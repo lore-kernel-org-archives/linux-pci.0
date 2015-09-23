@@ -1,77 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 15 Sep 2015 18:36:55 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <david.daney@cavium.com>, lorenzo.pieralisi@arm.com
-Subject: Re: [PATCH 2/6] PCI: generic: Only fixup irqs for bus we are
- creating.
-Message-ID: <20150915173654.GJ31157@arm.com>
-References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
- <1442013719-5001-3-git-send-email-ddaney.cavm@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:53611 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755608AbbIWVAX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Sep 2015 17:00:23 -0400
+Message-ID: <560312F7.3000001@ti.com>
+Date: Wed, 23 Sep 2015 17:00:39 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442013719-5001-3-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [Resend: PATCH] PCI: designware: fix the boot noise for missing
+ *config* reg space
+References: <1437515651-20883-1-git-send-email-m-karicheri2@ti.com> <55BA47E0.9030003@ti.com>
+In-Reply-To: <55BA47E0.9030003@ti.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David,
+On 07/30/2015 11:50 AM, Murali Karicheri wrote:
+> On 07/21/2015 05:54 PM, Murali Karicheri wrote:
+>> Currently on Keystone SoCs, boot up log shows an unnecessary boot
+>> noise as follows:-
+>>
+>> [    0.365823] keystone-pcie 21021000.pcie: missing *config* reg space
+>>
+>> Keystone uses older version of designware h/w that doesn't have ATU
+>> support. So va_cfg0_base and va_cfg1_base are already set up in
+>> ks_dw_pcie_host_init() before calling dw_pcie_host_init() and
+>> they point to the remote config space address va (both same for
+>> Keystone).
+>> So add a check to avoid this boot noise on Keystone.
+>>
+>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>> ---
+>>   - Resend with "PCI: designware" prefix in subject
+>>   drivers/pci/host/pcie-designware.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-designware.c
+>> b/drivers/pci/host/pcie-designware.c
+>> index 69486be..b48b8a2 100644
+>> --- a/drivers/pci/host/pcie-designware.c
+>> +++ b/drivers/pci/host/pcie-designware.c
+>> @@ -388,7 +388,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>           addrp = of_get_address(np, index, NULL, NULL);
+>>           pp->cfg0_mod_base = of_read_number(addrp, ns);
+>>           pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
+>> -    } else {
+>> +    } else if (!pp->va_cfg0_base) {
+>>           dev_err(pp->dev, "missing *config* reg space\n");
+>>       }
+>>
+>>
+> A gentle ping to review and apply this to pci next.
+>
+Bjorn,
 
-On Sat, Sep 12, 2015 at 12:21:55AM +0100, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> Use pci_walk_bus() to restrict the fixup irq actions to only the bus
-> being created.
-> 
-> If we create multiple buses with pci-host-generic, or there are buses
-> created by other drivers, we don't want to call pci_fixup_irqs() which
-> operates on all devices, not just the devices on the bus being added.
-> The consequence is that either the fixups are done more than once, or
-> in some cases incorrect fixups could be applied.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  drivers/pci/host/pci-host-generic.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 265dd25..a0fb241 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -205,6 +205,12 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  	return 0;
->  }
->  
-> +static int gen_pci_fixup_irq_cb(struct pci_dev *dev, void *arg)
-> +{
-> +	pdev_fixup_irq(dev, pci_common_swizzle, of_irq_parse_and_map_pci);
-> +	return 0;
-> +}
-> +
->  static int gen_pci_probe(struct platform_device *pdev)
->  {
->  	int err;
-> @@ -262,7 +268,7 @@ static int gen_pci_probe(struct platform_device *pdev)
->  		return -ENODEV;
->  	}
->  
-> -	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> +	pci_walk_bus(bus, gen_pci_fixup_irq_cb, NULL);
+Not sure why this is not picked for merge. Can you pick this up please!
 
-Any chance we could put something in the core PCI code for this? I think
-any host controller wanting to work with arm64 is potentially going to
-run into the same problem.
-
-Will
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
