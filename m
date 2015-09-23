@@ -1,57 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0079.outbound.protection.outlook.com ([207.46.100.79]:59904
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755745AbbIUCN2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 20 Sep 2015 22:13:28 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v7 1/6] arm: add msi.h to Kbuild
-Date: Mon, 21 Sep 2015 10:13:02 +0800
-Message-ID: <1442801587-3812-2-git-send-email-lftan@altera.com>
-In-Reply-To: <1442801587-3812-1-git-send-email-lftan@altera.com>
-References: <1442801587-3812-1-git-send-email-lftan@altera.com>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:35254 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754167AbbIWQYu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 12:24:50 -0400
+Received: by wicge5 with SMTP id ge5so215256214wic.0
+        for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2015 09:24:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1622BC36@lhreml503-mbb>
+References: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1441964307-126942-3-git-send-email-gabriele.paoloni@huawei.com>
+ <20150918204625.GL25767@google.com> <CAHM4w1nWNj-Ws0CiYt2vGCa4V7XJsjjwHRSkgdpVSCPmdeARqA@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1622BC36@lhreml503-mbb>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 23 Sep 2015 11:24:29 -0500
+Message-ID: <CAErSpo4hWUyaGrt3iTYffCxP0XHiR=DeZ8OEp9XnhAP3C8D+HQ@mail.gmail.com>
+Subject: Re: [PATCH v3 2/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Include asm-generic/msi.h to support CONFIG_GENERIC_MSI_IRQ_DOMAIN.
-This to fix compilation error:
-"include/linux/msi.h:123:21: fatal error: asm/msi.h:
-No such file or directory"
+On Wed, Sep 23, 2015 at 11:20 AM, Gabriele Paoloni
+<gabriele.paoloni@huawei.com> wrote:
+> Hi guys sorry for the late reply I have been OOO for the last 5 days
+>
+>> -----Original Message-----
+>> From: Pratyush Anand [mailto:pratyush.anand@gmail.com]
+>> Sent: Saturday, September 19, 2015 4:04 AM
+>> To: Bjorn Helgaas
+>> Cc: Gabriele Paoloni; Jingoo Han; linux-pci@vger.kernel.org; Wangzhou
+>> (B); Yuanzhichang; Zhudacai; zhangjukuo; qiuzhenfa; Liguozhu (Kenneth)
+>> Subject: Re: [PATCH v3 2/3] PCI: designware: change dw_pcie_cfg_write()
+>> and dw_pcie_cfg_read()
+>>
+>> On Sat, Sep 19, 2015 at 2:16 AM, Bjorn Helgaas <bhelgaas@google.com>
+>> wrote:
+>> > On Fri, Sep 11, 2015 at 05:38:26PM +0800, Gabriele Paoloni wrote:
+>> >> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+>> >>
+>> >> This patch changes the implementation of dw_pcie_cfg_read() and
+>> >> dw_pcie_cfg_write() to improve the function usage from the callers
+>> >> perspective.
+>> >> Currently the callers are obliged to pass the 32bit aligned address
+>> >> of the register that contains the field of the PCI header that they
+>> >> want to read/write; also they have to pass the offset of the field
+>> >> in that register. This is quite tricky to use as the callers are
+>> >> obliged to sum the PCI header base address to the field offset
+>> >> masked to retrieve the 32b aligned register address.
+>> >>
+>> >> With the new API the callers have to pass the base address of the
+>> >> PCI header and the offset corresponding to the field they intend to
+>> >> read/write.
+>> >>
+>> >> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>> >
+>> >
+>> >>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32
+>> *val)
+>> >>  {
+>> >> +     addr += (where & ~0x3);
+>> >>       *val = readl(addr);
+>> >> +     where &= 3;
+>> >>
+>> >>       if (size == 1)
+>> >> -             *val = (*val >> (8 * (where & 3))) & 0xff;
+>> >> +             *val = (*val >> (8 * where)) & 0xff;
+>> >>       else if (size == 2)
+>> >> -             *val = (*val >> (8 * (where & 3))) & 0xffff;
+>> >> +             *val = (*val >> (8 * where)) & 0xffff;
+>> >>       else if (size != 4)
+>> >>               return PCIBIOS_BAD_REGISTER_NUMBER;
+>> >>
+>> >> @@ -96,12 +98,14 @@ int dw_pcie_cfg_read(void __iomem *addr, int
+>> where, int size, u32 *val)
+>> >>
+>> >>  int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32
+>> val)
+>> >>  {
+>> >> +     addr += where;
+>> >> +
+>> >>       if (size == 4)
+>> >>               writel(val, addr);
+>> >>       else if (size == 2)
+>> >> -             writew(val, addr + (where & 2));
+>> >> +             writew(val, addr);
+>> >>       else if (size == 1)
+>> >> -             writeb(val, addr + (where & 3));
+>> >> +             writeb(val, addr);
+>> >>       else
+>> >>               return PCIBIOS_BAD_REGISTER_NUMBER;
+>> >
+>> > I just noticed the asymmetry between dw_pcie_cfg_read() and
+>> > dw_pcie_cfg_write(): in dw_pcie_cfg_read() we always do 32-bit reads
+>> and
+>> > mask out the parts we won't want, but in dw_pcie_cfg_write() we do 8-,
+>> 16-,
+>> > or 32-byte writes.
+>> >
+>> > That was there even before your patch, but I wonder why.  Either both
+>> > should work the same way, or there should be a comment explaining why
+>> they
+>> > are different.
+>> >
+>> > Jingoo, Pratyush?
+>>
+>> As I said earlier, I just vaguely remember that there was some issue
+>> with a SOC in reading non word aligned addresses.
+>> (1) I do not have any reference for it and (2) even if some where
+>> there could be such issue they can always have platform specific
+>> accessor . So I support your idea and both read and write can be made
+>> symmetric.
+>
+> I agree with the idea but, what if doing so we break other drivers?
+> Is the correct flow to break them first and let the single maintainers fix them then...?
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- arch/arm/include/asm/Kbuild | 1 +
- 1 file changed, 1 insertion(+)
+Since we don't know which (if any) systems would break, I think the
+best we can do is see if anybody has objections, then put it in and
+see if anything breaks.
 
-diff --git a/arch/arm/include/asm/Kbuild b/arch/arm/include/asm/Kbuild
-index be648eb..bd42530 100644
---- a/arch/arm/include/asm/Kbuild
-+++ b/arch/arm/include/asm/Kbuild
-@@ -14,6 +14,7 @@ generic-y += local.h
- generic-y += local64.h
- generic-y += mm-arch-hooks.h
- generic-y += msgbuf.h
-+generic-y += msi.h
- generic-y += param.h
- generic-y += parport.h
- generic-y += poll.h
--- 
-1.8.2.1
-
+Bjorn
