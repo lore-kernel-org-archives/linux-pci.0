@@ -1,95 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:47449 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964843AbbI2L1b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 07:27:31 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: [PATCH v4 1/3] PCIE: spear13xx: fix addresses in dw_pcie_cfg_read and dw_pcie_cfg_write
-Date: Tue, 29 Sep 2015 19:34:05 +0800
-Message-ID: <1443526447-228817-2-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1443526447-228817-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1443526447-228817-1-git-send-email-gabriele.paoloni@huawei.com>
+Received: from foss.arm.com ([217.140.101.70]:35364 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752105AbbIWSCA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Sep 2015 14:02:00 -0400
+Date: Wed, 23 Sep 2015 19:01:57 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v2 4/5] PCI: generic: Correct, and avoid overflow, in
+ bus_max calculation.
+Message-ID: <20150923180157.GV7356@arm.com>
+References: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com>
+ <1442527332-1174-5-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442527332-1174-5-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On Thu, Sep 17, 2015 at 11:02:11PM +0100, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> There are two problems with the bus_max calculation:
+> 
+> 1) The u8 data type can overflow for large config space windows.
+> 
+> 2) The calculation is incorrect for a bus range that doesn't start at
+>    zero.
+> 
+> Since the configuration space is relative to bus zero, make bus_max
+> just be the size of the config window scaled by bus_shift.  Then clamp
+> it to a maximum of 255, per PCI.  Use a data type of int to avoid
+> overflow problems.
+> 
+> Update host-generic-pci.txt to clarify the semantics of the "reg"
+> property with respect to non-zero starting bus numbers.
+> 
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+> Change from v1: Added text to host-generic-pci.txt
+> 
+>  Documentation/devicetree/bindings/pci/host-generic-pci.txt | 4 +++-
+>  drivers/pci/host/pci-host-generic.c                        | 7 ++++---
+>  2 files changed, 7 insertions(+), 4 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> index cf3e205..105a968 100644
+> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> @@ -34,7 +34,9 @@ Properties of the host controller node:
+>  - #size-cells    : Must be 2.
+>  
+>  - reg            : The Configuration Space base address and size, as accessed
+> -                   from the parent bus.
+> +                   from the parent bus.  The base address corresponds to
+> +                   bus zero, even though the "bus-range" property may specify
+> +                   a different starting bus number.
 
-Currently spear13xx passes the wrong "address" in many calls to
-dw_pcie_cfg_read and dw_pcie_cfg_write: the passed address is
-always pp->dbi_base, that is wrong as it does not consider
-the offset to access the right register of the PCI header.
-This patches fixes these function calls passing the address to
-access the right register.
+That's a useful clarification, thanks.
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
----
- drivers/pci/host/pcie-spear13xx.c | 20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
+>  Properties of the /chosen node:
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 77cf4bd..0a9c453 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -164,7 +164,7 @@ out_release_res:
+>  static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+>  {
+>  	int err;
+> -	u8 bus_max;
+> +	int bus_max;
+>  	resource_size_t busn;
+>  	struct resource *bus_range;
+>  	struct device *dev = pci->host.dev.parent;
+> @@ -177,8 +177,9 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+>  	}
+>  
+>  	/* Limit the bus-range to fit within reg */
+> -	bus_max = pci->cfg.bus_range->start +
+> -		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+> +	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+> +	if (bus_max > 255)
+> +		bus_max = 255;
 
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 98d2683..a5997e3 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -146,6 +146,7 @@ struct pcie_app_reg {
- static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- {
- 	u32 val;
-+	int where;
- 	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
- 	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
- 	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
-@@ -163,9 +164,10 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	 * default value in capability register is 512 bytes. So force
- 	 * it to 128 here.
- 	 */
--	dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, &val);
-+	where = exp_cap_off + PCI_EXP_DEVCTL;
-+	dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, 4, &val);
- 	val &= ~PCI_EXP_DEVCTL_READRQ;
--	dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, val);
-+	dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where, 4, val);
- 
- 	dw_pcie_cfg_write(pp->dbi_base, PCI_VENDOR_ID, 2, 0x104A);
- 	dw_pcie_cfg_write(pp->dbi_base, PCI_DEVICE_ID, 2, 0xCD80);
-@@ -175,22 +177,24 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	 * also works
- 	 */
- 	if (spear13xx_pcie->is_gen1) {
--		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCAP, 4,
-+		where = exp_cap_off + PCI_EXP_LNKCAP;
-+		dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, 4,
- 				 &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
--					  PCI_EXP_LNKCAP, 4, val);
-+			dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
-+					where, 4, val);
- 		}
- 
--		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCTL2, 4,
-+		where = exp_cap_off + PCI_EXP_LNKCTL2;
-+		dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, 4,
- 				 &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
--					  PCI_EXP_LNKCTL2, 4, val);
-+			dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
-+					where, 4, val);
- 		}
- 	}
- 
--- 
-1.9.1
+I still don't understand the need for this part. If the cfg space is bigger
+than bus_max, isn't that simply an invalid resource? Given that the resource
+could be broken in other ways too, this check feels more like a specific
+workaround rather than generally useful code.
 
+Will
