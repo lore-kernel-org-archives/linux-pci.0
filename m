@@ -1,40 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f68.google.com ([209.85.213.68]:35669 "EHLO
-	mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932887AbbI2Qhe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 12:37:34 -0400
-Received: by vkao3 with SMTP id o3so742936vka.2
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2015 09:37:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1443543636-35105-4-git-send-email-gabriele.paoloni@huawei.com>
-References: <1443543636-35105-1-git-send-email-gabriele.paoloni@huawei.com>
-	<1443543636-35105-4-git-send-email-gabriele.paoloni@huawei.com>
-Date: Tue, 29 Sep 2015 22:07:33 +0530
-Message-ID: <CAHM4w1nj6Z9odZUTFzXYj40ZegG=yoOAizHW1TpX6e0UR0uoTg@mail.gmail.com>
-Subject: Re: [PATCH v6 3/3] PCI: designware: add sanity checks on the header
- offset in dw_pcie_cfg_read and dw_pcie_cfg_write
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
+Received: from foss.arm.com ([217.140.101.70]:35542 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750799AbbIWSkH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Sep 2015 14:40:07 -0400
+Date: Wed, 23 Sep 2015 19:40:05 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Zhichang Yuan <yuanzhichang@hisilicon.com>,
-	zhudacai@hisilicon.com, Zhang Jukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa@hisilicon.com, Liguozhu <liguozhu@hisilicon.com>
-Content-Type: text/plain; charset=UTF-8
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH] arm64/pci: Add quirks for Cavium Thunder PCI bridges.
+Message-ID: <20150923184005.GX7356@arm.com>
+References: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 29, 2015 at 9:50 PM, Gabriele Paoloni
-<gabriele.paoloni@huawei.com> wrote:
-> From: gabriele paoloni <gabriele.paoloni@huawei.com>
->
-> This patch adds sanity checks on "where" input parameter in
-> dw_pcie_cfg_read and dw_pcie_cfg_write. These checks make sure
-> that offset passed in by the caller is not in conflict with
-> the size of the PCI header field that is being read/written
->
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+On Wed, Sep 23, 2015 at 01:09:56AM +0100, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> The Cavium ThunderX SoC needs a PCI quirk for its on-chip bridges.
+> Since it is arm64, create a new quirks.c file there to contain arm64
+> related quirks.  Add the ThunderX bridge quirk, gated by a new config
+> variable, so that it can be disabled for kernels that aren't expected
+> to be used on ThunderX.
+> 
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+>  arch/arm64/Kconfig         | 11 +++++++++++
+>  arch/arm64/kernel/Makefile |  2 +-
+>  arch/arm64/kernel/quirks.c | 36 ++++++++++++++++++++++++++++++++++++
+>  3 files changed, 48 insertions(+), 1 deletion(-)
+>  create mode 100644 arch/arm64/kernel/quirks.c
 
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+Why does this have to live in the arch/arm64/ directory? The quirks have
+nothing to do with the architecture code.
+
+Will
