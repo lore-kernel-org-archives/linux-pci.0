@@ -1,89 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v3 4/6] PCI: generic: Correct, and avoid overflow, in bus_max calculation.
-Date: Tue, 22 Sep 2015 16:49:15 -0700
-Message-Id: <1442965757-12925-5-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:64003 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752177AbbIWD2K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Sep 2015 23:28:10 -0400
+Message-ID: <56021BC4.9030000@hisilicon.com>
+Date: Wed, 23 Sep 2015 11:25:56 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+To: Pratyush Anand <pratyush.anand@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Zhang Jukuo <zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, Liguozhu <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v9 3/6] PCI: designware: Add ARM64 support
+References: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com> <1442321361-174300-4-git-send-email-wangzhou1@hisilicon.com> <5600C285.5090603@hisilicon.com> <CAHM4w1mabn8SiE_oqWBbr1chrQTUPiUhc8fCsxJ0t=AyOZOadA@mail.gmail.com>
+In-Reply-To: <CAHM4w1mabn8SiE_oqWBbr1chrQTUPiUhc8fCsxJ0t=AyOZOadA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On 2015/9/23 1:05, Pratyush Anand wrote:
+> Hi Zhou,
+> 
+> On Tue, Sep 22, 2015 at 8:22 AM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+>> On 2015/9/15 20:49, Zhou Wang wrote:
+>>> This patch tries to unify ARM32 and ARM64 PCIe in designware driver. Delete
+>>> function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
+>>> move related operations to dw_pcie_host_init.
+>>>
+>>> This patch also try to use of_pci_get_host_bridge_resources for ARM32 and ARM64
+>>> according to the suggestion for Gabriele[1]
+>>>
+>>> This patch reverts commit f4c55c5a3f7f ("PCI: designware: Program ATU with
+>>> untranslated address") based on 1/6 in this series. we delete *_mod_base in
+>>> pcie-designware. This was discussed in [2]
+>>>
+>>> I have compiled the driver with multi_v7_defconfig. However, I don't have
+>>> ARM32 PCIe related board to do test. It will be appreciated if someone could
+>>> help to test it.
+>>>
+>>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+>>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>>> Tested-by: James Morse <james.morse@arm.com>
+>>> Tested-by: Gabriel Fernandez <gabriel.fernandez@st.com>
+>>> Tested-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> 
+> Sorry for delayed response. Since I moved from ST, I do not have any
+> test board having designware PCIe controller :(, and also I do
+> designware work only in my hobby time,  so it took time to understand
+> few modifications. Anyway, all modifications looks fine to me. So,
+> 
+> Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
 
-There are two problems with the bus_max calculation:
+Hi Pratyush,
 
-1) The u8 data type can overflow for large config space windows.
+Many thanks for your reviewing :)
 
-2) The calculation is incorrect for a bus range that doesn't start at
-   zero.
+Best Regards,
+Zhou
 
-Since the configuration space is relative to bus zero, make bus_max
-just be the size of the config window scaled by bus_shift.  Then clamp
-it to a maximum of 255, per PCI.  Use a data type of int to avoid
-overflow problems.
+> 
+> PS: Does someone know about a economical test board from any vendor
+> with designware PCIe IP?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
-Update host-generic-pci.txt to clarify the semantics of the "reg"
-property with respect to non-zero starting bus numbers.
-
-Signed-off-by: David Daney <david.daney@cavium.com>
----
-No change from v2.
-Change from v1: Added text to host-generic-pci.txt
-
- Documentation/devicetree/bindings/pci/host-generic-pci.txt | 4 +++-
- drivers/pci/host/pci-host-generic.c                        | 7 ++++---
- 2 files changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-index cf3e205..105a968 100644
---- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-@@ -34,7 +34,9 @@ Properties of the host controller node:
- - #size-cells    : Must be 2.
- 
- - reg            : The Configuration Space base address and size, as accessed
--                   from the parent bus.
-+                   from the parent bus.  The base address corresponds to
-+                   bus zero, even though the "bus-range" property may specify
-+                   a different starting bus number.
- 
- 
- Properties of the /chosen node:
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 77cf4bd..0a9c453 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -164,7 +164,7 @@ out_release_res:
- static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- {
- 	int err;
--	u8 bus_max;
-+	int bus_max;
- 	resource_size_t busn;
- 	struct resource *bus_range;
- 	struct device *dev = pci->host.dev.parent;
-@@ -177,8 +177,9 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- 	}
- 
- 	/* Limit the bus-range to fit within reg */
--	bus_max = pci->cfg.bus_range->start +
--		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-+	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-+	if (bus_max > 255)
-+		bus_max = 255;
- 	pci->cfg.bus_range->end = min_t(resource_size_t,
- 					pci->cfg.bus_range->end, bus_max);
- 
--- 
-1.9.1
 
