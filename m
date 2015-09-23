@@ -1,45 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:35420 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751672AbbIQOzv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Sep 2015 10:55:51 -0400
-Received: by wicge5 with SMTP id ge5so122533764wic.0
-        for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2015 07:55:50 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:65274 "EHLO
+	ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753434AbbIWKpI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 06:45:08 -0400
+Message-ID: <5602829C.5090500@internode.on.net>
+Date: Wed, 23 Sep 2015 20:14:44 +0930
+From: Arthur Marsh <arthur.marsh@internode.on.net>
 MIME-Version: 1.0
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 17 Sep 2015 09:55:30 -0500
-Message-ID: <CAErSpo5THoC1mC7OnKOvX04Bq27xvZmKmoY7v_QczCQTEG91gg@mail.gmail.com>
-Subject: Re: [PATCH v5 00/53] PCI: Resource allocation cleanup for v4.4
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	James Bottomley <James.Bottomley@HansenPartnership.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Ballabio Dario <dario.ballabio@emc.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Dario Ballabio <ballabio_dario@emc.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+Subject: Re: [RFT v3] eata: Convert eata driver as normal PCI and platform
+ device drivers
+References: <20150916134211.GA21535@infradead.org> <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com> <5601D550.5000801@internode.on.net> <1442961929.15264.4.camel@HansenPartnership.com> <5601E5FE.7020706@internode.on.net> <56023771.5010006@linux.intel.com>
+In-Reply-To: <56023771.5010006@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 16, 2015 at 4:56 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Hi,
->
-> After 5b28541552ef (PCI: Restrict 64-bit prefetchable bridge windows
-> to 64-bit resources), we have several reports on resource allocation
-> failure, and we try to fix the problem with resource clip, and get
-> more problems.
->
-> One is realloc fail with two graphics cards above 4G.
-> One is from sparc that have problem with clip as we don't parse
-> mem64 for it.
 
-I assume the following patches are related to the sparc64/mem64 thing.
-Could they be split out and posted separately?  We should be able to
-fix that issue even without all the other patches.
 
->   sparc/PCI: Add mem64 resource parsing for root bus
->   sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
->   powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
->   OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
+Jiang Liu wrote on 23/09/15 14:54:
+
+> Hi Arthur,
+> 	I have found the cause of the warning messages, it's caused
+> by a flaw in the conversion. But according to my understanding,
+> it isn't related to the kexec/kdump failure. Could you please help
+> to test the attached new version?
+> Thanks!
+> Gerry
+>
+
+Thanks, the patch worked, I could successfully unload and reload the 
+eata module, and perform a kexec reboot with the eata module loading 
+successfully afterwards.
+
+Arthur.
+
