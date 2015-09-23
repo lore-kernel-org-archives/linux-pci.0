@@ -1,79 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38852 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753422AbbIWTMU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 Sep 2015 15:12:20 -0400
-Subject: [PATCH 1/2] PCI: Clear IORESOURCE_UNSET when clipping a bridge
- window
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <helgaas@kernel.org>
-Cc: kordikmarek@gmail.com,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	airlied@linux.ie, zermond@gmail.com, gob_iron@hotmail.com,
-	weiyang.kernel@gmail.com, alexander.deucher@amd.com,
-	niaminbox@gmail.com, Yinghai Lu <yinghai@kernel.org>
-Date: Wed, 23 Sep 2015 14:12:16 -0500
-Message-ID: <20150923191216.21781.33925.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150923191159.21781.66169.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150923191159.21781.66169.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:57384 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753291AbbIWQqr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 12:46:47 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH] PCI: Designware: make num-lanes an optional DT property
+Date: Wed, 23 Sep 2015 16:46:35 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1622BCD1@lhreml503-mbb>
+References: <1441904546-34591-1-git-send-email-gabriele.paoloni@huawei.com>
+ <20150918225524.GP25767@google.com>
+In-Reply-To: <20150918225524.GP25767@google.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Friday, September 18, 2015 11:55 PM
+> To: Gabriele Paoloni
+> Cc: jingoohan1@gmail.com; pratyush.anand@gmail.com; linux-
+> pci@vger.kernel.org; Wangzhou (B); Yuanzhichang; Zhudacai; zhangjukuo;
+> qiuzhenfa; Liguozhu (Kenneth)
+> Subject: Re: [PATCH] PCI: Designware: make num-lanes an optional DT
+> property
+> 
+> Hi Gabriele,
+> 
+> On Fri, Sep 11, 2015 at 01:02:26AM +0800, Gabriele Paoloni wrote:
+> > From: gabriele paoloni <gabriele.paoloni@huawei.com>
+> >
+> > Currently num-lanes is read in dw_pcie_host_init().
+> > for A SoC that performs the link-up operation in UEFI num-lanes
+> > is not needed in the DTS but it has to be specified to any value;
+> > otherwise dw_pcie_host_init will fail.
+> > If the link is brought up in BIOS dw_pcie_setup_rc should not
+> > be called.
+> > This patch rework dw_pcie_host_init() so that, if num-lanes is
+> > not specified, it sets pp->lanes = 0. If later on dw_pcie_setup_rc
+> > is called and pp->num_lanes is not set to a valid value,
+> > dw_pcie_setup_rc will send an error message and return.
+> 
+> Which systems don't call dw_pcie_setup_rc()?  I don't have time for an
+> exhaustive search, but it looks like most or all designware drivers do
+> call
+> dw_pcie_setup_rc(), so if any left out num-lanes, they would report an
+> error.
 
-c770cb4cb505 ("PCI: Mark invalid BARs as unassigned") sets IORESOURCE_UNSET
-if we fail to claim a resource.  If we tried to claim a bridge window,
-failed, clipped the window, and tried to claim the clipped window, we
-failed again because of IORESOURCE_UNSET:
+All of them currently call dw_pcie_setup_rc(), however the call is not needed
+if the link-up is done in BIOS. For instance if you look at
+exynos_pcie_establish_link(), you see that it will first check if the link is
+already up; if so the function will return as the BIOS has already brought
+up the link and dw_pcie_setup_rc is not called in this case. Therefore num-lanes
+is not mandatory for a platform with link-up setup in BIOS.
 
-  pci_bus 0000:00: root bus resource [mem 0xc0000000-0xffffffff window]
-  pci 0000:00:01.0: can't claim BAR 15 [mem 0xbdf00000-0xddefffff 64bit pref]: no compatible bridge window
-  pci 0000:00:01.0: [mem size 0x20000000 64bit pref] clipped to [mem size 0x1df00000 64bit pref]
-  pci 0000:00:01.0:   bridge window [mem size 0x1df00000 64bit pref]
-  pci 0000:00:01.0: can't claim BAR 15 [mem size 0x1df00000 64bit pref]: no address assigned
+> 
+> > This patch is a follow-up of
+> > http://www.spinics.net/lists/linux-pci/msg44394.html
+> >
+> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> > ---
+> >  Documentation/devicetree/bindings/pci/designware-pcie.txt |  3 ++-
+> >  drivers/pci/host/pcie-designware.c                        | 10
+> ++++++----
+> >  2 files changed, 8 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/designware-
+> pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> > index 9f4faa8..0036ab3 100644
+> > --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> > +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> > @@ -14,7 +14,6 @@ Required properties:
+> >  - interrupt-map-mask and interrupt-map: standard PCI properties
+> >  	to define the mapping of the PCIe interface to interrupt
+> >  	numbers.
+> > -- num-lanes: number of lanes to use
+> >  - clocks: Must contain an entry for each entry in clock-names.
+> >  	See ../clocks/clock-bindings.txt for details.
+> >  - clock-names: Must include the following entries:
+> > @@ -22,6 +21,8 @@ Required properties:
+> >  	- "pcie_bus"
+> >
+> >  Optional properties:
+> > +- num-lanes: number of lanes to use (this property should be
+> specified unless
+> > +  the link is brought already up in BIOS)
+> >  - reset-gpio: gpio pin number of power good signal
+> >  - bus-range: PCI bus numbers covered (it is recommended for new
+> devicetrees to
+> >    specify this property, to keep backwards compatibility a range of
+> 0x00-0xff
+> > diff --git a/drivers/pci/host/pcie-designware.c
+> b/drivers/pci/host/pcie-designware.c
+> > index 52aa6e3..b0b40ed 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -482,10 +482,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> >  		}
+> >  	}
+> >
+> > -	if (of_property_read_u32(np, "num-lanes", &pp->lanes)) {
+> > -		dev_err(pp->dev, "Failed to parse the number of lanes\n");
+> > -		return -EINVAL;
+> > -	}
+> > +	ret = of_property_read_u32(np, "num-lanes", &pp->lanes);
+> > +	if (ret)
+> > +		pp->lanes = 0;
+> >
+> >  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> >  		if (!pp->ops->msi_host_init) {
+> > @@ -764,6 +763,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+> >  	case 8:
+> >  		val |= PORT_LINK_MODE_8_LANES;
+> >  		break;
+> > +	default:
+> > +		dev_err(pp->dev, "invalid pp->lanes value\n");
+> 
+> Maybe print the invalid value here, labelled "num-lanes"?
 
-The 00:01.0 window started as [mem 0xbdf00000-0xddefffff 64bit pref].  That
-starts before the host bridge window [mem 0xc0000000-0xffffffff window], so
-we clipped the 00:01.0 window to [mem 0xc0000000-0xddefffff 64bit pref].
-But we left it marked IORESOURCE_UNSET, so the second claim failed when it
-should have succeeded.
+Agreed, will fix in v2
 
-This means downstream devices will also fail for lack of resources, e.g.,
-in the bugzilla below,
-
-  radeon 0000:01:00.0: Fatal error during GPU init
-
-Clear IORESOURCE_UNSET when we clip a bridge window.  Also clear
-IORESOURCE_UNSET in our copy of the unclipped window so we can see exactly
-what the original window was and how it now fits inside the upstream
-window.
-
-Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491#c47
-Based-on-patch-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Based-on-patch-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Yinghai Lu <yinghai@kernel.org>
-CC: stable@vger.kernel.org	# 4.1+
----
- drivers/pci/bus.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 6fbd3f2..d3346d2 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -256,6 +256,8 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
- 
- 		res->start = start;
- 		res->end = end;
-+		res->flags &= ~IORESOURCE_UNSET;
-+		orig_res.flags &= ~IORESOURCE_UNSET;
- 		dev_printk(KERN_DEBUG, &dev->dev, "%pR clipped to %pR\n",
- 				 &orig_res, res);
- 
-
+> 
+> Bjorn
+> 
+> > +		return;
+> >  	}
+> >  	dw_pcie_writel_rc(pp, val, PCIE_PORT_LINK_CONTROL);
+> >
+> > --
+> > 1.9.1
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci"
+> in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
