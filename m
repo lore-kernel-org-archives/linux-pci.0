@@ -1,109 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 35/53] PCI: Don't add too much optional size for hotplug bridge io
-Date: Wed, 30 Sep 2015 22:53:09 -0700
-Message-Id: <1443678807-786-36-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:37176 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755901AbbIWXcD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 19:32:03 -0400
+Received: by wicfx3 with SMTP id fx3so90557739wic.0
+        for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2015 16:32:01 -0700 (PDT)
+From: Romain Bezut <rbezut@gmail.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: Romain Bezut <rbezut@gmail.com>
+Subject: [PATCH] PCI/MSI: Export all remapped MSIs to sysfs attributes
+Date: Thu, 24 Sep 2015 01:31:16 +0200
+Message-Id: <1443051076-27716-1-git-send-email-rbezut@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Same as patch for MMIO (PCI: Don't add too much optional size for hotplug
-bridge MMIO), and this one is for io port.
+irqbalance uses these attributes to populate its internal database, which is
+then used to bind the irq on the appropriate NUMA node.
 
-It will compare required+optional with min_sum_size to get smaller
-optional size.
+On a device accepting multiple MSIs and with interrupt remapping enabled,
+only the first irq entry is exported to msi_irqs directory.
+This results in irqbalance having no clue of the NUMA affinity for the extra
+irqs and starting to bind them on random nodes.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+This patch exports all MSI interrupts as sysfs attributes when relevant.
+
+Signed-off-by: Romain Bezut <rbezut@gmail.com>
 ---
- drivers/pci/setup-bus.c | 26 ++++++++++++++++----------
- 1 file changed, 16 insertions(+), 10 deletions(-)
+ drivers/pci/msi.c | 31 +++++++++++++++++--------------
+ 1 file changed, 17 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b6bfa1f..7cd6d32 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1139,7 +1139,6 @@ static resource_size_t window_alignment(struct pci_bus *bus,
-  *
-  * @bus : the bus
-  * @min_size : the minimum io window that must to be allocated
-- * @add_size : additional optional io window
-  * @realloc_head : track the additional io window on this list
-  *
-  * Sizing the IO windows of the PCI-PCI bridge is trivial,
-@@ -1148,9 +1147,11 @@ static resource_size_t window_alignment(struct pci_bus *bus,
-  * We must be careful with the ISA aliasing though.
-  */
- static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
--		resource_size_t add_size, struct list_head *realloc_head)
-+			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
-+	resource_size_t sum_add_size;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
- 							IORESOURCE_IO);
- 	resource_size_t size = 0, size0 = 0, size1 = 0;
-@@ -1160,6 +1161,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	if (!b_res)
- 		return;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d449714..324a164 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -475,10 +475,11 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+ 	int ret = -ENOMEM;
+ 	int num_msi = 0;
+ 	int count = 0;
++	int i;
  
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
+ 	/* Determine how many msi entries we have */
+ 	for_each_pci_msi_entry(entry, pdev)
+-		++num_msi;
++		num_msi += entry->nvec_used;
+ 	if (!num_msi)
+ 		return 0;
+ 
+@@ -487,19 +488,21 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+ 	if (!msi_attrs)
+ 		return -ENOMEM;
+ 	for_each_pci_msi_entry(entry, pdev) {
+-		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
+-		if (!msi_dev_attr)
+-			goto error_attrs;
+-		msi_attrs[count] = &msi_dev_attr->attr;
+-
+-		sysfs_attr_init(&msi_dev_attr->attr);
+-		msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
+-						    entry->irq);
+-		if (!msi_dev_attr->attr.name)
+-			goto error_attrs;
+-		msi_dev_attr->attr.mode = S_IRUGO;
+-		msi_dev_attr->show = msi_mode_show;
+-		++count;
++		for (i = 0; i < entry->nvec_used; i++) {
++			msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
++			if (!msi_dev_attr)
++				goto error_attrs;
++			msi_attrs[count] = &msi_dev_attr->attr;
 +
- 	min_align = window_alignment(bus, IORESOURCE_IO);
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
-@@ -1189,10 +1195,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
++			sysfs_attr_init(&msi_dev_attr->attr);
++			msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
++							    entry->irq + i);
++			if (!msi_dev_attr->attr.name)
++				goto error_attrs;
++			msi_dev_attr->attr.mode = S_IRUGO;
++			msi_dev_attr->show = msi_mode_show;
++			++count;
++		}
+ 	}
  
- 	size0 = calculate_iosize(size, min_size, size1,
- 			resource_size(b_res), min_align);
--	if (children_add_size > add_size)
--		add_size = children_add_size;
--	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
--		calculate_iosize(size, min_size, add_size + size1,
-+	sum_add_size = children_add_size + size + size1;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
-+	size1 = !realloc_head ? size0 :
-+		calculate_iosize(size, min_size, sum_add_size - size,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
-@@ -1718,7 +1725,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t min_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, min_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1751,13 +1758,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	case PCI_CLASS_BRIDGE_PCI:
- 		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
--			additional_io_size  = pci_hotplug_io_size;
-+			min_io_size  = pci_hotplug_io_size;
- 			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
--		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
--			     additional_io_size, realloc_head);
-+		pbus_size_io(bus, min_io_size, realloc_head);
- 
- 		/*
- 		 * If there's a 64-bit prefetchable MMIO window, compute
+ 	msi_irq_group = kzalloc(sizeof(*msi_irq_group), GFP_KERNEL);
 -- 
-1.8.4.5
+2.4.9
 
