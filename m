@@ -1,99 +1,83 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	David Daney <ddaney.cavm@gmail.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v3 4/6] PCI: generic: Correct, and avoid overflow, in bus_max calculation.
-Date: Wed, 23 Sep 2015 21:35:26 +0200
-Message-ID: <1589576.R6XolM4Vbv@wuerfel>
-In-Reply-To: <5602CA55.10604@caviumnetworks.com>
-References: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com> <1496061.0ds89jTH75@wuerfel> <5602CA55.10604@caviumnetworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: bhelgaas@google.com, yinghai@kernel.org, rajatxjain@gmail.com,
+	mst@redhat.com, zajec5@gmail.com, gong.chen@linux.intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-api@vger.kernel.org
+Cc: sean.stalley@intel.com
+Subject: [PATCH v2 1/2] PCI: Add Enhanced Allocation register entries
+Date: Wed, 23 Sep 2015 15:27:43 -0700
+Message-Id: <1443047264-4003-2-git-send-email-sean.stalley@intel.com>
+In-Reply-To: <1443047264-4003-1-git-send-email-sean.stalley@intel.com>
+References: <1443047264-4003-1-git-send-email-sean.stalley@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 23 September 2015 08:50:45 David Daney wrote:
-> On 09/23/2015 01:01 AM, Arnd Bergmann wrote:
-> > On Tuesday 22 September 2015 16:49:15 David Daney wrote:
-> >> From: David Daney <david.daney@cavium.com>
-> >> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> >> index cf3e205..105a968 100644
-> >> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> >> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> >> @@ -34,7 +34,9 @@ Properties of the host controller node:
-> >>   - #size-cells    : Must be 2.
-> >>
-> >>   - reg            : The Configuration Space base address and size, as accessed
-> >> -                   from the parent bus.
-> >> +                   from the parent bus.  The base address corresponds to
-> >> +                   bus zero, even though the "bus-range" property may specify
-> >> +                   a different starting bus number.
-> >
-> > This sounds like very unusual behavior. If you have a system with faked
-> > bus numbers where the registers only physically exist for a subset of the
-> > buses, this requires defining a reg property that contains MMIO space
-> > which is outside of the device and potentially contains other devices.
-> 
-> The pci-host-generic driver only maps the ranges that correspond to the 
-> "bus-range" buses, so mapping of illegal address ranges should not be a 
-> problem.
+Add registers defined in PCI-SIG's Enhanced allocation ECN.
 
-There is still a problem with what the driver is allowed to map,
-the current behavior is just an implementation detail that should
-not mean the binding can rely on that.
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+---
+ include/uapi/linux/pci_regs.h | 40 +++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 39 insertions(+), 1 deletion(-)
 
-We do the per-bus mapping because the vmalloc space on 32-bit systems
-is very limited. A driver for a purely 64-bit OS could simplify this
-by just mapping the entire 'reg' property as most drivers do, and
-then use the device as an offset into that.
-
-> > What would break if we instead defined it the expected way and only
-> > list the registers for the bus numbers in the "bus-range" property?
-> 
-> I'm not sure if we have the luxury of being able to change the 
-> definition, although the existing code only works with a starting bus 
-> number of zero.  From this we might conclude that non-zero starting bus 
-> numbers cannot exist in the wild, so changing the the definition of 
-> "reg" so that it starts at the starting bus number might be possible.
->
-> My reading of:
-> 
-> http://www.o3one.org/hwdocs/openfirmware/pci_supplement_2_1.pdf
-> 
-> Section 3.1.1, does not preclude your interpretation.  Although that is 
-> for PCI-PCI bridges, and not this pci-host-generic root complex.
-> 
-> If we really want to go with a different definition of what the "reg" 
-> property means, then actual code has to change, and we risk breaking 
-> something.
-
-My understanding is that the code has to change anyway in one place
-or another. The change you did in this patch is not needed then, but
-you say that something else has to change. Is this the only change
-we'd need?
-
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 265dd25169bf..d8a5c0047155 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -196,7 +196,7 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- 		u32 sz = 1 << pci->cfg.ops->bus_shift;
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 413417f..084ce98 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -216,7 +216,8 @@
+ #define  PCI_CAP_ID_MSIX	0x11	/* MSI-X */
+ #define  PCI_CAP_ID_SATA	0x12	/* SATA Data/Index Conf. */
+ #define  PCI_CAP_ID_AF		0x13	/* PCI Advanced Features */
+-#define  PCI_CAP_ID_MAX		PCI_CAP_ID_AF
++#define  PCI_CAP_ID_EA		0x14	/* PCI Enhanced Allocation */
++#define  PCI_CAP_ID_MAX		PCI_CAP_ID_EA
+ #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
+ #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
+ #define PCI_CAP_SIZEOF		4
+@@ -353,6 +354,43 @@
+ #define  PCI_AF_STATUS_TP	0x01
+ #define PCI_CAP_AF_SIZEOF	6	/* size of AF registers */
  
- 		pci->cfg.win[idx] = devm_ioremap(dev,
--						 pci->cfg.res.start + busn * sz,
-+						 pci->cfg.res.start + idx * sz,
- 						 sz);
- 		if (!pci->cfg.win[idx])
- 			return -ENOMEM;
++/* PCI Enhanced Allocation registers */
++
++#define PCI_EA_NUM_ENT		2	/* Number of Capability Entries */
++#define PCI_EA_NUM_ENT_MASK	0x3f	/* Num Entries Mask */
++#define PCI_EA_FIRST_ENT	4	/* First EA Entry in List */
++#define PCI_EA_FIRST_ENT_BRIDGE	8	/* First EA Entry for Bridges */
++#define PCI_EA_ES		0x7	/* Entry Size */
++#define PCI_EA_BEI(x)	(((x) >> 4) & 0xf) /* BAR Equivalent Indicator */
++/* 0-5 map to BARs 0-5 respectively */
++#define  PCI_EA_BEI_BRIDGE	6	/* Resource behind bridge */
++#define  PCI_EA_BEI_ENI		7	/* Equivalent Not Indicated */
++#define  PCI_EA_BEI_ROM		8	/* Expansion ROM */
++/* 9-14 map to VF BARs 0-5 respectively */
++#define  PCI_EA_BEI_RESERVED	15	/* Reserved - Treat like ENI */
++
++#define PCI_EA_PP(x)	(((x) >>  8) & 0xff)	/* Primary Properties */
++#define PCI_EA_SP(x)	(((x) >> 16) & 0xff)	/* Secondary Properties */
++#define  PCI_EA_P_MEM			0x00	/* Non-Prefetch Memory */
++#define  PCI_EA_P_MEM_PREFETCH		0x01	/* Prefetchable Memory */
++#define  PCI_EA_P_IO			0x02	/* I/O Space */
++#define  PCI_EA_P_VIRT_MEM_PREFETCH	0x03	/* VF Prefetchable Memory */
++#define  PCI_EA_P_VIRT_MEM		0x04	/* VF Non-Prefetch Memory */
++#define  PCI_EA_P_BRIDGE_MEM		0x05	/* Bridge Non-Prefetch Memory */
++#define  PCI_EA_P_BRIDGE_MEM_PREFETCH	0x06	/* Bridge Prefetchable Memory */
++#define  PCI_EA_P_BRIDGE_IO		0x07	/* Bridge I/O Space */
++/* 0x08-0xfc reserved */
++#define  PCI_EA_P_MEM_RESERVED		0xfd	/* Reserved Memory */
++#define  PCI_EA_P_IO_RESERVED		0xfe	/* Reserved I/O Space */
++#define  PCI_EA_P_UNAVAILABLE		0xff	/* Entry Unavailable */
++#define PCI_EA_WRITEABLE	BIT(30) /* Writable, 1 = RW, 0 = HwInit */
++#define PCI_EA_ENABLE		BIT(31) /* Enable for this entry */
++#define PCI_EA_BASE		4	/* Base Address Offset */
++#define PCI_EA_MAX_OFFSET	8	/* MaxOffset (resource length) */
++/* bit 0 is reserved */
++#define PCI_EA_IS_64		BIT(1)	/* 64-bit field flag */
++#define PCI_EA_FIELD_MASK	0xfffffffc	/* For Base & Max Offset */
++
+ /* PCI-X registers (Type 0 (non-bridge) devices) */
+ 
+ #define PCI_X_CMD		2	/* Modes & Features */
+-- 
+1.9.1
 
-	Arnd
