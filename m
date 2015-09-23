@@ -1,87 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f67.google.com ([209.85.213.67]:32816 "EHLO
-	mail-vk0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932486AbbIDGGZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Sep 2015 02:06:25 -0400
-Received: by vkbf67 with SMTP id f67so608462vkb.0
-        for <linux-pci@vger.kernel.org>; Thu, 03 Sep 2015 23:06:24 -0700 (PDT)
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:36083 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755750AbbIWRUi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 13:20:38 -0400
 MIME-Version: 1.0
-In-Reply-To: <20150903205943.GJ829@google.com>
-References: <1440079113-165527-1-git-send-email-gabriele.paoloni@huawei.com>
-	<20150903205943.GJ829@google.com>
-Date: Fri, 4 Sep 2015 11:36:23 +0530
-Message-ID: <CAHM4w1mRg2K49H3jD4oEcEY91Y-TbNA-C4tjwppDuQwi05yrVA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: designware: fix dw_pcie_cfg_write
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Zhichang Yuan <yuanzhichang@hisilicon.com>,
-	zhudacai@hisilicon.com, Zhang Jukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa@hisilicon.com, Liguozhu <liguozhu@hisilicon.com>
+In-Reply-To: <20150916041858.26694.97435.stgit@gimli.home>
+References: <20150916041858.26694.97435.stgit@gimli.home>
+Date: Wed, 23 Sep 2015 11:20:37 -0600
+Message-ID: <CAL-B5D3Y3BGHuWRygZaPD2w8vGJ1wQ4Gz3vOM1ThBt6We5tYiA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Relax function 0 VPD test and relocate
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>, mark.d.rustad@intel.com,
+	Myron Stowe <myron.stowe@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-
-On Fri, Sep 4, 2015 at 2:29 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Aug 20, 2015 at 09:58:33PM +0800, Gabriele Paoloni wrote:
->> From: gabriele paoloni <gabriele.paoloni@huawei.com>
->>
->> Currently in dw_pcie_cfg_write() if the input size is 2 bytes
->> the address offset is wrongly calculated as we mask also bit0
->> of "where" input parameter. Instead we should mask all bits of
->> "where" except bit0 and bit1.
+On Tue, Sep 15, 2015 at 10:24 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> When we quirk a device with PCI_DEV_FLAGS_VPD_REF_F0 we're expecting
+> to find a device where all the functions are identical.  If we don't
+> find that, we don't make VPD accessible through pci_vpd_ops.  That
+> means that if we quirk devices we shouldn't, we filter them out by
+> hiding VPD entirely rather than allowing default access.  Instead, we
+> can flip this around to only quirk devices that match a slightly more
+> rigorous test in the quirk, allowing regular access for anything else.
 >
-> I think there are two problems in this area:
+> Tests for the multifunction flag are removed since a) function 0 and
+> the function under test are clearly a multifunction device if we're
+> scanning a non-zero function in the same slot and b) at this point the
+> flag is only set in the device under test if the multifunction bit is
+> set in the PCI HEADER, which is a point of interpretation for the PCI
+> spec.
 >
-> 1) Most calls of dw_pcie_cfg_write() are of the form:
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
 >
->     dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, ...)
->     dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where, ...)
+> This is potentially another stable candiate since we're continuing to
+> iterate on 932c435caba8, but since we don't actually know of a device
+> where VPD is blocked (we don't think my Skylake example actually
+> supports VPD), I'm not including it.  I would support it if requested
+> though.
 >
->    This is needlessly repetitive because the caller has to mention
->    "where" twice and do the masking itself.  We could simply pass
->    "pp->dbi_base" and "where" and let dw_pcie_cfg_write() do all the
->    required masking internally.
-
-I think just by passing "pp->dbi_base" and "where"  we can not take
-care of all cases. For example, if I have to read PCI_CACHE_LINE_SIZE
-(8 bit value at offset 0x0C), I will have to pass "pp->dbi_base" +
-PCI_CACHE_LINE_SIZE, 1
-
-So, I think User of this function will need to pass "addr","size" and
-"val", where
-"addr"  as "pp->dbi_base" + "where"
-"size" and "val" as it is.
-
-one more thing IIRC, there was some discussion (however I am unable to
-find any reference), and not sure if it is still true with any
-platform:  issues with non word aligned PCI register read.
-If a platform is not able to read non word aligned register correctly,
-then in that case we will have to pass where and size both :(
-
+>  drivers/pci/access.c |   22 ----------------------
+>  drivers/pci/quirks.c |   20 ++++++++++++++++++--
+>  2 files changed, 18 insertions(+), 24 deletions(-)
 >
-> 2) Pratyush, this one's for you :)  spear13xx_pcie_establish_link()
->    calls dw_pcie_cfg_read() and dw_pcie_cfg_write() several times like
->    this:
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 5a5f0a7..59ac36f 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -475,23 +475,6 @@ static const struct pci_vpd_ops pci_vpd_f0_ops = {
+>         .release = pci_vpd_pci22_release,
+>  };
 >
->     dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, ...)
->     dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, ...)
+> -static int pci_vpd_f0_dev_check(struct pci_dev *dev)
+> -{
+> -       struct pci_dev *tdev = pci_get_slot(dev->bus,
+> -                                           PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+> -       int ret = 0;
+> -
+> -       if (!tdev)
+> -               return -ENODEV;
+> -       if (!tdev->vpd || !tdev->multifunction ||
+> -           dev->class != tdev->class || dev->vendor != tdev->vendor ||
+> -           dev->device != tdev->device)
+> -               ret = -ENODEV;
+> -
+> -       pci_dev_put(tdev);
+> -       return ret;
+> -}
+> -
+>  int pci_vpd_pci22_init(struct pci_dev *dev)
+>  {
+>         struct pci_vpd_pci22 *vpd;
+> @@ -500,12 +483,7 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+>         cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
+>         if (!cap)
+>                 return -ENODEV;
+> -       if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0) {
+> -               int ret = pci_vpd_f0_dev_check(dev);
 >
->    I think these are incorrect because dw_pcie_cfg_read() and
->    dw_pcie_cfg_write() don't add anything to the "addr" argument
->    ("pp->dbi_base" in this case) except the 0-3 byte select offset, so
->    they use the correct alignment, but access the wrong registers.
+> -               if (ret)
+> -                       return ret;
+> -       }
+>         vpd = kzalloc(sizeof(*vpd), GFP_ATOMIC);
+>         if (!vpd)
+>                 return -ENOMEM;
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 6a30252..b03373f 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -1907,11 +1907,27 @@ static void quirk_netmos(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_NETMOS, PCI_ANY_ID,
+>                          PCI_CLASS_COMMUNICATION_SERIAL, 8, quirk_netmos);
+>
+> +/*
+> + * Quirk non-zero PCI functions to route VPD access through function 0 for
+> + * devices that share VPD resources between functions.  The functions are
+> + * expected to be identical devices.
+> + */
+>  static void quirk_f0_vpd_link(struct pci_dev *dev)
+>  {
+> -       if (!dev->multifunction || !PCI_FUNC(dev->devfn))
+> +       struct pci_dev *f0;
+> +
+> +       if (!PCI_FUNC(dev->devfn))
+>                 return;
+> -       dev->dev_flags |= PCI_DEV_FLAGS_VPD_REF_F0;
+> +
+> +       f0 = pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+> +       if (!f0)
+> +               return;
+> +
+> +       if (f0->vpd && dev->class == f0->class &&
+> +           dev->vendor == f0->vendor && dev->device == f0->device)
+> +               dev->dev_flags |= PCI_DEV_FLAGS_VPD_REF_F0;
+> +
+> +       pci_dev_put(f0);
+>  }
+>  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+>                               PCI_CLASS_NETWORK_ETHERNET, 8, quirk_f0_vpd_link);
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-hummm..so for sure the version which was up-streamed has never been
-tested with buggy gen1 card and with any endpoint which would have
-generated a read request of more than 128 bytes :( .. Will correct.
-
-Thanks a lot for pointing this out :-)
-
-~Pratyush
+Acked-by: Myron Stowe <myron.stowe@redhat.com>
