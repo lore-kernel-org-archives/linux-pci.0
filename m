@@ -1,56 +1,67 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 25 Sep 2015 18:41:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, wfg@linux.intel.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, x86@kernel.org
-Subject: Re: [Bugfix 2/2] ACPI / PCI: Remove duplicated penalty on SCI IRQ
-Message-ID: <20150925234100.GC23134@localhost>
-References: <1442469766-31264-1-git-send-email-jiang.liu@linux.intel.com>
- <1442469766-31264-2-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:28251 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756001AbbIWXxm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Sep 2015 19:53:42 -0400
+Date: Wed, 23 Sep 2015 16:51:09 -0700
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] PCI: Add support for PCI Enhanced Allocation
+ "BARs"
+Message-ID: <20150923235109.GA4384@sean.stalley.intel.com>
+References: <1443047264-4003-1-git-send-email-sean.stalley@intel.com>
+ <CAE9FiQXYzcEnagnAZ_agXXSVssAfVD8tBjKh9ox_ajqKG0v27g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442469766-31264-2-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQXYzcEnagnAZ_agXXSVssAfVD8tBjKh9ox_ajqKG0v27g@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 17, 2015 at 02:02:46PM +0800, Jiang Liu wrote:
-> Now we have dedicated interface acpi_penalize_sci_irq() to penalize
-> ISA IRQ used by ACPI SCI, so remove duplicated code to penalize ACPI SCI
-> in acpi_irq_penalty_init().
+On Wed, Sep 23, 2015 at 04:26:56PM -0700, Yinghai Lu wrote:
+> On Wed, Sep 23, 2015 at 3:27 PM, Sean O. Stalley <sean.stalley@intel.com> wrote:
+> > PCI Enhanced Allocation is a new method of allocating MMIO & IO
+> > resources for PCI devices & bridges. It can be used instead
+> > of the traditional PCI method of using BARs.
+> >
+> > EA entries are hardware-initialized to a fixed address.
+> > Unlike BARs, regions described by EA are cannot be moved.
+> > Because of this, only devices which are permanently connected to
+> > the PCI bus can use EA. A removable PCI card must not use EA.
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> As it is fixed, can you put IORESOURCE_PCI_FIXED in the res->flags?
+> 
+> Thanks
+> 
+> Yinghai
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+IORESOURCE_PCI_FIXED is set in pci_ea_set_flags():
+ 
+	+static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
+	+{
+	+	unsigned long flags = IORESOURCE_PCI_FIXED;
+	+
+	+
 
-> ---
->  drivers/acpi/pci_link.c |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> index 246e50d22120..7c8408b946ca 100644
-> --- a/drivers/acpi/pci_link.c
-> +++ b/drivers/acpi/pci_link.c
-> @@ -498,8 +498,7 @@ int __init acpi_irq_penalty_init(void)
->  			    PIRQ_PENALTY_PCI_POSSIBLE;
->  		}
->  	}
-> -	/* Add a penalty for the SCI */
-> -	acpi_irq_penalty[acpi_gbl_FADT.sci_interrupt] += PIRQ_PENALTY_PCI_USING;
-> +
->  	return 0;
->  }
->  
-> -- 
-> 1.7.10.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Which is called in pci_ea_read(), and passed to res->flags (if there aren't any errors):
+
+	+
+	+	/* Try to use primary properties, otherwise fall back to secondary */
+	+	flags = pci_ea_set_flags(dev, PCI_EA_PP(dw0));
+	+	if (!flags)
+	+		flags = pci_ea_set_flags(dev, PCI_EA_SP(dw0));
+	+
+
+	...
+
+	+	res->flags = flags;
+
+
+-Sean
