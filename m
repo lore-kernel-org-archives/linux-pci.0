@@ -1,77 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:35744 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754915AbbIRPMm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 11:12:42 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-pci@vger.kernel.org, kernel@pengutronix.de,
-	patchwork-lst@pengutronix.de
-Subject: [PATCH v5 4/5] PCI: designware: Make get_msi_addr() return phys_addr_t, not u32
-Date: Fri, 18 Sep 2015 17:12:38 +0200
-Message-Id: <1442589159-28201-5-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
-References: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:33643 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752671AbbIXRGy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Sep 2015 13:06:54 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQWY1gdpzdqToBM0sNgfCRnRfEEgJfn-J9igorLH1K80JA@mail.gmail.com>
+References: <CAL-B5D3FgF+o7BcLBe7O_gcxy2jf3w43bXeDJuRH2VS2ES0A7Q@mail.gmail.com>
+	<CAE9FiQWY1gdpzdqToBM0sNgfCRnRfEEgJfn-J9igorLH1K80JA@mail.gmail.com>
+Date: Thu, 24 Sep 2015 11:06:53 -0600
+Message-ID: <CAL-B5D0f10Q6C5jmjzysowDjJ=Z8iA1tSSAQwUp9qcxW-WeMPw@mail.gmail.com>
+Subject: Re: [RFC] PCI: Unassigned Expansion ROM BARs
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make get_msi_addr() return phys_addr_t, not u32.  This allows the MSI
-target address to be above 4GB for 64bit or PAE systems.
+On Wed, Sep 23, 2015 at 9:21 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Sep 23, 2015 at 7:47 PM, Myron Stowe <myron.stowe@gmail.com> wrote:
+>>
+>> The kernel expects device Expansion ROM BARs to be programmed with valid
+>> values - even if the respective Expansion ROM's Enable bit is 0 (i.e. the
+>> device’s expansion ROM address space is disabled).  This seems to be the
+>> main contention point with said BIOS engineers.  If an Expansion ROM BAR is
+>> not programmed, the kernel will attempt to find available resources and, if
+>> successful, program it.  As this occurs various 'dmesg' entries
+>> related to kernel's actions are output.
+> ...
+>> There is a kernel boot parameter, pci=norom, that is intended to disable the
+>> kernel's resource assignment actions for Expansion ROMs that do not already
+>> have BIOS assigned address ranges.  Note however, if I remember correctly,
+>> that this only works if the Expansion ROM BAR is set to "0" by the BIOS
+>> before hand-off.
+>
+> option rom is used by legacy bios to enable booting from external device.
+> usually BIOS call the option rom, so the firmware will be loaded to
+> add on cards.
+> and firmware get started.
+> Also option rom would include tools that is used to configure behavior of cards
+> like add/remove raid.
 
-No functional change for the current 32bit platform users as phys_addr_t
-maps to u32 for them.
+I'm not sure what you are getting at here but yes, there are use cases
+where the BIOS
+needs to access the Expansion ROM, one of the more common being PXE booting from
+a NIC device where the PXE boot content is retrieved from the ROM, but
+that has little,
+if anything, to do with what I'm after here.
 
-[bhelgaas: changelog]
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
----
- drivers/pci/host/pci-keystone-dw.c | 2 +-
- drivers/pci/host/pci-keystone.h    | 2 +-
- drivers/pci/host/pcie-designware.h | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+The BIOS engineers are expressing that the kernel should *never* need
+to access the Expansion
+ROM, and thus should *never* try to allocate resources for these BARs
+and program them
+to sane address range values.
 
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index e71da991949b..3cf55cdb7f87 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -70,7 +70,7 @@ static inline void update_reg_offset_bit_pos(u32 offset, u32 *reg_offset,
- 	*bit_pos = offset >> 3;
- }
- 
--u32 ks_dw_pcie_get_msi_addr(struct pcie_port *pp)
-+phys_addr_t ks_dw_pcie_get_msi_addr(struct pcie_port *pp)
- {
- 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
- 
-diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
-index 478d932b602d..f0944e8c4b02 100644
---- a/drivers/pci/host/pci-keystone.h
-+++ b/drivers/pci/host/pci-keystone.h
-@@ -37,7 +37,7 @@ struct keystone_pcie {
- 
- /* Keystone DW specific MSI controller APIs/definitions */
- void ks_dw_pcie_handle_msi_irq(struct keystone_pcie *ks_pcie, int offset);
--u32 ks_dw_pcie_get_msi_addr(struct pcie_port *pp);
-+phys_addr_t ks_dw_pcie_get_msi_addr(struct pcie_port *pp);
- 
- /* Keystone specific PCI controller APIs */
- void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie);
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index d0bbd276840d..35123d9362c5 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -70,7 +70,7 @@ struct pcie_host_ops {
- 	void (*host_init)(struct pcie_port *pp);
- 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
- 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
--	u32 (*get_msi_addr)(struct pcie_port *pp);
-+	phys_addr_t (*get_msi_addr)(struct pcie_port *pp);
- 	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
- 	void (*scan_bus)(struct pcie_port *pp);
- 	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
--- 
-2.5.1
 
+I know you work with bringing up new hardware.  So picture yourself
+sitting with some
+members from your platform's BIOS team.  They tell you: "The OS is
+incorrect in thinking
+it needs to find, and program, sane resource range values into a
+device's Expansion ROM
+BAR.  We (the BIOS) hand-off the platform with these disabled, thus
+whatever values are in
+the ROMs BAR should be totally ignored, and the OS should never touch
+them."  What would you
+reply with to them in an attempt to show that your position (i.e. the
+kernel finding, and programming
+values under these circumstances) is correct and that the BIOS opinion
+is in-correct?  That is
+what I'm after.
+
+>
+> Also there is some use case that kernel driver try to get some parameters from
+> BIOS. like intel soft raid ? --- bad practice !
+
+Again, your replies are so terse I have no idea what you are saying; it's
+undecipherable!  Are you indicating that you agree with the BIOS
+engineers views?
+
+>
+> I would like to treat option rom BAR as optional resources during
+> resource allocation.
+>
+> https://git.kernel.org/cgit/linux/kernel/git/yinghai/linux-yinghai.git/patch/?id=7f689da33302e4871fd18aee2c19abb5e3ea5261
+>
+> Subject: PCI: Treat ROM resource as optional during realloc
+>
+> Current on realloc path, we just ignore ROM resource if we can not assign
+> them in first try.
+>
+> Treat ROM resources as optional resources,so try to allocate them together
+> with required ones, if can not assign them, could go with other required
+> resources only, and try to allocate them second time in expand path.
+
+Yes, while they may have lower priority in obtaining resources, your still
+attempting to do so initially.  The BIOS engineers seem to believe that this is
+incorrect - the OS should not even attempt to allocate them in the first try.
+
+So, which side are you on and can you support your view with some
+technical based
+argument (and any references from the specifications)?
+
+Please take some time and respond with some thought out explanations
+and opinions.
+I value your opinion because I have seen your work but your terse
+replies are going to
+do nothing what so ever in trying to convince BIOS engineers that the
+OS should, or needs
+to, access such.  Otherwise: "Why are we (the kernel) allocating
+resources for them?"
+
+Myron
+
+>
+> Thanks
+>
+> Yinghai
