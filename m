@@ -1,120 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:33385 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752079AbbIKMLT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 08:11:19 -0400
-Received: by lbcjc2 with SMTP id jc2so38440529lbc.0
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2015 05:11:17 -0700 (PDT)
+Received: from vps0.lunn.ch ([178.209.37.122]:53270 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753554AbbIXWbf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Sep 2015 18:31:35 -0400
+Date: Fri, 25 Sep 2015 00:23:22 +0200
+From: Andrew Lunn <andrew@lunn.ch>
+To: Russell King <rmk+kernel@arm.linux.org.uk>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 2/6] pci: mvebu: generate proper configuration access
+ cycles
+Message-ID: <20150924222322.GF20825@lunn.ch>
+References: <20150923171706.GL21084@n2100.arm.linux.org.uk>
+ <E1Zenfg-0004d5-Dg@rmk-PC.arm.linux.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <1441961093.3126.8.camel@pengutronix.de>
-References: <loom.20150910T144529-230@post.gmane.org> <1441893436.7900.10.camel@pengutronix.de>
- <CABFJKVLW3MsnxybhDjZ02ghUV2mKfPgj7kmMdiuJ+oK94OYFxQ@mail.gmail.com> <1441961093.3126.8.camel@pengutronix.de>
-From: Frank Jenner <faj6816@rit.edu>
-Date: Fri, 11 Sep 2015 08:10:57 -0400
-Message-ID: <CABFJKVKxpkS5Qb7mYbOuFxnW+_oaqdRX2UUW2GWaeT6Ss=oa0A@mail.gmail.com>
-Subject: Re: Multiple MSIs on ARM imx6q
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E1Zenfg-0004d5-Dg@rmk-PC.arm.linux.org.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ah! Things are making more sense to me now. I was failing to realize
-the distinction between the "port" and the "device" in terms of the
-MSI allocations. In particular, I was getting confused because the
-"port" happened to be limited to only 32 MSIs (even though the
-hardware can support 256), which is the same as the number of MSIs
-allowed for a device.
+> Testing with an ASM1062 PCIe to SATA mini-PCIe card on Armada 388.
+> PCIe capability at 0x80, DevCtl at 0x88, DevSta at 0x8a.
+> 
+> Before:
+> /# setpci -s 1:0.0 0x88.l		- DevSta: CorrErr+
+> 00012810
+> /# setpci -s 1:0.0 0x88.w=0x2810	- Write DevCtl only
+> /# setpci -s 1:0.0 0x88.l		- CorrErr cleared - FAIL
+> 00002810
+> 
+> After:
+> /# setpci -s 1:0.0 0x88.l		- DevSta: CorrErr+
+> 00012810
+> /# setpci -s 1:0.0 0x88.w=0x2810	- check DevCtl only write
+> /# setpci -s 1:0.0 0x88.l		- CorErr remains set
+> 00012810
+> /# setpci -s 1:0.0 0x88.w=0x281f	- check DevCtl write works
+> /# setpci -s 1:0.0 0x88.l		- devctl field updated
+> 0001281f
+> /# setpci -s 1:0.0 0x8a.w=0xffff	- clear DevSta
+> /# setpci -s 1:0.0 0x88.l		- CorrErr now cleared
+> 0000281f
+> /# setpci -s 1:0.0 0x88.w=0x2810	- restore DevCtl
+> /# setpci -s 1:0.0 0x88.l		- check
+> 00002810
 
-By simply increasing the MAX_MSI_IRQS value from 32 to 64 (in
-conjunction with using your multivector MSI support patches mentioned
-previously), I was able to successfully allocate all 32 of the EP's
-MSIs, while also allowing PME to use an MSI. I'm not sure if there
-should be more to it than that, but all 32 MSIs from the EP appear to
-work now with that change.
+Hi Russell
 
-If there's more I'm missing besides just modifying MAX_MSI_IRQS and
-you still want to make a patch for me to test, I'll be happy to give
-it a go with my device.
+Can you give me some hints how to test this in my Kirkwood board.
 
-Thanks again!
+root@dir665:~# lspci -nvvvv
+00:01.0 0604: 11ab:6281 (rev 02) (prog-if 00 [Normal decode])
+        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        I/O behind bridge: 00010000-00010fff
+        Memory behind bridge: e0000000-e00fffff
+        Prefetchable memory behind bridge: 00000000-000fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
 
+01:00.0 0200: 11ab:2a40
+        Subsystem: 11ab:2a40
+        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Interrupt: pin A routed to IRQ 83
+        Region 0: Memory at e0000000 (64-bit, non-prefetchable) [disabled] [size=64K]
+        Region 2: Memory at e0010000 (64-bit, non-prefetchable) [disabled] [size=64K]
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=1 PME-
+        Capabilities: [5c] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [e0] Express (v1) Legacy Endpoint, MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s unlimited, L1 unlimited
+                        ClockPM+ Surprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 1f, GenCap- CGenEn- ChkCap- ChkEn-
+        Capabilities: [130 v1] Device Serial Number 00-00-00-00-00-00-00-00
 
-On Fri, Sep 11, 2015 at 4:44 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Hi Frank,
->
-> Am Donnerstag, den 10.09.2015, 13:37 -0400 schrieb Frank Jenner:
->> Hi Lucas,
->>
->> Thanks for the quick response. See inline:
->>
->> On Thu, Sep 10, 2015 at 9:57 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
->
-> [...]
->
->> >
->> > An implementation for the i.MX6 is already sitting in Bjorns PCI
->> > maintainer tree and is expected to be merged in kernel 4.4.
->> >
->>
->> I took a look at Bjorn's pci-4.4/host-designware branch and saw your
->> commits. It looks like the patches I'm using apply most of the same
->> changes. While they do enable me to get multiple MSIs back from
->> pci_enable_msi_range() and I get the correct IRQs back to my ISR, I
->> still run into the issue below when attempting to get the full 32
->> vectors.
->>
->> >> Unfortunately, even if I work around the arch_setup_msi_irqs() limitation
->> >> (which I've done by trying out patches 448141 and 448142 from
->> >> http://patchwork.ozlabs.org/project/linux-pci/list/) and break through to
->> >> the assign_irq() function in drivers/pci/host/pcie-designware.c, I still
->> >> cannot allocate all 32 MSIs that my device reports.
->> >>
->> >> It appears that one of the bits in the msi_irq_in_use bitmap is already set
->> >> prior to my driver requesting any MSIs, meaning there aren't enough free
->> >> slots for the 32 MSIs I am requesting, and causing the function to fail with
->> >> -ENOSPC. Based on the output from /proc/interrupts, I believe that the PCIe
->> >> PME service driver is consuming one of the 32 available MSI slots. Thus, my
->> >> second question is:
->> >>
->> >> 2.) Is it possible to leverage all 32 MSIs while still using PCIe PME?
->> >>
->> >> I tried using the kernel command line argument pcie_pme=nomsi, but that
->> >> appeared to disable all MSIs for the device rather than just making the PME
->> >> service driver use some other mechanism.
->> >>
->> > It should be possible to make PME use a legacy INT, but I would have to
->> > look this up in the code.
->>
->> Could you please elaborate on this? I'm a little confused why PME
->> occupies one of the MSI slots in the first place. Also, as I thought a
->> device could only use either MSIs or legacy INTs (but not both), is it
->> even possible for PME to use legacy INTs while my driver uses MSIs?
->> >
->
-> Sorry, I'm not sure about this myself.
->
->> > Another alternative is to extend the i.MX6 driver. It should be able to
->> > provide up to 256 MSI interrupt vectors. But I have no way to test that,
->> > so if you could help with testing I can certainly come up with a patch
->> > for that.
->>
->> Where does the 256 come from?
->>
-> It's the size of the register space available for MSI IRQs in the i.MX6
-> implementation.
->
->> I appreciate the help, and I would be happy to test out a patch for
->> you with the caveat that I'm using a custom board so I can only test
->> any changes against our specific device.
->>
-> That's totally fine. I can test that I don't break the currently working
-> cases myself, so I only need you to test if the extension works as I
-> have no EP with such a large number of MSI IRQs.
->
-> Regards,
-> Lucas
-> --
-> Pengutronix e.K.             | Lucas Stach                 |
-> Industrial Linux Solutions   | http://www.pengutronix.de/  |
->
+root@dir665:~# setpci -s 1:0.0 0x88.l
+00000000
+
+Nothing there, so your test does not work directly.
+
+I tried
+
+root@dir665:~# setpci -s 1:0.0 0xe8.l
+00102000
+root@dir665:~# setpci -s 1:0.0 0xe8.w=0x2000
+root@dir665:~# setpci -s 1:0.0 0xe8.l
+00102000
+
+but that is not producing the FAIL you had.
+
+Thanks
+	Andrew
