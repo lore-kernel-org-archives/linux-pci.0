@@ -1,104 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:34963 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754836AbbIHQ1k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2015 12:27:40 -0400
-Received: by igbkq10 with SMTP id kq10so78286866igb.0
-        for <linux-pci@vger.kernel.org>; Tue, 08 Sep 2015 09:27:39 -0700 (PDT)
-Date: Tue, 8 Sep 2015 11:27:35 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: Re: [Bugfix] PCI, x86: Correctly allocate IRQs for PCI devices
- managed by non-PCI drivers
-Message-ID: <20150908162735.GK829@google.com>
-References: <55EE8106.6060100@internode.on.net>
- <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mga01.intel.com ([192.55.52.88]:61344 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755732AbbIXSfc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Sep 2015 14:35:32 -0400
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"myron.stowe@redhat.com" <myron.stowe@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Fix devfn for VPD access through function 0
+Date: Thu, 24 Sep 2015 18:35:30 +0000
+Message-ID: <A7D02BC2-8C65-4089-82C4-09EA16C7C0AB@intel.com>
+References: <20150915171216.7049.58119.stgit@gimli.home>
+ <20150924182755.GC3648@localhost>
+In-Reply-To: <20150924182755.GC3648@localhost>
+Content-Type: multipart/signed;
+	boundary="Apple-Mail=_F7A640EC-860D-4C77-981E-17829212F40A";
+	protocol="application/pgp-signature"; micalg=pgp-sha256
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jiang,
+--Apple-Mail=_F7A640EC-860D-4C77-981E-17829212F40A
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-I object to subject lines like "Correctly do such and such."  Nobody
-writes code to do things *incorrectly*, so the word "correctly" takes
-up space without contributing meaning.  In this case, it's at least
-debatable whether this is even the "correct" approach; see below.
+> On Sep 24, 2015, at 11:27 AM, Bjorn Helgaas <helgaas@kernel.org> =
+wrote:
+>=20
+> Applied to for-linus for v4.3 with acks from Myron & Mark, thanks!
+>=20
+> I removed the stable tag because 932c435caba8 first appeared in
+> v4.3-rc1, so it shouldn't appear in any stable kernels yet.  Right?
 
-On Tue, Sep 08, 2015 at 03:26:29PM +0800, Jiang Liu wrote:
-> Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
-> pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
-> for PCI devices on x86 platforms. Instead of allocating PCI legacy
-> IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
-> will be called by pci_device_probe() to allocate PCI legacy IRQs
-> when binding PCI drivers to PCI devices.
-> 
-> But some device drivers, such as eata, directly access PCI devices
-> without implementing corresponding PCI drivers, so pcibios_alloc_irq()
-> won't be called for those PCI devices and wrong IRQ number may be
-> used to manage the PCI device.
+I have seen the patch in some stable code reviews already. I know it was =
+deferred from one, but I see it in the changelogs for 4.1.8 and 4.2.1. I =
+have lost track if it is in any others.
 
-I'm not sure this is wise.  
+--
+Mark Rustad, Networking Division, Intel Corporation
 
-We normally call pcibios_alloc_irq() from pci_device_probe(), just
-before we call the driver's .probe() method.
 
-The eata driver does not use pci_register_driver(), so there is no
-.probe() method (also no .remove(), .suspend(), etc.)  But eata *does*
-use pci_enable_device() and other PCI interfaces.  So this patch adds
-code in the x86 pci_enable_device() path for this case.
+--Apple-Mail=_F7A640EC-860D-4C77-981E-17829212F40A
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Message signed with OpenPGP using GPGMail
 
-AFAICT, there's no real reason why eata doesn't register a PCI driver;
-it's just a case of legacy code where nobody has been motivated to
-update it.  I'm not in favor of catering to code like that because
-then we have random special cases like this that clutter up the core
-code.
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
 
-I don't think we should necessarily expect the PCI core to support
-calls to PCI interfaces when it hasn't had a chance to initialize
-itself via driver registration.
+iQIcBAEBCAAGBQJWBEJyAAoJEDwO/+eO4+5uIMcP/iCKspNNQ55WxHnWahr1q3C1
+6hVevKShXu9HjafytGE7SqszM8Vzw/tNWZC2n7JCxnyA9DSrJLh/RqKz9cWRtZi0
++T29RL9YOMZlBvtj2VCFLt6KmMB+74wiXhrOcLLcA0kBNGs8IcT8HZahhFIGnzpc
+x6DgNVJKQYkBJKSheEvVT2aiS2OD/hAJE5FnkTD2IFRIgoGE3NtX1aEEidDWCduW
+eckZC/7cghlqQm2eC903wiDkx27PFwdfhkJLohQHdsU6fZG5ygCMtqbVssPc0AGY
+dzyhJizfZwepOm/GAr2eJgkOgKpQvzNEp7vIlqd9WRiPDldEdP9XplJKExQG1t8v
+7gxb95divyOFxzLTndA5TEkfDUiFEFYt1Oi1yTboKib7UYi8GeUeWxC8FkA90rhq
+P9+jeCbS0yuL59yVhl1Mppkz6Jie2Ct/yk1AMqi0yIvIfdDlKaC8bDJ8g7AXc8qI
+wKEScMiAamQXOzNIqnzUiGxBX/SCugkTjaHtBSyRfBecxu0GVkR/ZOoVgu3pL073
+1vU8S6zNqxorP5XQ2oke2Hua3J+B5NyYNZGTObGD5Pu5d8935eSlD+DA8oBwrye/
+/+Ozk3bEY81cYavdw6YDSG9W8t3wCxrHsSvG1PJa0C2LBIpFlESsTbTKfet9wHLL
+s4EAXMxNhYKhIseBcL2r
+=JbYN
+-----END PGP SIGNATURE-----
 
-> So detect such a case in pcibios_enable_device() by checking
-> pci_dev->driver is NULL and call pcibios_alloc_irq() to allocate PCI
-> legacy IRQs.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  arch/x86/pci/common.c |   10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 09d3afc0a181..60b237783582 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -685,6 +685,16 @@ void pcibios_free_irq(struct pci_dev *dev)
->  
->  int pcibios_enable_device(struct pci_dev *dev, int mask)
->  {
-> +	/*
-> +	 * By design, pcibios_alloc_irq() will be called by pci_device_probe()
-> +	 * when binding a PCI device to a PCI driver. But some device drivers,
-> +	 * such as eata, directly make use of PCI devices without implementing
-> +	 * PCI device drivers, so pcibios_alloc_irq() won't be called for those
-> +	 * PCI devices.
-> +	 */
-> +	if (!dev->driver)
-> +		pcibios_alloc_irq(dev);
-
-This is a point fix for x86 only, but I think eata can be built for
-any architecture.  Won't other architectures still have the same
-problem?
-
->  	return pci_enable_resources(dev, mask);
->  }
->  
-> -- 
-> 1.7.10.4
-> 
+--Apple-Mail=_F7A640EC-860D-4C77-981E-17829212F40A--
