@@ -1,64 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23107 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752002AbbIPV61 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 17:58:27 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 02/53] PCI: Reuse res_to_dev_res() in reassign_resources_sorted()
-Date: Wed, 16 Sep 2015 14:57:00 -0700
-Message-Id: <1442440671-5361-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39143 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752254AbbIXVgq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Sep 2015 17:36:46 -0400
+Date: Thu, 24 Sep 2015 16:36:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Will Davis <wdavis@nvidia.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [PATCH 10/22] PCI: Add pci_resource_to_peer()
+Message-ID: <20150924213643.GG10481@localhost>
+References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+ <1442337067-22964-11-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442337067-22964-11-git-send-email-wdavis@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now res_to_dev_res() does not print out debug message anymore, so
-we can reuse it in reassign_resource_sorted() without confusing printout.
+On Tue, Sep 15, 2015 at 12:10:55PM -0500, Will Davis wrote:
+> Add helper to convert a struct resource to a peer DMA address.
+> 
+> Signed-off-by: Will Davis <wdavis@nvidia.com>
+> ---
+>  include/linux/pci.h | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index db0cb51..2a9deff 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1508,6 +1508,22 @@ static inline void pci_resource_to_user(const struct pci_dev *dev, int bar,
+>  }
+>  #endif /* HAVE_ARCH_PCI_RESOURCE_TO_USER */
+>  
+> +#ifdef CONFIG_HAS_DMA_P2P
+> +static inline bool pci_resource_to_peer(struct pci_dev *dev,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+I'm not really a fan of functions that return bool unless the
+function name is obviously a predicate.  So in this case, I'd
+return 0 or a negative errno.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 6d0815e..f816472 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -240,26 +240,17 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- {
- 	struct resource *res;
- 	struct pci_dev_resource *add_res, *tmp;
--	struct pci_dev_resource *dev_res;
- 	resource_size_t add_size, align;
- 	int idx;
- 
- 	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
--		bool found_match = false;
--
- 		res = add_res->res;
- 		/* skip resource that has been reset */
- 		if (!res->flags)
- 			goto out;
- 
- 		/* skip this resource if not found in head list */
--		list_for_each_entry(dev_res, head, list) {
--			if (dev_res->res == res) {
--				found_match = true;
--				break;
--			}
--		}
--		if (!found_match)/* just skip */
-+		if (!res_to_dev_res(head, res))
- 			continue;
- 
- 		idx = res - &add_res->dev->resource[0];
--- 
-1.8.4.5
+> +					struct pci_dev *peer,
+> +					struct resource *res,
+> +					dma_peer_addr_t *peer_addr) {
+> +	if (pci_peer_traffic_supported(dev, peer)) {
+> +		struct pci_bus_region region;
+> +
+> +		pcibios_resource_to_bus(dev->bus, &region, res);
+> +		*peer_addr = region.start;
+> +		return true;
+> +	}
+> +
+> +	return false;
 
+It's trivial, but I'd structure it like this, which is sort of the
+typical "return errors early" pattern, and reduces indentation of the
+mainline path:
+
+  if (!pci_peer_traffic_supported(dev, peer))
+    return -EINVAL;
+
+  pcibios_resource_to_bus(dev->bus, &region, res);
+  *peer_addr = region.start;
+  return 0;
+
+> +}
+> +#endif /* CONFIG_HAS_DMA_P2P */
+>  
+>  /*
+>   *  The world is not perfect and supplies us with broken PCI devices.
+> -- 
+> 2.5.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
