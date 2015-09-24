@@ -1,89 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:59926 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754930AbbIRPMm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 11:12:42 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-pci@vger.kernel.org, kernel@pengutronix.de,
-	patchwork-lst@pengutronix.de
-Subject: [PATCH v5 3/5] PCI: designware: Implement multivector MSI IRQ setup
-Date: Fri, 18 Sep 2015 17:12:37 +0200
-Message-Id: <1442589159-28201-4-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
-References: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
+Received: from mail.kernel.org ([198.145.29.136]:41049 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754407AbbIXWPT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Sep 2015 18:15:19 -0400
+Date: Thu, 24 Sep 2015 17:15:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: bhelgaas@google.com, l.stach@pengutronix.de,
+	linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: Re: [PATCH v2 1/2] PCI: imx6: Return the real error code
+Message-ID: <20150924221515.GI10481@localhost>
+References: <1441973333-3346-1-git-send-email-festevam@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1441973333-3346-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement multivector MSI IRQ setup.  This allows to set up and use multiple
-MSI IRQs per device.
+On Fri, Sep 11, 2015 at 09:08:52AM -0300, Fabio Estevam wrote:
+> From: Fabio Estevam <fabio.estevam@freescale.com>
+> 
+> When devm_request_irq() fails we should better return the real
+> error code instead of returning a 'fake' one.
+> 
+> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 
-[bhelgaas: changelog, use -EINVAL instead of -ENOSYS]
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
----
- drivers/pci/host/pcie-designware.c | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+Applied both of these to pci/host-imx6 for v4.4 with changelogs:
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 7a168ea25e2f..3a2b8bce27a6 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -286,6 +286,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
- 	}
- 
- 	*pos = pos0;
-+	desc->nvec_used = no_irqs;
-+	desc->msi_attrib.multiple = order_base_2(no_irqs);
-+
- 	return irq;
- 
- no_valid_irq:
-@@ -329,6 +332,33 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
- 	return 0;
- }
- 
-+static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
-+			     int nvec, int type)
-+{
-+#ifdef CONFIG_PCI_MSI
-+	int irq, pos;
-+	struct msi_desc *desc;
-+	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-+
-+	/* MSI-X interrupts are not supported */
-+	if (type == PCI_CAP_ID_MSIX)
-+		return -EINVAL;
-+
-+	WARN_ON(!list_is_singular(&pdev->dev.msi_list));
-+	desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
-+
-+	irq = assign_irq(nvec, desc, &pos);
-+	if (irq < 0)
-+		return irq;
-+
-+	dw_msi_setup_msg(pp, irq, pos);
-+
-+	return 0;
-+#else
-+	return -EINVAL;
-+#endif
-+}
-+
- static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
- {
- 	struct irq_data *data = irq_get_irq_data(irq);
-@@ -340,6 +370,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
- 
- static struct msi_controller dw_pcie_msi_chip = {
- 	.setup_irq = dw_msi_setup_irq,
-+	.setup_irqs = dw_msi_setup_irqs,
- 	.teardown_irq = dw_msi_teardown_irq,
- };
- 
--- 
-2.5.1
+  commit 89b2d4f14b147bcb499f5e7b1c6e6ce082a58e8f
+  Author: Fabio Estevam <fabio.estevam@freescale.com>
+  Date:   Fri Sep 11 09:08:52 2015 -0300
 
+    PCI: imx6: Return real error code from imx6_add_pcie_port()
+    
+    When devm_request_irq() fails, imx6_add_pcie_port() should return the real
+    error code instead of always returning -ENODEV.
+    
+    Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+    Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
+    Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+
+  commit 80ec3f14471dfb2536bfc4de36980fb42361b6e4
+  Author: Fabio Estevam <fabio.estevam@freescale.com>
+  Date:   Fri Sep 11 09:08:53 2015 -0300
+
+    PCI: imx6: Add #defines to improve code readability
+    
+    Add #defines and use them instead of hardcoded values.
+    
+    Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+    Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
+    Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+
+Thanks!
+
+> ---
+> Changes since v1:
+> - None
+> 
+>  drivers/pci/host/pci-imx6.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 8f3a981..2d0d0fe 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -539,7 +539,7 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+>  				       IRQF_SHARED, "mx6-pcie-msi", pp);
+>  		if (ret) {
+>  			dev_err(&pdev->dev, "failed to request MSI irq\n");
+> -			return -ENODEV;
+> +			return ret;
+>  		}
+>  	}
+>  
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
