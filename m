@@ -1,206 +1,170 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 43/53] resources: Make allocate_resource() return best fit resource
-Date: Wed, 30 Sep 2015 22:53:17 -0700
-Message-Id: <1443678807-786-44-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0074.outbound.protection.outlook.com ([65.55.169.74]:29616
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753043AbbIXXgH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Sep 2015 19:36:07 -0400
+From: Jay Cornwall <jay@jcornwall.me>
+To: <linux-pci@vger.kernel.org>
+CC: Jay Cornwall <jay@jcornwall.me>
+Subject: [PATCH v3] PCI: Add pci_enable_atomic_request
+Date: Thu, 24 Sep 2015 10:59:50 -0500
+Message-ID: <1443110390-4080-1-git-send-email-jay@jcornwall.me>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code just allocate from first avail window.
+The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions to be requested
+by, routed through and completed by PCIe components. Routing and completion
+do not require software support. Component support for each is detectable via
+the DEVCAP2 register.
 
-We can find all suitable empty slots and pick one with smallest size, so
-we could save the big slot for needed ones later when we have several pci
-bridges under parent bridge and some bridges get assigned from bios and we
-need to assign others in kernel.
+AtomicOp requests are permitted only if a component's
+DEVCTL2.ATOMICOP_REQUESTER_ENABLE field is set. This capability cannot be
+detected but is a no-op if set on a component with no support. These requests
+can only be serviced if the upstream components support AtomicOp completion
+and/or routing to a component which does.
 
-For examples: we have window
-[0xc0000000, 0xd0000000), and [0xe0000000,0xe1000000)
+A concrete example is the AMD Fiji-class GPU, which is specified to support
+AtomicOp requests, routed through a PLX 8747 switch (advertising AtomicOp
+routing) to a Haswell host bridge (advertising AtomicOp completion support).
+When AtomicOp requests are disabled the GPU logs attempts to initiate requests
+to an MMIO register for debugging.
 
-and we try allocate 0x200000 size resource.
+Add pci_enable_atomic_request for per-device control over AtomicOp requests.
+Upstream bridges are checked for AtomicOp routing capability and the call
+fails if any lack this capability. The root port is checked for AtomicOp
+completion capabilities and the call fails if it does not support any.
+Routes to other PCIe components are not checked for AtomicOp routing and
+completion capabilities.
 
-in this patch will reserve [0xc0000000, 0xd0000000) and
-[0xe0000000,0xe1000000) at first, then pick [0xe0000000,0xe1000000)
-to allocate 0x200000 size.
+v2: Check for AtomicOp route to root port with AtomicOp completion
+v3: Style fixes
 
--v2: updated after __allocate_resource change, and add field in constraint
-	instead of passing it directly.
--v3: Use best fit instead of just fit according to Bjorn.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jay Cornwall <jay@jcornwall.me>
 ---
- kernel/resource.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 68 insertions(+), 13 deletions(-)
+ drivers/pci/pci.c             | 70 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h           |  1 +
+ include/uapi/linux/pci_regs.h |  5 ++++
+ 3 files changed, 76 insertions(+)
 
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 62321b0..c468875 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -48,6 +48,7 @@ struct resource_constraint {
- 	resource_size_t (*alignf)(void *, const struct resource *,
- 			resource_size_t, resource_size_t);
- 	void *alignf_data;
-+	bool fit;
- };
- 
- static DEFINE_RWLOCK(resource_lock);
-@@ -589,12 +590,15 @@ static void resource_clip(struct resource *res, resource_size_t min,
-  * alignment constraints
-  */
- static int __find_resource(struct resource *root, struct resource *old,
--			 struct resource *new,
-+			 struct resource *new, struct resource *avail,
- 			 resource_size_t  size,
- 			 struct resource_constraint *constraint)
- {
- 	struct resource *this = root->child;
--	struct resource tmp = *new, avail, alloc;
-+	struct resource tmp = *new, availx, alloc;
-+
-+	if (!avail || avail == new)
-+		avail = &availx;
- 
- 	tmp.start = root->start;
- 	/*
-@@ -618,15 +622,16 @@ static int __find_resource(struct resource *root, struct resource *old,
- 		arch_remove_reservations(&tmp);
- 
- 		/* Check for overflow after ALIGN() */
--		avail.start = ALIGN(tmp.start, constraint->align);
--		avail.end = tmp.end;
--		avail.flags = new->flags & ~IORESOURCE_UNSET;
--		if (avail.start >= tmp.start) {
--			alloc.flags = avail.flags;
--			alloc.start = constraint->alignf(constraint->alignf_data, &avail,
-+		avail->start = ALIGN(tmp.start, constraint->align);
-+		avail->end = tmp.end;
-+		avail->flags = new->flags & ~IORESOURCE_UNSET;
-+		if (avail->start >= tmp.start) {
-+			alloc.flags = avail->flags;
-+			alloc.start = constraint->alignf(
-+					constraint->alignf_data, avail,
- 					size, constraint->align);
- 			alloc.end = alloc.start + size - 1;
--			if (resource_contains(&avail, &alloc)) {
-+			if (resource_contains(avail, &alloc)) {
- 				new->start = alloc.start;
- 				new->end = alloc.end;
- 				return 0;
-@@ -643,6 +648,11 @@ next:		if (!this || this->end == root->end)
- 	return -EBUSY;
- }
- 
-+struct good_resource {
-+	struct list_head list;
-+	struct resource avail;
-+	struct resource new;
-+};
- /*
-  * Find empty slot in the resource tree given range and alignment.
-  */
-@@ -650,7 +660,49 @@ static int find_resource(struct resource *root, struct resource *new,
- 			resource_size_t size,
- 			struct resource_constraint  *constraint)
- {
--	return  __find_resource(root, NULL, new, size, constraint);
-+	int ret = -1;
-+	LIST_HEAD(head);
-+	struct good_resource *good, *tmp;
-+	resource_size_t avail_size = (resource_size_t)-1ULL;
-+
-+	if (!constraint->fit)
-+		return __find_resource(root, NULL, new, NULL, size,
-+					constraint);
-+
-+	/* find all suitable ones and add to the list */
-+	for (;;) {
-+		good = kzalloc(sizeof(*good), GFP_KERNEL);
-+		if (!good)
-+			break;
-+
-+		good->new.start = new->start;
-+		good->new.end = new->end;
-+		good->new.flags = new->flags;
-+		ret = __find_resource(root, NULL, &good->new, &good->avail,
-+					size, constraint);
-+		if (ret || __request_resource(root, &good->avail)) {
-+			ret = -EBUSY;
-+			kfree(good);
-+			break;
-+		}
-+
-+		list_add(&good->list, &head);
-+	}
-+
-+	/* pick up the smallest one and delete the list */
-+	list_for_each_entry_safe(good, tmp, &head, list) {
-+		if (resource_size(&good->avail) < avail_size) {
-+			avail_size = resource_size(&good->avail);
-+			new->start = good->new.start;
-+			new->end = good->new.end;
-+			ret = 0;
-+		}
-+		list_del(&good->list);
-+		__release_resource(&good->avail);
-+		kfree(good);
-+	}
-+
-+	return ret;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6a9a111..edc56e4 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2453,6 +2453,76 @@ bool pci_acs_path_enabled(struct pci_dev *start,
  }
  
  /**
-@@ -671,7 +723,8 @@ static int __reallocate_resource(struct resource *root, struct resource *old,
- 	struct resource new = *old;
- 	struct resource *conflict;
++ * pci_enable_atomic_request - enable or disable AtomicOp requester
++ * @dev: the PCI device
++ *
++ * Return 0 if the device is capable of generating AtomicOp requests,
++ * all upstream bridges support AtomicOp routing, and the root port supports
++ * 32-bit, 64-bit and/or 128-bit AtomicOp completion, or negative otherwise.
++ */
++int pci_enable_atomic_request(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->bus;
++
++	if (!pci_is_pcie(dev))
++		return -EINVAL;
++
++	switch (pci_pcie_type(dev)) {
++	/*
++	 * PCIe 3.0, 6.15 specifies that endpoints and root ports are permitted
++	 * to implement AtomicOp requester capabilities.
++	 */
++	case PCI_EXP_TYPE_ENDPOINT:
++	case PCI_EXP_TYPE_LEG_END:
++	case PCI_EXP_TYPE_RC_END:
++	case PCI_EXP_TYPE_ROOT_PORT:
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	while (bus->parent) {
++		struct pci_dev *bridge = bus->self;
++		u32 cap;
++
++		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
++
++		switch (pci_pcie_type(bridge)) {
++		/*
++		 * Upstream, downstream and root ports may implement AtomicOp
++		 * routing capabilities. AtomicOp routing via a root port is
++		 * not considered.
++		 */
++		case PCI_EXP_TYPE_UPSTREAM:
++		case PCI_EXP_TYPE_DOWNSTREAM:
++			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTING))
++				return -EINVAL;
++			break;
++
++		/*
++		 * Root ports are permitted to implement AtomicOp completion
++		 * capabilities.
++		 */
++		case PCI_EXP_TYPE_ROOT_PORT:
++			if (!(cap & (PCI_EXP_DEVCAP2_ATOMIC_COMP32 |
++				     PCI_EXP_DEVCAP2_ATOMIC_COMP64 |
++				     PCI_EXP_DEVCAP2_ATOMIC_COMP128)))
++				return -EINVAL;
++			break;
++		}
++
++
++		bus = bus->parent;
++	}
++
++	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
++				 PCI_EXP_DEVCTL2_ATOMICOP_REQ);
++
++	return 0;
++}
++EXPORT_SYMBOL(pci_enable_atomic_request);
++
++/**
+  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+  * @dev: the PCI device
+  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e90eb22..4e50003 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1801,6 +1801,7 @@ void pci_request_acs(void);
+ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+ bool pci_acs_path_enabled(struct pci_dev *start,
+ 			  struct pci_dev *end, u16 acs_flags);
++int pci_enable_atomic_request(struct pci_dev *dev);
  
--	if ((err = __find_resource(root, old, &new, newsize, constraint)))
-+	err = __find_resource(root, old, &new, NULL, newsize, constraint);
-+	if (err)
- 		goto out;
- 
- 	if (resource_contains(&new, old)) {
-@@ -710,6 +763,7 @@ out:
-  * @align: alignment requested, in bytes
-  * @alignf: alignment function, optional, called if not NULL
-  * @alignf_data: arbitrary data to pass to the @alignf function
-+ * @fit: only allocate fit range.
-  *
-  * Caller need to hold resource_lock if needed.
+ #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+ #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 413417f..013c2bd 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -571,6 +571,10 @@
   */
-@@ -720,7 +774,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
- 						  const struct resource *,
- 						  resource_size_t,
- 						  resource_size_t),
--				void *alignf_data)
-+				void *alignf_data, bool fit)
- {
- 	int err;
- 	struct resource_constraint constraint;
-@@ -733,6 +787,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
- 	constraint.align = align;
- 	constraint.alignf = alignf;
- 	constraint.alignf_data = alignf_data;
-+	constraint.fit = fit;
- 
- 	if (new->parent) {
- 		/* resource is already allocated, try reallocating with
-@@ -773,7 +828,7 @@ int allocate_resource(struct resource *root, struct resource *new,
- 
- 	write_lock(&resource_lock);
- 	ret = __allocate_resource(root, new, size, min, max, align,
--				   alignf, alignf_data);
-+				   alignf, alignf_data, true);
- 	write_unlock(&resource_lock);
- 
- 	return ret;
+ #define PCI_EXP_DEVCAP2		36	/* Device Capabilities 2 */
+ #define  PCI_EXP_DEVCAP2_ARI		0x00000020 /* Alternative Routing-ID */
++#define  PCI_EXP_DEVCAP2_ATOMIC_ROUTING	0x00000040 /* AtomicOp routing */
++#define  PCI_EXP_DEVCAP2_ATOMIC_COMP32	0x00000080 /* 32b AtomicOp completion */
++#define  PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* 64b AtomicOp completion */
++#define  PCI_EXP_DEVCAP2_ATOMIC_COMP128	0x00000200 /* 128b AtomicOp completion*/
+ #define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance reporting */
+ #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
+ #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
+@@ -578,6 +582,7 @@
+ #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
+ #define  PCI_EXP_DEVCTL2_COMP_TIMEOUT	0x000f	/* Completion Timeout Value */
+ #define  PCI_EXP_DEVCTL2_ARI		0x0020	/* Alternative Routing-ID */
++#define  PCI_EXP_DEVCTL2_ATOMICOP_REQ	0x0040	/* Allow AtomicOp requests */
+ #define  PCI_EXP_DEVCTL2_IDO_REQ_EN	0x0100	/* Allow IDO for requests */
+ #define  PCI_EXP_DEVCTL2_IDO_CMP_EN	0x0200	/* Allow IDO for completions */
+ #define  PCI_EXP_DEVCTL2_LTR_EN		0x0400	/* Enable LTR mechanism */
 -- 
-1.8.4.5
+1.9.1
 
