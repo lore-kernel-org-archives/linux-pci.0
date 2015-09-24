@@ -1,98 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:36429 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751772AbbIPDZR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 23:25:17 -0400
-Message-ID: <55F8E0EF.3040900@hisilicon.com>
-Date: Wed, 16 Sep 2015 11:24:31 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from vps0.lunn.ch ([178.209.37.122]:53369 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751086AbbIXXpH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Sep 2015 19:45:07 -0400
+Date: Fri, 25 Sep 2015 01:36:50 +0200
+From: Andrew Lunn <andrew@lunn.ch>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 0/6] mvebu PCI fixes and cleanups
+Message-ID: <20150924233650.GA24416@lunn.ch>
+References: <20150923171706.GL21084@n2100.arm.linux.org.uk>
 MIME-Version: 1.0
-To: Rob Herring <robh@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <gabriel.fernandez@linaro.org>,
-	<Minghuan.Lian@freescale.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
-	<liguozhu@hisilicon.com>
-Subject: Re: [PATCH v9 5/6] Documentation: DT: Add HiSilicon PCIe host binding
-References: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com> <1442321361-174300-6-git-send-email-wangzhou1@hisilicon.com> <55F874F9.1060804@kernel.org> <55F8C268.2020809@hisilicon.com> <55F8D12D.50107@kernel.org>
-In-Reply-To: <55F8D12D.50107@kernel.org>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150923171706.GL21084@n2100.arm.linux.org.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/9/16 10:17, Rob Herring wrote:
-> On 09/15/2015 08:14 PM, Zhou Wang wrote:
->> On 2015/9/16 3:43, Rob Herring wrote:
->>> On 09/15/2015 07:49 AM, Zhou Wang wrote:
->>>> This patch adds related DTS binding document for HiSilicon PCIe host driver.
->>>>
->>>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
->>>> ---
->>>>  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
->>>>  1 file changed, 46 insertions(+)
->>>>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->>>>
->>>> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->>>> new file mode 100644
->>>> index 0000000..2afc9d1
->>>> --- /dev/null
->>>> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->>>> @@ -0,0 +1,46 @@
->>>> +HiSilicon PCIe host bridge DT description
->>>> +
->>>> +HiSilicon PCIe host controller is based on Designware PCI core.
->>>> +It shares common functions with PCIe Designware core driver and inherits
->>>> +common properties defined in
->>>> +Documentation/devicetree/bindings/pci/designware-pci.txt.
->>>> +
->>>> +Additional properties are described here:
->>>> +
->>>> +Required properties:
->>>> +- compatible: Should contain "hisilicon,hip05-pcie".
->>>> +- reg: Should contain rc_dbi, subctrl, config registers location and length.
->>>> +- reg-names: Must include the following entries:
->>>> +  "rc_dbi": controller configuration registers;
->>>> +  "subctrl": whole PCIe hosts configuration registers;
->>>> +  "config": PCIe configuration space registers.
->>>> +- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
->>>> +- port-id: Should be 0, 1, 2 or 3.
->>>
->>> What is port-id for? Use of instance indexes need to have good reason.
->>>
->>> Rob
->>
->> There are four PCIe controllers in HiSilicon Hip05 SoC, port-id just indicates
->> which one we use. And we will use port-id to locate related registers in driver.
-> 
-> Just having multiple instances is not a reason. So looking at the
-> driver, port-id is used to calculate register addresses for these registers:
-> 
-> #define PCIE_SUBCTRL_MODE_REG                           0x2800
-> #define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
-> 
-> Is the base address of subctrl the same on all 4 ports? If so, you
+On Wed, Sep 23, 2015 at 06:17:07PM +0100, Russell King - ARM Linux wrote:
+> This small series contains a number of fixes and cleanups to the
+> mvebu PCI host code.
 
-Yes, same subctrl address for 4 ports. Will use syscon to access subctrl
-registers in next version.
+Hi Russell
 
-Many thanks for pointing this,
-Zhou
+I've tested this on my Kirkwood based DIR665, which has a Marvell
+TopDog wifi card on PCIe. I can join my wifi network, so no obvious
+regression.
 
-> should not have overlapping resources in the DT. Either split these 2
-> registers into 2 reg regions (for each register) or use syscon to
-> provide access to the region.
-> 
-> Rob
-> 
-> 
-> .
-> 
+Tested-by: Andrew Lunn <andrew@lunn.ch>
 
+Thanks
+	Andrew
 
