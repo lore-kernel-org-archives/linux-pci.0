@@ -1,88 +1,49 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v2 4/5] PCI: generic: Correct, and avoid overflow, in bus_max calculation.
-Date: Thu, 17 Sep 2015 15:02:11 -0700
-Message-Id: <1442527332-1174-5-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com>
+From: Ondrej Zary <linux@rainbow-software.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH] PCI: disable MSI on SiS 761
+Date: Thu, 24 Sep 2015 21:21:33 +0200
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Kernel development list <linux-kernel@vger.kernel.org>
+References: <1442005937-21938-1-git-send-email-linux@rainbow-software.org> <20150924182115.GB3648@localhost>
+In-Reply-To: <20150924182115.GB3648@localhost>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201509242121.33509.linux@rainbow-software.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On Thursday 24 September 2015 20:21:16 Bjorn Helgaas wrote:
+> Hi Ondrej,
+>
+> On Fri, Sep 11, 2015 at 11:12:17PM +0200, Ondrej Zary wrote:
+> > MSI is broken on SiS 761 chipset at least on PC Chips A31G board.
+> > No interrupts are delivered once MSI is enabled for a device. This causes
+> > hang on X11 start with a nVidia card installed (with nouveau driver).
+> >
+> > Disable MSI completely for this chipset.
+> >
+> > Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+>
+> This is a pretty old chipset, isn't it?  Google finds a reference to
+> SiS 761GX from 2005.  I wonder why we're only finding this problem
+> now.  Is there a problem report?  I wonder if the problem is really
+> elsewhere, and turning off MSI just avoids the real problem.
 
-There are two problems with the bus_max calculation:
+Yes, it's an old chipset and board (Socket 754) and not very common. Nouveau 
+was not usable back then, MSI support was added to Nouveau in 2010 and 
+enabled by default only in 2013. Maybe I'm the only one who tested MSI on 
+this board/chipset...
 
-1) The u8 data type can overflow for large config space windows.
+The facts are:
+ - zero interrupts in /proc/interrupts with MSI enabled and X11 hangs
+ - everything works fine with MSI disabled
+ - tested with two different nVidia cards (don't have any other PCIe card to 
+test)
 
-2) The calculation is incorrect for a bus range that doesn't start at
-   zero.
+I guess that either the MSI support in the chipset is broken or the BIOS does 
+not set up some secret chipset register(s) correctly.
 
-Since the configuration space is relative to bus zero, make bus_max
-just be the size of the config window scaled by bus_shift.  Then clamp
-it to a maximum of 255, per PCI.  Use a data type of int to avoid
-overflow problems.
-
-Update host-generic-pci.txt to clarify the semantics of the "reg"
-property with respect to non-zero starting bus numbers.
-
-Signed-off-by: David Daney <david.daney@cavium.com>
----
-Change from v1: Added text to host-generic-pci.txt
-
- Documentation/devicetree/bindings/pci/host-generic-pci.txt | 4 +++-
- drivers/pci/host/pci-host-generic.c                        | 7 ++++---
- 2 files changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-index cf3e205..105a968 100644
---- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-@@ -34,7 +34,9 @@ Properties of the host controller node:
- - #size-cells    : Must be 2.
- 
- - reg            : The Configuration Space base address and size, as accessed
--                   from the parent bus.
-+                   from the parent bus.  The base address corresponds to
-+                   bus zero, even though the "bus-range" property may specify
-+                   a different starting bus number.
- 
- 
- Properties of the /chosen node:
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 77cf4bd..0a9c453 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -164,7 +164,7 @@ out_release_res:
- static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- {
- 	int err;
--	u8 bus_max;
-+	int bus_max;
- 	resource_size_t busn;
- 	struct resource *bus_range;
- 	struct device *dev = pci->host.dev.parent;
-@@ -177,8 +177,9 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- 	}
- 
- 	/* Limit the bus-range to fit within reg */
--	bus_max = pci->cfg.bus_range->start +
--		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-+	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-+	if (bus_max > 255)
-+		bus_max = 255;
- 	pci->cfg.bus_range->end = min_t(resource_size_t,
- 					pci->cfg.bus_range->end, bus_max);
- 
 -- 
-1.9.1
-
+Ondrej Zary
