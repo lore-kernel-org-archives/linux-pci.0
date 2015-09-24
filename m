@@ -1,92 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com
-Cc: "Signed-off-by: David Daney" <david.daney@cavium.com>
-Subject: [PATCH v3 1/2] PCI: Add Enhanced Allocation register entries
-Date: Mon, 28 Sep 2015 17:10:38 -0700
-Message-Id: <1443485439-12081-2-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1443485439-12081-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1443485439-12081-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from vps0.lunn.ch ([178.209.37.122]:52954 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751750AbbIXOiZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Sep 2015 10:38:25 -0400
+Date: Thu, 24 Sep 2015 16:30:09 +0200
+From: Andrew Lunn <andrew@lunn.ch>
+To: Russell King <rmk+kernel@arm.linux.org.uk>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 2/6] pci: mvebu: generate proper configuration access
+ cycles
+Message-ID: <20150924143009.GA20029@lunn.ch>
+References: <20150923171706.GL21084@n2100.arm.linux.org.uk>
+ <E1Zenfg-0004d5-Dg@rmk-PC.arm.linux.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E1Zenfg-0004d5-Dg@rmk-PC.arm.linux.org.uk>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Sean O. Stalley" <sean.stalley@intel.com>
+On Wed, Sep 23, 2015 at 06:17:32PM +0100, Russell King wrote:
+> The idea that you can arbitarily read 32-bits from PCI configuration
+> space, modify a sub-field (like the command register) and write it
+> back without consequence is deeply flawed.
+> 
+> Status registers (such as the status register, PCIe device status
+> register, etc) contain status bits which are read, write-one-to-clear.
+> 
+> What this means is that reading 32-bits from the command register,
+> modifying the command register, and then writing it back has the effect
+> of clearing any status bits that were indicating at that time.  Same for
+> the PCIe device control register clearing bits in the PCIe device status
+> register.
+> 
+> Since the Armada chips support byte, 16-bit and 32-bit accesses to the
+> registers (unless otherwise stated) and the PCI configuration data
+> register does not specify otherwise, it seems logical that the chip can
+> indeed generate the proper configuration access cycles down to byte
+> level.
+> 
+> Testing with an ASM1062 PCIe to SATA mini-PCIe card on Armada 388.
+> PCIe capability at 0x80, DevCtl at 0x88, DevSta at 0x8a.
 
-Add registers defined in PCI-SIG's Enhanced allocation ECN.
+The Armada 388 is a pretty new SoC. It would be good to test this on a
+much older device as well, e.g. Kirkwood. I will add it to my TODO
+list, but it anybody else gets there first, please let me know.
 
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
-[david.daney@cavium.com: Added definitions for PCI_EA_BEI_BAR0 and PCI_EA_BEI_VF_BAR0]
-Signed-off-by: Signed-off-by: David Daney <david.daney@cavium.com>
----
- include/uapi/linux/pci_regs.h | 42 +++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 41 insertions(+), 1 deletion(-)
-
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 413417f..d9119eb 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -216,7 +216,8 @@
- #define  PCI_CAP_ID_MSIX	0x11	/* MSI-X */
- #define  PCI_CAP_ID_SATA	0x12	/* SATA Data/Index Conf. */
- #define  PCI_CAP_ID_AF		0x13	/* PCI Advanced Features */
--#define  PCI_CAP_ID_MAX		PCI_CAP_ID_AF
-+#define  PCI_CAP_ID_EA		0x14	/* PCI Enhanced Allocation */
-+#define  PCI_CAP_ID_MAX		PCI_CAP_ID_EA
- #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
- #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
- #define PCI_CAP_SIZEOF		4
-@@ -353,6 +354,45 @@
- #define  PCI_AF_STATUS_TP	0x01
- #define PCI_CAP_AF_SIZEOF	6	/* size of AF registers */
- 
-+/* PCI Enhanced Allocation registers */
-+
-+#define PCI_EA_NUM_ENT		2	/* Number of Capability Entries */
-+#define PCI_EA_NUM_ENT_MASK	0x3f	/* Num Entries Mask */
-+#define PCI_EA_FIRST_ENT	4	/* First EA Entry in List */
-+#define PCI_EA_FIRST_ENT_BRIDGE	8	/* First EA Entry for Bridges */
-+#define PCI_EA_ES		0x7	/* Entry Size */
-+#define PCI_EA_BEI(x)	(((x) >> 4) & 0xf) /* BAR Equivalent Indicator */
-+/* 0-5 map to BARs 0-5 respectively */
-+#define  PCI_EA_BEI_BAR0	0
-+#define  PCI_EA_BEI_BRIDGE	6	/* Resource behind bridge */
-+#define  PCI_EA_BEI_ENI		7	/* Equivalent Not Indicated */
-+#define  PCI_EA_BEI_ROM		8	/* Expansion ROM */
-+/* 9-14 map to VF BARs 0-5 respectively */
-+#define  PCI_EA_BEI_VF_BAR0	9
-+#define  PCI_EA_BEI_RESERVED	15	/* Reserved - Treat like ENI */
-+
-+#define PCI_EA_PP(x)	(((x) >>  8) & 0xff)	/* Primary Properties */
-+#define PCI_EA_SP(x)	(((x) >> 16) & 0xff)	/* Secondary Properties */
-+#define  PCI_EA_P_MEM			0x00	/* Non-Prefetch Memory */
-+#define  PCI_EA_P_MEM_PREFETCH		0x01	/* Prefetchable Memory */
-+#define  PCI_EA_P_IO			0x02	/* I/O Space */
-+#define  PCI_EA_P_VIRT_MEM_PREFETCH	0x03	/* VF Prefetchable Memory */
-+#define  PCI_EA_P_VIRT_MEM		0x04	/* VF Non-Prefetch Memory */
-+#define  PCI_EA_P_BRIDGE_MEM		0x05	/* Bridge Non-Prefetch Memory */
-+#define  PCI_EA_P_BRIDGE_MEM_PREFETCH	0x06	/* Bridge Prefetchable Memory */
-+#define  PCI_EA_P_BRIDGE_IO		0x07	/* Bridge I/O Space */
-+/* 0x08-0xfc reserved */
-+#define  PCI_EA_P_MEM_RESERVED		0xfd	/* Reserved Memory */
-+#define  PCI_EA_P_IO_RESERVED		0xfe	/* Reserved I/O Space */
-+#define  PCI_EA_P_UNAVAILABLE		0xff	/* Entry Unavailable */
-+#define PCI_EA_WRITEABLE	BIT(30) /* Writable, 1 = RW, 0 = HwInit */
-+#define PCI_EA_ENABLE		BIT(31) /* Enable for this entry */
-+#define PCI_EA_BASE		4	/* Base Address Offset */
-+#define PCI_EA_MAX_OFFSET	8	/* MaxOffset (resource length) */
-+/* bit 0 is reserved */
-+#define PCI_EA_IS_64		BIT(1)	/* 64-bit field flag */
-+#define PCI_EA_FIELD_MASK	0xfffffffc	/* For Base & Max Offset */
-+
- /* PCI-X registers (Type 0 (non-bridge) devices) */
- 
- #define PCI_X_CMD		2	/* Modes & Features */
--- 
-1.9.1
-
+      Andrew
