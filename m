@@ -1,90 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23438 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753337AbbIPV67 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 17:58:59 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 46/53] PCI: Get new realloc size for bridge for last try
-Date: Wed, 16 Sep 2015 14:57:44 -0700
-Message-Id: <1442440671-5361-47-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Received: from mout.web.de ([212.227.15.4]:64517 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757491AbbIXRhx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Sep 2015 13:37:53 -0400
+MIME-Version: 1.0
+Message-ID: <trinity-8ba3da91-51c4-496e-8c40-91bbecacd141-1443116266781@3capp-webde-bs43>
+From: "Roland Weber" <r-o-l@web.de>
+To: linux-usb@vger.kernel.org
+Cc: "Mathias Nyman" <mathias.nyman@intel.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: PROBLEM: lsusb -v freezes kernel on Acer ES1-111M
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 24 Sep 2015 19:37:46 +0200
+In-Reply-To: <Pine.LNX.4.44L0.1509231058110.1670-100000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.1509231058110.1670-100000@iolanthe.rowland.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current realloc path would not shrink bridge resource through
-pbus_size_mem() checking with the old size.
+Hi Alan,
 
-That cause problem: when "required+optional" resource allocation fails,
-the cached bridge resource size will prevent "required" resource to get
-allocated smaller resource.
+> > Frankly, I don't dare to upgrade the BIOS right now.
+> 
+> All right.  Maybe at some point in the future.  The thing is, I don't 
+> want to patch the kernel only to find that the problem has already been 
+> fixed in a newer BIOS.
 
-Clear the old resource size for last try or third and later try.
+Fair enough. I'll see if I can make time for setting things up over
+the next few weeks. Andrew's report on this matter is encouraging.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Tested-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
+> The unavoidable conclusion is that your system doesn't work right when 
+> this root hub is suspended.  (I still think it's the BIOS's fault.)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 206d89c..7ced411 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2225,6 +2225,17 @@ static enum enable_type pci_realloc_detect(struct pci_bus *bus,
- }
- #endif
- 
-+static void reset_bridge_resource_size(struct pci_dev *dev,
-+				       struct resource *res)
-+{
-+	int idx = res - &dev->resource[0];
-+
-+	if (idx >= PCI_BRIDGE_RESOURCES && idx <= PCI_BRIDGE_RESOURCE_END) {
-+		res->start = 0;
-+		res->end = res->start - 1;
-+	}
-+}
-+
- /*
-  * first try will not touch pci bridge res
-  * second and later try will clear small leaf bridge res
-@@ -2307,8 +2318,13 @@ again:
- 		struct resource *res = fail_res->res;
- 
- 		restore_resource(fail_res, res);
--		if (fail_res->dev->subordinate)
-+		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
-+			/* last or third times and later */
-+			if (tried_times + 1 == pci_try_num ||
-+			    tried_times + 1 > 2)
-+				reset_bridge_resource_size(fail_res->dev, res);
-+		}
- 	}
- 	free_list(&fail_head);
- 
-@@ -2380,8 +2396,11 @@ again:
- 		struct resource *res = fail_res->res;
- 
- 		restore_resource(fail_res, res);
--		if (fail_res->dev->subordinate)
-+		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
-+			/* last time */
-+			reset_bridge_resource_size(fail_res->dev, res);
-+		}
- 	}
- 	free_list(&fail_head);
- 
--- 
-1.8.4.5
+I've been using the machine in legacy BIOS mode ever since I wasted
+three days trying to get an installed Linux booting in UEFI mode. I'm
+planning a clean installation anyway, this weekend or early next week.
+I'll give UEFI mode (without secure boot) another chance. Maybe it
+works when I get rid of the factory boot entries in that menu.
+At the very least, I can boot a Linux live disk with UEFI to see
+if that one freezes, and what the EHCI registers have to say.
 
+> Which suggests yet another test: Under a kernel with CONFIG_PM and
+> CONFIG_PM_SLEEP enabled, what happens when you suspend the system
+> (i.e., suspend-to-RAM) and then wake it up?
+
+Well, there's the second big problem I have with the machine. It has
+an eMMC rather than a real hard disk or SSD. AIUI, the Linux MMC driver
+has no way of distinguishing removable from non-removable MMC media.
+So it treats all MMC as removable and expects that the disk contents
+may have changed while it was asleep. Kind of an unmount on sleep or so.
+Which means that when the machine wakes up, the root filesystem is gone.
+IIRC, it did wake up but then hung up when I entered a command. It's
+been a while since I tried.
+There is a boot parameter to tell the MMC driver that all media are to
+be treated as non-removable. I gave it a try back then and it didn't work.
+But I'll give it another try a.s.a.p. Maybe I just had the prefix wrong.
+
+Thanks a lot, Alan. I'll provide more information as soon as I can
+gather it.
+
+cheers,
+  Roland
