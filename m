@@ -1,248 +1,210 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43908 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751330AbbINIRi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Sep 2015 04:17:38 -0400
-Subject: Re: [Bugfix 2/3] eata: Implement PCI driver to manage eata PCI
- devices
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	Dario Ballabio <ballabio_dario@emc.com>,
-	"James E.J. Bottomley" <JBottomley@odin.com>
-References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
- <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
- <1442200140-30808-3-git-send-email-jiang.liu@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, x86@kernel.org
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <55F6829F.8090707@suse.de>
-Date: Mon, 14 Sep 2015 10:17:35 +0200
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:35288 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755794AbbIXCrI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 22:47:08 -0400
 MIME-Version: 1.0
-In-Reply-To: <1442200140-30808-3-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252
+Date: Wed, 23 Sep 2015 20:47:07 -0600
+Message-ID: <CAL-B5D3FgF+o7BcLBe7O_gcxy2jf3w43bXeDJuRH2VS2ES0A7Q@mail.gmail.com>
+Subject: [RFC] PCI: Unassigned Expansion ROM BARs
+From: Myron Stowe <myron.stowe@gmail.com>
+To: linux-pci <linux-pci@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/14/2015 05:08 AM, Jiang Liu wrote:
-> Previously the eata driver just grabs and accesses eata PCI devices
-> without implementing a PCI device driver, that causes troubles with
-> latest IRQ related
-> 
-> Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
-> pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
-> for PCI devices on x86 platforms. Instead of allocating PCI legacy
-> IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
-> will be called by pci_device_probe() to allocate PCI legacy IRQs
-> when binding PCI drivers to PCI devices.
-> 
-> But the eata driver directly accesses PCI devices without implementing
-> corresponding PCI drivers, so pcibios_alloc_irq() won't be called for
-> those PCI devices and wrong IRQ number may be used to manage the PCI
-> device.
-> 
-> This patch implements a PCI device driver to manage eata PCI devices,
-> so eata driver could properly cooperate with the PCI core. It also
-> provides headroom for PCI hotplug with eata driver.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/scsi/eata.c |  170 ++++++++++++++++++++++-----------------------------
->  1 file changed, 74 insertions(+), 96 deletions(-)
-> 
-> diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-> index b45d3b532b70..b92e6856f909 100644
-> --- a/drivers/scsi/eata.c
-> +++ b/drivers/scsi/eata.c
-> @@ -850,10 +850,6 @@ static unsigned long io_port[] = {
->  	/* First ISA */
->  	0x1f0,
->  
-> -	/* Space for MAX_PCI ports possibly reported by PCI_BIOS */
-> -	SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-> -	SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-> -
->  	/* MAX_EISA ports */
->  	0x1c88, 0x2c88, 0x3c88, 0x4c88, 0x5c88, 0x6c88, 0x7c88, 0x8c88,
->  	0x9c88, 0xac88, 0xbc88, 0xcc88, 0xdc88, 0xec88, 0xfc88,
-> @@ -1024,60 +1020,13 @@ static int read_pio(unsigned long iobase, ushort * start, ushort * end)
->  	return 0;
->  }
->  
-> -static struct pci_dev *get_pci_dev(unsigned long port_base)
-> -{
-> -#if defined(CONFIG_PCI)
-> -	unsigned int addr;
-> -	struct pci_dev *dev = NULL;
-> -
-> -	while ((dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev))) {
-> -		addr = pci_resource_start(dev, 0);
-> -
-> -#if defined(DEBUG_PCI_DETECT)
-> -		printk("%s: get_pci_dev, bus %d, devfn 0x%x, addr 0x%x.\n",
-> -		       driver_name, dev->bus->number, dev->devfn, addr);
-> -#endif
-> -
-> -		/* we are in so much trouble for a pci hotplug system with this driver
-> -		 * anyway, so doing this at least lets people unload the driver and not
-> -		 * cause memory problems, but in general this is a bad thing to do (this
-> -		 * driver needs to be converted to the proper PCI api someday... */
-> -		pci_dev_put(dev);
-> -		if (addr + PCI_BASE_ADDRESS_0 == port_base)
-> -			return dev;
-> -	}
-> -#endif				/* end CONFIG_PCI */
-> -	return NULL;
-> -}
-> -
-> -static void enable_pci_ports(void)
-> -{
-> -#if defined(CONFIG_PCI)
-> -	struct pci_dev *dev = NULL;
-> -
-> -	while ((dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev))) {
-> -#if defined(DEBUG_PCI_DETECT)
-> -		printk("%s: enable_pci_ports, bus %d, devfn 0x%x.\n",
-> -		       driver_name, dev->bus->number, dev->devfn);
-> -#endif
-> -
-> -		if (pci_enable_device(dev))
-> -			printk
-> -			    ("%s: warning, pci_enable_device failed, bus %d devfn 0x%x.\n",
-> -			     driver_name, dev->bus->number, dev->devfn);
-> -	}
-> -
-> -#endif				/* end CONFIG_PCI */
-> -}
-> -
->  static int port_detect(unsigned long port_base, unsigned int j,
-> -		struct scsi_host_template *tpnt)
-> +		       struct scsi_host_template *tpnt, struct pci_dev *pdev)
->  {
->  	unsigned char irq, dma_channel, subversion, i, is_pci = 0;
->  	unsigned char protocol_rev;
->  	struct eata_info info;
->  	char *bus_type, dma_name[16];
-> -	struct pci_dev *pdev;
->  	/* Allowed DMA channels for ISA (0 indicates reserved) */
->  	unsigned char dma_channel_table[4] = { 5, 6, 7, 0 };
->  	struct Scsi_Host *shost;
-> @@ -1199,15 +1148,8 @@ static int port_detect(unsigned long port_base, unsigned int j,
->  		    ("%s: warning, LEVEL triggering is suggested for IRQ %u.\n",
->  		     name, irq);
->  
-> -	if (is_pci) {
-> -		pdev = get_pci_dev(port_base);
-> -		if (!pdev)
-> -			printk
-> -			    ("%s: warning, failed to get pci_dev structure.\n",
-> -			     name);
-> -	} else
-> -		pdev = NULL;
-> -
-> +	if (is_pci && !pdev)
-> +		printk("%s: warning, failed to get pci_dev structure.\n", name);
->  	if (pdev && (irq != pdev->irq)) {
->  		printk("%s: IRQ %u mapped to IO-APIC IRQ %u.\n", name, irq,
->  		       pdev->irq);
-> @@ -1510,14 +1452,17 @@ static int option_setup(char *str)
->  }
->  
->  static unsigned int port_probe(unsigned long port_base,
-> -			       struct scsi_host_template *tpnt)
-> +			       struct scsi_host_template *tpnt,
-> +			       struct pci_dev *pdev)
->  {
->  	int id;
->  
->  	id = ida_simple_get(&eata_ida, 0, MAX_BOARDS, GFP_KERNEL);
->  	if (id >= 0) {
->  		set_bit(id, eata_board_bitmap);
-> -		if (port_detect(port_base, id, tpnt))
-> +		if (pdev)
-> +			dev_set_drvdata(&pdev->dev, (void *)(long)id);
-> +		if (port_detect(port_base, id, tpnt, pdev))
->  			return id;
->  		clear_bit(id, eata_board_bitmap);
->  		ida_simple_remove(&eata_ida, id);
-> @@ -1526,42 +1471,81 @@ static unsigned int port_probe(unsigned long port_base,
->  	return -1;
->  }
->  
-> -static void add_pci_ports(void)
-> -{
-> -#if defined(CONFIG_PCI)
-> -	unsigned int addr, k;
-> -	struct pci_dev *dev = NULL;
-> -
-> -	for (k = 0; k < MAX_PCI; k++) {
-> +#ifdef CONFIG_PCI
-> +static int eata2x_pci_device_count;
->  
-> -		if (!(dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev)))
-> -			break;
-> +static int eata2x_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
-> +{
-> +	int i, ret = -ENXIO;
-> +	resource_size_t addr;
-> +	unsigned long port_base;
-> +	struct scsi_host_template *tpnt = (void *)id->driver_data;
->  
-> -		if (pci_enable_device(dev)) {
-> +	if (pci_enable_device(dev)) {
->  #if defined(DEBUG_PCI_DETECT)
-> -			printk
-> -			    ("%s: detect, bus %d, devfn 0x%x, pci_enable_device failed.\n",
-> -			     driver_name, dev->bus->number, dev->devfn);
-> +		pr_warn("%s: detect, bus %d, devfn 0x%x, pci_enable_device failed.\n",
-> +			driver_name, dev->bus->number, dev->devfn);
->  #endif
-> +		goto out_error;
-> +	}
->  
-> -			continue;
-> -		}
-> -
-> -		addr = pci_resource_start(dev, 0);
-> -
-> +	addr = pci_resource_start(dev, 0);
-> +	port_base = addr + PCI_BASE_ADDRESS_0;
->  #if defined(DEBUG_PCI_DETECT)
-> -		printk("%s: detect, seq. %d, bus %d, devfn 0x%x, addr 0x%x.\n",
-> -		       driver_name, k, dev->bus->number, dev->devfn, addr);
-> +	printk("%s: detect, bus %d, devfn 0x%x, addr 0x%x.\n",
-> +	       driver_name, dev->bus->number, dev->devfn, (unsigned int)addr);
->  #endif
->  
-> -		/* Order addresses according to rev_scan value */
-> -		io_port[MAX_INT_PARAM + (rev_scan ? (MAX_PCI - k) : (1 + k))] =
-> -		    addr + PCI_BASE_ADDRESS_0;
-> +	if (setup_done) {
-> +		/*
-> +		 * Handle kernel or module parameter
-> +		 * . probe board if its port is specified by user
-> +		 * . otherwise ignore the board
-> +		 */
-> +		for (i = 1; i < MAX_INT_PARAM; i++)
-> +			if (io_port[i] == port_base) {
-> +				io_port[i] = SKIP;
-> +				break;
-> +			}
-> +		if (i >= MAX_INT_PARAM)
-> +			goto out_disable_device;
-> +	}
-Hmm. I must admit I don't like the 'setup_done' thingie. As the driver
-is now converted to a 'real' PCI device we should be using driver-core
-mechanisms to avoid driver binding, not the prefabricated 'setup_done'
-variable.
-Can't we just do away with it completely?
+I've encountered numerous bugzilla reports related to platform BIOS' not
+programming valid values into a PCI device's Type 0 Configuration space
+"Expansion ROM Base Address" field (a.k.a. Expansion ROM BAR).  The main
+observed consequence being 'dmesg' entries like the following that get
+customers excited enough to file reports against the kernel.
 
-Cheers,
+  pci 0000:01:00.0: can't claim BAR 6 [mem 0xfff00000-0xffffffff pref]:
+    no compatible bridge window
+  pci 0000:04:03.0: can't claim BAR 6 [mem 0xffff0000-0xffffffff pref]:
+    no compatible bridge window
 
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+After I've provided an analysis similar to [1] the respective BIOS response
+(teams from two of the major vendors) is typically:
+   "The OS has no business touching the Expansion ROM BARs and it
+    provides no value to the equation here.  The Expansion ROM BAR
+    is only useful in pre-boot for the BIOS to get boot code from
+    a device."
+
+This scenario has occurred enough times now that I'd like to attempt to
+"raise the bar" and invite a technically merit based discussion concerning
+this topic - via a public forum that is archived and provides a source of
+reference for use upon future occurrences - and see if a consensus can be
+reached between the various vendor's BIOS engineers and kernel engineers.
+
+
+A little more background context -
+
+The kernel expects device Expansion ROM BARs to be programmed with valid
+values - even if the respective Expansion ROM's Enable bit is 0 (i.e. the
+deviceâ€™s expansion ROM address space is disabled).  This seems to be the
+main contention point with said BIOS engineers.  If an Expansion ROM BAR is
+not programmed, the kernel will attempt to find available resources and, if
+successful, program it.  As this occurs various 'dmesg' entries
+related to kernel's actions are output.
+
+Note that for devices that share decoders between the Expansion ROM BAR and
+other BARs the firmware (probably) should not enable the Expansion ROM BAR
+at hand-off to the operating system (see the last paragraph of the PCI
+Firmware Specification, Rev 3.2, Section 3.5 "Device State at
+Firmware/Operating System Handoff").
+
+There is a kernel boot parameter, pci=norom, that is intended to disable the
+kernel's resource assignment actions for Expansion ROMs that do not already
+have BIOS assigned address ranges.  Note however, if I remember correctly,
+that this only works if the Expansion ROM BAR is set to "0" by the BIOS
+before hand-off.
+
+
+I've opened https://bugzilla.kernel.org/show_bug.cgi?id=104931 and attached
+the full 'dmesg' that exhibits a typical occurrence as an example.  I'd like
+to use the bugzilla to archive any discussion that takes place.   I'll copy all
+relevant discussion that takes place here into the bugzilla as "Additional
+Comments".
+
+Please continue with this thread, adding your views in these regards.  Citing's
+from pertinent specifications that back up your position would be appreciated.
+
+Thanks,
+ Myron
+
+
+
+[1]  Annotated 'dmesg' log concerning Expansion ROM BARs not setup by BIOS
+
+The "can't claim" messages of interest are:
+  pci 0000:01:00.0: can't claim BAR 6 [mem 0xfff00000-0xffffffff pref]:
+  no compatible bridge window
+  pci 0000:04:03.0: can't claim BAR 6 [mem 0xffff0000-0xffffffff pref]:
+  no compatible bridge window
+
+The PCI devices of interest are a device at PCI Bus 1, Device 0, Function
+0 (01:00.0) and another device at PCI Bus 4, Device 3, Function 0 (04:03.0).
+
+The "root bridge" that leads to PCI buses 1 and 4 - the buses of interest -
+is "PCI0" and its I/O Port space and Memory Mapped I/O (MMIO) space are:
+
+ ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-fe])
+ PCI host bridge to bus 0000:00
+ pci_bus 0000:00: root bus resource [bus 00-fe]
+ pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7]
+ pci_bus 0000:00: root bus resource [io  0x0d00-0xffff]
+ pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff]
+ pci_bus 0000:00: root bus resource [mem 0xc0000000-0xfeafffff]
+
+It's helpful to gather up all the resource related information pertaining to
+the devices of interest in one place.  Concentrating on the PCI-to-PCI
+bridges and individual PCI devices that lead to 01:00.0, the first device
+exhibiting the "can't claim" message (everything that is consuming resources
+on PCI bus 0 and PCI bus 1):
+
+    pci 0000:00:1a.0: [8086:1c2d] type 00 class 0x0c0320
+    pci 0000:00:1a.0: reg 0x10: [mem 0xc1305000-0xc13053ff]
+
+    pci 0000:00:1d.0: [8086:1c26] type 00 class 0x0c0320
+    pci 0000:00:1d.0: reg 0x10: [mem 0xc1304000-0xc13043ff]
+
+    pci 0000:00:1f.2: [8086:1c00] type 00 class 0x01018f
+    pci 0000:00:1f.2: reg 0x10: [io  0x3078-0x307f]
+    pci 0000:00:1f.2: reg 0x14: [io  0x308c-0x308f]
+    pci 0000:00:1f.2: reg 0x18: [io  0x3070-0x3077]
+    pci 0000:00:1f.2: reg 0x1c: [io  0x3088-0x308b]
+    pci 0000:00:1f.2: reg 0x20: [io  0x3050-0x305f]
+    pci 0000:00:1f.2: reg 0x24: [io  0x3040-0x304f]
+
+    pci 0000:00:1f.3: [8086:1c22] type 00 class 0x0c0500
+    pci 0000:00:1f.3: reg 0x10: [mem 0xc1302000-0xc13020ff 64bit]
+    pci 0000:00:1f.3: reg 0x20: [io  0x3000-0x301f]
+
+    pci 0000:00:1f.5: [8086:1c08] type 00 class 0x010185
+    pci 0000:00:1f.5: reg 0x10: [io  0x3068-0x306f]
+    pci 0000:00:1f.5: reg 0x14: [io  0x3084-0x3087]
+    pci 0000:00:1f.5: reg 0x18: [io  0x3060-0x3067]
+    pci 0000:00:1f.5: reg 0x1c: [io  0x3080-0x3083]
+    pci 0000:00:1f.5: reg 0x20: [io  0x3030-0x303f]
+    pci 0000:00:1f.5: reg 0x24: [io  0x3020-0x302f]
+
+  pci 0000:00:01.0: PCI bridge to [bus 01]
+  pci 0000:00:01.0:   bridge window [io  0x2000-0x2fff]
+  pci 0000:00:01.0:   bridge window [mem 0xc1200000-0xc12fffff]
+
+    pci 0000:01:00.0: [1000:0072] type 00 class 0x010700
+      [1000:0072] - LSI (Symbios) Logic : SAS2008 PCIe Fusion-MPT SAS-2
+    pci 0000:01:00.0: reg 0x10: [io  0x2000-0x20ff]
+    pci 0000:01:00.0: reg 0x14: [mem 0xc1240000-0xc124ffff 64bit]
+    pci 0000:01:00.0: reg 0x1c: [mem 0xc1200000-0xc123ffff 64bit]
+x   pci 0000:01:00.0: reg 0x30: [mem 0xfff00000-0xffffffff pref]
+
+
+The PCI-to-PCI bridge device for Bus 0 to Bus 1 only has one memory space
+apeture ("bridge window") active - [mem 0xc1200000-0xc12fffff].  This must
+be a subset of one of the "root bus" memory resources and looking at those,
+it is.
+
+The target device - 01:00.0; an 'mpt2sas' device - consumes three memory
+ranges.  These correspond to the device's BAR 1 and 2 (64 bit addresses
+consume two BAR registers), BAR 3 and 4, and the "Expansion ROM Base Address
+(a.k.a. BAR 6).  These also must be a subset of both the corresponding root
+bus resources and all PCI-to-PCI bridge devices in the PCI hiearchy leading
+to the device itself.  Looking at them we see that the first two satisfy the
+requirement but the third - [mem 0xfff00000-0xffffffff pref] - does not!
+It's because the "Expansion ROM Base Address" register (a.k.a. BAR 6) does
+not adhear to the subset requirement(s) that the kernel later outputs:
+
+ pci 0000:01:00.0: can't claim BAR 6 [mem 0xfff00000-0xffffffff pref]:
+ no compatible bridge window
+ pci 0000:01:00.0: BAR 6: no space for [mem size 0x00100000 pref]
+ pci 0000:01:00.0: BAR 6: failed to assign [mem size 0x00100000 pref]
+
+The "can't claim" message is the kernel alerting us that the BIOS has not
+correctly set up resources that fulfill all the requirements (subset,
+alignment, type, ...).
+
+The kernel then "sizes" the BAR to see how much address space that BAR
+requires - in this case we see BAR 6 of 01:00.0 needs 1 MB of contiguous
+space - and subsequently tries to work around the BIOS' failure, attempting
+to find available, currently unused, resource space that meets all the
+requirements which is where the "no space for" message comes from.
+
+There is no contiguous space that meets all the requirements (subset,
+alignment, type, ...) available which is fairly easy to see here; there was
+only a 1 MB memory aperture provided by the PCI-to-PCI bridge device to
+begin with and the 01:00.0 device consumed subsets of that for BARs 1 and 3
+so there is no way 1 MB remains free to satisfy BAR 6's needs.  And so the
+kernel outputs the "failed to assign" message.
+
+
+In a very similar scenario, the 04:03.0 device also has not been properly
+set up by BIOS ([mem 0xffff0000-0xffffffff pref]).  The difference in this
+case is that there were enough available resources left to satisfy all the
+subset, alignment, type, ..., requirements and thus the kernel was able to
+allocate from such and re-program the device's BAR 6 ([mem
+0xc1010000-0xc101ffff pref]) so that the device can function correctly.
+
+  pci 0000:00:1e.0: PCI bridge to [bus 04] (subtractive decode)
+  pci 0000:00:1e.0:   bridge window [mem 0xc0800000-0xc10fffff]
+  pci 0000:00:1e.0:   bridge window [mem 0xc0000000-0xc07fffff 64bit pref]
+  pci 0000:00:1e.0:   bridge window [io  0x0000-0x0cf7] (subtractive decode)
+  pci 0000:00:1e.0:   bridge window [io  0x0d00-0xffff] (subtractive decode)
+  pci 0000:00:1e.0:   bridge window [mem 0x000a0000-0x000bffff] (subtract d)
+  pci 0000:00:1e.0:   bridge window [mem 0xc0000000-0xfeafffff] (subtract d)
+
+    pci 0000:04:03.0: [102b:0532] type 00 class 0x030000
+      [102b:0532] - Matrox : MGS G200eW WPCM450 (Graphics)
+    pci 0000:04:03.0: reg 0x10: [mem 0xc0000000-0xc07fffff pref]
+    pci 0000:04:03.0: reg 0x14: [mem 0xc1000000-0xc1003fff]
+    pci 0000:04:03.0: reg 0x18: [mem 0xc0800000-0xc0ffffff]
+x   pci 0000:04:03.0: reg 0x30: [mem 0xffff0000-0xffffffff pref]
+
+ pci 0000:04:03.0: can't claim BAR 6 [mem 0xffff0000-0xffffffff pref]:
+ no compatible bridge window
+ pci 0000:04:03.0: BAR 6: assigned [mem 0xc1010000-0xc101ffff pref]
