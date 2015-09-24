@@ -1,102 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:38700 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756529AbbIUWKt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Sep 2015 18:10:49 -0400
-Received: by igxx6 with SMTP id x6so67567796igx.1
-        for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2015 15:10:48 -0700 (PDT)
-Date: Mon, 21 Sep 2015 17:10:43 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	linux-pci@vger.kernel.org,
-	virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH v7] pci: quirk to skip msi disable on shutdown
-Message-ID: <20150921221043.GR25767@google.com>
-References: <1441553385-3810-1-git-send-email-mst@redhat.com>
- <20150921182147.GC27964@google.com>
- <20150921223622-mutt-send-email-mst@redhat.com>
+Received: from mail.kernel.org ([198.145.29.136]:55261 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755331AbbIXS17 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Sep 2015 14:27:59 -0400
+Date: Thu, 24 Sep 2015 13:27:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	mark.d.rustad@intel.com, myron.stowe@redhat.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fix devfn for VPD access through function 0
+Message-ID: <20150924182755.GC3648@localhost>
+References: <20150915171216.7049.58119.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20150921223622-mutt-send-email-mst@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150915171216.7049.58119.stgit@gimli.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 21, 2015 at 10:42:13PM +0300, Michael S. Tsirkin wrote:
-> On Mon, Sep 21, 2015 at 01:21:47PM -0500, Bjorn Helgaas wrote:
-> > On Sun, Sep 06, 2015 at 06:32:35PM +0300, Michael S. Tsirkin wrote:
-> > > On some hypervisors, virtio devices tend to generate spurious interrupts
-> > > when switching between MSI and non-MSI mode.  Normally, either MSI or
-> > > non-MSI is used and all is well, but during shutdown, linux disables MSI
-> > > which then causes an "irq %d: nobody cared" message, with irq being
-> > > subsequently disabled.
-> > 
-> > My understanding is:
-> > 
-> >   Linux disables MSI/MSI-X during device shutdown.  If the device
-> >   signals an interrupt after that, it may use INTx.
-> > 
-> > This INTx interrupt is not necessarily spurious.  Using INTx to signal an
-> > interrupt that occurs when MSI is disabled seems like reasonable behavior
-> > for any PCI device.
-> > And it doesn't seem related to switching between MSI and non-MSI mode.
-> > Yes, the INTx happens *after* disabling MSI, but it is not at all
-> > *because* we disabled MSI.  So I wouldn't say "they generate spurious
-> > interrupts when switching between MSI and non-MSI."
-> > 
-> > Why doesn't virtio-pci just register an INTx handler in addition to an MSI
-> > handler?
+On Tue, Sep 15, 2015 at 11:17:21AM -0600, Alex Williamson wrote:
+> Commit 932c435caba8 ("PCI: Add dev_flags bit to access VPD through
+> function 0") passes PCI_SLOT(devfn) for the devfn parameter of
+> pci_get_slot().  Generally this works because we're fairly well
+> guaranteed that a PCIe device is at slot address 0, but for the
+> general case, including conventional PCI, it's incorrect.  We need
+> to get the slot and then convert it back into a devfn.
 > 
-> The handler causes an expensive exit to the hypervisor,
-> and the INTx lines are shared with other devices.
+> Fixes: 932c435caba8 ("PCI: Add dev_flags bit to access VPD through function 0")
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Cc: stable@vger.kernel.org
 
-Do we care?  Is this a performance path?  I thought we were in a kexec
-shutdown path.
+Applied to for-linus for v4.3 with acks from Myron & Mark, thanks!
 
-> Seems silly to slow them down just so we can do something
-> that triggers the device bug.  The bus master is disabled by that time,
-> if linux can just desist from touching MSI enable device won't
-> send either INTx (because MSI is on) or MSI
-> (because bus master is on) and all will be well.
+I removed the stable tag because 932c435caba8 first appeared in
+v4.3-rc1, so it shouldn't appear in any stable kernels yet.  Right?
 
-It would also be silly to put special-purpose code in the PCI core
-if there's a reasonable way to handle this in a driver.
-
-Can you describe exactly what the device bug is?  Apparently you're
-saying that if we shut down MSI, it triggers the bug?  And I guess
-you're talking about a virtio device as implemented in qemu or other
-hypervisors?
-
-If we leave MSI enabled (as your patch does), then the device has MSI
-enabled and Bus Master disabled.  I can see these possibilities:
-
-  1) the device never recognizes an interrupt condition
-  2) the device sets the pending bit but doesn't issue the MSI write,
-     so the OS doesn't see the interrupt unless it polls for it
-  3) the device signals MSI and we still have an MSI handler
-     registered, so we silently handle it
-  4) the device signals INTx
-
-You seem to suggest that if we leave MSI enabled (as your patch does),
-we're in case 1.  But I doubt that disabling MSI causes the device to
-interrupt.
-
-Case 2 seems more likely to me: the device recognized an interrupt
-condition, e.g., an event occurred, and the OS simply doesn't see the
-interrupt because the device can't issue the MSI message.
-
-Case 3 does seem like it would be a device bug, because the device
-shouldn't do an MSI write when Bus Master is disabled.  I don't see
-this case mentioned explicitly in the PCI spec, but PCIe r3.0 spec sec
-7.5.1.1 does make it clear that disabling Bus Master also disables MSI
-messages.
-
-I don't know whether case 4 would be legal or not.  But apparently it
-doesn't happen with the virtio device anyway, so it's not really a
-concern here.
-
-Bjorn
+> ---
+> 
+> Since the original patch and quirk was marked for stable and applies
+> to all Intel NICs, regardless of the bus type, I assume this needs to
+> chase it or VPD might disappear on e1000/e100 if it currently exists.
+> 
+>  drivers/pci/access.c |    9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 769f7e3..5a5f0a7 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -442,7 +442,8 @@ static const struct pci_vpd_ops pci_vpd_pci22_ops = {
+>  static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
+>  			       void *arg)
+>  {
+> -	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
+> +	struct pci_dev *tdev = pci_get_slot(dev->bus,
+> +					    PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+>  	ssize_t ret;
+>  
+>  	if (!tdev)
+> @@ -456,7 +457,8 @@ static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
+>  static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
+>  				const void *arg)
+>  {
+> -	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
+> +	struct pci_dev *tdev = pci_get_slot(dev->bus,
+> +					    PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+>  	ssize_t ret;
+>  
+>  	if (!tdev)
+> @@ -475,7 +477,8 @@ static const struct pci_vpd_ops pci_vpd_f0_ops = {
+>  
+>  static int pci_vpd_f0_dev_check(struct pci_dev *dev)
+>  {
+> -	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
+> +	struct pci_dev *tdev = pci_get_slot(dev->bus,
+> +					    PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+>  	int ret = 0;
+>  
+>  	if (!tdev)
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
