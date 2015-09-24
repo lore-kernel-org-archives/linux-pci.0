@@ -1,85 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 37/53] PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
-Date: Wed, 16 Sep 2015 14:57:35 -0700
-Message-Id: <1442440671-5361-38-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:51292 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755623AbbIXQml (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Sep 2015 12:42:41 -0400
+Date: Thu, 24 Sep 2015 09:39:46 -0700
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: bhelgaas@google.com, yinghai@kernel.org, rajatxjain@gmail.com,
+	mst@redhat.com, zajec5@gmail.com, gong.chen@linux.intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] PCI: Add support for PCI Enhanced Allocation
+ "BARs"
+Message-ID: <20150924163945.GA7240@sean.stalley.intel.com>
+References: <1443047264-4003-1-git-send-email-sean.stalley@intel.com>
+ <56034505.1080301@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56034505.1080301@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If any bridge up to root only have 32bit pref mmio, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
+Hi David,
 
-We need to move pci_bridge_check_ranges calling early.
-for parent bridges pref mmio BAR may not allocated by BIOS, res flags
-is still 0, we need to have it correct set before we check them for
-child device resources.
+My response is inline. Let me know if you have any questions.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+Thanks for taking a look,
+Sean
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a48836b..81d551f 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -978,6 +978,18 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
- 
-+static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self && !(bus->self->resource[PCI_BRIDGE_RESOURCES + 2].flags &
-+			   IORESOURCE_MEM_64))
-+		return false;
-+
-+	return pci_up_path_over_pref_mem64(bus->parent);
-+}
-+
- int pci_resource_pref_compatible(const struct pci_dev *dev,
- 				 struct resource *res)
- {
-@@ -986,7 +998,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
- 
- 	if ((res->flags & IORESOURCE_MEM) &&
- 	    (res->flags & IORESOURCE_MEM_64) &&
--	    dev->on_all_pcie_path)
-+	    dev->on_all_pcie_path &&
-+	    pci_up_path_over_pref_mem64(dev->bus))
- 		return res->flags | IORESOURCE_PREFETCH;
- 
- 	return res->flags;
-@@ -1796,6 +1809,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	struct resource *b_res;
- 	int ret;
- 
-+	if (!pci_is_root_bus(bus) &&
-+	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
-+		pci_bridge_check_ranges(bus);
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		struct pci_bus *b = dev->subordinate;
- 		if (!b)
-@@ -1823,7 +1840,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		break;
- 
- 	case PCI_CLASS_BRIDGE_PCI:
--		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			min_io_size  = pci_hotplug_io_size;
- 			min_mem_size = pci_hotplug_mem_size;
--- 
-1.8.4.5
+On Wed, Sep 23, 2015 at 05:34:13PM -0700, David Daney wrote:
+> Hi Sean,
+> 
+> Thanks for doing this, I think we will use it for Cavium ThunderX.
+> A couple of questions...
+> 
+> 
+> On 09/23/2015 03:27 PM, Sean O. Stalley wrote:
+> >PCI Enhanced Allocation is a new method of allocating MMIO & IO
+> >resources for PCI devices & bridges. It can be used instead
+> >of the traditional PCI method of using BARs.
+> >
+> >EA entries are hardware-initialized to a fixed address.
+> >Unlike BARs, regions described by EA are cannot be moved.
+> >Because of this, only devices which are permanently connected to
+> >the PCI bus can use EA. A removable PCI card must not use EA.
+> >
+> >This patchset adds support for using EA entries instead of BARs
+> >on Root Complex Integrated Endpoints.
+> >
+> >The Enhanced Allocation ECN is publicly available here:
+> >https://www.pcisig.com/specifications/conventional/ECN_Enhanced_Allocation_23_Oct_2014_Final.pdf
+> >
+> >
+> >Changes from V1:
+> >	- Use generic PCI resource claim functions (instead of EA-specific functions)
+> >	- Only add support for RCiEPs (instead of all devices).
+> 
+> Why not all devices?  The spec. allows for EA on devices behind bridges.
 
+The short answer is that adding support for EA bridges would be a much larger change.
+EA bridges can do some weird stuff, like fixing bus numbers & using resources not in the base+limit window.
+
+See the conversation I had with Bjorn on the original patchset for the details.
+[ https://lkml.org/lkml/2015/9/3/497 ]
+
+> >	- Removed some debugging messages leftover from early testing.
+> >
+> >
+> >Sean O. Stalley (2):
+> >   PCI: Add Enhanced Allocation register entries
+> >   PCI: Add support for Enhanced Allocation devices
+> >
+> >  drivers/pci/pci.c             | 174 ++++++++++++++++++++++++++++++++++++++++++
+> >  drivers/pci/pci.h             |   1 +
+> >  drivers/pci/probe.c           |   3 +
+> >  include/uapi/linux/pci_regs.h |  40 +++++++++-
+> >  4 files changed, 217 insertions(+), 1 deletion(-)
+> >
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
