@@ -1,241 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29266 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756281AbbJAF76 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:59:58 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 53/53] PCI: Don't set flags to 0 when assign resource fail
-Date: Wed, 30 Sep 2015 22:53:27 -0700
-Message-Id: <1443678807-786-54-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:33448 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752364AbbIXTuZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Sep 2015 15:50:25 -0400
+Date: Thu, 24 Sep 2015 14:50:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, mark.d.rustad@intel.com,
+	myron.stowe@redhat.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Relax function 0 VPD test and relocate
+Message-ID: <20150924195019.GB10481@localhost>
+References: <20150916041858.26694.97435.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150916041858.26694.97435.stgit@gimli.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We want to keep resource flags instead of clearing it after resource
-allocation fails.
+On Tue, Sep 15, 2015 at 10:24:46PM -0600, Alex Williamson wrote:
+> When we quirk a device with PCI_DEV_FLAGS_VPD_REF_F0 we're expecting
+> to find a device where all the functions are identical.  If we don't
+> find that, we don't make VPD accessible through pci_vpd_ops.  That
+> means that if we quirk devices we shouldn't, we filter them out by
+> hiding VPD entirely rather than allowing default access.  Instead, we
+> can flip this around to only quirk devices that match a slightly more
+> rigorous test in the quirk, allowing regular access for anything else.
+> 
+> Tests for the multifunction flag are removed since a) function 0 and
+> the function under test are clearly a multifunction device if we're
+> scanning a non-zero function in the same slot and b) at this point the
+> flag is only set in the device under test if the multifunction bit is
+> set in the PCI HEADER, which is a point of interpretation for the PCI
+> spec.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+> 
+> This is potentially another stable candiate since we're continuing to
+> iterate on 932c435caba8, but since we don't actually know of a device
+> where VPD is blocked (we don't think my Skylake example actually
+> supports VPD), I'm not including it.  I would support it if requested
+> though.
 
-Make flags take IORESOURCE_UNSET | IORESOURCE_DISABLED instead.
+Applied with acks from Myron & Mark to for-linus for v4.3 with the
+changelog below.  I added a stable tag on the theory that there's not
+really any benefit in having different flavors of this brand-new code.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/bus.c       |  2 +-
- drivers/pci/setup-bus.c | 45 +++++++++++++++++++++++----------------------
- drivers/pci/setup-res.c |  3 ++-
- 3 files changed, 26 insertions(+), 24 deletions(-)
+    PCI: Use function 0 VPD for identical functions, regular VPD for others
+    
+    932c435caba8 ("PCI: Add dev_flags bit to access VPD through function 0")
+    added PCI_DEV_FLAGS_VPD_REF_F0.  Previously, we set the flag on every
+    non-zero function of quirked devices.  If a function turned out to be
+    different from function 0, i.e., it had a different class, vendor ID, or
+    device ID, the flag remained set but we didn't make VPD accessible at all.
+    
+    Flip this around so we only set PCI_DEV_FLAGS_VPD_REF_F0 for functions that
+    are identical to function 0, and allow regular VPD access for any other
+    functions.
+    
+    [bhelgaas: changelog, stable tag]
+    Fixes: 932c435caba8 ("PCI: Add dev_flags bit to access VPD through function 0")
+    Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+    Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
+    Acked-by: Myron Stowe <myron.stowe@redhat.com>
+    Acked-by: Mark Rustad <mark.d.rustad@intel.com>
+    CC: stable@vger.kernel.org
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index b043bdf..b68f1cd 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -140,7 +140,7 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
- 	type_mask |= IORESOURCE_TYPE_BITS;
- 
- 	pci_bus_for_each_resource(bus, r, i) {
--		if (!r)
-+		if (!r || resource_disabled(r))
- 			continue;
- 
- 		/* type_mask must match */
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index fa15ee3..92e17b6 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -264,13 +264,6 @@ static void __dev_assign_resources_prepare(struct pci_dev *dev,
- 	pdev_assign_resources_prepare(dev, realloc_head, head);
- }
- 
--static inline void reset_resource(struct resource *res)
--{
--	res->start = 0;
--	res->end = 0;
--	res->flags = 0;
--}
--
- static void sort_resources(struct list_head *head)
- {
- 	struct pci_dev_resource *res1, *tmp_res, *res2;
-@@ -337,7 +330,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 			res->start = align;
- 			res->end = res->start + add_size - 1;
- 			if (pci_assign_resource(add_res->dev, idx))
--				reset_resource(res);
-+				res->flags |= IORESOURCE_DISABLED;
- 		} else {
- 			/* could just assigned with alt, add difference ? */
- 			resource_size_t size;
-@@ -391,7 +384,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
- 				add_to_list(fail_head, dev_res->dev, res);
--			reset_resource(res);
-+			res->flags |= IORESOURCE_DISABLED;
- 		}
- 	}
- }
-@@ -677,7 +670,7 @@ static void __assign_resources_alt_sorted(struct list_head *head,
- 
- 		if (!res_to_dev_res(local_fail_head, res))
- 			add_to_list(local_fail_head, fail_res->dev, res);
--		reset_resource(res);
-+		res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 	}
- 	free_list(&local_alt_fail_head);
- }
-@@ -843,7 +836,7 @@ static void pci_setup_bridge_io(struct pci_dev *bridge)
- 	/* Set up the top and bottom of the PCI I/O segment for this bus. */
- 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 0];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
--	if (res->flags & IORESOURCE_IO) {
-+	if ((res->flags & IORESOURCE_IO) && !(res->flags & IORESOURCE_UNSET)) {
- 		pci_read_config_word(bridge, PCI_IO_BASE, &l);
- 		io_base_lo = (region.start >> 8) & io_mask;
- 		io_limit_lo = (region.end >> 8) & io_mask;
-@@ -873,7 +866,8 @@ static void pci_setup_bridge_mmio(struct pci_dev *bridge)
- 	/* Set up the top and bottom of the PCI Memory segment for this bus. */
- 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 1];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
--	if (res->flags & IORESOURCE_MEM) {
-+	if ((res->flags & IORESOURCE_MEM) &&
-+	    !(res->flags & IORESOURCE_UNSET)) {
- 		l = (region.start >> 16) & 0xfff0;
- 		l |= region.end & 0xfff00000;
- 		dev_info(&bridge->dev, "  bridge window %pR\n", res);
-@@ -898,7 +892,8 @@ static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
- 	bu = lu = 0;
- 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
--	if (res->flags & IORESOURCE_PREFETCH) {
-+	if ((res->flags & IORESOURCE_PREFETCH) &&
-+	    !(res->flags & IORESOURCE_UNSET)) {
- 		l = (region.start >> 16) & 0xfff0;
- 		l |= region.end & 0xfff00000;
- 		if (res->flags & IORESOURCE_MEM_64) {
-@@ -1017,6 +1012,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 
- 	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
- 	b_res[1].flags |= IORESOURCE_MEM;
-+	b_res[1].flags &= ~IORESOURCE_DISABLED;
- 
- 	pci_read_config_word(bridge, PCI_IO_BASE, &io);
- 	if (!io) {
-@@ -1024,8 +1020,10 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 		pci_read_config_word(bridge, PCI_IO_BASE, &io);
- 		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
- 	}
--	if (io)
-+	if (io) {
- 		b_res[0].flags |= IORESOURCE_IO;
-+		b_res[0].flags &= ~IORESOURCE_DISABLED;
-+	}
- 
- 	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
- 	    disconnect boundary by one PCI data phase.
-@@ -1042,6 +1040,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 	}
- 	if (pmem) {
- 		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
-+		b_res[2].flags &= ~IORESOURCE_DISABLED;
- 		if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
- 		    PCI_PREF_RANGE_TYPE_64) {
- 			b_res[2].flags |= IORESOURCE_MEM_64;
-@@ -1187,8 +1186,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 			struct resource *r = &dev->resource[i];
- 			unsigned long r_size, r_add_size;
- 
--			if (r->parent || !(r->flags & IORESOURCE_IO))
-+			if (r->parent || !(r->flags & IORESOURCE_IO) ||
-+			    resource_disabled(r))
- 				continue;
-+
- 			r_size = resource_size(r);
- 
- 			if (r_size < 0x400)
-@@ -1229,7 +1230,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
- 				 b_res, &bus->busn_res);
--		b_res->flags = 0;
-+		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 		return;
- 	}
- 
-@@ -1521,7 +1522,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 			if (r->parent || ((flags & mask) != type &&
- 					  (flags & mask) != type2 &&
--					  (flags & mask) != type3))
-+					  (flags & mask) != type3) ||
-+			    resource_disabled(r))
- 				continue;
- 
- 			r_size = resource_size(r);
-@@ -1542,7 +1544,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
- 					i, r, (unsigned long long) align);
--				r->flags = 0;
-+				r->flags |= IORESOURCE_UNSET |
-+					    IORESOURCE_DISABLED;
- 				continue;
- 			}
- 
-@@ -1639,7 +1642,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
- 				 b_res, &bus->busn_res);
--		b_res->flags = 0;
-+		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 		return 0;
- 	}
- 
-@@ -2056,7 +2059,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 		/* keep the old size */
- 		r->end = resource_size(r) - 1;
- 		r->start = 0;
--		r->flags = 0;
-+		r->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 
- 		/* avoiding touch the one without PREF */
- 		if (type & IORESOURCE_PREFETCH)
-@@ -2325,7 +2328,6 @@ again:
- 
- 		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
--			res->flags = 0;
- 			/* last or third times and later */
- 			if (tried_times + 1 == pci_try_num ||
- 			    tried_times + 1 > 2)
-@@ -2409,7 +2411,6 @@ again:
- 
- 		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
--			res->flags = 0;
- 			/* last time */
- 			reset_bridge_resource_size(fail_res->dev, res);
- 		}
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 55caf7a..d17f23c 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -364,7 +364,8 @@ int pci_enable_resources(struct pci_dev *dev, int mask)
- 
- 		r = &dev->resource[i];
- 
--		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
-+		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)) ||
-+		    resource_disabled(r))
- 			continue;
- 		if ((i == PCI_ROM_RESOURCE) &&
- 				(!(r->flags & IORESOURCE_ROM_ENABLE)))
--- 
-1.8.4.5
-
+> 
+>  drivers/pci/access.c |   22 ----------------------
+>  drivers/pci/quirks.c |   20 ++++++++++++++++++--
+>  2 files changed, 18 insertions(+), 24 deletions(-)
+> 
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 5a5f0a7..59ac36f 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -475,23 +475,6 @@ static const struct pci_vpd_ops pci_vpd_f0_ops = {
+>  	.release = pci_vpd_pci22_release,
+>  };
+>  
+> -static int pci_vpd_f0_dev_check(struct pci_dev *dev)
+> -{
+> -	struct pci_dev *tdev = pci_get_slot(dev->bus,
+> -					    PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+> -	int ret = 0;
+> -
+> -	if (!tdev)
+> -		return -ENODEV;
+> -	if (!tdev->vpd || !tdev->multifunction ||
+> -	    dev->class != tdev->class || dev->vendor != tdev->vendor ||
+> -	    dev->device != tdev->device)
+> -		ret = -ENODEV;
+> -
+> -	pci_dev_put(tdev);
+> -	return ret;
+> -}
+> -
+>  int pci_vpd_pci22_init(struct pci_dev *dev)
+>  {
+>  	struct pci_vpd_pci22 *vpd;
+> @@ -500,12 +483,7 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+>  	cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
+>  	if (!cap)
+>  		return -ENODEV;
+> -	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0) {
+> -		int ret = pci_vpd_f0_dev_check(dev);
+>  
+> -		if (ret)
+> -			return ret;
+> -	}
+>  	vpd = kzalloc(sizeof(*vpd), GFP_ATOMIC);
+>  	if (!vpd)
+>  		return -ENOMEM;
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 6a30252..b03373f 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -1907,11 +1907,27 @@ static void quirk_netmos(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_NETMOS, PCI_ANY_ID,
+>  			 PCI_CLASS_COMMUNICATION_SERIAL, 8, quirk_netmos);
+>  
+> +/*
+> + * Quirk non-zero PCI functions to route VPD access through function 0 for
+> + * devices that share VPD resources between functions.  The functions are
+> + * expected to be identical devices.
+> + */
+>  static void quirk_f0_vpd_link(struct pci_dev *dev)
+>  {
+> -	if (!dev->multifunction || !PCI_FUNC(dev->devfn))
+> +	struct pci_dev *f0;
+> +
+> +	if (!PCI_FUNC(dev->devfn))
+>  		return;
+> -	dev->dev_flags |= PCI_DEV_FLAGS_VPD_REF_F0;
+> +
+> +	f0 = pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+> +	if (!f0)
+> +		return;
+> +
+> +	if (f0->vpd && dev->class == f0->class &&
+> +	    dev->vendor == f0->vendor && dev->device == f0->device)
+> +		dev->dev_flags |= PCI_DEV_FLAGS_VPD_REF_F0;
+> +
+> +	pci_dev_put(f0);
+>  }
+>  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+>  			      PCI_CLASS_NETWORK_ETHERNET, 8, quirk_f0_vpd_link);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
