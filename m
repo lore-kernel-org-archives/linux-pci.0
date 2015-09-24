@@ -1,151 +1,201 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27423 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750839AbbJAFyE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:54:04 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 01/53] sparc/PCI: Add mem64 resource parsing for root bus
-Date: Wed, 30 Sep 2015 22:52:35 -0700
-Message-Id: <1443678807-786-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39520 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752254AbbIXVtZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Sep 2015 17:49:25 -0400
+Date: Thu, 24 Sep 2015 16:49:21 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Will Davis <wdavis@nvidia.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [PATCH 09/22] PCI: Add pci_peer_traffic_supported()
+Message-ID: <20150924214921.GH10481@localhost>
+References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+ <1442337067-22964-10-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442337067-22964-10-git-send-email-wdavis@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Found "no compatible bridge window" warning in boot log from T5-8.
+On Tue, Sep 15, 2015 at 12:10:54PM -0500, Will Davis wrote:
+> Add checks for topology and ACS configuration to determine whether or not
+> peer traffic should be supported between two PCI devices.
+> 
+> Signed-off-by: Will Davis <wdavis@nvidia.com>
+> ---
+>  drivers/pci/pci.c   | 99 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |  3 ++
+>  2 files changed, 102 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 0008c95..b8ba0f0 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -25,6 +25,7 @@
+>  #include <linux/device.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/pci_hotplug.h>
+> +#include <linux/iommu.h>
+>  #include <asm-generic/pci-bridge.h>
+>  #include <asm/setup.h>
+>  #include "pci.h"
+> @@ -4302,6 +4303,104 @@ void pci_ignore_hotplug(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_ignore_hotplug);
+>  
+> +bool pci_peer_traffic_supported(struct pci_dev *dev, struct pci_dev *peer)
+> +{
+> +	struct pci_host_bridge *dev_host_bridge;
+> +	struct pci_host_bridge *peer_host_bridge;
+> +
+> +	/*
+> +	 * Disallow the peer-to-peer traffic if the devices do not share a
+> +	 * host bridge. The PCI specifications does not make any guarantees
+> +	 * about P2P capabilities between devices under separate domains.
+> +	 *
+> +	 * PCI Local Bus Specification Revision 3.0, section 3.10:
+> +	 *    "Peer-to-peer transactions crossing multiple host bridges
+> +	 *     PCI host bridges may, but are not required to, support PCI
+> +	 *     peer-to-peer transactions that traverse multiple PCI host
+> +	 *     bridges."
+> +	 */
+> +	dev_host_bridge = pci_find_host_bridge(dev->bus);
+> +	peer_host_bridge = pci_find_host_bridge(peer->bus);
+> +	if (dev_host_bridge != peer_host_bridge)
+> +		return false;
+> +
+> +	if (pci_is_pcie(dev) && pci_is_pcie(peer)) {
 
-pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
+Can you use the same "return errors early" trick here to unindent
+everything below, e.g.,
 
-That resource is above 4G, but does not get offset correctly as
-root bus only report io and mem32.
+  if (!pci_is_pcie(dev) || !pci_is_pcie(peer))
+    return false;
 
-pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
-pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
-pci_bus 0000:00: root bus resource [bus 00-77]
+> +		/*
+> +		 * Access Control Services (ACS) Checks
+> +		 *
+> +		 * ACS has a capability bit for P2P Request Redirects (RR),
+> +		 * but unfortunately it doesn't tell us much about the real
+> +		 * capabilities of the hardware.
+> +		 *
+> +		 * PCI Express Base Specification Revision 3.0, section
+> +		 * 6.12.1.1:
+> +		 *    "ACS P2P Request Redirect: must be implemented by Root
+> +		 *     Ports that support peer-to-peer traffic with other
+> +		 *     Root Ports; [80]"
+> +		 * but
+> +		 *    "[80] Root Port indication of ACS P2P Request Redirect
+> +		 *     or ACS P2P Completion Redirect support does not imply
+> +		 *     any particular level of peer-to-peer support by the
+> +		 *     Root Complex, or that peer-to-peer traffic is
+> +		 *     supported at all"
+> +		 */
+> +		struct pci_dev *rpdev = dev->bus->self;
+> +		struct pci_dev *rppeer = peer->bus->self;
 
-Add mem64 handling in pci_common for sparc, so we can have 64bit resource
-registered for root bus at first.
+This will oops if rpdev or rppeer is a VF on a "virtual" bus (bus->self
+is NULL in that case); see the comment near pci_is_root_bus().
 
-After patch, will have:
-pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
-pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
-pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
-pci_bus 0000:00: root bus resource [bus 00-77]
+> +		struct pci_dev *common_upstream;
+> +		int pos;
+> +		u16 cap;
+> +
+> +		while ((rpdev) && (pci_is_pcie(rpdev)) &&
+> +		       (pci_pcie_type(rpdev) != PCI_EXP_TYPE_ROOT_PORT))
+> +			rpdev = rpdev->bus->self;
 
--v2: mem64_space should use mem_space.start as offset.
--v3: add IORESOURCE_MEM_64 flag
+I think we might need some sort of pcie_root_port() function.  We already
+have a static pcie_find_root_port() that is basically the same.  And
+dmar_find_matched_atsr_unit() does something very similar.  And
+ixgbe_io_error_detected().  And myri10ge_enable_ecrc().
 
-Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
-Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
-Reported-by: David Ahern <david.ahern@oracle.com>
-Tested-by: David Ahern <david.ahern@oracle.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> +
+> +		while ((rppeer) && (pci_is_pcie(rppeer)) &&
+> +		       (pci_pcie_type(rppeer) != PCI_EXP_TYPE_ROOT_PORT))
+> +			rppeer = rppeer->bus->self;
+> +
+> +		common_upstream = pci_find_common_upstream_dev(dev, peer);
 
- arch/sparc/kernel/pci.c        |    7 ++++++-
- arch/sparc/kernel/pci_common.c |   15 +++++++++++++--
- arch/sparc/kernel/pci_impl.h   |    1 +
- 3 files changed, 20 insertions(+), 3 deletions(-)
----
- arch/sparc/kernel/pci.c        |  7 ++++++-
- arch/sparc/kernel/pci_common.c | 15 +++++++++++++--
- arch/sparc/kernel/pci_impl.h   |  1 +
- 3 files changed, 20 insertions(+), 3 deletions(-)
+This (and the ACS check) logically belongs above the rpdev/rppeer stuff.
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index b91d7f1..badf095 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -185,8 +185,10 @@ static unsigned long pci_parse_of_flags(u32 addr0)
- 
- 	if (addr0 & 0x02000000) {
- 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
--		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
-+		if (addr0 & 0x01000000)
-+			flags |= IORESOURCE_MEM_64
-+				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		if (addr0 & 0x40000000)
- 			flags |= IORESOURCE_PREFETCH
- 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
-@@ -655,6 +657,9 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 				pbm->io_space.start);
- 	pci_add_resource_offset(&resources, &pbm->mem_space,
- 				pbm->mem_space.start);
-+	if (pbm->mem64_space.flags)
-+		pci_add_resource_offset(&resources, &pbm->mem64_space,
-+					pbm->mem_space.start);
- 	pbm->busn.start = pbm->pci_first_busno;
- 	pbm->busn.end	= pbm->pci_last_busno;
- 	pbm->busn.flags	= IORESOURCE_BUS;
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 944a065..a859a86 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -406,6 +406,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 	}
- 
- 	num_pbm_ranges = i / sizeof(*pbm_ranges);
-+	memset(&pbm->mem64_space, 0, sizeof(struct resource));
- 
- 	for (i = 0; i < num_pbm_ranges; i++) {
- 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
-@@ -451,7 +452,11 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			break;
- 
- 		case 3:
--			/* XXX 64-bit MEM handling XXX */
-+			/* 64-bit MEM handling */
-+			pbm->mem64_space.start = a;
-+			pbm->mem64_space.end = a + size - 1UL;
-+			pbm->mem64_space.flags = IORESOURCE_MEM;
-+			break;
- 
- 		default:
- 			break;
-@@ -465,15 +470,21 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 		prom_halt();
- 	}
- 
--	printk("%s: PCI IO[%llx] MEM[%llx]\n",
-+	printk("%s: PCI IO[%llx] MEM[%llx]",
- 	       pbm->name,
- 	       pbm->io_space.start,
- 	       pbm->mem_space.start);
-+	if (pbm->mem64_space.flags)
-+		printk(" MEM64[%llx]",
-+		       pbm->mem64_space.start);
-+	printk("\n");
- 
- 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
- 
- 	request_resource(&ioport_resource, &pbm->io_space);
- 	request_resource(&iomem_resource, &pbm->mem_space);
-+	if (pbm->mem64_space.flags)
-+		request_resource(&iomem_resource, &pbm->mem64_space);
- 
- 	pci_register_legacy_regions(&pbm->io_space,
- 				    &pbm->mem_space);
-diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
-index 75803c7..37222ca 100644
---- a/arch/sparc/kernel/pci_impl.h
-+++ b/arch/sparc/kernel/pci_impl.h
-@@ -97,6 +97,7 @@ struct pci_pbm_info {
- 	/* PBM I/O and Memory space resources. */
- 	struct resource			io_space;
- 	struct resource			mem_space;
-+	struct resource			mem64_space;
- 	struct resource			busn;
- 
- 	/* Base of PCI Config space, can be per-PBM or shared. */
--- 
-1.8.4.5
-
+> +		/*
+> +		 * If ACS is not implemented, we have no idea about P2P
+> +		 * support. Optimistically allow this if there is a common
+> +		 * upstream device.
+> +		 */
+> +		pos = pci_find_ext_capability(rpdev, PCI_EXT_CAP_ID_ACS);
+> +		if (!pos)
+> +			return common_upstream != NULL;
+> +
+> +		/*
+> +		 * If the devices are under the same root port and have a common
+> +		 * upstream device, allow if the root port is further upstream
+> +		 * from the common upstream device and the common upstream
+> +		 * device has Upstream Forwarding disabled, or if the root port
+> +		 * is the common upstream device and ACS is not implemented.
+> +		 */
+> +		pci_read_config_word(rpdev, pos + PCI_ACS_CAP, &cap);
+> +		if ((rpdev == rppeer && common_upstream) &&
+> +		    (((common_upstream != rpdev) &&
+> +		      !pci_acs_enabled(common_upstream, PCI_ACS_UF)) ||
+> +		     ((common_upstream == rpdev) && ((cap & PCI_ACS_RR) == 0))))
+> +			return true;
+> +
+> +		/*
+> +		 * If ACS RR is implemented and disabled, allow only if the
+> +		 * devices are under the same root port.
+> +		 */
+> +		if (cap & PCI_ACS_RR && !pci_acs_enabled(rpdev, PCI_ACS_RR))
+> +			return rpdev == rppeer;
+> +
+> +		/*
+> +		 * If ACS RR is not implemented, or is implemented and enabled,
+> +		 * only allow if there's a translation agent enabled to do the
+> +		 * redirect.
+> +		 */
+> +		return iommu_present(&pci_bus_type);
+> +	}
+> +
+> +	return false;
+> +}
+> +
+>  #define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
+>  static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
+>  static DEFINE_SPINLOCK(resource_alignment_lock);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 8262b9e..db0cb51 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -824,6 +824,8 @@ void pci_stop_root_bus(struct pci_bus *bus);
+>  void pci_remove_root_bus(struct pci_bus *bus);
+>  void pci_setup_cardbus(struct pci_bus *bus);
+>  void pci_sort_breadthfirst(void);
+> +bool pci_peer_traffic_supported(struct pci_dev *dev, struct pci_dev *peer);
+> +
+>  #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+>  #define dev_is_pf(d) ((dev_is_pci(d) ? to_pci_dev(d)->is_physfn : false))
+>  #define dev_num_vf(d) ((dev_is_pci(d) ? pci_num_vf(to_pci_dev(d)) : 0))
+> @@ -1914,4 +1916,5 @@ static inline bool pci_ari_enabled(struct pci_bus *bus)
+>  {
+>  	return bus->self && bus->self->ari_enabled;
+>  }
+> +
+>  #endif /* LINUX_PCI_H */
+> -- 
+> 2.5.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
