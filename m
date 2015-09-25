@@ -1,76 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:50180 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751033AbbIWTjp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 15:39:45 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Will Deacon <will.deacon@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <ddaney@caviumnetworks.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	David Daney <david.daney@cavium.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Kumar Gala <galak@codeaurora.org>,
+Received: from mx1.redhat.com ([209.132.183.28]:45514 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932359AbbIYQSL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 25 Sep 2015 12:18:11 -0400
+Message-ID: <1443197890.23936.631.camel@redhat.com>
+Subject: Re: [RFC] PCI: Unassigned Expansion ROM BARs
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 4/5] PCI: generic: Correct, and avoid overflow, in bus_max calculation.
-Date: Wed, 23 Sep 2015 21:39:27 +0200
-Message-ID: <1707525.QvfFzUYq4E@wuerfel>
-In-Reply-To: <20150923193545.GZ7356@arm.com>
-References: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com> <3751968.n8LRgots8n@wuerfel> <20150923193545.GZ7356@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Date: Fri, 25 Sep 2015 10:18:10 -0600
+In-Reply-To: <20150925143546.GA1017@localhost>
+References: <CAL-B5D3FgF+o7BcLBe7O_gcxy2jf3w43bXeDJuRH2VS2ES0A7Q@mail.gmail.com>
+	 <CAE9FiQWY1gdpzdqToBM0sNgfCRnRfEEgJfn-J9igorLH1K80JA@mail.gmail.com>
+	 <CAL-B5D0f10Q6C5jmjzysowDjJ=Z8iA1tSSAQwUp9qcxW-WeMPw@mail.gmail.com>
+	 <CAE9FiQVXox9UbaQKZvatLwdqbEp6k9QpRcSCeFNROdK6=5qq2Q@mail.gmail.com>
+	 <CAE9FiQWd69=6-UvCWsPOHvnZ96grJyzEt_+WR0-Q3M9wHz69hw@mail.gmail.com>
+	 <20150925143546.GA1017@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 23 September 2015 20:35:45 Will Deacon wrote:
-> On Wed, Sep 23, 2015 at 08:27:41PM +0100, Arnd Bergmann wrote:
-> > On Wednesday 23 September 2015 11:21:56 David Daney wrote:
-> > > >>
-> > > >>      /* Limit the bus-range to fit within reg */
-> > > >> -    bus_max = pci->cfg.bus_range->start +
-> > > >> -              (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-> > > >> +    bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-> > > >> +    if (bus_max > 255)
-> > > >> +            bus_max = 255;
-> > > >
-> > > > I still don't understand the need for this part. If the cfg space is bigger
-> > > > than bus_max, isn't that simply an invalid resource? Given that the resource
-> > > > could be broken in other ways too, this check feels more like a specific
-> > > > workaround rather than generally useful code.
-> > > 
-> > > Imagine...
-> > > 
-> > >    bus-range [0x80 .. 0xff], this requires a cfg.res that will cover the 
-> > > entire range of 0..0xff.
-> > > 
-> > >    according to the calculations above, (resource_size(&pci->cfg.res) >> 
-> > > pci->cfg.ops.bus_shift) - 1 will have a value of 0xff, so...
+On Fri, 2015-09-25 at 09:35 -0500, Bjorn Helgaas wrote:
+> On Thu, Sep 24, 2015 at 09:35:20PM -0700, Yinghai Lu wrote:
+> > On Thu, Sep 24, 2015 at 12:01 PM, Yinghai Lu <yinghai@kernel.org> wrote:
 > > 
-> > Extending the computation to 32 bit seems fine, but I'd rather warn loudly
-> > if the bus range does not fit within the registers.
+> > > Or do we want to keep a white list to say which device should have
+> > > ROM bar as mush have, and other is optional to have ?
 > > 
-> > Also note that the computation is already correct with my interpretation
-> > of the reg property.
+> > Subject: [RFC PATCH] PCI: Add pci_dev_need_rom_bar()
+> > 
+> > Only set that for
+> > 1. if BIOS/firmware already set ROM bar.
+> > 2. via quirks for some devices.
+> > 
+> > We assign those needed ROM bar as required
+> > and other ROM bars as optional resources.
 > 
-> From what Lorenzo was saying, ACPI shares the interpretation that David is
-> implementing here and, given that the DT version seems to be subjective,
-> aligning this reg property with MMCFG seems to make sense.
+> I'd rather not have a whitelist if we can avoid it.  We'd be
+> continually adding new devices to it, and it makes the system harder
+> to understand because there's no consistent rule about how ROMs are
+> handled.
+> 
+> Alex mentioned the idea of ripping the ROM, and I'd like to explore
+> that idea a little more.  What if we could temporarily assign space
+> for the ROM during enumeration, read the contents, cache the contents
+> somewhere, then deallocate the actual BAR space?  We could hang onto
+> the cache and give it to anybody who later needs the ROM.
+> 
+> I know there are probably issues here, but I don't know what they are,
+> so I'd like to at least have a conversation about it.
 
-We should then make it very clear in the binding that the driver
-is not allowed to actually map the registers for the buses outside
-of the bus-range, as that is highly unusual.
+Ok, so for background in the case I mentioned, we can often use the
+pci-sysfs rom interface to get a copy of the device ROM, which we then
+pass to QEMU and we avoid any access to the physical ROM from the VM.
+We can obviously get the ROM from other sources too, but that's not
+really relevant here.
 
-We would also need a special exception for this if we ever get to
-implement the DT source checker that we have been talking about for
-years, as the reg property might then overlap with a property from
-another device.
+If we want to extend this idea into the kernel, creating a buffer that
+holds the ROM contents that we access rather than mapping and enabling
+the ROM to provide access, we first need to get access to the ROM at
+least once.  The simplification here is that we can do this on boot and
+we can re-use the space allocated to the standard BARs since we don't
+need space for both the ROM and the standard BARs at the same time.  I
+think that in the vast majority of cases, we're going to find that the
+ROM BAR is smaller than the largest standard MMIO BAR of the device or
+at least smaller than the minimum bridge aperture.  This suggests that
+we could simply record the BAR values, reprogram them to zero, then
+overlap the ROM BAR to the orignal addresses, enable, rip the ROM, then
+restore the configuration without needing to adjust any bridge
+apertures.
 
-	Arnd
+That sounds pretty good, so long as we can consider the ROM to be
+perfectly static.  I don't know if anything relies on an in-place update
+or if there are ROMs that are less read-only than others.  Maybe it's
+safe to assume that or at least safe to assume that if the BIOS didn't
+leave room for them, then we can consider them static.  It might be
+interesting to strace some of the userspace firmware update programs for
+add-in cards to see if they re-read the ROM to determine if it has
+changed.
+
+We already sort of do this for VGA ROMs.  When a driver tries to map the
+boot VGA ROM they actually map the shadow copy at 0xC0000 (iirc) rather
+than the one on the device.  This actually sort of sucks because this
+particular shadow copy certainly is not read-only and in all the glory
+that is VGA, the shadow sometimes gets modified by the execution of the
+VGA ROM itself and we no longer have access to the pristine device
+version of it (bad for device assignment of primary graphics).
+
+Now, if we want to make our own shadow copies for all ROMs, it seems
+pretty clear that we first need to get access to the ROM, which means we
+need to figure out if the BIOS mapped it.  If the ROM BAR is outside of
+the bridge aperture (catching both 0 and 0xFFF..000) or overlaps a
+standard ROM BAR, we can consider it unprogrammed.  In that case we need
+to try to do the trick above with unmapping standard BARs to get the
+shadow copy.  Otherwise we should be able to get the shadow copy in
+place (maybe a question of which we prefer to use in this case).  I
+would be willing to risk that if the BIOS didn't leave room for the ROM
+and we can't map it into the space used by other BARs or it doesn't fit
+the bridge aperture, we can spit out a printk warning and skip it.  I
+expect a very low failure rate.
+
+What dependencies would we have on the BIOS programming of the ROM BAR
+if we took such an approach?  It seems like we should always be able to
+detect invalid contents in the ROM BAR and it doesn't matter if they
+think we should have access or not, we own the device and can give
+ourselves access.  Thanks,
+
+Alex
+
