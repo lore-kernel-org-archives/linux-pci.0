@@ -1,150 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 14/53] PCI: Use correct align for optional only resources during sorting
-Date: Wed, 30 Sep 2015 22:52:48 -0700
-Message-Id: <1443678807-786-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:44973 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751106AbbIYHjB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Sep 2015 03:39:01 -0400
+Date: Fri, 25 Sep 2015 09:38:58 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/6] mvebu PCI fixes and cleanups
+Message-ID: <20150925093858.0af99c28@free-electrons.com>
+In-Reply-To: <20150923171706.GL21084@n2100.arm.linux.org.uk>
+References: <20150923171706.GL21084@n2100.arm.linux.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During sorting before assign, we only put resource with non-zero align
-in the sorted list, so for optional resources that required size is 0 and
-only have optional parts, we need to have correct align.
+Russell,
 
-While treating SRIOV as optional resources, we always read alignment for
-SRIOV bars every time, so they are ok.
-Hotplug bridge resources are using STARTALIGN so it is ok when size is 0
-if we have correct start for them.
+On Wed, 23 Sep 2015 18:17:07 +0100, Russell King - ARM Linux wrote:
+> This small series contains a number of fixes and cleanups to the
+> mvebu PCI host code.
 
-Later we want to treat the ROM BAR as optional resource, and it has
-SIZEALIGN, so align=size will be 0. We need to find a way to get align
-for them.
+I've tested this series on my Armada XP GP board, with 3 PCIe cards
+connected (one Intel e1000e NIC, one generic AHCI SATA card, and one
+Marvell SATA card), and I saw no obvious regressions. The PCIe devices
+are still properly enumerated, and they seem to work fine. There is no
+change in the 'lspci -vv' output.
 
-We can use optional resource align instead in that case, and it
-is ok for SRIOV path and hotplug bridge resource path.
+Moreover, I've reviewed the different patches, and they look alright to
+me.
 
-We need to pass realloc list from sizing stage to sorting stage, and
-get entry from realloc list and calculate align from the entry.
+Reviewed-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Reported-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 42 insertions(+), 7 deletions(-)
+Bjorn, will you propagate the Tested-by/Reviewed-by to all patches on
+the series, or since I believe you're using patchwork, you want us to
+post Tested-by/Reviewed-by replies to each patch?
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a62cbd2..79bc2cb 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -145,9 +145,42 @@ static resource_size_t get_res_add_align(struct list_head *head,
- 	return dev_res->min_align;
- }
- 
-+static resource_size_t __pci_resource_alignment(
-+				struct pci_dev *dev,
-+				struct resource *r,
-+				struct list_head *realloc_head)
-+{
-+	resource_size_t r_align = pci_resource_alignment(dev, r);
-+	resource_size_t orig_start, orig_end;
-+	struct pci_dev_resource *dev_res;
-+
-+	if (r_align || !realloc_head)
-+		return r_align;
-+
-+	dev_res = res_to_dev_res(realloc_head, r);
-+	if (!dev_res || !dev_res->add_size)
-+		return r_align;
-+
-+	orig_start = r->start;
-+	orig_end = r->end;
-+	r->end += dev_res->add_size;
-+	if ((r->flags & IORESOURCE_STARTALIGN)) {
-+		resource_size_t r_size = resource_size(r);
-+
-+		r->start = dev_res->min_align;
-+		r->end = r->start + r_size - 1;
-+	}
-+	r_align = pci_resource_alignment(dev, r);
-+	r->start = orig_start;
-+	r->end = orig_end;
-+
-+	return r_align;
-+}
- 
- /* Sort resources by alignment */
--static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
-+static void pdev_sort_resources(struct pci_dev *dev,
-+				 struct list_head *realloc_head,
-+				 struct list_head *head)
- {
- 	int i;
- 
-@@ -165,7 +198,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- 		if (!(r->flags) || r->parent)
- 			continue;
- 
--		r_align = pci_resource_alignment(dev, r);
-+		r_align = __pci_resource_alignment(dev, r, realloc_head);
- 		if (!r_align) {
- 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
- 				 i, r);
-@@ -183,8 +216,9 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- 		list_for_each_entry(dev_res, head, list) {
- 			resource_size_t align;
- 
--			align = pci_resource_alignment(dev_res->dev,
--							 dev_res->res);
-+			align = __pci_resource_alignment(dev_res->dev,
-+							 dev_res->res,
-+							 realloc_head);
- 
- 			if (r_align > align) {
- 				n = &dev_res->list;
-@@ -197,6 +231,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- }
- 
- static void __dev_sort_resources(struct pci_dev *dev,
-+				 struct list_head *realloc_head,
- 				 struct list_head *head)
- {
- 	u16 class = dev->class >> 8;
-@@ -213,7 +248,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
- 			return;
- 	}
- 
--	pdev_sort_resources(dev, head);
-+	pdev_sort_resources(dev, realloc_head, head);
- }
- 
- static inline void reset_resource(struct resource *res)
-@@ -507,7 +542,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
- {
- 	LIST_HEAD(head);
- 
--	__dev_sort_resources(dev, &head);
-+	__dev_sort_resources(dev, add_head, &head);
- 	__assign_resources_sorted(&head, add_head, fail_head);
- 
- }
-@@ -520,7 +555,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
- 	LIST_HEAD(head);
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list)
--		__dev_sort_resources(dev, &head);
-+		__dev_sort_resources(dev, realloc_head, &head);
- 
- 	__assign_resources_sorted(&head, realloc_head, fail_head);
- }
+Thanks!
+
+Thomas
 -- 
-1.8.4.5
-
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
