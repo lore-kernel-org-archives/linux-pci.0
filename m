@@ -1,80 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:45252 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753694AbbIWTL2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 Sep 2015 15:11:28 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"myron.stowe@redhat.com" <myron.stowe@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Fix devfn for VPD access through function 0
-Date: Wed, 23 Sep 2015 19:11:19 +0000
-Message-ID: <409211CA-FEAB-4CB6-B418-CBF9FA50DB6A@intel.com>
-References: <20150915171216.7049.58119.stgit@gimli.home>
-In-Reply-To: <20150915171216.7049.58119.stgit@gimli.home>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_1C680143-7EEE-49FD-B33B-845B452A5FE9";
-	protocol="application/pgp-signature"; micalg=pgp-sha256
+Received: from iolanthe.rowland.org ([192.131.102.54]:41408 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933216AbbIYVPr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Sep 2015 17:15:47 -0400
+Date: Fri, 25 Sep 2015 17:15:46 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Roland Weber <r-o-l@web.de>
+cc: linux-usb@vger.kernel.org, Mathias Nyman <mathias.nyman@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: PROBLEM: lsusb -v freezes kernel on Acer ES1-111M
+In-Reply-To: <trinity-873ca220-d869-40c4-88b0-a6ae9ec8548d-1443213001295@3capp-webde-bs54>
+Message-ID: <Pine.LNX.4.44L0.1509251714160.1847-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_1C680143-7EEE-49FD-B33B-845B452A5FE9
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+On Fri, 25 Sep 2015, Roland Weber wrote:
 
-> On Sep 15, 2015, at 10:17 AM, Alex Williamson =
-<alex.williamson@redhat.com> wrote:
->=20
-> Commit 932c435caba8 ("PCI: Add dev_flags bit to access VPD through
-> function 0") passes PCI_SLOT(devfn) for the devfn parameter of
-> pci_get_slot().  Generally this works because we're fairly well
-> guaranteed that a PCIe device is at slot address 0, but for the
-> general case, including conventional PCI, it's incorrect.  We need
-> to get the slot and then convert it back into a devfn.
->=20
-> Fixes: 932c435caba8 ("PCI: Add dev_flags bit to access VPD through =
-function 0")
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: stable@vger.kernel.org
-> ---
->=20
-> Since the original patch and quirk was marked for stable and applies
-> to all Intel NICs, regardless of the bus type, I assume this needs to
-> chase it or VPD might disappear on e1000/e100 if it currently exists.
+> Hi Alan,
+> 
+> > (I still think it's the BIOS's fault.)
+> 
+> You're spot on, and the keyboard doesn't have enough special characters
+> to express my feelings. (@$#!§*)
+> 
+> I created a bootable USB stick with the Xubuntu 15.04 installer.
+> When booting in legacy BIOS mode...
+> 
+> > lspci
+> 00:00.0 Host bridge: Intel Corporation Atom Processor Z36xxx/Z37xxx Series SoC Transaction Register (rev 0e)
+> 00:02.0 VGA compatible controller: Intel Corporation Atom Processor Z36xxx/Z37xxx Series Graphics & Display (rev 0e)
+> 00:12.0 SD Host controller: Intel Corporation Atom Processor Z36xxx/Z37xxx Series SDIO Controller (rev 0e)
+> 00:14.0 USB controller: Intel Corporation Atom Processor Z36xxx/Z37xxx Series USB xHCI (rev 0e)
+> 00:17.0 SD Host controller: Intel Corporation Device 0f50 (rev 0e)
+> 00:1a.0 Encryption controller: Intel Corporation Atom Processor Z36xxx/Z37xxx Series Trusted Execution Engine (rev 0e)
+> 00:1b.0 Audio device: Intel Corporation Atom Processor Z36xxx/Z37xxx Series High Definition Audio Controller (rev 0e)
+> 00:1c.0 PCI bridge: Intel Corporation Device 0f48 (rev 0e)
+> 00:1c.1 PCI bridge: Intel Corporation Device 0f4a (rev 0e)
+> 00:1c.2 PCI bridge: Intel Corporation Device 0f4c (rev 0e)
+> 00:1d.0 USB controller: Intel Corporation Atom Processor Z36xxx/Z37xxx Series USB EHCI (rev 0e)
+> 00:1f.0 ISA bridge: Intel Corporation Atom Processor Z36xxx/Z37xxx Series Power Control Unit (rev 0e)
+> 00:1f.3 SMBus: Intel Corporation Device 0f12 (rev 0e)
+> 02:00.0 Network controller: Qualcomm Atheros QCA9565 / AR9565 Wireless Network Adapter (rev 01)
+> 03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 0c)
+> 
+> and the machine freezes.
+> When booting in UEFI mode (insecure)...
+> 
+> > lspci
+> 00:00.0 Host bridge: Intel Corporation Atom Processor Z36xxx/Z37xxx Series SoC Transaction Register (rev 0e)
+> 00:02.0 VGA compatible controller: Intel Corporation Atom Processor Z36xxx/Z37xxx Series Graphics & Display (rev 0e)
+> 00:14.0 USB controller: Intel Corporation Atom Processor Z36xxx/Z37xxx Series USB xHCI (rev 0e)
+> 00:1a.0 Encryption controller: Intel Corporation Atom Processor Z36xxx/Z37xxx Series Trusted Execution Engine (rev 0e)
+> 00:1b.0 Audio device: Intel Corporation Atom Processor Z36xxx/Z37xxx Series High Definition Audio Controller (rev 0e)
+> 00:1c.0 PCI bridge: Intel Corporation Device 0f48 (rev 0e)
+> 00:1c.1 PCI bridge: Intel Corporation Device 0f4a (rev 0e)
+> 00:1c.2 PCI bridge: Intel Corporation Device 0f4c (rev 0e)
+> 00:1f.0 ISA bridge: Intel Corporation Atom Processor Z36xxx/Z37xxx Series Power Control Unit (rev 0e)
+> 00:1f.3 SMBus: Intel Corporation Device 0f12 (rev 0e)
+> 02:00.0 Network controller: Qualcomm Atheros QCA9565 / AR9565 Wireless Network Adapter (rev 01)
+> 03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 0c)
+> 
+> and the machine does not freeze. The device 00:1d.0 which caused my problem
+> has simply vanished, along with 00:12.0 and 00:17.0. Apparently, there's
+> some unused hardware in the machine and Acer decided to hide it from the OS
+> in UEFI mode, but didn't bother to do the same in legacy BIOS mode. Or maybe
+> BIOS doesn't support such behavior.
 
-This looks good to me.
-Acked-by: Mark Rustad <mark.d.rustad@intel.com>
+Amazing!
 
---
-Mark Rustad, Networking Division, Intel Corporation
+> I'll try the upcoming re-installation in UEFI mode. And if it goes as I hope,
+> I won't be able to trigger the freeze anymore. It'd be kind of an unsatisfactory
+> ending to a months-long wild goose chase. But the simplest solution might
+> turn out to be telling people not to use legacy BIOS mode on this machine.
+> 
+> I'll wait with the installation until Sunday morning, just in case you or
+> somebody else would like me to gather some more information in BIOS mode.
+> And of course I'll report the outcome of the installation.
 
+Okay.  I don't have any other requests for now.
 
---Apple-Mail=_1C680143-7EEE-49FD-B33B-845B452A5FE9
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
+> thanks for all your efforts,
 
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
+You're the one who did all the work.  Go ahead and pat yourself on the 
+back.  :-)
 
-iQIcBAEBCAAGBQJWAvlWAAoJEDwO/+eO4+5uM2gQAIh1SfENjAcIsBr2g5eu3Hs6
-f1HfjSPjlPD7xCZLDJ2qRtLRb1h0FtA+Z+bZ2Uq2gXu1A9AscnRi+N8usBMtop3j
-J3rBO5i2rYwN/1sGpsOTLKYUgN/tasqLpqkEgeF2huFK9uSI/qmdwbvPd4EN8OoU
-Q3eEOk5ynBAy/tOQSiYZQgEZ7xwdrFHOXJD7Xfy3XUorGu5UJ5MzlD8nl8AFRO5L
-BLpDMDdhLo3kOSo8x6qoiRq2NfZP/T0e+lTxqBJ9uIVWfcsQDrXJtbIIs6iG13dM
-b4MPvq9/h56BS3BnkMrHrDXSqNrTflvNtrLaHlbdsirqF90ZvZHVzgZeEYbDSvm9
-YQWk9/JHu7wEnPhq0exae89+x3TmgInIk4kZwwMvMTmxWhDeATwdvchUugrhL0zE
-yRCqqxlXatDrEdWiBzL8tTS0GK0NP7tphRuy32ONucBqXGDLLSaa8u9/WkpTInXE
-OUjcjq5SV2qIQEXg/8+DI6nJMesCi4guq/kgxXfdG8p5rFKauE2Fkz/qaQ7weoaf
-kubanTe2/m874gD8YxsY2y4Y17kNA7PgerYkIWy2weG0QM5ZDuR7OgDY/apRJQWD
-BhmJ0xDQqc92fdSts2n7x42a5OncGIA3ZWOJ/o/7MoxAaEJcavnjKWuuCQARJmpe
-LwBiFEoS2ciTQ/3USShZ
-=MhfJ
------END PGP SIGNATURE-----
+Alan Stern
 
---Apple-Mail=_1C680143-7EEE-49FD-B33B-845B452A5FE9--
