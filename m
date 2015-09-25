@@ -1,61 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp04.br.ibm.com ([32.104.18.25]:54077 "EHLO
-	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751135AbbIGXIG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Sep 2015 19:08:06 -0400
-Received: from /spool/local
-	by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Mon, 7 Sep 2015 20:08:03 -0300
-Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.13.184.26])
-	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 8FEED352008C
-	for <linux-pci@vger.kernel.org>; Mon,  7 Sep 2015 19:06:53 -0400 (EDT)
-Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
-	by d24relay02.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t87N6CQt23658774
-	for <linux-pci@vger.kernel.org>; Mon, 7 Sep 2015 20:06:13 -0300
-Received: from d24av05.br.ibm.com (localhost [127.0.0.1])
-	by d24av05.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t87N7w7Q024508
-	for <linux-pci@vger.kernel.org>; Mon, 7 Sep 2015 19:08:00 -0400
-Subject: Re: [PATCH v2 2/2] powerpc/PCI: Disable MSI/MSI-X interrupts at PCI
- probe time in OF case
-To: Michael Ellerman <mpe@ellerman.id.au>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1439932430-13375-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <1439932077-11427-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <1440010450-4549-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <20150903175624.GI829@google.com> <1441595403.12945.3.camel@ellerman.id.au>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
-	paulus@samba.org, mst@redhat.com, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 25 Sep 2015 17:19:24 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	"David S. Miller" <davem@davemloft.net>
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Message-ID: <55EE18CD.1060803@linux.vnet.ibm.com>
-Date: Mon, 7 Sep 2015 20:07:57 -0300
+	Will Deacon <Will.Deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
+ ECAM) and ACPI code out of arch/x86/ directory
+Message-ID: <20150925161924.GA2271@red-moon>
+References: <5570447D.3020705@linaro.org>
+ <557504A2.3060203@linaro.org>
+ <20150608151443.GA16151@red-moon>
+ <55E4340D.6050004@linaro.org>
+ <55ED6010.3020406@linaro.org>
+ <20150908150727.GF29293@red-moon>
+ <55F0388B.1090607@linaro.org>
+ <20150911112018.GA13033@red-moon>
+ <55F6DFF6.4010807@linaro.org>
+ <56057001.9000101@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <1441595403.12945.3.camel@ellerman.id.au>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56057001.9000101@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Sep 25, 2015 at 05:02:09PM +0100, Tomasz Nowicki wrote:
 
-On 09/07/2015 12:10 AM, Michael Ellerman wrote:
->> But we later removed pci_msi_off() completely, so I think we probably
->> *could* call pci_msi_setup_pci_dev() from pci_init_capabilities().
->>
->> That would be much nicer because it makes more sense there, and it
->> would do the right thing for powerpc and sparc because they both
->> already use that path.
->
-> Sounds reasonable to me.
->
-> Guilherme can you please try this and let us know.
+[...]
 
-Sure Michael. I tested in pSeries and PowerNV and both worked. Couldn't 
-test on SPARC.
+> > My concerns/ideas related to raw accessors for ARM64, please correct me
+> > at any point.
+> >
+> > ACPI spec - chapter: 19.5.96 OperationRegion (Declare Operation Region)
+> > defines PCI_Config as one of region types. Every time ASL opcode
+> > operates on corresponding PCI config space region, ASL interpreter is
+> > dispatching address space to our raw accessors, please see
+> > acpi_ex_pci_config_space_handler, acpi_ev_pci_config_region_setup calls.
+> > What is more important, such operations may happen after (yes after) bus
+> > enumeration, but always raw accessors are called at the end with the
+> > {segment, bus, dev, fn} tuple.
+> >
+> > Giving above, here are some ideas:
+> > 1. We force somehow vendors to avoid operations on PCI config regions in
+> > ASL code. PCI config region definitions still fall into Hardware Reduced
+> > profile, so new ACPICA special subset for ARM64 is need. Then raw ACPI
+> > accessors can be empty (and overridden by x86).
+> > 2. We provide raw accessors which translate {segment, bus, dev, fn}
+> > tuple to Linux generic accessors (this can be considered only if PCI
+> > config accesses happened after bus enumeration for HR profile, thus
+> > tuple to bus structure map is possible).
+> > 4. We rely on the generic MCFG based raw read and writes.
+> 
+> I will appreciate your opinion on above ideas.
 
+Well, (1) does not seem allowed by the ACPI specification, the only
+way we can detect that is by leaving the raw accessors empty for
+now and see how things will turn out on ARM64, in the meantime
+I will start a thread on ASWG to check how that's used on x86, I
+do not have any machine to test this and grokking ACPICA is not
+trivial, there is lots of history there and it is hard to fathom.
 
-Cheers
+(2) is tempting but I am not sure it works all the time (I still
+think that's a quirk of ACPI specs, namely that some OperationRegion
+should always be available to ASL, maybe that's just an unused ACPI
+spec quirk).
 
+If I read you series correctly (4) can be implemented easily if and
+when we deem the raw accessors necessary, on top of the MCFG layer,
+by making the MCFG raw accessors the default instead of leaving them
+empty.
+
+I pulled your branch and started testing it on AMD Seattle, next week
+we should try to get this done.
+
+I think you should target option (1) and in the meantime we should
+reach a conclusion on the raw accessors usage on ARM64.
+
+Thanks,
+Lorenzo
