@@ -1,61 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:42276 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754598AbbIWRRn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 13:17:43 -0400
-In-Reply-To: <20150923171706.GL21084@n2100.arm.linux.org.uk>
-References: <20150923171706.GL21084@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 3/6] pci: mvebu: use of_get_available_child_count()
+Received: from mail.kernel.org ([198.145.29.136]:57491 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932171AbbIYOft (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 25 Sep 2015 10:35:49 -0400
+Date: Fri, 25 Sep 2015 09:35:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Myron Stowe <myron.stowe@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [RFC] PCI: Unassigned Expansion ROM BARs
+Message-ID: <20150925143546.GA1017@localhost>
+References: <CAL-B5D3FgF+o7BcLBe7O_gcxy2jf3w43bXeDJuRH2VS2ES0A7Q@mail.gmail.com>
+ <CAE9FiQWY1gdpzdqToBM0sNgfCRnRfEEgJfn-J9igorLH1K80JA@mail.gmail.com>
+ <CAL-B5D0f10Q6C5jmjzysowDjJ=Z8iA1tSSAQwUp9qcxW-WeMPw@mail.gmail.com>
+ <CAE9FiQVXox9UbaQKZvatLwdqbEp6k9QpRcSCeFNROdK6=5qq2Q@mail.gmail.com>
+ <CAE9FiQWd69=6-UvCWsPOHvnZ96grJyzEt_+WR0-Q3M9wHz69hw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1Zenfl-0004dB-HA@rmk-PC.arm.linux.org.uk>
-Date: Wed, 23 Sep 2015 18:17:37 +0100
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQWd69=6-UvCWsPOHvnZ96grJyzEt_+WR0-Q3M9wHz69hw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rather than open-coding of_get_available_child_count(), use the provided
-helper instead.
+On Thu, Sep 24, 2015 at 09:35:20PM -0700, Yinghai Lu wrote:
+> On Thu, Sep 24, 2015 at 12:01 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> 
+> > Or do we want to keep a white list to say which device should have
+> > ROM bar as mush have, and other is optional to have ?
+> 
+> Subject: [RFC PATCH] PCI: Add pci_dev_need_rom_bar()
+> 
+> Only set that for
+> 1. if BIOS/firmware already set ROM bar.
+> 2. via quirks for some devices.
+> 
+> We assign those needed ROM bar as required
+> and other ROM bars as optional resources.
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/pci/host/pci-mvebu.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+I'd rather not have a whitelist if we can avoid it.  We'd be
+continually adding new devices to it, and it makes the system harder
+to understand because there's no consistent rule about how ROMs are
+handled.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 0d9f3eae4315..0ed14f477bf8 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -933,7 +933,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 	struct mvebu_pcie *pcie;
- 	struct device_node *np = pdev->dev.of_node;
- 	struct device_node *child;
--	int i, ret;
-+	int num, i, ret;
- 
- 	pcie = devm_kzalloc(&pdev->dev, sizeof(struct mvebu_pcie),
- 			    GFP_KERNEL);
-@@ -969,14 +969,9 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 		return ret;
- 	}
- 
--	i = 0;
--	for_each_child_of_node(pdev->dev.of_node, child) {
--		if (!of_device_is_available(child))
--			continue;
--		i++;
--	}
-+	num = of_get_available_child_count(pdev->dev.of_node);
- 
--	pcie->ports = devm_kzalloc(&pdev->dev, i *
-+	pcie->ports = devm_kzalloc(&pdev->dev, num *
- 				   sizeof(struct mvebu_pcie_port),
- 				   GFP_KERNEL);
- 	if (!pcie->ports)
--- 
-2.1.0
+Alex mentioned the idea of ripping the ROM, and I'd like to explore
+that idea a little more.  What if we could temporarily assign space
+for the ROM during enumeration, read the contents, cache the contents
+somewhere, then deallocate the actual BAR space?  We could hang onto
+the cache and give it to anybody who later needs the ROM.
 
+I know there are probably issues here, but I don't know what they are,
+so I'd like to at least have a conversation about it.
+
+Bjorn
