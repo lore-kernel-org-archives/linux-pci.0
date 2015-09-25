@@ -1,77 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:34217 "EHLO
-	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754098AbbI2AKs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Sep 2015 20:10:48 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v3 0/2] PCI: Add support for PCI Enhanced Allocation "BARs"
-Date: Mon, 28 Sep 2015 17:10:37 -0700
-Message-Id: <1443485439-12081-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 25 Sep 2015 08:29:29 -0500
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: [GIT PULL] PCI fixes for v4.3
+Message-ID: <20150925132929.GA27521@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+Hi Linus,
 
-The original patches are from Sean O. Stalley. I made a few tweaks,
-but feel that it is substancially Sean's work, so I am keeping the
-patch set version numbering scheme going.
+These are fixes for things we merged for v4.3 (VPD, MSI, and bridge window
+management), and a new Renesas R8A7794 SoC device ID.
 
-Tested on Cavium ThunderX system with 4 Root Complexes containing 50
-devices/bridges provisioned with EA.
-
-Here is Sean's description of the patches:
-
-PCI Enhanced Allocation is a new method of allocating MMIO & IO
-resources for PCI devices & bridges. It can be used instead
-of the traditional PCI method of using BARs.
-
-EA entries are hardware-initialized to a fixed address.
-Unlike BARs, regions described by EA are cannot be moved.
-Because of this, only devices which are permanently connected to
-the PCI bus can use EA. A removable PCI card must not use EA.
-
-This patchset adds support for using EA entries instead of BARs
-on Root Complex Integrated Endpoints.
-
-The Enhanced Allocation ECN is publicly available here:
-https://www.pcisig.com/specifications/conventional/ECN_Enhanced_Allocation_23_Oct_2014_Final.pdf
+Bjorn
 
 
-Changes from V1:
-	- Use generic PCI resource claim functions (instead of EA-specific functions)
-	- Only add support for RCiEPs (instead of all devices).
-	- Removed some debugging messages leftover from early testing.
+The following changes since commit 6ff33f3902c3b1c5d0db6b1e2c70b6d76fba357f:
 
-Changes from V2 (By David Daney):
-	- Add ea_cap to struct pci_device, to aid in finding the EA capability.
-	- Factored EA entity decoding into a separate function.
-	- Add functions to find EA entities by BEI or Property.
-	- Add handling of EA provisioned bridges.
-	- Add handling of EA SRIOV BARs.
-	- Try to assign proper resource parent so that SRIOV device creation can occur.
+  Linux 4.3-rc1 (2015-09-12 16:35:56 -0700)
 
+are available in the git repository at:
 
-Sean O. Stalley (2):
-  PCI: Add Enhanced Allocation register entries
-  PCI: Add support for Enhanced Allocation devices
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.3-fixes-1
 
- drivers/pci/iov.c             |  15 ++-
- drivers/pci/pci.c             | 278 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h             |   4 +
- drivers/pci/probe.c           |  42 ++++++-
- drivers/pci/setup-bus.c       |   3 +
- include/linux/pci.h           |   1 +
- include/uapi/linux/pci_regs.h |  42 ++++++-
- 7 files changed, 380 insertions(+), 5 deletions(-)
+for you to fetch changes up to de24c18c0faca5ebd618e1cb87f5489745e40475:
 
--- 
-1.9.1
+  PCI: rcar: Add R8A7794 support (2015-09-24 17:06:32 -0500)
 
+----------------------------------------------------------------
+PCI updates for v4.3:
+
+  Resource management
+    - Revert pci_read_bridge_bases() unification (Bjorn Helgaas)
+    - Clear IORESOURCE_UNSET when clipping a bridge window (Bjorn Helgaas)
+
+  MSI
+    - Fix MSI IRQ domains for VFs on virtual buses (Alex Williamson)
+
+  Renesas R-Car host bridge driver
+    - Add R8A7794 support (Sergei Shtylyov)
+
+  Miscellaneous
+    - Fix devfn for VPD access through function 0 (Alex Williamson)
+    - Use function 0 VPD only for identical functions (Alex Williamson)
+
+----------------------------------------------------------------
+Alex Williamson (3):
+      PCI/MSI: Fix MSI IRQ domains for VFs on virtual buses
+      PCI: Fix devfn for VPD access through function 0
+      PCI: Use function 0 VPD for identical functions, regular VPD for others
+
+Bjorn Helgaas (2):
+      PCI: Revert "PCI: Call pci_read_bridge_bases() from core instead of arch code"
+      PCI: Clear IORESOURCE_UNSET when clipping a bridge window
+
+Sergei Shtylyov (1):
+      PCI: rcar: Add R8A7794 support
+
+ .../devicetree/bindings/pci/pci-rcar-gen2.txt      |  3 ++-
+ arch/alpha/kernel/pci.c                            |  7 +++++-
+ arch/frv/mb93090-mb00/pci-vdk.c                    |  2 ++
+ arch/ia64/pci/pci.c                                |  5 ++--
+ arch/microblaze/pci/pci-common.c                   |  9 +++++++-
+ arch/mips/pci/pci.c                                |  6 +++++
+ arch/mn10300/unit-asb2305/pci.c                    |  1 +
+ arch/powerpc/kernel/pci-common.c                   |  8 ++++++-
+ arch/x86/pci/common.c                              |  1 +
+ arch/xtensa/kernel/pci.c                           |  4 ++++
+ drivers/parisc/dino.c                              |  3 +++
+ drivers/parisc/lba_pci.c                           |  1 +
+ drivers/pci/access.c                               | 27 ++++------------------
+ drivers/pci/bus.c                                  |  2 ++
+ drivers/pci/host/pci-rcar-gen2.c                   |  1 +
+ drivers/pci/probe.c                                | 23 +++++++++---------
+ drivers/pci/quirks.c                               | 20 ++++++++++++++--
+ 17 files changed, 80 insertions(+), 43 deletions(-)
