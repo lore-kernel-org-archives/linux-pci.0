@@ -1,87 +1,139 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:34559 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752483AbbIOQqr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 12:46:47 -0400
-Received: by obbda8 with SMTP id da8so139850460obb.1
-        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2015 09:46:47 -0700 (PDT)
-Date: Tue, 15 Sep 2015 11:46:42 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: create builtin_pci_driver to avoid registration
- boilerplate
-Message-ID: <20150915164642.GC25767@google.com>
-References: <1440548737-7465-1-git-send-email-paul.gortmaker@windriver.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v7 5/6] Documentation: dt-bindings: pci: altera pcie
+ device tree binding
+To: Ley Foon Tan <lftan@altera.com>
+References: <1442801587-3812-1-git-send-email-lftan@altera.com>
+ <1442801587-3812-6-git-send-email-lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lftan.linux@gmail.com,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+From: Rob Herring <robh@kernel.org>
+Message-ID: <5606171A.5000609@kernel.org>
+Date: Fri, 25 Sep 2015 22:55:06 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1440548737-7465-1-git-send-email-paul.gortmaker@windriver.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1442801587-3812-6-git-send-email-lftan@altera.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Paul,
-
-On Tue, Aug 25, 2015 at 08:25:37PM -0400, Paul Gortmaker wrote:
-> In commit f309d4443130bf814e991f836e919dca22df37ae ("platform_device:
-> better support builtin boilerplate avoidance") we introduced the
-> builtin_driver macro.
+On 09/20/2015 09:13 PM, Ley Foon Tan wrote:
+> This patch adds the bindings for Altera PCIe host controller driver and
+> Altera PCIe MSI driver.
 > 
-> Here we use that support and extend it to PCI driver registration,
-> so where a driver is clearly non-modular and builtin-only, we can
-> register it in a similar fashion.  And existing code that is clearly
-> non-modular can be updated with the simple mapping of
-> 
->      module_pci_driver(...)  ---> builtin_pci_driver(...)
-> 
-> We've essentially cloned the former to make the latter, and taken
-> out the remove/module_exit parts since those never get used in a
-> non-modular build of the code.
-
-Do you have any estimate of how many potential users of this there
-are?  I took a quick look at users of module_pci_driver() (I see
-almost 300 of them in v4.3-rc1), and most of them look like legitimate
-modules.  But the comment mentions replacing device_initcall() as
-well, so maybe there are more there?
-
-If only a couple would be converted to builtin_pci_driver(), I'm not
-sure it's worth it, because it does add more things to look at
-(builtin_pci_driver() in addition to module_pci_driver()).
-
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+> Signed-off-by: Ley Foon Tan <lftan@altera.com>
 > ---
->  include/linux/pci.h | 11 +++++++++++
->  1 file changed, 11 insertions(+)
+>  .../devicetree/bindings/pci/altera-pcie-msi.txt    | 28 +++++++++++++
+>  .../devicetree/bindings/pci/altera-pcie.txt        | 49 ++++++++++++++++++++++
+>  2 files changed, 77 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+>  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
 > 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 88bee285b93d..8da2758e7d0e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1187,6 +1187,17 @@ void pci_unregister_driver(struct pci_driver *dev);
->  	module_driver(__pci_driver, pci_register_driver, \
->  		       pci_unregister_driver)
->  
-> +/**
-> + * builtin_pci_driver() - Helper macro for registering a PCI driver
-> + * @__pci_driver: pci_driver struct
-> + *
-> + * Helper macro for PCI drivers which do not do anything special in their
-> + * init code. This eliminates a lot of boilerplate. Each driver may only
-> + * use this macro once, and calling it replaces device_initcall(...)
-
-The builtin_platform_driver() patches I see are single-line patches,
-so they don't look like they remove a *lot* of boilerplate.
-
-Bjorn
-
-> + */
-> +#define builtin_pci_driver(__pci_driver) \
-> +	builtin_driver(__pci_driver, pci_register_driver)
+> diff --git a/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+> new file mode 100644
+> index 0000000..53ad2388
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+> @@ -0,0 +1,28 @@
+> +* Altera PCIe MSI controller
 > +
->  struct pci_driver *pci_dev_driver(const struct pci_dev *dev);
->  int pci_add_dynid(struct pci_driver *drv,
->  		  unsigned int vendor, unsigned int device,
-> -- 
-> 2.5.0
+> +Required properties:
+> +- compatible:	should contain "altr,msi-1.0"
+> +- reg:		specifies the physical base address of the controller and
+> +		the length of the memory mapped region.
+> +- reg-names:	must include the following entries:
+> +		"csr": CSR registers
+> +		"vector_slave": vectors slave port region
+> +- interrupt-parent:	interrupt source phandle.
+> +- interrupts:	specifies the interrupt source of the parent interrupt
+> +		controller. The format of the interrupt specifier depends on the
+> +		parent interrupt controller.
+> +- num-vectors:	number of vectors, range 1 to 32.
+> +- msi-controller:	indicates that this is MSI controller node
+> +
+> +
+> +Example
+> +msi0: msi@0xFF200000 {
+> +	compatible = "altr,msi-1.0";
+> +	reg = <0xFF200000 0x00000010
+> +		0xFF200010 0x00000080>;
+> +	reg-names = "csr", "vector_slave";
+> +	interrupt-parent = <&hps_0_arm_gic_0>;
+> +	interrupts = <0 42 4>;
+> +	msi-controller = <1>;
+
+This should not have a value.
+
+> +	num-vectors = <32>;
+> +};
+> diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+> new file mode 100644
+> index 0000000..4440db1
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+> @@ -0,0 +1,49 @@
+> +* Altera PCIe controller
+> +
+> +Required properties:
+> +- compatible :	should contain "altr,pcie-root-port-1.0"
+> +- reg:		a list of physical base address and length for TXS and CRA.
+> +- reg-names:	must include the following entries:
+> +		"Txs" or "txs": TX slave port region
+> +		"Cra" or "cra": Control register access region
+
+Why both cases? Can we please just have one (or none is better IMO).
+
+txs contains the config space?
+
+> +- interrupt-parent:	interrupt source phandle.
+> +- interrupts:	specifies the interrupt source of the parent interrupt controller.
+> +		The format of the interrupt specifier depends on the parent interrupt
+> +		controller.
+> +- device_type:	must be "pci"
+> +- #address-cells:	set to <3>
+> +- #size-cells:	set to <2>
+> +- #interrupt-cells:	set to <1>
+> +- ranges:		describes the translation of addresses for root ports and standard
+> +		PCI regions.
+> +- interrupt-map-mask and interrupt-map: standard PCI properties to define the
+> +		mapping of the PCIe interface to interrupt numbers.
+> +
+> +Optional properties:
+> +- msi-parent:	Link to the hardware entity that serves as the MSI controller for this PCIe
+> +		controller.
+> +- bus-range:	PCI bus numbers covered
+> +
+> +Example
+> +	pcie_0: pcie@0xc00000000 {
+> +		compatible = "altr,pcie-root-port-1.0";
+> +		reg = <0xc0000000 0x20000000>,
+> +			<0xff220000 0x00004000>;
+> +		reg-names = "Txs", "Cra";
+> +		interrupt-parent = <&hps_0_arm_gic_0>;
+> +		interrupts = <0 40 4>;
+> +		interrupt-controller;
+> +		#interrupt-cells = <1>;
+> +		bus-range = <0x0 0xFF>;
+> +		device_type = "pci";
+> +		msi-parent = <&msi_to_gic_gen_0>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		interrupt-map-mask = <0 0 0 7>;
+> +		interrupt-map = <0 0 0 1 &pcie_0 1>,
+> +			            <0 0 0 2 &pcie_0 2>,
+> +			            <0 0 0 3 &pcie_0 3>,
+> +			            <0 0 0 4 &pcie_0 4>;
+> +		ranges = <0x82000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x10000000
+> +			    0x82000000 0x00000000 0x10000000 0xd0000000 0x00000000 0x10000000>;
+> +	};
 > 
+
