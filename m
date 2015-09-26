@@ -1,79 +1,76 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 7 Sep 2015 10:15:37 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org, linux-parisc@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v4 2/4] PCI: pci-host-generic: Fix lookup of
- linux,pci-probe-only property
-Message-ID: <20150907091537.GA14244@arm.com>
-References: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com>
- <1441385411-7624-3-git-send-email-marc.zyngier@arm.com>
+	Meelis Roos <mroos@linux.ee>, Helge Deller <deller@gmx.de>
+Subject: [PATCH 4.2 099/134] PCI,parisc: Enable 64-bit bus addresses on PA-RISC
+Date: Sat, 26 Sep 2015 13:55:51 -0700
+Message-Id: <20150926205317.816721300@linuxfoundation.org>
+In-Reply-To: <20150926205311.819185658@linuxfoundation.org>
+References: <20150926205311.819185658@linuxfoundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1441385411-7624-3-git-send-email-marc.zyngier@arm.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 04, 2015 at 05:50:09PM +0100, Marc Zyngier wrote:
-> When pci-host-generic looks for the probe-only property, it seems
-> to trust the DT to be correctly written, and assumes that there
-> is a parameter to the property.
-> 
-> Unfortunately, this is not always the case, and some firmware expose
-> this property naked. The driver ends up making a decision based on
-> whatever the property pointer points to, which is likely to be junk.
-> 
-> Switch to the common of_pci.c implementation that doesn't suffer
-> from this problem.
-> 
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
->  drivers/pci/host/pci-host-generic.c | 9 +--------
->  1 file changed, 1 insertion(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 265dd25..224303d 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -210,7 +210,6 @@ static int gen_pci_probe(struct platform_device *pdev)
->  	int err;
->  	const char *type;
->  	const struct of_device_id *of_id;
-> -	const int *prop;
->  	struct device *dev = &pdev->dev;
->  	struct device_node *np = dev->of_node;
->  	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> @@ -225,13 +224,7 @@ static int gen_pci_probe(struct platform_device *pdev)
->  		return -EINVAL;
->  	}
->  
-> -	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
-> -	if (prop) {
-> -		if (*prop)
-> -			pci_add_flags(PCI_PROBE_ONLY);
-> -		else
-> -			pci_clear_flags(PCI_PROBE_ONLY);
-> -	}
-> +	of_pci_check_probe_only();
+4.2-stable review patch.  If anyone has any objections, please let me know.
 
-Looks good to me:
+------------------
 
-  Acked-by: Will Deacon <will.deacon@arm.com>
+From: Helge Deller <deller@gmx.de>
 
-Thanks, Marc.
+commit e02a653e15d8d32e9e768fd99a3271aafe5c5d77 upstream.
 
-Will
+Commit 3a9ad0b ("PCI: Add pci_bus_addr_t") unconditionally introduced usage of
+64-bit PCI bus addresses on all 64-bit platforms which broke PA-RISC.
+
+It turned out that due to enabling the 64-bit addresses, the PCI logic decided
+to use the GMMIO instead of the LMMIO region. This commit simply disables
+registering the GMMIO and thus we fall back to use the LMMIO region as before.
+
+Reverts commit 45ea2a5fed6dacb9bb0558d8b21eacc1c45d5bb4
+("PCI: Don't use 64-bit bus addresses on PA-RISC")
+
+To: linux-parisc@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Meelis Roos <mroos@linux.ee>
+Signed-off-by: Helge Deller <deller@gmx.de>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ drivers/parisc/lba_pci.c |    7 +++++--
+ drivers/pci/Kconfig      |    2 +-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+--- a/drivers/parisc/lba_pci.c
++++ b/drivers/parisc/lba_pci.c
+@@ -1556,8 +1556,11 @@ lba_driver_probe(struct parisc_device *d
+ 	if (lba_dev->hba.lmmio_space.flags)
+ 		pci_add_resource_offset(&resources, &lba_dev->hba.lmmio_space,
+ 					lba_dev->hba.lmmio_space_offset);
+-	if (lba_dev->hba.gmmio_space.flags)
+-		pci_add_resource(&resources, &lba_dev->hba.gmmio_space);
++	if (lba_dev->hba.gmmio_space.flags) {
++		/* pci_add_resource(&resources, &lba_dev->hba.gmmio_space); */
++		pr_warn("LBA: Not registering GMMIO space %pR\n",
++			&lba_dev->hba.gmmio_space);
++	}
+ 
+ 	pci_add_resource(&resources, &lba_dev->hba.bus_num);
+ 
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -2,7 +2,7 @@
+ # PCI configuration
+ #
+ config PCI_BUS_ADDR_T_64BIT
+-	def_bool y if (ARCH_DMA_ADDR_T_64BIT || (64BIT && !PARISC))
++	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
+ 	depends on PCI
+ 
+ config PCI_MSI
+
+
