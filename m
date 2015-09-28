@@ -1,121 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41520 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751415AbbIVL3J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Sep 2015 07:29:09 -0400
-Date: Tue, 22 Sep 2015 14:29:03 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	linux-pci@vger.kernel.org,
-	virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH v7] pci: quirk to skip msi disable on shutdown
-Message-ID: <20150922131303-mutt-send-email-mst@redhat.com>
-References: <1441553385-3810-1-git-send-email-mst@redhat.com>
- <20150921182147.GC27964@google.com>
- <20150921223622-mutt-send-email-mst@redhat.com>
- <20150921221043.GR25767@google.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:16797 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934119AbbI1P42 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Sep 2015 11:56:28 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
+Subject: [PATCH v2 ] PCI: Designware: make num-lanes an optional DT property
+Date: Tue, 29 Sep 2015 00:03:10 +0800
+Message-ID: <1443456190-225875-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20150921221043.GR25767@google.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 21, 2015 at 05:10:43PM -0500, Bjorn Helgaas wrote:
-> On Mon, Sep 21, 2015 at 10:42:13PM +0300, Michael S. Tsirkin wrote:
-> > On Mon, Sep 21, 2015 at 01:21:47PM -0500, Bjorn Helgaas wrote:
-> > > On Sun, Sep 06, 2015 at 06:32:35PM +0300, Michael S. Tsirkin wrote:
-> > > > On some hypervisors, virtio devices tend to generate spurious interrupts
-> > > > when switching between MSI and non-MSI mode.  Normally, either MSI or
-> > > > non-MSI is used and all is well, but during shutdown, linux disables MSI
-> > > > which then causes an "irq %d: nobody cared" message, with irq being
-> > > > subsequently disabled.
-> > > 
-> > > My understanding is:
-> > > 
-> > >   Linux disables MSI/MSI-X during device shutdown.  If the device
-> > >   signals an interrupt after that, it may use INTx.
-> > > 
-> > > This INTx interrupt is not necessarily spurious.  Using INTx to signal an
-> > > interrupt that occurs when MSI is disabled seems like reasonable behavior
-> > > for any PCI device.
-> > > And it doesn't seem related to switching between MSI and non-MSI mode.
-> > > Yes, the INTx happens *after* disabling MSI, but it is not at all
-> > > *because* we disabled MSI.  So I wouldn't say "they generate spurious
-> > > interrupts when switching between MSI and non-MSI."
-> > > 
-> > > Why doesn't virtio-pci just register an INTx handler in addition to an MSI
-> > > handler?
-> > 
-> > The handler causes an expensive exit to the hypervisor,
-> > and the INTx lines are shared with other devices.
-> 
-> Do we care?  Is this a performance path?  I thought we were in a kexec
-> shutdown path.
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Yes but the handler would always have to be registered, right?
+Currently num-lanes is read in dw_pcie_host_init().
+For a SoC that performs the link-up operation in UEFI, num-lanes
+is not needed in the DTS; however currently it has to be specified
+to some random value otherwise dw_pcie_host_init will fail.
+If the link is brought up in BIOS dw_pcie_setup_rc should not
+be called.
+This patch reworks dw_pcie_host_init() so that, if num-lanes is
+not specified, it sets pp->lanes = 0. If later on dw_pcie_setup_rc
+is called and pp->num_lanes is not set to a valid value,
+dw_pcie_setup_rc will send an error message and return.
 
-> > Seems silly to slow them down just so we can do something
-> > that triggers the device bug.  The bus master is disabled by that time,
-> > if linux can just desist from touching MSI enable device won't
-> > send either INTx (because MSI is on) or MSI
-> > (because bus master is on) and all will be well.
-> 
-> It would also be silly to put special-purpose code in the PCI core
-> if there's a reasonable way to handle this in a driver.
-> 
-> Can you describe exactly what the device bug is?  Apparently you're
-> saying that if we shut down MSI, it triggers the bug?  And I guess
-> you're talking about a virtio device as implemented in qemu or other
-> hypervisors?
+This patch is a follow-up of
+http://www.spinics.net/lists/linux-pci/msg44394.html
 
-Yes. Basically depending on an internal device state, disabling MSI
-sometimes wedges it.  The most easy to debug effect is if it starts
-sending INTx interrupts, for which there's no handler currently.
-Full system reset always gets us out of the bad state.
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+---
+ Documentation/devicetree/bindings/pci/designware-pcie.txt |  3 ++-
+ drivers/pci/host/pcie-designware.c                        | 10 ++++++----
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-
-> If we leave MSI enabled (as your patch does), then the device has MSI
-> enabled and Bus Master disabled.  I can see these possibilities:
-> 
->   1) the device never recognizes an interrupt condition
->   2) the device sets the pending bit but doesn't issue the MSI write,
->      so the OS doesn't see the interrupt unless it polls for it
->   3) the device signals MSI and we still have an MSI handler
->      registered, so we silently handle it
->   4) the device signals INTx
-> You seem to suggest that if we leave MSI enabled (as your patch does),
-> we're in case 1.  But I doubt that disabling MSI causes the device to
-> interrupt.
-> 
-> Case 2 seems more likely to me: the device recognized an interrupt
-> condition, e.g., an event occurred, and the OS simply doesn't see the
-> interrupt because the device can't issue the MSI message.
-> 
-> Case 3 does seem like it would be a device bug, because the device
-> shouldn't do an MSI write when Bus Master is disabled.  I don't see
-> this case mentioned explicitly in the PCI spec, but PCIe r3.0 spec sec
-> 7.5.1.1 does make it clear that disabling Bus Master also disables MSI
-> messages.
-> 
-> I don't know whether case 4 would be legal or not.  But apparently it
-> doesn't happen with the virtio device anyway, so it's not really a
-> concern here.
-> 
-> Bjorn
-
-It's case 2. Except it doesn't actually set the pending
-bit, because PCI spec has language like
-
-	"While a vector is masked, the function is prohibited from sending the
-	associated message, and the function must set the associated Pending bit"
-
-but doesn't actually require to set pending if bus master enable
-prevents sending MSI.
-
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index 9f4faa8..0036ab3 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -14,7 +14,6 @@ Required properties:
+ - interrupt-map-mask and interrupt-map: standard PCI properties
+ 	to define the mapping of the PCIe interface to interrupt
+ 	numbers.
+-- num-lanes: number of lanes to use
+ - clocks: Must contain an entry for each entry in clock-names.
+ 	See ../clocks/clock-bindings.txt for details.
+ - clock-names: Must include the following entries:
+@@ -22,6 +21,8 @@ Required properties:
+ 	- "pcie_bus"
+ 
+ Optional properties:
++- num-lanes: number of lanes to use (this property should be specified unless
++  the link is brought already up in BIOS)
+ - reset-gpio: gpio pin number of power good signal
+ - bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
+   specify this property, to keep backwards compatibility a range of 0x00-0xff
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 52aa6e3..047ac52 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -482,10 +482,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		}
+ 	}
+ 
+-	if (of_property_read_u32(np, "num-lanes", &pp->lanes)) {
+-		dev_err(pp->dev, "Failed to parse the number of lanes\n");
+-		return -EINVAL;
+-	}
++	ret = of_property_read_u32(np, "num-lanes", &pp->lanes);
++	if (ret)
++		pp->lanes = 0;
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		if (!pp->ops->msi_host_init) {
+@@ -764,6 +763,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	case 8:
+ 		val |= PORT_LINK_MODE_8_LANES;
+ 		break;
++	default:
++		dev_err(pp->dev, "num-lanes = %u: invalid value\n", pp->lanes);
++		return;
+ 	}
+ 	dw_pcie_writel_rc(pp, val, PCIE_PORT_LINK_CONTROL);
+ 
 -- 
-MST
+1.9.1
+
