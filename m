@@ -1,78 +1,108 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v3 6/6] PCI: generic: Claim device resources if PCI_PROBE_ONLY
-Date: Tue, 22 Sep 2015 16:49:17 -0700
-Message-Id: <1442965757-12925-7-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <bhelgaas@google.com>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<nsekhar@ti.com>, <kishon@ti.com>
+Subject: [RFC PATCH 1/2] pci: host: pci-dra7xx: use "num-lanes" property to find phy count
+Date: Mon, 28 Sep 2015 18:27:37 +0530
+Message-ID: <1443445058-643-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1443445058-643-1-git-send-email-kishon@ti.com>
+References: <1443445058-643-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+use "num-lanes" property to find phy count instead of the number
+phy-names property.
 
-In the case where the PCI_PROBE_ONLY flag is set, we need to claim the
-resources for all PCI devices added to the bus.  Failure to claim
-SRIOV BAR resources prevents SRIOV devices from being being enabled.
-
-So, when the PCI_PROBE_ONLY flag is set, claim MEM and IO resources
-for all devices that were added to the bus.
-
-Signed-off-by: David Daney <david.daney@cavium.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
-Added this patch in v3.
+ drivers/pci/host/pci-dra7xx.c |   23 +++++++++++------------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
 
- drivers/pci/host/pci-host-generic.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
-
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index e364232..b163fdc 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -209,6 +209,24 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- 	return 0;
- }
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 199e29a..e15b2e2 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -66,7 +66,7 @@
+ struct dra7xx_pcie {
+ 	void __iomem		*base;
+ 	struct phy		**phy;
+-	int			phy_count;
++	int			lanes;
+ 	struct device		*dev;
+ 	struct pcie_port	pp;
+ };
+@@ -328,7 +328,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	int ret;
+ 	int irq;
+ 	int i;
+-	int phy_count;
++	u32 lanes;
+ 	struct phy **phy;
+ 	void __iomem *base;
+ 	struct resource *res;
+@@ -362,17 +362,16 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	if (!base)
+ 		return -ENOMEM;
  
-+static int gen_pci_claim_resource_cb(struct pci_dev *dev, void *arg)
-+{
-+	int resno;
-+
-+	for (resno = 0; resno < PCI_BRIDGE_RESOURCES; resno++) {
-+		struct resource *res = &dev->resource[resno];
-+
-+		/* If it already has a parent, don't claim it. */
-+		if (res->parent)
-+			continue;
-+
-+		if (resource_type(res) == IORESOURCE_MEM ||
-+		    resource_type(res) == IORESOURCE_IO)
-+			pci_claim_resource(dev, resno);
-+	}
-+	return 0;
-+}
-+
- static int gen_pci_probe(struct platform_device *pdev)
- {
- 	int err;
-@@ -277,6 +295,9 @@ static int gen_pci_probe(struct platform_device *pdev)
+-	phy_count = of_property_count_strings(np, "phy-names");
+-	if (phy_count < 0) {
+-		dev_err(dev, "unable to find the strings\n");
+-		return phy_count;
++	if (of_property_read_u32(np, "num-lanes", &lanes)) {
++		dev_err(dev, "Failed to parse the number of lanes\n");
++		return -EINVAL;
  	}
  
- 	pci_bus_add_devices(bus);
-+
-+	if (pci_has_flag(PCI_PROBE_ONLY))
-+		pci_walk_bus(bus, gen_pci_claim_resource_cb, NULL);
- 	return 0;
- }
+-	phy = devm_kzalloc(dev, sizeof(*phy) * phy_count, GFP_KERNEL);
++	phy = devm_kzalloc(dev, sizeof(*phy) * lanes, GFP_KERNEL);
+ 	if (!phy)
+ 		return -ENOMEM;
+ 
+-	for (i = 0; i < phy_count; i++) {
++	for (i = 0; i < lanes; i++) {
+ 		snprintf(name, sizeof(name), "pcie-phy%d", i);
+ 		phy[i] = devm_phy_get(dev, name);
+ 		if (IS_ERR(phy[i]))
+@@ -392,7 +391,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	dra7xx->base = base;
+ 	dra7xx->phy = phy;
+ 	dra7xx->dev = dev;
+-	dra7xx->phy_count = phy_count;
++	dra7xx->lanes = lanes;
+ 
+ 	pm_runtime_enable(dev);
+ 	ret = pm_runtime_get_sync(dev);
+@@ -449,7 +448,7 @@ static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
+ 	struct dra7xx_pcie *dra7xx = platform_get_drvdata(pdev);
+ 	struct pcie_port *pp = &dra7xx->pp;
+ 	struct device *dev = &pdev->dev;
+-	int count = dra7xx->phy_count;
++	int count = dra7xx->lanes;
+ 
+ 	if (pp->irq_domain)
+ 		irq_domain_remove(pp->irq_domain);
+@@ -495,7 +494,7 @@ static int dra7xx_pcie_resume(struct device *dev)
+ static int dra7xx_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+-	int count = dra7xx->phy_count;
++	int count = dra7xx->lanes;
+ 
+ 	while (count--) {
+ 		phy_power_off(dra7xx->phy[count]);
+@@ -508,7 +507,7 @@ static int dra7xx_pcie_suspend_noirq(struct device *dev)
+ static int dra7xx_pcie_resume_noirq(struct device *dev)
+ {
+ 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+-	int phy_count = dra7xx->phy_count;
++	int phy_count = dra7xx->lanes;
+ 	int ret;
+ 	int i;
  
 -- 
-1.9.1
+1.7.9.5
 
