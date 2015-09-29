@@ -1,116 +1,275 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:54220 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754223AbbIWQ0e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 12:26:34 -0400
+Received: from szxga01-in.huawei.com ([58.251.152.64]:12493 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934596AbbI2QN5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 12:13:57 -0400
 From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v3 2/3] PCI: designware: change dw_pcie_cfg_write() and
- dw_pcie_cfg_read()
-Date: Wed, 23 Sep 2015 16:26:19 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1622BC54@lhreml503-mbb>
-References: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
- <1441964307-126942-3-git-send-email-gabriele.paoloni@huawei.com>
- <20150918204625.GL25767@google.com>
- <CAHM4w1nWNj-Ws0CiYt2vGCa4V7XJsjjwHRSkgdpVSCPmdeARqA@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1622BC36@lhreml503-mbb>
- <CAErSpo4hWUyaGrt3iTYffCxP0XHiR=DeZ8OEp9XnhAP3C8D+HQ@mail.gmail.com>
-In-Reply-To: <CAErSpo4hWUyaGrt3iTYffCxP0XHiR=DeZ8OEp9XnhAP3C8D+HQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
+Subject: [PATCH v6 2/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
+Date: Wed, 30 Sep 2015 00:20:35 +0800
+Message-ID: <1443543636-35105-3-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1443543636-35105-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1443543636-35105-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBb
-bWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwgU2VwdGVtYmVy
-IDIzLCAyMDE1IDU6MjQgUE0NCj4gVG86IEdhYnJpZWxlIFBhb2xvbmkNCj4gQ2M6IFByYXR5dXNo
-IEFuYW5kOyBKaW5nb28gSGFuOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBXYW5nemhvdSAo
-Qik7DQo+IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87IHFpdXpoZW5mYTsgTGln
-dW96aHUgKEtlbm5ldGgpDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjMgMi8zXSBQQ0k6IGRlc2ln
-bndhcmU6IGNoYW5nZSBkd19wY2llX2NmZ193cml0ZSgpDQo+IGFuZCBkd19wY2llX2NmZ19yZWFk
-KCkNCj4gDQo+IE9uIFdlZCwgU2VwIDIzLCAyMDE1IGF0IDExOjIwIEFNLCBHYWJyaWVsZSBQYW9s
-b25pDQo+IDxnYWJyaWVsZS5wYW9sb25pQGh1YXdlaS5jb20+IHdyb3RlOg0KPiA+IEhpIGd1eXMg
-c29ycnkgZm9yIHRoZSBsYXRlIHJlcGx5IEkgaGF2ZSBiZWVuIE9PTyBmb3IgdGhlIGxhc3QgNSBk
-YXlzDQo+ID4NCj4gPj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPj4gRnJvbTogUHJh
-dHl1c2ggQW5hbmQgW21haWx0bzpwcmF0eXVzaC5hbmFuZEBnbWFpbC5jb21dDQo+ID4+IFNlbnQ6
-IFNhdHVyZGF5LCBTZXB0ZW1iZXIgMTksIDIwMTUgNDowNCBBTQ0KPiA+PiBUbzogQmpvcm4gSGVs
-Z2Fhcw0KPiA+PiBDYzogR2FicmllbGUgUGFvbG9uaTsgSmluZ29vIEhhbjsgbGludXgtcGNpQHZn
-ZXIua2VybmVsLm9yZzsNCj4gV2FuZ3pob3UNCj4gPj4gKEIpOyBZdWFuemhpY2hhbmc7IFpodWRh
-Y2FpOyB6aGFuZ2p1a3VvOyBxaXV6aGVuZmE7IExpZ3Vvemh1DQo+IChLZW5uZXRoKQ0KPiA+PiBT
-dWJqZWN0OiBSZTogW1BBVENIIHYzIDIvM10gUENJOiBkZXNpZ253YXJlOiBjaGFuZ2UNCj4gZHdf
-cGNpZV9jZmdfd3JpdGUoKQ0KPiA+PiBhbmQgZHdfcGNpZV9jZmdfcmVhZCgpDQo+ID4+DQo+ID4+
-IE9uIFNhdCwgU2VwIDE5LCAyMDE1IGF0IDI6MTYgQU0sIEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFz
-QGdvb2dsZS5jb20+DQo+ID4+IHdyb3RlOg0KPiA+PiA+IE9uIEZyaSwgU2VwIDExLCAyMDE1IGF0
-IDA1OjM4OjI2UE0gKzA4MDAsIEdhYnJpZWxlIFBhb2xvbmkgd3JvdGU6DQo+ID4+ID4+IEZyb206
-IGdhYnJpZWxlIHBhb2xvbmkgPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2VpLmNvbT4NCj4gPj4gPj4N
-Cj4gPj4gPj4gVGhpcyBwYXRjaCBjaGFuZ2VzIHRoZSBpbXBsZW1lbnRhdGlvbiBvZiBkd19wY2ll
-X2NmZ19yZWFkKCkgYW5kDQo+ID4+ID4+IGR3X3BjaWVfY2ZnX3dyaXRlKCkgdG8gaW1wcm92ZSB0
-aGUgZnVuY3Rpb24gdXNhZ2UgZnJvbSB0aGUNCj4gY2FsbGVycw0KPiA+PiA+PiBwZXJzcGVjdGl2
-ZS4NCj4gPj4gPj4gQ3VycmVudGx5IHRoZSBjYWxsZXJzIGFyZSBvYmxpZ2VkIHRvIHBhc3MgdGhl
-IDMyYml0IGFsaWduZWQNCj4gYWRkcmVzcw0KPiA+PiA+PiBvZiB0aGUgcmVnaXN0ZXIgdGhhdCBj
-b250YWlucyB0aGUgZmllbGQgb2YgdGhlIFBDSSBoZWFkZXIgdGhhdA0KPiB0aGV5DQo+ID4+ID4+
-IHdhbnQgdG8gcmVhZC93cml0ZTsgYWxzbyB0aGV5IGhhdmUgdG8gcGFzcyB0aGUgb2Zmc2V0IG9m
-IHRoZQ0KPiBmaWVsZA0KPiA+PiA+PiBpbiB0aGF0IHJlZ2lzdGVyLiBUaGlzIGlzIHF1aXRlIHRy
-aWNreSB0byB1c2UgYXMgdGhlIGNhbGxlcnMgYXJlDQo+ID4+ID4+IG9ibGlnZWQgdG8gc3VtIHRo
-ZSBQQ0kgaGVhZGVyIGJhc2UgYWRkcmVzcyB0byB0aGUgZmllbGQgb2Zmc2V0DQo+ID4+ID4+IG1h
-c2tlZCB0byByZXRyaWV2ZSB0aGUgMzJiIGFsaWduZWQgcmVnaXN0ZXIgYWRkcmVzcy4NCj4gPj4g
-Pj4NCj4gPj4gPj4gV2l0aCB0aGUgbmV3IEFQSSB0aGUgY2FsbGVycyBoYXZlIHRvIHBhc3MgdGhl
-IGJhc2UgYWRkcmVzcyBvZiB0aGUNCj4gPj4gPj4gUENJIGhlYWRlciBhbmQgdGhlIG9mZnNldCBj
-b3JyZXNwb25kaW5nIHRvIHRoZSBmaWVsZCB0aGV5IGludGVuZA0KPiB0bw0KPiA+PiA+PiByZWFk
-L3dyaXRlLg0KPiA+PiA+Pg0KPiA+PiA+PiBTaWduZWQtb2ZmLWJ5OiBHYWJyaWVsZSBQYW9sb25p
-IDxnYWJyaWVsZS5wYW9sb25pQGh1YXdlaS5jb20+DQo+ID4+ID4NCj4gPj4gPg0KPiA+PiA+PiAg
-aW50IGR3X3BjaWVfY2ZnX3JlYWQodm9pZCBfX2lvbWVtICphZGRyLCBpbnQgd2hlcmUsIGludCBz
-aXplLA0KPiB1MzINCj4gPj4gKnZhbCkNCj4gPj4gPj4gIHsNCj4gPj4gPj4gKyAgICAgYWRkciAr
-PSAod2hlcmUgJiB+MHgzKTsNCj4gPj4gPj4gICAgICAgKnZhbCA9IHJlYWRsKGFkZHIpOw0KPiA+
-PiA+PiArICAgICB3aGVyZSAmPSAzOw0KPiA+PiA+Pg0KPiA+PiA+PiAgICAgICBpZiAoc2l6ZSA9
-PSAxKQ0KPiA+PiA+PiAtICAgICAgICAgICAgICp2YWwgPSAoKnZhbCA+PiAoOCAqICh3aGVyZSAm
-IDMpKSkgJiAweGZmOw0KPiA+PiA+PiArICAgICAgICAgICAgICp2YWwgPSAoKnZhbCA+PiAoOCAq
-IHdoZXJlKSkgJiAweGZmOw0KPiA+PiA+PiAgICAgICBlbHNlIGlmIChzaXplID09IDIpDQo+ID4+
-ID4+IC0gICAgICAgICAgICAgKnZhbCA9ICgqdmFsID4+ICg4ICogKHdoZXJlICYgMykpKSAmIDB4
-ZmZmZjsNCj4gPj4gPj4gKyAgICAgICAgICAgICAqdmFsID0gKCp2YWwgPj4gKDggKiB3aGVyZSkp
-ICYgMHhmZmZmOw0KPiA+PiA+PiAgICAgICBlbHNlIGlmIChzaXplICE9IDQpDQo+ID4+ID4+ICAg
-ICAgICAgICAgICAgcmV0dXJuIFBDSUJJT1NfQkFEX1JFR0lTVEVSX05VTUJFUjsNCj4gPj4gPj4N
-Cj4gPj4gPj4gQEAgLTk2LDEyICs5OCwxNCBAQCBpbnQgZHdfcGNpZV9jZmdfcmVhZCh2b2lkIF9f
-aW9tZW0gKmFkZHIsIGludA0KPiA+PiB3aGVyZSwgaW50IHNpemUsIHUzMiAqdmFsKQ0KPiA+PiA+
-Pg0KPiA+PiA+PiAgaW50IGR3X3BjaWVfY2ZnX3dyaXRlKHZvaWQgX19pb21lbSAqYWRkciwgaW50
-IHdoZXJlLCBpbnQgc2l6ZSwNCj4gdTMyDQo+ID4+IHZhbCkNCj4gPj4gPj4gIHsNCj4gPj4gPj4g
-KyAgICAgYWRkciArPSB3aGVyZTsNCj4gPj4gPj4gKw0KPiA+PiA+PiAgICAgICBpZiAoc2l6ZSA9
-PSA0KQ0KPiA+PiA+PiAgICAgICAgICAgICAgIHdyaXRlbCh2YWwsIGFkZHIpOw0KPiA+PiA+PiAg
-ICAgICBlbHNlIGlmIChzaXplID09IDIpDQo+ID4+ID4+IC0gICAgICAgICAgICAgd3JpdGV3KHZh
-bCwgYWRkciArICh3aGVyZSAmIDIpKTsNCj4gPj4gPj4gKyAgICAgICAgICAgICB3cml0ZXcodmFs
-LCBhZGRyKTsNCj4gPj4gPj4gICAgICAgZWxzZSBpZiAoc2l6ZSA9PSAxKQ0KPiA+PiA+PiAtICAg
-ICAgICAgICAgIHdyaXRlYih2YWwsIGFkZHIgKyAod2hlcmUgJiAzKSk7DQo+ID4+ID4+ICsgICAg
-ICAgICAgICAgd3JpdGViKHZhbCwgYWRkcik7DQo+ID4+ID4+ICAgICAgIGVsc2UNCj4gPj4gPj4g
-ICAgICAgICAgICAgICByZXR1cm4gUENJQklPU19CQURfUkVHSVNURVJfTlVNQkVSOw0KPiA+PiA+
-DQo+ID4+ID4gSSBqdXN0IG5vdGljZWQgdGhlIGFzeW1tZXRyeSBiZXR3ZWVuIGR3X3BjaWVfY2Zn
-X3JlYWQoKSBhbmQNCj4gPj4gPiBkd19wY2llX2NmZ193cml0ZSgpOiBpbiBkd19wY2llX2NmZ19y
-ZWFkKCkgd2UgYWx3YXlzIGRvIDMyLWJpdA0KPiByZWFkcw0KPiA+PiBhbmQNCj4gPj4gPiBtYXNr
-IG91dCB0aGUgcGFydHMgd2Ugd29uJ3Qgd2FudCwgYnV0IGluIGR3X3BjaWVfY2ZnX3dyaXRlKCkg
-d2UgZG8NCj4gOC0sDQo+ID4+IDE2LSwNCj4gPj4gPiBvciAzMi1ieXRlIHdyaXRlcy4NCj4gPj4g
-Pg0KPiA+PiA+IFRoYXQgd2FzIHRoZXJlIGV2ZW4gYmVmb3JlIHlvdXIgcGF0Y2gsIGJ1dCBJIHdv
-bmRlciB3aHkuICBFaXRoZXINCj4gYm90aA0KPiA+PiA+IHNob3VsZCB3b3JrIHRoZSBzYW1lIHdh
-eSwgb3IgdGhlcmUgc2hvdWxkIGJlIGEgY29tbWVudCBleHBsYWluaW5nDQo+IHdoeQ0KPiA+PiB0
-aGV5DQo+ID4+ID4gYXJlIGRpZmZlcmVudC4NCj4gPj4gPg0KPiA+PiA+IEppbmdvbywgUHJhdHl1
-c2g/DQo+ID4+DQo+ID4+IEFzIEkgc2FpZCBlYXJsaWVyLCBJIGp1c3QgdmFndWVseSByZW1lbWJl
-ciB0aGF0IHRoZXJlIHdhcyBzb21lIGlzc3VlDQo+ID4+IHdpdGggYSBTT0MgaW4gcmVhZGluZyBu
-b24gd29yZCBhbGlnbmVkIGFkZHJlc3Nlcy4NCj4gPj4gKDEpIEkgZG8gbm90IGhhdmUgYW55IHJl
-ZmVyZW5jZSBmb3IgaXQgYW5kICgyKSBldmVuIGlmIHNvbWUgd2hlcmUNCj4gPj4gdGhlcmUgY291
-bGQgYmUgc3VjaCBpc3N1ZSB0aGV5IGNhbiBhbHdheXMgaGF2ZSBwbGF0Zm9ybSBzcGVjaWZpYw0K
-PiA+PiBhY2Nlc3NvciAuIFNvIEkgc3VwcG9ydCB5b3VyIGlkZWEgYW5kIGJvdGggcmVhZCBhbmQg
-d3JpdGUgY2FuIGJlDQo+IG1hZGUNCj4gPj4gc3ltbWV0cmljLg0KPiA+DQo+ID4gSSBhZ3JlZSB3
-aXRoIHRoZSBpZGVhIGJ1dCwgd2hhdCBpZiBkb2luZyBzbyB3ZSBicmVhayBvdGhlciBkcml2ZXJz
-Pw0KPiA+IElzIHRoZSBjb3JyZWN0IGZsb3cgdG8gYnJlYWsgdGhlbSBmaXJzdCBhbmQgbGV0IHRo
-ZSBzaW5nbGUNCj4gbWFpbnRhaW5lcnMgZml4IHRoZW0gdGhlbi4uLj8NCj4gDQo+IFNpbmNlIHdl
-IGRvbid0IGtub3cgd2hpY2ggKGlmIGFueSkgc3lzdGVtcyB3b3VsZCBicmVhaywgSSB0aGluayB0
-aGUNCj4gYmVzdCB3ZSBjYW4gZG8gaXMgc2VlIGlmIGFueWJvZHkgaGFzIG9iamVjdGlvbnMsIHRo
-ZW4gcHV0IGl0IGluIGFuZA0KPiBzZWUgaWYgYW55dGhpbmcgYnJlYWtzLg0KDQpSaWdodCwgSSds
-bCBwdXQgaXQgaW4gdjQNCg0KTWFueSBUaGFua3MNCg0KR2FiDQoNCj4gDQo+IEJqb3JuDQo=
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
+
+This patch changes the implementation of dw_pcie_cfg_read() and
+dw_pcie_cfg_write() to improve the function usage from the callers
+perspective.
+Currently the callers are obliged to pass the 32bit aligned address
+of the register that contains the field of the PCI header that they
+want to read/write; also they have to pass the offset of the field
+in that register. This is quite tricky to use as the callers are
+obliged to sum the PCI header base address to the field offset
+masked to retrieve the 32b aligned register address.
+
+With the new API the callers have to pass directly the address of the
+field they intend to read/write in the PCI header: so once they have
+the base address of the PCI header they will just sum up the offset
+of the field they intend to access and pass the sum to the functions'
+addr field.
+
+This patch also changes the implementation of dw_pcie_cfg_read to
+make it symmetric with dw_pcie_cfg_write.
+
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+---
+ drivers/pci/host/pci-exynos.c      |  5 ++---
+ drivers/pci/host/pci-keystone-dw.c |  4 ++--
+ drivers/pci/host/pcie-designware.c | 36 ++++++++++++++++--------------------
+ drivers/pci/host/pcie-designware.h |  4 ++--
+ drivers/pci/host/pcie-spear13xx.c  | 18 ++++++++----------
+ 5 files changed, 30 insertions(+), 37 deletions(-)
+
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index f9f468d..01095e1 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -454,7 +454,7 @@ static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 	int ret;
+ 
+ 	exynos_pcie_sideband_dbi_r_mode(pp, true);
+-	ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, size, val);
++	ret = dw_pcie_cfg_read(pp->dbi_base + where, size, val);
+ 	exynos_pcie_sideband_dbi_r_mode(pp, false);
+ 	return ret;
+ }
+@@ -465,8 +465,7 @@ static int exynos_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+ 	int ret;
+ 
+ 	exynos_pcie_sideband_dbi_w_mode(pp, true);
+-	ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
+-			where, size, val);
++	ret = dw_pcie_cfg_write(pp->dbi_base + where, size, val);
+ 	exynos_pcie_sideband_dbi_w_mode(pp, false);
+ 	return ret;
+ }
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index e71da99..51789b7 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -398,7 +398,7 @@ int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 
+ 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
+ 
+-	return dw_pcie_cfg_read(addr + (where & ~0x3), where, size, val);
++	return dw_pcie_cfg_read(addr + where, size, val);
+ }
+ 
+ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+@@ -410,7 +410,7 @@ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 
+ 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
+ 
+-	return dw_pcie_cfg_write(addr + (where & ~0x3), where, size, val);
++	return dw_pcie_cfg_write(addr + where, size, val);
+ }
+ 
+ /**
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 52aa6e3..d771fa5 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -80,28 +80,28 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+ 	return sys->private_data;
+ }
+ 
+-int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
++int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
+ {
+-	*val = readl(addr);
+-
+-	if (size == 1)
+-		*val = (*val >> (8 * (where & 3))) & 0xff;
++	if (size == 4)
++		*val = readl(addr);
+ 	else if (size == 2)
+-		*val = (*val >> (8 * (where & 3))) & 0xffff;
+-	else if (size != 4)
++		*val = readw(addr);
++	else if (size == 1)
++		*val = readb(addr);
++	else
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
++int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
+ {
+ 	if (size == 4)
+ 		writel(val, addr);
+ 	else if (size == 2)
+-		writew(val, addr + (where & 2));
++		writew(val, addr);
+ 	else if (size == 1)
+-		writeb(val, addr + (where & 3));
++		writeb(val, addr);
+ 	else
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 
+@@ -132,8 +132,7 @@ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 	if (pp->ops->rd_own_conf)
+ 		ret = pp->ops->rd_own_conf(pp, where, size, val);
+ 	else
+-		ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where,
+-				size, val);
++		ret = dw_pcie_cfg_read(pp->dbi_base + where, size, val);
+ 
+ 	return ret;
+ }
+@@ -146,8 +145,7 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+ 	if (pp->ops->wr_own_conf)
+ 		ret = pp->ops->wr_own_conf(pp, where, size, val);
+ 	else
+-		ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where,
+-				size, val);
++		ret = dw_pcie_cfg_write(pp->dbi_base + where, size, val);
+ 
+ 	return ret;
+ }
+@@ -539,13 +537,12 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 		u32 devfn, int where, int size, u32 *val)
+ {
+ 	int ret, type;
+-	u32 address, busdev, cfg_size;
++	u32 busdev, cfg_size;
+ 	u64 cpu_addr;
+ 	void __iomem *va_cfg_base;
+ 
+ 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
+ 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
+-	address = where & ~0x3;
+ 
+ 	if (bus->parent->number == pp->root_bus_nr) {
+ 		type = PCIE_ATU_TYPE_CFG0;
+@@ -562,7 +559,7 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 				  type, cpu_addr,
+ 				  busdev, cfg_size);
+-	ret = dw_pcie_cfg_read(va_cfg_base + address, where, size, val);
++	ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
+ 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
+ 				  pp->io_bus_addr, pp->io_size);
+@@ -574,13 +571,12 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 		u32 devfn, int where, int size, u32 val)
+ {
+ 	int ret, type;
+-	u32 address, busdev, cfg_size;
++	u32 busdev, cfg_size;
+ 	u64 cpu_addr;
+ 	void __iomem *va_cfg_base;
+ 
+ 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
+ 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
+-	address = where & ~0x3;
+ 
+ 	if (bus->parent->number == pp->root_bus_nr) {
+ 		type = PCIE_ATU_TYPE_CFG0;
+@@ -597,7 +593,7 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 				  type, cpu_addr,
+ 				  busdev, cfg_size);
+-	ret = dw_pcie_cfg_write(va_cfg_base + address, where, size, val);
++	ret = dw_pcie_cfg_write(va_cfg_base + where, size, val);
+ 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
+ 				  pp->io_bus_addr, pp->io_size);
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index d0bbd27..0b29194 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -76,8 +76,8 @@ struct pcie_host_ops {
+ 	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
+ };
+ 
+-int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+-int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
++int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
++int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
+ int dw_pcie_link_up(struct pcie_port *pp);
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 0754ea3..b95b756 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -163,14 +163,12 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 	 * default value in capability register is 512 bytes. So force
+ 	 * it to 128 here.
+ 	 */
+-	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
+-				0, 2, &val);
++	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, &val);
+ 	val &= ~PCI_EXP_DEVCTL_READRQ;
+-	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
+-				0, 2, val);
++	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, val);
+ 
+-	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 0, 2, 0x104A);
+-	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 2, 0xCD80);
++	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 0x104A);
++	dw_pcie_cfg_write(pp->dbi_base + PCI_DEVICE_ID, 2, 0xCD80);
+ 
+ 	/*
+ 	 * if is_gen1 is set then handle it, so that some buggy card
+@@ -178,21 +176,21 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 	 */
+ 	if (spear13xx_pcie->is_gen1) {
+ 		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
+-					0, 4, &val);
++					4, &val);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+ 			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
+-						PCI_EXP_LNKCAP, 0, 4, val);
++				PCI_EXP_LNKCAP, 4, val);
+ 		}
+ 
+ 		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
+-					0, 2, &val);
++					2, &val);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+ 			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
+-						PCI_EXP_LNKCTL2, 0, 2, val);
++					PCI_EXP_LNKCTL2, 2, val);
+ 		}
+ 	}
+ 
+-- 
+1.9.1
+
