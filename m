@@ -1,49 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23162 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752252AbbIPV6d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 17:58:33 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 16/53] PCI: Check if resource is allocated before trying to assign one
-Date: Wed, 16 Sep 2015 14:57:14 -0700
-Message-Id: <1442440671-5361-17-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:12519 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934106AbbI2QOE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 12:14:04 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Pratyush Anand <panand@redhat.com>
+Subject: [PATCH v6 1/3] PCIe: SPEAr13xx: fix dw_pcie_cfg_read/write() usage
+Date: Wed, 30 Sep 2015 00:20:34 +0800
+Message-ID: <1443543636-35105-2-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1443543636-35105-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1443543636-35105-1-git-send-email-gabriele.paoloni@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In following alt_size support, we will call pci_assign_resource() several
-times on one resource list, and some resources could have been assigned
-already.
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Skip allocated resource in the list, as pci_assign_resource()
-only can handle not assigned resource.
+w_pcie_cfg_read/write() expects 1st argument 'addr' as a 32 bit word
+aligned address, 2nd argument 'where' as the offset within that word(0, 1,
+2 or 3) and 3rd argument 'size' is the number of bytes need to be read at
+the offset(could be 1, 2 ,4).
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+SPEAr13xx is using dw_pcie_cfg_read() and dw_pcie_cfg_write() incorrectly.
+Without this fix, SPEAr13xx host will never work with  few buggy gen1 card
+which connects with only gen1 host and also with any endpoint which would
+generate a read request of more than 128 bytes.
+
+Cc: stable@vger.kernel.org # v3.17+
+Signed-off-by: Pratyush Anand <panand@redhat.com>
+Reported-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/setup-bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/host/pcie-spear13xx.c | 26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a5b3ec1..71e20f8 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -386,7 +386,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
- 		idx = res - &dev_res->dev->resource[0];
--		if (resource_size(res) &&
-+		if (!res->parent && resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
- 				add_to_list(fail_head, dev_res->dev, res);
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 98d2683..0754ea3 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -163,34 +163,36 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 	 * default value in capability register is 512 bytes. So force
+ 	 * it to 128 here.
+ 	 */
+-	dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, &val);
++	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
++				0, 2, &val);
+ 	val &= ~PCI_EXP_DEVCTL_READRQ;
+-	dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, val);
++	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
++				0, 2, val);
+ 
+-	dw_pcie_cfg_write(pp->dbi_base, PCI_VENDOR_ID, 2, 0x104A);
+-	dw_pcie_cfg_write(pp->dbi_base, PCI_DEVICE_ID, 2, 0xCD80);
++	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 0, 2, 0x104A);
++	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 2, 0xCD80);
+ 
+ 	/*
+ 	 * if is_gen1 is set then handle it, so that some buggy card
+ 	 * also works
+ 	 */
+ 	if (spear13xx_pcie->is_gen1) {
+-		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCAP, 4,
+-				 &val);
++		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
++					0, 4, &val);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+-			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
+-					  PCI_EXP_LNKCAP, 4, val);
++			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
++						PCI_EXP_LNKCAP, 0, 4, val);
+ 		}
+ 
+-		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCTL2, 4,
+-				 &val);
++		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
++					0, 2, &val);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+-			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
+-					  PCI_EXP_LNKCTL2, 4, val);
++			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
++						PCI_EXP_LNKCTL2, 0, 2, val);
+ 		}
+ 	}
+ 
 -- 
-1.8.4.5
+1.9.1
 
