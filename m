@@ -1,64 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:27827 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932887AbbI2PzF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 11:55:05 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Pratyush Anand <pratyush.anand@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v5 3/3] PCI: designware: add sanity checks on the header
- offset in dw_pcie_cfg_read and dw_pcie_cfg_write
-Date: Tue, 29 Sep 2015 15:54:53 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E16236C21@lhreml503-mbs>
-References: <1443535042-242400-1-git-send-email-gabriele.paoloni@huawei.com>
-	<1443535042-242400-4-git-send-email-gabriele.paoloni@huawei.com>
- <CAHM4w1mToKoxdO=K08zUueS=yRp+=xyZ1n4e4_qR=AzaV-W-Zg@mail.gmail.com>
-In-Reply-To: <CAHM4w1mToKoxdO=K08zUueS=yRp+=xyZ1n4e4_qR=AzaV-W-Zg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-bn1bn0100.outbound.protection.outlook.com ([157.56.110.100]:3857
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750749AbbI2Xxc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Sep 2015 19:53:32 -0400
+Message-ID: <560B2470.9080100@caviumnetworks.com>
+Date: Tue, 29 Sep 2015 16:53:20 -0700
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
+To: "Sean O. Stalley" <sean.stalley@intel.com>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	<linux-api@vger.kernel.org>, <yinghai@kernel.org>,
+	<rajatxjain@gmail.com>, <gong.chen@linux.intel.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v3 2/2] PCI: Add support for Enhanced Allocation devices
+References: <1443485439-12081-1-git-send-email-ddaney.cavm@gmail.com> <1443485439-12081-3-git-send-email-ddaney.cavm@gmail.com> <20150929192737.GA2517@sean.stalley.intel.com> <560AF3D7.80908@gmail.com> <20150929224727.GB2517@sean.stalley.intel.com>
+In-Reply-To: <20150929224727.GB2517@sean.stalley.intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBQcmF0eXVzaCBBbmFuZCBbbWFp
-bHRvOnByYXR5dXNoLmFuYW5kQGdtYWlsLmNvbV0NCj4gU2VudDogVHVlc2RheSwgU2VwdGVtYmVy
-IDI5LCAyMDE1IDQ6MzYgUE0NCj4gVG86IEdhYnJpZWxlIFBhb2xvbmkNCj4gQ2M6IEJqb3JuIEhl
-bGdhYXM7IEppbmdvbyBIYW47IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IFdhbmd6aG91IChC
-KTsNCj4gWXVhbnpoaWNoYW5nOyBaaHVkYWNhaTsgemhhbmdqdWt1bzsgcWl1emhlbmZhOyBMaWd1
-b3podSAoS2VubmV0aCkNCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2NSAzLzNdIFBDSTogZGVzaWdu
-d2FyZTogYWRkIHNhbml0eSBjaGVja3Mgb24gdGhlDQo+IGhlYWRlciBvZmZzZXQgaW4gZHdfcGNp
-ZV9jZmdfcmVhZCBhbmQgZHdfcGNpZV9jZmdfd3JpdGUNCj4gDQo+IE9uIFR1ZSwgU2VwIDI5LCAy
-MDE1IGF0IDc6MjcgUE0sIEdhYnJpZWxlIFBhb2xvbmkNCj4gPGdhYnJpZWxlLnBhb2xvbmlAaHVh
-d2VpLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogZ2FicmllbGUgcGFvbG9uaSA8Z2FicmllbGUucGFv
-bG9uaUBodWF3ZWkuY29tPg0KPiA+DQo+ID4gVGhpcyBwYXRjaCBhZGRzIHNhbml0eSBjaGVja3Mg
-b24gIndoZXJlIiBpbnB1dCBwYXJhbWV0ZXIgaW4NCj4gPiBkd19wY2llX2NmZ19yZWFkIGFuZCBk
-d19wY2llX2NmZ193cml0ZS4gVGhlc2UgY2hlY2tzIG1ha2Ugc3VyZQ0KPiA+IHRoYXQgb2Zmc2V0
-IHBhc3NlZCBpbiBieSB0aGUgY2FsbGVyIGlzIG5vdCBpbiBjb25mbGljdCB3aXRoDQo+ID4gdGhl
-IHNpemUgb2YgdGhlIFBDSSBoZWFkZXIgZmllbGQgdGhhdCBpcyBiZWluZyByZWFkL3dyaXR0ZW4N
-Cj4gPg0KPiANCj4gSSBhbSBzdGlsbCBub3QgY29udmluY2VkIHRoYXQgd2Ugc2hvdWxkIGRvdWJ0
-IHRoZSBjYWxsZXIuLkJ1dCBtYXkgYmUgSQ0KPiBhbSBiaWFzZWQgaW4gbXkgdGhvdWdodHMuLi4N
-Cj4gU2luY2UgQmpvcm4gaGFzIGFza2VkIGFib3V0IGl0LCBzbyB3aWxsIHRha2UgaXQuDQoNClll
-cywgSSB0aGluayB0aGlzIHNob3VsZCBiZSBhIG1haW50YWluZXIgZGVjaXNpb24gYXMgaXQgaXMg
-YSBtYXR0ZXIgb2YNCnRydXN0aW5nIHRoZSBjYWxsZXJzLi4uDQoNCj4gDQo+ID4gU2lnbmVkLW9m
-Zi1ieTogR2FicmllbGUgUGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPg0KPiA+
-IC0tLQ0KPiA+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jIHwgMjAgKysrKysr
-KysrKysrKystLS0tLS0NCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDE0IGluc2VydGlvbnMoKyksIDYg
-ZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ll
-LWRlc2lnbndhcmUuYw0KPiBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMNCj4g
-PiBpbmRleCBkNzcxZmE1Li43MTlkMmNkIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvcGNpL2hv
-c3QvcGNpZS1kZXNpZ253YXJlLmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVz
-aWdud2FyZS5jDQo+ID4gQEAgLTgyLDExICs4MiwxNSBAQCBzdGF0aWMgaW5saW5lIHN0cnVjdCBw
-Y2llX3BvcnQNCj4gKnN5c190b19wY2llKHN0cnVjdCBwY2lfc3lzX2RhdGEgKnN5cykNCj4gPg0K
-PiA+ICBpbnQgZHdfcGNpZV9jZmdfcmVhZCh2b2lkIF9faW9tZW0gKmFkZHIsIGludCBzaXplLCB1
-MzIgKnZhbCkNCj4gPiAgew0KPiANCj4gV291bGRuJ3QgYSBzaW5nbGUgY2hlY2sgd291bGQgaGF2
-ZSBiZWVuIGJldHRlcg0KPiArICAgICAgIGlmICgodWludHB0cl90KWFkZHIgJiAoc2l6ZSAtMSkp
-DQo+ICsgICAgICAgICAgICAgICByZXR1cm4gUENJQklPU19CQURfUkVHSVNURVJfTlVNQkVSOw0K
-DQpPayBhZ3JlZWQgd2lsbCBjaGFuZ2UgaW4gdjYNCg0KVGhhbmtzDQoNCj4gDQo+IH5QcmF0eXVz
-aA0K
+On 09/29/2015 03:47 PM, Sean O. Stalley wrote:
+[...]
+>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>> index 6a9a111..7c60b16 100644
+>>>> --- a/drivers/pci/pci.c
+>>>> +++ b/drivers/pci/pci.c
+>>>> @@ -2148,6 +2148,284 @@ void pci_pm_init(struct pci_dev *dev)
+>>>>   	}
+>>>>   }
+>>>>
+>>>> +static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
+>>>> +{
+>>>> +	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_SIZEALIGN;
+>>>
+>>> Why did you add the IORESOURCE_SIZEALIGN flag? EA allows for unaligned resources.
+>>
+>> pci_bus_assign_resources() fails causing the devices to be unusable
+>> if resource_alignment() returns zero.  The easiest fix for this was
+>> to specify IORESOURCE_SIZEALIGN.
+>>
+>> An alternative would be to change the code in setup-bus.c so that
+>> for IORESOURCE_PCI_FIXED resources, it didn't barf.
+>
+> I would do this alternative, but with a IORESOURCE_PCI_EA flag.
+>
+
+I don't think we need IORESOURCE_PCI_EA.  If a resource is tagged as 
+IORESOURCE_PCI_FIXED that means that it cannot be changed, we shouldn't 
+care why it is fixed (due to an EA capability for example).  We just 
+need to gracefully handle IORESOURCE_PCI_FIXED in the places where 
+things currently go wrong.
+
+David Daney
+
