@@ -1,53 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f47.google.com ([209.85.213.47]:32782 "EHLO
-	mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750980AbbINVh3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 17:37:29 -0400
+Received: from szxga02-in.huawei.com ([119.145.14.65]:59212 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964843AbbI2L1p (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 07:27:45 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
+Subject: [PATCH v4 3/3] PCI: designware: add sanity checks on the header offset in dw_pcie_cfg_read and dw_pcie_cfg_write
+Date: Tue, 29 Sep 2015 19:34:07 +0800
+Message-ID: <1443526447-228817-4-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1443526447-228817-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1443526447-228817-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20150914202123.GA27964@google.com>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-	<1440138067-4314-5-git-send-email-yinghai@kernel.org>
-	<20150914202123.GA27964@google.com>
-Date: Mon, 14 Sep 2015 14:37:28 -0700
-Message-ID: <CAE9FiQXr3vqusta0Tb35BovbWh7jDZ5uVQer741ioWKhYr7xmA@mail.gmail.com>
-Subject: Re: [PATCH v4 04/52] PCI: Optimize bus min_align/size calculation
- during sizing
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 14, 2015 at 1:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> I spent a couple hours trying to understand the v3 version of this
-> patch, and I gave you some detailed examples and questions.  If you
-> want me to look at v4, I expect you to try to clarify the changelog to
-> help answer those questions.
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-you example is  addressed in following patch that support alt_size
+This patch adds sanity checks on "where" input parameter in
+dw_pcie_cfg_read and dw_pcie_cfg_write. These checks make sure
+that offset passed in by the caller is not in conflict with
+the size of the PCI header field that is being read/written
 
-and this patch only handle min_align searching for size is not equal to
-align.
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+---
+ drivers/pci/host/pcie-designware.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
 
->
-> The goal is that someone with reasonable familiarity with Linux and
-> PCI would be able to read the changelogs and understand what happened,
-> without having to search out all the email discussions.
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index d771fa5..719d2cd 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -82,11 +82,15 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+ 
+ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
+ {
+-	if (size == 4)
++	if (size == 4) {
++		if ((uintptr_t)addr & 3)
++			return PCIBIOS_BAD_REGISTER_NUMBER;
+ 		*val = readl(addr);
+-	else if (size == 2)
++	} else if (size == 2) {
++		if ((uintptr_t)addr & 1)
++			return PCIBIOS_BAD_REGISTER_NUMBER;
+ 		*val = readw(addr);
+-	else if (size == 1)
++	} else if (size == 1)
+ 		*val = readb(addr);
+ 	else
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+@@ -96,11 +100,15 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
+ 
+ int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
+ {
+-	if (size == 4)
++	if (size == 4) {
++		if ((uintptr_t)addr & 3)
++			return PCIBIOS_BAD_REGISTER_NUMBER;
+ 		writel(val, addr);
+-	else if (size == 2)
++	} else if (size == 2) {
++		if ((uintptr_t)addr & 1)
++			return PCIBIOS_BAD_REGISTER_NUMBER;
+ 		writew(val, addr);
+-	else if (size == 1)
++	} else if (size == 1)
+ 		writeb(val, addr);
+ 	else
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+-- 
+1.9.1
 
-Agreed. But changelog for this should not talk alt_size support in
-following patch.
-
-Also please let me know if you prefer to reviewing v5 that would be
-re-based on v4.3-rc1
-instead of v4. or I could wait to post v5 after you finish v4.
-
-Thanks
-
-Yinghai
