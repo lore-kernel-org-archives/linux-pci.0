@@ -1,76 +1,92 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org, linux-parisc@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Meelis Roos <mroos@linux.ee>, Helge Deller <deller@gmx.de>
-Subject: [PATCH 4.1 076/159] PCI,parisc: Enable 64-bit bus addresses on PA-RISC
-Date: Sat, 26 Sep 2015 13:55:22 -0700
-Message-Id: <20150926205318.076976875@linuxfoundation.org>
-In-Reply-To: <20150926205313.363686083@linuxfoundation.org>
-References: <20150926205313.363686083@linuxfoundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com
+Cc: "Signed-off-by: David Daney" <david.daney@cavium.com>
+Subject: [PATCH v3 1/2] PCI: Add Enhanced Allocation register entries
+Date: Mon, 28 Sep 2015 17:10:38 -0700
+Message-Id: <1443485439-12081-2-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443485439-12081-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1443485439-12081-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-4.1-stable review patch.  If anyone has any objections, please let me know.
+From: "Sean O. Stalley" <sean.stalley@intel.com>
 
-------------------
+Add registers defined in PCI-SIG's Enhanced allocation ECN.
 
-From: Helge Deller <deller@gmx.de>
-
-commit e02a653e15d8d32e9e768fd99a3271aafe5c5d77 upstream.
-
-Commit 3a9ad0b ("PCI: Add pci_bus_addr_t") unconditionally introduced usage of
-64-bit PCI bus addresses on all 64-bit platforms which broke PA-RISC.
-
-It turned out that due to enabling the 64-bit addresses, the PCI logic decided
-to use the GMMIO instead of the LMMIO region. This commit simply disables
-registering the GMMIO and thus we fall back to use the LMMIO region as before.
-
-Reverts commit 45ea2a5fed6dacb9bb0558d8b21eacc1c45d5bb4
-("PCI: Don't use 64-bit bus addresses on PA-RISC")
-
-To: linux-parisc@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Meelis Roos <mroos@linux.ee>
-Signed-off-by: Helge Deller <deller@gmx.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+[david.daney@cavium.com: Added definitions for PCI_EA_BEI_BAR0 and PCI_EA_BEI_VF_BAR0]
+Signed-off-by: Signed-off-by: David Daney <david.daney@cavium.com>
 ---
- drivers/parisc/lba_pci.c |    7 +++++--
- drivers/pci/Kconfig      |    2 +-
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ include/uapi/linux/pci_regs.h | 42 +++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 41 insertions(+), 1 deletion(-)
 
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -1556,8 +1556,11 @@ lba_driver_probe(struct parisc_device *d
- 	if (lba_dev->hba.lmmio_space.flags)
- 		pci_add_resource_offset(&resources, &lba_dev->hba.lmmio_space,
- 					lba_dev->hba.lmmio_space_offset);
--	if (lba_dev->hba.gmmio_space.flags)
--		pci_add_resource(&resources, &lba_dev->hba.gmmio_space);
-+	if (lba_dev->hba.gmmio_space.flags) {
-+		/* pci_add_resource(&resources, &lba_dev->hba.gmmio_space); */
-+		pr_warn("LBA: Not registering GMMIO space %pR\n",
-+			&lba_dev->hba.gmmio_space);
-+	}
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 413417f..d9119eb 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -216,7 +216,8 @@
+ #define  PCI_CAP_ID_MSIX	0x11	/* MSI-X */
+ #define  PCI_CAP_ID_SATA	0x12	/* SATA Data/Index Conf. */
+ #define  PCI_CAP_ID_AF		0x13	/* PCI Advanced Features */
+-#define  PCI_CAP_ID_MAX		PCI_CAP_ID_AF
++#define  PCI_CAP_ID_EA		0x14	/* PCI Enhanced Allocation */
++#define  PCI_CAP_ID_MAX		PCI_CAP_ID_EA
+ #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
+ #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
+ #define PCI_CAP_SIZEOF		4
+@@ -353,6 +354,45 @@
+ #define  PCI_AF_STATUS_TP	0x01
+ #define PCI_CAP_AF_SIZEOF	6	/* size of AF registers */
  
- 	pci_add_resource(&resources, &lba_dev->hba.bus_num);
++/* PCI Enhanced Allocation registers */
++
++#define PCI_EA_NUM_ENT		2	/* Number of Capability Entries */
++#define PCI_EA_NUM_ENT_MASK	0x3f	/* Num Entries Mask */
++#define PCI_EA_FIRST_ENT	4	/* First EA Entry in List */
++#define PCI_EA_FIRST_ENT_BRIDGE	8	/* First EA Entry for Bridges */
++#define PCI_EA_ES		0x7	/* Entry Size */
++#define PCI_EA_BEI(x)	(((x) >> 4) & 0xf) /* BAR Equivalent Indicator */
++/* 0-5 map to BARs 0-5 respectively */
++#define  PCI_EA_BEI_BAR0	0
++#define  PCI_EA_BEI_BRIDGE	6	/* Resource behind bridge */
++#define  PCI_EA_BEI_ENI		7	/* Equivalent Not Indicated */
++#define  PCI_EA_BEI_ROM		8	/* Expansion ROM */
++/* 9-14 map to VF BARs 0-5 respectively */
++#define  PCI_EA_BEI_VF_BAR0	9
++#define  PCI_EA_BEI_RESERVED	15	/* Reserved - Treat like ENI */
++
++#define PCI_EA_PP(x)	(((x) >>  8) & 0xff)	/* Primary Properties */
++#define PCI_EA_SP(x)	(((x) >> 16) & 0xff)	/* Secondary Properties */
++#define  PCI_EA_P_MEM			0x00	/* Non-Prefetch Memory */
++#define  PCI_EA_P_MEM_PREFETCH		0x01	/* Prefetchable Memory */
++#define  PCI_EA_P_IO			0x02	/* I/O Space */
++#define  PCI_EA_P_VIRT_MEM_PREFETCH	0x03	/* VF Prefetchable Memory */
++#define  PCI_EA_P_VIRT_MEM		0x04	/* VF Non-Prefetch Memory */
++#define  PCI_EA_P_BRIDGE_MEM		0x05	/* Bridge Non-Prefetch Memory */
++#define  PCI_EA_P_BRIDGE_MEM_PREFETCH	0x06	/* Bridge Prefetchable Memory */
++#define  PCI_EA_P_BRIDGE_IO		0x07	/* Bridge I/O Space */
++/* 0x08-0xfc reserved */
++#define  PCI_EA_P_MEM_RESERVED		0xfd	/* Reserved Memory */
++#define  PCI_EA_P_IO_RESERVED		0xfe	/* Reserved I/O Space */
++#define  PCI_EA_P_UNAVAILABLE		0xff	/* Entry Unavailable */
++#define PCI_EA_WRITEABLE	BIT(30) /* Writable, 1 = RW, 0 = HwInit */
++#define PCI_EA_ENABLE		BIT(31) /* Enable for this entry */
++#define PCI_EA_BASE		4	/* Base Address Offset */
++#define PCI_EA_MAX_OFFSET	8	/* MaxOffset (resource length) */
++/* bit 0 is reserved */
++#define PCI_EA_IS_64		BIT(1)	/* 64-bit field flag */
++#define PCI_EA_FIELD_MASK	0xfffffffc	/* For Base & Max Offset */
++
+ /* PCI-X registers (Type 0 (non-bridge) devices) */
  
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -2,7 +2,7 @@
- # PCI configuration
- #
- config PCI_BUS_ADDR_T_64BIT
--	def_bool y if (ARCH_DMA_ADDR_T_64BIT || (64BIT && !PARISC))
-+	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
- 	depends on PCI
- 
- config PCI_MSI
-
+ #define PCI_X_CMD		2	/* Modes & Features */
+-- 
+1.9.1
 
