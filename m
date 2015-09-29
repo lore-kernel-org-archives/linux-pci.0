@@ -1,85 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 47/53] PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
-Date: Wed, 30 Sep 2015 22:53:21 -0700
-Message-Id: <1443678807-786-48-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Linux-Arch <linux-arch@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] nios2: Add architectural support for PCIe
+Date: Tue, 29 Sep 2015 09:37:09 +0200
+Message-ID: <3218771.zBxT0jYLDs@wuerfel>
+In-Reply-To: <CAFiDJ5_jkEqdAY=TtKOg6=GzT8i4qAFdnSH_z1RsoPVU2Vfr1Q@mail.gmail.com>
+References: <1442906367-10935-1-git-send-email-lftan@altera.com> <5408024.XroFc5QNep@wuerfel> <CAFiDJ5_jkEqdAY=TtKOg6=GzT8i4qAFdnSH_z1RsoPVU2Vfr1Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If any bridge up to root only have 32bit pref mmio, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
+On Tuesday 29 September 2015 11:12:24 Ley Foon Tan wrote:
+> >
+> > I think that would be good, yes. We probably picked defaults for the
+> > asm-generic version that are enough to build with CONFIG_PCI disabled,
+> > but there are useful defaults for the other case as well.
+> >
+> > Most architectures that use the file don't support PCI, so you can just
+> > add stuff inside of #ifdef CONFIG_PCI. For the remaining 13 architectures
+> > (git grep -l generic/pci.h  | wc), see whether there are conflicts first.
+> > The normal way would be to have the arch specific definition come before
+> > the #include, and then do something like
+> >
+> > #ifndef pci_proc_domain
+> > #define pci_proc_domain pci_proc_domain
+> > static inline int pci_proc_domain(struct pci_bus *bus)
+> > {
+> > #ifdef CONFIG_PCI_DOMAINS_GENERIC
+> >         return pci_domain_nr(bus);
+> > #else
+> >         return 1;
+> > }
+> > #endif
+> 
+> Okay, will try add them to asm-generic.
 
-We need to move pci_bridge_check_ranges calling early.
-for parent bridges pref mmio BAR may not allocated by BIOS, res flags
-is still 0, we need to have it correct set before we check them for
-child device resources.
+Thanks
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+> Do you prefer to send it as separate patch or can be part of this patchset?
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 86900ac..3b27c8c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -978,6 +978,18 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
- 
-+static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self && !(bus->self->resource[PCI_BRIDGE_RESOURCES + 2].flags &
-+			   IORESOURCE_MEM_64))
-+		return false;
-+
-+	return pci_up_path_over_pref_mem64(bus->parent);
-+}
-+
- int pci_resource_pref_compatible(const struct pci_dev *dev,
- 				 struct resource *res)
- {
-@@ -986,7 +998,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
- 
- 	if ((res->flags & IORESOURCE_MEM) &&
- 	    (res->flags & IORESOURCE_MEM_64) &&
--	    dev->on_all_pcie_path)
-+	    dev->on_all_pcie_path &&
-+	    pci_up_path_over_pref_mem64(dev->bus))
- 		return res->flags | IORESOURCE_PREFETCH;
- 
- 	return res->flags;
-@@ -1796,6 +1809,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	struct resource *b_res;
- 	int ret;
- 
-+	if (!pci_is_root_bus(bus) &&
-+	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
-+		pci_bridge_check_ranges(bus);
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		struct pci_bus *b = dev->subordinate;
- 		if (!b)
-@@ -1823,7 +1840,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		break;
- 
- 	case PCI_CLASS_BRIDGE_PCI:
--		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			min_io_size  = pci_hotplug_io_size;
- 			min_mem_size = pci_hotplug_mem_size;
--- 
-1.8.4.5
+I prefer the patches to be part of this series and merged through together
+with them.
 
+	Arnd
