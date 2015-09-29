@@ -1,119 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:2401 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751622AbbIOTtT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 15:49:19 -0400
-From: William Davis <wdavis@nvidia.com>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <TRipperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>
-Subject: RE: [PATCH 11/22] swiotlb: Add map_peer_resource stub
-Date: Tue, 15 Sep 2015 19:49:08 +0000
-Message-ID: <640f5c715db84f83b1cb443365c1de30@HQMAIL106.nvidia.com>
-References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
- <1442337067-22964-12-git-send-email-wdavis@nvidia.com>
- <20150915194028.GA23813@l.oracle.com>
-In-Reply-To: <20150915194028.GA23813@l.oracle.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-vk0-f67.google.com ([209.85.213.67]:35065 "EHLO
+	mail-vk0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965227AbbI2OWl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 10:22:41 -0400
+Received: by vkao3 with SMTP id o3so499151vka.2
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2015 07:22:41 -0700 (PDT)
 MIME-Version: 1.0
+Date: Tue, 29 Sep 2015 19:52:40 +0530
+Message-ID: <CAHM4w1ksjc0+mN+gSRm-M+M+1Mc5P3Lfa+kJVkyrPYWvbAnO9w@mail.gmail.com>
+Subject: Re: [PATCH v5 2/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Zhichang Yuan <yuanzhichang@hisilicon.com>,
+	zhudacai@hisilicon.com, Zhang Jukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa@hisilicon.com, Liguozhu <liguozhu@hisilicon.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Sep 29, 2015 at 7:27 PM, Gabriele Paoloni
+<gabriele.paoloni@huawei.com> wrote:
+> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+>
+> This patch changes the implementation of dw_pcie_cfg_read() and
+> dw_pcie_cfg_write() to improve the function usage from the callers
+> perspective.
+> Currently the callers are obliged to pass the 32bit aligned address
+> of the register that contains the field of the PCI header that they
+> want to read/write; also they have to pass the offset of the field
+> in that register. This is quite tricky to use as the callers are
+> obliged to sum the PCI header base address to the field offset
+> masked to retrieve the 32b aligned register address.
+>
+> With the new API the callers have to pass directly the address of the
+> field they intend to read/write in the PCI header: so once they have
+> the base address of the PCI header they will just sum up the offset
+> of the field they intend to access and pass the sum to the functions'
+> addr field.
+>
+> This patch also changes the implementation of dw_pcie_cfg_read to
+> make it symmetric with dw_pcie_cfg_write.
+>
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 
-
-> -----Original Message-----
-> From: Konrad Rzeszutek Wilk [mailto:konrad.wilk@oracle.com]
-> Sent: Tuesday, September 15, 2015 2:40 PM
-> To: William Davis
-> Cc: Bjorn Helgaas; Alex Williamson; Joerg Roedel; iommu@lists.linux-foundation.org; linux-
-> pci@vger.kernel.org; Mark Hounschell; David S. Miller; Jonathan Corbet; Terence Ripperda; John
-> Hubbard; Jerome Glisse
-> Subject: Re: [PATCH 11/22] swiotlb: Add map_peer_resource stub
-> 
-> On Tue, Sep 15, 2015 at 12:10:56PM -0500, Will Davis wrote:
-> > Add swiotlb stub of the 'map_peer_resource' DMA operation.
-> >
-> > Signed-off-by: Will Davis <wdavis@nvidia.com>
-> > ---
-> >  include/linux/swiotlb.h |  8 ++++++++
-> >  lib/swiotlb.c           | 17 +++++++++++++++++
-> >  2 files changed, 25 insertions(+)
-> >
-> > diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
-> > index e7a018e..872463a 100644
-> > --- a/include/linux/swiotlb.h
-> > +++ b/include/linux/swiotlb.h
-> > @@ -87,6 +87,14 @@ swiotlb_unmap_sg_attrs(struct device *hwdev, struct scatterlist *sgl,
-> >  		       int nelems, enum dma_data_direction dir,
-> >  		       struct dma_attrs *attrs);
-> >
-> > +#ifdef CONFIG_HAS_DMA_P2P
-> > +extern dma_peer_addr_t
-> > +swiotlb_map_peer_resource(struct device *hwdev, struct device *hwpeer,
-> > +			  struct resource *res, unsigned long offset,
-> > +			  size_t size, enum dma_data_direction dir,
-> > +			  struct dma_attrs *attrs);
-> > +#endif
-> > +
-> >  extern void
-> >  swiotlb_sync_single_for_cpu(struct device *hwdev, dma_addr_t dev_addr,
-> >  			    size_t size, enum dma_data_direction dir);
-> > diff --git a/lib/swiotlb.c b/lib/swiotlb.c
-> > index 76f29ec..61522a7 100644
-> > --- a/lib/swiotlb.c
-> > +++ b/lib/swiotlb.c
-> > @@ -945,6 +945,23 @@ swiotlb_unmap_sg(struct device *hwdev, struct scatterlist *sgl, int nelems,
-> >  }
-> >  EXPORT_SYMBOL(swiotlb_unmap_sg);
-> >
-> > +#ifdef CONFIG_HAS_DMA_P2P
-> > +/*
-> > + * Maps a single region from a peer device's resource for DMA streaming. This
-> > + * is currently unimplemented because there's no bounce buffer abstraction for
-> > + * peer mappings.
-> > + */
-> > +dma_peer_addr_t
-> > +swiotlb_map_peer_resource(struct device *hwdev, struct device *hwpeer,
-> > +			  struct resource *res, unsigned long offset,
-> > +			  size_t size, enum dma_data_direction dir,
-> > +			  struct dma_attrs *attrs)
-> > +{
-> > +	return phys_to_dma(hwdev, io_tlb_overflow_buffer);
-> 
-> That seems to be implemented :-)
-> 
-> Did you mean to return DMA_ERROR_CODE instead?
-
-I didn't see DMA_ERROR_CODE used in lib/swiotlb.c, and
-swiotlb_dma_mapping_error is implemented as:
-
-	return (dma_addr == phys_to_dma(hwdev, io_tlb_overflow_buffer));
-
-So I figured that phys_to_dma(hwdev, io_tlb_overflow_buffer) was intended
-to be used as DMA_ERROR_CODE instead.
-
-Thanks,
-Will
-
-> > +}
-> > +EXPORT_SYMBOL(swiotlb_map_peer_resource);
-> > +#endif
-> > +
-> >  /*
-> >   * Make physical memory consistent for a set of streaming mode DMA translations
-> >   * after a transfer.
-> > --
-> > 2.5.1
-> >
-
---
-nvpublic
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
