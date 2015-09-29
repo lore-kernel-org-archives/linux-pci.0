@@ -1,85 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:32785 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816AbbIPCRT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 22:17:19 -0400
-Subject: Re: [PATCH v9 5/6] Documentation: DT: Add HiSilicon PCIe host binding
-To: Zhou Wang <wangzhou1@hisilicon.com>
-References: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com>
- <1442321361-174300-6-git-send-email-wangzhou1@hisilicon.com>
- <55F874F9.1060804@kernel.org> <55F8C268.2020809@hisilicon.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, jingoohan1@gmail.com,
-	pratyush.anand@gmail.com, Arnd Bergmann <arnd@arndb.de>,
-	linux@arm.linux.org.uk, thomas.petazzoni@free-electrons.com,
-	gabriele.paoloni@huawei.com, lorenzo.pieralisi@arm.com,
-	james.morse@arm.com, Liviu.Dudau@arm.com, jason@lakedaemon.net,
-	gabriel.fernandez@linaro.org, Minghuan.Lian@freescale.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, zhangjukuo@huawei.com,
-	qiuzhenfa@hisilicon.com, liudongdong3@huawei.com,
-	qiujiang@huawei.com, xuwei5@hisilicon.com, liguozhu@hisilicon.com
-From: Rob Herring <robh@kernel.org>
-Message-ID: <55F8D12D.50107@kernel.org>
-Date: Tue, 15 Sep 2015 21:17:17 -0500
-MIME-Version: 1.0
-In-Reply-To: <55F8C268.2020809@hisilicon.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-io0-f195.google.com ([209.85.223.195]:34217 "EHLO
+	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754098AbbI2AKs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Sep 2015 20:10:48 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v3 0/2] PCI: Add support for PCI Enhanced Allocation "BARs"
+Date: Mon, 28 Sep 2015 17:10:37 -0700
+Message-Id: <1443485439-12081-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/15/2015 08:14 PM, Zhou Wang wrote:
-> On 2015/9/16 3:43, Rob Herring wrote:
->> On 09/15/2015 07:49 AM, Zhou Wang wrote:
->>> This patch adds related DTS binding document for HiSilicon PCIe host driver.
->>>
->>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
->>> ---
->>>  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
->>>  1 file changed, 46 insertions(+)
->>>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->>>
->>> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->>> new file mode 100644
->>> index 0000000..2afc9d1
->>> --- /dev/null
->>> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->>> @@ -0,0 +1,46 @@
->>> +HiSilicon PCIe host bridge DT description
->>> +
->>> +HiSilicon PCIe host controller is based on Designware PCI core.
->>> +It shares common functions with PCIe Designware core driver and inherits
->>> +common properties defined in
->>> +Documentation/devicetree/bindings/pci/designware-pci.txt.
->>> +
->>> +Additional properties are described here:
->>> +
->>> +Required properties:
->>> +- compatible: Should contain "hisilicon,hip05-pcie".
->>> +- reg: Should contain rc_dbi, subctrl, config registers location and length.
->>> +- reg-names: Must include the following entries:
->>> +  "rc_dbi": controller configuration registers;
->>> +  "subctrl": whole PCIe hosts configuration registers;
->>> +  "config": PCIe configuration space registers.
->>> +- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
->>> +- port-id: Should be 0, 1, 2 or 3.
->>
->> What is port-id for? Use of instance indexes need to have good reason.
->>
->> Rob
-> 
-> There are four PCIe controllers in HiSilicon Hip05 SoC, port-id just indicates
-> which one we use. And we will use port-id to locate related registers in driver.
+From: David Daney <david.daney@cavium.com>
 
-Just having multiple instances is not a reason. So looking at the
-driver, port-id is used to calculate register addresses for these registers:
+The original patches are from Sean O. Stalley. I made a few tweaks,
+but feel that it is substancially Sean's work, so I am keeping the
+patch set version numbering scheme going.
 
-#define PCIE_SUBCTRL_MODE_REG                           0x2800
-#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
+Tested on Cavium ThunderX system with 4 Root Complexes containing 50
+devices/bridges provisioned with EA.
 
-Is the base address of subctrl the same on all 4 ports? If so, you
-should not have overlapping resources in the DT. Either split these 2
-registers into 2 reg regions (for each register) or use syscon to
-provide access to the region.
+Here is Sean's description of the patches:
 
-Rob
+PCI Enhanced Allocation is a new method of allocating MMIO & IO
+resources for PCI devices & bridges. It can be used instead
+of the traditional PCI method of using BARs.
+
+EA entries are hardware-initialized to a fixed address.
+Unlike BARs, regions described by EA are cannot be moved.
+Because of this, only devices which are permanently connected to
+the PCI bus can use EA. A removable PCI card must not use EA.
+
+This patchset adds support for using EA entries instead of BARs
+on Root Complex Integrated Endpoints.
+
+The Enhanced Allocation ECN is publicly available here:
+https://www.pcisig.com/specifications/conventional/ECN_Enhanced_Allocation_23_Oct_2014_Final.pdf
+
+
+Changes from V1:
+	- Use generic PCI resource claim functions (instead of EA-specific functions)
+	- Only add support for RCiEPs (instead of all devices).
+	- Removed some debugging messages leftover from early testing.
+
+Changes from V2 (By David Daney):
+	- Add ea_cap to struct pci_device, to aid in finding the EA capability.
+	- Factored EA entity decoding into a separate function.
+	- Add functions to find EA entities by BEI or Property.
+	- Add handling of EA provisioned bridges.
+	- Add handling of EA SRIOV BARs.
+	- Try to assign proper resource parent so that SRIOV device creation can occur.
+
+
+Sean O. Stalley (2):
+  PCI: Add Enhanced Allocation register entries
+  PCI: Add support for Enhanced Allocation devices
+
+ drivers/pci/iov.c             |  15 ++-
+ drivers/pci/pci.c             | 278 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h             |   4 +
+ drivers/pci/probe.c           |  42 ++++++-
+ drivers/pci/setup-bus.c       |   3 +
+ include/linux/pci.h           |   1 +
+ include/uapi/linux/pci_regs.h |  42 ++++++-
+ 7 files changed, 380 insertions(+), 5 deletions(-)
+
+-- 
+1.9.1
 
