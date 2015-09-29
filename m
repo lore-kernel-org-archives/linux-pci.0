@@ -1,63 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0076.outbound.protection.outlook.com ([157.56.110.76]:31552
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751573AbbIOSHI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Sep 2015 14:07:08 -0400
-Message-ID: <55F85E43.5070207@caviumnetworks.com>
-Date: Tue, 15 Sep 2015 11:06:59 -0700
-From: David Daney <ddaney@caviumnetworks.com>
+Received: from mail-io0-f173.google.com ([209.85.223.173]:36238 "EHLO
+	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756516AbbI2OEJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 10:04:09 -0400
 MIME-Version: 1.0
-To: David Daney <ddaney.cavm@gmail.com>
-CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 0/6] PCI: generic: Misc. bug fixes and enhanced support
- for MSI.
-References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <CAE9FiQWxBWaJh0CbbEfeBUJK+54NDrTW6r0v-6itXEyTkmzkhQ@mail.gmail.com>
+References: <CAKsTQnn-+13Q=+hM581p=dvWnZXtnG6W-t5K4-ioNUTkEmyLMg@mail.gmail.com>
+	<CAE9FiQXaOkMKk2PddYOXApK9tKLkgusH18sYgvLHA04BRdXR-g@mail.gmail.com>
+	<CAKsTQn=u5HuMCz5_L1jbx6Fvz5Rf_e14tNeEPwxy1o8dxk4J8g@mail.gmail.com>
+	<CAE9FiQWxiLV0YeWfUAd=vJaxtV-0PrqBqm1ptKnFoEM0jQDaiQ@mail.gmail.com>
+	<CAKsTQn=skDo7mbTrvFfQHW+nD1Ggy-g+qT922WOrjiwqyK5BwQ@mail.gmail.com>
+	<CAKsTQn=aigrfTz5hYmzvERK3w6Ax1yxEyZfzWt_NaT6d+-DYuA@mail.gmail.com>
+	<CAE9FiQWxBWaJh0CbbEfeBUJK+54NDrTW6r0v-6itXEyTkmzkhQ@mail.gmail.com>
+Date: Tue, 29 Sep 2015 16:04:07 +0200
+Message-ID: <CAKsTQnkBPEiUtpaVxyDm--BLnHvUCtVMhEUQ5-FQryp-X9HBUg@mail.gmail.com>
+Subject: Re: PCIe bus (re-)numbering
+From: Ruud <netwerkforens@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/11/2015 04:21 PM, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
+>>
+>> Thus the procedure that works is:
+>> 1) Chassis off
+>> 2) Boot linux
+>> 3) Chassis on
+>> 4) setpci busnrs to 0
+>> 5) remove switch
+>> 6) rescan
 >
-> While using the pci-host-generic driver to add PCI support for the
-> Cavium ThunderX processors, several bugs were discovered.  We also
-> need the ability to specify a per-bus MSI controller, so support for
-> that was added.
->
-> David Daney (6):
->    PCI: Make global and export pdev_fixup_irq().
->    PCI: generic: Only fixup irqs for bus we are creating.
->    PCI: generic: Quit clobbering our pci_ops.
->    PCI: generic: Correct, and avoid overflow, in bus_max calculation.
->    PCI: generic: Pass proper starting bus number to pci_scan_root_bus().
->    PCI: generic: Allow bus default MSI controller to be specified.
->
+> 4, 5 is reversed?
 
-Based on feedback on this first revision of the patches, I plan on 
-sending an updated patch set in a few days.  In the mean time, keep 
-sending feedback...
+I can not setpci on a removed device, afaik.... for that reason I
+reset the busses before removing the switch (not physically remove but
+echo 1 >../remove).
 
-David Daney
+For the kernel crash issue I will try to explain better, and try to
+get a kernel crash dump to post some logging. It seems that the switch
+will still fire hotplug events even after being removed (see lspci -tv
+below). I zero-ed the busnumber for bus 04 (02.0-[04-17])  without
+removing the underlying bus 05 device 00.0 and switches below.
 
+(for illustration, lspci -tv from a 3.2 kernel, hand edited as the
+original picture has already discovered the subordinate busses)
+            +-02.0-[04-17]----00.0-[05-17]--+-04.0-[06-16]----00.0-[07-16]---
+             |                               |
+      \-08.0-[11-16]----
 
+Sorry for the delay, but I didn't manage to create a crashdump yet :(
+and the BMC is not cooperative in getting the serial console kernel
+working either.
+Will not go into details on my attempts for the kernel crash logging
+to work as it is out of scope for the discussion..
 
->   .../devicetree/bindings/pci/host-generic-pci.txt   |  5 ++
->   drivers/pci/host/pci-host-generic.c                | 55 +++++++++++++++-------
->   drivers/pci/setup-irq.c                            |  7 +--
->   include/linux/pci.h                                |  3 ++
->   4 files changed, 50 insertions(+), 20 deletions(-)
->
-
+Bet regards, Ruud
