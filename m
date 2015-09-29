@@ -1,82 +1,197 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: "Suthikulpanit, Suravee" <suravee.suthikulpanit@amd.com>
-Cc: bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
-	will.deacon@arm.com, hanjun.guo@linaro.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V3 0/4] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
-Date: Wed, 09 Sep 2015 22:38:50 +0200
-Message-ID: <8172790.rR5Ld4j83C@vostro.rjw.lan>
-In-Reply-To: <55F02331.2060001@amd.com>
-References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com> <55F02331.2060001@amd.com>
+To: Linux PCI <linux-pci@vger.kernel.org>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: [RFC][PATCH] PCI / PM: Avoid resuming more devices during system suspend
+Date: Tue, 29 Sep 2015 02:10:59 +0200
+Message-ID: <1885084.5xWH6KN36q@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 09, 2015 07:16:49 PM Suthikulpanit, Suravee wrote:
-> Hi All,
-> 
-> Are there any other concerns about this patch series?
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I have none, but then it sort of missed the merge window.
+Commit bac2a909a096 (PCI / PM: Avoid resuming PCI devices during
+system suspend) introduced a mechanism by which some PCI devices that
+were runtime-suspended at the system suspend time might be left in
+that state for the duration of the system suspend-resume cycle.
+However, it overlooked devices that were marked as capable of waking
+up the system just because PME support was detected in their PCI
+config space.
 
-I can easily queue it up for the next one unless it is super-urgent,
-but in that case I need to know why that's the case.
+Namely, in that case, device_can_wakeup(dev) returns 'true' for the
+device and if the device is not configured for system wakeup,
+device_may_wakeup(dev) returns 'false' and it will be resumed during
+system suspend even though configuring it for system wakeup may not
+really make sense at all.
 
+To avoid this problem, simply disable PME for PCI devices that have
+not been configured for system wakeup and are runtime-suspended at
+the system suspend time for the duration of the suspend-resume cycle.
 
-> On 8/26/2015 8:54 PM, Suravee Suthikulpanit wrote:
-> > This patch adds support to setup DMA coherency for PCI device using
-> > the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
-> > is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
-> > support for ARM64 which is currently in development.
-> >
-> > Also, this should not affect other architectures that does not define
-> > CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
-> >
-> > I have included the following patch from Jeremy before cleaning up
-> > the acpi_check_dma() function (in patch 2).
-> >
-> >      http://www.spinics.net/lists/linux-usb/msg128582.html)
-> >
-> > Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
-> >      * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
-> >      * Add WARN() when fail to setup DMA for PCI device when booting
-> >        ACPI (per Arnd's suggestion)
-> >      * Added Acked-by from Rob.
-> >      * Minor clean up
-> >
-> > Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
-> >      * Include patch 1 from Jeremy to enable support for _CCA=0
-> >      * Clean up acpi_check_dma() per Bjorn suggestions
-> >      * Split the original V1 patch into two patches (patch 3 and 4)
-> >
-> >
-> > Jeremy Linton (1):
-> >    Honor ACPI _CCA attribute setting
-> >
-> > Suravee Suthikulpanit (3):
-> >    ACPI/scan: Clean up acpi_check_dma
-> >    PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
-> >    PCI: ACPI: Add support for PCI device DMA coherency
-> >
-> >   drivers/acpi/acpi_platform.c |  7 ++++++-
-> >   drivers/acpi/glue.c          |  6 +++---
-> >   drivers/acpi/scan.c          | 39 +++++++++++++++++++++++++++++++++++++++
-> >   drivers/base/property.c      | 10 +++++++---
-> >   drivers/of/of_pci.c          | 20 --------------------
-> >   drivers/pci/probe.c          | 35 +++++++++++++++++++++++++++++++++--
-> >   include/acpi/acpi_bus.h      | 35 ++---------------------------------
-> >   include/linux/acpi.h         |  4 ++--
-> >   include/linux/of_pci.h       |  3 ---
-> >   9 files changed, 92 insertions(+), 67 deletions(-)
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If the device is in D3cold, its config space is not available and it
+shouldn't be written to, but that's only possible if the device
+has platform PM support and the platform code is responsible for
+checking whether or not the device's configuration is suitable for
+system suspend in that case.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci-driver.c |   12 ++++++++
+ drivers/pci/pci.c        |   68 +++++++++++++++++++++++++++++++++++++++--------
+ drivers/pci/pci.h        |    1 
+ 3 files changed, 70 insertions(+), 11 deletions(-)
+
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -1710,15 +1710,7 @@ static void pci_pme_list_scan(struct wor
+ 	mutex_unlock(&pci_pme_list_mutex);
+ }
+ 
+-/**
+- * pci_pme_active - enable or disable PCI device's PME# function
+- * @dev: PCI device to handle.
+- * @enable: 'true' to enable PME# generation; 'false' to disable it.
+- *
+- * The caller must verify that the device is capable of generating PME# before
+- * calling this function with @enable equal to 'true'.
+- */
+-void pci_pme_active(struct pci_dev *dev, bool enable)
++static void __pci_pme_active(struct pci_dev *dev, bool enable)
+ {
+ 	u16 pmcsr;
+ 
+@@ -1732,6 +1724,19 @@ void pci_pme_active(struct pci_dev *dev,
+ 		pmcsr &= ~PCI_PM_CTRL_PME_ENABLE;
+ 
+ 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
++}
++
++/**
++ * pci_pme_active - enable or disable PCI device's PME# function
++ * @dev: PCI device to handle.
++ * @enable: 'true' to enable PME# generation; 'false' to disable it.
++ *
++ * The caller must verify that the device is capable of generating PME# before
++ * calling this function with @enable equal to 'true'.
++ */
++void pci_pme_active(struct pci_dev *dev, bool enable)
++{
++	__pci_pme_active(dev, enable);
+ 
+ 	/*
+ 	 * PCI (as opposed to PCIe) PME requires that the device have
+@@ -2032,17 +2037,58 @@ EXPORT_SYMBOL_GPL(pci_dev_run_wake);
+  * reconfigured due to wakeup settings difference between system and runtime
+  * suspend and the current power state of it is suitable for the upcoming
+  * (system) transition.
++ *
++ * If the device is not configured for system wakeup, disable PME for it before
++ * returning 'true' to prevent it from waking up the system unnecessarily.
+  */
+ bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
+ {
+ 	struct device *dev = &pci_dev->dev;
+ 
+ 	if (!pm_runtime_suspended(dev)
+-	    || (device_can_wakeup(dev) && !device_may_wakeup(dev))
++	    || pci_target_state(pci_dev) != pci_dev->current_state
+ 	    || platform_pci_need_resume(pci_dev))
+ 		return false;
+ 
+-	return pci_target_state(pci_dev) == pci_dev->current_state;
++	/*
++	 * At this point the device is good to go unless it's been configured
++	 * to generate PME at the runtime suspend time, but it is not supposed
++	 * to wake up the system.  In that case, simply disable PME for it
++	 * (it will have to be re-enabled on exit from system resume).
++	 *
++	 * If the device's power state is D3cold and the platform check above
++	 * hasn't triggered, the device's configuration is suitable and we don't
++	 * need to manipulate it at all.
++	 */
++	spin_lock_irq(&dev->power.lock);
++
++	if (pm_runtime_suspended(dev) && pci_dev->current_state < PCI_D3cold &&
++	    !device_may_wakeup(dev))
++		__pci_pme_active(pci_dev, false);
++
++	spin_unlock_irq(&dev->power.lock);
++	return true;
++}
++
++/**
++ * pci_dev_complete_resume - Finalize resume from system sleep for a device.
++ * @pci_dev: Device to handle.
++ *
++ * If the device is runtime suspended and wakeup-capable, enable PME for it as
++ * it might have been disabled during the prepare phase of system suspend if
++ * the device was not configured for system wakeup.
++ */
++void pci_dev_complete_resume(struct pci_dev *pci_dev)
++{
++	struct device *dev = &pci_dev->dev;
++
++	spin_lock_irq(&dev->power.lock);
++
++	if (pm_runtime_suspended(dev) && pci_dev->current_state < PCI_D3cold &&
++	    pci_dev_run_wake(pci_dev))
++		__pci_pme_active(pci_dev, true);
++
++	spin_unlock_irq(&dev->power.lock);
+ }
+ 
+ void pci_config_pm_runtime_get(struct pci_dev *pdev)
+Index: linux-pm/drivers/pci/pci.h
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.h
++++ linux-pm/drivers/pci/pci.h
+@@ -75,6 +75,7 @@ void pci_disable_enabled_device(struct p
+ int pci_finish_runtime_suspend(struct pci_dev *dev);
+ int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
+ bool pci_dev_keep_suspended(struct pci_dev *dev);
++void pci_dev_complete_resume(struct pci_dev *pci_dev);
+ void pci_config_pm_runtime_get(struct pci_dev *dev);
+ void pci_config_pm_runtime_put(struct pci_dev *dev);
+ void pci_pm_init(struct pci_dev *dev);
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -684,10 +684,21 @@ static int pci_pm_prepare(struct device
+ 	return pci_dev_keep_suspended(to_pci_dev(dev));
+ }
+ 
++static void pci_pm_complete(struct device *dev)
++{
++	struct device_driver *drv = dev->driver;
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++
++	pci_dev_complete_resume(pci_dev);
++
++	if (drv && drv->pm && drv->pm->complete)
++		drv->pm->complete(dev);
++}
+ 
+ #else /* !CONFIG_PM_SLEEP */
+ 
+ #define pci_pm_prepare	NULL
++#define pci_pm_complete	NULL
+ 
+ #endif /* !CONFIG_PM_SLEEP */
+ 
+@@ -1218,6 +1229,7 @@ static int pci_pm_runtime_idle(struct de
+ 
+ static const struct dev_pm_ops pci_dev_pm_ops = {
+ 	.prepare = pci_pm_prepare,
++	.complete = pci_pm_complete,
+ 	.suspend = pci_pm_suspend,
+ 	.resume = pci_pm_resume,
+ 	.freeze = pci_pm_freeze,
+
