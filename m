@@ -1,44 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:59916 "EHLO
-	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507AbbINQAT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 12:00:19 -0400
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [193.165.110.70])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-	by jabberwock.ucw.cz (Postfix) with ESMTPS id 330431C00ED
-	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2015 18:00:18 +0200 (CEST)
-Date: Mon, 14 Sep 2015 18:00:16 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Linux-PCI Mailing List <linux-pci@vger.kernel.org>
-Subject: Released pciutils-3.4.0
-Message-ID: <mj+md-20150914.155859.17916.albireo@ucw.cz>
+Received: from mail-vk0-f68.google.com ([209.85.213.68]:35669 "EHLO
+	mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932887AbbI2Qhe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 12:37:34 -0400
+Received: by vkao3 with SMTP id o3so742936vka.2
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2015 09:37:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443543636-35105-4-git-send-email-gabriele.paoloni@huawei.com>
+References: <1443543636-35105-1-git-send-email-gabriele.paoloni@huawei.com>
+	<1443543636-35105-4-git-send-email-gabriele.paoloni@huawei.com>
+Date: Tue, 29 Sep 2015 22:07:33 +0530
+Message-ID: <CAHM4w1nj6Z9odZUTFzXYj40ZegG=yoOAizHW1TpX6e0UR0uoTg@mail.gmail.com>
+Subject: Re: [PATCH v6 3/3] PCI: designware: add sanity checks on the header
+ offset in dw_pcie_cfg_read and dw_pcie_cfg_write
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Zhichang Yuan <yuanzhichang@hisilicon.com>,
+	zhudacai@hisilicon.com, Zhang Jukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa@hisilicon.com, Liguozhu <liguozhu@hisilicon.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello, world!\n
+On Tue, Sep 29, 2015 at 9:50 PM, Gabriele Paoloni
+<gabriele.paoloni@huawei.com> wrote:
+> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+>
+> This patch adds sanity checks on "where" input parameter in
+> dw_pcie_cfg_read and dw_pcie_cfg_write. These checks make sure
+> that offset passed in by the caller is not in conflict with
+> the size of the PCI header field that is being read/written
+>
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 
-I just released pciutils-3.4.0.
-
->From the ChangeLog:
-
-2015-09-14  Martin Mares <mj@ucw.cz>
-
-	* Released as 3.4.0.
-
-	* On Linux, we report NUMA nodes of devices.
-
-	* The sysfs back-end does not die on read errors
-	  of optional attributes. Instead, a warning is produced.
-
-	* Fixed several minor bugs.
-
-	* Updated pci.ids to the current snapshot of the database.
-
-				Have a nice fortnight
--- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-98% of the time I am right. Why worry about the other 3%
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
