@@ -1,106 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 17 Sep 2015 09:59:49 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	" David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, m-karicheri2@ti.com,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH v4 0/4] PCI: st: provide support for dw pcie
-Message-ID: <20150917145949.GF25767@google.com>
-References: <1440678857-27118-1-git-send-email-gabriel.fernandez@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:47449 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964843AbbI2L1b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 07:27:31 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
+Subject: [PATCH v4 1/3] PCIE: spear13xx: fix addresses in dw_pcie_cfg_read and dw_pcie_cfg_write
+Date: Tue, 29 Sep 2015 19:34:05 +0800
+Message-ID: <1443526447-228817-2-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1443526447-228817-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1443526447-228817-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1440678857-27118-1-git-send-email-gabriel.fernandez@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gabriel,
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-On Thu, Aug 27, 2015 at 02:34:13PM +0200, Gabriel Fernandez wrote:
-> 
-> This patchset is based on v4.2-rc1 and is based on 
-> [PATCH v8 0/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
-> patchset from Zhou Wang.
-> 
-> Changes in v4:
->  - Remove pci: designware: remove my pci_common_init_dev() patch and
-> 	use [PATCH v8 3/6] PCI: designware: Add ARM64 support instead.
-> 	This patch is a good solution for me to disable IO support.
->  - add __init to st_pcie_probe() and use module_init() instead
-> 	device_initcall() to prevent the probe function from being
-> 	deferred and to prevent module unloading.
-> 
-> Changes in v3:
->  - Remove power management functions (was not fully tested)
->  - Remove configuration space range from dt binding
->  - Remove pci_common_init_dev() call in pcie-designware.c to avoid 
->    default IO space declaration. 
-> 
-> Changes in v2:
->  - comestic corrections in device tree binding
->  - add pci-st.c into MAINTAINERS
->  - remove st_pcie_ops structure to avoid another level of indirection
->  - remove nasty busy-loop
->  - remove useless test using virt_to_phys()
->  - move disable io support into dw-pcie driver
-> 
-> I don't change the st_pcie_abort_handler() function because abort handling
-> is masked during boot.
-> 
-> 
-> This patch-set introduces a STMicroelectronics PCIe controller.
-> It's based on designware PCIe driver.
-> 
-> Gabriel Fernandez (4):
->   ARM: STi: Kconfig update for PCIe support
->   PCI: st: Add Device Tree bindings for sti pcie
->   PCI: st: Provide support for the sti PCIe controller
->   MAINTAINERS: Add pci-st.c to ARCH/STI architecture
+Currently spear13xx passes the wrong "address" in many calls to
+dw_pcie_cfg_read and dw_pcie_cfg_write: the passed address is
+always pp->dbi_base, that is wrong as it does not consider
+the offset to access the right register of the PCI header.
+This patches fixes these function calls passing the address to
+access the right register.
 
-Rob had some questions, so I'm waiting for an update that responds to
-those.  When you post that, can you also squash the last two patches
-together?
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+---
+ drivers/pci/host/pcie-spear13xx.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-Thanks,
-  Bjorn
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 98d2683..a5997e3 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -146,6 +146,7 @@ struct pcie_app_reg {
+ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ {
+ 	u32 val;
++	int where;
+ 	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
+ 	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
+ 	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
+@@ -163,9 +164,10 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 	 * default value in capability register is 512 bytes. So force
+ 	 * it to 128 here.
+ 	 */
+-	dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, &val);
++	where = exp_cap_off + PCI_EXP_DEVCTL;
++	dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, 4, &val);
+ 	val &= ~PCI_EXP_DEVCTL_READRQ;
+-	dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, val);
++	dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where, 4, val);
+ 
+ 	dw_pcie_cfg_write(pp->dbi_base, PCI_VENDOR_ID, 2, 0x104A);
+ 	dw_pcie_cfg_write(pp->dbi_base, PCI_DEVICE_ID, 2, 0xCD80);
+@@ -175,22 +177,24 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 	 * also works
+ 	 */
+ 	if (spear13xx_pcie->is_gen1) {
+-		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCAP, 4,
++		where = exp_cap_off + PCI_EXP_LNKCAP;
++		dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, 4,
+ 				 &val);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+-			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
+-					  PCI_EXP_LNKCAP, 4, val);
++			dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
++					where, 4, val);
+ 		}
+ 
+-		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCTL2, 4,
++		where = exp_cap_off + PCI_EXP_LNKCTL2;
++		dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, 4,
+ 				 &val);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+-			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
+-					  PCI_EXP_LNKCTL2, 4, val);
++			dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
++					where, 4, val);
+ 		}
+ 	}
+ 
+-- 
+1.9.1
 
->  Documentation/devicetree/bindings/pci/st-pcie.txt |  53 ++
->  MAINTAINERS                                       |   1 +
->  arch/arm/mach-sti/Kconfig                         |   2 +
->  drivers/pci/host/Kconfig                          |   9 +
->  drivers/pci/host/Makefile                         |   1 +
->  drivers/pci/host/pci-st.c                         | 583 ++++++++++++++++++++++
->  6 files changed, 649 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
->  create mode 100644 drivers/pci/host/pci-st.c
-> 
-> -- 
-> 1.9.1
-> 
