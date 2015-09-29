@@ -1,46 +1,34 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:59602 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759258AbbIVSXu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Sep 2015 14:23:50 -0400
-Date: Tue, 22 Sep 2015 19:23:48 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<lftan.linux@gmail.com>, Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v7 1/6] arm: add msi.h to Kbuild
-Message-ID: <20150922192348.1c9814c8@arm.com>
-In-Reply-To: <1442801587-3812-2-git-send-email-lftan@altera.com>
-References: <1442801587-3812-1-git-send-email-lftan@altera.com>
-	<1442801587-3812-2-git-send-email-lftan@altera.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAKsTQnkBPEiUtpaVxyDm--BLnHvUCtVMhEUQ5-FQryp-X9HBUg@mail.gmail.com>
+References: <CAKsTQnn-+13Q=+hM581p=dvWnZXtnG6W-t5K4-ioNUTkEmyLMg@mail.gmail.com>
+	<CAE9FiQXaOkMKk2PddYOXApK9tKLkgusH18sYgvLHA04BRdXR-g@mail.gmail.com>
+	<CAKsTQn=u5HuMCz5_L1jbx6Fvz5Rf_e14tNeEPwxy1o8dxk4J8g@mail.gmail.com>
+	<CAE9FiQWxiLV0YeWfUAd=vJaxtV-0PrqBqm1ptKnFoEM0jQDaiQ@mail.gmail.com>
+	<CAKsTQn=skDo7mbTrvFfQHW+nD1Ggy-g+qT922WOrjiwqyK5BwQ@mail.gmail.com>
+	<CAKsTQn=aigrfTz5hYmzvERK3w6Ax1yxEyZfzWt_NaT6d+-DYuA@mail.gmail.com>
+	<CAE9FiQWxBWaJh0CbbEfeBUJK+54NDrTW6r0v-6itXEyTkmzkhQ@mail.gmail.com>
+	<CAKsTQnkBPEiUtpaVxyDm--BLnHvUCtVMhEUQ5-FQryp-X9HBUg@mail.gmail.com>
+Date: Tue, 29 Sep 2015 08:36:18 -0700
+Message-ID: <CAE9FiQVfPwkg-EX2B1bYS+KD2_atN-xSh-EAXtGh0GqZxcftKQ@mail.gmail.com>
+Subject: Re: PCIe bus (re-)numbering
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ruud <netwerkforens@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 21 Sep 2015 10:13:02 +0800
-Ley Foon Tan <lftan@altera.com> wrote:
+On Tue, Sep 29, 2015 at 7:04 AM, Ruud <netwerkforens@gmail.com> wrote:
+>
+> (for illustration, lspci -tv from a 3.2 kernel, hand edited as the
+> original picture has already discovered the subordinate busses)
+>             +-02.0-[04-17]----00.0-[05-17]--+-04.0-[06-16]----00.0-[07-16]---
+>              |                               |
+>       \-08.0-[11-16]----
+>
 
-> Include asm-generic/msi.h to support CONFIG_GENERIC_MSI_IRQ_DOMAIN.
-> This to fix compilation error:
-> "include/linux/msi.h:123:21: fatal error: asm/msi.h:
-> No such file or directory"
-> 
-> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+please try to post lspci -tv and whole boot log.
 
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-
-	M.
--- 
-Jazz is not dead. It just smells funny.
+Yinghai
