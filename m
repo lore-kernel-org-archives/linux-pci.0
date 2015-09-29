@@ -1,215 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:56799 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753283AbbIIDxg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2015 23:53:36 -0400
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 9 Sep 2015 13:53:33 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 541232BB0051
-	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2015 13:53:30 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t893rJd933620042
-	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 13:53:27 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t893quOQ028882
-	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 13:52:57 +1000
-Date: Wed, 9 Sep 2015 13:52:32 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, bhelgaas@google.com,
-	mpe@ellerman.id.au, linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org, aik@ozlabs.ru
-Subject: Re: [PATCH V9 11/11] powerpc/powernv: compound PE for VFs
-Message-ID: <20150909035232.GA4971@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150729031718.GA18069@richard>
- <20150909024820.GA6808@gwshan>
- <20150909033616.GA5148@richards-mbp.cn.ibm.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:48925 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964828AbbI2NI5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 09:08:57 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Pratyush Anand <pratyush.anand@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v4 0/3] PCI: designware: change dw_pcie_cfg_write() and
+ dw_pcie_cfg_read()
+Date: Tue, 29 Sep 2015 13:08:44 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E16236A55@lhreml503-mbs>
+References: <1443526447-228817-1-git-send-email-gabriele.paoloni@huawei.com>
+ <CAHM4w1mKMxy_MyZuSa_+pt3zF1Oi_gXYgMLUJAni3HLDRQmyFw@mail.gmail.com>
+In-Reply-To: <CAHM4w1mKMxy_MyZuSa_+pt3zF1Oi_gXYgMLUJAni3HLDRQmyFw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150909033616.GA5148@richards-mbp.cn.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 09, 2015 at 11:36:16AM +0800, Richard Yang wrote:
->On Wed, Sep 09, 2015 at 12:48:21PM +1000, Gavin Shan wrote:
->>On Wed, Jul 29, 2015 at 11:17:18AM +0800, Wei Yang wrote:
->>>Hi, Michael
->>>
->>>Hope you didn't take this yet. We may change this patch a little.
->>>
->>
->>[Cc Alexey who might concern the SRIOV status]
->>
->>Richard, do you have plan to get it upstream? It seems it's hanged
->>over here for long time.
->>
->
->The VF EEH is hung since we re-designed the SRIOV. After the re-design, we
->don't have VF groups.
->
-
-How can this SRIOV redesign patchset affect EEH part greatly? The EEH
-VF patchset already support VF PE which contains only one VF.
-
->My plan is to push the VF EEH patch set after the SRIOV Redesign is accepted.
->
-
-That SRIOV redesign patchset missed 4.3 merge window obviously. I think the
-code has been reviewed by Alexey and me. If Alexey isn't going to have more
-comments about it, you can refresh the series (EEH support for VF) based on
-it and send the updated series. I don't think there is any dependencies.
-
->>>On Fri, Jul 17, 2015 at 02:02:41PM +0800, Wei Yang wrote:
->>>>When VF BAR size is larger than 64MB, we group VFs in terms of M64 BAR,
->>>>which means those VFs in a group should form a compound PE.
->>>>
->>>>This patch links those VF PEs into compound PE in this case.
->>>>
->>>>[gwshan: code refactoring for a bit]
->>>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>>>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>>>---
->>>> arch/powerpc/platforms/powernv/pci-ioda.c |   46 +++++++++++++++++++++++++----
->>>> arch/powerpc/platforms/powernv/pci.c      |   17 +++++++++--
->>>> 2 files changed, 56 insertions(+), 7 deletions(-)
->>>>
->>>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>>>index 5738d31..d1530cb 100644
->>>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>>>@@ -1359,9 +1359,20 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
->>>> 	}
->>>>
->>>> 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
->>>>+		struct pnv_ioda_pe *s, *sn;
->>>> 		if (pe->parent_dev != pdev)
->>>> 			continue;
->>>>
->>>>+		if ((pe->flags & PNV_IODA_PE_MASTER) &&
->>>>+		    (pe->flags & PNV_IODA_PE_VF)) {
->>>>+			list_for_each_entry_safe(s, sn, &pe->slaves, list) {
->>>>+				pnv_pci_ioda2_release_dma_pe(pdev, s);
->>>>+				list_del(&s->list);
->>>>+				pnv_ioda_deconfigure_pe(phb, s);
->>>>+				pnv_ioda_free_pe(phb, s->pe_number);
->>>>+			}
->>>>+		}
->>>>+
->>>> 		pnv_pci_ioda2_release_dma_pe(pdev, pe);
->>>>
->>>> 		/* Remove from list */
->>>>@@ -1414,7 +1425,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
->>>> 	struct pci_bus        *bus;
->>>> 	struct pci_controller *hose;
->>>> 	struct pnv_phb        *phb;
->>>>-	struct pnv_ioda_pe    *pe;
->>>>+	struct pnv_ioda_pe    *pe, *master_pe;
->>>> 	int                    pe_num;
->>>> 	u16                    vf_index;
->>>> 	struct pci_dn         *pdn;
->>>>@@ -1456,10 +1467,13 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
->>>> 			continue;
->>>> 		}
->>>>
->>>>-		/* Put PE to the list */
->>>>-		mutex_lock(&phb->ioda.pe_list_mutex);
->>>>-		list_add_tail(&pe->list, &phb->ioda.pe_list);
->>>>-		mutex_unlock(&phb->ioda.pe_list_mutex);
->>>>+		/* Put PE to the list, or postpone it for compound PEs */
->>>>+		if ((pdn->m64_per_iov != M64_PER_IOV) ||
->>>>+		    (num_vfs <= M64_PER_IOV)) {
->>>>+			mutex_lock(&phb->ioda.pe_list_mutex);
->>>>+			list_add_tail(&pe->list, &phb->ioda.pe_list);
->>>>+			mutex_unlock(&phb->ioda.pe_list_mutex);
->>>>+		}
->>>>
->>>> 		pnv_pci_ioda2_setup_dma_pe(phb, pe);
->>>> 	}
->>>>@@ -1472,10 +1486,32 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
->>>> 		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
->>>>
->>>> 		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++) {
->>>>+			master_pe = NULL;
->>>>+
->>>> 			for (vf_index = vf_group * vf_per_group;
->>>> 			     vf_index < (vf_group + 1) * vf_per_group &&
->>>> 			     vf_index < num_vfs;
->>>> 			     vf_index++) {
->>>>+
->>>>+				/*
->>>>+				 * Figure out the master PE and put all slave
->>>>+				 * PEs to master PE's list.
->>>>+				 */
->>>>+				pe = &phb->ioda.pe_array[pdn->offset + vf_index];
->>>>+				if (!master_pe) {
->>>>+					pe->flags |= PNV_IODA_PE_MASTER;
->>>>+					INIT_LIST_HEAD(&pe->slaves);
->>>>+					master_pe = pe;
->>>>+					mutex_lock(&phb->ioda.pe_list_mutex);
->>>>+					list_add_tail(&pe->list, &phb->ioda.pe_list);
->>>>+					mutex_unlock(&phb->ioda.pe_list_mutex);
->>>>+				} else {
->>>>+					pe->flags |= PNV_IODA_PE_SLAVE;
->>>>+					pe->master = master_pe;
->>>>+					list_add_tail(&pe->list,
->>>>+						&master_pe->slaves);
->>>>+				}
->>>>+
->>>> 				for (vf_index1 = vf_group * vf_per_group;
->>>> 				     vf_index1 < (vf_group + 1) * vf_per_group &&
->>>> 				     vf_index1 < num_vfs;
->>>>diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
->>>>index 0e4f42e..f3aead0 100644
->>>>--- a/arch/powerpc/platforms/powernv/pci.c
->>>>+++ b/arch/powerpc/platforms/powernv/pci.c
->>>>@@ -739,7 +739,7 @@ void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
->>>> 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
->>>> 	struct pnv_phb *phb = hose->private_data;
->>>> #ifdef CONFIG_PCI_IOV
->>>>-	struct pnv_ioda_pe *pe;
->>>>+	struct pnv_ioda_pe *pe, *slave;
->>>> 	struct pci_dn *pdn;
->>>>
->>>> 	/* Fix the VF pdn PE number */
->>>>@@ -751,10 +751,23 @@ void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
->>>> 			    (pdev->devfn & 0xff))) {
->>>> 				pdn->pe_number = pe->pe_number;
->>>> 				pe->pdev = pdev;
->>>>-				break;
->>>>+				goto found;
->>>>+			}
->>>>+
->>>>+			if ((pe->flags & PNV_IODA_PE_MASTER) &&
->>>>+			    (pe->flags & PNV_IODA_PE_VF)) {
->>>>+				list_for_each_entry(slave, &pe->slaves, list) {
->>>>+					if (slave->rid == ((pdev->bus->number << 8)
->>>>+					   | (pdev->devfn & 0xff))) {
->>>>+						pdn->pe_number = slave->pe_number;
->>>>+						slave->pdev = pdev;
->>>>+						goto found;
->>>>+					}
->>>>+				}
->>>> 			}
->>>> 		}
->>>> 	}
->>>>+found:
->>>> #endif /* CONFIG_PCI_IOV */
->>>>
->>>> 	if (phb && phb->dma_dev_setup)
->>>>-- 
->>>>1.7.9.5
->>>
->>>-- 
->>>Richard Yang
->>>Help you, Help me
->
->-- 
->Richard Yang
->Help you, Help me
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUHJhdHl1c2ggQW5hbmQg
+W21haWx0bzpwcmF0eXVzaC5hbmFuZEBnbWFpbC5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIFNlcHRl
+bWJlciAyOSwgMjAxNSAxOjA4IFBNDQo+IFRvOiBHYWJyaWVsZSBQYW9sb25pDQo+IENjOiBCam9y
+biBIZWxnYWFzOyBKaW5nb28gSGFuOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBXYW5nemhv
+dSAoQik7DQo+IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87IHFpdXpoZW5mYTsg
+TGlndW96aHUgKEtlbm5ldGgpDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjQgMC8zXSBQQ0k6IGRl
+c2lnbndhcmU6IGNoYW5nZSBkd19wY2llX2NmZ193cml0ZSgpDQo+IGFuZCBkd19wY2llX2NmZ19y
+ZWFkKCkNCj4gDQo+IEhpIEdhYiwNCj4gDQo+IE9uIFR1ZSwgU2VwIDI5LCAyMDE1IGF0IDU6MDQg
+UE0sIEdhYnJpZWxlIFBhb2xvbmkNCj4gPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2VpLmNvbT4gd3Jv
+dGU6DQo+ID4gRnJvbTogZ2FicmllbGUgcGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWku
+Y29tPg0KPiA+DQo+ID4gVGhpcyBwYXRjaHNldDoNCj4gPiAxKSBmaXhlcyBhIGJ1ZyBpbiBzcGVh
+cjEzeHggd2hlbiBjYWxsaW5nIGR3X3BjaWVfY2ZnX3JlYWQgYW5kDQo+ID4gICAgZHdfcGNpZV9j
+Zmdfd3JpdGUgdXNpZ24gdGhlIHBhdGNoIGZyb20gUHJhdHl1c2ggaW4NCj4gPiAgICBodHRwczov
+L2xrbWwub3JnL2xrbWwvMjAxNS85LzcvNQ0KPiANCj4gSSB0aGluaywgeW91IGZvcmdvdCB0byB0
+YWtlIHRoaXMsIGFuZCByZXBsYWNlZCB3aXRoIGFub3RoZXIgdmVyc2lvbi4NCj4gV2UgaGF2ZSBh
+bHJlYWR5IGRpc2N1c3NlZCBbMV0gdGhhdCwgd2h5IHRoZSB2ZXJzaW9uIGFkZGVkIGluIHRoaXMN
+Cj4gc2VyaWVzIGlzIG5vdCBwcmVmZXJhYmxlLg0KPiBQbGVhc2UgbGV0IG1lIGtub3cgaWYgeW91
+IHNlZSBhbnkgaXNzdWUgaW4gdGFraW5nIFsyXS4NCg0KU29ycnkgeW91J3JlIGNvbXBsZXRlbHkg
+cmlnaHQhDQoNCkkndmUganVzdCBtZXNzZWQgdXAgd2l0aCBteSBpbnRlcm5hbCBicmFuY2hlcy4N
+Cg0KV2lsbCByZS1zZW5kIHdpdGggdjUNCg0KQXBvbG9naWVzIGFnYWluDQoNCj4gDQo+IFRoYW5r
+cw0KPiANCj4gflByYXR5dXNoDQo+IA0KPiBbMV0gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0
+cy9saW51eC1wY2kvbXNnNDQ0NDAuaHRtbA0KPiBbMl0gaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIw
+MTUvOS83LzUNCg==
