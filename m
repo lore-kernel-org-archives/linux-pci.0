@@ -1,57 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0092.outbound.protection.outlook.com ([207.46.100.92]:41664
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752741AbbIWSs0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 Sep 2015 14:48:26 -0400
-Message-ID: <5602F3F2.2050100@caviumnetworks.com>
-Date: Wed, 23 Sep 2015 11:48:18 -0700
-From: David Daney <ddaney@caviumnetworks.com>
-MIME-Version: 1.0
-To: Will Deacon <will.deacon@arm.com>
-CC: David Daney <ddaney.cavm@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH] arm64/pci: Add quirks for Cavium Thunder PCI bridges.
-References: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com> <20150923184005.GX7356@arm.com>
-In-Reply-To: <20150923184005.GX7356@arm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from plane.gmane.org ([80.91.229.3]:32987 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751541AbbI3Lye (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Sep 2015 07:54:34 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1ZhFxu-0005Ov-RP
+	for linux-pci@vger.kernel.org; Wed, 30 Sep 2015 13:54:31 +0200
+Received: from nsg-static-030.145.72.182.airtel.in ([nsg-static-030.145.72.182.airtel.in])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2015 13:54:30 +0200
+Received: from bharatku by nsg-static-030.145.72.182.airtel.in with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2015 13:54:30 +0200
+To: linux-pci@vger.kernel.org
+From: bharat kumar gogada <bharatku@xilinx.com>
+Subject: Need information on Microblaze PCIe
+Date: Wed, 30 Sep 2015 11:54:17 +0000 (UTC)
+Message-ID: <loom.20150930T134944-26@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/23/2015 11:40 AM, Will Deacon wrote:
-> On Wed, Sep 23, 2015 at 01:09:56AM +0100, David Daney wrote:
->> From: David Daney <david.daney@cavium.com>
->>
->> The Cavium ThunderX SoC needs a PCI quirk for its on-chip bridges.
->> Since it is arm64, create a new quirks.c file there to contain arm64
->> related quirks.  Add the ThunderX bridge quirk, gated by a new config
->> variable, so that it can be disabled for kernels that aren't expected
->> to be used on ThunderX.
->>
->> Signed-off-by: David Daney <david.daney@cavium.com>
->> ---
->>   arch/arm64/Kconfig         | 11 +++++++++++
->>   arch/arm64/kernel/Makefile |  2 +-
->>   arch/arm64/kernel/quirks.c | 36 ++++++++++++++++++++++++++++++++++++
->>   3 files changed, 48 insertions(+), 1 deletion(-)
->>   create mode 100644 arch/arm64/kernel/quirks.c
->
-> Why does this have to live in the arch/arm64/ directory? The quirks have
-> nothing to do with the architecture code.
->
+We are trying to write a generic PCIE root port driver which works both on
+zynq (ARM 32 architecture) and Microblaze architecture, since both use same
+PCIE Hardware IP. So we started exploring microblaze pci architecture. Zynq
+driver is already present at drivers/pci/host/pcie-xilinx.c
 
-It doesn't have to live there.  It is something that will never be used 
-for any other architecture.  So I thought we could do like 
-arch/x86/kernel/quirks.c
+Microblaze pci mainly relies on arch/microblaze/pci/pci-common.c this file.
+In this file "static int __init pcibios_init(void)" is the main function
+which does most of the work, before that we need to allocate struct
+pci_controller and fill in the required device node and resource details.
 
-I could move it to drivers/pci/quirks.c if people think that is a much 
-better place for it.
+Problem is if we use platform_driver for registration, the "pcibios_init" of
+microblaze will get invoked before this driver probe is called since it is
+exported as " subsys_initcall(pcibios_init) " and by that time it doesn't
+have information of struct pci_controller. (We are using some #ifdef
+according to archticture) 
 
-David Daney
+So, in order to avoid above problem and remove dependency on "pcibios_init",
+we tried directly invoking the following functions, without registering to
+hw_pci in probe:
+of_pci_get_host_bridge_resources, pci_create_root_bus, pci_scan_child_bus,
+pci_assign_unassigned_bus_resources, pci_bus_add_devices.
+
+But then also its not successful since pci subsystem itself is invoking some
+methods from this file(pci-common.c), and some methods take information from
+struct pci_controller. 
+
+So I need some inputs what are other possible ways I could try to make
+generic driver.
+
+
