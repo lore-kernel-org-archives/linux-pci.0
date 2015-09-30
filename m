@@ -1,74 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 28/53] PCI: Move comment to pci_need_to_release()
-Date: Wed, 30 Sep 2015 22:53:02 -0700
-Message-Id: <1443678807-786-29-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:34711 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753516AbbI3GfO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2015 02:35:14 -0400
+Received: by padhy16 with SMTP id hy16so30591066pad.1
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2015 23:35:14 -0700 (PDT)
+From: Simon Horman <simon.horman@netronome.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Simon Horman <simon.horman@netronome.com>
+Subject: [PATCH repost 0/3] Support Netronome NFP6000 family quirks
+Date: Wed, 30 Sep 2015 15:35:04 +0900
+Message-Id: <1443594907-16196-1-git-send-email-simon.horman@netronome.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move comment from caller to pci_need_to_release(), as we will have one new
-caller for alt_size support.
+Hi,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 27 +++++++++++++++------------
- 1 file changed, 15 insertions(+), 12 deletions(-)
+this short patch-set adds support for Netronome NFP6000 family quirks.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 86c5b1d..5f5737e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -415,6 +415,20 @@ static unsigned long pci_fail_res_type_mask(struct list_head *fail_head)
- 
- static bool pci_need_to_release(unsigned long mask, struct resource *res)
- {
-+	/*
-+	 * Separate three resource type checking if we need to release
-+	 * assigned resource.
-+	 *	1. if there is io port assign fail, will release assigned
-+	 *	   io port.
-+	 *	2. if there is pref mmio assign fail, release assigned
-+	 *	   pref mmio.
-+	 *	   if assigned pref mmio's parent is non-pref mmio and there
-+	 *	   is non-pref mmio assign fail, will release that assigned
-+	 *	   pref mmio.
-+	 *	3. if there is non-pref mmio assign fail or pref mmio
-+	 *	   assigned fail, will release assigned non-pref mmio.
-+	 */
-+
- 	if (res->flags & IORESOURCE_IO)
- 		return !!(mask & IORESOURCE_IO);
- 
-@@ -471,19 +485,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 *  if could do that, could get out early.
- 	 *  if could not do that, we still try to assign requested at first,
- 	 *    then try to reassign add_size for some resources.
--	 *
--	 * Separate three resource type checking if we need to release
--	 * assigned resource after requested + add_size try.
--	 *	1. if there is io port assign fail, will release assigned
--	 *	   io port.
--	 *	2. if there is pref mmio assign fail, release assigned
--	 *	   pref mmio.
--	 *	   if assigned pref mmio's parent is non-pref mmio and there
--	 *	   is non-pref mmio assign fail, will release that assigned
--	 *	   pref mmio.
--	 *	3. if there is non-pref mmio assign fail or pref mmio
--	 *	   assigned fail, will release assigned non-pref mmio.
- 	 */
-+
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
+Base:
+
+This patchset is based on the next branch of Bjorn Helgaas's PCI tree.
+
+About NFP6000 Drivers (someone is bound to ask):
+
+My understanding is that Netronome is actively working on preparing to
+submit NFP6000 family drivers to mainline.  For now they can be found on
+github at https://github.com/Netronome/nfp-drv-kmods
+
+Jason S. McMullan (3):
+  PCI: Support PCIe devices with short cfg_size
+  PCI: Add Netronome vendor and device IDs
+  PCI: Support Netronome NFP6000 family quirks
+
+ drivers/pci/pci-sysfs.c | 18 +++++++++---------
+ drivers/pci/quirks.c    | 11 +++++++++++
+ include/linux/pci_ids.h |  6 ++++++
+ 3 files changed, 26 insertions(+), 9 deletions(-)
+
 -- 
-1.8.4.5
+2.1.4
 
