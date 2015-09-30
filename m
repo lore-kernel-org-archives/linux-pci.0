@@ -1,51 +1,169 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [Bugfix 3/3] eata: Enhance eata driver to support PCI device
- hot-removal
-To: Christoph Hellwig <hch@infradead.org>,
-	Hannes Reinecke <hare@suse.de>
-References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
- <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
- <1442200140-30808-4-git-send-email-jiang.liu@linux.intel.com>
- <55F6837A.5020807@suse.de> <20150916134211.GA21535@infradead.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	Dario Ballabio <ballabio_dario@emc.com>,
-	"James E.J. Bottomley" <JBottomley@odin.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, x86@kernel.org
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <55FA6280.3050000@linux.intel.com>
-Date: Thu, 17 Sep 2015 14:49:36 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:33706 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751184AbbI3JTN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2015 05:19:13 -0400
+Received: by wiclk2 with SMTP id lk2so188102121wic.0
+        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2015 02:19:12 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20150916134211.GA21535@infradead.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAL_Jsq+A-3bF2vdqQnD4HJXLoxDEnm1w=yBynbKYahgLe8CVPQ@mail.gmail.com>
+References: <1440678857-27118-1-git-send-email-gabriel.fernandez@linaro.org>
+ <1440678857-27118-3-git-send-email-gabriel.fernandez@linaro.org> <CAL_Jsq+A-3bF2vdqQnD4HJXLoxDEnm1w=yBynbKYahgLe8CVPQ@mail.gmail.com>
+From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Date: Wed, 30 Sep 2015 11:18:32 +0200
+Message-ID: <CAG374jDTu52AUL8hzH9LuU2fkhSo2+qgo3ba5Ne4gzhA8cN7BQ@mail.gmail.com>
+Subject: Re: [PATCH v4 2/4] PCI: st: Add Device Tree bindings for sti pcie
+To: Rob Herring <robherring2@gmail.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"kernel@stlinux.com" <kernel@stlinux.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/9/16 21:42, Christoph Hellwig wrote:
-> On Mon, Sep 14, 2015 at 10:21:14AM +0200, Hannes Reinecke wrote:
->> Welll ... if you don't have hardware (and I strongly hope you refer to
->> 'hardware able to do hotplugging', not 'hardware for the eata driver'
->> ...) why add the code at all?
->> Chances are no-one will ever need eata PCI hotplug; SCSI parallel
->> typically isn't very good at hotplugging, so throwing in PCI hotplug
->> will only confuse matters more.
->> Plus due to the sheer mechanics involved here I find it very unlikely
->> anyone will be using it in real life.
-> 
-> Because it's used for module removal and we want every driver to use
-> the standard interface that.
-> 
-> Jiang, you also need to convert the driver to
-> scsi_add_host/scsi_remove_host from the legacy scsi_register interface,
-> otherwise the SCSI layer will be very unhappy.
-> 
-> Take a look at commit 0d31f8759109cbc1e6fc196d08e6b0e8a9e93b3f for
-> example, the change should be straight forward.
-Hi Christoph,
-	I have taken a look at the commit 0d31f8759109cb and it seems
-that the conversion is not so big. But I have no hardware for testing,
-so could only ask for help from community.
-Thanks!
-Gerry
+Hi Rob,
+
+Thanks for the review.
+
+Best regards
+
+Gabriel
+
+On 28 August 2015 at 02:06, Rob Herring <robherring2@gmail.com> wrote:
+> On Thu, Aug 27, 2015 at 7:34 AM, Gabriel Fernandez
+> <gabriel.fernandez@linaro.org> wrote:
+>> sti pcie is built around a Synopsis Designware PCIe IP.
+>>
+>> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+>> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+>> ---
+>>  Documentation/devicetree/bindings/pci/st-pcie.txt | 53 +++++++++++++++++++++++
+>>  1 file changed, 53 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
+>> new file mode 100644
+>> index 0000000..25fcab3
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
+>> @@ -0,0 +1,53 @@
+>> +STMicroelectronics STi PCIe controller
+>> +
+>> +This PCIe host controller is based on the Synopsis Designware PCIe IP
+>> +and thus inherits all the common properties defined in designware-pcie.txt.
+>> +
+>> +Required properties:
+>> + - compatible: "st,stih407-pcie"
+>
+> What about "snps,dw-pcie" as well?
+>
+You are right.
+
+>> + - reg: base address and length of the pcie controller, mem-window address
+>> +   and length available to the controller.
+>
+> What is mem-window? Seems rather large and perhaps should be under ranges.
+>
+No the purpose is to specify the physical memory available to the controller.
+reg property is more appropriate.
+
+>> + - interrupts: A list of interrupt outputs of the controller. Must contain an
+>> +   entry for each entry in the interrupt-names property.
+>
+> Define how many interrupts.
+>
+ok i will fix it.
+
+>> + - interrupt-names: Should be "msi". STi interrupt that is asserted when an
+>> +   MSI is received.
+>
+> Kind of pointless with a single interrupt.
+>
+ok
+
+>> + - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
+>> +   offset for IP configuration.
+>> + - resets, reset-names: the power-down and soft-reset lines of PCIe IP.
+>> +   Associated names must be "powerdown" and "softreset".
+>> + - phys, phy-names: the phandle for the PHY device.
+>> +   Associated name must be "pcie"
+>
+> What does this mean?
+>
+i will reformulate this paragraph.
+
+>> +
+>> +Optional properties:
+>> + - reset-gpio: a GPIO spec to define which pin is connected to the bus reset.
+>> +
+>> +Example:
+>> +
+>> +pcie0: pcie@9b00000 {
+>> +       compatible = "st,pcie", "snps,dw-pcie";
+>> +       device_type = "pci";
+>> +       reg = <0x09b00000 0x4000>,      /* dbi cntrl registers */
+>> +             <0x2fff0000 0x00010000>,  /* configuration space */
+>> +             <0x40000000 0x80000000>;  /* lmi mem window */
+>> +       reg-names = "dbi", "config", "mem-window";
+>> +       st,syscfg = <&syscfg_core 0xd8 0xe0>;
+>> +       #address-cells = <3>;
+>> +       #size-cells = <2>;
+>> +       ranges = <0x82000000 0 0x20000000 0x20000000 0 0x0FFF0000>; /* non-prefetchable memory */
+>
+> No i/o support?
+>
+Exactly there is no i/o support.
+
+>> +       num-lanes = <1>;
+>> +       interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
+>> +       interrupt-names = "msi";
+>> +       #interrupt-cells = <1>;
+>> +       interrupt-map-mask = <0 0 0 7>;
+>> +       interrupt-map = <0 0 0 1 &intc GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>, /* INT A */
+>> +                       <0 0 0 2 &intc GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>, /* INT B */
+>> +                       <0 0 0 3 &intc GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>, /* INT C */
+>> +                       <0 0 0 4 &intc GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>; /* INT D */
+>> +
+>> +       resets = <&powerdown STIH407_PCIE0_POWERDOWN>,
+>> +                <&softreset STIH407_PCIE0_SOFTRESET>;
+>> +       reset-names = "powerdown",
+>> +                     "softreset";
+>> +       phys = <&phy_port0 PHY_TYPE_PCIE>;
+>> +       phy-names = "pcie";
+>> +};
+>> --
+>> 1.9.1
+>>
