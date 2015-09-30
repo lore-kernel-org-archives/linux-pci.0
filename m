@@ -1,91 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bn0100.outbound.protection.outlook.com ([157.56.110.100]:18272
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2on0093.outbound.protection.outlook.com ([65.55.169.93]:59185
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932168AbbI2QDp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Sep 2015 12:03:45 -0400
-Message-ID: <560AB653.6070602@caviumnetworks.com>
-Date: Tue, 29 Sep 2015 09:03:31 -0700
+	id S1754457AbbI3XB3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Sep 2015 19:01:29 -0400
+Message-ID: <560C69BF.6000205@caviumnetworks.com>
+Date: Wed, 30 Sep 2015 16:01:19 -0700
 From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	David Daney <ddaney.cavm@gmail.com>,
-	<linux-kernel@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
+To: "Sean O. Stalley" <sean.stalley@intel.com>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	"Sean O. Stalley" <sean.stalley@intel.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	<linux-api@vger.kernel.org>, <yinghai@kernel.org>,
+	<rajatxjain@gmail.com>, <gong.chen@linux.intel.com>,
 	David Daney <david.daney@cavium.com>
-Subject: Re: [RFC PATCH] PCI/pci-host-generic: Add support for Cavium Thunder
- fixed BARs.
-References: <1443488184-12633-1-git-send-email-ddaney.cavm@gmail.com> <1981236.3bSkWiA8PH@wuerfel>
-In-Reply-To: <1981236.3bSkWiA8PH@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Subject: Re: [PATCH v3 2/2] PCI: Add support for Enhanced Allocation devices
+References: <1443485439-12081-1-git-send-email-ddaney.cavm@gmail.com> <1443485439-12081-3-git-send-email-ddaney.cavm@gmail.com> <20150929192737.GA2517@sean.stalley.intel.com> <560AF3D7.80908@gmail.com> <20150929224727.GB2517@sean.stalley.intel.com> <560B2470.9080100@caviumnetworks.com> <20150930225011.GA4244@sean.stalley.intel.com>
+In-Reply-To: <20150930225011.GA4244@sean.stalley.intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/29/2015 12:42 AM, Arnd Bergmann wrote:
-> On Monday 28 September 2015 17:56:24 David Daney wrote:
->> From: David Daney <david.daney@cavium.com>
+On 09/30/2015 03:50 PM, Sean O. Stalley wrote:
+> On Tue, Sep 29, 2015 at 04:53:20PM -0700, David Daney wrote:
+>> On 09/29/2015 03:47 PM, Sean O. Stalley wrote:
+>> [...]
+>>>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>>>> index 6a9a111..7c60b16 100644
+>>>>>> --- a/drivers/pci/pci.c
+>>>>>> +++ b/drivers/pci/pci.c
+>>>>>> @@ -2148,6 +2148,284 @@ void pci_pm_init(struct pci_dev *dev)
+>>>>>>   	}
+>>>>>>   }
+>>>>>>
+>>>>>> +static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
+>>>>>> +{
+>>>>>> +	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_SIZEALIGN;
+>>>>>
+>>>>> Why did you add the IORESOURCE_SIZEALIGN flag? EA allows for unaligned resources.
+>>>>
+>>>> pci_bus_assign_resources() fails causing the devices to be unusable
+>>>> if resource_alignment() returns zero.  The easiest fix for this was
+>>>> to specify IORESOURCE_SIZEALIGN.
+>>>>
+>>>> An alternative would be to change the code in setup-bus.c so that
+>>>> for IORESOURCE_PCI_FIXED resources, it didn't barf.
+>>>
+>>> I would do this alternative, but with a IORESOURCE_PCI_EA flag.
+>>>
 >>
->> Early versions of the Cavium Thunder CN88XX processor are missing
->> Enhanced Allocation (EA) capabilities for the fixed BAR addresses used
->> by the on-SoC hardware blocks.
+>> I don't think we need IORESOURCE_PCI_EA.  If a resource is tagged as
+>> IORESOURCE_PCI_FIXED that means that it cannot be changed, we
+>> shouldn't care why it is fixed (due to an EA capability for
+>> example).  We just need to gracefully handle IORESOURCE_PCI_FIXED in
+>> the places where things currently go wrong.
 >>
->> Add config access functions that synthesize the missing EA
->> capabilities for versions that are missing that information.  Since
->> this is a little hacky, gate the inclusion of the code with a new
->> Kconfig variable.
+>> David Daney
 >>
->> Signed-off-by: David Daney <david.daney@cavium.com>
->> ---
->>
->> As suggested by Bjorn Helgaas...  It is RFC at this point, but this is
->> working well for me.
 >
-> I don't have an opinion on the way you implement the config space
-> accessors, but it seems that the overall amount of code is comparable
-> to the normal pci-host-generic driver without this,
-
-That is not a correct interpretation of the patch.  We need *both* 
-files.  So if we, hypothetically, duplicated the contents of 
-pci-host-generic.c and combined it with the new 
-thunder_ecam_config_io.c, the result would be over twice as much code. 
-That doesn't even address the anti-pattern of making many copies of the 
-common code (unfactoring?) found in pci-host-generic.c  I am not even 
-going to attempt such a thing as it would surely receive many NAKs.
-
-> and it is not
-> really generic at all.
-
-The "generic" part of that driver really refers to the framework of 
-parsing the OF device tree, mapping the config space address windows and 
-creating and scanning of the PCI buses.  It already contains several 
-specializations of config space accessors, my patch just adds an 
-additional config space accessor.
-
+> I agree that we need to make sure fixed things stay fixed,
+> regardless of if they are fixed by EA or something else.
 >
-> I think because of this, it makes more sense to have a separate top-level
-> driver for this and not reuse the pci-host-generic implementation here.
+> The question is: do we want to allow all fixed resources to be non-aligned, or just EA?
 
-I will not do that, as some of our first attempts at getting PCI support 
-merged used that strategy, and were NAKed for being reimplementations of 
-pci-host-generic.c
-
-The current thinking on Cavium ThunderX on-SoC PCI buses really consists 
-of two options:
-
-1) Use pci-host-generic.c with existing ECAM config space accessors. 
-Set PCI_PROBE_ONLY, and then enumerate and assign BARs for all external 
-PCIe devices in firmware.
-
-2) Use pci-host-generic.c with this new EA synthesizing config space 
-accessor.
-
-My interpretation of Bjorn Helgaas' suggestion was to do #2, and the 
-first attempt at this is this patch.
+The alignment should only be important if a new address is being 
+calculated for a BAR or behind the bridge memory/io region.  If the 
+resource is fixed, I would almost say that "alignment" is an undefined 
+concept.  So, in the places were we need special treatment for 
+IORESOURCE_PCI_FIXED, I would argue that we shouldn't be use the 
+resource alignment information.
 
 David Daney
+
+>
+> -Sean
+>
 
