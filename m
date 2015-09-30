@@ -1,174 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 17 Sep 2015 19:03:37 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	linux-pci@vger.kernel.org,
-	virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH v7] pci: quirk to skip msi disable on shutdown
-Message-ID: <20150917185638-mutt-send-email-mst@redhat.com>
-References: <1441553385-3810-1-git-send-email-mst@redhat.com>
- <20150917154424.GI25767@google.com>
- <874mitxczx.fsf@x220.int.ebiederm.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout1.freenet.de ([195.4.92.91]:57088 "EHLO mout1.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750768AbbI3Ozu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Sep 2015 10:55:50 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: Joerg Roedel <joro@8bytes.org>,
+	Mikulas Patocka <mpatocka@redhat.com>
+References: <55B7BEA2.30205@01019freenet.de>
+ <20150728175054.GB24782@redhat.com> <55B7D054.4070308@maya.org>
+ <20150728192908.GA25264@redhat.com> <55BCD5A7.2080708@maya.org>
+ <55BE1D5E.6020709@maya.org>
+ <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
+ <55FE5740.2060701@maya.org> <20150929152100.GL3036@8bytes.org>
+ <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
+ <20150929162042.GR3036@8bytes.org>
+Cc: Andreas Hartmann <andihartmann@freenet.de>,
+	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
+	Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <560BF73F.8000008@maya.org>
+Date: Wed, 30 Sep 2015 16:52:47 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <874mitxczx.fsf@x220.int.ebiederm.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150929162042.GR3036@8bytes.org>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 17, 2015 at 10:49:06AM -0500, Eric W. Biederman wrote:
-> Bjorn Helgaas <bhelgaas@google.com> writes:
+On 09/29/2015 at 06:20 PM, Joerg Roedel wrote:
+> On Tue, Sep 29, 2015 at 11:58:10AM -0400, Mikulas Patocka wrote:
+>> On Tue, 29 Sep 2015, Joerg Roedel wrote:
+>> There was a patch (34b48db66e08ca1c1bc07cf305d672ac940268dc) that 
+>> increased default block request size. That patch triggers AMD-Vi page 
+>> faults. The bug may be in ATA driver, in ATA controller on in AMD-Vi 
+>> driver or hardware. I didn't see anything in that thread that proves that 
+>> the bug in not in AMD-Vi IOMMU.
+>>
+>> The bug probably existed even before kernel 3.19, but it was masked by the 
+>> fact that I/O request size was artifically capped. Bisecting probably 
+>> won't find it, as it may have existed since ever.
 > 
-> > On Sun, Sep 06, 2015 at 06:32:35PM +0300, Michael S. Tsirkin wrote:
-> >> On some hypervisors, virtio devices tend to generate spurious interrupts
-> >> when switching between MSI and non-MSI mode.  Normally, either MSI or
-> >> non-MSI is used and all is well, but during shutdown, linux disables MSI
-> >> which then causes an "irq %d: nobody cared" message, with irq being
-> >> subsequently disabled.
-> >> 
-> >> Since bus mastering is already disabled at this point, disabling MSI
-> >> isn't actually useful for spec compliant devices: MSI interrupts are
-> >> in-bus memory writes so disabling Bus Master (which is already done)
-> >> disables these as well: after some research, it appears to be there for
-> >> the benefit of devices that ignore the bus master bit.
-> >> 
-> >> As it's not clear how common this kind of bug is, this patch simply adds
-> >> a quirk, to be set by devices that wish to skip disabling msi on
-> >> shutdown, relying on bus master instead.
-> >> 
-> >> We set this quirk in virtio core.
-> >> 
-> >> Reported-by: Fam Zheng <famz@redhat.com>
-> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
-> >> Cc: Ulrich Obergfell <uobergfe@redhat.com>
-> >> Cc: Rusty Russell <rusty@rustcorp.com.au>
-> >> Cc: "Eric W. Biederman" <ebiederm@xmission.com>
-> >> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> >
-> > Eric, what do you think of this?  You had many comments on previous
-> > versions.
+> Okay, I see. But as long as the request-size is not bigger than 128MB
+> (the biggest chunk the AMD IOMMU driver can map at once), I don't see
+> how the IOMMU driver could be at fault.
 > 
-> I still think it is a hack to avoid actually fixing a driver.
-
-The bug's in the hypervisor though.
-
-> I think the hack is better as a quirk.
-
-You mean put it in drivers/pci/quirks.c?
-
->  I think the quirk would tend to
-> be better if it was limited to whatever set of hypervisors where this is
-> actually a problem.
-
-I guess we might add a new flag "msi disable at shutdown is safe" in future
-hypervisors. Until such hypervisors ship I don't see a way to detect
-this.
-
-> And of course given that on any sane configuration we have the irq
-> watchdog I don't see what this is fixing in practice.
+> Which ATA driver is in use when this happens and are there instructions
+> on how to reproduce the issue?
 > 
-> Other than suggesting this hack become find a way to limit itself to the
-> driver that is actually having problems I don't see a way to improve it.
+> Alternativly someone who can reproduce it should trace the calls to
+> __map_single and __unmap_single in the AMD IOMMU driver to find out
+> whether the addresses which the faults happen on are really mapped, or
+> at least requested from the AMD IOMMU driver.
 
-It's already limited: virtio is the only one that sets
-PCI_DEV_FLAGS_NO_MSI_SHUTDOWN. Did you notice this?
+How can I trace it?
 
-> > Minor comment on a comment below.
-> >
-> >> ---
-> >> 
-> >> 
-> >> changes from v6:
-> >> 	limit changes to virtio only
-> >> changes from v5:
-> >>         rebased on top of pci/msi
-> >>         fixed commit log, including comments by Bjorn
-> >>         and adding explanation to address comments/questions by Eric
-> >>         dropped stable Cc, this patch does not seem to qualify for stable
-> >> changes from v4:
-> >>         Yijing Wang <wangyijing@huawei.com> noted that
-> >>         early fixups rely on pci_msi_off.
-> >>         Split out the functionality and move off the
-> >>         required part to run early during pci_device_setup.
-> >> Changes from v3:
-> >>         fix a copy-and-paste error in
-> >>           pci: drop some duplicate code
-> >>         other patches are unchanged
-> >>         drop Cc stable for now
-> >> Changes from v2:
-> >>         move code from probe to device enumeration
-> >>         add patches to unexport pci_msi_off
-> >> 
-> >> 
-> >>  include/linux/pci.h                | 2 ++
-> >>  drivers/pci/pci-driver.c           | 6 ++++--
-> >>  drivers/virtio/virtio_pci_common.c | 4 ++++
-> >>  3 files changed, 10 insertions(+), 2 deletions(-)
-> >> 
-> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >> index 860c751..80f3494 100644
-> >> --- a/include/linux/pci.h
-> >> +++ b/include/linux/pci.h
-> >> @@ -180,6 +180,8 @@ enum pci_dev_flags {
-> >>  	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
-> >>  	/* Do not use PM reset even if device advertises NoSoftRst- */
-> >>  	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
-> >> +	/* Do not disable MSI on shutdown, disable bus master instead */
-> >
-> > This comment doesn't really match what the patch does.  The patch merely
-> > does "Do not disable MSI on shutdown."  It doesn't "disable bus master
-> > instead."
-> >
-> > Bus master may be disabled elsewhere, but that is independent of the
-> > PCI_DEV_FLAGS_NO_MSI_SHUTDOWN flag.
-> >
-> >> +	PCI_DEV_FLAGS_NO_MSI_SHUTDOWN = (__force pci_dev_flags_t) (1 << 8),
-> >>  };
-> >>  
-> >>  enum pci_irq_reroute_variant {
-> >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> >> index 3cb2210..59d9e40 100644
-> >> --- a/drivers/pci/pci-driver.c
-> >> +++ b/drivers/pci/pci-driver.c
-> >> @@ -450,8 +450,10 @@ static void pci_device_shutdown(struct device *dev)
-> >>  
-> >>  	if (drv && drv->shutdown)
-> >>  		drv->shutdown(pci_dev);
-> >> -	pci_msi_shutdown(pci_dev);
-> >> -	pci_msix_shutdown(pci_dev);
-> >> +	if (!(pci_dev->dev_flags & PCI_DEV_FLAGS_NO_MSI_SHUTDOWN)) {
-> >> +		pci_msi_shutdown(pci_dev);
-> >> +		pci_msix_shutdown(pci_dev);
-> >> +	}
-> >>  
-> >>  #ifdef CONFIG_KEXEC
-> >>  	/*
-> >> diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
-> >> index 78f804a..26f46c3 100644
-> >> --- a/drivers/virtio/virtio_pci_common.c
-> >> +++ b/drivers/virtio/virtio_pci_common.c
-> >> @@ -528,6 +528,8 @@ static int virtio_pci_probe(struct pci_dev *pci_dev,
-> >>  	if (rc)
-> >>  		goto err_register;
-> >>  
-> >> +	pci_dev->dev_flags |= PCI_DEV_FLAGS_NO_MSI_SHUTDOWN;
-> >> +
-> >>  	return 0;
-> >>  
-> >>  err_register:
-> >> @@ -546,6 +548,8 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
-> >>  {
-> >>  	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
-> >>  
-> >> +	pci_dev->dev_flags &= ~PCI_DEV_FLAGS_NO_MSI_SHUTDOWN;
-> >> +
-> >>  	unregister_virtio_device(&vp_dev->vdev);
-> >>  
-> >>  	if (vp_dev->ioaddr)
-> >> -- 
-> >> MST
+
+Thanks,
+Andreas
