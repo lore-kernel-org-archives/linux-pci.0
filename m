@@ -1,71 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:45919 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753417AbbIGDKG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 6 Sep 2015 23:10:06 -0400
-Message-ID: <1441595403.12945.3.camel@ellerman.id.au>
-Subject: Re: [PATCH v2 2/2] powerpc/PCI: Disable MSI/MSI-X interrupts at PCI
- probe time in OF case
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
-	paulus@samba.org, mst@redhat.com, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	"David S. Miller" <davem@davemloft.net>
-Date: Mon, 07 Sep 2015 13:10:03 +1000
-In-Reply-To: <20150903175624.GI829@google.com>
-References: <1439932430-13375-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
-	 <1439932077-11427-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
-	 <1440010450-4549-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-	 <20150903175624.GI829@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v3 3/4] PCI/MSI:  Add helper function pci_msi_domain_get_msi_rid().
+Date: Wed, 30 Sep 2015 15:47:01 -0700
+Message-Id: <1443653222-24924-4-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443653222-24924-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1443653222-24924-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-09-03 at 12:56 -0500, Bjorn Helgaas wrote:
-> [+cc Fam, Yinghai, Yijing, Eric (reviewers of MST's original series), Dave]
-> 
-> Hi Guilherme,
-> 
-> On Wed, Aug 19, 2015 at 03:54:10PM -0300, Guilherme G. Piccoli wrote:
-> > diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-> > index 42e02a2..0e920f3 100644
-> > --- a/arch/powerpc/kernel/pci_of_scan.c
-> > +++ b/arch/powerpc/kernel/pci_of_scan.c
-> > @@ -191,6 +191,9 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
-> >  
-> >  	pci_device_add(dev, bus);
-> >  
-> > +	/* Disable MSI/MSI-X here to avoid bogus interrupts */
-> > +	pci_msi_setup_pci_dev(dev);
-> 
-> of_create_pci_dev() already has a lot of code that duplicates
-> pci_setup_device(), and it's a shame to add more.  There's also a sparc
-> version of of_create_pci_dev() that presumably has the same problem you're
-> fixing for powerpc.
-> 
-> Michael originally called pci_msi_setup_pci_dev() from
-> pci_init_capabilities() [1].  A subsequent patch moved the call
-> to pci_setup_device() [2] because an early quirk (called from
-> pci_setup_device()) used pci_msi_off(), which depended on
-> pci_msi_setup_pci_dev().  
-> 
-> But we later removed pci_msi_off() completely, so I think we probably
-> *could* call pci_msi_setup_pci_dev() from pci_init_capabilities().
-> 
-> That would be much nicer because it makes more sense there, and it
-> would do the right thing for powerpc and sparc because they both
-> already use that path.
+From: David Daney <david.daney@cavium.com>
 
-Sounds reasonable to me.
+Add pci_msi_domain_get_msi_rid() to return the MSI requester id (RID).
+Initially needed by gic-v3 based systems. It will be used by follow on
+patch to drivers/irqchip/irq-gic-v3-its-pci-msi.c
 
-Guilherme can you please try this and let us know.
+Initially supports mapping the RID via OF device tree.  In the future,
+this could be extended to use ACPI _IORT tables as well.
 
-cheers
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ drivers/pci/msi.c   | 31 +++++++++++++++++++++++++++++++
+ include/linux/msi.h |  1 +
+ 2 files changed, 32 insertions(+)
 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d449714..92b6dc9 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -20,6 +20,7 @@
+ #include <linux/io.h>
+ #include <linux/slab.h>
+ #include <linux/irqdomain.h>
++#include <linux/of_irq.h>
+ 
+ #include "pci.h"
+ 
+@@ -1327,4 +1328,34 @@ struct irq_domain *pci_msi_create_default_irq_domain(struct device_node *node,
+ 
+ 	return domain;
+ }
++
++struct get_mis_id_data {
++	u32	alias;
++};
++
++static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
++{
++	struct get_mis_id_data *s = data;
++
++	s->alias = alias;
++	return 0;
++}
++/**
++ * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
++ * @domain:	The interrupt domain
++ * @pdev:	The PCI device.
++ *
++ * The RID for a device is formed from the alias, with a firmware
++ * supplied mapping applied
++ *
++ * Returns: The RID.
++ */
++u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
++{
++	struct get_mis_id_data d;
++
++	d.alias = 0;
++	pci_for_each_dma_alias(pdev, get_msi_id_cb, &d);
++	return of_msi_map_rid(&pdev->dev, domain->of_node, d.alias);
++}
+ #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index ad939d0..56e3b76 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -293,6 +293,7 @@ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
+ 					  struct msi_desc *desc);
+ int pci_msi_domain_check_cap(struct irq_domain *domain,
+ 			     struct msi_domain_info *info, struct device *dev);
++u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
+ #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+ 
+ #endif /* LINUX_MSI_H */
+-- 
+1.9.1
 
