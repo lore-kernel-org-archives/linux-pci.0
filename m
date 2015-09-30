@@ -1,48 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:34082 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752145AbbIPNmg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 09:42:36 -0400
-Date: Wed, 16 Sep 2015 06:42:11 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	Dario Ballabio <ballabio_dario@emc.com>,
-	"James E.J. Bottomley" <JBottomley@odin.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, x86@kernel.org
-Subject: Re: [Bugfix 3/3] eata: Enhance eata driver to support PCI device
- hot-removal
-Message-ID: <20150916134211.GA21535@infradead.org>
-References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
- <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
- <1442200140-30808-4-git-send-email-jiang.liu@linux.intel.com>
- <55F6837A.5020807@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55F6837A.5020807@suse.de>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33793 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753752AbbI3GfS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2015 02:35:18 -0400
+Received: by padhy16 with SMTP id hy16so30593434pad.1
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2015 23:35:18 -0700 (PDT)
+From: Simon Horman <simon.horman@netronome.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Simon Horman <simon.horman@netronome.com>
+Subject: [PATCH repost 2/3] PCI: Add Netronome vendor and device IDs
+Date: Wed, 30 Sep 2015 15:35:06 +0900
+Message-Id: <1443594907-16196-3-git-send-email-simon.horman@netronome.com>
+In-Reply-To: <1443594907-16196-1-git-send-email-simon.horman@netronome.com>
+References: <1443594907-16196-1-git-send-email-simon.horman@netronome.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 14, 2015 at 10:21:14AM +0200, Hannes Reinecke wrote:
-> Welll ... if you don't have hardware (and I strongly hope you refer to
-> 'hardware able to do hotplugging', not 'hardware for the eata driver'
-> ...) why add the code at all?
-> Chances are no-one will ever need eata PCI hotplug; SCSI parallel
-> typically isn't very good at hotplugging, so throwing in PCI hotplug
-> will only confuse matters more.
-> Plus due to the sheer mechanics involved here I find it very unlikely
-> anyone will be using it in real life.
+From: "Jason S. McMullan" <jason.mcmullan@netronome.com>
 
-Because it's used for module removal and we want every driver to use
-the standard interface that.
+Device IDs for the Netronome NFP3200, NFP3240, NFP6000, and
+NFP6000 SR-IOV devices.
 
-Jiang, you also need to convert the driver to
-scsi_add_host/scsi_remove_host from the legacy scsi_register interface,
-otherwise the SCSI layer will be very unhappy.
+Signed-off-by: Jason S. McMullan <jason.mcmullan@netronome.com>
+[simon: edited changelog]
+Signed-off-by: Simon Horman <simon.horman@netronome.com>
+---
+ include/linux/pci_ids.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Take a look at commit 0d31f8759109cbc1e6fc196d08e6b0e8a9e93b3f for
-example, the change should be straight forward.
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index d9ba49cedc5d..526e2c12ae59 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2495,6 +2495,12 @@
+ #define PCI_DEVICE_ID_KORENIX_JETCARDF2	0x1700
+ #define PCI_DEVICE_ID_KORENIX_JETCARDF3	0x17ff
+ 
++#define PCI_VENDOR_ID_NETRONOME		0x19ee
++#define PCI_DEVICE_ID_NETRONOME_NFP3200	0x3200
++#define PCI_DEVICE_ID_NETRONOME_NFP3240	0x3240
++#define PCI_DEVICE_ID_NETRONOME_NFP6000	0x6000
++#define PCI_DEVICE_ID_NETRONOME_NFP6000_VF	0x6003
++
+ #define PCI_VENDOR_ID_QMI		0x1a32
+ 
+ #define PCI_VENDOR_ID_AZWAVE		0x1a3b
+-- 
+2.1.4
+
