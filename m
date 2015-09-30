@@ -1,88 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:64003 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752177AbbIWD2K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Sep 2015 23:28:10 -0400
-Message-ID: <56021BC4.9030000@hisilicon.com>
-Date: Wed, 23 Sep 2015 11:25:56 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from mail-yk0-f180.google.com ([209.85.160.180]:35025 "EHLO
+	mail-yk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752734AbbI3VaZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2015 17:30:25 -0400
+Received: by ykdz138 with SMTP id z138so59306476ykd.2
+        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2015 14:30:25 -0700 (PDT)
 MIME-Version: 1.0
-To: Pratyush Anand <pratyush.anand@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>,
-	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Zhang Jukuo <zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
-	<xuwei5@hisilicon.com>, Liguozhu <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v9 3/6] PCI: designware: Add ARM64 support
-References: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com> <1442321361-174300-4-git-send-email-wangzhou1@hisilicon.com> <5600C285.5090603@hisilicon.com> <CAHM4w1mabn8SiE_oqWBbr1chrQTUPiUhc8fCsxJ0t=AyOZOadA@mail.gmail.com>
-In-Reply-To: <CAHM4w1mabn8SiE_oqWBbr1chrQTUPiUhc8fCsxJ0t=AyOZOadA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CADaLNDndQ6qZ2yuGuff6=cTm565in5e75AjkcX8MJmH2BCwyEw@mail.gmail.com>
+References: <20150928220854.GA16110@localhost> <CAL_JsqL_O2qqESs69spQCPuDfKG5g8_GZkhiYFo-+U8ttxnJng@mail.gmail.com>
+ <20150928230532.GG21513@n2100.arm.linux.org.uk> <CAL_JsqLVxtcgcTK55cY32=s24Nuv378X2aKZhYKHFEKO9wh3mw@mail.gmail.com>
+ <CADaLNDndQ6qZ2yuGuff6=cTm565in5e75AjkcX8MJmH2BCwyEw@mail.gmail.com>
+From: Rob Herring <robh@kernel.org>
+Date: Wed, 30 Sep 2015 16:30:05 -0500
+Message-ID: <CAL_JsqJni3nB3OTevG8VSZoJ7ndnxSYHV6Yfpn6TwvghCxhHxg@mail.gmail.com>
+Subject: Re: pci_generic_config_write32() access size problem
+To: Duc Dang <dhdang@apm.com>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Ray Jui <rjui@broadcom.com>, Tanmay Inamdar <tinamdar@apm.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/9/23 1:05, Pratyush Anand wrote:
-> Hi Zhou,
-> 
-> On Tue, Sep 22, 2015 at 8:22 AM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
->> On 2015/9/15 20:49, Zhou Wang wrote:
->>> This patch tries to unify ARM32 and ARM64 PCIe in designware driver. Delete
->>> function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
->>> move related operations to dw_pcie_host_init.
+On Wed, Sep 30, 2015 at 4:17 PM, Duc Dang <dhdang@apm.com> wrote:
+> On Tue, Sep 29, 2015 at 9:47 AM, Rob Herring <robh@kernel.org> wrote:
+>> + several affected driver maintainers
+>>
+>> On Mon, Sep 28, 2015 at 6:05 PM, Russell King - ARM Linux
+>> <linux@arm.linux.org.uk> wrote:
+>>> On Mon, Sep 28, 2015 at 05:42:20PM -0500, Rob Herring wrote:
+>>>> On Mon, Sep 28, 2015 at 5:08 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>>> > Hi Rob,
+>>>> >
+>>>> > Russell pointed out a problem with 1f94a94f67e1 ("PCI: Add generic config
+>>>> > accessors").  pci_generic_config_write32() does a read/modify/write if the
+>>>> > size is less than 32 bits, so I think we have problem if this is used with
+>>>> > 8- or 16-bit registers that contain RW1C bits.  Any thoughts on how we can
+>>>> > fix this?
+>>>>
+>>>> My series didn't change access sizes unless I made a made a mistake
+>>>> somewhere, so the problem should have existed before.
+>>>>
+>>>> Is it known addresses we need to deal with? We could do special case
+>>>> handling of certain addresses to mask out RW1C bits. This could be in
+>>>> the generic functions or in wrappers around the generic functions.
+>>>> There's already some similar examples of special address handling
+>>>> IIRC.
 >>>
->>> This patch also try to use of_pci_get_host_bridge_resources for ARM32 and ARM64
->>> according to the suggestion for Gabriele[1]
->>>
->>> This patch reverts commit f4c55c5a3f7f ("PCI: designware: Program ATU with
->>> untranslated address") based on 1/6 in this series. we delete *_mod_base in
->>> pcie-designware. This was discussed in [2]
->>>
->>> I have compiled the driver with multi_v7_defconfig. However, I don't have
->>> ARM32 PCIe related board to do test. It will be appreciated if someone could
->>> help to test it.
->>>
->>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
->>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->>> Tested-by: James Morse <james.morse@arm.com>
->>> Tested-by: Gabriel Fernandez <gabriel.fernandez@st.com>
->>> Tested-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> 
-> Sorry for delayed response. Since I moved from ST, I do not have any
-> test board having designware PCIe controller :(, and also I do
-> designware work only in my hobby time,  so it took time to understand
-> few modifications. Anyway, all modifications looks fine to me. So,
-> 
-> Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+>>> I think this originally came into being because Intel decided that their
+>>> IOP platforms wouldn't support anything except 32-bit accesses, and
+>>> cargo cult programming took over.  I complained about it on the Intel IOP
+>>> platforms, but obviously if the hardware doesn't support anything else
+>>> then your stuck with it.
+>>
+>> What about SA1100 nanoengine?
+>>
+>> Others are Tegra, XGene, iproc, and maybe rcar. These are all
+>> relatively active platforms, so hopefully some testing can be done.
+>
+> On X-Gene, so far I don't see anything strange after switching to use
+> pci_generic_config_write32 with all the cards that I can test.
 
-Hi Pratyush,
+You mean switching to use pci_generic_config_write, right?
 
-Many thanks for your reviewing :)
+>
+> But looks like it's still safer to use pci_generic_config_write
+> instead as this will make sure no unexpected read-modify-write will
+> happen?
 
-Best Regards,
-Zhou
+Yes. You can also change xgene_pcie_config_read32 to use
+pci_generic_config_read instead to simplify the function some.
 
-> 
-> PS: Does someone know about a economical test board from any vendor
-> with designware PCIe IP?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
-
+Rob
