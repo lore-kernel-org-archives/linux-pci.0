@@ -1,66 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59308 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751500AbbIVU1g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Sep 2015 16:27:36 -0400
-Subject: Re: [RFT v3] eata: Convert eata driver as normal PCI and platform
- device drivers
-To: Jiang Liu <jiang.liu@linux.intel.com>,
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:34026 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754803AbbI3WrN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2015 18:47:13 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	Ballabio Dario <dario.ballabio@emc.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Dario Ballabio <ballabio_dario@emc.com>,
-	"James E.J. Bottomley" <JBottomley@odin.com>
-References: <20150916134211.GA21535@infradead.org>
- <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, x86@kernel.org
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <5601B9B0.4090302@suse.de>
-Date: Tue, 22 Sep 2015 22:27:28 +0200
-MIME-Version: 1.0
-In-Reply-To: <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252
+	Jason Cooper <jason@lakedaemon.net>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v3 4/4] irqchip/gic-v3-its:  Add handling of PCI requester id.
+Date: Wed, 30 Sep 2015 15:47:02 -0700
+Message-Id: <1443653222-24924-5-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443653222-24924-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1443653222-24924-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/22/2015 09:30 AM, Jiang Liu wrote:
-> Previously the eata driver just grabs and accesses eata PCI devices
-> without implementing a PCI device driver, that causes troubles with
-> latest IRQ related
-> 
-> Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
-> pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
-> for PCI devices on x86 platforms. Instead of allocating PCI legacy
-> IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
-> will be called by pci_device_probe() to allocate PCI legacy IRQs
-> when binding PCI drivers to PCI devices.
-> 
-> But the eata driver directly accesses PCI devices without implementing
-> corresponding PCI drivers, so pcibios_alloc_irq() won't be called for
-> those PCI devices and wrong IRQ number may be used to manage the PCI
-> device.
-> 
-> This patch implements a PCI device driver to manage eata PCI devices,
-> so eata driver could properly cooperate with the PCI core. It also
-> provides headroom for PCI hotplug with eata driver.
-> 
-> It also represents non-PCI eata devices as platform devices, so it could
-> be managed as normal devices.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Ballabio, Dario <dario.ballabio@emc.com>
-> Cc: Christoph Hellwig <hch@infradead.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+From: David Daney <david.daney@cavium.com>
 
-Cheers,
+Replace open coded generation PCI/MSI requester id with call to the
+new function pci_msi_domain_get_msi_rid() which applies the "msi-map"
+to the id value.
 
-Hannes
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+index cf351c6..7bbf64a 100644
+--- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
++++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+@@ -42,7 +42,6 @@ static struct irq_chip its_msi_irq_chip = {
+ 
+ struct its_pci_alias {
+ 	struct pci_dev	*pdev;
+-	u32		dev_id;
+ 	u32		count;
+ };
+ 
+@@ -60,7 +59,6 @@ static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
+ {
+ 	struct its_pci_alias *dev_alias = data;
+ 
+-	dev_alias->dev_id = alias;
+ 	if (pdev != dev_alias->pdev)
+ 		dev_alias->count += its_pci_msi_vec_count(dev_alias->pdev);
+ 
+@@ -86,7 +84,7 @@ static int its_pci_msi_prepare(struct irq_domain *domain, struct device *dev,
+ 	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
+ 
+ 	/* ITS specific DeviceID, as the core ITS ignores dev. */
+-	info->scratchpad[0].ul = dev_alias.dev_id;
++	info->scratchpad[0].ul = pci_msi_domain_get_msi_rid(domain, pdev);
+ 
+ 	return msi_info->ops->msi_prepare(domain->parent,
+ 					  dev, dev_alias.count, info);
 -- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+1.9.1
+
