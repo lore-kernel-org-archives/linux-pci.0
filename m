@@ -1,95 +1,122 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 25 Sep 2015 17:19:24 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Will Deacon <Will.Deacon@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:37785 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754857AbbI3JT0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2015 05:19:26 -0400
+Received: by wicfx3 with SMTP id fx3so51993260wic.0
+        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2015 02:19:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAHM4w1=g=UFoz=R-6hxJC0=fSieN1WDvZT97ykL1b3_YPhBjZg@mail.gmail.com>
+References: <1440678857-27118-1-git-send-email-gabriel.fernandez@linaro.org>
+ <1440678857-27118-4-git-send-email-gabriel.fernandez@linaro.org> <CAHM4w1=g=UFoz=R-6hxJC0=fSieN1WDvZT97ykL1b3_YPhBjZg@mail.gmail.com>
+From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Date: Wed, 30 Sep 2015 11:18:45 +0200
+Message-ID: <CAG374jAx8DN8GXkv7O0jcgnvVTnH4U3LegX-hPq5RWo1_cy+OQ@mail.gmail.com>
+Subject: Re: [PATCH v4 3/4] PCI: st: Provide support for the sti PCIe controller
+To: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-Message-ID: <20150925161924.GA2271@red-moon>
-References: <5570447D.3020705@linaro.org>
- <557504A2.3060203@linaro.org>
- <20150608151443.GA16151@red-moon>
- <55E4340D.6050004@linaro.org>
- <55ED6010.3020406@linaro.org>
- <20150908150727.GF29293@red-moon>
- <55F0388B.1090607@linaro.org>
- <20150911112018.GA13033@red-moon>
- <55F6DFF6.4010807@linaro.org>
- <56057001.9000101@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56057001.9000101@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+	"kernel@stlinux.com" <kernel@stlinux.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 25, 2015 at 05:02:09PM +0100, Tomasz Nowicki wrote:
+Hi Pratyush,
 
-[...]
+Thanks for the review.
 
-> > My concerns/ideas related to raw accessors for ARM64, please correct me
-> > at any point.
-> >
-> > ACPI spec - chapter: 19.5.96 OperationRegion (Declare Operation Region)
-> > defines PCI_Config as one of region types. Every time ASL opcode
-> > operates on corresponding PCI config space region, ASL interpreter is
-> > dispatching address space to our raw accessors, please see
-> > acpi_ex_pci_config_space_handler, acpi_ev_pci_config_region_setup calls.
-> > What is more important, such operations may happen after (yes after) bus
-> > enumeration, but always raw accessors are called at the end with the
-> > {segment, bus, dev, fn} tuple.
-> >
-> > Giving above, here are some ideas:
-> > 1. We force somehow vendors to avoid operations on PCI config regions in
-> > ASL code. PCI config region definitions still fall into Hardware Reduced
-> > profile, so new ACPICA special subset for ARM64 is need. Then raw ACPI
-> > accessors can be empty (and overridden by x86).
-> > 2. We provide raw accessors which translate {segment, bus, dev, fn}
-> > tuple to Linux generic accessors (this can be considered only if PCI
-> > config accesses happened after bus enumeration for HR profile, thus
-> > tuple to bus structure map is possible).
-> > 4. We rely on the generic MCFG based raw read and writes.
-> 
-> I will appreciate your opinion on above ideas.
+Best regards
 
-Well, (1) does not seem allowed by the ACPI specification, the only
-way we can detect that is by leaving the raw accessors empty for
-now and see how things will turn out on ARM64, in the meantime
-I will start a thread on ASWG to check how that's used on x86, I
-do not have any machine to test this and grokking ACPICA is not
-trivial, there is lots of history there and it is hard to fathom.
+Gabriel
 
-(2) is tempting but I am not sure it works all the time (I still
-think that's a quirk of ACPI specs, namely that some OperationRegion
-should always be available to ASL, maybe that's just an unused ACPI
-spec quirk).
+On 27 August 2015 at 19:31, Pratyush Anand <pratyush.anand@gmail.com> wrote:
+> Hi Gabriel,
+>
+> Looks good to me.
+>
+> On Thu, Aug 27, 2015 at 6:04 PM, Gabriel Fernandez
+> <gabriel.fernandez@linaro.org> wrote:
+>> sti pcie is built around a Synopsis Designware PCIe IP.
+>>
+>> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+>> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+>
+>
+>> +static int st_pcie_link_up(struct pcie_port *pp)
+>> +{
+>> +       u32 status;
+>> +       int link_up;
+>
+> nit: why not bool
 
-If I read you series correctly (4) can be implemented easily if and
-when we deem the raw accessors necessary, on top of the MCFG layer,
-by making the MCFG raw accessors the default instead of leaving them
-empty.
+i prefer to keep it as 'int' because the prototype of link_up callback
+is an 'int'.
 
-I pulled your branch and started testing it on AMD Seattle, next week
-we should try to get this done.
+>
+>> +       int count = 0;
+>
+> [...]
+>
+>> +static void st_pcie_board_reset(struct pcie_port *pp)
+>> +{
+>> +       struct st_pcie *pcie = to_st_pcie(pp);
+>> +
+>> +       if (!gpio_is_valid(pcie->reset_gpio))
+>> +               return;
+>> +
+>> +       if (gpio_direction_output(pcie->reset_gpio, 0)) {
+>> +               dev_err(pp->dev, "Cannot set PERST# (gpio %u) to output\n",
+>> +                       pcie->reset_gpio);
+>> +               return;
+>> +       }
+>> +
+>> +       /* From PCIe spec */
+>> +       msleep(2);
+>> +       gpio_direction_output(pcie->reset_gpio, 1);
+>> +
+>> +       /*
+>> +        * PCIe specification states that you should not issue any config
+>> +        * requests until 100ms after asserting reset, so we enforce that here
+>> +        */
+>> +       msleep(100);
+>
+> IIRC, specification says to wait after link training completes. So
+> shouldn't it be after st_pcie_enable_ltssm. Moreover, I wonder why
+> others do not need it.
+>
+Ok i will fix it.
 
-I think you should target option (1) and in the meantime we should
-reach a conclusion on the raw accessors usage on ARM64.
-
-Thanks,
-Lorenzo
+> Reviewed-by: Pratyush Anand <pratyush.anand@gmail.com>
