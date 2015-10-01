@@ -1,83 +1,150 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: bhelgaas@google.com, yinghai@kernel.org, rajatxjain@gmail.com,
-	mst@redhat.com, zajec5@gmail.com, gong.chen@linux.intel.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-api@vger.kernel.org
-Cc: sean.stalley@intel.com
-Subject: [PATCH v2 1/2] PCI: Add Enhanced Allocation register entries
-Date: Wed, 23 Sep 2015 15:27:43 -0700
-Message-Id: <1443047264-4003-2-git-send-email-sean.stalley@intel.com>
-In-Reply-To: <1443047264-4003-1-git-send-email-sean.stalley@intel.com>
-References: <1443047264-4003-1-git-send-email-sean.stalley@intel.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 14/53] PCI: Use correct align for optional only resources during sorting
+Date: Wed, 30 Sep 2015 22:52:48 -0700
+Message-Id: <1443678807-786-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add registers defined in PCI-SIG's Enhanced allocation ECN.
+During sorting before assign, we only put resource with non-zero align
+in the sorted list, so for optional resources that required size is 0 and
+only have optional parts, we need to have correct align.
 
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+While treating SRIOV as optional resources, we always read alignment for
+SRIOV bars every time, so they are ok.
+Hotplug bridge resources are using STARTALIGN so it is ok when size is 0
+if we have correct start for them.
+
+Later we want to treat the ROM BAR as optional resource, and it has
+SIZEALIGN, so align=size will be 0. We need to find a way to get align
+for them.
+
+We can use optional resource align instead in that case, and it
+is ok for SRIOV path and hotplug bridge resource path.
+
+We need to pass realloc list from sizing stage to sorting stage, and
+get entry from realloc list and calculate align from the entry.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Reported-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- include/uapi/linux/pci_regs.h | 40 +++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 39 insertions(+), 1 deletion(-)
+ drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 42 insertions(+), 7 deletions(-)
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 413417f..084ce98 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -216,7 +216,8 @@
- #define  PCI_CAP_ID_MSIX	0x11	/* MSI-X */
- #define  PCI_CAP_ID_SATA	0x12	/* SATA Data/Index Conf. */
- #define  PCI_CAP_ID_AF		0x13	/* PCI Advanced Features */
--#define  PCI_CAP_ID_MAX		PCI_CAP_ID_AF
-+#define  PCI_CAP_ID_EA		0x14	/* PCI Enhanced Allocation */
-+#define  PCI_CAP_ID_MAX		PCI_CAP_ID_EA
- #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
- #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
- #define PCI_CAP_SIZEOF		4
-@@ -353,6 +354,43 @@
- #define  PCI_AF_STATUS_TP	0x01
- #define PCI_CAP_AF_SIZEOF	6	/* size of AF registers */
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a62cbd2..79bc2cb 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -145,9 +145,42 @@ static resource_size_t get_res_add_align(struct list_head *head,
+ 	return dev_res->min_align;
+ }
  
-+/* PCI Enhanced Allocation registers */
++static resource_size_t __pci_resource_alignment(
++				struct pci_dev *dev,
++				struct resource *r,
++				struct list_head *realloc_head)
++{
++	resource_size_t r_align = pci_resource_alignment(dev, r);
++	resource_size_t orig_start, orig_end;
++	struct pci_dev_resource *dev_res;
 +
-+#define PCI_EA_NUM_ENT		2	/* Number of Capability Entries */
-+#define PCI_EA_NUM_ENT_MASK	0x3f	/* Num Entries Mask */
-+#define PCI_EA_FIRST_ENT	4	/* First EA Entry in List */
-+#define PCI_EA_FIRST_ENT_BRIDGE	8	/* First EA Entry for Bridges */
-+#define PCI_EA_ES		0x7	/* Entry Size */
-+#define PCI_EA_BEI(x)	(((x) >> 4) & 0xf) /* BAR Equivalent Indicator */
-+/* 0-5 map to BARs 0-5 respectively */
-+#define  PCI_EA_BEI_BRIDGE	6	/* Resource behind bridge */
-+#define  PCI_EA_BEI_ENI		7	/* Equivalent Not Indicated */
-+#define  PCI_EA_BEI_ROM		8	/* Expansion ROM */
-+/* 9-14 map to VF BARs 0-5 respectively */
-+#define  PCI_EA_BEI_RESERVED	15	/* Reserved - Treat like ENI */
++	if (r_align || !realloc_head)
++		return r_align;
 +
-+#define PCI_EA_PP(x)	(((x) >>  8) & 0xff)	/* Primary Properties */
-+#define PCI_EA_SP(x)	(((x) >> 16) & 0xff)	/* Secondary Properties */
-+#define  PCI_EA_P_MEM			0x00	/* Non-Prefetch Memory */
-+#define  PCI_EA_P_MEM_PREFETCH		0x01	/* Prefetchable Memory */
-+#define  PCI_EA_P_IO			0x02	/* I/O Space */
-+#define  PCI_EA_P_VIRT_MEM_PREFETCH	0x03	/* VF Prefetchable Memory */
-+#define  PCI_EA_P_VIRT_MEM		0x04	/* VF Non-Prefetch Memory */
-+#define  PCI_EA_P_BRIDGE_MEM		0x05	/* Bridge Non-Prefetch Memory */
-+#define  PCI_EA_P_BRIDGE_MEM_PREFETCH	0x06	/* Bridge Prefetchable Memory */
-+#define  PCI_EA_P_BRIDGE_IO		0x07	/* Bridge I/O Space */
-+/* 0x08-0xfc reserved */
-+#define  PCI_EA_P_MEM_RESERVED		0xfd	/* Reserved Memory */
-+#define  PCI_EA_P_IO_RESERVED		0xfe	/* Reserved I/O Space */
-+#define  PCI_EA_P_UNAVAILABLE		0xff	/* Entry Unavailable */
-+#define PCI_EA_WRITEABLE	BIT(30) /* Writable, 1 = RW, 0 = HwInit */
-+#define PCI_EA_ENABLE		BIT(31) /* Enable for this entry */
-+#define PCI_EA_BASE		4	/* Base Address Offset */
-+#define PCI_EA_MAX_OFFSET	8	/* MaxOffset (resource length) */
-+/* bit 0 is reserved */
-+#define PCI_EA_IS_64		BIT(1)	/* 64-bit field flag */
-+#define PCI_EA_FIELD_MASK	0xfffffffc	/* For Base & Max Offset */
++	dev_res = res_to_dev_res(realloc_head, r);
++	if (!dev_res || !dev_res->add_size)
++		return r_align;
 +
- /* PCI-X registers (Type 0 (non-bridge) devices) */
++	orig_start = r->start;
++	orig_end = r->end;
++	r->end += dev_res->add_size;
++	if ((r->flags & IORESOURCE_STARTALIGN)) {
++		resource_size_t r_size = resource_size(r);
++
++		r->start = dev_res->min_align;
++		r->end = r->start + r_size - 1;
++	}
++	r_align = pci_resource_alignment(dev, r);
++	r->start = orig_start;
++	r->end = orig_end;
++
++	return r_align;
++}
  
- #define PCI_X_CMD		2	/* Modes & Features */
+ /* Sort resources by alignment */
+-static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
++static void pdev_sort_resources(struct pci_dev *dev,
++				 struct list_head *realloc_head,
++				 struct list_head *head)
+ {
+ 	int i;
+ 
+@@ -165,7 +198,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 		if (!(r->flags) || r->parent)
+ 			continue;
+ 
+-		r_align = pci_resource_alignment(dev, r);
++		r_align = __pci_resource_alignment(dev, r, realloc_head);
+ 		if (!r_align) {
+ 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
+ 				 i, r);
+@@ -183,8 +216,9 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 		list_for_each_entry(dev_res, head, list) {
+ 			resource_size_t align;
+ 
+-			align = pci_resource_alignment(dev_res->dev,
+-							 dev_res->res);
++			align = __pci_resource_alignment(dev_res->dev,
++							 dev_res->res,
++							 realloc_head);
+ 
+ 			if (r_align > align) {
+ 				n = &dev_res->list;
+@@ -197,6 +231,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ }
+ 
+ static void __dev_sort_resources(struct pci_dev *dev,
++				 struct list_head *realloc_head,
+ 				 struct list_head *head)
+ {
+ 	u16 class = dev->class >> 8;
+@@ -213,7 +248,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ 			return;
+ 	}
+ 
+-	pdev_sort_resources(dev, head);
++	pdev_sort_resources(dev, realloc_head, head);
+ }
+ 
+ static inline void reset_resource(struct resource *res)
+@@ -507,7 +542,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+ {
+ 	LIST_HEAD(head);
+ 
+-	__dev_sort_resources(dev, &head);
++	__dev_sort_resources(dev, add_head, &head);
+ 	__assign_resources_sorted(&head, add_head, fail_head);
+ 
+ }
+@@ -520,7 +555,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
+ 	LIST_HEAD(head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+-		__dev_sort_resources(dev, &head);
++		__dev_sort_resources(dev, realloc_head, &head);
+ 
+ 	__assign_resources_sorted(&head, realloc_head, fail_head);
+ }
 -- 
-1.9.1
+1.8.4.5
 
