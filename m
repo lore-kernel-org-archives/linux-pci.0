@@ -1,226 +1,122 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 13 Oct 2015 19:33:27 +0100
-From: Mark Rutland <mark.rutland@arm.com>
-To: WingMan Kwok <w-kwok2@ti.com>
-Cc: robh+dt@kernel.org, pawel.moll@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, kishon@ti.com,
-	rogerq@ti.com, m-karicheri2@ti.com, bhelgaas@google.com,
-	ssantosh@kernel.org, linux@arm.linux.org.uk,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 1/3] phy: keystone: serdes driver for gbe 10gbe and pcie
-Message-ID: <20151013183327.GG24353@leverpostej>
-References: <1444759464-32299-1-git-send-email-w-kwok2@ti.com>
- <1444759464-32299-2-git-send-email-w-kwok2@ti.com>
+Message-ID: <560CFBDC.4020901@arm.com>
+Date: Thu, 01 Oct 2015 10:24:44 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444759464-32299-2-git-send-email-w-kwok2@ti.com>
+To: David Daney <ddaney.cavm@gmail.com>, linux-kernel@vger.kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Grant Likely <grant.likely@linaro.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+CC: David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v3 3/4] PCI/MSI:  Add helper function pci_msi_domain_get_msi_rid().
+References: <1443653222-24924-1-git-send-email-ddaney.cavm@gmail.com> <1443653222-24924-4-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443653222-24924-4-git-send-email-ddaney.cavm@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 13, 2015 at 02:04:22PM -0400, WingMan Kwok wrote:
-> On TI's Keystone platforms, several peripherals such as the
-> gbe ethernet switch, 10gbe ethernet switch and PCIe controller
-> require the use of a SerDes for converting SoC parallel data into
-> serialized data that can be output over a high-speed electrical
-> interface, and also converting high-speed serial input data
-> into parallel data that can be processed by the SoC.  The
-> SerDeses used by those peripherals, though they may be different,
-> are largely similar in functionality and setup.
+Hi David,
+
+On 30/09/15 23:47, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
 > 
-> This patch provides a SerDes phy driver implementation that can be
-> used by the above mentioned peripheral drivers to configure their
-> respective SerDeses.
+> Add pci_msi_domain_get_msi_rid() to return the MSI requester id (RID).
+> Initially needed by gic-v3 based systems. It will be used by follow on
+> patch to drivers/irqchip/irq-gic-v3-its-pci-msi.c
 > 
-> Signed-off-by: WingMan Kwok <w-kwok2@ti.com>
+> Initially supports mapping the RID via OF device tree.  In the future,
+> this could be extended to use ACPI _IORT tables as well.
+> 
+> Signed-off-by: David Daney <david.daney@cavium.com>
 > ---
->  Documentation/devicetree/bindings/phy/ti-phy.txt |  256 +++
->  drivers/phy/Kconfig                              |    8 +
->  drivers/phy/Makefile                             |    1 +
->  drivers/phy/phy-keystone-serdes.c                | 2465 ++++++++++++++++++++++
->  4 files changed, 2730 insertions(+)
->  create mode 100644 drivers/phy/phy-keystone-serdes.c
+>  drivers/pci/msi.c   | 31 +++++++++++++++++++++++++++++++
+>  include/linux/msi.h |  1 +
+>  2 files changed, 32 insertions(+)
 > 
-> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
-> index 9cf9446..231716e 100644
-> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
-> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
-> @@ -115,4 +115,260 @@ sata_phy: phy@4A096000 {
->  	clock-names = "sysclk", "refclk";
->  	syscon-pllreset = <&scm_conf 0x3fc>;
->  	#phy-cells = <0>;
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index d449714..92b6dc9 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -20,6 +20,7 @@
+>  #include <linux/io.h>
+>  #include <linux/slab.h>
+>  #include <linux/irqdomain.h>
+> +#include <linux/of_irq.h>
+>  
+>  #include "pci.h"
+>  
+> @@ -1327,4 +1328,34 @@ struct irq_domain *pci_msi_create_default_irq_domain(struct device_node *node,
+>  
+>  	return domain;
+>  }
 > +
-> +TI Keystone SerDes PHY
-> +======================
+> +struct get_mis_id_data {
+> +	u32	alias;
+> +};
 > +
-> +Required properties:
-> + - compatible: should be one of
-> +	* "ti,keystone-serdes-gbe"
-> +	* "ti,keystone-serdes-xgbe"
-> +	* "ti,keystone-serdes-pcie"
-> + - reg:
-> +	* base address and length of the SerDes register set
-> + - reg-names:
-> +	* "reg_serdes"
-> +		- name of the reg SerDes register set
-
-Just describe reg in terms of reg-names, and don't bother with the
-"reg_" prefix, we know this is a reg entry:
-
-- reg: a list of address and length pairs, corresponding to entires in
-  reg-names
-
-- reg-names: should contain:
-  * "serdes"
-
-> + - #phy-cells:
-> +	* From the generic phy bindings, must be 0;
-> + - max-lanes:
-> +	* Number of lanes in SerDes.
-
-Why is this not "num-lanes"? Why do you even need this?
-
-> + - phy-type: should be one of
-> +	* "sgmii"
-> +	* "xge"
-> +	* "pcie"
+> +static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
+> +{
+> +	struct get_mis_id_data *s = data;
 > +
-> +Optional properties:
-> + - syscon-peripheral:
-> +	* Handle to the subsystem register region of the peripheral
-> +	  inside which the SerDes exists.
-> + - syscon-link:
-> +	* Handle to the Link register region of the peripheral inside
-> +	  which the SerDes exists.  Example: it is the PCSR register
-> +	  region in the case of 10gbe.
-> + - refclk-khz:
-> +	* Reference clock rate of SerDes in kHz.
+> +	s->alias = alias;
+> +	return 0;
+> +}
 
-Surely this should be an actual clock?
+Why not use a naked u32, since you only have a single field in this
+structure? Or is it that you are anticipating other fields there?
 
-> + - link-rate-kbps:
-> +	* SerDes link rate to be configured, in kbps.
-
-Why does this need to be in the binding? How does one derive the correct
-value?
-
-> + - control-rate:
-> +	* Lane control rate
-> +		0: full rate
-> +		1: half rate
-> +		2: quarter rate
-
-Likewise on both points.
-
-> + - rx-start:
-> +	* Initial lane rx equalizer attenuation and boost configurations.
-> +	* Must be array of 2 integers.
-> + - rx-force:
-> +	* Forced lane rx equalizer attenuation and boost configurations.
-> +	* Must be array of 2 integers.
-> + - tx-coeff:
-> +	* Lane c1, c2, cm, attenuation and regulator outpust voltage
-> +	  configurations.
-> +	* Must be array of 5 integers.
-
-s/outpust/output/
-
-> + - debug:
-> +	* enable more debug messages.
-
-NAK.
-
-This is a driver option, and belongs on the kernel command line. It does
-not describe the hardware, and does not belong in the DT.
-
-> +Example for Keystone K2E GBE:
-> +-----------------------------
+> +/**
+> + * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
+> + * @domain:	The interrupt domain
+> + * @pdev:	The PCI device.
+> + *
+> + * The RID for a device is formed from the alias, with a firmware
+> + * supplied mapping applied
+> + *
+> + * Returns: The RID.
+> + */
+> +u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+> +{
+> +	struct get_mis_id_data d;
 > +
-> +gbe_serdes0: gbe_serdes@232a000 {
-> +	#phy-cells		= <0>;
-> +	compatible		= "ti,keystone-serdes-gbe";
-> +	reg			= <0x0232a000 0x2000>;
-> +	reg-names		= "reg_serdes";
-> +	refclk-khz		= <156250>;
-> +	link-rate-kbps		= <1250000>;
-> +	phy-type		= "sgmii";
-> +	max-lanes		= <4>;
-> +	lane0 {
-> +		control-rate	= <2>; /* quart */
-> +		rx-start	= <7 5>;
-> +		rx-force	= <1 1>;
-> +		tx-coeff	= <0 0 0 12 4>;
-> +		       /* c1 c2 cm att vreg */
-> +	};
-> +	lane1 {
-> +		control-rate	= <2>; /* quart */
-> +		rx-start	= <7 5>;
-> +		rx-force	= <1 1>;
-> +		tx-coeff	= <0 0 0 12 4>;
-> +		       /* c1 c2 cm att vreg */
-> +	};
+> +	d.alias = 0;
+> +	pci_for_each_dma_alias(pdev, get_msi_id_cb, &d);
+> +	return of_msi_map_rid(&pdev->dev, domain->of_node, d.alias);
 
-The binding didn't describe the sub-nodes, and which properties belong
-to them.
+Should you check whether domain->of_node is NULL first? I don't think
+of_msi_map_rid would have any problem with that, but a domain that is
+not backed by an of_node makes me feel a bit uneasy and would tend to
+indicate that we're not using DT.
 
-Don't use magic names. Define a new address space, and use reg to
-identify lanes.
+> +}
+>  #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index ad939d0..56e3b76 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -293,6 +293,7 @@ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
+>  					  struct msi_desc *desc);
+>  int pci_msi_domain_check_cap(struct irq_domain *domain,
+>  			     struct msi_domain_info *info, struct device *dev);
+> +u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
+>  #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+>  
+>  #endif /* LINUX_MSI_H */
+> 
 
-> +	if (of_find_property(np, "disable", NULL))
-> +		lc->enable = 0;
-> +	else
-> +		lc->enable = 1;
-
-This was not described in the binding, and uses the wrong accessor. What
-is this for?
-
-> +	if (of_find_property(np, "loopback", NULL))
-> +		lc->loopback = 1;
-> +	else
-> +		lc->loopback = 0;
-
-Likewise.
-
-> +	if (of_property_read_bool(np, "syscon-peripheral")) {
-> +		sc->peripheral_regmap =
-> +			syscon_regmap_lookup_by_phandle(np,
-> +							"syscon-peripheral");
-
-Can't you always call syscon_regmap_lookup_by_phandle, then check the
-return value to see if the property existed?
-
-You clearly know that of_property_read_bool exists, why did you not use
-it to read properties which are boolean?
-
-> +	if (of_property_read_bool(np, "syscon-link")) {
-> +		sc->pcsr_regmap =
-> +			syscon_regmap_lookup_by_phandle(np, "syscon-link");
-
-Likewise.
-
-> +	sc->debug = of_property_read_bool(np, "debug");
-
-As stated above, NAK for this property.
-
-> +
-> +	if (of_find_property(np, "rx-force-enable", NULL))
-> +		sc->rx_force_enable = 1;
-> +	else
-> +		sc->rx_force_enable = 0;
-
-Not in the binding, and uses the wrong accessor.
-
-> +
-> +	for (i = 0; i < sc->lanes; i++) {
-> +		sprintf(&name[4], "%d", i);
-> +		lp = of_find_node_by_name(np, name);
-> +		if (lp) {
-> +			if (kserdes_get_lane_bindings(dev, lp, &sc->lane[i]))
-> +				return -EINVAL;
-> +		}
-> +	}
-
-As above, use reg, not magic names.
+Otherwise looks good to me.
 
 Thanks,
-Mark.
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
