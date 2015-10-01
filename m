@@ -1,79 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0097.outbound.protection.outlook.com ([207.46.100.97]:53072
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753978AbbIAKaV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Sep 2015 06:30:21 -0400
-From: Ley Foon Tan <lftan@altera.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:29076 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755539AbbJAF7U (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:59:20 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>
-Subject: [PATCH v6 0/6] Altera PCIe host controller driver with MSI support
-Date: Tue, 1 Sep 2015 18:30:02 +0800
-Message-ID: <1441103408-8433-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 17/53] PCI: Don't add too much optional size for hotplug bridge MMIO
+Date: Wed, 30 Sep 2015 22:52:51 -0700
+Message-Id: <1443678807-786-18-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the 6th version of patch set to add support for Altera PCIe host
-controller with MSI feature on Altera FPGA device families. This patchset
-mainly resolve comments from Marc Zyngier in v5 and minor fixes.
+Current code will always add 2M for hotplug bridge MMIO even
+there is child device under it already.
 
-It is based on patch series from Marc Zyngier "Per-device MSI domain &
-platform MSI" [1] to get rid of struct msi_controller.
+For example:
+	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
+					 \- 45:00.1
 
-v5->v6 changes:
-- altera-msi: remove irq_enable and irq_disable
-- pcie-altera: change to PCI_VENDOR_ID_ALTERA for fixup
-- pcie-altera: change to use switch case method
-- update interrupt handling
-- include: pci: add Altera PCI vendor ID
+44:02.0 will need 1M as must for 45:00.0 and 45:00.1
+When we calculate add_size for 44:02.0, we pass 2M as additional
+size for hotplug bridge, total will be 3M.
 
-[1]: https://lkml.org/lkml/2015/7/23/172
+That is different from code before changes for optional support,
+or even current code that treat optional as required directly by
+not passing realloc list. We only need 2M as total.
 
-History:
--------
-[v1]: https://lkml.org/lkml/2015/7/28/395
-[v2]: https://lkml.org/lkml/2015/7/31/267
-[v3]: http://www.kernelhub.org/?msg=811940&p=2
-[v4]: https://lkml.org/lkml/2015/8/17/141
-[v5]: https://lkml.org/lkml/2015/8/25/238
+The optional size should be 1M, and total size should be 2M.
 
-Ley Foon Tan (6):
-  arm: add msi.h to Kbuild
-  pci: add Altera PCI vendor ID
-  pci:host: Add Altera PCIe host controller driver
-  pci: altera: Add Altera PCIe MSI driver
-  Documentation: dt-bindings: pci: altera pcie device tree binding
-  MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+This patch change to comparing required+optional with min_sum_size to
+get smaller optional size.
 
- .../devicetree/bindings/pci/altera-pcie-msi.txt    |  28 +
- .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
- MAINTAINERS                                        |  16 +
- arch/arm/include/asm/Kbuild                        |   1 +
- drivers/pci/host/Kconfig                           |  16 +
- drivers/pci/host/Makefile                          |   2 +
- drivers/pci/host/pcie-altera-msi.c                 | 311 +++++++++++
- drivers/pci/host/pcie-altera.c                     | 593 +++++++++++++++++++++
- include/linux/pci_ids.h                            |   2 +
- 9 files changed, 1018 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
- create mode 100644 drivers/pci/host/pcie-altera-msi.c
- create mode 100644 drivers/pci/host/pcie-altera.c
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 3797b71..6fda7ad 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1161,7 +1161,6 @@ out:
+  * @type2: second match type
+  * @type3: third match type
+  * @min_size : the minimum memory window that must to be allocated
+- * @add_size : additional optional memory window
+  * @realloc_head : track the additional memory window on this list
+  *
+  * Calculate the size of the bus and minimal alignment which
+@@ -1174,10 +1173,11 @@ out:
+ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			 unsigned long type, unsigned long type2,
+ 			 unsigned long type3,
+-			 resource_size_t min_size, resource_size_t add_size,
++			 resource_size_t min_size,
+ 			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
++	resource_size_t min_sum_size = 0;
+ 	resource_size_t min_align = 0, min_add_align = 0;
+ 	resource_size_t max_align = 0, max_add_align = 0;
+ 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
+@@ -1189,6 +1189,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (!b_res)
+ 		return -ENOSPC;
+ 
++	if (realloc_head) {
++		min_sum_size = min_size;
++		min_size = 0;
++	}
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+@@ -1259,8 +1264,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	}
+ 	free_align_test_list(&align_test_list);
+ 
+-	if ((sum_add_size - size) < add_size)
+-		sum_add_size = size + add_size;
++	if (sum_add_size < min_sum_size)
++		sum_add_size = min_sum_size;
+ 	if (sum_add_size > size && realloc_head) {
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+@@ -1397,7 +1402,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+-	resource_size_t additional_mem_size = 0, additional_io_size = 0;
++	resource_size_t min_mem_size = 0, additional_io_size = 0;
+ 	struct resource *b_res;
+ 	int ret;
+ 
+@@ -1431,7 +1436,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+ 			additional_io_size  = pci_hotplug_io_size;
+-			additional_mem_size = pci_hotplug_mem_size;
++			min_mem_size = pci_hotplug_mem_size;
+ 		}
+ 		/* Fall through */
+ 	default:
+@@ -1450,8 +1455,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			prefmask |= IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 				  prefmask, prefmask,
+-				  realloc_head ? 0 : additional_mem_size,
+-				  additional_mem_size, realloc_head);
++				  min_mem_size, realloc_head);
+ 
+ 			/*
+ 			 * If successful, all non-prefetchable resources
+@@ -1474,8 +1478,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			prefmask &= ~IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 					 prefmask, prefmask,
+-					 realloc_head ? 0 : additional_mem_size,
+-					 additional_mem_size, realloc_head);
++					 min_mem_size, realloc_head);
+ 
+ 			/*
+ 			 * If successful, only non-prefetchable resources
+@@ -1484,7 +1487,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			if (ret == 0)
+ 				mask = prefmask;
+ 			else
+-				additional_mem_size += additional_mem_size;
++				min_mem_size += min_mem_size;
+ 
+ 			type2 = type3 = IORESOURCE_MEM;
+ 		}
+@@ -1505,8 +1508,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		 * window.
+ 		 */
+ 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
+-				realloc_head ? 0 : additional_mem_size,
+-				additional_mem_size, realloc_head);
++				min_mem_size, realloc_head);
+ 		break;
+ 	}
+ }
 -- 
-1.8.2.1
+1.8.4.5
 
