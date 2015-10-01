@@ -1,122 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:33643 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752671AbbIXRGy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Sep 2015 13:06:54 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWY1gdpzdqToBM0sNgfCRnRfEEgJfn-J9igorLH1K80JA@mail.gmail.com>
-References: <CAL-B5D3FgF+o7BcLBe7O_gcxy2jf3w43bXeDJuRH2VS2ES0A7Q@mail.gmail.com>
-	<CAE9FiQWY1gdpzdqToBM0sNgfCRnRfEEgJfn-J9igorLH1K80JA@mail.gmail.com>
-Date: Thu, 24 Sep 2015 11:06:53 -0600
-Message-ID: <CAL-B5D0f10Q6C5jmjzysowDjJ=Z8iA1tSSAQwUp9qcxW-WeMPw@mail.gmail.com>
-Subject: Re: [RFC] PCI: Unassigned Expansion ROM BARs
-From: Myron Stowe <myron.stowe@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 28/53] PCI: Move comment to pci_need_to_release()
+Date: Wed, 30 Sep 2015 22:53:02 -0700
+Message-Id: <1443678807-786-29-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 23, 2015 at 9:21 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Sep 23, 2015 at 7:47 PM, Myron Stowe <myron.stowe@gmail.com> wrote:
->>
->> The kernel expects device Expansion ROM BARs to be programmed with valid
->> values - even if the respective Expansion ROM's Enable bit is 0 (i.e. the
->> device’s expansion ROM address space is disabled).  This seems to be the
->> main contention point with said BIOS engineers.  If an Expansion ROM BAR is
->> not programmed, the kernel will attempt to find available resources and, if
->> successful, program it.  As this occurs various 'dmesg' entries
->> related to kernel's actions are output.
-> ...
->> There is a kernel boot parameter, pci=norom, that is intended to disable the
->> kernel's resource assignment actions for Expansion ROMs that do not already
->> have BIOS assigned address ranges.  Note however, if I remember correctly,
->> that this only works if the Expansion ROM BAR is set to "0" by the BIOS
->> before hand-off.
->
-> option rom is used by legacy bios to enable booting from external device.
-> usually BIOS call the option rom, so the firmware will be loaded to
-> add on cards.
-> and firmware get started.
-> Also option rom would include tools that is used to configure behavior of cards
-> like add/remove raid.
+Move comment from caller to pci_need_to_release(), as we will have one new
+caller for alt_size support.
 
-I'm not sure what you are getting at here but yes, there are use cases
-where the BIOS
-needs to access the Expansion ROM, one of the more common being PXE booting from
-a NIC device where the PXE boot content is retrieved from the ROM, but
-that has little,
-if anything, to do with what I'm after here.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
 
-The BIOS engineers are expressing that the kernel should *never* need
-to access the Expansion
-ROM, and thus should *never* try to allocate resources for these BARs
-and program them
-to sane address range values.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 86c5b1d..5f5737e 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -415,6 +415,20 @@ static unsigned long pci_fail_res_type_mask(struct list_head *fail_head)
+ 
+ static bool pci_need_to_release(unsigned long mask, struct resource *res)
+ {
++	/*
++	 * Separate three resource type checking if we need to release
++	 * assigned resource.
++	 *	1. if there is io port assign fail, will release assigned
++	 *	   io port.
++	 *	2. if there is pref mmio assign fail, release assigned
++	 *	   pref mmio.
++	 *	   if assigned pref mmio's parent is non-pref mmio and there
++	 *	   is non-pref mmio assign fail, will release that assigned
++	 *	   pref mmio.
++	 *	3. if there is non-pref mmio assign fail or pref mmio
++	 *	   assigned fail, will release assigned non-pref mmio.
++	 */
++
+ 	if (res->flags & IORESOURCE_IO)
+ 		return !!(mask & IORESOURCE_IO);
+ 
+@@ -471,19 +485,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 *  if could do that, could get out early.
+ 	 *  if could not do that, we still try to assign requested at first,
+ 	 *    then try to reassign add_size for some resources.
+-	 *
+-	 * Separate three resource type checking if we need to release
+-	 * assigned resource after requested + add_size try.
+-	 *	1. if there is io port assign fail, will release assigned
+-	 *	   io port.
+-	 *	2. if there is pref mmio assign fail, release assigned
+-	 *	   pref mmio.
+-	 *	   if assigned pref mmio's parent is non-pref mmio and there
+-	 *	   is non-pref mmio assign fail, will release that assigned
+-	 *	   pref mmio.
+-	 *	3. if there is non-pref mmio assign fail or pref mmio
+-	 *	   assigned fail, will release assigned non-pref mmio.
+ 	 */
++
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-- 
+1.8.4.5
 
-
-I know you work with bringing up new hardware.  So picture yourself
-sitting with some
-members from your platform's BIOS team.  They tell you: "The OS is
-incorrect in thinking
-it needs to find, and program, sane resource range values into a
-device's Expansion ROM
-BAR.  We (the BIOS) hand-off the platform with these disabled, thus
-whatever values are in
-the ROMs BAR should be totally ignored, and the OS should never touch
-them."  What would you
-reply with to them in an attempt to show that your position (i.e. the
-kernel finding, and programming
-values under these circumstances) is correct and that the BIOS opinion
-is in-correct?  That is
-what I'm after.
-
->
-> Also there is some use case that kernel driver try to get some parameters from
-> BIOS. like intel soft raid ? --- bad practice !
-
-Again, your replies are so terse I have no idea what you are saying; it's
-undecipherable!  Are you indicating that you agree with the BIOS
-engineers views?
-
->
-> I would like to treat option rom BAR as optional resources during
-> resource allocation.
->
-> https://git.kernel.org/cgit/linux/kernel/git/yinghai/linux-yinghai.git/patch/?id=7f689da33302e4871fd18aee2c19abb5e3ea5261
->
-> Subject: PCI: Treat ROM resource as optional during realloc
->
-> Current on realloc path, we just ignore ROM resource if we can not assign
-> them in first try.
->
-> Treat ROM resources as optional resources,so try to allocate them together
-> with required ones, if can not assign them, could go with other required
-> resources only, and try to allocate them second time in expand path.
-
-Yes, while they may have lower priority in obtaining resources, your still
-attempting to do so initially.  The BIOS engineers seem to believe that this is
-incorrect - the OS should not even attempt to allocate them in the first try.
-
-So, which side are you on and can you support your view with some
-technical based
-argument (and any references from the specifications)?
-
-Please take some time and respond with some thought out explanations
-and opinions.
-I value your opinion because I have seen your work but your terse
-replies are going to
-do nothing what so ever in trying to convince BIOS engineers that the
-OS should, or needs
-to, access such.  Otherwise: "Why are we (the kernel) allocating
-resources for them?"
-
-Myron
-
->
-> Thanks
->
-> Yinghai
