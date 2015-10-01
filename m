@@ -1,131 +1,139 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 22 Oct 2015 15:58:55 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Lan Tianyu <tianyu.lan@intel.com>
-Cc: bhelgaas@google.com, carolyn.wyborny@intel.com,
-	donald.c.skidmore@intel.com, eddie.dong@intel.com,
-	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
-	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-Subject: Re: [RFC Patch 08/12] IXGBEVF: Rework code of finding the end
- transmit desc of package
-Message-ID: <20151022155650-mutt-send-email-mst@redhat.com>
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
- <1445445464-5056-9-git-send-email-tianyu.lan@intel.com>
+Message-ID: <560D5B98.5050400@caviumnetworks.com>
+Date: Thu, 1 Oct 2015 09:13:12 -0700
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445445464-5056-9-git-send-email-tianyu.lan@intel.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	<linux-kernel@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v3 3/4] PCI/MSI:  Add helper function pci_msi_domain_get_msi_rid().
+References: <1443653222-24924-1-git-send-email-ddaney.cavm@gmail.com> <1443653222-24924-4-git-send-email-ddaney.cavm@gmail.com> <560CFBDC.4020901@arm.com>
+In-Reply-To: <560CFBDC.4020901@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 22, 2015 at 12:37:40AM +0800, Lan Tianyu wrote:
-> When transmit a package, the end transmit desc of package
-> indicates whether package is sent already. Current code records
-> the end desc's pointer in the next_to_watch of struct tx buffer.
-> This code will be broken if shifting desc ring after migration.
-> The pointer will be invalid. This patch is to replace recording
-> pointer with recording the desc number of the package and find
-> the end decs via the first desc and desc number.
-> 
-> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
+On 10/01/2015 02:24 AM, Marc Zyngier wrote:
+> Hi David,
+>
+> On 30/09/15 23:47, David Daney wrote:
+>> From: David Daney <david.daney@cavium.com>
+>>
+>> Add pci_msi_domain_get_msi_rid() to return the MSI requester id (RID).
+>> Initially needed by gic-v3 based systems. It will be used by follow on
+>> patch to drivers/irqchip/irq-gic-v3-its-pci-msi.c
+>>
+>> Initially supports mapping the RID via OF device tree.  In the future,
+>> this could be extended to use ACPI _IORT tables as well.
+>>
+>> Signed-off-by: David Daney <david.daney@cavium.com>
+>> ---
+>>   drivers/pci/msi.c   | 31 +++++++++++++++++++++++++++++++
+>>   include/linux/msi.h |  1 +
+>>   2 files changed, 32 insertions(+)
+>>
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index d449714..92b6dc9 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -20,6 +20,7 @@
+>>   #include <linux/io.h>
+>>   #include <linux/slab.h>
+>>   #include <linux/irqdomain.h>
+>> +#include <linux/of_irq.h>
+>>
+>>   #include "pci.h"
+>>
+>> @@ -1327,4 +1328,34 @@ struct irq_domain *pci_msi_create_default_irq_domain(struct device_node *node,
+>>
+>>   	return domain;
+>>   }
+>> +
+>> +struct get_mis_id_data {
+>> +	u32	alias;
+>> +};
+>> +
+>> +static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
+>> +{
+>> +	struct get_mis_id_data *s = data;
+>> +
+>> +	s->alias = alias;
+>> +	return 0;
+>> +}
+>
+> Why not use a naked u32, since you only have a single field in this
+> structure? Or is it that you are anticipating other fields there?
 
-Do you really need to play the shifting games?
-Can't you just reset everything and re-initialize the rings?
-It's slower but way less intrusive.
-Also removes the need to track writes into rings.
+In this case, I think using a pointer to u32 is a good idea.  It would 
+simplify the source code somewhat.  Although, I think the generated 
+binary would likely be the same.  I don't foresee adding things to this 
+structure.  If it becomes necessary in the future, we can just go back 
+to using a pointer to a structure.
 
-> ---
->  drivers/net/ethernet/intel/ixgbevf/ixgbevf.h      |  1 +
->  drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c | 19 ++++++++++++++++---
->  2 files changed, 17 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h b/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
-> index 775d089..c823616 100644
-> --- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
-> +++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
-> @@ -54,6 +54,7 @@
->   */
->  struct ixgbevf_tx_buffer {
->  	union ixgbe_adv_tx_desc *next_to_watch;
-> +	u16 desc_num;
->  	unsigned long time_stamp;
->  	struct sk_buff *skb;
->  	unsigned int bytecount;
-> diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> index 4446916..056841c 100644
-> --- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> +++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> @@ -210,6 +210,7 @@ static void ixgbevf_unmap_and_free_tx_resource(struct ixgbevf_ring *tx_ring,
->  			       DMA_TO_DEVICE);
->  	}
->  	tx_buffer->next_to_watch = NULL;
-> +	tx_buffer->desc_num = 0;
->  	tx_buffer->skb = NULL;
->  	dma_unmap_len_set(tx_buffer, len, 0);
->  	/* tx_buffer must be completely set up in the transmit path */
-> @@ -295,7 +296,7 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
->  	union ixgbe_adv_tx_desc *tx_desc;
->  	unsigned int total_bytes = 0, total_packets = 0;
->  	unsigned int budget = tx_ring->count / 2;
-> -	unsigned int i = tx_ring->next_to_clean;
-> +	int i, watch_index;
->  
->  	if (test_bit(__IXGBEVF_DOWN, &adapter->state))
->  		return true;
-> @@ -305,9 +306,17 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
->  	i -= tx_ring->count;
->  
->  	do {
-> -		union ixgbe_adv_tx_desc *eop_desc = tx_buffer->next_to_watch;
-> +		union ixgbe_adv_tx_desc *eop_desc;
-> +
-> +		if (!tx_buffer->desc_num)
-> +			break;
-> +
-> +		if (i + tx_buffer->desc_num >= 0)
-> +			watch_index = i + tx_buffer->desc_num;
-> +		else
-> +			watch_index = i + tx_ring->count + tx_buffer->desc_num;
->  
-> -		/* if next_to_watch is not set then there is no work pending */
-> +		eop_desc = IXGBEVF_TX_DESC(tx_ring, watch_index);
->  		if (!eop_desc)
->  			break;
->  
-> @@ -320,6 +329,7 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
->  
->  		/* clear next_to_watch to prevent false hangs */
->  		tx_buffer->next_to_watch = NULL;
-> +		tx_buffer->desc_num = 0;
->  
->  		/* update the statistics for this packet */
->  		total_bytes += tx_buffer->bytecount;
-> @@ -3457,6 +3467,7 @@ static void ixgbevf_tx_map(struct ixgbevf_ring *tx_ring,
->  	u32 tx_flags = first->tx_flags;
->  	__le32 cmd_type;
->  	u16 i = tx_ring->next_to_use;
-> +	u16 start;
->  
->  	tx_desc = IXGBEVF_TX_DESC(tx_ring, i);
->  
-> @@ -3540,6 +3551,8 @@ static void ixgbevf_tx_map(struct ixgbevf_ring *tx_ring,
->  
->  	/* set next_to_watch value indicating a packet is present */
->  	first->next_to_watch = tx_desc;
-> +	start = first - tx_ring->tx_buffer_info;
-> +	first->desc_num = (i - start >= 0) ? i - start: i + tx_ring->count - start;
->  
->  	i++;
->  	if (i == tx_ring->count)
-> -- 
-> 1.8.4.rc0.1.g8f6a3e5.dirty
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>> +/**
+>> + * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
+>> + * @domain:	The interrupt domain
+>> + * @pdev:	The PCI device.
+>> + *
+>> + * The RID for a device is formed from the alias, with a firmware
+>> + * supplied mapping applied
+>> + *
+>> + * Returns: The RID.
+>> + */
+>> +u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+>> +{
+>> +	struct get_mis_id_data d;
+>> +
+>> +	d.alias = 0;
+>> +	pci_for_each_dma_alias(pdev, get_msi_id_cb, &d);
+>> +	return of_msi_map_rid(&pdev->dev, domain->of_node, d.alias);
+>
+> Should you check whether domain->of_node is NULL first? I don't think
+> of_msi_map_rid would have any problem with that, but a domain that is
+> not backed by an of_node makes me feel a bit uneasy and would tend to
+> indicate that we're not using DT.
+
+Yes, that makes sense.  As you observe, I think it probably works as is, 
+but it would be good to make it more clear.  This is especially true 
+when we add ACPI support.  We will want to be clear on which of 
+device-tree or ACPI we are using.
+
+
+>
+>> +}
+>>   #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+>> diff --git a/include/linux/msi.h b/include/linux/msi.h
+>> index ad939d0..56e3b76 100644
+>> --- a/include/linux/msi.h
+>> +++ b/include/linux/msi.h
+>> @@ -293,6 +293,7 @@ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
+>>   					  struct msi_desc *desc);
+>>   int pci_msi_domain_check_cap(struct irq_domain *domain,
+>>   			     struct msi_domain_info *info, struct device *dev);
+>> +u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
+>>   #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+>>
+>>   #endif /* LINUX_MSI_H */
+>>
+>
+> Otherwise looks good to me.
+
+I will send what I hope is the final revision of the patches later today.
+
+David Daney
+
+
