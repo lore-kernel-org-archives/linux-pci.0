@@ -1,90 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from xspv0103.northgrum.com ([134.223.120.78]:13364 "EHLO
-	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752924AbbIQVWj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Sep 2015 17:22:39 -0400
-From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: [PATCH v1 7/7] PCI: Override firmware settings if static enumeration
- is set
-Date: Thu, 17 Sep 2015 21:11:45 +0000
-Message-ID: <613697bdfcbd46d98d11718a41b8bc49@XCGVAG27.northgrum.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: [PATCH v6 08/53] PCI: Separate realloc list checking after allocation
+Date: Wed, 30 Sep 2015 22:52:42 -0700
+Message-Id: <1443678807-786-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI scanning algorithm currently preserves any bus numbers set by
-the firmware.  If there exists static enumeration settings, then
-ignore those numbers and reenumerate everything.  This may move
-devices around based upon the value of "hpbuses".
+We check the realloc list, as list must be empty after allocation.
 
-Signed-off-by: Jason Tang <jason.tang2@ngc.com>
+Separate the realloc list checking to another function.
+
+Add checking that is missed in acpiphp driver.
+
+-v2: change to WARN_ON addording to Rafael.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
 ---
- drivers/pci/pci.h             | 2 ++
- drivers/pci/pci_static_enum.c | 9 +++++++++
- drivers/pci/probe.c           | 4 +++-
- 3 files changed, 14 insertions(+), 1 deletion(-)
+ drivers/pci/hotplug/acpiphp_glue.c |  1 +
+ drivers/pci/pci.h                  |  1 +
+ drivers/pci/setup-bus.c            | 12 +++++++++---
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index ff53856..ce9fb21 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+ 		}
+ 	}
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
++	pci_bus_check_realloc(&add_list);
+ 
+ 	acpiphp_sanitize_bus(bus);
+ 	pcie_bus_configure_settings(bus);
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index e1a1cce..36b358d 100644
+index c04c9f1..9dc42b6 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -337,9 +337,11 @@ struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
+@@ -238,6 +238,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
+ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 				struct list_head *realloc_head,
+ 				struct list_head *fail_head);
++void pci_bus_check_realloc(struct list_head *realloc_head);
+ bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
  
- #ifdef CONFIG_PCI_STATIC_ENUMERATION
- void pci_static_enum_set_opt(const char *str);
-+bool pci_static_enum_is_set(void);
- void pci_static_enum_bridge(struct pci_bus *bus);
- #else
- static inline void pci_static_enum_set_opt(const char *str) { return; }
-+static inline bool pci_static_enum_is_set(void) { return 0; }
- static inline void pci_static_enum_bridge(struct pci_bus *bus) { };
- #endif
- 
-diff --git a/drivers/pci/pci_static_enum.c b/drivers/pci/pci_static_enum.c
-index 47b7bd5..a7c595b 100644
---- a/drivers/pci/pci_static_enum.c
-+++ b/drivers/pci/pci_static_enum.c
-@@ -38,6 +38,15 @@ void __init pci_static_enum_set_opt(const char *str)
+ void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index fc77a71..8550408 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -280,6 +280,12 @@ out:
+ 	}
  }
  
- /**
-+ * pci_static_enum_is_set() - return true if static enumeration
-+ * options are set
-+ */
-+bool pci_static_enum_is_set(void)
++void pci_bus_check_realloc(struct list_head *realloc_head)
 +{
-+	return pci_static_enum_param[0] != '\0';
++	if (WARN_ON(!list_empty(realloc_head)))
++		free_list(realloc_head);
 +}
 +
-+/**
-  * pci_static_enum_find_setting() - find requested bridge within options
-  * @bus: bridge to find
-  * @setting: found static enumeration settings
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7cc80c3..91311e7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -802,6 +802,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 	pci_enable_crs(dev);
+ /**
+  * assign_requested_resources_sorted() - satisfy resource requests
+  *
+@@ -1686,7 +1692,7 @@ again:
+ 	/* Depth last, allocate resources and update the hardware. */
+ 	__pci_bus_assign_resources(bus, add_list, &fail_head);
+ 	if (add_list)
+-		BUG_ON(!list_empty(add_list));
++		pci_bus_check_realloc(add_list);
+ 	tried_times++;
  
- 	if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
-+	    !pci_static_enum_is_set() &&
- 	    !is_cardbus && !broken) {
- 		unsigned int cmax;
- 		/*
-@@ -840,7 +841,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 		 * do in the second pass.
- 		 */
- 		if (!pass) {
--			if (pcibios_assign_all_busses() || broken || is_cardbus)
-+			if (pcibios_assign_all_busses() || broken ||
-+			    is_cardbus || pci_static_enum_is_set())
- 				/* Temporarily disable forwarding of the
- 				   configuration cycles on all bridges in
- 				   this bus segment to avoid possible
+ 	/* any device complain? */
+@@ -1761,7 +1767,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ again:
+ 	__pci_bus_size_bridges(parent, &add_list);
+ 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+-	BUG_ON(!list_empty(&add_list));
++	pci_bus_check_realloc(&add_list);
+ 	tried_times++;
+ 
+ 	if (list_empty(&fail_head))
+@@ -1820,6 +1826,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 							 &add_list);
+ 	up_read(&pci_bus_sem);
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+-	BUG_ON(!list_empty(&add_list));
++	pci_bus_check_realloc(&add_list);
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
 -- 
-1.8.3.1
+1.8.4.5
 
