@@ -1,82 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:49519 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754928AbbIRPMm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 11:12:42 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-pci@vger.kernel.org, kernel@pengutronix.de,
-	patchwork-lst@pengutronix.de
-Subject: [PATCH v5 2/5] PCI: designware: Factor out MSI msg setup
-Date: Fri, 18 Sep 2015 17:12:36 +0200
-Message-Id: <1442589159-28201-3-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
-References: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 47/53] PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
+Date: Wed, 30 Sep 2015 22:53:21 -0700
+Message-Id: <1443678807-786-48-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Factor out the PCI MSI message setup from the single MSI setup function.
-This will be reused by the multivector MSI setup.
+If any bridge up to root only have 32bit pref mmio, We don't need to
+treat device non-pref mmio64 as as pref mmio64.
 
-No functional change yet.
+We need to move pci_bridge_check_ranges calling early.
+for parent bridges pref mmio BAR may not allocated by BIOS, res flags
+is still 0, we need to have it correct set before we check them for
+child device resources.
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host/pcie-designware.c | 28 +++++++++++++++++-----------
- 1 file changed, 17 insertions(+), 11 deletions(-)
+ drivers/pci/setup-bus.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 52aa6e34002b..7a168ea25e2f 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -293,19 +293,9 @@ no_valid_irq:
- 	return -ENOSPC;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 86900ac..3b27c8c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -978,6 +978,18 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 	return -EINVAL;
  }
  
--static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
--			struct msi_desc *desc)
-+static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
- {
--	int irq, pos;
- 	struct msi_msg msg;
--	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
--
--	if (desc->msi_attrib.is_msix)
--		return -EINVAL;
--
--	irq = assign_irq(1, desc, &pos);
--	if (irq < 0)
--		return irq;
- 
- 	if (pp->ops->get_msi_addr)
- 		msg.address_lo = pp->ops->get_msi_addr(pp);
-@@ -319,6 +309,22 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
- 		msg.data = pos;
- 
- 	pci_write_msi_msg(irq, &msg);
++static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
++{
++	if (pci_is_root_bus(bus))
++		return true;
++
++	if (bus->self && !(bus->self->resource[PCI_BRIDGE_RESOURCES + 2].flags &
++			   IORESOURCE_MEM_64))
++		return false;
++
++	return pci_up_path_over_pref_mem64(bus->parent);
 +}
 +
-+static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
-+			struct msi_desc *desc)
-+{
-+	int irq, pos;
-+	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-+
-+	if (desc->msi_attrib.is_msix)
-+		return -EINVAL;
-+
-+	irq = assign_irq(1, desc, &pos);
-+	if (irq < 0)
-+		return irq;
-+
-+	dw_msi_setup_msg(pp, irq, pos);
+ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 				 struct resource *res)
+ {
+@@ -986,7 +998,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
  
- 	return 0;
- }
+ 	if ((res->flags & IORESOURCE_MEM) &&
+ 	    (res->flags & IORESOURCE_MEM_64) &&
+-	    dev->on_all_pcie_path)
++	    dev->on_all_pcie_path &&
++	    pci_up_path_over_pref_mem64(dev->bus))
+ 		return res->flags | IORESOURCE_PREFETCH;
+ 
+ 	return res->flags;
+@@ -1796,6 +1809,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	struct resource *b_res;
+ 	int ret;
+ 
++	if (!pci_is_root_bus(bus) &&
++	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
++		pci_bridge_check_ranges(bus);
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		struct pci_bus *b = dev->subordinate;
+ 		if (!b)
+@@ -1823,7 +1840,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		break;
+ 
+ 	case PCI_CLASS_BRIDGE_PCI:
+-		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+ 			min_io_size  = pci_hotplug_io_size;
+ 			min_mem_size = pci_hotplug_mem_size;
 -- 
-2.5.1
+1.8.4.5
 
