@@ -7,131 +7,200 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 51/53] PCI, x86: Add pci=assign_pref_bars to reallocate pref BARs
-Date: Wed, 16 Sep 2015 14:57:49 -0700
-Message-Id: <1442440671-5361-52-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v6 43/53] resources: Make allocate_resource() return best fit resource
+Date: Wed, 30 Sep 2015 22:53:17 -0700
+Message-Id: <1443678807-786-44-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now some BIOS tend to allocate pref MMIO under non-pref MMIO, or allocate
-64bit pref MMIO under 4G.
+Current code just allocate from first avail window.
 
-Add pci=assign_pref_bars to clear and allocate resource to pref BARS.
-So could reallocate pref mmio64 above 4G and pref under bridges pref BARs.
+We can find all suitable empty slots and pick one with smallest size, so
+we could save the big slot for needed ones later when we have several pci
+bridges under parent bridge and some bridges get assigned from bios and we
+need to assign others in kernel.
+
+For examples: we have window
+[0xc0000000, 0xd0000000), and [0xe0000000,0xe1000000)
+
+and we try allocate 0x200000 size resource.
+
+in this patch will reserve [0xc0000000, 0xd0000000) and
+[0xe0000000,0xe1000000) at first, then pick [0xe0000000,0xe1000000)
+to allocate 0x200000 size.
+
+-v2: updated after __allocate_resource change, and add field in constraint
+	instead of passing it directly.
+-v3: Use best fit instead of just fit according to Bjorn.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/include/asm/pci_x86.h |  1 +
- arch/x86/pci/common.c          |  3 +++
- arch/x86/pci/i386.c            | 56 ++++++++++++++++++++++++++----------------
- 3 files changed, 39 insertions(+), 21 deletions(-)
+ kernel/resource.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 68 insertions(+), 13 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 81a7abf..23bc5d6 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -34,6 +34,7 @@ do {						\
- #define PCI_NOASSIGN_ROMS	0x80000
- #define PCI_ROOT_NO_CRS		0x100000
- #define PCI_NOASSIGN_BARS	0x200000
-+#define PCI_ASSIGN_PREF_BARS	0x400000
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 62321b0..c468875 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -48,6 +48,7 @@ struct resource_constraint {
+ 	resource_size_t (*alignf)(void *, const struct resource *,
+ 			resource_size_t, resource_size_t);
+ 	void *alignf_data;
++	bool fit;
+ };
  
- extern unsigned int pci_probe;
- extern unsigned long pirq_table_addr;
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 7c018df..7dc28c2 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -606,6 +606,9 @@ char *__init pcibios_setup(char *str)
- 	} else if (!strcmp(str, "assign-busses")) {
- 		pci_probe |= PCI_ASSIGN_ALL_BUSSES;
- 		return NULL;
-+	} else if (!strcmp(str, "assign_pref_bars")) {
-+		pci_probe |= PCI_ASSIGN_PREF_BARS;
-+		return NULL;
- 	} else if (!strcmp(str, "use_crs")) {
- 		pci_probe |= PCI_USE__CRS;
- 		return NULL;
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 21f3e3e..6f27780 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -228,16 +228,25 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
- 			continue;
- 		if (r->parent)	/* Already allocated */
- 			continue;
--		if (!r->start || pci_claim_bridge_resource(dev, idx) < 0) {
--			/*
--			 * Something is wrong with the region.
--			 * Invalidate the resource to prevent
--			 * child resource allocations in this
--			 * range.
--			 */
--			r->start = r->end = 0;
--			r->flags = 0;
--		}
+ static DEFINE_RWLOCK(resource_lock);
+@@ -589,12 +590,15 @@ static void resource_clip(struct resource *res, resource_size_t min,
+  * alignment constraints
+  */
+ static int __find_resource(struct resource *root, struct resource *old,
+-			 struct resource *new,
++			 struct resource *new, struct resource *avail,
+ 			 resource_size_t  size,
+ 			 struct resource_constraint *constraint)
+ {
+ 	struct resource *this = root->child;
+-	struct resource tmp = *new, avail, alloc;
++	struct resource tmp = *new, availx, alloc;
 +
-+		if ((r->flags & IORESOURCE_PREFETCH) &&
-+		    (pci_probe & PCI_ASSIGN_PREF_BARS))
-+			goto clear;
-+
-+		if (!r->start)
-+			goto clear;
-+
-+		if (pci_claim_bridge_resource(dev, idx) == 0)
-+			continue;
-+
-+clear:
-+		/*
-+		 * Something is wrong with the region.
-+		 * Invalidate the resource to prevent
-+		 * child resource allocations in this range.
-+		 */
-+		r->start = r->end = 0;
-+		r->flags = 0;
- 	}
++	if (!avail || avail == new)
++		avail = &availx;
+ 
+ 	tmp.start = root->start;
+ 	/*
+@@ -618,15 +622,16 @@ static int __find_resource(struct resource *root, struct resource *old,
+ 		arch_remove_reservations(&tmp);
+ 
+ 		/* Check for overflow after ALIGN() */
+-		avail.start = ALIGN(tmp.start, constraint->align);
+-		avail.end = tmp.end;
+-		avail.flags = new->flags & ~IORESOURCE_UNSET;
+-		if (avail.start >= tmp.start) {
+-			alloc.flags = avail.flags;
+-			alloc.start = constraint->alignf(constraint->alignf_data, &avail,
++		avail->start = ALIGN(tmp.start, constraint->align);
++		avail->end = tmp.end;
++		avail->flags = new->flags & ~IORESOURCE_UNSET;
++		if (avail->start >= tmp.start) {
++			alloc.flags = avail->flags;
++			alloc.start = constraint->alignf(
++					constraint->alignf_data, avail,
+ 					size, constraint->align);
+ 			alloc.end = alloc.start + size - 1;
+-			if (resource_contains(&avail, &alloc)) {
++			if (resource_contains(avail, &alloc)) {
+ 				new->start = alloc.start;
+ 				new->end = alloc.end;
+ 				return 0;
+@@ -643,6 +648,11 @@ next:		if (!this || this->end == root->end)
+ 	return -EBUSY;
  }
  
-@@ -283,21 +292,26 @@ static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- 			else
- 				disabled = !(command & PCI_COMMAND_MEMORY);
- 			if (pass == disabled) {
-+				if ((r->flags & IORESOURCE_PREFETCH) &&
-+				    (pci_probe & PCI_ASSIGN_PREF_BARS))
-+					goto clear;
++struct good_resource {
++	struct list_head list;
++	struct resource avail;
++	struct resource new;
++};
+ /*
+  * Find empty slot in the resource tree given range and alignment.
+  */
+@@ -650,7 +660,49 @@ static int find_resource(struct resource *root, struct resource *new,
+ 			resource_size_t size,
+ 			struct resource_constraint  *constraint)
+ {
+-	return  __find_resource(root, NULL, new, size, constraint);
++	int ret = -1;
++	LIST_HEAD(head);
++	struct good_resource *good, *tmp;
++	resource_size_t avail_size = (resource_size_t)-1ULL;
 +
- 				dev_dbg(&dev->dev,
- 					"BAR %d: reserving %pr (d=%d, p=%d)\n",
- 					idx, r, disabled, pass);
--				if (pci_claim_resource(dev, idx) < 0) {
--					if (r->flags & IORESOURCE_PCI_FIXED) {
--						dev_info(&dev->dev, "BAR %d %pR is immovable\n",
--							 idx, r);
--					} else {
--						/* We'll assign a new address later */
--						pcibios_save_fw_addr(dev,
--								idx, r->start);
--						r->end -= r->start;
--						r->start = 0;
--					}
-+				if (pci_claim_resource(dev, idx) == 0)
-+					continue;
-+				if (r->flags & IORESOURCE_PCI_FIXED) {
-+					dev_info(&dev->dev, "BAR %d %pR is immovable\n",
-+						 idx, r);
-+					continue;
- 				}
++	if (!constraint->fit)
++		return __find_resource(root, NULL, new, NULL, size,
++					constraint);
 +
-+clear:
-+				/* We'll assign a new address later */
-+				pcibios_save_fw_addr(dev, idx, r->start);
-+				r->end -= r->start;
-+				r->start = 0;
- 			}
- 		}
- 	if (!pass) {
++	/* find all suitable ones and add to the list */
++	for (;;) {
++		good = kzalloc(sizeof(*good), GFP_KERNEL);
++		if (!good)
++			break;
++
++		good->new.start = new->start;
++		good->new.end = new->end;
++		good->new.flags = new->flags;
++		ret = __find_resource(root, NULL, &good->new, &good->avail,
++					size, constraint);
++		if (ret || __request_resource(root, &good->avail)) {
++			ret = -EBUSY;
++			kfree(good);
++			break;
++		}
++
++		list_add(&good->list, &head);
++	}
++
++	/* pick up the smallest one and delete the list */
++	list_for_each_entry_safe(good, tmp, &head, list) {
++		if (resource_size(&good->avail) < avail_size) {
++			avail_size = resource_size(&good->avail);
++			new->start = good->new.start;
++			new->end = good->new.end;
++			ret = 0;
++		}
++		list_del(&good->list);
++		__release_resource(&good->avail);
++		kfree(good);
++	}
++
++	return ret;
+ }
+ 
+ /**
+@@ -671,7 +723,8 @@ static int __reallocate_resource(struct resource *root, struct resource *old,
+ 	struct resource new = *old;
+ 	struct resource *conflict;
+ 
+-	if ((err = __find_resource(root, old, &new, newsize, constraint)))
++	err = __find_resource(root, old, &new, NULL, newsize, constraint);
++	if (err)
+ 		goto out;
+ 
+ 	if (resource_contains(&new, old)) {
+@@ -710,6 +763,7 @@ out:
+  * @align: alignment requested, in bytes
+  * @alignf: alignment function, optional, called if not NULL
+  * @alignf_data: arbitrary data to pass to the @alignf function
++ * @fit: only allocate fit range.
+  *
+  * Caller need to hold resource_lock if needed.
+  */
+@@ -720,7 +774,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+ 						  const struct resource *,
+ 						  resource_size_t,
+ 						  resource_size_t),
+-				void *alignf_data)
++				void *alignf_data, bool fit)
+ {
+ 	int err;
+ 	struct resource_constraint constraint;
+@@ -733,6 +787,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+ 	constraint.align = align;
+ 	constraint.alignf = alignf;
+ 	constraint.alignf_data = alignf_data;
++	constraint.fit = fit;
+ 
+ 	if (new->parent) {
+ 		/* resource is already allocated, try reallocating with
+@@ -773,7 +828,7 @@ int allocate_resource(struct resource *root, struct resource *new,
+ 
+ 	write_lock(&resource_lock);
+ 	ret = __allocate_resource(root, new, size, min, max, align,
+-				   alignf, alignf_data);
++				   alignf, alignf_data, true);
+ 	write_unlock(&resource_lock);
+ 
+ 	return ret;
 -- 
 1.8.4.5
 
