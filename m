@@ -7,172 +7,176 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 00/53] PCI: Resource allocation cleanup for v4.4
-Date: Wed, 30 Sep 2015 22:52:34 -0700
-Message-Id: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v6 24/53] PCI: Add __add_to_list()
+Date: Wed, 30 Sep 2015 22:52:58 -0700
+Message-Id: <1443678807-786-25-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+For alt_size support, we will add more entries to realloc list.
 
-After 5b28541552ef (PCI: Restrict 64-bit prefetchable bridge windows
-to 64-bit resources), we have several reports on resource allocation
-failure, and we try to fix the problem with resource clip, and find
-more problems.
+Add new __add_to_list() to take alt_size, alt_align.
 
-One is realloc fail with two graphics cards above 4G.
-One is from sparc that have problem with clip as we don't parse
-mem64 for it.
+And simplify add_to_list() not to take add/alt input.
 
-Other report is about pci remove/rescan does not work on some setup
-when BIOS tend to allocate small bus size.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 51 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 31 insertions(+), 20 deletions(-)
 
-This patchset enhance resource allocation to address those problems.
-
-patch 1-4: parse MEM64 for sparc and other system with OF
-patch 5-7: FIXED resource handling during realloc
-	don't realloc resource if device firmware does not support bar change.
-patch 8-10: bridge MMIO size set to 0 for last try during realloc
-patch 11-45: enhancement for mmio resource allocation:
-	optimize bus mmio alignment calculation.
-	optimize bus mmio optional alignment calculation.
-	add support for alt size to prefer small bus size to small bus alignment.
-	treat ROM bar as optional resource.
-	during allocation, will pick up best fit resource, and allocate near end.
-patch 46-50: MMIO64 allocation enhancement
-	treat non-pref mmio64 if parent bridges are all pcie.
-	restore old pref allocation logic if hostbridge does not support mmio64 really.
-patch 51: add pci=assign_pref_bars to clear and assign pref bars.
-patch 52-53: don't clear resource when allocation fails
-
-I put latest copy at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-v4.4-next
-
-That is based on v4.3-rc1 plus reverting of pci_read_bridge_bases() change.
-
-Yijing and Wei Yang both test the branch, and the patchset fixs rescan problem,
-and is working well on powerpc setup.
-
-Thanks
-
-Yinghai
-
-v2:
-    - fix resource_disabled allocation from powerpc
-    - other warnings that were found by Fengguang's build robot.
-    - io port alignment clean up.
-    - rebased to v4.2-rc2
-    - better for two alt_size support.
-
-v3:
-    - fix reset bridge resource on last try: only with bridge resources
-    - remove/rescan path checking with old_size.
-
-v4:
-    - Update changelog according to Bjorn.
-    - split calculate_size patch to two.
-    - use required instead of must.
-
-v5:
-    - update changelog
-    - add one debug patch
-    - add one patch that get resource allocation near end of avialable window
-
-v6:
-    - reorder patches according to Bjorn.
-
-Yinghai Lu (53):
-  sparc/PCI: Add mem64 resource parsing for root bus
-  sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-  powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-  OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
-  PCI: Don't release fixed resource for realloc
-  PCI: Claim fixed resource during remove/rescan path
-  PCI: Set resource to FIXED for LSI devices
-  PCI: Separate realloc list checking after allocation
-  PCI: Treat optional as required in first try for bridge rescan
-  PCI: Get new realloc size for bridge for last try
-  PCI: Don't release sibling bridge resources during hotplug
-  PCI: Cleanup res_to_dev_res() printout
-  PCI: Reuse res_to_dev_res() in reassign_resources_sorted()
-  PCI: Use correct align for optional only resources during sorting
-  PCI: Optimize bus min_align/size calculation during sizing
-  PCI: Optimize bus align/size calculation for optional during sizing
-  PCI: Don't add too much optional size for hotplug bridge MMIO
-  PCI: Reorder resources list for required/optional resources
-  PCI: Remove duplicated code for resource sorting
-  PCI: Rename pdev_sort_resources() to pdev_assign_resources_prepare()
-  PCI: Treat ROM resource as optional during realloc
-  PCI: Add debug printout during releasing partial assigned resources
-  PCI: Simplify res reference using in __assign_resources_sorted()
-  PCI: Add __add_to_list()
-  PCI: Cache window alignment value during bus sizing
-  PCI: Check if resource is allocated before trying to assign one
-  PCI: Separate out save_resources()/restore_resources()
-  PCI: Move comment to pci_need_to_release()
-  PCI: Separate required+optional assigning to another function
-  PCI: Skip required+optional if there is no optional
-  PCI: Move saved required resource list out of required+optional assigning
-  PCI: Add alt_size ressource allocation support
-  PCI: Add support for more than two alt_size entries under same bridge
-  PCI: Fix size calculation with old_size on rescan path
-  PCI: Don't add too much optional size for hotplug bridge io
-  PCI: Move ISA io port align out of calculate_iosize()
-  PCI: Don't add too much io port for hotplug bridge with old size
-  PCI: Unify calculate_size() for io port and MMIO
-  PCI: Allow bridge optional only io port resource required size to be 0
-  PCI: Unify skip_ioresource_align()
-  PCI: Kill macro checking for bus io port sizing
-  resources: Split out __allocate_resource()
-  resources: Make allocate_resource() return best fit resource
-  PCI, x86: Allocate from high in available window for MMIO
-  PCI: Add debug print out for min_align and alt_size
-  PCI: Check pref compatible bit for mem64 resource of PCIe device
-  PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
-  PCI: Add has_mem64 for struct host_bridge
-  PCI: Only treat non-pref mmio64 as pref if host bridge has mmio64
-  PCI: Restore pref MMIO allocation logic for host bridge without mmio64
-  PCI, x86: Add pci=assign_pref_bars to reallocate pref BARs
-  PCI: Introduce resource_disabled()
-  PCI: Don't set flags to 0 when assign resource fail
-
- arch/alpha/kernel/pci.c                   |    2 +-
- arch/ia64/pci/pci.c                       |    4 +-
- arch/microblaze/pci/pci-common.c          |   23 +-
- arch/mn10300/unit-asb2305/pci-asb2305.c   |    4 +-
- arch/mn10300/unit-asb2305/pci.c           |    4 +-
- arch/powerpc/kernel/pci-common.c          |   27 +-
- arch/powerpc/kernel/pci_of_scan.c         |    4 +-
- arch/powerpc/platforms/powernv/pci-ioda.c |   12 +-
- arch/s390/pci/pci.c                       |    2 +-
- arch/sparc/kernel/of_device_32.c          |    5 +-
- arch/sparc/kernel/of_device_64.c          |    5 +-
- arch/sparc/kernel/pci.c                   |    9 +-
- arch/sparc/kernel/pci_common.c            |   15 +-
- arch/sparc/kernel/pci_impl.h              |    1 +
- arch/x86/include/asm/pci_x86.h            |    2 +-
- arch/x86/pci/common.c                     |    7 +-
- arch/x86/pci/i386.c                       |   86 +-
- arch/xtensa/kernel/pci.c                  |    4 +-
- drivers/iommu/intel-iommu.c               |    3 +-
- drivers/of/address.c                      |    4 +-
- drivers/pci/bus.c                         |    6 +-
- drivers/pci/host/pcie-rcar.c              |    2 +-
- drivers/pci/hotplug/acpiphp_glue.c        |    1 +
- drivers/pci/iov.c                         |    2 +-
- drivers/pci/pci.c                         |    3 +-
- drivers/pci/pci.h                         |    4 +
- drivers/pci/probe.c                       |   44 +-
- drivers/pci/quirks.c                      |   37 +
- drivers/pci/rom.c                         |    2 +-
- drivers/pci/setup-bus.c                   | 1292 +++++++++++++++++++++--------
- drivers/pci/setup-res.c                   |   18 +-
- include/asm-generic/pci-bridge.h          |    2 +
- include/linux/ioport.h                    |    6 +-
- include/linux/pci.h                       |    5 +
- kernel/resource.c                         |  175 +++-
- 35 files changed, 1351 insertions(+), 471 deletions(-)
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 2c81d76..ca23b2a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -66,6 +66,8 @@ struct pci_dev_resource {
+ 	resource_size_t end;
+ 	resource_size_t add_size;
+ 	resource_size_t min_align;
++	resource_size_t alt_size;
++	resource_size_t alt_align;
+ 	unsigned long flags;
+ };
+ 
+@@ -88,15 +90,16 @@ static void free_list(struct list_head *head)
+  * @add_size:	additional size to be optionally added
+  *              to the resource
+  */
+-static int add_to_list(struct list_head *head,
++static int __add_to_list(struct list_head *head,
+ 		 struct pci_dev *dev, struct resource *res,
+-		 resource_size_t add_size, resource_size_t min_align)
++		 resource_size_t add_size, resource_size_t min_align,
++		 resource_size_t alt_size, resource_size_t alt_align)
+ {
+ 	struct pci_dev_resource *tmp;
+ 
+ 	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
+ 	if (!tmp) {
+-		pr_warn("add_to_list: kmalloc() failed!\n");
++		pr_warn("__add_to_list: kmalloc() failed!\n");
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -107,12 +110,20 @@ static int add_to_list(struct list_head *head,
+ 	tmp->flags = res->flags;
+ 	tmp->add_size = add_size;
+ 	tmp->min_align = min_align;
++	tmp->alt_size = alt_size;
++	tmp->alt_align = alt_align;
+ 
+ 	list_add(&tmp->list, head);
+ 
+ 	return 0;
+ }
+ 
++static int add_to_list(struct list_head *head,
++		 struct pci_dev *dev, struct resource *res)
++{
++	return __add_to_list(head, dev, res, 0, 0, 0, 0);
++}
++
+ static void remove_from_list(struct list_head *head,
+ 				 struct resource *res)
+ {
+@@ -378,9 +389,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 		if (resource_size(res) &&
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+ 			if (fail_head)
+-				add_to_list(fail_head, dev_res->dev, res,
+-					    0 /* don't care */,
+-					    0 /* don't care */);
++				add_to_list(fail_head, dev_res->dev, res);
+ 			reset_resource(res);
+ 		}
+ 	}
+@@ -466,7 +475,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	/* Save original start, end, flags etc at first */
+ 	list_for_each_entry(dev_res, head, list) {
+-		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
++		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
+ 			free_list(&save_head);
+ 			goto requested_and_reassign;
+ 		}
+@@ -1019,8 +1028,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0,
+-			    min_align);
++		__add_to_list(realloc_head, bus->self, b_res,
++			      size1 - size0, min_align, 0, 0);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long)size1-size0);
+@@ -1222,7 +1231,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				add_to_align_test_list(&align_test_add_list,
+ 							align, r_size);
+ 				r->end = r->start - 1;
+-				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
++				__add_to_list(realloc_head, dev, r,
++					      r_size, align, 0, 0);
+ 				sum_add_size += r_size;
+ 				if (align > max_add_align)
+ 					max_add_align = align;
+@@ -1293,8 +1303,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
+-				min_add_align);
++		__add_to_list(realloc_head, bus->self, b_res, size1 - size0,
++				min_add_align, 0, 0);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long) (size1 - size0),
+@@ -1331,8 +1341,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[0].end -= pci_cardbus_io_size;
+-		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
+-				pci_cardbus_io_size);
++		__add_to_list(realloc_head, bridge, b_res,
++			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
+ 	}
+ 
+ handle_b_res_1:
+@@ -1343,8 +1353,8 @@ handle_b_res_1:
+ 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[1].end -= pci_cardbus_io_size;
+-		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
+-				 pci_cardbus_io_size);
++		__add_to_list(realloc_head, bridge, b_res + 1,
++			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
+ 	}
+ 
+ handle_b_res_2:
+@@ -1381,8 +1391,9 @@ handle_b_res_2:
+ 				  IORESOURCE_STARTALIGN;
+ 		if (realloc_head) {
+ 			b_res[2].end -= pci_cardbus_mem_size;
+-			add_to_list(realloc_head, bridge, b_res+2,
+-				 pci_cardbus_mem_size, pci_cardbus_mem_size);
++			__add_to_list(realloc_head, bridge, b_res + 2,
++				pci_cardbus_mem_size, pci_cardbus_mem_size,
++				0, 0);
+ 		}
+ 
+ 		/* reduce that to half */
+@@ -1397,8 +1408,8 @@ handle_b_res_3:
+ 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[3].end -= b_res_3_size;
+-		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
+-				 pci_cardbus_mem_size);
++		__add_to_list(realloc_head, bridge, b_res + 3,
++				b_res_3_size, pci_cardbus_mem_size, 0, 0);
+ 	}
+ 
+ handle_done:
 -- 
 1.8.4.5
 
