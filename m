@@ -1,56 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:35434 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751981AbbIQWCX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Sep 2015 18:02:23 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v2 5/5] PCI: generic: Pass proper starting bus number to pci_scan_root_bus().
-Date: Thu, 17 Sep 2015 15:02:12 -0700
-Message-Id: <1442527332-1174-6-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 36/53] PCI: Move ISA io port align out of calculate_iosize()
+Date: Wed, 30 Sep 2015 22:53:10 -0700
+Message-Id: <1443678807-786-37-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+We need to move ISA io port align out of calculate_iosize(),
+so we could unify calculate_iosize and calculate_memsize later.
 
-If the bus is being configured with a bus-range that does not start at
-zero, pass that starting bus number to pci_scan_root_bus().  Passing
-the incorrect value of zero causes attempted config accesses outside
-of the supported range, which cascades to an OOPs spew and eventual
-kernel panic.
+That extra aligning or offset is to work around ISA devices:
+When one bridge have several children devices, and every device
+has several io port resources and resource size < 0x400.
+We need to check size, and add extra size to make sure bit8/9
+to be zero.
 
-Acked-by: Will Deacon <will.deacon@arm.com>
-Signed-off-by: David Daney <david.daney@cavium.com>
+Also need to apply same checking for optional size path.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
-No change from v1.
+ drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
+ 1 file changed, 27 insertions(+), 12 deletions(-)
 
- drivers/pci/host/pci-host-generic.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 0a9c453..e364232 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -259,7 +259,7 @@ static int gen_pci_probe(struct platform_device *pdev)
- 	if (!pci_has_flag(PCI_PROBE_ONLY))
- 		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 7cd6d32..a446fc3 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1076,11 +1076,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
+-	/* To be fixed in 2.5: we should have sort of HAVE_ISA
+-	   flag in the struct pci_bus. */
+-#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+-	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+-#endif
+ 	size = ALIGN(size + size1, align);
+ 	if (size < old_size)
+ 		size = old_size;
+@@ -1134,6 +1129,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+ 	return max(align, arch_align);
+ }
  
--	bus = pci_scan_root_bus(dev, 0,
-+	bus = pci_scan_root_bus(dev, pci->cfg.bus_range->start,
- 				&pci->cfg.ops.ops, pci, &pci->resources);
- 	if (!bus) {
- 		dev_err(dev, "Scanning rootbus failed");
++static resource_size_t size_aligned_for_isa(resource_size_t size)
++{
++	/*
++	 * To be fixed in 2.5: we should have sort of HAVE_ISA
++	 *  flag in the struct pci_bus.
++	 */
++#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
++	size = (size & 0xff) + ((size & ~0xffUL) << 2);
++#endif
++	return size;
++}
++
+ /**
+  * pbus_size_io() - size the io window of a given bus
+  *
+@@ -1151,11 +1158,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ {
+ 	struct pci_dev *dev;
+ 	resource_size_t min_sum_size = 0;
+-	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+-	resource_size_t children_add_size = 0;
++	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
+ 	resource_size_t min_align, align;
+ 
+ 	if (!b_res)
+@@ -1172,7 +1178,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+-			unsigned long r_size;
++			unsigned long r_size, r_add_size;
+ 
+ 			if (r->parent || !(r->flags & IORESOURCE_IO))
+ 				continue;
+@@ -1188,18 +1194,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 			if (align > min_align)
+ 				min_align = align;
+ 
+-			if (realloc_head)
+-				children_add_size += get_res_add_size(realloc_head, r);
++			if (realloc_head) {
++				r_add_size = get_res_add_size(realloc_head, r);
++				r_add_size += r_size;
++				if (r_add_size < 0x400)
++					/* Might be re-aligned for ISA */
++					sum_add_size += r_add_size;
++				else
++					sum_add_size1 += r_add_size;
++			}
+ 		}
+ 	}
+ 
++	size = size_aligned_for_isa(size);
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	sum_add_size = children_add_size + size + size1;
++	sum_add_size = size_aligned_for_isa(sum_add_size);
++	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	size1 = !realloc_head ? size0 :
+-		calculate_iosize(size, min_size, sum_add_size - size,
++		calculate_iosize(sum_add_size, min_size, 0,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
 -- 
-1.9.1
+1.8.4.5
 
