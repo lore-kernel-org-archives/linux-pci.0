@@ -1,107 +1,228 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:55052 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752182AbbIPL2j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Sep 2015 07:28:39 -0400
-Date: Wed, 16 Sep 2015 12:28:52 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: David Daney <ddaney@caviumnetworks.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 4/6] PCI: generic: Correct, and avoid overflow, in
- bus_max calculation.
-Message-ID: <20150916112852.GC17510@red-moon>
-References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
- <1442013719-5001-5-git-send-email-ddaney.cavm@gmail.com>
- <20150915174934.GL31157@arm.com>
- <55F85D4E.9020604@caviumnetworks.com>
- <20150915183500.GR31157@arm.com>
- <55F86764.4060502@caviumnetworks.com>
- <20150916104152.GC28771@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150916104152.GC28771@arm.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:29225 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756268AbbJAF7s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:59:48 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 46/53] PCI: Check pref compatible bit for mem64 resource of PCIe device
+Date: Wed, 30 Sep 2015 22:53:20 -0700
+Message-Id: <1443678807-786-47-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 16, 2015 at 11:41:53AM +0100, Will Deacon wrote:
+We still get "no compatible bridge window" warning on sparc T5-8
+after we add support for 64bit resource parsing for root bus.
 
-[...]
+ PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
+ PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
+ PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
+ PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
+ PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
+ PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
+ PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
+ pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
 
-> > Here is the current code:
-> > 
-> > >> 	bus_range = pci->cfg.bus_range;
-> > >> 	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
-> > >> 		u32 idx = busn - bus_range->start;
-> > 
-> > The index is offset by the bus range start...
-> > 
-> > >> 		u32 sz = 1 << pci->cfg.ops.bus_shift;
-> > >>
-> > >> 		pci->cfg.win[idx] = devm_ioremap(dev,
-> > >> 						 pci->cfg.res.start + busn * sz,
-> > >> 						 sz);
-> > 
-> > But, the offset into the "reg" property is the raw bus number.
-> > 
-> > 
-> > >> 		if (!pci->cfg.win[idx])
-> > >> 			return -ENOMEM;
-> > >> 	}
-> > 
-> > 
-> > I hope that makes it more clear.
-> 
-> Got it. So we should be using idx instead of busn in the devm_ioremap
-> call above.
+All the bridges 64-bit resource have pref bit, but the device resource does not
+have pref set, then we can not find parent for the device resource,
+as we can not put non-pref mem under pref mem.
 
-I think that's not what's specified in the PCI firmware specification,
-at least for the MMCFG regions. For MMCFG regions (quoting the specs)
-the "base address of the memory mapped configuration space always
-corresponds to bus number 0 (regardless of the start bus number decoded
-by the host bridge)..."
+According to pcie spec errta
+https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
+page 13, in some case it is ok to mark some as pref.
 
-For the x86 implementation have a look at:
+Mark if the entire path from the host to the adapter is over PCI Express.
+Then set pref compatible bit for claim/sizing/assign for 64bit mem resource
+on that pcie device.
 
-arch/x86/pci/mmconfig_64.c mcfg_ioremap()
+-v2: set pref for mmio 64 when whole path is PCI Express, according to David Miller.
+-v3: don't set pref directly, change to UNDER_PREF, and set PREF before
+     sizing and assign resource, and cleart PREF afterwards. requested by BenH.
+-v4: use on_all_pcie_path device flag instead.
 
-static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
-{
-	void __iomem *addr;
-	u64 start, size;
-	int num_buses;
+Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+Reported-by: David Ahern <david.ahern@oracle.com>
+Tested-by: David Ahern <david.ahern@oracle.com>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Tested-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci.c       |  3 ++-
+ drivers/pci/pci.h       |  2 ++
+ drivers/pci/probe.c     | 33 +++++++++++++++++++++++++++++++++
+ drivers/pci/setup-bus.c | 21 ++++++++++++++++++---
+ drivers/pci/setup-res.c |  4 ++++
+ include/linux/pci.h     |  1 +
+ 6 files changed, 60 insertions(+), 4 deletions(-)
 
-	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
-	num_buses = cfg->end_bus - cfg->start_bus + 1;
-	size = PCI_MMCFG_BUS_OFFSET(num_buses);
-	addr = ioremap_nocache(start, size);
-	if (addr)
-		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
-	return addr;
-}
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6a9a111..f951cfb 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -425,6 +425,7 @@ EXPORT_SYMBOL_GPL(pci_find_ht_capability);
+ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 					  struct resource *res)
+ {
++	int flags = pci_resource_pref_compatible(dev, res);
+ 	const struct pci_bus *bus = dev->bus;
+ 	struct resource *r;
+ 	int i;
+@@ -439,7 +440,7 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 			 * not, the allocator made a mistake.
+ 			 */
+ 			if (r->flags & IORESOURCE_PREFETCH &&
+-			    !(res->flags & IORESOURCE_PREFETCH))
++			    !(flags & IORESOURCE_PREFETCH))
+ 				return NULL;
+ 
+ 			/*
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 9dc42b6..c34c2aa 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -339,4 +339,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ 
+ struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
+ 
++int pci_resource_pref_compatible(const struct pci_dev *dev,
++				 struct resource *res);
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c8cc0e62..9eb9e30 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1628,6 +1628,36 @@ static void pci_set_msi_domain(struct pci_dev *dev)
+ 				   dev_get_msi_domain(&dev->bus->dev));
+ }
+ 
++static bool pci_up_path_over_pcie(struct pci_bus *bus)
++{
++	if (pci_is_root_bus(bus))
++		return true;
++
++	if (bus->self && !pci_is_pcie(bus->self))
++		return false;
++
++	return pci_up_path_over_pcie(bus->parent);
++}
++
++/*
++ * According to
++ * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
++ * page 13, system firmware could put some 64bit non-pref under 64bit pref,
++ * on some cases.
++ * Let's mark if entire path from the host to the adapter is over PCI
++ * Express. later will use that compute pref compaitable bit.
++ */
++static void pci_set_on_all_pcie_path(struct pci_dev *dev)
++{
++	if (!pci_is_pcie(dev))
++		return;
++
++	if (!pci_up_path_over_pcie(dev->bus))
++		return;
++
++	dev->on_all_pcie_path = 1;
++}
++
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	int ret;
+@@ -1658,6 +1688,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	/* Initialize various capabilities */
+ 	pci_init_capabilities(dev);
+ 
++	/* After pcie_cap is assigned */
++	pci_set_on_all_pcie_path(dev);
++
+ 	/*
+ 	 * Add the device to our list of discovered devices
+ 	 * and the bus list for fixup functions, etc.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 173c83f..86900ac 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -978,6 +978,20 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 	return -EINVAL;
+ }
+ 
++int pci_resource_pref_compatible(const struct pci_dev *dev,
++				 struct resource *res)
++{
++	if (res->flags & IORESOURCE_PREFETCH)
++		return res->flags;
++
++	if ((res->flags & IORESOURCE_MEM) &&
++	    (res->flags & IORESOURCE_MEM_64) &&
++	    dev->on_all_pcie_path)
++		return res->flags | IORESOURCE_PREFETCH;
++
++	return res->flags;
++}
++
+ /* Check whether the bridge supports optional I/O and
+    prefetchable memory ranges. If not, the respective
+    base/limit registers must be read-only and read as 0. */
+@@ -1490,10 +1504,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+ 			resource_size_t r_size, align;
++			int flags = pci_resource_pref_compatible(dev, r);
+ 
+-			if (r->parent || ((r->flags & mask) != type &&
+-					  (r->flags & mask) != type2 &&
+-					  (r->flags & mask) != type3))
++			if (r->parent || ((flags & mask) != type &&
++					  (flags & mask) != type2 &&
++					  (flags & mask) != type3))
+ 				continue;
+ 
+ 			r_size = resource_size(r);
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 232f925..b19aa5b 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -250,15 +250,19 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ static int _pci_assign_resource(struct pci_dev *dev, int resno,
+ 				resource_size_t size, resource_size_t min_align)
+ {
++	struct resource *res = dev->resource + resno;
++	int old_flags = res->flags;
+ 	struct pci_bus *bus;
+ 	int ret;
+ 
++	res->flags = pci_resource_pref_compatible(dev, res);
+ 	bus = dev->bus;
+ 	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
+ 		if (!bus->parent || !bus->self->transparent)
+ 			break;
+ 		bus = bus->parent;
+ 	}
++	res->flags = old_flags;
+ 
+ 	return ret;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index acb9c56..66969bb 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -311,6 +311,7 @@ struct pci_dev {
+ 						   powered on/off by the
+ 						   corresponding bridge */
+ 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
++	unsigned int	on_all_pcie_path:1;	/* up to host-bridge all pcie */
+ 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+ 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+ 
+-- 
+1.8.4.5
 
-The MCFG config accessors add back the PCI_MMCFG_BUS_OFFSET(cfg->start_bus)
-to the virtual address so that the proper virtual address is used when
-issuing the config cycles, that's my understanding.
-
-So IMO we have to define what "reg" represents for ECAM in DT, we can't
-leave this open to interpretation (and I think makng MCFG and DT config
-work the same way would be ideal).
-
-Thoughts appreciated, I will countercheck on my side.
-
-Lorenzo
