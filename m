@@ -1,98 +1,94 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55EEA45D.2070709@internode.on.net>
-Date: Tue, 08 Sep 2015 18:33:25 +0930
-From: Arthur Marsh <arthur.marsh@internode.on.net>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
-CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: Re: [Bugfix] PCI, x86: Correctly allocate IRQs for PCI devices managed
- by non-PCI drivers
-References: <55EE8106.6060100@internode.on.net> <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
+Subject: [PATCH v6 07/53] PCI: Set resource to FIXED for LSI devices
+Date: Wed, 30 Sep 2015 22:52:41 -0700
+Message-Id: <1443678807-786-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+LSI HBA firmware stop responding pci read from host if pci core ever change
+pci device BAR values.
 
+Set their resources to FIXED, so will allow realloc to skip them.
 
-Jiang Liu wrote on 08/09/15 16:56:
-> Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
-> pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
-> for PCI devices on x86 platforms. Instead of allocating PCI legacy
-> IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
-> will be called by pci_device_probe() to allocate PCI legacy IRQs
-> when binding PCI drivers to PCI devices.
->
-> But some device drivers, such as eata, directly access PCI devices
-> without implementing corresponding PCI drivers, so pcibios_alloc_irq()
-> won't be called for those PCI devices and wrong IRQ number may be
-> used to manage the PCI device.
->
-> So detect such a case in pcibios_enable_device() by checking
-> pci_dev->driver is NULL and call pcibios_alloc_irq() to allocate PCI
-> legacy IRQs.
->
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->   arch/x86/pci/common.c |   10 ++++++++++
->   1 file changed, 10 insertions(+)
->
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 09d3afc0a181..60b237783582 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -685,6 +685,16 @@ void pcibios_free_irq(struct pci_dev *dev)
->
->   int pcibios_enable_device(struct pci_dev *dev, int mask)
->   {
-> +	/*
-> +	 * By design, pcibios_alloc_irq() will be called by pci_device_probe()
-> +	 * when binding a PCI device to a PCI driver. But some device drivers,
-> +	 * such as eata, directly make use of PCI devices without implementing
-> +	 * PCI device drivers, so pcibios_alloc_irq() won't be called for those
-> +	 * PCI devices.
-> +	 */
-> +	if (!dev->driver)
-> +		pcibios_alloc_irq(dev);
-> +
->   	return pci_enable_resources(dev, mask);
->   }
->
->
+Reported-by: Paul Johnson <pjay@nwtrail.com>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/pci.h       |  1 +
+ drivers/pci/quirks.c    | 20 ++++++++++++++++++++
+ drivers/pci/setup-bus.c |  4 ++++
+ 3 files changed, 25 insertions(+)
 
-Thanks, I removed the test patch and applied the revised patch and built 
-and rebooted the kernel and successfully mounted file systems on a disk 
-attached to the DPT 2044W card using the eata driver:
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 24ba9dc..c04c9f1 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -170,6 +170,7 @@ static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u
+ }
+ 
+ void pci_realloc_get_opt(char *);
++bool pci_realloc_user_enabled(void);
+ 
+ static inline int pci_no_d1d2(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index c1d9a78..00c0a3a 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -323,6 +323,26 @@ static void quirk_s3_64M(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
+ 
++/*
++ * LSI devices firmware does not like BAR get changed
++ */
++static void quirk_bar_fixed(struct pci_dev *dev)
++{
++	int i;
++
++	if (pci_realloc_user_enabled())
++		return;
++
++	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
++		struct resource *r = &dev->resource[i];
++
++		if (!r->start || !r->flags)
++			continue;
++		r->flags |= IORESOURCE_PCI_FIXED;
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC,	PCI_ANY_ID,	quirk_bar_fixed);
++
+ /* for pci remove and rescan */
+ static void quirk_allocate_fixed(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a65439a..fc77a71 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1587,6 +1587,10 @@ void __init pci_realloc_get_opt(char *str)
+ 	else if (!strncmp(str, "on", 2))
+ 		pci_realloc_enable = user_enabled;
+ }
++bool pci_realloc_user_enabled(void)
++{
++	return pci_realloc_enable == user_enabled;
++}
+ static bool pci_realloc_enabled(enum enable_type enable)
+ {
+ 	return enable >= user_enabled;
+-- 
+1.8.4.5
 
-[    0.000000] Linux version 4.2.0+ (root@victoria) (gcc version 5.2.1 
-20150903
-(Debian 5.2.1-16) ) #31 SMP PREEMPT Tue Sep 8 17:36:28 ACST 2015
-...
-
-[   80.691097] EATA0: IRQ 10 mapped to IO-APIC IRQ 17.
-[   80.724519] EATA/DMA 2.0x: Copyright (C) 1994-2003 Dario Ballabio.
-[   80.752035] EATA config options -> tm:1, lc:y, mq:16, rs:y, et:n, 
-ip:n, ep:n, pp:y.
-[   80.777063] EATA0: 2.0C, PCI 0xd890, IRQ 17, BMST, SG 122, MB 64.
-[   80.802391] EATA0: wide SCSI support enabled, max_id 16, max_lun 8.
-[   80.827959] EATA0: SCSI channel 0 enabled, host target ID 7.
-[   80.853413] scsi host3: EATA/DMA 2.0x rev. 8.10.00
-[   82.445662] scsi 3:0:6:0: Direct-Access     IBM      DCAS-34330W 
-  S65A PQ: 0 ANSI: 2
-[   82.471584] scsi 3:0:6:0: cmds/lun 16, sorted, simple tags.
-[   84.571451] sd 3:0:6:0: Attached scsi generic sg4 type 0
-[   84.597572] sd 3:0:6:0: [sdd] 8466688 512-byte logical blocks: (4.33 
-GB/4.03 GiB)
-[   84.659874] sd 3:0:6:0: [sdd] Write Protect is off
-[   84.688543] sd 3:0:6:0: [sdd] Mode Sense: b3 00 00 08
-[   84.714021] sd 3:0:6:0: [sdd] Write cache: enabled, read cache: 
-enabled, doesn't support DPO or FUA
-[   84.817682]  sdd: sdd1 sdd2 < sdd5 >
-[   84.919267] sd 3:0:6:0: [sdd] Attached SCSI disk
-
-Arthur.
