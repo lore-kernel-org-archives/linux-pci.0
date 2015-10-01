@@ -1,59 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39783 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753900AbbINQyP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Sep 2015 12:54:15 -0400
-Message-ID: <1442249653.23936.17.camel@redhat.com>
-Subject: Re: [RFC PATCH] vfio/pci: Use kernel VPD access functions
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Rustad, Mark D" <mark.d.rustad@intel.com>
-Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"alexander.h.duyck@redhat.com" <alexander.h.duyck@redhat.com>,
-	"myron.stowe@redhat.com" <myron.stowe@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Mon, 14 Sep 2015 10:54:13 -0600
-In-Reply-To: <80CE59CA-1B93-42FF-96D1-6276B724203F@intel.com>
-References: <20150911181332.32399.74472.stgit@gimli.home>
-	 <80CE59CA-1B93-42FF-96D1-6276B724203F@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from aserp1040.oracle.com ([141.146.126.69]:20551 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755443AbbJAFy3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:54:29 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 29/53] PCI: Separate required+optional assigning to another function
+Date: Wed, 30 Sep 2015 22:53:03 -0700
+Message-Id: <1443678807-786-30-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2015-09-12 at 01:11 +0000, Rustad, Mark D wrote:
-> Alex,
-> 
-> > On Sep 11, 2015, at 11:16 AM, Alex Williamson <alex.williamson@redhat.com> wrote:
-> > 
-> > RFC - Is this something we should do?
-> 
-> Superficially this looks pretty good. I need to think harder to be sure of the details.
-> 
-> > Should we consider providing
-> > similar emulation through PCI sysfs to allow lspci to also make use
-> > of the vpd interfaces?
-> 
-> It looks to me like lspci already uses the vpd attribute in sysfs to access VPD, so maybe nothing more than this is needed. No doubt lspci can be coerced into accessing VPD directly, but is that really worth going after? I'm not so sure.
-> 
-> An strace of lspci accessing a device with VPD shows me:
-> 
-> write(1, "\tCapabilities: [e0] Vital Produc"..., 39	Capabilities: [e0] Vital Product Data
-> ) = 39
-> open("/sys/bus/pci/devices/0000:02:00.0/vpd", O_RDONLY) = 4
-> ----------------------------------------^^^ accesses to this should be safe, I think
-> 
-> pread(4, "\202", 1, 0)                  = 1
-> pread(4, "\10\0", 2, 1)                 = 2
-> pread(4, "PVL Dell", 8, 3)              = 8
-> write(1, "\t\tProduct Name: PVL Dell\n", 25		Product Name: PVL Dell
-> ) = 25
-> 
-> and so forth.
+__assign_resources_sorted() is getting too big if we put alt_size support
+into it.  Split out required+optional assigning code to another function.
 
-Oh good, so aside from some rouge admin poking around with setpci access
-through pci-sysfs is hopefully not an issue.  Thanks for looking into
-it.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
+ 1 file changed, 27 insertions(+), 20 deletions(-)
 
-Alex
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 5f5737e..e39de7c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -473,20 +473,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
+ 	res->flags = save_res->flags;
+ }
+ 
+-static void __assign_resources_sorted(struct list_head *head,
+-				 struct list_head *realloc_head,
+-				 struct list_head *fail_head)
++static bool __assign_resources_required_optional_sorted(struct list_head *head,
++				 struct list_head *realloc_head)
+ {
+-	/*
+-	 * Should not assign requested resources at first.
+-	 *   they could be adjacent, so later reassign can not reallocate
+-	 *   them one by one in parent resource window.
+-	 * Try to assign requested + add_size at beginning
+-	 *  if could do that, could get out early.
+-	 *  if could not do that, we still try to assign requested at first,
+-	 *    then try to reassign add_size for some resources.
+-	 */
+-
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+@@ -495,12 +484,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	resource_size_t add_align;
+ 	struct resource *res;
+ 
+-	/* Check if optional add_size is there */
+-	if (!realloc_head || list_empty(realloc_head))
+-		goto requested_and_reassign;
+-
+ 	if (!save_resources(head, &save_head))
+-		goto requested_and_reassign;
++		return false;
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+@@ -539,7 +524,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 			remove_from_list(realloc_head, dev_res->res);
+ 		free_list(&save_head);
+ 		free_list(head);
+-		return;
++
++		return true;
+ 	}
+ 
+ 	/* check failed type */
+@@ -574,7 +560,28 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	free_list(&save_head);
+ 
+-requested_and_reassign:
++	return false;
++}
++
++static void __assign_resources_sorted(struct list_head *head,
++				 struct list_head *realloc_head,
++				 struct list_head *fail_head)
++{
++	/*
++	 * Should not assign required resources at first.
++	 *   they could be adjacent, so later reassign can not reallocate
++	 *   them one by one in parent resource window.
++	 * Try to assign required + optional at beginning
++	 *  if could do that, could get out early.
++	 *  if could not do that, we still try to assign required at first,
++	 *    then try to reassign add_size for some resources.
++	 */
++
++	/* Check required+optional add */
++	if (realloc_head && !list_empty(realloc_head) &&
++	    __assign_resources_required_optional_sorted(head, realloc_head))
++		return;
++
+ 	sort_resources(head);
+ 
+ 	/* Satisfy the must-have resource requests */
+-- 
+1.8.4.5
 
