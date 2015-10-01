@@ -1,95 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [Bugfix] PCI, x86: Correctly allocate IRQs for PCI devices
- managed by non-PCI drivers
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <55EE8106.6060100@internode.on.net>
- <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
- <20150908162735.GK829@google.com> <55EF119E.5030905@linux.intel.com>
- <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <55F14619.4030007@linux.intel.com>
-Date: Thu, 10 Sep 2015 16:58:01 +0800
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21895 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756162AbbJAF7h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:59:37 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 39/53] PCI: Allow bridge optional only io port resource required size to be 0
+Date: Wed, 30 Sep 2015 22:53:13 -0700
+Message-Id: <1443678807-786-40-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/9/10 3:11, Bjorn Helgaas wrote:
-> On Tue, Sep 8, 2015 at 11:49 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->> Hi Bjorn,
->>         We have used another draft version to fix this issue by changing
->> eata driver as below. But that needs to export pcibios_alloc_irq. And
->> I'm not sure whether there are other drivers having the same behavior.
->> If we think it's a legacy behavior and only a few drivers may have
->> such a behavior, I prefer changing drivers to fix the issue too.
-> 
-> Did you look at changing the driver to use pci_register_driver()?  I
-> bet it's pretty straightforward.
-Hi Bjorn,
-	I have done some investigation. It's doable, but the change
-may be a little bigger. Will send the patch out for comments once
-it's done.
-Thanks!
-Gerry
+When there is no child device under the non hotplug bridge,
+We can use 0 for required size, and do not use old size as required size.
 
-> 
->>  drivers/pci/pci-driver.c |    1 +
->>  drivers/scsi/eata.c      |    2 ++
->>  2 files changed, 3 insertions(+)
->>
->> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->> index 52a880ca1768..17d2a0b1de18 100644
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
->> @@ -392,6 +392,7 @@ int __weak pcibios_alloc_irq(struct pci_dev *dev)
->>  {
->>         return 0;
->>  }
->> +EXPORT_SYMBOL_GPL(pcibios_alloc_irq);
->>
->>  void __weak pcibios_free_irq(struct pci_dev *dev)
->>  {
->> diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
->> index 227dd2c2ec2f..7e6eaf867987 100644
->> --- a/drivers/scsi/eata.c
->> +++ b/drivers/scsi/eata.c
->> @@ -1061,6 +1061,7 @@ static void enable_pci_ports(void)
->>                        driver_name, dev->bus->number, dev->devfn);
->>  #endif
->>
->> +               pcibios_alloc_irq(dev);
->>                 if (pci_enable_device(dev))
->>                         printk
->>                             ("%s: warning, pci_enable_device failed, bus %d devfn 0x%x.\n",
->> @@ -1520,6 +1521,7 @@ static void add_pci_ports(void)
->>                 if (!(dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev)))
->>                         break;
->>
->> +               pcibios_alloc_irq(dev);
->>                 if (pci_enable_device(dev)) {
->>  #if defined(DEBUG_PCI_DETECT)
->>                         printk
->>
->>
->>>
->>>>      return pci_enable_resources(dev, mask);
->>>>  }
->>>>
->>>> --
->>>> 1.7.10.4
->>>>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+That will save some io port range for other bridges, as BIOS could do
+some partial assign, and we want to use those not used io port range.
+
+When there is child device, size will not be 0.
+when the bridge supports hotplug, min_size will not be 0.
+So they will still honor the old size as required size.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 0fd66b6..7a474d9 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1192,8 +1192,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 	size = size_aligned_for_isa(size);
+ 	size += size1;
+-	size0 = calculate_size(size, min_size,
+-			resource_size(b_res), min_align);
++	if (size || min_size)
++		size0 = calculate_size(size, min_size,
++					resource_size(b_res), min_align);
+ 	sum_add_size = size_aligned_for_isa(sum_add_size);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+@@ -1209,7 +1210,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		return;
+ 	}
+ 
+-	b_res->start = min_align;
++	b_res->start = size0 ? min_align : 0;
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-- 
+1.8.4.5
+
