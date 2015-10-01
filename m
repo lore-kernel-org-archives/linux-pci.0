@@ -1,120 +1,165 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Patch v5 1/6] ACPI/PCI: Enhance ACPI core to support sparse IO
- space
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
- <1433780448-18636-2-git-send-email-jiang.liu@linux.intel.com>
- <20150729203741.GC9640@google.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>, Vivek Goyal <vgoyal@redhat.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Jakub Sitnicki <jsitnicki@gmail.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <55EFD3CA.3050301@linux.intel.com>
-Date: Wed, 9 Sep 2015 14:38:02 +0800
-MIME-Version: 1.0
-In-Reply-To: <20150729203741.GC9640@google.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 42/53] resources: Split out __allocate_resource()
+Date: Wed, 30 Sep 2015 22:53:16 -0700
+Message-Id: <1443678807-786-43-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/7/30 4:37, Bjorn Helgaas wrote:
-> On Tue, Jun 09, 2015 at 12:20:43AM +0800, Jiang Liu wrote:
->> Enhance ACPI resource parsing interfaces to support sparse IO space,
->> which will be used to share common code between x86 and IA64 later.
->>
->> Tested-by: Tony Luck <tony.luck@intel.com>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
->> ---
->>  drivers/acpi/resource.c |    9 ++++++---
->>  include/linux/ioport.h  |    1 +
->>  2 files changed, 7 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->> index 8244f013f210..fdcc73dad2c1 100644
->> --- a/drivers/acpi/resource.c
->> +++ b/drivers/acpi/resource.c
->> @@ -123,7 +123,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
->>  EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
->>  
->>  static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
->> -				      u8 io_decode)
->> +				      u8 io_decode, u8 translation_type)
->>  {
->>  	res->flags = IORESOURCE_IO;
->>  
->> @@ -135,6 +135,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
->>  
->>  	if (io_decode == ACPI_DECODE_16)
->>  		res->flags |= IORESOURCE_IO_16BIT_ADDR;
->> +	if (translation_type == ACPI_SPARSE_TRANSLATION)
->> +		res->flags |= IORESOURCE_IO_SPARSE;
->>  }
->>  
->>  static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
->> @@ -142,7 +144,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
->>  {
->>  	res->start = start;
->>  	res->end = start + len - 1;
->> -	acpi_dev_ioresource_flags(res, len, io_decode);
->> +	acpi_dev_ioresource_flags(res, len, io_decode, 0);
->>  }
->>  
->>  /**
->> @@ -227,7 +229,8 @@ static bool acpi_decode_space(struct resource_win *win,
->>  		acpi_dev_memresource_flags(res, len, wp);
->>  		break;
->>  	case ACPI_IO_RANGE:
->> -		acpi_dev_ioresource_flags(res, len, iodec);
->> +		acpi_dev_ioresource_flags(res, len, iodec,
->> +					  addr->info.io.translation_type);
->>  		break;
->>  	case ACPI_BUS_NUMBER_RANGE:
->>  		res->flags = IORESOURCE_BUS;
->> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
->> index 388e3ae94f7a..24bea087e7af 100644
->> --- a/include/linux/ioport.h
->> +++ b/include/linux/ioport.h
->> @@ -94,6 +94,7 @@ struct resource {
->>  /* PnP I/O specific bits (IORESOURCE_BITS) */
->>  #define IORESOURCE_IO_16BIT_ADDR	(1<<0)
->>  #define IORESOURCE_IO_FIXED		(1<<1)
->> +#define IORESOURCE_IO_SPARSE		(1<<2)
-> 
-> I don't really like this bit.  We adding a new generic IORESOURCE_* bit
-> just for a special case, and it's only used in one place, for one arch,
-> during enumeration.
-Hi Bjorn,
-	Instead of defining a formal flag IORESOURCE_IO_SPARSE, we may
-reuse other field in struct resource to pass back the SPARSE flag,
-but that's a little dirty. For example, we may reuse res->name field
-to carry the SPARSE flag for the IA64 special case.
-	Is that OK?
-Thanks!
-Gerry
+This one is separated from next patch for best fit allocation.
 
-> 
-> Don't we have a similar problem (struct resource can't express all the
-> information from an ACPI resource) for the _TRA value for bridge windows?
-> If it's a similar issue, we should solve it in a similar way.
-Per my understanding, we just ignore ACPI address space information
-which can't be expressed by struct resource.
-Thanks!
-Gerry
+Split out __allocate_resource(), and it will not hold lock, so we could use it
+in other functions that hold the resource lock already.
 
-> 
->>  /* PCI ROM control bits (IORESOURCE_BITS) */
->>  #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
->> -- 
->> 1.7.10.4
->>
+-v2: according to Linus, using "bool lock" as parameter
+     aka "conditionally take lock" is *wrong*.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Acked-by: Linus Torvalds <torvalds@linux-foundation.org>
+---
+ kernel/resource.c | 70 +++++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 50 insertions(+), 20 deletions(-)
+
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 6927298..62321b0 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -654,7 +654,7 @@ static int find_resource(struct resource *root, struct resource *new,
+ }
+ 
+ /**
+- * reallocate_resource - allocate a slot in the resource tree given range & alignment.
++ * __reallocate_resource - allocate a slot in the resource tree given range & alignment.
+  *	The resource will be relocated if the new size cannot be reallocated in the
+  *	current location.
+  *
+@@ -663,7 +663,7 @@ static int find_resource(struct resource *root, struct resource *new,
+  * @newsize: new size of the resource descriptor
+  * @constraint: the size and alignment constraints to be met.
+  */
+-static int reallocate_resource(struct resource *root, struct resource *old,
++static int __reallocate_resource(struct resource *root, struct resource *old,
+ 			resource_size_t newsize,
+ 			struct resource_constraint  *constraint)
+ {
+@@ -671,8 +671,6 @@ static int reallocate_resource(struct resource *root, struct resource *old,
+ 	struct resource new = *old;
+ 	struct resource *conflict;
+ 
+-	write_lock(&resource_lock);
+-
+ 	if ((err = __find_resource(root, old, &new, newsize, constraint)))
+ 		goto out;
+ 
+@@ -697,14 +695,13 @@ static int reallocate_resource(struct resource *root, struct resource *old,
+ 		BUG_ON(conflict);
+ 	}
+ out:
+-	write_unlock(&resource_lock);
+ 	return err;
+ }
+ 
+-
+ /**
+- * allocate_resource - allocate empty slot in the resource tree given range & alignment.
+- * 	The resource will be reallocated with a new size if it was already allocated
++ * __allocate_resource - allocate empty slot in the resource tree given range & alignment.
++ *	The resource will be reallocated with a new size if it was already
++ *	allocated
+  * @root: root resource descriptor
+  * @new: resource descriptor desired by caller
+  * @size: requested resource region size
+@@ -713,15 +710,17 @@ out:
+  * @align: alignment requested, in bytes
+  * @alignf: alignment function, optional, called if not NULL
+  * @alignf_data: arbitrary data to pass to the @alignf function
++ *
++ * Caller need to hold resource_lock if needed.
+  */
+-int allocate_resource(struct resource *root, struct resource *new,
+-		      resource_size_t size, resource_size_t min,
+-		      resource_size_t max, resource_size_t align,
+-		      resource_size_t (*alignf)(void *,
+-						const struct resource *,
+-						resource_size_t,
+-						resource_size_t),
+-		      void *alignf_data)
++static int __allocate_resource(struct resource *root, struct resource *new,
++				resource_size_t size, resource_size_t min,
++				resource_size_t max, resource_size_t align,
++				resource_size_t (*alignf)(void *,
++						  const struct resource *,
++						  resource_size_t,
++						  resource_size_t),
++				void *alignf_data)
+ {
+ 	int err;
+ 	struct resource_constraint constraint;
+@@ -735,20 +734,51 @@ int allocate_resource(struct resource *root, struct resource *new,
+ 	constraint.alignf = alignf;
+ 	constraint.alignf_data = alignf_data;
+ 
+-	if ( new->parent ) {
++	if (new->parent) {
+ 		/* resource is already allocated, try reallocating with
+ 		   the new constraints */
+-		return reallocate_resource(root, new, size, &constraint);
++		return __reallocate_resource(root, new, size, &constraint);
+ 	}
+ 
+-	write_lock(&resource_lock);
+ 	err = find_resource(root, new, size, &constraint);
+ 	if (err >= 0 && __request_resource(root, new))
+ 		err = -EBUSY;
+-	write_unlock(&resource_lock);
++
+ 	return err;
+ }
+ 
++/**
++ * allocate_resource - allocate empty slot in the resource tree given range & alignment.
++ *	The resource will be reallocated with a new size if it was already
++ *	allocated
++ * @root: root resource descriptor
++ * @new: resource descriptor desired by caller
++ * @size: requested resource region size
++ * @min: minimum boundary to allocate
++ * @max: maximum boundary to allocate
++ * @align: alignment requested, in bytes
++ * @alignf: alignment function, optional, called if not NULL
++ * @alignf_data: arbitrary data to pass to the @alignf function
++ */
++int allocate_resource(struct resource *root, struct resource *new,
++		      resource_size_t size, resource_size_t min,
++		      resource_size_t max, resource_size_t align,
++		      resource_size_t (*alignf)(void *,
++						const struct resource *,
++						resource_size_t,
++						resource_size_t),
++		      void *alignf_data)
++{
++	int ret;
++
++	write_lock(&resource_lock);
++	ret = __allocate_resource(root, new, size, min, max, align,
++				   alignf, alignf_data);
++	write_unlock(&resource_lock);
++
++	return ret;
++}
++
+ EXPORT_SYMBOL(allocate_resource);
+ 
+ /**
+-- 
+1.8.4.5
+
