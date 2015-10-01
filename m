@@ -1,62 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49590 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754613AbbIUTmR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 21 Sep 2015 15:42:17 -0400
-Date: Mon, 21 Sep 2015 22:42:13 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	linux-pci@vger.kernel.org,
-	virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH v7] pci: quirk to skip msi disable on shutdown
-Message-ID: <20150921223622-mutt-send-email-mst@redhat.com>
-References: <1441553385-3810-1-git-send-email-mst@redhat.com>
- <20150921182147.GC27964@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150921182147.GC27964@google.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:26979 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836AbbJAGK4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 02:10:56 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 12/53] PCI: Cleanup res_to_dev_res() printout
+Date: Wed, 30 Sep 2015 22:52:46 -0700
+Message-Id: <1443678807-786-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 21, 2015 at 01:21:47PM -0500, Bjorn Helgaas wrote:
-> On Sun, Sep 06, 2015 at 06:32:35PM +0300, Michael S. Tsirkin wrote:
-> > On some hypervisors, virtio devices tend to generate spurious interrupts
-> > when switching between MSI and non-MSI mode.  Normally, either MSI or
-> > non-MSI is used and all is well, but during shutdown, linux disables MSI
-> > which then causes an "irq %d: nobody cared" message, with irq being
-> > subsequently disabled.
-> 
-> My understanding is:
-> 
->   Linux disables MSI/MSI-X during device shutdown.  If the device
->   signals an interrupt after that, it may use INTx.
-> 
-> This INTx interrupt is not necessarily spurious.  Using INTx to signal an
-> interrupt that occurs when MSI is disabled seems like reasonable behavior
-> for any PCI device.
-> And it doesn't seem related to switching between MSI and non-MSI mode.
-> Yes, the INTx happens *after* disabling MSI, but it is not at all
-> *because* we disabled MSI.  So I wouldn't say "they generate spurious
-> interrupts when switching between MSI and non-MSI."
-> 
-> Why doesn't virtio-pci just register an INTx handler in addition to an MSI
-> handler?
-> 
-> Bjorn
+Now get_res_add_size() and get_res_add_align() all have same printout
+from res_to_dev_res(), and it is confusing.
 
-The handler causes an expensive exit to the hypervisor,
-and the INTx lines are shared with other devices.
+Move out debug messages printout from res_to_dev_res(),
+so later we will reuse res_to_dev_res() in other functions.
 
-Seems silly to slow them down just so we can do something
-that triggers the device bug.  The bus master is disabled by that time,
-if linux can just desist from touching MSI enable device won't
-send either INTx (because MSI is on) or MSI
-(because bus master is on) and all will be well.
+-v2: does not print out when add_size or min_align is 0
+-v3: change to %#llx according to Bjorn.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 34 ++++++++++++++++++++--------------
+ 1 file changed, 20 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 6b6a4ed..2256ce6 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -104,19 +104,9 @@ static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
+ {
+ 	struct pci_dev_resource *dev_res;
+ 
+-	list_for_each_entry(dev_res, head, list) {
+-		if (dev_res->res == res) {
+-			int idx = res - &dev_res->dev->resource[0];
+-
+-			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
+-				 idx, dev_res->res,
+-				 (unsigned long long)dev_res->add_size,
+-				 (unsigned long long)dev_res->min_align);
+-
++	list_for_each_entry(dev_res, head, list)
++		if (dev_res->res == res)
+ 			return dev_res;
+-		}
+-	}
+ 
+ 	return NULL;
+ }
+@@ -127,7 +117,15 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 	struct pci_dev_resource *dev_res;
+ 
+ 	dev_res = res_to_dev_res(head, res);
+-	return dev_res ? dev_res->add_size : 0;
++	if (!dev_res || !dev_res->add_size)
++		return 0;
++
++	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
++		   "BAR %d: %pR get_res_add_size add_size   %#llx\n",
++		   (int)(res - &dev_res->dev->resource[0]),
++		   res, (unsigned long long)dev_res->add_size);
++
++	return dev_res->add_size;
+ }
+ 
+ static resource_size_t get_res_add_align(struct list_head *head,
+@@ -136,7 +134,15 @@ static resource_size_t get_res_add_align(struct list_head *head,
+ 	struct pci_dev_resource *dev_res;
+ 
+ 	dev_res = res_to_dev_res(head, res);
+-	return dev_res ? dev_res->min_align : 0;
++	if (!dev_res || !dev_res->min_align)
++		return 0;
++
++	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
++		   "BAR %d: %pR get_res_add_align min_align %#llx\n",
++		   (int)(res - &dev_res->dev->resource[0]),
++		   res, (unsigned long long)dev_res->min_align);
++
++	return dev_res->min_align;
+ }
+ 
+ 
 -- 
-MST
+1.8.4.5
+
