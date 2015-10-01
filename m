@@ -1,61 +1,177 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 20 Oct 2015 04:46:26 +0800
-From: kbuild test robot <lkp@intel.com>
-To: WingMan Kwok <w-kwok2@ti.com>
-Cc: kbuild-all@01.org, robh+dt@kernel.org, pawel.moll@arm.com,
-	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
-	galak@codeaurora.org, kishon@ti.com, rogerq@ti.com,
-	m-karicheri2@ti.com, bhelgaas@google.com, ssantosh@kernel.org,
-	linux@arm.linux.org.uk, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, WingMan Kwok <w-kwok2@ti.com>
-Subject: [RFC PATCH] phy: keystone: ks2_gbe_serdes_firmwares[] can be static
-Message-ID: <20151019204626.GA42156@athens>
-References: <201510200459.7i1D4X2p%fengguang.wu@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:38798 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752716AbbJAPpe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 11:45:34 -0400
+Subject: Re: pci_generic_config_write32() access size problem
+To: Thierry Reding <thierry.reding@gmail.com>,
+	Rob Herring <robh@kernel.org>
+References: <20150928220854.GA16110@localhost>
+ <CAL_JsqL_O2qqESs69spQCPuDfKG5g8_GZkhiYFo-+U8ttxnJng@mail.gmail.com>
+ <20150928230532.GG21513@n2100.arm.linux.org.uk>
+ <CAL_JsqLVxtcgcTK55cY32=s24Nuv378X2aKZhYKHFEKO9wh3mw@mail.gmail.com>
+ <CADaLNDndQ6qZ2yuGuff6=cTm565in5e75AjkcX8MJmH2BCwyEw@mail.gmail.com>
+ <CAL_JsqJni3nB3OTevG8VSZoJ7ndnxSYHV6Yfpn6TwvghCxhHxg@mail.gmail.com>
+ <CADaLNDmjv+SkRxtGDToUTxo4DKFF+yd2LRmte=k4-HRsGOHYVg@mail.gmail.com>
+ <CAL_JsqLrkbXQu2uf9RzqRRu17Rp+sVuCoPb-RSk7aVsuVPpibw@mail.gmail.com>
+ <20151001074659.GB3070@ulmo>
+CC: Duc Dang <dhdang@apm.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+Message-ID: <560D5504.8040608@broadcom.com>
+Date: Thu, 1 Oct 2015 08:45:08 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445281040-14742-2-git-send-email-w-kwok2@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20151001074659.GB3070@ulmo>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
----
- phy-keystone-serdes.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/phy/phy-keystone-serdes.c b/drivers/phy/phy-keystone-serdes.c
-index ee1cda7..e34201c 100644
---- a/drivers/phy/phy-keystone-serdes.c
-+++ b/drivers/phy/phy-keystone-serdes.c
-@@ -209,9 +209,9 @@
-  * Newest first. Search starts from the 0-th array entry until a firmware
-  * file is found.
-  */
--const char *ks2_gbe_serdes_firmwares[] = {"ks2_gbe_serdes.bin"};
--const char *ks2_xgbe_serdes_firmwares[] = {"ks2_xgbe_serdes.bin"};
--const char *ks2_pcie_serdes_firmwares[] = {"ks2_pcie_serdes.bin"};
-+static const char *ks2_gbe_serdes_firmwares[] = {"ks2_gbe_serdes.bin"};
-+static const char *ks2_xgbe_serdes_firmwares[] = {"ks2_xgbe_serdes.bin"};
-+static const char *ks2_pcie_serdes_firmwares[] = {"ks2_pcie_serdes.bin"};
- 
- /* SERDES Link Rate Kbps */
- enum KSERDES_LINK_RATE {
-@@ -933,7 +933,7 @@ done:
- 	return val;
- }
- 
--int kserdes_get_status(struct kserdes_config *sc)
-+static int kserdes_get_status(struct kserdes_config *sc)
- {
- 	unsigned long timeout;
- 
-@@ -1568,7 +1568,7 @@ static void kserdes_att_boost_phy_patch(struct kserdes_config *sc)
- 		for_each_lane(kserdes_att_boost_phyb_patch, sc);
- }
- 
--int kserdes_sgmii_lanes_enable(struct kserdes_config *sc)
-+static int kserdes_sgmii_lanes_enable(struct kserdes_config *sc)
- {
- 	int ret, i;
- 	u32 val, lanes_enable = 0;
+On 10/1/2015 12:46 AM, Thierry Reding wrote:
+> On Wed, Sep 30, 2015 at 04:53:00PM -0500, Rob Herring wrote:
+>> On Wed, Sep 30, 2015 at 4:47 PM, Duc Dang <dhdang@apm.com> wrote:
+>>> On Wed, Sep 30, 2015 at 2:30 PM, Rob Herring <robh@kernel.org> wrote:
+>>>> On Wed, Sep 30, 2015 at 4:17 PM, Duc Dang <dhdang@apm.com> wrote:
+>>>>> On Tue, Sep 29, 2015 at 9:47 AM, Rob Herring <robh@kernel.org> wrote:
+>>>>>> + several affected driver maintainers
+>>>>>>
+>>>>>> On Mon, Sep 28, 2015 at 6:05 PM, Russell King - ARM Linux
+>>>>>> <linux@arm.linux.org.uk> wrote:
+>>>>>>> On Mon, Sep 28, 2015 at 05:42:20PM -0500, Rob Herring wrote:
+>>>>>>>> On Mon, Sep 28, 2015 at 5:08 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>>>>>>>> Hi Rob,
+>>>>>>>>>
+>>>>>>>>> Russell pointed out a problem with 1f94a94f67e1 ("PCI: Add generic config
+>>>>>>>>> accessors").  pci_generic_config_write32() does a read/modify/write if the
+>>>>>>>>> size is less than 32 bits, so I think we have problem if this is used with
+>>>>>>>>> 8- or 16-bit registers that contain RW1C bits.  Any thoughts on how we can
+>>>>>>>>> fix this?
+>>>>>>>>
+>>>>>>>> My series didn't change access sizes unless I made a made a mistake
+>>>>>>>> somewhere, so the problem should have existed before.
+>>>>>>>>
+>>>>>>>> Is it known addresses we need to deal with? We could do special case
+>>>>>>>> handling of certain addresses to mask out RW1C bits. This could be in
+>>>>>>>> the generic functions or in wrappers around the generic functions.
+>>>>>>>> There's already some similar examples of special address handling
+>>>>>>>> IIRC.
+>>>>>>>
+>>>>>>> I think this originally came into being because Intel decided that their
+>>>>>>> IOP platforms wouldn't support anything except 32-bit accesses, and
+>>>>>>> cargo cult programming took over.  I complained about it on the Intel IOP
+>>>>>>> platforms, but obviously if the hardware doesn't support anything else
+>>>>>>> then your stuck with it.
+>>>>>>
+>>>>>> What about SA1100 nanoengine?
+>>>>>>
+>>>>>> Others are Tegra, XGene, iproc, and maybe rcar. These are all
+>>>>>> relatively active platforms, so hopefully some testing can be done.
+>>>>>
+>>>>> On X-Gene, so far I don't see anything strange after switching to use
+>>>>> pci_generic_config_write32 with all the cards that I can test.
+>>>>
+>>>> You mean switching to use pci_generic_config_write, right?
+>>> Hi Rob,
+>>>
+>>> I meant even using pci_generic_config_write32 , all the cards that I
+>>> have right now are still running fine.
+>>
+>> No doubt. I would hope your driver was already tested to some level.
+>>
+>> The question is can you switch to pci_generic_config_write? Is there
+>> some h/w bug like hanging the bus or garbage data that prevents 8 and
+>> 16 bit accesses from working?
+> 
+> It seems like at least on Tegra there is a hardware bug that prevents 8
+> and 16 bit accesses from working.
+
+We have the same issue with iProc based PCIe controllers. The access
+needs to be 32-bit aligned.
+
+> I've tried next-20151001 on Jetson TK1
+> (I have root on NFS, and the network card is on PCIe) and I see this:
+> 
+> 	[    1.535877] tegra-pcie 1003000.pcie-controller: probing port 0, using 2 lanes
+> 	[    1.545099] tegra-pcie 1003000.pcie-controller: Slot present pin change, signature: 00000008
+> 	[    1.985057] tegra-pcie 1003000.pcie-controller: link 0 down, retrying
+> 	[    2.420307] tegra-pcie 1003000.pcie-controller: link 0 down, retrying
+> 	[    2.856198] tegra-pcie 1003000.pcie-controller: link 0 down, retrying
+> 	[    2.864783] tegra-pcie 1003000.pcie-controller: link 0 down, ignoring
+> 	[    2.871296] tegra-pcie 1003000.pcie-controller: probing port 1, using 1 lanes
+> 	[    2.880794] tegra-pcie 1003000.pcie-controller: Slot present pin change, signature: 00000000
+> 	[    2.898441] tegra-pcie 1003000.pcie-controller: PCI host bridge to bus 0000:00
+> 	[    2.905718] pci_bus 0000:00: root bus resource [mem 0x13000000-0x1fffffff]
+> 	[    2.912587] pci_bus 0000:00: root bus resource [mem 0x20000000-0x3fffffff pref]
+> 	[    2.919905] pci_bus 0000:00: root bus resource [bus 00-ff]
+> 	[    2.925386] pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
+> 	[    2.931625] pci 0000:00:02.0: [10de:0e13] type 01 class 0x060400
+> 	[    2.937733] pci 0000:00:02.0: PME# supported from D0 D1 D2 D3hot D3cold
+> 	[    2.945062] PCI: bus0: Fast back to back transfers disabled
+> 	[    2.950649] pci 0000:00:02.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+> 	[    2.959096] pci 0000:01:00.0: [10ec:8168] type 00 class 0x020000
+> 	[    2.965148] pci 0000:01:00.0: reg 0x10: [io  0x0000-0x00ff]
+> 	[    2.970762] pci 0000:01:00.0: reg 0x18: [mem 0x00000000-0x00000fff 64bit]
+> 	[    2.977575] pci 0000:01:00.0: reg 0x20: [mem 0x00000000-0x00003fff 64bit pref]
+> 	[    2.984879] pci 0000:01:00.0: supports D1 D2
+> 	[    2.989162] pci 0000:01:00.0: PME# supported from D0 D1 D2 D3hot D3cold
+> 	[    3.015680] PCI: bus1: Fast back to back transfers disabled
+> 	[    3.021261] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+> 	[    3.028012] pci 0000:00:02.0: BAR 8: assigned [mem 0x13000000-0x130fffff]
+> 	[    3.034796] pci 0000:00:02.0: BAR 9: assigned [mem 0x20000000-0x200fffff 64bit pref]
+> 	[    3.042574] pci 0000:00:02.0: BAR 7: assigned [io  0x1000-0x1fff]
+> 	[    3.048715] pci 0000:01:00.0: BAR 4: assigned [mem 0x20000000-0x20003fff 64bit pref]
+> 	[    3.056491] pci 0000:01:00.0: BAR 2: assigned [mem 0x13000000-0x13000fff 64bit]
+> 	[    3.063807] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
+> 	[    3.070021] pci 0000:00:02.0: PCI bridge to [bus 01]
+> 	[    3.074984] pci 0000:00:02.0:   bridge window [io  0x1000-0x1fff]
+> 	[    3.081093] pci 0000:00:02.0:   bridge window [mem 0x13000000-0x130fffff]
+> 	[    3.087890] pci 0000:00:02.0:   bridge window [mem 0x20000000-0x200fffff 64bit pref]
+> 	[    3.095668] pci 0000:00:02.0: nv_msi_ht_cap_quirk didn't locate host bridge
+> 	[    3.102813] pcieport 0000:00:02.0: enabling device (0140 -> 0143)
+> 	[    3.109455] pcieport 0000:00:02.0: Signaling PME through PCIe PME interrupt
+> 	[    3.116428] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
+> 	[    3.122950] pcie_pme 0000:00:02.0:pcie01: service driver pcie_pme loaded
+> 	[    3.130024] r8169 Gigabit Ethernet driver 2.3LK-NAPI loaded
+> 	[    3.135670] r8169 0000:01:00.0: enabling device (0140 -> 0143)
+> 	[    3.158326] r8169 0000:01:00.0 eth0: RTL8168g/8111g at 0xf08f6000, 00:04:4b:1e:07:bb, XID 0c000800 IRQ 390
+> 	[    3.168015] r8169 0000:01:00.0 eth0: jumbo features [frames: 9200 bytes, tx checksumming: ko]
+> 
+> The network card is detected and boot continues normally. When I change
+> the pci_ops to use pci_generic_config_{read,write} the system no longer
+> boots because the network card never shows up. The kernel log has this:
+> 
+> 	[    1.546563] tegra-pcie 1003000.pcie-controller: probing port 0, using 2 lanes
+> 	[    1.556137] tegra-pcie 1003000.pcie-controller: Slot present pin change, signature: 00000008
+> 	[    1.996905] tegra-pcie 1003000.pcie-controller: link 0 down, retrying
+> 	[    2.432731] tegra-pcie 1003000.pcie-controller: link 0 down, retrying
+> 	[    2.868648] tegra-pcie 1003000.pcie-controller: link 0 down, retrying
+> 	[    2.877241] tegra-pcie 1003000.pcie-controller: link 0 down, ignoring
+> 	[    2.883707] tegra-pcie 1003000.pcie-controller: probing port 1, using 1 lanes
+> 	[    2.893239] tegra-pcie 1003000.pcie-controller: Slot present pin change, signature: 00000000
+> 	[    2.908770] tegra-pcie 1003000.pcie-controller: PCI host bridge to bus 0000:00
+> 	[    2.916039] pci_bus 0000:00: root bus resource [mem 0x13000000-0x1fffffff]
+> 	[    2.922906] pci_bus 0000:00: root bus resource [mem 0x20000000-0x3fffffff pref]
+> 	[    2.930225] pci_bus 0000:00: root bus resource [bus 00-ff]
+> 	[    2.935721] pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
+> 	[    2.941935] pci 0000:00:02.0: [10de:0e13] type 00 class 0x060400
+> 	[    2.947958] pci 0000:00:02.0: ignoring class 0x060400 (doesn't match header type 00)
+> 	[    2.956292] PCI: bus0: Fast back to back transfers disabled
+> 
+> So it seems like it's failing to properly read the header type. That's
+> retrieved from byte 0xe as an 8 bit access. That said, even with 32-bit
+> accesses I haven't seen any problems, but that might just be because
+> none of the devices I've tested with have R1WC bits in problematic
+> places.
+
+We have not seen any issue so far. The devices we tested include Intel
+e1000e based gigabit NIC and Broadcom BCM4356 5G WiFi card. But yeah,
+I'm not sure if it ever hits the R1WC bits issue in our test cases.
+
+> 
+> Thierry
+> 
