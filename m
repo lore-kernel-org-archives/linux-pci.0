@@ -1,4 +1,8 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:35425 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752163AbbJAGOr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 02:14:47 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -6,102 +10,266 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: [PATCH v5 13/53] PCI: Separate realloc list checking after allocation
-Date: Wed, 16 Sep 2015 14:57:11 -0700
-Message-Id: <1442440671-5361-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 44/53] PCI, x86: Allocate from high in available window for MMIO
+Date: Wed, 30 Sep 2015 22:53:18 -0700
+Message-Id: <1443678807-786-45-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We check the realloc list, as list must be empty after allocation.
+Current code just use aligned start from avialable window, that could waste
+big alignment from start.
 
-Separate the realloc list checking to another function.
+We can align to the end from avialable window, so will save
+start with big align to others: like second try for pref mmio
+after first try already have non-pref assigned.
 
-Add checking that is missed in acpiphp driver.
+pci tree:
+-[0000:00]-+-00.0
+           +-1c.0-[01-10]--+-00.0-[02-10]--+-01.0-[03]----00.0  PLX Technology, Inc. Device 87b1
+           |               |               +-02.0-[04-09]--+-00.0-[05-09]--+-01.0-[06]----00.0  PLX Technology, Inc. Device 87b1
+           |               |               |               |               +-02.0-[07]----00.0  Broadcom Corporation Device 8650
+           |               |               |               |               +-03.0-[08]--
+           |               |               |               |               \-04.0-[09]----00.0  Altera Corporation Device 0201
+           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
+           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
+           |               |               +-03.0-[0a-0f]--+-00.0-[0b-0f]--+-01.0-[0c]----00.0  PLX Technology, Inc. Device 87b1
+           |               |               |               |               +-02.0-[0d]----00.0  Broadcom Corporation Device 8650
+           |               |               |               |               +-03.0-[0e]--
+           |               |               |               |               \-04.0-[0f]----00.0  Altera Corporation Device 0201
+           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
+           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
+           |               |               \-04.0-[10]--
+           |               +-00.1  PLX Technology, Inc. Device 87d0
+           |               +-00.2  PLX Technology, Inc. Device 87d0
+           |               +-00.3  PLX Technology, Inc. Device 87d0
+           |               \-00.4  PLX Technology, Inc. Device 87d0
+           +-1c.3-[11]----00.0
 
--v2: change to WARN_ON addording to Rafael.
+hotplug device under 0000:02:03.0
+
+before the patch:
+
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 8: assigned [mem 0xb0000000-0xb01fffff]  **************
+pci 0000:0a:00.0: BAR 0: assigned [mem 0xb0200000-0xb023ffff]
+pci 0000:0a:00.1: BAR 0: assigned [mem 0xb0240000-0xb0241fff]
+pci 0000:0a:00.2: BAR 0: assigned [mem 0xb0242000-0xb0243fff]
+pci 0000:0a:00.3: BAR 0: assigned [mem 0xb0244000-0xb0245fff]
+pci 0000:0a:00.4: BAR 0: assigned [mem 0xb0246000-0xb0247fff]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:01.0: BAR 8: assigned [mem 0xb0000000-0xb00fffff]
+pci 0000:0b:02.0: BAR 8: assigned [mem 0xb0100000-0xb01fffff]
+pci 0000:0c:00.0: BAR 0: assigned [mem 0xb0000000-0xb003ffff]
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
+pci 0000:0d:00.0: BAR 0: assigned [mem 0xb0100000-0xb013ffff 64bit]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
+pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+pcieport 0000:02:03.0:   bridge window [mem 0x80200000-0x803fffff 64bit pref]
+PCI: No. 2 try to assign unassigned res
+pcieport 0000:02:03.0: resource 9 [mem 0x80200000-0x803fffff 64bit pref] released
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
+pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+
+
+after the patch:
+
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 8: assigned [mem 0xb2300000-0xb24fffff]   *************
+pci 0000:0a:00.0: BAR 0: assigned [mem 0xb22c0000-0xb22fffff]
+pci 0000:0a:00.1: BAR 0: assigned [mem 0xb22be000-0xb22bffff]
+pci 0000:0a:00.2: BAR 0: assigned [mem 0xb22bc000-0xb22bdfff]
+pci 0000:0a:00.3: BAR 0: assigned [mem 0xb22ba000-0xb22bbfff]
+pci 0000:0a:00.4: BAR 0: assigned [mem 0xb22b8000-0xb22b9fff]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:01.0: BAR 8: assigned [mem 0xb2400000-0xb24fffff]
+pci 0000:0b:02.0: BAR 8: assigned [mem 0xb2300000-0xb23fffff]
+pci 0000:0c:00.0: BAR 0: assigned [mem 0xb24c0000-0xb24fffff]
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
+pci 0000:0d:00.0: BAR 0: assigned [mem 0xb23c0000-0xb23fffff 64bit]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
+pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+pcieport 0000:02:03.0:   bridge window [mem 0x9fc00000-0x9fdfffff 64bit pref]
+PCI: No. 2 try to assign unassigned res
+pcieport 0000:02:03.0: resource 9 [mem 0x9fc00000-0x9fdfffff 64bit pref] released
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: assigned [mem 0xb0000000-0xb1ffffff 64bit pref]   ********
+pci 0000:0f:00.0: BAR 2: assigned [mem 0xb20f0000-0xb20fffff 64bit pref]   ********
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0b:04.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
+pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+
+So we allocate high for 0a:00.0 and etc, and leave low range like 0xb0000000 to
+0b:04.0 and 0f:00.0
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
 ---
- drivers/pci/hotplug/acpiphp_glue.c |  1 +
- drivers/pci/pci.h                  |  1 +
- drivers/pci/setup-bus.c            | 12 +++++++++---
- 3 files changed, 11 insertions(+), 3 deletions(-)
+ arch/x86/pci/i386.c     | 20 ++++++++++++++++++++
+ drivers/pci/setup-bus.c | 11 ++++++++++-
+ include/linux/pci.h     |  3 +++
+ 3 files changed, 33 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index ff53856..ce9fb21 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 		}
- 	}
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
-+	pci_bus_check_realloc(&add_list);
- 
- 	acpiphp_sanitize_bus(bus);
- 	pcie_bus_configure_settings(bus);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 24ba9dc..45a28c4 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -237,6 +237,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
- void __pci_bus_assign_resources(const struct pci_bus *bus,
- 				struct list_head *realloc_head,
- 				struct list_head *fail_head);
-+void pci_bus_check_realloc(struct list_head *realloc_head);
- bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
- 
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 9d7adab..c2482da 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -349,6 +349,12 @@ out:
- 	}
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 3f17726..21f3e3e 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -129,6 +129,24 @@ static void __init pcibios_fw_addr_list_del(void)
+ 	pcibios_fw_addr_done = true;
  }
  
-+void pci_bus_check_realloc(struct list_head *realloc_head)
++resource_size_t
++pcibios_align_end_resource(void *data, const struct resource *res,
++			resource_size_t size, resource_size_t align)
 +{
-+	if (WARN_ON(!list_empty(realloc_head)))
-+		free_list(realloc_head);
++	resource_size_t start = res->start;
++
++	/* Take near end */
++	if (res->end + 1 > size) {
++		resource_size_t new_start;
++
++		new_start = round_down(res->end + 1 - size, align);
++		if (new_start > start)
++			start = new_start;
++	}
++
++	return start;
 +}
 +
- /**
-  * assign_requested_resources_sorted() - satisfy resource requests
-  *
-@@ -1860,7 +1866,7 @@ again:
- 	/* Depth last, allocate resources and update the hardware. */
- 	__pci_bus_assign_resources(bus, add_list, &fail_head);
- 	if (add_list)
--		BUG_ON(!list_empty(add_list));
-+		pci_bus_check_realloc(add_list);
- 	tried_times++;
- 
- 	/* any device complain? */
-@@ -1935,7 +1941,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- again:
- 	__pci_bus_size_bridges(parent, &add_list);
- 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
--	BUG_ON(!list_empty(&add_list));
-+	pci_bus_check_realloc(&add_list);
- 	tried_times++;
- 
- 	if (list_empty(&fail_head))
-@@ -1994,6 +2000,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 							 &add_list);
- 	up_read(&pci_bus_sem);
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
--	BUG_ON(!list_empty(&add_list));
-+	pci_bus_check_realloc(&add_list);
+ /*
+  * We need to avoid collisions with `mirrored' VGA ports
+  * and other strange ISA hardware, so we always want the
+@@ -155,6 +173,8 @@ pcibios_align_resource(void *data, const struct resource *res,
+ 		if (start & 0x300)
+ 			start = (start + 0x3ff) & ~0x3ff;
+ 	} else if (res->flags & IORESOURCE_MEM) {
++		start = pcibios_align_end_resource(data, res, size, align);
++
+ 		/* The low 1MB range is reserved for ISA cards */
+ 		if (start < BIOS_END)
+ 			start = BIOS_END;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 95c7def..40a76d6 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1281,6 +1281,15 @@ static void sort_align_test(struct list_head *head)
+ 	}
  }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
+ 
++resource_size_t __weak pcibios_align_end_resource(void *data,
++					  const struct resource *res,
++					  resource_size_t size,
++					  resource_size_t align)
++{
++	/* default is not aligned to end */
++	return res->start;
++}
++
+ static bool is_align_size_good(struct list_head *head,
+ 			resource_size_t min_align, resource_size_t size,
+ 			resource_size_t start)
+@@ -1298,7 +1307,7 @@ static bool is_align_size_good(struct list_head *head,
+ 	list_for_each_entry(p, head, list)
+ 		if (allocate_resource(&root, &p->res, p->size,
+ 				0, (resource_size_t)-1ULL,
+-				p->align, NULL, NULL))
++				p->align, pcibios_align_end_resource, NULL))
+ 			return false;
+ 
+ 	return true;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e90eb22..acb9c56 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -772,6 +772,9 @@ char *pcibios_setup(char *str);
+ resource_size_t pcibios_align_resource(void *, const struct resource *,
+ 				resource_size_t,
+ 				resource_size_t);
++resource_size_t pcibios_align_end_resource(void *, const struct resource *,
++				resource_size_t,
++				resource_size_t);
+ void pcibios_update_irq(struct pci_dev *, int irq);
+ 
+ /* Weak but can be overriden by arch */
 -- 
 1.8.4.5
 
