@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26979 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:21950 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836AbbJAGK4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 02:10:56 -0400
+	with ESMTP id S1756293AbbJAF7v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:59:51 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -11,87 +11,134 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 12/53] PCI: Cleanup res_to_dev_res() printout
-Date: Wed, 30 Sep 2015 22:52:46 -0700
-Message-Id: <1443678807-786-13-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v6 50/53] PCI: Restore pref MMIO allocation logic for host bridge without mmio64
+Date: Wed, 30 Sep 2015 22:53:24 -0700
+Message-Id: <1443678807-786-51-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now get_res_add_size() and get_res_add_align() all have same printout
-from res_to_dev_res(), and it is confusing.
+>From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
+resources), we change the logic for pref mmio allocation:
+When bridge pref support mmio64, we will only put children pref
+that support mmio64 into it, and will put children pref mmio32
+into bridge's non-pref mmio32.
 
-Move out debug messages printout from res_to_dev_res(),
-so later we will reuse res_to_dev_res() in other functions.
+That could leave bridge pref bar not used when that pref bar is mmio64,
+and children res only has mmio32.
+Also could have allocation failure when non-pref mmio32 is not big
+enough space for those children pref mmio32.
 
--v2: does not print out when add_size or min_align is 0
--v3: change to %#llx according to Bjorn.
+That is not rational when the host bridge does not 64bit mmio above 4g
+at all.
+
+The patch restore to old logic:
+when host bridge does not have has_mem64, put children pref mmio64 and
+pref mmio32 all under bridges pref bars.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 34 ++++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 14 deletions(-)
+ drivers/pci/bus.c       |  4 +++-
+ drivers/pci/setup-bus.c | 13 +++++++++----
+ drivers/pci/setup-res.c |  9 ++++++---
+ 3 files changed, 18 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 6fbd3f2..b043bdf 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -202,8 +202,10 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ {
+ #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+ 	int rc;
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
+ 
+-	if (res->flags & IORESOURCE_MEM_64) {
++	if (res->flags & mmio64) {
+ 		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
+ 					       type_mask, alignf, alignf_data,
+ 					       &pci_high);
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 6b6a4ed..2256ce6 100644
+index d95b46a..e6c649a 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -104,19 +104,9 @@ static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
- {
- 	struct pci_dev_resource *dev_res;
+@@ -1856,7 +1856,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
+ 		mask = IORESOURCE_MEM;
+ 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+-		if (b_res[2].flags & IORESOURCE_MEM_64) {
++		if ((b_res[2].flags & IORESOURCE_MEM_64) &&
++		    pci_find_host_bridge(bus)->has_mem64) {
+ 			prefmask |= IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 				  prefmask, prefmask,
+@@ -2012,17 +2013,21 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 	 *	  io port.
+ 	 *     2. if there is non pref mmio assign fail, release bridge
+ 	 *	  nonpref mmio.
+-	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
++	 *     3. if there is pref mmio assign fail, and host bridge does
++	 *	  have 64bit mmio, release bridge pref mmio.
++	 *     4. if there is 64bit pref mmio assign fail, and bridge pref
+ 	 *	  is 64bit, release bridge pref mmio.
+-	 *     4. if there is pref mmio assign fail, and bridge pref is
++	 *     5. if there is pref mmio assign fail, and bridge pref is
+ 	 *	  32bit mmio, release bridge pref mmio
+-	 *     5. if there is pref mmio assign fail, and bridge pref is not
++	 *     6. if there is pref mmio assign fail, and bridge pref is not
+ 	 *	  assigned, release bridge nonpref mmio.
+ 	 */
+ 	if (type & IORESOURCE_IO)
+ 		idx = 0;
+ 	else if (!(type & IORESOURCE_PREFETCH))
+ 		idx = 1;
++	else if (!pci_find_host_bridge(bus)->has_mem64)
++		idx = 2;
+ 	else if ((type & IORESOURCE_MEM_64) &&
+ 		 (b_res[2].flags & IORESOURCE_MEM_64))
+ 		idx = 2;
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index b19aa5b..26aedde 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -205,6 +205,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	struct resource *res = dev->resource + resno;
+ 	resource_size_t min;
+ 	int ret;
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
  
--	list_for_each_entry(dev_res, head, list) {
--		if (dev_res->res == res) {
--			int idx = res - &dev_res->dev->resource[0];
--
--			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
--				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
--				 idx, dev_res->res,
--				 (unsigned long long)dev_res->add_size,
--				 (unsigned long long)dev_res->min_align);
--
-+	list_for_each_entry(dev_res, head, list)
-+		if (dev_res->res == res)
- 			return dev_res;
--		}
--	}
+ 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
  
- 	return NULL;
- }
-@@ -127,7 +117,15 @@ static resource_size_t get_res_add_size(struct list_head *head,
- 	struct pci_dev_resource *dev_res;
- 
- 	dev_res = res_to_dev_res(head, res);
--	return dev_res ? dev_res->add_size : 0;
-+	if (!dev_res || !dev_res->add_size)
-+		return 0;
-+
-+	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
-+		   "BAR %d: %pR get_res_add_size add_size   %#llx\n",
-+		   (int)(res - &dev_res->dev->resource[0]),
-+		   res, (unsigned long long)dev_res->add_size);
-+
-+	return dev_res->add_size;
- }
- 
- static resource_size_t get_res_add_align(struct list_head *head,
-@@ -136,7 +134,15 @@ static resource_size_t get_res_add_align(struct list_head *head,
- 	struct pci_dev_resource *dev_res;
- 
- 	dev_res = res_to_dev_res(head, res);
--	return dev_res ? dev_res->min_align : 0;
-+	if (!dev_res || !dev_res->min_align)
-+		return 0;
-+
-+	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
-+		   "BAR %d: %pR get_res_add_align min_align %#llx\n",
-+		   (int)(res - &dev_res->dev->resource[0]),
-+		   res, (unsigned long long)dev_res->min_align);
-+
-+	return dev_res->min_align;
- }
- 
+@@ -216,7 +218,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * things differently than they were sized, not everything will fit.
+ 	 */
+ 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
+-				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
++				     IORESOURCE_PREFETCH | mmio64,
+ 				     pcibios_align_resource, dev);
+ 	if (ret == 0)
+ 		return 0;
+@@ -225,7 +227,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * If the prefetchable window is only 32 bits wide, we can put
+ 	 * 64-bit prefetchable resources in it.
+ 	 */
+-	if ((res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
++	if (mmio64 &&
++	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
+ 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
+ 					     IORESOURCE_PREFETCH,
+@@ -240,7 +243,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * non-prefetchable, the first call already tried the only possibility
+ 	 * so we don't need to try again.
+ 	 */
+-	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
++	if (res->flags & (IORESOURCE_PREFETCH | mmio64))
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
+ 					     pcibios_align_resource, dev);
  
 -- 
 1.8.4.5
