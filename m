@@ -1,70 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0088.outbound.protection.outlook.com ([65.55.169.88]:33395
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752109AbbIRRAm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Sep 2015 13:00:42 -0400
-Message-ID: <55FC4330.10302@caviumnetworks.com>
-Date: Fri, 18 Sep 2015 10:00:32 -0700
-From: David Daney <ddaney@caviumnetworks.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	David Daney <ddaney.cavm@gmail.com>,
-	<linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	<devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
-	"David Daney" <david.daney@cavium.com>
-Subject: Re: [PATCH 2/3] PCI: Add quirks for devices found on Cavium ThunderX
- SoCs.
-References: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com> <1442529694-1792-3-git-send-email-ddaney.cavm@gmail.com> <3066583.BWDZlYWxXU@wuerfel>
-In-Reply-To: <3066583.BWDZlYWxXU@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
+Subject: [PATCH v6 05/53] PCI: Don't release fixed resource for realloc
+Date: Wed, 30 Sep 2015 22:52:39 -0700
+Message-Id: <1443678807-786-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/18/2015 12:19 AM, Arnd Bergmann wrote:
-> On Thursday 17 September 2015 15:41:33 David Daney wrote:
->> From: David Daney <david.daney@cavium.com>
->>
->> The on-chip devices all have fixed bars.  So, fix them up.
->>
->> Signed-off-by: David Daney <david.daney@cavium.com>
->>
->
-> You should be able to just mark the BARs as fixed in DT
+We should not release bridge resource if there is fixed resources
+under it, otherwise the children firmware would stop working.
 
-In the case of ACPI, there is no DT.  So we would need a different 
-solution for ACPI.  What would you recommend for ACPI?
+Reported-by: Paul Johnson <pjay@nwtrail.com>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/setup-bus.c |  6 ++++--
+ include/linux/ioport.h  |  2 +-
+ kernel/resource.c       | 28 ++++++++++++++++++++++++++--
+ 3 files changed, 31 insertions(+), 5 deletions(-)
 
-Also, can you point me to the OF device tree specification where it 
-tells how to specify PCI BAR addresses, I would especially be interested 
-in knowing how to specify fixed SRIOV BAR addresses in the device tree.
-
-Thanks,
-David Daney
-
-> and not need
-> this hack.
-
-Yes, it is a bit of a hack.  That is why I put it in its own file, and 
-only try to hack up PCI devices that exactly match the vendor and device 
-ids that need fixing.
-
-IMHO, putting infrastructure into drivers/pci/probe.c, et al. to handle 
-this would be much more intrusive.
-
-For the record:  The PCI Enhanced Allocation (EA) capability (approved 
-by PCI SIG on 23 October 2014) is the proper way to handle this going 
-forward.  However, this is not yet implemented in the SoCs that this 
-patch addresses.  Our plan is to implement the EA capability in the core 
-PCI code, so that we do not need to keep adding devices to this fixup code.
-
-David Daney
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 508cc56..a65439a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1450,14 +1450,16 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 
+ 	r = &b_res[idx];
+ 
+-	if (!r->parent)
++	if (!r->parent || r->flags & IORESOURCE_PCI_FIXED)
+ 		return;
+ 
+ 	/*
+ 	 * if there are children under that, we should release them
+ 	 *  all
+ 	 */
+-	release_child_resources(r);
++	if (!release_child_resources(r))
++		return;
++
+ 	if (!release_resource(r)) {
+ 		type = old_flags = r->flags & type_mask;
+ 		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 388e3ae..27dbb18 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -141,7 +141,7 @@ extern struct resource iomem_resource;
+ extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
+ extern int request_resource(struct resource *root, struct resource *new);
+ extern int release_resource(struct resource *new);
+-void release_child_resources(struct resource *new);
++bool release_child_resources(struct resource *new);
+ extern void reserve_region_with_split(struct resource *root,
+ 			     resource_size_t start, resource_size_t end,
+ 			     const char *name);
+diff --git a/kernel/resource.c b/kernel/resource.c
+index f150dbb..6927298 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -275,11 +275,35 @@ static void __release_child_resources(struct resource *r)
+ 	}
+ }
+ 
+-void release_child_resources(struct resource *r)
++static bool __has_fixed_child_resources(struct resource *r)
+ {
++	struct resource *p;
++
++	p = r->child;
++	while (p) {
++		if (p->flags & IORESOURCE_PCI_FIXED)
++			return true;
++
++		if (__has_fixed_child_resources(p))
++			return true;
++
++		p = p->sibling;
++	}
++
++	return false;
++}
++
++bool release_child_resources(struct resource *r)
++{
++	bool fixed;
++
+ 	write_lock(&resource_lock);
+-	__release_child_resources(r);
++	fixed = __has_fixed_child_resources(r);
++	if (!fixed)
++		__release_child_resources(r);
+ 	write_unlock(&resource_lock);
++
++	return !fixed;
+ }
+ 
+ /**
+-- 
+1.8.4.5
 
