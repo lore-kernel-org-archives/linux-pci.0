@@ -1,61 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55100 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755436AbbIXSVT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 Sep 2015 14:21:19 -0400
-Date: Thu, 24 Sep 2015 13:21:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Kernel development list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: disable MSI on SiS 761
-Message-ID: <20150924182115.GB3648@localhost>
-References: <1442005937-21938-1-git-send-email-linux@rainbow-software.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442005937-21938-1-git-send-email-linux@rainbow-software.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 19/53] PCI: Remove duplicated code for resource sorting
+Date: Wed, 30 Sep 2015 22:52:53 -0700
+Message-Id: <1443678807-786-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ondrej,
+Now sort_resources() and pdev_sort_resources() all have sorting
+code.
 
-On Fri, Sep 11, 2015 at 11:12:17PM +0200, Ondrej Zary wrote:
-> MSI is broken on SiS 761 chipset at least on PC Chips A31G board.
-> No interrupts are delivered once MSI is enabled for a device. This causes
-> hang on X11 start with a nVidia card installed (with nouveau driver).
-> 
-> Disable MSI completely for this chipset.
-> 
-> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+As we are going to call sort_resources() several places later for
+alt_size support, so choose to remove related code in
+pdev_sort_resources().
 
-This is a pretty old chipset, isn't it?  Google finds a reference to
-SiS 761GX from 2005.  I wonder why we're only finding this problem
-now.  Is there a problem report?  I wonder if the problem is really
-elsewhere, and turning off MSI just avoids the real problem.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 22 +++-------------------
+ 1 file changed, 3 insertions(+), 19 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 92677c5..61905bb 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -214,9 +214,8 @@ static void pdev_sort_resources(struct pci_dev *dev,
+ 
+ 	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 		struct resource *r;
+-		struct pci_dev_resource *dev_res, *tmp;
++		struct pci_dev_resource *tmp;
+ 		resource_size_t r_align;
+-		struct list_head *n;
+ 
+ 		r = &dev->resource[i];
+ 
+@@ -239,22 +238,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
+ 		tmp->res = r;
+ 		tmp->dev = dev;
+ 
+-		/* fallback is smallest one or list is empty*/
+-		n = head;
+-		list_for_each_entry(dev_res, head, list) {
+-			resource_size_t align;
+-
+-			align = __pci_resource_alignment(dev_res->dev,
+-							 dev_res->res,
+-							 realloc_head);
+-
+-			if (r_align > align) {
+-				n = &dev_res->list;
+-				break;
+-			}
+-		}
+-		/* Insert it just before n*/
+-		list_add_tail(&tmp->list, n);
++		list_add_tail(&tmp->list, head);
+ 	}
+ }
+ 
+@@ -563,9 +547,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	free_list(&save_head);
+ 
++requested_and_reassign:
+ 	sort_resources(head);
+ 
+-requested_and_reassign:
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
+ 
+-- 
+1.8.4.5
 
-> ---
->  drivers/pci/quirks.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index e9fd0e9..6caffc3 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2204,6 +2204,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3336, quirk_disab
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3351, quirk_disable_all_msi);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3364, quirk_disable_all_msi);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_8380_0, quirk_disable_all_msi);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SI, 0x0761, quirk_disable_all_msi);
->  
->  /* Disable MSI on chipsets that are known to not support it */
->  static void quirk_disable_msi(struct pci_dev *dev)
-> -- 
-> Ondrej Zary
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
