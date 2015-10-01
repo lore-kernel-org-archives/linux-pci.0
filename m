@@ -1,37 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from xspv0103.northgrum.com ([134.223.120.78]:14313 "EHLO
-	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932491AbbIUQDI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Sep 2015 12:03:08 -0400
-From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: :Re: [PATCH v1 3/7] PCI: Let kcmdline reserve bus numbers for hotplug
- bridges
-Date: Mon, 21 Sep 2015 16:01:51 +0000
-Message-ID: <c7712b0f947d43db957a199f5085ae33@XCGVAG27.northgrum.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from userp1040.oracle.com ([156.151.31.81]:27509 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752758AbbJAFyM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:54:12 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 09/53] PCI: Treat optional as required in first try for bridge rescan
+Date: Wed, 30 Sep 2015 22:52:43 -0700
+Message-Id: <1443678807-786-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiB5aGx1Lmtlcm5lbEBnbWFpbC5j
-b20gW21haWx0bzp5aGx1Lmtlcm5lbEBnbWFpbC5jb21dIE9uIEJlaGFsZiBPZg0KPiBZaW5naGFp
-IEx1DQo+IFNlbnQ6IFN1bmRheSwgU2VwdGVtYmVyIDIwLCAyMDE1IDAyOjIwDQo+IFRvOiBCam9y
-biBIZWxnYWFzDQo+IENjOiBUYW5nLCBKYXNvbiAoRVMpOyBsaW51eC1wY2lAdmdlci5rZXJuZWwu
-b3JnDQo+IFN1YmplY3Q6IEVYVCA6UmU6IFtQQVRDSCB2MSAzLzddIFBDSTogTGV0IGtjbWRsaW5l
-IHJlc2VydmUgYnVzIG51bWJlcnMgZm9yDQo+IGhvdHBsdWcgYnJpZGdlcw0KPiANCj4gZnJvbSBi
-dXMgW29sZF9tYXgsIG9sZF9tYXgrcGNpX2hvdHBsdWdfYnVzZXMpIGNvdWxkIGJlIHVzZWQgYnkg
-b3RoZXINCj4gYnJpZGdlcywNCj4gYW5kIG90aGVyIGJyaWRnZXMgY291bGQgZXZlbiBnZXQgcHJv
-YmVkIHlldC4NCg0KSSBoYXZlIHRlc3RlZCB0aGUgY2FzZSB3aGVyZSBhIHN1YnNlcXVlbnQgYnJp
-ZGdlIGhhcyBub3QgYmVlbiBwcm9iZWQgeWV0IGFuZCB0aGUgQklPUyBpcyBhc3NpZ25pbmcgaXQg
-dGhlIHNhbWUgYnVzIG51bWJlci4gVGhlIGJlaGF2aW9yIEkgb2JzZXJ2ZWQgaXMgdGhhdCBjb25m
-bGljdGluZyBidXMgbnVtYmVycyB3aWxsIGJlIGZpeGVkIGR1cmluZyB0aGUgc2Vjb25kIHBhc3Mg
-b2YgUENJIHByb2JpbmcuIFNlZSBwY2lfc2Nhbl9icmlkZ2UoKSBpbiBkcml2ZXJzL3BjaS9wcm9i
-ZS5jLCBsaW5lcyA4NzUtODgwIG9uIHRhZyB2NC4zLXJjMi4gQWxzbyBvYnNlcnZlIGhvdyBwYXRj
-aCA3IGluIG15IHNlcmllcyB1cGRhdGVzIHRoZSBwcmVjZWRpbmcgY29uZGl0aW9uYWwgKGxpbmUg
-ODc0KSB0byBhbHNvIGNoZWNrIGlmIHRoZSBkZXZpY2UgaXMgYSBob3RwbHVnZ2FibGUgYnJpZGdl
-Lg0KDQo+IEFsc28gaXQgY291bGQgZXZlbiBjcm9zcyB0aGUgYm91bmRhcnkgdG8gb3RoZXIgcGVl
-ciByb290IGJ1cyByYW5nZS4NCg0KSSBhbSBub3Qgc3VyZSB3aGF0IHlvdSBtZWFuIGJ5IHRoaXMu
-IENhbiB5b3UgZWxhYm9yYXRlPw0KDQo=
+For rescan bridge/bus that children are removed before, we should treat
+optional as required just like root bus the boot time in 19aa7ee432ce
+(PCI: make re-allocation try harder by reassigning ranges higher in
+the heirarchy).
+
+The reason: allocate required and expand to optional path do not
+put failed resource to fail list, so will lose required info before
+next try.
+
+So we are using following way:
+1. First and following try before last try:
+   We don't keep realloc list so treat every optional as required.
+   allocate for required+optional and put failed in the fail list.
+   then size info (include must and optonal separatedly) will be kept
+   for next try.
+2. last try:
+   a: try to allocate required+optional to see if all get allocated.
+   b: try to allocate required then expand to optional.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8550408..9961ab2 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1755,25 +1755,34 @@ void __init pci_assign_unassigned_resources(void)
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ {
+ 	struct pci_bus *parent = bridge->subordinate;
+-	LIST_HEAD(add_list); /* list of resources that
++	LIST_HEAD(realloc_head); /* list of resources that
+ 					want additional resources */
++	struct list_head *add_list = NULL;
+ 	int tried_times = 0;
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+ 	int retval;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
++	int pci_try_num = 2;
+ 
+ again:
+-	__pci_bus_size_bridges(parent, &add_list);
+-	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+-	pci_bus_check_realloc(&add_list);
++	/*
++	 * last try will use add_list, otherwise will try good to have as
++	 * must have, so can realloc parent bridge resource
++	 */
++	if (tried_times + 1 == pci_try_num)
++		add_list = &realloc_head;
++	__pci_bus_size_bridges(parent, add_list);
++	__pci_bridge_assign_resources(bridge, add_list, &fail_head);
++	if (add_list)
++		pci_bus_check_realloc(add_list);
+ 	tried_times++;
+ 
+ 	if (list_empty(&fail_head))
+ 		goto enable_all;
+ 
+-	if (tried_times >= 2) {
++	if (tried_times >= pci_try_num) {
+ 		/* still fail, don't need to try more */
+ 		free_list(&fail_head);
+ 		goto enable_all;
+-- 
+1.8.4.5
+
