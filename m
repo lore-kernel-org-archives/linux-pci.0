@@ -1,101 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52355 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751005AbbIOSfA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Sep 2015 14:35:00 -0400
-Date: Tue, 15 Sep 2015 19:35:01 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: David Daney <ddaney.cavm@gmail.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <david.daney@cavium.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-Subject: Re: [PATCH 4/6] PCI: generic: Correct, and avoid overflow, in
- bus_max calculation.
-Message-ID: <20150915183500.GR31157@arm.com>
-References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
- <1442013719-5001-5-git-send-email-ddaney.cavm@gmail.com>
- <20150915174934.GL31157@arm.com>
- <55F85D4E.9020604@caviumnetworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55F85D4E.9020604@caviumnetworks.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:30980 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755889AbbJAGEl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 02:04:41 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 41/53] PCI: Kill macro checking for bus io port sizing
+Date: Wed, 30 Sep 2015 22:53:15 -0700
+Message-Id: <1443678807-786-42-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 15, 2015 at 07:02:54PM +0100, David Daney wrote:
-> On 09/15/2015 10:49 AM, Will Deacon wrote:
-> > On Sat, Sep 12, 2015 at 12:21:57AM +0100, David Daney wrote:
-> >>   	/* Limit the bus-range to fit within reg */
-> >> -	bus_max = pci->cfg.bus_range->start +
-> >> -		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-> >> +	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-> >> +	if (bus_max > 255)
-> >> +		bus_max = 255;
-> >>   	pci->cfg.bus_range->end = min_t(resource_size_t,
-> >>   					pci->cfg.bus_range->end, bus_max);
-> >
-> > Hmm, this is changing the meaning of the bus-range property in the
-> > device-tree, which really needs to match what IEEE Std 1275-1994 requires.
-> 
-> I doesn't change the bus-range.
+We can use new generic version skip_isa_ioresource_align() instead
+of macro, and then kill the marco.
 
-Not directly, but pci->cfg.bus_range is a resource populated from the
-"bus-range" property in the device-tree, so it's changing how the driver
-uses that property.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-> > My understanding was that the bus-range could be used to offset the config
-> > space, which is why it's subtracted from the bus number in
-> > gen_pci_map_cfg_bus_[e]cam.
-> 
-> There is an inconsistency in the current code.  The calculation of the 
-> cfg.win[?] pointers is done such that the beginning of the config space 
-> specified in the "reg" property corresponds to bus 0.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 7d449d8..95c7def 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1122,15 +1122,12 @@ int skip_isa_ioresource_align(struct pci_bus *bus)
+ 	return 0;
+ }
+ 
+-static resource_size_t size_aligned_for_isa(resource_size_t size)
++static resource_size_t size_aligned_for_isa(resource_size_t size,
++					    struct pci_bus *bus)
+ {
+-	/*
+-	 * To be fixed in 2.5: we should have sort of HAVE_ISA
+-	 *  flag in the struct pci_bus.
+-	 */
+-#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+-	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+-#endif
++	if (!skip_isa_ioresource_align(bus))
++		size = (size & 0xff) + ((size & ~0xffUL) << 2);
++
+ 	return size;
+ }
+ 
+@@ -1199,12 +1196,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		}
+ 	}
+ 
+-	size = size_aligned_for_isa(size);
++	size = size_aligned_for_isa(size, bus);
+ 	size += size1;
+ 	if (size || min_size)
+ 		size0 = calculate_size(size, min_size,
+ 					resource_size(b_res), min_align);
+-	sum_add_size = size_aligned_for_isa(sum_add_size);
++	sum_add_size = size_aligned_for_isa(sum_add_size, bus);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+-- 
+1.8.4.5
 
-I don't follow you here. The mapping functions explicitly subtract the
-start of the bus range when calculating the window offset:
-
-  resource_size_t idx = bus->number - pci->cfg.bus_range->start;
-
-so if I have bus-range = <128 255>; then bus 128 lives at the start of
-the configuration space described by the reg property, not bus 0.
-
-Sorry if I'm being thick; I just can't see the inconsistency.
-
-> The calculation that I am changing, was done such that the beginning of 
-> the config space specified in the "reg" property corresponds to the 
-> first bus of the "bus-range"
-> 
-> Which is correct?  I assumed that the config space specified in the 
-> "reg" property corresponds to bus 0.  Based on this assumption, I made 
-> the bus_max calculation match.
-> 
-> Due to hardware peculiarities, our bus-range starts at a non-zero bus 
-> number.  So, something has to be done to make all the code agree on a 
-> single interpretation of the meaning "reg" property.
-
-I think you're the first to exercise this code, so it's definitely worth
-us fixing whatever's going wrong.
-
-> > Also, why is your config space so large that
-> > we end up overflowing bus_max?
-> 
-> It isn't.  The part of the patch that changes the type from u8 to int 
-> was just to add some sanity.  The  code was easily susceptible to 
-> overflow failures, it seemed best to change to int.
-
-Can we drop this part for now if it's not actually needed?
-
-Will
