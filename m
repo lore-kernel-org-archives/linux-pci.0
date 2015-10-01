@@ -1,153 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:46759 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754960AbbIHQt6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Sep 2015 12:49:58 -0400
-Subject: Re: [Bugfix] PCI, x86: Correctly allocate IRQs for PCI devices
- managed by non-PCI drivers
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <55EE8106.6060100@internode.on.net>
- <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
- <20150908162735.GK829@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <55EF119E.5030905@linux.intel.com>
-Date: Wed, 9 Sep 2015 00:49:34 +0800
-MIME-Version: 1.0
-In-Reply-To: <20150908162735.GK829@google.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from userp1040.oracle.com ([156.151.31.81]:27441 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751873AbbJAFyF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:54:05 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v6 02/53] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+Date: Wed, 30 Sep 2015 22:52:36 -0700
+Message-Id: <1443678807-786-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+For device resource PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource, so set
+IORESOUCE_MEM_64 for 64bit resource during of device resource flags
+parsing.
 
-
-On 2015/9/9 0:27, Bjorn Helgaas wrote:
-> Hi Jiang,
-> 
-> I object to subject lines like "Correctly do such and such."  Nobody
-> writes code to do things *incorrectly*, so the word "correctly" takes
-> up space without contributing meaning.  In this case, it's at least
-> debatable whether this is even the "correct" approach; see below.
-> 
-> On Tue, Sep 08, 2015 at 03:26:29PM +0800, Jiang Liu wrote:
->> Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
->> pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
->> for PCI devices on x86 platforms. Instead of allocating PCI legacy
->> IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
->> will be called by pci_device_probe() to allocate PCI legacy IRQs
->> when binding PCI drivers to PCI devices.
->>
->> But some device drivers, such as eata, directly access PCI devices
->> without implementing corresponding PCI drivers, so pcibios_alloc_irq()
->> won't be called for those PCI devices and wrong IRQ number may be
->> used to manage the PCI device.
-> 
-> I'm not sure this is wise.  
-> 
-> We normally call pcibios_alloc_irq() from pci_device_probe(), just
-> before we call the driver's .probe() method.
-> 
-> The eata driver does not use pci_register_driver(), so there is no
-> .probe() method (also no .remove(), .suspend(), etc.)  But eata *does*
-> use pci_enable_device() and other PCI interfaces.  So this patch adds
-> code in the x86 pci_enable_device() path for this case.
-> 
-> AFAICT, there's no real reason why eata doesn't register a PCI driver;
-> it's just a case of legacy code where nobody has been motivated to
-> update it.  I'm not in favor of catering to code like that because
-> then we have random special cases like this that clutter up the core
-> code.
-> 
-> I don't think we should necessarily expect the PCI core to support
-> calls to PCI interfaces when it hasn't had a chance to initialize
-> itself via driver registration.
-> 
->> So detect such a case in pcibios_enable_device() by checking
->> pci_dev->driver is NULL and call pcibios_alloc_irq() to allocate PCI
->> legacy IRQs.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->>  arch/x86/pci/common.c |   10 ++++++++++
->>  1 file changed, 10 insertions(+)
->>
->> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
->> index 09d3afc0a181..60b237783582 100644
->> --- a/arch/x86/pci/common.c
->> +++ b/arch/x86/pci/common.c
->> @@ -685,6 +685,16 @@ void pcibios_free_irq(struct pci_dev *dev)
->>  
->>  int pcibios_enable_device(struct pci_dev *dev, int mask)
->>  {
->> +	/*
->> +	 * By design, pcibios_alloc_irq() will be called by pci_device_probe()
->> +	 * when binding a PCI device to a PCI driver. But some device drivers,
->> +	 * such as eata, directly make use of PCI devices without implementing
->> +	 * PCI device drivers, so pcibios_alloc_irq() won't be called for those
->> +	 * PCI devices.
->> +	 */
->> +	if (!dev->driver)
->> +		pcibios_alloc_irq(dev);
-> 
-> This is a point fix for x86 only, but I think eata can be built for
-> any architecture.  Won't other architectures still have the same
-> problem?
-Hi Bjorn,
-	We have used another draft version to fix this issue by changing
-eata driver as below. But that needs to export pcibios_alloc_irq. And
-I'm not sure whether there are other drivers having the same behavior.
-If we think it's a legacy behavior and only a few drivers may have
-such a behavior, I prefer changing drivers to fix the issue too.
-Thanks!
-Gerry
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
 ---
- drivers/pci/pci-driver.c |    1 +
- drivers/scsi/eata.c      |    2 ++
- 2 files changed, 3 insertions(+)
+ arch/sparc/kernel/of_device_32.c | 5 +++--
+ arch/sparc/kernel/of_device_64.c | 5 +++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 52a880ca1768..17d2a0b1de18 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -392,6 +392,7 @@ int __weak pcibios_alloc_irq(struct pci_dev *dev)
- {
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(pcibios_alloc_irq);
+diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
+index 185aa96..3e9f273 100644
+--- a/arch/sparc/kernel/of_device_32.c
++++ b/arch/sparc/kernel/of_device_32.c
+@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
+diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
+index 7bbdc26..defee61 100644
+--- a/arch/sparc/kernel/of_device_64.c
++++ b/arch/sparc/kernel/of_device_64.c
+@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
+-- 
+1.8.4.5
 
- void __weak pcibios_free_irq(struct pci_dev *dev)
- {
-diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index 227dd2c2ec2f..7e6eaf867987 100644
---- a/drivers/scsi/eata.c
-+++ b/drivers/scsi/eata.c
-@@ -1061,6 +1061,7 @@ static void enable_pci_ports(void)
- 		       driver_name, dev->bus->number, dev->devfn);
- #endif
-
-+		pcibios_alloc_irq(dev);
- 		if (pci_enable_device(dev))
- 			printk
- 			    ("%s: warning, pci_enable_device failed, bus %d devfn 0x%x.\n",
-@@ -1520,6 +1521,7 @@ static void add_pci_ports(void)
- 		if (!(dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev)))
- 			break;
-
-+		pcibios_alloc_irq(dev);
- 		if (pci_enable_device(dev)) {
- #if defined(DEBUG_PCI_DETECT)
- 			printk
-
-
-> 
->>  	return pci_enable_resources(dev, mask);
->>  }
->>  
->> -- 
->> 1.7.10.4
->>
