@@ -1,257 +1,234 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:20638 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753037AbbINIbR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Sep 2015 04:31:17 -0400
-Subject: Re: [Bugfix 2/3] eata: Implement PCI driver to manage eata PCI
- devices
-To: Hannes Reinecke <hare@suse.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	Dario Ballabio <ballabio_dario@emc.com>,
-	"James E.J. Bottomley" <JBottomley@odin.com>
-References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
- <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
- <1442200140-30808-3-git-send-email-jiang.liu@linux.intel.com>
- <55F6829F.8090707@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, x86@kernel.org
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <55F685D1.4050102@linux.intel.com>
-Date: Mon, 14 Sep 2015 16:31:13 +0800
-MIME-Version: 1.0
-In-Reply-To: <55F6829F.8090707@suse.de>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 16/53] PCI: Optimize bus align/size calculation for optional during sizing
+Date: Wed, 30 Sep 2015 22:52:50 -0700
+Message-Id: <1443678807-786-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/9/14 16:17, Hannes Reinecke wrote:
-> On 09/14/2015 05:08 AM, Jiang Liu wrote:
->> Previously the eata driver just grabs and accesses eata PCI devices
->> without implementing a PCI device driver, that causes troubles with
->> latest IRQ related
->>
->> Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
->> pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
->> for PCI devices on x86 platforms. Instead of allocating PCI legacy
->> IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
->> will be called by pci_device_probe() to allocate PCI legacy IRQs
->> when binding PCI drivers to PCI devices.
->>
->> But the eata driver directly accesses PCI devices without implementing
->> corresponding PCI drivers, so pcibios_alloc_irq() won't be called for
->> those PCI devices and wrong IRQ number may be used to manage the PCI
->> device.
->>
->> This patch implements a PCI device driver to manage eata PCI devices,
->> so eata driver could properly cooperate with the PCI core. It also
->> provides headroom for PCI hotplug with eata driver.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->>  drivers/scsi/eata.c |  170 ++++++++++++++++++++++-----------------------------
->>  1 file changed, 74 insertions(+), 96 deletions(-)
->>
->> diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
->> index b45d3b532b70..b92e6856f909 100644
->> --- a/drivers/scsi/eata.c
->> +++ b/drivers/scsi/eata.c
->> @@ -850,10 +850,6 @@ static unsigned long io_port[] = {
->>  	/* First ISA */
->>  	0x1f0,
->>  
->> -	/* Space for MAX_PCI ports possibly reported by PCI_BIOS */
->> -	SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
->> -	SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
->> -
->>  	/* MAX_EISA ports */
->>  	0x1c88, 0x2c88, 0x3c88, 0x4c88, 0x5c88, 0x6c88, 0x7c88, 0x8c88,
->>  	0x9c88, 0xac88, 0xbc88, 0xcc88, 0xdc88, 0xec88, 0xfc88,
->> @@ -1024,60 +1020,13 @@ static int read_pio(unsigned long iobase, ushort * start, ushort * end)
->>  	return 0;
->>  }
->>  
->> -static struct pci_dev *get_pci_dev(unsigned long port_base)
->> -{
->> -#if defined(CONFIG_PCI)
->> -	unsigned int addr;
->> -	struct pci_dev *dev = NULL;
->> -
->> -	while ((dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev))) {
->> -		addr = pci_resource_start(dev, 0);
->> -
->> -#if defined(DEBUG_PCI_DETECT)
->> -		printk("%s: get_pci_dev, bus %d, devfn 0x%x, addr 0x%x.\n",
->> -		       driver_name, dev->bus->number, dev->devfn, addr);
->> -#endif
->> -
->> -		/* we are in so much trouble for a pci hotplug system with this driver
->> -		 * anyway, so doing this at least lets people unload the driver and not
->> -		 * cause memory problems, but in general this is a bad thing to do (this
->> -		 * driver needs to be converted to the proper PCI api someday... */
->> -		pci_dev_put(dev);
->> -		if (addr + PCI_BASE_ADDRESS_0 == port_base)
->> -			return dev;
->> -	}
->> -#endif				/* end CONFIG_PCI */
->> -	return NULL;
->> -}
->> -
->> -static void enable_pci_ports(void)
->> -{
->> -#if defined(CONFIG_PCI)
->> -	struct pci_dev *dev = NULL;
->> -
->> -	while ((dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev))) {
->> -#if defined(DEBUG_PCI_DETECT)
->> -		printk("%s: enable_pci_ports, bus %d, devfn 0x%x.\n",
->> -		       driver_name, dev->bus->number, dev->devfn);
->> -#endif
->> -
->> -		if (pci_enable_device(dev))
->> -			printk
->> -			    ("%s: warning, pci_enable_device failed, bus %d devfn 0x%x.\n",
->> -			     driver_name, dev->bus->number, dev->devfn);
->> -	}
->> -
->> -#endif				/* end CONFIG_PCI */
->> -}
->> -
->>  static int port_detect(unsigned long port_base, unsigned int j,
->> -		struct scsi_host_template *tpnt)
->> +		       struct scsi_host_template *tpnt, struct pci_dev *pdev)
->>  {
->>  	unsigned char irq, dma_channel, subversion, i, is_pci = 0;
->>  	unsigned char protocol_rev;
->>  	struct eata_info info;
->>  	char *bus_type, dma_name[16];
->> -	struct pci_dev *pdev;
->>  	/* Allowed DMA channels for ISA (0 indicates reserved) */
->>  	unsigned char dma_channel_table[4] = { 5, 6, 7, 0 };
->>  	struct Scsi_Host *shost;
->> @@ -1199,15 +1148,8 @@ static int port_detect(unsigned long port_base, unsigned int j,
->>  		    ("%s: warning, LEVEL triggering is suggested for IRQ %u.\n",
->>  		     name, irq);
->>  
->> -	if (is_pci) {
->> -		pdev = get_pci_dev(port_base);
->> -		if (!pdev)
->> -			printk
->> -			    ("%s: warning, failed to get pci_dev structure.\n",
->> -			     name);
->> -	} else
->> -		pdev = NULL;
->> -
->> +	if (is_pci && !pdev)
->> +		printk("%s: warning, failed to get pci_dev structure.\n", name);
->>  	if (pdev && (irq != pdev->irq)) {
->>  		printk("%s: IRQ %u mapped to IO-APIC IRQ %u.\n", name, irq,
->>  		       pdev->irq);
->> @@ -1510,14 +1452,17 @@ static int option_setup(char *str)
->>  }
->>  
->>  static unsigned int port_probe(unsigned long port_base,
->> -			       struct scsi_host_template *tpnt)
->> +			       struct scsi_host_template *tpnt,
->> +			       struct pci_dev *pdev)
->>  {
->>  	int id;
->>  
->>  	id = ida_simple_get(&eata_ida, 0, MAX_BOARDS, GFP_KERNEL);
->>  	if (id >= 0) {
->>  		set_bit(id, eata_board_bitmap);
->> -		if (port_detect(port_base, id, tpnt))
->> +		if (pdev)
->> +			dev_set_drvdata(&pdev->dev, (void *)(long)id);
->> +		if (port_detect(port_base, id, tpnt, pdev))
->>  			return id;
->>  		clear_bit(id, eata_board_bitmap);
->>  		ida_simple_remove(&eata_ida, id);
->> @@ -1526,42 +1471,81 @@ static unsigned int port_probe(unsigned long port_base,
->>  	return -1;
->>  }
->>  
->> -static void add_pci_ports(void)
->> -{
->> -#if defined(CONFIG_PCI)
->> -	unsigned int addr, k;
->> -	struct pci_dev *dev = NULL;
->> -
->> -	for (k = 0; k < MAX_PCI; k++) {
->> +#ifdef CONFIG_PCI
->> +static int eata2x_pci_device_count;
->>  
->> -		if (!(dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev)))
->> -			break;
->> +static int eata2x_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
->> +{
->> +	int i, ret = -ENXIO;
->> +	resource_size_t addr;
->> +	unsigned long port_base;
->> +	struct scsi_host_template *tpnt = (void *)id->driver_data;
->>  
->> -		if (pci_enable_device(dev)) {
->> +	if (pci_enable_device(dev)) {
->>  #if defined(DEBUG_PCI_DETECT)
->> -			printk
->> -			    ("%s: detect, bus %d, devfn 0x%x, pci_enable_device failed.\n",
->> -			     driver_name, dev->bus->number, dev->devfn);
->> +		pr_warn("%s: detect, bus %d, devfn 0x%x, pci_enable_device failed.\n",
->> +			driver_name, dev->bus->number, dev->devfn);
->>  #endif
->> +		goto out_error;
->> +	}
->>  
->> -			continue;
->> -		}
->> -
->> -		addr = pci_resource_start(dev, 0);
->> -
->> +	addr = pci_resource_start(dev, 0);
->> +	port_base = addr + PCI_BASE_ADDRESS_0;
->>  #if defined(DEBUG_PCI_DETECT)
->> -		printk("%s: detect, seq. %d, bus %d, devfn 0x%x, addr 0x%x.\n",
->> -		       driver_name, k, dev->bus->number, dev->devfn, addr);
->> +	printk("%s: detect, bus %d, devfn 0x%x, addr 0x%x.\n",
->> +	       driver_name, dev->bus->number, dev->devfn, (unsigned int)addr);
->>  #endif
->>  
->> -		/* Order addresses according to rev_scan value */
->> -		io_port[MAX_INT_PARAM + (rev_scan ? (MAX_PCI - k) : (1 + k))] =
->> -		    addr + PCI_BASE_ADDRESS_0;
->> +	if (setup_done) {
->> +		/*
->> +		 * Handle kernel or module parameter
->> +		 * . probe board if its port is specified by user
->> +		 * . otherwise ignore the board
->> +		 */
->> +		for (i = 1; i < MAX_INT_PARAM; i++)
->> +			if (io_port[i] == port_base) {
->> +				io_port[i] = SKIP;
->> +				break;
->> +			}
->> +		if (i >= MAX_INT_PARAM)
->> +			goto out_disable_device;
->> +	}
-> Hmm. I must admit I don't like the 'setup_done' thingie. As the driver
-> is now converted to a 'real' PCI device we should be using driver-core
-> mechanisms to avoid driver binding, not the prefabricated 'setup_done'
-> variable.
-> Can't we just do away with it completely?
-Hi Hannes,
-	Thanks for review. Originally user may specify ports to probe
-by kernel or module parameter, no matter it's a ISA, EISA or PCI device.
-My concern here is that, if we don't do the setup_done dance here,
-it may cause trouble if user load new eata driver with old parameter
-configurations, so PCI eata device will be probed twice. So point here
-is that we still honor user kernel or module parameter configurations.
-Thanks!
-Gerry
+Current add_align always use max align, that make required+optional
+to get allocated more than needed in some cases.
+
+Now we have new calculate_mem_align(), so we could use it for
+add_align calculation.
+
+Need to create separated list for required+optional align/size info.
+
+After that we can get smaller add_align/size, and we have more chance
+to make required+optional to get allocated sucessfully.
+
+The result for bridge that have Intel 4x10g card installed:
+
+ pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
+	to [bus 2a-31] calculate_mem for required
+ align/size:
+   00800000/00800000, 00800000/00800000, 00800000/00800000,
+   00800000/00800000, 00008000/00008000, 00008000/00008000,
+   00008000/00008000, 00008000/00008000
+ original min_align/min_size: 00400000/02400000
+ new min_align/min_size: 00400000/02400000
+
+ pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
+	to [bus 2a-31] calculate_mem for required+optional
+ align/size:
+   00800000/00800000, 00800000/00800000, 00800000/00800000,
+   00800000/00800000, 00010000/00200000, 00010000/00200000,
+   00010000/00200000, 00010000/00200000, 00008000/00008000,
+   00008000/00008000, 00008000/00008000, 00008000/00008000,
+   00004000/00080000, 00004000/00080000, 00004000/00080000,
+   00004000/00080000
+ original code min_align/min_size: 00800000/03000000
+ new min_align/min_size: 00100000/02b00000
+
+so required align/size: 0x400000/0x2400000, and
+new required+optional align/size: 0x100000/0x2b00000, and it is much better
+than original required+optional align/size: 0x800000/0x3000000
+and even have smaller min_align than required.
+
+-v2: remove not used size1 in calculate_memsize
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Reported-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
 
-> 
-> Cheers,
-> 
-> Hannes
-> 
+ drivers/pci/setup-bus.c |   82 +++++++++++++++++++++++++++++-------------------
+ 1 file changed, 51 insertions(+), 31 deletions(-)
+---
+ drivers/pci/setup-bus.c | 82 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 51 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c03a5d8..3797b71 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -906,7 +906,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 
+ static resource_size_t calculate_memsize(resource_size_t size,
+ 		resource_size_t min_size,
+-		resource_size_t size1,
+ 		resource_size_t old_size,
+ 		resource_size_t align)
+ {
+@@ -916,7 +915,7 @@ static resource_size_t calculate_memsize(resource_size_t size,
+ 		old_size = 0;
+ 	if (size < old_size)
+ 		size = old_size;
+-	size = ALIGN(size + size1, align);
++	size = ALIGN(size, align);
+ 	return size;
+ }
+ 
+@@ -1179,44 +1178,45 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+-	resource_size_t min_align, align, size, size0, size1;
+-	resource_size_t max_align = 0;
++	resource_size_t min_align = 0, min_add_align = 0;
++	resource_size_t max_align = 0, max_add_align = 0;
++	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
+ 	struct resource *b_res = find_free_bus_resource(bus,
+ 					mask | IORESOURCE_PREFETCH, type);
+-	resource_size_t children_add_size = 0;
+-	resource_size_t children_add_align = 0;
+-	resource_size_t add_align = 0;
+ 	LIST_HEAD(align_test_list);
++	LIST_HEAD(align_test_add_list);
+ 
+ 	if (!b_res)
+ 		return -ENOSPC;
+ 
+-	size = 0;
+-
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+-			resource_size_t r_size;
++			resource_size_t r_size, align;
+ 
+ 			if (r->parent || ((r->flags & mask) != type &&
+ 					  (r->flags & mask) != type2 &&
+ 					  (r->flags & mask) != type3))
+ 				continue;
++
+ 			r_size = resource_size(r);
++			align = pci_resource_alignment(dev, r);
+ #ifdef CONFIG_PCI_IOV
+ 			/* put SRIOV requested res to the optional list */
+ 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+ 					i <= PCI_IOV_RESOURCE_END) {
+-				add_align = max(pci_resource_alignment(dev, r), add_align);
++				add_to_align_test_list(&align_test_add_list,
++							align, r_size);
+ 				r->end = r->start - 1;
+ 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
+-				children_add_size += r_size;
++				sum_add_size += r_size;
++				if (align > max_add_align)
++					max_add_align = align;
+ 				continue;
+ 			}
+ #endif
+-			align = pci_resource_alignment(dev, r);
+ 			if (align > (1ULL<<37)) { /*128 Gb*/
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
+ 					i, r, (unsigned long long) align);
+@@ -1224,33 +1224,52 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				continue;
+ 			}
+ 
+-			if (r_size > 1)
++			if (r_size > 1) {
+ 				add_to_align_test_list(&align_test_list,
+ 							align, r_size);
+-			size += r_size;
+-			if (align > max_align)
+-				max_align = align;
++				size += r_size;
++				if (align > max_align)
++					max_align = align;
++			}
+ 
+ 			if (realloc_head) {
+-				children_add_size += get_res_add_size(realloc_head, r);
+-				children_add_align = get_res_add_align(realloc_head, r);
+-				add_align = max(add_align, children_add_align);
++				resource_size_t add_r_size, add_align;
++
++				add_r_size = get_res_add_size(realloc_head, r);
++				add_align = get_res_add_align(realloc_head, r);
++				/* no add on ? */
++				if (add_align < align)
++					add_align = align;
++				add_to_align_test_list(&align_test_add_list,
++							add_align,
++							r_size + add_r_size);
++				sum_add_size += r_size + add_r_size;
++				if (add_align > max_add_align)
++					max_add_align = add_align;
+ 			}
+ 		}
+ 	}
+ 
+ 	max_align = max(max_align, window_alignment(bus, b_res->flags));
+-	min_align = calculate_mem_align(&align_test_list, max_align, size,
+-					window_alignment(bus, b_res->flags));
+-	size0 = calculate_memsize(size, min_size, 0,
++	if (size || min_size) {
++		min_align = calculate_mem_align(&align_test_list, max_align,
++				 size, window_alignment(bus, b_res->flags));
++		size0 = calculate_memsize(size, min_size,
+ 				  resource_size(b_res), min_align);
++	}
+ 	free_align_test_list(&align_test_list);
+-	add_align = max(min_align, add_align);
+-	if (children_add_size > add_size)
+-		add_size = children_add_size;
+-	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+-		calculate_memsize(size, min_size, add_size,
+-				resource_size(b_res), add_align);
++
++	if ((sum_add_size - size) < add_size)
++		sum_add_size = size + add_size;
++	if (sum_add_size > size && realloc_head) {
++		min_add_align = calculate_mem_align(&align_test_add_list,
++					max_add_align, sum_add_size,
++					window_alignment(bus, b_res->flags));
++		size1 = calculate_memsize(sum_add_size, min_size,
++				 resource_size(b_res), min_add_align);
++	}
++	free_align_test_list(&align_test_add_list);
++
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+@@ -1262,11 +1281,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
++		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
++				min_add_align);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long) (size1 - size0),
+-			   (unsigned long long) add_align);
++			   (unsigned long long) min_add_align);
+ 	}
+ 	return 0;
+ }
+-- 
+1.8.4.5
+
