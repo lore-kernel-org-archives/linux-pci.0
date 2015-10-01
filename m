@@ -1,36 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f45.google.com ([209.85.213.45]:34244 "EHLO
-	mail-vk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752AbbIQPiH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Sep 2015 11:38:07 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5THoC1mC7OnKOvX04Bq27xvZmKmoY7v_QczCQTEG91gg@mail.gmail.com>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo5THoC1mC7OnKOvX04Bq27xvZmKmoY7v_QczCQTEG91gg@mail.gmail.com>
-Date: Thu, 17 Sep 2015 08:38:06 -0700
-Message-ID: <CAE9FiQXvJM+Gc8Q4=n4-xN0kDXazLjpn0u8Lpc8ctmVotFLEEg@mail.gmail.com>
-Subject: Re: [PATCH v5 00/53] PCI: Resource allocation cleanup for v4.4
+Received: from userp1040.oracle.com ([156.151.31.81]:27423 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750839AbbJAFyE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:54:04 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Miller <davem@davemloft.net>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 01/53] sparc/PCI: Add mem64 resource parsing for root bus
+Date: Wed, 30 Sep 2015 22:52:35 -0700
+Message-Id: <1443678807-786-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 17, 2015 at 7:55 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
-> I assume the following patches are related to the sparc64/mem64 thing.
-> Could they be split out and posted separately?  We should be able to
-> fix that issue even without all the other patches.
->
->>   sparc/PCI: Add mem64 resource parsing for root bus
->>   sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
->>   powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
->>   OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
+Found "no compatible bridge window" warning in boot log from T5-8.
 
-Yes, you are right.
+pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
+
+That resource is above 4G, but does not get offset correctly as
+root bus only report io and mem32.
+
+pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+pci_bus 0000:00: root bus resource [bus 00-77]
+
+Add mem64 handling in pci_common for sparc, so we can have 64bit resource
+registered for root bus at first.
+
+After patch, will have:
+pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
+pci_bus 0000:00: root bus resource [bus 00-77]
+
+-v2: mem64_space should use mem_space.start as offset.
+-v3: add IORESOURCE_MEM_64 flag
+
+Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+Reported-by: David Ahern <david.ahern@oracle.com>
+Tested-by: David Ahern <david.ahern@oracle.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+ arch/sparc/kernel/pci.c        |    7 ++++++-
+ arch/sparc/kernel/pci_common.c |   15 +++++++++++++--
+ arch/sparc/kernel/pci_impl.h   |    1 +
+ 3 files changed, 20 insertions(+), 3 deletions(-)
+---
+ arch/sparc/kernel/pci.c        |  7 ++++++-
+ arch/sparc/kernel/pci_common.c | 15 +++++++++++++--
+ arch/sparc/kernel/pci_impl.h   |  1 +
+ 3 files changed, 20 insertions(+), 3 deletions(-)
+
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index b91d7f1..badf095 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -185,8 +185,10 @@ static unsigned long pci_parse_of_flags(u32 addr0)
+ 
+ 	if (addr0 & 0x02000000) {
+ 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
+-		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
++		if (addr0 & 0x01000000)
++			flags |= IORESOURCE_MEM_64
++				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		if (addr0 & 0x40000000)
+ 			flags |= IORESOURCE_PREFETCH
+ 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
+@@ -655,6 +657,9 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 				pbm->io_space.start);
+ 	pci_add_resource_offset(&resources, &pbm->mem_space,
+ 				pbm->mem_space.start);
++	if (pbm->mem64_space.flags)
++		pci_add_resource_offset(&resources, &pbm->mem64_space,
++					pbm->mem_space.start);
+ 	pbm->busn.start = pbm->pci_first_busno;
+ 	pbm->busn.end	= pbm->pci_last_busno;
+ 	pbm->busn.flags	= IORESOURCE_BUS;
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 944a065..a859a86 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -406,6 +406,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 	}
+ 
+ 	num_pbm_ranges = i / sizeof(*pbm_ranges);
++	memset(&pbm->mem64_space, 0, sizeof(struct resource));
+ 
+ 	for (i = 0; i < num_pbm_ranges; i++) {
+ 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
+@@ -451,7 +452,11 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 			break;
+ 
+ 		case 3:
+-			/* XXX 64-bit MEM handling XXX */
++			/* 64-bit MEM handling */
++			pbm->mem64_space.start = a;
++			pbm->mem64_space.end = a + size - 1UL;
++			pbm->mem64_space.flags = IORESOURCE_MEM;
++			break;
+ 
+ 		default:
+ 			break;
+@@ -465,15 +470,21 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 		prom_halt();
+ 	}
+ 
+-	printk("%s: PCI IO[%llx] MEM[%llx]\n",
++	printk("%s: PCI IO[%llx] MEM[%llx]",
+ 	       pbm->name,
+ 	       pbm->io_space.start,
+ 	       pbm->mem_space.start);
++	if (pbm->mem64_space.flags)
++		printk(" MEM64[%llx]",
++		       pbm->mem64_space.start);
++	printk("\n");
+ 
+ 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
+ 
+ 	request_resource(&ioport_resource, &pbm->io_space);
+ 	request_resource(&iomem_resource, &pbm->mem_space);
++	if (pbm->mem64_space.flags)
++		request_resource(&iomem_resource, &pbm->mem64_space);
+ 
+ 	pci_register_legacy_regions(&pbm->io_space,
+ 				    &pbm->mem_space);
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 75803c7..37222ca 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -97,6 +97,7 @@ struct pci_pbm_info {
+ 	/* PBM I/O and Memory space resources. */
+ 	struct resource			io_space;
+ 	struct resource			mem_space;
++	struct resource			mem64_space;
+ 	struct resource			busn;
+ 
+ 	/* Base of PCI Config space, can be per-PBM or shared. */
+-- 
+1.8.4.5
+
