@@ -1,47 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:42286 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755794AbbIWRRz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 13:17:55 -0400
-In-Reply-To: <20150923171706.GL21084@n2100.arm.linux.org.uk>
-References: <20150923171706.GL21084@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 5/6] pci: mvebu: report full node name when reporting a DT
- error
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1Zenfw-0004dN-8k@rmk-PC.arm.linux.org.uk>
-Date: Wed, 23 Sep 2015 18:17:48 +0100
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 48/53] PCI: Add has_mem64 for struct host_bridge
+Date: Wed, 30 Sep 2015 22:53:22 -0700
+Message-Id: <1443678807-786-49-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If we have a missing required property, report the full node name rather
-than a vague "PCIe DT node" statement.  This allows the exact node in
-error to be identified immediately.
+Add has_mem64 for struct host_bridge, on root bus that does not support
+mmio64 above 4g, will not set that.
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+We will use that info next two following patches:
+1. Don't treat non-pref mmio64 as pref mmio, so will not put
+   it under bridge's pref range when rescan the devices
+2. will keep pref mmio64 and pref mmio32 under bridge pref bar.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host/pci-mvebu.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/probe.c | 9 +++++++++
+ include/linux/pci.h | 1 +
+ 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index d331d2664580..8c715444b722 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -987,7 +987,8 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 		if (of_property_read_u32(child, "marvell,pcie-port",
- 					 &port->port)) {
- 			dev_warn(&pdev->dev,
--				 "ignoring PCIe DT node, missing pcie-port property\n");
-+				 "ignoring %s, missing pcie-port property\n",
-+				 of_node_full_name(child));
- 			continue;
- 		}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 9eb9e30..31998ea 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2122,6 +2122,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
+ 	}
  
++	resource_list_for_each_entry(window, &bridge->windows) {
++		res = window->res;
++		if (resource_type(res) == IORESOURCE_MEM &&
++		    (res->end - window->offset) > 0xffffffff) {
++			bridge->has_mem64 = 1;
++			break;
++		}
++	}
++
+ 	down_write(&pci_bus_sem);
+ 	list_add_tail(&b->node, &pci_root_buses);
+ 	up_write(&pci_bus_sem);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 66969bb..207ee64 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -413,6 +413,7 @@ struct pci_host_bridge {
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+ 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
++	unsigned int has_mem64:1;
+ };
+ 
+ #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
 -- 
-2.1.0
+1.8.4.5
 
