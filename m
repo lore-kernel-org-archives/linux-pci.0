@@ -1,117 +1,154 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55064 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751070AbbIOR3c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Sep 2015 13:29:32 -0400
-Subject: Re: [Bug 104431] New: second connected thunderbolt dock fails
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <bug-104431-41252@https.bugzilla.kernel.org/>
- <CAErSpo6LpJRbhnwH-Mqu3zN-=gEVgJ2u+aonpWNXbtXKQ8xCKw@mail.gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-From: Jarod Wilson <jarod@redhat.com>
-Message-ID: <55F8557D.5030609@redhat.com>
-Date: Tue, 15 Sep 2015 13:29:33 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6LpJRbhnwH-Mqu3zN-=gEVgJ2u+aonpWNXbtXKQ8xCKw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH v6 18/53] PCI: Reorder resources list for required/optional resources
+Date: Wed, 30 Sep 2015 22:52:52 -0700
+Message-Id: <1443678807-786-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015-09-15 11:31 AM, Bjorn Helgaas wrote:
-> [+cc linux-pci]
->
-> Hi Jarod,
->
-> On Fri, Sep 11, 2015 at 3:19 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
->> https://bugzilla.kernel.org/show_bug.cgi?id=104431
->>
->>              Bug ID: 104431
->>             Summary: second connected thunderbolt dock fails
->>             Product: Drivers
->>             Version: 2.5
->>      Kernel Version: 4.2.0 + a handful of other patches
->>            Hardware: All
->>                  OS: Linux
->>                Tree: Mainline
->>              Status: NEW
->>            Severity: normal
->>            Priority: P1
->>           Component: PCI
->>            Assignee: drivers_pci@kernel-bugs.osdl.org
->>            Reporter: jarod@redhat.com
->>          Regression: No
->>
->> I've been loaned a pair of thunderbolt docking peripherals. One is an Akitio
->> Thunder Dock, which has usb3, esata and firewire 800 on it, the other is a
->> StarTech Thunderbolt Docking Station, which has usb3, a usb audio device and an
->> Intel i210 GbE device.
->>
->> Individually, each of the docks work fine (at least with the 4.3.x pciehp patch
->> for my zbook and an igb patch I just sent upstream), hotplug and remove. They
->> even work correctly if connected together -- i.e., connect the two docks
->> together, then connect to the host, and both come up fine.
->>
->> However, when I connect one dock directly to the host, then the second dock,
->> the second dock fails to function, with the following output upon connection:
->>
->> pciehp 0000:06:04.0:pcie24: pending interrupts 0x0008 from Slot Status
->> pciehp 0000:06:04.0:pcie24: Card present on Slot(4-1)
->> pciehp 0000:06:04.0:pcie24: pending interrupts 0x0100 from Slot Status
->> pciehp 0000:06:04.0:pcie24: pciehp_check_link_active: lnk_status = 3041
->> pciehp 0000:06:04.0:pcie24: slot(4-1): Link Up event
->> pciehp 0000:06:04.0:pcie24: Link Up event ignored on slot(4-1): already
->> powering on
->> pciehp 0000:06:04.0:pcie24: pciehp_check_link_active: lnk_status = 3041
->> pciehp 0000:06:04.0:pcie24: pciehp_check_link_status: lnk_status = 3041
->> pci 0000:0b:00.0: [8086:1547] type 01 class 0x060400
->> pci 0000:0b:00.0: supports D1 D2
->> pci 0000:0b:00.0: PME# supported from D0 D1 D2 D3hot D3cold
->> No bus number available for hot-added bridge 0000:0b:00.0
->> pcieport 0000:06:04.0: bridge window [io  0x1000-0x0fff] to [bus 0b] add_size
->> 1000
->> pcieport 0000:06:04.0: res[13]=[io  0x1000-0x0fff] res_to_dev_res add_size 1000
->> min_align    1000
->> pcieport 0000:06:04.0: res[13]=[io  0x1000-0x1fff] res_to_dev_res add_size 1000
->> min_align    1000
->> pcieport 0000:06:04.0: BAR 13: no space for [io  size 0x1000]
->> pcieport 0000:06:04.0: BAR 13: failed to assign [io  size 0x1000]
->> pcieport 0000:06:04.0: BAR 13: no space for [io  size 0x1000]
->> pcieport 0000:06:04.0: BAR 13: failed to assign [io  size 0x1000]
->> pcieport 0000:06:04.0: PCI bridge to [bus 0b]
->> pcieport 0000:06:04.0:   bridge window [mem 0xb4700000-0xb49fffff]
->> pcieport 0000:06:04.0:   bridge window [mem 0x90700000-0x909fffff 64bit pref]
->>
->> I'll attach full dmesg dumps from both simultaneous and one at a time
->> connection attempts shortly.
->
-> Thanks for the report.  The logs only start from the hotplug, so they
-> don't show the initial enumeration at boot.  Can you also attach
-> "lspci -vv" output from the working case, so we can see which devices
-> are in which dock?  I started working it out from the logs, but that's
-> pretty tedious.
+We try to allocate required+optional before allocate required only and
+expand with optional.
 
-I just attached dmesg from a fresh boot prior to attaching any 
-thunderbolt devices, as well as full lspci -vv output with both docks 
-attached.
+At first we update size and alignment for required+optional resource.
+And after that we reorder them with new alignment, but current we only
+do that STARTALIGN ones.
 
-> I *think* the second dock that fails is rooted at 0b:00.0, and it's
-> being added below 06:04.0  Since the 0b:00.0 tree wasn't present at
-> boot, we don't know how many bus numbers to reserve for 06:04.0, and
-> we only reserved one (bus 0b).  Obviously that's not enough for all
-> the devices in that dock.
+For SIZEALIGN type resource, after add back add_size, the alignment
+get changed, so need to do sorting like STARTALIGN type resources.
 
-I need to double-check possible differences with reversing the ordering 
-of connection, but that seems to be what I'm seeing. I'm assuming the 
-first dock connected just sucks up as many resources as it can grab, and 
-the second one gets resource-starved.
+Also we need to reorder the sorting back after we restore
+resource to required only when required+optional fail to allocate for all.
 
-> For memory and I/O, we reserve default amounts of space
-> (pci_hotplug_mem_size and pci_hotplug_io_size), but I don't think we
-> do anything corresponding for bus numbers.  Maybe we should.
+So move out the reordering code from the loop to separated function,
+and call it two times accordingly.
 
-Sounds plausible.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 62 +++++++++++++++++++++++++++++--------------------
+ 1 file changed, 37 insertions(+), 25 deletions(-)
 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 6fda7ad..92677c5 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -286,6 +286,31 @@ static inline void reset_resource(struct resource *res)
+ 	res->flags = 0;
+ }
+ 
++static void sort_resources(struct list_head *head)
++{
++	struct pci_dev_resource *res1, *tmp_res, *res2;
++
++	list_for_each_entry_safe(res1, tmp_res, head, list) {
++		resource_size_t align1, size1, align2, size2;
++
++		align1 = pci_resource_alignment(res1->dev, res1->res);
++		size1 = resource_size(res1->res);
++
++		/* reorder it */
++		list_for_each_entry(res2, head, list) {
++			if (res2 == res1)
++				break;
++
++			align2 = pci_resource_alignment(res2->dev, res2->res);
++			size2 = resource_size(res2->res);
++			if (is_before(align1, size1, align2, size2)) {
++				list_move_tail(&res1->list, &res2->list);
++				break;
++			}
++		}
++	}
++}
++
+ /**
+  * reassign_resources_sorted() - satisfy any additional resource requests
+  *
+@@ -454,9 +479,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
++	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+-	resource_size_t add_align, align;
++	resource_size_t add_align;
+ 
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -471,47 +496,32 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+-	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
++	list_for_each_entry(dev_res, head, list) {
+ 		dev_res->res->end += get_res_add_size(realloc_head,
+ 							dev_res->res);
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+-		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+-		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
+-		 * Here just fix the additional alignment for bridge
++		 * 1. bridge resource with IORESOURCE_STARTALIGN
++		 *    need to update start to change alignment
++		 * 2. resource with IORESOURCE_SIZEALIGN
++		 *    update size above already change alignment.
+ 		 */
+ 		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
+ 			continue;
+ 
+ 		add_align = get_res_add_align(realloc_head, dev_res->res);
+ 
+-		/*
+-		 * The "head" list is sorted by the alignment to make sure
+-		 * resources with bigger alignment will be assigned first.
+-		 * After we change the alignment of a dev_res in "head" list,
+-		 * we need to reorder the list by alignment to make it
+-		 * consistent.
+-		 */
+-		if (add_align > dev_res->res->start) {
++		if (add_align) {
+ 			resource_size_t r_size = resource_size(dev_res->res);
+ 
+ 			dev_res->res->start = add_align;
+ 			dev_res->res->end = add_align + r_size - 1;
+-
+-			list_for_each_entry(dev_res2, head, list) {
+-				align = pci_resource_alignment(dev_res2->dev,
+-							       dev_res2->res);
+-				if (add_align > align) {
+-					list_move_tail(&dev_res->list,
+-						       &dev_res2->list);
+-					break;
+-				}
+-			}
+                }
+-
+ 	}
+ 
++	sort_resources(head);
++
+ 	/* Try updated head list with add_size added */
+ 	assign_requested_resources_sorted(head, &local_fail_head);
+ 
+@@ -553,6 +563,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	free_list(&save_head);
+ 
++	sort_resources(head);
++
+ requested_and_reassign:
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
 -- 
-Jarod Wilson
-jarod@redhat.com
+1.8.4.5
+
