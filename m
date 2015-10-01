@@ -1,362 +1,174 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 28 Oct 2015 11:49:40 +0000
-From: Liviu.Dudau@arm.com
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, jiang.liu@linux.intel.com,
-	robert.richter@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
-	tglx@linutronix.de, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org
-Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
- hostbridge init
-Message-ID: <20151028114940.GL963@e106497-lin.cambridge.arm.com>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
- <1445963922-22711-12-git-send-email-tn@semihalf.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1445963922-22711-12-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1443653222-24924-3-git-send-email-ddaney.cavm@gmail.com>
+References: <1443653222-24924-1-git-send-email-ddaney.cavm@gmail.com> <1443653222-24924-3-git-send-email-ddaney.cavm@gmail.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Thu, 1 Oct 2015 08:08:35 -0500
+Message-ID: <CAL_JsqJA6UskrxU2Gpo3vtAyfPzT=d-9Z+CSpT__mR+7FRmhrQ@mail.gmail.com>
+Subject: Re: [PATCH v3 2/4] of/irq: Add new function of_msi_map_rid()
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	David Daney <david.daney@cavium.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 27, 2015 at 05:38:42PM +0100, Tomasz Nowicki wrote:
-> Because of two patch series:
-> 1. Jiang Liu's common interface to support PCI host bridge init
-> 2. Refactoring of MMCONFIG, part of this patch set
-> now we can think about PCI buses enumeration for ARM64 and ACPI tables.
-> 
-> This patch introduce ACPI based PCI hostbridge init calls which
-> use information from MCFG table (PCI config space regions) and
-> _CRS (IO/irq resources) to initialize PCI hostbridge.
-> 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Catalin Marinas <catalin.marinas@arm.com>
-> CC: Liviu Dudau <Liviu.Dudau@arm.com>
-> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-> CC: Will Deacon <will.deacon@arm.com>
+On Wed, Sep 30, 2015 at 5:47 PM, David Daney <ddaney.cavm@gmail.com> wrote:
+> From: David Daney <david.daney@cavium.com>
+>
+> The device tree property "msi-map" specifies how to create the PCI
+> requester id used in some MSI controllers.  Add a new function
+> of_msi_map_rid() that finds the msi-map property and applies its
+> translation to a given requester id.
+>
+> Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+> Signed-off-by: David Daney <david.daney@cavium.com>
+
+Acked-by: Rob Herring <robh@kernel.org>
+
+I'm assuming this will go thru irqchip or PCI trees? It helps if To is
+who you want to merge this.
+
+Rob
+
 > ---
->  arch/arm64/Kconfig      |   6 ++
->  arch/arm64/kernel/pci.c | 208 +++++++++++++++++++++++++++++++++++++++++++++---
->  2 files changed, 202 insertions(+), 12 deletions(-)
-> 
-> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-> index 07d1811..bbcc6b1 100644
-> --- a/arch/arm64/Kconfig
-> +++ b/arch/arm64/Kconfig
-> @@ -89,6 +89,7 @@ config ARM64
->  	select SPARSE_IRQ
->  	select SYSCTL_EXCEPTION_TRACE
->  	select HAVE_CONTEXT_TRACKING
-> +	select HAVE_PCI_ECAM
->  	help
->  	  ARM 64-bit (AArch64) Linux support.
->  
-> @@ -202,6 +203,11 @@ source "drivers/pci/Kconfig"
->  source "drivers/pci/pcie/Kconfig"
->  source "drivers/pci/hotplug/Kconfig"
->  
-> +config PCI_MMCONFIG
-> +	def_bool y
-> +	select PCI_ECAM
-> +	depends on ACPI
-> +
->  endmenu
->  
->  menu "Kernel Features"
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index b3d098b..66cc1ae 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -11,12 +11,15 @@
->   */
->  
->  #include <linux/acpi.h>
-> +#include <linux/ecam.h>
->  #include <linux/init.h>
->  #include <linux/io.h>
->  #include <linux/kernel.h>
->  #include <linux/mm.h>
-> +#include <linux/of_address.h>
->  #include <linux/of_pci.h>
->  #include <linux/of_platform.h>
-> +#include <linux/pci-acpi.h>
->  #include <linux/slab.h>
->  
->  #include <asm/pci-bridge.h>
-> @@ -52,35 +55,216 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+>  drivers/of/irq.c       | 84 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/of_irq.h |  7 +++++
+>  2 files changed, 91 insertions(+)
+>
+> diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+> index 55317fa..c90bd4e 100644
+> --- a/drivers/of/irq.c
+> +++ b/drivers/of/irq.c
+> @@ -598,3 +598,87 @@ void of_msi_configure(struct device *dev, struct device_node *np)
+>                 d = irq_find_host(msi_np);
+>         dev_set_msi_domain(dev, d);
 >  }
->  
->  /*
-> - * Try to assign the IRQ number from DT when adding a new device
-> + * Try to assign the IRQ number from DT/ACPI when adding a new device
->   */
->  int pcibios_add_device(struct pci_dev *dev)
+> +
+> +/**
+> + * of_msi_map_rid - Map a MSI requester ID for a device.
+> + * @dev: device for which the mapping is to be done.
+> + * @msi_np: device node of the expected msi controller.
+> + * @rid_in: unmapped MSI requester ID for the device.
+> + *
+> + * Walk up the device hierarchy looking for devices with a "msi-map"
+> + * property.  If found, apply the mapping to @rid_in.
+> + *
+> + * Returns the mapped MSI requester ID.
+> + */
+> +u32 of_msi_map_rid(struct device *dev, struct device_node *msi_np, u32 rid_in)
+> +{
+> +       struct device *parent_dev;
+> +       struct device_node *msi_controller_node;
+> +       u32 map_mask, masked_rid, rid_base, msi_base, rid_len, phandle;
+> +       int msi_map_len;
+> +       bool matched;
+> +       u32 rid_out = rid_in;
+> +       const __be32 *msi_map = NULL;
+> +
+> +       /*
+> +        * Walk up the device parent links looking for one with a
+> +        * "msi-map" property.
+> +        */
+> +       for (parent_dev = dev; parent_dev; parent_dev = parent_dev->parent) {
+> +               if (!parent_dev->of_node)
+> +                       continue;
+> +
+> +               msi_map = of_get_property(parent_dev->of_node,
+> +                                         "msi-map", &msi_map_len);
+> +               if (!msi_map)
+> +                       continue;
+> +
+> +               if (msi_map_len % (4 * sizeof(__be32))) {
+> +                       dev_err(parent_dev, "Error: Bad msi-map length: %d\n",
+> +                               msi_map_len);
+> +                       return rid_out;
+> +               }
+> +               /* We have a good parent_dev and msi_map, let's use them. */
+> +               break;
+> +       }
+> +       if (!msi_map)
+> +               return rid_out;
+> +
+> +       /* The default is to select all bits. */
+> +       map_mask = 0xffffffff;
+> +
+> +       /*
+> +        * Can be overridden by "msi-map-mask" property.  If
+> +        * of_property_read_u32() fails, the default is used.
+> +        */
+> +       of_property_read_u32(parent_dev->of_node, "msi-map-mask", &map_mask);
+> +
+> +       masked_rid = map_mask & rid_in;
+> +       matched = false;
+> +       while (!matched && msi_map_len >= 4 * sizeof(__be32)) {
+> +               rid_base = be32_to_cpup(msi_map + 0);
+> +               phandle = be32_to_cpup(msi_map + 1);
+> +               msi_base = be32_to_cpup(msi_map + 2);
+> +               rid_len = be32_to_cpup(msi_map + 3);
+> +
+> +               msi_controller_node = of_find_node_by_phandle(phandle);
+> +
+> +               matched = masked_rid >= rid_base &&
+> +                       masked_rid < rid_base + rid_len &&
+> +                       msi_np == msi_controller_node;
+> +
+> +               of_node_put(msi_controller_node);
+> +               msi_map_len -= 4 * sizeof(__be32);
+> +               msi_map += 4;
+> +       }
+> +       if (!matched)
+> +               return rid_out;
+> +
+> +       rid_out = masked_rid + msi_base;
+> +       dev_dbg(dev,
+> +               "msi-map at: %s, using mask %08x, rid-base: %08x, msi-base: %08x, length: %08x, rid: %08x -> %08x\n",
+> +               dev_name(parent_dev), map_mask, rid_base, msi_base,
+> +               rid_len, rid_in, rid_out);
+> +
+> +       return rid_out;
+> +}
+> diff --git a/include/linux/of_irq.h b/include/linux/of_irq.h
+> index 4bcbd58..8cd9334 100644
+> --- a/include/linux/of_irq.h
+> +++ b/include/linux/of_irq.h
+> @@ -75,6 +75,7 @@ static inline int of_irq_to_resource_table(struct device_node *dev,
+>  extern unsigned int irq_of_parse_and_map(struct device_node *node, int index);
+>  extern struct device_node *of_irq_find_parent(struct device_node *child);
+>  extern void of_msi_configure(struct device *dev, struct device_node *np);
+> +u32 of_msi_map_rid(struct device *dev, struct device_node *msi_np, u32 rid_in);
+>
+>  #else /* !CONFIG_OF */
+>  static inline unsigned int irq_of_parse_and_map(struct device_node *dev,
+> @@ -87,6 +88,12 @@ static inline void *of_irq_find_parent(struct device_node *child)
 >  {
-> -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> +	if (acpi_disabled)
-> +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> +#ifdef CONFIG_ACPI
-> +	else
-> +		acpi_pci_irq_enable(dev);
-> +#endif
->  
->  	return 0;
+>         return NULL;
 >  }
->  
-> +#ifdef CONFIG_ACPI
-> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+> +
+> +static inline u32 of_msi_map_rid(struct device *dev,
+> +                                struct device_node *msi_np, u32 rid_in)
 > +{
-> +	struct acpi_pci_root *root = bridge->bus->sysdata;
-> +
-> +	ACPI_COMPANION_SET(&bridge->dev, root->device);
-> +	return 0;
+> +       return rid_in;
 > +}
-> +
-> +void pcibios_add_bus(struct pci_bus *bus)
-> +{
-> +	acpi_pci_add_bus(bus);
-> +}
-> +
-> +void pcibios_remove_bus(struct pci_bus *bus)
-> +{
-> +	acpi_pci_remove_bus(bus);
-> +}
-> +
-> +static int __init pcibios_assign_resources(void)
-> +{
-> +	if (acpi_disabled)
-> +		return 0;
-> +
-> +	pci_assign_unassigned_resources();
-> +	return 0;
-
-You can change this function into:
-{
-	if (!acpi_disabled)
-		pci_assign_unassigned_resources();
-
-	return 0;
-}
-
-as the equivalent but shorter form.
-
-> +}
->  /*
-> - * raw_pci_read/write - Platform-specific PCI config space access.
-> + * rootfs_initcall comes after subsys_initcall and fs_initcall_sync,
-> + * so we know acpi scan and PCI_FIXUP_FINAL quirks have both run.
->   */
-> -int raw_pci_read(unsigned int domain, unsigned int bus,
-> -		  unsigned int devfn, int reg, int len, u32 *val)
-
-What happened with raw_pci_{read,write} ? Why do you remove them?
-
-
-> +rootfs_initcall(pcibios_assign_resources);
-
-Would you be so kind and explain to me why you need this initcall?
-Can you not set the PCI_REASSIGN_ALL_RSRC flag before calling
-pci_scan_root_bus() ?
-
-I haven't focused on ACPI before so I'm a bit hazy on the init order when
-that is enabled. That being said, I don't like adding in the architecture
-code initcall hooks just to fix up some dependency orders that could / should
-be fixed some other way.
-
-> +
-> +static void __iomem *
-> +pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
->  {
-> -	return -ENXIO;
-> +	struct pci_mmcfg_region *cfg;
-> +
-> +	cfg = pci_mmconfig_lookup(pci_domain_nr(bus), bus->number);
-> +	if (cfg && cfg->virt)
-> +		return cfg->virt +
-> +			(PCI_MMCFG_BUS_OFFSET(bus->number) | (devfn << 12)) +
-> +			offset;
-> +	return NULL;
->  }
->  
-> -int raw_pci_write(unsigned int domain, unsigned int bus,
-> -		unsigned int devfn, int reg, int len, u32 val)
-> +struct pci_ops pci_root_ops = {
-> +	.map_bus = pci_mcfg_dev_base,
-> +	.read = pci_generic_config_read,
-> +	.write = pci_generic_config_write,
-> +};
-> +
-> +#ifdef CONFIG_PCI_MMCONFIG
-> +static int pci_add_mmconfig_region(struct acpi_pci_root_info *ci)
->  {
-> -	return -ENXIO;
-> +	struct pci_mmcfg_region *cfg;
-> +	struct acpi_pci_root *root;
-> +	int seg, start, end, err;
-> +
-> +	root = ci->root;
-> +	seg = root->segment;
-> +	start = root->secondary.start;
-> +	end = root->secondary.end;
-> +
-> +	cfg = pci_mmconfig_lookup(seg, start);
-> +	if (cfg)
-> +		return 0;
-> +
-> +	cfg = pci_mmconfig_alloc(seg, start, end, root->mcfg_addr);
-> +	if (!cfg)
-> +		return -ENOMEM;
-> +
-> +	err = pci_mmconfig_inject(cfg);
-> +	return err;
->  }
->  
-> -#ifdef CONFIG_ACPI
-> +static void pci_remove_mmconfig_region(struct acpi_pci_root_info *ci)
-> +{
-> +	struct acpi_pci_root *root = ci->root;
-> +	struct pci_mmcfg_region *cfg;
-> +
-> +	cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
-> +	if (cfg)
-> +		return;
-> +
-> +	if (cfg->hot_added)
-> +		pci_mmconfig_delete(root->segment, root->secondary.start,
-> +				    root->secondary.end);
-> +}
-> +#else
-> +static int pci_add_mmconfig_region(struct acpi_pci_root_info *ci)
-> +{
-> +	return 0;
-> +}
-> +
-> +static void pci_remove_mmconfig_region(struct acpi_pci_root_info *ci) { }
-> +#endif
-> +
-> +static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
-> +{
-> +	return pci_add_mmconfig_region(ci);
-> +}
-> +
-> +static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
-> +{
-> +	pci_remove_mmconfig_region(ci);
-> +	kfree(ci);
-> +}
-> +
-> +static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
-> +{
-> +	struct resource_entry *entry, *tmp;
-> +	int ret;
-> +
-> +	ret = acpi_pci_probe_root_resources(ci);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
-> +		struct resource *res = entry->res;
-> +
-> +		/*
-> +		 * Special handling for ARM IO range
-
-There is nothing ARM specific here. It should apply to any memory mapped IO range.
-
-> +		 * TODO: need to move pci_register_io_range() function out
-> +		 * of drivers/of/address.c for both used by DT and ACPI
-> +		 */
-> +		if (res->flags & IORESOURCE_IO) {
-> +			unsigned long port;
-> +			int err;
-> +			resource_size_t length = res->end - res->start;
-> +
-> +			err = pci_register_io_range(res->start, length);
-> +			if (err) {
-> +				resource_list_destroy_entry(entry);
-> +				continue;
-> +			}
-> +
-> +			port = pci_address_to_pio(res->start);
-> +			if (port == (unsigned long)-1) {
-> +				resource_list_destroy_entry(entry);
-> +				continue;
-> +			}
-> +
-> +			res->start = port;
-> +			res->end = res->start + length - 1;
-> +
-> +			if (pci_remap_iospace(res, res->start) < 0)
-> +				resource_list_destroy_entry(entry);
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static struct acpi_pci_root_ops acpi_pci_root_ops = {
-> +	.pci_ops = &pci_root_ops,
-> +	.init_info = pci_acpi_root_init_info,
-> +	.release_info = pci_acpi_root_release_info,
-> +	.prepare_resources = pci_acpi_root_prepare_resources,
-> +};
-> +
->  /* Root bridge scanning */
->  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  {
-> -	/* TODO: Should be revisited when implementing PCI on ACPI */
-> -	return NULL;
-> +	int node = acpi_get_node(root->device->handle);
-> +	int domain = root->segment;
-> +	int busnum = root->secondary.start;
-> +	struct acpi_pci_root_info *info;
-> +	struct pci_bus *bus;
-> +
-> +	if (domain && !pci_domains_supported) {
-> +		pr_warn("PCI %04x:%02x: multiple domains not supported.\n",
-> +			domain, busnum);
-> +		return NULL;
-> +	}
-> +
-> +	info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
-> +	if (!info) {
-> +		dev_err(&root->device->dev,
-> +			"pci_bus %04x:%02x: ignored (out of memory)\n",
-> +			domain, busnum);
-> +		return NULL;
-> +	}
-> +
-> +	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, info, root);
-> +
-> +	/* After the PCI-E bus has been walked and all devices discovered,
-> +	 * configure any settings of the fabric that might be necessary.
-> +	 */
-> +	if (bus) {
-> +		struct pci_bus *child;
-> +
-> +		list_for_each_entry(child, &bus->children, node)
-> +			pcie_bus_configure_settings(child);
-> +	}
-> +
-> +	return bus;
->  }
->  #endif
-> -- 
+>  #endif /* !CONFIG_OF */
+>
+>  #endif /* __OF_IRQ_H */
+> --
 > 1.9.1
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+>
