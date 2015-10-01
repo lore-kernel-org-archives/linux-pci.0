@@ -1,76 +1,250 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39318 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932287AbbIXD6N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 Sep 2015 23:58:13 -0400
-Message-ID: <1443067091.23936.534.camel@redhat.com>
-Subject: Re: [RFC] PCI: Unassigned Expansion ROM BARs
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Myron Stowe <myron.stowe@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 23 Sep 2015 21:58:11 -0600
-In-Reply-To: <CAE9FiQWY1gdpzdqToBM0sNgfCRnRfEEgJfn-J9igorLH1K80JA@mail.gmail.com>
-References: <CAL-B5D3FgF+o7BcLBe7O_gcxy2jf3w43bXeDJuRH2VS2ES0A7Q@mail.gmail.com>
-	 <CAE9FiQWY1gdpzdqToBM0sNgfCRnRfEEgJfn-J9igorLH1K80JA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from aserp1040.oracle.com ([141.146.126.69]:21952 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756326AbbJAF7x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:59:53 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 45/53] PCI: Add debug print out for min_align and alt_size
+Date: Wed, 30 Sep 2015 22:53:19 -0700
+Message-Id: <1443678807-786-46-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2015-09-23 at 20:21 -0700, Yinghai Lu wrote:
-> On Wed, Sep 23, 2015 at 7:47 PM, Myron Stowe <myron.stowe@gmail.com> wrote:
-> >
-> > The kernel expects device Expansion ROM BARs to be programmed with valid
-> > values - even if the respective Expansion ROM's Enable bit is 0 (i.e. the
-> > device’s expansion ROM address space is disabled).  This seems to be the
-> > main contention point with said BIOS engineers.  If an Expansion ROM BAR is
-> > not programmed, the kernel will attempt to find available resources and, if
-> > successful, program it.  As this occurs various 'dmesg' entries
-> > related to kernel's actions are output.
-> ...
-> > There is a kernel boot parameter, pci=norom, that is intended to disable the
-> > kernel's resource assignment actions for Expansion ROMs that do not already
-> > have BIOS assigned address ranges.  Note however, if I remember correctly,
-> > that this only works if the Expansion ROM BAR is set to "0" by the BIOS
-> > before hand-off.
-> 
-> option rom is used by legacy bios to enable booting from external device.
-> usually BIOS call the option rom, so the firmware will be loaded to
-> add on cards.
-> and firmware get started.
-> Also option rom would include tools that is used to configure behavior of cards
-> like add/remove raid.
-> 
-> Also there is some use case that kernel driver try to get some parameters from
-> BIOS. like intel soft raid ? --- bad practice !
-> 
-> I would like to treat option rom BAR as optional resources during
-> resource allocation.
-> 
-> https://git.kernel.org/cgit/linux/kernel/git/yinghai/linux-yinghai.git/patch/?id=7f689da33302e4871fd18aee2c19abb5e3ea5261
-> 
-> Subject: PCI: Treat ROM resource as optional during realloc
-> 
-> Current on realloc path, we just ignore ROM resource if we can not assign
-> them in first try.
-> 
-> Treat ROM resources as optional resources,so try to allocate them together
-> with required ones, if can not assign them, could go with other required
-> resources only, and try to allocate them second time in expand path.
+Put all print out for all children align/size and result align/size
+together.
 
-Don't forget that the physical system boot may not be the only "boot" of
-the PCI device.  We can assign a PCI device to a VM running on top of
-the bare-metal OS, at which point the option ROM of the device may be
-re-executed and the device re-initialized by the VM BIOS.  A BIOS
-engineer that argues that the option ROM is unnecessary after bare-metal
-BIOS boot is completely disregarding this use case.  We do have ways to
-make this be a soft requirement, we can pass the option ROM as a file to
-the VM, but we need to be able to rip the option ROM from the device in
-order to do that, likely from a better behaved platform wrt option ROM
-mapping.  Thanks,
+We can print out device name at same time with min_align/alt_size
+calculation.
 
-Alex
+So we can shut off debug print out from get_res_add_size() and
+get_res_add_align().
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 76 ++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 56 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 40a76d6..173c83f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -159,11 +159,6 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 	if (!dev_res || !dev_res->add_size)
+ 		return 0;
+ 
+-	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-		   "BAR %d: %pR get_res_add_size add_size   %#llx\n",
+-		   (int)(res - &dev_res->dev->resource[0]),
+-		   res, (unsigned long long)dev_res->add_size);
+-
+ 	return dev_res->add_size;
+ }
+ 
+@@ -176,11 +171,6 @@ static resource_size_t get_res_add_align(struct list_head *head,
+ 	if (!dev_res || !dev_res->min_align)
+ 		return 0;
+ 
+-	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-		   "BAR %d: %pR get_res_add_align min_align %#llx\n",
+-		   (int)(res - &dev_res->dev->resource[0]),
+-		   res, (unsigned long long)dev_res->min_align);
+-
+ 	return dev_res->min_align;
+ }
+ 
+@@ -1233,6 +1223,8 @@ struct align_test_res {
+ 	struct resource res;
+ 	resource_size_t size;
+ 	resource_size_t align;
++	struct device *dev;
++	int idx;
+ };
+ 
+ static void free_align_test_list(struct list_head *head)
+@@ -1246,7 +1238,8 @@ static void free_align_test_list(struct list_head *head)
+ }
+ 
+ static int add_to_align_test_list(struct list_head *head,
+-				  resource_size_t align, resource_size_t size)
++				  resource_size_t align, resource_size_t size,
++				  struct device *dev, int idx)
+ {
+ 	struct align_test_res *tmp;
+ 
+@@ -1256,6 +1249,8 @@ static int add_to_align_test_list(struct list_head *head,
+ 
+ 	tmp->align = align;
+ 	tmp->size = size;
++	tmp->dev = dev;
++	tmp->idx = idx;
+ 
+ 	list_add_tail(&tmp->list, head);
+ 
+@@ -1321,6 +1316,19 @@ static resource_size_t calculate_mem_align(struct list_head *head,
+ 	resource_size_t min_align, good_align, aligned_size, start;
+ 	int count = 0;
+ 
++	list_for_each_entry(p, head, list)
++		count++;
++
++	printk(KERN_DEBUG "  ===========BEGIN===calculate_mem_align========\n");
++	if (count) {
++		printk(KERN_DEBUG "  align/size:\n");
++		list_for_each_entry(p, head, list)
++			dev_printk(KERN_DEBUG, p->dev,
++				   "BAR %d:     %08llx/%08llx\n", p->idx,
++				   (unsigned long long)p->align,
++				   (unsigned long long)p->size);
++	}
++
+ 	if (max_align <= align_low) {
+ 		good_align = align_low;
+ 		goto out;
+@@ -1328,9 +1336,6 @@ static resource_size_t calculate_mem_align(struct list_head *head,
+ 
+ 	good_align = max_align;
+ 
+-	list_for_each_entry(p, head, list)
+-		count++;
+-
+ 	if (count <= 1)
+ 		goto out;
+ 
+@@ -1355,6 +1360,11 @@ static resource_size_t calculate_mem_align(struct list_head *head,
+ 	} while (min_align > align_low);
+ 
+ out:
++	printk(KERN_DEBUG "      min_align/aligned_size: %08llx/%08llx\n",
++			(unsigned long long)good_align,
++			(unsigned long long)ALIGN(size, good_align));
++	printk(KERN_DEBUG "  ===========END===calculate_mem_align==========\n");
++
+ 	return good_align;
+ }
+ 
+@@ -1372,6 +1382,16 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
+ 	list_for_each_entry(p, head, list)
+ 		count++;
+ 
++	printk(KERN_DEBUG "  ===========BEGIN===calculate_mem_alt_size=====\n");
++	if (count) {
++		printk(KERN_DEBUG "  align/size:\n");
++		list_for_each_entry(p, head, list)
++			dev_printk(KERN_DEBUG, p->dev,
++				   "BAR %d:     %08llx/%08llx\n", p->idx,
++				   (unsigned long long)p->align,
++				   (unsigned long long)p->size);
++	}
++
+ 	if (count <= 1)
+ 		goto out;
+ 
+@@ -1396,6 +1416,11 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
+ 	}
+ 
+ out:
++	printk(KERN_DEBUG "   alt_align/alt_size: %08llx/%08llx\n",
++			(unsigned long long)max_align,
++			(unsigned long long)good_size);
++	printk(KERN_DEBUG "  ===========END===calculate_mem_alt_size=======\n");
++
+ 	return good_size;
+ }
+ 
+@@ -1476,7 +1501,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			/* put SRIOV/ROM res to realloc list */
+ 			if (realloc_head && is_optional(i)) {
+ 				add_to_align_test_list(&align_test_add_list,
+-							align, r_size);
++						align, r_size, &dev->dev, i);
+ 				r->end = r->start - 1;
+ 				__add_to_list(realloc_head, dev, r,
+ 					      r_size, align, 0, 0);
+@@ -1495,7 +1520,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 			if (r_size > 1) {
+ 				add_to_align_test_list(&align_test_list,
+-							align, r_size);
++						align, r_size, &dev->dev, i);
+ 				size += r_size;
+ 				if (align > max_align)
+ 					max_align = align;
+@@ -1512,7 +1537,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					add_align = align;
+ 				add_to_align_test_list(&align_test_add_list,
+ 							add_align,
+-							r_size + add_r_size);
++							r_size + add_r_size,
++							&dev->dev, i);
+ 				sum_add_size += r_size + add_r_size;
+ 				if (add_align > max_add_align)
+ 					max_add_align = add_align;
+@@ -1522,14 +1548,14 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					add_to_align_test_list(
+ 						&align_test_alt_list,
+ 						dev_res->alt_align,
+-						dev_res->alt_size);
++						dev_res->alt_size, &dev->dev, i);
+ 					alt_size += dev_res->alt_size;
+ 					if (alt_align < dev_res->alt_align)
+ 						alt_align = dev_res->alt_align;
+ 				} else if (r_size > 1) {
+ 					add_to_align_test_list(
+ 						&align_test_alt_list,
+-						align, r_size);
++						align, r_size, &dev->dev, i);
+ 					alt_size += r_size;
+ 					if (alt_align < align)
+ 						alt_align = align;
+@@ -1540,6 +1566,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	max_align = max(max_align, window_align);
+ 	if (size || min_size) {
++		dev_printk(KERN_DEBUG, &bus->self->dev,
++			   "BAR %d: bridge window %pR to %pR calculate_mem for MUST\n",
++			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
+ 		min_align = calculate_mem_align(&align_test_list, max_align,
+ 						size, window_align);
+ 		size0 = calculate_size(size, min_size,
+@@ -1549,6 +1578,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	if (size0 && realloc_head) {
+ 		alt_align = max(alt_align, window_align);
++		dev_printk(KERN_DEBUG, &bus->self->dev,
++			   "BAR %d: bridge window %pR to %pR calculate_mem for ALT\n",
++			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
+ 		/* need to increase size to fit more alt */
+ 		alt_size = calculate_mem_alt_size(&align_test_alt_list,
+ 						  alt_align, alt_size,
+@@ -1564,6 +1596,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	if (sum_add_size > size && realloc_head) {
++		dev_printk(KERN_DEBUG, &bus->self->dev,
++			   "BAR %d: bridge window %pR to %pR calculate_mem for ADD\n",
++			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+ 					window_align);
+@@ -1621,7 +1656,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				      final_add_size, min_add_align,
+ 				      alt_size, alt_align);
+ 			dev_printk(KERN_DEBUG, &bus->self->dev,
+-				   "bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx req_size %llx req_align %llx\n",
++				   "BAR %d: bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx req_size %llx req_align %llx\n",
++				   (int)(b_res - &bus->self->resource[0]),
+ 				   b_res, &bus->busn_res,
+ 				   (unsigned long long)final_add_size,
+ 				   (unsigned long long)min_add_align,
+-- 
+1.8.4.5
 
