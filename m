@@ -1,72 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f48.google.com ([209.85.215.48]:35423 "EHLO
-	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751739AbbJVTRg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Oct 2015 15:17:36 -0400
-Received: by lfbn126 with SMTP id n126so25390316lfb.2
-        for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2015 12:17:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20151022180813.GA25693@localhost>
-References: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
-	<1444979960-24100-5-git-send-email-Minghuan.Lian@freescale.com>
-	<20151021213612.GK1583@localhost>
-	<CADRPPNSPP1m_7zNF6wEfw9+Bpe=Z_gUA81cSaV4SENVpR34YWQ@mail.gmail.com>
-	<20151022180813.GA25693@localhost>
-Date: Thu, 22 Oct 2015 14:17:34 -0500
-Message-ID: <CADRPPNQoyzfr=bHOaVRrdxDmamUtTOfJOn=G9bQ=tGrB8b2Z4A@mail.gmail.com>
-Subject: Re: [PATCH v4 5/6] PCI: layerscape: add PCIe support for LS1043a and LS2080a
-From: Li Yang <leoli@freescale.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-io0-f181.google.com ([209.85.223.181]:33972 "EHLO
+	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753244AbbJBSoM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 14:44:12 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v4 2/5] PCI: generic: Only fixup irqs for bus we are creating.
+Date: Fri,  2 Oct 2015 11:44:00 -0700
+Message-Id: <1443811443-18878-3-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 22, 2015 at 1:08 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> Hi Leo,
->
-> On Thu, Oct 22, 2015 at 12:38:48PM -0500, Li Yang wrote:
->> On Wed, Oct 21, 2015 at 4:36 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> > On Fri, Oct 16, 2015 at 03:19:19PM +0800, Minghuan Lian wrote:
->> >> Both LS1043a and LS2080a are based on ARMv8 64-bit architecture
->> >> and have similar PCIe implementation. LUT is added to controller.
->> >> The patch removes the necessary fields from struct ls_pcie.
->> >>
->> >> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
->> >> ---
->> >> This patch is based on v4.3-rc4 and [PATCH v10 3/6]
->> >> PCI: designware: Add ARM64 support.
->>
->> Hi Bjorn,
->>
->> Are you also applying this patch
->> https://patchwork.ozlabs.org/patch/531184/ in this merge windows?
->> Because the new hardware can only work with the generic ARM64 support
->> added in the designware pcie driver.
->
-> I'm reviewing that patch right now, and I do hope to apply it for
-> v4.4.
->
-> There was no cover letter for this series (Minghuan's Layerscape v4
-> series), and I didn't see any mention of dependencies, so I applied it
-> on top of v4.3-rc1.  Is that the wrong thing to do?  If it depends on
-> the Zhou's v11 series, I can hold the Layerscape branch until after
-> that.
+From: David Daney <david.daney@cavium.com>
 
-I don't know if this patch will break anything without Zhou's patch.
-But the new hardware mentioned in the description will not be working
-without the dependent patch.  We should hold this patch until after
-the generic change is merged.  Minghuan, are there any bug fixing
-patch in the series that need to be merged earlier?
+If we create multiple buses with pci-host-generic, or there are buses
+created by other drivers, we don't want to call pci_fixup_irqs() which
+operates on all devices, not just the devices on the bus being added.
+The consequence is that either the fixups are done more than once, or
+in some cases incorrect fixups could be applied.
 
-Regards,
-Leo
+Call pci_bus_fixup_irqs() instead of pci_fixup_irqs().
+
+Acked-by: Will Deacon <will.deacon@arm.com>
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+No change from v2.
+
+ drivers/pci/host/pci-host-generic.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 265dd25..9e9f1c3 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -262,7 +262,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 		return -ENODEV;
+ 	}
+ 
+-	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++	pci_bus_fixup_irqs(bus, pci_common_swizzle, of_irq_parse_and_map_pci);
+ 
+ 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+ 		pci_bus_size_bridges(bus);
+-- 
+1.9.1
+
