@@ -1,61 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0143.outbound.protection.outlook.com ([157.56.111.143]:32420
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750835AbbJ3QNQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 30 Oct 2015 12:13:16 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	KY Srinivasan <kys@microsoft.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"olaf@aepfle.de" <olaf@aepfle.de>,
-	"apw@canonical.com" <apw@canonical.com>,
-	Vitaly Kuznetsov <vkuznets@redhat.com>,
-	"tglx@redhat.com" <tglx@redhat.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v4 5/7] PCI: irqdomain: Look up IRQ domain by
- fwnode_handle
-Date: Fri, 30 Oct 2015 15:58:23 +0000
-Message-ID: <DM2PR0301MB123242391B393049EACC7A81AB2F0@DM2PR0301MB1232.namprd03.prod.outlook.com>
-References: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
-	<1446162376-43419-6-git-send-email-jakeo@microsoft.com>
- <CAHp75Vd=najBY7MJofStyLODWuG45=VzwLoWCSrQRm0nemuD4A@mail.gmail.com>
-In-Reply-To: <CAHp75Vd=najBY7MJofStyLODWuG45=VzwLoWCSrQRm0nemuD4A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:34258 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751309AbbJBAuk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 20:50:40 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v4 2/4] of/irq: Add new function of_msi_map_rid()
+Date: Thu,  1 Oct 2015 17:50:23 -0700
+Message-Id: <1443747025-9918-3-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443747025-9918-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1443747025-9918-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbmR5IFNoZXZjaGVua28gW21h
-aWx0bzphbmR5LnNoZXZjaGVua29AZ21haWwuY29tXQ0KPiBTZW50OiBUaHVyc2RheSwgT2N0b2Jl
-ciAyOSwgMjAxNSA1OjI4IFBNDQo+IFRvOiBKYWtlIE9zaGlucyA8amFrZW9AbWljcm9zb2Z0LmNv
-bT4NCj4gQ2M6IEdyZWcgS3JvYWgtSGFydG1hbiA8Z3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc+
-OyBLWSBTcmluaXZhc2FuDQo+IDxreXNAbWljcm9zb2Z0LmNvbT47IGxpbnV4LWtlcm5lbEB2Z2Vy
-Lmtlcm5lbC5vcmc7DQo+IGRldmVsQGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7IG9sYWZAYWVwZmxl
-LmRlOyBhcHdAY2Fub25pY2FsLmNvbTsgVml0YWx5DQo+IEt1em5ldHNvdiA8dmt1em5ldHNAcmVk
-aGF0LmNvbT47IHRnbHhAcmVkaGF0LmNvbTsgSGFpeWFuZyBaaGFuZw0KPiA8aGFpeWFuZ3pAbWlj
-cm9zb2Z0LmNvbT47IG1hcmMuenluZ2llckBhcm0uY29tOyBKaWFuZyBMaXUNCj4gPGppYW5nLmxp
-dUBsaW51eC5pbnRlbC5jb20+OyBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPjsg
-bGludXgtDQo+IHBjaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2NCA1
-LzddIFBDSTogaXJxZG9tYWluOiBMb29rIHVwIElSUSBkb21haW4gYnkNCj4gZndub2RlX2hhbmRs
-ZQ0KPiANCj4gT24gRnJpLCBPY3QgMzAsIDIwMTUgYXQgMTo0NiBBTSwgIDxqYWtlb0BtaWNyb3Nv
-ZnQuY29tPiB3cm90ZToNCj4gPiBGcm9tOiBKYWtlIE9zaGlucyA8amFrZW9AbWljcm9zb2Z0LmNv
-bT4NCj4gPg0KPiA+IFRoaXMgcGF0Y2ggYWRkcyBhIHNlY29uZCB3YXkgb2YgZmluZGluZyBhbiBJ
-UlEgZG9tYWluIGFzc29jaWF0ZWQgd2l0aA0KPiA+IGEgcm9vdCBQQ0kgYnVzLiAgQWZ0ZXIgbG9v
-a2luZyB0byBzZWUgaWYgb25lIGNhbiBiZSBmb3VuZCB0aHJvdWdoDQo+ID4gdGhlIE9GIHRyZWUs
-IGl0IGF0dGVtcHRzIHRvIGxvb2sgdXAgdGhlIElSUSBkb21haW4gdGhyb3VnaCBhbg0KPiA+IGZ3
-bm9kZV9oYW5kbGUgc3RvcmVkIGluIHRoZSBwY2lfc3lzZGF0YSBzdHJ1Y3QuDQo+IA0KPiANCj4g
-PiArI2lmZGVmIENPTkZJR19QQ0lfTVNJX0lSUV9ET01BSU4NCj4gPiArICAgICAgIC8qDQo+ID4g
-KyAgICAgICAgKiBJZiBubyBJUlEgZG9tYWluIHdhcyBmb3VuZCB2aWEgdGhlIE9GIHRyZWUsIHRy
-eSBsb29raW5nIGl0IHVwDQo+ID4gKyAgICAgICAgKiBkaXJlY3RseSB0aHJvdWdoIHRoZSBmd25v
-ZGVfaGFuZGxlLg0KPiA+ICsgICAgICAgICovDQo+ID4gKyAgICAgICBpZiAoIWQpIHsNCj4gPiAr
-ICAgICAgICAgICAgICAgaWYgKHBjaV9md25vZGUoYnVzKSkgew0KPiANCj4gSXNuJ3QgaXQgdGhl
-IHNhbWUgdG8NCj4gaWYgKCFkICYmIHBjaV9md25vZGUoYnVzKSkNCj4gIGQgPSAuLi4NCj4gDQoN
-ClRoYW5rcy4gIEknbGwgbWFrZSB0aGlzIGNoYW5nZSBhbmQgcmVzZW5kLg0KDQotLSBKYWtlIE9z
-aGlucw0K
+From: David Daney <david.daney@cavium.com>
+
+The device tree property "msi-map" specifies how to create the PCI
+requester id used in some MSI controllers.  Add a new function
+of_msi_map_rid() that finds the msi-map property and applies its
+translation to a given requester id.
+
+Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ drivers/of/irq.c       | 84 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_irq.h |  7 +++++
+ 2 files changed, 91 insertions(+)
+
+diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+index 55317fa..c90bd4e 100644
+--- a/drivers/of/irq.c
++++ b/drivers/of/irq.c
+@@ -598,3 +598,87 @@ void of_msi_configure(struct device *dev, struct device_node *np)
+ 		d = irq_find_host(msi_np);
+ 	dev_set_msi_domain(dev, d);
+ }
++
++/**
++ * of_msi_map_rid - Map a MSI requester ID for a device.
++ * @dev: device for which the mapping is to be done.
++ * @msi_np: device node of the expected msi controller.
++ * @rid_in: unmapped MSI requester ID for the device.
++ *
++ * Walk up the device hierarchy looking for devices with a "msi-map"
++ * property.  If found, apply the mapping to @rid_in.
++ *
++ * Returns the mapped MSI requester ID.
++ */
++u32 of_msi_map_rid(struct device *dev, struct device_node *msi_np, u32 rid_in)
++{
++	struct device *parent_dev;
++	struct device_node *msi_controller_node;
++	u32 map_mask, masked_rid, rid_base, msi_base, rid_len, phandle;
++	int msi_map_len;
++	bool matched;
++	u32 rid_out = rid_in;
++	const __be32 *msi_map = NULL;
++
++	/*
++	 * Walk up the device parent links looking for one with a
++	 * "msi-map" property.
++	 */
++	for (parent_dev = dev; parent_dev; parent_dev = parent_dev->parent) {
++		if (!parent_dev->of_node)
++			continue;
++
++		msi_map = of_get_property(parent_dev->of_node,
++					  "msi-map", &msi_map_len);
++		if (!msi_map)
++			continue;
++
++		if (msi_map_len % (4 * sizeof(__be32))) {
++			dev_err(parent_dev, "Error: Bad msi-map length: %d\n",
++				msi_map_len);
++			return rid_out;
++		}
++		/* We have a good parent_dev and msi_map, let's use them. */
++		break;
++	}
++	if (!msi_map)
++		return rid_out;
++
++	/* The default is to select all bits. */
++	map_mask = 0xffffffff;
++
++	/*
++	 * Can be overridden by "msi-map-mask" property.  If
++	 * of_property_read_u32() fails, the default is used.
++	 */
++	of_property_read_u32(parent_dev->of_node, "msi-map-mask", &map_mask);
++
++	masked_rid = map_mask & rid_in;
++	matched = false;
++	while (!matched && msi_map_len >= 4 * sizeof(__be32)) {
++		rid_base = be32_to_cpup(msi_map + 0);
++		phandle = be32_to_cpup(msi_map + 1);
++		msi_base = be32_to_cpup(msi_map + 2);
++		rid_len = be32_to_cpup(msi_map + 3);
++
++		msi_controller_node = of_find_node_by_phandle(phandle);
++
++		matched = masked_rid >= rid_base &&
++			masked_rid < rid_base + rid_len &&
++			msi_np == msi_controller_node;
++
++		of_node_put(msi_controller_node);
++		msi_map_len -= 4 * sizeof(__be32);
++		msi_map += 4;
++	}
++	if (!matched)
++		return rid_out;
++
++	rid_out = masked_rid + msi_base;
++	dev_dbg(dev,
++		"msi-map at: %s, using mask %08x, rid-base: %08x, msi-base: %08x, length: %08x, rid: %08x -> %08x\n",
++		dev_name(parent_dev), map_mask, rid_base, msi_base,
++		rid_len, rid_in, rid_out);
++
++	return rid_out;
++}
+diff --git a/include/linux/of_irq.h b/include/linux/of_irq.h
+index 4bcbd58..8cd9334 100644
+--- a/include/linux/of_irq.h
++++ b/include/linux/of_irq.h
+@@ -75,6 +75,7 @@ static inline int of_irq_to_resource_table(struct device_node *dev,
+ extern unsigned int irq_of_parse_and_map(struct device_node *node, int index);
+ extern struct device_node *of_irq_find_parent(struct device_node *child);
+ extern void of_msi_configure(struct device *dev, struct device_node *np);
++u32 of_msi_map_rid(struct device *dev, struct device_node *msi_np, u32 rid_in);
+ 
+ #else /* !CONFIG_OF */
+ static inline unsigned int irq_of_parse_and_map(struct device_node *dev,
+@@ -87,6 +88,12 @@ static inline void *of_irq_find_parent(struct device_node *child)
+ {
+ 	return NULL;
+ }
++
++static inline u32 of_msi_map_rid(struct device *dev,
++				 struct device_node *msi_np, u32 rid_in)
++{
++	return rid_in;
++}
+ #endif /* !CONFIG_OF */
+ 
+ #endif /* __OF_IRQ_H */
+-- 
+1.9.1
+
