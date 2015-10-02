@@ -1,77 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:33452 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752618AbbJ3FJM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 01:09:12 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 30 Oct 2015 10:39:09 +0530
-Date: Fri, 30 Oct 2015 13:09:04 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
-	Ethan Zhao <ethan.zhao@oracle.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 3/7] PCI: Remove VFs in reverse order if virtfn_add()
- fails
-Message-ID: <20151030050904.GB5119@richards-mbp.cn.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151029222308.11908.95902.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-vk0-f68.google.com ([209.85.213.68]:35855 "EHLO
+	mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402AbbJBXQv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 19:16:51 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151029222308.11908.95902.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <560F0DD1.60304@oracle.com>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+	<1443678807-786-2-git-send-email-yinghai@kernel.org>
+	<1443816007.7936.24.camel@oracle.com>
+	<CAE9FiQX=qEO53rSw9bQv-2-3sSmYUO3YCJyj8m6mSNSTed3zEA@mail.gmail.com>
+	<560F0DD1.60304@oracle.com>
+Date: Fri, 2 Oct 2015 16:16:50 -0700
+Message-ID: <CAE9FiQV4HnmyosmM76Hax2oaDiP7QSVdVt8kFt6ki2Ee-xhgKA@mail.gmail.com>
+Subject: Re: [PATCH v6 01/53] sparc/PCI: Add mem64 resource parsing for root bus
+From: Yinghai Lu <yinghai@kernel.org>
+To: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 29, 2015 at 05:23:08PM -0500, Bjorn Helgaas wrote:
->From: Alexander Duyck <aduyck@mirantis.com>
->
->If virtfn_add() fails, we call virtfn_remove() for any previously added
->devices.  Remove the devices in reverse order (first-added is
->last-removed), which is more natural and doesn't require an additional
->variable.
->
->[bhelgaas: changelog, split to separate patch for reviewability]
->Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
->Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Fri, Oct 2, 2015 at 4:05 PM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
+> On 10/02/2015 04:05 PM, Yinghai Lu wrote:
 
-Interesting.
+> I still see lots of "no compatible
+> bridge window" messages but overlapping address ranges are no longer
+> reserved
 
-Reviewed-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Please send boot log to me, I'd like to fix them.
 
->---
-> drivers/pci/iov.c |    6 +++---
-> 1 file changed, 3 insertions(+), 3 deletions(-)
->
->diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->index ca400a9..c86d94c 100644
->--- a/drivers/pci/iov.c
->+++ b/drivers/pci/iov.c
->@@ -233,7 +233,7 @@ int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
-> static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> {
-> 	int rc;
->-	int i, j;
->+	int i;
-> 	int nres;
-> 	u16 initial;
-> 	struct resource *res;
->@@ -328,8 +328,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> 	return 0;
->
-> failed:
->-	for (j = 0; j < i; j++)
->-		virtfn_remove(dev, j, 0);
->+	while (i--)
->+		virtfn_remove(dev, i, 0);
->
-> 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
-> 	pci_cfg_access_lock(dev);
+Thanks
 
--- 
-Richard Yang
-Help you, Help me
-
+Yinghai
