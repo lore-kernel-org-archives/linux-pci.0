@@ -1,195 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 00/60] PCI: Resource allocation cleanup for v4.4
-Date: Thu,  8 Oct 2015 14:38:19 -0700
-Message-Id: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:35301 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750730AbbJBHxr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 03:53:47 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAL_JsqL9eoTRa2-eeNJgVoO=0LyuaaJ87E4_BS0KocRKBXGdGA@mail.gmail.com>
+References: <1442801587-3812-1-git-send-email-lftan@altera.com>
+	<1442801587-3812-6-git-send-email-lftan@altera.com>
+	<5606171A.5000609@kernel.org>
+	<CAFiDJ59PuhRj3F288A_451pLiKnqPUKin9C2t5uuH2iNPnJfAg@mail.gmail.com>
+	<CAL_JsqL9eoTRa2-eeNJgVoO=0LyuaaJ87E4_BS0KocRKBXGdGA@mail.gmail.com>
+Date: Fri, 2 Oct 2015 15:53:44 +0800
+Message-ID: <CAFiDJ5_MYC=V_L1LyRNq00z=DerzKAF=RF5av9vHnUPP+9a1nw@mail.gmail.com>
+Subject: Re: [PATCH v7 5/6] Documentation: dt-bindings: pci: altera pcie
+ device tree binding
+From: Ley Foon Tan <lftan@altera.com>
+To: Rob Herring <robh@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Tue, Sep 29, 2015 at 1:31 AM, Rob Herring <robh@kernel.org> wrote:
+> On Mon, Sep 28, 2015 at 12:38 AM, Ley Foon Tan <lftan@altera.com> wrote:
+>> On Sat, Sep 26, 2015 at 11:55 AM, Rob Herring <robh@kernel.org> wrote:
+>>>
+>>> On 09/20/2015 09:13 PM, Ley Foon Tan wrote:
+>>> > This patch adds the bindings for Altera PCIe host controller driver and
+>>> > Altera PCIe MSI driver.
+>
+> [...]
+>
+>>> > +     num-vectors = <32>;
+>>> > +};
+>>> > diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+>>> > new file mode 100644
+>>> > index 0000000..4440db1
+>>> > --- /dev/null
+>>> > +++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+>>> > @@ -0,0 +1,49 @@
+>>> > +* Altera PCIe controller
+>>> > +
+>>> > +Required properties:
+>>> > +- compatible :       should contain "altr,pcie-root-port-1.0"
+>>> > +- reg:               a list of physical base address and length for TXS and CRA.
+>>> > +- reg-names: must include the following entries:
+>>> > +             "Txs" or "txs": TX slave port region
+>>> > +             "Cra" or "cra": Control register access region
+>>>
+>>> Why both cases? Can we please just have one (or none is better IMO).
+>> The PCIe IP on different device families use different register names.
+>> And our device tree generator will auto generate the register names
+>> based on the hardware description name. Too bad we can't change the
+>> hardware description names now.
+>
+> Okay, your problem to maintain. Hopefully the driver just goes by index then.
+Okay, we will fix our generator tool to standardize one reg-name case
+and driver  just use one reg-name case as well.
+>
+> Strictly speaking, if you have undocumented bindings downstream that
+> is your problem and we don't have to accept them as-is upstream. I'm
+> not going to worry about that here.
+>
+>>> txs contains the config space?
+>> It is not the config space, but a memory slave port.
+>
+> Then where is the config space? It should not be part of "ranges" is
+> all I care about.
+The config space is not part of "ranges". Our IP uses TLP packet to
+access config space.
 
-After 5b28541552ef (PCI: Restrict 64-bit prefetchable bridge windows
-to 64-bit resources), we have several reports on resource allocation
-failure, and we try to fix the problem with resource clip, and find
-more problems.
-
-One is realloc fail with two graphics cards above 4G.
-One is from sparc that have problem with clip as we don't parse
-mem64 for it.
-
-Other report is about pci remove/rescan does not work on some setup
-when BIOS tend to allocate small bus size.
-
-This patchset enhance resource allocation to address those problems.
-
-patch 1-10: parse MEM64 for sparc and other system with OF
-patch 11-15: MMIO64 allocation enhancement
-	treat non-pref mmio64 if parent bridges are all pcie.
-	restore old pref allocation logic if hostbridge does not support mmio64.
-patch 16-18: FIXED resource handling during realloc
-	don't realloc resource if device firmware does not support bar change.
-patch 19-22: bridge MMIO allocation with hotplug and last try.
-	treat optional as required on first try when hotplug.
-	MMIO size set to 0 for last try during realloc
-patch 22-56: enhancement for mmio resource allocation:
-	optimize bus mmio alignment calculation.
-	optimize bus mmio optional alignment calculation.
-	add support for alt size to prefer small bus size to small bus alignment.
-	treat ROM bar as optional resource.
-	during allocation, will pick up best fit resource, and allocate near end.
-patch 57: add pci=assign_pref_bars to clear and assign pref bars.
-patch 58-59: don't clear resource when allocation fails
-patch 60: don't try io port allocation if root bus does not have io port.
-
-I put latest copy at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-v4.4-next
-
-That is based on v4.3-rc4+.
-
-Yijing and Wei Yang both tested the branch, and the patchset fixs rescan
-problem, and is working well on powerpc setup.
-
-Khalid Aziz tested on some sparc platforms that have different offset to
-mem space start or support 64bit mmio.
-
-Thanks
-
-Yinghai
-
-v2:
-    - fix resource_disabled allocation from powerpc
-    - other warnings that were found by Fengguang's build robot.
-    - io port alignment clean up.
-    - rebased to v4.2-rc2
-    - better for two alt_size support.
-
-v3:
-    - fix reset bridge resource on last try: only with bridge resources
-    - remove/rescan path checking with old_size.
-
-v4:
-    - Update changelog according to Bjorn.
-    - split calculate_size patch to two.
-    - use required instead of must.
-
-v5:
-    - update changelog
-    - add one debug patch
-    - add one patch that get resource allocation near end of avialable window
-
-v6:
-    - reorder patches according to Bjorn.
-
-v7:
-    - add some patches that fix problems on sparc that Khalid Aziz found.
-
-Yinghai Lu (60):
-  sparc/PCI: Add mem64 resource parsing for root bus
-  sparc/PCI: Use correct bus address to resource offset
-  sparc/PCI: Unify pci_register_region()
-  sparc/PCI: Reserve legacy mmio after PCI mmio
-  sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-  sparc/PCI: Keep resource idx order with bridge register number
-  PCI: kill wrong quirk about M7101
-  powerpc/PCI: Keep resource idx order with bridge register number
-  powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-  OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
-  PCI: Check pref compatible bit for mem64 resource of PCIe device
-  PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
-  PCI: Add has_mem64 for struct host_bridge
-  PCI: Only treat non-pref mmio64 as pref if host bridge has mmio64
-  PCI: Restore pref MMIO allocation logic for host bridge without mmio64
-  PCI: Don't release fixed resource for realloc
-  PCI: Claim fixed resource during remove/rescan path
-  PCI: Set resource to FIXED for LSI devices
-  PCI: Separate realloc list checking after allocation
-  PCI: Treat optional as required in first try for bridge rescan
-  PCI: Get new realloc size for bridge for last try
-  PCI: Don't release sibling bridge resources during hotplug
-  PCI: Cleanup res_to_dev_res() printout
-  PCI: Reuse res_to_dev_res() in reassign_resources_sorted()
-  PCI: Use correct align for optional only resources during sorting
-  PCI: Optimize bus min_align/size calculation during sizing
-  PCI: Optimize bus align/size calculation for optional during sizing
-  PCI: Don't add too much optional size for hotplug bridge MMIO
-  PCI: Reorder resources list for required/optional resources
-  PCI: Remove duplicated code for resource sorting
-  PCI: Rename pdev_sort_resources() to pdev_assign_resources_prepare()
-  PCI: Treat ROM resource as optional during realloc
-  PCI: Add debug printout during releasing partial assigned resources
-  PCI: Simplify res reference using in __assign_resources_sorted()
-  PCI: Add __add_to_list()
-  PCI: Cache window alignment value during bus sizing
-  PCI: Check if resource is allocated before trying to assign one
-  PCI: Separate out save_resources()/restore_resources()
-  PCI: Move comment to pci_need_to_release()
-  PCI: Separate required+optional assigning to another function
-  PCI: Skip required+optional if there is no optional
-  PCI: Move saved required resource list out of required+optional assigning
-  PCI: Add alt_size ressource allocation support
-  PCI: Add support for more than two alt_size entries under same bridge
-  PCI: Fix size calculation with old_size on rescan path
-  PCI: Don't add too much optional size for hotplug bridge io
-  PCI: Move ISA io port align out of calculate_iosize()
-  PCI: Don't add too much io port for hotplug bridge with old size
-  PCI: Unify calculate_size() for io port and MMIO
-  PCI: Allow bridge optional only io port resource required size to be 0
-  PCI: Unify skip_ioresource_align()
-  PCI: Kill macro checking for bus io port sizing
-  resources: Split out __allocate_resource()
-  resources: Make allocate_resource() return best fit resource
-  PCI, x86: Allocate from high in available window for MMIO
-  PCI: Add debug print out for min_align and alt_size
-  PCI, x86: Add pci=assign_pref_bars to reallocate pref BARs
-  PCI: Introduce resource_disabled()
-  PCI: Don't set flags to 0 when assign resource fail
-  PCI: Only try to assign io port only for root bus that support it
-
- arch/alpha/kernel/pci.c                   |    2 +-
- arch/ia64/pci/pci.c                       |    4 +-
- arch/microblaze/pci/pci-common.c          |   23 +-
- arch/mn10300/unit-asb2305/pci-asb2305.c   |    4 +-
- arch/mn10300/unit-asb2305/pci.c           |    4 +-
- arch/powerpc/kernel/pci-common.c          |   27 +-
- arch/powerpc/kernel/pci_of_scan.c         |   12 +-
- arch/powerpc/platforms/powernv/pci-ioda.c |   12 +-
- arch/s390/pci/pci.c                       |    2 +-
- arch/sparc/kernel/of_device_32.c          |    5 +-
- arch/sparc/kernel/of_device_64.c          |    5 +-
- arch/sparc/kernel/pci.c                   |   30 +-
- arch/sparc/kernel/pci_common.c            |  125 +--
- arch/sparc/kernel/pci_impl.h              |    5 +
- arch/x86/include/asm/pci_x86.h            |    2 +-
- arch/x86/pci/common.c                     |    7 +-
- arch/x86/pci/i386.c                       |   86 +-
- arch/xtensa/kernel/pci.c                  |    4 +-
- drivers/iommu/intel-iommu.c               |    3 +-
- drivers/of/address.c                      |    4 +-
- drivers/pci/bus.c                         |    6 +-
- drivers/pci/host/pcie-rcar.c              |    2 +-
- drivers/pci/hotplug/acpiphp_glue.c        |    1 +
- drivers/pci/iov.c                         |    2 +-
- drivers/pci/pci.c                         |    3 +-
- drivers/pci/pci.h                         |    4 +
- drivers/pci/probe.c                       |   48 +-
- drivers/pci/quirks.c                      |   55 +-
- drivers/pci/rom.c                         |    2 +-
- drivers/pci/setup-bus.c                   | 1312 +++++++++++++++++++++--------
- drivers/pci/setup-res.c                   |   18 +-
- include/asm-generic/pci-bridge.h          |    2 +
- include/linux/ioport.h                    |    6 +-
- include/linux/pci.h                       |    6 +
- kernel/resource.c                         |  175 +++-
- 35 files changed, 1461 insertions(+), 547 deletions(-)
-
--- 
-1.8.4.5
-
+Regards
+Ley Foon
