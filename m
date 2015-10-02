@@ -1,216 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:14738 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753426AbbJZLUv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 07:20:51 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v12 5/8] PCI: designware: Remove *_mod_base
-Date: Mon, 26 Oct 2015 19:35:47 +0800
-Message-ID: <1445859350-26375-6-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:61690 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390AbbJBWhJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 18:37:09 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Ray Jui <rjui@broadcom.com>, mark.rutland@arm.com,
+	devicetree@vger.kernel.org,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	pawel.moll@arm.com, ijc+devicetree@hellion.org.uk,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	hauke@hauke-m.de, linux-pci@vger.kernel.org,
+	michal.simek@xilinx.com, linux-kernel@vger.kernel.org,
+	m-karicheri2@ti.com, Minghuan.Lian@freescale.com,
+	robh+dt@kernel.org, Ravi Kiran Gummaluri <rgummal@xilinx.com>,
+	tinamdar@apm.com, galak@codeaurora.org, bhelgaas@google.com,
+	treding@nvidia.com, soren.brinkmann@xilinx.com
+Subject: Re: [PATCH v2] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL PCIe Host Controller
+Date: Sat, 03 Oct 2015 00:36:53 +0200
+Message-ID: <5225360.GkBHX0QnIA@wuerfel>
+In-Reply-To: <560DD374.4000708@broadcom.com>
+References: <1443689961-23909-1-git-send-email-bharatku@xilinx.com> <2677327.lnRZhqx5GI@wuerfel> <560DD374.4000708@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch reverts commit f4c55c5a3f7f ("PCI: designware: Program ATU with
-untranslated address") based on 1/8 in this series. we delete *_mod_base in
-pcie-designware. This was discussed in [1]
+On Thursday 01 October 2015 17:44:36 Ray Jui wrote:
+> 
+> Sorry for stealing this discussion, :)
+> 
+> I have some questions here, since this affects how I should implement
+> the MSI support for iProc based PCIe controller. I understand it makes
+> more sense to use separate device node for MSI and have "msi-parent"
+> from the pci node points to the MSI node, and that MSI node can be
+> gicv2m or gicv3 based on more advanced ARMv8 platforms.
+> 
+> Then I would assume the MSI controller would deserve its own driver?
+> Which is a lot of people do nowadays. In that case, how I should handle
+> the case when the iProc MSI support is handled through some event queue
+> mechanism with their registers embedded in the PCIe controller register
+> space?
+> 
+> Does the following logic make sense to you?
+> 
+> 1. parse phandle of "msi-parent"
+> 2. Call of_pci_find_msi_chip_by_node to hook it up to msi chip already
+> registered (in the gicv2m and gicv3 case)
+> 3. If failed, fall back to use the iProc's own event queue logic by
+> calling iproc_pcie_msi_init.
+> 
+> The iProc MSI still has its own node that looks like this:
+> 141 msi0: msi@20020000 {
+> 142                         msi-controller;
+> 143                         interrupt-parent = <&gic>;
+> 144                         interrupts = <GIC_SPI 277 IRQ_TYPE_NONE>,
+> 145                                      <GIC_SPI 278 IRQ_TYPE_NONE>,
+> 146                                      <GIC_SPI 279 IRQ_TYPE_NONE>,
+> 147                                      <GIC_SPI 280 IRQ_TYPE_NONE>,
+> 148                                      <GIC_SPI 281 IRQ_TYPE_NONE>,
+> 149                                      <GIC_SPI 282 IRQ_TYPE_NONE>;
+> 150                         brcm,num-eq-region = <1>;
+> 151                         brcm,num-msi-msg-region = <1>;
+> 152                 };
+> 
+> But it does not have its own "reg" since they are embedded in the PCI
+> controller's registers and it relies on one calling iproc_pcie_msi_init
+> to pass in base register value and some other information.
 
-[1] http://www.spinics.net/lists/arm-kernel/msg436779.html
+I don't think I have a perfect answer to this. One way would be to
+separate the actual PCI root device node from the IP block that
+contains both the PCI root and the MSI catcher, but I guess that
+would require an incompatible change to your binding and it's not
+worth the pain.
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Tested-by: James Morse <james.morse@arm.com>
-Tested-by: Gabriel Fernandez <gabriel.fernandez@st.com>
-Tested-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
----
- drivers/pci/host/pci-dra7xx.c      |  8 ++++----
- drivers/pci/host/pcie-designware.c | 38 +++++++++-----------------------------
- drivers/pci/host/pcie-designware.h |  4 ----
- 3 files changed, 13 insertions(+), 37 deletions(-)
+It's probably also ok to make the PCI host node itself be the msi-controller
+node and have an msi-parent phandle that points to the node itself. Not
+sure if that violates any rules that we may want or need to follow though.
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 0b4847a..8c36880 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -153,10 +153,10 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
- {
- 	dw_pcie_setup_rc(pp);
- 
--	pp->io_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
--	pp->mem_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
--	pp->cfg0_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
--	pp->cfg1_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
-+	pp->io_base &= DRA7XX_CPU_TO_BUS_ADDR;
-+	pp->mem_base &= DRA7XX_CPU_TO_BUS_ADDR;
-+	pp->cfg0_base &= DRA7XX_CPU_TO_BUS_ADDR;
-+	pp->cfg1_base &= DRA7XX_CPU_TO_BUS_ADDR;
- 
- 	dra7xx_pcie_establish_link(pp);
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 0af1432..1615deb 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -355,26 +355,17 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	struct platform_device *pdev = to_platform_device(pp->dev);
- 	struct pci_bus *bus, *child;
- 	struct resource *cfg_res;
--	u32 val, ns;
--	const __be32 *addrp;
--	int i, index, ret;
-+	u32 val;
-+	int i, ret;
- 	LIST_HEAD(res);
- 	struct resource_entry *win;
- 
--	ns = of_n_size_cells(np);
--
- 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
- 	if (cfg_res) {
- 		pp->cfg0_size = resource_size(cfg_res)/2;
- 		pp->cfg1_size = resource_size(cfg_res)/2;
- 		pp->cfg0_base = cfg_res->start;
- 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
--
--		/* Find the untranslated configuration space address */
--		index = of_property_match_string(np, "reg-names", "config");
--		addrp = of_get_address(np, index, NULL, NULL);
--		pp->cfg0_mod_base = of_read_number(addrp, ns);
--		pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
- 	} else if (!pp->va_cfg0_base) {
- 		dev_err(pp->dev, "missing *config* reg space\n");
- 	}
-@@ -397,19 +388,12 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 					 ret, pp->io);
- 				continue;
- 			}
--			pp->io_base = pp->io->start;
--
--			/* Find the untranslated IO space address */
--			pp->io_mod_base = pp->io->start;;
- 			break;
- 		case IORESOURCE_MEM:
- 			pp->mem = win->res;
- 			pp->mem->name = "MEM";
- 			pp->mem_size = resource_size(pp->mem);
- 			pp->mem_bus_addr = pp->mem->start - win->offset;
--
--			/* Find the untranslated MEM space address */
--			pp->mem_mod_base = pp->mem->start;
- 			break;
- 		case 0:
- 			pp->cfg = win->res;
-@@ -417,10 +401,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->cfg1_size = resource_size(pp->cfg)/2;
- 			pp->cfg0_base = pp->cfg->start;
- 			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
--
--			/* Find the untranslated configuration space address */
--			pp->cfg0_mod_base = pp->cfg->start;
--			pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
- 			break;
- 		case IORESOURCE_BUS:
- 			pp->busn = win->res;
-@@ -488,7 +468,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 
- 	if (!pp->ops->rd_other_conf)
- 		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
-+					  PCIE_ATU_TYPE_MEM, pp->mem_base,
- 					  pp->mem_bus_addr, pp->mem_size);
- 
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-@@ -546,12 +526,12 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
- 		type = PCIE_ATU_TYPE_CFG0;
--		cpu_addr = pp->cfg0_mod_base;
-+		cpu_addr = pp->cfg0_base;
- 		cfg_size = pp->cfg0_size;
- 		va_cfg_base = pp->va_cfg0_base;
- 	} else {
- 		type = PCIE_ATU_TYPE_CFG1;
--		cpu_addr = pp->cfg1_mod_base;
-+		cpu_addr = pp->cfg1_base;
- 		cfg_size = pp->cfg1_size;
- 		va_cfg_base = pp->va_cfg1_base;
- 	}
-@@ -561,7 +541,7 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 				  busdev, cfg_size);
- 	ret = dw_pcie_cfg_read(va_cfg_base + address, where, size, val);
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
--				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
-+				  PCIE_ATU_TYPE_IO, pp->io_base,
- 				  pp->io_bus_addr, pp->io_size);
- 
- 	return ret;
-@@ -581,12 +561,12 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
- 		type = PCIE_ATU_TYPE_CFG0;
--		cpu_addr = pp->cfg0_mod_base;
-+		cpu_addr = pp->cfg0_base;
- 		cfg_size = pp->cfg0_size;
- 		va_cfg_base = pp->va_cfg0_base;
- 	} else {
- 		type = PCIE_ATU_TYPE_CFG1;
--		cpu_addr = pp->cfg1_mod_base;
-+		cpu_addr = pp->cfg1_base;
- 		cfg_size = pp->cfg1_size;
- 		va_cfg_base = pp->va_cfg1_base;
- 	}
-@@ -596,7 +576,7 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 				  busdev, cfg_size);
- 	ret = dw_pcie_cfg_write(va_cfg_base + address, where, size, val);
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
--				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
-+				  PCIE_ATU_TYPE_IO, pp->io_base,
- 				  pp->io_bus_addr, pp->io_size);
- 
- 	return ret;
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 41d137c..264c969 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -27,19 +27,15 @@ struct pcie_port {
- 	u8			root_bus_nr;
- 	void __iomem		*dbi_base;
- 	u64			cfg0_base;
--	u64			cfg0_mod_base;
- 	void __iomem		*va_cfg0_base;
- 	u32			cfg0_size;
- 	u64			cfg1_base;
--	u64			cfg1_mod_base;
- 	void __iomem		*va_cfg1_base;
- 	u32			cfg1_size;
--	u64			io_mod_base;
- 	resource_size_t		io_base;
- 	phys_addr_t		io_bus_addr;
- 	u32			io_size;
- 	u64			mem_base;
--	u64			mem_mod_base;
- 	phys_addr_t		mem_bus_addr;
- 	u32			mem_size;
- 	struct resource		*cfg;
--- 
-1.9.1
+Having a device node without registers is also a bit problematic,
+especially the 'msi@20020000' name doesn't make sense if 0x20020000
+is not the first number in the reg property. Maybe it's best to 
+put that node directly under the PCI host controller and not assign
+any registers. This is still a bit ugly because we'd expect devices
+under the host bridge to be PCI devices rather than random other things,
+but it may be the least of the evils.
 
+	Arnd
