@@ -1,133 +1,81 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
-	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
-	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V5 6/9] device property: ACPI: Remove unused DMA APIs
-Date: Wed, 28 Oct 2015 15:50:51 -0700
-Message-ID: <1446072654-5608-7-git-send-email-Suravee.Suthikulpanit@amd.com>
-In-Reply-To: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Message-ID: <560EA099.2060907@arm.com>
+Date: Fri, 02 Oct 2015 16:19:53 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: David Daney <ddaney.cavm@gmail.com>, linux-kernel@vger.kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Grant Likely <grant.likely@linaro.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+CC: David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v4 4/4] irqchip/gic-v3-its:  Add handling of PCI requester
+ id.
+References: <1443747025-9918-1-git-send-email-ddaney.cavm@gmail.com> <1443747025-9918-5-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443747025-9918-5-git-send-email-ddaney.cavm@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These DMA APIs are replaced with the newer versions, which return
-the enum dev_dma_attr. So, we can safely remove them.
+On 02/10/15 01:50, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> Replace open coded generation PCI/MSI requester id with call to the
+> new function pci_msi_domain_get_msi_rid() which applies the "msi-map"
+> to the id value.
+> 
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+>  drivers/irqchip/irq-gic-v3-its-pci-msi.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+> index cf351c6..7bbf64a 100644
+> --- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+> +++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+> @@ -42,7 +42,6 @@ static struct irq_chip its_msi_irq_chip = {
+>  
+>  struct its_pci_alias {
+>  	struct pci_dev	*pdev;
+> -	u32		dev_id;
+>  	u32		count;
+>  };
+>  
+> @@ -60,7 +59,6 @@ static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
+>  {
+>  	struct its_pci_alias *dev_alias = data;
+>  
+> -	dev_alias->dev_id = alias;
+>  	if (pdev != dev_alias->pdev)
+>  		dev_alias->count += its_pci_msi_vec_count(dev_alias->pdev);
 
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-CC: Rafael J. Wysocki <rjw@rjwysocki.net>
----
- drivers/base/property.c  | 13 -------------
- include/acpi/acpi_bus.h  | 34 ----------------------------------
- include/linux/acpi.h     |  5 -----
- include/linux/property.h |  2 --
- 4 files changed, 54 deletions(-)
+Damn it. You've just shown me a bug. Unrelated to what you're doing, but
+still. I'll post a patch shortly.
 
-diff --git a/drivers/base/property.c b/drivers/base/property.c
-index 05d57a2..1325ff2 100644
---- a/drivers/base/property.c
-+++ b/drivers/base/property.c
-@@ -598,19 +598,6 @@ unsigned int device_get_child_node_count(struct device *dev)
- }
- EXPORT_SYMBOL_GPL(device_get_child_node_count);
- 
--bool device_dma_is_coherent(struct device *dev)
--{
--	bool coherent = false;
--
--	if (IS_ENABLED(CONFIG_OF) && dev->of_node)
--		coherent = of_dma_is_coherent(dev->of_node);
--	else
--		acpi_check_dma(ACPI_COMPANION(dev), &coherent);
--
--	return coherent;
--}
--EXPORT_SYMBOL_GPL(device_dma_is_coherent);
--
- bool device_dma_supported(struct device *dev)
- {
- 	/* For DT, this is always supported.
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 920b774..ad0a5ff 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -390,40 +390,6 @@ struct acpi_data_node {
- 	struct completion kobj_done;
- };
- 
--static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
--{
--	bool ret = false;
--
--	if (!adev)
--		return ret;
--
--	/**
--	 * Currently, we only support _CCA=1 (i.e. coherent_dma=1)
--	 * This should be equivalent to specifyig dma-coherent for
--	 * a device in OF.
--	 *
--	 * For the case when _CCA=0 (i.e. coherent_dma=0 && cca_seen=1),
--	 * There are two cases:
--	 * case 1. Do not support and disable DMA.
--	 * case 2. Support but rely on arch-specific cache maintenance for
--	 *         non-coherence DMA operations.
--	 * Currently, we implement case 2 above.
--	 *
--	 * For the case when _CCA is missing (i.e. cca_seen=0) and
--	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
--	 * and fallback to arch-specific default handling.
--	 *
--	 * See acpi_init_coherency() for more info.
--	 */
--	if (adev->flags.coherent_dma ||
--	    (adev->flags.cca_seen && IS_ENABLED(CONFIG_ARM64))) {
--		ret = true;
--		if (coherent)
--			*coherent = adev->flags.coherent_dma;
--	}
--	return ret;
--}
--
- static inline bool is_acpi_node(struct fwnode_handle *fwnode)
- {
- 	return fwnode && (fwnode->type == FWNODE_ACPI
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 6527920..fa2bbc0 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -593,11 +593,6 @@ static inline int acpi_device_modalias(struct device *dev,
- 	return -ENODEV;
- }
- 
--static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
--{
--	return false;
--}
--
- static inline bool acpi_dma_supported(struct acpi_device *adev)
- {
- 	return false;
-diff --git a/include/linux/property.h b/include/linux/property.h
-index 7200490..0a3705a 100644
---- a/include/linux/property.h
-+++ b/include/linux/property.h
-@@ -174,8 +174,6 @@ struct property_set {
- 
- void device_add_property_set(struct device *dev, struct property_set *pset);
- 
--bool device_dma_is_coherent(struct device *dev);
--
- bool device_dma_supported(struct device *dev);
- 
- enum dev_dma_attr device_get_dma_attr(struct device *dev);
+>  
+> @@ -86,7 +84,7 @@ static int its_pci_msi_prepare(struct irq_domain *domain, struct device *dev,
+>  	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
+>  
+>  	/* ITS specific DeviceID, as the core ITS ignores dev. */
+> -	info->scratchpad[0].ul = dev_alias.dev_id;
+> +	info->scratchpad[0].ul = pci_msi_domain_get_msi_rid(domain, pdev);
+>  
+>  	return msi_info->ops->msi_prepare(domain->parent,
+>  					  dev, dev_alias.count, info);
+> 
+
+Looks good to me.
+
+Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+
+	M.
 -- 
-2.1.0
-
+Jazz is not dead. It just smells funny...
