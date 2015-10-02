@@ -1,95 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:33266 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752467AbbJ0WEu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 18:04:50 -0400
-Received: by pabla5 with SMTP id la5so41334833pab.0
-        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 15:04:50 -0700 (PDT)
-From: Daniel Axtens <dja@axtens.net>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: Re: [PATCH V10 03/12] powerpc/pci: Cache VF index in pci_dn
-In-Reply-To: <1445829362-2738-4-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com> <1445829362-2738-4-git-send-email-weiyang@linux.vnet.ibm.com>
-Date: Wed, 28 Oct 2015 09:04:34 +1100
-Message-ID: <87pp00otn1.fsf@gamma.ozlabs.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1443825476-26880-4-git-send-email-ddaney.cavm@gmail.com>
+References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+	<1443825476-26880-4-git-send-email-ddaney.cavm@gmail.com>
+Date: Fri, 2 Oct 2015 16:14:08 -0700
+Message-ID: <CAE9FiQWnE3ucbjPKuXm5qhTGx7bYOBqnNoSNOMaJa_tEf3Z4=Q@mail.gmail.com>
+Subject: Re: [PATCH v4 3/5] PCI: Handle IORESOURCE_PCI_FIXED when sizing and
+ assigning resources.
+From: Yinghai Lu <yinghai@kernel.org>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
+	David Daney <david.daney@cavium.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain
-
-Hi,
-
+On Fri, Oct 2, 2015 at 3:37 PM, David Daney <ddaney.cavm@gmail.com> wrote:
+> From: David Daney <david.daney@cavium.com>
 >
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index b3a226b..3d7e537 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -210,6 +210,7 @@ struct pci_dn {
->  #define IODA_INVALID_PE		(-1)
->  #ifdef CONFIG_PPC_POWERNV
->  	int	pe_number;
-> +	int     vf_index;		/* VF index in the PF */
+> The new Enhanced Allocation (EA) capability support creates resources
+> with the IORESOURCE_PCI_FIXED set.  This creates a couple of problems:
+>
+> 1) Since these resources cannot be relocated or resized, their
+>    alignment is not really defined, and it is therefore not specified.
+>    This causes a problem in pbus_size_mem() where resources with
+>    unspecified alignment are disabled.
+>
+> 2) During resource assignment in pci_bus_assign_resources(),
+>    IORESOURCE_PCI_FIXED resources are not given a parent.  This, in
+>    turn, causes pci_enable_resources() to fail with a "not claimed"
+>    error.
+>
+> So, in pbus_size_mem() skip IORESOURCE_PCI_FIXED resources, instead of
+> disabling them.
+>
+> In __pci_bus_assign_resources(), for IORESOURCE_PCI_FIXED resources,
+> try to request the resource from a parent bus.
 
-Here, vf_index is inside CONFIG_PPC_POWERNV...
+Can you check if
 
->  #ifdef CONFIG_PCI_IOV
->  	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
->  	u16     num_vfs;		/* number of VFs enabled*/
-> diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-> index b3b4df9..f771130 100644
-> --- a/arch/powerpc/kernel/pci_dn.c
-> +++ b/arch/powerpc/kernel/pci_dn.c
-> @@ -139,6 +139,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
->  #ifdef CONFIG_PCI_IOV
->  static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
->  					   struct pci_dev *pdev,
-> +					   int vf_index,
->  					   int busno, int devfn)
->  {
->  	struct pci_dn *pdn;
-> @@ -157,6 +158,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
->  	pdn->parent = parent;
->  	pdn->busno = busno;
->  	pdn->devfn = devfn;
-> +	pdn->vf_index = vf_index;
->  #ifdef CONFIG_PPC_POWERNV
->  	pdn->pe_number = IODA_INVALID_PE;
-... but here, vf_index is outside CONFIG_PPC_POWERNV.
+https://patchwork.kernel.org/patch/7304971/
+[v6,05/53] PCI: Don't release fixed resource for realloc
 
-Otherwise, the patch looks fine to me.
+https://patchwork.kernel.org/patch/7304371/
+[v6,06/53] PCI: Claim fixed resource during remove/rescan path
 
-I'm still trying to get my head around SR-IOV generally - once I do I
-will add any more comments I have or add a reviewed-by.
+address the the problem that you met?
 
-Regards,
-Daniel
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: GPGTools - https://gpgtools.org
-
-iQIcBAEBCgAGBQJWL/TyAAoJEPC3R3P2I92FDOYQAK308mSVjJMwzWsRyQjYYhZl
-Hrow29pj8Lu4gmTdntb4xWX0+hc8uIbJpFk0mvFzIhCv/QhY0PQgURK04FQQLiv9
-lti0624zP1ah6C7JzLRkRQsCbZAuTpMlj/IvHroFg0YJQNdKkyCM2ijq+7SrKzkJ
-OUD10QA9RGTTX8tt6BfW6hHoxMPA4EB+I074LLQtNMjQcZRQh8aE/ezSpIazrPV/
-yhac7Jgf6evmRCl/xovRi5YPZs+qnyKm79o5YSaug0VLVEDwtMXySwgtKsPIZzF7
-HFCDmS9ThWo+Td9R0+dnybOgwxFhXW59aTbXcs7VLFRUtO0U1gJvv3ytKtLL1aSa
-GqxPcBhrpDeJJw1Yd94rxx7ZK8n0vJ4sAtdqCHwPsbG6wxax7YlvnNnSFzBvWerv
-5LUrEd1SEm5CE9gQrp7GLQsGg+dSPT++0muBPyA4YUMQLfsngYOmIzST620L7bfX
-jIZYIh/9JaB/GHJf4vQQ8FiZ5rHi2UEyfan3dWOgP5Tj+XXk/5bLWSQk5TV2Sc47
-t9kFgTtq1nwhfSl3SMsOdwtByxWhNhDrTCFYJbnbCBhAn0waJ7Ig1sMfp9lF9yMi
-m4IYattxpuJmVWlLC/0LAvFUuCdyiIkH68O8XjZcuaxtpEFNxcGtyoSXJ7bZ0AlW
-9pSia8FdoYjscWeP5sSL
-=i6vB
------END PGP SIGNATURE-----
---=-=-=--
+        Yinghai
