@@ -1,46 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:34175 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752111AbbJBSXx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 14:23:53 -0400
-Received: by wicfx3 with SMTP id fx3so44979219wic.1
-        for <linux-pci@vger.kernel.org>; Fri, 02 Oct 2015 11:23:52 -0700 (PDT)
-From: Ruud <netwerkforens@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Ruud <netwerkforens@gmail.com>
-Subject: [PATCH] Enumerate all undiscovered PCIe busses
-Date: Fri,  2 Oct 2015 18:23:36 +0000
-Message-Id: <1443810216-3215-1-git-send-email-netwerkforens@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v4 1/5] PCI: Add pci_bus_fixup_irqs().
+Date: Fri,  2 Oct 2015 11:43:59 -0700
+Message-Id: <1443811443-18878-2-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Multiple root complexes have a different start busnumber.
-Poll all undiscovered busses for a root complex
+From: David Daney <david.daney@cavium.com>
 
-Signed-off-by: Ruud <netwerkforens@gmail.com>
+pci_bus_fixup_irqs() works like pci_fixup_irqs(), except it only does
+the fixups for devices on the specified bus.
+
+Follow-on patch will use the new function.
+
+Signed-off-by: David Daney <david.daney@cavium.com>
 ---
- lib/generic.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+No change from v2.
 
-diff --git a/lib/generic.c b/lib/generic.c
-index c219592..21b8022 100644
---- a/lib/generic.c
-+++ b/lib/generic.c
-@@ -69,9 +69,13 @@ void
- pci_generic_scan(struct pci_access *a)
- {
-   byte busmap[256];
-+  int basebus;
- 
-   memset(busmap, 0, sizeof(busmap));
--  pci_generic_scan_bus(a, busmap, 0);
-+  for(basebus=0;basebus<256;basebus++) {
-+      if (busmap[basebus]==0)
-+          pci_generic_scan_bus(a, busmap, basebus);
-+  }
+ drivers/pci/setup-irq.c | 30 ++++++++++++++++++++++++++++++
+ include/linux/pci.h     |  4 ++++
+ 2 files changed, 34 insertions(+)
+
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index 95c225b..189ad17 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -66,3 +66,33 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+ 		pdev_fixup_irq(dev, swizzle, map_irq);
  }
- 
- int
+ EXPORT_SYMBOL_GPL(pci_fixup_irqs);
++
++struct pci_bus_fixup_cb_info {
++	u8 (*swizzle)(struct pci_dev *, u8 *);
++	int (*map_irq)(const struct pci_dev *, u8, u8);
++};
++
++static int pci_bus_fixup_irq_cb(struct pci_dev *dev, void *arg)
++{
++	struct pci_bus_fixup_cb_info *info = arg;
++
++	pdev_fixup_irq(dev, info->swizzle, info->map_irq);
++	return 0;
++}
++
++/*
++ * Fixup the irqs only for devices on the given bus using supplied
++ * swizzle and map_irq function pointers
++ */
++void pci_bus_fixup_irqs(struct pci_bus *bus,
++			u8 (*swizzle)(struct pci_dev *, u8 *),
++			int (*map_irq)(const struct pci_dev *, u8, u8))
++{
++	struct pci_bus_fixup_cb_info info;
++
++	info.swizzle = swizzle;
++	info.map_irq = map_irq;
++	pci_walk_bus(bus, pci_bus_fixup_irq_cb, &info);
++
++}
++EXPORT_SYMBOL_GPL(pci_bus_fixup_irqs);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e90eb22..b505b50 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1120,6 +1120,10 @@ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+ 		    int (*)(const struct pci_dev *, u8, u8));
++void pci_bus_fixup_irqs(struct pci_bus *,
++			u8 (*)(struct pci_dev *, u8 *),
++			int (*)(const struct pci_dev *, u8, u8));
++
+ #define HAVE_PCI_REQ_REGIONS	2
+ int __must_check pci_request_regions(struct pci_dev *, const char *);
+ int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
 -- 
-1.7.0.4
+1.9.1
 
