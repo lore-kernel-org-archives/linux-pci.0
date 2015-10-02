@@ -1,73 +1,38 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <562B99E3.7020209@intel.com>
-Date: Sat, 24 Oct 2015 22:46:59 +0800
-From: "Lan, Tianyu" <tianyu.lan@intel.com>
-MIME-Version: 1.0
-To: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
-	pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-Subject: Re: [RFC Patch 01/12] PCI: Add virtfn_index for struct pci_device
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com> <1445445464-5056-2-git-send-email-tianyu.lan@intel.com> <5627D45A.4040502@gmail.com>
-In-Reply-To: <5627D45A.4040502@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor3.renesas.com ([210.160.252.173]:58097 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751189AbbJBK1p (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 06:27:45 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Simon Horman <horms@verge.net.au>,
+	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Phil Edworthy <phil.edworthy@renesas.com>
+Message-ID: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
+Date: Fri, 2 Oct 2015 11:25:03 +0100
+Subject: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple instances
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Fixes and changes to get PCIe working on ARM64 with mulitple instances.
 
+I've tested these on ARM (Koelsch board), and it works fine.
+I've also tested on ARM64 (Salvator-X board), but I currently have an issue
+with inbound PCI accesses. I am reasonably sure that this problem is hardware
+related.
 
-On 10/22/2015 2:07 AM, Alexander Duyck wrote:
-> On 10/21/2015 09:37 AM, Lan Tianyu wrote:
->> Add "virtfn_index" member in the struct pci_device to record VF sequence
->> of PF. This will be used in the VF sysfs node handle.
->>
->> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
->> ---
->>   drivers/pci/iov.c   | 1 +
->>   include/linux/pci.h | 1 +
->>   2 files changed, 2 insertions(+)
->>
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index ee0ebff..065b6bb 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -136,6 +136,7 @@ static int virtfn_add(struct pci_dev *dev, int id,
->> int reset)
->>       virtfn->physfn = pci_dev_get(dev);
->>       virtfn->is_virtfn = 1;
->>       virtfn->multifunction = 0;
->> +    virtfn->virtfn_index = id;
->>       for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
->>           res = &dev->resource[i + PCI_IOV_RESOURCES];
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 353db8d..85c5531 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -356,6 +356,7 @@ struct pci_dev {
->>       unsigned int    io_window_1k:1;    /* Intel P2P bridge 1K I/O
->> windows */
->>       unsigned int    irq_managed:1;
->>       pci_dev_flags_t dev_flags;
->> +    unsigned int    virtfn_index;
->>       atomic_t    enable_cnt;    /* pci_enable_device has been called */
->>       u32        saved_config_space[16]; /* config space saved at
->> suspend time */
->>
->
-> Can't you just calculate the VF index based on the VF BDF number
-> combined with the information in the PF BDF number and VF
-> offset/stride?  Seems kind of pointless to add a variable that is only
-> used by one driver and is in a slowpath when you can just calculate it
-> pretty quickly.
+Phil Edworthy (4):
+  PCI: rcar-pcie: Make PCI aware of the IO resources
+  PCI: rcar-pcie: Remove dependency on ARM-specific struct hw_pci
+  PCI: rcar-pcie: Set root bus nr to that provided in DT
+  PCI: rcar-pcie: Fix IO offset for multiple instances
 
-Good suggestion. Will try it.
+ drivers/pci/host/pcie-rcar.c | 86 ++++++++++++++++++++++++++++----------------
+ 1 file changed, 55 insertions(+), 31 deletions(-)
 
->
-> - Alex
+-- 
+1.9.1
+
