@@ -1,110 +1,283 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 41/61] PCI: Separate required+optional assigning to another function
-Date: Tue, 27 Oct 2015 13:55:33 -0700
-Message-Id: <1445979353-1728-42-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f195.google.com ([209.85.223.195]:34790 "EHLO
+	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750866AbbJBAui (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 20:50:38 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v4 1/4] Docs: dt: Add PCI MSI map bindings
+Date: Thu,  1 Oct 2015 17:50:22 -0700
+Message-Id: <1443747025-9918-2-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443747025-9918-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1443747025-9918-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-__assign_resources_sorted() is getting too big if we put alt_size support
-into it.  Split out required+optional assigning code to another function.
+From: Mark Rutland <mark.rutland@arm.com>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Currently msi-parent is used by a few bindings to describe the
+relationship between a PCI root complex and a single MSI controller, but
+this property does not have a generic binding document.
+
+Additionally, msi-parent is insufficient to describe more complex
+relationships between MSI controllers and devices under a root complex,
+where devices may be able to target multiple MSI controllers, or where
+MSI controllers use (non-probeable) sideband information to distinguish
+devices.
+
+This patch adds a generic binding for mapping PCI devices to MSI
+controllers. This document covers msi-parent, and a new msi-map property
+(specific to PCI*) which may be used to map devices (identified by their
+Requester ID) to sideband data for each MSI controller that they may
+target.
+
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Mark Rutland <mark.rutland@arm.com>
+Signed-off-by: David Daney <david.daney@cavium.com>
 ---
- drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
- 1 file changed, 27 insertions(+), 20 deletions(-)
+ Documentation/devicetree/bindings/pci/pci-msi.txt | 220 ++++++++++++++++++++++
+ 1 file changed, 220 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/pci-msi.txt
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 09844d9..c49bfde 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -473,20 +473,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
- 	res->flags = save_res->flags;
- }
- 
--static void __assign_resources_sorted(struct list_head *head,
--				 struct list_head *realloc_head,
--				 struct list_head *fail_head)
-+static bool __assign_resources_required_optional_sorted(struct list_head *head,
-+				 struct list_head *realloc_head)
- {
--	/*
--	 * Should not assign requested resources at first.
--	 *   they could be adjacent, so later reassign can not reallocate
--	 *   them one by one in parent resource window.
--	 * Try to assign requested + add_size at beginning
--	 *  if could do that, could get out early.
--	 *  if could not do that, we still try to assign requested at first,
--	 *    then try to reassign add_size for some resources.
--	 */
--
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
-@@ -495,12 +484,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	resource_size_t add_align;
- 	struct resource *res;
- 
--	/* Check if optional add_size is there */
--	if (!realloc_head || list_empty(realloc_head))
--		goto requested_and_reassign;
--
- 	if (!save_resources(head, &save_head))
--		goto requested_and_reassign;
-+		return false;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -539,7 +524,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 			remove_from_list(realloc_head, dev_res->res);
- 		free_list(&save_head);
- 		free_list(head);
--		return;
+diff --git a/Documentation/devicetree/bindings/pci/pci-msi.txt b/Documentation/devicetree/bindings/pci/pci-msi.txt
+new file mode 100644
+index 0000000..9b3cc81
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/pci-msi.txt
+@@ -0,0 +1,220 @@
++This document describes the generic device tree binding for describing the
++relationship between PCI devices and MSI controllers.
 +
-+		return true;
- 	}
- 
- 	/* check failed type */
-@@ -574,7 +560,28 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	free_list(&save_head);
- 
--requested_and_reassign:
-+	return false;
-+}
++Each PCI device under a root complex is uniquely identified by its Requester ID
++(AKA RID). A Requester ID is a triplet of a Bus number, Device number, and
++Function number.
 +
-+static void __assign_resources_sorted(struct list_head *head,
-+				 struct list_head *realloc_head,
-+				 struct list_head *fail_head)
-+{
-+	/*
-+	 * Should not assign required resources at first.
-+	 *   they could be adjacent, so later reassign can not reallocate
-+	 *   them one by one in parent resource window.
-+	 * Try to assign required + optional at beginning
-+	 *  if could do that, could get out early.
-+	 *  if could not do that, we still try to assign required at first,
-+	 *    then try to reassign add_size for some resources.
-+	 */
++For the purpose of this document, when treated as a numeric value, a RID is
++formatted such that:
 +
-+	/* Check required+optional add */
-+	if (realloc_head && !list_empty(realloc_head) &&
-+	    __assign_resources_required_optional_sorted(head, realloc_head))
-+		return;
++* Bits [15:8] are the Bus number.
++* Bits [7:3] are the Device number.
++* Bits [2:0] are the Function number.
++* Any other bits required for padding must be zero.
 +
- 	sort_resources(head);
- 
- 	/* Satisfy the must-have resource requests */
++MSIs may be distinguished in part through the use of sideband data accompanying
++writes. In the case of PCI devices, this sideband data may be derived from the
++Requester ID. A mechanism is required to associate a device with both the MSI
++controllers it can address, and the sideband data that will be associated with
++its writes to those controllers.
++
++For generic MSI bindings, see
++Documentation/devicetree/bindings/interrupt-controller/msi.txt.
++
++
++PCI root complex
++================
++
++Optional properties
++-------------------
++
++- msi-map: Maps a Requester ID to an MSI controller and associated
++  msi-specifier data. The property is an arbitrary number of tuples of
++  (rid-base,msi-controller,msi-base,length), where:
++
++  * rid-base is a single cell describing the first RID matched by the entry.
++
++  * msi-controller is a single phandle to an MSI controller
++
++  * msi-base is an msi-specifier describing the msi-specifier produced for the
++    first RID matched by the entry.
++
++  * length is a single cell describing how many consecutive RIDs are matched
++    following the rid-base.
++
++  Any RID r in the interval [rid-base, rid-base + length) is associated with
++  the listed msi-controller, with the msi-specifier (r - rid-base + msi-base).
++
++- msi-map-mask: A mask to be applied to each Requester ID prior to being mapped
++  to an msi-specifier per the msi-map property.
++
++- msi-parent: Describes the MSI parent of the root complex itself. Where
++  the root complex and MSI controller do not pass sideband data with MSI
++  writes, this property may be used to describe the MSI controller(s)
++  used by PCI devices under the root complex, if defined as such in the
++  binding for the root complex.
++
++
++Example (1)
++===========
++
++/ {
++	#address-cells = <1>;
++	#size-cells = <1>;
++
++	msi: msi-controller@a {
++		reg = <0xa 0x1>;
++		compatible = "vendor,some-controller";
++		msi-controller;
++		#msi-cells = <1>;
++	};
++
++	pci: pci@f {
++		reg = <0xf 0x1>;
++		compatible = "vendor,pcie-root-complex";
++		device_type = "pci";
++
++		/*
++		 * The sideband data provided to the MSI controller is
++		 * the RID, identity-mapped.
++		 */
++		msi-map = <0x0 &msi_a 0x0 0x10000>,
++	};
++};
++
++
++Example (2)
++===========
++
++/ {
++	#address-cells = <1>;
++	#size-cells = <1>;
++
++	msi: msi-controller@a {
++		reg = <0xa 0x1>;
++		compatible = "vendor,some-controller";
++		msi-controller;
++		#msi-cells = <1>;
++	};
++
++	pci: pci@f {
++		reg = <0xf 0x1>;
++		compatible = "vendor,pcie-root-complex";
++		device_type = "pci";
++
++		/*
++		 * The sideband data provided to the MSI controller is
++		 * the RID, masked to only the device and function bits.
++		 */
++		msi-map = <0x0 &msi_a 0x0 0x100>,
++		msi-map-mask = <0xff>
++	};
++};
++
++
++Example (3)
++===========
++
++/ {
++	#address-cells = <1>;
++	#size-cells = <1>;
++
++	msi: msi-controller@a {
++		reg = <0xa 0x1>;
++		compatible = "vendor,some-controller";
++		msi-controller;
++		#msi-cells = <1>;
++	};
++
++	pci: pci@f {
++		reg = <0xf 0x1>;
++		compatible = "vendor,pcie-root-complex";
++		device_type = "pci";
++
++		/*
++		 * The sideband data provided to the MSI controller is
++		 * the RID, but the high bit of the bus number is
++		 * ignored.
++		 */
++		msi-map = <0x0000 &msi 0x0000 0x8000>,
++			  <0x8000 &msi 0x0000 0x8000>;
++	};
++};
++
++
++Example (4)
++===========
++
++/ {
++	#address-cells = <1>;
++	#size-cells = <1>;
++
++	msi: msi-controller@a {
++		reg = <0xa 0x1>;
++		compatible = "vendor,some-controller";
++		msi-controller;
++		#msi-cells = <1>;
++	};
++
++	pci: pci@f {
++		reg = <0xf 0x1>;
++		compatible = "vendor,pcie-root-complex";
++		device_type = "pci";
++
++		/*
++		 * The sideband data provided to the MSI controller is
++		 * the RID, but the high bit of the bus number is
++		 * negated.
++		 */
++		msi-map = <0x0000 &msi 0x8000 0x8000>,
++			  <0x8000 &msi 0x0000 0x8000>;
++	};
++};
++
++
++Example (5)
++===========
++
++/ {
++	#address-cells = <1>;
++	#size-cells = <1>;
++
++	msi_a: msi-controller@a {
++		reg = <0xa 0x1>;
++		compatible = "vendor,some-controller";
++		msi-controller;
++		#msi-cells = <1>;
++	};
++
++	msi_b: msi-controller@b {
++		reg = <0xb 0x1>;
++		compatible = "vendor,some-controller";
++		msi-controller;
++		#msi-cells = <1>;
++	};
++
++	msi_c: msi-controller@c {
++		reg = <0xc 0x1>;
++		compatible = "vendor,some-controller";
++		msi-controller;
++		#msi-cells = <1>;
++	};
++
++	pci: pci@c {
++		reg = <0xf 0x1>;
++		compatible = "vendor,pcie-root-complex";
++		device_type = "pci";
++
++		/*
++		 * The sideband data provided to MSI controller a is the
++		 * RID, but the high bit of the bus number is negated.
++		 * The sideband data provided to MSI controller b is the
++		 * RID, identity-mapped.
++		 * MSI controller c is not addressable.
++		 */
++		msi-map = <0x0000 &msi_a 0x8000 0x08000>,
++			  <0x8000 &msi_a 0x0000 0x08000>,
++			  <0x0000 &msi_b 0x0000 0x10000>;
++	};
++};
 -- 
-1.8.4.5
+1.9.1
 
