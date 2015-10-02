@@ -1,73 +1,145 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"rjui@broadcom.com" <rjui@broadcom.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>
-CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Ravikiran Gummaluri" <rgummal@xilinx.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v3] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Date: Fri, 9 Oct 2015 05:11:20 +0000
-Message-ID: <8520D5D51A55D047800579B09414719801690CD0@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1444146289-28940-1-git-send-email-bharatku@xilinx.com>
- <5613F310.6060305@arm.com>
- <8520D5D51A55D047800579B0941471980169063F@XAP-PVEXMBX01.xlnx.xilinx.com>
- <5613F9C8.9020000@arm.com>
-In-Reply-To: <5613F9C8.9020000@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [RFC][PATCH v2 1/2] PM / sleep: Add flags to indicate platform firmware involvement
+Date: Fri, 02 Oct 2015 03:52:34 +0200
+Message-ID: <1753290.aWURjseO2E@vostro.rjw.lan>
+In-Reply-To: <5472042.4c1h9diL7E@vostro.rjw.lan>
+References: <10641052.oOBhM6BU9G@vostro.rjw.lan> <5472042.4c1h9diL7E@vostro.rjw.lan>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> >> +struct nwl_msi {                  /* struct nwl_msi - MSI information
-> */
-> >> +  struct msi_controller chip;     /* chip: MSI controller */
-> >
-> >> We're moving away from msi_controller altogether, as the kernel now
-> >> has all the necessary infrastructure to do this properly.
-> >
-> > Our current GIC version does not have separate msi controller (we are
-> > not using GICv2m or GICv3), so is it necessary to have separate msi
-> > controller node ? Please give me clarity on this.
->
-> This has nothing to do with the version of the GIC you are using (XGene
-> doesn't have GICv2m or v3 either). This is about reducing code duplication
-> and having something that we can maintain. See also
-> https://lkml.org/lkml/2015/9/20/193 for yet another example.
->
-> I still plan to kill msi_controller, and I'd like to avoid more dependencies with
-> it. MSI domains are the way to do it.
->
-Sorry previously I haven't configured my email client properly so resending.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Since we don't have separate MSI controller, and our PCIe controller is handling MSI, is it necessary to create a separate MSI controller node because we don't have any 'reg' space.
-Please let me know whether we require a separate msi file as suggested in your previous comments to separate MSI controller and PCIE controller in two files, if we don't have separate node.
-If we do not need a separate node do we need to embed MSI controller child node  in PCIe controller node itself, and what properties does this child node will require other than 'interrupts'.
+There are quite a few cases in which device drivers, bus types or
+even the PM core itself may benefit from knowing whether or not
+the platform firmware will be involved in the upcoming system power
+transition (during system suspend) or whether or not it was involved
+in it (during system resume).
 
-Bharat
-> Thanks,
->
->       M.
-> --
-> Jazz is not dead. It just smells funny...
+For this reason, introduce global system suspend flags that can be
+used by the platform code to expose that information for the benefit
+of the other parts of the kernel and make the ACPI core set them
+as appropriate.
 
+Users of the new flags will be added later.
 
-This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+
+v1 -> v2: Apply EXPORT_SYMBOL_GPL() to pm_suspend_global_flags so modular
+drivers can use it too.
+
+---
+ drivers/acpi/sleep.c    |    3 +++
+ include/linux/suspend.h |   36 ++++++++++++++++++++++++++++++++++++
+ kernel/power/suspend.c  |    4 ++++
+ 3 files changed, 43 insertions(+)
+
+Index: linux-pm/include/linux/suspend.h
+===================================================================
+--- linux-pm.orig/include/linux/suspend.h
++++ linux-pm/include/linux/suspend.h
+@@ -202,6 +202,36 @@ struct platform_freeze_ops {
+ extern void suspend_set_ops(const struct platform_suspend_ops *ops);
+ extern int suspend_valid_only_mem(suspend_state_t state);
+ 
++extern unsigned int pm_suspend_global_flags;
++
++#define PM_SUSPEND_FLAG_FW_SUSPEND	(1 << 0)
++#define PM_SUSPEND_FLAG_FW_RESUME	(1 << 1)
++
++static inline void pm_suspend_clear_flags(void)
++{
++	pm_suspend_global_flags = 0;
++}
++
++static inline void pm_set_suspend_via_firmware(void)
++{
++	pm_suspend_global_flags |= PM_SUSPEND_FLAG_FW_SUSPEND;
++}
++
++static inline void pm_set_resume_via_firmware(void)
++{
++	pm_suspend_global_flags |= PM_SUSPEND_FLAG_FW_RESUME;
++}
++
++static inline bool pm_suspend_via_firmware(void)
++{
++	return !!(pm_suspend_global_flags & PM_SUSPEND_FLAG_FW_SUSPEND);
++}
++
++static inline bool pm_resume_via_firmware(void)
++{
++	return !!(pm_suspend_global_flags & PM_SUSPEND_FLAG_FW_RESUME);
++}
++
+ /* Suspend-to-idle state machnine. */
+ enum freeze_state {
+ 	FREEZE_STATE_NONE,      /* Not suspended/suspending. */
+@@ -241,6 +271,12 @@ extern int pm_suspend(suspend_state_t st
+ #else /* !CONFIG_SUSPEND */
+ #define suspend_valid_only_mem	NULL
+ 
++static inline void pm_suspend_clear_flags(void) {}
++static inline void pm_set_suspend_via_firmware(void) {}
++static inline void pm_set_resume_via_firmware(void) {}
++static inline bool pm_suspend_via_firmware(void) { return false; }
++static inline bool pm_resume_via_firmware(void) { return false; }
++
+ static inline void suspend_set_ops(const struct platform_suspend_ops *ops) {}
+ static inline int pm_suspend(suspend_state_t state) { return -ENOSYS; }
+ static inline bool idle_should_freeze(void) { return false; }
+Index: linux-pm/kernel/power/suspend.c
+===================================================================
+--- linux-pm.orig/kernel/power/suspend.c
++++ linux-pm/kernel/power/suspend.c
+@@ -35,6 +35,9 @@
+ const char *pm_labels[] = { "mem", "standby", "freeze", NULL };
+ const char *pm_states[PM_SUSPEND_MAX];
+ 
++unsigned int pm_suspend_global_flags;
++EXPORT_SYMBOL_GPL(pm_suspend_global_flags);
++
+ static const struct platform_suspend_ops *suspend_ops;
+ static const struct platform_freeze_ops *freeze_ops;
+ static DECLARE_WAIT_QUEUE_HEAD(suspend_freeze_wait_head);
+@@ -493,6 +496,7 @@ static int enter_state(suspend_state_t s
+ #endif
+ 
+ 	pr_debug("PM: Preparing system for sleep (%s)\n", pm_states[state]);
++	pm_suspend_clear_flags();
+ 	error = suspend_prepare(state);
+ 	if (error)
+ 		goto Unlock;
+Index: linux-pm/drivers/acpi/sleep.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/sleep.c
++++ linux-pm/drivers/acpi/sleep.c
+@@ -487,6 +487,8 @@ static int acpi_suspend_begin(suspend_st
+ 		pr_err("ACPI does not support sleep state S%u\n", acpi_state);
+ 		return -ENOSYS;
+ 	}
++	if (acpi_state > ACPI_STATE_S1)
++		pm_set_suspend_via_firmware();
+ 
+ 	acpi_pm_start(acpi_state);
+ 	return 0;
+@@ -522,6 +524,7 @@ static int acpi_suspend_enter(suspend_st
+ 		if (error)
+ 			return error;
+ 		pr_info(PREFIX "Low-level resume complete\n");
++		pm_set_resume_via_firmware();
+ 		break;
+ 	}
+ 	trace_suspend_resume(TPS("acpi_suspend"), acpi_state, false);
 
