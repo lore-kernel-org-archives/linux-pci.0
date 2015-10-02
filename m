@@ -1,47 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:33382 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965331AbbJ0UwK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 16:52:10 -0400
-Received: by pabla5 with SMTP id la5so39776848pab.0
-        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 13:52:10 -0700 (PDT)
-Subject: [PATCH 0/5] Various of SR-IOV fixes and cleanup
-From: Alexander Duyck <aduyck@mirantis.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 27 Oct 2015 13:52:08 -0700
-Message-ID: <20151027204607.14626.59671.stgit@localhost.localdomain>
+Received: from mout.kundenserver.de ([212.227.17.24]:52629 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751475AbbJBV5D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 17:57:03 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v7 5/6] Documentation: dt-bindings: pci: altera pcie device tree binding
+Date: Fri, 02 Oct 2015 23:56:37 +0200
+Message-ID: <6497772.rqSurELzER@wuerfel>
+In-Reply-To: <CAFiDJ5_MYC=V_L1LyRNq00z=DerzKAF=RF5av9vHnUPP+9a1nw@mail.gmail.com>
+References: <1442801587-3812-1-git-send-email-lftan@altera.com> <CAL_JsqL9eoTRa2-eeNJgVoO=0LyuaaJ87E4_BS0KocRKBXGdGA@mail.gmail.com> <CAFiDJ5_MYC=V_L1LyRNq00z=DerzKAF=RF5av9vHnUPP+9a1nw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set is meant to address several issues found in recent patches
-currently in the pci/virtualization branch.
+On Friday 02 October 2015 15:53:44 Ley Foon Tan wrote:
+> > Strictly speaking, if you have undocumented bindings downstream that
+> > is your problem and we don't have to accept them as-is upstream. I'm
+> > not going to worry about that here.
+> >
+> >>> txs contains the config space?
+> >> It is not the config space, but a memory slave port.
+> >
+> > Then where is the config space? It should not be part of "ranges" is
+> > all I care about.
+> The config space is not part of "ranges". Our IP uses TLP packet to
+> access config space.
+> 
 
-The first two patches address possible issues in initialization.
-Specifically the fact that offset and stride cannot be read while numvfs is
-0, and that the BARs need to be reset if totalVFs has increased because the
-BIOS likely allocated the given resources under the assumption of a smaller
-number of VFs being available.
+It took me a bit to figure out what you mean here. To save others
+from reading the source, here is what I found:
 
-The last 3 address a number of issues in sriov_enable.  They started as
-just a patch to address the offset and stride issues, however there were
-some other issues found related to pcibios_enable_sriov that I decided to
-address as well, and then there was some minor cleanup in addition to all
-of that.
+* The config space is accessed indirectly through registers from the
+  "cra" register range, which is the right approach according to the
+  point that Rob made.
+* hardware-wise this basically looks like bit-banged PCIe, which is
+  both awesome and scary ;-)
 
----
-
-Alexander Duyck (5):
-      iov: Update virtfn_max_buses to validate offset and stride
-      iov: Reset resources to 0 if totalVFs increases after enabling ARI
-      iov: Fix sriov_enable exception handling path
-      iov: Variable and loop cleanup for sriov_disable and sriov_enable
-      iov: Update sriov_enable to correctly handle offset and stride
-
-
- drivers/pci/iov.c |  123 ++++++++++++++++++++++++++++-------------------------
- 1 file changed, 65 insertions(+), 58 deletions(-)
-
---
+	Arnd
