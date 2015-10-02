@@ -1,126 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36731 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753249AbbJOPjf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Oct 2015 11:39:35 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: Ma Jun <majun258@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH RFC 1/7] platform-msi: Allow MSIs to be allocated in chunks
-Date: Thu, 15 Oct 2015 16:39:22 +0100
-Message-Id: <1444923568-17413-2-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
-References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
+Received: from mail-io0-f179.google.com ([209.85.223.179]:33165 "EHLO
+	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751574AbbJBWiD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 18:38:03 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com
+Cc: "Signed-off-by: David Daney" <david.daney@cavium.com>
+Subject: [PATCH v4 1/5] PCI: Add Enhanced Allocation register entries
+Date: Fri,  2 Oct 2015 15:37:52 -0700
+Message-Id: <1443825476-26880-2-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-MSIs for a given device are normally all allocated in one go.
-Make sure the internal code can allocate them one at a time
-if required.
+From: "Sean O. Stalley" <sean.stalley@intel.com>
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Add registers defined in PCI-SIG's Enhanced allocation ECN.
+
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+[david.daney@cavium.com: Added more definitions for PCI_EA_BEI_*]
+Signed-off-by: Signed-off-by: David Daney <david.daney@cavium.com>
 ---
- drivers/base/platform-msi.c | 32 ++++++++++++++++++++------------
- 1 file changed, 20 insertions(+), 12 deletions(-)
+ include/uapi/linux/pci_regs.h | 44 ++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 43 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/base/platform-msi.c b/drivers/base/platform-msi.c
-index 5df4575..6148c78 100644
---- a/drivers/base/platform-msi.c
-+++ b/drivers/base/platform-msi.c
-@@ -25,6 +25,7 @@
- #include <linux/slab.h>
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 413417f..352e418 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -216,7 +216,8 @@
+ #define  PCI_CAP_ID_MSIX	0x11	/* MSI-X */
+ #define  PCI_CAP_ID_SATA	0x12	/* SATA Data/Index Conf. */
+ #define  PCI_CAP_ID_AF		0x13	/* PCI Advanced Features */
+-#define  PCI_CAP_ID_MAX		PCI_CAP_ID_AF
++#define  PCI_CAP_ID_EA		0x14	/* PCI Enhanced Allocation */
++#define  PCI_CAP_ID_MAX		PCI_CAP_ID_EA
+ #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
+ #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
+ #define PCI_CAP_SIZEOF		4
+@@ -353,6 +354,47 @@
+ #define  PCI_AF_STATUS_TP	0x01
+ #define PCI_CAP_AF_SIZEOF	6	/* size of AF registers */
  
- #define DEV_ID_SHIFT	24
-+#define MAX_DEV_MSIS	(1 << (32 - DEV_ID_SHIFT))
++/* PCI Enhanced Allocation registers */
++
++#define PCI_EA_NUM_ENT		2	/* Number of Capability Entries */
++#define PCI_EA_NUM_ENT_MASK	0x3f	/* Num Entries Mask */
++#define PCI_EA_FIRST_ENT	4	/* First EA Entry in List */
++#define PCI_EA_FIRST_ENT_BRIDGE	8	/* First EA Entry for Bridges */
++#define PCI_EA_ES		0x7	/* Entry Size */
++#define PCI_EA_BEI(x)	(((x) >> 4) & 0xf) /* BAR Equivalent Indicator */
++/* 0-5 map to BARs 0-5 respectively */
++#define  PCI_EA_BEI_BAR0	0
++#define  PCI_EA_BEI_BAR5	5
++#define  PCI_EA_BEI_BRIDGE	6	/* Resource behind bridge */
++#define  PCI_EA_BEI_ENI		7	/* Equivalent Not Indicated */
++#define  PCI_EA_BEI_ROM		8	/* Expansion ROM */
++/* 9-14 map to VF BARs 0-5 respectively */
++#define  PCI_EA_BEI_VF_BAR0	9
++#define  PCI_EA_BEI_VF_BAR5	14
++#define  PCI_EA_BEI_RESERVED	15	/* Reserved - Treat like ENI */
++
++#define PCI_EA_PP(x)	(((x) >>  8) & 0xff)	/* Primary Properties */
++#define PCI_EA_SP(x)	(((x) >> 16) & 0xff)	/* Secondary Properties */
++#define  PCI_EA_P_MEM			0x00	/* Non-Prefetch Memory */
++#define  PCI_EA_P_MEM_PREFETCH		0x01	/* Prefetchable Memory */
++#define  PCI_EA_P_IO			0x02	/* I/O Space */
++#define  PCI_EA_P_VIRT_MEM_PREFETCH	0x03	/* VF Prefetchable Memory */
++#define  PCI_EA_P_VIRT_MEM		0x04	/* VF Non-Prefetch Memory */
++#define  PCI_EA_P_BRIDGE_MEM		0x05	/* Bridge Non-Prefetch Memory */
++#define  PCI_EA_P_BRIDGE_MEM_PREFETCH	0x06	/* Bridge Prefetchable Memory */
++#define  PCI_EA_P_BRIDGE_IO		0x07	/* Bridge I/O Space */
++/* 0x08-0xfc reserved */
++#define  PCI_EA_P_MEM_RESERVED		0xfd	/* Reserved Memory */
++#define  PCI_EA_P_IO_RESERVED		0xfe	/* Reserved I/O Space */
++#define  PCI_EA_P_UNAVAILABLE		0xff	/* Entry Unavailable */
++#define PCI_EA_WRITEABLE	BIT(30) /* Writable, 1 = RW, 0 = HwInit */
++#define PCI_EA_ENABLE		BIT(31) /* Enable for this entry */
++#define PCI_EA_BASE		4	/* Base Address Offset */
++#define PCI_EA_MAX_OFFSET	8	/* MaxOffset (resource length) */
++/* bit 0 is reserved */
++#define PCI_EA_IS_64		BIT(1)	/* 64-bit field flag */
++#define PCI_EA_FIELD_MASK	0xfffffffc	/* For Base & Max Offset */
++
+ /* PCI-X registers (Type 0 (non-bridge) devices) */
  
- /*
-  * Internal data structure containing a (made up, but unique) devid
-@@ -110,13 +111,16 @@ static void platform_msi_update_chip_ops(struct msi_domain_info *info)
- 		chip->irq_write_msi_msg = platform_msi_write_msg;
- }
- 
--static void platform_msi_free_descs(struct device *dev)
-+static void platform_msi_free_descs(struct device *dev, int base, int nvec)
- {
- 	struct msi_desc *desc, *tmp;
- 
- 	list_for_each_entry_safe(desc, tmp, dev_to_msi_list(dev), list) {
--		list_del(&desc->list);
--		free_msi_entry(desc);
-+		if (desc->platform.msi_index >= base &&
-+		    desc->platform.msi_index < (base + nvec)) {
-+			list_del(&desc->list);
-+			free_msi_entry(desc);
-+		}
- 	}
- }
- 
-@@ -124,17 +128,22 @@ static int platform_msi_alloc_descs(struct device *dev, int nvec,
- 				    struct platform_msi_priv_data *data)
- 
- {
--	int i;
-+	struct msi_desc *desc;
-+	int i, base = 0;
- 
--	for (i = 0; i < nvec; i++) {
--		struct msi_desc *desc;
-+	if (!list_empty(dev_to_msi_list(dev))) {
-+		desc = list_last_entry(dev_to_msi_list(dev),
-+				       struct msi_desc, list);
-+		base = desc->platform.msi_index + 1;
-+	}
- 
-+	for (i = 0; i < nvec; i++) {
- 		desc = alloc_msi_entry(dev);
- 		if (!desc)
- 			break;
- 
- 		desc->platform.msi_priv_data = data;
--		desc->platform.msi_index = i;
-+		desc->platform.msi_index = base + i;
- 		desc->nvec_used = 1;
- 
- 		list_add_tail(&desc->list, dev_to_msi_list(dev));
-@@ -142,7 +151,7 @@ static int platform_msi_alloc_descs(struct device *dev, int nvec,
- 
- 	if (i != nvec) {
- 		/* Clean up the mess */
--		platform_msi_free_descs(dev);
-+		platform_msi_free_descs(dev, base, nvec);
- 
- 		return -ENOMEM;
- 	}
-@@ -201,8 +210,7 @@ int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
- 	 * accordingly (which would impact the max number of MSI
- 	 * capable devices).
- 	 */
--	if (!dev->msi_domain || !write_msi_msg || !nvec ||
--	    nvec > (1 << (32 - DEV_ID_SHIFT)))
-+	if (!dev->msi_domain || !write_msi_msg || !nvec || nvec > MAX_DEV_MSIS)
- 		return -EINVAL;
- 
- 	if (dev->msi_domain->bus_token != DOMAIN_BUS_PLATFORM_MSI) {
-@@ -238,7 +246,7 @@ int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
- 	return 0;
- 
- out_free_desc:
--	platform_msi_free_descs(dev);
-+	platform_msi_free_descs(dev, 0, nvec);
- out_free_id:
- 	ida_simple_remove(&platform_msi_devid_ida, priv_data->devid);
- out_free_data:
-@@ -266,5 +274,5 @@ void platform_msi_domain_free_irqs(struct device *dev)
- 	}
- 
- 	msi_domain_free_irqs(dev->msi_domain, dev);
--	platform_msi_free_descs(dev);
-+	platform_msi_free_descs(dev, 0, MAX_DEV_MSIS);
- }
+ #define PCI_X_CMD		2	/* Modes & Features */
 -- 
-2.1.4
+1.9.1
 
