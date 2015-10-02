@@ -1,83 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0100.outbound.protection.outlook.com ([65.55.169.100]:36103
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933645AbbJHPkJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Oct 2015 11:40:09 -0400
-Message-ID: <56168E4E.3070405@caviumnetworks.com>
-Date: Thu, 8 Oct 2015 08:39:58 -0700
-From: David Daney <ddaney@caviumnetworks.com>
+Received: from smtp304.stejtech.net ([91.236.209.154]:54818 "EHLO
+	smtp304-outgoing.stejtech.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752767AbbJBOc0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 10:32:26 -0400
+Received: from promail.crossnet.net (unknown [213.132.113.130])
+	(using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp304.stejtech.net (Postfix) with ESMTPS id 94CF92833FC
+	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2015 16:24:10 +0200 (CEST)
+Subject: Fwd: SWIOTLB on 32-bit PAE.
+References: <560E9007.1000604@t2data.com>
+To: <linux-pci@vger.kernel.org>
+From: Christian Melki <christian.melki@t2data.com>
+Message-ID: <560E92A0.9030707@t2data.com>
+Date: Fri, 2 Oct 2015 16:20:16 +0200
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	<devicetree@vger.kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-pci@vger.kernel.org>, David Daney <david.daney@cavium.com>,
-	<linux-kernel@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v4 4/5] PCI: generic: Correct, and avoid overflow, in
- bus_max calculation.
-References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com> <20151008150243.GC3885@localhost> <5230007.h2fkbnOlh5@wuerfel> <5178627.ufUfdomGdT@wuerfel>
-In-Reply-To: <5178627.ufUfdomGdT@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <560E9007.1000604@t2data.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/08/2015 08:18 AM, Arnd Bergmann wrote:
-> On Thursday 08 October 2015 17:11:32 Arnd Bergmann wrote:
->>>> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
->>>> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
->>>> @@ -34,7 +34,11 @@ Properties of the host controller node:
->>>>   - #size-cells    : Must be 2.
->>>>
->>>>   - reg            : The Configuration Space base address and size, as accessed
->>>> -                   from the parent bus.
->>>> +                   from the parent bus.  The base address corresponds to
->>>> +                   bus zero, even though the "bus-range" property may specify
->>>> +                   a different starting bus number.  The driver must only map
->>>> +                   or access the portion of the Configuration Space that
->>>> +                   corresponds to the "bus-range"
->>
->> I thought we had reached an agreement that it is a bad idea to have a 'reg'
->> property that lists registers belonging to a different device.
->>
->>
->
-> To further clarify: the argument was to make it mirror what ACPI does for
-> PCI. However, this is unlike what all other devices do with DT, where you
-> have non-overlapping register ranges (start, length) for each device.
-> ACPI as far as I understand it does not give a range for a PCIe host, but
-> instead provides a way to get the start address of the ECAM register area
-> for the domain that the host is part of, and that needs to be the same
-> address for each host in the domain.
->
+I discovered a strange error on my machine. 32-bit PAE 4.2.0 without
+IOMMU code (yeah, I know).
+When writing to an ext4 filesystem on a USB disk my kernel would hang
+and not return control to userspace. It would spew kernel messages to
+syslog as fast as it could without giving userspace any time, ie "hang"
+as far as a user sees it. The device itself is ok and the filesystem is
+clean.
+I get messages like this, millions of them.
 
-We are agreed that it is a bad thing to do.  There is disagreement about 
-if we should do it.
+Oct  2 14:33:06 voodoochild kernel: [  223.287447] nommu_map_sg:
+overflow 25dcac000+1024 of device mask ffffffff
+Oct  2 14:33:06 voodoochild kernel: [  223.287448] nommu_map_sg:
+overflow 25dcac000+1024 of device mask ffffffff
+Oct  2 14:33:06 voodoochild kernel: [  223.287449] nommu_map_sg:
+overflow 25dcac000+1024 of device mask ffffffff
 
-I think there are two schools of thought (I will attribute them to their 
-proponents and my apologies if I misrepresent someone's stance):
+I disovered that SWIOTLB was not on. It is only provided for 64-bit
+machines where it is default. On 32-bit SWIOTLB seems disabled unless 
+you are running with some IOMMU/AGPGART code.
 
-1) (Arnd) Don't make the the "reg" ranges overlap because it is ugly, 
-dangerous and arguably incorrect in general.
+But what about 32-bit PAE? Would that not qualify for SWIOTLB without IOMMU?
 
-2) (Me, Will Deacon, Lorenzo Pieralisi) Overlapping "reg" properties 
-should be maintained, as that is the current behavior and seems to agree 
-with legacy OF device-tree specifications (although there is some debate 
-about this).
+I am a novice in this area. Maybe this is a Kconfig "bug" for us that 
+like to hang ourselves with CONFIG_* rope? :) I'd like to think that 
+SWIOTLB should be default for 32-bit PAE too?
 
-Because the driver is broken in this area (thus the patch), it indicates 
-that there are probably no users with non-zero starting bus numbers. 
-So, we may have some latitude to change it.
+Best regards,
+Christian
 
-I will generate another patch that does it Arnd's way, and if Will is OK 
-with it, we might be able to do that instead.  One thing is certain: 
-The driver is currently broken for non-zero starting bus numbers.
 
-David Daney
