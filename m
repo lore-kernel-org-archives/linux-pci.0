@@ -1,92 +1,193 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: James Bottomley <James.Bottomley@HansenPartnership.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f182.google.com ([209.85.223.182]:34342 "EHLO
+	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751720AbbJBWiH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 18:38:07 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	Hannes Reinecke <hare@suse.de>, Ballabio@vger.kernel.org,
-	Dario <dario.ballabio@emc.com>,
-	Christoph Hellwig <hch@infradead.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, x86@kernel.org
-Subject: [Bugfix v4 2/2] eata: Ask for help to reset eata controllers for kexec
-Date: Thu,  8 Oct 2015 10:51:15 +0800
-Message-Id: <1444272675-14631-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1444272675-14631-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1444272675-14631-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v4 5/5] PCI: Handle Enhanced Allocation (EA) capability for bridges
+Date: Fri,  2 Oct 2015 15:37:56 -0700
+Message-Id: <1443825476-26880-6-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Arthur Marsh <arthur.marsh@internode.on.net> reported that with the first
-patch applied, he still encountered troubles when doing kexec with eata
-devices. Quote Arthur's report:
-    To clarify, if the eata driver gets loaded once and stays loaded, at a
-    kexec reboot attempt the "Synchronising SCSI cache" message is missing
-    for the SCSI disk attached to the controller using the eata driver and
-    eventually other error messages appear as seen in screen images that
-    I have previously posted at
-	http://www.users.on.net/~arthur.marsh/20150915547.jpg.
+From: David Daney <david.daney@cavium.com>
 
-    If the eata driver is loaded, unloaded via modprobe -r, then reloaded,
-    a kexec reboot shows 2 "Synchronising SCSI cache" messages for the SCSI
-    disk attached to the controller using the eata driver and the kexec
-    reboot is successful.
+PCI bridges may have their properties be specified via EA entries.
 
-For more details, please refer to thread at:
-	http://www.gossamer-threads.com/lists/linux/kernel/2251833
-	https://lkml.org/lkml/2015/9/6/165
+Extend the EA parser to extract the bridge resources, and modify
+pci_read_bridge_{io,mmio,mmio_pref}() to use resources previously
+obtained via EA.
 
-First I thought we could solve this issue by implementing a shutdown
-callback to reset eata controllers when rebooting, but it turns out
-that this patch doesn't really help. And due to limited knowledge about
-eata controllers and lack of hardware for tests, helps from eata experts
-are really welcomed!
+Save the offset to the EA capability in struct pci_dev, and use it to
+easily find the EA bridge subordinate and secondary bus numbers.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+When assigning the bridge resources a couple of changes are required
+so that the EA obtained IORESOURCE_PCI_FIXED are not resized, and
+correctly linked into the resource tree.
+
+1) In pbus_size_mem() do not attempt to resize the bridge resources if
+   they are marked as IORESOURCE_PCI_FIXED.
+
+2) In pci_bus_alloc_from_region()for IORESOURCE_PCI_FIXED resources, just
+   try to request the resource as is, without attempting to resize it.
+
+Signed-off-by: David Daney <david.daney@cavium.com>
 ---
- drivers/scsi/eata.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/pci/bus.c       |  7 +++++++
+ drivers/pci/pci.c       | 13 +++++++++++++
+ drivers/pci/probe.c     | 31 +++++++++++++++++++++++++++++--
+ drivers/pci/setup-bus.c |  3 +++
+ include/linux/pci.h     |  1 +
+ 5 files changed, 53 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index 7315f8adcf65..b83abe283744 100644
---- a/drivers/scsi/eata.c
-+++ b/drivers/scsi/eata.c
-@@ -1519,6 +1519,11 @@ static void eata2x_pci_remove(struct pci_dev *pdev)
- 	pci_disable_device(pdev);
- }
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 6fbd3f2..0556b33 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -153,6 +153,13 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
+ 		    !(res->flags & IORESOURCE_PREFETCH))
+ 			continue;
  
-+static void eata2x_pci_shutdown(struct pci_dev *pdev)
-+{
-+	port_remove(&pdev->dev);
-+}
++		if (res->flags & IORESOURCE_PCI_FIXED) {
++			/* Cannot change it, just try to claim it. */
++			if (request_resource(r, res))
++				continue;
++			return 0;
++		}
 +
- static struct pci_device_id eata2x_tbl[] = {
- 	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_SCSI << 8, PCI_ANY_ID) },
- 	{ },
-@@ -1530,6 +1535,7 @@ static struct pci_driver eata2x_pci_driver = {
- 	.id_table	= eata2x_tbl,
- 	.probe		= eata2x_pci_probe,
- 	.remove		= eata2x_pci_remove,
-+	.shutdown	= eata2x_pci_shutdown,
+ 		avail = *r;
+ 		pci_clip_resource_to_region(bus, &avail, region);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6750edf..c857632 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2183,6 +2183,17 @@ static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei, u8 prop
+ 		 (prop == PCI_EA_P_VIRT_MEM || prop == PCI_EA_P_VIRT_MEM_PREFETCH))
+ 		return &dev->resource[PCI_IOV_RESOURCES + bei - PCI_EA_BEI_VF_BAR0];
+ #endif
++	else if (bei == PCI_EA_BEI_BRIDGE)
++		switch (prop) {
++		case PCI_EA_P_BRIDGE_IO:
++			return &dev->resource[PCI_BRIDGE_RESOURCES + 0];
++		case PCI_EA_P_BRIDGE_MEM:
++			return &dev->resource[PCI_BRIDGE_RESOURCES + 1];
++		case PCI_EA_P_BRIDGE_MEM_PREFETCH:
++			return &dev->resource[PCI_BRIDGE_RESOURCES + 2];
++		default:
++			return NULL;
++		}
+ 	else if (bei == PCI_EA_BEI_ROM)
+ 		return &dev->resource[PCI_ROM_RESOURCE];
+ 	else
+@@ -2321,6 +2332,8 @@ void pci_ea_init(struct pci_dev *dev)
+ 	if (!ea)
+ 		return;
+ 
++	dev->ea_cap = ea;
++
+ 	/* determine the number of entries */
+ 	pci_bus_read_config_byte(dev->bus, dev->devfn, ea + PCI_EA_NUM_ENT,
+ 					&num_ent);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 4293eec..e4bcb0b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -348,6 +348,10 @@ static void pci_read_bridge_io(struct pci_bus *child)
+ 	}
+ 
+ 	res = child->resource[0];
++	if (res->flags & IORESOURCE_PCI_FIXED) {
++		dev_dbg(&dev->dev, "  bridge window %pR (fixed)\n", res);
++		return;
++	}
+ 	pci_read_config_byte(dev, PCI_IO_BASE, &io_base_lo);
+ 	pci_read_config_byte(dev, PCI_IO_LIMIT, &io_limit_lo);
+ 	base = (io_base_lo & io_mask) << 8;
+@@ -380,6 +384,10 @@ static void pci_read_bridge_mmio(struct pci_bus *child)
+ 	struct resource *res;
+ 
+ 	res = child->resource[1];
++	if (res->flags & IORESOURCE_PCI_FIXED) {
++		dev_dbg(&dev->dev, "  bridge window %pR (fixed)\n", res);
++		return;
++	}
+ 	pci_read_config_word(dev, PCI_MEMORY_BASE, &mem_base_lo);
+ 	pci_read_config_word(dev, PCI_MEMORY_LIMIT, &mem_limit_lo);
+ 	base = ((unsigned long) mem_base_lo & PCI_MEMORY_RANGE_MASK) << 16;
+@@ -403,6 +411,10 @@ static void pci_read_bridge_mmio_pref(struct pci_bus *child)
+ 	struct resource *res;
+ 
+ 	res = child->resource[2];
++	if (res->flags & IORESOURCE_PCI_FIXED) {
++		dev_dbg(&dev->dev, "  bridge window %pR (fixed)\n", res);
++		return;
++	}
+ 	pci_read_config_word(dev, PCI_PREF_MEMORY_BASE, &mem_base_lo);
+ 	pci_read_config_word(dev, PCI_PREF_MEMORY_LIMIT, &mem_limit_lo);
+ 	base64 = (mem_base_lo & PCI_PREF_RANGE_MASK) << 16;
+@@ -801,8 +813,23 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 
+ 	pci_read_config_dword(dev, PCI_PRIMARY_BUS, &buses);
+ 	primary = buses & 0xFF;
+-	secondary = (buses >> 8) & 0xFF;
+-	subordinate = (buses >> 16) & 0xFF;
++	if (dev->ea_cap) {
++		u32 dw1;
++
++		pci_read_config_dword(dev, dev->ea_cap + 4, &dw1);
++		if (dw1 & 0xFF)
++			secondary = dw1 & 0xFF;
++		else
++			secondary = (buses >> 8) & 0xFF;
++
++		if ((dw1 >> 8) & 0xFF)
++			subordinate = (dw1 >> 8) & 0xFF;
++		else
++			subordinate = (buses >> 16) & 0xFF;
++	} else {
++		secondary = (buses >> 8) & 0xFF;
++		subordinate = (buses >> 16) & 0xFF;
++	}
+ 
+ 	dev_dbg(&dev->dev, "scanning [bus %02x-%02x] behind bridge, pass %d\n",
+ 		secondary, subordinate, pass);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8f9ed9b..8b8cc32 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1086,6 +1086,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		}
+ 	}
+ 
++	if (b_res->flags & IORESOURCE_PCI_FIXED)
++		return 0;
++
+ 	min_align = calculate_mem_align(aligns, max_order);
+ 	min_align = max(min_align, window_alignment(bus, b_res->flags));
+ 	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b505b50..a8a177c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -384,6 +384,7 @@ struct pci_dev {
+ 	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
+ 	size_t romlen; /* Length of ROM if it's not from the BAR */
+ 	char *driver_override; /* Driver name to force a match */
++	u8		ea_cap; /* Enhanced Allocation capability offset */
  };
  
- static int eata2x_register_pci_driver(void)
-@@ -1571,8 +1577,14 @@ static int __exit eata2x_platform_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
-+static void eata2x_platform_shutdown(struct platform_device *pdev)
-+{
-+	port_remove(&pdev->dev);
-+}
-+
- static struct platform_driver eata2x_platform_driver = {
- 	.remove = __exit_p(eata2x_platform_remove),
-+	.shutdown = eata2x_platform_shutdown,
- 	.driver = {
- 		.name	= "eata_plat",
- 		.owner	= THIS_MODULE,
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
 -- 
-1.7.10.4
+1.9.1
 
