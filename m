@@ -1,97 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp06.in.ibm.com ([122.248.162.6]:37955 "EHLO
-	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752283AbbJ3FW4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 01:22:56 -0400
-Received: from /spool/local
-	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 30 Oct 2015 10:52:54 +0530
-Date: Fri, 30 Oct 2015 13:22:49 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
-	Ethan Zhao <ethan.zhao@oracle.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 7/7] PCI: Set NumVFs before computing how many buses
- VFs require
-Message-ID: <20151030052249.GF5119@richards-mbp.cn.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151029222336.11908.66193.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151029222336.11908.66193.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v4 4/5] PCI: generic: Correct, and avoid overflow, in bus_max calculation.
+Date: Fri,  2 Oct 2015 11:44:02 -0700
+Message-Id: <1443811443-18878-5-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 29, 2015 at 05:23:36PM -0500, Bjorn Helgaas wrote:
->From: Alexander Duyck <aduyck@mirantis.com>
->
->VF bus numbers depend on the First VF Offset and VF Stride, and per
->sections 3.3.9 and 3.3.10 of the SR-IOV spec r1.1, these depend on the
->NumVF value.
->
->Wait until after we set NumVFs to compute and validate the bus number of
->the last VF.
->
->[bhelgaas: changelog, add spec reference, split to separate patch for
->reviewability]
->Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
->Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->---
-> drivers/pci/iov.c |   18 ++++++++++--------
-> 1 file changed, 10 insertions(+), 8 deletions(-)
->
->diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->index bd1c4fa..9d29712 100644
->--- a/drivers/pci/iov.c
->+++ b/drivers/pci/iov.c
->@@ -274,13 +274,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> 		return -ENOMEM;
-> 	}
->
->-	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
->-	if (bus > dev->bus->busn_res.end) {
->-		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
->-			nr_virtfn, bus, &dev->bus->busn_res);
->-		return -ENOMEM;
->-	}
->-
-> 	if (pci_enable_resources(dev, bars)) {
-> 		dev_err(&dev->dev, "SR-IOV: IOV BARS not allocated\n");
-> 		return -ENOMEM;
->@@ -304,6 +297,15 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> 	}
->
-> 	pci_iov_set_numvfs(dev, nr_virtfn);
+From: David Daney <david.daney@cavium.com>
 
-How about move it up?
+There are two problems with the bus_max calculation:
 
->+
->+	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
->+	if (bus > dev->bus->busn_res.end) {
->+		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
->+			nr_virtfn, bus, &dev->bus->busn_res);
->+		rc = -ENOMEM;
->+		goto err_bus;
->+	}
->+
-> 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
-> 	pci_cfg_access_lock(dev);
-> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->@@ -342,7 +344,7 @@ err_pcibios:
-> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-> 	ssleep(1);
-> 	pci_cfg_access_unlock(dev);
->-
->+err_bus:
-> 	if (iov->link != dev->devfn)
-> 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
->
+1) The u8 data type can overflow for large config space windows.
 
+2) The calculation is incorrect for a bus range that doesn't start at
+   zero.
+
+Since the configuration space is relative to bus zero, make bus_max
+just be the size of the config window scaled by bus_shift.  Then clamp
+it to a maximum of 255, per PCI.  Use a data type of int to avoid
+overflow problems.
+
+Update host-generic-pci.txt to clarify the semantics of the "reg"
+property with respect to non-zero starting bus numbers.
+
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+Change from V3: Add to explanation of "reg" property in
+host-generic-pci.txt.  Add error message if "reg" property is too big.
+
+ Documentation/devicetree/bindings/pci/host-generic-pci.txt |  6 +++++-
+ drivers/pci/host/pci-host-generic.c                        | 12 +++++++++---
+ 2 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+index cf3e205..42303bb 100644
+--- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
++++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+@@ -34,7 +34,11 @@ Properties of the host controller node:
+ - #size-cells    : Must be 2.
+ 
+ - reg            : The Configuration Space base address and size, as accessed
+-                   from the parent bus.
++                   from the parent bus.  The base address corresponds to
++                   bus zero, even though the "bus-range" property may specify
++                   a different starting bus number.  The driver must only map
++                   or access the portion of the Configuration Space that
++                   corresponds to the "bus-range"
+ 
+ 
+ Properties of the /chosen node:
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 216ded5..5cce837 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -164,7 +164,7 @@ out_release_res:
+ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ {
+ 	int err;
+-	u8 bus_max;
++	int bus_max;
+ 	resource_size_t busn;
+ 	struct resource *bus_range;
+ 	struct device *dev = pci->host.dev.parent;
+@@ -177,8 +177,14 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 	}
+ 
+ 	/* Limit the bus-range to fit within reg */
+-	bus_max = pci->cfg.bus_range->start +
+-		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
++	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
++	if (bus_max > 255) {
++		dev_err(dev,
++			"\"reg\" size corresponds to bus %d, truncating to 255\n",
++			bus_max);
++		bus_max = 255;
++	}
++
+ 	pci->cfg.bus_range->end = min_t(resource_size_t,
+ 					pci->cfg.bus_range->end, bus_max);
+ 
 -- 
-Richard Yang
-Help you, Help me
+1.9.1
 
