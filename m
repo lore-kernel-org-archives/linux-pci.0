@@ -1,74 +1,258 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0058.outbound.protection.outlook.com ([65.55.169.58]:4333
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751274AbbJSIUQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Oct 2015 04:20:16 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v10 6/6] MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
-Date: Mon, 19 Oct 2015 16:19:28 +0800
-Message-ID: <1445242768-4423-7-git-send-email-lftan@altera.com>
-In-Reply-To: <1445242768-4423-1-git-send-email-lftan@altera.com>
-References: <1445242768-4423-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v4 2/5] PCI: Add support for Enhanced Allocation devices
+Date: Fri,  2 Oct 2015 15:37:53 -0700
+Message-Id: <1443825476-26880-3-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- MAINTAINERS | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+From: "Sean O. Stalley" <sean.stalley@intel.com>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index b8577ad9..96b9fac 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7958,6 +7958,14 @@ F:	include/linux/pci*
- F:	arch/x86/pci/
- F:	arch/x86/kernel/quirks.c
+Add support for devices using Enhanced Allocation entries instead of BARs.
+This patch allows the kernel to parse the EA Extended Capability structure
+in PCI configspace and claim the BAR-equivalent resources.
+
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+[david.daney@cavium.com: Add more support/checking for Entry Properties,
+allow EA behind bridges, rewrite some error messages.]
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ drivers/pci/pci.c   | 184 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h   |   1 +
+ drivers/pci/probe.c |   3 +
+ 3 files changed, 188 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6a9a111..54a0a98 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2148,6 +2148,190 @@ void pci_pm_init(struct pci_dev *dev)
+ 	}
+ }
  
-+PCI DRIVER FOR ALTERA PCIE IP
-+M:	Ley Foon Tan <lftan@altera.com>
-+L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
-+F:	drivers/pci/host/pcie-altera.c
++static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
++{
++	unsigned long flags = IORESOURCE_PCI_FIXED;
 +
- PCI DRIVER FOR ARM VERSATILE PLATFORM
- M:	Rob Herring <robh@kernel.org>
- L:	linux-pci@vger.kernel.org
-@@ -8059,6 +8067,14 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/host/*spear*
++	switch (prop) {
++	case PCI_EA_P_MEM:
++	case PCI_EA_P_VIRT_MEM:
++	case PCI_EA_P_BRIDGE_MEM:
++		flags |= IORESOURCE_MEM;
++		break;
++	case PCI_EA_P_MEM_PREFETCH:
++	case PCI_EA_P_VIRT_MEM_PREFETCH:
++	case PCI_EA_P_BRIDGE_MEM_PREFETCH:
++		flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
++		break;
++	case PCI_EA_P_IO:
++	case PCI_EA_P_BRIDGE_IO:
++		flags |= IORESOURCE_IO;
++		break;
++	default:
++		return 0;
++	}
++
++	return flags;
++}
++
++static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei, u8 prop)
++{
++	if (bei <= PCI_EA_BEI_BAR5 && prop <= PCI_EA_P_IO)
++		return &dev->resource[bei];
++	else if (bei == PCI_EA_BEI_ROM)
++		return &dev->resource[PCI_ROM_RESOURCE];
++	else
++		return NULL;
++}
++
++/* Read an Enhanced Allocation (EA) entry */
++static int pci_ea_read(struct pci_dev *dev, int offset)
++{
++	struct resource *res;
++	int ent_offset = offset;
++	int ent_size;
++	resource_size_t start;
++	resource_size_t end;
++	unsigned long flags;
++	u32 dw0;
++	u32 base;
++	u32 max_offset;
++	u8 prop;
++	bool support_64 = (sizeof(resource_size_t) >= 8);
++
++	pci_read_config_dword(dev, ent_offset, &dw0);
++	ent_offset += 4;
++
++	/* Entry size field indicates DWORDs after 1st */
++	ent_size = ((dw0 & PCI_EA_ES) + 1) << 2;
++
++	if (!(dw0 & PCI_EA_ENABLE)) /* Entry not enabled */
++		goto out;
++
++	prop = PCI_EA_PP(dw0);
++	/*
++	 * If the Property is in the reserved range, try the Secondary
++	 * Property instead.
++	 */
++	if (prop > PCI_EA_P_BRIDGE_IO && prop < PCI_EA_P_MEM_RESERVED)
++		prop = PCI_EA_SP(dw0);
++	if (prop > PCI_EA_P_BRIDGE_IO)
++		goto out;
++
++	res = pci_ea_get_resource(dev, PCI_EA_BEI(dw0), prop);
++	if (!res) {
++		dev_err(&dev->dev, "Unsupported EA entry BEI: %u\n",
++			PCI_EA_BEI(dw0));
++		goto out;
++	}
++
++	flags = pci_ea_set_flags(dev, prop);
++	if (!flags) {
++		dev_err(&dev->dev, "Unsupported EA properties: %u\n", prop);
++		goto out;
++	}
++
++	/* Read Base */
++	pci_read_config_dword(dev, ent_offset, &base);
++	start = (base & PCI_EA_FIELD_MASK);
++	ent_offset += 4;
++
++	/* Read MaxOffset */
++	pci_read_config_dword(dev, ent_offset, &max_offset);
++	ent_offset += 4;
++
++	/* Read Base MSBs (if 64-bit entry) */
++	if (base & PCI_EA_IS_64) {
++		u32 base_upper;
++
++		pci_read_config_dword(dev, ent_offset, &base_upper);
++		ent_offset += 4;
++
++		flags |= IORESOURCE_MEM_64;
++
++		/* entry starts above 32-bit boundary, can't use */
++		if (!support_64 && base_upper)
++			goto out;
++
++		if (support_64)
++			start |= ((u64)base_upper << 32);
++	}
++
++	dev_dbg(&dev->dev,
++		"EA (%u,%u) start = %pa\n", PCI_EA_BEI(dw0), prop, &start);
++
++	end = start + (max_offset | 0x03);
++
++	/* Read MaxOffset MSBs (if 64-bit entry) */
++	if (max_offset & PCI_EA_IS_64) {
++		u32 max_offset_upper;
++
++		pci_read_config_dword(dev, ent_offset, &max_offset_upper);
++		ent_offset += 4;
++
++		flags |= IORESOURCE_MEM_64;
++
++		/* entry too big, can't use */
++		if (!support_64 && max_offset_upper)
++			goto out;
++
++		if (support_64)
++			end += ((u64)max_offset_upper << 32);
++	}
++
++	dev_dbg(&dev->dev,
++		"EA (%u,%u) end = %pa\n", PCI_EA_BEI(dw0), prop, &end);
++
++	if (end < start) {
++		dev_err(&dev->dev, "EA Entry crosses address boundary\n");
++		goto out;
++	}
++
++	if (ent_size != ent_offset - offset) {
++		dev_err(&dev->dev,
++			"EA Entry Size (%d) does not match length read (%d)\n",
++			ent_size, ent_offset - offset);
++		goto out;
++	}
++
++	res->name = pci_name(dev);
++	res->start = start;
++	res->end = end;
++	res->flags = flags;
++
++out:
++	return offset + ent_size;
++}
++
++/* Enhanced Allocation Initalization */
++void pci_ea_init(struct pci_dev *dev)
++{
++	int ea;
++	u8 num_ent;
++	int offset;
++	int i;
++
++	/* find PCI EA capability in list */
++	ea = pci_find_capability(dev, PCI_CAP_ID_EA);
++	if (!ea)
++		return;
++
++	/* determine the number of entries */
++	pci_bus_read_config_byte(dev->bus, dev->devfn, ea + PCI_EA_NUM_ENT,
++					&num_ent);
++	num_ent &= PCI_EA_NUM_ENT_MASK;
++
++	offset = ea + PCI_EA_FIRST_ENT;
++
++	/* Skip DWORD 2 for type 1 functions */
++	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
++		offset += 4;
++
++	/* parse each EA entry */
++	for (i = 0; i < num_ent; ++i)
++		offset = pci_ea_read(dev, offset);
++}
++
+ static void pci_add_saved_cap(struct pci_dev *pci_dev,
+ 	struct pci_cap_saved_state *new_cap)
+ {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 24ba9dc..a160733 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -78,6 +78,7 @@ bool pci_dev_keep_suspended(struct pci_dev *dev);
+ void pci_config_pm_runtime_get(struct pci_dev *dev);
+ void pci_config_pm_runtime_put(struct pci_dev *dev);
+ void pci_pm_init(struct pci_dev *dev);
++void pci_ea_init(struct pci_dev *dev);
+ void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+ void pci_free_cap_save_buffers(struct pci_dev *dev);
  
-+PCI MSI DRIVER FOR ALTERA MSI IP
-+M:	Ley Foon Tan <lftan@altera.com>
-+L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-+F:	drivers/pci/host/pcie-altera-msi.c
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 0b2be17..4293eec 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1598,6 +1598,9 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 
+ static void pci_init_capabilities(struct pci_dev *dev)
+ {
++	/* Enhanced Allocation */
++	pci_ea_init(dev);
 +
- PCI MSI DRIVER FOR APPLIEDMICRO XGENE
- M:	Duc Dang <dhdang@apm.com>
- L:	linux-pci@vger.kernel.org
+ 	/* MSI/MSI-X list */
+ 	pci_msi_init_pci_dev(dev);
+ 
 -- 
-1.8.2.1
+1.9.1
 
