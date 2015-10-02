@@ -1,163 +1,89 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>
-CC: <linux-kernel@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Ley Foon Tan <lftan@altera.com>,
-	<lftan.linux@gmail.com>
-Subject: [PATCH v2 4/4] nios2: Add architectural support for PCIe
-Date: Wed, 14 Oct 2015 14:31:44 +0800
-Message-ID: <1444804304-5213-5-git-send-email-lftan@altera.com>
-In-Reply-To: <1444804304-5213-1-git-send-email-lftan@altera.com>
-References: <1444804304-5213-1-git-send-email-lftan@altera.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f52.google.com ([209.85.213.52]:33923 "EHLO
+	mail-vk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751670AbbJBWFi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 18:05:38 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <1443816007.7936.24.camel@oracle.com>
+References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+	<1443678807-786-2-git-send-email-yinghai@kernel.org>
+	<1443816007.7936.24.camel@oracle.com>
+Date: Fri, 2 Oct 2015 15:05:37 -0700
+Message-ID: <CAE9FiQX=qEO53rSw9bQv-2-3sSmYUO3YCJyj8m6mSNSTed3zEA@mail.gmail.com>
+Subject: Re: [PATCH v6 01/53] sparc/PCI: Add mem64 resource parsing for root bus
+From: Yinghai Lu <yinghai@kernel.org>
+To: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=001a1141673c1506ef0521265d88
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch add pcie support on nios2 platform.
+--001a1141673c1506ef0521265d88
+Content-Type: text/plain; charset=UTF-8
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- arch/nios2/Kconfig            | 21 +++++++++++++++++++++
- arch/nios2/include/asm/Kbuild |  1 +
- arch/nios2/include/asm/io.h   | 12 ++++++++++--
- arch/nios2/kernel/Makefile    |  1 +
- arch/nios2/kernel/pci.c       | 33 +++++++++++++++++++++++++++++++++
- 5 files changed, 66 insertions(+), 2 deletions(-)
- create mode 100644 arch/nios2/kernel/pci.c
+On Fri, Oct 2, 2015 at 1:00 PM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
+> On Wed, 2015-09-30 at 22:52 -0700, Yinghai Lu wrote:
+>> Found "no compatible bridge window" warning in boot log from T5-8.
+>>
+>> pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
+>>
+>> That resource is above 4G, but does not get offset correctly as
+>> root bus only report io and mem32.
+>>
+>> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+>> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+>> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+>> pci_bus 0000:00: root bus resource [bus 00-77]
+>>
+>> Add mem64 handling in pci_common for sparc, so we can have 64bit resource
+>> registered for root bus at first.
+>>
+>> After patch, will have:
+>> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+>> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+>> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+>> pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
+>> pci_bus 0000:00: root bus resource [bus 00-77]
+>>
+>> -v2: mem64_space should use mem_space.start as offset.
+>> -v3: add IORESOURCE_MEM_64 flag
+...
+> PCI: Scanning PBM /pci@301
+> pci_sun4v f0339c2c: PCI host bridge to bus 0009:00
+> pci_bus 0009:00: root bus resource [io  0x2027e40000000-0x2027e4fffffff] (bus address [0x0000-0xfffffff])
+> pci_bus 0009:00: root bus resource [mem 0x2024000100000-0x202407effffff] (bus address [0x00000000-0x7eefffff])
+> pci_bus 0009:00: root bus resource [mem 0x2024100000000-0x2024dffffffff] (bus address [0xfff00000-0xdffefffff])
 
-diff --git a/arch/nios2/Kconfig b/arch/nios2/Kconfig
-index 4375554..bde323f 100644
---- a/arch/nios2/Kconfig
-+++ b/arch/nios2/Kconfig
-@@ -11,6 +11,7 @@ config NIOS2
- 	select HAVE_ARCH_KGDB
- 	select IRQ_DOMAIN
- 	select MODULES_USE_ELF_RELA
-+	select MIGHT_HAVE_PCI
- 	select OF
- 	select OF_EARLY_FLATTREE
- 	select SOC_BUS
-@@ -194,6 +195,26 @@ config NIOS2_IO_REGION_BASE
- 
- endmenu
- 
-+menu "Bus support"
-+config PCI
-+	bool "PCI support"
-+	select GENERIC_PCI_IOMAP
-+	help
-+	  This feature enables support for PCIe bus system. If you say Y
-+	  here, the kernel will include drivers and infrastructure code
-+	  to support PCIe bus devices.
-+
-+config PCI_DOMAINS
-+	def_bool PCI
-+
-+config PCI_DOMAINS_GENERIC
-+	def_bool PCI
-+
-+source "drivers/pci/Kconfig"
-+source "drivers/pci/pcie/Kconfig"
-+
-+endmenu
-+
- menu "Executable file formats"
- 
- source "fs/Kconfig.binfmt"
-diff --git a/arch/nios2/include/asm/Kbuild b/arch/nios2/include/asm/Kbuild
-index d63330e..a7cace1 100644
---- a/arch/nios2/include/asm/Kbuild
-+++ b/arch/nios2/include/asm/Kbuild
-@@ -34,6 +34,7 @@ generic-y += mm-arch-hooks.h
- generic-y += mman.h
- generic-y += module.h
- generic-y += msgbuf.h
-+generic-y += msi.h
- generic-y += param.h
- generic-y += pci.h
- generic-y += percpu.h
-diff --git a/arch/nios2/include/asm/io.h b/arch/nios2/include/asm/io.h
-index c5a62da..0ba8388 100644
---- a/arch/nios2/include/asm/io.h
-+++ b/arch/nios2/include/asm/io.h
-@@ -14,8 +14,7 @@
- #include <linux/types.h>
- #include <asm/pgtable-bits.h>
- 
--/* PCI is not supported in nios2, set this to 0. */
--#define IO_SPACE_LIMIT 0
-+#define IO_SPACE_LIMIT 0xffff
- 
- #define readb_relaxed(addr)	readb(addr)
- #define readw_relaxed(addr)	readw(addr)
-@@ -45,6 +44,15 @@ static inline void iounmap(void __iomem *addr)
- 	__iounmap(addr);
- }
- 
-+static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
-+{
-+	return NULL;
-+}
-+
-+static inline void ioport_unmap(void __iomem *p)
-+{
-+}
-+
- #define ioremap_wc ioremap_nocache
- #define ioremap_wt ioremap_nocache
- 
-diff --git a/arch/nios2/kernel/Makefile b/arch/nios2/kernel/Makefile
-index 1aae257..bb1ef81 100644
---- a/arch/nios2/kernel/Makefile
-+++ b/arch/nios2/kernel/Makefile
-@@ -10,6 +10,7 @@ obj-y	+= entry.o
- obj-y	+= insnemu.o
- obj-y	+= irq.o
- obj-y	+= nios2_ksyms.o
-+obj-y	+= pci.o
- obj-y	+= process.o
- obj-y	+= prom.o
- obj-y	+= ptrace.o
-diff --git a/arch/nios2/kernel/pci.c b/arch/nios2/kernel/pci.c
-new file mode 100644
-index 0000000..d28aed7
---- /dev/null
-+++ b/arch/nios2/kernel/pci.c
-@@ -0,0 +1,33 @@
-+/* Copyright Altera Corporation (C) 2015. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License, version 2,
-+ * as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ *
-+ */
-+#include <linux/pci.h>
-+
-+/*
-+ * Called after each bus is probed, but before its children are examined
-+ */
-+void pcibios_fixup_bus(struct pci_bus *bus)
-+{
-+	/* nothing to do, expected to be removed in the future */
-+}
-+
-+/*
-+ * We don't have to worry about legacy ISA devices, so nothing to do here
-+ */
-+resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-+				resource_size_t size, resource_size_t align)
-+{
-+	return res->start;
-+}
--- 
-1.8.2.1
+Looks like offset for mmio64 is not right.
 
+Please check attached patch on the this platform  and T5-8.
+
+Thanks
+
+Yinghai
+
+--001a1141673c1506ef0521265d88
+Content-Type: text/x-patch; charset=US-ASCII; name="fix_sparc_mem64_offset.patch"
+Content-Disposition: attachment; filename="fix_sparc_mem64_offset.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ifa766jz0
+
+LS0tCiBhcmNoL3NwYXJjL2tlcm5lbC9wY2kuYyB8ICAgIDIgKy0KIDEgZmlsZSBjaGFuZ2VkLCAx
+IGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQoKSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3NwYXJj
+L2tlcm5lbC9wY2kuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9hcmNoL3NwYXJjL2tl
+cm5lbC9wY2kuYworKysgbGludXgtMi42L2FyY2gvc3BhcmMva2VybmVsL3BjaS5jCkBAIC02NTks
+NyArNjU5LDcgQEAgc3RydWN0IHBjaV9idXMgKnBjaV9zY2FuX29uZV9wYm0oc3RydWN0CiAJCQkJ
+cGJtLT5tZW1fc3BhY2Uuc3RhcnQpOwogCWlmIChwYm0tPm1lbTY0X3NwYWNlLmZsYWdzKQogCQlw
+Y2lfYWRkX3Jlc291cmNlX29mZnNldCgmcmVzb3VyY2VzLCAmcGJtLT5tZW02NF9zcGFjZSwKLQkJ
+CQkJcGJtLT5tZW1fc3BhY2Uuc3RhcnQpOworCQkJCQlwYm0tPm1lbTY0X3NwYWNlLnN0YXJ0KTsK
+IAlwYm0tPmJ1c24uc3RhcnQgPSBwYm0tPnBjaV9maXJzdF9idXNubzsKIAlwYm0tPmJ1c24uZW5k
+CT0gcGJtLT5wY2lfbGFzdF9idXNubzsKIAlwYm0tPmJ1c24uZmxhZ3MJPSBJT1JFU09VUkNFX0JV
+UzsK
+--001a1141673c1506ef0521265d88--
