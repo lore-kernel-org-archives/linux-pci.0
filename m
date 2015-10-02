@@ -1,73 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f181.google.com ([209.85.223.181]:32938 "EHLO
+	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751407AbbJBAuk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 20:50:40 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Ma Jun <majun258@huawei.com>
-Subject: Re: [PATCH RFC 0/7] Adding core support for wire-MSI bridges
-Date: Fri, 16 Oct 2015 10:45:30 +0200
-Message-ID: <4196649.VJFYrvEAp6@wuerfel>
-In-Reply-To: <5620AF42.4070204@arm.com>
-References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com> <5879538.pKBkpUOxls@wuerfel> <5620AF42.4070204@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+	Jason Cooper <jason@lakedaemon.net>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v4 3/4] PCI/MSI:  Add helper function pci_msi_domain_get_msi_rid().
+Date: Thu,  1 Oct 2015 17:50:24 -0700
+Message-Id: <1443747025-9918-4-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1443747025-9918-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1443747025-9918-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 16 October 2015 09:03:14 Marc Zyngier wrote:
-> On 15/10/15 20:16, Arnd Bergmann wrote:
-> > On Thursday 15 October 2015 17:01:02 Marc Zyngier wrote:
-> >>
-> >> "Preconfigured" is the key word. While you can do something like that if
-> >> your hardware treats MSIs just as if they were wired interrupts
-> >> (something like GICv2m), it becomes far more hairy if the target of MSIs
-> >> is something like a GICv3 ITS (which is the case for HiSilicon mbigen).
-> >>
-> >> The main reason is that the ITS relies on "translation tables" kept in
-> >> memory, which the OS has to configure, and handing over pre-configured
-> >> tables is not something I'm looking forward to doing. From a CPU point
-> >> of view, this is akin entering the kernel with the MMU already on and no
-> >> idmap...
-> >>
-> >> The approach taken here is to make the MSI-ness explicit at the irqchip
-> >> level, and keep the interrupting device oblivious of that feature. Also,
-> >> this relies on the fact that we can have one MSI per wire, meaning that
-> >> we don't have to multiplex anything (no nested irqchip), and that we can
-> >> rely on hierarchical domains, which simplifies the code (at least for
-> >> the irqchip).
-> >>
-> > 
-> > Thanks, that already makes things much clearer. Just one more question:
-> > why can't those translation tables be configured statically by the
-> > irqchip driver? Is this all about being able to cut a few cycles
-> > in case of virtualization? 
-> 
-> Having a static configuration, while doable, complicates things for
-> everybody else. The LPI number used by the irqchip would need to be put
-> an some "exclusion list" to make sure it is not reallocated for other
-> subsystems (e.g PCI). The translation tables also define the target CPU,
-> which could cause interesting problems once combined with CPU hotplug if
-> the ITS is not completely in control of it.
-> 
-> I'm not really getting your point about virtualization though.
+From: David Daney <david.daney@cavium.com>
 
-I think I'm mainly still confused by how MSI is implemented on
-the CPU side. Your explanation makes sense though.
+Add pci_msi_domain_get_msi_rid() to return the MSI requester id (RID).
+Initially needed by gic-v3 based systems. It will be used by follow on
+patch to drivers/irqchip/irq-gic-v3-its-pci-msi.c
 
-> > I would assume that once you have gone through the overhead of having
-> > both an MSI and a normal interrupt line (with the need for
-> > serialization vs DMA), you can just as well trap to user space to
-> > deliver an IRQ to a guest.
-> 
-> The whole idea behind this bridge is to move wired interrupts to the
-> periphery of a SoC. I don't think virtualization was part of the
-> equation, but of course I can't speak for the "geniuses" behind the idea.
-> 
-> Or maybe I'm reading your question the wrong way, which is entirely
-> possible given the lack of caffeine.
+Initially supports mapping the RID via OF device tree.  In the future,
+this could be extended to use ACPI _IORT tables as well.
 
-No, I think I get it now.
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ drivers/pci/msi.c   | 30 ++++++++++++++++++++++++++++++
+ include/linux/msi.h |  1 +
+ 2 files changed, 31 insertions(+)
 
-	Arnd
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d449714..81a2798 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -20,6 +20,7 @@
+ #include <linux/io.h>
+ #include <linux/slab.h>
+ #include <linux/irqdomain.h>
++#include <linux/of_irq.h>
+ 
+ #include "pci.h"
+ 
+@@ -1327,4 +1328,33 @@ struct irq_domain *pci_msi_create_default_irq_domain(struct device_node *node,
+ 
+ 	return domain;
+ }
++
++static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
++{
++	u32 *pa = data;
++
++	*pa = alias;
++	return 0;
++}
++/**
++ * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
++ * @domain:	The interrupt domain
++ * @pdev:	The PCI device.
++ *
++ * The RID for a device is formed from the alias, with a firmware
++ * supplied mapping applied
++ *
++ * Returns: The RID.
++ */
++u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
++{
++	u32 rid = 0;
++
++	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
++
++	if (domain->of_node)
++		rid = of_msi_map_rid(&pdev->dev, domain->of_node, rid);
++
++	return rid;
++}
+ #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index ad939d0..56e3b76 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -293,6 +293,7 @@ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
+ 					  struct msi_desc *desc);
+ int pci_msi_domain_check_cap(struct irq_domain *domain,
+ 			     struct msi_domain_info *info, struct device *dev);
++u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
+ #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+ 
+ #endif /* LINUX_MSI_H */
+-- 
+1.9.1
+
