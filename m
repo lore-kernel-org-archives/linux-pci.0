@@ -1,128 +1,244 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
- hostbridge init
-To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
- <1445963922-22711-12-git-send-email-tn@semihalf.com>
- <5631180D.2000902@codeaurora.org> <563131B0.9060305@codeaurora.org>
-Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <563233EE.1090907@codeaurora.org>
-Date: Thu, 29 Oct 2015 10:57:50 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:36909 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750941AbbJCSNo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 14:13:44 -0400
+In-Reply-To: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 8/9] pci: mvebu: add PCI Express root complex capability block
 MIME-Version: 1.0
-In-Reply-To: <563131B0.9060305@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <E1ZiRJN-0004JH-1h@rmk-PC.arm.linux.org.uk>
+Date: Sat, 03 Oct 2015 19:13:33 +0100
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Add a PCI Express root complex capability block so the PCI layer
+identifies the bridge as a PCI Express device.
 
+We expose this as a version 1 PCIe capability block, with slot support.
+We disable the clock power management capability as this depends on
+boards wiring the CLKREQ# signal.
 
-On 10/28/2015 4:36 PM, Sinan Kaya wrote:
-> 2. The second problem is about the PCIe resources.
->
-> pci_0000:01:00.0:_can't_enable_device:_BAR_0_[mem_0x80100100000-0x80100101fff_64bit]_not_claimed
->
-> pci 0000:01:00.0: Can't enable PCI device, BIOS handoff failed.
-> pci 0000:00:00.0: BAR 14: assigned [mem 0x80100100000-0x801003fffff]
-> pci 0000:00:00.0: BAR 13: no space for [io  size 0x1000]
-> pci 0000:00:00.0: BAR 13: failed to assign [io  size 0x1000]
-> pci 0000:00:00.0: BAR 13: no space for [io  size 0x1000]
-> pci 0000:00:00.0: BAR 13: failed to assign [io  size 0x1000]
-> pci 0000:01:00.0: BAR 0: assigned [mem 0x80100100000-0x80100101fff 64bit]
->
-> For some reason, the kernel is unable to assign resources.
->
-> I appreciate any pointers you might give.
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ drivers/pci/host/pci-mvebu.c | 137 +++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 133 insertions(+), 4 deletions(-)
 
-Tomasz,
-I debugged this part of the problem yesterday night.
-
-I have one set up with 4.2 kernel and Mark Salter's original ACPI PCIE 
-patch. His patchwork works fine with our ACPI table.
-
-This is what IO resource looks like in our table. PCI IO is supported 
-using the ACPI translation attribute on ARM systems.
-
-QWORDIO(			// produced resource
-	ResourceProducer,	// bit 0 of general flags is 0
-	MinFixed,		// Range is fixed
-	MaxFixed,		// Range is fixed
-	PosDecode,
-	EntireRange,
-	0x0000,			// Granularity
-	0x1000,			// Min,
-	0xFFFF,			// Max
-	0x8FFFFFEF000,		// Translation
-	0xF000,			// Range Length
-	,, PI00
-  )
-
-It looks like you are missing the translation support for the IO 
-aperture and Mark Salter's patch has this support.
-
-Yours is missing in pci_acpi_root_prepare_resources function here. 
-Mark's patch uses the offset argument to reorganize the resource.
-
-
-+            resource_size_t length = res->end - res->start;
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 97208233d901..6310f2a84cfd 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -30,6 +30,7 @@
+ #define PCIE_DEV_REV_OFF	0x0008
+ #define PCIE_BAR_LO_OFF(n)	(0x0010 + ((n) << 3))
+ #define PCIE_BAR_HI_OFF(n)	(0x0014 + ((n) << 3))
++#define PCIE_CAP_PCIEXP		0x0060
+ #define PCIE_HEADER_LOG_4_OFF	0x0128
+ #define PCIE_BAR_CTRL_OFF(n)	(0x1804 + (((n) - 1) * 4))
+ #define PCIE_WIN04_CTRL_OFF(n)	(0x1820 + ((n) << 4))
+@@ -57,14 +58,35 @@
+ #define  PCIE_STAT_BUS                  0xff00
+ #define  PCIE_STAT_DEV                  0x1f0000
+ #define  PCIE_STAT_LINK_DOWN		BIT(0)
++#define PCIE_RC_RTSTA		0x1a14
+ #define PCIE_DEBUG_CTRL         0x1a60
+ #define  PCIE_DEBUG_SOFT_RESET		BIT(20)
+ 
++enum {
++	PCISWCAP = PCI_BRIDGE_CONTROL + 2,
++	PCISWCAP_EXP_LIST_ID	= PCISWCAP + PCI_CAP_LIST_ID,
++	PCISWCAP_EXP_DEVCAP	= PCISWCAP + PCI_EXP_DEVCAP,
++	PCISWCAP_EXP_DEVCTL	= PCISWCAP + PCI_EXP_DEVCTL,
++	PCISWCAP_EXP_LNKCAP	= PCISWCAP + PCI_EXP_LNKCAP,
++	PCISWCAP_EXP_LNKCTL	= PCISWCAP + PCI_EXP_LNKCTL,
++	PCISWCAP_EXP_SLTCAP	= PCISWCAP + PCI_EXP_SLTCAP,
++	PCISWCAP_EXP_SLTCTL	= PCISWCAP + PCI_EXP_SLTCTL,
++	PCISWCAP_EXP_RTCTL	= PCISWCAP + PCI_EXP_RTCTL,
++	PCISWCAP_EXP_RTSTA	= PCISWCAP + PCI_EXP_RTSTA,
++	PCISWCAP_EXP_DEVCAP2	= PCISWCAP + PCI_EXP_DEVCAP2,
++	PCISWCAP_EXP_DEVCTL2	= PCISWCAP + PCI_EXP_DEVCTL2,
++	PCISWCAP_EXP_LNKCAP2	= PCISWCAP + PCI_EXP_LNKCAP2,
++	PCISWCAP_EXP_LNKCTL2	= PCISWCAP + PCI_EXP_LNKCTL2,
++	PCISWCAP_EXP_SLTCAP2	= PCISWCAP + PCI_EXP_SLTCAP2,
++	PCISWCAP_EXP_SLTCTL2	= PCISWCAP + PCI_EXP_SLTCTL2,
++};
 +
-+            err = pci_register_io_range(res->start, length);
-+            if (err) {
-+                resource_list_destroy_entry(entry);
-+                continue;
-+            }
+ /* PCI configuration space of a PCI-to-PCI bridge */
+ struct mvebu_sw_pci_bridge {
+ 	u16 vendor;
+ 	u16 device;
+ 	u16 command;
++	u16 status;
+ 	u16 class;
+ 	u8 interface;
+ 	u8 revision;
+@@ -84,13 +106,15 @@ struct mvebu_sw_pci_bridge {
+ 	u16 memlimit;
+ 	u16 iobaseupper;
+ 	u16 iolimitupper;
+-	u8 cappointer;
+-	u8 reserved1;
+-	u16 reserved2;
+ 	u32 romaddr;
+ 	u8 intline;
+ 	u8 intpin;
+ 	u16 bridgectrl;
 +
-+            port = pci_address_to_pio(res->start);
-+            if (port == (unsigned long)-1) {
-+                resource_list_destroy_entry(entry);
-+                continue;
-+            }
++	/* PCI express capability */
++	u32 pcie_sltcap;
++	u16 pcie_devctl;
++	u16 pcie_rtctl;
+ };
+ 
+ struct mvebu_pcie_port;
+@@ -451,6 +475,9 @@ static void mvebu_sw_pci_bridge_init(struct mvebu_pcie_port *port)
+ 	/* We support 32 bits I/O addressing */
+ 	bridge->iobase = PCI_IO_RANGE_TYPE_32;
+ 	bridge->iolimit = PCI_IO_RANGE_TYPE_32;
 +
-+            res->start = port;
-+            res->end = res->start + length - 1;
++	/* Add capabilities */
++	bridge->status = PCI_STATUS_CAP_LIST;
+ }
+ 
+ /*
+@@ -468,7 +495,7 @@ static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
+ 		break;
+ 
+ 	case PCI_COMMAND:
+-		*value = bridge->command;
++		*value = bridge->command | bridge->status << 16;
+ 		break;
+ 
+ 	case PCI_CLASS_REVISION:
+@@ -513,6 +540,10 @@ static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
+ 		*value = (bridge->iolimitupper << 16 | bridge->iobaseupper);
+ 		break;
+ 
++	case PCI_CAPABILITY_LIST:
++		*value = PCISWCAP;
++		break;
 +
-+            if (pci_remap_iospace(res, res->start) < 0)
-+                resource_list_destroy_entry(entry);
-
-
-
- > 
-pci_0000:01:00.0:_can't_enable_device:_BAR_0_[mem_0x80100100000-0x80100101fff_64bit]_not_claimed 
-
- >
- > pci 0000:01:00.0: Can't enable PCI device, BIOS handoff failed.
-
-I also found out this problem. This is a resource reclaim order problem 
-with respect to quirks. The card I'm testing is a PCIe USB card. It has 
-a quirk associated with it and it tries to enable and then disable the 
-device here.
-
-DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-PCI_CLASS_SERIAL_USB, 8, quirk_usb_early_handoff);
-
-The resources get assigned after this quirk. That's why I see these 
-can't enable messages. I looked at 4.2 kernel. The execution order is 
-reversed.
-
- > pci 0000:00:00.0: BAR 14: assigned [mem 0x80100100000-0x801003fffff]
- > pci 0000:00:00.0: BAR 13: no space for [io  size 0x1000]
- > pci 0000:00:00.0: BAR 13: failed to assign [io  size 0x1000]
- > pci 0000:00:00.0: BAR 13: no space for [io  size 0x1000]
- > pci 0000:00:00.0: BAR 13: failed to assign [io  size 0x1000]
- > pci 0000:01:00.0: BAR 0: assigned [mem 0x80100100000-0x80100101fff 64bit]
-
-
-
-
+ 	case PCI_ROM_ADDRESS1:
+ 		*value = 0;
+ 		break;
+@@ -522,6 +553,59 @@ static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
+ 		*value = 0;
+ 		break;
+ 
++	case PCISWCAP_EXP_LIST_ID:
++		/* Set PCIe v2, root port, slot support */
++		*value = (PCI_EXP_TYPE_ROOT_PORT << 4 | 2 |
++			  PCI_EXP_FLAGS_SLOT) << 16 | PCI_CAP_ID_EXP;
++		break;
++
++	case PCISWCAP_EXP_DEVCAP:
++		*value = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_DEVCAP);
++		break;
++
++	case PCISWCAP_EXP_DEVCTL:
++		*value = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_DEVCTL) &
++				 ~(PCI_EXP_DEVCTL_URRE | PCI_EXP_DEVCTL_FERE |
++				   PCI_EXP_DEVCTL_NFERE | PCI_EXP_DEVCTL_CERE);
++		*value |= bridge->pcie_devctl;
++		break;
++
++	case PCISWCAP_EXP_LNKCAP:
++		/*
++		 * PCIe requires the clock power management capability to be
++		 * hard-wired to zero for downstream ports
++		 */
++		*value = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_LNKCAP) &
++			 ~PCI_EXP_LNKCAP_CLKPM;
++		break;
++
++	case PCISWCAP_EXP_LNKCTL:
++		*value = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_LNKCTL);
++		break;
++
++	case PCISWCAP_EXP_SLTCAP:
++		*value = bridge->pcie_sltcap;
++		break;
++
++	case PCISWCAP_EXP_SLTCTL:
++		*value = PCI_EXP_SLTSTA_PDS << 16;
++		break;
++
++	case PCISWCAP_EXP_RTCTL:
++		*value = bridge->pcie_rtctl;
++		break;
++
++	case PCISWCAP_EXP_RTSTA:
++		*value = mvebu_readl(port, PCIE_RC_RTSTA);
++		break;
++
++	/* PCIe requires the v2 fields to be hard-wired to zero */
++	case PCISWCAP_EXP_DEVCAP2:
++	case PCISWCAP_EXP_DEVCTL2:
++	case PCISWCAP_EXP_LNKCAP2:
++	case PCISWCAP_EXP_LNKCTL2:
++	case PCISWCAP_EXP_SLTCAP2:
++	case PCISWCAP_EXP_SLTCTL2:
+ 	default:
+ 		/*
+ 		 * PCI defines configuration read accesses to reserved or
+@@ -614,6 +698,51 @@ static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
+ 		mvebu_pcie_set_local_bus_nr(port, bridge->secondary_bus);
+ 		break;
+ 
++	case PCISWCAP_EXP_DEVCTL:
++		/*
++		 * Armada370 data says these bits must always
++		 * be zero when in root complex mode.
++		 */
++		value &= ~(PCI_EXP_DEVCTL_URRE | PCI_EXP_DEVCTL_FERE |
++			   PCI_EXP_DEVCTL_NFERE | PCI_EXP_DEVCTL_CERE);
++
++		/*
++		 * If the mask is 0xffff0000, then we only want to write
++		 * the device control register, rather than clearing the
++		 * RW1C bits in the device status register.  Mask out the
++		 * status register bits.
++		 */
++		if (mask == 0xffff0000)
++			value &= 0xffff;
++
++		mvebu_writel(port, value, PCIE_CAP_PCIEXP + PCI_EXP_DEVCTL);
++		break;
++
++	case PCISWCAP_EXP_LNKCTL:
++		/*
++		 * If we don't support CLKREQ, we must ensure that the
++		 * CLKREQ enable bit always reads zero.  Since we haven't
++		 * had this capability, and it's dependent on board wiring,
++		 * disable it for the time being.
++		 */
++		value &= ~PCI_EXP_LNKCTL_CLKREQ_EN;
++
++		/*
++		 * If the mask is 0xffff0000, then we only want to write
++		 * the link control register, rather than clearing the
++		 * RW1C bits in the link status register.  Mask out the
++		 * status register bits.
++		 */
++		if (mask == 0xffff0000)
++			value &= 0xffff;
++
++		mvebu_writel(port, value, PCIE_CAP_PCIEXP + PCI_EXP_LNKCTL);
++		break;
++
++	case PCISWCAP_EXP_RTSTA:
++		mvebu_writel(port, value, PCIE_RC_RTSTA);
++		break;
++
+ 	default:
+ 		break;
+ 	}
 -- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+2.1.0
+
