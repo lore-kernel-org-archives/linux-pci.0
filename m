@@ -1,124 +1,194 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
- <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
- <562761A1.4020306@linaro.org>
- <20151021110201.GE3394@e106497-lin.cambridge.arm.com>
- <562776A5.7000303@linaro.org> <20151021114218.GA18602@red-moon>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Message-ID: <56278233.1020308@linaro.org>
-Date: Wed, 21 Oct 2015 14:16:51 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:36873 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834AbbJCSNC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 14:13:02 -0400
+In-Reply-To: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 1/9] pci: mvebu: move port parsing and resource claiming to
+ separate function
 MIME-Version: 1.0
-In-Reply-To: <20151021114218.GA18602@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <E1ZiRIn-0004IT-6Q@rmk-PC.arm.linux.org.uk>
+Date: Sat, 03 Oct 2015 19:12:57 +0100
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21.10.2015 13:42, Lorenzo Pieralisi wrote:
-> On Wed, Oct 21, 2015 at 01:27:33PM +0200, Tomasz Nowicki wrote:
->> On 21.10.2015 13:02, Liviu Dudau wrote:
->>> On Wed, Oct 21, 2015 at 11:57:53AM +0200, Tomasz Nowicki wrote:
->>>> On 14.10.2015 08:29, Jiang Liu wrote:
->>>>> Introduce common interface acpi_pci_root_create() and related data
->>>>> structures to create PCI root bus for ACPI PCI host bridges. It will
->>>>> be used to kill duplicated arch specific code for IA64 and x86. It may
->>>>> also help ARM64 in future.
->>>>>
->>>>> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>>>> Tested-by: Tony Luck <tony.luck@intel.com>
->>>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>>>> Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
->>>>> ---
->>>>>   drivers/acpi/pci_root.c  |  204 ++++++++++++++++++++++++++++++++++++++++++++++
->>>>>   include/linux/pci-acpi.h |   24 ++++++
->>>>>   2 files changed, 228 insertions(+)
->>>>>
->>>>
->>>> [...]
->>>>
->>>>> +
->>>>> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
->>>>> +				     struct acpi_pci_root_ops *ops,
->>>>> +				     struct acpi_pci_root_info *info,
->>>>> +				     void *sysdata)
->>>>> +{
->>>>> +	int ret, busnum = root->secondary.start;
->>>>> +	struct acpi_device *device = root->device;
->>>>> +	int node = acpi_get_node(device->handle);
->>>>> +	struct pci_bus *bus;
->>>>> +
->>>>> +	info->root = root;
->>>>> +	info->bridge = device;
->>>>> +	info->ops = ops;
->>>>> +	INIT_LIST_HEAD(&info->resources);
->>>>> +	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
->>>>> +		 root->segment, busnum);
->>>>> +
->>>>> +	if (ops->init_info && ops->init_info(info))
->>>>> +		goto out_release_info;
->>>>> +	if (ops->prepare_resources)
->>>>> +		ret = ops->prepare_resources(info);
->>>>> +	else
->>>>> +		ret = acpi_pci_probe_root_resources(info);
->>>>> +	if (ret < 0)
->>>>> +		goto out_release_info;
->>>>> +
->>>>> +	pci_acpi_root_add_resources(info);
->>>>> +	pci_add_resource(&info->resources, &root->secondary);
->>>>> +	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
->>>>> +				  sysdata, &info->resources);
->>>>
->>>> Thank a lot for this cleanup!!
->>>>
->>>> I recall you already considered passing segment (domain nr) to
->>>> pci_create_root_bus, right? Can you please remind me why we gave up on this?
->>>>
->>>> I am asking because currently I can not find the way to retrieve domain
->>>> number from pci_bus_assign_domain_nr (for those platforms which choose
->>>> PCI_DOMAINS_GENERIC and want to use segment nr from MCFG table) which is the
->>>> part of pci_create_root_bus.
->>>
->>> Not sure I fully understand your question, but pci_bus_assign_domain_nr() will
->>> put the assigned domain number in bus->domain_nr if you chose PCI_DOMAINS_GENERIC.
->>> Do you want to override that value with the segment nr from MCFG?
->>>
->>
->> Let me give ACPI ARM64 example:
->>
->> 1. We parse MCFG table and get segment nr assigned to root bridge
->> 2. Then PCI host bridge calls acpi_pci_root_create ->
->> pci_create_root_bus -> pci_bus_assign_domain_nr
->> 3. At this point we cannot get segment nr for ACPI
->>
->> So I would like to assign MCFG segment nr to bus->domain_nr being in
->> pci_bus_assign_domain_nr giving we have scenario above.
->
-> I do not understand what you mean by "assign MCFG segment" here, please
-> explain. The MCFG segment group number is used to look-up the configuration
-> space for a given host bridge, not to assign a domain number to it.
->
-> The domain_nr above is the value returned by the _SEG object for the host
-> bridge device.
+Move the PCIe port parsing and resource claiming to a separate function
+in preparation to add proper cleanup of claimed resources.
 
-If I read the code correctly, MCFG region assigned to PCI host bridge X 
-should have the same value for its segment field and corresponding _SEG 
-object. Anyway, you are right, the MCFG segment group number should be 
-used to look-up the configuration space and _SEG object to retrieve 
-domain nr.
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ drivers/pci/host/pci-mvebu.c | 130 ++++++++++++++++++++++++-------------------
+ 1 file changed, 74 insertions(+), 56 deletions(-)
 
-To evaluate _SEG object being in pci_bus_assign_domain_nr we still miss 
-there the PCI host bridge device. So I should change my previous 
-question, can we pass down the PCI host bridge device to be able to call 
-_SEG object being in pci_bus_assign_domain_nr?
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 19144ed7bdad..13ab0350f7fb 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -928,6 +928,76 @@ static int mvebu_pcie_resume(struct device *dev)
+ 	return 0;
+ }
+ 
++static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
++	struct mvebu_pcie_port *port, struct device_node *child)
++{
++	struct device *dev = &pcie->pdev->dev;
++	enum of_gpio_flags flags;
++	int ret;
++
++	port->pcie = pcie;
++
++	if (of_property_read_u32(child, "marvell,pcie-port", &port->port)) {
++		dev_warn(dev, "ignoring %s, missing pcie-port property\n",
++			 of_node_full_name(child));
++		goto skip;
++	}
++
++	if (of_property_read_u32(child, "marvell,pcie-lane", &port->lane))
++		port->lane = 0;
++
++	port->name = kasprintf(GFP_KERNEL, "pcie%d.%d", port->port, port->lane);
++
++	port->devfn = of_pci_get_devfn(child);
++	if (port->devfn < 0)
++		goto skip;
++
++	ret = mvebu_get_tgt_attr(dev->of_node, port->devfn, IORESOURCE_MEM,
++				 &port->mem_target, &port->mem_attr);
++	if (ret < 0) {
++		dev_err(dev, "%s: cannot get tgt/attr for mem window\n",
++			port->name);
++		goto skip;
++	}
++
++	if (resource_size(&pcie->io) != 0)
++		mvebu_get_tgt_attr(dev->of_node, port->devfn, IORESOURCE_IO,
++				   &port->io_target, &port->io_attr);
++	else {
++		port->io_target = -1;
++		port->io_attr = -1;
++	}
++
++	port->reset_gpio = of_get_named_gpio_flags(child, "reset-gpios", 0,
++						   &flags);
++	if (gpio_is_valid(port->reset_gpio)) {
++		port->reset_active_low = flags & OF_GPIO_ACTIVE_LOW;
++		port->reset_name = kasprintf(GFP_KERNEL, "%s-reset",
++					     port->name);
++
++		ret = devm_gpio_request_one(dev, port->reset_gpio,
++					    GPIOF_DIR_OUT, port->reset_name);
++		if (ret) {
++			if (ret == -EPROBE_DEFER)
++				goto err;
++			goto skip;
++		}
++	}
++
++	port->clk = of_clk_get_by_name(child, NULL);
++	if (IS_ERR(port->clk)) {
++		dev_err(dev, "%s: cannot get clock\n", port->name);
++		goto skip;
++	}
++
++	return 1;
++
++skip:
++	ret = 0;
++err:
++	return ret;
++}
++
+ static int mvebu_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct mvebu_pcie *pcie;
+@@ -980,76 +1050,24 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+ 	i = 0;
+ 	for_each_available_child_of_node(pdev->dev.of_node, child) {
+ 		struct mvebu_pcie_port *port = &pcie->ports[i];
+-		enum of_gpio_flags flags;
+-
+-		port->pcie = pcie;
+ 
+-		if (of_property_read_u32(child, "marvell,pcie-port",
+-					 &port->port)) {
+-			dev_warn(&pdev->dev,
+-				 "ignoring %s, missing pcie-port property\n",
+-				 of_node_full_name(child));
++		ret = mvebu_pcie_parse_port(pcie, port, child);
++		if (ret < 0)
++			return ret;
++		else if (ret == 0)
+ 			continue;
+-		}
+ 
+-		if (of_property_read_u32(child, "marvell,pcie-lane",
+-					 &port->lane))
+-			port->lane = 0;
+-
+-		port->name = kasprintf(GFP_KERNEL, "pcie%d.%d",
+-				       port->port, port->lane);
+-
+-		port->devfn = of_pci_get_devfn(child);
+-		if (port->devfn < 0)
+-			continue;
+-
+-		ret = mvebu_get_tgt_attr(np, port->devfn, IORESOURCE_MEM,
+-					 &port->mem_target, &port->mem_attr);
+-		if (ret < 0) {
+-			dev_err(&pdev->dev, "%s: cannot get tgt/attr for mem window\n",
+-				port->name);
+-			continue;
+-		}
+-
+-		if (resource_size(&pcie->io) != 0)
+-			mvebu_get_tgt_attr(np, port->devfn, IORESOURCE_IO,
+-					   &port->io_target, &port->io_attr);
+-		else {
+-			port->io_target = -1;
+-			port->io_attr = -1;
+-		}
+-
+-		port->reset_gpio = of_get_named_gpio_flags(child,
+-						   "reset-gpios", 0, &flags);
+ 		if (gpio_is_valid(port->reset_gpio)) {
+ 			u32 reset_udelay = 20000;
+ 
+-			port->reset_active_low = flags & OF_GPIO_ACTIVE_LOW;
+-			port->reset_name = kasprintf(GFP_KERNEL, "%s-reset",
+-						     port->name);
+ 			of_property_read_u32(child, "reset-delay-us",
+ 					     &reset_udelay);
+ 
+-			ret = devm_gpio_request_one(&pdev->dev,
+-			    port->reset_gpio, GPIOF_DIR_OUT, port->reset_name);
+-			if (ret) {
+-				if (ret == -EPROBE_DEFER)
+-					return ret;
+-				continue;
+-			}
+-
+ 			gpio_set_value(port->reset_gpio,
+ 				       (port->reset_active_low) ? 1 : 0);
+ 			msleep(reset_udelay/1000);
+ 		}
+ 
+-		port->clk = of_clk_get_by_name(child, NULL);
+-		if (IS_ERR(port->clk)) {
+-			dev_err(&pdev->dev, "%s: cannot get clock\n",
+-				port->name);
+-			continue;
+-		}
+-
+ 		ret = clk_prepare_enable(port->clk);
+ 		if (ret)
+ 			continue;
+-- 
+2.1.0
 
-Thanks,
-Tomasz
