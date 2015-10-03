@@ -1,140 +1,59 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	qiujiang <qiujiang@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v11 1/6] PCI: designware: move calculation of bus
- addresses to DRA7xx
-Date: Thu, 22 Oct 2015 16:37:17 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162759DA@lhreml503-mbs>
-References: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com>
- <1444991021-109306-2-git-send-email-wangzhou1@hisilicon.com>
- <20151021221524.GM1583@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E16274DCC@lhreml503-mbs>
- <20151022163534.GB21237@localhost>
-In-Reply-To: <20151022163534.GB21237@localhost>
-Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
+In-Reply-To: <560F158C.4040303@caviumnetworks.com>
+References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+	<1443825476-26880-4-git-send-email-ddaney.cavm@gmail.com>
+	<CAE9FiQWnE3ucbjPKuXm5qhTGx7bYOBqnNoSNOMaJa_tEf3Z4=Q@mail.gmail.com>
+	<560F158C.4040303@caviumnetworks.com>
+Date: Fri, 2 Oct 2015 20:00:20 -0700
+Message-ID: <CAE9FiQVr9E4w80ZSeTgKKwbGQ=NQiReSRnfoGF3D3+3NXj-G3Q@mail.gmail.com>
+Subject: Re: [PATCH v4 3/5] PCI: Handle IORESOURCE_PCI_FIXED when sizing and
+ assigning resources.
+From: Yinghai Lu <yinghai@kernel.org>
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: David Daney <ddaney.cavm@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
+	David Daney <david.daney@cavium.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
-> Sent: Thursday, October 22, 2015 5:36 PM
-> To: Gabriele Paoloni
-> Cc: Wangzhou (B); Bjorn Helgaas; jingoohan1@gmail.com;
-> pratyush.anand@gmail.com; Arnd Bergmann; linux@arm.linux.org.uk;
-> thomas.petazzoni@free-electrons.com; lorenzo.pieralisi@arm.com;
-> james.morse@arm.com; Liviu.Dudau@arm.com; jason@lakedaemon.net;
-> robh@kernel.org; gabriel.fernandez@linaro.org;
-> Minghuan.Lian@freescale.com; linux-pci@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; devicetree@vger.kernel.org; linux-
-> kernel@vger.kernel.org; zhangjukuo; qiuzhenfa; liudongdong (C);
-> qiujiang; xuwei (O); Liguozhu (Kenneth)
-> Subject: Re: [PATCH v11 1/6] PCI: designware: move calculation of bus
-> addresses to DRA7xx
-> 
-> Hi Gabriele,
-> 
-> On Thu, Oct 22, 2015 at 07:21:41AM +0000, Gabriele Paoloni wrote:
-> > > -----Original Message-----
-> > > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> 
-> > > >  #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
-> > > >  #define	LINK_UP						BIT(16)
-> > > > +#define	CPU_TO_BUS_ADDR					0x0FFFFFFF
-> > >
-> > > "CPU_TO_BUS_ADDR" is a very generic name.  Since you do have DRA7XX
-> in
-> > > other #defines and static symbols in this file, maybe it could be
-> DRA7XX to
-> > > make it obvious that it only applies here?
-> >
-> > Ok will change to DRA7XX_CPU_TO_BUS_ADRR in v12
-> > ..
-> 
-> > > > +	if (pp->io_mod_base)
-> > > > +		pp->io_mod_base &= CPU_TO_BUS_ADDR;
-> > >
-> > > These are equivalent to
-> > >
-> > >   pp->io_mod_base &= CPU_TO_BUS_ADDR;
-> > >
-> > > (You don't need to test whether they're zero first.)
-> >
-> > Yes agreed, will change in v12
-> > ...
-> 
-> > > >  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-> "config");
-> > > > @@ -415,8 +411,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> > > >  			pp->io_base = range.cpu_addr;
-> > > >
-> > > >  			/* Find the untranslated IO space address */
-> > > > -			pp->io_mod_base = of_read_number(parser.range -
-> > > > -							 parser.np + na, ns);
-> > > > +			pp->io_mod_base = range.cpu_addr;
-> > >
-> > > So apparently
-> > >
-> > >   "of_read_number() == range.cpu_addr & CPU_TO_BUS_ADDR" on DRA7xx
-> > >   "of_read_number() == range.cpu_addr" everywhere else?
-> >
-> > Yes correct
-> >
-> > > Is that right?  Is that a valid assumption, i.e., are we assuming
-> > > anything about DTs in the field that we shouldn't?
-> >
-> > Before I wrote a patch that was generic to accommodate intermediate
-> level
-> > of translation between PCI_addr -> BUS_addr -> CPU_addr
-> >
-> > http://lists.infradead.org/pipermail/linux-arm-kernel/2015-
-> July/360922.html
-> >
-> > After discussion we agreed to solve it with a bitmask rather than
-> adding
-> > a field to of_pci_range to make it generic.
-> > The bitmask only applies to DRA7xx
-> 
-> I haven't gotten all the way through this series yet, but don't bother
-> with
-> a v12 just for these minor changes.  I can easily fix them up when
-> applying
-> it.
+On Fri, Oct 2, 2015 at 4:38 PM, David Daney <ddaney@caviumnetworks.com> wrote:
+> On 10/02/2015 04:14 PM, Yinghai Lu wrote:
+>>
+>> https://patchwork.kernel.org/patch/7304371/
+>> [v6,06/53] PCI: Claim fixed resource during remove/rescan path
+>
+>
+> This one is interesting, but I don't think it will work.
+>
+> pci_claim_resource() calls pci_find_parent_resource(), which will fail in
+> important use cases.
+>
+> It is perfectly legal for a bridge provisioned by EA to not specify any
+> resources.  In this case we must walk up the bus tree until we find
+> something that contains the device resource, and can thus be a parent.
+>
+> That is a big part of what my patch is doing.
 
-Great Many Thanks for this!
+looks we need another resource flags for EA in addition to
+FIXED as it could out side of bridge MMIO range.
 
-Gab
+>
+> As for the merits of assigning fixed resources from the FINAL fixup, rather
+> than in __pci_bus_assign_resources(), I am unsure.
 
-> 
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+usually __pci_bus_assign_resources() is used for unassigned one. so
+I don't want it mixed with request resource there.
+
+Thanks
+
+Yinghai
