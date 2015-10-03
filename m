@@ -1,60 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bbn0105.outbound.protection.outlook.com ([157.56.111.105]:2267
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758680AbbJ3QNq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 30 Oct 2015 12:13:46 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	KY Srinivasan <kys@microsoft.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"olaf@aepfle.de" <olaf@aepfle.de>,
-	"apw@canonical.com" <apw@canonical.com>,
-	Vitaly Kuznetsov <vkuznets@redhat.com>,
-	"tglx@redhat.com" <tglx@redhat.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v4 6/7] drivers:hv: Define the channel type for Hyper-V
- PCI Express pass-through
-Date: Fri, 30 Oct 2015 15:57:56 +0000
-Message-ID: <DM2PR0301MB123280EE1F7E37B57E27E6EAAB2F0@DM2PR0301MB1232.namprd03.prod.outlook.com>
-References: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
-	<1446162376-43419-7-git-send-email-jakeo@microsoft.com>
- <CAHp75VfcLVsESDT-KdjobcKVwSWUT=f1i_1PrET47tJ=rB91jA@mail.gmail.com>
-In-Reply-To: <CAHp75VfcLVsESDT-KdjobcKVwSWUT=f1i_1PrET47tJ=rB91jA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:36878 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750892AbbJCSNL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 14:13:11 -0400
+In-Reply-To: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 2/9] pci: mvebu: fix memory leaks and refcount leaks
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <E1ZiRIs-0004Id-AN@rmk-PC.arm.linux.org.uk>
+Date: Sat, 03 Oct 2015 19:13:02 +0100
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbmR5IFNoZXZjaGVua28gW21h
-aWx0bzphbmR5LnNoZXZjaGVua29AZ21haWwuY29tXQ0KPiBTZW50OiBUaHVyc2RheSwgT2N0b2Jl
-ciAyOSwgMjAxNSA1OjQ1IFBNDQo+IFRvOiBKYWtlIE9zaGlucyA8amFrZW9AbWljcm9zb2Z0LmNv
-bT4NCj4gQ2M6IEdyZWcgS3JvYWgtSGFydG1hbiA8Z3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc+
-OyBLWSBTcmluaXZhc2FuDQo+IDxreXNAbWljcm9zb2Z0LmNvbT47IGxpbnV4LWtlcm5lbEB2Z2Vy
-Lmtlcm5lbC5vcmc7DQo+IGRldmVsQGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7IG9sYWZAYWVwZmxl
-LmRlOyBhcHdAY2Fub25pY2FsLmNvbTsgVml0YWx5DQo+IEt1em5ldHNvdiA8dmt1em5ldHNAcmVk
-aGF0LmNvbT47IHRnbHhAcmVkaGF0LmNvbTsgSGFpeWFuZyBaaGFuZw0KPiA8aGFpeWFuZ3pAbWlj
-cm9zb2Z0LmNvbT47IG1hcmMuenluZ2llckBhcm0uY29tOyBKaWFuZyBMaXUNCj4gPGppYW5nLmxp
-dUBsaW51eC5pbnRlbC5jb20+OyBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPjsg
-bGludXgtDQo+IHBjaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2NCA2
-LzddIGRyaXZlcnM6aHY6IERlZmluZSB0aGUgY2hhbm5lbCB0eXBlIGZvciBIeXBlci1WDQo+IFBD
-SSBFeHByZXNzIHBhc3MtdGhyb3VnaA0KPiANCj4gPg0KPiA+ICAvKg0KPiA+ICsgKiBQQ0kgRXhw
-cmVzcyBQYXNzIFRocm91Z2gNCj4gPiArICogezQ0QzRGNjFELTQ0NDQtNDQwMC05RDUyLTgwMkUy
-N0VERTE5Rn0NCj4gPiArICovDQo+ID4gKw0KPiA+ICsjZGVmaW5lIEhWX1BDSUVfR1VJRCBcDQo+
-ID4gKyAgICAgICAuZ3VpZCA9IHsgXA0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIDB4MUQs
-IDB4RjYsIDB4QzQsIDB4NDQsIDB4NDQsIDB4NDQsIDB4MDAsIDB4NDQsIFwNCj4gPiArICAgICAg
-ICAgICAgICAgICAgICAgICAweDlELCAweDUyLCAweDgwLCAweDJFLCAweDI3LCAweEVELCAweEUx
-LCAweDlGIFwNCj4gPiArICAgICAgICAgICAgICAgfQ0KPiANCj4gV2hhdCBhYm91dA0KPiAjaW5j
-bHVkZSA8bGludXgvdXVpZC5oPg0KPiANCj4gVVVJRF9MRSguLi4pDQo+IA0KPiBBbmQgeW91IG1h
-eSB1c2UgdXVpZF9sZSB0eXBlIGluc3RlYWQgb2YgY3VzdG9tIHJhdyBidWZmZXIuDQo+IA0KDQpU
-aGFua3MuICBJIHdhcyBqdXN0IGZvbGxvd2luZyB0aGUgZm9ybSBvZiBhbGwgdGhlIG90aGVycyBp
-biB0aGlzIGZpbGUuICBJIHRoaW5rIHRoYXQgdGhpcyB3YXMgZG9uZSB0byBtYXRjaCB1cCB3aXRo
-IHRoZSByZXByZXNlbnRhdGlvbiB0aGF0J3MgY29taW5nIGFjcm9zcyB0aGUgVk0gYm91bmRhcnkg
-ZnJvbSBXaW5kb3dzLg0KDQpJIGRvIHZlcnkgbXVjaCBhcHByZWNpYXRlIHRoZSBmZWVkYmFjaywg
-dGhvdWdoLA0KSmFrZSBPc2hpbnMNCg==
+The mvebu PCI port parsing is weak due to:
+
+1) allocations via kasprintf() were not cleaned up when we encounter an
+   error or decide to skip the port.
+2) kasprintf() wasn't checked for failure.
+3) of_get_named_gpio_flags() returns EPROBE_DEFER if the GPIO is not
+   present, not devm_gpio_request_one().
+4) the of_node was not being put when terminating the loop.
+
+Fix these oversights.
+
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ drivers/pci/host/pci-mvebu.c | 50 +++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 43 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 13ab0350f7fb..e8c51bb58e99 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -928,6 +928,13 @@ static int mvebu_pcie_resume(struct device *dev)
+ 	return 0;
+ }
+ 
++static void mvebu_pcie_port_clk_put(void *data)
++{
++	struct mvebu_pcie_port *port = data;
++
++	clk_put(port->clk);
++}
++
+ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
+ 	struct mvebu_pcie_port *port, struct device_node *child)
+ {
+@@ -946,7 +953,12 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
+ 	if (of_property_read_u32(child, "marvell,pcie-lane", &port->lane))
+ 		port->lane = 0;
+ 
+-	port->name = kasprintf(GFP_KERNEL, "pcie%d.%d", port->port, port->lane);
++	port->name = devm_kasprintf(dev, GFP_KERNEL, "pcie%d.%d", port->port,
++				    port->lane);
++	if (!port->name) {
++		ret = -ENOMEM;
++		goto err;
++	}
+ 
+ 	port->devfn = of_pci_get_devfn(child);
+ 	if (port->devfn < 0)
+@@ -960,20 +972,29 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
+ 		goto skip;
+ 	}
+ 
+-	if (resource_size(&pcie->io) != 0)
++	if (resource_size(&pcie->io) != 0) {
+ 		mvebu_get_tgt_attr(dev->of_node, port->devfn, IORESOURCE_IO,
+ 				   &port->io_target, &port->io_attr);
+-	else {
++	} else {
+ 		port->io_target = -1;
+ 		port->io_attr = -1;
+ 	}
+ 
+ 	port->reset_gpio = of_get_named_gpio_flags(child, "reset-gpios", 0,
+ 						   &flags);
++	if (port->reset_gpio == -EPROBE_DEFER) {
++		ret = port->reset_gpio;
++		goto err;
++	}
++
+ 	if (gpio_is_valid(port->reset_gpio)) {
+ 		port->reset_active_low = flags & OF_GPIO_ACTIVE_LOW;
+-		port->reset_name = kasprintf(GFP_KERNEL, "%s-reset",
+-					     port->name);
++		port->reset_name = devm_kasprintf(dev, GFP_KERNEL, "%s-reset",
++						  port->name);
++		if (!port->reset_name) {
++			ret = -ENOMEM;
++			goto err;
++		}
+ 
+ 		ret = devm_gpio_request_one(dev, port->reset_gpio,
+ 					    GPIOF_DIR_OUT, port->reset_name);
+@@ -990,10 +1011,23 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
+ 		goto skip;
+ 	}
+ 
++	ret = devm_add_action(dev, mvebu_pcie_port_clk_put, port);
++	if (ret < 0) {
++		clk_put(port->clk);
++		goto err;
++	}
++
+ 	return 1;
+ 
+ skip:
+ 	ret = 0;
++
++	/* In the case of skipping, we need to free these */
++	devm_kfree(dev, port->reset_name);
++	port->reset_name = NULL;
++	devm_kfree(dev, port->name);
++	port->name = NULL;
++
+ err:
+ 	return ret;
+ }
+@@ -1052,10 +1086,12 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+ 		struct mvebu_pcie_port *port = &pcie->ports[i];
+ 
+ 		ret = mvebu_pcie_parse_port(pcie, port, child);
+-		if (ret < 0)
++		if (ret < 0) {
++			of_node_put(child);
+ 			return ret;
+-		else if (ret == 0)
++		} else if (ret == 0) {
+ 			continue;
++		}
+ 
+ 		if (gpio_is_valid(port->reset_gpio)) {
+ 			u32 reset_udelay = 20000;
+-- 
+2.1.0
+
