@@ -1,49 +1,153 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1444407602.17726.8.camel@oracle.com>
-Subject: Re: [PATCH v7 07/60] PCI: kill wrong quirk about M7101
-From: Khalid Aziz <khalid.aziz@oracle.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Meelis Roos <mroos@linux.ee>
-Date: Fri, 09 Oct 2015 10:20:02 -0600
-In-Reply-To: <1444340359-8011-8-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-	 <1444340359-8011-8-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:1257 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750925AbbJCILe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 3 Oct 2015 04:11:34 -0400
+Subject: Re: [RFT v3] eata: Convert eata driver as normal PCI and platform
+ device drivers
+To: Arthur Marsh <arthur.marsh@internode.on.net>,
+	James Bottomley <James.Bottomley@HansenPartnership.com>
+References: <20150916134211.GA21535@infradead.org>
+ <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com>
+ <5601D550.5000801@internode.on.net>
+ <1442961929.15264.4.camel@HansenPartnership.com>
+ <5601E5FE.7020706@internode.on.net> <56023771.5010006@linux.intel.com>
+ <5602829C.5090500@internode.on.net>
+ <1443019207.2240.27.camel@HansenPartnership.com>
+ <56037C09.5050201@linux.intel.com> <560390A1.5060503@internode.on.net>
+ <56063AB7.9030309@internode.on.net>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Ballabio Dario <dario.ballabio@emc.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Dario Ballabio <ballabio_dario@emc.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <560F8DB0.8030704@linux.intel.com>
+Date: Sat, 3 Oct 2015 16:11:28 +0800
+MIME-Version: 1.0
+In-Reply-To: <56063AB7.9030309@internode.on.net>
+Content-Type: multipart/mixed;
+ boundary="------------080201060803010608010500"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-10-08 at 14:38 -0700, Yinghai Lu wrote:
-> Meelis reported that qla2000 driver does not get loaded on one sparc system.
+This is a multi-part message in MIME format.
+--------------080201060803010608010500
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+On 2015/9/26 14:27, Arthur Marsh wrote:
 > 
-> schizo f00732d0: PCI host bridge to bus 0001:00
-> pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
-> pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
-> pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
-> pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
 > 
-> So the quirk for M7101 claim the io range early.
+> Arthur Marsh wrote on 24/09/15 15:26:
+>>
+>>
+>> Jiang Liu wrote on 24/09/15 13:58:
+>>
+>>> Hi James,
+>>>     Thanks for review. How about the attached patch which addresses
+>>> the three suggestions from you?
+>>> Thanks!
+>>> Gerry
+>>
+>> I've applied the patch, rebuilt the kernel and verified that it allows
+>> unloading of the eata module and reloading it, as well as a successful
+>> kexec.
+>>
+>> Regards,
+>>
+>> Arthur.
 > 
-> According to spec with M7101 in M1543 page 103/104,
-> 	http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
-> 0xe0, and 0xe2 do not include address info for acpi/smb.
+> After some more thorough testing I've encountered an ongoing problem
+> trying to use kexec with filesystems mounted with the eata driver.
 > 
-> Kill wrong quirk about them.
+> If I boot up and have the eata driver loaded but no filesystem check or
+> mounting of filesystems on the disk attached to the DPT2044W controller,
+> then attempt a kexec reboot I get the reboot pausing after the
+> "synchronizing scsi cache" messages and getting the errors that I have
+> included as pictures in my previous reports.
 > 
-> Link: http://kodu.ut.ee/~mroos/dm/dm.v240
-> Link: http://kodu.ut.ee/~mroos/dm/dm.sb100
-> Reported-by: Meelis Roos <mroos@linux.ee>
-> Cc: Meelis Roos <mroos@linux.ee>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> If I do a normal boot which includes eata being loaded, the disk
+> attached to the DPT2044W controller having its filesystems checked and
+> mounted, then attempt a kexec reboot, I get the reboot pausing after the
+> "synchronizing SCSI cache" messages as before.
+> 
+> If I un-mount the filesystems on the disk attached to the DPT2044W
+> controller after start-up and try a reboot I get the same problem.
+> 
+> If I do modprobe -r eata after un-mounting the filesystems on the disk
+> attached to the DPT2044W controller after a start-up kexec *works fine*.
+Hi Arthur,
+	The above results suggest that we need to shutdown eata
+controller for kexec. So could you please try to apply the attached
+patch upon the previous two patches?
+Thanks!
+Gerry
+
+--------------080201060803010608010500
+Content-Type: text/x-patch;
+ name="0001-eata-Implement-shutdown-callback-for-eata-driver.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-eata-Implement-shutdown-callback-for-eata-driver.patch"
+
+>From 44a7ee9008951684a6ee1482a4445a64da61f54a Mon Sep 17 00:00:00 2001
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Date: Sat, 3 Oct 2015 15:57:39 +0800
+Subject: [PATCH] eata: Implement shutdown callback for eata driver
+
+Implement shutdown callback for eata driver, so eata controllers will
+be put into ready state for kexec.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/scsi/eata.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+index ceeba4d7b4ff..f3ef9ac97646 100644
+--- a/drivers/scsi/eata.c
++++ b/drivers/scsi/eata.c
+@@ -1517,6 +1517,11 @@ static void eata2x_pci_remove(struct pci_dev *pdev)
+ 	pci_disable_device(pdev);
+ }
+ 
++static void eata2x_pci_shutdown(struct pci_dev *pdev)
++{
++	port_remove(&pdev->dev);
++}
++
+ static struct pci_device_id eata2x_tbl[] = {
+ 	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_SCSI << 8, PCI_ANY_ID) },
+ 	{ },
+@@ -1528,6 +1533,7 @@ static struct pci_driver eata2x_pci_driver = {
+ 	.id_table	= eata2x_tbl,
+ 	.probe		= eata2x_pci_probe,
+ 	.remove		= eata2x_pci_remove,
++	.shutdown	= eata2x_pci_shutdown,
+ };
+ 
+ static int eata2x_register_pci_driver(void)
+@@ -1569,8 +1575,14 @@ static int __exit eata2x_platform_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static void eata2x_platform_shutdown(struct platform_device *pdev)
++{
++	port_remove(&pdev->dev);
++}
++
+ static struct platform_driver eata2x_platform_driver = {
+ 	.remove = __exit_p(eata2x_platform_remove),
++	.shutdown = eata2x_platform_shutdown,
+ 	.driver = {
+ 		.name	= "eata_plat",
+ 		.owner	= THIS_MODULE,
+-- 
+1.7.10.4
 
 
-Tested on sparc platforms
-
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com> 
-
-
+--------------080201060803010608010500--
