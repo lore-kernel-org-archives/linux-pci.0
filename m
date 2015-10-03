@@ -1,79 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 30 Oct 2015 13:18:37 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
-	Ethan Zhao <ethan.zhao@oracle.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 6/7] PCI: Fix sriov_enable() error path for
- pcibios_enable_sriov() failures
-Message-ID: <20151030051837.GE5119@richards-mbp.cn.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151029222329.11908.72848.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:32570 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750AbbJCSAo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 14:00:44 -0400
+Date: Sat, 3 Oct 2015 14:00:19 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, christian.melki@t2data.com
+Cc: Christian Melki <christian.melki@t2data.com>,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org
+Subject: Re: Fwd: SWIOTLB on 32-bit PAE.
+Message-ID: <20151003180007.GA4732@localhost.localdomain>
+References: <560E9007.1000604@t2data.com>
+ <560E92A0.9030707@t2data.com>
+ <20151003143630.GB17684@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151029222329.11908.72848.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20151003143630.GB17684@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 29, 2015 at 05:23:29PM -0500, Bjorn Helgaas wrote:
->From: Alexander Duyck <aduyck@mirantis.com>
->
->Disable VFs if pcibios_enable_sriov() fails, just like we do for other
->errors in sriov_enable().  Call pcibios_sriov_disable() if virtfn_add()
->fails.
->
->[bhelgaas: changelog, split to separate patch for reviewability]
->Fixes: 995df527f399 ("PCI: Add pcibios_sriov_enable() and pcibios_sriov_disable()")
->Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
->Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Sat, Oct 03, 2015 at 09:36:30AM -0500, Bjorn Helgaas wrote:
+> [+cc Konrad, Joerg, iommu list]
+> 
+> On Fri, Oct 02, 2015 at 04:20:16PM +0200, Christian Melki wrote:
+> > I discovered a strange error on my machine. 32-bit PAE 4.2.0 without
+> > IOMMU code (yeah, I know).
+> > When writing to an ext4 filesystem on a USB disk my kernel would hang
+> > and not return control to userspace. It would spew kernel messages to
+> > syslog as fast as it could without giving userspace any time, ie "hang"
+> > as far as a user sees it. The device itself is ok and the filesystem is
+> > clean.
+> > I get messages like this, millions of them.
+> > 
+> > Oct  2 14:33:06 voodoochild kernel: [  223.287447] nommu_map_sg:
+> > overflow 25dcac000+1024 of device mask ffffffff
+> > Oct  2 14:33:06 voodoochild kernel: [  223.287448] nommu_map_sg:
+> > overflow 25dcac000+1024 of device mask ffffffff
+> > Oct  2 14:33:06 voodoochild kernel: [  223.287449] nommu_map_sg:
+> > overflow 25dcac000+1024 of device mask ffffffff
+> > 
+> > I disovered that SWIOTLB was not on. It is only provided for 64-bit
+> > machines where it is default. On 32-bit SWIOTLB seems disabled
+> > unless you are running with some IOMMU/AGPGART code.
+> > 
+> > But what about 32-bit PAE? Would that not qualify for SWIOTLB without IOMMU?
 
-Reviewed-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+It most certainly would!
+> > 
+> > I am a novice in this area. Maybe this is a Kconfig "bug" for us
+> > that like to hang ourselves with CONFIG_* rope? :) I'd like to think
+> > that SWIOTLB should be default for 32-bit PAE too?
 
->---
-> drivers/pci/iov.c |   11 ++++++-----
-> 1 file changed, 6 insertions(+), 5 deletions(-)
->
->diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->index 24428d5..bd1c4fa 100644
->--- a/drivers/pci/iov.c
->+++ b/drivers/pci/iov.c
->@@ -246,7 +246,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> 	struct pci_sriov *iov = dev->sriov;
-> 	int bars = 0;
-> 	int bus;
->-	int retval;
->
-> 	if (!nr_virtfn)
-> 		return 0;
->@@ -315,10 +314,10 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> 	if (nr_virtfn < initial)
-> 		initial = nr_virtfn;
->
->-	if ((retval = pcibios_sriov_enable(dev, initial))) {
->-		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
->-			retval);
->-		return retval;
->+	rc = pcibios_sriov_enable(dev, initial);
->+	if (rc) {
->+		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n", rc);
->+		goto err_pcibios;
-> 	}
->
-> 	for (i = 0; i < initial; i++) {
->@@ -336,6 +335,8 @@ failed:
-> 	while (i--)
-> 		virtfn_remove(dev, i, 0);
->
->+	pcibios_sriov_disable(dev);
->+err_pcibios:
-> 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
-> 	pci_cfg_access_lock(dev);
-> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+Aye. I presume that you had done a small change already for this?
+Would you be willing to post it on lkml and CC me ?
 
--- 
-Richard Yang
-Help you, Help me
-
+Thank you.
+> > 
+> > Best regards,
+> > Christian
+> > 
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
