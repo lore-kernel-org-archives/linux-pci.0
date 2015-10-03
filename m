@@ -1,79 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:52716 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751850AbbJOTlP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Oct 2015 15:41:15 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Kevin Hilman <khilman@kernel.org>,
-	Tyler Baker <tyler.baker@linaro.org>,
-	lkml <linux-kernel@vger.kernel.org>,
-	Olof Johansson <olof@lixom.net>,
-	Mark Brown <broonie@kernel.org>,
-	bcm-kernel-feedback-list@broadcom.com,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2] PCI: iproc: fix 32-bit build error
-Date: Thu, 15 Oct 2015 21:40:45 +0200
-Message-ID: <5754881.OPA6La0Zg0@wuerfel>
-In-Reply-To: <561FD20F.1090004@broadcom.com>
-References: <1442363962-29805-1-git-send-email-rjui@broadcom.com> <20151015160028.GA17702@localhost> <561FD20F.1090004@broadcom.com>
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:36883 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898AbbJCSNQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 14:13:16 -0400
+In-Reply-To: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 3/9] pci: mvebu: split port parsing and resource claiming from
+ port setup
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <E1ZiRIx-0004Ik-Da@rmk-PC.arm.linux.org.uk>
+Date: Sat, 03 Oct 2015 19:13:07 +0100
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The iproc PCI driver tries to figure out whether the MMIO window has
-a valid size, but does this using a 64-bit modulo operation, which
-is not allowed on 32-bit kernels and leads to a link error:
+Split the PCIe port DT parsing and resource claiming from setting up
+the actual ports.  This allows us to gather all the resources first,
+before touching the hardware.  This is important as some of these
+resources (such as the GPIO for the PCIe reset) may defer probing.
 
-drivers/built-in.o: In function `iproc_pcie_setup':
-:(.text+0x4b798): undefined reference to `__aeabi_uldivmod'
-
-This works around that error by using the div64_u64() function
-provided by the kernel. While this is an expensive operation,
-it is harmless because we only call it during the probing
-of the driver.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Acked-by: Ray Jui <rjui@broadcom.com>
-Fixes: 0ab99ca8eb6c ("PCI: iproc: Fix compile warnings")
-
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
-On Thursday 15 October 2015 09:19:27 Ray Jui wrote:
-> On 10/15/2015 9:00 AM, Bjorn Helgaas wrote:
-> > 
-> > Ping; I can easily fix up the static, but it'd be nice to have real acks
-> > from Ray and Hauke.
+ drivers/pci/host/pci-mvebu.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-
-Argh, I knew there was one patch from my build fixes that I needed to
-redo, I just couldn't find it again. Thanks for the reminder.
-
-
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index f3481ddff344..9193951ae861 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -241,6 +241,7 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
- 	struct iproc_pcie_ob *ob = &pcie->ob;
- 	unsigned i;
- 	u64 max_size = (u64)ob->window_size * MAX_NUM_OB_WINDOWS;
-+	u64 remainder;
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index e8c51bb58e99..92c777e1aa3c 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -1093,6 +1093,18 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+ 			continue;
+ 		}
  
- 	if (size > max_size) {
- 		dev_err(pcie->dev,
-@@ -249,7 +250,8 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
- 		return -EINVAL;
++		port->dn = child;
++		i++;
++	}
++	pcie->nports = i;
++
++	for (i = 0; i < pcie->nports; i++) {
++		struct mvebu_pcie_port *port = &pcie->ports[i];
++
++		child = port->dn;
++		if (!child)
++			continue;
++
+ 		if (gpio_is_valid(port->reset_gpio)) {
+ 			u32 reset_udelay = 20000;
+ 
+@@ -1118,10 +1130,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+ 		}
+ 
+ 		mvebu_pcie_set_local_dev_nr(port, 1);
+-
+-		port->dn = child;
+ 		mvebu_sw_pci_bridge_init(port);
+-		i++;
  	}
  
--	if (size % ob->window_size) {
-+	div64_u64_rem(size, ob->window_size, &remainder);
-+	if (remainder) {
- 		dev_err(pcie->dev,
- 			"res size %pap needs to be multiple of window size %pap\n",
- 			&size, &ob->window_size);
+ 	pcie->nports = i;
+-- 
+2.1.0
 
