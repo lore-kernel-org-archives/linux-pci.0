@@ -1,98 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f179.google.com ([209.85.223.179]:33165 "EHLO
-	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751574AbbJBWiD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 18:38:03 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com
-Cc: "Signed-off-by: David Daney" <david.daney@cavium.com>
-Subject: [PATCH v4 1/5] PCI: Add Enhanced Allocation register entries
-Date: Fri,  2 Oct 2015 15:37:52 -0700
-Message-Id: <1443825476-26880-2-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from mail-qg0-f48.google.com ([209.85.192.48]:33340 "EHLO
+	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788AbbJCVL7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 17:11:59 -0400
+Received: by qgev79 with SMTP id v79so121362914qge.0
+        for <linux-pci@vger.kernel.org>; Sat, 03 Oct 2015 14:11:59 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: pratyush.anand@gmail.com, l.stach@pengutronix.de,
+	linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: [PATCH 1/2] PCI: spear: Move LTSSM state definitions to pcie-designware.h
+Date: Sat,  3 Oct 2015 18:11:30 -0300
+Message-Id: <1443906691-14642-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Sean O. Stalley" <sean.stalley@intel.com>
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-Add registers defined in PCI-SIG's Enhanced allocation ECN.
+Move LTSSM state definitions to common pcie-designware.h so that other
+drivers can make use of them.
 
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
-[david.daney@cavium.com: Added more definitions for PCI_EA_BEI_*]
-Signed-off-by: Signed-off-by: David Daney <david.daney@cavium.com>
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
 ---
- include/uapi/linux/pci_regs.h | 44 ++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 43 insertions(+), 1 deletion(-)
+ drivers/pci/host/pcie-designware.h | 34 ++++++++++++++++++++++++++++++++++
+ drivers/pci/host/pcie-spear13xx.c  | 33 ---------------------------------
+ 2 files changed, 34 insertions(+), 33 deletions(-)
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 413417f..352e418 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -216,7 +216,8 @@
- #define  PCI_CAP_ID_MSIX	0x11	/* MSI-X */
- #define  PCI_CAP_ID_SATA	0x12	/* SATA Data/Index Conf. */
- #define  PCI_CAP_ID_AF		0x13	/* PCI Advanced Features */
--#define  PCI_CAP_ID_MAX		PCI_CAP_ID_AF
-+#define  PCI_CAP_ID_EA		0x14	/* PCI Enhanced Allocation */
-+#define  PCI_CAP_ID_MAX		PCI_CAP_ID_EA
- #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
- #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
- #define PCI_CAP_SIZEOF		4
-@@ -353,6 +354,47 @@
- #define  PCI_AF_STATUS_TP	0x01
- #define PCI_CAP_AF_SIZEOF	6	/* size of AF registers */
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 35123d9..97d6558 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -22,6 +22,40 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
  
-+/* PCI Enhanced Allocation registers */
++#define LTSSM_STATE_DETECT_QUIET	0x00
++#define LTSSM_STATE_DETECT_ACT		0x01
++#define LTSSM_STATE_POLL_ACTIVE		0x02
++#define LTSSM_STATE_POLL_COMPLIANCE	0x03
++#define LTSSM_STATE_POLL_CONFIG		0x04
++#define LTSSM_STATE_PRE_DETECT_QUIET	0x05
++#define LTSSM_STATE_DETECT_WAIT		0x06
++#define LTSSM_STATE_CFG_LINKWD_START	0x07
++#define LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
++#define LTSSM_STATE_CFG_LANENUM_WAIT	0x09
++#define LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
++#define LTSSM_STATE_CFG_COMPLETE	0x0B
++#define LTSSM_STATE_CFG_IDLE		0x0C
++#define LTSSM_STATE_RCVRY_LOCK		0x0D
++#define LTSSM_STATE_RCVRY_SPEED		0x0E
++#define LTSSM_STATE_RCVRY_RCVRCFG	0x0F
++#define LTSSM_STATE_RCVRY_IDLE		0x10
++#define LTSSM_STATE_L0			0x11
++#define LTSSM_STATE_L0S			0x12
++#define LTSSM_STATE_L123_SEND_EIDLE	0x13
++#define LTSSM_STATE_L1_IDLE		0x14
++#define LTSSM_STATE_L2_IDLE		0x15
++#define LTSSM_STATE_L2_WAKE		0x16
++#define LTSSM_STATE_DISABLED_ENTRY	0x17
++#define LTSSM_STATE_DISABLED_IDLE	0x18
++#define LTSSM_STATE_DISABLED		0x19
++#define LTSSM_STATE_LPBK_ENTRY		0x1A
++#define LTSSM_STATE_LPBK_ACTIVE		0x1B
++#define LTSSM_STATE_LPBK_EXIT		0x1C
++#define LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
++#define LTSSM_STATE_HOT_RESET_ENTRY	0x1E
++#define LTSSM_STATE_HOT_RESET		0x1F
++#define LTSSM_STATE_MASK		0x3F
 +
-+#define PCI_EA_NUM_ENT		2	/* Number of Capability Entries */
-+#define PCI_EA_NUM_ENT_MASK	0x3f	/* Num Entries Mask */
-+#define PCI_EA_FIRST_ENT	4	/* First EA Entry in List */
-+#define PCI_EA_FIRST_ENT_BRIDGE	8	/* First EA Entry for Bridges */
-+#define PCI_EA_ES		0x7	/* Entry Size */
-+#define PCI_EA_BEI(x)	(((x) >> 4) & 0xf) /* BAR Equivalent Indicator */
-+/* 0-5 map to BARs 0-5 respectively */
-+#define  PCI_EA_BEI_BAR0	0
-+#define  PCI_EA_BEI_BAR5	5
-+#define  PCI_EA_BEI_BRIDGE	6	/* Resource behind bridge */
-+#define  PCI_EA_BEI_ENI		7	/* Equivalent Not Indicated */
-+#define  PCI_EA_BEI_ROM		8	/* Expansion ROM */
-+/* 9-14 map to VF BARs 0-5 respectively */
-+#define  PCI_EA_BEI_VF_BAR0	9
-+#define  PCI_EA_BEI_VF_BAR5	14
-+#define  PCI_EA_BEI_RESERVED	15	/* Reserved - Treat like ENI */
-+
-+#define PCI_EA_PP(x)	(((x) >>  8) & 0xff)	/* Primary Properties */
-+#define PCI_EA_SP(x)	(((x) >> 16) & 0xff)	/* Secondary Properties */
-+#define  PCI_EA_P_MEM			0x00	/* Non-Prefetch Memory */
-+#define  PCI_EA_P_MEM_PREFETCH		0x01	/* Prefetchable Memory */
-+#define  PCI_EA_P_IO			0x02	/* I/O Space */
-+#define  PCI_EA_P_VIRT_MEM_PREFETCH	0x03	/* VF Prefetchable Memory */
-+#define  PCI_EA_P_VIRT_MEM		0x04	/* VF Non-Prefetch Memory */
-+#define  PCI_EA_P_BRIDGE_MEM		0x05	/* Bridge Non-Prefetch Memory */
-+#define  PCI_EA_P_BRIDGE_MEM_PREFETCH	0x06	/* Bridge Prefetchable Memory */
-+#define  PCI_EA_P_BRIDGE_IO		0x07	/* Bridge I/O Space */
-+/* 0x08-0xfc reserved */
-+#define  PCI_EA_P_MEM_RESERVED		0xfd	/* Reserved Memory */
-+#define  PCI_EA_P_IO_RESERVED		0xfe	/* Reserved I/O Space */
-+#define  PCI_EA_P_UNAVAILABLE		0xff	/* Entry Unavailable */
-+#define PCI_EA_WRITEABLE	BIT(30) /* Writable, 1 = RW, 0 = HwInit */
-+#define PCI_EA_ENABLE		BIT(31) /* Enable for this entry */
-+#define PCI_EA_BASE		4	/* Base Address Offset */
-+#define PCI_EA_MAX_OFFSET	8	/* MaxOffset (resource length) */
-+/* bit 0 is reserved */
-+#define PCI_EA_IS_64		BIT(1)	/* 64-bit field flag */
-+#define PCI_EA_FIELD_MASK	0xfffffffc	/* For Base & Max Offset */
-+
- /* PCI-X registers (Type 0 (non-bridge) devices) */
+ struct pcie_port {
+ 	struct device		*dev;
+ 	u8			root_bus_nr;
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 98d2683..920d399 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -84,39 +84,6 @@ struct pcie_app_reg {
+ #define APPS_PM_XMT_PME_ID			5
  
- #define PCI_X_CMD		2	/* Modes & Features */
+ /* CR3 ID */
+-#define XMLH_LTSSM_STATE_DETECT_QUIET		0x00
+-#define XMLH_LTSSM_STATE_DETECT_ACT		0x01
+-#define XMLH_LTSSM_STATE_POLL_ACTIVE		0x02
+-#define XMLH_LTSSM_STATE_POLL_COMPLIANCE	0x03
+-#define XMLH_LTSSM_STATE_POLL_CONFIG		0x04
+-#define XMLH_LTSSM_STATE_PRE_DETECT_QUIET	0x05
+-#define XMLH_LTSSM_STATE_DETECT_WAIT		0x06
+-#define XMLH_LTSSM_STATE_CFG_LINKWD_START	0x07
+-#define XMLH_LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
+-#define XMLH_LTSSM_STATE_CFG_LANENUM_WAIT	0x09
+-#define XMLH_LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
+-#define XMLH_LTSSM_STATE_CFG_COMPLETE		0x0B
+-#define XMLH_LTSSM_STATE_CFG_IDLE		0x0C
+-#define XMLH_LTSSM_STATE_RCVRY_LOCK		0x0D
+-#define XMLH_LTSSM_STATE_RCVRY_SPEED		0x0E
+-#define XMLH_LTSSM_STATE_RCVRY_RCVRCFG		0x0F
+-#define XMLH_LTSSM_STATE_RCVRY_IDLE		0x10
+-#define XMLH_LTSSM_STATE_L0			0x11
+-#define XMLH_LTSSM_STATE_L0S			0x12
+-#define XMLH_LTSSM_STATE_L123_SEND_EIDLE	0x13
+-#define XMLH_LTSSM_STATE_L1_IDLE		0x14
+-#define XMLH_LTSSM_STATE_L2_IDLE		0x15
+-#define XMLH_LTSSM_STATE_L2_WAKE		0x16
+-#define XMLH_LTSSM_STATE_DISABLED_ENTRY		0x17
+-#define XMLH_LTSSM_STATE_DISABLED_IDLE		0x18
+-#define XMLH_LTSSM_STATE_DISABLED		0x19
+-#define XMLH_LTSSM_STATE_LPBK_ENTRY		0x1A
+-#define XMLH_LTSSM_STATE_LPBK_ACTIVE		0x1B
+-#define XMLH_LTSSM_STATE_LPBK_EXIT		0x1C
+-#define XMLH_LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
+-#define XMLH_LTSSM_STATE_HOT_RESET_ENTRY	0x1E
+-#define XMLH_LTSSM_STATE_HOT_RESET		0x1F
+-#define XMLH_LTSSM_STATE_MASK			0x3F
+ #define XMLH_LINK_UP				(1 << 6)
+ 
+ /* CR4 ID */
 -- 
 1.9.1
 
