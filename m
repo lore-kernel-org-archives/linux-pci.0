@@ -1,99 +1,124 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 12/60] PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
-Date: Thu,  8 Oct 2015 14:38:31 -0700
-Message-Id: <1444340359-8011-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:36899 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750932AbbJCSNd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 14:13:33 -0400
+In-Reply-To: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 6/9] pci: mvebu: use gpio_desc to carry around gpio
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <E1ZiRJC-0004J4-PY@rmk-PC.arm.linux.org.uk>
+Date: Sat, 03 Oct 2015 19:13:22 +0100
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If any bridge up to root only have 32bit pref mmio, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
+Use a gpio_desc to carry around the gpio, so we can then make use of the
+GPIOF_ACTIVE_LOW property rather than carrying that around as well.
+This also avoids needing to use gpio_is_valid() to check whether we have
+a GPIO; checking for a non-NULL descriptor is simpler.
 
-We need to move pci_bridge_check_ranges calling early.
-for parent bridges pref mmio BAR may not allocated by BIOS, res flags
-is still 0, we need to have it correct set before we check them for
-child device resources.
-
--v2: check all bus resources instead of just res[15].
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- drivers/pci/setup-bus.c | 31 +++++++++++++++++++++++++++++--
- 1 file changed, 29 insertions(+), 2 deletions(-)
+ drivers/pci/host/pci-mvebu.c | 39 ++++++++++++++++++++++++---------------
+ 1 file changed, 24 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 6c43c43..b1e4595 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -739,6 +739,29 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
- 
-+static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self) {
-+		int i;
-+		bool found = false;
-+		struct resource *res;
-+
-+		pci_bus_for_each_resource(bus, res, i)
-+			if (res->flags & IORESOURCE_MEM_64) {
-+				found = true;
-+				break;
-+			}
-+
-+		if (!found)
-+			return false;
-+	}
-+
-+	return pci_up_path_over_pref_mem64(bus->parent);
-+}
-+
- int pci_resource_pref_compatible(const struct pci_dev *dev,
- 				 struct resource *res)
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 7282bb06c7a8..ab619ee0ef49 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -119,8 +119,7 @@ struct mvebu_pcie_port {
+ 	unsigned int io_target;
+ 	unsigned int io_attr;
+ 	struct clk *clk;
+-	int reset_gpio;
+-	int reset_active_low;
++	struct gpio_desc *reset_gpio;
+ 	char *reset_name;
+ 	struct mvebu_sw_pci_bridge bridge;
+ 	struct device_node *dn;
+@@ -940,7 +939,7 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
  {
-@@ -747,7 +770,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 	struct device *dev = &pcie->pdev->dev;
+ 	enum of_gpio_flags flags;
+-	int ret;
++	int reset_gpio, ret;
  
- 	if ((res->flags & IORESOURCE_MEM) &&
- 	    (res->flags & IORESOURCE_MEM_64) &&
--	    dev->on_all_pcie_path)
-+	    dev->on_all_pcie_path &&
-+	    pci_up_path_over_pref_mem64(dev->bus))
- 		return res->flags | IORESOURCE_PREFETCH;
+ 	port->pcie = pcie;
  
- 	return res->flags;
-@@ -1239,6 +1263,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	struct resource *b_res;
- 	int ret;
+@@ -980,15 +979,15 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
+ 		port->io_attr = -1;
+ 	}
  
-+	if (!pci_is_root_bus(bus) &&
-+	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
-+		pci_bridge_check_ranges(bus);
+-	port->reset_gpio = of_get_named_gpio_flags(child, "reset-gpios", 0,
+-						   &flags);
+-	if (port->reset_gpio == -EPROBE_DEFER) {
+-		ret = port->reset_gpio;
++	reset_gpio = of_get_named_gpio_flags(child, "reset-gpios", 0, &flags);
++	if (reset_gpio == -EPROBE_DEFER) {
++		ret = reset_gpio;
+ 		goto err;
+ 	}
+ 
+-	if (gpio_is_valid(port->reset_gpio)) {
+-		port->reset_active_low = flags & OF_GPIO_ACTIVE_LOW;
++	if (gpio_is_valid(reset_gpio)) {
++		unsigned long gpio_flags;
 +
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		struct pci_bus *b = dev->subordinate;
- 		if (!b)
-@@ -1266,7 +1294,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		break;
+ 		port->reset_name = devm_kasprintf(dev, GFP_KERNEL, "%s-reset",
+ 						  port->name);
+ 		if (!port->reset_name) {
+@@ -996,13 +995,24 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
+ 			goto err;
+ 		}
  
- 	case PCI_CLASS_BRIDGE_PCI:
--		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
- 			additional_mem_size = pci_hotplug_mem_size;
+-		ret = devm_gpio_request_one(dev, port->reset_gpio,
+-					    GPIOF_DIR_OUT, port->reset_name);
++		if (flags & OF_GPIO_ACTIVE_LOW) {
++			dev_info(dev, "%s: reset gpio is active low\n",
++				 of_node_full_name(child));
++			gpio_flags = GPIOF_ACTIVE_LOW |
++				     GPIOF_OUT_INIT_LOW;
++		} else {
++			gpio_flags = GPIOF_OUT_INIT_HIGH;
++		}
++
++		ret = devm_gpio_request_one(dev, reset_gpio, gpio_flags,
++					    port->reset_name);
+ 		if (ret) {
+ 			if (ret == -EPROBE_DEFER)
+ 				goto err;
+ 			goto skip;
+ 		}
++
++		port->reset_gpio = gpio_to_desc(reset_gpio);
+ 	}
+ 
+ 	port->clk = of_clk_get_by_name(child, NULL);
+@@ -1104,15 +1114,14 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+ 		if (!child)
+ 			continue;
+ 
+-		if (gpio_is_valid(port->reset_gpio)) {
++		if (port->reset_gpio) {
+ 			u32 reset_udelay = 20000;
+ 
+ 			of_property_read_u32(child, "reset-delay-us",
+ 					     &reset_udelay);
+ 
+-			gpio_set_value_cansleep(port->reset_gpio,
+-						!!port->reset_active_low);
+-			msleep(reset_udelay/1000);
++			gpiod_set_value_cansleep(port->reset_gpio, 0);
++			msleep(reset_udelay / 1000);
+ 		}
+ 
+ 		ret = clk_prepare_enable(port->clk);
 -- 
-1.8.4.5
+2.1.0
 
