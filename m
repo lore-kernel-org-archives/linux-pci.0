@@ -1,130 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v9 5/6] Documentation: dt-bindings: pci: altera pcie device tree binding
-Date: Wed, 14 Oct 2015 10:41:31 +0800
-Message-ID: <1444790492-4051-6-git-send-email-lftan@altera.com>
-In-Reply-To: <1444790492-4051-1-git-send-email-lftan@altera.com>
-References: <1444790492-4051-1-git-send-email-lftan@altera.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:36914 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952AbbJCSNs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 14:13:48 -0400
+In-Reply-To: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 9/9] pci: mvebu: remove code restricting accesses to slot 0
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <E1ZiRJS-0004JN-6A@rmk-PC.arm.linux.org.uk>
+Date: Sat, 03 Oct 2015 19:13:38 +0100
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the bindings for Altera PCIe host controller driver and
-Altera PCIe MSI driver.
+Now that we advertise a PCIe capability, the Linux PCI layer will not
+scan the bus for devices other than in slot 0.  This makes the
+work-around to trap accesses to devices other than slot 0 unnecessary.
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- .../devicetree/bindings/pci/altera-pcie-msi.txt    | 28 +++++++++++++
- .../devicetree/bindings/pci/altera-pcie.txt        | 49 ++++++++++++++++++++++
- 2 files changed, 77 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
+ drivers/pci/host/pci-mvebu.c | 24 ------------------------
+ 1 file changed, 24 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-new file mode 100644
-index 0000000..09cd3bc
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-@@ -0,0 +1,28 @@
-+* Altera PCIe MSI controller
-+
-+Required properties:
-+- compatible:	should contain "altr,msi-1.0"
-+- reg:		specifies the physical base address of the controller and
-+		the length of the memory mapped region.
-+- reg-names:	must include the following entries:
-+		"csr": CSR registers
-+		"vector_slave": vectors slave port region
-+- interrupt-parent:	interrupt source phandle.
-+- interrupts:	specifies the interrupt source of the parent interrupt
-+		controller. The format of the interrupt specifier depends on the
-+		parent interrupt controller.
-+- num-vectors:	number of vectors, range 1 to 32.
-+- msi-controller:	indicates that this is MSI controller node
-+
-+
-+Example
-+msi0: msi@0xFF200000 {
-+	compatible = "altr,msi-1.0";
-+	reg = <0xFF200000 0x00000010
-+		0xFF200010 0x00000080>;
-+	reg-names = "csr", "vector_slave";
-+	interrupt-parent = <&hps_0_arm_gic_0>;
-+	interrupts = <0 42 4>;
-+	msi-controller;
-+	num-vectors = <32>;
-+};
-diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-new file mode 100644
-index 0000000..2951a6a
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-@@ -0,0 +1,49 @@
-+* Altera PCIe controller
-+
-+Required properties:
-+- compatible :	should contain "altr,pcie-root-port-1.0"
-+- reg:		a list of physical base address and length for TXS and CRA.
-+- reg-names:	must include the following entries:
-+		"Txs": TX slave port region
-+		"Cra": Control register access region
-+- interrupt-parent:	interrupt source phandle.
-+- interrupts:	specifies the interrupt source of the parent interrupt controller.
-+		The format of the interrupt specifier depends on the parent interrupt
-+		controller.
-+- device_type:	must be "pci"
-+- #address-cells:	set to <3>
-+- #size-cells:	set to <2>
-+- #interrupt-cells:	set to <1>
-+- ranges:		describes the translation of addresses for root ports and standard
-+		PCI regions.
-+- interrupt-map-mask and interrupt-map: standard PCI properties to define the
-+		mapping of the PCIe interface to interrupt numbers.
-+
-+Optional properties:
-+- msi-parent:	Link to the hardware entity that serves as the MSI controller for this PCIe
-+		controller.
-+- bus-range:	PCI bus numbers covered
-+
-+Example
-+	pcie_0: pcie@0xc00000000 {
-+		compatible = "altr,pcie-root-port-1.0";
-+		reg = <0xc0000000 0x20000000>,
-+			<0xff220000 0x00004000>;
-+		reg-names = "Txs", "Cra";
-+		interrupt-parent = <&hps_0_arm_gic_0>;
-+		interrupts = <0 40 4>;
-+		interrupt-controller;
-+		#interrupt-cells = <1>;
-+		bus-range = <0x0 0xFF>;
-+		device_type = "pci";
-+		msi-parent = <&msi_to_gic_gen_0>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_0 1>,
-+			            <0 0 0 2 &pcie_0 2>,
-+			            <0 0 0 3 &pcie_0 3>,
-+			            <0 0 0 4 &pcie_0 4>;
-+		ranges = <0x82000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x10000000
-+			    0x82000000 0x00000000 0x10000000 0xd0000000 0x00000000 0x10000000>;
-+	};
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 6310f2a84cfd..53b79c5f0559 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -794,17 +794,6 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	if (!mvebu_pcie_link_up(port))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	/*
+-	 * On the secondary bus, we don't want to expose any other
+-	 * device than the device physically connected in the PCIe
+-	 * slot, visible in slot 0. In slot 1, there's a special
+-	 * Marvell device that only makes sense when the Armada is
+-	 * used as a PCIe endpoint.
+-	 */
+-	if (bus->number == port->bridge.secondary_bus &&
+-	    PCI_SLOT(devfn) != 0)
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-
+ 	/* Access the real PCIe interface */
+ 	ret = mvebu_pcie_hw_wr_conf(port, bus, devfn,
+ 				    where, size, val);
+@@ -835,19 +824,6 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+ 
+-	/*
+-	 * On the secondary bus, we don't want to expose any other
+-	 * device than the device physically connected in the PCIe
+-	 * slot, visible in slot 0. In slot 1, there's a special
+-	 * Marvell device that only makes sense when the Armada is
+-	 * used as a PCIe endpoint.
+-	 */
+-	if (bus->number == port->bridge.secondary_bus &&
+-	    PCI_SLOT(devfn) != 0) {
+-		*val = 0xffffffff;
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-	}
+-
+ 	/* Access the real PCIe interface */
+ 	ret = mvebu_pcie_hw_rd_conf(port, bus, devfn,
+ 				    where, size, val);
 -- 
-1.8.2.1
+2.1.0
 
