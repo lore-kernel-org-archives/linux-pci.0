@@ -1,76 +1,63 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Subject: [PATCH V1 07/11] XEN / PCI: Remove the dependence on arch x86 when PCI_MMCONFIG=y
-Date: Tue, 27 Oct 2015 17:38:38 +0100
-Message-Id: <1445963922-22711-8-git-send-email-tn@semihalf.com>
-In-Reply-To: <1445963922-22711-1-git-send-email-tn@semihalf.com>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+Date: Sat, 3 Oct 2015 14:10:37 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Ley Foon Tan <lftan@altera.com>, Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v7 5/6] Documentation: dt-bindings: pci: altera pcie
+ device tree binding
+Message-ID: <20151003141037.140fcbc3@arm.com>
+In-Reply-To: <6497772.rqSurELzER@wuerfel>
+References: <1442801587-3812-1-git-send-email-lftan@altera.com>
+	<CAL_JsqL9eoTRa2-eeNJgVoO=0LyuaaJ87E4_BS0KocRKBXGdGA@mail.gmail.com>
+	<CAFiDJ5_MYC=V_L1LyRNq00z=DerzKAF=RF5av9vHnUPP+9a1nw@mail.gmail.com>
+	<6497772.rqSurELzER@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hanjun Guo <hanjun.guo@linaro.org>
+On Fri, 2 Oct 2015 23:56:37 +0200
+Arnd Bergmann <arnd@arndb.de> wrote:
 
-In drivers/xen/pci.c, there are arch x86 dependent codes when
-CONFIG_PCI_MMCONFIG is enabled, since CONFIG_PCI_MMCONFIG
-depends on ACPI, so this will prevent XEN PCI running on other
-architectures using ACPI with PCI_MMCONFIG enabled (such as ARM64).
+> On Friday 02 October 2015 15:53:44 Ley Foon Tan wrote:
+> > > Strictly speaking, if you have undocumented bindings downstream that
+> > > is your problem and we don't have to accept them as-is upstream. I'm
+> > > not going to worry about that here.
+> > >
+> > >>> txs contains the config space?
+> > >> It is not the config space, but a memory slave port.
+> > >
+> > > Then where is the config space? It should not be part of "ranges" is
+> > > all I care about.
+> > The config space is not part of "ranges". Our IP uses TLP packet to
+> > access config space.
+> > 
+> 
+> It took me a bit to figure out what you mean here. To save others
+> from reading the source, here is what I found:
+> 
+> * The config space is accessed indirectly through registers from the
+>   "cra" register range, which is the right approach according to the
+>   point that Rob made.
+> * hardware-wise this basically looks like bit-banged PCIe, which is
+>   both awesome and scary ;-)
 
-Fortunatly, it can be sloved in a simple way. In drivers/xen/pci.c,
-the only x86 dependent code is if ((pci_probe & PCI_PROBE_MMCONF) == 0),
-and it's defined in asm/pci_x86.h, the code means that
-if the PCI resource is not probed in PCI_PROBE_MMCONF way, just
-ingnore the xen mcfg init. Actually this is duplicate, because
-if PCI resource is not probed in PCI_PROBE_MMCONF way, the
-pci_mmconfig_list will be empty, and the if (list_empty())
-after it will do the same job.
+drivers/pcie/host/pcie-host-gpio.c anyone? ;-)
 
-So just remove the arch related code and the head file, this
-will be no functional change for x86, and also makes xen/pci.c
-usable for other architectures.
-
-Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>
----
- drivers/xen/pci.c | 6 ------
- 1 file changed, 6 deletions(-)
-
-diff --git a/drivers/xen/pci.c b/drivers/xen/pci.c
-index 6785ebb..9a8dbe3 100644
---- a/drivers/xen/pci.c
-+++ b/drivers/xen/pci.c
-@@ -28,9 +28,6 @@
- #include <asm/xen/hypervisor.h>
- #include <asm/xen/hypercall.h>
- #include "../pci/pci.h"
--#ifdef CONFIG_PCI_MMCONFIG
--#include <asm/pci_x86.h>
--#endif
- 
- static bool __read_mostly pci_seg_supported = true;
- 
-@@ -222,9 +219,6 @@ static int __init xen_mcfg_late(void)
- 	if (!xen_initial_domain())
- 		return 0;
- 
--	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
--		return 0;
--
- 	if (list_empty(&pci_mmcfg_list))
- 		return 0;
- 
+	M.
 -- 
-1.9.1
-
+Jazz is not dead. It just smells funny.
