@@ -1,117 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 38/60] PCI: Separate out save_resources()/restore_resources()
-Date: Thu,  8 Oct 2015 14:38:57 -0700
-Message-Id: <1444340359-8011-39-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:52704 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751927AbbJCOgd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 3 Oct 2015 10:36:33 -0400
+Date: Sat, 3 Oct 2015 09:36:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian Melki <christian.melki@t2data.com>
+Cc: linux-pci@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org
+Subject: Re: Fwd: SWIOTLB on 32-bit PAE.
+Message-ID: <20151003143630.GB17684@localhost>
+References: <560E9007.1000604@t2data.com>
+ <560E92A0.9030707@t2data.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <560E92A0.9030707@t2data.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to save/restore resources several times for alt_size support,
-separate the save_resources()/resources() to save some lines later.
+[+cc Konrad, Joerg, iommu list]
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 30 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index ca34346..dc83c2c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -436,6 +436,29 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
- 	return false;	/* should not get here */
- }
- 
-+static bool save_resources(struct list_head *head,
-+			   struct list_head *save_head)
-+{
-+	struct pci_dev_resource *dev_res;
-+
-+	/* Save original start, end, flags etc at first */
-+	list_for_each_entry(dev_res, head, list)
-+		if (add_to_list(save_head, dev_res->dev, dev_res->res)) {
-+			free_list(save_head);
-+			return false;
-+		}
-+
-+	return true;
-+}
-+
-+static void restore_resource(struct pci_dev_resource *save_res,
-+			     struct resource *res)
-+{
-+	res->start = save_res->start;
-+	res->end = save_res->end;
-+	res->flags = save_res->flags;
-+}
-+
- static void __assign_resources_sorted(struct list_head *head,
- 				 struct list_head *realloc_head,
- 				 struct list_head *fail_head)
-@@ -473,13 +496,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	if (!realloc_head || list_empty(realloc_head))
- 		goto requested_and_reassign;
- 
--	/* Save original start, end, flags etc at first */
--	list_for_each_entry(dev_res, head, list) {
--		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
--			free_list(&save_head);
--			goto requested_and_reassign;
--		}
--	}
-+	if (!save_resources(head, &save_head))
-+		goto requested_and_reassign;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -548,12 +566,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 		}
- 	}
- 	/* Restore start/end/flags from saved list */
--	list_for_each_entry(save_res, &save_head, list) {
--		res = save_res->res;
--		res->start = save_res->start;
--		res->end = save_res->end;
--		res->flags = save_res->flags;
--	}
-+	list_for_each_entry(save_res, &save_head, list)
-+		restore_resource(save_res, save_res->res);
-+
- 	free_list(&save_head);
- 
- requested_and_reassign:
-@@ -1981,9 +1996,7 @@ again:
- 	list_for_each_entry(fail_res, &fail_head, list) {
- 		struct resource *res = fail_res->res;
- 
--		res->start = fail_res->start;
--		res->end = fail_res->end;
--		res->flags = fail_res->flags;
-+		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
- 			/* last or third times and later */
-@@ -2067,9 +2080,7 @@ again:
- 	list_for_each_entry(fail_res, &fail_head, list) {
- 		struct resource *res = fail_res->res;
- 
--		res->start = fail_res->start;
--		res->end = fail_res->end;
--		res->flags = fail_res->flags;
-+		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
- 			/* last time */
--- 
-1.8.4.5
-
+On Fri, Oct 02, 2015 at 04:20:16PM +0200, Christian Melki wrote:
+> I discovered a strange error on my machine. 32-bit PAE 4.2.0 without
+> IOMMU code (yeah, I know).
+> When writing to an ext4 filesystem on a USB disk my kernel would hang
+> and not return control to userspace. It would spew kernel messages to
+> syslog as fast as it could without giving userspace any time, ie "hang"
+> as far as a user sees it. The device itself is ok and the filesystem is
+> clean.
+> I get messages like this, millions of them.
+> 
+> Oct  2 14:33:06 voodoochild kernel: [  223.287447] nommu_map_sg:
+> overflow 25dcac000+1024 of device mask ffffffff
+> Oct  2 14:33:06 voodoochild kernel: [  223.287448] nommu_map_sg:
+> overflow 25dcac000+1024 of device mask ffffffff
+> Oct  2 14:33:06 voodoochild kernel: [  223.287449] nommu_map_sg:
+> overflow 25dcac000+1024 of device mask ffffffff
+> 
+> I disovered that SWIOTLB was not on. It is only provided for 64-bit
+> machines where it is default. On 32-bit SWIOTLB seems disabled
+> unless you are running with some IOMMU/AGPGART code.
+> 
+> But what about 32-bit PAE? Would that not qualify for SWIOTLB without IOMMU?
+> 
+> I am a novice in this area. Maybe this is a Kconfig "bug" for us
+> that like to hang ourselves with CONFIG_* rope? :) I'd like to think
+> that SWIOTLB should be default for 32-bit PAE too?
+> 
+> Best regards,
+> Christian
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
