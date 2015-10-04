@@ -1,39 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:35487 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751573AbbJFKWT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 Oct 2015 06:22:19 -0400
-Date: Tue, 6 Oct 2015 12:22:16 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Gerald Schaefer <gerald.schaefer@de.ibm.com>
-Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>
-Subject: Re: [PATCH] iommu/s390: add iommu api for s390 pci devices
-Message-ID: <20151006102216.GB20886@8bytes.org>
-References: <1440682383-27688-1-git-send-email-gerald.schaefer@de.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1440682383-27688-1-git-send-email-gerald.schaefer@de.ibm.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37558 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751800AbbJDVtn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Oct 2015 17:49:43 -0400
+From: Sasha Levin <sasha.levin@oracle.com>
+To: bhelgaas@google.com, prarit@redhat.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Sasha Levin <sasha.levin@oracle.com>
+Subject: [PATCH] PCI: prevent out of bounds access in numa_node override
+Date: Sun,  4 Oct 2015 17:49:29 -0400
+Message-Id: <1443995369-11399-1-git-send-email-sasha.levin@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 27, 2015 at 03:33:03PM +0200, Gerald Schaefer wrote:
-> This adds an IOMMU API implementation for s390 PCI devices.
-> 
-> Reviewed-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
-> Signed-off-by: Gerald Schaefer <gerald.schaefer@de.ibm.com>
-> ---
->  MAINTAINERS                     |   7 +
->  arch/s390/Kconfig               |   1 +
->  arch/s390/include/asm/pci.h     |   4 +
->  arch/s390/include/asm/pci_dma.h |   5 +-
->  arch/s390/pci/pci_dma.c         |  37 +++--
->  drivers/iommu/Kconfig           |   7 +
->  drivers/iommu/Makefile          |   1 +
->  drivers/iommu/s390-iommu.c      | 337 ++++++++++++++++++++++++++++++++++++++++
->  8 files changed, 386 insertions(+), 13 deletions(-)
->  create mode 100644 drivers/iommu/s390-iommu.c
+Commit 63692df1 ("PCI: Allow numa_node override via sysfs") didn't check that
+the numa node provided by userspace is valid. Passing a node number too high
+would attempt to access invalid memory and trigger a kernel panic.
 
-Applied, thanks.
+Fixes: 63692df1 ("PCI: Allow numa_node override via sysfs")
+Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+---
+ drivers/pci/pci-sysfs.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 312f23a..e9abca8 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -216,7 +216,7 @@ static ssize_t numa_node_store(struct device *dev,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (!node_online(node))
++	if (node > MAX_NUMNODES || !node_online(node))
+ 		return -EINVAL;
+ 
+ 	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+-- 
+1.7.10.4
+
