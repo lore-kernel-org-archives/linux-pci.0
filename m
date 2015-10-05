@@ -1,79 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV NIC
-To: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
-	pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
- <562A7E33.4080800@gmail.com> <562DBBC9.4000104@intel.com>
- <562E40BB.6040404@gmail.com> <5631B8CA.9040805@intel.com>
- <5631C3A7.2070900@gmail.com> <5631D9C2.2040206@intel.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <56324682.5060507@gmail.com>
-Date: Thu, 29 Oct 2015 09:17:06 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:33866 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214AbbJEOXQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Oct 2015 10:23:16 -0400
+Received: by igcpb10 with SMTP id pb10so63869036igc.1
+        for <linux-pci@vger.kernel.org>; Mon, 05 Oct 2015 07:23:16 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <5631D9C2.2040206@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <mj+md-20151005.101820.16366.nikam@ucw.cz>
+References: <1443810216-3215-1-git-send-email-netwerkforens@gmail.com>
+	<20151003143056.GA17684@localhost>
+	<mj+md-20151005.101820.16366.nikam@ucw.cz>
+Date: Mon, 5 Oct 2015 16:23:16 +0200
+Message-ID: <CAKsTQn=GEJwk-OFypdVLFQcXrYy4Zc8ADgX6V=rX0azfQspjkg@mail.gmail.com>
+Subject: Re: [PATCH] Enumerate all undiscovered PCIe busses
+From: Ruud <netwerkforens@gmail.com>
+To: Martin Mares <mj@ucw.cz>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/29/2015 01:33 AM, Lan Tianyu wrote:
-> On 2015年10月29日 14:58, Alexander Duyck wrote:
->> Your code was having to do a bunch of shuffling in order to get things
->> set up so that you could bring the interface back up.  I would argue
->> that it may actually be faster at least on the bring-up to just drop the
->> old rings and start over since it greatly reduced the complexity and the
->> amount of device related data that has to be moved.
-> If give up the old ring after migration and keep DMA running before
-> stopping VCPU, it seems we don't need to track Tx/Rx descriptor ring and
-> just make sure that all Rx buffers delivered to stack has been migrated.
+Hi Martin,
+
+I can't check the effect of "-M" at the moment so that will have to wait.
+Some context:
+
+I got some buggy BIOS and lots of GPU's. The effect is that I need to
+reenumerate busses and to let linux do that it is suggested to use
+setpci to clear busnumber etc.
+To make sure I do not clobber the linux drivers, I prefer to remove
+the switches at the root level (echo 1>remove) and set the registers
+using -H1 as hardware access.
+
+Unfortunately on the multiprocessor intel system, three root complexes
+exist: one at bus 0x00, One at bux 0x80 (and one at 0x7f IIRC). lspci
+-H1 will only report bus 0x00.
+
+It is not a problem for me to use a patched version of pciutils
+locally, but hoped to share. Perhaps as an idea: make the base
+bus-number configurable at the command line instead of hard coded?
+
+Best regards,
+
+Ruud
+
+
+2015-10-05 12:21 GMT+02:00 Martin Mares <mj@ucw.cz>:
+> Hi!
 >
-> 1) Dummy write Rx buffer before checking Rx descriptor to ensure packet
-> migrated first.
-
-Don't dummy write the Rx descriptor.  You should only really need to 
-dummy write the Rx buffer and you would do so after checking the 
-descriptor, not before.  Otherwise you risk corrupting the Rx buffer 
-because it is possible for you to read the Rx buffer, DMA occurs, and 
-then you write back the Rx buffer and now you have corrupted the memory.
-
-> 2) Make a copy of Rx descriptor and then use the copied data to check
-> buffer status. Not use the original descriptor because it won't be
-> migrated and migration may happen between two access of the Rx descriptor.
-
-Do not just blindly copy the Rx descriptor ring.  That is a recipe for 
-disaster.  The problem is DMA has to happen in a very specific order for 
-things to function correctly.  The Rx buffer has to be written and then 
-the Rx descriptor.  The problem is you will end up getting a read-ahead 
-on the Rx descriptor ring regardless of which order you dirty things in.
-
-The descriptor is only 16 bytes, you can fit 256 of them in a single 
-page.  There is a good chance you probably wouldn't be able to migrate 
-if you were under heavy network stress, however you could still have 
-several buffers written in the time it takes for you to halt the VM and 
-migrate the remaining pages.  Those buffers wouldn't be marked as dirty 
-but odds are the page the descriptors are in would be.  As such you will 
-end up with the descriptors but not the buffers.
-
-The only way you could possibly migrate the descriptors rings cleanly 
-would be to have enough knowledge about the layout of things to force 
-the descriptor rings to be migrated first followed by all of the 
-currently mapped Rx buffers.  In addition you would need to have some 
-means of tracking all of the Rx buffers such as an emulated IOMMU as you 
-would need to migrate all of them, not just part.  By doing it this way 
-you would get the Rx descriptor rings in the earliest state possible and 
-would be essentially emulating the Rx buffer writes occurring before the 
-Rx descriptor writes.  You would likely have several Rx buffer writes 
-that would be discarded in the process as there would be no descriptor 
-for them but at least the state of the system would be consistent.
-
-- Alex
-
-
+>> This appears to be a patch for pciutils, so I cc'd Martin, who
+>> maintains that.
+>
+> Thanks, I manage to follow linux-pci only very loosely these days...
+>
+>> On Fri, Oct 02, 2015 at 06:23:36PM +0000, Ruud wrote:
+>> > Multiple root complexes have a different start busnumber.
+>> > Poll all undiscovered busses for a root complex
+>
+> Unfortunately, this is not correct to do. Many systems report
+> junk on unused bus number (for example, they decode bus numbers
+> only partially, so the buses repeat).
+>
+> In which situation do you need this? Is it on Linux? Only lspci,
+> or your own code using libpci?
+>
+> Does `lspci -M' help?
+>
+>                                 Have a nice fortnight
+> --
+> Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+> Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+> "Please try to fit your code to 80 columns. That's decimal 80." -- A. Morton
