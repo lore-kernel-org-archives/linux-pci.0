@@ -1,69 +1,203 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 52/60] PCI: Kill macro checking for bus io port sizing
-Date: Thu,  8 Oct 2015 14:39:11 -0700
-Message-Id: <1444340359-8011-53-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2on0092.outbound.protection.outlook.com ([207.46.100.92]:13968
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751859AbbJEOni convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Oct 2015 10:43:38 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+CC: "robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"rjui@broadcom.com" <rjui@broadcom.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH v2] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+Date: Mon, 5 Oct 2015 14:08:52 +0000
+Message-ID: <8520D5D51A55D047800579B0941471980169054D@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1443689961-23909-1-git-send-email-bharatku@xilinx.com>
+ <2677327.lnRZhqx5GI@wuerfel>
+In-Reply-To: <2677327.lnRZhqx5GI@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can use new generic version skip_isa_ioresource_align() instead
-of macro, and then kill the marco.
+On Thursday 01 October 2015 14:29:21 Bharat Kumar Gogada wrote:
+> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+> 
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> ---
+> Removed unneccessary comments
+> Modified setup_sspl implementation
+> Added more details in binding Documentation
+> ---
+>  .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   49 +
+>  drivers/pci/host/Kconfig                           |    9 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pcie-xilinx-nwl.c                 | 1029 ++++++++++++++++++++
+>  4 files changed, 1088 insertions(+)
+>  create mode 100644 
+> Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
+>  create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt 
+> b/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
+> new file mode 100644
+> index 0000000..ed87184
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
+> @@ -0,0 +1,49 @@
+> +* Xilinx NWL PCIe Root Port Bridge DT description
+> +
+> +Required properties:
+> +- compatible: Should contain "xlnx,nwl-pcie-2.11"
+> +- #address-cells: Address representation for root ports, set to <3>
+> +- #size-cells: Size representation for root ports, set to <2>
+> +- #interrupt-cells: specifies the number of cells needed to encode an
+> +	interrupt source. The value must be 1.
+> +- reg: Should contain Bridge, PCIe Controller registers location,
+> +	configuration sapce, and length
+> +- reg-names: Must include the following entries:
+> +	"breg": bridge registers
+> +	"pcireg": PCIe controller registers
+> +	"cfg": configuration space region
+> +- device_type: must be "pci"
+> +- interrupts: Should contain NWL PCIe interrupt
+> +- interrupt-names: Must include the following entries:
+> +	"misc": interrupt asserted when miscellaneous is recieved
+> +	"intx": interrupt that is asserted when an legacy interrupt is received
+> +	"msi_1, msi_0": interrupt asserted when msi is recieved
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+The msi and intx interrupts don't really belong here: For intx, please use an interrupt-map property as the other host drivers do.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f1c7b46..419eaaf 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1160,15 +1160,12 @@ int skip_isa_ioresource_align(struct pci_bus *bus)
- 	return 0;
- }
- 
--static resource_size_t size_aligned_for_isa(resource_size_t size)
-+static resource_size_t size_aligned_for_isa(resource_size_t size,
-+					    struct pci_bus *bus)
- {
--	/*
--	 * To be fixed in 2.5: we should have sort of HAVE_ISA
--	 *  flag in the struct pci_bus.
--	 */
--#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
--	size = (size & 0xff) + ((size & ~0xffUL) << 2);
--#endif
-+	if (!skip_isa_ioresource_align(bus))
-+		size = (size & 0xff) + ((size & ~0xffUL) << 2);
-+
- 	return size;
- }
- 
-@@ -1237,12 +1234,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		}
- 	}
- 
--	size = size_aligned_for_isa(size);
-+	size = size_aligned_for_isa(size, bus);
- 	size += size1;
- 	if (size || min_size)
- 		size0 = calculate_size(size, min_size,
- 					resource_size(b_res), min_align);
--	sum_add_size = size_aligned_for_isa(sum_add_size);
-+	sum_add_size = size_aligned_for_isa(sum_add_size, bus);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
--- 
-1.8.4.5
+For MSI, the usual answer is that there should be a separate device node for the MSI controller, and an msi-parent property in the PCI host.
+Our current GIC version does not have separate msi controller, so is it necessary to have separate msi node ?
 
+This lets you use the same code for hosts that have a GICv2m or GICv3 that comes with its own MSI controller.
+
+> +/**
+> + * struct nwl_pcie - PCIe port information
+> + *
+> + * @dev: Device pointer
+> + * @breg_base: IO Mapped Bridge Register Base
+> + * @pcireg_base: IO Mapped PCIe controller attributes
+> + * @ecam_base: IO Mapped configuration space
+> + * @phys_breg_base: Physical Bridge Register Base
+> + * @phys_pcie_reg_base: Physical PCIe Controller Attributes
+> + * @phys_ecam_base: Physical Configuration Base
+> + * @breg_size: Bridge Register space
+> + * @pcie_reg_size: PCIe controller attributes space
+> + * @ecam_size: PCIe Configuration space
+> + * @irq_intx: Legacy interrupt number
+> + * @irq_misc: Misc interrupt number
+> + * @ecam_value: ECAM value
+> + * @last_busno: Last Bus number configured
+> + * @link_up: Link status flag
+> + * @enable_msi_fifo: Enable MSI FIFO mode
+> + * @bus: PCI bus
+> + * @msi: MSI interrupt info
+> + */
+> +struct nwl_pcie {
+> +	struct device *dev;
+> +	void __iomem *breg_base;
+> +	void __iomem *pcireg_base;
+> +	void __iomem *ecam_base;
+> +	u32 phys_breg_base;
+> +	u32 phys_pcie_reg_base;
+> +	u32 phys_ecam_base;
+
+These should probably be phys_addr_t.
+
+> + * nwl_setup_sspl - Set Slot Power limit
+> + *
+> + * @pcie: PCIe port information
+> + */
+> +static int nwl_setup_sspl(struct nwl_pcie *pcie) {
+> +	unsigned int status;
+> +	int retval = 0;
+> +
+> +	do {
+> +		status = nwl_bridge_readl(pcie, TX_PCIE_MSG) & MSG_BUSY_BIT;
+> +		if (!status) {
+> +			/*
+> +			 * Generate the TLP message for a single EP
+> +			 * [TODO] Add a multi-endpoint code
+> +			 */
+> +			nwl_bridge_writel(pcie, 0x0,
+> +					  TX_PCIE_MSG + TX_PCIE_MSG_CNTL);
+> +			nwl_bridge_writel(pcie, 0x0,
+> +					  TX_PCIE_MSG + TX_PCIE_MSG_SPEC_LO);
+> +			nwl_bridge_writel(pcie, 0x0,
+> +					  TX_PCIE_MSG + TX_PCIE_MSG_SPEC_HI);
+> +			nwl_bridge_writel(pcie, 0x0,
+> +					  TX_PCIE_MSG + TX_PCIE_MSG_DATA);
+> +			/* Pattern to generate SSLP TLP */
+> +			nwl_bridge_writel(pcie, PATTRN_SSLP_TLP,
+> +					  TX_PCIE_MSG + TX_PCIE_MSG_CNTL);
+> +			nwl_bridge_writel(pcie, RANDOM_DIGIT,
+> +					  TX_PCIE_MSG + TX_PCIE_MSG_DATA);
+> +			nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,
+> +					  TX_PCIE_MSG) | 0x1, TX_PCIE_MSG);
+> +			status = 0;
+> +			mdelay(2);
+
+That is a really long delay. Can you use msleep(2) instead here?
+
+> +
+> +/* PCIe operations */
+> +static struct pci_ops nwl_pcie_ops = {
+> +	.read  = nwl_nwl_readl_config,
+> +	.write = nwl_nwl_writel_config,
+> +};
+	
+If the config space access is using ECAM, you should be able to use the generic implementation for that. I don't know how far we got in splitting that out, but it would be nice to not duplicate that here.
+We need configuration base address for checking condition for nwl_setup_sspl function so we are not using the generic implementation.  
+
+> +
+> +static irqreturn_t nwl_pcie_leg_handler(int irq, void *data) {
+> +	struct nwl_pcie *pcie = (struct nwl_pcie *)data;
+> +	u32 leg_stat;
+> +
+> +	/* Checking for legacy interrupts */
+> +	leg_stat = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
+> +				MSGF_LEG_SR_MASKALL;
+> +	if (!leg_stat)
+> +		return IRQ_NONE;
+> +
+> +	if (leg_stat & MSGF_LEG_SR_INTA)
+> +		dev_dbg(pcie->dev, "legacy interruptA\n");
+> +
+> +	if (leg_stat & MSGF_LEG_SR_INTB)
+> +		dev_dbg(pcie->dev, "legacy interruptB\n");
+> +
+> +	if (leg_stat & MSGF_LEG_SR_INTC)
+> +		dev_dbg(pcie->dev, "legacy interruptC\n");
+> +
+> +	if (leg_stat & MSGF_LEG_SR_INTD)
+> +		dev_dbg(pcie->dev, "legacy interruptD\n");
+> +
+> +	return IRQ_HANDLED;
+> +}
+
+This does not appear to be an appropriate implementation. I suspect what you need to do here is to model this as an irq_chip_generic, which should be able to handle the status/mask/pending registers and provide the irq domain that you will need for your DT irq-map property.
+
+	Arnd
+
+Bharat
