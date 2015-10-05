@@ -1,96 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM list <linux-pm@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Daniel Vetter <daniel.vetter@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [RFC][PATCH v3 3/3] input: i8042: Avoid resetting controller on system suspend/resume
-Date: Wed, 07 Oct 2015 00:53:49 +0200
-Message-ID: <3385784.1Q539YNd1G@vostro.rjw.lan>
-In-Reply-To: <2723857.EVg1dAvTli@vostro.rjw.lan>
-References: <10641052.oOBhM6BU9G@vostro.rjw.lan> <5472042.4c1h9diL7E@vostro.rjw.lan> <2723857.EVg1dAvTli@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f179.google.com ([209.85.220.179]:36575 "EHLO
+	mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751961AbbJEDVl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Oct 2015 23:21:41 -0400
+Received: by qkcf65 with SMTP id f65so64861164qkc.3
+        for <linux-pci@vger.kernel.org>; Sun, 04 Oct 2015 20:21:40 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: m-karicheri2@ti.com, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: [RFC] PCI: spear: Fix definition of LTSSM_STATE_MASK
+Date: Mon,  5 Oct 2015 00:21:15 -0300
+Message-Id: <1444015275-5668-1-git-send-email-festevam@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-If the upcoming system suspend is not going to be handled by the
-platform firmware, like in the suspend-to-idle case, it is not
-necessary to reset the controller in i8042_pm_suspend(), so avoid
-doing that.
+Designware PCI block uses 0x3f for the LTSSM_STATE_MASK.
 
-Moreover, if the system resume currently in progress has not been
-started by the platform firmware, like in the suspend-to-idle case,
-i8042_controller_resume() need not be called by i8042_pm_resume(),
-so avoid doing that too in that case.
-
-Additionally, try to catch the event that woke up the system by
-calling the interrupt handler early during system resume if it has
-not been started by the platform firmware.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
 ---
- drivers/input/serio/i8042.c |   15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+Murali,
 
-Index: linux-pm/drivers/input/serio/i8042.c
-===================================================================
---- linux-pm.orig/drivers/input/serio/i8042.c
-+++ linux-pm/drivers/input/serio/i8042.c
-@@ -24,6 +24,7 @@
- #include <linux/platform_device.h>
- #include <linux/i8042.h>
- #include <linux/slab.h>
-+#include <linux/suspend.h>
+I am doing some consolidation on the PCI DW drivers and I noticed that
+keystone uses a different LTSSM_STATE_MASK definition.
+
+Could you please double check it?
+
+ drivers/pci/host/pci-keystone-dw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index 3cf55cd..78320e4 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -25,7 +25,7 @@
  
- #include <asm/io.h>
- 
-@@ -1170,7 +1171,8 @@ static int i8042_pm_suspend(struct devic
- {
- 	int i;
- 
--	i8042_controller_reset(true);
-+	if (pm_suspend_via_firmware())
-+		i8042_controller_reset(true);
- 
- 	/* Set up serio interrupts for system wakeup. */
- 	for (i = 0; i < I8042_NUM_PORTS; i++) {
-@@ -1183,6 +1185,14 @@ static int i8042_pm_suspend(struct devic
- 	return 0;
- }
- 
-+static int i8042_pm_resume_noirq(struct device *dev)
-+{
-+	if (!pm_resume_via_firmware())
-+		i8042_interrupt(0, NULL);
-+
-+	return 0;
-+}
-+
- static int i8042_pm_resume(struct device *dev)
- {
- 	int i;
-@@ -1199,7 +1209,7 @@ static int i8042_pm_resume(struct device
- 	 * to bring it in a sane state. (In case of S2D we expect
- 	 * BIOS to reset the controller for us.)
- 	 */
--	return i8042_controller_resume(true);
-+	return pm_resume_via_firmware() ? i8042_controller_resume(true) : 0;
- }
- 
- static int i8042_pm_thaw(struct device *dev)
-@@ -1223,6 +1233,7 @@ static int i8042_pm_restore(struct devic
- 
- static const struct dev_pm_ops i8042_pm_ops = {
- 	.suspend	= i8042_pm_suspend,
-+	.resume_noirq	= i8042_pm_resume_noirq,
- 	.resume		= i8042_pm_resume,
- 	.thaw		= i8042_pm_thaw,
- 	.poweroff	= i8042_pm_reset,
+ /* Application register defines */
+ #define LTSSM_EN_VAL		        1
+-#define LTSSM_STATE_MASK		0x1f
++#define LTSSM_STATE_MASK		0x3f
+ #define LTSSM_STATE_L0			0x11
+ #define DBI_CS2_EN_VAL			0x20
+ #define OB_XLAT_EN_VAL		        2
+-- 
+1.9.1
 
