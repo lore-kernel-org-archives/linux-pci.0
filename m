@@ -1,106 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45850 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751313AbbJIWdS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Oct 2015 18:33:18 -0400
-Date: Fri, 9 Oct 2015 17:33:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Romain Bezut <rbezut@gmail.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Neil Horman <nhorman@tuxdriver.com>
-Subject: Re: [PATCH] PCI/MSI: Export all remapped MSIs to sysfs attributes
-Message-ID: <20151009223315.GC16112@localhost>
-References: <1443051076-27716-1-git-send-email-rbezut@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 5 Oct 2015 14:34:01 +0000 (UTC)
+From: Keith Busch <keith.busch@intel.com>
+To: Ingo Molnar <mingo@kernel.org>
+cc: Keith Busch <keith.busch@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device
+ driver
+In-Reply-To: <20151003094512.GA29104@gmail.com>
+Message-ID: <alpine.LNX.2.00.1510051424000.23840@localhost.lm.intel.com>
+References: <1443721454-25467-1-git-send-email-keith.busch@intel.com> <20151003094512.GA29104@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443051076-27716-1-git-send-email-rbezut@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Neil, Thomas, linux-kernel]
+On Sat, 3 Oct 2015, Ingo Molnar wrote:
+> * Keith Busch <keith.busch@intel.com> wrote:
+>> +config VMDDEV
+>> +	depends on PCI && PCI_DOMAINS && PCI_MSI && GENERIC_MSI_IRQ_DOMAIN && IRQ_DOMAIN_HIERARCHY
+>> +	tristate "Volume Management Device Driver"
+>> +	default N
+>> +	select HAVE_VMDDEV
+>> +	---help---
+>> +	Adds support for the Intel Volume Manage Device (VMD). VMD is
+>> +	a secondary PCI host bridge that allows PCI Express root ports,
+>> +	and devices attached to them, to be removed from the default PCI
+>> +	domain and placed within the VMD domain. If your system provides
+>> +	one of these and has devices attached to it, say "Y".
+>
+> So what this text does not explain is why does the user care? What tangible
+> benefits does this feature offer to users?
 
-Hi Romain,
+Hi Ingo,
 
-On Thu, Sep 24, 2015 at 01:31:16AM +0200, Romain Bezut wrote:
-> irqbalance uses these attributes to populate its internal database, which is
-> then used to bind the irq on the appropriate NUMA node.
-> 
-> On a device accepting multiple MSIs and with interrupt remapping enabled,
-> only the first irq entry is exported to msi_irqs directory.
-> This results in irqbalance having no clue of the NUMA affinity for the extra
-> irqs and starting to bind them on random nodes.
-> 
-> This patch exports all MSI interrupts as sysfs attributes when relevant.
-> 
-> Signed-off-by: Romain Bezut <rbezut@gmail.com>
-
-This seems like it makes sense to me.  Do you have any bug reports
-related to this problem?  If so, I'll mention them in the changelog.
-
-Added Neil, Thomas, and linux-kernel since this is of interest to folks
-beyond the usual linux-pci audience.
-
-> ---
->  drivers/pci/msi.c | 31 +++++++++++++++++--------------
->  1 file changed, 17 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index d449714..324a164 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -475,10 +475,11 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->  	int ret = -ENOMEM;
->  	int num_msi = 0;
->  	int count = 0;
-> +	int i;
->  
->  	/* Determine how many msi entries we have */
->  	for_each_pci_msi_entry(entry, pdev)
-> -		++num_msi;
-> +		num_msi += entry->nvec_used;
->  	if (!num_msi)
->  		return 0;
->  
-> @@ -487,19 +488,21 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->  	if (!msi_attrs)
->  		return -ENOMEM;
->  	for_each_pci_msi_entry(entry, pdev) {
-> -		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
-> -		if (!msi_dev_attr)
-> -			goto error_attrs;
-> -		msi_attrs[count] = &msi_dev_attr->attr;
-> -
-> -		sysfs_attr_init(&msi_dev_attr->attr);
-> -		msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
-> -						    entry->irq);
-> -		if (!msi_dev_attr->attr.name)
-> -			goto error_attrs;
-> -		msi_dev_attr->attr.mode = S_IRUGO;
-> -		msi_dev_attr->show = msi_mode_show;
-> -		++count;
-> +		for (i = 0; i < entry->nvec_used; i++) {
-> +			msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
-> +			if (!msi_dev_attr)
-> +				goto error_attrs;
-> +			msi_attrs[count] = &msi_dev_attr->attr;
-> +
-> +			sysfs_attr_init(&msi_dev_attr->attr);
-> +			msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
-> +							    entry->irq + i);
-> +			if (!msi_dev_attr->attr.name)
-> +				goto error_attrs;
-> +			msi_dev_attr->attr.mode = S_IRUGO;
-> +			msi_dev_attr->show = msi_mode_show;
-> +			++count;
-> +		}
->  	}
->  
->  	msi_irq_group = kzalloc(sizeof(*msi_irq_group), GFP_KERNEL);
-> -- 
-> 2.4.9
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The immediate benefit is that devices on VMD domains do not use resources
+on the default PCI domain, so we have more than the 256 buses available.
