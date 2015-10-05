@@ -1,71 +1,53 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v4 4/5] PCI: Handle Enhanced Allocation (EA) capability for SRIOV devices.
-Date: Fri,  2 Oct 2015 15:37:55 -0700
-Message-Id: <1443825476-26880-5-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+Date: Mon, 5 Oct 2015 11:04:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ruud <netwerkforens@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: Which PCI development git repo to use?
+Message-ID: <20151005160453.GA13383@localhost>
+References: <CAKsTQnnuRzWjTtjLSt2FhPuy7s6V=oO5R7WKC0G4=VnR5s_AfQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKsTQnnuRzWjTtjLSt2FhPuy7s6V=oO5R7WKC0G4=VnR5s_AfQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On Mon, Oct 05, 2015 at 08:03:45AM +0200, Ruud wrote:
+> Hello all,
+> 
+> Looking at the changes in this sundays rc, it seems the PCI patches of
+> Yinghai do not get picked up in RC2 and later. I did see some patches
+> from helgaas.
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> 
+> Does someone know the plans with regard to PCIe support for big
+> systems with problematic bioses (aka high density GPU computing
+> clusters) in the linus tree. Or is it just too much of a risk to
+> migrate to new PCIe configuration code as most users do not need it?
+> 
+> If the latter is the case, it is at least good to know now beforehand...
 
-SRIOV BARs can be specified via EA entries.  Extend the EA parser to
-extract the SRIOV BAR resources, and modify sriov_init() to use
-resources previously obtained via EA.
+I don't know specifically what problems you're seeing with "big
+systems with problematic BIOSes," but I will apply patches that
+improve Linux support for PCIe configuration, as long as they are
+clean, reviewable, and safe.
 
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/pci/iov.c | 11 +++++++++--
- drivers/pci/pci.c |  5 +++++
- 2 files changed, 14 insertions(+), 2 deletions(-)
+There is no automatic "post patches on linux-pci and see them appear
+in the next RC" arrangement.  Even if such patches fix a problem for
+some users, they have to be safe for all users and maintainable by
+people other than the author before I can merge them.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..c789e68 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -436,8 +436,15 @@ found:
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &dev->resource[i + PCI_IOV_RESOURCES];
--		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
--					pos + PCI_SRIOV_BAR + i * 4);
-+		/*
-+		 * If it is already FIXED, don't change it, something
-+		 * (perhaps EA or header fixups) wants it this way.
-+		 */
-+		if (res->flags & IORESOURCE_PCI_FIXED)
-+			bar64 = (res->flags & IORESOURCE_MEM_64) ? 1 : 0;
-+		else
-+			bar64 = __pci_read_base(dev, pci_bar_unknown, res,
-+						pos + PCI_SRIOV_BAR + i * 4);
- 		if (!res->flags)
- 			continue;
- 		if (resource_size(res) & (PAGE_SIZE - 1)) {
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 54a0a98..6750edf 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2178,6 +2178,11 @@ static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei, u8 prop
- {
- 	if (bei <= PCI_EA_BEI_BAR5 && prop <= PCI_EA_P_IO)
- 		return &dev->resource[bei];
-+#ifdef CONFIG_PCI_IOV
-+	else if (bei >= PCI_EA_BEI_VF_BAR0 && bei <= PCI_EA_BEI_VF_BAR5 &&
-+		 (prop == PCI_EA_P_VIRT_MEM || prop == PCI_EA_P_VIRT_MEM_PREFETCH))
-+		return &dev->resource[PCI_IOV_RESOURCES + bei - PCI_EA_BEI_VF_BAR0];
-+#endif
- 	else if (bei == PCI_EA_BEI_ROM)
- 		return &dev->resource[PCI_ROM_RESOURCE];
- 	else
--- 
-1.9.1
+I use https://patchwork.ozlabs.org/project/linux-pci/list/ as the
+queue of patches to be reviewed and potentially applied.
 
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/ is the
+git tree of PCI-related changes heading for the mainline kernel.  The
+"for-linus" branch contains things I plan to ask Linus to merge
+between the merge window and the final release, e.g., between v4.3-rc1
+and v4.3.  The "next" branch contains things intended for the next
+merge window, e.g., they would be merged between v4.3 and v4.4-rc1.
+
+Bjorn
