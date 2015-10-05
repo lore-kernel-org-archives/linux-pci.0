@@ -1,111 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54602 "EHLO mail.kernel.org"
+Received: from mga03.intel.com ([134.134.136.65]:2039 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750731AbbJ1Qhu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 Oct 2015 12:37:50 -0400
-Date: Wed, 28 Oct 2015 11:37:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexander Duyck <aduyck@mirantis.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/5] iov: Reset resources to 0 if totalVFs increases
- after enabling ARI
-Message-ID: <20151028163747.GA29223@localhost>
-References: <20151027204607.14626.59671.stgit@localhost.localdomain>
- <20151027205221.14626.8940.stgit@localhost.localdomain>
+	id S1751369AbbJEXHm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 Oct 2015 19:07:42 -0400
+Date: Mon, 5 Oct 2015 16:05:05 -0700
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Daney <ddaney.cavm@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org, Rajat Jain <rajatxjain@gmail.com>,
+	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v4 0/5] PCI: Add support for PCI Enhanced Allocation
+ "BARs"
+Message-ID: <20151005230505.GD4821@sean.stalley.intel.com>
+References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+ <CAE9FiQXT0ux42gQ+DhpVv2K=BR4jC++LmNdCSLiK4Wy0BhL=HQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151027205221.14626.8940.stgit@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAE9FiQXT0ux42gQ+DhpVv2K=BR4jC++LmNdCSLiK4Wy0BhL=HQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
-
-On Tue, Oct 27, 2015 at 01:52:21PM -0700, Alexander Duyck wrote:
-> This patch forces us to reallocate VF BARs if the totalVFs value has
-> increased after enabling ARI.  This normally shouldn't occur, however I
-> have seen some non-spec devices that shift between 7 and some value greater
-> than 7 based on the ARI value and we want to avoid triggering any issues
-> with such devices.
-
-Can you include specifics about the devices?  The value "7" is pretty
-specific, so if we're going to include that level of detail, we should
-have the actual device info to go with it.
-
-I guess the problem is:
-
-  - Device supports 7 TotalVFs with ARI disabled, >7 with ARI enabled
-  - Firmware leaves ARI disabled in SRIOV_CTRL
-  - Firmware computes size based on 7 VFs
-  - Firmware allocates space and programs BARs for 7 VFs
-  - Linux enables ARI, reads >7 TotalVFs
-  - Linux computes size based on >7 VFs
-  - Increased size may overlap other resources
-
-Right?
-
-> Fixes: 3aa71da412fe ("PCI: Enable SR-IOV ARI Capable Hierarchy before reading TotalVFs")
-> Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
-> ---
->  drivers/pci/iov.c |   11 ++++++++++-
->  1 file changed, 10 insertions(+), 1 deletion(-)
+On Fri, Oct 02, 2015 at 08:16:48PM -0700, Yinghai Lu wrote:
+> On Fri, Oct 2, 2015 at 3:37 PM, David Daney <ddaney.cavm@gmail.com> wrote:
+> > From: David Daney <david.daney@cavium.com>
+> >
+> > PCI Enhanced Allocation is a new method of allocating MMIO & IO
+> > resources for PCI devices & bridges. It can be used instead
+> > of the traditional PCI method of using BARs.
+> >
+> > EA entries are hardware-initialized to a fixed address.
+> > Unlike BARs, regions described by EA are cannot be moved.
+> > Because of this, only devices which are permanently connected to
+> > the PCI bus can use EA. A removable PCI card must not use EA.
+> >
+> > The Enhanced Allocation ECN is publicly available here:
+> > https://www.pcisig.com/specifications/conventional/ECN_Enhanced_Allocation_23_Oct_2014_Final.pdf
 > 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 099050d78a39..238950412de0 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -393,7 +393,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
->  	int rc;
->  	int nres;
->  	u32 pgsz;
-> -	u16 ctrl, total;
-> +	u16 ctrl, total, orig_total;
->  	struct pci_sriov *iov;
->  	struct resource *res;
->  	struct pci_dev *pdev;
-> @@ -402,6 +402,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
->  	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
->  		return -ENODEV;
->  
-> +	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &orig_total);
->  	pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl);
->  	if (ctrl & PCI_SRIOV_CTRL_VFE) {
->  		pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, 0);
-> @@ -450,6 +451,14 @@ found:
->  		}
->  		iov->barsz[i] = resource_size(res);
->  		res->end = res->start + resource_size(res) * total - 1;
-> +
-> +		/* force reallocation of BARs if total VFs increased */
-> +		if (orig_total < total) {
-> +			res->flags |= IORESOURCE_UNSET;
-> +			res->end -= res->start;
-> +			res->start = 0;
-> +		}
-
-Two thoughts here:
-
-1) Even if the required space increased, it's possible that firmware
-placed the BAR somewhere where the extra space is available.  In that
-case, this forces reallocation unnecessarily.
-
-2) This *feels* like something the PCI core should be doing anyway,
-even without any help here.  Shouldn't we fail in pci_claim_resource()
-and set IORESOURCE_UNSET there?
-
-OK, and a third: re-reading TotalVF is (I think) completely
-unnecessary per spec, so if we're going to do it we should probably
-have a one-line comment about why the code is doing something that
-appears unnecessary, and really should have a concrete example device
-in the changelog.
-
-> +
->  		dev_info(&dev->dev, "VF(n) BAR%d space: %pR (contains BAR%d for %d VFs)\n",
->  			 i, res, i, total);
->  		i += bar64;
+> Looks like the EA will support more than just fixed address later.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> "Enhanced Allocation is an optional Conventional PCI Capability that
+> may be implemented by
+> Functions to indicate fixed (non reprogrammable) I/O and memory ranges
+> assigned to the
+> Function, as well as supporting new resource “type” definitions and
+> future extensibility to also
+> support reprogrammable allocations."
+> 
+> so I would prefer to think more to make frame configurable to leave
+> space for that.
+> 
+> Bjorn,
+> 
+> I wonder if we need to revive the add-on resource support patchset
+> that i suggested couple years ago,
+> so we can extend it to support EA features.
+> 
+> URL: https://lkml.org/lkml/2012/3/19/86
+> 
+> Thanks
+> 
+> Yinghai
+
+This might be useful for fixed resources as well.
+
+For some BEI values, EA allows for an arbitrary number of EA entries.
+For PF & VF resource ranges, it allows 2 ranges.
+(one below the 4GB boundry, and one above).
+I don't think the current pci_dev struct can handle that many resources.
+
+-Sean
