@@ -1,53 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.140]:25627 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751443AbbJLKIQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 06:08:16 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
+Received: from mga11.intel.com ([192.55.52.93]:7996 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750953AbbJESDL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 Oct 2015 14:03:11 -0400
+Date: Mon, 5 Oct 2015 18:03:09 +0000 (UTC)
+From: Keith Busch <keith.busch@intel.com>
+To: Ingo Molnar <mingo@kernel.org>
+cc: Keith Busch <keith.busch@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 5/5] arm64: defconfig: Enable PCI generic host bridge by default
-Date: Mon, 12 Oct 2015 11:07:39 +0100
-Message-Id: <1444644459-2780-6-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1444644459-2780-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1444644459-2780-1-git-send-email-Liviu.Dudau@arm.com>
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device
+ driver
+In-Reply-To: <20151005164624.GA13737@gmail.com>
+Message-ID: <alpine.LNX.2.00.1510051734310.23840@localhost.lm.intel.com>
+References: <1443721454-25467-1-git-send-email-keith.busch@intel.com> <20151003094512.GA29104@gmail.com> <alpine.LNX.2.00.1510051424000.23840@localhost.lm.intel.com> <20151005164624.GA13737@gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that pci-host-generic can be used under arm64, enable it by
-default so that SBSA compliant systems can use it.
+On Mon, 5 Oct 2015, Ingo Molnar wrote:
+> * Keith Busch <keith.busch@intel.com> wrote:
+>> The immediate benefit is that devices on VMD domains do not use resources
+>> on the default PCI domain, so we have more than the 256 buses available.
+>
+> Would be nice to incorporate that information in the help text and in the
+> changelog.
 
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
+Fair enough. Perhaps we thought the "secondary domain" description
+implied that information, but maybe we've been doing this too long. :)
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 34d71dd..7c9455a 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -49,6 +49,7 @@ CONFIG_ARCH_XGENE=y
- CONFIG_ARCH_ZYNQMP=y
- CONFIG_PCI=y
- CONFIG_PCI_MSI=y
-+CONFIG_PCI_HOST_GENERIC=y
- CONFIG_PCI_XGENE=y
- CONFIG_SMP=y
- CONFIG_PREEMPT=y
--- 
-2.6.0
-
+Thanks for the feedback.
