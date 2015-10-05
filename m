@@ -1,61 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f45.google.com ([209.85.213.45]:33486 "EHLO
-	mail-vk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757307AbbJVT4R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Oct 2015 15:56:17 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQX4XujVNBXTL_TaEyPPiGgANwa9eavBL23eyZOJbG2f5w@mail.gmail.com>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-	<1444340359-8011-4-git-send-email-yinghai@kernel.org>
-	<20151020215714.GI8224@localhost>
-	<CAE9FiQVC+r=7NrCvwq9+1XVQD9CGf_3+-4VO9kFPSGqMTR5cBw@mail.gmail.com>
-	<CAE9FiQUdKdyipTw3KSVL0Kr1FFvki5Un3NuUuXpw4TXoWi1Tpg@mail.gmail.com>
-	<20151021023522.GJ8224@localhost>
-	<CAE9FiQXXP8-5hNvKXuh5mu6Xu_9yFufmpZaXv0V95TwBBnxCpA@mail.gmail.com>
-	<20151021185046.GD1583@localhost>
-	<CAE9FiQWzRbXOZCsPueERgw1gE=LpDxEkf_sYCvyJErUr+qgzow@mail.gmail.com>
-	<CAE9FiQXpdw+e2BXDwvRnzUs8D1gdngz61nXFV5xKy9TLsvEvUw@mail.gmail.com>
-	<CAE9FiQX4XujVNBXTL_TaEyPPiGgANwa9eavBL23eyZOJbG2f5w@mail.gmail.com>
-Date: Thu, 22 Oct 2015 12:56:16 -0700
-Message-ID: <CAE9FiQV1WOJj3Qc2M6q7qWy2G2Y4DbAL9EnY9ziaZO4UH9=WFA@mail.gmail.com>
-Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
+Received: from mga01.intel.com ([192.55.52.88]:47669 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751370AbbJEWqt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 Oct 2015 18:46:49 -0400
+Date: Mon, 5 Oct 2015 15:44:12 -0700
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Daney <ddaney@caviumnetworks.com>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org, Rajat Jain <rajatxjain@gmail.com>,
+	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v4 3/5] PCI: Handle IORESOURCE_PCI_FIXED when sizing and
+ assigning resources.
+Message-ID: <20151005224412.GB4821@sean.stalley.intel.com>
+References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+ <1443825476-26880-4-git-send-email-ddaney.cavm@gmail.com>
+ <CAE9FiQWnE3ucbjPKuXm5qhTGx7bYOBqnNoSNOMaJa_tEf3Z4=Q@mail.gmail.com>
+ <560F158C.4040303@caviumnetworks.com>
+ <CAE9FiQVr9E4w80ZSeTgKKwbGQ=NQiReSRnfoGF3D3+3NXj-G3Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQVr9E4w80ZSeTgKKwbGQ=NQiReSRnfoGF3D3+3NXj-G3Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 21, 2015 at 6:15 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Oct 21, 2015 at 3:59 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Wed, Oct 21, 2015 at 3:32 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> On Wed, Oct 21, 2015 at 11:50 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>>> Lots of other architectures have both mem32 and mem64 apertures.  You
->>>> haven't explained what's unique about sparc yet.  Does
->>>> pci_find_parent_resource() not work on sparc?  If not, is that because the
->>>> resource tree looks different on sparc than on other architectures?  If so,
->>>> is that difference something intentional that we want to keep, or should we
->>>> converge on a single resource tree format across all architectures?
->>>
->>> In the new pci_register_legacy_regions(), we only have root bus.
->>> but current pci_find_parent_resource is taking pci dev.
->>>
->>> So will need to change it to take bus instead, please check if you are ok
->>> with following, then I would update other two.
->>
->> Never mind, I could just one dummy pci device to work around it.
->> so don't need to change that.
->
-> Khalid,
->
-> Please use attached two to replace patch2, patch3 and patch4.
->
-looks like i mix the use root bus resource with parent bus resource ...
-so that still have problem.
+On Fri, Oct 02, 2015 at 08:00:20PM -0700, Yinghai Lu wrote:
+> On Fri, Oct 2, 2015 at 4:38 PM, David Daney <ddaney@caviumnetworks.com> wrote:
+> > On 10/02/2015 04:14 PM, Yinghai Lu wrote:
+> >>
+> >> https://patchwork.kernel.org/patch/7304371/
+> >> [v6,06/53] PCI: Claim fixed resource during remove/rescan path
+> >
+> >
+> > This one is interesting, but I don't think it will work.
+> >
+> > pci_claim_resource() calls pci_find_parent_resource(), which will fail in
+> > important use cases.
+> >
+> > It is perfectly legal for a bridge provisioned by EA to not specify any
+> > resources.  In this case we must walk up the bus tree until we find
+> > something that contains the device resource, and can thus be a parent.
+> >
+> > That is a big part of what my patch is doing.
+> 
+> looks we need another resource flags for EA in addition to
+> FIXED as it could out side of bridge MMIO range.
+
+I think I get what you are saying, but let me check.
+
+If a bridge gets reconfigured, it needs to be able to tell if this resource is EA or not.
+If it is a fixed EA resource, it doesn't need to include it in its MMIO range.
+If it is fixed for some other reason,
+	we should make sure the bridges MMIO range includes the fixed region.
+
+You are suggesting that we should add a flag for EA, so if a bridge tries to move,
+the bridge knows weather or not the resource is EA,
+and therefore if it needs to worry about the resource when setting it's range?
+
+Is that what you are trying to say?
+
+-Sean
