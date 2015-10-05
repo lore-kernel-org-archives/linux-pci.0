@@ -1,184 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:47880 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751310AbbJLKTv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 06:19:51 -0400
-Message-ID: <1444645188.3364.5.camel@pengutronix.de>
-Subject: Re: [PATCH v2 1/2] PCI: designware: Move LTSSM state definitions to
- pcie-designware.h
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: bhelgaas@google.com, pratyush.anand@gmail.com, m-karicheri2@ti.com,
-	linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Date: Mon, 12 Oct 2015 12:19:48 +0200
-In-Reply-To: <1444355306-21486-1-git-send-email-festevam@gmail.com>
-References: <1444355306-21486-1-git-send-email-festevam@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from wtarreau.pck.nerim.net ([62.212.114.60]:45777 "EHLO 1wt.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752943AbbJEVGs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 Oct 2015 17:06:48 -0400
+Date: Mon, 5 Oct 2015 23:05:24 +0200
+From: Willy Tarreau <w@1wt.eu>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 0/9] Further mvebu PCIe patches
+Message-ID: <20151005210524.GA2292@1wt.eu>
+References: <20151003181228.GI21513@n2100.arm.linux.org.uk> <20151003200026.6eea945d@free-electrons.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151003200026.6eea945d@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 08.10.2015, 22:48 -0300 schrieb Fabio Estevam:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
-> 
-> Move LTSSM state definitions to common pcie-designware.h so that other
-> drivers can make use of them.
-> 
-> Also, in order to avoid name collision define LTSSM_STATE_MASK_KS, as
-> keystone uses a different LTSSM mask.
-> 
-Why? Is this some kind of difference between the DW PCIe core revisions?
+Hi,
 
-I don't see the other drivers using any LTSSM state value that would not
-fit inside the KS mask. Can we just use the narrower KS mask, even if
-the others have one bit more allocated in the register? This would spare
-us this needless differentiation in the software.
-
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-> Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
-> ---
-> Changes since v1:
-> - Fix build warning noticed by kbuild robot
+On Sat, Oct 03, 2015 at 08:00:26PM +0100, Thomas Petazzoni wrote:
+> Hello Russell,
 > 
->  drivers/pci/host/pci-keystone-dw.c |  4 ++--
->  drivers/pci/host/pci-layerscape.c  |  1 -
->  drivers/pci/host/pcie-designware.h | 34 ++++++++++++++++++++++++++++++++++
->  drivers/pci/host/pcie-spear13xx.c  | 33 ---------------------------------
->  4 files changed, 36 insertions(+), 36 deletions(-)
+> On Sat, 3 Oct 2015 19:12:28 +0100, Russell King - ARM Linux wrote:
 > 
-> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-> index 3cf55cd..004b677 100644
-> --- a/drivers/pci/host/pci-keystone-dw.c
-> +++ b/drivers/pci/host/pci-keystone-dw.c
-> @@ -25,7 +25,7 @@
->  
->  /* Application register defines */
->  #define LTSSM_EN_VAL		        1
-> -#define LTSSM_STATE_MASK		0x1f
-> +#define LTSSM_STATE_MASK_KS		0x1f
->  #define LTSSM_STATE_L0			0x11
->  #define DBI_CS2_EN_VAL			0x20
->  #define OB_XLAT_EN_VAL		        2
-> @@ -445,7 +445,7 @@ int ks_dw_pcie_link_up(struct pcie_port *pp)
->  {
->  	u32 val = readl(pp->dbi_base + DEBUG0);
->  
-> -	return (val & LTSSM_STATE_MASK) == LTSSM_STATE_L0;
-> +	return (val & LTSSM_STATE_MASK_KS) == LTSSM_STATE_L0;
->  }
->  
->  void ks_dw_pcie_initiate_link_train(struct keystone_pcie *ks_pcie)
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> index b2328ea1..f02752e 100644
-> --- a/drivers/pci/host/pci-layerscape.c
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -29,7 +29,6 @@
->  /* PEX1/2 Misc Ports Status Register */
->  #define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
->  #define LTSSM_STATE_SHIFT	20
-> -#define LTSSM_STATE_MASK	0x3f
->  #define LTSSM_PCIE_L0		0x11 /* L0 state */
->  
->  /* Symbol Timer Register and Filter Mask Register 1 */
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index 35123d9..97d6558 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -22,6 +22,40 @@
->  #define MAX_MSI_IRQS			32
->  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
->  
-> +#define LTSSM_STATE_DETECT_QUIET	0x00
-> +#define LTSSM_STATE_DETECT_ACT		0x01
-> +#define LTSSM_STATE_POLL_ACTIVE		0x02
-> +#define LTSSM_STATE_POLL_COMPLIANCE	0x03
-> +#define LTSSM_STATE_POLL_CONFIG		0x04
-> +#define LTSSM_STATE_PRE_DETECT_QUIET	0x05
-> +#define LTSSM_STATE_DETECT_WAIT		0x06
-> +#define LTSSM_STATE_CFG_LINKWD_START	0x07
-> +#define LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
-> +#define LTSSM_STATE_CFG_LANENUM_WAIT	0x09
-> +#define LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
-> +#define LTSSM_STATE_CFG_COMPLETE	0x0B
-> +#define LTSSM_STATE_CFG_IDLE		0x0C
-> +#define LTSSM_STATE_RCVRY_LOCK		0x0D
-> +#define LTSSM_STATE_RCVRY_SPEED		0x0E
-> +#define LTSSM_STATE_RCVRY_RCVRCFG	0x0F
-> +#define LTSSM_STATE_RCVRY_IDLE		0x10
-> +#define LTSSM_STATE_L0			0x11
-> +#define LTSSM_STATE_L0S			0x12
-> +#define LTSSM_STATE_L123_SEND_EIDLE	0x13
-> +#define LTSSM_STATE_L1_IDLE		0x14
-> +#define LTSSM_STATE_L2_IDLE		0x15
-> +#define LTSSM_STATE_L2_WAKE		0x16
-> +#define LTSSM_STATE_DISABLED_ENTRY	0x17
-> +#define LTSSM_STATE_DISABLED_IDLE	0x18
-> +#define LTSSM_STATE_DISABLED		0x19
-> +#define LTSSM_STATE_LPBK_ENTRY		0x1A
-> +#define LTSSM_STATE_LPBK_ACTIVE		0x1B
-> +#define LTSSM_STATE_LPBK_EXIT		0x1C
-> +#define LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
-> +#define LTSSM_STATE_HOT_RESET_ENTRY	0x1E
-> +#define LTSSM_STATE_HOT_RESET		0x1F
-> +#define LTSSM_STATE_MASK		0x3F
-> +
-I know this is just copy-and-paste, but can we use lowercase letters for
-the hex values please? This would make this fit in better with the rest
-of the header and is much more like any other part of the kernel.
+> > Here are further PCIe patches which follow on from the previous set of
+> > six I sent earlier in September.  This set:
+> > 
+> > * Separates the DT parsing from the use of this parsed data.
+> > * Fixes memory leaks from kasprintf() and refcount leaks of the DT
+> >   node where we break out from the loop early.
+> > * Uses gpio_set_value_cansleep() so that GPIOs on I2C expanders can
+> >   be used for the PCIe reset functionality.
+> > * Switch to using devm_kcalloc() instead of devm_kzalloc(), which
+> >   eliminates the multiplication, moving it into core code.
+> > * Switch to using a gpio descriptor for the reset gpio, which can
+> >   contain the active level information from DT.  (It would be nice
+> >   if gpiolib automated some of the resource claiming there.)
+> > * Make PERST# vs clock timing to match PCIe specifications.  PCIe
+> >   specs require the clock to be running for 100us prior to releasing
+> >   reset.
+> > * Add the standard PCIe capability block in root port form to the
+> >   emulated PCIe configuration block.  This allows the PCI layer to
+> >   identify the "host bridge" as a PCIe device, and allows us to
+> >   take advantage of the code in drivers/pci/pcie, particularly
+> >   aspm for link power management.
+> > * As a result of identifying ourselves as a PCIe root port, this
+> >   eliminates the need to special case accesses to non-slot 0 in
+> >   the driver; the lack of other "slots" is something which the
+> >   generic PCI code knows about for PCIe root ports.
+> 
+> Thanks for these patches! They look good. However, I'm away for the
+> Embedded Linux Conference Europe in Dublin right now, and therefore
+> don't have access to my boards to test that it works OK on platforms
+> other than Armada 38x (which you tested). I will try to do this testing
+> next week, hopefully on Friday.
 
-Regards,
-Lucas
+Just FWIW, I could run this series on top of the previous one on top
+of 4.3-rc4. It ran fine (ie no regressions observed) on :
 
->  struct pcie_port {
->  	struct device		*dev;
->  	u8			root_bus_nr;
-> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-> index 98d2683..920d399 100644
-> --- a/drivers/pci/host/pcie-spear13xx.c
-> +++ b/drivers/pci/host/pcie-spear13xx.c
-> @@ -84,39 +84,6 @@ struct pcie_app_reg {
->  #define APPS_PM_XMT_PME_ID			5
->  
->  /* CR3 ID */
-> -#define XMLH_LTSSM_STATE_DETECT_QUIET		0x00
-> -#define XMLH_LTSSM_STATE_DETECT_ACT		0x01
-> -#define XMLH_LTSSM_STATE_POLL_ACTIVE		0x02
-> -#define XMLH_LTSSM_STATE_POLL_COMPLIANCE	0x03
-> -#define XMLH_LTSSM_STATE_POLL_CONFIG		0x04
-> -#define XMLH_LTSSM_STATE_PRE_DETECT_QUIET	0x05
-> -#define XMLH_LTSSM_STATE_DETECT_WAIT		0x06
-> -#define XMLH_LTSSM_STATE_CFG_LINKWD_START	0x07
-> -#define XMLH_LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
-> -#define XMLH_LTSSM_STATE_CFG_LANENUM_WAIT	0x09
-> -#define XMLH_LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
-> -#define XMLH_LTSSM_STATE_CFG_COMPLETE		0x0B
-> -#define XMLH_LTSSM_STATE_CFG_IDLE		0x0C
-> -#define XMLH_LTSSM_STATE_RCVRY_LOCK		0x0D
-> -#define XMLH_LTSSM_STATE_RCVRY_SPEED		0x0E
-> -#define XMLH_LTSSM_STATE_RCVRY_RCVRCFG		0x0F
-> -#define XMLH_LTSSM_STATE_RCVRY_IDLE		0x10
-> -#define XMLH_LTSSM_STATE_L0			0x11
-> -#define XMLH_LTSSM_STATE_L0S			0x12
-> -#define XMLH_LTSSM_STATE_L123_SEND_EIDLE	0x13
-> -#define XMLH_LTSSM_STATE_L1_IDLE		0x14
-> -#define XMLH_LTSSM_STATE_L2_IDLE		0x15
-> -#define XMLH_LTSSM_STATE_L2_WAKE		0x16
-> -#define XMLH_LTSSM_STATE_DISABLED_ENTRY		0x17
-> -#define XMLH_LTSSM_STATE_DISABLED_IDLE		0x18
-> -#define XMLH_LTSSM_STATE_DISABLED		0x19
-> -#define XMLH_LTSSM_STATE_LPBK_ENTRY		0x1A
-> -#define XMLH_LTSSM_STATE_LPBK_ACTIVE		0x1B
-> -#define XMLH_LTSSM_STATE_LPBK_EXIT		0x1C
-> -#define XMLH_LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
-> -#define XMLH_LTSSM_STATE_HOT_RESET_ENTRY	0x1E
-> -#define XMLH_LTSSM_STATE_HOT_RESET		0x1F
-> -#define XMLH_LTSSM_STATE_MASK			0x3F
->  #define XMLH_LINK_UP				(1 << 6)
->  
->  /* CR4 ID */
+  - Iomega iconnect (kirkwood) with an RT3090 WiFi card (I could verify
+    that the card was detected in lspci, module loaded without error
+    and the interface appeared)
 
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+  - mirabox (armada370) with a dual-igb NIC (i350), Marvell 88E8053 (sky2),
+    realtek 8168, and bcm5721. For the first one, I only verified that the
+    driver loaded properly and that I could set the links up on the two
+    NICs. For the last 3, I could even check that the NIC could receive
+    traffic.
+
+I could not test on the XPGP board, it didn't boot regardless of the
+patches, I'll have to redo a clean config. This happens once in a while
+during "make oldconfig" over a too large version jump.
+
+So far so good!
+
+Cheers,
+Willy
 
