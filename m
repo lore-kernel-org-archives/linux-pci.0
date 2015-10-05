@@ -1,81 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:34795 "EHLO
-	mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752701AbbJFU6r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Oct 2015 16:58:47 -0400
-Message-ID: <56143603.9090708@gmail.com>
-Date: Tue, 06 Oct 2015 13:58:43 -0700
-From: David Daney <ddaney.cavm@gmail.com>
-MIME-Version: 1.0
-To: "Sean O. Stalley" <sean.stalley@intel.com>
-CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v4 3/5] PCI: Handle IORESOURCE_PCI_FIXED when sizing and
- assigning resources.
-References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com> <1443825476-26880-4-git-send-email-ddaney.cavm@gmail.com> <20151005222351.GA4821@sean.stalley.intel.com>
-In-Reply-To: <20151005222351.GA4821@sean.stalley.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mail-qg0-f45.google.com ([209.85.192.45]:35183 "EHLO
+	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751077AbbJEKxi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Oct 2015 06:53:38 -0400
+Received: by qgt47 with SMTP id 47so145544745qgt.2
+        for <linux-pci@vger.kernel.org>; Mon, 05 Oct 2015 03:53:37 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: m-karicheri2@ti.com, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: [RFC v2] PCI: keystone: Fix definition of LTSSM_STATE_MASK
+Date: Mon,  5 Oct 2015 07:53:09 -0300
+Message-Id: <1444042389-8036-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/05/2015 03:23 PM, Sean O. Stalley wrote:
-> On Fri, Oct 02, 2015 at 03:37:54PM -0700, David Daney wrote:
->
-> ...
->
->> +/*
->> + * Try to assign any resources marked as IORESOURCE_PCI_FIXED, as they
->> + * are skipped by pbus_assign_resources_sorted().
->> + */
->> +static void pdev_assign_fixed_resources(struct pci_dev *dev)
->> +{
->> +	int i;
->> +
->> +	for (i = 0; i <  PCI_NUM_RESOURCES; i++) {
->> +		struct pci_bus *b;
->> +		struct resource *r = &dev->resource[i];
->> +
->> +		if (r->parent || !(r->flags & IORESOURCE_PCI_FIXED) ||
->> +		    !(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
->> +			continue;
->> +
->> +		b = dev->bus;
->> +		while (b && !r->parent) {
->> +			assign_fixed_resource_on_bus(b, r);
->> +			b = b->parent;
->> +		}
->> +		if (!r->parent) {
->> +			/*
->> +			 * If that didn't work, try to fallback to the
->> +			 * ultimate parent.
->> +			 */
->> +			if (r->flags &  IORESOURCE_IO)
->> +				request_resource(&ioport_resource, r);
->> +			else
->> +				request_resource(&iomem_resource, r);
->> +		}
->
-> I don't think this check is necessary.
-> assign_fixed_resource_on_bus() should find these resources when it reaches the top bus.
-> (since since the root bus contains these resources).
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-You are correct.  It does work fine without that last fallback bit.  I 
-will remove that, and re-send the patches.
+Designware PCI block uses 0x3f for the LTSSM_STATE_MASK.
 
-Thanks,
-David Daney
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+---
+Changes since v1:
+- Fix Subject
 
+Murali,
 
+I am doing some consolidation on the PCI DW drivers and I noticed that
+keystone uses a different LTSSM_STATE_MASK definition.
 
->
->> +	}
->> +}
->
-> -Sean
->
+Could you please double check it?
+
+ drivers/pci/host/pci-keystone-dw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index 3cf55cd..78320e4 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -25,7 +25,7 @@
+ 
+ /* Application register defines */
+ #define LTSSM_EN_VAL		        1
+-#define LTSSM_STATE_MASK		0x1f
++#define LTSSM_STATE_MASK		0x3f
+ #define LTSSM_STATE_L0			0x11
+ #define DBI_CS2_EN_VAL			0x20
+ #define OB_XLAT_EN_VAL		        2
+-- 
+1.9.1
 
