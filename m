@@ -1,79 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f66.google.com ([209.85.213.66]:34374 "EHLO
-	mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754419AbbJTWQq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 18:16:46 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v4 5/5] PCI: Handle Enhanced Allocation (EA) capability
+ for bridges
+To: "Sean O. Stalley" <sean.stalley@intel.com>,
+	David Daney <ddaney.cavm@gmail.com>
+References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+ <1443825476-26880-6-git-send-email-ddaney.cavm@gmail.com>
+ <20151005225405.GC4821@sean.stalley.intel.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	<linux-api@vger.kernel.org>, <yinghai@kernel.org>,
+	<rajatxjain@gmail.com>, <gong.chen@linux.intel.com>,
+	David Daney <david.daney@cavium.com>
+From: David Daney <ddaney@caviumnetworks.com>
+Message-ID: <56130159.6000909@caviumnetworks.com>
+Date: Mon, 5 Oct 2015 16:01:45 -0700
 MIME-Version: 1.0
-In-Reply-To: <20151020215714.GI8224@localhost>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-	<1444340359-8011-4-git-send-email-yinghai@kernel.org>
-	<20151020215714.GI8224@localhost>
-Date: Tue, 20 Oct 2015 15:16:45 -0700
-Message-ID: <CAE9FiQVC+r=7NrCvwq9+1XVQD9CGf_3+-4VO9kFPSGqMTR5cBw@mail.gmail.com>
-Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20151005225405.GC4821@sean.stalley.intel.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 20, 2015 at 2:57 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Oct 08, 2015 at 02:38:22PM -0700, Yinghai Lu wrote:
->> We register regions for legacy and iommu and all have open code.
+On 10/05/2015 03:54 PM, Sean O. Stalley wrote:
+> On Fri, Oct 02, 2015 at 03:37:56PM -0700, David Daney wrote:
+>> From: David Daney <david.daney@cavium.com>
 >>
->> Unify them to pci_register_region() and call it accordingly.
+>> PCI bridges may have their properties be specified via EA entries.
 >>
->> +     if (!mem_res->flags)
->>               return;
+>> Extend the EA parser to extract the bridge resources, and modify
+>> pci_read_bridge_{io,mmio,mmio_pref}() to use resources previously
+>> obtained via EA.
 >>
->> -     p->name = "Video RAM area";
->> -     p->start = mem_res->start + 0xa0000UL;
->> -     p->end = p->start + 0x1ffffUL;
->> -     p->flags = IORESOURCE_BUSY;
->> -     request_resource(mem_res, p);
->> +     mem_rstart = mem_res->start - offset;
->> +     mem_rend = mem_res->end - offset;
+>> Save the offset to the EA capability in struct pci_dev, and use it to
+>> easily find the EA bridge subordinate and secondary bus numbers.
+>>
+>> When assigning the bridge resources a couple of changes are required
+>> so that the EA obtained IORESOURCE_PCI_FIXED are not resized, and
+>> correctly linked into the resource tree.
+>>
+>> 1) In pbus_size_mem() do not attempt to resize the bridge resources if
+>>     they are marked as IORESOURCE_PCI_FIXED.
+>>
+>> 2) In pci_bus_alloc_from_region()for IORESOURCE_PCI_FIXED resources, just
+>>     try to request the resource as is, without attempting to resize it.
+>>
+>> Signed-off-by: David Daney <david.daney@cavium.com>
+>> ---
+>>   drivers/pci/bus.c       |  7 +++++++
+>>   drivers/pci/pci.c       | 13 +++++++++++++
+>>   drivers/pci/probe.c     | 31 +++++++++++++++++++++++++++++--
+>>   drivers/pci/setup-bus.c |  3 +++
+>>   include/linux/pci.h     |  1 +
+>>   5 files changed, 53 insertions(+), 2 deletions(-)
+>> @@ -801,8 +813,23 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+>>
+>>   	pci_read_config_dword(dev, PCI_PRIMARY_BUS, &buses);
+>>   	primary = buses & 0xFF;
+>> -	secondary = (buses >> 8) & 0xFF;
+>> -	subordinate = (buses >> 16) & 0xFF;
+>> +	if (dev->ea_cap) {
+>> +		u32 dw1;
+>> +
+>> +		pci_read_config_dword(dev, dev->ea_cap + 4, &dw1);
+>> +		if (dw1 & 0xFF)
+>> +			secondary = dw1 & 0xFF;
+>> +		else
+>> +			secondary = (buses >> 8) & 0xFF;
+>> +
+>> +		if ((dw1 >> 8) & 0xFF)
+>> +			subordinate = (dw1 >> 8) & 0xFF;
+>> +		else
+>> +			subordinate = (buses >> 16) & 0xFF;
+>> +	} else {
+>> +		secondary = (buses >> 8) & 0xFF;
+>> +		subordinate = (buses >> 16) & 0xFF;
+>> +	}
 >
-> This is essentially doing pcibios_bus_to_resource(), except in an
-> unnecessarily arch-dependent way.  Can you rework it to use
-> pcibios_bus_to_resource()?  I think you'll have to do
-> pci_register_legacy_regions() in pci_scan_one_pbm() instead of in
-> pci_determine_mem_io_space(), so that you have a struct pci_bus to
-> use, but your next patch does that anyway.
+> We can refactor this to make it cleaner/more compact. from V3 review:
 >
->>
->> -     p = kzalloc(sizeof(*p), GFP_KERNEL);
->> -     if (!p)
->> +     /* contain checking */
->> +     if (!(mem_rstart <= rstart && mem_rend >= rend))
->>               return;
+>
+> 	secondary = (buses >> 8) & 0xFF;
+> 	subordinate = (buses >> 16) & 0xFF;
+> 	if (dev->ea_cap) {
+> 		u32 sdw;
+> 		
+> 		pci_read_config_dword(dev, dev->ea_cap + 4, &sdw);
+> 		
+> 		if (sdw & 0xFF)
+> 			secondary = sdw & 0xFF;
+> 		
+> 		sdw >>= 8;
+> 		if (sdw & 0xFF)
+> 			subordinate = sdw & 0xFF;
+> 	}
+>
 
-Difference is here.
+Yes, that is cleaner.  I think I didn't read the comments on v3 closely 
+enough.  I will switch to doing it this way.
 
-pcibios_bus_to_resource() would return resource even region is not contained.
+Thanks,
+David Daney
 
->> +     res->name = name;
->> +     res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
->> +     res->start = rstart + offset;
->> +     res->end = rend + offset;
->> +     conflict = request_resource_conflict(mem_res, res);
->> +     if (conflict) {
->> +             printk(KERN_DEBUG "PCI: %s can't claim %s %pR: address conflict with %s %pR\n",
->> +                     pbm->name, res->name, res, conflict->name, conflict);
->> +             kfree(res);
->> +     }
 
-also we will need to get parent resource to use request_resource_conflict.
-
-otherwise we need to use insert_resource(), but that will prevent driver to use
-the resource.
-
-        Yinghai
+>
+> -Sean
+>
