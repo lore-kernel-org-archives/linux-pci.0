@@ -1,244 +1,135 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 20 Oct 2015 14:54:13 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 02/60] sparc/PCI: Use correct bus address to resource
- offset
-Message-ID: <20151020195413.GH8224@localhost>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
- <1444340359-8011-3-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444340359-8011-3-git-send-email-yinghai@kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, Mark Rutland <Mark.Rutland@arm.com>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Robin Murphy <robin.murphy@arm.com>
+Subject: [PATCH v2 1/8] of/irq: Add support code for multi-parent version of "msi-parent"
+Date: Tue,  6 Oct 2015 18:03:56 +0100
+Message-Id: <1444151043-31084-2-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
+References: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 08, 2015 at 02:38:21PM -0700, Yinghai Lu wrote:
-> After we add 64bit mmio parsing, we got some "no compatible bridge window"
-> warning on anther new model that support 64bit resource.
-> 
-> It turns out that we can not use mem_space.start as 64bit mem space
-> offset, aka mem_space.start != offset.
-> 
-> Use child_phys_addr to calculate exact offset and recorder offset in
-> pbm.  Still assume all mem have same offset, otherwise panic early.
-> 
-> After patch we get correct offset.
-> 
-> /pci@305: PCI IO [io  0x2007e00000000-0x2007e0fffffff] offset 2007e00000000
-> /pci@305: PCI MEM [mem 0x2000000100000-0x200007effffff] offset 2000000000000
-> /pci@305: PCI MEM64 [mem 0x2000100000000-0x2000dffffffff] offset 2000000000000
-> ...
-> pci_sun4v f02ae7f8: PCI host bridge to bus 0000:00
-> pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
-> pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
-> pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
+Since 126b16e2ad98 ("Docs: dt: add generic MSI bindings"),
+the definition of "msi-parent" has evolved, while maintaining
+some degree of compatibility. It can now express multiple MSI
+controllers as parents, as well as some sideband data being
+communicated to the controller.
 
-I think this changelog is incorrect.  It suggests that this fixes a
-problem with 64-bit apertures, but in this example, *both* mem
-apertures are different from what they would have been before this
-patch.
+This patch adds the parsing of the property, iterating over
+the multiple parents until a suitable irqdomain is found.
+It can also fallback to the original parsing if the old
+binding is detected.
 
-Before this patch, we used the mem32 aperture base (0x2000000100000)
-as the translation offset for both the mem32 and mem64 apertures, so I
-think we would have had this:
+This support code gets used in the subsequent patches.
 
-  pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00000000-0x7eefffff])
-  pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0xfff00000-0xdffefffff])
+Suggested-by: Robin Murphy <robin.murphy@arm.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/of/irq.c       | 59 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_irq.h |  9 ++++++++
+ 2 files changed, 68 insertions(+)
 
-After this patch, you compute the real mem32 offset (0x2000000000000)
-and use it for both mem32 and mem64:
+diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+index c90bd4e..62cfdc2 100644
+--- a/drivers/of/irq.c
++++ b/drivers/of/irq.c
+@@ -682,3 +682,62 @@ u32 of_msi_map_rid(struct device *dev, struct device_node *msi_np, u32 rid_in)
+ 
+ 	return rid_out;
+ }
++
++static struct irq_domain *__of_get_msi_domain(struct device_node *np,
++					      enum irq_domain_bus_token token)
++{
++	struct irq_domain *d;
++
++	d = irq_find_matching_host(np, token);
++	if (!d)
++		d = irq_find_host(np);
++
++	return d;
++}
++
++/**
++ * of_msi_get_domain - Use msi-parent to find the relevant MSI domain
++ * @dev: device for which the domain is requested
++ * @np: device node for @dev
++ * @token: bus type for this domain
++ *
++ * Parse the msi-parent property (both the simple and the complex
++ * versions), and returns the corresponding MSI domain.
++ *
++ * Returns: the MSI domain for this device (or NULL on failure).
++ */
++struct irq_domain *of_msi_get_domain(struct device *dev,
++				     struct device_node *np,
++				     enum irq_domain_bus_token token)
++{
++	struct device_node *msi_np;
++	struct irq_domain *d;
++
++	/* Check for a single msi-parent property */
++	msi_np = of_parse_phandle(np, "msi-parent", 0);
++	if (msi_np && !of_property_read_bool(msi_np, "#msi-cells")) {
++		d = __of_get_msi_domain(msi_np, token);
++		if (!d)
++			of_node_put(msi_np);
++		return d;
++	}
++
++	if (token == DOMAIN_BUS_PLATFORM_MSI) {
++		/* Check for the complex msi-parent version */
++		struct of_phandle_args args;
++		int index = 0;
++
++		while (!of_parse_phandle_with_args(np, "msi-parent",
++						   "#msi-cells",
++						   index, &args)) {
++			d = __of_get_msi_domain(args.np, token);
++			if (d)
++				return d;
++
++			of_node_put(args.np);
++			index++;
++		}
++	}
++
++	return NULL;
++}
+diff --git a/include/linux/of_irq.h b/include/linux/of_irq.h
+index 8cd9334..62ae6ed 100644
+--- a/include/linux/of_irq.h
++++ b/include/linux/of_irq.h
+@@ -46,6 +46,9 @@ extern int of_irq_get(struct device_node *dev, int index);
+ extern int of_irq_get_byname(struct device_node *dev, const char *name);
+ extern int of_irq_to_resource_table(struct device_node *dev,
+ 		struct resource *res, int nr_irqs);
++extern struct irq_domain *of_msi_get_domain(struct device *dev,
++					    struct device_node *np,
++					    enum irq_domain_bus_token token);
+ #else
+ static inline int of_irq_count(struct device_node *dev)
+ {
+@@ -64,6 +67,12 @@ static inline int of_irq_to_resource_table(struct device_node *dev,
+ {
+ 	return 0;
+ }
++static inline struct irq_domain *of_msi_get_domain(struct device *dev,
++						   struct device_node *np,
++						   enum irq_domain_bus_token token)
++{
++	return NULL;
++}
+ #endif
+ 
+ #if defined(CONFIG_OF)
+-- 
+2.1.4
 
-  pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
-  pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
-
-> -v2: to make is simple, do not add mem64_offset, and assume
->      mem64_offset == mem_offset, otherwise would make
->      pci_mmap_resource() path too complicated.
-
-I missed this comment before, and I suppose it has something to do
-with why you decided to panic if the mem64 offset is different from
-the mem32 offset.  But I don't understand the reasoning.  Other
-architectures handle pci_mmap_resource() just fine, ...  oh, I see,
-this is related to the pci_resource_to_user() messiness.
-
-I don't want to argue about pci_resource_to_user() right now, so I
-guess you can just panic if the mem64 offset is different from the
-mem32 offset.  But you should at least add a comment about why you're
-doing that.  Otherwise it looks like you were just lazy.
-
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  arch/sparc/kernel/pci.c        | 14 +++++++-------
->  arch/sparc/kernel/pci_common.c | 36 +++++++++++++++++++++++++++---------
->  arch/sparc/kernel/pci_impl.h   |  3 +++
->  3 files changed, 37 insertions(+), 16 deletions(-)
-> 
-> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-> index badf095..451792e 100644
-> --- a/arch/sparc/kernel/pci.c
-> +++ b/arch/sparc/kernel/pci.c
-> @@ -654,12 +654,12 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
->  	printk("PCI: Scanning PBM %s\n", node->full_name);
->  
->  	pci_add_resource_offset(&resources, &pbm->io_space,
-> -				pbm->io_space.start);
-> +				pbm->io_offset);
->  	pci_add_resource_offset(&resources, &pbm->mem_space,
-> -				pbm->mem_space.start);
-> +				pbm->mem_offset);
->  	if (pbm->mem64_space.flags)
->  		pci_add_resource_offset(&resources, &pbm->mem64_space,
-> -					pbm->mem_space.start);
-> +					pbm->mem_offset);
->  	pbm->busn.start = pbm->pci_first_busno;
->  	pbm->busn.end	= pbm->pci_last_busno;
->  	pbm->busn.flags	= IORESOURCE_BUS;
-> @@ -751,10 +751,10 @@ static int __pci_mmap_make_offset_bus(struct pci_dev *pdev, struct vm_area_struc
->  		return -EINVAL;
->  
->  	if (mmap_state == pci_mmap_io) {
-> -		vma->vm_pgoff = (pbm->io_space.start +
-> +		vma->vm_pgoff = (pbm->io_offset +
->  				 user_offset) >> PAGE_SHIFT;
->  	} else {
-> -		vma->vm_pgoff = (pbm->mem_space.start +
-> +		vma->vm_pgoff = (pbm->mem_offset +
->  				 user_offset) >> PAGE_SHIFT;
->  	}
->  
-> @@ -981,9 +981,9 @@ void pci_resource_to_user(const struct pci_dev *pdev, int bar,
->  	unsigned long offset;
->  
->  	if (rp->flags & IORESOURCE_IO)
-> -		offset = pbm->io_space.start;
-> +		offset = pbm->io_offset;
->  	else
-> -		offset = pbm->mem_space.start;
-> +		offset = pbm->mem_offset;
->  
->  	*start = rp->start - offset;
->  	*end = rp->end - offset;
-> diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-> index 33524c1..28e976a 100644
-> --- a/arch/sparc/kernel/pci_common.c
-> +++ b/arch/sparc/kernel/pci_common.c
-> @@ -393,6 +393,7 @@ static void pci_register_iommu_region(struct pci_pbm_info *pbm)
->  void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  {
->  	const struct linux_prom_pci_ranges *pbm_ranges;
-> +	resource_size_t mem64_offset = 0;
->  	int i, saw_mem, saw_io;
->  	int num_pbm_ranges;
->  
-> @@ -410,13 +411,16 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  
->  	for (i = 0; i < num_pbm_ranges; i++) {
->  		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
-> -		unsigned long a, size;
-> +		unsigned long a, size, region_a;
->  		u32 parent_phys_hi, parent_phys_lo;
-> +		u32 child_phys_mid, child_phys_lo;
->  		u32 size_hi, size_lo;
->  		int type;
->  
->  		parent_phys_hi = pr->parent_phys_hi;
->  		parent_phys_lo = pr->parent_phys_lo;
-> +		child_phys_mid = pr->child_phys_mid;
-> +		child_phys_lo = pr->child_phys_lo;
->  		if (tlb_type == hypervisor)
->  			parent_phys_hi &= 0x0fffffff;
->  
-> @@ -426,6 +430,8 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  		type = (pr->child_phys_hi >> 24) & 0x3;
->  		a = (((unsigned long)parent_phys_hi << 32UL) |
->  		     ((unsigned long)parent_phys_lo  <<  0UL));
-> +		region_a = (((unsigned long)child_phys_mid << 32UL) |
-> +		     ((unsigned long)child_phys_lo  <<  0UL));
->  		size = (((unsigned long)size_hi << 32UL) |
->  			((unsigned long)size_lo  <<  0UL));
->  
-> @@ -440,6 +446,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  			pbm->io_space.start = a;
->  			pbm->io_space.end = a + size - 1UL;
->  			pbm->io_space.flags = IORESOURCE_IO;
-> +			pbm->io_offset = a - region_a;
->  			saw_io = 1;
->  			break;
->  
-> @@ -448,6 +455,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  			pbm->mem_space.start = a;
->  			pbm->mem_space.end = a + size - 1UL;
->  			pbm->mem_space.flags = IORESOURCE_MEM;
-> +			pbm->mem_offset = a - region_a;
->  			saw_mem = 1;
->  			break;
->  
-> @@ -456,6 +464,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  			pbm->mem64_space.start = a;
->  			pbm->mem64_space.end = a + size - 1UL;
->  			pbm->mem64_space.flags = IORESOURCE_MEM;
-> +			mem64_offset = a - region_a;
->  			saw_mem = 1;
->  			break;
->  
-> @@ -471,14 +480,23 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  		prom_halt();
->  	}
->  
-> -	printk("%s: PCI IO[%llx] MEM[%llx]",
-> -	       pbm->name,
-> -	       pbm->io_space.start,
-> -	       pbm->mem_space.start);
-> -	if (pbm->mem64_space.flags)
-> -		printk(" MEM64[%llx]",
-> -		       pbm->mem64_space.start);
-> -	printk("\n");
-> +	if (pbm->io_space.flags)
-> +		printk("%s: PCI IO %pR offset %llx\n",
-> +		       pbm->name, &pbm->io_space, pbm->io_offset);
-> +	if (pbm->mem_space.flags)
-> +		printk("%s: PCI MEM %pR offset %llx\n",
-> +		       pbm->name, &pbm->mem_space, pbm->mem_offset);
-> +	if (pbm->mem64_space.flags) {
-> +		if (pbm->mem_space.flags) {
-> +			if (mem64_offset != pbm->mem_offset)
-> +				panic("mem offset %llx != mem64 offset %llx\n",
-> +					pbm->mem_offset, mem64_offset);
-> +		} else
-> +			pbm->mem_offset = mem64_offset;
-> +
-> +		printk("%s: PCI MEM64 %pR offset %llx\n",
-> +		       pbm->name, &pbm->mem64_space, pbm->mem_offset);
-> +	}
->  
->  	pbm->io_space.name = pbm->mem_space.name = pbm->name;
->  	pbm->mem64_space.name = pbm->name;
-> diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
-> index 37222ca..08b74af 100644
-> --- a/arch/sparc/kernel/pci_impl.h
-> +++ b/arch/sparc/kernel/pci_impl.h
-> @@ -99,6 +99,9 @@ struct pci_pbm_info {
->  	struct resource			mem_space;
->  	struct resource			mem64_space;
->  	struct resource			busn;
-> +	/* offset */
-> +	resource_size_t			io_offset;
-> +	resource_size_t			mem_offset;
->  
->  	/* Base of PCI Config space, can be per-PBM or shared. */
->  	unsigned long			config_space;
-> -- 
-> 1.8.4.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
