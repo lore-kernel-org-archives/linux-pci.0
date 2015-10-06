@@ -1,77 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:43498 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752346AbbJ3FJ5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 01:09:57 -0400
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 30 Oct 2015 10:39:55 +0530
-Date: Fri, 30 Oct 2015 13:09:49 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
-	Ethan Zhao <ethan.zhao@oracle.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 4/7] PCI: Reorder pcibios_sriov_disable()
-Message-ID: <20151030050949.GC5119@richards-mbp.cn.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151029222315.11908.6949.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151029222315.11908.6949.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:32887 "EHLO
+	mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753051AbbJFXut (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Oct 2015 19:50:49 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v5 4/4] PCI: Handle Enhanced Allocation (EA) capability for SRIOV devices.
+Date: Tue,  6 Oct 2015 16:50:38 -0700
+Message-Id: <1444175438-7443-5-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 29, 2015 at 05:23:15PM -0500, Bjorn Helgaas wrote:
->From: Alexander Duyck <aduyck@mirantis.com>
->
->Move pcibios_sriov_disable() up so it's defined before a future use.
->
->[bhelgaas: split to separate patch for reviewability]
->Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
->Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+From: David Daney <david.daney@cavium.com>
 
-Reviewed-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+SRIOV BARs can be specified via EA entries.  Extend the EA parser to
+extract the SRIOV BAR resources, and modify sriov_init() to use
+resources previously obtained via EA.
 
->---
-> drivers/pci/iov.c |   12 ++++++------
-> 1 file changed, 6 insertions(+), 6 deletions(-)
->
->diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->index c86d94c..fada98d 100644
->--- a/drivers/pci/iov.c
->+++ b/drivers/pci/iov.c
->@@ -227,7 +227,12 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
->
-> int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
-> {
->-       return 0;
->+	return 0;
->+}
->+
->+int __weak pcibios_sriov_disable(struct pci_dev *pdev)
->+{
->+	return 0;
-> }
->
-> static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->@@ -344,11 +349,6 @@ failed:
-> 	return rc;
-> }
->
->-int __weak pcibios_sriov_disable(struct pci_dev *pdev)
->-{
->-       return 0;
->-}
->-
-> static void sriov_disable(struct pci_dev *dev)
-> {
-> 	int i;
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ drivers/pci/iov.c | 11 +++++++++--
+ drivers/pci/pci.c |  7 +++++++
+ 2 files changed, 16 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee0ebff..c789e68 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -436,8 +436,15 @@ found:
+ 	nres = 0;
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = &dev->resource[i + PCI_IOV_RESOURCES];
+-		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
+-					pos + PCI_SRIOV_BAR + i * 4);
++		/*
++		 * If it is already FIXED, don't change it, something
++		 * (perhaps EA or header fixups) wants it this way.
++		 */
++		if (res->flags & IORESOURCE_PCI_FIXED)
++			bar64 = (res->flags & IORESOURCE_MEM_64) ? 1 : 0;
++		else
++			bar64 = __pci_read_base(dev, pci_bar_unknown, res,
++						pos + PCI_SRIOV_BAR + i * 4);
+ 		if (!res->flags)
+ 			continue;
+ 		if (resource_size(res) & (PAGE_SIZE - 1)) {
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 30a90d1..6c41585 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2176,6 +2176,13 @@ static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei,
+ {
+ 	if (bei <= PCI_EA_BEI_BAR5 && prop <= PCI_EA_P_IO)
+ 		return &dev->resource[bei];
++#ifdef CONFIG_PCI_IOV
++	else if (bei >= PCI_EA_BEI_VF_BAR0 && bei <= PCI_EA_BEI_VF_BAR5 &&
++		 (prop == PCI_EA_P_VIRT_MEM ||
++		  prop == PCI_EA_P_VIRT_MEM_PREFETCH))
++		return &dev->resource[PCI_IOV_RESOURCES +
++				      bei - PCI_EA_BEI_VF_BAR0];
++#endif
+ 	else if (bei == PCI_EA_BEI_ROM)
+ 		return &dev->resource[PCI_ROM_RESOURCE];
+ 	else
 -- 
-Richard Yang
-Help you, Help me
+1.9.1
 
