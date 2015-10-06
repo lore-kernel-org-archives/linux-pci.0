@@ -1,155 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50809 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965710AbbJ0VCE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 17:02:04 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 29/61] PCI: Don't add too much optional size for hotplug bridge MMIO
-Date: Tue, 27 Oct 2015 13:55:21 -0700
-Message-Id: <1445979353-1728-30-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [RFC][PATCH v3 3/3] input: i8042: Avoid resetting controller on system suspend/resume
+Date: Wed, 07 Oct 2015 01:08:30 +0200
+Message-ID: <1927174.T9TA7zgbS1@vostro.rjw.lan>
+In-Reply-To: <20151006223442.GA31850@dtor-ws>
+References: <10641052.oOBhM6BU9G@vostro.rjw.lan> <3385784.1Q539YNd1G@vostro.rjw.lan> <20151006223442.GA31850@dtor-ws>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code will always add 2M for hotplug bridge MMIO even
-there is child device under it already.
+On Tuesday, October 06, 2015 03:34:42 PM Dmitry Torokhov wrote:
+> On Wed, Oct 07, 2015 at 12:53:49AM +0200, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > If the upcoming system suspend is not going to be handled by the
+> > platform firmware, like in the suspend-to-idle case, it is not
+> > necessary to reset the controller in i8042_pm_suspend(), so avoid
+> > doing that.
+> > 
+> > Moreover, if the system resume currently in progress has not been
+> > started by the platform firmware, like in the suspend-to-idle case,
+> > i8042_controller_resume() need not be called by i8042_pm_resume(),
+> > so avoid doing that too in that case.
+> > 
+> > Additionally, try to catch the event that woke up the system by
+> > calling the interrupt handler early during system resume if it has
+> > not been started by the platform firmware.
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >  drivers/input/serio/i8042.c |   15 +++++++++++++--
+> >  1 file changed, 13 insertions(+), 2 deletions(-)
+> > 
+> > Index: linux-pm/drivers/input/serio/i8042.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/input/serio/i8042.c
+> > +++ linux-pm/drivers/input/serio/i8042.c
+> > @@ -24,6 +24,7 @@
+> >  #include <linux/platform_device.h>
+> >  #include <linux/i8042.h>
+> >  #include <linux/slab.h>
+> > +#include <linux/suspend.h>
+> >  
+> >  #include <asm/io.h>
+> >  
+> > @@ -1170,7 +1171,8 @@ static int i8042_pm_suspend(struct devic
+> >  {
+> >  	int i;
+> >  
+> > -	i8042_controller_reset(true);
+> > +	if (pm_suspend_via_firmware())
+> > +		i8042_controller_reset(true);
+> >  
+> >  	/* Set up serio interrupts for system wakeup. */
+> >  	for (i = 0; i < I8042_NUM_PORTS; i++) {
+> > @@ -1183,6 +1185,14 @@ static int i8042_pm_suspend(struct devic
+> >  	return 0;
+> >  }
+> >  
+> > +static int i8042_pm_resume_noirq(struct device *dev)
+> > +{
+> > +	if (!pm_resume_via_firmware())
+> > +		i8042_interrupt(0, NULL);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> >  static int i8042_pm_resume(struct device *dev)
+> >  {
+> >  	int i;
+> > @@ -1199,7 +1209,7 @@ static int i8042_pm_resume(struct device
+> >  	 * to bring it in a sane state. (In case of S2D we expect
+> >  	 * BIOS to reset the controller for us.)
+> >  	 */
+> > -	return i8042_controller_resume(true);
+> > +	return pm_resume_via_firmware() ? i8042_controller_resume(true) : 0;
+> 
+> What happens if we were going to suspend via firmware so we reset the
+> controller but then we got wakeup condition and we actually did not
+> suspend. What pm_resume_via_firmware() will return in this case?
 
-For example:
-	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
-					 \- 45:00.1
+It will return 'false'.  Do we need to resume the controller then?  But I guess
+'false' should be passed to i8042_controller_resume() in that case?
 
-44:02.0 will need 1M as must for 45:00.0 and 45:00.1
-When we calculate add_size for 44:02.0, we pass 2M as additional
-size for hotplug bridge, total will be 3M.
-
-That is different from code before changes for optional support,
-or even current code that treat optional as required directly by
-not passing realloc list. We only need 2M as total.
-
-The optional size should be 1M, and total size should be 2M.
-
-This patch change to comparing required+optional with min_sum_size to
-get smaller optional size.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 0c6977c9..5e1cc7e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1199,7 +1199,6 @@ out:
-  * @type2: second match type
-  * @type3: third match type
-  * @min_size : the minimum memory window that must to be allocated
-- * @add_size : additional optional memory window
-  * @realloc_head : track the additional memory window on this list
-  *
-  * Calculate the size of the bus and minimal alignment which
-@@ -1212,10 +1211,11 @@ out:
- static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			 unsigned long type, unsigned long type2,
- 			 unsigned long type3,
--			 resource_size_t min_size, resource_size_t add_size,
-+			 resource_size_t min_size,
- 			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
- 	resource_size_t min_align = 0, min_add_align = 0;
- 	resource_size_t max_align = 0, max_add_align = 0;
- 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
-@@ -1227,6 +1227,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (!b_res)
- 		return -ENOSPC;
- 
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -1298,8 +1303,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	}
- 	free_align_test_list(&align_test_list);
- 
--	if ((sum_add_size - size) < add_size)
--		sum_add_size = size + add_size;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
- 	if (sum_add_size > size && realloc_head) {
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
-@@ -1436,7 +1441,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t additional_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, additional_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1473,7 +1478,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	case PCI_CLASS_BRIDGE_PCI:
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
--			additional_mem_size = pci_hotplug_mem_size;
-+			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
-@@ -1493,8 +1498,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
--				  realloc_head ? 0 : additional_mem_size,
--				  additional_mem_size, realloc_head);
-+				  min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, all non-prefetchable resources
-@@ -1517,8 +1521,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask &= ~IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 					 prefmask, prefmask,
--					 realloc_head ? 0 : additional_mem_size,
--					 additional_mem_size, realloc_head);
-+					 min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, only non-prefetchable resources
-@@ -1527,7 +1530,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			if (ret == 0)
- 				mask = prefmask;
- 			else
--				additional_mem_size += additional_mem_size;
-+				min_mem_size += min_mem_size;
- 
- 			type2 = type3 = IORESOURCE_MEM;
- 		}
-@@ -1548,8 +1551,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		 * window.
- 		 */
- 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
--				realloc_head ? 0 : additional_mem_size,
--				additional_mem_size, realloc_head);
-+				min_mem_size, realloc_head);
- 		break;
- 	}
- }
--- 
-1.8.4.5
+Rafael
 
