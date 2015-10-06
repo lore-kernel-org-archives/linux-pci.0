@@ -1,114 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:34123 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932074AbbJMIBc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Oct 2015 04:01:32 -0400
-Received: by wicgb1 with SMTP id gb1so77893127wic.1
-        for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2015 01:01:31 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1729985.4Y6lgbpPqx@vostro.rjw.lan>
-References: <4970284.9k6NVjxDce@vostro.rjw.lan>
-	<1729985.4Y6lgbpPqx@vostro.rjw.lan>
-Date: Tue, 13 Oct 2015 10:01:29 +0200
-Message-ID: <CAPDyKFoERBD00U1Wwr==K4E8bj+gaWJsZ7qZt5wRsUFmvFW6Tw@mail.gmail.com>
-Subject: Re: [PATCH] PM / sleep: Drop pm_request_idle() from pm_generic_complete()
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+In-Reply-To: <1444118168-13086-3-git-send-email-gabriel.fernandez@linaro.org>
+References: <1444118168-13086-1-git-send-email-gabriel.fernandez@linaro.org> <1444118168-13086-3-git-send-email-gabriel.fernandez@linaro.org>
+From: Rob Herring <robh@kernel.org>
+Date: Tue, 6 Oct 2015 09:45:18 -0500
+Message-ID: <CAL_JsqKRby4ZWb6iU7d+yN5Cj0qM+m+sQPsFVM0SgAHGK===uA@mail.gmail.com>
+Subject: Re: [PATCH v5 2/3] PCI: st: Add Device Tree bindings for sti pcie
+To: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Cc: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Alan Stern <stern@rowland.harvard.edu>
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, kernel@stlinux.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lee Jones <lee.jones@linaro.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12 October 2015 at 22:15, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Wednesday, September 30, 2015 02:44:29 AM Rafael J. Wysocki wrote:
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> The pm_request_idle() in pm_generic_complete() is pointless as it is
->> called with the runtime PM usage counter different from zero (bumped
->> up by the core during the prepare phase of system suspend) and the
->> core calls pm_runtime_put() for all devices after executing their
->> complete callbacks, so drop it.
->>
->> This allows the PCI PM layer to use pm_generic_complete() too.
->>
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> ---
->>
->> On top of https://patchwork.kernel.org/patch/7291251/ .
+On Tue, Oct 6, 2015 at 2:56 AM, Gabriel Fernandez
+<gabriel.fernandez@linaro.org> wrote:
+> sti pcie is built around a Synopsis Designware PCIe IP.
 >
-> Due to the lack of comments for the last several days (which I'm taking as
-> the lack of objections), I'm tentatively queing this up for v4.4.
->
-> Please let me know if there are any problems with that.
+> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
 
-Looks good to me, so unless it's too late you may add my reviewed-by tag.
+Acked-by: Rob Herring <robh@kernel.org>
 
-Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
-
-Kind regards
-Uffe
-
+> ---
+>  Documentation/devicetree/bindings/pci/st-pcie.txt | 56 +++++++++++++++++++++++
+>  1 file changed, 56 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
 >
-> Thanks,
-> Rafael
->
->
->> ---
->>  drivers/base/power/generic_ops.c |    6 ------
->>  drivers/pci/pci-driver.c         |    9 ++-------
->>  2 files changed, 2 insertions(+), 13 deletions(-)
->>
->> Index: linux-pm/drivers/base/power/generic_ops.c
->> ===================================================================
->> --- linux-pm.orig/drivers/base/power/generic_ops.c
->> +++ linux-pm/drivers/base/power/generic_ops.c
->> @@ -296,11 +296,5 @@ void pm_generic_complete(struct device *
->>
->>       if (drv && drv->pm && drv->pm->complete)
->>               drv->pm->complete(dev);
->> -
->> -     /*
->> -      * Let runtime PM try to suspend devices that haven't been in use before
->> -      * going into the system-wide sleep state we're resuming from.
->> -      */
->> -     pm_request_idle(dev);
->>  }
->>  #endif /* CONFIG_PM_SLEEP */
->> Index: linux-pm/drivers/pci/pci-driver.c
->> ===================================================================
->> --- linux-pm.orig/drivers/pci/pci-driver.c
->> +++ linux-pm/drivers/pci/pci-driver.c
->> @@ -686,13 +686,8 @@ static int pci_pm_prepare(struct device
->>
->>  static void pci_pm_complete(struct device *dev)
->>  {
->> -     struct device_driver *drv = dev->driver;
->> -     struct pci_dev *pci_dev = to_pci_dev(dev);
->> -
->> -     pci_dev_complete_resume(pci_dev);
->> -
->> -     if (drv && drv->pm && drv->pm->complete)
->> -             drv->pm->complete(dev);
->> +     pci_dev_complete_resume(to_pci_dev(dev));
->> +     pm_generic_complete(dev);
->>  }
->>
->>  #else /* !CONFIG_PM_SLEEP */
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
+> new file mode 100644
+> index 0000000..32e76d0
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
+> @@ -0,0 +1,56 @@
+> +STMicroelectronics STi PCIe controller
+> +
+> +This PCIe host controller is based on the Synopsis Designware PCIe IP
+> +and thus inherits all the common properties defined in designware-pcie.txt.
+> +
+> +Required properties:
+> + - compatible: Should be "st,pcie", "snps,dw-pcie"
+> +
+> + - reg: base address and length of the pcie controller, mem-window address
+> +   and length available to the controller.
+> +
+> + - interrupts: one GIC interrupt line connected to PCI MSI interrupt line
+> +
+> + - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
+> +   offset for IP configuration.
+> +
+> + - resets: phandle to the powerdown and reset controller for the PCIe IP.
+> +   See ../reset/reset.txt for details.
+> + - reset-names: should be "powerdown" and "softreset".
+> +
+> + - phys: the phandle for the PHY device (used by generic PHY framework).
+> + - phys-names: must be "pcie".
+> +
+> +Optional properties:
+> + - reset-gpio: a GPIO spec to define which pin is connected to the bus reset.
+> +
+> +Example:
+> +
+> +pcie0: pcie@9b00000 {
+> +       compatible = "st,pcie", "snps,dw-pcie";
+> +       device_type = "pci";
+> +       reg = <0x09b00000 0x4000>,      /* dbi cntrl registers */
+> +             <0x2fff0000 0x00010000>,  /* configuration space */
+> +             <0x40000000 0x80000000>;  /* lmi mem window */
+> +       reg-names = "dbi", "config", "mem-window";
+> +       st,syscfg = <&syscfg_core 0xd8 0xe0>;
+> +       #address-cells = <3>;
+> +       #size-cells = <2>;
+> +       ranges = <0x82000000 0 0x20000000 0x20000000 0 0x0FFF0000>; /* non-prefetchable memory */
+> +       num-lanes = <1>;
+> +       interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
+> +       interrupt-names = "msi";
+> +       #interrupt-cells = <1>;
+> +       interrupt-map-mask = <0 0 0 7>;
+> +       interrupt-map = <0 0 0 1 &intc GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>, /* INT A */
+> +                       <0 0 0 2 &intc GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>, /* INT B */
+> +                       <0 0 0 3 &intc GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>, /* INT C */
+> +                       <0 0 0 4 &intc GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>; /* INT D */
+> +
+> +       resets = <&powerdown STIH407_PCIE0_POWERDOWN>,
+> +                <&softreset STIH407_PCIE0_SOFTRESET>;
+> +       reset-names = "powerdown",
+> +                     "softreset";
+> +       phys = <&phy_port0 PHY_TYPE_PCIE>;
+> +       phy-names = "pcie";
+> +};
 > --
-> I speak only for myself.
-> Rafael J. Wysocki, Intel Open Source Technology Center.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> 1.9.1
+>
