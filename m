@@ -1,59 +1,260 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:54446 "EHLO mout0.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752597AbbJHTGB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Oct 2015 15:06:01 -0400
-Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
- READ FPDMA QUEUED errors since Linux 4.0
-To: Joerg Roedel <joro@8bytes.org>
-References: <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
- <55FE5740.2060701@maya.org> <20150929152100.GL3036@8bytes.org>
- <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
- <20150929162042.GR3036@8bytes.org> <560BF73F.8000008@maya.org>
- <20151006101356.GE12506@8bytes.org> <56141507.7040103@maya.org>
- <20151007154005.GH28811@8bytes.org> <56155028.7060906@maya.org>
- <20151008173007.GL28811@8bytes.org>
-Cc: Mikulas Patocka <mpatocka@redhat.com>,
-	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
-	Christoph Hellwig <hch@lst.de>,
-	device-mapper development <dm-devel@redhat.com>,
-	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-From: Andreas Hartmann <andihartmann@freenet.de>
-Message-ID: <5616BCF4.10104@maya.org>
-Date: Thu, 8 Oct 2015 20:59:00 +0200
-MIME-Version: 1.0
-In-Reply-To: <20151008173007.GL28811@8bytes.org>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-qg0-f41.google.com ([209.85.192.41]:34830 "EHLO
+	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752879AbbJFXut (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Oct 2015 19:50:49 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v5 2/4] PCI: Add support for Enhanced Allocation devices
+Date: Tue,  6 Oct 2015 16:50:36 -0700
+Message-Id: <1444175438-7443-3-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/08/2015 at 07:30 PM Joerg Roedel wrote:
-> On Wed, Oct 07, 2015 at 07:02:32PM +0200, Andreas Hartmann wrote:
->> Binding the device to vfio isn't a problem (it's done before the vm is
->> started). The problem occurs during start of qemu-system-x86_64 (2.3.0).
->>
->> The attached dmesg.out doesn't show the trace, but the desired iommu dump.
->>
->>> Also, which device are you trying to attach to the guest (pci
->>> bus/device/function)?
->>
->> See attached ath9k.device.
-> 
-> Hmm, can you also test this again with the v4.3-rc4 please? The device
-> you are attaching has its own group and no aliases, so I really can't
-> see how the trace could happen, and I can't reproduce it here either.
+From: "Sean O. Stalley" <sean.stalley@intel.com>
 
-Unchanged - this time hard locked machine and no trace at all because of
-data loss after reboot :-(.
+Add support for devices using Enhanced Allocation entries instead of BARs.
+This patch allows the kernel to parse the EA Extended Capability structure
+in PCI configspace and claim the BAR-equivalent resources.
 
-Btw: Linux 4.2 doesn't show this problem.
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+[david.daney@cavium.com: Add more support/checking for Entry Properties,
+allow EA behind bridges, rewrite some error messages.]
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ drivers/pci/pci.c   | 182 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h   |   1 +
+ drivers/pci/probe.c |   3 +
+ 3 files changed, 186 insertions(+)
 
-Nevertheless I'll try to get a trace - maybe I'm lucky and the machine
-doesn't lock up completely another time :-).
-
-
-Regards,
-Andreas
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6a9a111..30a90d1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2148,6 +2148,188 @@ void pci_pm_init(struct pci_dev *dev)
+ 	}
+ }
+ 
++static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
++{
++	unsigned long flags = IORESOURCE_PCI_FIXED;
++
++	switch (prop) {
++	case PCI_EA_P_MEM:
++	case PCI_EA_P_VIRT_MEM:
++		flags |= IORESOURCE_MEM;
++		break;
++	case PCI_EA_P_MEM_PREFETCH:
++	case PCI_EA_P_VIRT_MEM_PREFETCH:
++		flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
++		break;
++	case PCI_EA_P_IO:
++		flags |= IORESOURCE_IO;
++		break;
++	default:
++		return 0;
++	}
++
++	return flags;
++}
++
++static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei,
++					    u8 prop)
++{
++	if (bei <= PCI_EA_BEI_BAR5 && prop <= PCI_EA_P_IO)
++		return &dev->resource[bei];
++	else if (bei == PCI_EA_BEI_ROM)
++		return &dev->resource[PCI_ROM_RESOURCE];
++	else
++		return NULL;
++}
++
++/* Read an Enhanced Allocation (EA) entry */
++static int pci_ea_read(struct pci_dev *dev, int offset)
++{
++	struct resource *res;
++	int ent_offset = offset;
++	int ent_size;
++	resource_size_t start;
++	resource_size_t end;
++	unsigned long flags;
++	u32 dw0;
++	u32 base;
++	u32 max_offset;
++	u8 prop;
++	bool support_64 = (sizeof(resource_size_t) >= 8);
++
++	pci_read_config_dword(dev, ent_offset, &dw0);
++	ent_offset += 4;
++
++	/* Entry size field indicates DWORDs after 1st */
++	ent_size = ((dw0 & PCI_EA_ES) + 1) << 2;
++
++	if (!(dw0 & PCI_EA_ENABLE)) /* Entry not enabled */
++		goto out;
++
++	prop = PCI_EA_PP(dw0);
++	/*
++	 * If the Property is in the reserved range, try the Secondary
++	 * Property instead.
++	 */
++	if (prop > PCI_EA_P_BRIDGE_IO && prop < PCI_EA_P_MEM_RESERVED)
++		prop = PCI_EA_SP(dw0);
++	if (prop > PCI_EA_P_BRIDGE_IO)
++		goto out;
++
++	res = pci_ea_get_resource(dev, PCI_EA_BEI(dw0), prop);
++	if (!res) {
++		dev_err(&dev->dev, "Unsupported EA entry BEI: %u\n",
++			PCI_EA_BEI(dw0));
++		goto out;
++	}
++
++	flags = pci_ea_set_flags(dev, prop);
++	if (!flags) {
++		dev_err(&dev->dev, "Unsupported EA properties: %u\n", prop);
++		goto out;
++	}
++
++	/* Read Base */
++	pci_read_config_dword(dev, ent_offset, &base);
++	start = (base & PCI_EA_FIELD_MASK);
++	ent_offset += 4;
++
++	/* Read MaxOffset */
++	pci_read_config_dword(dev, ent_offset, &max_offset);
++	ent_offset += 4;
++
++	/* Read Base MSBs (if 64-bit entry) */
++	if (base & PCI_EA_IS_64) {
++		u32 base_upper;
++
++		pci_read_config_dword(dev, ent_offset, &base_upper);
++		ent_offset += 4;
++
++		flags |= IORESOURCE_MEM_64;
++
++		/* entry starts above 32-bit boundary, can't use */
++		if (!support_64 && base_upper)
++			goto out;
++
++		if (support_64)
++			start |= ((u64)base_upper << 32);
++	}
++
++	dev_dbg(&dev->dev,
++		"EA (%u,%u) start = %pa\n", PCI_EA_BEI(dw0), prop, &start);
++
++	end = start + (max_offset | 0x03);
++
++	/* Read MaxOffset MSBs (if 64-bit entry) */
++	if (max_offset & PCI_EA_IS_64) {
++		u32 max_offset_upper;
++
++		pci_read_config_dword(dev, ent_offset, &max_offset_upper);
++		ent_offset += 4;
++
++		flags |= IORESOURCE_MEM_64;
++
++		/* entry too big, can't use */
++		if (!support_64 && max_offset_upper)
++			goto out;
++
++		if (support_64)
++			end += ((u64)max_offset_upper << 32);
++	}
++
++	dev_dbg(&dev->dev,
++		"EA (%u,%u) end = %pa\n", PCI_EA_BEI(dw0), prop, &end);
++
++	if (end < start) {
++		dev_err(&dev->dev, "EA Entry crosses address boundary\n");
++		goto out;
++	}
++
++	if (ent_size != ent_offset - offset) {
++		dev_err(&dev->dev,
++			"EA Entry Size (%d) does not match length read (%d)\n",
++			ent_size, ent_offset - offset);
++		goto out;
++	}
++
++	res->name = pci_name(dev);
++	res->start = start;
++	res->end = end;
++	res->flags = flags;
++
++out:
++	return offset + ent_size;
++}
++
++/* Enhanced Allocation Initalization */
++void pci_ea_init(struct pci_dev *dev)
++{
++	int ea;
++	u8 num_ent;
++	int offset;
++	int i;
++
++	/* find PCI EA capability in list */
++	ea = pci_find_capability(dev, PCI_CAP_ID_EA);
++	if (!ea)
++		return;
++
++	/* determine the number of entries */
++	pci_bus_read_config_byte(dev->bus, dev->devfn, ea + PCI_EA_NUM_ENT,
++					&num_ent);
++	num_ent &= PCI_EA_NUM_ENT_MASK;
++
++	offset = ea + PCI_EA_FIRST_ENT;
++
++	/* Skip DWORD 2 for type 1 functions */
++	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
++		offset += 4;
++
++	/* parse each EA entry */
++	for (i = 0; i < num_ent; ++i)
++		offset = pci_ea_read(dev, offset);
++}
++
+ static void pci_add_saved_cap(struct pci_dev *pci_dev,
+ 	struct pci_cap_saved_state *new_cap)
+ {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 24ba9dc..a160733 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -78,6 +78,7 @@ bool pci_dev_keep_suspended(struct pci_dev *dev);
+ void pci_config_pm_runtime_get(struct pci_dev *dev);
+ void pci_config_pm_runtime_put(struct pci_dev *dev);
+ void pci_pm_init(struct pci_dev *dev);
++void pci_ea_init(struct pci_dev *dev);
+ void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+ void pci_free_cap_save_buffers(struct pci_dev *dev);
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8361d27..4c4af78 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1597,6 +1597,9 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 
+ static void pci_init_capabilities(struct pci_dev *dev)
+ {
++	/* Enhanced Allocation */
++	pci_ea_init(dev);
++
+ 	/* MSI/MSI-X list */
+ 	pci_msi_init_pci_dev(dev);
+ 
+-- 
+1.9.1
 
