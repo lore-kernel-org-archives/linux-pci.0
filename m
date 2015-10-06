@@ -1,78 +1,197 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Jisheng Zhang <jszhang@marvell.com>, Ray Jui <rjui@broadcom.com>,
-	gnurou@gmail.com, linux@arm.linux.org.uk, sbranden@broadcom.com,
-	swarren@wwwdotorg.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
-	thierry.reding@gmail.com, bcm-kernel-feedback-list@broadcom.com,
-	tinamdar@apm.com, bhelgaas@google.com
-Subject: Re: [RFC PATCH 1/3] PCI: iproc: generate proper configuration access cycles
-Date: Sat, 31 Oct 2015 00:21:08 +0100
-Message-ID: <4140206.u40gNKhatz@wuerfel>
-In-Reply-To: <20151027101820.2d2a1368@xhacker>
-References: <1445857334-6936-1-git-send-email-jszhang@marvell.com> <562E6056.3040203@broadcom.com> <20151027101820.2d2a1368@xhacker>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:33670 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752742AbbJFX02 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Oct 2015 19:26:28 -0400
+Date: Tue, 6 Oct 2015 16:26:25 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [RFC][PATCH v3 3/3] input: i8042: Avoid resetting controller on
+ system suspend/resume
+Message-ID: <20151006232625.GI31850@dtor-ws>
+References: <10641052.oOBhM6BU9G@vostro.rjw.lan>
+ <1927174.T9TA7zgbS1@vostro.rjw.lan>
+ <20151006224308.GD31850@dtor-ws>
+ <1769930.Ws5UzSBdLV@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1769930.Ws5UzSBdLV@vostro.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 27 October 2015 10:18:20 Jisheng Zhang wrote:
-> On Mon, 26 Oct 2015 10:18:14 -0700 Ray Jui <rjui@broadcom.com> wrote:
+On Wed, Oct 07, 2015 at 01:31:44AM +0200, Rafael J. Wysocki wrote:
+> On Tuesday, October 06, 2015 03:43:08 PM Dmitry Torokhov wrote:
+> > On Wed, Oct 07, 2015 at 01:08:30AM +0200, Rafael J. Wysocki wrote:
+> > > On Tuesday, October 06, 2015 03:34:42 PM Dmitry Torokhov wrote:
+> > > > On Wed, Oct 07, 2015 at 12:53:49AM +0200, Rafael J. Wysocki wrote:
+> > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > 
+> > > > > If the upcoming system suspend is not going to be handled by the
+> > > > > platform firmware, like in the suspend-to-idle case, it is not
+> > > > > necessary to reset the controller in i8042_pm_suspend(), so avoid
+> > > > > doing that.
+> > > > > 
+> > > > > Moreover, if the system resume currently in progress has not been
+> > > > > started by the platform firmware, like in the suspend-to-idle case,
+> > > > > i8042_controller_resume() need not be called by i8042_pm_resume(),
+> > > > > so avoid doing that too in that case.
+> > > > > 
+> > > > > Additionally, try to catch the event that woke up the system by
+> > > > > calling the interrupt handler early during system resume if it has
+> > > > > not been started by the platform firmware.
+> > > > > 
+> > > > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > ---
+> > > > >  drivers/input/serio/i8042.c |   15 +++++++++++++--
+> > > > >  1 file changed, 13 insertions(+), 2 deletions(-)
+> > > > > 
+> > > > > Index: linux-pm/drivers/input/serio/i8042.c
+> > > > > ===================================================================
+> > > > > --- linux-pm.orig/drivers/input/serio/i8042.c
+> > > > > +++ linux-pm/drivers/input/serio/i8042.c
+> > > > > @@ -24,6 +24,7 @@
+> > > > >  #include <linux/platform_device.h>
+> > > > >  #include <linux/i8042.h>
+> > > > >  #include <linux/slab.h>
+> > > > > +#include <linux/suspend.h>
+> > > > >  
+> > > > >  #include <asm/io.h>
+> > > > >  
+> > > > > @@ -1170,7 +1171,8 @@ static int i8042_pm_suspend(struct devic
+> > > > >  {
+> > > > >  	int i;
+> > > > >  
+> > > > > -	i8042_controller_reset(true);
+> > > > > +	if (pm_suspend_via_firmware())
+> > > > > +		i8042_controller_reset(true);
+> > > > >  
+> > > > >  	/* Set up serio interrupts for system wakeup. */
+> > > > >  	for (i = 0; i < I8042_NUM_PORTS; i++) {
+> > > > > @@ -1183,6 +1185,14 @@ static int i8042_pm_suspend(struct devic
+> > > > >  	return 0;
+> > > > >  }
+> > > > >  
+> > > > > +static int i8042_pm_resume_noirq(struct device *dev)
+> > > > > +{
+> > > > > +	if (!pm_resume_via_firmware())
+> > > > > +		i8042_interrupt(0, NULL);
+> > > > > +
+> > > > > +	return 0;
+> > > > > +}
+> > > > > +
+> > > > >  static int i8042_pm_resume(struct device *dev)
+> > > > >  {
+> > > > >  	int i;
+> > > > > @@ -1199,7 +1209,7 @@ static int i8042_pm_resume(struct device
+> > > > >  	 * to bring it in a sane state. (In case of S2D we expect
+> > > > >  	 * BIOS to reset the controller for us.)
+> > > > >  	 */
+> > > > > -	return i8042_controller_resume(true);
+> > > > > +	return pm_resume_via_firmware() ? i8042_controller_resume(true) : 0;
+> > > > 
+> > > > What happens if we were going to suspend via firmware so we reset the
+> > > > controller but then we got wakeup condition and we actually did not
+> > > > suspend. What pm_resume_via_firmware() will return in this case?
+> > > 
+> > > It will return 'false'.  Do we need to resume the controller then?
+> > 
+> > Yes.
+> > 
+> > >  But I guess
+> > > 'false' should be passed to i8042_controller_resume() in that case?
+> > 
+> > Yes, we do not need to reset the controller in this case, just
+> > reactivate multiplexing mode, etc.
 > 
-> > Hi Jisheng,
-> > 
-> > On 10/26/2015 4:02 AM, Jisheng Zhang wrote:
-> > > Inspired by Russell King's patch[1], I found current iproc also has the
-> > > same issue of "reading 32-bits from the command register, modifying the
-> > > command register, and then writing it back has the effect of clearing
-> > > any status bits that were indicating at that time" as pointed out by
-> > > Russell. This patch fix this issue by using the pci_generic_config_write.
-> > >
-> > > [1]http://www.spinics.net/lists/linux-pci/msg44869.html
-> > >
-> > > Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
-> > > ---
-> > >   drivers/pci/host/pcie-iproc.c | 2 +-
-> > >   1 file changed, 1 insertion(+), 1 deletion(-)
-> > >
-> > > diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> > > index fe2efb1..0c423f2 100644
-> > > --- a/drivers/pci/host/pcie-iproc.c
-> > > +++ b/drivers/pci/host/pcie-iproc.c
-> > > @@ -111,7 +111,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
-> > >   static struct pci_ops iproc_pcie_ops = {
-> > >     .map_bus = iproc_pcie_map_cfg_bus,
-> > >     .read = pci_generic_config_read32,
-> > > -   .write = pci_generic_config_write32,
-> > > +   .write = pci_generic_config_write,
-> > >   };
-> > >
-> > >   static void iproc_pcie_reset(struct iproc_pcie *pcie)
-> > >  
-> > 
-> > I have already confirmed with the ASIC team that the current iProc PCIe 
-> > controller requires 32-bit aligned access into the configuration space 
-> > due to the way how it was integrated into various iProc SoCs including 
-> > NSP, Cygnus, and NS2.
-> > 
-> > This change will prevent the driver from working properly.
-> > 
-> > I've informed our ASIC team about this issue and all future iProc based 
-> > SoCs should be able to support 8-bit, 16-bit access and therefore 
-> > pci_generic_config_write/read can be used for those SoCs.
->
-> Thanks for the information,
+> So something like this I suppose:
+> 
+> ---
+>  drivers/input/serio/i8042.c |   16 ++++++++++++++--
+>  1 file changed, 14 insertions(+), 2 deletions(-)
+> 
+> Index: linux-pm/drivers/input/serio/i8042.c
+> ===================================================================
+> --- linux-pm.orig/drivers/input/serio/i8042.c
+> +++ linux-pm/drivers/input/serio/i8042.c
+> @@ -24,6 +24,7 @@
+>  #include <linux/platform_device.h>
+>  #include <linux/i8042.h>
+>  #include <linux/slab.h>
+> +#include <linux/suspend.h>
+>  
+>  #include <asm/io.h>
+>  
+> @@ -1170,7 +1171,8 @@ static int i8042_pm_suspend(struct devic
+>  {
+>  	int i;
+>  
+> -	i8042_controller_reset(true);
+> +	if (pm_suspend_via_firmware())
+> +		i8042_controller_reset(true);
+>  
+>  	/* Set up serio interrupts for system wakeup. */
+>  	for (i = 0; i < I8042_NUM_PORTS; i++) {
+> @@ -1183,6 +1185,14 @@ static int i8042_pm_suspend(struct devic
+>  	return 0;
+>  }
+>  
+> +static int i8042_pm_resume_noirq(struct device *dev)
+> +{
+> +	if (!pm_resume_via_firmware())
+> +		i8042_interrupt(0, NULL);
+> +
+> +	return 0;
+> +}
+> +
+>  static int i8042_pm_resume(struct device *dev)
+>  {
+>  	int i;
+> @@ -1199,7 +1209,8 @@ static int i8042_pm_resume(struct device
+>  	 * to bring it in a sane state. (In case of S2D we expect
+>  	 * BIOS to reset the controller for us.)
+>  	 */
+> -	return i8042_controller_resume(true);
+> +	return pm_suspend_via_firmware() ?
+> +		i8042_controller_resume(pm_resume_via_firmware()) : 0;
 
-We discussed the same issue when the X-gene PCI host driver was first
-reviewed, and someone from APM then clarified that it had the same bug.
+Hmm, looks right, maybe just be more verbose...
 
-However, I don't know the details about the Tegra implementation, or
-whether the X-Gene bug has been fixed in a newer version of the parts,
-so we need to get confirmation from the respective developers before
-applying any of the patches. If X-gene has been fixed in the meantime,
-we need to make sure we match on the exact product numbers in the
-compatible property so we only do it for the newer ones.
+	/*
+	 * If firmware was not going to be involved in suspend we did
+	 * not restore controller state to whatever it was when we were
+	 * booting, so we do not need to do anything.
+	 */
+	if (!pm_suspend_via_firmware())
+		return 0;
 
-	Arnd
+	/*
+	 * We only need to reset controller if we are resuming after
+	 * handing off control to the firmware, otherwise we can
+	 * simply restore the mode.
+	 */
+	do_reset = pm_resume_via_firmware();
 
+	return i8042_controller_resume(do_reset);
+
+>  }
+>  
+>  static int i8042_pm_thaw(struct device *dev)
+> @@ -1223,6 +1234,7 @@ static int i8042_pm_restore(struct devic
+>  
+>  static const struct dev_pm_ops i8042_pm_ops = {
+>  	.suspend	= i8042_pm_suspend,
+> +	.resume_noirq	= i8042_pm_resume_noirq,
+>  	.resume		= i8042_pm_resume,
+>  	.thaw		= i8042_pm_thaw,
+>  	.poweroff	= i8042_pm_reset,
+> 
+
+-- 
+Dmitry
