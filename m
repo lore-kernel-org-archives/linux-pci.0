@@ -1,95 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45016 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:53910 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750856AbbJORXI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Oct 2015 13:23:08 -0400
-Date: Thu, 15 Oct 2015 12:23:05 -0500
+	id S1752575AbbJFRyr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 Oct 2015 13:54:47 -0400
+Date: Tue, 6 Oct 2015 12:54:44 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Romain Bezut <rbezut@gmail.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH] PCI/MSI: Export all remapped MSIs to sysfs attributes
-Message-ID: <20151015172305.GC17702@localhost>
-References: <1443051076-27716-1-git-send-email-rbezut@gmail.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [Patch v6 5/7] ACPI, PCI: Reset acpi_root_dev->domain to 0 when
+ pci_ignore_seg is set
+Message-ID: <20151006175444.GB29420@localhost>
+References: <1442218057-4355-1-git-send-email-jiang.liu@linux.intel.com>
+ <1442218057-4355-6-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443051076-27716-1-git-send-email-rbezut@gmail.com>
+In-Reply-To: <1442218057-4355-6-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 24, 2015 at 01:31:16AM +0200, Romain Bezut wrote:
-> irqbalance uses these attributes to populate its internal database, which is
-> then used to bind the irq on the appropriate NUMA node.
+On Mon, Sep 14, 2015 at 04:07:34PM +0800, Jiang Liu wrote:
+> Reset acpi_root_dev->domain to 0 when pci_ignore_seg is set to keep
+> consistence between ACPI PCI root device and PCI host bridge device.
 > 
-> On a device accepting multiple MSIs and with interrupt remapping enabled,
-> only the first irq entry is exported to msi_irqs directory.
-> This results in irqbalance having no clue of the NUMA affinity for the extra
-> irqs and starting to bind them on random nodes.
-> 
-> This patch exports all MSI interrupts as sysfs attributes when relevant.
-> 
-> Signed-off-by: Romain Bezut <rbezut@gmail.com>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-Applied with Thomas' ack to pci/msi for v4.4, thanks, Romain!
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
 > ---
->  drivers/pci/msi.c | 31 +++++++++++++++++--------------
->  1 file changed, 17 insertions(+), 14 deletions(-)
+>  arch/x86/pci/acpi.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index d449714..324a164 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -475,10 +475,11 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->  	int ret = -ENOMEM;
->  	int num_msi = 0;
->  	int count = 0;
-> +	int i;
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index ff9911707160..5bc018559cc4 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -401,7 +401,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  	int node;
 >  
->  	/* Determine how many msi entries we have */
->  	for_each_pci_msi_entry(entry, pdev)
-> -		++num_msi;
-> +		num_msi += entry->nvec_used;
->  	if (!num_msi)
->  		return 0;
+>  	if (pci_ignore_seg)
+> -		domain = 0;
+> +		root->segment = domain = 0;
 >  
-> @@ -487,19 +488,21 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->  	if (!msi_attrs)
->  		return -ENOMEM;
->  	for_each_pci_msi_entry(entry, pdev) {
-> -		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
-> -		if (!msi_dev_attr)
-> -			goto error_attrs;
-> -		msi_attrs[count] = &msi_dev_attr->attr;
-> -
-> -		sysfs_attr_init(&msi_dev_attr->attr);
-> -		msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
-> -						    entry->irq);
-> -		if (!msi_dev_attr->attr.name)
-> -			goto error_attrs;
-> -		msi_dev_attr->attr.mode = S_IRUGO;
-> -		msi_dev_attr->show = msi_mode_show;
-> -		++count;
-> +		for (i = 0; i < entry->nvec_used; i++) {
-> +			msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
-> +			if (!msi_dev_attr)
-> +				goto error_attrs;
-> +			msi_attrs[count] = &msi_dev_attr->attr;
-> +
-> +			sysfs_attr_init(&msi_dev_attr->attr);
-> +			msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
-> +							    entry->irq + i);
-> +			if (!msi_dev_attr->attr.name)
-> +				goto error_attrs;
-> +			msi_dev_attr->attr.mode = S_IRUGO;
-> +			msi_dev_attr->show = msi_mode_show;
-> +			++count;
-> +		}
->  	}
->  
->  	msi_irq_group = kzalloc(sizeof(*msi_irq_group), GFP_KERNEL);
+>  	if (domain && !pci_domains_supported) {
+>  		printk(KERN_WARNING "pci_bus %04x:%02x: "
 > -- 
-> 2.4.9
+> 1.7.10.4
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
