@@ -1,65 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55735 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751718AbbJVNGO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Oct 2015 09:06:14 -0400
-Date: Thu, 22 Oct 2015 16:06:05 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Or Gerlitz <gerlitz.or@gmail.com>, emil.s.tantilov@intel.com,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	qemu-devel@nongnu.org,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	carolyn.wyborny@intel.com,
-	"Skidmore, Donald C" <donald.c.skidmore@intel.com>, agraf@suse.de,
-	matthew.vick@intel.com, intel-wired-lan@lists.osuosl.org,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	yang.z.zhang@intel.com,
-	Mitch Williams <mitch.a.williams@intel.com>,
-	nrupal.jani@intel.com, bhelgaas@google.com,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Linux Netdev List <netdev@vger.kernel.org>,
-	Shannon Nelson <shannon.nelson@intel.com>,
-	eddie.dong@intel.com, Linux Kernel <linux-kernel@vger.kernel.org>,
-	john.ronciak@intel.com, Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [Qemu-devel] [RFC Patch 00/12] IXGBE: Add live migration support
- for SRIOV NIC
-Message-ID: <20151022130605.GA20267@redhat.com>
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
- <CAJ3xEMiStMJdGjgO9=MQrhLpBo8ZiTRoOL_P=aC9kyrNi91FSw@mail.gmail.com>
- <1445455227.4059.867.camel@redhat.com>
- <20151022123252.GA19940@redhat.com>
- <1445518861.4059.869.camel@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 6 Oct 2015 20:01:21 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	" David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, m-karicheri2@ti.com,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH v5 1/3] ARM: STi: Kconfig update for PCIe support
+Message-ID: <20151006190121.GV21513@n2100.arm.linux.org.uk>
+References: <1444118168-13086-1-git-send-email-gabriel.fernandez@linaro.org>
+ <1444118168-13086-2-git-send-email-gabriel.fernandez@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445518861.4059.869.camel@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1444118168-13086-2-git-send-email-gabriel.fernandez@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 22, 2015 at 07:01:01AM -0600, Alex Williamson wrote:
-> On Thu, 2015-10-22 at 15:32 +0300, Michael S. Tsirkin wrote:
-> > On Wed, Oct 21, 2015 at 01:20:27PM -0600, Alex Williamson wrote:
-> > > The trouble here is that the VF needs to be unplugged prior to the start
-> > > of migration because we can't do effective dirty page tracking while the
-> > > device is connected and doing DMA.
-> > 
-> > That's exactly what patch 12/12 is trying to accomplish.
-> > 
-> > I do see some problems with it, but I also suggested some solutions.
+On Tue, Oct 06, 2015 at 09:56:06AM +0200, Gabriel Fernandez wrote:
+> Update Kconfig:
+> - MIGHT_HAVE_PCI
+> - PCI_DOMAINS
 > 
-> I was replying to:
+> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+> ---
+>  arch/arm/mach-sti/Kconfig | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> > So... what would you expect service down wise for the following
-> > solution which is zero touch and I think should work for any VF
-> > driver:
-> 
-> And then later note:
-> 
-> "Here it's done via an enlightened guest driver."
+> diff --git a/arch/arm/mach-sti/Kconfig b/arch/arm/mach-sti/Kconfig
+> index 125865d..5f99e93 100644
+> --- a/arch/arm/mach-sti/Kconfig
+> +++ b/arch/arm/mach-sti/Kconfig
+> @@ -9,6 +9,8 @@ menuconfig ARCH_STI
+>  	select ARCH_HAS_RESET_CONTROLLER
+>  	select HAVE_ARM_SCU if SMP
+>  	select ARCH_REQUIRE_GPIOLIB
+> +	select PCI_DOMAINS if PCI
+> +	select MIGHT_HAVE_PCI
+>  	select ARM_ERRATA_754322
+>  	select ARM_ERRATA_764369 if SMP
+>  	select ARM_ERRATA_775420
 
-Oh, I misunderstood your intent. Sorry about that.
-
-So we are actually in agreement between us then. That's nice.
+Please, alphabetical ordering for select statements.
 
 -- 
-MST
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
