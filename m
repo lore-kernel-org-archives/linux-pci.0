@@ -1,94 +1,121 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:37512 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752640AbbJFH5a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Oct 2015 03:57:30 -0400
+Received: by wicfx3 with SMTP id fx3so146548836wic.0
+        for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2015 00:57:29 -0700 (PDT)
+From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com
-Cc: "Signed-off-by: David Daney" <david.daney@cavium.com>
-Subject: [PATCH v6 3/5] PCI: Add Enhanced Allocation register entries
-Date: Tue, 20 Oct 2015 16:04:40 -0700
-Message-Id: <1445382282-2396-4-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1445382282-2396-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1445382282-2396-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	" David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
+Subject: [PATCH v5 2/3] PCI: st: Add Device Tree bindings for sti pcie
+Date: Tue,  6 Oct 2015 09:56:07 +0200
+Message-Id: <1444118168-13086-3-git-send-email-gabriel.fernandez@linaro.org>
+In-Reply-To: <1444118168-13086-1-git-send-email-gabriel.fernandez@linaro.org>
+References: <1444118168-13086-1-git-send-email-gabriel.fernandez@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Sean O. Stalley" <sean.stalley@intel.com>
+sti pcie is built around a Synopsis Designware PCIe IP.
 
-Add registers defined in PCI-SIG's Enhanced allocation ECN.
-
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
-[david.daney@cavium.com: Added more definitions for PCI_EA_BEI_*]
-Signed-off-by: Signed-off-by: David Daney <david.daney@cavium.com>
+Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
 ---
- include/uapi/linux/pci_regs.h | 44 ++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 43 insertions(+), 1 deletion(-)
+ Documentation/devicetree/bindings/pci/st-pcie.txt | 56 +++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 413417f..199ea45 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -216,7 +216,8 @@
- #define  PCI_CAP_ID_MSIX	0x11	/* MSI-X */
- #define  PCI_CAP_ID_SATA	0x12	/* SATA Data/Index Conf. */
- #define  PCI_CAP_ID_AF		0x13	/* PCI Advanced Features */
--#define  PCI_CAP_ID_MAX		PCI_CAP_ID_AF
-+#define  PCI_CAP_ID_EA		0x14	/* PCI Enhanced Allocation */
-+#define  PCI_CAP_ID_MAX		PCI_CAP_ID_EA
- #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
- #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
- #define PCI_CAP_SIZEOF		4
-@@ -353,6 +354,47 @@
- #define  PCI_AF_STATUS_TP	0x01
- #define PCI_CAP_AF_SIZEOF	6	/* size of AF registers */
- 
-+/* PCI Enhanced Allocation registers */
+diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
+new file mode 100644
+index 0000000..32e76d0
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
+@@ -0,0 +1,56 @@
++STMicroelectronics STi PCIe controller
 +
-+#define PCI_EA_NUM_ENT		2	/* Number of Capability Entries */
-+#define  PCI_EA_NUM_ENT_MASK	0x3f	/* Num Entries Mask */
-+#define PCI_EA_FIRST_ENT	4	/* First EA Entry in List */
-+#define PCI_EA_FIRST_ENT_BRIDGE	8	/* First EA Entry for Bridges */
-+#define  PCI_EA_ES		0x7	/* Entry Size */
-+#define  PCI_EA_BEI(x)	(((x) >> 4) & 0xf) /* BAR Equivalent Indicator */
-+/* 0-5 map to BARs 0-5 respectively */
-+#define   PCI_EA_BEI_BAR0	0
-+#define   PCI_EA_BEI_BAR5	5
-+#define   PCI_EA_BEI_BRIDGE	6	/* Resource behind bridge */
-+#define   PCI_EA_BEI_ENI	7	/* Equivalent Not Indicated */
-+#define   PCI_EA_BEI_ROM	8	/* Expansion ROM */
-+/* 9-14 map to VF BARs 0-5 respectively */
-+#define   PCI_EA_BEI_VF_BAR0	9
-+#define   PCI_EA_BEI_VF_BAR5	14
-+#define   PCI_EA_BEI_RESERVED	15	/* Reserved - Treat like ENI */
++This PCIe host controller is based on the Synopsis Designware PCIe IP
++and thus inherits all the common properties defined in designware-pcie.txt.
 +
-+#define  PCI_EA_PP(x)	(((x) >>  8) & 0xff)	/* Primary Properties */
-+#define  PCI_EA_SP(x)	(((x) >> 16) & 0xff)	/* Secondary Properties */
-+#define   PCI_EA_P_MEM			0x00	/* Non-Prefetch Memory */
-+#define   PCI_EA_P_MEM_PREFETCH		0x01	/* Prefetchable Memory */
-+#define   PCI_EA_P_IO			0x02	/* I/O Space */
-+#define   PCI_EA_P_VF_MEM_PREFETCH	0x03	/* VF Prefetchable Memory */
-+#define   PCI_EA_P_VF_MEM		0x04	/* VF Non-Prefetch Memory */
-+#define   PCI_EA_P_BRIDGE_MEM		0x05	/* Bridge Non-Prefetch Memory */
-+#define   PCI_EA_P_BRIDGE_MEM_PREFETCH	0x06	/* Bridge Prefetchable Memory */
-+#define   PCI_EA_P_BRIDGE_IO		0x07	/* Bridge I/O Space */
-+/* 0x08-0xfc reserved */
-+#define   PCI_EA_P_MEM_RESERVED		0xfd	/* Reserved Memory */
-+#define   PCI_EA_P_IO_RESERVED		0xfe	/* Reserved I/O Space */
-+#define   PCI_EA_P_UNAVAILABLE		0xff	/* Entry Unavailable */
-+#define  PCI_EA_WRITEABLE	0x40000000	/* Writable: 1 = RW, 0 = HwInit */
-+#define  PCI_EA_ENABLE		0x80000000	/* Enable for this entry */
-+#define PCI_EA_BASE		4		/* Base Address Offset */
-+#define PCI_EA_MAX_OFFSET	8		/* MaxOffset (resource length) */
-+/* bit 0 is reserved */
-+#define  PCI_EA_IS_64		0x00000002	/* 64-bit field flag */
-+#define  PCI_EA_FIELD_MASK	0xfffffffc	/* For Base & Max Offset */
++Required properties:
++ - compatible: Should be "st,pcie", "snps,dw-pcie"
 +
- /* PCI-X registers (Type 0 (non-bridge) devices) */
- 
- #define PCI_X_CMD		2	/* Modes & Features */
++ - reg: base address and length of the pcie controller, mem-window address
++   and length available to the controller.
++
++ - interrupts: one GIC interrupt line connected to PCI MSI interrupt line
++
++ - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
++   offset for IP configuration.
++
++ - resets: phandle to the powerdown and reset controller for the PCIe IP.
++   See ../reset/reset.txt for details.
++ - reset-names: should be "powerdown" and "softreset".
++
++ - phys: the phandle for the PHY device (used by generic PHY framework).
++ - phys-names: must be "pcie".
++
++Optional properties:
++ - reset-gpio: a GPIO spec to define which pin is connected to the bus reset.
++
++Example:
++
++pcie0: pcie@9b00000 {
++	compatible = "st,pcie", "snps,dw-pcie";
++	device_type = "pci";
++	reg = <0x09b00000 0x4000>,	/* dbi cntrl registers */
++	      <0x2fff0000 0x00010000>,	/* configuration space */
++	      <0x40000000 0x80000000>;	/* lmi mem window */
++	reg-names = "dbi", "config", "mem-window";
++	st,syscfg = <&syscfg_core 0xd8 0xe0>;
++	#address-cells = <3>;
++	#size-cells = <2>;
++	ranges = <0x82000000 0 0x20000000 0x20000000 0 0x0FFF0000>; /* non-prefetchable memory */
++	num-lanes = <1>;
++	interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
++	interrupt-names = "msi";
++	#interrupt-cells = <1>;
++	interrupt-map-mask = <0 0 0 7>;
++	interrupt-map = <0 0 0 1 &intc GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>, /* INT A */
++			<0 0 0 2 &intc GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>, /* INT B */
++			<0 0 0 3 &intc GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>, /* INT C */
++			<0 0 0 4 &intc GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>; /* INT D */
++
++	resets = <&powerdown STIH407_PCIE0_POWERDOWN>,
++		 <&softreset STIH407_PCIE0_SOFTRESET>;
++	reset-names = "powerdown",
++		      "softreset";
++	phys = <&phy_port0 PHY_TYPE_PCIE>;
++	phy-names = "pcie";
++};
 -- 
 1.9.1
 
