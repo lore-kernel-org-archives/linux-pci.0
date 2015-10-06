@@ -1,84 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0058.outbound.protection.outlook.com ([157.56.111.58]:11680
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933241AbbJINrl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 09:47:41 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"rjui@broadcom.com" <rjui@broadcom.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>
-CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Ravikiran Gummaluri" <rgummal@xilinx.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v3] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Date: Fri, 9 Oct 2015 13:47:35 +0000
-Message-ID: <8520D5D51A55D047800579B09414719801690DEC@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1444146289-28940-1-git-send-email-bharatku@xilinx.com>
- <5613F310.6060305@arm.com>
-In-Reply-To: <5613F310.6060305@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v5 3/4] PCI: Handle IORESOURCE_PCI_FIXED when sizing and assigning resources.
+Date: Tue,  6 Oct 2015 16:50:37 -0700
+Message-Id: <1444175438-7443-4-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Hi Bharat,
->> > Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
-> >
-> > +/* SSPL ERROR */
-> > +#define SLVERR					0x02
-> > +#define DECERR					0x03
-> > +
-> > +struct nwl_msi {			/* struct nwl_msi - MSI information
-> */
-> > +	struct msi_controller chip;	/* chip: MSI controller */
-> 
-> We're moving away from msi_controller altogether, as the kernel now has all
-> the necessary infrastructure to do this properly.
-> 
-> Please convert this driver to msi domains (see drivers/pci/host/pci-xgene-
-> msi.c or the gic-v2m driver as examples of how this is being done).
+From: David Daney <david.daney@cavium.com>
 
-As suggested I have gone through the code in pci-gene-msi.c for msi domains, 
-and have gone through IRQ Domain documentation. 
-I mainly observe when we have more than one interrupt controller involved
-between device and cpu we use "Hierarchy IRQ domain" (parent and child msi domains). But in our case we 
-don't have any such Hierarchy and we have single interrupt controller.
-In such case is it necessary to use multiple domains in software which actually isn't case in hardware.
+The new Enhanced Allocation (EA) capability support creates resources
+with the IORESOURCE_PCI_FIXED set.  This causes a couple of problems:
 
-Thanks 
-Bharat
-> 
-> > +	DECLARE_BITMAP(used, INT_PCI_MSI_NR);	/* used: Declare
-> Bitmap
-> > +						for MSI	*/
-> > +	struct irq_domain *domain;	/* domain: IRQ domain pointer */
-> > +	unsigned long pages;		/* pages: MSI pages */
-> 
-> Overall, I think it would make sense to split the PCIe controller driver and the
-> MSI controller (in separate files as well).
-> 
-> Please keep me posted on the updates.
-> 
-> Thanks,
-> 
-> 	M.
-> --
-> Jazz is not dead. It just smells funny...
+1) Since these resources cannot be relocated or resized, their
+   alignment is not really defined, and it is therefore not specified.
+   This causes a problem in pbus_size_mem() where resources with
+   unspecified alignment are disabled.
+
+2) During resource assignment in pci_bus_assign_resources(),
+   IORESOURCE_PCI_FIXED resources are not given a parent.  This, in
+   turn, causes pci_enable_resources() to fail with a "not claimed"
+   error.
+
+So, in pbus_size_mem() skip IORESOURCE_PCI_FIXED resources, instead of
+disabling them.
+
+In __pci_bus_assign_resources(), for IORESOURCE_PCI_FIXED resources,
+try to request the resource from a parent bus.
+
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ drivers/pci/setup-bus.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 47 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 508cc56..7239a2c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1037,9 +1037,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			struct resource *r = &dev->resource[i];
+ 			resource_size_t r_size;
+ 
+-			if (r->parent || ((r->flags & mask) != type &&
+-					  (r->flags & mask) != type2 &&
+-					  (r->flags & mask) != type3))
++			if (r->parent || (r->flags | IORESOURCE_PCI_FIXED) ||
++			    ((r->flags & mask) != type &&
++			     (r->flags & mask) != type2 &&
++			     (r->flags & mask) != type3))
+ 				continue;
+ 			r_size = resource_size(r);
+ #ifdef CONFIG_PCI_IOV
+@@ -1340,6 +1341,47 @@ void pci_bus_size_bridges(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL(pci_bus_size_bridges);
+ 
++static void assign_fixed_resource_on_bus(struct pci_bus *b, struct resource *r)
++{
++	int i;
++	struct resource *parent_r;
++	unsigned long mask = IORESOURCE_IO | IORESOURCE_MEM |
++			     IORESOURCE_PREFETCH;
++
++	pci_bus_for_each_resource(b, parent_r, i) {
++		if (!parent_r)
++			continue;
++
++		if ((r->flags & mask) == (parent_r->flags & mask) &&
++		    resource_contains(parent_r, r))
++			request_resource(parent_r, r);
++	}
++}
++
++/*
++ * Try to assign any resources marked as IORESOURCE_PCI_FIXED, as they
++ * are skipped by pbus_assign_resources_sorted().
++ */
++static void pdev_assign_fixed_resources(struct pci_dev *dev)
++{
++	int i;
++
++	for (i = 0; i <  PCI_NUM_RESOURCES; i++) {
++		struct pci_bus *b;
++		struct resource *r = &dev->resource[i];
++
++		if (r->parent || !(r->flags & IORESOURCE_PCI_FIXED) ||
++		    !(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
++			continue;
++
++		b = dev->bus;
++		while (b && !r->parent) {
++			assign_fixed_resource_on_bus(b, r);
++			b = b->parent;
++		}
++	}
++}
++
+ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 				struct list_head *realloc_head,
+ 				struct list_head *fail_head)
+@@ -1350,6 +1392,8 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 	pbus_assign_resources_sorted(bus, realloc_head, fail_head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
++		pdev_assign_fixed_resources(dev);
++
+ 		b = dev->subordinate;
+ 		if (!b)
+ 			continue;
+-- 
+1.9.1
+
