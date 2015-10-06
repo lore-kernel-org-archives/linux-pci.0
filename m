@@ -1,41 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43745 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752707AbbJ0XHB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Oct 2015 19:07:01 -0400
-Date: Tue, 27 Oct 2015 18:06:54 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 6 Oct 2015 13:01:44 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru, linuxppc-dev@lists.ozlabs.org,
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: Re: [PATCH V10 01/12] PCI/IOV: Rename and export
- virtfn_add/virtfn_remove
-Message-ID: <20151027230654.GA5155@localhost>
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1445829362-2738-2-git-send-email-weiyang@linux.vnet.ibm.com>
+Subject: Re: [Patch v6 6/7] x86/PCI/ACPI: Use common interface to support PCI
+ host bridge
+Message-ID: <20151006180144.GC29420@localhost>
+References: <1442218057-4355-1-git-send-email-jiang.liu@linux.intel.com>
+ <1442218057-4355-7-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445829362-2738-2-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1442218057-4355-7-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 26, 2015 at 11:15:51AM +0800, Wei Yang wrote:
-> During EEH recovery, hotplug is applied to the devices which don't
-> have drivers or their drivers don't support EEH. However, the hotplug,
-> which was implemented based on PCI bus, can't be applied to VF directly.
+On Mon, Sep 14, 2015 at 04:07:35PM +0800, Jiang Liu wrote:
+> Use common interface to simplify ACPI PCI host bridge implementation.
 > 
-> The patch renames virtn_{add,remove}() and exports them so that they
-> can be used in PCI hotplug during EEH recovery.
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-Trivial, but write this as an imperative sentence, e.g.,
+Is there a corresponding ia64 patch?  If we're really consolidating
+this code (which I completely support), we need to do the whole job.
 
-  Rename virtn_{add,remove}() and export them so they
-  can be used in PCI hotplug during EEH recovery.
-
-"The patch" doesn't add any useful information; it's obvious that the
-changelog applied to this patch.
-
-This comment also applies to at least the next patch.
-
-Bjorn
+> ---
+>  arch/x86/pci/acpi.c |  293 +++++++++++++++------------------------------------
+>  1 file changed, 86 insertions(+), 207 deletions(-)
