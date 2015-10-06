@@ -1,52 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36024 "EHLO mail.kernel.org"
+Received: from 8bytes.org ([81.169.241.247]:35175 "EHLO theia.8bytes.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756446AbbJVPJ6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Oct 2015 11:09:58 -0400
+	id S1752278AbbJFKN6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 Oct 2015 06:13:58 -0400
+Date: Tue, 6 Oct 2015 12:13:56 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Mikulas Patocka <mpatocka@redhat.com>,
+	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
+	Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+Message-ID: <20151006101356.GE12506@8bytes.org>
+References: <55B7D054.4070308@maya.org>
+ <20150728192908.GA25264@redhat.com>
+ <55BCD5A7.2080708@maya.org>
+ <55BE1D5E.6020709@maya.org>
+ <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
+ <55FE5740.2060701@maya.org>
+ <20150929152100.GL3036@8bytes.org>
+ <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
+ <20150929162042.GR3036@8bytes.org>
+ <560BF73F.8000008@maya.org>
 MIME-Version: 1.0
-In-Reply-To: <20151020210303.3671.52391.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20151020210303.3671.52391.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-From: Rob Herring <robh+dt@kernel.org>
-Date: Thu, 22 Oct 2015 10:09:36 -0500
-Message-ID: <CAL_Jsq+Ea_sKsMgWtXSkLeOUibsDTR0EW7AVsyGvZdHXSdZ6GQ@mail.gmail.com>
-Subject: Re: [PATCH] Documentation/devicetree: Update PCI Device Tree bindings
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/mixed; boundary="liOOAslEiF7prFVr"
+In-Reply-To: <560BF73F.8000008@maya.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 20, 2015 at 4:03 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Update broken links to PCI bus and interrupt mapping bindings.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Applied, thanks.
+--liOOAslEiF7prFVr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Rob
+On Wed, Sep 30, 2015 at 04:52:47PM +0200, Andreas Hartmann wrote:
+> > Alternativly someone who can reproduce it should trace the calls to
+> > __map_single and __unmap_single in the AMD IOMMU driver to find out
+> > whether the addresses which the faults happen on are really mapped, or
+> > at least requested from the AMD IOMMU driver.
+> 
+> How can I trace it?
 
-> ---
->  Documentation/devicetree/bindings/pci/pci.txt |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-> index f8fbe9a..08dcfad 100644
-> --- a/Documentation/devicetree/bindings/pci/pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci.txt
-> @@ -1,12 +1,12 @@
->  PCI bus bridges have standardized Device Tree bindings:
->
->  PCI Bus Binding to: IEEE Std 1275-1994
-> -http://www.openfirmware.org/ofwg/bindings/pci/pci2_1.pdf
-> +http://www.firmware.org/1275/bindings/pci/pci2_1.pdf
->
->  And for the interrupt mapping part:
->
->  Open Firmware Recommended Practice: Interrupt Mapping
-> -http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
-> +http://www.firmware.org/1275/practice/imap/imap0_9d.pdf
->
->  Additionally to the properties specified in the above standards a host bridge
->  driver implementation may support the following properties:
->
+Please apply the attached debug patch on-top of Linux v4.3-rc3 and boot
+the machine. After boot you run (as root):
+
+
+	# cat /sys/kernel/debug/tracing/trace_pipe > trace-data
+
+Please run this in a seperate shell an keep it running.
+
+Then trigger the problem while the above command is running. When you
+triggered it, please send me the (compressed) trace-data file, full
+dmesg and output of lspci on the box.
+
+Please let me know if you have further questions.
+
+
+Thanks,
+
+	Joerg
+
+
+--liOOAslEiF7prFVr
+Content-Type: text/x-diff; charset=us-ascii
+Content-Disposition: attachment; filename="iommu-debug.patch"
+
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index f82060e7..0002e79 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -2465,6 +2465,7 @@ static dma_addr_t __map_single(struct device *dev,
+ {
+ 	dma_addr_t offset = paddr & ~PAGE_MASK;
+ 	dma_addr_t address, start, ret;
++	phys_addr_t old_paddr = paddr;
+ 	unsigned int pages;
+ 	unsigned long align_mask = 0;
+ 	int i;
+@@ -2521,6 +2522,8 @@ retry:
+ 		domain_flush_pages(&dma_dom->domain, address, size);
+ 
+ out:
++	trace_printk("%s: mapped %llx paddr %llx size %zu\n",
++			dev_name(dev), address, old_paddr, size);
+ 	return address;
+ 
+ out_unmap:
+@@ -2532,6 +2535,9 @@ out_unmap:
+ 
+ 	dma_ops_free_addresses(dma_dom, address, pages);
+ 
++	trace_printk("%s: return DMA_ERROR_CODE paddr %llx size %zu\n",
++			dev_name(dev), old_paddr, size);
++
+ 	return DMA_ERROR_CODE;
+ }
+ 
+@@ -2628,6 +2634,8 @@ static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
+ 
+ 	spin_lock_irqsave(&domain->lock, flags);
+ 
++	trace_printk("%s: unmap dma_addr %llx size %zu\n",
++			dev_name(dev), dma_addr, size);
+ 	__unmap_single(domain->priv, dma_addr, size, dir);
+ 
+ 	domain_flush_complete(domain);
+@@ -2683,9 +2691,13 @@ out:
+ 	return mapped_elems;
+ unmap:
+ 	for_each_sg(sglist, s, mapped_elems, i) {
+-		if (s->dma_address)
++		if (s->dma_address) {
++			trace_printk("%s: unmap dma_addr %llx size %u\n",
++					dev_name(dev), s->dma_address,
++					s->dma_length);
+ 			__unmap_single(domain->priv, s->dma_address,
+ 				       s->dma_length, dir);
++		}
+ 		s->dma_address = s->dma_length = 0;
+ 	}
+ 
+@@ -2716,6 +2728,9 @@ static void unmap_sg(struct device *dev, struct scatterlist *sglist,
+ 	spin_lock_irqsave(&domain->lock, flags);
+ 
+ 	for_each_sg(sglist, s, nelems, i) {
++	trace_printk("%s: unmap dma_addr %llx size %u\n",
++			dev_name(dev), s->dma_address, s->dma_length);
++
+ 		__unmap_single(domain->priv, s->dma_address,
+ 			       s->dma_length, dir);
+ 		s->dma_address = s->dma_length = 0;
+@@ -2813,6 +2828,9 @@ static void free_coherent(struct device *dev, size_t size,
+ 
+ 	spin_lock_irqsave(&domain->lock, flags);
+ 
++	trace_printk("%s: unmap dma_addr %llx size %zu\n",
++			dev_name(dev), dma_addr, size);
++
+ 	__unmap_single(domain->priv, dma_addr, size, DMA_BIDIRECTIONAL);
+ 
+ 	domain_flush_complete(domain);
+
+--liOOAslEiF7prFVr--
