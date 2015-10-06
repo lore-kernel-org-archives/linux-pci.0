@@ -1,87 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:44203 "EHLO arroyo.ext.ti.com"
+Received: from foss.arm.com ([217.140.101.70]:53559 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753247AbbJPACo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Oct 2015 20:02:44 -0400
-From: "Kwok, WingMan" <w-kwok2@ti.com>
-To: KISHON VIJAY ABRAHAM <kishon@ti.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-CC: "robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"Quadros, Roger" <rogerq@ti.com>,
-	"Karicheri, Muralidharan" <m-karicheri2@ti.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"ssantosh@kernel.org" <ssantosh@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v1 0/2] Common SerDes driver for TI's Keystone Platforms
-Date: Fri, 16 Oct 2015 00:02:03 +0000
-Message-ID: <230CBA6E4B6B6B418E8730AC28E6FC7E04228E01@DFLE11.ent.ti.com>
-References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com>
- <20151015165105.GE32532@n2100.arm.linux.org.uk> <561FFCD6.7000509@ti.com>
-In-Reply-To: <561FFCD6.7000509@ti.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1753508AbbJFREj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 Oct 2015 13:04:39 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, Mark Rutland <Mark.Rutland@arm.com>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Robin Murphy <robin.murphy@arm.com>
+Subject: [PATCH v2 7/8] PCI: Add per-device MSI domain hook
+Date: Tue,  6 Oct 2015 18:04:02 +0100
+Message-Id: <1444151043-31084-8-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
+References: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS0lTSE9OIFZJ
-SkFZIEFCUkFIQU0NCj4gU2VudDogVGh1cnNkYXksIE9jdG9iZXIgMTUsIDIwMTUgMzoyMiBQTQ0K
-PiBUbzogUnVzc2VsbCBLaW5nIC0gQVJNIExpbnV4OyBLd29rLCBXaW5nTWFuDQo+IENjOiByb2Jo
-K2R0QGtlcm5lbC5vcmc7IHBhd2VsLm1vbGxAYXJtLmNvbTsgbWFyay5ydXRsYW5kQGFybS5jb207
-DQo+IGlqYytkZXZpY2V0cmVlQGhlbGxpb24ub3JnLnVrOyBnYWxha0Bjb2RlYXVyb3JhLm9yZzsg
-UXVhZHJvcywgUm9nZXI7DQo+IEthcmljaGVyaSwgTXVyYWxpZGhhcmFuOyBiaGVsZ2Fhc0Bnb29n
-bGUuY29tOyBzc2FudG9zaEBrZXJuZWwub3JnOw0KPiBkZXZpY2V0cmVlQHZnZXIua2VybmVsLm9y
-ZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtDQo+IHBjaUB2Z2VyLmtlcm5l
-bC5vcmc7IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZw0KPiBTdWJqZWN0OiBS
-ZTogW1BBVENIIHYxIDAvMl0gQ29tbW9uIFNlckRlcyBkcml2ZXIgZm9yIFRJJ3MgS2V5c3RvbmUg
-UGxhdGZvcm1zDQo+IA0KPiBIaSwNCj4gDQo+IE9uIFRodXJzZGF5IDE1IE9jdG9iZXIgMjAxNSAx
-MDoyMSBQTSwgUnVzc2VsbCBLaW5nIC0gQVJNIExpbnV4IHdyb3RlOg0KPiA+IE9uIFRodSwgT2N0
-IDE1LCAyMDE1IGF0IDEwOjI1OjQzQU0gLTA0MDAsIFdpbmdNYW4gS3dvayB3cm90ZToNCj4gPj4g
-T24gVEkncyBLZXlzdG9uZSBwbGF0Zm9ybXMsIHNldmVyYWwgcGVyaXBoZXJhbHMgc3VjaCBhcyB0
-aGUNCj4gPj4gZ2JlIGV0aGVybmV0IHN3aXRjaCwgMTBnYmUgZXRoZXRoZXIgc3dpdGNoIGFuZCBQ
-Q0llIGNvbnRyb2xsZXINCj4gPj4gcmVxdWlyZSB0aGUgdXNlIG9mIGEgU2VyRGVzIGZvciBjb252
-ZXJ0aW5nIFNvQyBwYXJhbGxlbCBkYXRhIGludG8NCj4gPj4gc2VyaWFsaXplZCBkYXRhIHRoYXQg
-Y2FuIGJlIG91dHB1dCBvdmVyIGEgaGlnaC1zcGVlZCBlbGVjdHJpY2FsDQo+ID4+IGludGVyZmFj
-ZSwgYW5kIGFsc28gY29udmVydGluZyBoaWdoLXNwZWVkIHNlcmlhbCBpbnB1dCBkYXRhDQo+ID4+
-IGludG8gcGFyYWxsZWwgZGF0YSB0aGF0IGNhbiBiZSBwcm9jZXNzZWQgYnkgdGhlIFNvQy4gIFRo
-ZQ0KPiA+PiBTZXJEZXNlcyB1c2VkIGJ5IHRob3NlIHBlcmlwaGVyYWxzLCB0aG91Z2ggdGhleSBt
-YXkgYmUgZGlmZmVyZW50LA0KPiA+PiBhcmUgbGFyZ2VseSBzaW1pbGFyIGluIGZ1bmN0aW9uYWxp
-dHkgYW5kIHNldHVwLg0KPiA+DQo+ID4gR2l2ZW4gdGhhdCBzZXJkZXMgaXMgbm90IHNwZWNpZmlj
-IHRvIFRJLCBzaG91bGQgdGhpcyBiZSBzcGVjaWZpYyB0bw0KPiA+IFRJLCBvciBzaG91bGQgdGhl
-cmUgYmUgYW4gZWZmb3J0IHRvIGNvbWUgdXAgd2l0aCBzb21ldGhpbmcgd2hpY2gNCj4gPiBldmVy
-eW9uZSB3aG8gaGFzIHNlcmRlcyBsaW5rcyBjYW4gbWFrZSB1c2Ugb2Y/DQo+ID4NCj4gPiBTZXJk
-ZXMgY29tZXMgaW4gbXVsdGlwbGUgZGlmZmVyZW50IGZvcm1zOiBQQ0llLCAxRyBTR01JSSBldGhl
-cm5ldCwNCj4gPiAxMDAwYmFzZS1YIGV0aGVybmV0LCAxMGcgZXRoZXJuZXQsIFNBVEEuLi4gSSdk
-IGhhdGUgdG8gc2VlIGENCj4gPiBwbGV0aG9yYSBvZiBTb0Mgc3BlY2lmaWMgc3R1ZmYgZm9yIHRo
-aXMuDQo+IA0KPiBHZW5lcmFsbHkgZXZlcnkgU29DIHVzZSBpdCdzIG93biBzZXJkZXMgYW5kIHRo
-ZSBwcm9ncmFtbWluZyByZXF1aXJlZCBpcw0KPiBkaWZmZXJlbnQgZm9yIGRpZmZlcmVudCBTb0Nz
-LiBFYWNoIG9mIHRoZW0gaGF2ZSB0aGVpciBvd24gcmVnaXN0ZXIgbWFwDQo+IGFuZCBjbG9jayBw
-cm9ncmFtbWluZy9yZWd1bGF0b3IgcHJvZ3JhbW1pbmcvcmVzZXQgcHJvZ3JhbW1pbmcgYXJlIGFs
-bA0KPiBkaWZmZXJlbnQuDQo+IA0KPiBIb3dldmVyIG1vc3QgU29DIHZlbmRvcnMgdXNlIHRoZSBz
-YW1lIFBIWS9TZXJEZXMgSVAgdG8gYmUgdXNlZCBieQ0KPiBtdWx0aXBsZSBjb250cm9sbGVycyBs
-aWtlIFBDSWUvU0FUQS9VU0IgaW4gYSBzaW5nbGUgU29DIGFuZCBhIHNpbmdsZSBQSFkNCj4gZHJp
-dmVyIGlzIHVzZWQgZm9yIHByb2dyYW1taW5nIGFsbCB0aGVzZSBQSFlzLg0KPiANCg0KVGhhbmtz
-IHNvIG11Y2ggZm9yIHRoZSBjbGFyaWZpY2F0aW9ucy4NCg0KPiBUaGFua3MNCj4gS2lzaG9uDQo+
-IA0KDQpSZWdhcmRzLA0KV2luZ01hbg0KDQo+ID4NCj4gPiBXaGVuIHNlcmRlcyBpcyBjb21iaW5l
-ZCB3aXRoIFNGUCBjYWdlcywgdGhlIHNpdHVhdGlvbiBiZWNvbWVzIG11Y2gNCj4gPiBtb3JlIGZ1
-biwgYmVjYXVzZSB0aGUgc2VyZGVzIGxpbmsgdGhlbiBuZWVkcyB0byBiZWNvbWUgaG90cGx1Z2dh
-YmxlDQo+ID4gKFNGUCBtb2R1bGVzIGFyZSBkZXNpZ25lZCB0byBiZSBob3RwbHVnZ2VkKSB3aGlj
-aCBtZWFucyB5b3UgaGF2ZSB0bw0KPiA+IGJlIGFibGUgdG8gc3dpdGNoIGJldHdlZW4gKGF0IGxl
-YXN0KSAxRyBTR01JSSBhbmQgMTAwMGJhc2UtWCBtb2RlcywNCj4gPiBhbmQgcHJvYmFibHkgMTBH
-IG1vZGUgYXMgd2VsbC4gIFRoZXJlJ3MgZXZlbiBhIFNGUCBtb2R1bGUgdGhhdCBoYXMNCj4gPiBh
-IFNBVEEgY29ubmVjdG9yIG9uIGl0LCB0aG91Z2ggSSBiZWxpZXZlIHRoZXJlJ3Mgbm8gc3RhbmRh
-cmQgZm9yDQo+ID4gdGhhdCwgYW5kIGl0J3MgbW9yZSBhIGhhcmR3YXJlIGhhY2suDQo+ID4NCj4g
-PiBJJ3ZlIGJlZW4gd29ya2luZyBpbiB0aGlzIGFyZWEgYnV0IGZyb20gdGhlIEV0aGVybmV0IHNp
-ZGUgb24gYW4NCj4gPiBBcm1hZGEgMzh4IGJhc2VkIGJvYXJkIHdoaWNoIGhhcyBhIFNGUCBjYWdl
-IG9uIGl0LCB0aG91Z2ggaXQncw0KPiA+IHNsaWdodGx5IHNpbXBsZXIgdGhlcmUgYmVjYXVzZSB0
-aGVyZSBpcyBubyBzdXBwb3J0IChvciBJIGJlbGlldmUNCj4gPiBhbnkgZGVzaXJlKSB0byByZWNv
-bmZpZ3VyZSB0aGUgc2VyZGVzIGxhbmVzIGJldHdlZW4gUENJLCBldGhlcm5ldA0KPiA+IGFuZCBT
-QVRBIC0gdGhhdCdzIGFsbCBzZXR1cCBhbmQgaW5pdGlhbGlzZWQgZm9yIHVzIGJ5IHVib290Lg0K
-PiA+DQo=
+So far, we have considered that the MSI domain for a device was
+either set via the architecture-dependent pcibios implementation
+or inherited from the host bridge.
+
+As we're about to break that assumption, add pci_dev_msi_domain
+which is the equivalent of pci_host_bridge_msi_domain, but for
+a single device.
+
+Other than moving things around a bit, this patch on its own
+has no effect.
+
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/probe.c | 35 ++++++++++++++++++++++++++++++-----
+ 1 file changed, 30 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8361d27..7c333f8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1622,15 +1622,40 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_enable_acs(dev);
+ }
+ 
++/*
++ * This is the equivalent of pci_host_bridge_msi_domain that acts on
++ * devices. Firmware interfaces that can select the MSI domain on a
++ * per-device basis should be called from here.
++ */
++static struct irq_domain *pci_dev_msi_domain(struct pci_dev *dev)
++{
++	struct irq_domain *d;
++
++	/*
++	 * If a domain has been set through the pcibios_add_device
++	 * callback, then this is the one (platform code knows best).
++	 */
++	d = dev_get_msi_domain(&dev->dev);
++	if (d)
++		return d;
++
++	return NULL;
++}
++
+ static void pci_set_msi_domain(struct pci_dev *dev)
+ {
++	struct irq_domain *d;
++
+ 	/*
+-	 * If no domain has been set through the pcibios_add_device
+-	 * callback, inherit the default from the bus device.
++	 * If the platform or firmware interfaces cannot supply a
++	 * device-specific MSI domain, then inherit the default domain
++	 * from the host bridge itself.
+ 	 */
+-	if (!dev_get_msi_domain(&dev->dev))
+-		dev_set_msi_domain(&dev->dev,
+-				   dev_get_msi_domain(&dev->bus->dev));
++	d = pci_dev_msi_domain(dev);
++	if (!d)
++		d = dev_get_msi_domain(&dev->bus->dev);
++
++	dev_set_msi_domain(&dev->dev, d);
+ }
+ 
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+-- 
+2.1.4
+
