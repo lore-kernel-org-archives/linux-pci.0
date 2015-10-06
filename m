@@ -1,48 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f48.google.com ([209.85.213.48]:33139 "EHLO
-	mail-vk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751058AbbJGWtn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 18:49:43 -0400
+Received: from mail.kernel.org ([198.145.29.136]:60535 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751829AbbJFTga (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 Oct 2015 15:36:30 -0400
+Date: Tue, 6 Oct 2015 14:36:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sasha Levin <sasha.levin@oracle.com>
+Cc: bhelgaas@google.com, prarit@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: prevent out of bounds access in numa_node override
+Message-ID: <20151006193627.GE29420@localhost>
+References: <1443995369-11399-1-git-send-email-sasha.levin@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee>
-References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee>
-Date: Wed, 7 Oct 2015 15:49:42 -0700
-Message-ID: <CAE9FiQXM9YxRwcbG577Pcqmj7YbOa0yk6hYELb2FpTtct5u2jg@mail.gmail.com>
-Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
-From: Yinghai Lu <yinghai@kernel.org>
-To: Meelis Roos <mroos@linux.ee>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443995369-11399-1-git-send-email-sasha.levin@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 7, 2015 at 2:25 AM, Meelis Roos <mroos@linux.ee> wrote:
-> First I noticed that on Sun Netra t1-150 (sparc64 CPU), PCI allocation
-> was failing for qla1280 scsi driver. Reading dmesg uncovered "can't
-> claim BAR" errors. Looking for this in my other test machines I see more
-> of them - on many sparc64 machines and some on x86.
->
-> In another thread for "Resource allocation cleanup for v4.4", Yinghai Lu
-> asked for full dmesg to solve another similar case. So to help
-> understanding this one, here are the dmesgs of my machines:
->
-> sparc64 machines:
->
-> http://kodu.ut.ee/~mroos/dm/dm.t1-105
-> http://kodu.ut.ee/~mroos/dm/dm.t1-200
-> http://kodu.ut.ee/~mroos/dm/dm.v120
-> http://kodu.ut.ee/~mroos/dm/dm.v210
-> http://kodu.ut.ee/~mroos/dm/dm.v240
-> http://kodu.ut.ee/~mroos/dm/dm.sb100
+Hi Sasha,
 
-Please try
+On Sun, Oct 04, 2015 at 05:49:29PM -0400, Sasha Levin wrote:
+> Commit 63692df1 ("PCI: Allow numa_node override via sysfs") didn't check that
+> the numa node provided by userspace is valid. Passing a node number too high
+> would attempt to access invalid memory and trigger a kernel panic.
+> 
+> Fixes: 63692df1 ("PCI: Allow numa_node override via sysfs")
+> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+> ---
+>  drivers/pci/pci-sysfs.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 312f23a..e9abca8 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -216,7 +216,7 @@ static ssize_t numa_node_store(struct device *dev,
+>  	if (ret)
+>  		return ret;
+>  
+> -	if (!node_online(node))
+> +	if (node > MAX_NUMNODES || !node_online(node))
 
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-v4.4-next
+This needs to be "node >= MAX_NUMNODES", doesn't it?  I'll fix it up if
+you agree.
 
-It should fix some "no compatible bridge window"
+Looks like a candidate for stable.
 
-Thanks
-
-Yinghai
+>  		return -EINVAL;
+>  
+>  	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+> -- 
+> 1.7.10.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
