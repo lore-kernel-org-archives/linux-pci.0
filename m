@@ -1,60 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0056.outbound.protection.outlook.com ([157.56.111.56]:10624
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753535AbbJUPxE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Oct 2015 11:53:04 -0400
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
-	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
-	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V4 2/8] device property: Introducing enum dev_dma_attr
-Date: Wed, 21 Oct 2015 08:52:05 -0700
-Message-ID: <1445442731-28819-3-git-send-email-Suravee.Suthikulpanit@amd.com>
-In-Reply-To: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:44727 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753146AbbJFWZg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Oct 2015 18:25:36 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH v3 2/3] PM / PCI / ACPI: Kick devices that might have been reset by firmware
+Date: Wed, 07 Oct 2015 00:50:24 +0200
+Message-ID: <1973640.XGUdor7p6A@vostro.rjw.lan>
+In-Reply-To: <2723857.EVg1dAvTli@vostro.rjw.lan>
+References: <10641052.oOBhM6BU9G@vostro.rjw.lan> <5472042.4c1h9diL7E@vostro.rjw.lan> <2723857.EVg1dAvTli@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A device could have one of the following DMA attributes:
-    * DMA not supported
-    * DMA non-coherent
-    * DMA coherent
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-So, this patch introduces enum dev_dma_attribute. This will be used by
-new APIs introduced in later patches.
+There is a concern that if the platform firmware was involved in
+the system resume that's being completed,  some devices might have
+been reset by it and if those devices had the power.direct_complete
+flag set during the preceding suspend transition, they may stay
+in a reset-power-on state indefinitely (until they are runtime-resumed
+and then suspended again).  That may not be a big deal from the
+individual device's perspective, but if the system is an SoC, it may
+be prevented from entering deep SoC-wide low-power states on idle
+because of that.
 
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-CC: Rafael J. Wysocki <rjw@rjwysocki.net>
-CC: Bjorn Helgaas <bhelgaas@google.com>
+The devices that are most likely to be affected by this issue are
+PCI devices and ACPI-enumerated devices using the general ACPI PM
+domain, so to prevent it from happening for those devices, force a
+runtime resume for them if they have their power.direct_complete
+flags set and the platform firmware was involved in the resume
+transition currently in progress.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- include/linux/property.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/acpi/acpi_lpss.c         |    2 +-
+ drivers/acpi/device_pm.c         |   19 +------------------
+ drivers/base/power/generic_ops.c |   23 +++++++++++++++++++++++
+ drivers/pci/pci-driver.c         |    2 +-
+ include/linux/pm.h               |    2 +-
+ 5 files changed, 27 insertions(+), 21 deletions(-)
 
-diff --git a/include/linux/property.h b/include/linux/property.h
-index a59c6ee..522c1bf 100644
---- a/include/linux/property.h
-+++ b/include/linux/property.h
-@@ -27,6 +27,12 @@ enum dev_prop_type {
- 	DEV_PROP_MAX,
- };
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -963,23 +963,6 @@ int acpi_subsys_prepare(struct device *d
+ EXPORT_SYMBOL_GPL(acpi_subsys_prepare);
  
-+enum dev_dma_attr {
-+	DEV_DMA_NOT_SUPPORTED,
-+	DEV_DMA_NON_COHERENT,
-+	DEV_DMA_COHERENT,
-+};
+ /**
+- * acpi_subsys_complete - Finalize device's resume during system resume.
+- * @dev: Device to handle.
+- */
+-void acpi_subsys_complete(struct device *dev)
+-{
+-	pm_generic_complete(dev);
+-	/*
+-	 * If the device had been runtime-suspended before the system went into
+-	 * the sleep state it is going out of and it has never been resumed till
+-	 * now, resume it in case the firmware powered it up.
+-	 */
+-	if (dev->power.direct_complete)
+-		pm_request_resume(dev);
+-}
+-EXPORT_SYMBOL_GPL(acpi_subsys_complete);
+-
+-/**
+  * acpi_subsys_suspend - Run the device driver's suspend callback.
+  * @dev: Device to handle.
+  *
+@@ -1047,7 +1030,7 @@ static struct dev_pm_domain acpi_general
+ 		.runtime_resume = acpi_subsys_runtime_resume,
+ #ifdef CONFIG_PM_SLEEP
+ 		.prepare = acpi_subsys_prepare,
+-		.complete = acpi_subsys_complete,
++		.complete = pm_complete_with_resume_check,
+ 		.suspend = acpi_subsys_suspend,
+ 		.suspend_late = acpi_subsys_suspend_late,
+ 		.resume_early = acpi_subsys_resume_early,
+Index: linux-pm/drivers/acpi/acpi_lpss.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/acpi_lpss.c
++++ linux-pm/drivers/acpi/acpi_lpss.c
+@@ -664,7 +664,7 @@ static struct dev_pm_domain acpi_lpss_pm
+ #ifdef CONFIG_PM
+ #ifdef CONFIG_PM_SLEEP
+ 		.prepare = acpi_subsys_prepare,
+-		.complete = acpi_subsys_complete,
++		.complete = pm_complete_with_resume_check,
+ 		.suspend = acpi_subsys_suspend,
+ 		.suspend_late = acpi_lpss_suspend_late,
+ 		.resume_early = acpi_lpss_resume_early,
+Index: linux-pm/drivers/base/power/generic_ops.c
+===================================================================
+--- linux-pm.orig/drivers/base/power/generic_ops.c
++++ linux-pm/drivers/base/power/generic_ops.c
+@@ -9,6 +9,7 @@
+ #include <linux/pm.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/export.h>
++#include <linux/suspend.h>
+ 
+ #ifdef CONFIG_PM
+ /**
+@@ -297,4 +298,26 @@ void pm_generic_complete(struct device *
+ 	if (drv && drv->pm && drv->pm->complete)
+ 		drv->pm->complete(dev);
+ }
 +
- bool device_property_present(struct device *dev, const char *propname);
- int device_property_read_u8_array(struct device *dev, const char *propname,
- 				  u8 *val, size_t nval);
--- 
-2.1.0
++/**
++ * pm_complete_with_resume_check - Complete a device power transition.
++ * @dev: Device to handle.
++ *
++ * Complete a device power transition during a system-wide power transition and
++ * optionally schedule a runtime resume of the device if the system resume in
++ * progress has been initated by the platform firmware and the device had its
++ * power.direct_complete flag set.
++ */
++void pm_complete_with_resume_check(struct device *dev)
++{
++	pm_generic_complete(dev);
++	/*
++	 * If the device had been runtime-suspended before the system went into
++	 * the sleep state it is going out of and it has never been resumed till
++	 * now, resume it in case the firmware powered it up.
++	 */
++	if (dev->power.direct_complete && pm_resume_via_firmware())
++		pm_request_resume(dev);
++}
++EXPORT_SYMBOL_GPL(pm_complete_with_resume_check);
+ #endif /* CONFIG_PM_SLEEP */
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -687,7 +687,7 @@ static int pci_pm_prepare(struct device
+ static void pci_pm_complete(struct device *dev)
+ {
+ 	pci_dev_complete_resume(to_pci_dev(dev));
+-	pm_generic_complete(dev);
++	pm_complete_with_resume_check(dev);
+ }
+ 
+ #else /* !CONFIG_PM_SLEEP */
+Index: linux-pm/include/linux/pm.h
+===================================================================
+--- linux-pm.orig/include/linux/pm.h
++++ linux-pm/include/linux/pm.h
+@@ -731,7 +731,7 @@ extern int pm_generic_restore(struct dev
+ extern int pm_generic_poweroff_noirq(struct device *dev);
+ extern int pm_generic_poweroff_late(struct device *dev);
+ extern int pm_generic_poweroff(struct device *dev);
+-extern void pm_generic_complete(struct device *dev);
++extern void pm_complete_with_resume_check(struct device *dev);
+ 
+ #else /* !CONFIG_PM_SLEEP */
+ 
 
