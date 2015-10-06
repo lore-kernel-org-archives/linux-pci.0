@@ -1,87 +1,63 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-Subject: [Patch v7 1/7] ACPI/PCI: Enhance ACPI core to support sparse IO space
-Date: Wed, 14 Oct 2015 14:29:36 +0800
-Message-Id: <1444804182-6596-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, Mark Rutland <Mark.Rutland@arm.com>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Robin Murphy <robin.murphy@arm.com>
+Subject: [PATCH v2 4/8] irqchip/gic-v3-its: Parse new version of msi-parent property
+Date: Tue,  6 Oct 2015 18:03:59 +0100
+Message-Id: <1444151043-31084-5-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
+References: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance ACPI resource parsing interfaces to support sparse IO space,
-which will be used to share common code between x86 and IA64 later.
+Now that 126b16e2ad98 ("Docs: dt: add generic MSI bindings")
+has made it into the tree, the time has come to get rid of the
+old hack, and to parse msi-parent in its full glory.
 
-Tested-by: Tony Luck <tony.luck@intel.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/acpi/resource.c |    9 ++++++---
- include/linux/ioport.h  |    1 +
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/irqchip/irq-gic-v3-its-platform-msi.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 15d22db05054..cdc5c2599beb 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -119,7 +119,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
- 
- static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
--				      u8 io_decode)
-+				      u8 io_decode, u8 translation_type)
+diff --git a/drivers/irqchip/irq-gic-v3-its-platform-msi.c b/drivers/irqchip/irq-gic-v3-its-platform-msi.c
+index a865505..589a532 100644
+--- a/drivers/irqchip/irq-gic-v3-its-platform-msi.c
++++ b/drivers/irqchip/irq-gic-v3-its-platform-msi.c
+@@ -29,13 +29,25 @@ static int its_pmsi_prepare(struct irq_domain *domain, struct device *dev,
  {
- 	res->flags = IORESOURCE_IO;
+ 	struct msi_domain_info *msi_info;
+ 	u32 dev_id;
+-	int ret;
++	int ret, index = 0;
  
-@@ -131,6 +131,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+ 	msi_info = msi_get_domain_info(domain->parent);
  
- 	if (io_decode == ACPI_DECODE_16)
- 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
-+	if (translation_type == ACPI_SPARSE_TRANSLATION)
-+		res->flags |= IORESOURCE_IO_SPARSE;
- }
+ 	/* Suck the DeviceID out of the msi-parent property */
+-	ret = of_property_read_u32_index(dev->of_node, "msi-parent",
+-					 1, &dev_id);
++	do {
++		struct of_phandle_args args;
++
++		ret = of_parse_phandle_with_args(dev->of_node,
++						 "msi-parent", "#msi-cells",
++						 index, &args);
++		if (args.np == domain->of_node) {
++			if (WARN_ON(args.args_count != 1))
++				return -EINVAL;
++			dev_id = args.args[0];
++			break;
++		}
++	} while (!ret);
++
+ 	if (ret)
+ 		return ret;
  
- static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
-@@ -138,7 +140,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
- {
- 	res->start = start;
- 	res->end = start + len - 1;
--	acpi_dev_ioresource_flags(res, len, io_decode);
-+	acpi_dev_ioresource_flags(res, len, io_decode, 0);
- }
- 
- /**
-@@ -231,7 +233,8 @@ static bool acpi_decode_space(struct resource_win *win,
- 		acpi_dev_memresource_flags(res, len, wp);
- 		break;
- 	case ACPI_IO_RANGE:
--		acpi_dev_ioresource_flags(res, len, iodec);
-+		acpi_dev_ioresource_flags(res, len, iodec,
-+					  addr->info.io.translation_type);
- 		break;
- 	case ACPI_BUS_NUMBER_RANGE:
- 		res->flags = IORESOURCE_BUS;
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 388e3ae94f7a..24bea087e7af 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -94,6 +94,7 @@ struct resource {
- /* PnP I/O specific bits (IORESOURCE_BITS) */
- #define IORESOURCE_IO_16BIT_ADDR	(1<<0)
- #define IORESOURCE_IO_FIXED		(1<<1)
-+#define IORESOURCE_IO_SPARSE		(1<<2)
- 
- /* PCI ROM control bits (IORESOURCE_BITS) */
- #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
 -- 
-1.7.10.4
+2.1.4
 
