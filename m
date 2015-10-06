@@ -1,99 +1,74 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
-	will.deacon@arm.com, hanjun.guo@linaro.org,
-	thomas.lendacky@amd.com, herbert@gondor.apana.org.au,
-	davem@davemloft.net, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V4 0/8] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
-Date: Tue, 27 Oct 2015 16:27:26 +0100
-Message-ID: <24127028.eJSjD1i70u@vostro.rjw.lan>
-In-Reply-To: <20151027145249.GE8660@localhost>
-References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com> <20151027145249.GE8660@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, Mark Rutland <Mark.Rutland@arm.com>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Robin Murphy <robin.murphy@arm.com>
+Subject: [PATCH v2 3/8] PCI/MSI: Use of_msi_get_domain instead of open-coded "msi-parent" parsing
+Date: Tue,  6 Oct 2015 18:03:58 +0100
+Message-Id: <1444151043-31084-4-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
+References: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, October 27, 2015 09:52:50 AM Bjorn Helgaas wrote:
-> Hi Suravee,
-> 
-> On Wed, Oct 21, 2015 at 08:52:03AM -0700, Suravee Suthikulpanit wrote:
-> > This patch series adds support to setup DMA coherency for PCI device using
-> > the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
-> > is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
-> > support for ARM64 which is currently in development.  Also, this should
-> > not affect other architectures that does not define 
-> > CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
-> > 
-> > In the process, this series also introduces enum dev_dma_attr and a set
-> > of APIs to query device DMA attribute. These APIs replace the obsolete
-> > device_dma_is_coherent(), and acpi_check_dma().
-> > 
-> > I have also included a patch from Jeremy posted here:
-> >     http://www.spinics.net/lists/linux-usb/msg128582.html
-> > 
-> > This patch series  has been tested on AMD Seattle RevB platform.
-> > The git tree containing tested code and pre-req patches are posted here:
-> > 
-> >     http://github.com/ssuthiku/linux.git pci-cca-v4
-> > 
-> > Changes from V3: (https://lkml.org/lkml/2015/8/26/389)
-> >     * Clean up suggested by Bjorn
-> >     * Introduce enum dev_dma_attr
-> >     * Replace device_dma_is_coherent() and acpi_check_dma() with
-> >       new APIs.
-> > 
-> > Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
-> >     * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
-> >     * Add WARN() when fail to setup DMA for PCI device when booting
-> >       ACPI (per Arnd's suggestion)
-> >     * Added Acked-by from Rob.
-> >     * Minor clean up
-> > 
-> > Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
-> >     * Include patch 1 from Jeremy to enable support for _CCA=0
-> >     * Clean up acpi_check_dma() per Bjorn suggestions
-> >     * Split the original V1 patch into two patches (patch 3 and 4)
-> > 
-> > Jeremy Linton (1):
-> >   Honor ACPI _CCA attribute setting
-> > 
-> > Suravee Suthikulpanit (7):
-> >   device property: Introducing enum dev_dma_attr
-> >   acpi: Adding DMA Attribute APIs for ACPI Device
-> >   device property: Adding DMA Attribute APIs for Generic Devices
-> >   device property: acpi: Make use of the new DMA Attribute APIs
-> >   device property: acpi: Remove unused DMA APIs
-> >   PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
-> >   PCI: ACPI: Add support for PCI device DMA coherency
-> > 
-> >  drivers/acpi/acpi_platform.c              |  7 +++++-
-> >  drivers/acpi/glue.c                       |  8 +++---
-> >  drivers/acpi/scan.c                       | 42 +++++++++++++++++++++++++++++++
-> >  drivers/base/property.c                   | 32 +++++++++++++++++------
-> >  drivers/crypto/ccp/ccp-platform.c         |  9 ++++++-
-> >  drivers/net/ethernet/amd/xgbe/xgbe-main.c |  9 ++++++-
-> >  drivers/of/of_pci.c                       | 20 ---------------
-> >  drivers/pci/probe.c                       | 36 ++++++++++++++++++++++++--
-> >  include/acpi/acpi_bus.h                   | 36 +++-----------------------
-> >  include/linux/acpi.h                      |  7 +++++-
-> >  include/linux/of_pci.h                    |  3 ---
-> >  include/linux/property.h                  | 10 +++++++-
-> >  12 files changed, 145 insertions(+), 74 deletions(-)
-> 
-> I had a couple minor comments.  It's sort of a toss-up, but this feels
-> more ACPI-flavored than PCI, so I assume Rafael will take this whole
-> series unless I hear otherwise.
+Now that we have a function that implements the complexity of the
+"msi-parent" property parsing, switch to that.
 
-I'll do that.
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/of.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Thanks for the help with reviewing this!
-
-Rafael
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index 2e99a50..e112da1 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -13,6 +13,7 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/of.h>
++#include <linux/of_irq.h>
+ #include <linux/of_pci.h>
+ #include "pci.h"
+ 
+@@ -64,27 +65,25 @@ struct device_node * __weak pcibios_get_phb_of_node(struct pci_bus *bus)
+ struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus)
+ {
+ #ifdef CONFIG_IRQ_DOMAIN
+-	struct device_node *np;
+ 	struct irq_domain *d;
+ 
+ 	if (!bus->dev.of_node)
+ 		return NULL;
+ 
+ 	/* Start looking for a phandle to an MSI controller. */
+-	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
++	d = of_msi_get_domain(&bus->dev, bus->dev.of_node, DOMAIN_BUS_PCI_MSI);
++	if (d)
++		return d;
+ 
+ 	/*
+ 	 * If we don't have an msi-parent property, look for a domain
+ 	 * directly attached to the host bridge.
+ 	 */
+-	if (!np)
+-		np = bus->dev.of_node;
+-
+-	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
++	d = irq_find_matching_host(bus->dev.of_node, DOMAIN_BUS_PCI_MSI);
+ 	if (d)
+ 		return d;
+ 
+-	return irq_find_host(np);
++	return irq_find_host(bus->dev.of_node);
+ #else
+ 	return NULL;
+ #endif
+-- 
+2.1.4
 
