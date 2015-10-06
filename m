@@ -1,120 +1,144 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Josef Bacik <jbacik@fb.com>
-To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>, <bhelgaas@google.com>, <shli@fb.com>,
-	<kernel-team@fb.com>
-Subject: [RFC][PATCH] pci: completely disable aspm if it's unsupported
-Date: Fri, 30 Oct 2015 11:47:41 -0400
-Message-ID: <1446220061-28570-1-git-send-email-jbacik@fb.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:54897 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753153AbbJFWZ3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Oct 2015 18:25:29 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH v3 1/3] PM / sleep: Add flags to indicate platform firmware involvement
+Date: Wed, 07 Oct 2015 00:49:34 +0200
+Message-ID: <3703527.UxzUnnSz5F@vostro.rjw.lan>
+In-Reply-To: <2723857.EVg1dAvTli@vostro.rjw.lan>
+References: <10641052.oOBhM6BU9G@vostro.rjw.lan> <5472042.4c1h9diL7E@vostro.rjw.lan> <2723857.EVg1dAvTli@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We have some hardware that takes about 30 seconds to setup common clocks for
-ASPM, but our bios'es don't actually allow ASPM.  It seems we had this thing in
-place where we would disable ASPM after the pci bus probe so that we would make
-sure that pre pcie 1.1 devices would be properly skipped during initialization.
-This is because the mechanism to disable ASPM doesn't actually disable the
-setting up of the link state stuff, it just keeps us from changing the link
-state after the fact.  So instead make it so that when we call pcie_no_aspm()
-that we disable ASPM completley, that is we skip setting up the link state and
-everything.  This way we avoid the costly setup for a feature we cannot support
-in the first place and we also make sure we are safe from future tampering with
-the ASPM link state.  Thanks,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Josef Bacik <jbacik@fb.com>
+There are quite a few cases in which device drivers, bus types or
+even the PM core itself may benefit from knowing whether or not
+the platform firmware will be involved in the upcoming system power
+transition (during system suspend) or whether or not it was involved
+in it (during system resume).
+
+For this reason, introduce global system suspend flags that can be
+used by the platform code to expose that information for the benefit
+of the other parts of the kernel and make the ACPI core set them
+as appropriate.
+
+Users of the new flags will be added later.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/acpi/pci_root.c | 22 +++++-----------------
- drivers/pci/pcie/aspm.c |  1 +
- 2 files changed, 6 insertions(+), 17 deletions(-)
+ drivers/acpi/sleep.c    |    3 +++
+ include/linux/suspend.h |   36 ++++++++++++++++++++++++++++++++++++
+ kernel/power/suspend.c  |    4 ++++
+ 3 files changed, 43 insertions(+)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 393706a..00e164a 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -419,7 +419,7 @@ out:
- }
- EXPORT_SYMBOL(acpi_pci_osc_control_set);
+Index: linux-pm/include/linux/suspend.h
+===================================================================
+--- linux-pm.orig/include/linux/suspend.h
++++ linux-pm/include/linux/suspend.h
+@@ -202,6 +202,36 @@ struct platform_freeze_ops {
+ extern void suspend_set_ops(const struct platform_suspend_ops *ops);
+ extern int suspend_valid_only_mem(suspend_state_t state);
  
--static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
-+static void negotiate_os_control(struct acpi_pci_root *root)
- {
- 	u32 support, control, requested;
- 	acpi_status status;
-@@ -456,7 +456,7 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- 	if (ACPI_FAILURE(status)) {
- 		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
- 			 acpi_format_exception(status));
--		*no_aspm = 1;
-+		pcie_no_aspm();
- 		return;
++extern unsigned int pm_suspend_global_flags;
++
++#define PM_SUSPEND_FLAG_FW_SUSPEND	(1 << 0)
++#define PM_SUSPEND_FLAG_FW_RESUME	(1 << 1)
++
++static inline void pm_suspend_clear_flags(void)
++{
++	pm_suspend_global_flags = 0;
++}
++
++static inline void pm_set_suspend_via_firmware(void)
++{
++	pm_suspend_global_flags |= PM_SUSPEND_FLAG_FW_SUSPEND;
++}
++
++static inline void pm_set_resume_via_firmware(void)
++{
++	pm_suspend_global_flags |= PM_SUSPEND_FLAG_FW_RESUME;
++}
++
++static inline bool pm_suspend_via_firmware(void)
++{
++	return !!(pm_suspend_global_flags & PM_SUSPEND_FLAG_FW_SUSPEND);
++}
++
++static inline bool pm_resume_via_firmware(void)
++{
++	return !!(pm_suspend_global_flags & PM_SUSPEND_FLAG_FW_RESUME);
++}
++
+ /* Suspend-to-idle state machnine. */
+ enum freeze_state {
+ 	FREEZE_STATE_NONE,      /* Not suspended/suspending. */
+@@ -241,6 +271,12 @@ extern int pm_suspend(suspend_state_t st
+ #else /* !CONFIG_SUSPEND */
+ #define suspend_valid_only_mem	NULL
+ 
++static inline void pm_suspend_clear_flags(void) {}
++static inline void pm_set_suspend_via_firmware(void) {}
++static inline void pm_set_resume_via_firmware(void) {}
++static inline bool pm_suspend_via_firmware(void) { return false; }
++static inline bool pm_resume_via_firmware(void) { return false; }
++
+ static inline void suspend_set_ops(const struct platform_suspend_ops *ops) {}
+ static inline int pm_suspend(suspend_state_t state) { return -ENOSYS; }
+ static inline bool idle_should_freeze(void) { return false; }
+Index: linux-pm/kernel/power/suspend.c
+===================================================================
+--- linux-pm.orig/kernel/power/suspend.c
++++ linux-pm/kernel/power/suspend.c
+@@ -35,6 +35,9 @@
+ const char *pm_labels[] = { "mem", "standby", "freeze", NULL };
+ const char *pm_states[PM_SUSPEND_MAX];
+ 
++unsigned int pm_suspend_global_flags;
++EXPORT_SYMBOL_GPL(pm_suspend_global_flags);
++
+ static const struct platform_suspend_ops *suspend_ops;
+ static const struct platform_freeze_ops *freeze_ops;
+ static DECLARE_WAIT_QUEUE_HEAD(suspend_freeze_wait_head);
+@@ -493,6 +496,7 @@ static int enter_state(suspend_state_t s
+ #endif
+ 
+ 	pr_debug("PM: Preparing system for sleep (%s)\n", pm_states[state]);
++	pm_suspend_clear_flags();
+ 	error = suspend_prepare(state);
+ 	if (error)
+ 		goto Unlock;
+Index: linux-pm/drivers/acpi/sleep.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/sleep.c
++++ linux-pm/drivers/acpi/sleep.c
+@@ -487,6 +487,8 @@ static int acpi_suspend_begin(suspend_st
+ 		pr_err("ACPI does not support sleep state S%u\n", acpi_state);
+ 		return -ENOSYS;
  	}
++	if (acpi_state > ACPI_STATE_S1)
++		pm_set_suspend_via_firmware();
  
-@@ -495,22 +495,14 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- 			 * intact and prevent the OS from touching it.
- 			 */
- 			dev_info(&device->dev, "FADT indicates ASPM is unsupported, using BIOS configuration\n");
--			*no_aspm = 1;
-+			pcie_no_aspm();
- 		}
- 	} else {
- 		decode_osc_control(root, "OS requested", requested);
- 		decode_osc_control(root, "platform willing to grant", control);
- 		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
- 			acpi_format_exception(status));
--
--		/*
--		 * We want to disable ASPM here, but aspm_disabled
--		 * needs to remain in its state from boot so that we
--		 * properly handle PCIe 1.1 devices.  So we set this
--		 * flag here, to defer the action until after the ACPI
--		 * root scan.
--		 */
--		*no_aspm = 1;
-+		pcie_no_aspm();
+ 	acpi_pm_start(acpi_state);
+ 	return 0;
+@@ -522,6 +524,7 @@ static int acpi_suspend_enter(suspend_st
+ 		if (error)
+ 			return error;
+ 		pr_info(PREFIX "Low-level resume complete\n");
++		pm_set_resume_via_firmware();
+ 		break;
  	}
- }
- 
-@@ -522,7 +514,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	int result;
- 	struct acpi_pci_root *root;
- 	acpi_handle handle = device->handle;
--	int no_aspm = 0;
- 	bool hotadd = system_state != SYSTEM_BOOTING;
- 
- 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
-@@ -581,7 +572,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 
- 	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
- 
--	negotiate_os_control(root, &no_aspm);
-+	negotiate_os_control(root);
- 
- 	/*
- 	 * TBD: Need PCI interface for enumeration/configuration of roots.
-@@ -604,9 +595,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 		goto remove_dmar;
- 	}
- 
--	if (no_aspm)
--		pcie_no_aspm();
--
- 	pci_acpi_add_bus_pm_notifier(device);
- 	if (device->wakeup.flags.run_wake)
- 		device_set_run_wake(root->bus->bridge, true);
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 317e355..5f84af2 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -954,6 +954,7 @@ void pcie_no_aspm(void)
- 	if (!aspm_force) {
- 		aspm_policy = POLICY_DEFAULT;
- 		aspm_disabled = 1;
-+		aspm_support_enabled = false;
- 	}
- }
- 
--- 
-2.1.0
+ 	trace_suspend_resume(TPS("acpi_suspend"), acpi_state, false);
 
