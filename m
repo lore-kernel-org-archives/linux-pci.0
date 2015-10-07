@@ -1,146 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:36542 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbbJ1VhT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2015 17:37:19 -0400
-Subject: Re: [PATCH 2/5] iov: Reset resources to 0 if totalVFs increases after
- enabling ARI
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20151027204607.14626.59671.stgit@localhost.localdomain>
- <20151027205221.14626.8940.stgit@localhost.localdomain>
- <20151028163747.GA29223@localhost> <563114AE.7050505@gmail.com>
- <20151028195259.GA13864@localhost>
-Cc: Alexander Duyck <aduyck@mirantis.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Ben Shelton <benjamin.h.shelton@intel.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <5631400D.30608@gmail.com>
-Date: Wed, 28 Oct 2015 14:37:17 -0700
+Received: from mout.kundenserver.de ([212.227.126.131]:52039 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752414AbbJGUF7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 16:05:59 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Krzysztof =?utf-8?B?SGHFgmFzYQ==?= <khalasa@piap.pl>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v2] ARM: cns3xxx: pci: avoid potential stack overflow
+Date: Wed, 07 Oct 2015 22:05:49 +0200
+Message-ID: <12713701.B4epxIQJNF@wuerfel>
+In-Reply-To: <201510072201.51697.arnd@arndb.de>
+References: <2273145.0Ls8cProhs@wuerfel> <m3fv6i8qnh.fsf@t19.piap.pl> <201510072201.51697.arnd@arndb.de>
 MIME-Version: 1.0
-In-Reply-To: <20151028195259.GA13864@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/28/2015 12:52 PM, Bjorn Helgaas wrote:
-> On Wed, Oct 28, 2015 at 11:32:14AM -0700, Alexander Duyck wrote:
->> On 10/28/2015 09:37 AM, Bjorn Helgaas wrote:
->>> Hi Alex,
->>>
->>> On Tue, Oct 27, 2015 at 01:52:21PM -0700, Alexander Duyck wrote:
->>>> This patch forces us to reallocate VF BARs if the totalVFs value has
->>>> increased after enabling ARI.  This normally shouldn't occur, however I
->>>> have seen some non-spec devices that shift between 7 and some value greater
->>>> than 7 based on the ARI value and we want to avoid triggering any issues
->>>> with such devices.
->>>
->>> Can you include specifics about the devices?  The value "7" is pretty
->>> specific, so if we're going to include that level of detail, we should
->>> have the actual device info to go with it.
->>
->> I referenced 7 as that is the largest number of VFs a single
->> function can support assuming a single function without ARI and
->> without the ability to handle Type 1 configuration requests.  The
->> Intel fm10k driver has logic in it that does a check for ARI and if
->> it is supported it reports via sysfs a totalVFs of 64, otherwise it
->> limits the totalVFs reported to 7.  However, I don't believe it
->> exposes the limitation via the configuration space.
->
-> Ah, OK, that makes sense.
->
->>> I guess the problem is:
->>>
->>>    - Device supports 7 TotalVFs with ARI disabled, >7 with ARI enabled
->>>    - Firmware leaves ARI disabled in SRIOV_CTRL
->>>    - Firmware computes size based on 7 VFs
->>>    - Firmware allocates space and programs BARs for 7 VFs
->>>    - Linux enables ARI, reads >7 TotalVFs
->>>    - Linux computes size based on >7 VFs
->>>    - Increased size may overlap other resources
->>>
->>> Right?
->>
->> Right.  More than likely what will happen is that you will see
->> overlap of the device on itself if it has multiple base address
->> registers assigned to the VFs.
->>
->>>> Fixes: 3aa71da412fe ("PCI: Enable SR-IOV ARI Capable Hierarchy before reading TotalVFs")
->>>> Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
->>>> ---
->>>>   drivers/pci/iov.c |   11 ++++++++++-
->>>>   1 file changed, 10 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>>> index 099050d78a39..238950412de0 100644
->>>> --- a/drivers/pci/iov.c
->>>> +++ b/drivers/pci/iov.c
->>>> @@ -393,7 +393,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
->>>>   	int rc;
->>>>   	int nres;
->>>>   	u32 pgsz;
->>>> -	u16 ctrl, total;
->>>> +	u16 ctrl, total, orig_total;
->>>>   	struct pci_sriov *iov;
->>>>   	struct resource *res;
->>>>   	struct pci_dev *pdev;
->>>> @@ -402,6 +402,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
->>>>   	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
->>>>   		return -ENODEV;
->>>>
->>>> +	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &orig_total);
->>>>   	pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl);
->>>>   	if (ctrl & PCI_SRIOV_CTRL_VFE) {
->>>>   		pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, 0);
->>>> @@ -450,6 +451,14 @@ found:
->>>>   		}
->>>>   		iov->barsz[i] = resource_size(res);
->>>>   		res->end = res->start + resource_size(res) * total - 1;
->>>> +
->>>> +		/* force reallocation of BARs if total VFs increased */
->>>> +		if (orig_total < total) {
->>>> +			res->flags |= IORESOURCE_UNSET;
->>>> +			res->end -= res->start;
->>>> +			res->start = 0;
->>>> +		}
->>>
->>> Two thoughts here:
->>>
->>> 1) Even if the required space increased, it's possible that firmware
->>> placed the BAR somewhere where the extra space is available.  In that
->>> case, this forces reallocation unnecessarily.
->>
->> I'd say it is possible, but not likely.  From past experience I have
->> seen BIOSes do some very dumb things when it comes to SR-IOV,
->> assuming they even support it.
->>
->> In addition many of the VF devices out there support more than one
->> base address register per function.  The Intel NICs for example have
->> one for device registers and one for MSI-X registers.  And most
->> BIOSes usually pack one right after the other from what I have seen.
->> So while there may be more space there what usually happens is that
->> the MSI-X region will have to be relocated in order to make room for
->> expanding the other base address register.
->>
->> My last bit on all this is that VFs are meant to be assigned into
->> guests.  I would argue that for the sake of security we are much
->> better off invalidating the VF base address registers and forcing a
->> reallocation if there is even a risk of the VF base address register
->> space overlapping with some other piece of host memory.  We don't
->> want to risk possibly exposing any bits of the host that we didn't
->> intend on.
->
-> Agreed, not likely for several reasons.
->
->>> 2) This *feels* like something the PCI core should be doing anyway,
->>> even without any help here.  Shouldn't we fail in pci_claim_resource()
->>> and set IORESOURCE_UNSET there?
->
-> This is really the core of my question -- what problem does this patch
-> solve?  I'm trying to figure out if delaying the read of TotalVFs
-> until after we set ARI Capable Hierarchy is sufficient, and if it's
-> not sufficient, *why* not?
+The cns3xxx_pcie_hw_init function uses excessive kernel
+stack space because of a hack that puts a fake struct
+pci_sys_data and struct pci_bus on the stack in order to
+call the generic pci_bus_read_config accessors, which causes
+a warning in ARM allmodconfig builds:
 
-I suppose you have a point.  As long as the PCI core is taking care of 
-any overlaps in pci_claim_resource that is probably good enough.
+arch/arm/mach-cns3xxx/pcie.c:266:1: warning: the frame size of 1080 bytes is larger than 1024 bytes
 
-- Alex
+I've spent a few hours trying to find out what exactly this
+code is wants to achieve here. The obvious part is setting
+up the host_regs using config space accessors, and this can
+simply be changed to use direct MMIO accesses, as I do
+in this patch.
+
+The second part is how the driver sets up the Max_Read_Request_Size
+value for the first device/function on bus 1, i.e. the device
+plugged directly into the PCIe root port.
+For all I can tell, this is in fact incomplete, as it does not
+perform the same setting on devices attached to a PCIe switch,
+or multi-function devices.
+The solution for this part fortunately is even easier: if we
+just set the global pcie_bus_config variable to PCIE_BUS_PEER2PEER,
+all PCIe devices in the system are limited to 128 byte MPS, which
+in turn limits the MRRS to 128 bytes for all devices, and we
+no longer even need to touch any devices.
+
+With those two changes in place, we no longer need the fake
+pci_sys_data/pci_bus structures for faking config space writes,
+and the stack usage goes down as well.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+New approach based on Krzysztof's feedback about the previous version,
+should be cleaner now, but still needs critical review
+
+ arch/arm/mach-cns3xxx/pcie.c | 71 +++++++++++++++++++++++++++++----------------------------------------
+ 1 file changed, 30 insertions(+), 41 deletions(-)
+
+diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
+index c622c306c390..47905a50e075 100644
+--- a/arch/arm/mach-cns3xxx/pcie.c
++++ b/arch/arm/mach-cns3xxx/pcie.c
+@@ -65,8 +65,9 @@ static void __iomem *cns3xxx_pci_map_bus(struct pci_bus *bus,
+ 
+ 	/*
+ 	 * The CNS PCI bridge doesn't fit into the PCI hierarchy, though
+-	 * we still want to access it. For this to work, we must place
+-	 * the first device on the same bus as the CNS PCI bridge.
++	 * we still want to access it.
++	 * We place the host bridge on bus 0, and the directly connected
++	 * device on bus 1, slot 0.
+ 	 */
+ 	if (busno == 0) { /* internal PCIe bus, host bridge device */
+ 		if (devfn == 0) /* device# and function# are ignored by hw */
+@@ -211,58 +212,46 @@ static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
+ 	}
+ }
+ 
++static void cns3xxx_write_config(struct cns3xxx_pcie *cnspci,
++					 int where, int size, u32 val)
++{
++	void __iomem *base = cnspci->host_regs + (where & 0xffc);
++	u32 v;
++	u32 mask = (0x1ull << (size * 8)) - 1;
++	int shift = (where % 4) * 8;
++
++	v = readl_relaxed(base + (where & 0xffc));
++
++	v &= ~(mask << shift);
++	v |= (val & mask) << shift;
++
++	writel_relaxed(v, base + (where & 0xffc));
++	readl_relaxed(base + (where & 0xffc));
++}
++
+ static void __init cns3xxx_pcie_hw_init(struct cns3xxx_pcie *cnspci)
+ {
+-	int port = cnspci->port;
+-	struct pci_sys_data sd = {
+-		.private_data = cnspci,
+-	};
+-	struct pci_bus bus = {
+-		.number = 0,
+-		.ops = &cns3xxx_pcie_ops,
+-		.sysdata = &sd,
+-	};
+ 	u16 mem_base  = cnspci->res_mem.start >> 16;
+ 	u16 mem_limit = cnspci->res_mem.end   >> 16;
+ 	u16 io_base   = cnspci->res_io.start  >> 16;
+ 	u16 io_limit  = cnspci->res_io.end    >> 16;
+-	u32 devfn = 0;
+-	u8 tmp8;
+-	u16 pos;
+-	u16 dc;
+-
+-	pci_bus_write_config_byte(&bus, devfn, PCI_PRIMARY_BUS, 0);
+-	pci_bus_write_config_byte(&bus, devfn, PCI_SECONDARY_BUS, 1);
+-	pci_bus_write_config_byte(&bus, devfn, PCI_SUBORDINATE_BUS, 1);
+ 
+-	pci_bus_read_config_byte(&bus, devfn, PCI_PRIMARY_BUS, &tmp8);
+-	pci_bus_read_config_byte(&bus, devfn, PCI_SECONDARY_BUS, &tmp8);
+-	pci_bus_read_config_byte(&bus, devfn, PCI_SUBORDINATE_BUS, &tmp8);
+-
+-	pci_bus_write_config_word(&bus, devfn, PCI_MEMORY_BASE, mem_base);
+-	pci_bus_write_config_word(&bus, devfn, PCI_MEMORY_LIMIT, mem_limit);
+-	pci_bus_write_config_word(&bus, devfn, PCI_IO_BASE_UPPER16, io_base);
+-	pci_bus_write_config_word(&bus, devfn, PCI_IO_LIMIT_UPPER16, io_limit);
++	cns3xxx_write_config(cnspci, PCI_PRIMARY_BUS, 1, 0);
++	cns3xxx_write_config(cnspci, PCI_SECONDARY_BUS, 1, 1);
++	cns3xxx_write_config(cnspci, PCI_SUBORDINATE_BUS, 1, 1);
++	cns3xxx_write_config(cnspci, PCI_MEMORY_BASE, 2, mem_base);
++	cns3xxx_write_config(cnspci, PCI_MEMORY_LIMIT, 2, mem_limit);
++	cns3xxx_write_config(cnspci, PCI_IO_BASE_UPPER16, 2, io_base);
++	cns3xxx_write_config(cnspci, PCI_IO_LIMIT_UPPER16, 2, io_limit);
+ 
+ 	if (!cnspci->linked)
+ 		return;
+ 
+ 	/* Set Device Max_Read_Request_Size to 128 byte */
+-	bus.number = 1; /* directly connected PCIe device */
+-	devfn = PCI_DEVFN(0, 0);
+-	pos = pci_bus_find_capability(&bus, devfn, PCI_CAP_ID_EXP);
+-	pci_bus_read_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, &dc);
+-	if (dc & PCI_EXP_DEVCTL_READRQ) {
+-		dc &= ~PCI_EXP_DEVCTL_READRQ;
+-		pci_bus_write_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, dc);
+-		pci_bus_read_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, &dc);
+-		if (dc & PCI_EXP_DEVCTL_READRQ)
+-			pr_warn("PCIe: Unable to set device Max_Read_Request_Size\n");
+-		else
+-			pr_info("PCIe: Max_Read_Request_Size set to 128 bytes\n");
+-	}
++	pcie_bus_config = PCIE_BUS_PEER2PEER;
++
+ 	/* Disable PCIe0 Interrupt Mask INTA to INTD */
+-	__raw_writel(~0x3FFF, MISC_PCIE_INT_MASK(port));
++	__raw_writel(~0x3FFF, MISC_PCIE_INT_MASK(cnspci->port));
+ }
+ 
+ static int cns3xxx_pcie_abort_handler(unsigned long addr, unsigned int fsr,
+
