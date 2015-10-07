@@ -1,46 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:38481 "EHLO theia.8bytes.org"
+Received: from mga11.intel.com ([192.55.52.93]:30414 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757232AbbJIO7w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Oct 2015 10:59:52 -0400
-Date: Fri, 9 Oct 2015 16:59:51 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: Mikulas Patocka <mpatocka@redhat.com>,
-	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
-	Christoph Hellwig <hch@lst.de>,
-	device-mapper development <dm-devel@redhat.com>,
-	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
- READ FPDMA QUEUED errors since Linux 4.0
-Message-ID: <20151009145951.GC27420@8bytes.org>
-References: <20151006101356.GE12506@8bytes.org>
- <56141507.7040103@maya.org>
- <56148A1B.5060506@maya.org>
- <20151007161022.GI28811@8bytes.org>
- <56154DEA.5050901@maya.org>
- <20151008163957.GK28811@8bytes.org>
- <5616B436.1000802@maya.org>
- <5616C998.1010309@maya.org>
- <56174EA6.7000106@maya.org>
- <56178599.6010807@maya.org>
+	id S1752657AbbJGAVD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 Oct 2015 20:21:03 -0400
+Date: Wed, 7 Oct 2015 00:21:02 +0000 (UTC)
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Keith Busch <keith.busch@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device
+ driver
+In-Reply-To: <20151006231412.GF29420@localhost>
+Message-ID: <alpine.LNX.2.00.1510062331220.23840@localhost.lm.intel.com>
+References: <1443721454-25467-1-git-send-email-keith.busch@intel.com> <20151006231412.GF29420@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56178599.6010807@maya.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 09, 2015 at 11:15:05AM +0200, Andreas Hartmann wrote:
-> v4.3-rc4 isn't usable at all for me as long as is hangs the machine on
-> the necessary PCI passthrough for VMs (I need them).
+Hi Bjorn,
 
-If the fix I just sent you works, could you please test this again with
-a (patched) v4.3-rc4 kernel?
+Thanks for the feedback. Much of the issues you mentioned look pretty
+straight forward to resolve, and will fix of for the next revision.
 
+I have some immediate follow up comments to two issues you brought up:
 
-Thanks,
+On Tue, 6 Oct 2015, Bjorn Helgaas wrote:
+>> +static int vmd_find_free_domain(void)
+>> +{
+>> +	int domain = -1;
+>> +	struct pci_bus *bus = NULL;
+>> +
+>> +	while ((bus = pci_find_next_bus(bus)) != NULL)
+>> +		domain = max_t(int, domain, pci_domain_nr(bus));
+>> +	if (domain < 0)
+>> +		return -ENODEV;
+>> +	return domain + 1;
+>> +}
+>
+> The PCI core should own domain number allocation.  We have a little
+> bit of generic domain support, e.g., pci_get_new_domain_nr().  On x86,
+> I think that is compiled-in, but currently not used -- currently x86
+> only uses _SEG from ACPI.  How would you handle collisions between a
+> domain number assigned here (or via pci_get_new_domain_nr()) and a
+> hot-added host bridge where _SEG uses the same domain?
 
-	Joerg
+Thank you for bringing this up as I hadn't thought much about it and may
+have misunderstood the meaning of _SEG. AIUI, it is used to identify a
+logical grouping. The OS does not need to use the same identifier for
+the domain, so we there's no need to collide if we can assign the domain
+of a a new _SEG to the next available domain_nr.
 
+On pci_get_new_domain_nr(), can we make this use something like an
+ida instead of an atomic? I think we'd like to put domains back into
+the available pool if someone unbinds it. I imagine someone will test
+unbinding/rebinding these devices in a loop for a while, and will file
+a bug after the atomic increments to 64k. :)
+
+>> +	resource_list_for_each_entry(entry, &resources) {
+>> +		struct resource *source, *resource = entry->res;
+>> +
+>> +		if (!i) {
+>> +			resource->start = 0;
+>> +			resource->end = (resource_size(
+>> +					&vmd->dev->resource[0]) >> 20) - 1;
+>> +			resource->flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED;
+>
+> I thought BAR0 was CFGBAR.  I missed the connection to a bus number
+> aperture.
+
+Right, BAR0 is the CFGBAR and is the device's aperture to access its
+domain's config space. Based on your comment, I assume that's not
+a bus resource, though it seems to work with the posted code. :)
