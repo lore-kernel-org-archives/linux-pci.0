@@ -1,112 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34970 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962AbbJ2D3g (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2015 23:29:36 -0400
-Received: by pasz6 with SMTP id z6so26317710pas.2
-        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 20:29:34 -0700 (PDT)
-From: Daniel Axtens <dja@axtens.net>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: Re: [PATCH V10 05/12] powerpc/eeh: Cache only BARs, not windows or IOV BARs
-In-Reply-To: <1445829362-2738-6-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com> <1445829362-2738-6-git-send-email-weiyang@linux.vnet.ibm.com>
-Date: Thu, 29 Oct 2015 14:29:19 +1100
-Message-ID: <87h9lapd2o.fsf@gamma.ozlabs.ibm.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46151 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750967AbbJGOHu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 10:07:50 -0400
+Message-ID: <56152725.10809@oracle.com>
+Date: Wed, 07 Oct 2015 10:07:33 -0400
+From: Sasha Levin <sasha.levin@oracle.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
+To: Prarit Bhargava <prarit@redhat.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: prevent out of bounds access in numa_node override
+References: <1443995369-11399-1-git-send-email-sasha.levin@oracle.com> <20151006193627.GE29420@localhost> <561428CE.2040601@redhat.com>
+In-Reply-To: <561428CE.2040601@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On 10/06/2015 04:02 PM, Prarit Bhargava wrote:
+> 
+> 
+> On 10/06/2015 03:36 PM, Bjorn Helgaas wrote:
+>> Hi Sasha,
+>>
+>> On Sun, Oct 04, 2015 at 05:49:29PM -0400, Sasha Levin wrote:
+>>> Commit 63692df1 ("PCI: Allow numa_node override via sysfs") didn't check that
+>>> the numa node provided by userspace is valid. Passing a node number too high
+>>> would attempt to access invalid memory and trigger a kernel panic.
+>>>
+>>> Fixes: 63692df1 ("PCI: Allow numa_node override via sysfs")
+>>> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+>>> ---
+>>>  drivers/pci/pci-sysfs.c |    2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>>> index 312f23a..e9abca8 100644
+>>> --- a/drivers/pci/pci-sysfs.c
+>>> +++ b/drivers/pci/pci-sysfs.c
+>>> @@ -216,7 +216,7 @@ static ssize_t numa_node_store(struct device *dev,
+>>>  	if (ret)
+>>>  		return ret;
+>>>  
+>>> -	if (!node_online(node))
+>>> +	if (node > MAX_NUMNODES || !node_online(node))
+>>
+>> This needs to be "node >= MAX_NUMNODES", doesn't it?  I'll fix it up if
+>> you agree.
 
-Wei Yang <weiyang@linux.vnet.ibm.com> writes:
+Yup, you're right.
 
-> EEH address cache, which helps to locate the PCI device according to
-> the given (physical) MMIO address, didn't cover PCI bridges. Also, it
-> shouldn't return PF with address in PF's IOV BARs. Instead, the VFs
-> should be returned.
->
-> Also, by doing so, it removes the type check in
-> eeh_addr_cache_insert_dev(), since bridge's window would not be cached.
->
-> The patch restricts the address cache to cover first 7 BARs for the
-> above purposes.
-If I've understoond the patch correctly, I think you want to swap the
-last two paragraphs in the commit message:
+> 
+> Not a strenuous objection, but I don't see much bound checking using
+> MAX_NUMNODES in the kernel outside of the core numa area.  Is fixing
+> node_online() with bounds checking a better option here so that other callers
+> get the fix?  I would have thought that calling node_online() with node >
+> MAX_NUMNODES should be safe to call.
 
-"Restrict the address cache to cover the first 7 BARs...
+I don't know, this will add overhead to node_online(), and isn't really
+done in any other similar function. For example, cpu_online() isn't safe
+to call with cpu > NR_CPUS either.
 
-Since the window of a bridge will now not be cached, remove the type
-check..."
 
-With regards to the actual patch, I have now got access to the PCI and
-SR-IOV specs, but I'm still getting to grips with it all so let me know
-if something I say doesn't make sense.
-
-Here, you restrict the enumeration of resources to the standard and
-extension ROM resources (the first 7), which excludes enumeration of
-VF resources. That much I understand.
-
-I'm having more trouble convincing myself that it's safe or desirable to
-drop the test for bridges. I think I understand that the change to the
-for loop means it _should_ be safe, but is there any motivation for the
-change other than making the code more straightforward?
-
->  	/* Walk resources on this device, poke them into the tree *
-This comment probably needs to be made more descriptive given the change.
-> -	for (i =3D 0; i < DEVICE_COUNT_RESOURCE; i++) {
-> +	for (i =3D 0; i <=3D PCI_ROM_RESOURCE; i++) {
->  		resource_size_t start =3D pci_resource_start(dev,i);
->  		resource_size_t end =3D pci_resource_end(dev,i);
->  		unsigned long flags =3D pci_resource_flags(dev,i);
-> @@ -222,10 +222,6 @@ void eeh_addr_cache_insert_dev(struct pci_dev *dev)
->  {
-
-Regards,
-Daniel
-
->  	unsigned long flags;
->=20=20
-> -	/* Ignore PCI bridges */
-> -	if ((dev->class >> 16) =3D=3D PCI_BASE_CLASS_BRIDGE)
-> -		return;
-> -
->  	spin_lock_irqsave(&pci_io_addr_cache_root.piar_lock, flags);
->  	__eeh_addr_cache_insert_dev(dev);
->  	spin_unlock_irqrestore(&pci_io_addr_cache_root.piar_lock, flags);
-> --=20
-> 2.5.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: GPGTools - https://gpgtools.org
-
-iQIcBAEBCgAGBQJWMZKPAAoJEPC3R3P2I92F4yUP/2+LVfLEulfsQFlu8wYybzFB
-Ql7EBUTmS0jLABLiEstd5vbQCtMIwZeqDkeKYyJwXC0AqNBK2QjIRGviTS/VdK6l
-9SFMfiefVUPd/kKCHTNCSP3ZCTbPNWZHqxuyfrDIsTO9rRnKWRBrxBWs/jDk3Ids
-BZ4JZuEt3i6sgEwnivnD6sMIO7ZqIghVHG9cutIKWxCi/H8weO2UZwtaalySCQ2h
-98WR91l2/kz/wH0Q49tVxijcaqx0+m8IAzxTFBismTGh00uikW3REm1euIfrqZSs
-KXmpPZSWJPjPj0JjIuZFE73XJnbTlNBIA7x/pUC0a0SaSVRb5irk+EzpHlCTGPvx
-zi98ugS842la+I2mx7x8IxQVNkPMBcnY669XrZOvaJM+fDg2M0n/tbWXuf3m2gJ8
-kRVN7rBiSE59wr9g585KE/YZBQ6S1R7apX2Ha3f9Ze+StvrQ1DkVSHwh+Qq0HBli
-fAzgbbpxu1+wW4l10R9a3RNsDB5nx5mCAZRPPlNSqgj4rY4M10CjGIDZEXdv+HCL
-tYXQr1KZtz3ORB35OlUMDg6fkkWr5cBJ1Oq6Cw9Pjcqesqw0w+FeslXzHbs06jKe
-sPV2z2a/xl0uJ1PgSOx+5UV+UjpvMbOM/hQnH4JUIWkfG1ECKGrpE9kN4K83EZrt
-BVphs8FSiX0s4hLmPI+p
-=y51B
------END PGP SIGNATURE-----
---=-=-=--
+Thanks,
+Sasha
