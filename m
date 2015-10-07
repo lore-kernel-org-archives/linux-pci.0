@@ -1,94 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com
-Cc: "Signed-off-by: David Daney" <david.daney@cavium.com>
-Subject: [PATCH v5 1/4] PCI: Add Enhanced Allocation register entries
-Date: Tue,  6 Oct 2015 16:50:35 -0700
-Message-Id: <1444175438-7443-2-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:36365 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751055AbbJGS4M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 14:56:12 -0400
+Received: by wicgb1 with SMTP id gb1so224705885wic.1
+        for <linux-pci@vger.kernel.org>; Wed, 07 Oct 2015 11:56:10 -0700 (PDT)
+From: Ruud <netwerkforens@gmail.com>
+To: linux-pci@vger.kernel.org, mj@ucw.cz
+Cc: Ruud <netwerkforens@gmail.com>
+Subject: [PATCH] pciutil: Enumerate alternative PCIe bus
+Date: Wed,  7 Oct 2015 18:55:46 +0000
+Message-Id: <1444244146-714-1-git-send-email-netwerkforens@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-
-Add registers defined in PCI-SIG's Enhanced allocation ECN.
-
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
-[david.daney@cavium.com: Added more definitions for PCI_EA_BEI_*]
-Signed-off-by: Signed-off-by: David Daney <david.daney@cavium.com>
+Start enumerating at a specific bus number, this allows accessing root
+complexes that do not start a busnumber 0. (e.g. Intel Corporation Xeon
+E5/Core internal components and root complex on second CPU).
 ---
- include/uapi/linux/pci_regs.h | 44 ++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 43 insertions(+), 1 deletion(-)
+ lib/generic.c    |    3 ++-
+ lib/i386-ports.c |   11 +++++++++--
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 413417f..352e418 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -216,7 +216,8 @@
- #define  PCI_CAP_ID_MSIX	0x11	/* MSI-X */
- #define  PCI_CAP_ID_SATA	0x12	/* SATA Data/Index Conf. */
- #define  PCI_CAP_ID_AF		0x13	/* PCI Advanced Features */
--#define  PCI_CAP_ID_MAX		PCI_CAP_ID_AF
-+#define  PCI_CAP_ID_EA		0x14	/* PCI Enhanced Allocation */
-+#define  PCI_CAP_ID_MAX		PCI_CAP_ID_EA
- #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
- #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
- #define PCI_CAP_SIZEOF		4
-@@ -353,6 +354,47 @@
- #define  PCI_AF_STATUS_TP	0x01
- #define PCI_CAP_AF_SIZEOF	6	/* size of AF registers */
+diff --git a/lib/generic.c b/lib/generic.c
+index c219592..5ee37f5 100644
+--- a/lib/generic.c
++++ b/lib/generic.c
+@@ -69,9 +69,10 @@ void
+ pci_generic_scan(struct pci_access *a)
+ {
+   byte busmap[256];
++  int basebus = strtol(pci_get_param(a, "i386.basebus"),NULL,16);
  
-+/* PCI Enhanced Allocation registers */
-+
-+#define PCI_EA_NUM_ENT		2	/* Number of Capability Entries */
-+#define PCI_EA_NUM_ENT_MASK	0x3f	/* Num Entries Mask */
-+#define PCI_EA_FIRST_ENT	4	/* First EA Entry in List */
-+#define PCI_EA_FIRST_ENT_BRIDGE	8	/* First EA Entry for Bridges */
-+#define PCI_EA_ES		0x7	/* Entry Size */
-+#define PCI_EA_BEI(x)	(((x) >> 4) & 0xf) /* BAR Equivalent Indicator */
-+/* 0-5 map to BARs 0-5 respectively */
-+#define  PCI_EA_BEI_BAR0	0
-+#define  PCI_EA_BEI_BAR5	5
-+#define  PCI_EA_BEI_BRIDGE	6	/* Resource behind bridge */
-+#define  PCI_EA_BEI_ENI		7	/* Equivalent Not Indicated */
-+#define  PCI_EA_BEI_ROM		8	/* Expansion ROM */
-+/* 9-14 map to VF BARs 0-5 respectively */
-+#define  PCI_EA_BEI_VF_BAR0	9
-+#define  PCI_EA_BEI_VF_BAR5	14
-+#define  PCI_EA_BEI_RESERVED	15	/* Reserved - Treat like ENI */
-+
-+#define PCI_EA_PP(x)	(((x) >>  8) & 0xff)	/* Primary Properties */
-+#define PCI_EA_SP(x)	(((x) >> 16) & 0xff)	/* Secondary Properties */
-+#define  PCI_EA_P_MEM			0x00	/* Non-Prefetch Memory */
-+#define  PCI_EA_P_MEM_PREFETCH		0x01	/* Prefetchable Memory */
-+#define  PCI_EA_P_IO			0x02	/* I/O Space */
-+#define  PCI_EA_P_VIRT_MEM_PREFETCH	0x03	/* VF Prefetchable Memory */
-+#define  PCI_EA_P_VIRT_MEM		0x04	/* VF Non-Prefetch Memory */
-+#define  PCI_EA_P_BRIDGE_MEM		0x05	/* Bridge Non-Prefetch Memory */
-+#define  PCI_EA_P_BRIDGE_MEM_PREFETCH	0x06	/* Bridge Prefetchable Memory */
-+#define  PCI_EA_P_BRIDGE_IO		0x07	/* Bridge I/O Space */
-+/* 0x08-0xfc reserved */
-+#define  PCI_EA_P_MEM_RESERVED		0xfd	/* Reserved Memory */
-+#define  PCI_EA_P_IO_RESERVED		0xfe	/* Reserved I/O Space */
-+#define  PCI_EA_P_UNAVAILABLE		0xff	/* Entry Unavailable */
-+#define PCI_EA_WRITEABLE	BIT(30) /* Writable, 1 = RW, 0 = HwInit */
-+#define PCI_EA_ENABLE		BIT(31) /* Enable for this entry */
-+#define PCI_EA_BASE		4	/* Base Address Offset */
-+#define PCI_EA_MAX_OFFSET	8	/* MaxOffset (resource length) */
-+/* bit 0 is reserved */
-+#define PCI_EA_IS_64		BIT(1)	/* 64-bit field flag */
-+#define PCI_EA_FIELD_MASK	0xfffffffc	/* For Base & Max Offset */
-+
- /* PCI-X registers (Type 0 (non-bridge) devices) */
+   memset(busmap, 0, sizeof(busmap));
+-  pci_generic_scan_bus(a, busmap, 0);
++  pci_generic_scan_bus(a, busmap, basebus);
+ }
  
- #define PCI_X_CMD		2	/* Modes & Features */
+ int
+diff --git a/lib/i386-ports.c b/lib/i386-ports.c
+index 421bbfd..1c70c58 100644
+--- a/lib/i386-ports.c
++++ b/lib/i386-ports.c
+@@ -32,6 +32,13 @@
+ 
+ static int conf12_io_enabled = -1;		/* -1=haven't tried, 0=failed, 1=succeeded */
+ 
++static void
++conf12_config(struct pci_access *a)
++{
++  pci_define_param(a, "i386.basebus", "0", "Start busnumber for scanning");
++}
++
++
+ static int
+ conf12_setup_io(struct pci_access *a)
+ {
+@@ -261,7 +268,7 @@ conf2_write(struct pci_dev *d, int pos, byte *buf, int len)
+ struct pci_methods pm_intel_conf1 = {
+   "intel-conf1",
+   "Raw I/O port access using Intel conf1 interface",
+-  NULL,					/* config */
++  conf12_config,		/* config */
+   conf1_detect,
+   conf12_init,
+   conf12_cleanup,
+@@ -277,7 +284,7 @@ struct pci_methods pm_intel_conf1 = {
+ struct pci_methods pm_intel_conf2 = {
+   "intel-conf2",
+   "Raw I/O port access using Intel conf2 interface",
+-  NULL,					/* config */
++  conf12_config,		/* config */
+   conf2_detect,
+   conf12_init,
+   conf12_cleanup,
 -- 
-1.9.1
+1.7.0.4
 
