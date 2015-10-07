@@ -1,54 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([104.200.29.153]:36288 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751324AbbJWFGK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:06:10 -0400
-From: Matthew Minter <matt@masarand.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	lorenzo.pieralisi@arm.com
-Cc: Matthew Minter <matt@masarand.com>
-Subject: [PATCH V4 27/29] PCI: Update pci-host-generic to use IRQ deffered assignment
-Date: Fri, 23 Oct 2015 06:04:00 +0100
-Message-Id: <1445576642-29624-28-git-send-email-matt@masarand.com>
-In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
-References: <1445576642-29624-1-git-send-email-matt@masarand.com>
+Received: from mailout3.w1.samsung.com ([210.118.77.13]:9903 "EHLO
+	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962AbbJGKtz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 06:49:55 -0400
+From: Pavel Fedin <p.fedin@samsung.com>
+To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Cc: Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Peter Maydell <peter.maydell@linaro.org>
+Subject: [PATCH 0/2] PCI: of: Fix handling 64-bit PCI resources on non-LPAE
+ kernels
+Date: Wed, 07 Oct 2015 13:49:19 +0300
+Message-id: <cover.1444214119.git.p.fedin@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci-host-generic platform device is using the fixup irqs code which
-will be removed later in the code to migrate to deffered irq
-assignment. This patch migrates it to use the new code path and
-adds support for deffered irq assignment
+The initial aim of this series is to fix long-standing problem with generic
+PCI host controller, triggered by ARM "virt" machine in the recent qemu.
+Since v2.4.50 qemu adds support for the second, large PCI MMIO window,
+which resides in 64-bit address space. This series addresses problems,
+which are triggered on non-LPAE kernels by this configuration.
 
-Signed-off-by: Matthew Minter <matt@masarand.com>
----
- drivers/pci/host/pci-host-generic.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+These patches do not depend on each other and can be applied individually.
+The first adds missing recognition of 64-bit resources (which is actually
+a bug). The second one changes the code to ignore unaccessible resources
+instead of completely bailing out. Since it touches generic of_pci code,
+the fix is expected to be applied to all drivers which use
+of_pci_get_host_bridge_resources().
 
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 265dd25..0c12597 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -215,6 +215,7 @@ static int gen_pci_probe(struct platform_device *pdev)
- 	struct device_node *np = dev->of_node;
- 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
- 	struct pci_bus *bus, *child;
-+	struct pci_host_bridge *bridge;
- 
- 	if (!pci)
- 		return -ENOMEM;
-@@ -262,7 +263,9 @@ static int gen_pci_probe(struct platform_device *pdev)
- 		return -ENODEV;
- 	}
- 
--	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-+	bridge = pci_find_host_bridge(bus);
-+	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->map_irq = of_irq_parse_and_map_pci;
- 
- 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
- 		pci_bus_size_bridges(bus);
+Pavel Fedin (2):
+  PCI: of: Add 64-bit address recognition without LPAE support
+  PCI: of: Ignore resources with failed translation
+
+ drivers/of/address.c | 6 ++++++
+ drivers/of/of_pci.c  | 6 ++++--
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
 -- 
-2.6.2
-
+2.4.4
