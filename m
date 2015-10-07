@@ -1,57 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0095.outbound.protection.outlook.com ([65.55.169.95]:48160
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752331AbbJLTvp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 12 Oct 2015 15:51:45 -0400
-Subject: Re: [PATCH V3 0/4] PCI: ACPI: Setting up DMA coherency for PCI device
- from _CCA attribute
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <55F02331.2060001@amd.com> <8172790.rR5Ld4j83C@vostro.rjw.lan>
- <55F0EF79.3090202@amd.com>
-CC: <bhelgaas@google.com>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>,
-	<hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Message-ID: <561C0F45.8090107@amd.com>
-Date: Mon, 12 Oct 2015 14:51:33 -0500
+Received: from mail.kernel.org ([198.145.29.136]:60086 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751104AbbJGXNU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Oct 2015 19:13:20 -0400
+Date: Wed, 7 Oct 2015 18:13:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ben Shelton <benjamin.h.shelton@intel.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: IOV: reread SRIOV_NUM_VF after enabling ARI
+Message-ID: <20151007231317.GH27633@localhost>
+References: <1442008500-3570-1-git-send-email-benjamin.h.shelton@intel.com>
+ <20151007192940.GE27633@localhost>
+ <20151007202136.GA19836@bhshelto-vm>
 MIME-Version: 1.0
-In-Reply-To: <55F0EF79.3090202@amd.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151007202136.GA19836@bhshelto-vm>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
+On Wed, Oct 07, 2015 at 03:21:36PM -0500, Ben Shelton wrote:
+> Hi Bjorn,
+> 
+> On Wed, Oct 07, 2015 at 02:29:40PM -0500, Bjorn Helgaas wrote:
+> > Hi Ben,
+> > 
+> > On Fri, Sep 11, 2015 at 04:55:00PM -0500, Ben Shelton wrote:
+> > > For some SR-IOV devices, the number of available virtual functions
+> > > increases after enabling ARI.  Currently, SRIOV_NUM_VF is read and saved
+> > > off before the ARI control bit is enabled.  This causes an issue when VFs
+> > > are enabled.
+> > > 
+> > > At device init, SRIOV_INITIAL_VF and SRIOV_NUM_VF are specified to contain
+> > > the number of available VFs for the device.  sriov_enable() does a sanity
+> > > check that PCI_SRIOV_INITIAL_VF is not greater than iov->total_VFs, the
+> > > saved-off value of SRIOV_NUM_VF.  Since the value of both SRIOV_INITIAL_VF
+> > > and SRIOV_NUM_VF has increased after enabling the ARI bit, the check fails,
+> > > and the VFs cannot be enabled.
+> > > 
+> > > To fix the issue, after ARI is enabled for a device, reread SRIOV_NUM_VF.
+> > > 
+> > > Signed-off-by: Ben Shelton <benjamin.h.shelton@intel.com>
+> > > ---
+> > >  drivers/pci/iov.c | 9 ++++++++-
+> > >  1 file changed, 8 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> > > index ee0ebff..88b1959 100644
+> > > --- a/drivers/pci/iov.c
+> > > +++ b/drivers/pci/iov.c
+> > > @@ -388,6 +388,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+> > >  	struct pci_sriov *iov;
+> > >  	struct resource *res;
+> > >  	struct pci_dev *pdev;
+> > > +	bool total_needs_reread = false;
+> > >  
+> > >  	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
+> > >  	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
+> > > @@ -409,12 +410,18 @@ static int sriov_init(struct pci_dev *dev, int pos)
+> > >  			goto found;
+> > >  
+> > >  	pdev = NULL;
+> > > -	if (pci_ari_enabled(dev->bus))
+> > > +	if (pci_ari_enabled(dev->bus)) {
+> > >  		ctrl |= PCI_SRIOV_CTRL_ARI;
+> > > +		total_needs_reread = true;
+> > > +	}
+> > >  
+> > >  found:
+> > >  	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+> > >  	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
+> > > +
+> > > +	if (total_needs_reread)
+> > > +		pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
+> > 
+> > Can we just *move* the PCI_SRIOV_TOTAL_VF read from its original
+> > location and do it unconditionally here?  I don't think we use "total"
+> > for anything in the interim, and it'd be nice if we could do this
+> > without the "total_needs_reread" flag.
+> 
+> The only thing we do with 'total' is return early if it's read as 0
+> (i.e. for a device that does not support any VFs).  If we just move the
+> read to here, a PCI device with no VFs would have its PCI_SRIOV_CTRL
+> config word written before PCI_SRIOV_TOTAL_VF is read as 0 and
+> sriov_init() returns.  The reread preserves the original behavior.
+> 
+> If the change in behavior is OK, I'll make the change and submit a v2.
 
-On 9/9/15 21:48, Suthikulpanit, Suravee wrote:
-> Hi Rafael,
->
-> On 9/10/2015 3:38 AM, Rafael J. Wysocki wrote:
->> On Wednesday, September 09, 2015 07:16:49 PM Suthikulpanit, Suravee
->> wrote:
->>> >Hi All,
->>> >
->>> >Are there any other concerns about this patch series?
->> I have none, but then it sort of missed the merge window.
->>
->> I can easily queue it up for the next one unless it is super-urgent,
->> but in that case I need to know why that's the case.
->>
->
-> This is not urgent. This mainly needed to enable the ACPI PCI supports
-> for ARM64 which is still work in progress.
->
-> Thanks,
-> Suravee
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I think that's OK.  We do return some other errors after modifying
+PCI_SRIOV_CTRL, so I don't know that this would be any worse.
 
-Just wondering if you are planning to queue this series up for 4.4 as well?
-
-Thank you,
-Suravee
+Bjorn
