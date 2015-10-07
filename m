@@ -1,81 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53812 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758150AbbJVS4v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Oct 2015 14:56:51 -0400
-Date: Thu, 22 Oct 2015 13:56:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Ben Shelton <benjamin.h.shelton@intel.com>,
-	linux-kernel@vger.kernel.org,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Subject: Re: [PATCH] PCI: Remove unnecessary re-read of SR-IOV offset/stride
- registers
-Message-ID: <20151022185647.GF21237@localhost>
-References: <20151016211628.31492.86258.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151016211628.31492.86258.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:60189 "EHLO
+	mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751984AbbJGKt4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 06:49:56 -0400
+From: Pavel Fedin <p.fedin@samsung.com>
+To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Cc: Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Peter Maydell <peter.maydell@linaro.org>
+Subject: [PATCH 1/2] PCI: of: Add 64-bit address recognition without LPAE
+ support
+Date: Wed, 07 Oct 2015 13:49:20 +0300
+Message-id: <d222dd1e4d8ed59e25248091e90e53b662e007c5.1444214119.git.p.fedin@samsung.com>
+In-reply-to: <cover.1444214119.git.p.fedin@samsung.com>
+References: <cover.1444214119.git.p.fedin@samsung.com>
+In-reply-to: <cover.1444214119.git.p.fedin@samsung.com>
+References: <cover.1444214119.git.p.fedin@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 16, 2015 at 04:16:28PM -0500, Bjorn Helgaas wrote:
-> Previously, we read PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE from the
-> SR-IOV capability in pci_iov_set_numvfs() after changing PCI_SRIOV_NUM_VF,
-> and we read them again in sriov_enable().  But sriov_init() always calls
-> pci_iov_set_numvfs() before a successful return, and it caches the offset
-> and stride values, so there's no need to read the capability again in
-> sriov_enable().
-> 
-> Remove the PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE config reads from
-> sriov_enable() and use the cached values from the pci_sriov structure.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+If non-LPAE kernel is booted up on a machine with 64-bit PCI resources,
+PCI controller probe fails with:
 
-I haven't seen any objections, so I applied this to pci/virtualization for
-v4.4.
+PCI host bridge /pcie@10000000 ranges:
+   IO 0x3eff0000..0x3effffff -> 0x00000000
+  MEM 0x10000000..0x3efeffff -> 0x10000000
+  MEM 0x8000000000..0xffffffffff -> 0x8000000000
+pci-host-generic 3f000000.pcie: resource collision: [mem 0x00000000-0xffffffff] conflicts with /pl011@9000000 [mem 0x09000000-0x09000fff]
+pci-host-generic: probe of 3f000000.pcie failed with error -16
 
-> ---
->  drivers/pci/iov.c |    9 ++-------
->  1 file changed, 2 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 0202ab0..9b52ad4 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -230,7 +230,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  	int rc;
->  	int i, j;
->  	int nres;
-> -	u16 offset, stride, initial;
-> +	u16 initial;
->  	struct resource *res;
->  	struct pci_dev *pdev;
->  	struct pci_sriov *iov = dev->sriov;
-> @@ -253,9 +253,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  	    (!(iov->cap & PCI_SRIOV_CAP_VFM) && (nr_virtfn > initial)))
->  		return -EINVAL;
->  
-> -	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &offset);
-> -	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &stride);
-> -	if (!offset || (nr_virtfn > 1 && !stride))
-> +	if (!iov->offset || (nr_virtfn > 1 && !iov->stride))
->  		return -EIO;
->  
->  	nres = 0;
-> @@ -270,9 +268,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  		return -ENOMEM;
->  	}
->  
-> -	iov->offset = offset;
-> -	iov->stride = stride;
-> -
->  	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
->  	if (bus > dev->bus->busn_res.end) {
->  		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This happens because res->start assignment in of_pci_range_to_resource()
+truncates the upper part of the address, because res->start is of
+phys_addr_t type, which is 32-bit on non-LPAE kernels.
+
+This patch adds explicit recognition of 64-bit resources, preventing from
+potential problems when e. g. 0x8000001234 would be converted to
+0x00001234.
+
+Signed-off-by: Pavel Fedin <p.fedin@samsung.com>
+---
+ drivers/of/address.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 384574c..9a8f8c3 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -330,6 +330,12 @@ int of_pci_range_to_resource(struct of_pci_range *range,
+ 		}
+ 		res->start = port;
+ 	} else {
++#ifndef CONFIG_PHYS_ADDR_T_64BIT
++		if (upper_32_bits(range->cpu_addr)) {
++			err = -EINVAL;
++			goto invalid_range;
++		}
++#endif
+ 		res->start = range->cpu_addr;
+ 	}
+ 	res->end = res->start + range->size - 1;
+-- 
+2.4.4
+
