@@ -1,30 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:35898 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750949AbbJHXay (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 19:30:54 -0400
-Received: by wicgb1 with SMTP id gb1so45978067wic.1
-        for <linux-pci@vger.kernel.org>; Thu, 08 Oct 2015 16:30:53 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 7 Oct 2015 14:44:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v4 1/5] PCI: Add pci_bus_fixup_irqs().
+Message-ID: <20151007194426.GF27633@localhost>
+References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com>
+ <1443811443-18878-2-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-Date: Thu, 8 Oct 2015 16:30:53 -0700
-Message-ID: <CAKAYmMKumZTG9e_PzBtW1Jbo+0EvHVtY_XyFiZ=jnBVstkA-dw@mail.gmail.com>
-Subject: what code generates this message?
-From: Chuck Tuffli <ctuffli@gmail.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443811443-18878-2-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As part of trying to understand a hardware issue, I'm trying to track
-down the kernel code which prints:
+Hi David,
 
-[ 1077.119096] pcieport 0000:00:02.0: PCI bridge to [bus 02-02]
-[ 1077.119098] pcieport 0000:00:02.0:   bridge window [io  disabled]
-[ 1077.119101] pcieport 0000:00:02.0:   bridge window [mem disabled]
-[ 1077.119104] pcieport 0000:00:02.0:   bridge window [mem pref disabled]
+On Fri, Oct 02, 2015 at 11:43:59AM -0700, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> pci_bus_fixup_irqs() works like pci_fixup_irqs(), except it only does
+> the fixups for devices on the specified bus.
+> 
+> Follow-on patch will use the new function.
+> 
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+> No change from v2.
+> 
+>  drivers/pci/setup-irq.c | 30 ++++++++++++++++++++++++++++++
+>  include/linux/pci.h     |  4 ++++
+>  2 files changed, 34 insertions(+)
+> 
+> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+> index 95c225b..189ad17 100644
+> --- a/drivers/pci/setup-irq.c
+> +++ b/drivers/pci/setup-irq.c
+> @@ -66,3 +66,33 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+>  		pdev_fixup_irq(dev, swizzle, map_irq);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_fixup_irqs);
+> +
+> +struct pci_bus_fixup_cb_info {
+> +	u8 (*swizzle)(struct pci_dev *, u8 *);
+> +	int (*map_irq)(const struct pci_dev *, u8, u8);
+> +};
+> +
+> +static int pci_bus_fixup_irq_cb(struct pci_dev *dev, void *arg)
+> +{
+> +	struct pci_bus_fixup_cb_info *info = arg;
+> +
+> +	pdev_fixup_irq(dev, info->swizzle, info->map_irq);
+> +	return 0;
+> +}
+> +
+> +/*
+> + * Fixup the irqs only for devices on the given bus using supplied
+> + * swizzle and map_irq function pointers
+> + */
+> +void pci_bus_fixup_irqs(struct pci_bus *bus,
+> +			u8 (*swizzle)(struct pci_dev *, u8 *),
+> +			int (*map_irq)(const struct pci_dev *, u8, u8))
+> +{
+> +	struct pci_bus_fixup_cb_info info;
+> +
+> +	info.swizzle = swizzle;
+> +	info.map_irq = map_irq;
+> +	pci_walk_bus(bus, pci_bus_fixup_irq_cb, &info);
 
-to the system log / dmesg. Grep'ing the kernel source for strings such
-as "PCI bridge to" or "bridge window" hasn't turned up any candidates.
-Can someone point me in the right direction? TIA.
+I don't like the existing pci_fixup_irqs(), so by transitivity, I
+don't like pci_bus_fixup_irqs() either.  The problem is that in both
+cases this is a one-time pass over the tree, so we don't handle
+hot-added devices correctly.
 
---chuck
+I think we need to get rid of pci_fixup_irqs() and somehow integrate
+it into the pci_device_add() path, where it would be done once for
+every device we enumerate.  If we did that, I don't think you would
+need to add pci_bus_fixup_irqs(), would you?
+
+Bjorn
+
+> +
+> +}
+> +EXPORT_SYMBOL_GPL(pci_bus_fixup_irqs);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e90eb22..b505b50 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1120,6 +1120,10 @@ void pdev_enable_device(struct pci_dev *);
+>  int pci_enable_resources(struct pci_dev *, int mask);
+>  void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+>  		    int (*)(const struct pci_dev *, u8, u8));
+> +void pci_bus_fixup_irqs(struct pci_bus *,
+> +			u8 (*)(struct pci_dev *, u8 *),
+> +			int (*)(const struct pci_dev *, u8, u8));
+> +
+>  #define HAVE_PCI_REQ_REGIONS	2
+>  int __must_check pci_request_regions(struct pci_dev *, const char *);
+>  int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
