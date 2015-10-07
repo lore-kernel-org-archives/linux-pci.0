@@ -1,50 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:35578 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750802AbbJYGDI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Oct 2015 02:03:08 -0400
-Subject: Re: [RFC Patch 05/12] IXGBE: Add new sysfs interface of "notify_vf"
-To: "Lan, Tianyu" <tianyu.lan@intel.com>, bhelgaas@google.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
-	pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
- <1445445464-5056-6-git-send-email-tianyu.lan@intel.com>
- <5627FB20.3020003@gmail.com> <562BA729.10903@intel.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <562C7098.4030406@gmail.com>
-Date: Sat, 24 Oct 2015 23:03:04 -0700
+Received: from mail-vk0-f48.google.com ([209.85.213.48]:33139 "EHLO
+	mail-vk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751058AbbJGWtn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 18:49:43 -0400
 MIME-Version: 1.0
-In-Reply-To: <562BA729.10903@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee>
+References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee>
+Date: Wed, 7 Oct 2015 15:49:42 -0700
+Message-ID: <CAE9FiQXM9YxRwcbG577Pcqmj7YbOa0yk6hYELb2FpTtct5u2jg@mail.gmail.com>
+Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
+From: Yinghai Lu <yinghai@kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/24/2015 08:43 AM, Lan, Tianyu wrote:
+On Wed, Oct 7, 2015 at 2:25 AM, Meelis Roos <mroos@linux.ee> wrote:
+> First I noticed that on Sun Netra t1-150 (sparc64 CPU), PCI allocation
+> was failing for qla1280 scsi driver. Reading dmesg uncovered "can't
+> claim BAR" errors. Looking for this in my other test machines I see more
+> of them - on many sparc64 machines and some on x86.
 >
-> On 10/22/2015 4:52 AM, Alexander Duyck wrote:
->> Also have you even considered the MSI-X configuration on the VF?  I
->> haven't seen anything anywhere that would have migrated the VF's MSI-X
->> configuration from BAR 3 on one system to the new system.
+> In another thread for "Resource allocation cleanup for v4.4", Yinghai Lu
+> asked for full dmesg to solve another similar case. So to help
+> understanding this one, here are the dmesgs of my machines:
 >
-> MSI-X migration is done by Hypervisor(Qemu).
-> Following link is my Qemu patch to do that.
-> http://marc.info/?l=kvm&m=144544706530484&w=2
+> sparc64 machines:
+>
+> http://kodu.ut.ee/~mroos/dm/dm.t1-105
+> http://kodu.ut.ee/~mroos/dm/dm.t1-200
+> http://kodu.ut.ee/~mroos/dm/dm.v120
+> http://kodu.ut.ee/~mroos/dm/dm.v210
+> http://kodu.ut.ee/~mroos/dm/dm.v240
+> http://kodu.ut.ee/~mroos/dm/dm.sb100
 
-I really don't like the idea of trying to migrate the MSI-X across from 
-host to host while it is still active.  I really think Qemu shouldn't be 
-moving this kind of data over in a migration.
+Please try
 
-I think that having the VF do a suspend/resume is the best way to go.  
-Then it simplifies things as all you have to deal with is the dirty page 
-tracking for the Rx DMA and you should be able to do this without making 
-things too difficult.
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+for-pci-v4.4-next
 
-- Alex
+It should fix some "no compatible bridge window"
+
+Thanks
+
+Yinghai
