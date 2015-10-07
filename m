@@ -1,187 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32286 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932432AbbJHVuQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:50:16 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 35/60] PCI: Add __add_to_list()
-Date: Thu,  8 Oct 2015 14:38:54 -0700
-Message-Id: <1444340359-8011-36-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 7 Oct 2015 11:09:16 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: Sasha Levin <sasha.levin@oracle.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: prevent out of bounds access in numa_node override
+Message-ID: <20151007160916.GB27633@localhost>
+References: <1443995369-11399-1-git-send-email-sasha.levin@oracle.com>
+ <20151006193627.GE29420@localhost>
+ <561428CE.2040601@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <561428CE.2040601@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For alt_size support, we will add more entries to realloc list.
+Hi Prarit,
 
-Add new __add_to_list() to take alt_size, alt_align.
+On Tue, Oct 06, 2015 at 04:02:22PM -0400, Prarit Bhargava wrote:
+> On 10/06/2015 03:36 PM, Bjorn Helgaas wrote:
+> > On Sun, Oct 04, 2015 at 05:49:29PM -0400, Sasha Levin wrote:
+> >> Commit 63692df1 ("PCI: Allow numa_node override via sysfs") didn't check that
+> >> the numa node provided by userspace is valid. Passing a node number too high
+> >> would attempt to access invalid memory and trigger a kernel panic.
+> >>
+> >> Fixes: 63692df1 ("PCI: Allow numa_node override via sysfs")
+> >> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+> >> ---
+> >>  drivers/pci/pci-sysfs.c |    2 +-
+> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> >> index 312f23a..e9abca8 100644
+> >> --- a/drivers/pci/pci-sysfs.c
+> >> +++ b/drivers/pci/pci-sysfs.c
+> >> @@ -216,7 +216,7 @@ static ssize_t numa_node_store(struct device *dev,
+> >>  	if (ret)
+> >>  		return ret;
+> >>  
+> >> -	if (!node_online(node))
+> >> +	if (node > MAX_NUMNODES || !node_online(node))
+> > 
+> > This needs to be "node >= MAX_NUMNODES", doesn't it?  I'll fix it up if
+> > you agree.
+> 
+> Not a strenuous objection, but I don't see much bound checking using
+> MAX_NUMNODES in the kernel outside of the core numa area.  Is fixing
+> node_online() with bounds checking a better option here so that other callers
+> get the fix?  I would have thought that calling node_online() with node >
+> MAX_NUMNODES should be safe to call.
 
-And simplify add_to_list() not to take add/alt input.
+Yes, that would certainly be an option.  I don't feel super strongly
+either way, but one argument in favor of Sasha's approach is that the
+validation of user input is nice and obvious right at the point where
+we process the input.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 51 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 31 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index d575c56..b86417d 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -66,6 +66,8 @@ struct pci_dev_resource {
- 	resource_size_t end;
- 	resource_size_t add_size;
- 	resource_size_t min_align;
-+	resource_size_t alt_size;
-+	resource_size_t alt_align;
- 	unsigned long flags;
- };
- 
-@@ -88,15 +90,16 @@ static void free_list(struct list_head *head)
-  * @add_size:	additional size to be optionally added
-  *              to the resource
-  */
--static int add_to_list(struct list_head *head,
-+static int __add_to_list(struct list_head *head,
- 		 struct pci_dev *dev, struct resource *res,
--		 resource_size_t add_size, resource_size_t min_align)
-+		 resource_size_t add_size, resource_size_t min_align,
-+		 resource_size_t alt_size, resource_size_t alt_align)
- {
- 	struct pci_dev_resource *tmp;
- 
- 	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
- 	if (!tmp) {
--		pr_warn("add_to_list: kmalloc() failed!\n");
-+		pr_warn("__add_to_list: kmalloc() failed!\n");
- 		return -ENOMEM;
- 	}
- 
-@@ -107,12 +110,20 @@ static int add_to_list(struct list_head *head,
- 	tmp->flags = res->flags;
- 	tmp->add_size = add_size;
- 	tmp->min_align = min_align;
-+	tmp->alt_size = alt_size;
-+	tmp->alt_align = alt_align;
- 
- 	list_add(&tmp->list, head);
- 
- 	return 0;
- }
- 
-+static int add_to_list(struct list_head *head,
-+		 struct pci_dev *dev, struct resource *res)
-+{
-+	return __add_to_list(head, dev, res, 0, 0, 0, 0);
-+}
-+
- static void remove_from_list(struct list_head *head,
- 				 struct resource *res)
- {
-@@ -378,9 +389,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
--				add_to_list(fail_head, dev_res->dev, res,
--					    0 /* don't care */,
--					    0 /* don't care */);
-+				add_to_list(fail_head, dev_res->dev, res);
- 			reset_resource(res);
- 		}
- 	}
-@@ -466,7 +475,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	/* Save original start, end, flags etc at first */
- 	list_for_each_entry(dev_res, head, list) {
--		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
-+		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
- 			free_list(&save_head);
- 			goto requested_and_reassign;
- 		}
-@@ -1057,8 +1066,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	b_res->end = b_res->start + size0 - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1-size0,
--			    min_align);
-+		__add_to_list(realloc_head, bus->self, b_res,
-+			      size1 - size0, min_align, 0, 0);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
- 			   b_res, &bus->busn_res,
- 			   (unsigned long long)size1-size0);
-@@ -1261,7 +1270,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				add_to_align_test_list(&align_test_add_list,
- 							align, r_size);
- 				r->end = r->start - 1;
--				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
-+				__add_to_list(realloc_head, dev, r,
-+					      r_size, align, 0, 0);
- 				sum_add_size += r_size;
- 				if (align > max_add_align)
- 					max_add_align = align;
-@@ -1332,8 +1342,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
--				min_add_align);
-+		__add_to_list(realloc_head, bus->self, b_res, size1 - size0,
-+				min_add_align, 0, 0);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
- 			   b_res, &bus->busn_res,
- 			   (unsigned long long) (size1 - size0),
-@@ -1370,8 +1380,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[0].end -= pci_cardbus_io_size;
--		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
--				pci_cardbus_io_size);
-+		__add_to_list(realloc_head, bridge, b_res,
-+			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
- 	}
- 
- handle_b_res_1:
-@@ -1382,8 +1392,8 @@ handle_b_res_1:
- 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[1].end -= pci_cardbus_io_size;
--		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
--				 pci_cardbus_io_size);
-+		__add_to_list(realloc_head, bridge, b_res + 1,
-+			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
- 	}
- 
- handle_b_res_2:
-@@ -1420,8 +1430,9 @@ handle_b_res_2:
- 				  IORESOURCE_STARTALIGN;
- 		if (realloc_head) {
- 			b_res[2].end -= pci_cardbus_mem_size;
--			add_to_list(realloc_head, bridge, b_res+2,
--				 pci_cardbus_mem_size, pci_cardbus_mem_size);
-+			__add_to_list(realloc_head, bridge, b_res + 2,
-+				pci_cardbus_mem_size, pci_cardbus_mem_size,
-+				0, 0);
- 		}
- 
- 		/* reduce that to half */
-@@ -1436,8 +1447,8 @@ handle_b_res_3:
- 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[3].end -= b_res_3_size;
--		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
--				 pci_cardbus_mem_size);
-+		__add_to_list(realloc_head, bridge, b_res + 3,
-+				b_res_3_size, pci_cardbus_mem_size, 0, 0);
- 	}
- 
- handle_done:
--- 
-1.8.4.5
-
+Bjorn
