@@ -1,116 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v12 7/8] Documentation: DT: Add HiSilicon PCIe host binding
-Date: Mon, 26 Oct 2015 19:35:49 +0800
-Message-ID: <1445859350-26375-8-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:37361 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750730AbbJGXQi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 19:16:38 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee>
+References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee>
+Date: Wed, 7 Oct 2015 16:16:37 -0700
+Message-ID: <CAE9FiQXwqvg0X7j6Ccek+ZU+uhCoxy5myXfU2W9AFzedUoO8nw@mail.gmail.com>
+Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
+From: Yinghai Lu <yinghai@kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds related DTS binding document for HiSilicon PCIe host driver.
+On Wed, Oct 7, 2015 at 2:25 AM, Meelis Roos <mroos@linux.ee> wrote:
+> amd64 machine:
+>
+> http://kodu.ut.ee/~mroos/dm/dm.x2100
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
----
- .../bindings/arm/hisilicon/hisilicon.txt           | 17 +++++++++
- .../devicetree/bindings/pci/hisilicon-pcie.txt     | 44 ++++++++++++++++++++++
- 2 files changed, 61 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+[    0.156360] bus: [bus 00-05] on node 0 link 0
+[    0.156362] bus: 00 [io  0x0000-0xffff]
+[    0.156364] bus: 00 [mem 0x000a0000-0x000bffff]
+[    0.156365] bus: 00 [mem 0xfe030000-0xffffffff]
+[    0.156366] bus: 00 [mem 0xc0000000-0xefffffff]
+[    0.156368] bus: 00 [mem 0xf0000000-0xfe02ffff]
+[    0.156369] bus: 00 [mem 0x140000000-0xfcffffffff]
 
-diff --git a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
-index 3504dca..6ac7c00 100644
---- a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
-+++ b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
-@@ -171,6 +171,23 @@ Example:
- 	};
- 
- -----------------------------------------------------------------------
-+Hisilicon HiP05 PCIe-SAS system controller
-+
-+Required properties:
-+- compatible : "hisilicon,pcie-sas-subctrl", "syscon";
-+- reg : Register address and size
-+
-+The HiP05 PCIe-SAS system controller is shared by PCIe and SAS controllers in
-+HiP05 Soc to implement some basic configurations.
-+
-+Example:
-+	/* for HiP05 PCIe-SAS system */
-+	pcie_sas: system_controller@0xb0000000 {
-+		compatible = "hisilicon,pcie-sas-subctrl", "syscon";
-+		reg = <0xb0000000 0x10000>;
-+	};
-+
-+-----------------------------------------------------------------------
- Hisilicon CPU controller
- 
- Required properties:
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-new file mode 100644
-index 0000000..17c6ed9
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-@@ -0,0 +1,44 @@
-+HiSilicon PCIe host bridge DT description
-+
-+HiSilicon PCIe host controller is based on Designware PCI core.
-+It shares common functions with PCIe Designware core driver and inherits
-+common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pci.txt.
-+
-+Additional properties are described here:
-+
-+Required properties:
-+- compatible: Should contain "hisilicon,hip05-pcie".
-+- reg: Should contain rc_dbi, config registers location and length.
-+- reg-names: Must include the following entries:
-+  "rc_dbi": controller configuration registers;
-+  "config": PCIe configuration space registers.
-+- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
-+- port-id: Should be 0, 1, 2 or 3.
-+
-+Optional properties:
-+- status: Either "ok" or "disabled".
-+- dma-coherent: Present if DMA operations are coherent.
-+
-+Example:
-+	pcie@0xb0080000 {
-+		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
-+		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
-+		reg-names = "rc_dbi", "config";
-+		bus-range = <0  15>;
-+		msi-parent = <&its_pcie>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		dma-coherent;
-+		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
-+		num-lanes = <8>;
-+		port-id = <1>;
-+		#interrupts-cells = <1>;
-+		interrupts-map-mask = <0xf800 0 0 7>;
-+		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
-+				  0x0 0 0 2 &mbigen_pcie 2 11
-+				  0x0 0 0 3 &mbigen_pcie 3 12
-+				  0x0 0 0 4 &mbigen_pcie 4 13>;
-+		status = "ok";
-+	};
--- 
-1.9.1
+[    0.174069] PCI: Using host bridge windows from ACPI; if necessary,
+use "pci=nocrs" and report a bug
+[    0.180821] ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-05])
+[    0.180943] acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM
+ClockPM Segments MSI]
+[    0.181139] acpi PNP0A08:00: _OSC failed (AE_NOT_FOUND); disabling ASPM
+[    0.181917] PCI host bridge to bus 0000:00
+[    0.182030] pci_bus 0000:00: root bus resource [bus 00-05]
+[    0.182144] pci_bus 0000:00: root bus resource [io  0x0000-0x03af window]
+[    0.182262] pci_bus 0000:00: root bus resource [io  0x03e0-0x0cf7 window]
+[    0.182379] pci_bus 0000:00: root bus resource [io  0x6000-0xffff window]
+[    0.182494] pci_bus 0000:00: root bus resource [io  0x03b0-0x03df window]
+[    0.182609] pci_bus 0000:00: root bus resource [mem
+0x000a0000-0x000bffff window]
+[    0.182799] pci_bus 0000:00: root bus resource [mem
+0xc0000000-0xdfffffff window]
+[    0.182989] pci_bus 0000:00: root bus resource [mem
+0xf0000000-0xfe02ffff window]
+[    0.183179] pci_bus 0000:00: root bus resource [mem
+0xfeb00000-0xfebfffff window]
 
+BIOS report different resource from _CRS setting and setting with cpu registers.
+
+[    0.183379] pci 0000:00:00.0: [10de:005e] type 00 class 0x058000
+[    0.183542] pci 0000:00:01.0: [10de:0050] type 00 class 0x060100
+
+root bus io range from _CRS does not include that.
+
+boot with pci=nocrs should avoid that and it is safe as we get ranges
+from register.
+
+Thanks
+
+Yinghai
