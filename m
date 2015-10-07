@@ -1,48 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:56960 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145AbbJOPrN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Oct 2015 11:47:13 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Ma Jun <majun258@huawei.com>
-Subject: Re: [PATCH RFC 0/7] Adding core support for wire-MSI bridges
-Date: Thu, 15 Oct 2015 17:46:33 +0200
-Message-ID: <5027676.zPNVVQXaP4@wuerfel>
-In-Reply-To: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
-References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5139149.TmJY1YjqAU@wuerfel>
+References: <1444118168-13086-1-git-send-email-gabriel.fernandez@linaro.org>
+ <1444118168-13086-4-git-send-email-gabriel.fernandez@linaro.org> <5139149.TmJY1YjqAU@wuerfel>
+From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Date: Wed, 7 Oct 2015 16:32:16 +0200
+Message-ID: <CAG374jAnKQCerh3nBX9WsmwP4g6uPLKPSZ2EhhwPa-i89RsyZQ@mail.gmail.com>
+Subject: Re: [PATCH v5 3/3] PCI: st: Provide support for the sti PCIe controller
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Mark Rutland <mark.rutland@arm.com>, Andrew Lunn <andrew@lunn.ch>,
+	"kernel@stlinux.com" <kernel@stlinux.com>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Lee Jones <lee.jones@linaro.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Muralidharan Karicheri <m-karicheri2@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thierry Reding <treding@nvidia.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, Tejun Heo <tj@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Joe Perches <joe@perches.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 15 October 2015 16:39:21 Marc Zyngier wrote:
-> There seems to be a new class of interrupt controller out there whose
-> sole purpose (apart from making everybody's life a nightmare) is to
-> turn wired interrupts into MSIs.
-> 
-> Instead of considering that the MSIs allocated to a device are for the
-> direct use of that device, we can turn this set of MSIs into a irq
-> domain, and use that domain to build a standard irqchip on top of
-> that.
-> 
-> This requires some (slightly ugly) surgery in both the generic MSI and
-> platform MSI layers, but the amount of code is actually relatively
-> small (about +150 LoC so far).
-> 
-> On top of that, we add a dummy driver for a such a bridge, hoping that
-> this will give enough information to driver authors so that they can
-> use this new feature. An even more stupid client driver is provided to
-> show the interrupt stack allocation:
+On 6 October 2015 at 23:01, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Tuesday 06 October 2015 09:56:08 Gabriel Fernandez wrote:
+>> +
+>> +/*
+>> + * On ARM platforms, we actually get a bus error returned when the PCIe IP
+>> + * returns a UR or CRS instead of an OK.
+>> + */
+>> +static int st_pcie_abort_handler(unsigned long addr, unsigned int fsr,
+>> +                                struct pt_regs *regs)
+>> +{
+>> +       return 0;
+>> +}
+>>
+>
+> I'm not sure if we discussed this already for this driver. Usually
+> you should have a register in the PCI host that you can check to see
+> what caused the abort.
+>
+> Try to make this as narrow as possible so you return nonzero for
+> any abort except the one you actually try to prevent.
+>
+>         Arnd
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-I'm pretty sure you've thought of this before and it doesn't work, but
-can you explain why we can't just treat this as an edge-triggered
-nested irqchip? As long as the weird hardware can be preconfigured
-by the bootloader, the device that is attached to it shouldn't
-care how the interrupt ends up at the CPU.
+Hi Arnd,
 
-	Arnd
+Yes we already discussed about that:
+http://www.spinics.net/lists/arm-kernel/msg393705.html
+
+We can probably improve the abort handling once the patch below will be merged
+http://lists.infradead.org/pipermail/linux-arm-kernel/2015-August/366215.html
+
+As imx6 does the same, does it sound reasonable to keep this approach
+of the st driver and start discussing about generic way to handle
+abort for DW pci driver ?
+
+Best regards
+
+Gabriel
