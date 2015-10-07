@@ -1,41 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5620B9F0.50203@arm.com>
-Date: Fri, 16 Oct 2015 09:48:48 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 7 Oct 2015 07:45:54 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>
-CC: Ma Jun <majun258@huawei.com>, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RFC 4/7] genirq/msi: Make the .prepare callback reusable
-References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com> <1444923568-17413-5-git-send-email-marc.zyngier@arm.com> <56208EE0.1030604@linux.intel.com>
-In-Reply-To: <56208EE0.1030604@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [Patch v6 6/7] x86/PCI/ACPI: Use common interface to support PCI
+ host bridge
+Message-ID: <20151007124554.GA22797@localhost>
+References: <1442218057-4355-1-git-send-email-jiang.liu@linux.intel.com>
+ <1442218057-4355-7-git-send-email-jiang.liu@linux.intel.com>
+ <20151006180144.GC29420@localhost>
+ <5614DD67.4070801@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5614DD67.4070801@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16/10/15 06:45, Jiang Liu wrote:
-> On 2015/10/15 23:39, Marc Zyngier wrote:
-> <snit>
->> +int msi_domain_prepare_irqs(struct irq_domain *domain, struct device *dev,
->> +			    int nvec, msi_alloc_info_t *arg)
->> +{
->> +	struct msi_domain_info *info = domain->host_data;
->> +	struct msi_domain_ops *ops = info->ops;
->> +	int ret;
->> +
->> +	ret = ops->msi_check(domain, info, dev);
->> +	if (ret == 0)
->> +		ret = ops->msi_prepare(domain, dev, nvec, arg);
->> +	if (ret)
->> +		return ret;
->> +
->> +	return 0;
-> Seems a simple "return ret" is enough:)
+On Wed, Oct 07, 2015 at 04:52:55PM +0800, Hanjun Guo wrote:
+> On 10/07/2015 02:01 AM, Bjorn Helgaas wrote:
+> >On Mon, Sep 14, 2015 at 04:07:35PM +0800, Jiang Liu wrote:
+> >>Use common interface to simplify ACPI PCI host bridge implementation.
+> >>
+> >>Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> >>Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+> >
+> >Is there a corresponding ia64 patch?  If we're really consolidating
+> >this code (which I completely support), we need to do the whole job.
+> 
+> Yes, there is a patch for it:
+> 
+> [Patch v6 7/7] ia64/PCI/ACPI: Use common interface to support PCI
+> host bridge
+> 
+> which has lots of code simplification [1],
+> 
+>  arch/ia64/pci/pci.c |  232
+> ++++++++++-----------------------------------------
+>  1 file changed, 46 insertions(+), 186 deletions(-)
+> 
+> [1]: https://lkml.org/lkml/2015/9/14/84
 
-Ah! yes! ;-)
+Oh, sorry I missed that.  I review things that appear on linux-pci,
+and several patches in this series weren't posted there, so I didn't
+see them.
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Bjorn
