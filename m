@@ -1,103 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54633 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:40195 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753054AbbJOULM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Oct 2015 16:11:12 -0400
-Date: Thu, 15 Oct 2015 15:11:09 -0500
+	id S1754719AbbJGQFC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Oct 2015 12:05:02 -0400
+Date: Wed, 7 Oct 2015 11:04:58 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Rob Herring <robh+dt@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, Mark Rutland <Mark.Rutland@arm.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Robin Murphy <robin.murphy@arm.com>
-Subject: Re: [PATCH v2 7/8] PCI: Add per-device MSI domain hook
-Message-ID: <20151015201109.GD10442@localhost>
-References: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
- <1444151043-31084-8-git-send-email-marc.zyngier@arm.com>
+To: Sasha Levin <sasha.levin@oracle.com>
+Cc: Prarit Bhargava <prarit@redhat.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: prevent out of bounds access in numa_node override
+Message-ID: <20151007160458.GA27633@localhost>
+References: <1443995369-11399-1-git-send-email-sasha.levin@oracle.com>
+ <20151006193627.GE29420@localhost>
+ <561428CE.2040601@redhat.com>
+ <56152725.10809@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444151043-31084-8-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <56152725.10809@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 06, 2015 at 06:04:02PM +0100, Marc Zyngier wrote:
-> So far, we have considered that the MSI domain for a device was
-> either set via the architecture-dependent pcibios implementation
-> or inherited from the host bridge.
+On Wed, Oct 07, 2015 at 10:07:33AM -0400, Sasha Levin wrote:
+> > On 10/06/2015 03:36 PM, Bjorn Helgaas wrote:
+> >> Hi Sasha,
+> >>
+> >> On Sun, Oct 04, 2015 at 05:49:29PM -0400, Sasha Levin wrote:
+> >>> Commit 63692df1 ("PCI: Allow numa_node override via sysfs") didn't check that
+> >>> the numa node provided by userspace is valid. Passing a node number too high
+> >>> would attempt to access invalid memory and trigger a kernel panic.
+> >>>
+> >>> Fixes: 63692df1 ("PCI: Allow numa_node override via sysfs")
+> >>> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+> >>> ---
+> >>>  drivers/pci/pci-sysfs.c |    2 +-
+> >>>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >>>
+> >>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> >>> index 312f23a..e9abca8 100644
+> >>> --- a/drivers/pci/pci-sysfs.c
+> >>> +++ b/drivers/pci/pci-sysfs.c
+> >>> @@ -216,7 +216,7 @@ static ssize_t numa_node_store(struct device *dev,
+> >>>  	if (ret)
+> >>>  		return ret;
+> >>>  
+> >>> -	if (!node_online(node))
+> >>> +	if (node > MAX_NUMNODES || !node_online(node))
+> >>
+> >> This needs to be "node >= MAX_NUMNODES", doesn't it?  I'll fix it up if
+> >> you agree.
 > 
-> As we're about to break that assumption, add pci_dev_msi_domain
-> which is the equivalent of pci_host_bridge_msi_domain, but for
-> a single device.
-> 
-> Other than moving things around a bit, this patch on its own
-> has no effect.
-> 
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> Yup, you're right.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+OK, applied to for-linus for v4.3 as follows.  Thanks a lot, Sasha!
 
-> ---
->  drivers/pci/probe.c | 35 ++++++++++++++++++++++++++++++-----
->  1 file changed, 30 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 8361d27..7c333f8 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1622,15 +1622,40 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  	pci_enable_acs(dev);
->  }
->  
-> +/*
-> + * This is the equivalent of pci_host_bridge_msi_domain that acts on
-> + * devices. Firmware interfaces that can select the MSI domain on a
-> + * per-device basis should be called from here.
-> + */
-> +static struct irq_domain *pci_dev_msi_domain(struct pci_dev *dev)
-> +{
-> +	struct irq_domain *d;
-> +
-> +	/*
-> +	 * If a domain has been set through the pcibios_add_device
-> +	 * callback, then this is the one (platform code knows best).
-> +	 */
-> +	d = dev_get_msi_domain(&dev->dev);
-> +	if (d)
-> +		return d;
-> +
-> +	return NULL;
-> +}
-> +
->  static void pci_set_msi_domain(struct pci_dev *dev)
->  {
-> +	struct irq_domain *d;
-> +
->  	/*
-> -	 * If no domain has been set through the pcibios_add_device
-> -	 * callback, inherit the default from the bus device.
-> +	 * If the platform or firmware interfaces cannot supply a
-> +	 * device-specific MSI domain, then inherit the default domain
-> +	 * from the host bridge itself.
->  	 */
-> -	if (!dev_get_msi_domain(&dev->dev))
-> -		dev_set_msi_domain(&dev->dev,
-> -				   dev_get_msi_domain(&dev->bus->dev));
-> +	d = pci_dev_msi_domain(dev);
-> +	if (!d)
-> +		d = dev_get_msi_domain(&dev->bus->dev);
-> +
-> +	dev_set_msi_domain(&dev->dev, d);
->  }
->  
->  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+commit 0f7b9ad7477f7ce9b30e9ab0048f6e726f11a08a
+Author: Sasha Levin <sasha.levin@oracle.com>
+Date:   Sun Oct 4 17:49:29 2015 -0400
+
+    PCI: Prevent out of bounds access in numa_node override
+    
+    63692df103e9 ("PCI: Allow numa_node override via sysfs") didn't check that
+    the numa node provided by userspace is valid.  Passing a node number too
+    high would attempt to access invalid memory and trigger a kernel panic.
+    
+    Fixes: 63692df103e9 ("PCI: Allow numa_node override via sysfs")
+    Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: stable@vger.kernel.org	# v3.19+
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 312f23a..9261868 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -216,7 +216,7 @@ static ssize_t numa_node_store(struct device *dev,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (!node_online(node))
++	if (node >= MAX_NUMNODES || !node_online(node))
+ 		return -EINVAL;
+ 
+ 	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
