@@ -1,62 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48707 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965512AbbJVSIS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Oct 2015 14:08:18 -0400
-Date: Thu, 22 Oct 2015 13:08:13 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Li Yang <leoli@freescale.com>
-Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v4 5/6] PCI: layerscape: add PCIe support for LS1043a and
- LS2080a
-Message-ID: <20151022180813.GA25693@localhost>
-References: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
- <1444979960-24100-5-git-send-email-Minghuan.Lian@freescale.com>
- <20151021213612.GK1583@localhost>
- <CADRPPNSPP1m_7zNF6wEfw9+Bpe=Z_gUA81cSaV4SENVpR34YWQ@mail.gmail.com>
+Received: from mail-io0-f173.google.com ([209.85.223.173]:33464 "EHLO
+	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755866AbbJGT6f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 15:58:35 -0400
+Received: by iofh134 with SMTP id h134so35217782iof.0
+        for <linux-pci@vger.kernel.org>; Wed, 07 Oct 2015 12:58:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CADRPPNSPP1m_7zNF6wEfw9+Bpe=Z_gUA81cSaV4SENVpR34YWQ@mail.gmail.com>
+In-Reply-To: <mj+md-20151007.185700.38057.nikam@ucw.cz>
+References: <1444244146-714-1-git-send-email-netwerkforens@gmail.com>
+	<mj+md-20151007.185700.38057.nikam@ucw.cz>
+Date: Wed, 7 Oct 2015 21:58:34 +0200
+Message-ID: <CAKsTQnnmxaedSx6Bd+wzJ9LZON=d17OoCZuzE9BRe1Wd5cqHjg@mail.gmail.com>
+Subject: Re: [PATCH] pciutil: Enumerate alternative PCIe bus
+From: Ruud <netwerkforens@gmail.com>
+To: Martin Mares <mj@ucw.cz>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Leo,
+Hi Martin,
 
-On Thu, Oct 22, 2015 at 12:38:48PM -0500, Li Yang wrote:
-> On Wed, Oct 21, 2015 at 4:36 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Fri, Oct 16, 2015 at 03:19:19PM +0800, Minghuan Lian wrote:
-> >> Both LS1043a and LS2080a are based on ARMv8 64-bit architecture
-> >> and have similar PCIe implementation. LUT is added to controller.
-> >> The patch removes the necessary fields from struct ls_pcie.
-> >>
-> >> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> >> ---
-> >> This patch is based on v4.3-rc4 and [PATCH v10 3/6]
-> >> PCI: designware: Add ARM64 support.
-> 
-> Hi Bjorn,
-> 
-> Are you also applying this patch
-> https://patchwork.ozlabs.org/patch/531184/ in this merge windows?
-> Because the new hardware can only work with the generic ARM64 support
-> added in the designware pcie driver.
+> Sorry, but this is utterly wrong. This function is not specific
+> to i386 at all.
 
-I'm reviewing that patch right now, and I do hope to apply it for
-v4.4.
+No need to say sorry, you are the expert :)
 
-There was no cover letter for this series (Minghuan's Layerscape v4
-series), and I didn't see any mention of dependencies, so I applied it
-on top of v4.3-rc1.  Is that the wrong thing to do?  If it depends on
-the Zhou's v11 series, I can hold the Layerscape branch until after
-that.
+>
+> I will add a different work-around soon.
 
-Bjorn
+Thanks, looking forward to it.
+
+> (Also, please note that using the i386 access methods on Linux
+> is inherently unsafe as there is no locking between accesses by
+> different processes and by the kernel. There are available only
+> as a last resort when everything else fails.)
+
+I know, if you look at my other posts you will see I got some problems
+in hooking up an external chassis to a server. But I will not bother
+you with that too much. Problem is that the linux kernel will try to
+follow the PCIe busnumbering that the BIOS has installed. That leads
+to problems when the chassis contains about 12 switches that need to
+fit in the range the bios has set (which of course is too small and
+also assigns 64bit bars below 4G).
+
+Turning knobs on the PCIe busnumbering seems to confuse the linux
+kernel quite a bit when it has knowledge of that switch. However when
+I remove (1 > remove) the switches at the root complex level, they
+also disappear from the sysfs. This makes it difficult to manipulate
+(clear) settings using the linux kernel. setpci allows to bypass the
+kernel, but clearly no locking is implemented on the io ports thus if
+the kernel decides to access the PCI configuration io ports at the
+same time as setpci its heading for disaster.
+
+I will keep my fingers crossed for now, I expect the kernel not to do
+too much PCI config via io once the system is booted.
+
+It would be nice to orchestrate better with the kernel however afaik
+there is no lowlevel interface at the sysfs level that allows to
+address devices that are not enumerated (e.g. by directly accessing
+the MMIO_BASE?) and keeps the kernel "informed". But perhaps I am
+wrong.
+
+
+Best regards,
+
+Ruud
