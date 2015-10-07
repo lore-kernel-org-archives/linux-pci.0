@@ -1,163 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54326 "EHLO mail.kernel.org"
+Received: from mout0.freenet.de ([195.4.92.90]:52338 "EHLO mout0.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751237AbbJ1QcW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 Oct 2015 12:32:22 -0400
-Date: Wed, 28 Oct 2015 11:32:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexander Duyck <aduyck@mirantis.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/5] iov: Update virtfn_max_buses to validate offset and
- stride
-Message-ID: <20151028163216.GA2927@localhost>
-References: <20151027204607.14626.59671.stgit@localhost.localdomain>
- <20151027205215.14626.93504.stgit@localhost.localdomain>
+	id S1753512AbbJGQ7k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Oct 2015 12:59:40 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: Joerg Roedel <joro@8bytes.org>,
+	Andreas Hartmann <andihartmann@freenet.de>
+References: <55BE1D5E.6020709@maya.org>
+ <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
+ <55FE5740.2060701@maya.org> <20150929152100.GL3036@8bytes.org>
+ <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
+ <20150929162042.GR3036@8bytes.org> <560BF73F.8000008@maya.org>
+ <20151006101356.GE12506@8bytes.org> <56141507.7040103@maya.org>
+ <56148A1B.5060506@maya.org> <20151007161022.GI28811@8bytes.org>
+Cc: Mikulas Patocka <mpatocka@redhat.com>,
+	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
+	Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <56154DEA.5050901@maya.org>
+Date: Wed, 7 Oct 2015 18:52:58 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151027205215.14626.93504.stgit@localhost.localdomain>
+In-Reply-To: <20151007161022.GI28811@8bytes.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
-
-Thanks a lot for cleaning this up.  I think this is a great
-improvement over what I did.
-
-On Tue, Oct 27, 2015 at 01:52:15PM -0700, Alexander Duyck wrote:
-> This patch pulls the validation of offset and stride into virtfn_max_buses.
-> The general idea is to validate offset and stride for each possible value
-> of numvfs in addition to still determining the maximum bus value for the
-> VFs.
+On 10/07/2015 at 06:10 PM, Joerg Roedel wrote:
+> On Wed, Oct 07, 2015 at 04:57:31AM +0200, Andreas Hartmann wrote:
+>> Got it during a single mount (I booted with massively reduced mounts and
+>> did the mount afterwards manually. During the second manually mount, the
+>> problem can be seen).
+>>
+>> I attached the requested files. The mount starts at 80 seconds.
+>> Hope this helps.
 > 
-> I also reversed the loop as the most likely maximum will be when numvfs is
-> set to total_VFs.  In addition this makes it so that we loop down to a
-> value of 0 for numvfs which should be the resting state for the register.
+> Okay, the lowest dma-addr the AMD IOMMU driver returns is 0x1000 and
+> the highest is 0x7ff4000. All fault addresses are outside of this range,
+> so the AMD IOMMU driver never returned these addresses.
 > 
-> Fixes: 8e20e89658f2 ("PCI: Set SR-IOV NumVFs to zero after enumeration")
-> Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+> This doesn't mean that it is not at fault, but it looks still unlikely.
+> Maybe I can reproduce the problem here. Can you please tell me some
+> details about the partitions you mounted to trigger this?
+> 
+> I remember something about a xfs->lvm->dm_crypt->md_raid->sata setup, but
+> having more details may help me to reproduce.
 
-I'd like to squash this together with my patch instead of having fixes
-on top of fixes.  What do you think of the following?  (This applies
-on top of 70675e0b6a1a ("PCI: Don't try to restore VF BARs")).
+See attachments in http://article.gmane.org/gmane.linux.kernel.pci/43975
 
 
-commit c20e11b572c5d4e4f01c86580a133122fbd13cfa
-Author: Alexander Duyck <aduyck@mirantis.com>
-Date:   Wed Oct 28 10:54:32 2015 -0500
+To reproduce the error:
+First I mounted /daten2, afterwards /raid/mt, which produces the errors.
+The ssd mounts have been already active (during boot by fstab).
 
-    PCI: Set SR-IOV NumVFs to zero after enumeration
-    
-    The enumeration path should leave NumVFs set to zero.  But after
-    4449f079722c ("PCI: Calculate maximum number of buses required for VFs"),
-    we call virtfn_max_buses() in the enumeration path, which changes NumVFs.
-    This NumVFs change is visible via lspci and sysfs until a driver enables
-    SR-IOV.
-    
-    Iterate from TotalVFs down to zero so NumVFs is zero when we're finished
-    computing the maximum number of buses.  Validate offset and stride in
-    the loop, so we can test it at every possible NumVFs setting.  Rename
-    virtfn_max_buses() to compute_max_vf_buses() to hint that it does have a
-    side effect of updating iov->max_VF_buses.
-    
-    [bhelgaas: changelog, rename, reverse sense of error path]
-    Fixes: 4449f079722c ("PCI: Calculate maximum number of buses required for VFs")
-    Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
-    Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+If I mount all of them already during boot, the system mostly starts to
+emergency mode which unfortunately is broken here.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..120cfb3 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -54,24 +54,33 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
-  * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
-  * determine how many additional bus numbers will be consumed by VFs.
-  *
-- * Iterate over all valid NumVFs and calculate the maximum number of bus
-- * numbers that could ever be required.
-+ * Iterate over all valid NumVFs, validate offset and stride, and calculate
-+ * the maximum number of bus numbers that could ever be required.
-  */
--static inline u8 virtfn_max_buses(struct pci_dev *dev)
-+static int compute_max_vf_buses(struct pci_dev *dev)
- {
- 	struct pci_sriov *iov = dev->sriov;
--	int nr_virtfn;
--	u8 max = 0;
-+	int nr_virtfn = iov->total_VFs;
- 	int busnr;
- 
--	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
--		pci_iov_set_numvfs(dev, nr_virtfn);
-+	pci_iov_set_numvfs(dev, nr_virtfn);
-+
-+	while (nr_virtfn--) {
-+		if (!iov->offset || !iov->stride)
-+			goto err;
-+
- 		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
--		if (busnr > max)
--			max = busnr;
-+		if (busnr > iov->max_VF_buses)
-+			iov->max_VF_buses = busnr;
-+
-+		pci_iov_set_numvfs(dev, nr_virtfn);
- 	}
- 
--	return max;
-+	return 0;
-+
-+err:
-+	pci_iov_set_numvfs(dev, 0);
-+	return -EIO;
- }
- 
- static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
-@@ -384,7 +393,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
- 	int rc;
- 	int nres;
- 	u32 pgsz;
--	u16 ctrl, total, offset, stride;
-+	u16 ctrl, total;
- 	struct pci_sriov *iov;
- 	struct resource *res;
- 	struct pci_dev *pdev;
-@@ -414,11 +423,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
- 
- found:
- 	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
--	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
--	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
--	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
--	if (!offset || (total > 1 && !stride))
--		return -EIO;
- 
- 	pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
- 	i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
-@@ -456,8 +460,6 @@ found:
- 	iov->nres = nres;
- 	iov->ctrl = ctrl;
- 	iov->total_VFs = total;
--	iov->offset = offset;
--	iov->stride = stride;
- 	iov->pgsz = pgsz;
- 	iov->self = dev;
- 	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
-@@ -474,10 +476,15 @@ found:
- 
- 	dev->sriov = iov;
- 	dev->is_physfn = 1;
--	iov->max_VF_buses = virtfn_max_buses(dev);
-+	rc = compute_max_vf_buses(dev);
-+	if (rc)
-+		goto fail_max_buses;
- 
- 	return 0;
- 
-+fail_max_buses:
-+	dev->sriov = NULL;
-+	dev->is_physfn = 0;
- failed:
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &dev->resource[i + PCI_IOV_RESOURCES];
+
+Regards,
+Andreas
