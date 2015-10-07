@@ -1,110 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 40/60] PCI: Separate required+optional assigning to another function
-Date: Thu,  8 Oct 2015 14:38:59 -0700
-Message-Id: <1444340359-8011-41-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:39479 "EHLO
+	nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751716AbbJGTAt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 15:00:49 -0400
+Date: Wed, 7 Oct 2015 21:00:47 +0200
+From: Martin Mares <mj@ucw.cz>
+To: Ruud <netwerkforens@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pciutil: Enumerate alternative PCIe bus
+Message-ID: <mj+md-20151007.185700.38057.nikam@ucw.cz>
+References: <1444244146-714-1-git-send-email-netwerkforens@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444244146-714-1-git-send-email-netwerkforens@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-__assign_resources_sorted() is getting too big if we put alt_size support
-into it.  Split out required+optional assigning code to another function.
+Hello!
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
- 1 file changed, 27 insertions(+), 20 deletions(-)
+> diff --git a/lib/generic.c b/lib/generic.c
+> index c219592..5ee37f5 100644
+> --- a/lib/generic.c
+> +++ b/lib/generic.c
+> @@ -69,9 +69,10 @@ void
+>  pci_generic_scan(struct pci_access *a)
+>  {
+>    byte busmap[256];
+> +  int basebus = strtol(pci_get_param(a, "i386.basebus"),NULL,16);
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 09844d9..c49bfde 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -473,20 +473,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
- 	res->flags = save_res->flags;
- }
- 
--static void __assign_resources_sorted(struct list_head *head,
--				 struct list_head *realloc_head,
--				 struct list_head *fail_head)
-+static bool __assign_resources_required_optional_sorted(struct list_head *head,
-+				 struct list_head *realloc_head)
- {
--	/*
--	 * Should not assign requested resources at first.
--	 *   they could be adjacent, so later reassign can not reallocate
--	 *   them one by one in parent resource window.
--	 * Try to assign requested + add_size at beginning
--	 *  if could do that, could get out early.
--	 *  if could not do that, we still try to assign requested at first,
--	 *    then try to reassign add_size for some resources.
--	 */
--
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
-@@ -495,12 +484,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	resource_size_t add_align;
- 	struct resource *res;
- 
--	/* Check if optional add_size is there */
--	if (!realloc_head || list_empty(realloc_head))
--		goto requested_and_reassign;
--
- 	if (!save_resources(head, &save_head))
--		goto requested_and_reassign;
-+		return false;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -539,7 +524,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 			remove_from_list(realloc_head, dev_res->res);
- 		free_list(&save_head);
- 		free_list(head);
--		return;
-+
-+		return true;
- 	}
- 
- 	/* check failed type */
-@@ -574,7 +560,28 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	free_list(&save_head);
- 
--requested_and_reassign:
-+	return false;
-+}
-+
-+static void __assign_resources_sorted(struct list_head *head,
-+				 struct list_head *realloc_head,
-+				 struct list_head *fail_head)
-+{
-+	/*
-+	 * Should not assign required resources at first.
-+	 *   they could be adjacent, so later reassign can not reallocate
-+	 *   them one by one in parent resource window.
-+	 * Try to assign required + optional at beginning
-+	 *  if could do that, could get out early.
-+	 *  if could not do that, we still try to assign required at first,
-+	 *    then try to reassign add_size for some resources.
-+	 */
-+
-+	/* Check required+optional add */
-+	if (realloc_head && !list_empty(realloc_head) &&
-+	    __assign_resources_required_optional_sorted(head, realloc_head))
-+		return;
-+
- 	sort_resources(head);
- 
- 	/* Satisfy the must-have resource requests */
--- 
-1.8.4.5
+Sorry, but this is utterly wrong. This function is not specific
+to i386 at all.
 
+I will add a different work-around soon.
+
+(Also, please note that using the i386 access methods on Linux
+is inherently unsafe as there is no locking between accesses by
+different processes and by the kernel. There are available only
+as a last resort when everything else fails.)
+
+				Martin
