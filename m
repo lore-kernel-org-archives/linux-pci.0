@@ -1,74 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:63977 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932942AbbJ3VMD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 17:12:03 -0400
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v5 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
-Date: Fri, 30 Oct 2015 21:11:08 +0000
-Message-Id: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
+Received: from mail-io0-f171.google.com ([209.85.223.171]:33316 "EHLO
+	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750916AbbJGHaa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 03:30:30 -0400
+Received: by iofh134 with SMTP id h134so13210981iof.0
+        for <linux-pci@vger.kernel.org>; Wed, 07 Oct 2015 00:30:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAKsTQn=GEJwk-OFypdVLFQcXrYy4Zc8ADgX6V=rX0azfQspjkg@mail.gmail.com>
+References: <1443810216-3215-1-git-send-email-netwerkforens@gmail.com>
+	<20151003143056.GA17684@localhost>
+	<mj+md-20151005.101820.16366.nikam@ucw.cz>
+	<CAKsTQn=GEJwk-OFypdVLFQcXrYy4Zc8ADgX6V=rX0azfQspjkg@mail.gmail.com>
+Date: Wed, 7 Oct 2015 09:30:29 +0200
+Message-ID: <CAKsTQnne+knY2owNTYVG9hL93fDSwKK2TRQ8sp-zgjJD2qZ_ng@mail.gmail.com>
+Subject: Re: [PATCH] Enumerate all undiscovered PCIe busses
+From: Ruud <netwerkforens@gmail.com>
+To: Martin Mares <mj@ucw.cz>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+Hi Martin,
 
-This patch series incorporates feedback related to the version sent yesterday.
+I did some more digging
+>
+> Does `lspci -M' help?
 
-First, export functions that allow correlating Hyper-V virtual processors
-and Linux cpus, along with the means for invoking a hypercall that targets
-interrupts at chosen vectors on specfic cpus.
+The -M option shows all busses (but not a tree view), but more
+important setpci doesn't have the option and thus does not allow to do
+settings on the alternative busses.
 
-Second, mark various parts of IRQ domain related code as exported, so that
-this PCI front-end can implement an IRQ domain as part of a module.  (The
-alternative would be to pull all this into the kernel, which would pull
-in a lot of other Hyper-V related code, as this IRQ domain depends on
-hv_vmbus.ko.)
+With respect to the "incorrectness" of the patch, one could argue that
+scanning all busses is allowed as they should read 0xFF for unassigned
+busses IIRC.
+>From that respect it may  make more sense to have a command line
+option that forces a single bus, but scans by default instead of the
+other way around.
 
-Third, modify PCI so that new root PCI buses can be marked with an associated
-fwnode_handle, and so that root PCI buses can look up their associated IRQ
-domain by that handle.
+What do you think?
 
-Fourth, introduce a new driver, hv_pcifront, which eposes root PCI buses in
-a Hyper-V VM.  These root PCI buses expose real PCIe devices, or PCI Virtual
-Functions.
+Best regards,
 
-Jake Oshins (7):
-  drivers:hv: Export a function that maps Linux CPU num onto Hyper-V
-    proc num
-  drivers:hv: Export hv_do_hypercall()
-  PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
-  PCI: Add fwnode_handle to pci_sysdata
-  PCI: irqdomain: Look up IRQ domain by fwnode_handle
-  drivers:hv: Define the channel type for Hyper-V PCI Express
-    pass-through
-  PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
+Ruud
 
- MAINTAINERS                    |    1 +
- arch/x86/include/asm/msi.h     |    4 +
- arch/x86/include/asm/pci.h     |   13 +
- arch/x86/kernel/apic/msi.c     |    5 +-
- arch/x86/kernel/apic/vector.c  |    2 +
- drivers/hv/hv.c                |   20 +-
- drivers/hv/hyperv_vmbus.h      |    2 +-
- drivers/hv/vmbus_drv.c         |   17 +
- drivers/pci/Kconfig            |    7 +
- drivers/pci/host/Makefile      |    1 +
- drivers/pci/host/hv_pcifront.c | 2267 ++++++++++++++++++++++++++++++++++++++++
- drivers/pci/msi.c              |    4 +
- drivers/pci/probe.c            |   11 +
- include/asm-generic/pci.h      |    4 +
- include/linux/hyperv.h         |   14 +
- kernel/irq/chip.c              |    1 +
- kernel/irq/irqdomain.c         |    2 +
- 17 files changed, 2362 insertions(+), 13 deletions(-)
- create mode 100644 drivers/pci/host/hv_pcifront.c
-
--- 
-1.9.1
-
+2015-10-05 16:23 GMT+02:00 Ruud <netwerkforens@gmail.com>:
+> Hi Martin,
+>
+> I can't check the effect of "-M" at the moment so that will have to wait.
+> Some context:
+>
+> I got some buggy BIOS and lots of GPU's. The effect is that I need to
+> reenumerate busses and to let linux do that it is suggested to use
+> setpci to clear busnumber etc.
+> To make sure I do not clobber the linux drivers, I prefer to remove
+> the switches at the root level (echo 1>remove) and set the registers
+> using -H1 as hardware access.
+>
+> Unfortunately on the multiprocessor intel system, three root complexes
+> exist: one at bus 0x00, One at bux 0x80 (and one at 0x7f IIRC). lspci
+> -H1 will only report bus 0x00.
+>
+> It is not a problem for me to use a patched version of pciutils
+> locally, but hoped to share. Perhaps as an idea: make the base
+> bus-number configurable at the command line instead of hard coded?
+>
+> Best regards,
+>
+> Ruud
+>
+>
+> 2015-10-05 12:21 GMT+02:00 Martin Mares <mj@ucw.cz>:
+>> Hi!
+>>
+>>> This appears to be a patch for pciutils, so I cc'd Martin, who
+>>> maintains that.
+>>
+>> Thanks, I manage to follow linux-pci only very loosely these days...
+>>
+>>> On Fri, Oct 02, 2015 at 06:23:36PM +0000, Ruud wrote:
+>>> > Multiple root complexes have a different start busnumber.
+>>> > Poll all undiscovered busses for a root complex
+>>
+>> Unfortunately, this is not correct to do. Many systems report
+>> junk on unused bus number (for example, they decode bus numbers
+>> only partially, so the buses repeat).
+>>
+>> In which situation do you need this? Is it on Linux? Only lspci,
+>> or your own code using libpci?
+>>
+>> Does `lspci -M' help?
+>>
+>>                                 Have a nice fortnight
+>> --
+>> Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+>> Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+>> "Please try to fit your code to 80 columns. That's decimal 80." -- A. Morton
