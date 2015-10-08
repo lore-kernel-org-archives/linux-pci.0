@@ -1,56 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56803 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751425AbbJWFip (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:38:45 -0400
-Date: Fri, 23 Oct 2015 00:38:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: David Miller <davem@davemloft.net>, yinghai@kernel.org,
-	bhelgaas@google.com, weiyang@linux.vnet.ibm.com, linux@iam.tj,
-	wangyijing@huawei.com, khalid.aziz@oracle.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
-Message-ID: <20151023053842.GB20335@localhost>
-References: <CAE9FiQUdKdyipTw3KSVL0Kr1FFvki5Un3NuUuXpw4TXoWi1Tpg@mail.gmail.com>
- <20151021023522.GJ8224@localhost>
- <CAE9FiQXXP8-5hNvKXuh5mu6Xu_9yFufmpZaXv0V95TwBBnxCpA@mail.gmail.com>
- <20151021.182714.551622926534141857.davem@davemloft.net>
- <1445485662.2935.17.camel@kernel.crashing.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445485662.2935.17.camel@kernel.crashing.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:29873 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756478AbbJHVpK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:45:10 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 30/60] PCI: Remove duplicated code for resource sorting
+Date: Thu,  8 Oct 2015 14:38:49 -0700
+Message-Id: <1444340359-8011-31-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 22, 2015 at 02:47:42PM +1100, Benjamin Herrenschmidt wrote:
-> On Wed, 2015-10-21 at 18:27 -0700, David Miller wrote:
-> > From: Yinghai Lu <yinghai@kernel.org>
-> > Date: Wed, 21 Oct 2015 11:16:53 -0700
-> > 
-> > > otherwise we need to compare res with pbm->mem_space or pbm
-> > ->mem64_space
-> > > to get direct parent for request_resource_conflict() calling in
-> > > pci_register_legacy_regions().
-> > 
-> > Right, this is the issue.
-> > 
-> > On sparc64, the cpu physical base address used for accessing 64-bit
-> > and non-64-bit memory spaces is different.
-> > 
-> > And that's why the resource values will be different.
-> 
-> This is the same on power btw, we have separate PowerBus windows to the
-> PHB that get mapped respectively to 32-bit PCI MMIO and 64-bit PCI
-> MMIO. The former gets "remapped" to generates 0-based PCI cycles, while
-> the latter is 1:1. So the offset between CPU and PCI changes depending
-> on which window you hit.
+Now sort_resources() and pdev_sort_resources() all have sorting
+code.
 
-Lots of architectures do this, and the PCI core supports it by keeping
-a list of all the host bridge windows.  Each entry has a struct
-resource that contains the CPU address, as well as the offset from the
-CPU address to the PCI address.  The arch or host bridge driver uses
-pci_add_resource_offset() to tell the core about the window and the
-offset.
+As we are going to call sort_resources() several places later for
+alt_size support, so choose to remove related code in
+pdev_sort_resources().
 
-Bjorn
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 22 +++-------------------
+ 1 file changed, 3 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 5ea06c6..bcf7cba 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -214,9 +214,8 @@ static void pdev_sort_resources(struct pci_dev *dev,
+ 
+ 	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 		struct resource *r;
+-		struct pci_dev_resource *dev_res, *tmp;
++		struct pci_dev_resource *tmp;
+ 		resource_size_t r_align;
+-		struct list_head *n;
+ 
+ 		r = &dev->resource[i];
+ 
+@@ -239,22 +238,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
+ 		tmp->res = r;
+ 		tmp->dev = dev;
+ 
+-		/* fallback is smallest one or list is empty*/
+-		n = head;
+-		list_for_each_entry(dev_res, head, list) {
+-			resource_size_t align;
+-
+-			align = __pci_resource_alignment(dev_res->dev,
+-							 dev_res->res,
+-							 realloc_head);
+-
+-			if (r_align > align) {
+-				n = &dev_res->list;
+-				break;
+-			}
+-		}
+-		/* Insert it just before n*/
+-		list_add_tail(&tmp->list, n);
++		list_add_tail(&tmp->list, head);
+ 	}
+ }
+ 
+@@ -563,9 +547,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	free_list(&save_head);
+ 
++requested_and_reassign:
+ 	sort_resources(head);
+ 
+-requested_and_reassign:
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
+ 
+-- 
+1.8.4.5
+
