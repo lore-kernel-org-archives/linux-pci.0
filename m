@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:27369 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932309AbbJHVj6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:39:58 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -7,54 +11,68 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Khalid Aziz <khalid.aziz@oracle.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 08/60] powerpc/PCI: Keep resource idx order with bridge register number
-Date: Thu,  8 Oct 2015 14:38:27 -0700
-Message-Id: <1444340359-8011-9-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v7 05/60] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+Date: Thu,  8 Oct 2015 14:38:24 -0700
+Message-Id: <1444340359-8011-6-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Same as sparc version.
+For device resource PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource, so set
+IORESOUCE_MEM_64 for 64bit resource during of device resource flags
+parsing.
 
-Make resource with consistent sequence
-like other arch or directly from pci_read_bridge_bases(),
-even non-pref mmio is missing, or out of ordering in firmware reporting.
-
-So hold i = 1 for non pref mmio, and i = 2 for pref mmio.
-
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
 ---
- arch/powerpc/kernel/pci_of_scan.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ arch/sparc/kernel/of_device_32.c | 5 +++--
+ arch/sparc/kernel/of_device_64.c | 5 +++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 2e710c1..349ed11 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -255,7 +255,7 @@ void of_scan_pci_bridge(struct pci_dev *dev)
- 		bus->resource[i] = res;
- 		++res;
+diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
+index 185aa96..3e9f273 100644
+--- a/arch/sparc/kernel/of_device_32.c
++++ b/arch/sparc/kernel/of_device_32.c
+@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
  	}
--	i = 1;
-+	i = 3;
- 	for (; len >= 32; len -= 32, ranges += 8) {
- 		flags = pci_parse_of_flags(of_read_number(ranges, 1), 1);
- 		size = of_read_number(&ranges[6], 2);
-@@ -268,6 +268,12 @@ void of_scan_pci_bridge(struct pci_dev *dev)
- 				       " for bridge %s\n", node->full_name);
- 				continue;
- 			}
-+		} else if ((flags & IORESOURCE_PREFETCH) &&
-+			   !bus->resource[2]->flags) {
-+			res = bus->resource[2];
-+		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
-+			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
-+			res = bus->resource[1];
- 		} else {
- 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
- 				printk(KERN_ERR "PCI: too many memory ranges"
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
+diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
+index 7bbdc26..defee61 100644
+--- a/arch/sparc/kernel/of_device_64.c
++++ b/arch/sparc/kernel/of_device_64.c
+@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
 -- 
 1.8.4.5
 
