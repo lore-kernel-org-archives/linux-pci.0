@@ -1,55 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:50803 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbbJIPfy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 11:35:54 -0400
-Date: Fri, 9 Oct 2015 16:35:43 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Andrew Lunn <andrew@lunn.ch>, Julia Lawall <julia.lawall@lip6.fr>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 2/9] pci: mvebu: fix memory leaks and refcount leaks
-Message-ID: <20151009153543.GX32532@n2100.arm.linux.org.uk>
-References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
- <E1ZiRIs-0004Id-AN@rmk-PC.arm.linux.org.uk>
- <20151009165240.3ba17ece@free-electrons.com>
- <20151009150710.GJ14688@lunn.ch>
- <20151009171442.52988f0b@free-electrons.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151009171442.52988f0b@free-electrons.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25783 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756475AbbJHVpJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:45:09 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 29/60] PCI: Reorder resources list for required/optional resources
+Date: Thu,  8 Oct 2015 14:38:48 -0700
+Message-Id: <1444340359-8011-30-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 09, 2015 at 05:14:42PM +0200, Thomas Petazzoni wrote:
-> Julia: some of the Device Tree iterator functions have a somewhat
-> "interesting" behavior in that they take the reference on the current
-> child when entering the loop, and release it before entering the next
-> iteration (which will also take a reference to the next child).
-> 
-> This means that if you have an exit point inside the loop (break or
-> return), you are loosing a reference. For example,
-> http://lxr.free-electrons.com/source/arch/arm/mach-shmobile/pm-rmobile.c#L367
-> is wrong because there is a missing of_node_put(np) before the "return
-> -ENOMEM".
-> 
-> So essentially, every exit point in such Device Tree iteration loops
-> should make to call of_node_put() on the current element before exiting
-> the loop unexpectedly.
+We try to allocate required+optional before allocate required only and
+expand with optional.
 
-There is an exception to that... if the loop is part of a DT node lookup
-function, which would return a DT node based on some search criteria, it
-would be valid to break out of the loop while holding a reference.
+At first we update size and alignment for required+optional resource.
+And after that we reorder them with new alignment, but current we only
+do that STARTALIGN ones.
 
-For example, of_get_child_by_name(), of_find_next_cache_node(),
-of_graph_get_port_by_id(), are valid breaker-outer cases. ;)
+For SIZEALIGN type resource, after add back add_size, the alignment
+get changed, so need to do sorting like STARTALIGN type resources.
 
-However, of_platform_bus_probe(), of_platform_populate(),
-of_overlay_apply_one(), overlay_subtree_check() are examples of
-incorrect break-out cases.
+Also we need to reorder the sorting back after we restore
+resource to required only when required+optional fail to allocate for all.
 
+So move out the reordering code from the loop to separated function,
+and call it two times accordingly.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 62 +++++++++++++++++++++++++++++--------------------
+ 1 file changed, 37 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 5e1cc7e..5ea06c6 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -286,6 +286,31 @@ static inline void reset_resource(struct resource *res)
+ 	res->flags = 0;
+ }
+ 
++static void sort_resources(struct list_head *head)
++{
++	struct pci_dev_resource *res1, *tmp_res, *res2;
++
++	list_for_each_entry_safe(res1, tmp_res, head, list) {
++		resource_size_t align1, size1, align2, size2;
++
++		align1 = pci_resource_alignment(res1->dev, res1->res);
++		size1 = resource_size(res1->res);
++
++		/* reorder it */
++		list_for_each_entry(res2, head, list) {
++			if (res2 == res1)
++				break;
++
++			align2 = pci_resource_alignment(res2->dev, res2->res);
++			size2 = resource_size(res2->res);
++			if (is_before(align1, size1, align2, size2)) {
++				list_move_tail(&res1->list, &res2->list);
++				break;
++			}
++		}
++	}
++}
++
+ /**
+  * reassign_resources_sorted() - satisfy any additional resource requests
+  *
+@@ -454,9 +479,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
++	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+-	resource_size_t add_align, align;
++	resource_size_t add_align;
+ 
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -471,47 +496,32 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+-	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
++	list_for_each_entry(dev_res, head, list) {
+ 		dev_res->res->end += get_res_add_size(realloc_head,
+ 							dev_res->res);
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+-		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+-		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
+-		 * Here just fix the additional alignment for bridge
++		 * 1. bridge resource with IORESOURCE_STARTALIGN
++		 *    need to update start to change alignment
++		 * 2. resource with IORESOURCE_SIZEALIGN
++		 *    update size above already change alignment.
+ 		 */
+ 		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
+ 			continue;
+ 
+ 		add_align = get_res_add_align(realloc_head, dev_res->res);
+ 
+-		/*
+-		 * The "head" list is sorted by the alignment to make sure
+-		 * resources with bigger alignment will be assigned first.
+-		 * After we change the alignment of a dev_res in "head" list,
+-		 * we need to reorder the list by alignment to make it
+-		 * consistent.
+-		 */
+-		if (add_align > dev_res->res->start) {
++		if (add_align) {
+ 			resource_size_t r_size = resource_size(dev_res->res);
+ 
+ 			dev_res->res->start = add_align;
+ 			dev_res->res->end = add_align + r_size - 1;
+-
+-			list_for_each_entry(dev_res2, head, list) {
+-				align = pci_resource_alignment(dev_res2->dev,
+-							       dev_res2->res);
+-				if (add_align > align) {
+-					list_move_tail(&dev_res->list,
+-						       &dev_res2->list);
+-					break;
+-				}
+-			}
+                }
+-
+ 	}
+ 
++	sort_resources(head);
++
+ 	/* Try updated head list with add_size added */
+ 	assign_requested_resources_sorted(head, &local_fail_head);
+ 
+@@ -553,6 +563,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	free_list(&save_head);
+ 
++	sort_resources(head);
++
+ requested_and_reassign:
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
 -- 
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+1.8.4.5
+
