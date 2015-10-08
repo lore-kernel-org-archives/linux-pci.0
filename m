@@ -1,56 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28717 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757049AbbJIQkG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 12:40:06 -0400
-Message-ID: <1444407581.17726.7.camel@oracle.com>
-Subject: Re: [PATCH v7 06/60] sparc/PCI: Keep resource idx order with bridge
- register number
-From: Khalid Aziz <khalid.aziz@oracle.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Fri, 09 Oct 2015 10:19:41 -0600
-In-Reply-To: <1444340359-8011-7-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-	 <1444340359-8011-7-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.kundenserver.de ([212.227.17.13]:57617 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932145AbbJHOig convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 10:38:36 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Krzysztof =?utf-8?B?SGHFgmFzYQ==?= <khalasa@piap.pl>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2] ARM: cns3xxx: pci: avoid potential stack overflow
+Date: Thu, 08 Oct 2015 16:38:31 +0200
+Message-ID: <6292196.7OZzGKz28l@wuerfel>
+In-Reply-To: <m3vbahy8wp.fsf@t19.piap.pl>
+References: <2273145.0Ls8cProhs@wuerfel> <12713701.B4epxIQJNF@wuerfel> <m3vbahy8wp.fsf@t19.piap.pl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-10-08 at 14:38 -0700, Yinghai Lu wrote:
-> On one system found strang "no compatible bridge window" warning
+On Thursday 08 October 2015 12:03:18 Krzysztof Hałasa wrote:
+> Hi,
 > 
-> PCI: Claiming 0000:00:01.0: Resource 14: 0002000100000000..000200010fffffff [10220c]
-> PCI: Claiming 0000:01:00.0: Resource 1: 0002000100000000..000200010000ffff [100214]
-> pci 0000:01:00.0: can't claim BAR 1 [mem 0x2000100000000-0x200010000ffff 64bit]: no compatible bridge window
+> Arnd Bergmann <arnd@arndb.de> writes:
 > 
-> and we already had pref_compat support that add extra pref bit for device
-> resource.
+> > With those two changes in place, we no longer need the fake
+> > pci_sys_data/pci_bus structures for faking config space writes,
+> > and the stack usage goes down as well.
 > 
-> It turns out that pci_resource_compatible()/pci_up_path_over_pref_mem64()
-> just check resource with bridge pref mmio register idx 15, and we have put
-> resource to use mmio register idx 14 during of_scan_pci_bridge()
-> as the bridge does not mmio resource.
+> >  arch/arm/mach-cns3xxx/pcie.c | 71 +++++++++++++++++++++++++++++----------------------------------------
 > 
-> We already fix pci_up_path_over_pref_mem64() to check all bus resources.
+> I'm ATM unable to test this change, but will do that at some point.
+> Meanwhile, I guess there is nothing I can say against this patch.
+> Thanks.
 > 
-> And at the same time, this patch will make resource to consistent sequence
-> like other arch or directly from pci_read_bridge_bases(),
-> even non-pref mmio is missing, or out of ordering in firmware reporting.
+> Acked-by: Krzysztof Hałasa <khalasa@piap.pl>
 > 
-> So hold i = 1 for non pref mmio, and i =2 for pref mmio.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Tested on sparc platforms
+Thanks! I've queued it up in next/fixes-non-critical for linux-4.4
+now, if you find something wrong later, we can revert or fix up.
 
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com> 
+There is no urgency for this one, especially since you still want to
+test it, so no reason to put it in 4.3.
 
+This was the last pre-2015 build warning for the ARM defconfigs
+and allmodconfig, all remaining warnings are regressions or new
+code, and I've submitted patches for those. Let's see if we can
+get to a warning-free kernel build in 4.4.
 
-
+	Arnd
