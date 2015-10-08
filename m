@@ -1,163 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:36444 "EHLO
-	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932587AbbJHWK7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 18:10:59 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v5 2/4] of/irq: Add new function of_msi_map_rid()
-Date: Thu,  8 Oct 2015 15:10:48 -0700
-Message-Id: <1444342250-6196-3-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1444342250-6196-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1444342250-6196-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:23405 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932320AbbJHVj7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:39:59 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 01/60] sparc/PCI: Add mem64 resource parsing for root bus
+Date: Thu,  8 Oct 2015 14:38:20 -0700
+Message-Id: <1444340359-8011-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+Found "no compatible bridge window" warning in boot log from T5-8.
 
-The device tree property "msi-map" specifies how to create the PCI
-requester id used in some MSI controllers.  Add a new function
-of_msi_map_rid() that finds the msi-map property and applies its
-translation to a given requester id.
+pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
 
-Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: David Daney <david.daney@cavium.com>
+That resource is above 4G, but does not get offset correctly as
+root bus only report io and mem32.
+
+pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+pci_bus 0000:00: root bus resource [bus 00-77]
+
+Add mem64 handling in pci_common for sparc, so we can have 64bit resource
+registered for root bus at first.
+
+After patch, will have:
+pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
+pci_bus 0000:00: root bus resource [bus 00-77]
+
+-v2: mem64_space should use mem_space.start as offset.
+-v3: add IORESOURCE_MEM_64 flag
+-v4: set name for mem64_space, otherwise /proc/iomem will have <bad> for name
+
+Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+Reported-by: David Ahern <david.ahern@oracle.com>
+Tested-by: David Ahern <david.ahern@oracle.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+ arch/sparc/kernel/pci.c        |    7 ++++++-
+ arch/sparc/kernel/pci_common.c |   17 +++++++++++++++--
+ arch/sparc/kernel/pci_impl.h   |    1 +
+ 3 files changed, 22 insertions(+), 3 deletions(-)
 ---
- drivers/of/irq.c       | 84 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/of_irq.h |  7 +++++
- 2 files changed, 91 insertions(+)
+ arch/sparc/kernel/pci.c        |  7 ++++++-
+ arch/sparc/kernel/pci_common.c | 17 +++++++++++++++--
+ arch/sparc/kernel/pci_impl.h   |  1 +
+ 3 files changed, 22 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-index 55317fa..c90bd4e 100644
---- a/drivers/of/irq.c
-+++ b/drivers/of/irq.c
-@@ -598,3 +598,87 @@ void of_msi_configure(struct device *dev, struct device_node *np)
- 		d = irq_find_host(msi_np);
- 	dev_set_msi_domain(dev, d);
- }
-+
-+/**
-+ * of_msi_map_rid - Map a MSI requester ID for a device.
-+ * @dev: device for which the mapping is to be done.
-+ * @msi_np: device node of the expected msi controller.
-+ * @rid_in: unmapped MSI requester ID for the device.
-+ *
-+ * Walk up the device hierarchy looking for devices with a "msi-map"
-+ * property.  If found, apply the mapping to @rid_in.
-+ *
-+ * Returns the mapped MSI requester ID.
-+ */
-+u32 of_msi_map_rid(struct device *dev, struct device_node *msi_np, u32 rid_in)
-+{
-+	struct device *parent_dev;
-+	struct device_node *msi_controller_node;
-+	u32 map_mask, masked_rid, rid_base, msi_base, rid_len, phandle;
-+	int msi_map_len;
-+	bool matched;
-+	u32 rid_out = rid_in;
-+	const __be32 *msi_map = NULL;
-+
-+	/*
-+	 * Walk up the device parent links looking for one with a
-+	 * "msi-map" property.
-+	 */
-+	for (parent_dev = dev; parent_dev; parent_dev = parent_dev->parent) {
-+		if (!parent_dev->of_node)
-+			continue;
-+
-+		msi_map = of_get_property(parent_dev->of_node,
-+					  "msi-map", &msi_map_len);
-+		if (!msi_map)
-+			continue;
-+
-+		if (msi_map_len % (4 * sizeof(__be32))) {
-+			dev_err(parent_dev, "Error: Bad msi-map length: %d\n",
-+				msi_map_len);
-+			return rid_out;
-+		}
-+		/* We have a good parent_dev and msi_map, let's use them. */
-+		break;
-+	}
-+	if (!msi_map)
-+		return rid_out;
-+
-+	/* The default is to select all bits. */
-+	map_mask = 0xffffffff;
-+
-+	/*
-+	 * Can be overridden by "msi-map-mask" property.  If
-+	 * of_property_read_u32() fails, the default is used.
-+	 */
-+	of_property_read_u32(parent_dev->of_node, "msi-map-mask", &map_mask);
-+
-+	masked_rid = map_mask & rid_in;
-+	matched = false;
-+	while (!matched && msi_map_len >= 4 * sizeof(__be32)) {
-+		rid_base = be32_to_cpup(msi_map + 0);
-+		phandle = be32_to_cpup(msi_map + 1);
-+		msi_base = be32_to_cpup(msi_map + 2);
-+		rid_len = be32_to_cpup(msi_map + 3);
-+
-+		msi_controller_node = of_find_node_by_phandle(phandle);
-+
-+		matched = masked_rid >= rid_base &&
-+			masked_rid < rid_base + rid_len &&
-+			msi_np == msi_controller_node;
-+
-+		of_node_put(msi_controller_node);
-+		msi_map_len -= 4 * sizeof(__be32);
-+		msi_map += 4;
-+	}
-+	if (!matched)
-+		return rid_out;
-+
-+	rid_out = masked_rid + msi_base;
-+	dev_dbg(dev,
-+		"msi-map at: %s, using mask %08x, rid-base: %08x, msi-base: %08x, length: %08x, rid: %08x -> %08x\n",
-+		dev_name(parent_dev), map_mask, rid_base, msi_base,
-+		rid_len, rid_in, rid_out);
-+
-+	return rid_out;
-+}
-diff --git a/include/linux/of_irq.h b/include/linux/of_irq.h
-index 4bcbd58..8cd9334 100644
---- a/include/linux/of_irq.h
-+++ b/include/linux/of_irq.h
-@@ -75,6 +75,7 @@ static inline int of_irq_to_resource_table(struct device_node *dev,
- extern unsigned int irq_of_parse_and_map(struct device_node *node, int index);
- extern struct device_node *of_irq_find_parent(struct device_node *child);
- extern void of_msi_configure(struct device *dev, struct device_node *np);
-+u32 of_msi_map_rid(struct device *dev, struct device_node *msi_np, u32 rid_in);
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index b91d7f1..badf095 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -185,8 +185,10 @@ static unsigned long pci_parse_of_flags(u32 addr0)
  
- #else /* !CONFIG_OF */
- static inline unsigned int irq_of_parse_and_map(struct device_node *dev,
-@@ -87,6 +88,12 @@ static inline void *of_irq_find_parent(struct device_node *child)
- {
- 	return NULL;
- }
-+
-+static inline u32 of_msi_map_rid(struct device *dev,
-+				 struct device_node *msi_np, u32 rid_in)
-+{
-+	return rid_in;
-+}
- #endif /* !CONFIG_OF */
+ 	if (addr0 & 0x02000000) {
+ 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
+-		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
++		if (addr0 & 0x01000000)
++			flags |= IORESOURCE_MEM_64
++				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		if (addr0 & 0x40000000)
+ 			flags |= IORESOURCE_PREFETCH
+ 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
+@@ -655,6 +657,9 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 				pbm->io_space.start);
+ 	pci_add_resource_offset(&resources, &pbm->mem_space,
+ 				pbm->mem_space.start);
++	if (pbm->mem64_space.flags)
++		pci_add_resource_offset(&resources, &pbm->mem64_space,
++					pbm->mem_space.start);
+ 	pbm->busn.start = pbm->pci_first_busno;
+ 	pbm->busn.end	= pbm->pci_last_busno;
+ 	pbm->busn.flags	= IORESOURCE_BUS;
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 944a065..33524c1 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -406,6 +406,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 	}
  
- #endif /* __OF_IRQ_H */
+ 	num_pbm_ranges = i / sizeof(*pbm_ranges);
++	memset(&pbm->mem64_space, 0, sizeof(struct resource));
+ 
+ 	for (i = 0; i < num_pbm_ranges; i++) {
+ 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
+@@ -451,7 +452,12 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 			break;
+ 
+ 		case 3:
+-			/* XXX 64-bit MEM handling XXX */
++			/* 64-bit MEM handling */
++			pbm->mem64_space.start = a;
++			pbm->mem64_space.end = a + size - 1UL;
++			pbm->mem64_space.flags = IORESOURCE_MEM;
++			saw_mem = 1;
++			break;
+ 
+ 		default:
+ 			break;
+@@ -465,15 +471,22 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 		prom_halt();
+ 	}
+ 
+-	printk("%s: PCI IO[%llx] MEM[%llx]\n",
++	printk("%s: PCI IO[%llx] MEM[%llx]",
+ 	       pbm->name,
+ 	       pbm->io_space.start,
+ 	       pbm->mem_space.start);
++	if (pbm->mem64_space.flags)
++		printk(" MEM64[%llx]",
++		       pbm->mem64_space.start);
++	printk("\n");
+ 
+ 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
++	pbm->mem64_space.name = pbm->name;
+ 
+ 	request_resource(&ioport_resource, &pbm->io_space);
+ 	request_resource(&iomem_resource, &pbm->mem_space);
++	if (pbm->mem64_space.flags)
++		request_resource(&iomem_resource, &pbm->mem64_space);
+ 
+ 	pci_register_legacy_regions(&pbm->io_space,
+ 				    &pbm->mem_space);
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 75803c7..37222ca 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -97,6 +97,7 @@ struct pci_pbm_info {
+ 	/* PBM I/O and Memory space resources. */
+ 	struct resource			io_space;
+ 	struct resource			mem_space;
++	struct resource			mem64_space;
+ 	struct resource			busn;
+ 
+ 	/* Base of PCI Config space, can be per-PBM or shared. */
 -- 
-1.9.1
+1.8.4.5
 
