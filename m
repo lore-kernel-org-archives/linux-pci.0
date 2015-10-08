@@ -1,151 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 26/61] PCI: Use correct align for optional only resources during sorting
-Date: Tue, 27 Oct 2015 13:55:18 -0700
-Message-Id: <1445979353-1728-27-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 8bytes.org ([81.169.241.247]:57843 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933103AbbJHQkA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Oct 2015 12:40:00 -0400
+Date: Thu, 8 Oct 2015 18:39:58 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Mikulas Patocka <mpatocka@redhat.com>,
+	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
+	Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+Message-ID: <20151008163957.GK28811@8bytes.org>
+References: <55FE5740.2060701@maya.org>
+ <20150929152100.GL3036@8bytes.org>
+ <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
+ <20150929162042.GR3036@8bytes.org>
+ <560BF73F.8000008@maya.org>
+ <20151006101356.GE12506@8bytes.org>
+ <56141507.7040103@maya.org>
+ <56148A1B.5060506@maya.org>
+ <20151007161022.GI28811@8bytes.org>
+ <56154DEA.5050901@maya.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56154DEA.5050901@maya.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During sorting before assign, we only put resource with non-zero align
-in the sorted list, so for optional resources that required size is 0 and
-only have optional parts, we need to have correct align.
+On Wed, Oct 07, 2015 at 06:52:58PM +0200, Andreas Hartmann wrote:
+> To reproduce the error:
+> First I mounted /daten2, afterwards /raid/mt, which produces the errors.
+> The ssd mounts have been already active (during boot by fstab).
 
-While treating SRIOV as optional resources, we always read alignment for
-SRIOV bars every time, so they are ok.
-Hotplug bridge resources are using STARTALIGN so it is ok when size is 0
-if we have correct start for them.
+Okay, I spent the day on that problem, and managed to reproduce it here
+on one of my AMD IOMMU boxes. I wasn't an easy journey, as I can only
+reproduce it if I setup the crypto partition and everything above that
+(like mounting the lvm volumes) _after_ the system has finished booting.
+If everything is setup during system boot it works fine and I don't see
+any IO_PAGE_FAULTS.
 
-Later we want to treat the ROM BAR as optional resource, and it has
-SIZEALIGN, so align=size will be 0. We need to find a way to get align
-for them.
+I also tried kernel v4.3-rc4 first, to have it tested with a
+self-compiled kernel. It didn't show up there, so I built a 4.1.0, where
+it showed up again. Something seems to have fixed the issue in the
+latest kernels.
 
-We can use optional resource align instead in that case, and it
-is ok for SRIOV path and hotplug bridge resource path.
+So I looked a little bit around at the commits that were merged into the
+respective parts involved here, and found this one:
 
-We need to pass realloc list from sizing stage to sorting stage, and
-get entry from realloc list and calculate align from the entry.
+	586b286 dm crypt: constrain crypt device's max_segment_size to PAGE_SIZE
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Reported-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 42 insertions(+), 7 deletions(-)
+The problem fixed with this commit looks quite similar to what you have
+seen (execpt that there was no IOMMU involved). So I cherry-picked that
+commit on 4.1.0 and tested that. The problem was gone.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e075495..ab67cdb 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -145,9 +145,42 @@ static resource_size_t get_res_add_align(struct list_head *head,
- 	return dev_res->min_align;
- }
- 
-+static resource_size_t __pci_resource_alignment(
-+				struct pci_dev *dev,
-+				struct resource *r,
-+				struct list_head *realloc_head)
-+{
-+	resource_size_t r_align = pci_resource_alignment(dev, r);
-+	resource_size_t orig_start, orig_end;
-+	struct pci_dev_resource *dev_res;
-+
-+	if (r_align || !realloc_head)
-+		return r_align;
-+
-+	dev_res = res_to_dev_res(realloc_head, r);
-+	if (!dev_res || !dev_res->add_size)
-+		return r_align;
-+
-+	orig_start = r->start;
-+	orig_end = r->end;
-+	r->end += dev_res->add_size;
-+	if ((r->flags & IORESOURCE_STARTALIGN)) {
-+		resource_size_t r_size = resource_size(r);
-+
-+		r->start = dev_res->min_align;
-+		r->end = r->start + r_size - 1;
-+	}
-+	r_align = pci_resource_alignment(dev, r);
-+	r->start = orig_start;
-+	r->end = orig_end;
-+
-+	return r_align;
-+}
- 
- /* Sort resources by alignment */
--static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
-+static void pdev_sort_resources(struct pci_dev *dev,
-+				 struct list_head *realloc_head,
-+				 struct list_head *head)
- {
- 	int i;
- 
-@@ -165,7 +198,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- 		if (!(r->flags) || r->parent)
- 			continue;
- 
--		r_align = pci_resource_alignment(dev, r);
-+		r_align = __pci_resource_alignment(dev, r, realloc_head);
- 		if (!r_align) {
- 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
- 				 i, r);
-@@ -183,8 +216,9 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- 		list_for_each_entry(dev_res, head, list) {
- 			resource_size_t align;
- 
--			align = pci_resource_alignment(dev_res->dev,
--							 dev_res->res);
-+			align = __pci_resource_alignment(dev_res->dev,
-+							 dev_res->res,
-+							 realloc_head);
- 
- 			if (r_align > align) {
- 				n = &dev_res->list;
-@@ -197,6 +231,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- }
- 
- static void __dev_sort_resources(struct pci_dev *dev,
-+				 struct list_head *realloc_head,
- 				 struct list_head *head)
- {
- 	u16 class = dev->class >> 8;
-@@ -213,7 +248,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
- 			return;
- 	}
- 
--	pdev_sort_resources(dev, head);
-+	pdev_sort_resources(dev, realloc_head, head);
- }
- 
- static inline void reset_resource(struct resource *res)
-@@ -507,7 +542,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
- {
- 	LIST_HEAD(head);
- 
--	__dev_sort_resources(dev, &head);
-+	__dev_sort_resources(dev, add_head, &head);
- 	__assign_resources_sorted(&head, add_head, fail_head);
- 
- }
-@@ -520,7 +555,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
- 	LIST_HEAD(head);
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list)
--		__dev_sort_resources(dev, &head);
-+		__dev_sort_resources(dev, realloc_head, &head);
- 
- 	__assign_resources_sorted(&head, realloc_head, fail_head);
- }
--- 
-1.8.4.5
+So it looks like it was a dm-crypt issue, the patch went into v4.3-rc3,
+either this kernel of rc4 should fix the problem for you too. Can you
+please verify this is fixed for you too with v4.3-rc4?
+
+
+Thanks,
+
+	Joerg
 
