@@ -1,77 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0116.outbound.protection.outlook.com ([157.56.110.116]:6784
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753568AbbJPHSz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 16 Oct 2015 03:18:55 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	"Yoder Stuart-B08248" <stuart.yoder@freescale.com>,
-	Li Yang <leoli@freescale.com>, Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Jingoo Han" <jg1.han@samsung.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	"Minghuan Lian" <Minghuan.Lian@freescale.com>
-Subject: [PATCH v4 6/6] PCI: layerscape: add ls_pcie_msi_host_init
-Date: Fri, 16 Oct 2015 15:19:20 +0800
-Message-ID: <1444979960-24100-6-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from userp1040.oracle.com ([156.151.31.81]:27564 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932606AbbJHVkM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:40:12 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 17/60] PCI: Claim fixed resource during remove/rescan path
+Date: Thu,  8 Oct 2015 14:38:36 -0700
+Message-Id: <1444340359-8011-18-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Layerscape PCIe has its own MSI implementation. The patch registers
-ls_pcie_msi_host_init() to avoid using Designware's MSI.
+During driver loading kernel will check if resources get reserved.
+so we need to make sure resources get reserved before pci_bus_add().
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+On remove/rescan path, we will leave those fixed resource
+not reserved. In that path, We don't call pcibios_resource_survery()
+before pci_assign_unassigned_bus_resources(), and that is intentional
+for us to get new resources for rescan. We do need to use rescan to make
+device get resource allocated while ignoring BIOS allocate resource.
+
+But fixed resources are not allocated via
+pci_assign_unassigned_bus_resources(), so we need to reserve them
+explicitly.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
-Change log
-v4: split from [PATCH v3] PCI: layerscape: Add PCIe support for LS1043a and LS2080a
-
- drivers/pci/host/pci-layerscape.c | 17 +++++++++++++++++
+ drivers/pci/quirks.c | 17 +++++++++++++++++
  1 file changed, 17 insertions(+)
 
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index c53692a..8fac6c8 100644
---- a/drivers/pci/host/pci-layerscape.c
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -150,14 +150,31 @@ static void ls_pcie_host_init(struct pcie_port *pp)
- 	iowrite32(0, pcie->dbi + PCIE_DBI_RO_WR_EN);
- }
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 55bb661..e7e86d3 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -323,6 +323,23 @@ static void quirk_s3_64M(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
  
-+static int ls_pcie_msi_host_init(struct pcie_port *pp,
-+				 struct msi_controller *chip)
++/* for pci remove and rescan */
++static void quirk_allocate_fixed(struct pci_dev *dev)
 +{
-+	struct device_node *msi_node;
-+	struct device_node *np = pp->dev->of_node;
++	int i;
++	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
++		struct resource *r = &dev->resource[i];
 +
-+	msi_node = of_parse_phandle(np, "msi-parent", 0);
-+	if (!msi_node) {
-+		dev_err(pp->dev, "failed to find msi-parent\n");
-+		return -EINVAL;
++		if (r->parent ||
++		    !(r->flags & IORESOURCE_PCI_FIXED) ||
++		    !(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
++			continue;
++
++		pci_claim_resource(dev, i);
 +	}
-+
-+	return 0;
 +}
++DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID,	PCI_ANY_ID,	quirk_allocate_fixed);
 +
- static struct pcie_host_ops ls1021_pcie_host_ops = {
- 	.link_up = ls1021_pcie_link_up,
- 	.host_init = ls1021_pcie_host_init,
-+	.msi_host_init = ls_pcie_msi_host_init,
- };
- 
- static struct pcie_host_ops ls_pcie_host_ops = {
- 	.link_up = ls_pcie_link_up,
- 	.host_init = ls_pcie_host_init,
-+	.msi_host_init = ls_pcie_msi_host_init,
- };
- 
- static struct ls_pcie_drvdata ls1021_drvdata = {
+ static void quirk_io(struct pci_dev *dev, int pos, unsigned size,
+ 		     const char *name)
+ {
 -- 
-1.9.1
+1.8.4.5
 
