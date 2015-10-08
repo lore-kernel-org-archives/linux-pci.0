@@ -1,100 +1,242 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 5/5] iov: Update sriov_enable to correctly handle offset and
- stride
-From: Alexander Duyck <aduyck@mirantis.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 27 Oct 2015 13:52:40 -0700
-Message-ID: <20151027205240.14626.85603.stgit@localhost.localdomain>
-In-Reply-To: <20151027204607.14626.59671.stgit@localhost.localdomain>
-References: <20151027204607.14626.59671.stgit@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:23698 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751770AbbJHVkc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:40:32 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 59/60] PCI: Don't set flags to 0 when assign resource fail
+Date: Thu,  8 Oct 2015 14:39:18 -0700
+Message-Id: <1444340359-8011-60-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As per the SR-IOV spec the values for offset and stride are undefined until
-ARI and numVFs have been set.  As such we should not be reading them until
-the values have been assigned to the hardware.  In addition if numVFs is 0
-the values for offset and stride are defined as unused.
+We want to keep resource flags instead of clearing it after resource
+allocation fails.
 
-This change corrects a spot where we were reading the offset and stride
-even though we had left numVFs set to 0.
+Make flags take IORESOURCE_UNSET | IORESOURCE_DISABLED instead.
 
-Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/iov.c |   28 +++++++++++-----------------
- 1 file changed, 11 insertions(+), 17 deletions(-)
+ drivers/pci/bus.c       |  2 +-
+ drivers/pci/setup-bus.c | 45 +++++++++++++++++++++++----------------------
+ drivers/pci/setup-res.c |  3 ++-
+ 3 files changed, 26 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index c0fc88fa7c4d..030568520772 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -241,11 +241,11 @@ int __weak pcibios_sriov_disable(struct pci_dev *pdev)
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 0859e77..69f1b5e 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -140,7 +140,7 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
+ 	type_mask |= IORESOURCE_TYPE_BITS;
  
- static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	pci_bus_for_each_resource(bus, r, i) {
+-		if (!r)
++		if (!r || resource_disabled(r))
+ 			continue;
+ 
+ 		/* type_mask must match */
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 23318bd..22ee1a1 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -264,13 +264,6 @@ static void __dev_assign_resources_prepare(struct pci_dev *dev,
+ 	pdev_assign_resources_prepare(dev, realloc_head, head);
+ }
+ 
+-static inline void reset_resource(struct resource *res)
+-{
+-	res->start = 0;
+-	res->end = 0;
+-	res->flags = 0;
+-}
+-
+ static void sort_resources(struct list_head *head)
  {
--	u16 offset, stride, initial;
- 	struct resource *res;
- 	struct pci_dev *pdev;
- 	struct pci_sriov *iov = dev->sriov;
- 	int rc, i, nres, bars, bus;
-+	u16 initial;
- 
- 	if (!nr_virtfn)
- 		return 0;
-@@ -262,11 +262,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	    (!(iov->cap & PCI_SRIOV_CAP_VFM) && (nr_virtfn > initial)))
- 		return -EINVAL;
- 
--	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &offset);
--	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &stride);
--	if (!offset || (nr_virtfn > 1 && !stride))
--		return -EIO;
--
- 	for (nres = 0, bars = 0, i = PCI_SRIOV_NUM_BARS; i--;) {
- 		bars |= (1 << (i + PCI_IOV_RESOURCES));
- 		res = &dev->resource[i + PCI_IOV_RESOURCES];
-@@ -278,16 +273,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 		return -ENOMEM;
+ 	struct pci_dev_resource *res1, *tmp_res, *res2;
+@@ -337,7 +330,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 			res->start = align;
+ 			res->end = res->start + add_size - 1;
+ 			if (pci_assign_resource(add_res->dev, idx))
+-				reset_resource(res);
++				res->flags |= IORESOURCE_DISABLED;
+ 		} else {
+ 			/* could just assigned with alt, add difference ? */
+ 			resource_size_t size;
+@@ -391,7 +384,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+ 			if (fail_head)
+ 				add_to_list(fail_head, dev_res->dev, res);
+-			reset_resource(res);
++			res->flags |= IORESOURCE_DISABLED;
+ 		}
  	}
+ }
+@@ -677,7 +670,7 @@ static void __assign_resources_alt_sorted(struct list_head *head,
  
--	iov->offset = offset;
--	iov->stride = stride;
--
--	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
--	if (bus > dev->bus->busn_res.end) {
--		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
--			nr_virtfn, bus, &dev->bus->busn_res);
--		return -ENOMEM;
--	}
--
- 	if (pci_enable_resources(dev, bars)) {
- 		dev_err(&dev->dev, "SR-IOV: IOV BARS not allocated\n");
- 		return -ENOMEM;
-@@ -311,6 +296,15 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 		if (!res_to_dev_res(local_fail_head, res))
+ 			add_to_list(local_fail_head, fail_res->dev, res);
+-		reset_resource(res);
++		res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
  	}
+ 	free_list(&local_alt_fail_head);
+ }
+@@ -843,7 +836,7 @@ static void pci_setup_bridge_io(struct pci_dev *bridge)
+ 	/* Set up the top and bottom of the PCI I/O segment for this bus. */
+ 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 0];
+ 	pcibios_resource_to_bus(bridge->bus, &region, res);
+-	if (res->flags & IORESOURCE_IO) {
++	if ((res->flags & IORESOURCE_IO) && !(res->flags & IORESOURCE_UNSET)) {
+ 		pci_read_config_word(bridge, PCI_IO_BASE, &l);
+ 		io_base_lo = (region.start >> 8) & io_mask;
+ 		io_limit_lo = (region.end >> 8) & io_mask;
+@@ -873,7 +866,8 @@ static void pci_setup_bridge_mmio(struct pci_dev *bridge)
+ 	/* Set up the top and bottom of the PCI Memory segment for this bus. */
+ 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 1];
+ 	pcibios_resource_to_bus(bridge->bus, &region, res);
+-	if (res->flags & IORESOURCE_MEM) {
++	if ((res->flags & IORESOURCE_MEM) &&
++	    !(res->flags & IORESOURCE_UNSET)) {
+ 		l = (region.start >> 16) & 0xfff0;
+ 		l |= region.end & 0xfff00000;
+ 		dev_info(&bridge->dev, "  bridge window %pR\n", res);
+@@ -898,7 +892,8 @@ static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
+ 	bu = lu = 0;
+ 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
+ 	pcibios_resource_to_bus(bridge->bus, &region, res);
+-	if (res->flags & IORESOURCE_PREFETCH) {
++	if ((res->flags & IORESOURCE_PREFETCH) &&
++	    !(res->flags & IORESOURCE_UNSET)) {
+ 		l = (region.start >> 16) & 0xfff0;
+ 		l |= region.end & 0xfff00000;
+ 		if (res->flags & IORESOURCE_MEM_64) {
+@@ -1028,6 +1023,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
  
- 	pci_iov_set_numvfs(dev, nr_virtfn);
-+
-+	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
-+	if (bus > dev->bus->busn_res.end) {
-+		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
-+			nr_virtfn, bus, &dev->bus->busn_res);
-+		rc = -ENOMEM;
-+		goto err_bus;
+ 	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+ 	b_res[1].flags |= IORESOURCE_MEM;
++	b_res[1].flags &= ~IORESOURCE_DISABLED;
+ 
+ 	pci_read_config_word(bridge, PCI_IO_BASE, &io);
+ 	if (!io) {
+@@ -1035,8 +1031,10 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+ 		pci_read_config_word(bridge, PCI_IO_BASE, &io);
+ 		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
+ 	}
+-	if (io)
++	if (io) {
+ 		b_res[0].flags |= IORESOURCE_IO;
++		b_res[0].flags &= ~IORESOURCE_DISABLED;
 +	}
-+
- 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-@@ -350,7 +344,7 @@ err_pcibios:
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
- 	ssleep(1);
- 	pci_cfg_access_unlock(dev);
--
-+err_bus:
- 	if (iov->link != dev->devfn)
- 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
  
+ 	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
+ 	    disconnect boundary by one PCI data phase.
+@@ -1053,6 +1051,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+ 	}
+ 	if (pmem) {
+ 		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
++		b_res[2].flags &= ~IORESOURCE_DISABLED;
+ 		if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
+ 		    PCI_PREF_RANGE_TYPE_64) {
+ 			b_res[2].flags |= IORESOURCE_MEM_64;
+@@ -1198,8 +1197,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 			struct resource *r = &dev->resource[i];
+ 			unsigned long r_size, r_add_size;
+ 
+-			if (r->parent || !(r->flags & IORESOURCE_IO))
++			if (r->parent || !(r->flags & IORESOURCE_IO) ||
++			    resource_disabled(r))
+ 				continue;
++
+ 			r_size = resource_size(r);
+ 
+ 			if (r_size < 0x400)
+@@ -1240,7 +1241,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+ 				 b_res, &bus->busn_res);
+-		b_res->flags = 0;
++		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+ 		return;
+ 	}
+ 
+@@ -1532,7 +1533,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 			if (r->parent || ((flags & mask) != type &&
+ 					  (flags & mask) != type2 &&
+-					  (flags & mask) != type3))
++					  (flags & mask) != type3) ||
++			    resource_disabled(r))
+ 				continue;
+ 
+ 			r_size = resource_size(r);
+@@ -1553,7 +1555,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			if (align > (1ULL<<37)) { /*128 Gb*/
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
+ 					i, r, (unsigned long long) align);
+-				r->flags = 0;
++				r->flags |= IORESOURCE_UNSET |
++					    IORESOURCE_DISABLED;
+ 				continue;
+ 			}
+ 
+@@ -1650,7 +1653,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+ 				 b_res, &bus->busn_res);
+-		b_res->flags = 0;
++		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+ 		return 0;
+ 	}
+ 
+@@ -2067,7 +2070,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 		/* keep the old size */
+ 		r->end = resource_size(r) - 1;
+ 		r->start = 0;
+-		r->flags = 0;
++		r->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+ 
+ 		/* avoiding touch the one without PREF */
+ 		if (type & IORESOURCE_PREFETCH)
+@@ -2336,7 +2339,6 @@ again:
+ 
+ 		restore_resource(fail_res, res);
+ 		if (fail_res->dev->subordinate) {
+-			res->flags = 0;
+ 			/* last or third times and later */
+ 			if (tried_times + 1 == pci_try_num ||
+ 			    tried_times + 1 > 2)
+@@ -2420,7 +2422,6 @@ again:
+ 
+ 		restore_resource(fail_res, res);
+ 		if (fail_res->dev->subordinate) {
+-			res->flags = 0;
+ 			/* last time */
+ 			reset_bridge_resource_size(fail_res->dev, res);
+ 		}
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 55caf7a..d17f23c 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -364,7 +364,8 @@ int pci_enable_resources(struct pci_dev *dev, int mask)
+ 
+ 		r = &dev->resource[i];
+ 
+-		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
++		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)) ||
++		    resource_disabled(r))
+ 			continue;
+ 		if ((i == PCI_ROM_RESOURCE) &&
+ 				(!(r->flags & IORESOURCE_ROM_ENABLE)))
+-- 
+1.8.4.5
 
