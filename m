@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17594 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965807AbbJ0VHM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 17:07:12 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:28192 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932432AbbJHVuU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:50:20 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -12,110 +12,86 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Khalid Aziz <khalid.aziz@oracle.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 39/61] PCI: Separate out save_resources()/restore_resources()
-Date: Tue, 27 Oct 2015 13:55:31 -0700
-Message-Id: <1445979353-1728-40-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v7 49/60] PCI: Unify calculate_size() for io port and MMIO
+Date: Thu,  8 Oct 2015 14:39:08 -0700
+Message-Id: <1444340359-8011-50-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to save/restore resources several times for alt_size support,
-separate the save_resources()/resources() to save some lines later.
+Now calculate_memsize() and calculate_iosize() is the same.
+
+Change them to calculate_size().
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 30 insertions(+), 19 deletions(-)
+ drivers/pci/setup-bus.c | 25 +++++--------------------
+ 1 file changed, 5 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index ca34346..dc83c2c 100644
+index d4e8da1..a6eea60 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -436,6 +436,29 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
- 	return false;	/* should not get here */
+@@ -1104,22 +1104,7 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
+ 	return NULL;
  }
  
-+static bool save_resources(struct list_head *head,
-+			   struct list_head *save_head)
-+{
-+	struct pci_dev_resource *dev_res;
-+
-+	/* Save original start, end, flags etc at first */
-+	list_for_each_entry(dev_res, head, list)
-+		if (add_to_list(save_head, dev_res->dev, dev_res->res)) {
-+			free_list(save_head);
-+			return false;
-+		}
-+
-+	return true;
-+}
-+
-+static void restore_resource(struct pci_dev_resource *save_res,
-+			     struct resource *res)
-+{
-+	res->start = save_res->start;
-+	res->end = save_res->end;
-+	res->flags = save_res->flags;
-+}
-+
- static void __assign_resources_sorted(struct list_head *head,
- 				 struct list_head *realloc_head,
- 				 struct list_head *fail_head)
-@@ -473,13 +496,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	if (!realloc_head || list_empty(realloc_head))
- 		goto requested_and_reassign;
+-static resource_size_t calculate_iosize(resource_size_t size,
+-		resource_size_t min_size,
+-		resource_size_t old_size,
+-		resource_size_t align)
+-{
+-	if (size < min_size)
+-		size = min_size;
+-	if (old_size == 1)
+-		old_size = 0;
+-	size = ALIGN(size, align);
+-	if (size < old_size)
+-		size = old_size;
+-	return size;
+-}
+-
+-static resource_size_t calculate_memsize(resource_size_t size,
++static resource_size_t calculate_size(resource_size_t size,
+ 		resource_size_t min_size,
+ 		resource_size_t old_size,
+ 		resource_size_t align)
+@@ -1245,14 +1230,14 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
  
--	/* Save original start, end, flags etc at first */
--	list_for_each_entry(dev_res, head, list) {
--		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
--			free_list(&save_head);
--			goto requested_and_reassign;
--		}
--	}
-+	if (!save_resources(head, &save_head))
-+		goto requested_and_reassign;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -548,12 +566,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 		}
+ 	size = size_aligned_for_isa(size);
+ 	size += size1;
+-	size0 = calculate_iosize(size, min_size,
++	size0 = calculate_size(size, min_size,
+ 			resource_size(b_res), min_align);
+ 	sum_add_size = size_aligned_for_isa(sum_add_size);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	size1 = !realloc_head ? size0 :
+-		calculate_iosize(sum_add_size, min_size,
++		calculate_size(sum_add_size, min_size,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+@@ -1580,7 +1565,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (size || min_size) {
+ 		min_align = calculate_mem_align(&align_test_list, max_align,
+ 						size, window_align);
+-		size0 = calculate_memsize(size, min_size,
++		size0 = calculate_size(size, min_size,
+ 				  resource_size(b_res), min_align);
  	}
- 	/* Restore start/end/flags from saved list */
--	list_for_each_entry(save_res, &save_head, list) {
--		res = save_res->res;
--		res->start = save_res->start;
--		res->end = save_res->end;
--		res->flags = save_res->flags;
--	}
-+	list_for_each_entry(save_res, &save_head, list)
-+		restore_resource(save_res, save_res->res);
-+
- 	free_list(&save_head);
- 
- requested_and_reassign:
-@@ -1981,9 +1996,7 @@ again:
- 	list_for_each_entry(fail_res, &fail_head, list) {
- 		struct resource *res = fail_res->res;
- 
--		res->start = fail_res->start;
--		res->end = fail_res->end;
--		res->flags = fail_res->flags;
-+		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
- 			/* last or third times and later */
-@@ -2067,9 +2080,7 @@ again:
- 	list_for_each_entry(fail_res, &fail_head, list) {
- 		struct resource *res = fail_res->res;
- 
--		res->start = fail_res->start;
--		res->end = fail_res->end;
--		res->flags = fail_res->flags;
-+		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
- 			/* last time */
+ 	free_align_test_list(&align_test_list);
+@@ -1605,7 +1590,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+ 					window_align);
+-		size1 = calculate_memsize(sum_add_size, min_size,
++		size1 = calculate_size(sum_add_size, min_size,
+ 				 resource_size(b_res), min_add_align);
+ 	}
+ 	free_align_test_list(&align_test_add_list);
 -- 
 1.8.4.5
 
