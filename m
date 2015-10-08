@@ -1,324 +1,489 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53858 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:43199 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752975AbbJUUXe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Oct 2015 16:23:34 -0400
-Date: Wed, 21 Oct 2015 15:23:23 -0500
+	id S1752596AbbJHT0F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Oct 2015 15:26:05 -0400
+Date: Thu, 8 Oct 2015 14:25:58 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 2/2] PCI: pciehp: Add support for delayed power-on
-Message-ID: <20151021202323.GE1583@localhost>
-References: <1444677013-3836-1-git-send-email-linux@roeck-us.net>
- <1444677013-3836-2-git-send-email-linux@roeck-us.net>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: bhelgaas@google.com, jingoohan1@gmail.com,
+	pratyush.anand@gmail.com, linux-pci@vger.kernel.org,
+	wangzhou1@hisilicon.com, yuanzhichang@hisilicon.com,
+	zhudacai@hisilicon.com, zhangjukuo@huawei.com,
+	qiuzhenfa@hisilicon.com, liguozhu@hisilicon.com
+Subject: Re: [PATCH v6 0/3] PCI: designware: change dw_pcie_cfg_write() and
+ dw_pcie_cfg_read()
+Message-ID: <20151008192558.GF3885@localhost>
+References: <1443543636-35105-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444677013-3836-2-git-send-email-linux@roeck-us.net>
+In-Reply-To: <1443543636-35105-1-git-send-email-gabriele.paoloni@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Guenter,
-
-On Mon, Oct 12, 2015 at 12:10:13PM -0700, Guenter Roeck wrote:
-> Some oddball devices may experience a PCIe link flap after power-on.
-> This may result in the following sequence of events.
+On Wed, Sep 30, 2015 at 12:20:33AM +0800, Gabriele Paoloni wrote:
+> From: gabriele paoloni <gabriele.paoloni@huawei.com>
 > 
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24: Card present on Slot(0)
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24: slot(0): Link Up event
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24: Link Up event ignored on slot(0): already powering on
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24: slot(0): Link Down event
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24: Link Down event queued on slot(0): currently getting powered on
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24: slot(0): Link Up event
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24: Link Up event queued on slot(0): currently getting powered off
-
-I'm really interested in how this happens.  I'm not happy with the
-pciehp state machine, and I wonder if it is causing or obscuring this
-problem.
-
-For example, pcie_isr() reads PCI_EXP_SLTSTA to find out what
-happened.  Then it queues events (attention button, presence detect
-changed, etc.)  Along the way, we re-read PCI_EXP_SLTSTA.  That seems
-wrong to me -- I think we should capture the state *once*, save it,
-and act on it.  If we re-read it, we'll see transitions that might
-confuse us.
-
-Similarly, pcie_isr() reads and acts on PCI_EXP_LNKSTA (via
-pciehp_check_link_active()).  I think we should capture and save that
-at the same time we capture PCI_EXP_SLTSTA, before we queue up work
-events that are going to change things.
-
-And I'm not sure it's really necessary for pcie_isr() to queue up
-*separate* events for attention button, presence detect, power fault,
-and link state events.  I suspect that could throw in extraneous
-events that confuse things.  For instance, I think it's possible for
-pcie_isr() to see a single interrupt with PCI_EXP_SLTSTA showing both
-a presence detect change (card now present) and a link state change
-(link now up).  It will queue two events and we'll probably see a
-"Link Up event ignored" message.  I think it would be better if
-pcie_isr() captured the register values we need, bundled them up,
-and queued a single work item to deal with them.
-
-> This causes the driver for affected devices to be instantiated, removed,
-> and re-instantiated. This can result in problems, for example if the device
-> in question provides gpio pins or interrupts which are used by other
-> drivers. For example, the removal can result in errors such as
-> the following.
+> This patchset:
+> 1) fixes a bug in spear13xx when calling dw_pcie_cfg_read and
+>    dw_pcie_cfg_write usign the patch from Pratyush in
+>    https://lkml.org/lkml/2015/9/7/5
+> 2) reworks dw_pcie_cfg_read/dw_pcie_cfg_write in pcie-designware.c in
+>    order to make it easier for callers to pass input parameters;
+> 3) changes dw_pcie_cfg_read implementation to make it symmetric with
+>    dw_pcie_cfg_write 
+> 4) adds sanity checks in dw_pcie_cfg_read/dw_pcie_cfg_write to make
+>    sure the PCI header offset does not conflict with the size of
+>    the read/written field.
 > 
-> fpc0 kernel: remove_proc_entry: removing non-empty directory 'irq/148',
-> 	leaking at least 'pic0'
-> fpc0 kernel: ------------[ cut here ]------------
-> fpc0 kernel: WARNING: at /home/p2020/linux-freescale/fs/proc/generic.c:575
-
-Something's definitely wrong here, but shouldn't we be able to add and
-remove a device as many times as we want, as quickly as we want,
-without problems?  Maybe this particular issue is a driver problem or
-a core problem with the proc file maintenance?  I wonder if this is
-something we could reproduce without pciehp at all, just by inserting
-and removing a module?
-
-> Add support for per-port power-on delay to avoid this situation. This can
-> be enabled globally with the pciehp_poweron_delay module parameter, or
-> per port (using a quirks function) with a new poweron_delay flag in
-> struct pci_dev.
+> Changes from v5: sanity check readibility simplified
 > 
-> With this patch, the link flap still occurs, but because of the delayed
-> insertion the driver is not immediately instantiated, and the above error
-> is no longer seen.
+> Changes from v4:
+>    - included https://lkml.org/lkml/2015/9/7/5 back as it was lost in v4
+> 
+> Changes from v3:
+>    - changed dw_pcie_cfg_read implementation to make it symmetric with
+>      dw_pcie_cfg_write
+>    - changed dw_pcie_cfg_read/dw_pcie_cfg_write implementations to take
+>      as input param directly the address of the field to read/write rather
+>      than the base address and the offset in the PCI header
+> 
+> Change from v2:
+>    Replaced patch 1/3 with Pratyush one in
+>    https://lkml.org/lkml/2015/9/7/5
+> 
+> gabriele paoloni (3):
+>   PCIe: SPEAr13xx: fix dw_pcie_cfg_read/write() usage
+>   PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
+>   PCI: designware: add sanity checks on the header offset in
+>     dw_pcie_cfg_read and dw_pcie_cfg_write
 
-We might have to do something like this eventually, but I'd really
-like to see if we can simplify the pciehp state machine a little
-before we add more stuff to it.
+Applied to pci/host-designware for v4.4.  I tweaked a couple things:
 
-> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
-> ---
-> We started seeing this problem after the recent rework of link status
-> change handling. I think the up/down/up sequence was previously just
-> ignored or folded into a single event (and sometimes resulted in a stuck
-> state machine).
-> I would like to see this patch upstream, but I am not sure if the problem
-> is seen anywhere but on the hardware I am dealing with, and I can
-> understand if others don't want to pollute the pcie hotplug code with
-> such workarounds. Also, maybe someone has a better idea on how to handle
-> the situation, so I marked the patch as RFC.
-> 
->  drivers/pci/hotplug/pciehp.h      |  5 ++++-
->  drivers/pci/hotplug/pciehp_core.c |  3 +++
->  drivers/pci/hotplug/pciehp_ctrl.c | 44 +++++++++++++++++++++++++++------------
->  drivers/pci/hotplug/pciehp_hpc.c  |  2 ++
->  include/linux/pci.h               |  1 +
->  5 files changed, 41 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index 62d6fe6c3714..5047bde7d51d 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -40,6 +40,7 @@
->  
->  #define MY_NAME	"pciehp"
->  
-> +extern bool pciehp_poweron_delay;
->  extern bool pciehp_poll_mode;
->  extern int pciehp_poll_time;
->  extern bool pciehp_debug;
-> @@ -98,6 +99,7 @@ struct controller {
->  	unsigned int cmd_busy:1;
->  	unsigned int link_active_reporting:1;
->  	unsigned int notification_enabled:1;
-> +	unsigned int poweron_delay:1;	/* Delay poweron for this slot */
->  	unsigned int power_fault_detected;
->  };
->  
-> @@ -112,7 +114,8 @@ struct controller {
->  #define BLINKINGON_STATE		1
->  #define BLINKINGOFF_STATE		2
->  #define POWERON_STATE			3
-> -#define POWEROFF_STATE			4
-> +#define DELAYED_POWERON_STATE		4
-> +#define POWEROFF_STATE			5
->  
->  #define ATTN_BUTTN(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_ABP)
->  #define POWER_CTRL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_PCP)
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 612b21a14df5..cc69fd10d884 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -38,6 +38,7 @@
->  #include <linux/time.h>
->  
->  /* Global variables */
-> +bool pciehp_poweron_delay;
->  bool pciehp_debug;
->  bool pciehp_poll_mode;
->  int pciehp_poll_time;
-> @@ -51,10 +52,12 @@ MODULE_AUTHOR(DRIVER_AUTHOR);
->  MODULE_DESCRIPTION(DRIVER_DESC);
->  MODULE_LICENSE("GPL");
->  
-> +module_param(pciehp_poweron_delay, bool, 0644);
->  module_param(pciehp_debug, bool, 0644);
->  module_param(pciehp_poll_mode, bool, 0644);
->  module_param(pciehp_poll_time, int, 0644);
->  module_param(pciehp_force, bool, 0644);
-> +MODULE_PARM_DESC(pciehp_poweron_delay, "Delay port power-on");
->  MODULE_PARM_DESC(pciehp_debug, "Debugging mode enabled or not");
->  MODULE_PARM_DESC(pciehp_poll_mode, "Using polling mechanism for hot-plug events or not");
->  MODULE_PARM_DESC(pciehp_poll_time, "Polling mechanism frequency, in seconds");
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index ef96a1d51fac..fd829c2b7418 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -204,11 +204,19 @@ static void pciehp_power_thread(struct work_struct *work)
->  	kfree(info);
->  }
->  
-> -void pciehp_queue_power_work(struct slot *p_slot, int req)
-> +void pciehp_queue_power_work(struct slot *p_slot, int req, bool delay)
->  {
->  	struct power_work_info *info;
->  
-> -	p_slot->state = req == ENABLE_REQ ? POWERON_STATE : POWEROFF_STATE;
-> +	if (req == ENABLE_REQ) {
-> +		p_slot->state = delay ? DELAYED_POWERON_STATE : POWERON_STATE;
-> +		if (delay) {
-> +			mod_delayed_work(p_slot->wq, &p_slot->work, HZ);
-> +			return;
-> +		}
-> +	} else {
-> +		p_slot->state = POWEROFF_STATE;
-> +	}
->  
->  	info = kmalloc(sizeof(*info), GFP_KERNEL);
->  	if (!info) {
-> @@ -229,10 +237,11 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
->  	mutex_lock(&p_slot->lock);
->  	switch (p_slot->state) {
->  	case BLINKINGOFF_STATE:
-> -		pciehp_queue_power_work(p_slot, DISABLE_REQ);
-> +		pciehp_queue_power_work(p_slot, DISABLE_REQ, false);
->  		break;
->  	case BLINKINGON_STATE:
-> -		pciehp_queue_power_work(p_slot, ENABLE_REQ);
-> +	case DELAYED_POWERON_STATE:
-> +		pciehp_queue_power_work(p_slot, ENABLE_REQ, false);
->  		break;
->  	default:
->  		break;
-> @@ -263,7 +272,7 @@ static void handle_button_press_event(struct slot *p_slot)
->  		/* blink green LED and turn off amber */
->  		pciehp_green_led_blink(p_slot);
->  		pciehp_set_attention_status(p_slot, 0);
-> -		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
-> +		mod_delayed_work(p_slot->wq, &p_slot->work, 5 * HZ);
->  		break;
->  	case BLINKINGOFF_STATE:
->  	case BLINKINGON_STATE:
-> @@ -285,6 +294,7 @@ static void handle_button_press_event(struct slot *p_slot)
->  		break;
->  	case POWEROFF_STATE:
->  	case POWERON_STATE:
-> +	case DELAYED_POWERON_STATE:
->  		/*
->  		 * Ignore if the slot is on power-on or power-off state;
->  		 * this means that the previous attention button action
-> @@ -305,12 +315,12 @@ static void handle_surprise_event(struct slot *p_slot)
->  {
->  	u8 getstatus;
->  
-> +	if (p_slot->state == DELAYED_POWERON_STATE)
-> +		cancel_delayed_work(&p_slot->work);
-> +
->  	pciehp_get_adapter_status(p_slot, &getstatus);
-> -	if (!getstatus) {
-> -		pciehp_queue_power_work(p_slot, DISABLE_REQ);
-> -	} else {
-> -		pciehp_queue_power_work(p_slot, ENABLE_REQ);
-> -	}
-> +	pciehp_queue_power_work(p_slot, getstatus ? ENABLE_REQ : DISABLE_REQ,
-> +				p_slot->ctrl->poweron_delay);
->  }
->  
->  /*
-> @@ -327,8 +337,13 @@ static void handle_link_event(struct slot *p_slot, u32 event)
->  		/* Fall through */
->  	case STATIC_STATE:
->  		pciehp_queue_power_work(p_slot, event == INT_LINK_UP ?
-> -					ENABLE_REQ : DISABLE_REQ);
-> +					ENABLE_REQ : DISABLE_REQ,
-> +					ctrl->poweron_delay);
->  		break;
-> +	case DELAYED_POWERON_STATE:
-> +		if (event != INT_LINK_UP)
-> +			cancel_delayed_work(&p_slot->work);
-> +		/* Fall through */
->  	case POWERON_STATE:
->  		if (event == INT_LINK_UP) {
->  			ctrl_info(ctrl,
-> @@ -338,7 +353,7 @@ static void handle_link_event(struct slot *p_slot, u32 event)
->  			ctrl_info(ctrl,
->  				  "Link Down event queued on slot(%s): currently getting powered on\n",
->  				  slot_name(p_slot));
-> -			pciehp_queue_power_work(p_slot, DISABLE_REQ);
-> +			pciehp_queue_power_work(p_slot, DISABLE_REQ, false);
->  		}
->  		break;
->  	case POWEROFF_STATE:
-> @@ -346,7 +361,8 @@ static void handle_link_event(struct slot *p_slot, u32 event)
->  			ctrl_info(ctrl,
->  				  "Link Up event queued on slot(%s): currently getting powered off\n",
->  				  slot_name(p_slot));
-> -			pciehp_queue_power_work(p_slot, ENABLE_REQ);
-> +			pciehp_queue_power_work(p_slot, ENABLE_REQ,
-> +						ctrl->poweron_delay);
->  		} else {
->  			ctrl_info(ctrl,
->  				  "Link Down event ignored on slot(%s): already powering off\n",
-> @@ -482,6 +498,7 @@ int pciehp_sysfs_enable_slot(struct slot *p_slot)
->  		p_slot->state = STATIC_STATE;
->  		break;
->  	case POWERON_STATE:
-> +	case DELAYED_POWERON_STATE:
->  		ctrl_info(ctrl, "Slot %s is already in powering on state\n",
->  			  slot_name(p_slot));
->  		break;
-> @@ -522,6 +539,7 @@ int pciehp_sysfs_disable_slot(struct slot *p_slot)
->  		break;
->  	case BLINKINGON_STATE:
->  	case POWERON_STATE:
-> +	case DELAYED_POWERON_STATE:
->  		ctrl_info(ctrl, "Already disabled on slot %s\n",
->  			  slot_name(p_slot));
->  		break;
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 5c24e938042f..7c7a598eec9f 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -809,6 +809,8 @@ struct controller *pcie_init(struct pcie_device *dev)
->  	pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &link_cap);
->  	if (link_cap & PCI_EXP_LNKCAP_DLLLARC)
->  		ctrl->link_active_reporting = 1;
-> +	if (pciehp_poweron_delay || dev->port->poweron_delay)
-> +		ctrl->poweron_delay = 1;
->  
->  	/* Clear all remaining event bits in Slot Status register */
->  	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index e90eb22de628..9cb0fe3037b9 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -359,6 +359,7 @@ struct pci_dev {
->  	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
->  	unsigned int	irq_managed:1;
->  	unsigned int	has_secondary_link:1;
-> +	unsigned int    poweron_delay:1;	/* Port needs poweron delay */
->  	pci_dev_flags_t dev_flags;
->  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
->  
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+  - Split out the dw_pcie_cfg_read() access size change into its own
+    patch.  This is an important change that got obscured by being
+    combined with the interface change.  Splitting it out makes both
+    patches much easier to review.
+
+  - In dw_pcie_cfg_read(), I set *val to zero when we return failure.
+    Previously we always set "*val = readl(addr)" even if we later
+    returned failure.  That could have been garbage or a misaligned
+    read.
+
+Below are the patches as I applied them.  Thanks!
+
+Bjorn
+
+
+commit 0951120a4c778cf043497e4af508588417bef29a
+Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Date:   Wed Sep 30 00:20:34 2015 +0800
+
+    PCI: spear: Fix dw_pcie_cfg_read/write() usage
+    
+    The first argument of dw_pcie_cfg_read/write() is a 32-bit aligned address.
+    The second argument is the byte offset into a 32-bit word, and
+    dw_pcie_cfg_read/write() only look at the low two bits.
+    
+    SPEAr13xx used dw_pcie_cfg_read() and dw_pcie_cfg_write() incorrectly: it
+    passed important address bits in the second argument, where they were
+    ignored.
+    
+    Pass the complete 32-bit word address in the first argument and only the
+    2-bit offset into that word in the second argument.
+    
+    Without this fix, SPEAr13xx host will never work with few buggy gen1 card
+    which connects with only gen1 host and also with any endpoint which would
+    generate a read request of more than 128 bytes.
+    
+    [bhelgaas: changelog]
+    Reported-by: Bjorn Helgaas <bhelgaas@google.com>
+    Signed-off-by: Pratyush Anand <panand@redhat.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: stable@vger.kernel.org	# v3.17+
+
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 98d2683..0754ea3 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -163,34 +163,36 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 	 * default value in capability register is 512 bytes. So force
+ 	 * it to 128 here.
+ 	 */
+-	dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, &val);
++	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
++				0, 2, &val);
+ 	val &= ~PCI_EXP_DEVCTL_READRQ;
+-	dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, val);
++	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
++				0, 2, val);
+ 
+-	dw_pcie_cfg_write(pp->dbi_base, PCI_VENDOR_ID, 2, 0x104A);
+-	dw_pcie_cfg_write(pp->dbi_base, PCI_DEVICE_ID, 2, 0xCD80);
++	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 0, 2, 0x104A);
++	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 2, 0xCD80);
+ 
+ 	/*
+ 	 * if is_gen1 is set then handle it, so that some buggy card
+ 	 * also works
+ 	 */
+ 	if (spear13xx_pcie->is_gen1) {
+-		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCAP, 4,
+-				 &val);
++		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
++					0, 4, &val);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+-			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
+-					  PCI_EXP_LNKCAP, 4, val);
++			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
++						PCI_EXP_LNKCAP, 0, 4, val);
+ 		}
+ 
+-		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCTL2, 4,
+-				 &val);
++		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
++					0, 2, &val);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+-			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
+-					  PCI_EXP_LNKCTL2, 4, val);
++			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
++						PCI_EXP_LNKCTL2, 0, 2, val);
+ 		}
+ 	}
+ 
+
+commit 6e5d5205ccb07c95931412f1e6fdb9ec5abc8dfd
+Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Date:   Thu Oct 8 11:45:41 2015 -0500
+
+    PCI: designware: Use exact access size in dw_pcie_cfg_read()
+    
+    dw_pcie_cfg_write() uses the exact 8-, 16-, or 32-bit access size
+    requested, but dw_pcie_cfg_read() previously performed a 32-bit read and
+    masked out the bits requested.
+    
+    Use the exact access size in dw_pcie_cfg_read().  For example, if we want
+    an 8-bit read, use readb() instead of using readl() and masking out the 8
+    bits we need.  This makes it symmetric with dw_pcie_cfg_write().
+    
+    [bhelgaas: split into separate patch, set *val = 0 in failure case]
+    Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 52aa6e3..9073722 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -82,14 +82,16 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+ 
+ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+ {
+-	*val = readl(addr);
+-
+-	if (size == 1)
+-		*val = (*val >> (8 * (where & 3))) & 0xff;
++	if (size == 4)
++		*val = readl(addr);
+ 	else if (size == 2)
+-		*val = (*val >> (8 * (where & 3))) & 0xffff;
+-	else if (size != 4)
++		*val = readw(addr + (where & 2));
++	else if (size == 1)
++		*val = readb(addr + (where & 1));
++	else {
++		*val = 0;
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
++	}
+ 
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+
+commit 060ca07e0d22f150d237e8d8e7149a88c3055e9a
+Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Date:   Wed Sep 30 00:20:35 2015 +0800
+
+    PCI: designware: Simplify dw_pcie_cfg_read/write() interfaces
+    
+    Callers of dw_pcie_cfg_read() and dw_pcie_cfg_write() previously had to
+    split the address into "addr" and "where".  The callees assumed "addr" was
+    32-bit aligned (with zeros in the low two bits) and they used only the low
+    two bits of "where".
+    
+    Accept the entire address in "addr" and drop the now-redundant "where"
+    argument.  As an example, this replaces this:
+    
+      int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+        *val = readb(addr + (where & 1));
+    
+    with this:
+    
+      int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
+        *val = readb(addr):
+    
+    [bhelgaas: changelog, split access size change to separate patch]
+    Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index f9f468d..01095e1 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -454,7 +454,7 @@ static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 	int ret;
+ 
+ 	exynos_pcie_sideband_dbi_r_mode(pp, true);
+-	ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, size, val);
++	ret = dw_pcie_cfg_read(pp->dbi_base + where, size, val);
+ 	exynos_pcie_sideband_dbi_r_mode(pp, false);
+ 	return ret;
+ }
+@@ -465,8 +465,7 @@ static int exynos_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+ 	int ret;
+ 
+ 	exynos_pcie_sideband_dbi_w_mode(pp, true);
+-	ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
+-			where, size, val);
++	ret = dw_pcie_cfg_write(pp->dbi_base + where, size, val);
+ 	exynos_pcie_sideband_dbi_w_mode(pp, false);
+ 	return ret;
+ }
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index e71da99..51789b7 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -398,7 +398,7 @@ int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 
+ 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
+ 
+-	return dw_pcie_cfg_read(addr + (where & ~0x3), where, size, val);
++	return dw_pcie_cfg_read(addr + where, size, val);
+ }
+ 
+ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+@@ -410,7 +410,7 @@ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 
+ 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
+ 
+-	return dw_pcie_cfg_write(addr + (where & ~0x3), where, size, val);
++	return dw_pcie_cfg_write(addr + where, size, val);
+ }
+ 
+ /**
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 9073722..a7d2352 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -80,14 +80,14 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+ 	return sys->private_data;
+ }
+ 
+-int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
++int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
+ {
+ 	if (size == 4)
+ 		*val = readl(addr);
+ 	else if (size == 2)
+-		*val = readw(addr + (where & 2));
++		*val = readw(addr);
+ 	else if (size == 1)
+-		*val = readb(addr + (where & 1));
++		*val = readb(addr);
+ 	else {
+ 		*val = 0;
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+@@ -96,14 +96,14 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
++int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
+ {
+ 	if (size == 4)
+ 		writel(val, addr);
+ 	else if (size == 2)
+-		writew(val, addr + (where & 2));
++		writew(val, addr);
+ 	else if (size == 1)
+-		writeb(val, addr + (where & 3));
++		writeb(val, addr);
+ 	else
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 
+@@ -134,8 +134,7 @@ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 	if (pp->ops->rd_own_conf)
+ 		ret = pp->ops->rd_own_conf(pp, where, size, val);
+ 	else
+-		ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where,
+-				size, val);
++		ret = dw_pcie_cfg_read(pp->dbi_base + where, size, val);
+ 
+ 	return ret;
+ }
+@@ -148,8 +147,7 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+ 	if (pp->ops->wr_own_conf)
+ 		ret = pp->ops->wr_own_conf(pp, where, size, val);
+ 	else
+-		ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where,
+-				size, val);
++		ret = dw_pcie_cfg_write(pp->dbi_base + where, size, val);
+ 
+ 	return ret;
+ }
+@@ -541,13 +539,12 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 		u32 devfn, int where, int size, u32 *val)
+ {
+ 	int ret, type;
+-	u32 address, busdev, cfg_size;
++	u32 busdev, cfg_size;
+ 	u64 cpu_addr;
+ 	void __iomem *va_cfg_base;
+ 
+ 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
+ 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
+-	address = where & ~0x3;
+ 
+ 	if (bus->parent->number == pp->root_bus_nr) {
+ 		type = PCIE_ATU_TYPE_CFG0;
+@@ -564,7 +561,7 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 				  type, cpu_addr,
+ 				  busdev, cfg_size);
+-	ret = dw_pcie_cfg_read(va_cfg_base + address, where, size, val);
++	ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
+ 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
+ 				  pp->io_bus_addr, pp->io_size);
+@@ -576,13 +573,12 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 		u32 devfn, int where, int size, u32 val)
+ {
+ 	int ret, type;
+-	u32 address, busdev, cfg_size;
++	u32 busdev, cfg_size;
+ 	u64 cpu_addr;
+ 	void __iomem *va_cfg_base;
+ 
+ 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
+ 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
+-	address = where & ~0x3;
+ 
+ 	if (bus->parent->number == pp->root_bus_nr) {
+ 		type = PCIE_ATU_TYPE_CFG0;
+@@ -599,7 +595,7 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 				  type, cpu_addr,
+ 				  busdev, cfg_size);
+-	ret = dw_pcie_cfg_write(va_cfg_base + address, where, size, val);
++	ret = dw_pcie_cfg_write(va_cfg_base + where, size, val);
+ 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
+ 				  pp->io_bus_addr, pp->io_size);
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index d0bbd27..0b29194 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -76,8 +76,8 @@ struct pcie_host_ops {
+ 	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
+ };
+ 
+-int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+-int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
++int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
++int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
+ int dw_pcie_link_up(struct pcie_port *pp);
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 0754ea3..b95b756 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -163,14 +163,12 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 	 * default value in capability register is 512 bytes. So force
+ 	 * it to 128 here.
+ 	 */
+-	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
+-				0, 2, &val);
++	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, &val);
+ 	val &= ~PCI_EXP_DEVCTL_READRQ;
+-	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
+-				0, 2, val);
++	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, val);
+ 
+-	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 0, 2, 0x104A);
+-	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 2, 0xCD80);
++	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 0x104A);
++	dw_pcie_cfg_write(pp->dbi_base + PCI_DEVICE_ID, 2, 0xCD80);
+ 
+ 	/*
+ 	 * if is_gen1 is set then handle it, so that some buggy card
+@@ -178,21 +176,21 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 	 */
+ 	if (spear13xx_pcie->is_gen1) {
+ 		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
+-					0, 4, &val);
++					4, &val);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+ 			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
+-						PCI_EXP_LNKCAP, 0, 4, val);
++				PCI_EXP_LNKCAP, 4, val);
+ 		}
+ 
+ 		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
+-					0, 2, &val);
++					2, &val);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+ 			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
+-						PCI_EXP_LNKCTL2, 0, 2, val);
++					PCI_EXP_LNKCTL2, 2, val);
+ 		}
+ 	}
+ 
+
+commit 08a79800db364aabe4422ac4f2e2efdf450e1c31
+Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Date:   Wed Sep 30 00:20:36 2015 +0800
+
+    PCI: designware: Require config accesses to be naturally aligned
+    
+    Add sanity checks on "addr" input parameter in dw_pcie_cfg_read() and
+    dw_pcie_cfg_write().  These checks make sure that accesses are aligned on
+    their size, e.g., a 4-byte config access is aligned on a 4-byte boundary.
+    
+    [bhelgaas: changelog, set *val = 0 in failure case]
+    Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index a7d2352..6a71f99 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -82,6 +82,11 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+ 
+ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
+ {
++	if ((uintptr_t)addr & (size - 1)) {
++		*val = 0;
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++	}
++
+ 	if (size == 4)
+ 		*val = readl(addr);
+ 	else if (size == 2)
+@@ -98,6 +103,9 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
+ 
+ int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
+ {
++	if ((uintptr_t)addr & (size - 1))
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
+ 	if (size == 4)
+ 		writel(val, addr);
+ 	else if (size == 2)
