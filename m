@@ -1,79 +1,207 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41748 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751696AbbJBXGO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 19:06:14 -0400
-Subject: Re: [PATCH v6 01/53] sparc/PCI: Add mem64 resource parsing for root
- bus
-To: Yinghai Lu <yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
- <1443678807-786-2-git-send-email-yinghai@kernel.org>
- <1443816007.7936.24.camel@oracle.com>
- <CAE9FiQX=qEO53rSw9bQv-2-3sSmYUO3YCJyj8m6mSNSTed3zEA@mail.gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
 	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-From: Khalid Aziz <khalid.aziz@oracle.com>
-Message-ID: <560F0DD1.60304@oracle.com>
-Date: Fri, 2 Oct 2015 17:05:53 -0600
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQX=qEO53rSw9bQv-2-3sSmYUO3YCJyj8m6mSNSTed3zEA@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 54/60] resources: Make allocate_resource() return best fit resource
+Date: Thu,  8 Oct 2015 14:39:13 -0700
+Message-Id: <1444340359-8011-55-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/02/2015 04:05 PM, Yinghai Lu wrote:
-> On Fri, Oct 2, 2015 at 1:00 PM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
->> On Wed, 2015-09-30 at 22:52 -0700, Yinghai Lu wrote:
->>> Found "no compatible bridge window" warning in boot log from T5-8.
->>>
->>> pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
->>>
->>> That resource is above 4G, but does not get offset correctly as
->>> root bus only report io and mem32.
->>>
->>> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
->>> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
->>> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
->>> pci_bus 0000:00: root bus resource [bus 00-77]
->>>
->>> Add mem64 handling in pci_common for sparc, so we can have 64bit resource
->>> registered for root bus at first.
->>>
->>> After patch, will have:
->>> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
->>> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
->>> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
->>> pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
->>> pci_bus 0000:00: root bus resource [bus 00-77]
->>>
->>> -v2: mem64_space should use mem_space.start as offset.
->>> -v3: add IORESOURCE_MEM_64 flag
-> ...
->> PCI: Scanning PBM /pci@301
->> pci_sun4v f0339c2c: PCI host bridge to bus 0009:00
->> pci_bus 0009:00: root bus resource [io  0x2027e40000000-0x2027e4fffffff] (bus address [0x0000-0xfffffff])
->> pci_bus 0009:00: root bus resource [mem 0x2024000100000-0x202407effffff] (bus address [0x00000000-0x7eefffff])
->> pci_bus 0009:00: root bus resource [mem 0x2024100000000-0x2024dffffffff] (bus address [0xfff00000-0xdffefffff])
->
-> Looks like offset for mmio64 is not right.
->
-> Please check attached patch on the this platform  and T5-8.
+Current code just allocate from first avail window.
 
-Good catch! That code change looks like the right thing to do and it 
-fixed my issues with ixgbe not attaching. I still see lots of "no 
-compatible bridge window" messages but overlapping address ranges are no 
-longer reserved and as a result drivers are able to ioremap BARs 
-successfully.
+We can find all suitable empty slots and pick one with smallest size, so
+we could save the big slot for needed ones later when we have several pci
+bridges under parent bridge and some bridges get assigned from bios and we
+need to assign others in kernel.
 
-I have tested it on a T7 and one other platform where I was seeing 
-problems without mem64 and both platforms work with this patch. I have 
-not been able to get my hands on a T5-8 yet but I will try again on Monday.
+For examples: we have window
+[0xc0000000, 0xd0000000), and [0xe0000000,0xe1000000)
 
-Thanks,
-Khalid
+and we try allocate 0x200000 size resource.
+
+in this patch will reserve [0xc0000000, 0xd0000000) and
+[0xe0000000,0xe1000000) at first, then pick [0xe0000000,0xe1000000)
+to allocate 0x200000 size.
+
+-v2: updated after __allocate_resource change, and add field in constraint
+	instead of passing it directly.
+-v3: Use best fit instead of just fit according to Bjorn.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ kernel/resource.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 68 insertions(+), 13 deletions(-)
+
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 62321b0..c468875 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -48,6 +48,7 @@ struct resource_constraint {
+ 	resource_size_t (*alignf)(void *, const struct resource *,
+ 			resource_size_t, resource_size_t);
+ 	void *alignf_data;
++	bool fit;
+ };
+ 
+ static DEFINE_RWLOCK(resource_lock);
+@@ -589,12 +590,15 @@ static void resource_clip(struct resource *res, resource_size_t min,
+  * alignment constraints
+  */
+ static int __find_resource(struct resource *root, struct resource *old,
+-			 struct resource *new,
++			 struct resource *new, struct resource *avail,
+ 			 resource_size_t  size,
+ 			 struct resource_constraint *constraint)
+ {
+ 	struct resource *this = root->child;
+-	struct resource tmp = *new, avail, alloc;
++	struct resource tmp = *new, availx, alloc;
++
++	if (!avail || avail == new)
++		avail = &availx;
+ 
+ 	tmp.start = root->start;
+ 	/*
+@@ -618,15 +622,16 @@ static int __find_resource(struct resource *root, struct resource *old,
+ 		arch_remove_reservations(&tmp);
+ 
+ 		/* Check for overflow after ALIGN() */
+-		avail.start = ALIGN(tmp.start, constraint->align);
+-		avail.end = tmp.end;
+-		avail.flags = new->flags & ~IORESOURCE_UNSET;
+-		if (avail.start >= tmp.start) {
+-			alloc.flags = avail.flags;
+-			alloc.start = constraint->alignf(constraint->alignf_data, &avail,
++		avail->start = ALIGN(tmp.start, constraint->align);
++		avail->end = tmp.end;
++		avail->flags = new->flags & ~IORESOURCE_UNSET;
++		if (avail->start >= tmp.start) {
++			alloc.flags = avail->flags;
++			alloc.start = constraint->alignf(
++					constraint->alignf_data, avail,
+ 					size, constraint->align);
+ 			alloc.end = alloc.start + size - 1;
+-			if (resource_contains(&avail, &alloc)) {
++			if (resource_contains(avail, &alloc)) {
+ 				new->start = alloc.start;
+ 				new->end = alloc.end;
+ 				return 0;
+@@ -643,6 +648,11 @@ next:		if (!this || this->end == root->end)
+ 	return -EBUSY;
+ }
+ 
++struct good_resource {
++	struct list_head list;
++	struct resource avail;
++	struct resource new;
++};
+ /*
+  * Find empty slot in the resource tree given range and alignment.
+  */
+@@ -650,7 +660,49 @@ static int find_resource(struct resource *root, struct resource *new,
+ 			resource_size_t size,
+ 			struct resource_constraint  *constraint)
+ {
+-	return  __find_resource(root, NULL, new, size, constraint);
++	int ret = -1;
++	LIST_HEAD(head);
++	struct good_resource *good, *tmp;
++	resource_size_t avail_size = (resource_size_t)-1ULL;
++
++	if (!constraint->fit)
++		return __find_resource(root, NULL, new, NULL, size,
++					constraint);
++
++	/* find all suitable ones and add to the list */
++	for (;;) {
++		good = kzalloc(sizeof(*good), GFP_KERNEL);
++		if (!good)
++			break;
++
++		good->new.start = new->start;
++		good->new.end = new->end;
++		good->new.flags = new->flags;
++		ret = __find_resource(root, NULL, &good->new, &good->avail,
++					size, constraint);
++		if (ret || __request_resource(root, &good->avail)) {
++			ret = -EBUSY;
++			kfree(good);
++			break;
++		}
++
++		list_add(&good->list, &head);
++	}
++
++	/* pick up the smallest one and delete the list */
++	list_for_each_entry_safe(good, tmp, &head, list) {
++		if (resource_size(&good->avail) < avail_size) {
++			avail_size = resource_size(&good->avail);
++			new->start = good->new.start;
++			new->end = good->new.end;
++			ret = 0;
++		}
++		list_del(&good->list);
++		__release_resource(&good->avail);
++		kfree(good);
++	}
++
++	return ret;
+ }
+ 
+ /**
+@@ -671,7 +723,8 @@ static int __reallocate_resource(struct resource *root, struct resource *old,
+ 	struct resource new = *old;
+ 	struct resource *conflict;
+ 
+-	if ((err = __find_resource(root, old, &new, newsize, constraint)))
++	err = __find_resource(root, old, &new, NULL, newsize, constraint);
++	if (err)
+ 		goto out;
+ 
+ 	if (resource_contains(&new, old)) {
+@@ -710,6 +763,7 @@ out:
+  * @align: alignment requested, in bytes
+  * @alignf: alignment function, optional, called if not NULL
+  * @alignf_data: arbitrary data to pass to the @alignf function
++ * @fit: only allocate fit range.
+  *
+  * Caller need to hold resource_lock if needed.
+  */
+@@ -720,7 +774,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+ 						  const struct resource *,
+ 						  resource_size_t,
+ 						  resource_size_t),
+-				void *alignf_data)
++				void *alignf_data, bool fit)
+ {
+ 	int err;
+ 	struct resource_constraint constraint;
+@@ -733,6 +787,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+ 	constraint.align = align;
+ 	constraint.alignf = alignf;
+ 	constraint.alignf_data = alignf_data;
++	constraint.fit = fit;
+ 
+ 	if (new->parent) {
+ 		/* resource is already allocated, try reallocating with
+@@ -773,7 +828,7 @@ int allocate_resource(struct resource *root, struct resource *new,
+ 
+ 	write_lock(&resource_lock);
+ 	ret = __allocate_resource(root, new, size, min, max, align,
+-				   alignf, alignf_data);
++				   alignf, alignf_data, true);
+ 	write_unlock(&resource_lock);
+ 
+ 	return ret;
+-- 
+1.8.4.5
 
