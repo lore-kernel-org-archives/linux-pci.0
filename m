@@ -1,67 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from resqmta-po-10v.sys.comcast.net ([96.114.154.169]:39749 "EHLO
-	resqmta-po-10v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751047AbbJIQYI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 12:24:08 -0400
-Message-ID: <1444407355.17726.1.camel@oracle.com>
-Subject: Re: [PATCH v7 01/60] sparc/PCI: Add mem64 resource parsing for root
- bus
-From: Khalid Aziz <khalid.aziz@oracle.com>
-Reply-To: khalid.aziz@oracle.com
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from aserp1040.oracle.com ([141.146.126.69]:25760 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753753AbbJHVpI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:45:08 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Fri, 09 Oct 2015 10:15:55 -0600
-In-Reply-To: <1444340359-8011-2-git-send-email-yinghai@kernel.org>
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, Meelis Roos <mroos@linux.ee>
+Subject: [PATCH v7 07/60] PCI: kill wrong quirk about M7101
+Date: Thu,  8 Oct 2015 14:38:26 -0700
+Message-Id: <1444340359-8011-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-	 <1444340359-8011-2-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-10-08 at 14:38 -0700, Yinghai Lu wrote:
-> Found "no compatible bridge window" warning in boot log from T5-8.
-> 
-> pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
-> 
-> That resource is above 4G, but does not get offset correctly as
-> root bus only report io and mem32.
-> 
-> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
-> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
-> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
-> pci_bus 0000:00: root bus resource [bus 00-77]
-> 
-> Add mem64 handling in pci_common for sparc, so we can have 64bit resource
-> registered for root bus at first.
-> 
-> After patch, will have:
-> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
-> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
-> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
-> pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
-> pci_bus 0000:00: root bus resource [bus 00-77]
-> 
-> -v2: mem64_space should use mem_space.start as offset.
-> -v3: add IORESOURCE_MEM_64 flag
-> -v4: set name for mem64_space, otherwise /proc/iomem will have <bad> for name
-> 
-> Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
-> Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
-> Reported-by: David Ahern <david.ahern@oracle.com>
-> Tested-by: David Ahern <david.ahern@oracle.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Meelis reported that qla2000 driver does not get loaded on one sparc system.
 
+schizo f00732d0: PCI host bridge to bus 0001:00
+pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
+pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
+pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
+pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
 
-Tested on sparc platforms
+So the quirk for M7101 claim the io range early.
 
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com> 
+According to spec with M7101 in M1543 page 103/104,
+	http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
+0xe0, and 0xe2 do not include address info for acpi/smb.
 
+Kill wrong quirk about them.
 
+Link: http://kodu.ut.ee/~mroos/dm/dm.v240
+Link: http://kodu.ut.ee/~mroos/dm/dm.sb100
+Reported-by: Meelis Roos <mroos@linux.ee>
+Cc: Meelis Roos <mroos@linux.ee>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/quirks.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b03373f..55bb661 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -433,24 +433,6 @@ static void quirk_amd_nl_class(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
+ 		quirk_amd_nl_class);
+ 
+-/*
+- * Let's make the southbridge information explicit instead
+- * of having to worry about people probing the ACPI areas,
+- * for example.. (Yes, it happens, and if you read the wrong
+- * ACPI register it will put the machine to sleep with no
+- * way of waking it up again. Bummer).
+- *
+- * ALI M7101: Two IO regions pointed to by words at
+- *	0xE0 (64 bytes of ACPI registers)
+- *	0xE2 (32 bytes of SMB registers)
+- */
+-static void quirk_ali7101_acpi(struct pci_dev *dev)
+-{
+-	quirk_io_region(dev, 0xE0, 64, PCI_BRIDGE_RESOURCES, "ali7101 ACPI");
+-	quirk_io_region(dev, 0xE2, 32, PCI_BRIDGE_RESOURCES+1, "ali7101 SMB");
+-}
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
+-
+ static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
+ {
+ 	u32 devres;
+-- 
+1.8.4.5
 
