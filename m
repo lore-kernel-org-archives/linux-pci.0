@@ -1,71 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5620AF42.4070204@arm.com>
-Date: Fri, 16 Oct 2015 09:03:14 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: linux-arm-kernel@lists.infradead.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Ma Jun <majun258@huawei.com>
-Subject: Re: [PATCH RFC 0/7] Adding core support for wire-MSI bridges
-References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com> <5027676.zPNVVQXaP4@wuerfel> <561FCDBE.8000407@arm.com> <5879538.pKBkpUOxls@wuerfel>
-In-Reply-To: <5879538.pKBkpUOxls@wuerfel>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:29903 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965240AbbJHVpO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:45:14 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 36/60] PCI: Cache window alignment value during bus sizing
+Date: Thu,  8 Oct 2015 14:38:55 -0700
+Message-Id: <1444340359-8011-37-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15/10/15 20:16, Arnd Bergmann wrote:
-> On Thursday 15 October 2015 17:01:02 Marc Zyngier wrote:
->>
->> "Preconfigured" is the key word. While you can do something like that if
->> your hardware treats MSIs just as if they were wired interrupts
->> (something like GICv2m), it becomes far more hairy if the target of MSIs
->> is something like a GICv3 ITS (which is the case for HiSilicon mbigen).
->>
->> The main reason is that the ITS relies on "translation tables" kept in
->> memory, which the OS has to configure, and handing over pre-configured
->> tables is not something I'm looking forward to doing. From a CPU point
->> of view, this is akin entering the kernel with the MMU already on and no
->> idmap...
->>
->> The approach taken here is to make the MSI-ness explicit at the irqchip
->> level, and keep the interrupting device oblivious of that feature. Also,
->> this relies on the fact that we can have one MSI per wire, meaning that
->> we don't have to multiplex anything (no nested irqchip), and that we can
->> rely on hierarchical domains, which simplifies the code (at least for
->> the irqchip).
->>
-> 
-> Thanks, that already makes things much clearer. Just one more question:
-> why can't those translation tables be configured statically by the
-> irqchip driver? Is this all about being able to cut a few cycles
-> in case of virtualization? 
+There are several calling to window_alignment(), and we will have more
+for alt_size support, cache the value instead of keeping on getting it.
 
-Having a static configuration, while doable, complicates things for
-everybody else. The LPI number used by the irqchip would need to be put
-an some "exclusion list" to make sure it is not reallocated for other
-subsystems (e.g PCI). The translation tables also define the target CPU,
-which could cause interesting problems once combined with CPU hotplug if
-the ITS is not completely in control of it.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-I'm not really getting your point about virtualization though.
-
-> I would assume that once you have gone through the overhead of having
-> both an MSI and a normal interrupt line (with the need for
-> serialization vs DMA), you can just as well trap to user space to
-> deliver an IRQ to a guest.
-
-The whole idea behind this bridge is to move wired interrupts to the
-periphery of a SoC. I don't think virtualization was part of the
-equation, but of course I can't speak for the "geniuses" behind the idea.
-
-Or maybe I'm reading your question the wrong way, which is entirely
-possible given the lack of caffeine.
-
-Thanks,
-
-	M.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index b86417d..deed016 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1241,6 +1241,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	LIST_HEAD(align_test_list);
+ 	LIST_HEAD(align_test_add_list);
++	resource_size_t window_align;
+ 
+ 	if (!b_res)
+ 		return -ENOSPC;
+@@ -1250,6 +1251,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		min_size = 0;
+ 	}
+ 
++	window_align = window_alignment(bus, b_res->flags);
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+@@ -1311,10 +1314,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		}
+ 	}
+ 
+-	max_align = max(max_align, window_alignment(bus, b_res->flags));
++	max_align = max(max_align, window_align);
+ 	if (size || min_size) {
+ 		min_align = calculate_mem_align(&align_test_list, max_align,
+-				 size, window_alignment(bus, b_res->flags));
++						size, window_align);
+ 		size0 = calculate_memsize(size, min_size,
+ 				  resource_size(b_res), min_align);
+ 	}
+@@ -1325,7 +1328,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (sum_add_size > size && realloc_head) {
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+-					window_alignment(bus, b_res->flags));
++					window_align);
+ 		size1 = calculate_memsize(sum_add_size, min_size,
+ 				 resource_size(b_res), min_add_align);
+ 	}
 -- 
-Jazz is not dead. It just smells funny...
+1.8.4.5
+
