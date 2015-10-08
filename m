@@ -1,85 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sauhun.de ([89.238.76.85]:58081 "EHLO pokefinder.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030973AbbJ3MET (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 30 Oct 2015 08:04:19 -0400
-Date: Fri, 30 Oct 2015 13:04:08 +0100
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
- instances
-Message-ID: <20151030120408.GE25117@katana>
-References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
- <20151029123755.GC2351@katana>
- <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151029163930.GC22218@katana>
- <PS1PR06MB11804B39B09D6FCAA9B3D9DCF5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151029184800.GB8992@katana>
- <PS1PR06MB11805309BF760C14F4894EAEF52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="a+b56+3nqLzpiR9O"
-In-Reply-To: <PS1PR06MB11805309BF760C14F4894EAEF52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+Received: from mailout3.w1.samsung.com ([210.118.77.13]:46477 "EHLO
+	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753726AbbJHHYf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 03:24:35 -0400
+From: Pavel Fedin <p.fedin@samsung.com>
+To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Cc: Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: [PATCH v2 1/2] PCI: of: Add 64-bit address recognition without LPAE
+ support
+Date: Thu, 08 Oct 2015 10:24:25 +0300
+Message-id: <858110a5c4fb0b2094417cc8429560bdaae81c66.1444288748.git.p.fedin@samsung.com>
+In-reply-to: <cover.1444288748.git.p.fedin@samsung.com>
+References: <cover.1444288748.git.p.fedin@samsung.com>
+In-reply-to: <cover.1444288748.git.p.fedin@samsung.com>
+References: <cover.1444288748.git.p.fedin@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+If non-LPAE kernel is booted up on a machine with 64-bit PCI resources,
+PCI controller probe fails with:
 
---a+b56+3nqLzpiR9O
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+PCI host bridge /pcie@10000000 ranges:
+   IO 0x3eff0000..0x3effffff -> 0x00000000
+  MEM 0x10000000..0x3efeffff -> 0x10000000
+  MEM 0x8000000000..0xffffffffff -> 0x8000000000
+pci-host-generic 3f000000.pcie: resource collision: [mem 0x00000000-0xffffffff] conflicts with /pl011@9000000 [mem 0x09000000-0x09000fff]
+pci-host-generic: probe of 3f000000.pcie failed with error -16
 
+This happens because res->start assignment in of_pci_range_to_resource()
+truncates the upper part of the address, because res->start is of
+phys_addr_t type, which is 32-bit on non-LPAE kernels.
 
-> Hopefully, Geert's patch will be applied to avoid build errors in both the
-> rcar-pcie and rcar-pci-gen2 (internal USB bridge) drivers. Meanwhile I'll fix
-> the rcar-pcie driver properly for arm64.
+This patch adds explicit recognition of 64-bit resources, preventing from
+potential problems when e. g. 0x8000001234 would be converted to
+0x00001234.
 
-Thanks for taking care.
+Signed-off-by: Pavel Fedin <p.fedin@samsung.com>
+---
+ drivers/of/address.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-> > What MSI problem?
-> I was told that rcar pcie on v4.3-rc5 had an issue with MSI.
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 384574c..cd53fe4 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -330,6 +330,12 @@ int of_pci_range_to_resource(struct of_pci_range *range,
+ 		}
+ 		res->start = port;
+ 	} else {
++		if ((sizeof(resource_size_t) < 8) &&
++		    upper_32_bits(range->cpu_addr)) {
++			err = -EINVAL;
++			goto invalid_range;
++		}
++
+ 		res->start = range->cpu_addr;
+ 	}
+ 	res->end = res->start + range->size - 1;
+-- 
+2.4.4
 
-Okay, we'll see. I only have remote access to a Koelsch board, but my
-own Salvator. And a USB3 PCIE card. That would be my primary test setup.
-
-> > And can't you send the DTS patches as RFC so I can add some testing?
-> Sure, though what tree? As I mentioned above, next doesn't have
-> shmobile arm64 yet.
-
-I use renesas-drivers:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-drivers.git renesas-drivers-2015-10-27-v4.3-rc7
-
-Thanks,
-
-   Wolfram
-
-
---a+b56+3nqLzpiR9O
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJWM1y4AAoJEBQN5MwUoCm2g4YP+gNg09/8VHAE4OpROqXRm5fw
-Ni0FuaeMdaUH57LHy/pGWaFXzoROgqqiPC2Nou6zdNY1kD2Wkklj8mF9x5HbIi9b
-VXR5BTZZ04y6mmlgIFrXi2bpN1XGnfUhwvqD9SILM9n1BFRS2IAH1XkG3qJ6XjUZ
-0E7see8ffbUW6oHKLuTvJo3PcN74XOd+/3DKcPqONOa1BzhllCyCMQ+RbMSA9gNn
-58ISZwFgGkM29yqfNS5tzIcWqNARR+SNZBDC1iWZ+OufKPvj4fZFAZjMBQad0Gfm
-OyCMRmBP8+g8u1lXBqRaH9LFDy4xLEnnHO0UrPECL/tkENqMCkT2upew3ClEsD2M
-eB7aOkUPMtjhGiMor5NqofnuifUPVFGBp3tYXN18Yz12FyytFKVrxiCBZ5EXAf6I
-S7E7KS//JaCO6cZ5ousw5POQSiPFgtH4mkz8FFSoNpm+Fsde7mfhBEhr26E1wJwx
-JBhoAFEU6oE+FRHnWorwv5lTWsTFp82eF/rbrr1Bz2zugo+RXnOtOcEQA5h2bhwf
-eJPWDVT8U9QJppkxv3mc/nMWerPHOOE/xmZ2DYo4CRwLW0IT/GuGDG5rntlYl4Xs
-4ZD0XLpDvRm54Qjq1mi+PCyd/vKFpZYVDvYlCxiBDWtNpu59Ee/Xqas+nyuH4VRY
-FlBD6AfmqI0enGAs7//v
-=j/UL
------END PGP SIGNATURE-----
-
---a+b56+3nqLzpiR9O--
