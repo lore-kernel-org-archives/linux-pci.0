@@ -1,88 +1,74 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v4 0/5] PCI: Add support for PCI Enhanced Allocation "BARs"
-Date: Fri,  2 Oct 2015 15:37:51 -0700
-Message-Id: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 06/60] sparc/PCI: Keep resource idx order with bridge register number
+Date: Thu,  8 Oct 2015 14:38:25 -0700
+Message-Id: <1444340359-8011-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On one system found strang "no compatible bridge window" warning
 
-The original patches are from Sean O. Stalley. I made a few tweaks,
-but feel that it is substancially Sean's work, so I am keeping the
-patch set version numbering scheme going.
+PCI: Claiming 0000:00:01.0: Resource 14: 0002000100000000..000200010fffffff [10220c]
+PCI: Claiming 0000:01:00.0: Resource 1: 0002000100000000..000200010000ffff [100214]
+pci 0000:01:00.0: can't claim BAR 1 [mem 0x2000100000000-0x200010000ffff 64bit]: no compatible bridge window
 
-Tested on Cavium ThunderX system with 4 Root Complexes containing 50
-devices/bridges provisioned with EA.
+and we already had pref_compat support that add extra pref bit for device
+resource.
 
-Here is Sean's description of the patches:
+It turns out that pci_resource_compatible()/pci_up_path_over_pref_mem64()
+just check resource with bridge pref mmio register idx 15, and we have put
+resource to use mmio register idx 14 during of_scan_pci_bridge()
+as the bridge does not mmio resource.
 
-PCI Enhanced Allocation is a new method of allocating MMIO & IO
-resources for PCI devices & bridges. It can be used instead
-of the traditional PCI method of using BARs.
+We already fix pci_up_path_over_pref_mem64() to check all bus resources.
 
-EA entries are hardware-initialized to a fixed address.
-Unlike BARs, regions described by EA are cannot be moved.
-Because of this, only devices which are permanently connected to
-the PCI bus can use EA. A removable PCI card must not use EA.
+And at the same time, this patch will make resource to consistent sequence
+like other arch or directly from pci_read_bridge_bases(),
+even non-pref mmio is missing, or out of ordering in firmware reporting.
 
-This patchset adds support for using EA entries instead of BARs
-on Root Complex Integrated Endpoints.
+So hold i = 1 for non pref mmio, and i =2 for pref mmio.
 
-The Enhanced Allocation ECN is publicly available here:
-https://www.pcisig.com/specifications/conventional/ECN_Enhanced_Allocation_23_Oct_2014_Final.pdf
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/sparc/kernel/pci.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-
-Changes from V1:
-	- Use generic PCI resource claim functions (instead of EA-specific functions)
-	- Only add support for RCiEPs (instead of all devices).
-	- Removed some debugging messages leftover from early testing.
-
-Changes from V2 (By David Daney):
-	- Add ea_cap to struct pci_device, to aid in finding the EA capability.
-	- Factored EA entity decoding into a separate function.
-	- Add functions to find EA entities by BEI or Property.
-	- Add handling of EA provisioned bridges.
-	- Add handling of EA SRIOV BARs.
-	- Try to assign proper resource parent so that SRIOV device creation can occur.
-
-Changes from V3 (By David Daney):
-	- Discarded V3 changes and started over fresh based on Sean's V2.
-	- Add more support/checking for Entry Properties.
-	- Allow EA behind bridges.
-	- Rewrite some error messages.
-	- Add patch 3/5 to prevent resizing, and better handle
-          assigning, of fixed EA resources.
-	- Add patch 4/5 to handle EA provisioned SRIOV devices.
-	- Add patch 5/5 to handle EA provisioned bridges.
-
-David Daney (3):
-  PCI: Handle IORESOURCE_PCI_FIXED when sizing and assigning resources.
-  PCI: Handle Enhanced Allocation (EA) capability for SRIOV devices.
-  PCI: Handle Enhanced Allocation (EA) capability for bridges
-
-Sean O. Stalley (2):
-  PCI: Add Enhanced Allocation register entries
-  PCI: Add support for Enhanced Allocation devices
-
- drivers/pci/bus.c             |   7 ++
- drivers/pci/iov.c             |  11 ++-
- drivers/pci/pci.c             | 202 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h             |   1 +
- drivers/pci/probe.c           |  34 ++++++-
- drivers/pci/setup-bus.c       |  63 ++++++++++++-
- include/linux/pci.h           |   1 +
- include/uapi/linux/pci_regs.h |  44 ++++++++-
- 8 files changed, 355 insertions(+), 8 deletions(-)
-
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 41dcbc7..4113922 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -472,7 +472,7 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
+ 		pci_read_bridge_bases(bus);
+ 		goto after_ranges;
+ 	}
+-	i = 1;
++	i = 3;
+ 	for (; len >= 32; len -= 32, ranges += 8) {
+ 		u64 start;
+ 
+@@ -504,6 +504,12 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
+ 				       " for bridge %s\n", node->full_name);
+ 				continue;
+ 			}
++		} else if ((flags & IORESOURCE_PREFETCH) &&
++			   !bus->resource[2]->flags) {
++			res = bus->resource[2];
++		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
++			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
++			res = bus->resource[1];
+ 		} else {
+ 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
+ 				printk(KERN_ERR "PCI: too many memory ranges"
 -- 
-1.9.1
+1.8.4.5
 
