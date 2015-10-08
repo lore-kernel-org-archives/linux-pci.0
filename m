@@ -1,76 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 48/60] PCI: Don't add too much io port for hotplug bridge with old size
-Date: Thu,  8 Oct 2015 14:39:07 -0700
-Message-Id: <1444340359-8011-49-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:45298 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755041AbbJHNUO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Oct 2015 09:20:14 -0400
+Date: Thu, 8 Oct 2015 08:20:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [Patch v6 4/7] PCI/ACPI: Consolidate common PCI host bridge code
+ into ACPI core
+Message-ID: <20151008132010.GI27633@localhost>
+References: <1442218057-4355-1-git-send-email-jiang.liu@linux.intel.com>
+ <1442218057-4355-5-git-send-email-jiang.liu@linux.intel.com>
+ <20151006174725.GA29420@localhost>
+ <5615FFD4.3090202@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5615FFD4.3090202@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we add too much for hotplug bridge io port.
-For example, when hotplug bridge has two children bridges,
-every child bridge will need 0x1000, so size1 will be 0x2000
-and size is 0. The min_size for the hotplug bridge is 0x100.
-with old version calculate_iosize, we get 0x3000 for final
-size as we are using size to compare with min_size at first.
-That is not right, we should have 0x2000.
+On Thu, Oct 08, 2015 at 01:32:04PM +0800, Jiang Liu wrote:
+> On 2015/10/7 1:47, Bjorn Helgaas wrote:
+> >> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+> >> +				     struct acpi_pci_root_ops *ops,
+> >> +				     struct acpi_pci_root_info *info,
+> >> +				     void *sysdata)
+> >> +{
+> >> +	int ret, busnum = root->secondary.start;
+> >> +	struct acpi_device *device = root->device;
+> >> +	int node = acpi_get_node(device->handle);
+> >> +	struct pci_bus *bus;
+> >> +
+> >> +	info->root = root;
+> >> +	info->bridge = device;
+> >> +	info->ops = ops;
+> >> +	INIT_LIST_HEAD(&info->resources);
+> >> +	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
+> >> +		 root->segment, busnum);
+> >> +
+> >> +	if (ops->init_info && ops->init_info(info))
+> >> +		goto out_release_info;
+> >> +	ret = acpi_pci_probe_root_resources(info);
+> >> +	if (ops->prepare_resources)
+> >> +		ret = ops->prepare_resources(info, ret);
+> >> +	if (ret < 0)
+> >> +		goto out_release_info;
+> >> +	else if (ret > 0)
+> >> +		pci_acpi_root_add_resources(info);
+> > 
+> > This is unnecessarily complicated: you set "ret", then overwrite it if
+> > ops->prepare_resources.  By the time you test "ret", it's messy to
+> > figure out what it means.
+> > 
+> > Both ops->prepare_resources() and pci_acpi_root_add_resources()
+> > should be able to deal with empty resource lists, so can you do the
+> > following instead?
+> > 
+> >     ret = acpi_pci_probe_root_resources(info);
+> >     if (ret < 0)
+> >         goto out_release_info;
+>
+> 	The original code is used to handle a special case for x86,
+> where acpi_pci_probe_root_resources() fails but ops->prepare_resources()
+> succeeds. For x86, PCI host bridge resources may probed by means
+> other than ACPI when pci_use_crs is true (AMD and Broadcom hostbridges).
+> So we can't return failure when acpi_pci_probe_root_resources() fails.
 
-We can check size+size1 with min_size for io port, and just add size1
-to size without passing extra size1 into calculate_iosize().
+That's even worse than I thought.  I take back my ack; I think this
+really needs to be restructured so it does the right thing *and* reads
+clearly.  Having convoluted generic code to deal with an arch-specific
+special case is a recipe for breakage in the future.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Maybe you can move the non-ACPI resource probing from
+prepare_resources() into acpi_pci_probe_root_resources() (you could
+rename it to something more generic if that helps).
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 4e7f0aa..d4e8da1 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1106,7 +1106,6 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
- 
- static resource_size_t calculate_iosize(resource_size_t size,
- 		resource_size_t min_size,
--		resource_size_t size1,
- 		resource_size_t old_size,
- 		resource_size_t align)
- {
-@@ -1114,7 +1113,7 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 		size = min_size;
- 	if (old_size == 1)
- 		old_size = 0;
--	size = ALIGN(size + size1, align);
-+	size = ALIGN(size, align);
- 	if (size < old_size)
- 		size = old_size;
- 	return size;
-@@ -1245,14 +1244,15 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	}
- 
- 	size = size_aligned_for_isa(size);
--	size0 = calculate_iosize(size, min_size, size1,
-+	size += size1;
-+	size0 = calculate_iosize(size, min_size,
- 			resource_size(b_res), min_align);
- 	sum_add_size = size_aligned_for_isa(sum_add_size);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	size1 = !realloc_head ? size0 :
--		calculate_iosize(sum_add_size, min_size, 0,
-+		calculate_iosize(sum_add_size, min_size,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
--- 
-1.8.4.5
-
+> +	ret = acpi_pci_probe_root_resources(info);
+> +	if (ops->prepare_resources)
+> +		ret = ops->prepare_resources(info, ret);
+> +	if (ret < 0)
+> +		goto out_release_info;
+> 
+> >     if (ops->prepare_resources) {
+> >         ret = ops->prepare_resources(info, ret);
+> >         if (ret < 0)
+> >             goto out_release_info;
+> >     }
+> >     pci_acpi_root_add_resources(info);
+> I will remove the redundant check of (ret > 0) in:
+> +	else if (ret > 0)
+> +		pci_acpi_root_add_resources(info);
