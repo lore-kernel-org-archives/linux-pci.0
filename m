@@ -1,123 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53022 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752264AbbJOOFO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Oct 2015 10:05:14 -0400
-Date: Thu, 15 Oct 2015 09:05:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wenlin Kang <wenlin.kang@windriver.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: restrict 64-bit pci device to assign resource from
- behind of max_pfn
-Message-ID: <20151015140503.GA12958@localhost>
-References: <1444906004-2083-1-git-send-email-wenlin.kang@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444906004-2083-1-git-send-email-wenlin.kang@windriver.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25891 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965238AbbJHVpU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:45:20 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 47/60] PCI: Move ISA io port align out of calculate_iosize()
+Date: Thu,  8 Oct 2015 14:39:06 -0700
+Message-Id: <1444340359-8011-48-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Wenlin,
+We need to move ISA io port align out of calculate_iosize(),
+so we could unify calculate_iosize and calculate_memsize later.
 
-On Thu, Oct 15, 2015 at 06:46:44PM +0800, Wenlin Kang wrote:
-> This patch restricts 64-bit pci device to assign resource from behind of
-> max_pfn when kernel config enables CONFIG_64BIT.
-> 
-> On some system that pci device requires assignment of large resource(eg,
-> 1GB or larger), sometimes,the assignment of some devices may fail under
-> the current way.
-> 
-> e.g. the follow case is that.
-> 
-> ...
-> [    0.000000] e820: [mem 0x90000000-0xfed1bfff] available for PCI devices
-> [    0.000000] setup_percpu: NR_CPUS:128 nr_cpumask_bits:128 nr_cpu_ids:72 nr_node_ids:2
-> ...
-> [    6.564750] pci 0000:00:1c.7:   bridge window [mem 0x9f000000-0xa08fffff]
-> [    6.587130] pci 0000:84:06.0: BAR 14: can't assign mem (size 0x60000000)
-> [    6.609158] pci 0000:84:00.0: BAR 14: can't assign mem (size 0x100000)
-> ...
-> 
-> On this case, although the kernel has [0x90000000-0xfed1bfff] [1.73GB]
-> size space is available for PCI devices, assignment of some devices fail
-> yet, the cause is the resource isn't yet enough for devices.
+That extra aligning or offset is to work around ISA devices:
+When one bridge have several children devices, and every device
+has several io port resources and resource size < 0x400.
+We need to check size, and add extra size to make sure bit8/9
+to be zero.
 
-We do PCI resource allocation inside the host bridge windows, which
-you didn't include here.
+Also need to apply same checking for optional size path.
 
-The [mem 0x90000000-0xfed1bfff] range is derived from the E820 table
-and is sort of a theoretical maximum -- it's the range that isn't
-being used by anything else.  The "available for PCI devices" text is
-not quite accurate -- this range is potentially available for *any*
-device that has programmable addresses.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
+ 1 file changed, 27 insertions(+), 12 deletions(-)
 
-Long ago, we did use that range directly for PCI allocation, but now
-that we have machines with multiple host bridges, it's not sufficient:
-the range may be carved up between several bridges.  We have to look
-at the host bridge windows to see what parts of the range are
-available for devices below each host bridge.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index d4aeedc..4e7f0aa 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1114,11 +1114,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
+-	/* To be fixed in 2.5: we should have sort of HAVE_ISA
+-	   flag in the struct pci_bus. */
+-#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+-	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+-#endif
+ 	size = ALIGN(size + size1, align);
+ 	if (size < old_size)
+ 		size = old_size;
+@@ -1172,6 +1167,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+ 	return max(align, arch_align);
+ }
+ 
++static resource_size_t size_aligned_for_isa(resource_size_t size)
++{
++	/*
++	 * To be fixed in 2.5: we should have sort of HAVE_ISA
++	 *  flag in the struct pci_bus.
++	 */
++#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
++	size = (size & 0xff) + ((size & ~0xffUL) << 2);
++#endif
++	return size;
++}
++
+ /**
+  * pbus_size_io() - size the io window of a given bus
+  *
+@@ -1189,11 +1196,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ {
+ 	struct pci_dev *dev;
+ 	resource_size_t min_sum_size = 0;
+-	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+-	resource_size_t children_add_size = 0;
++	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
+ 	resource_size_t min_align, align;
+ 
+ 	if (!b_res)
+@@ -1210,7 +1216,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+-			unsigned long r_size;
++			unsigned long r_size, r_add_size;
+ 
+ 			if (r->parent || !(r->flags & IORESOURCE_IO))
+ 				continue;
+@@ -1226,18 +1232,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 			if (align > min_align)
+ 				min_align = align;
+ 
+-			if (realloc_head)
+-				children_add_size += get_res_add_size(realloc_head, r);
++			if (realloc_head) {
++				r_add_size = get_res_add_size(realloc_head, r);
++				r_add_size += r_size;
++				if (r_add_size < 0x400)
++					/* Might be re-aligned for ISA */
++					sum_add_size += r_add_size;
++				else
++					sum_add_size1 += r_add_size;
++			}
+ 		}
+ 	}
+ 
++	size = size_aligned_for_isa(size);
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	sum_add_size = children_add_size + size + size1;
++	sum_add_size = size_aligned_for_isa(sum_add_size);
++	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	size1 = !realloc_head ? size0 :
+-		calculate_iosize(size, min_size, sum_add_size - size,
++		calculate_iosize(sum_add_size, min_size, 0,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+-- 
+1.8.4.5
 
-That's a long-winded way of saying that we can't simply look at
-max_pfn as you do in this patch.  We need to look at the host bridge
-windows themselves.  On x86, these come from ACPI _CRS methods, and
-they probably aren't big enough to accommodate this device.  If that's
-the case, we can't do much about it.  If the BIOS tells us "this is
-the only range routed to the PCI bus," we have to assume it's telling
-us the truth.  The BIOS knows how the bridges are configured, and we
-don't.
-
-> After apply this patch, this problem get resolved, the patch makes kernel
-> assign resource from behind of max_pfn for 64-bit pci devices when kernel
-> is 64BIT, however, previous way always assigns resource below 4GB no
-> matter it is 32 or 64-bit devices, so this patch extends this window of
-> pci resource on 64-bit system that both 32 and 64-bit pci device exist or
-> only 64-bit device exists, makes it more likely that we can assign
-> resource to more or all devices.
-> 
-> Signed-off-by: wlkang <wlkang2008@126.com>
-> Signed-off-by: Wenlin Kang <wenlin.kang@windriver.com>
-
-I assume both of these Signed-off-by lines refer to you.  If that's
-the case, you should at least use the same "real name" (the "wlkang"
-and "Wenlin Kang" parts).  I think it makes the most sense to use a
-single address, but if you need both, I would put the second in a
-"CC:" line or something.  The Signed-off-by is more of an ownership
-thing where it doesn't really make sense to have two names for a
-single person.
-
-> ---
->  drivers/pci/setup-res.c |   12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index 232f925..dafd667 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -206,7 +206,19 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
->  	resource_size_t min;
->  	int ret;
->  
-> +#ifdef CONFIG_64BIT
-> +	/*
-> +	 * For 64-bit pci device, assign resource start from the next page
-> +	 * boundary above the maximum physical page address
-> +	 */
-> +	resource_size_t min_iomem;
-> +
-> +	min_iomem = (res->flags & IORESOURCE_MEM_64) ?
-> +				(max_pfn + 1) << PAGE_SHIFT : PCIBIOS_MIN_MEM;
-> +	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : min_iomem;
-> +#else
->  	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
-> +#endif
->  
->  	/*
->  	 * First, try exact prefetching match.  Even if a 64-bit
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
