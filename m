@@ -1,4 +1,4 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -7,102 +7,111 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Khalid Aziz <khalid.aziz@oracle.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: [PATCH v7 19/60] PCI: Separate realloc list checking after allocation
-Date: Thu,  8 Oct 2015 14:38:38 -0700
-Message-Id: <1444340359-8011-20-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 38/60] PCI: Separate out save_resources()/restore_resources()
+Date: Thu,  8 Oct 2015 14:38:57 -0700
+Message-Id: <1444340359-8011-39-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We check the realloc list, as list must be empty after allocation.
-
-Separate the realloc list checking to another function.
-
-Add checking that is missed in acpiphp driver.
-
--v2: change to WARN_ON according to Rafael.
+We need to save/restore resources several times for alt_size support,
+separate the save_resources()/resources() to save some lines later.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
 ---
- drivers/pci/hotplug/acpiphp_glue.c |  1 +
- drivers/pci/pci.h                  |  1 +
- drivers/pci/setup-bus.c            | 12 +++++++++---
- 3 files changed, 11 insertions(+), 3 deletions(-)
+ drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 30 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index ff53856..ce9fb21 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 		}
- 	}
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
-+	pci_bus_check_realloc(&add_list);
- 
- 	acpiphp_sanitize_bus(bus);
- 	pcie_bus_configure_settings(bus);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 39d2c50..c34c2aa 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -238,6 +238,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
- void __pci_bus_assign_resources(const struct pci_bus *bus,
- 				struct list_head *realloc_head,
- 				struct list_head *fail_head);
-+void pci_bus_check_realloc(struct list_head *realloc_head);
- bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
- 
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index d49c6e5..53ab81f 100644
+index ca34346..dc83c2c 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -280,6 +280,12 @@ out:
- 	}
+@@ -436,6 +436,29 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
+ 	return false;	/* should not get here */
  }
  
-+void pci_bus_check_realloc(struct list_head *realloc_head)
++static bool save_resources(struct list_head *head,
++			   struct list_head *save_head)
 +{
-+	if (WARN_ON(!list_empty(realloc_head)))
-+		free_list(realloc_head);
++	struct pci_dev_resource *dev_res;
++
++	/* Save original start, end, flags etc at first */
++	list_for_each_entry(dev_res, head, list)
++		if (add_to_list(save_head, dev_res->dev, dev_res->res)) {
++			free_list(save_head);
++			return false;
++		}
++
++	return true;
 +}
 +
- /**
-  * assign_requested_resources_sorted() - satisfy resource requests
-  *
-@@ -1733,7 +1739,7 @@ again:
- 	/* Depth last, allocate resources and update the hardware. */
- 	__pci_bus_assign_resources(bus, add_list, &fail_head);
- 	if (add_list)
--		BUG_ON(!list_empty(add_list));
-+		pci_bus_check_realloc(add_list);
- 	tried_times++;
++static void restore_resource(struct pci_dev_resource *save_res,
++			     struct resource *res)
++{
++	res->start = save_res->start;
++	res->end = save_res->end;
++	res->flags = save_res->flags;
++}
++
+ static void __assign_resources_sorted(struct list_head *head,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *fail_head)
+@@ -473,13 +496,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	if (!realloc_head || list_empty(realloc_head))
+ 		goto requested_and_reassign;
  
- 	/* any device complain? */
-@@ -1808,7 +1814,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- again:
- 	__pci_bus_size_bridges(parent, &add_list);
- 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
--	BUG_ON(!list_empty(&add_list));
-+	pci_bus_check_realloc(&add_list);
- 	tried_times++;
+-	/* Save original start, end, flags etc at first */
+-	list_for_each_entry(dev_res, head, list) {
+-		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
+-			free_list(&save_head);
+-			goto requested_and_reassign;
+-		}
+-	}
++	if (!save_resources(head, &save_head))
++		goto requested_and_reassign;
  
- 	if (list_empty(&fail_head))
-@@ -1867,6 +1873,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 							 &add_list);
- 	up_read(&pci_bus_sem);
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
--	BUG_ON(!list_empty(&add_list));
-+	pci_bus_check_realloc(&add_list);
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+@@ -548,12 +566,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		}
+ 	}
+ 	/* Restore start/end/flags from saved list */
+-	list_for_each_entry(save_res, &save_head, list) {
+-		res = save_res->res;
+-		res->start = save_res->start;
+-		res->end = save_res->end;
+-		res->flags = save_res->flags;
+-	}
++	list_for_each_entry(save_res, &save_head, list)
++		restore_resource(save_res, save_res->res);
++
+ 	free_list(&save_head);
+ 
+ requested_and_reassign:
+@@ -1981,9 +1996,7 @@ again:
+ 	list_for_each_entry(fail_res, &fail_head, list) {
+ 		struct resource *res = fail_res->res;
+ 
+-		res->start = fail_res->start;
+-		res->end = fail_res->end;
+-		res->flags = fail_res->flags;
++		restore_resource(fail_res, res);
+ 		if (fail_res->dev->subordinate) {
+ 			res->flags = 0;
+ 			/* last or third times and later */
+@@ -2067,9 +2080,7 @@ again:
+ 	list_for_each_entry(fail_res, &fail_head, list) {
+ 		struct resource *res = fail_res->res;
+ 
+-		res->start = fail_res->start;
+-		res->end = fail_res->end;
+-		res->flags = fail_res->flags;
++		restore_resource(fail_res, res);
+ 		if (fail_res->dev->subordinate) {
+ 			res->flags = 0;
+ 			/* last time */
 -- 
 1.8.4.5
 
