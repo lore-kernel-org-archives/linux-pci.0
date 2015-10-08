@@ -1,92 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:54561 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751804AbbJNJpr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Oct 2015 05:45:47 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	qiujiang <qiujiang@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"Wangkefeng (Kevin)" <wangkefeng.wang@huawei.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: Re: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
-Date: Wed, 14 Oct 2015 11:42:27 +0200
-Message-ID: <5959363.QRL4hSioHL@wuerfel>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1624367C@lhreml503-mbs>
-References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com> <7409042.iUdOP6FlU8@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1624367C@lhreml503-mbs>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: [PATCH v7 19/60] PCI: Separate realloc list checking after allocation
+Date: Thu,  8 Oct 2015 14:38:38 -0700
+Message-Id: <1444340359-8011-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 14 October 2015 09:31:48 Gabriele Paoloni wrote:
-> > 
-> > > To me it sounds more appropriate to adopt subsys_initcall() for all
-> > the
-> > > PCI Host Bridge controllers rather than having them as loadable
-> > modules...
-> > >
-> > > What is your view?
-> > 
-> > subsys_initcall() sounds odd because it's a driver rather than a
-> > subsystem,
-> > but I realize that most of the other levels don't fit any better.
-> 
-> Yes well I was seeing for example the vgaarb 
-> http://lxr.free-electrons.com/source/drivers/gpu/vga/vgaarb.c#L1357
-> 
-> That in the init is calling pci_get_subsys()
-> 
-> So I was wondering that the PCI devices may not be registered unless
-> we also init the PCI host bridge through subsys_initcall()...
+We check the realloc list, as list must be empty after allocation.
 
-I think this should work as is: the code first looks for devices
-that are already there and then registers a notifier for devices
-that show up later. This is meant to work for both devices that
-are hotplugged at a later point as well as PCI buses that are
-already there but not yet probed.
+Separate the realloc list checking to another function.
 
-> But then maybe is the vgaarb to be buggy...
+Add checking that is missed in acpiphp driver.
 
-Possible. It may well be that the code is only tested on x86,
-which always probes its PCI very early.
+-v2: change to WARN_ON according to Rafael.
 
-> > As I said, it's not really a choice we have to make in the source code,
-> > we can use subsys_initcall together with module_exit(), or we can
-> > create a helper macro that is similar to module_platform_driver()
-> > specifically for PCI that uses a particular initcall level.
-> 
-> Ok got it. But I guess this needs to be thought and applied to all
-> the PCI host bridge controllers...
-> 
-> So maybe for this driver I can use module_platform_driver_probe()
-> and then we can see...
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
+---
+ drivers/pci/hotplug/acpiphp_glue.c |  1 +
+ drivers/pci/pci.h                  |  1 +
+ drivers/pci/setup-bus.c            | 12 +++++++++---
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
-Sounds good. Let's focus on getting the driver merged first and
-then follow up with a patch to get this right for all PCI hosts.
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index ff53856..ce9fb21 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+ 		}
+ 	}
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
++	pci_bus_check_realloc(&add_list);
+ 
+ 	acpiphp_sanitize_bus(bus);
+ 	pcie_bus_configure_settings(bus);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 39d2c50..c34c2aa 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -238,6 +238,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
+ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 				struct list_head *realloc_head,
+ 				struct list_head *fail_head);
++void pci_bus_check_realloc(struct list_head *realloc_head);
+ bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
+ 
+ void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index d49c6e5..53ab81f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -280,6 +280,12 @@ out:
+ 	}
+ }
+ 
++void pci_bus_check_realloc(struct list_head *realloc_head)
++{
++	if (WARN_ON(!list_empty(realloc_head)))
++		free_list(realloc_head);
++}
++
+ /**
+  * assign_requested_resources_sorted() - satisfy resource requests
+  *
+@@ -1733,7 +1739,7 @@ again:
+ 	/* Depth last, allocate resources and update the hardware. */
+ 	__pci_bus_assign_resources(bus, add_list, &fail_head);
+ 	if (add_list)
+-		BUG_ON(!list_empty(add_list));
++		pci_bus_check_realloc(add_list);
+ 	tried_times++;
+ 
+ 	/* any device complain? */
+@@ -1808,7 +1814,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ again:
+ 	__pci_bus_size_bridges(parent, &add_list);
+ 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+-	BUG_ON(!list_empty(&add_list));
++	pci_bus_check_realloc(&add_list);
+ 	tried_times++;
+ 
+ 	if (list_empty(&fail_head))
+@@ -1867,6 +1873,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 							 &add_list);
+ 	up_read(&pci_bus_sem);
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+-	BUG_ON(!list_empty(&add_list));
++	pci_bus_check_realloc(&add_list);
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
+-- 
+1.8.4.5
 
-	Arnd
