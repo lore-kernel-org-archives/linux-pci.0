@@ -1,41 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:30354 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755491AbbJHVdM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Oct 2015 17:33:12 -0400
+Date: Thu, 8 Oct 2015 21:33:10 +0000 (UTC)
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device
+ driver
+In-Reply-To: <20151008134702.GK27633@localhost>
+Message-ID: <alpine.LNX.2.00.1510082115120.27742@localhost.lm.intel.com>
+References: <1443721454-25467-1-git-send-email-keith.busch@intel.com> <20151006231412.GF29420@localhost> <alpine.LNX.2.00.1510062331220.23840@localhost.lm.intel.com> <20151008134702.GK27633@localhost>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.20.1510131020140.9747@math.ut.ee>
-References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee>
-	<CAE9FiQXM9YxRwcbG577Pcqmj7YbOa0yk6hYELb2FpTtct5u2jg@mail.gmail.com>
-	<alpine.LRH.2.20.1510120808240.3251@math.ut.ee>
-	<CAE9FiQXHsgYaTgF2rsWFJXSYJ=kH3j63ageJ2H8F5wnzbFgxRg@mail.gmail.com>
-	<alpine.LRH.2.20.1510130800380.3972@math.ut.ee>
-	<CAE9FiQVAtPGgzwwMaHjGjyzOD8wKb0TqCd1wynF6-ZmFqZzEaQ@mail.gmail.com>
-	<alpine.LRH.2.20.1510131020140.9747@math.ut.ee>
-Date: Tue, 13 Oct 2015 12:30:09 -0700
-Message-ID: <CAE9FiQV3OuPn=Z2LKHgndeeUQUwjM+9O4f8AAAgZ3QGvxJydOA@mail.gmail.com>
-Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
-From: Yinghai Lu <yinghai@kernel.org>
-To: Meelis Roos <mroos@linux.ee>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 13, 2015 at 12:32 AM, Meelis Roos <mroos@linux.ee> wrote:
-
-> Applied the fix_mem_mem64_overlapping.patch and retested. The BAR
-> allocation problems are still there:
+On Thu, 8 Oct 2015, Bjorn Helgaas wrote:
+> On Wed, Oct 07, 2015 at 12:21:02AM +0000, Keith Busch wrote:
+>> Thank you for bringing this up as I hadn't thought much about it and may
+>> have misunderstood the meaning of _SEG. AIUI, it is used to identify a
+>> logical grouping. The OS does not need to use the same identifier for
+>> the domain, so we there's no need to collide if we can assign the domain
+>> of a a new _SEG to the next available domain_nr.
 >
-> http://kodu.ut.ee/~mroos/dm/dm.v210+patch+mem64patch+debug
+> Yes, I guess it would be possible to decouple _SEG and Linux PCI
+> domain numbers.  It's *convenient* to have them the same, so dmesg and
+> lspci output matches _SEG directly, but I guess you could argue that's
+> not essential.
+>
+> I think we'd have to maintain a mapping from domain back to _SEG to
+> deal with firmware interfaces that expect _SEG, e.g., ia64 PAL calls.
 
-Good, now MEM64 is gone.
+It looks like there are lots of assumptions in the kernel that segment
+and domain are the same thing. I don't have the necessary h/w to test
+any changes here to verify the mappings are handled correctly, so I'm
+apprehensive to start changing this much code that I can't test.
 
-[   34.145275] /pci@1f,700000: TOMATILLO PCI Bus Module ver[4:0]
-[   34.145304] /pci@1f,700000: PCI IO [io
-0x7f601000000-0x7f601ffffff] offset 7f601000000
-[   34.145330] /pci@1f,700000: PCI MEM [mem
-0x7f700000000-0x7f7ffffffff] offset 7f700000000
-[   34.146938] PCI: Scanning PBM /pci@1f,700000
-[   34.147104] schizo f0069c00: PCI host bridge to bus 0000:00
-[   34.147132] pci_bus 0000:00: root bus resource [io
-0x7f601000000-0x7f601ffffff] (bus address [0x0000-0xffffff])
-[   34.147162] pci_bus 0000:00: root bus resource [mem
-0x7f700000000-0x7f7ffffffff] (bus address [0x00000000-0xffffffff])
+Given that domain_nr is a 32-bit integer, APCI's _SEG is only 16 bits,
+and the pci domain is purely a software construct, do you see any problem
+if we start these 'special' domains at 0x10000? I've tested this in
+the driver and lspci + setpci with the single line update in pciutils'
+lib/pci.h, and it all seems to work just fine.
