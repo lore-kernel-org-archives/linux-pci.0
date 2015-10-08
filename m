@@ -1,62 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:42307 "EHLO arroyo.ext.ti.com"
+Received: from mout2.freenet.de ([195.4.92.92]:56574 "EHLO mout2.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753127AbbJMSGD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 13 Oct 2015 14:06:03 -0400
-From: WingMan Kwok <w-kwok2@ti.com>
-To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<kishon@ti.com>, <rogerq@ti.com>, <m-karicheri2@ti.com>,
-	<bhelgaas@google.com>, <ssantosh@kernel.org>,
-	<linux@arm.linux.org.uk>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: WingMan Kwok <w-kwok2@ti.com>
-Subject: [PATCH 0/3] Common SerDes driver for TI's Keystone Platforms
-Date: Tue, 13 Oct 2015 14:04:21 -0400
-Message-ID: <1444759464-32299-1-git-send-email-w-kwok2@ti.com>
+	id S1751938AbbJHSYR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Oct 2015 14:24:17 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: Joerg Roedel <joro@8bytes.org>
+References: <55FE5740.2060701@maya.org> <20150929152100.GL3036@8bytes.org>
+ <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
+ <20150929162042.GR3036@8bytes.org> <560BF73F.8000008@maya.org>
+ <20151006101356.GE12506@8bytes.org> <56141507.7040103@maya.org>
+ <56148A1B.5060506@maya.org> <20151007161022.GI28811@8bytes.org>
+ <56154DEA.5050901@maya.org> <20151008163957.GK28811@8bytes.org>
+Cc: Mikulas Patocka <mpatocka@redhat.com>,
+	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
+	Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <5616B436.1000802@maya.org>
+Date: Thu, 8 Oct 2015 20:21:42 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20151008163957.GK28811@8bytes.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On TI's Keystone platforms, several peripherals such as the
-gbe ethernet switch, 10gbe ethether switch and PCIe controller
-require the use of a SerDes for converting SoC parallel data into
-serialized data that can be output over a high-speed electrical
-interface, and also converting high-speed serial input data
-into parallel data that can be processed by the SoC.  The
-SerDeses used by those peripherals, though they may be different,
-are largely similar in functionality and setup.
+Am 08.10.2015 um 18:39 schrieb Joerg Roedel:
+> On Wed, Oct 07, 2015 at 06:52:58PM +0200, Andreas Hartmann wrote:
+>> To reproduce the error:
+>> First I mounted /daten2, afterwards /raid/mt, which produces the errors.
+>> The ssd mounts have been already active (during boot by fstab).
+>
+> Okay, I spent the day on that problem, and managed to reproduce it here
+> on one of my AMD IOMMU boxes. I wasn't an easy journey, as I can only
+> reproduce it if I setup the crypto partition and everything above that
+> (like mounting the lvm volumes) _after_ the system has finished booting.
+> If everything is setup during system boot it works fine and I don't see
+> any IO_PAGE_FAULTS.
 
-This patch series provides a SerDes phy driver implementation that can be
-used by the above mentioned peripheral drivers to configure their
-respective SerDeses.
+Thank you very much for spending so much of your time to reproduce the 
+problem!
 
-As an example of the using the SerDes driver, this patch series also
-updates the Keystone PCIe host driver to enable and use its SerDes block.
+> I also tried kernel v4.3-rc4 first, to have it tested with a
+> self-compiled kernel. It didn't show up there, so I built a 4.1.0, where
+> it showed up again. Something seems to have fixed the issue in the
+> latest kernels.
+>
+> So I looked a little bit around at the commits that were merged into the
+> respective parts involved here, and found this one:
+>
+> 	586b286 dm crypt: constrain crypt device's max_segment_size to PAGE_SIZE
+ >
+> The problem fixed with this commit looks quite similar to what you have
+> seen (execpt that there was no IOMMU involved). So I cherry-picked that
+> commit on 4.1.0 and tested that. The problem was gone.
 
-References:
+That's true - I already knew this patch and tested it some weeks ago - 
+unfortunately it doesn't fix the problem here.
 
-[1] KeyStone II Architecture Serializer/Deserializer (SerDes) User's Guide
-    (http://www.ti.com/lit/ug/spruho3a/spruho3a.pdf)
+To be really sure, I just retested it now again. I couldn't see any 
+IO_PAGE_FAULTS errors today (unfortunately I can't remember anymore if I 
+didn't see them too a few weeks ago) - but the ata errors remain. 
+Therefore, this patch isn't a solution for the problem I encounter here.
 
-WingMan Kwok (3):
-  phy: keystone: serdes driver for gbe 10gbe and pcie
-  PCI: keystone: update to use generic keystone serdes driver
-  ARM: keystone: dts: add PCI serdes driver bindings
+> So it looks like it was a dm-crypt issue, the patch went into v4.3-rc3,
+> either this kernel of rc4 should fix the problem for you too. Can you
+> please verify this is fixed for you too with v4.3-rc4?
 
- Documentation/devicetree/bindings/phy/ti-phy.txt |  256 +++
- arch/arm/boot/dts/k2e.dtsi                       |   24 +
- arch/arm/boot/dts/keystone.dtsi                  |   25 +
- drivers/pci/host/pci-keystone.c                  |   54 +-
- drivers/pci/host/pci-keystone.h                  |    2 +
- drivers/phy/Kconfig                              |    8 +
- drivers/phy/Makefile                             |    1 +
- drivers/phy/phy-keystone-serdes.c                | 2465 ++++++++++++++++++++++
- 8 files changed, 2826 insertions(+), 9 deletions(-)
- create mode 100644 drivers/phy/phy-keystone-serdes.c
+As I already wrote, I even couldn't see the problem with v4.3-rc2 any 
+more (as far as I was able to test because of the other problem). I have 
+to do some more tests now with this kernel to be really sure.
 
--- 
-1.7.9.5
 
+Kind regards,
+Andreas
