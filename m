@@ -1,127 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yk0-f170.google.com ([209.85.160.170]:34474 "EHLO
+	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752022AbbJHBmy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 21:42:54 -0400
 MIME-Version: 1.0
-In-Reply-To: <1444118168-13086-3-git-send-email-gabriel.fernandez@linaro.org>
-References: <1444118168-13086-1-git-send-email-gabriel.fernandez@linaro.org> <1444118168-13086-3-git-send-email-gabriel.fernandez@linaro.org>
+In-Reply-To: <d222dd1e4d8ed59e25248091e90e53b662e007c5.1444214119.git.p.fedin@samsung.com>
+References: <cover.1444214119.git.p.fedin@samsung.com> <d222dd1e4d8ed59e25248091e90e53b662e007c5.1444214119.git.p.fedin@samsung.com>
 From: Rob Herring <robh@kernel.org>
-Date: Tue, 6 Oct 2015 09:45:18 -0500
-Message-ID: <CAL_JsqKRby4ZWb6iU7d+yN5Cj0qM+m+sQPsFVM0SgAHGK===uA@mail.gmail.com>
-Subject: Re: [PATCH v5 2/3] PCI: st: Add Device Tree bindings for sti pcie
-To: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Cc: Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
+Date: Wed, 7 Oct 2015 20:42:34 -0500
+Message-ID: <CAL_JsqKV2FpzHQs9OaYoHP66ir9jXvf91bxDFKeoNiRtho_GGA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: of: Add 64-bit address recognition without LPAE support
+To: Pavel Fedin <p.fedin@samsung.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, kernel@stlinux.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>
+	Frank Rowand <frowand.list@gmail.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Peter Maydell <peter.maydell@linaro.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 6, 2015 at 2:56 AM, Gabriel Fernandez
-<gabriel.fernandez@linaro.org> wrote:
-> sti pcie is built around a Synopsis Designware PCIe IP.
+On Wed, Oct 7, 2015 at 5:49 AM, Pavel Fedin <p.fedin@samsung.com> wrote:
+> If non-LPAE kernel is booted up on a machine with 64-bit PCI resources,
+> PCI controller probe fails with:
 >
-> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
-> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-
-Acked-by: Rob Herring <robh@kernel.org>
-
+> PCI host bridge /pcie@10000000 ranges:
+>    IO 0x3eff0000..0x3effffff -> 0x00000000
+>   MEM 0x10000000..0x3efeffff -> 0x10000000
+>   MEM 0x8000000000..0xffffffffff -> 0x8000000000
+> pci-host-generic 3f000000.pcie: resource collision: [mem 0x00000000-0xffffffff] conflicts with /pl011@9000000 [mem 0x09000000-0x09000fff]
+> pci-host-generic: probe of 3f000000.pcie failed with error -16
+>
+> This happens because res->start assignment in of_pci_range_to_resource()
+> truncates the upper part of the address, because res->start is of
+> phys_addr_t type, which is 32-bit on non-LPAE kernels.
+>
+> This patch adds explicit recognition of 64-bit resources, preventing from
+> potential problems when e. g. 0x8000001234 would be converted to
+> 0x00001234.
+>
+> Signed-off-by: Pavel Fedin <p.fedin@samsung.com>
 > ---
->  Documentation/devicetree/bindings/pci/st-pcie.txt | 56 +++++++++++++++++++++++
->  1 file changed, 56 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
+>  drivers/of/address.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
 >
-> diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
-> new file mode 100644
-> index 0000000..32e76d0
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
-> @@ -0,0 +1,56 @@
-> +STMicroelectronics STi PCIe controller
-> +
-> +This PCIe host controller is based on the Synopsis Designware PCIe IP
-> +and thus inherits all the common properties defined in designware-pcie.txt.
-> +
-> +Required properties:
-> + - compatible: Should be "st,pcie", "snps,dw-pcie"
-> +
-> + - reg: base address and length of the pcie controller, mem-window address
-> +   and length available to the controller.
-> +
-> + - interrupts: one GIC interrupt line connected to PCI MSI interrupt line
-> +
-> + - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
-> +   offset for IP configuration.
-> +
-> + - resets: phandle to the powerdown and reset controller for the PCIe IP.
-> +   See ../reset/reset.txt for details.
-> + - reset-names: should be "powerdown" and "softreset".
-> +
-> + - phys: the phandle for the PHY device (used by generic PHY framework).
-> + - phys-names: must be "pcie".
-> +
-> +Optional properties:
-> + - reset-gpio: a GPIO spec to define which pin is connected to the bus reset.
-> +
-> +Example:
-> +
-> +pcie0: pcie@9b00000 {
-> +       compatible = "st,pcie", "snps,dw-pcie";
-> +       device_type = "pci";
-> +       reg = <0x09b00000 0x4000>,      /* dbi cntrl registers */
-> +             <0x2fff0000 0x00010000>,  /* configuration space */
-> +             <0x40000000 0x80000000>;  /* lmi mem window */
-> +       reg-names = "dbi", "config", "mem-window";
-> +       st,syscfg = <&syscfg_core 0xd8 0xe0>;
-> +       #address-cells = <3>;
-> +       #size-cells = <2>;
-> +       ranges = <0x82000000 0 0x20000000 0x20000000 0 0x0FFF0000>; /* non-prefetchable memory */
-> +       num-lanes = <1>;
-> +       interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
-> +       interrupt-names = "msi";
-> +       #interrupt-cells = <1>;
-> +       interrupt-map-mask = <0 0 0 7>;
-> +       interrupt-map = <0 0 0 1 &intc GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>, /* INT A */
-> +                       <0 0 0 2 &intc GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>, /* INT B */
-> +                       <0 0 0 3 &intc GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>, /* INT C */
-> +                       <0 0 0 4 &intc GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>; /* INT D */
-> +
-> +       resets = <&powerdown STIH407_PCIE0_POWERDOWN>,
-> +                <&softreset STIH407_PCIE0_SOFTRESET>;
-> +       reset-names = "powerdown",
-> +                     "softreset";
-> +       phys = <&phy_port0 PHY_TYPE_PCIE>;
-> +       phy-names = "pcie";
-> +};
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index 384574c..9a8f8c3 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -330,6 +330,12 @@ int of_pci_range_to_resource(struct of_pci_range *range,
+>                 }
+>                 res->start = port;
+>         } else {
+> +#ifndef CONFIG_PHYS_ADDR_T_64BIT
+> +               if (upper_32_bits(range->cpu_addr)) {
+
+Drop the ifdef:
+
+if ((sizeof(phys_addr_t) > 4) && upper_32_bits(range->cpu_addr)) {
+
+Seems fine otherwise.
+
+> +                       err = -EINVAL;
+> +                       goto invalid_range;
+> +               }
+> +#endif
+>                 res->start = range->cpu_addr;
+>         }
+>         res->end = res->start + range->size - 1;
 > --
-> 1.9.1
+> 2.4.4
 >
