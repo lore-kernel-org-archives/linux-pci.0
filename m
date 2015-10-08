@@ -1,65 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20151029232238.GB11994@localhost>
-References: <1445596035-27733-1-git-send-email-lftan@altera.com>
-	<20151027142644.GA8660@localhost>
-	<CAFiDJ5_vCqh=uKkF2E_BQkJUv692r3yr26bBj8boK2DY_Dj+gA@mail.gmail.com>
-	<CAErSpo5okE86k846hs28s4jvL59hmm+4az-dDsymzNayPCPCzw@mail.gmail.com>
-	<CAFiDJ59wOUj-Mr3cyqQEz+P=8AkmRoy7XzUCmM33_e03Y2G_ZQ@mail.gmail.com>
-	<20151029232238.GB11994@localhost>
-Date: Fri, 30 Oct 2015 13:51:27 +0800
-Message-ID: <CAFiDJ59QNqK6Np8Pp7JDV7Xr2mn3TEXpO2GPH12VYO4QOhtK+g@mail.gmail.com>
-Subject: Re: [PATCH v12 0/6] Altera PCIe host controller driver with MSI support
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:27374 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932316AbbJHVj7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:39:59 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
+Subject: [PATCH v7 10/60] OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
+Date: Thu,  8 Oct 2015 14:38:29 -0700
+Message-Id: <1444340359-8011-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 30, 2015 at 7:22 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+For device resource PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource, so set
+IORESOUCE_MEM_64 for 64bit resource during OF device resource flags
+parsing.
 
->> >>>
->> >>> I applied these to pci/host-altera for v4.4, thanks!
->> >>>
->> >>> I squashed these into three patches:
->> >>>
->> >>>   - add msi.h to Kbuild
->> >>>   - add Altera host driver (including DT binding and MAINTAINERS update)
->> >>>   - add Altera MSI driver (including DT binding and MAINTAINERS update)
->> >>>
->> >>> Since the convention is to add PCI ID #defines only when they are used in
->> >>> multiple places, I replaced PCI_VENDOR_ID_ALTERA with 0x1172 in the single
->> >>> place it is used.
->> >> Hi Bjorn
->> >>
->> >> Thanks for applied these.
->> >>
->> >> By the way, I can't see pci/host-altera branch in your pci.git tree
->> >> yet. It takes some time to appear there?
->> >
->> > Sorry, I forgot to push it.  It should be there now!
->> >
->> Yes, saw it now. It will merge to 'next' branch eventually?
->
-> Yep, I just merged it to 'next' and pushed it.
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: devicetree@vger.kernel.org
+---
+ drivers/of/address.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Saw it. Thanks!
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 384574c..3399602 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -128,9 +128,11 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
+ 		flags |= IORESOURCE_IO;
+ 		break;
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
+-- 
+1.8.4.5
 
-Regards
-Ley Foon
