@@ -1,65 +1,89 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ben Shelton <benjamin.h.shelton@intel.com>
-To: helgaas@kernel.org
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Ben Shelton <benjamin.h.shelton@intel.com>
-Subject: [PATCH v2] PCI: IOV: read SRIOV_NUM_VF after enabling ARI
-Date: Thu,  8 Oct 2015 10:20:17 -0500
-Message-Id: <1444317617-13399-1-git-send-email-benjamin.h.shelton@intel.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 20/60] PCI: Treat optional as required in first try for bridge rescan
+Date: Thu,  8 Oct 2015 14:38:39 -0700
+Message-Id: <1444340359-8011-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For some SR-IOV devices, the number of available virtual functions increases
-after enabling ARI.  Currently, SRIOV_NUM_VF is read and saved off before the
-ARI control bit is enabled in SRIOV_CTRL.  This causes an issue when VFs are
-enabled.
+For rescan bridge/bus that children are removed before, we should treat
+optional as required just like root bus the boot time in 19aa7ee432ce
+(PCI: make re-allocation try harder by reassigning ranges higher in
+the heirarchy).
 
-At device init, SRIOV_INITIAL_VF and SRIOV_NUM_VF are specified to contain the
-number of available VFs for the device.  sriov_enable() does a sanity check
-that SRIOV_INITIAL_VF is not greater than iov->total_VFs, the saved-off value
-of SRIOV_NUM_VF.  Since the value of both SRIOV_INITIAL_VF and SRIOV_NUM_VF has
-increased after enabling the ARI bit, the check fails, and the VFs cannot be
-enabled.
+The reason: allocate required and expand to optional path do not
+put failed resource to fail list, so will lose required info before
+next try.
 
-To fix the issue, write SRIOV_CTRL first, and then read SRIOV_NUM_VF.
+So we are using following way:
+1. First and following try before last try:
+   We don't keep realloc list so treat every optional as required.
+   allocate for required+optional and put failed in the fail list.
+   then size info (include must and optonal separatedly) will be kept
+   for next try.
+2. last try:
+   a: try to allocate required+optional to see if all get allocated.
+   b: try to allocate required then expand to optional.
 
-Signed-off-by: Ben Shelton <benjamin.h.shelton@intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
+ drivers/pci/setup-bus.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
-Changes since v1:
- * Moved read of SRIOV_NUM_VF rather than re-reading it if ARI was enabled.
-
- drivers/pci/iov.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..0174044 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -399,10 +399,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
- 		ssleep(1);
- 	}
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 53ab81f..5505942 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1802,25 +1802,34 @@ void __init pci_assign_unassigned_resources(void)
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ {
+ 	struct pci_bus *parent = bridge->subordinate;
+-	LIST_HEAD(add_list); /* list of resources that
++	LIST_HEAD(realloc_head); /* list of resources that
+ 					want additional resources */
++	struct list_head *add_list = NULL;
+ 	int tried_times = 0;
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+ 	int retval;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
++	int pci_try_num = 2;
  
--	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
--	if (!total)
--		return 0;
--
- 	ctrl = 0;
- 	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
- 		if (pdev->is_physfn)
-@@ -414,6 +410,11 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ again:
+-	__pci_bus_size_bridges(parent, &add_list);
+-	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+-	pci_bus_check_realloc(&add_list);
++	/*
++	 * last try will use add_list, otherwise will try good to have as
++	 * must have, so can realloc parent bridge resource
++	 */
++	if (tried_times + 1 == pci_try_num)
++		add_list = &realloc_head;
++	__pci_bus_size_bridges(parent, add_list);
++	__pci_bridge_assign_resources(bridge, add_list, &fail_head);
++	if (add_list)
++		pci_bus_check_realloc(add_list);
+ 	tried_times++;
  
- found:
- 	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
-+
-+	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
-+	if (!total)
-+		return 0;
-+
- 	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
- 	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
- 	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
+ 	if (list_empty(&fail_head))
+ 		goto enable_all;
+ 
+-	if (tried_times >= 2) {
++	if (tried_times >= pci_try_num) {
+ 		/* still fail, don't need to try more */
+ 		free_list(&fail_head);
+ 		goto enable_all;
 -- 
-1.9.5
+1.8.4.5
 
