@@ -1,126 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:27191 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751980AbbJNJ4x convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Oct 2015 05:56:53 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	zhangjukuo <zhangjukuo@huawe.i.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	qiujiang <qiujiang@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"Wangkefeng (Kevin)" <wangkefeng.wang@huawei.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: RE: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon
- SoC Hip05
-Date: Wed, 14 Oct 2015 09:56:09 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162436BC@lhreml503-mbs>
-References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
- <7409042.iUdOP6FlU8@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1624367C@lhreml503-mbs>
- <5959363.QRL4hSioHL@wuerfel>
-In-Reply-To: <5959363.QRL4hSioHL@wuerfel>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+Received: from userp1040.oracle.com ([156.151.31.81]:29908 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965245AbbJHVpP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:45:15 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 39/60] PCI: Move comment to pci_need_to_release()
+Date: Thu,  8 Oct 2015 14:38:58 -0700
+Message-Id: <1444340359-8011-40-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Move comment from caller to pci_need_to_release(), as we will have one new
+caller for alt_size support.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: Wednesday, October 14, 2015 10:42 AM
-> To: Gabriele Paoloni
-> Cc: Wangzhou (B); Bjorn Helgaas; Bjorn Helgaas; jingoohan1@gmail.com;
-> pratyush.anand@gmail.com; linux@arm.linux.org.uk;
-> thomas.petazzoni@free-electrons.com; lorenzo.pieralisi@arm.com;
-> james.morse@arm.com; Liviu.Dudau@arm.com; jason@lakedaemon.net;
-> robh@kernel.org; gabriel.fernandez@linaro.org;
-> Minghuan.Lian@freescale.com; linux-pci@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; devicetree@vger.kernel.org; linux-
-> kernel@vger.kernel.org; zhangjukuo; qiuzhenfa; liudongdong (C);
-> qiujiang; xuwei (O); Liguozhu (Kenneth); Wangkefeng (Kevin); Rob
-> Herring
-> Subject: Re: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for
-> HiSilicon SoC Hip05
-> 
-> On Wednesday 14 October 2015 09:31:48 Gabriele Paoloni wrote:
-> > >
-> > > > To me it sounds more appropriate to adopt subsys_initcall() for
-> all
-> > > the
-> > > > PCI Host Bridge controllers rather than having them as loadable
-> > > modules...
-> > > >
-> > > > What is your view?
-> > >
-> > > subsys_initcall() sounds odd because it's a driver rather than a
-> > > subsystem,
-> > > but I realize that most of the other levels don't fit any better.
-> >
-> > Yes well I was seeing for example the vgaarb
-> > http://lxr.free-electrons.com/source/drivers/gpu/vga/vgaarb.c#L1357
-> >
-> > That in the init is calling pci_get_subsys()
-> >
-> > So I was wondering that the PCI devices may not be registered unless
-> > we also init the PCI host bridge through subsys_initcall()...
-> 
-> I think this should work as is: the code first looks for devices
-> that are already there and then registers a notifier for devices
-> that show up later. This is meant to work for both devices that
-> are hotplugged at a later point as well as PCI buses that are
-> already there but not yet probed.
-> 
-> > But then maybe is the vgaarb to be buggy...
-> 
-> Possible. It may well be that the code is only tested on x86,
-> which always probes its PCI very early.
-> 
-> > > As I said, it's not really a choice we have to make in the source
-> code,
-> > > we can use subsys_initcall together with module_exit(), or we can
-> > > create a helper macro that is similar to module_platform_driver()
-> > > specifically for PCI that uses a particular initcall level.
-> >
-> > Ok got it. But I guess this needs to be thought and applied to all
-> > the PCI host bridge controllers...
-> >
-> > So maybe for this driver I can use module_platform_driver_probe()
-> > and then we can see...
-> 
-> Sounds good. Let's focus on getting the driver merged first and
-> then follow up with a patch to get this right for all PCI hosts.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index dc83c2c..09844d9 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -415,6 +415,20 @@ static unsigned long pci_fail_res_type_mask(struct list_head *fail_head)
+ 
+ static bool pci_need_to_release(unsigned long mask, struct resource *res)
+ {
++	/*
++	 * Separate three resource type checking if we need to release
++	 * assigned resource.
++	 *	1. if there is io port assign fail, will release assigned
++	 *	   io port.
++	 *	2. if there is pref mmio assign fail, release assigned
++	 *	   pref mmio.
++	 *	   if assigned pref mmio's parent is non-pref mmio and there
++	 *	   is non-pref mmio assign fail, will release that assigned
++	 *	   pref mmio.
++	 *	3. if there is non-pref mmio assign fail or pref mmio
++	 *	   assigned fail, will release assigned non-pref mmio.
++	 */
++
+ 	if (res->flags & IORESOURCE_IO)
+ 		return !!(mask & IORESOURCE_IO);
+ 
+@@ -471,19 +485,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 *  if could do that, could get out early.
+ 	 *  if could not do that, we still try to assign requested at first,
+ 	 *    then try to reassign add_size for some resources.
+-	 *
+-	 * Separate three resource type checking if we need to release
+-	 * assigned resource after requested + add_size try.
+-	 *	1. if there is io port assign fail, will release assigned
+-	 *	   io port.
+-	 *	2. if there is pref mmio assign fail, release assigned
+-	 *	   pref mmio.
+-	 *	   if assigned pref mmio's parent is non-pref mmio and there
+-	 *	   is non-pref mmio assign fail, will release that assigned
+-	 *	   pref mmio.
+-	 *	3. if there is non-pref mmio assign fail or pref mmio
+-	 *	   assigned fail, will release assigned non-pref mmio.
+ 	 */
++
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-- 
+1.8.4.5
 
-Ok good let's do like this then
-
-will change in v11
-
-Again Many Thanks
-
-Gab
-
-> 
-> 	Arnd
