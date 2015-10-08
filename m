@@ -1,106 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57925 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758892AbbJ3Nb4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 30 Oct 2015 09:31:56 -0400
-Date: Fri, 30 Oct 2015 08:31:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Wolfram Sang <wsa@the-dreams.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
- instances
-Message-ID: <20151030133150.GA17889@localhost>
-References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
- <20151029123755.GC2351@katana>
- <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151029163930.GC22218@katana>
- <PS1PR06MB11804B39B09D6FCAA9B3D9DCF5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151029184800.GB8992@katana>
- <20151029230314.GA11994@localhost>
- <PS1PR06MB1180BAA32BDBEE6BFD8229C3F52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <PS1PR06MB11807765B8231D1DD01B05ADF52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+Received: from mail-bl2on0100.outbound.protection.outlook.com ([65.55.169.100]:36103
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933645AbbJHPkJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Oct 2015 11:40:09 -0400
+Message-ID: <56168E4E.3070405@caviumnetworks.com>
+Date: Thu, 8 Oct 2015 08:39:58 -0700
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <PS1PR06MB11807765B8231D1DD01B05ADF52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+To: Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	<devicetree@vger.kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-pci@vger.kernel.org>, David Daney <david.daney@cavium.com>,
+	<linux-kernel@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v4 4/5] PCI: generic: Correct, and avoid overflow, in
+ bus_max calculation.
+References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com> <20151008150243.GC3885@localhost> <5230007.h2fkbnOlh5@wuerfel> <5178627.ufUfdomGdT@wuerfel>
+In-Reply-To: <5178627.ufUfdomGdT@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 30, 2015 at 09:00:20AM +0000, Phil Edworthy wrote:
-> Hi Bjorn,
-> 
-> On 30 October 2015 07:24, Phil wrote:
-> > On 30 October 2015 07:19, Phil wrote
-> > > On 29 October 2015 23:03, Bjorn wrote:
-> > > > On Thu, Oct 29, 2015 at 07:48:00PM +0100, Wolfram Sang wrote:
-> > > > > On Thu, Oct 29, 2015 at 04:44:06PM +0000, Phil Edworthy wrote:
-> > > > > > Hi Wolfram,
-> > > > > >
-> > > > > > On 29 October 2015 16:40, Wolfram wrote:
-> > > > > > > > Ouch, my bad. I have been working with our out-of-tree BSP for the
-> > > > Salvator-X
-> > > > > > > board on
-> > > > > > > > http://git.kernel.org/cgit/linux/kernel/git/horms/renesas-bsp.git,
-> > rcar-
-> > > > 3.0.2
-> > > > > > > tag along
-> > > > > > > > with some patches from colleagues. I hadn't noticed this patch:
-> > > > > > >
-> > > > > > > Thanks! Any plans for pushing this upstream? We will have the build
-> > error
-> > > > > > > otherwise...
-> > > > > > After some digging, that patch won't be accepted upstream. I'm looking
-> > into
-> > > > how the
-> > > > > > driver can be modified so it doesn't need to call this, but I don't expect a
-> > > small
-> > > > or
-> > > > > > imminent fix.
-> > > > >
-> > > > > Yes, I'd think so, too. However, a fix for 4.4 would be needed to
-> > > > > prevent having a final release with a build error.
-> > > >
-> > > > I'm thinking I should drop my pci/host-rcar branch until we
-> > > > have a fix for this.  It currently contains:
-> > > >
-> > > >   9ac724f20774 PCI: rcar: Fix I/O offset for multiple host bridges
-> > > >   7d75b413f5c6 PCI: rcar: Set root bus nr to that provided in DT
-> > > >   4c22eab88c68 PCI: rcar: Remove dependency on ARM-specific struct hw_pci
-> > > >   ef18d2e55ea0 PCI: rcar: Make PCI aware of the I/O resources
-> > > >
-> > > > Is that right?  Last I heard, Linus expects to release v4.3 on Sunday,
-> > > > so we really don't have much time to sort this out.
-> > > The simple thing is to re-add Geert's patch to stop this driver being built for
-> > > arm64.
-> > Btw, it's this one: https://patchwork.ozlabs.org/patch/512040/
-> It's worth mentioning that Geert's patch stops both the rcar-pcie driver and the
-> rcar-pci-gen2 driver from being built on arm64 due to build failures for both of
-> them. The rcar-pci-gen2 driver is not for R-Car Gen3 devices, and so should not
-> be built for arm64. The rcar-pcie driver will be used on R-Car Gen3 devices.
-> 
-> So if we don't use Geert's patch, I need to fix the rcar-pcie driver so it doesn't
-> use pci_ioremap_io(), _and_ fix Kconfig so that the rcar-pci-gen2 driver doesn't
-> get built on arm64. 
-> Let's just use Geert's patch for now.
+On 10/08/2015 08:18 AM, Arnd Bergmann wrote:
+> On Thursday 08 October 2015 17:11:32 Arnd Bergmann wrote:
+>>>> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+>>>> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+>>>> @@ -34,7 +34,11 @@ Properties of the host controller node:
+>>>>   - #size-cells    : Must be 2.
+>>>>
+>>>>   - reg            : The Configuration Space base address and size, as accessed
+>>>> -                   from the parent bus.
+>>>> +                   from the parent bus.  The base address corresponds to
+>>>> +                   bus zero, even though the "bus-range" property may specify
+>>>> +                   a different starting bus number.  The driver must only map
+>>>> +                   or access the portion of the Configuration Space that
+>>>> +                   corresponds to the "bus-range"
+>>
+>> I thought we had reached an agreement that it is a bad idea to have a 'reg'
+>> property that lists registers belonging to a different device.
+>>
+>>
+>
+> To further clarify: the argument was to make it mirror what ACPI does for
+> PCI. However, this is unlike what all other devices do with DT, where you
+> have non-overlapping register ranges (start, length) for each device.
+> ACPI as far as I understand it does not give a range for a PCIe host, but
+> instead provides a way to get the start address of the ECAM register area
+> for the domain that the host is part of, and that needs to be the same
+> address for each host in the domain.
+>
 
-OK, I re-added Geert's patch.  I split it into two, one for
-rcar-pci-gen2 and another for rcar-pcie, to help me keep things
-straight.  If I understand correctly,
+We are agreed that it is a bad thing to do.  There is disagreement about 
+if we should do it.
 
-  - rcar-pci-gen2 depends on the ARM-specific pci_sys_data, and I
-    don't have anything queued to address that.
+I think there are two schools of thought (I will attribute them to their 
+proponents and my apologies if I misrepresent someone's stance):
 
-  - rcar-pcie depended on the ARM-specific pci_sys_data and
-    pci_ioremap_io().  Your patches remove the pci_sys_data
-    dependency, and it sounds like future changes will remove the
-    pci_ioremap_io() dependency.
+1) (Arnd) Don't make the the "reg" ranges overlap because it is ugly, 
+dangerous and arguably incorrect in general.
 
-The result is in my pci/host-rcar branch:
-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-rcar
+2) (Me, Will Deacon, Lorenzo Pieralisi) Overlapping "reg" properties 
+should be maintained, as that is the current behavior and seems to agree 
+with legacy OF device-tree specifications (although there is some debate 
+about this).
 
-Bjorn
+Because the driver is broken in this area (thus the patch), it indicates 
+that there are probably no users with non-zero starting bus numbers. 
+So, we may have some latitude to change it.
+
+I will generate another patch that does it Arnd's way, and if Will is OK 
+with it, we might be able to do that instead.  One thing is certain: 
+The driver is currently broken for non-zero starting bus numbers.
+
+David Daney
