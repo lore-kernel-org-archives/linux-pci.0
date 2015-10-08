@@ -1,228 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:36205 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758340AbbJ3HaG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 03:30:06 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 30 Oct 2015 17:30:04 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id DB9F92BB0051
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 18:30:00 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9U7Tq6X28246180
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 18:30:00 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9U7TRrG005119
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 18:29:28 +1100
-Date: Fri, 30 Oct 2015 15:29:02 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com, mpe@ellerman.id.au,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V10 12/12] powerpc/eeh: Handle hot removed VF when PF is
- EEH aware
-Message-ID: <20151030072902.GG5940@richards-mbp.cn.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1445829362-2738-13-git-send-email-weiyang@linux.vnet.ibm.com>
- <563301BA.7050207@ozlabs.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <563301BA.7050207@ozlabs.ru>
+Received: from userp1040.oracle.com ([156.151.31.81]:27729 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756778AbbJHVkc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:40:32 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 45/60] PCI: Fix size calculation with old_size on rescan path
+Date: Thu,  8 Oct 2015 14:39:04 -0700
+Message-Id: <1444340359-8011-46-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 30, 2015 at 04:35:54PM +1100, Alexey Kardashevskiy wrote:
->On 10/26/2015 02:16 PM, Wei Yang wrote:
->>When PF is EEH aware while VFs are not, VFs will be removed during EEH
->>recovery. This is not supported in current code, while will leads to the VF
->>lost.
->>
->>This patch fixes this by adding VFs back. VFs should be added back after PF
->>get recovered properly.
->>
->>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
->
->btw please remove my "sob" from this patchset (here and 11/12 at least) as I
->did not "sob" the upstream versions of these and I did not post them and
->there is no public tree of mine with these patches. When I agree that the
->patches are good to go, it will be "reviewed-by" or "acked-by".
->
+On booting path, we don't pass realloc at first, and treat all optional
+just as required, in some case we can have smaller size/align with optional
+than required only.
 
-Sure, I would obey this rule in the future.
+  04:00.0 has children bridges: 05:03.0, 05:04.0
+pref layout after booting path like followings:
 
->
->>---
->>  arch/powerpc/include/asm/eeh.h   |  6 ++++++
->>  arch/powerpc/kernel/eeh_dev.c    |  1 +
->>  arch/powerpc/kernel/eeh_driver.c | 30 +++++++++++++++++++++++-------
->>  3 files changed, 30 insertions(+), 7 deletions(-)
->>
->>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
->>index ea1f13c4..c529a23 100644
->>--- a/arch/powerpc/include/asm/eeh.h
->>+++ b/arch/powerpc/include/asm/eeh.h
->>@@ -127,6 +127,11 @@ static inline bool eeh_pe_passed(struct eeh_pe *pe)
->>  #define EEH_DEV_SYSFS		(1 << 9)	/* Sysfs created	*/
->>  #define EEH_DEV_REMOVED		(1 << 10)	/* Removed permanently	*/
->>
->>+struct eeh_rmv_data {
->>+	struct list_head edev_list;
->>+	int removed;
->>+};
->>+
->>  struct eeh_dev {
->>  	int mode;			/* EEH mode			*/
->>  	int class_code;			/* Class code of the device	*/
->>@@ -139,6 +144,7 @@ struct eeh_dev {
->>  	int af_cap;			/* Saved AF capability		*/
->>  	struct eeh_pe *pe;		/* Associated PE		*/
->>  	struct list_head list;		/* Form link list in the PE	*/
->>+	struct list_head rmv_list;	/* Record the removed edev 	*/
->>  	struct pci_controller *phb;	/* Associated PHB		*/
->>  	struct pci_dn *pdn;		/* Associated PCI device node	*/
->>  	struct pci_dev *pdev;		/* Associated PCI device	*/
->>diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
->>index aabba94..7815095 100644
->>--- a/arch/powerpc/kernel/eeh_dev.c
->>+++ b/arch/powerpc/kernel/eeh_dev.c
->>@@ -67,6 +67,7 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
->>  	edev->pdn = pdn;
->>  	edev->phb = phb;
->>  	INIT_LIST_HEAD(&edev->list);
->>+	INIT_LIST_HEAD(&edev->rmv_list);
->>
->>  	return NULL;
->>  }
->>diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
->>index 99868e2..f2406b4 100644
->>--- a/arch/powerpc/kernel/eeh_driver.c
->>+++ b/arch/powerpc/kernel/eeh_driver.c
->>@@ -420,7 +420,8 @@ static void *eeh_rmv_device(void *data, void *userdata)
->>  	struct pci_driver *driver;
->>  	struct eeh_dev *edev = (struct eeh_dev *)data;
->>  	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
->>-	int *removed = (int *)userdata;
->>+	struct eeh_rmv_data *rmv_data = (struct eeh_rmv_data *)userdata;
->>+	int *removed = rmv_data ? &rmv_data->removed : NULL;
->
->
->You just touched @userdata/@removed in [10/12] and now you are touching it
->again.
->
->It feels like this patch is better to be merged into [10/12], this will
->reduce the noise about the userdata pointer changes passed into
->eeh_pe_dev_traverse() and make more sense as "powerpc/eeh: Support error
->recovery for VF PE" without adding VFs back is pretty useless.
->
+pci 0000:04:00.0: BAR 9: assigned [mem 0x84000000-0x9fffffff 64bit pref]
+pci 0000:05:04.0: BAR 9: assigned [mem 0x88000000-0x9fffffff 64bit pref]
+pci 0000:05:03.0: BAR 9: assigned [mem 0x84000000-0x841fffff 64bit pref]
+pci 0000:05:03.0: PCI bridge to [bus 08-0f]
+pci 0000:05:03.0:   bridge window [mem 0x84000000-0x841fffff 64bit pref]
+pci 0000:05:04.0: PCI bridge to [bus 10]
+pci 0000:05:04.0:   bridge window [mem 0x88000000-0x9fffffff 64bit pref]
+pci 0000:04:00.0: PCI bridge to [bus 05-10]
+pci 0000:04:00.0:   bridge window [mem 0x84000000-0x9fffffff 64bit pref]
 
-Agree, will merge them.
+so the old size in rescan for 04:00.0 would be 0x1c000000, and align is 0x4000000
 
->
->
->
->>  	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
->>
->>  	/*
->>@@ -467,6 +468,9 @@ static void *eeh_rmv_device(void *data, void *userdata)
->>  		 * required to plug the VF successfully.
->>  		 */
->>  		pdn->pe_number = IODA_INVALID_PE;
->>+
->>+		if (rmv_data)
->>+			list_add(&edev->rmv_list, &rmv_data->edev_list);
->>  	} else {
->>  		pci_lock_rescan_remove();
->>  		pci_stop_and_remove_bus_device(dev);
->>@@ -585,11 +589,12 @@ int eeh_pe_reset_and_recover(struct eeh_pe *pe)
->>   * During the reset, udev might be invoked because those affected
->>   * PCI devices will be removed and then added.
->>   */
->>-static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
->>+static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus,
->>+				struct eeh_rmv_data *rmv_data)
->>  {
->>  	struct pci_bus *frozen_bus = eeh_pe_bus_get(pe);
->>  	struct timeval tstamp;
->>-	int cnt, rc, removed = 0;
->>+	int cnt, rc;
->>  	struct eeh_dev *edev;
->>
->>  	/* pcibios will clear the counter; save the value */
->>@@ -612,7 +617,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
->>  			pci_unlock_rescan_remove();
->>  		}
->>  	} else if (frozen_bus)
->>-		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
->>+		eeh_pe_dev_traverse(pe, eeh_rmv_device, rmv_data);
->>
->>  	/*
->>  	 * Reset the pci controller. (Asserts RST#; resets config space).
->>@@ -659,7 +664,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
->>  			eeh_add_virt_device(edev, NULL);
->>  		else
->>  			pcibios_add_pci_devices(bus);
->>-	} else if (frozen_bus && removed) {
->>+	} else if (frozen_bus && rmv_data->removed) {
->>  		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
->>  		ssleep(5);
->>
->>@@ -687,8 +692,10 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
->>  static void eeh_handle_normal_event(struct eeh_pe *pe)
->>  {
->>  	struct pci_bus *frozen_bus;
->>+	struct eeh_dev *edev, *tmp;
->>  	int rc = 0;
->>  	enum pci_ers_result result = PCI_ERS_RESULT_NONE;
->>+	struct eeh_rmv_data rmv_data = {LIST_HEAD_INIT(rmv_data.edev_list), 0};
->>
->>  	frozen_bus = eeh_pe_bus_get(pe);
->>  	if (!frozen_bus) {
->>@@ -735,7 +742,7 @@ static void eeh_handle_normal_event(struct eeh_pe *pe)
->>  	 */
->>  	if (result == PCI_ERS_RESULT_NONE) {
->>  		pr_info("EEH: Reset with hotplug activity\n");
->>-		rc = eeh_reset_device(pe, frozen_bus);
->>+		rc = eeh_reset_device(pe, frozen_bus, NULL);
->>  		if (rc) {
->>  			pr_warn("%s: Unable to reset, err=%d\n",
->>  				__func__, rc);
->>@@ -787,7 +794,7 @@ static void eeh_handle_normal_event(struct eeh_pe *pe)
->>  	/* If any device called out for a reset, then reset the slot */
->>  	if (result == PCI_ERS_RESULT_NEED_RESET) {
->>  		pr_info("EEH: Reset without hotplug activity\n");
->>-		rc = eeh_reset_device(pe, NULL);
->>+		rc = eeh_reset_device(pe, NULL, &rmv_data);
->>  		if (rc) {
->>  			pr_warn("%s: Cannot reset, err=%d\n",
->>  				__func__, rc);
->>@@ -807,6 +814,15 @@ static void eeh_handle_normal_event(struct eeh_pe *pe)
->>  		goto hard_fail;
->>  	}
->>
->>+	/*
->>+	 * For those hot removed VFs, we should add back them after PF get
->>+	 * recovered properly.
->>+	 */
->>+	list_for_each_entry_safe(edev, tmp, &rmv_data.edev_list, rmv_list) {
->>+		eeh_add_virt_device(edev, NULL);
->>+		list_del(&edev->rmv_list);
->>+	}
->>+
->>  	/* Tell all device drivers that they can resume operations */
->>  	pr_info("EEH: Notify device driver to resume\n");
->>  	eeh_pe_dev_traverse(pe, eeh_report_resume, NULL);
->>
->
->
->-- 
->Alexey
+during remove and rescan:
 
+pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff 64bit pref] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
+pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
+pci 0000:05:04.0: bridge window [mem 0x08000000-0x1fffffff 64bit pref] to [bus 10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 18000000 must_align 8000000
+pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_size add_size   200000
+pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_align min_align 100000
+pci 0000:04:00.0: bridge window [mem 0x08000000-0x27ffffff 64bit pref] to [bus 05-10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 20000000 must_align 8000000
+
+align old size 0x1c000000 to 0x2000000 as size0, 0x1c000000 as size1.
+so for 04:00.0 will have big must and no optional size anymore.
+
+So don't align old size, then we will have same size0 and size1,
+and use smaller add_align as must align.
+
+After the patch, rescan works properly.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 7e7663a..00a39be 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1134,9 +1134,9 @@ static resource_size_t calculate_memsize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
++	size = ALIGN(size, align);
+ 	if (size < old_size)
+ 		size = old_size;
+-	size = ALIGN(size, align);
+ 	return size;
+ }
+ 
+@@ -1595,6 +1595,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		b_res->flags = 0;
+ 		return 0;
+ 	}
++
++	/*
++	 * It happens when boot path is not passing realloc
++	 * and later rescan is passing realloc.
++	 * The old value from boot path is bigger, and calculate_size will
++	 * use old value as size0 and size1, and also have
++	 * chance optional align is smaller than must only align.
++	 */
++	if(size0 == size1 && min_align > min_add_align)
++		min_align = min_add_align;
++
+ 	b_res->start = min_align;
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
 -- 
-Richard Yang
-Help you, Help me
+1.8.4.5
 
