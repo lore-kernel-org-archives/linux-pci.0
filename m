@@ -1,79 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0082.outbound.protection.outlook.com ([65.55.169.82]:51434
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753636AbbJHJna (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Oct 2015 05:43:30 -0400
-From: Ley Foon Tan <lftan@altera.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:29891 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965238AbbJHVpM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:45:12 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v8 0/6] Altera PCIe host controller driver with MSI support
-Date: Thu, 8 Oct 2015 17:43:08 +0800
-Message-ID: <1444297394-3122-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 32/60] PCI: Treat ROM resource as optional during realloc
+Date: Thu,  8 Oct 2015 14:38:51 -0700
+Message-Id: <1444340359-8011-33-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the 8th version of patch set to add support for Altera PCIe host
-controller with MSI feature on Altera FPGA device families. This patchset
-mainly resolve comments from Rob Herring and Marc Zyngier in v7 and minor fix.
+Current on realloc path, we just ignore ROM resource if we can not assign
+them in first try.
 
-This patchset is based on v4.3-rc3.
+Treat ROM resources as optional resources,so try to allocate them together
+with required ones, if can not assign them, could go with other required
+resources only, and try to allocate them second time in expand path.
 
-v7->v8 changes:
-- pcie-altera/Documentation: change to support one case of reg-names.
-- Documentation: remove <1> for msi-controller.
-- pci: remove depends on ARCH_SOCFPGA and NIOS2 in Kconfig
-- pci: change PCIE_ALTERA to bool in Kconfig. It requires pci fixups to work correctly,
-       so it needs to be builtin module.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 37 ++++++++++++++++++++-----------------
+ 1 file changed, 20 insertions(+), 17 deletions(-)
 
-History:
--------
-[v1]: https://lkml.org/lkml/2015/7/28/395
-[v2]: https://lkml.org/lkml/2015/7/31/267
-[v3]: http://www.kernelhub.org/?msg=811940&p=2
-[v4]: https://lkml.org/lkml/2015/8/17/141
-[v5]: https://lkml.org/lkml/2015/8/25/238
-[v6]: https://lkml.org/lkml/2015/9/1/177
-[v7]: https://lkml.org/lkml/2015/9/20/193
-
-Ley Foon Tan (6):
-  arm: add msi.h to Kbuild
-  pci: add Altera PCI vendor ID
-  pci:host: Add Altera PCIe host controller driver
-  pci: altera: Add Altera PCIe MSI driver
-  Documentation: dt-bindings: pci: altera pcie device tree binding
-  MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
-
- .../devicetree/bindings/pci/altera-pcie-msi.txt    |  28 +
- .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
- MAINTAINERS                                        |  16 +
- arch/arm/include/asm/Kbuild                        |   1 +
- drivers/pci/host/Kconfig                           |  15 +
- drivers/pci/host/Makefile                          |   2 +
- drivers/pci/host/pcie-altera-msi.c                 | 310 +++++++++++
- drivers/pci/host/pcie-altera.c                     | 588 +++++++++++++++++++++
- include/linux/pci_ids.h                            |   2 +
- 9 files changed, 1011 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
- create mode 100644 drivers/pci/host/pcie-altera-msi.c
- create mode 100644 drivers/pci/host/pcie-altera.c
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 74ad4ce..d2d38bc 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -377,18 +377,10 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 		idx = res - &dev_res->dev->resource[0];
+ 		if (resource_size(res) &&
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+-			if (fail_head) {
+-				/*
+-				 * if the failed res is for ROM BAR, and it will
+-				 * be enabled later, don't add it to the list
+-				 */
+-				if (!((idx == PCI_ROM_RESOURCE) &&
+-				      (!(res->flags & IORESOURCE_ROM_ENABLE))))
+-					add_to_list(fail_head,
+-						    dev_res->dev, res,
+-						    0 /* don't care */,
+-						    0 /* don't care */);
+-			}
++			if (fail_head)
++				add_to_list(fail_head, dev_res->dev, res,
++					    0 /* don't care */,
++					    0 /* don't care */);
+ 			reset_resource(res);
+ 		}
+ 	}
+@@ -1186,6 +1178,19 @@ out:
+ 	return good_align;
+ }
+ 
++static inline bool is_optional(int i)
++{
++
++	if (i == PCI_ROM_RESOURCE)
++		return true;
++
++#ifdef CONFIG_PCI_IOV
++	if (i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END)
++		return true;
++#endif
++
++	return false;
++}
+ /**
+  * pbus_size_mem() - size the memory window of a given bus
+  *
+@@ -1243,10 +1248,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 			r_size = resource_size(r);
+ 			align = pci_resource_alignment(dev, r);
+-#ifdef CONFIG_PCI_IOV
+-			/* put SRIOV requested res to the optional list */
+-			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+-					i <= PCI_IOV_RESOURCE_END) {
++			/* put SRIOV/ROM res to realloc list */
++			if (realloc_head && is_optional(i)) {
+ 				add_to_align_test_list(&align_test_add_list,
+ 							align, r_size);
+ 				r->end = r->start - 1;
+@@ -1256,7 +1259,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					max_add_align = align;
+ 				continue;
+ 			}
+-#endif
++
+ 			if (align > (1ULL<<37)) { /*128 Gb*/
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
+ 					i, r, (unsigned long long) align);
 -- 
-1.8.2.1
+1.8.4.5
 
