@@ -1,118 +1,68 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 3/5] iov: Fix sriov_enable exception handling path
-From: Alexander Duyck <aduyck@mirantis.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 27 Oct 2015 13:52:27 -0700
-Message-ID: <20151027205227.14626.13514.stgit@localhost.localdomain>
-In-Reply-To: <20151027204607.14626.59671.stgit@localhost.localdomain>
-References: <20151027204607.14626.59671.stgit@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v5 4/4] irqchip/gic-v3-its:  Add handling of PCI requester id.
+Date: Thu,  8 Oct 2015 15:10:50 -0700
+Message-Id: <1444342250-6196-5-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1444342250-6196-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1444342250-6196-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From what I can tell there were several errors in the sriov_enable
-exception handling path.  Below is a brief list of what I believe I am
-fixing:
+From: David Daney <david.daney@cavium.com>
 
-1.  If pcibios_enable_sriov failed, we returned without disabling SR-IOV on
-    the device.
-2.  If virtfn_add failed we didn't call pcibios_disable_sriov to undo
-    pcibios_enable_sriov.
-3.  We were resetting numvfs to 0 before a second had passed for the VFs to
-    quiesce.
-4.  Minor coding style issues for white space and for assignment in
-    conditional check.
+Replace open coded generation PCI/MSI requester id with call to the
+new function pci_msi_domain_get_msi_rid() which applies the "msi-map"
+to the id value.
 
-Beyond addressing these 4 issues there were also 2 other minor issues in
-that retval was a redundant variable with rc, and j wasn't actually needed
-as we could simply reverse the loop we were running when setting up i.  As
-such I have updated the code to address those two items.
-
-Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: David Daney <david.daney@cavium.com>
 ---
- drivers/pci/iov.c |   31 +++++++++++++++++--------------
- 1 file changed, 17 insertions(+), 14 deletions(-)
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 238950412de0..cecc242c1af0 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -231,13 +231,18 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+index a7c8c9f..96f5f5f 100644
+--- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
++++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+@@ -42,7 +42,6 @@ static struct irq_chip its_msi_irq_chip = {
  
- int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+ struct its_pci_alias {
+ 	struct pci_dev	*pdev;
+-	u32		dev_id;
+ 	u32		count;
+ };
+ 
+@@ -60,7 +59,6 @@ static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
  {
--       return 0;
-+	return 0;
-+}
-+
-+int __weak pcibios_sriov_disable(struct pci_dev *pdev)
-+{
-+	return 0;
- }
+ 	struct its_pci_alias *dev_alias = data;
  
- static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- {
- 	int rc;
--	int i, j;
-+	int i;
- 	int nres;
- 	u16 offset, stride, initial;
- 	struct resource *res;
-@@ -245,7 +250,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	struct pci_sriov *iov = dev->sriov;
- 	int bars = 0;
- 	int bus;
--	int retval;
+-	dev_alias->dev_id = alias;
+ 	if (pdev != dev_alias->pdev)
+ 		dev_alias->count += its_pci_msi_vec_count(pdev);
  
- 	if (!nr_virtfn)
- 		return 0;
-@@ -322,10 +326,11 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	if (nr_virtfn < initial)
- 		initial = nr_virtfn;
+@@ -86,7 +84,7 @@ static int its_pci_msi_prepare(struct irq_domain *domain, struct device *dev,
+ 	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
  
--	if ((retval = pcibios_sriov_enable(dev, initial))) {
-+	rc = pcibios_sriov_enable(dev, initial);
-+	if (rc) {
- 		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
--			retval);
--		return retval;
-+			rc);
-+		goto err_pcibios;
- 	}
+ 	/* ITS specific DeviceID, as the core ITS ignores dev. */
+-	info->scratchpad[0].ul = dev_alias.dev_id;
++	info->scratchpad[0].ul = pci_msi_domain_get_msi_rid(domain, pdev);
  
- 	for (i = 0; i < initial; i++) {
-@@ -340,25 +345,23 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	return 0;
- 
- failed:
--	for (j = 0; j < i; j++)
--		virtfn_remove(dev, j, 0);
-+	while (i--)
-+		virtfn_remove(dev, i, 0);
- 
-+	pcibios_sriov_disable(dev);
-+err_pcibios:
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
--	pci_iov_set_numvfs(dev, 0);
- 	ssleep(1);
- 	pci_cfg_access_unlock(dev);
- 
- 	if (iov->link != dev->devfn)
- 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
- 
--	return rc;
--}
-+	pci_iov_set_numvfs(dev, 0);
- 
--int __weak pcibios_sriov_disable(struct pci_dev *pdev)
--{
--       return 0;
-+	return rc;
- }
- 
- static void sriov_disable(struct pci_dev *dev)
+ 	return msi_info->ops->msi_prepare(domain->parent,
+ 					  dev, dev_alias.count, info);
+-- 
+1.9.1
 
