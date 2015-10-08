@@ -1,134 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34374 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755043AbbJUU6V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 16:58:21 -0400
-Subject: Re: [RFC Patch 06/12] IXGBEVF: Add self emulation layer
-To: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
-	pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
- <1445445464-5056-7-git-send-email-tianyu.lan@intel.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <5627FC6B.8060004@gmail.com>
-Date: Wed, 21 Oct 2015 13:58:19 -0700
-MIME-Version: 1.0
-In-Reply-To: <1445445464-5056-7-git-send-email-tianyu.lan@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from aserp1040.oracle.com ([141.146.126.69]:23404 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932319AbbJHVj7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:39:59 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 15/60] PCI: Restore pref MMIO allocation logic for host bridge without mmio64
+Date: Thu,  8 Oct 2015 14:38:34 -0700
+Message-Id: <1444340359-8011-16-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/21/2015 09:37 AM, Lan Tianyu wrote:
-> In order to restore VF function after migration, add self emulation layer
-> to record regs' values during accessing regs.
->
-> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
-> ---
->   drivers/net/ethernet/intel/ixgbevf/Makefile        |  3 ++-
->   drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c  |  2 +-
->   .../net/ethernet/intel/ixgbevf/self-emulation.c    | 26 ++++++++++++++++++++++
->   drivers/net/ethernet/intel/ixgbevf/vf.h            |  5 ++++-
->   4 files changed, 33 insertions(+), 3 deletions(-)
->   create mode 100644 drivers/net/ethernet/intel/ixgbevf/self-emulation.c
->
-> diff --git a/drivers/net/ethernet/intel/ixgbevf/Makefile b/drivers/net/ethernet/intel/ixgbevf/Makefile
-> index 4ce4c97..841c884 100644
-> --- a/drivers/net/ethernet/intel/ixgbevf/Makefile
-> +++ b/drivers/net/ethernet/intel/ixgbevf/Makefile
-> @@ -31,7 +31,8 @@
->   
->   obj-$(CONFIG_IXGBEVF) += ixgbevf.o
->   
-> -ixgbevf-objs := vf.o \
-> +ixgbevf-objs := self-emulation.o \
-> +		vf.o \
->                   mbx.o \
->                   ethtool.o \
->                   ixgbevf_main.o
-> diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> index a16d267..4446916 100644
-> --- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> +++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> @@ -156,7 +156,7 @@ u32 ixgbevf_read_reg(struct ixgbe_hw *hw, u32 reg)
->   
->   	if (IXGBE_REMOVED(reg_addr))
->   		return IXGBE_FAILED_READ_REG;
-> -	value = readl(reg_addr + reg);
-> +	value = ixgbe_self_emul_readl(reg_addr, reg);
->   	if (unlikely(value == IXGBE_FAILED_READ_REG))
->   		ixgbevf_check_remove(hw, reg);
->   	return value;
-> diff --git a/drivers/net/ethernet/intel/ixgbevf/self-emulation.c b/drivers/net/ethernet/intel/ixgbevf/self-emulation.c
-> new file mode 100644
-> index 0000000..d74b2da
-> --- /dev/null
-> +++ b/drivers/net/ethernet/intel/ixgbevf/self-emulation.c
-> @@ -0,0 +1,26 @@
-> +#include <linux/netdevice.h>
-> +#include <linux/pci.h>
-> +#include <linux/delay.h>
-> +#include <linux/interrupt.h>
-> +#include <net/arp.h>
-> +
-> +#include "vf.h"
-> +#include "ixgbevf.h"
-> +
-> +static u32 hw_regs[0x4000];
-> +
-> +u32 ixgbe_self_emul_readl(volatile void __iomem *base, u32 addr)
-> +{
-> +	u32 tmp;
-> +
-> +	tmp = readl(base + addr);
-> +	hw_regs[(unsigned long)addr] = tmp;
-> +
-> +	return tmp;
-> +}
-> +
-> +void ixgbe_self_emul_writel(u32 val, volatile void __iomem *base, u32  addr)
-> +{
-> +	hw_regs[(unsigned long)addr] = val;
-> +	writel(val, (volatile void __iomem *)(base + addr));
-> +}
+>From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
+resources), we change the logic for pref mmio allocation:
+When bridge pref support mmio64, we will only put children pref
+that support mmio64 into it, and will put children pref mmio32
+into bridge's non-pref mmio32.
 
-So I see what you are doing, however I don't think this adds much 
-value.  Many of the key registers for the device are not simple 
-Read/Write registers.  Most of them are things like write 1 to clear or 
-some other sort of value where writing doesn't set the bit but has some 
-other side effect.  Just take a look through the Datasheet at registers 
-such as the VFCTRL, VFMAILBOX, or most of the interrupt registers.  The 
-fact is simply storing the values off doesn't give you any real idea of 
-what the state of things are.
+That could leave bridge pref bar not used when that pref bar is mmio64,
+and children res only has mmio32.
+Also could have allocation failure when non-pref mmio32 is not big
+enough space for those children pref mmio32.
 
-> diff --git a/drivers/net/ethernet/intel/ixgbevf/vf.h b/drivers/net/ethernet/intel/ixgbevf/vf.h
-> index d40f036..6a3f4eb 100644
-> --- a/drivers/net/ethernet/intel/ixgbevf/vf.h
-> +++ b/drivers/net/ethernet/intel/ixgbevf/vf.h
-> @@ -39,6 +39,9 @@
->   
->   struct ixgbe_hw;
->   
-> +u32 ixgbe_self_emul_readl(volatile void __iomem *base, u32 addr);
-> +void ixgbe_self_emul_writel(u32 val, volatile void __iomem *base, u32  addr);
-> +
->   /* iterator type for walking multicast address lists */
->   typedef u8* (*ixgbe_mc_addr_itr) (struct ixgbe_hw *hw, u8 **mc_addr_ptr,
->   				  u32 *vmdq);
-> @@ -182,7 +185,7 @@ static inline void ixgbe_write_reg(struct ixgbe_hw *hw, u32 reg, u32 value)
->   
->   	if (IXGBE_REMOVED(reg_addr))
->   		return;
-> -	writel(value, reg_addr + reg);
-> +	ixgbe_self_emul_writel(value, reg_addr, reg);
->   }
->   
->   #define IXGBE_WRITE_REG(h, r, v) ixgbe_write_reg(h, r, v)
+That is not rational when the host bridge does not 64bit mmio above 4g
+at all.
+
+The patch restore to old logic:
+when host bridge does not have has_mem64, put children pref mmio64 and
+pref mmio32 all under bridges pref bars.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/bus.c       |  4 +++-
+ drivers/pci/setup-bus.c | 13 +++++++++----
+ drivers/pci/setup-res.c |  9 ++++++---
+ 3 files changed, 18 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index d3346d2..0859e77 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -202,8 +202,10 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ {
+ #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+ 	int rc;
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
+ 
+-	if (res->flags & IORESOURCE_MEM_64) {
++	if (res->flags & mmio64) {
+ 		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
+ 					       type_mask, alignf, alignf_data,
+ 					       &pci_high);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 95d18ef..0d64677 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1311,7 +1311,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
+ 		mask = IORESOURCE_MEM;
+ 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+-		if (b_res[2].flags & IORESOURCE_MEM_64) {
++		if ((b_res[2].flags & IORESOURCE_MEM_64) &&
++		    pci_find_host_bridge(bus)->has_mem64) {
+ 			prefmask |= IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 				  prefmask, prefmask,
+@@ -1470,17 +1471,21 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 	 *	  io port.
+ 	 *     2. if there is non pref mmio assign fail, release bridge
+ 	 *	  nonpref mmio.
+-	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
++	 *     3. if there is pref mmio assign fail, and host bridge does
++	 *	  have 64bit mmio, release bridge pref mmio.
++	 *     4. if there is 64bit pref mmio assign fail, and bridge pref
+ 	 *	  is 64bit, release bridge pref mmio.
+-	 *     4. if there is pref mmio assign fail, and bridge pref is
++	 *     5. if there is pref mmio assign fail, and bridge pref is
+ 	 *	  32bit mmio, release bridge pref mmio
+-	 *     5. if there is pref mmio assign fail, and bridge pref is not
++	 *     6. if there is pref mmio assign fail, and bridge pref is not
+ 	 *	  assigned, release bridge nonpref mmio.
+ 	 */
+ 	if (type & IORESOURCE_IO)
+ 		idx = 0;
+ 	else if (!(type & IORESOURCE_PREFETCH))
+ 		idx = 1;
++	else if (!pci_find_host_bridge(bus)->has_mem64)
++		idx = 2;
+ 	else if ((type & IORESOURCE_MEM_64) &&
+ 		 (b_res[2].flags & IORESOURCE_MEM_64))
+ 		idx = 2;
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index b19aa5b..26aedde 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -205,6 +205,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	struct resource *res = dev->resource + resno;
+ 	resource_size_t min;
+ 	int ret;
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
+ 
+ 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
+ 
+@@ -216,7 +218,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * things differently than they were sized, not everything will fit.
+ 	 */
+ 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
+-				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
++				     IORESOURCE_PREFETCH | mmio64,
+ 				     pcibios_align_resource, dev);
+ 	if (ret == 0)
+ 		return 0;
+@@ -225,7 +227,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * If the prefetchable window is only 32 bits wide, we can put
+ 	 * 64-bit prefetchable resources in it.
+ 	 */
+-	if ((res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
++	if (mmio64 &&
++	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
+ 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
+ 					     IORESOURCE_PREFETCH,
+@@ -240,7 +243,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * non-prefetchable, the first call already tried the only possibility
+ 	 * so we don't need to try again.
+ 	 */
+-	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
++	if (res->flags & (IORESOURCE_PREFETCH | mmio64))
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
+ 					     pcibios_align_resource, dev);
+ 
+-- 
+1.8.4.5
 
