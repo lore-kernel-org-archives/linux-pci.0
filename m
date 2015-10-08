@@ -1,38 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:36840 "EHLO
-	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754215AbbJIBUe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 21:20:34 -0400
-Received: by ioii196 with SMTP id i196so76708344ioi.3
-        for <linux-pci@vger.kernel.org>; Thu, 08 Oct 2015 18:20:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1444015275-5668-1-git-send-email-festevam@gmail.com>
-References: <1444015275-5668-1-git-send-email-festevam@gmail.com>
-Date: Thu, 8 Oct 2015 22:20:33 -0300
-Message-ID: <CAOMZO5B6KHKDDg16L3c=BoE__LNmjE+Ph-Esk8xT77tM_3GxeQ@mail.gmail.com>
-Subject: Re: [RFC] PCI: spear: Fix definition of LTSSM_STATE_MASK
-From: Fabio Estevam <festevam@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: m-karicheri2 <m-karicheri2@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from userp1040.oracle.com ([156.151.31.81]:27574 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932309AbbJHVkN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:40:13 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 13/60] PCI: Add has_mem64 for struct host_bridge
+Date: Thu,  8 Oct 2015 14:38:32 -0700
+Message-Id: <1444340359-8011-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 5, 2015 at 12:21 AM, Fabio Estevam <festevam@gmail.com> wrote:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
->
-> Designware PCI block uses 0x3f for the LTSSM_STATE_MASK.
->
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-> ---
-> Murali,
->
-> I am doing some consolidation on the PCI DW drivers and I noticed that
-> keystone uses a different LTSSM_STATE_MASK definition.
->
-> Could you please double check it?
+Add has_mem64 for struct host_bridge, on root bus that does not support
+mmio64 above 4g, will not set that.
 
-Ok, checked in http://www.ti.com/lit/ug/sprugs6d/sprugs6d.pdf and
-LTSSM_STATE_MASK is only 5 bits, so the current code is correct.
+We will use that info next two following patches:
+1. Don't treat non-pref mmio64 as pref mmio, so will not put
+   it under bridge's pref range when rescan the devices
+2. will keep pref mmio64 and pref mmio32 under bridge pref bar.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c | 7 +++++++
+ include/linux/pci.h | 1 +
+ 2 files changed, 8 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 2c69441..edc8d08 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2125,6 +2125,13 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		} else
+ 			bus_addr[0] = '\0';
+ 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
++
++		if (resource_type(res) == IORESOURCE_MEM) {
++			if ((res->end - offset) > 0xffffffff)
++				bridge->has_mem64 = 1;
++			if ((res->start - offset) > 0xffffffff)
++				res->flags |= IORESOURCE_MEM_64;
++		}
+ 	}
+ 
+ 	down_write(&pci_bus_sem);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 42a267a..f1c3f43 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -413,6 +413,7 @@ struct pci_host_bridge {
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+ 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
++	unsigned int has_mem64:1;
+ };
+ 
+ #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
+-- 
+1.8.4.5
+
