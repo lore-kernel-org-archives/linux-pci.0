@@ -1,56 +1,151 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35307 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756910AbbJ2WXZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 29 Oct 2015 18:23:25 -0400
-Subject: [PATCH v2 5/7] PCI: Wait 1 second between disabling VFs and
- clearing NumVFs
-To: Alexander Duyck <aduyck@mirantis.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Ethan Zhao <ethan.zhao@oracle.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linux-kernel@vger.kernel.org
-Date: Thu, 29 Oct 2015 17:23:22 -0500
-Message-ID: <20151029222322.11908.13738.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 28/60] PCI: Don't add too much optional size for hotplug bridge MMIO
+Date: Thu,  8 Oct 2015 14:38:47 -0700
+Message-Id: <1444340359-8011-29-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alexander Duyck <aduyck@mirantis.com>
+Current code will always add 2M for hotplug bridge MMIO even
+there is child device under it already.
 
-Per sec 3.3.3.1 of the SR-IOV spec, r1.1, we must allow 1.0s after clearing
-VF Enable before reading any field in the SR-IOV Extended Capability.
+For example:
+	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
+					 \- 45:00.1
 
-Wait 1 second before calling pci_iov_set_numvfs(), which reads
-PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE after it sets PCI_SRIOV_NUM_VF.
+44:02.0 will need 1M as must for 45:00.0 and 45:00.1
+When we calculate add_size for 44:02.0, we pass 2M as additional
+size for hotplug bridge, total will be 3M.
 
-[bhelgaas: split to separate patch for reviewability, add spec reference]
-Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+That is different from code before changes for optional support,
+or even current code that treat optional as required directly by
+not passing realloc list. We only need 2M as total.
+
+The optional size should be 1M, and total size should be 2M.
+
+This patch change to comparing required+optional with min_sum_size to
+get smaller optional size.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/iov.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index fada98d..24428d5 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -339,13 +339,13 @@ failed:
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
--	pci_iov_set_numvfs(dev, 0);
- 	ssleep(1);
- 	pci_cfg_access_unlock(dev);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 0c6977c9..5e1cc7e 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1199,7 +1199,6 @@ out:
+  * @type2: second match type
+  * @type3: third match type
+  * @min_size : the minimum memory window that must to be allocated
+- * @add_size : additional optional memory window
+  * @realloc_head : track the additional memory window on this list
+  *
+  * Calculate the size of the bus and minimal alignment which
+@@ -1212,10 +1211,11 @@ out:
+ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			 unsigned long type, unsigned long type2,
+ 			 unsigned long type3,
+-			 resource_size_t min_size, resource_size_t add_size,
++			 resource_size_t min_size,
+ 			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
++	resource_size_t min_sum_size = 0;
+ 	resource_size_t min_align = 0, min_add_align = 0;
+ 	resource_size_t max_align = 0, max_add_align = 0;
+ 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
+@@ -1227,6 +1227,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (!b_res)
+ 		return -ENOSPC;
  
- 	if (iov->link != dev->devfn)
- 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
++	if (realloc_head) {
++		min_sum_size = min_size;
++		min_size = 0;
++	}
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
  
-+	pci_iov_set_numvfs(dev, 0);
- 	return rc;
+@@ -1298,8 +1303,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	}
+ 	free_align_test_list(&align_test_list);
+ 
+-	if ((sum_add_size - size) < add_size)
+-		sum_add_size = size + add_size;
++	if (sum_add_size < min_sum_size)
++		sum_add_size = min_sum_size;
+ 	if (sum_add_size > size && realloc_head) {
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+@@ -1436,7 +1441,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+-	resource_size_t additional_mem_size = 0, additional_io_size = 0;
++	resource_size_t min_mem_size = 0, additional_io_size = 0;
+ 	struct resource *b_res;
+ 	int ret;
+ 
+@@ -1473,7 +1478,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	case PCI_CLASS_BRIDGE_PCI:
+ 		if (bus->self->is_hotplug_bridge) {
+ 			additional_io_size  = pci_hotplug_io_size;
+-			additional_mem_size = pci_hotplug_mem_size;
++			min_mem_size = pci_hotplug_mem_size;
+ 		}
+ 		/* Fall through */
+ 	default:
+@@ -1493,8 +1498,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			prefmask |= IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 				  prefmask, prefmask,
+-				  realloc_head ? 0 : additional_mem_size,
+-				  additional_mem_size, realloc_head);
++				  min_mem_size, realloc_head);
+ 
+ 			/*
+ 			 * If successful, all non-prefetchable resources
+@@ -1517,8 +1521,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			prefmask &= ~IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 					 prefmask, prefmask,
+-					 realloc_head ? 0 : additional_mem_size,
+-					 additional_mem_size, realloc_head);
++					 min_mem_size, realloc_head);
+ 
+ 			/*
+ 			 * If successful, only non-prefetchable resources
+@@ -1527,7 +1530,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			if (ret == 0)
+ 				mask = prefmask;
+ 			else
+-				additional_mem_size += additional_mem_size;
++				min_mem_size += min_mem_size;
+ 
+ 			type2 = type3 = IORESOURCE_MEM;
+ 		}
+@@ -1548,8 +1551,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		 * window.
+ 		 */
+ 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
+-				realloc_head ? 0 : additional_mem_size,
+-				additional_mem_size, realloc_head);
++				min_mem_size, realloc_head);
+ 		break;
+ 	}
  }
- 
+-- 
+1.8.4.5
 
