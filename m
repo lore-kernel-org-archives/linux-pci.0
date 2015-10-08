@@ -1,65 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:60189 "EHLO
-	mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751984AbbJGKt4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 06:49:56 -0400
-From: Pavel Fedin <p.fedin@samsung.com>
-To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Cc: Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Peter Maydell <peter.maydell@linaro.org>
-Subject: [PATCH 1/2] PCI: of: Add 64-bit address recognition without LPAE
- support
-Date: Wed, 07 Oct 2015 13:49:20 +0300
-Message-id: <d222dd1e4d8ed59e25248091e90e53b662e007c5.1444214119.git.p.fedin@samsung.com>
-In-reply-to: <cover.1444214119.git.p.fedin@samsung.com>
-References: <cover.1444214119.git.p.fedin@samsung.com>
-In-reply-to: <cover.1444214119.git.p.fedin@samsung.com>
-References: <cover.1444214119.git.p.fedin@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 50/60] PCI: Allow bridge optional only io port resource required size to be 0
+Date: Thu,  8 Oct 2015 14:39:09 -0700
+Message-Id: <1444340359-8011-51-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If non-LPAE kernel is booted up on a machine with 64-bit PCI resources,
-PCI controller probe fails with:
+When there is no child device under the non hotplug bridge,
+We can use 0 for required size, and do not use old size as required size.
 
-PCI host bridge /pcie@10000000 ranges:
-   IO 0x3eff0000..0x3effffff -> 0x00000000
-  MEM 0x10000000..0x3efeffff -> 0x10000000
-  MEM 0x8000000000..0xffffffffff -> 0x8000000000
-pci-host-generic 3f000000.pcie: resource collision: [mem 0x00000000-0xffffffff] conflicts with /pl011@9000000 [mem 0x09000000-0x09000fff]
-pci-host-generic: probe of 3f000000.pcie failed with error -16
+That will save some io port range for other bridges, as BIOS could do
+some partial assign, and we want to use those not used io port range.
 
-This happens because res->start assignment in of_pci_range_to_resource()
-truncates the upper part of the address, because res->start is of
-phys_addr_t type, which is 32-bit on non-LPAE kernels.
+When there is child device, size will not be 0.
+when the bridge supports hotplug, min_size will not be 0.
+So they will still honor the old size as required size.
 
-This patch adds explicit recognition of 64-bit resources, preventing from
-potential problems when e. g. 0x8000001234 would be converted to
-0x00001234.
-
-Signed-off-by: Pavel Fedin <p.fedin@samsung.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/of/address.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/pci/setup-bus.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 384574c..9a8f8c3 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -330,6 +330,12 @@ int of_pci_range_to_resource(struct of_pci_range *range,
- 		}
- 		res->start = port;
- 	} else {
-+#ifndef CONFIG_PHYS_ADDR_T_64BIT
-+		if (upper_32_bits(range->cpu_addr)) {
-+			err = -EINVAL;
-+			goto invalid_range;
-+		}
-+#endif
- 		res->start = range->cpu_addr;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a6eea60..bbc10d8 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1230,8 +1230,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 	size = size_aligned_for_isa(size);
+ 	size += size1;
+-	size0 = calculate_size(size, min_size,
+-			resource_size(b_res), min_align);
++	if (size || min_size)
++		size0 = calculate_size(size, min_size,
++					resource_size(b_res), min_align);
+ 	sum_add_size = size_aligned_for_isa(sum_add_size);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+@@ -1247,7 +1248,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		return;
  	}
- 	res->end = res->start + range->size - 1;
+ 
+-	b_res->start = min_align;
++	b_res->start = size0 ? min_align : 0;
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
 -- 
-2.4.4
+1.8.4.5
 
