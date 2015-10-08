@@ -1,102 +1,155 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, Mark Rutland <Mark.Rutland@arm.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Robin Murphy <robin.murphy@arm.com>
-Subject: [PATCH v2 8/8] PCI/MSI: Allow the MSI domain to be device-specific
-Date: Tue,  6 Oct 2015 18:04:03 +0100
-Message-Id: <1444151043-31084-9-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
-References: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 44/60] PCI: Add support for more than two alt_size entries under same bridge
+Date: Thu,  8 Oct 2015 14:39:03 -0700
+Message-Id: <1444340359-8011-45-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So far, we've always considered that for a given PCI device, its
-MSI controller was either set by the architecture-specific
-pcibios hook, or simply inherited from the host bridge.
+When we have two bridges under parent bridge, and each child
+bridge has alt_size, we need to increase parent alt_size to make
+sure it could fit all alt entries.
 
-This doesn't cover things like firmware-defined topologies like
-msi-map (DT) or IORT (ACPI), which can provide information about
-which MSI controller to use on a per-device basis.
+In the patch, we first select one big size, and then keep reducing
+the size and retrying to get the minimum value for alt_size.
 
-This patch adds the necessary hook into the MSI code to allow this
-feature, and provides the msi-map functionnality as a first
-implementation.
+For example, two bridges:
+  one have 8M/8M, and 1M/1M children res.
+  one have 4M/4M, and 1M/1M children res.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Then we have child pridges alt_align/alt_size: 8M/9M, 4M/5M.
+Before this patch, parent bridge alt_align/alt_size is 8M/14M
+that is wrong, as it can not fit two alt entries at all.
+With this patch	parent bridge alt_align/alt_size: 8M/17M.
+               8M            16M   20M   24M
+  |------------|-------------|-----|-----|
+	       8M			   25M
+	       |---------------------------|
+			       17M
+               |---9M----------|   |-5M----|
+
+
+At same time, child bridges required align/size: 4M/12M, 2M/6M.
+and prarent bridge required align/size: 4M/20M.
+
+So at last, we use 8M/17M as parent bridge alt_align/alt_size.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=100451
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Tested-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/msi.c   | 17 +++++++++++++++++
- drivers/pci/probe.c |  8 ++++++++
- include/linux/msi.h |  6 ++++++
- 3 files changed, 31 insertions(+)
+ drivers/pci/setup-bus.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 54 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 81a2798..3daff31 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1357,4 +1357,21 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
- 
- 	return rid;
- }
-+
-+/**
-+ * pci_msi_get_device_domain - Get the MSI domain for a given PCI device
-+ * @pdev:	The PCI device
-+ *
-+ * Use the firmware data to find a device-specific MSI domain
-+ * (i.e. not one that is ste as a default).
-+ *
-+ * Returns: The coresponding MSI domain or NULL if none has been found.
-+ */
-+struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
-+{
-+	u32 rid = 0;
-+
-+	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
-+	return of_msi_map_get_device_domain(&pdev->dev, rid);
-+}
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7c333f8..f14a970 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1639,6 +1639,14 @@ static struct irq_domain *pci_dev_msi_domain(struct pci_dev *dev)
- 	if (d)
- 		return d;
- 
-+	/*
-+	 * Let's see if we have a firmware interface able to provide
-+	 * the domain.
-+	 */
-+	d = pci_msi_get_device_domain(dev);
-+	if (d)
-+		return d;
-+
- 	return NULL;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index dea0344..7e7663a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1373,6 +1373,47 @@ out:
+ 	return good_align;
  }
  
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 56e3b76..375be7c 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -294,6 +294,12 @@ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
- int pci_msi_domain_check_cap(struct irq_domain *domain,
- 			     struct msi_domain_info *info, struct device *dev);
- u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
-+struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev);
-+#else
-+static inline struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
++static resource_size_t calculate_mem_alt_size(struct list_head *head,
++				resource_size_t max_align, resource_size_t size,
++				resource_size_t align_low)
 +{
-+	return NULL;
++	struct align_test_res *p;
++	resource_size_t tmp;
++	resource_size_t good_size, bad_size;
++	int count = 0, order;
++
++	good_size = ALIGN(size, align_low);
++
++	list_for_each_entry(p, head, list)
++		count++;
++
++	if (count <= 1)
++		goto out;
++
++	sort_align_test(head);
++
++	tmp = max(size, max_align);
++	order = __fls(count);
++	if ((1ULL << order) < count)
++		order++;
++	good_size = ALIGN((tmp << order), align_low);
++	bad_size = ALIGN(size, align_low) - align_low;
++	size = good_size;
++	while (size > bad_size) {
++		/* check if align/size fit all entries */
++		if (is_align_size_good(head, max_align, size, 0))
++			good_size = size;
++		else
++			bad_size = size;
++
++		size = bad_size + ((good_size - bad_size) >> 1);
++		size = round_down(size, align_low);
++	}
++
++out:
++	return good_size;
 +}
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
++
+ static inline bool is_optional(int i)
+ {
  
- #endif /* LINUX_MSI_H */
+@@ -1419,6 +1460,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	LIST_HEAD(align_test_list);
+ 	LIST_HEAD(align_test_add_list);
++	LIST_HEAD(align_test_alt_list);
+ 	resource_size_t alt_size = 0, alt_align = 0;
+ 	resource_size_t window_align;
+ 
+@@ -1493,10 +1535,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 				dev_res = res_to_dev_res(realloc_head, r);
+ 				if (dev_res && dev_res->alt_size) {
++					add_to_align_test_list(
++						&align_test_alt_list,
++						dev_res->alt_align,
++						dev_res->alt_size);
+ 					alt_size += dev_res->alt_size;
+ 					if (alt_align < dev_res->alt_align)
+ 						alt_align = dev_res->alt_align;
+ 				} else if (r_size > 1) {
++					add_to_align_test_list(
++						&align_test_alt_list,
++						align, r_size);
+ 					alt_size += r_size;
+ 					if (alt_align < align)
+ 						alt_align = align;
+@@ -1516,14 +1565,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	if (size0 && realloc_head) {
+ 		alt_align = max(alt_align, window_align);
+-		alt_size = calculate_memsize(alt_size, min_size,
+-					     0, window_align);
++		/* need to increase size to fit more alt */
++		alt_size = calculate_mem_alt_size(&align_test_alt_list,
++						  alt_align, alt_size,
++						  window_align);
+ 		/* required is better ? */
+ 		if (alt_size >= size0) {
+ 			alt_align = 0;
+ 			alt_size = 0;
+ 		}
+ 	}
++	free_align_test_list(&align_test_alt_list);
+ 
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
 -- 
-2.1.4
+1.8.4.5
 
