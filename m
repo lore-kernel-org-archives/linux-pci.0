@@ -1,33 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:52549 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752636AbbJEKAx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Oct 2015 06:00:53 -0400
-Date: Mon, 5 Oct 2015 12:00:52 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, christian.melki@t2data.com,
-	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: Re: Fwd: SWIOTLB on 32-bit PAE.
-Message-ID: <20151005100051.GA12506@8bytes.org>
-References: <560E9007.1000604@t2data.com>
- <560E92A0.9030707@t2data.com>
- <20151003143630.GB17684@localhost>
- <20151003180007.GA4732@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151003180007.GA4732@localhost.localdomain>
+Received: from mailout4.w1.samsung.com ([210.118.77.14]:39229 "EHLO
+	mailout4.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753730AbbJHHYf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 03:24:35 -0400
+From: Pavel Fedin <p.fedin@samsung.com>
+To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Cc: Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: [PATCH v2 2/2] PCI: of: Ignore resources with failed translation
+Date: Thu, 08 Oct 2015 10:24:26 +0300
+Message-id: <3604931244806840dd12ff9663671b52d2acd951.1444288748.git.p.fedin@samsung.com>
+In-reply-to: <cover.1444288748.git.p.fedin@samsung.com>
+References: <cover.1444288748.git.p.fedin@samsung.com>
+In-reply-to: <cover.1444288748.git.p.fedin@samsung.com>
+References: <cover.1444288748.git.p.fedin@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Oct 03, 2015 at 02:00:19PM -0400, Konrad Rzeszutek Wilk wrote:
-> Aye. I presume that you had done a small change already for this?
-> Would you be willing to post it on lkml and CC me ?
+This patch allows PCI host controller to function even if part of resources
+is unusable for some reason. An example is non-LPAE kernel on a machine
+which has some 64-bit resources. Unusable resources will be just skipped
+instead of a complete failure.
 
-Yes, I also think it is needed. SWIOTLB already correctly handles
-buffers in HighMem, so enabling it for 32-bit PAE should be easy. Please
-also CC me on the patch.
+Signed-off-by: Pavel Fedin <p.fedin@samsung.com>
+---
+ drivers/of/of_pci.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-
-	Joerg
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 5751dc5..ea7c2b6 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -223,8 +223,10 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 		}
+ 
+ 		err = of_pci_range_to_resource(&range, dev, res);
+-		if (err)
+-			goto conversion_failed;
++		if (err) {
++			kfree(res);
++			continue;
++		}
+ 
+ 		if (resource_type(res) == IORESOURCE_IO) {
+ 			if (!io_base) {
+-- 
+2.4.4
 
