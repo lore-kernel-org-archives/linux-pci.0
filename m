@@ -1,114 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36201 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964831AbbJ0QVH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Oct 2015 12:21:07 -0400
-Date: Tue, 27 Oct 2015 11:20:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
-	m-karicheri2 <m-karicheri2@ti.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Subject: Re: [PATCH v4 1/4] PCI: designware: Use common LTSSM_STATE_MASK
- definition
-Message-ID: <20151027162056.GA16564@localhost>
-References: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151021184250.28724.41928.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151027151542.GF8660@localhost>
- <CAOMZO5CYTd+VKj8h6iP_g1A_OAHuFYhM=-wfS5+PzshkbFFnyg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAOMZO5CYTd+VKj8h6iP_g1A_OAHuFYhM=-wfS5+PzshkbFFnyg@mail.gmail.com>
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:35942 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754203AbbJHTyW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 15:54:22 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH] PCI: generic: Fix address window calculation for non-zero starting bus.
+Date: Thu,  8 Oct 2015 12:54:16 -0700
+Message-Id: <1444334056-4870-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 27, 2015 at 02:05:17PM -0200, Fabio Estevam wrote:
-> Hi Bjorn,
-> 
-> On Tue, Oct 27, 2015 at 1:15 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > [+cc Minghuan]
-> >
-> > On Wed, Oct 21, 2015 at 01:42:50PM -0500, Bjorn Helgaas wrote:
-> >> From: Fabio Estevam <fabio.estevam@freescale.com>
-> >>
-> >> Add a common #define for LTSSM_STATE_MASK and use it in all the
-> >> DesignWare-based drivers.
-> >>
-> >> Note that this changes LTSSM_STATE_MASK from 6 bits (0x3f) to 5 bits (0x1f)
-> >> for i.MX6 and Layerscape.  We believe this is safe for all DesignWare-based
-> >> PCIe cores.
-> >
-> > OK, DesignWare experts, what's the story on this LTSSM_STATE_MASK?
-> >
-> > Minghuan says Layerscape requires a mask of 0x3f and it actually uses
-> > states 0x20, 0x21, 0x22, and 0x23:
-> >
-> > MH> Our LTSSM mask is 0x3f because it includes the following states:
-> > MH> 0x20 S_RCVRY_EQ0
-> > MH> 0x21 S_RCVRY_EQ1
-> > MH> 0x22 S_RCVRY_EQ2
-> > MH> 0x23 S_RCVRY_EQ3
-> >
-> > MH> And I checked DesignWare Cores PCI Express Controller Databook
-> > MH> v4.21a and found the following descriptor:
-> >
-> > MH> [5:0]: smlh_ltssm_state: LTSSM current state. Encoding is defined in workspace/src/include/cxpl_defs.vh
-> >
-> > MH> So could we use the mask 0x3f for all SoCs?
-> >
-> > I couldn't find the "DesignWare Cores PCI Express Controller Databook
-> > v4.21a", but I do see the Keystone mask (sec 3.9.11 of
-> > http://www.ti.com/lit/ug/sprugs6d/sprugs6d.pdf) is definitely only 5
-> > bits, but that's clearly a TI register, not a generic DesignWare
-> > register.
-> >
-> > So it looks like a mistake to make a common LTSSM_STATE_MASK
-> > definition.  It looks like this is something with some variation and
-> > we shouldn't make assumptions about it being common.
-> 
-> Yes, what if we keep the original behaviour: define a common
-> LTSSM_STATE_MASK as 0x3f and then add KS_LTSSM_STATE_MASK as 0x1f for
-> Keystone only?
-> 
-> >
-> > Now I'm concerned that the LTSSM state definitions I put in
-> > drivers/pci/host/pcie-designware.h might not actually apply to
-> > everything derived from DW.  For example, the Layerscape S_RCVRY
-> > states appear to be Layerscape-specific.
-> >
-> > I don't want to put misleading stuff in
-> > drivers/pci/host/pcie-designware.h if it's not really generic.  Better
-> > to have it in the individual drivers, with a prefix that indicates
-> > that it applies to that driver, e.g., KS_LTSSM_MASK, LS_LTSSM_MASK,
-> > etc.
-> 
-> The LTSSM states we put in drivers/pci/host/pcie-designware.h are from
-> 0-1f, so they are common.
+From: David Daney <david.daney@cavium.com>
 
-Well, maybe.  Are those states documented in the DesignWare spec?  I
-don't want to put things in pcie-designware.h that are only common by
-accident or even by convention.  We should only put things there if
-they are documented things that users of that IP can rely on.
+Make the offset from the beginning of the "reg" property be from the
+starting bus number, rather than zero.  Hoist the invariant size
+calculation out of the mapping for loop.
 
-LTSSM_MASK is documented in the TI Keystone spec, so its definition
-probably belongs in pci-keystone-dw.c.  The same TI spec also contains
-LTSSM state definitions, so I suspect they're in the same boat --
-things that might accidentally be the same across devices, but they
-don't *have* to be.
+Update host-generic-pci.txt to clarify the semantics of the "reg"
+property with respect to non-zero starting bus numbers.
 
-So I'm going to drop the following patches from my tree for now:
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+This is a replacement for:
 
-  1ad5fdbc8410 PCI: designware: Add LTSSM state definitions
-  b09464f77dd2 PCI: designware: Use common LTSSM_STATE_L0 definition
-  fa15c15fd95d PCI: designware: Use common LTSSM_STATE_RCVRY_LOCK definition
-  4788fe6ebf45 PCI: designware: Use common LTSSM_STATE_MASK definition
+https://lkml.org/lkml/2015/10/2/653
 
-We can add pieces back if they make sense.  If we add things to shared
-files like pcie-designware.h, I'd like a reference to the DW spec that
-justifies the sharing.
+Since that patch is getting too much push-back, this is the only other
+option for fixing the driver to be internally consistent in its
+treatment of the offset from "reg" to the first bus in the "bus-range"
+property.
 
-Bjorn
+ Documentation/devicetree/bindings/pci/host-generic-pci.txt | 5 +++--
+ drivers/pci/host/pci-host-generic.c                        | 4 ++--
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+index cf3e205..3f1d3fc 100644
+--- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
++++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+@@ -34,8 +34,9 @@ Properties of the host controller node:
+ - #size-cells    : Must be 2.
+ 
+ - reg            : The Configuration Space base address and size, as accessed
+-                   from the parent bus.
+-
++                   from the parent bus.  The base address corresponds to
++                   the first bus in the "bus-range" property.  If no
++                   "bus-range" is specified, this will be bus 0 (the default).
+ 
+ Properties of the /chosen node:
+ 
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index fe9a81b..bb93346 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -169,6 +169,7 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 	struct resource *bus_range;
+ 	struct device *dev = pci->host.dev.parent;
+ 	struct device_node *np = dev->of_node;
++	u32 sz = 1 << pci->cfg.ops->bus_shift;
+ 
+ 	err = of_address_to_resource(np, 0, &pci->cfg.res);
+ 	if (err) {
+@@ -196,10 +197,9 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 	bus_range = pci->cfg.bus_range;
+ 	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+ 		u32 idx = busn - bus_range->start;
+-		u32 sz = 1 << pci->cfg.ops->bus_shift;
+ 
+ 		pci->cfg.win[idx] = devm_ioremap(dev,
+-						 pci->cfg.res.start + busn * sz,
++						 pci->cfg.res.start + idx * sz,
+ 						 sz);
+ 		if (!pci->cfg.win[idx])
+ 			return -ENOMEM;
+-- 
+1.9.1
+
