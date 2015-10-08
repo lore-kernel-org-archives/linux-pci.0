@@ -1,127 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:35729 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753204AbbJTXEs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 19:04:48 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v6 0/5] PCI: Add support for PCI Enhanced Allocation "BARs"
-Date: Tue, 20 Oct 2015 16:04:37 -0700
-Message-Id: <1445382282-2396-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:54106 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933125AbbJHPCU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Oct 2015 11:02:20 -0400
+Date: Thu, 8 Oct 2015 10:02:16 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	David Daney <david.daney@cavium.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v4 3/5] PCI: generic: Quit clobbering our pci_ops.
+Message-ID: <20151008150215.GB3885@localhost>
+References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com>
+ <1443811443-18878-4-git-send-email-ddaney.cavm@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443811443-18878-4-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+[+cc Arnd]
 
-The original patches are from Sean O. Stalley. I made a few tweaks,
-but feel that it is substancially Sean's work, so I am keeping the
-patch set version numbering scheme going.
+Arnd, you had comments on the previous version.  What do you think of
+this one?
 
-Tested on Cavium ThunderX system with 4 Root Complexes containing 50
-devices/bridges provisioned with EA.
-
-Here is Sean's description of the patches:
-
-PCI Enhanced Allocation is a new method of allocating MMIO & IO
-resources for PCI devices & bridges. It can be used instead
-of the traditional PCI method of using BARs.
-
-EA entries are hardware-initialized to a fixed address.
-Unlike BARs, regions described by EA are cannot be moved.
-Because of this, only devices which are permanently connected to
-the PCI bus can use EA. A removable PCI card must not use EA.
-
-This patchset adds support for using EA entries instead of BARs
-on Root Complex Integrated Endpoints.
-
-The Enhanced Allocation ECN is publicly available here:
-https://www.pcisig.com/specifications/conventional/ECN_Enhanced_Allocation_23_Oct_2014_Final.pdf
-
-
-Changes from V1:
-	- Use generic PCI resource claim functions (instead of EA-specific functions)
-	- Only add support for RCiEPs (instead of all devices).
-	- Removed some debugging messages leftover from early testing.
-
-Changes from V2 (By David Daney):
-	- Add ea_cap to struct pci_device, to aid in finding the EA capability.
-	- Factored EA entity decoding into a separate function.
-	- Add functions to find EA entities by BEI or Property.
-	- Add handling of EA provisioned bridges.
-	- Add handling of EA SRIOV BARs.
-	- Try to assign proper resource parent so that SRIOV device creation can occur.
-
-Changes from V3 (By David Daney):
-	- Discarded V3 changes and started over fresh based on Sean's V2.
-	- Add more support/checking for Entry Properties.
-	- Allow EA behind bridges.
-	- Rewrite some error messages.
-	- Add patch 3/5 to prevent resizing, and better handle
-          assigning, of fixed EA resources.
-	- Add patch 4/5 to handle EA provisioned SRIOV devices.
-	- Add patch 5/5 to handle EA provisioned bridges.
-
-Changes from V4 (By David Daney):
-	- Drop patch 5/5 to handle EA provisioned bridges.
-	- Drop cases for bridge resources in 2/5.
-	- Drop unnecessary fallback resource parent handling in 3/5
-	- Small code formatting improvements.
-
-Changes from V5: (By David Daney) cosmetic only, as requested by Bjorn Helgaas:
-	- Split previous 3/4 into two patches, which are now 1/5 and 2/5
-	- Improve indentation of register definitions.
-	- Renamed PCI_EA_P_VIRT_MEM* to PCI_EA_P_VF_MEM*
-	- Remove use of BIT() macro from register definitions.
-	- Changed debug messages when probing EA entries to be like this:
-.
-.
-.
-pci 0002:01:00.0: [177d:a01e] type 00 class 0x020000
-pci 0002:01:00.0: EA - BEI  0, Prop 0x00: [mem 0x843000000000-0x84303fffffff 64bit]
-pci 0002:01:00.0: EA - BEI  4, Prop 0x00: [mem 0x843060000000-0x8430600fffff 64bit]
-pci 0002:01:00.0: EA - BEI  9, Prop 0x04: [mem 0x8430a0000000-0x8430a01fffff 64bit]
-pci 0002:01:00.0: EA - BEI 13, Prop 0x04: [mem 0x8430e0000000-0x8430e01fffff 64bit]
-pci 0002:01:00.0: VF(n) BAR0 space: [mem 0x8430a0000000-0x8430afffffff 64bit] (contains BAR0 for 128 VFs)
-pci 0002:01:00.0: VF(n) BAR4 space: [mem 0x8430e0000000-0x8430efffffff 64bit] (contains BAR4 for 128 VFs)
-.
-.
-.
-pci 0004:21:00.0: [1a03:2000] type 00 class 0x030000
-pci 0004:21:00.0: reg 0x10: [mem 0x881010000000-0x881010ffffff]
-pci 0004:21:00.0: reg 0x14: [mem 0x881011000000-0x88101101ffff]
-pci 0004:21:00.0: reg 0x18: [io  0x0000-0x007f]
-pci 0004:21:00.0: supports D1 D2
-.
-.
-.
-
-BEI and Prop values are represented as decimal and hexadecimal
-respectively to match the EA specification.
-
-David Daney (3):
-  PCI: Handle IORESOURCE_PCI_FIXED when sizing resources.
-  PCI: Handle IORESOURCE_PCI_FIXED when assigning resources.
-  PCI: Handle Enhanced Allocation (EA) capability for SRIOV devices.
-
-Sean O. Stalley (2):
-  PCI: Add Enhanced Allocation register entries
-  PCI: Add support for Enhanced Allocation devices
-
- drivers/pci/iov.c             |  11 ++-
- drivers/pci/pci.c             | 183 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h             |   1 +
- drivers/pci/probe.c           |   3 +
- drivers/pci/setup-bus.c       |  50 +++++++++++-
- include/uapi/linux/pci_regs.h |  44 +++++++++-
- 6 files changed, 286 insertions(+), 6 deletions(-)
-
--- 
-1.9.1
-
+On Fri, Oct 02, 2015 at 11:44:01AM -0700, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> The pci-host-generic driver keeps a global struct pci_ops which it
+> then patches with the .map_bus method appropriate for the bus device.
+> A problem arises when the driver is used for two different types of
+> bus devices, the .map_bus method for the last device probed clobbers
+> the method for all previous devices.  The result, only the last bus
+> device probed has the proper .map_bus, and the others fail.
+> 
+> Move the struct pci_ops into the bus specific structure, and
+> initialize a pointer to it when the bus device is probed.
+> 
+> Acked-by: Will Deacon <will.deacon@arm.com>
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+> Change from v3: Use pointer to ops rather than make a copy.
+> 
+>  drivers/pci/host/pci-host-generic.c | 27 +++++++++++++++------------
+>  1 file changed, 15 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 9e9f1c3..216ded5 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -27,7 +27,7 @@
+>  
+>  struct gen_pci_cfg_bus_ops {
+>  	u32 bus_shift;
+> -	void __iomem *(*map_bus)(struct pci_bus *, unsigned int, int);
+> +	struct pci_ops ops;
+>  };
+>  
+>  struct gen_pci_cfg_windows {
+> @@ -35,7 +35,7 @@ struct gen_pci_cfg_windows {
+>  	struct resource				*bus_range;
+>  	void __iomem				**win;
+>  
+> -	const struct gen_pci_cfg_bus_ops	*ops;
+> +	struct gen_pci_cfg_bus_ops		*ops;
+>  };
+>  
+>  /*
+> @@ -65,7 +65,11 @@ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+>  
+>  static struct gen_pci_cfg_bus_ops gen_pci_cfg_cam_bus_ops = {
+>  	.bus_shift	= 16,
+> -	.map_bus	= gen_pci_map_cfg_bus_cam,
+> +	.ops		= {
+> +		.map_bus	= gen_pci_map_cfg_bus_cam,
+> +		.read		= pci_generic_config_read,
+> +		.write		= pci_generic_config_write,
+> +	}
+>  };
+>  
+>  static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
+> @@ -80,12 +84,11 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
+>  
+>  static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
+>  	.bus_shift	= 20,
+> -	.map_bus	= gen_pci_map_cfg_bus_ecam,
+> -};
+> -
+> -static struct pci_ops gen_pci_ops = {
+> -	.read	= pci_generic_config_read,
+> -	.write	= pci_generic_config_write,
+> +	.ops		= {
+> +		.map_bus	= gen_pci_map_cfg_bus_ecam,
+> +		.read		= pci_generic_config_read,
+> +		.write		= pci_generic_config_write,
+> +	}
+>  };
+>  
+>  static const struct of_device_id gen_pci_of_match[] = {
+> @@ -234,8 +237,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+>  	}
+>  
+>  	of_id = of_match_node(gen_pci_of_match, np);
+> -	pci->cfg.ops = of_id->data;
+> -	gen_pci_ops.map_bus = pci->cfg.ops->map_bus;
+> +	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
+>  	pci->host.dev.parent = dev;
+>  	INIT_LIST_HEAD(&pci->host.windows);
+>  	INIT_LIST_HEAD(&pci->resources);
+> @@ -256,7 +258,8 @@ static int gen_pci_probe(struct platform_device *pdev)
+>  	if (!pci_has_flag(PCI_PROBE_ONLY))
+>  		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+>  
+> -	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, pci, &pci->resources);
+> +	bus = pci_scan_root_bus(dev, 0,
+> +				&pci->cfg.ops->ops, pci, &pci->resources);
+>  	if (!bus) {
+>  		dev_err(dev, "Scanning rootbus failed");
+>  		return -ENODEV;
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
