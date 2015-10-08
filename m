@@ -1,83 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0141.outbound.protection.outlook.com ([157.56.110.141]:45669
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752370AbbJPHSs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 16 Oct 2015 03:18:48 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	"Yoder Stuart-B08248" <stuart.yoder@freescale.com>,
-	Li Yang <leoli@freescale.com>, Arnd Bergmann <arnd@arndb.de>,
+Received: from mail.kernel.org ([198.145.29.136]:32949 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933014AbbJHQ0f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Oct 2015 12:26:35 -0400
+Date: Thu, 8 Oct 2015 11:26:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Jingoo Han" <jg1.han@samsung.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	"Minghuan Lian" <Minghuan.Lian@freescale.com>
-Subject: [PATCH v4 4/6] PCI: layerscape: update ls_add_pcie_port()
-Date: Fri, 16 Oct 2015 15:19:18 +0800
-Message-ID: <1444979960-24100-4-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/6] mvebu PCI fixes and cleanups
+Message-ID: <20151008162631.GE3885@localhost>
+References: <20150923171706.GL21084@n2100.arm.linux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150923171706.GL21084@n2100.arm.linux.org.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To keep consistent with the other DesignWare-based host drivers,
-The patch updates ls_add_pcie_port().
+On Wed, Sep 23, 2015 at 06:17:07PM +0100, Russell King - ARM Linux wrote:
+> This small series contains a number of fixes and cleanups to the
+> mvebu PCI host code.
+> 
+> The first patch makes the PCIe host controller more conformant with the
+> requirements of the PCI specification, which requires where a device is
+> present, unused PCI configuration space returns zero.  This patch
+> ensures that is the case.
+> 
+> The second patch fixes the very broken idea that it's somehow legal to
+> read-modify-write the PCI configuration space using 32-bit accessors,
+> even when accessing a smaller register.  There are _multiple_ registers
+> in PCI space where bits are defined to be "RW1C" - which means "read,
+> write 1 to clear".  Registers include the PCI status register, and all
+> PCIe status registers.  Hardware which does not support generating 16-bit
+> and 8-bit configuration cycles is essentially broken and non-conformant.
+> Luckily, that is not true of Armada hardware.  This patch fixes it.
+> Tested on Armada 388.
+> 
+> These two patches should be considered as fixes.  I don't see a need for
+> them to be backported to stable kernels as there is no serious breakage
+> resulting from them with the driver in its current state.  The remainder
+> are cleanups.
+> 
+> Patch 3 gets rid of the open coded "of_get_available_child_count()"
+> implementation.
+> 
+> Patch 4 uses for_each_available_child_of_node(), rather than
+> for_each_child_of_node() and checking whether of_device_is_available()
+> returns true.  for_each_available_child_of_node() is meant for this.
+> 
+> Patch 5 makes the warning message for the lack of the "marvell,pcie-port"
+> property more useful, by printing the DT path of the offending node
+> rather than the wooly "PCIe DT node".
+> 
+> Lastly, patch 6 converts all the "PCIe%d.%d" and "pcie%d.%d" with the
+> port name string, which is a pre-prepared string of that format.  This
+> means we end up with a consistent name for the port being used everywhere
+> which is good for user experience.
+> 
+>  drivers/pci/host/pci-mvebu.c | 87 ++++++++++++++++++++++++--------------------
+>  1 file changed, 47 insertions(+), 40 deletions(-)
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
----
-Change log
-v4: split from [PATCH v3] PCI: layerscape: Add PCIe support for LS1043a and LS2080a
+Applied to pci/host-mvebu for v4.4, with Tested-by Thomas and Andrew
+and Reviewed-by Thomas.  Thanks, Russell!
 
- drivers/pci/host/pci-layerscape.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index 89b7eb8..891e504 100644
---- a/drivers/pci/host/pci-layerscape.c
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -125,15 +125,14 @@ static const struct of_device_id ls_pcie_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
- 
--static int ls_add_pcie_port(struct ls_pcie *pcie)
-+static int __init
-+ls_add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
- {
--	struct pcie_port *pp;
- 	int ret;
-+	struct ls_pcie *pcie = to_ls_pcie(pp);
- 
--	pp = &pcie->pp;
--	pp->dev = pcie->dev;
-+	pp->dev = &pdev->dev;
- 	pp->dbi_base = pcie->dbi;
--	pp->root_bus_nr = -1;
- 	pp->ops = pcie->drvdata->ops;
- 
- 	ret = dw_pcie_host_init(pp);
-@@ -160,8 +159,6 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
- 	if (!pcie)
- 		return -ENOMEM;
- 
--	pcie->dev = &pdev->dev;
--
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
- 	pcie->dbi = devm_ioremap_resource(&pdev->dev, dbi_base);
- 	if (IS_ERR(pcie->dbi)) {
-@@ -174,7 +171,7 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
- 	if (!ls_pcie_is_bridge(pcie))
- 		return -ENODEV;
- 
--	ret = ls_add_pcie_port(pcie);
-+	ret = ls_add_pcie_port(&pcie->pp, pdev);
- 	if (ret < 0)
- 		return ret;
- 
--- 
-1.9.1
-
+Bjorn
