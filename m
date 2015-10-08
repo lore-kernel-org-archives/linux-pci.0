@@ -1,42 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36358 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751860AbbJPVer (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 16 Oct 2015 17:34:47 -0400
-Date: Fri, 16 Oct 2015 16:34:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
- instances
-Message-ID: <20151016213443.GD21346@localhost>
-References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
+Received: from mailout4.w1.samsung.com ([210.118.77.14]:39229 "EHLO
+	mailout4.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753723AbbJHHYe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 03:24:34 -0400
+From: Pavel Fedin <p.fedin@samsung.com>
+To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Cc: Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: [PATCH v2 0/2] PCI: of: Fix handling 64-bit PCI resources on non-LPAE
+ kernels
+Date: Thu, 08 Oct 2015 10:24:24 +0300
+Message-id: <cover.1444288748.git.p.fedin@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 02, 2015 at 11:25:03AM +0100, Phil Edworthy wrote:
-> Fixes and changes to get PCIe working on ARM64 with mulitple instances.
-> 
-> I've tested these on ARM (Koelsch board), and it works fine.
-> I've also tested on ARM64 (Salvator-X board), but I currently have an issue
-> with inbound PCI accesses. I am reasonably sure that this problem is hardware
-> related.
-> 
-> Phil Edworthy (4):
->   PCI: rcar-pcie: Make PCI aware of the IO resources
->   PCI: rcar-pcie: Remove dependency on ARM-specific struct hw_pci
->   PCI: rcar-pcie: Set root bus nr to that provided in DT
->   PCI: rcar-pcie: Fix IO offset for multiple instances
+The initial aim of this series is to fix long-standing problem with generic
+PCI host controller, triggered by ARM "virt" machine in the recent qemu.
+Since v2.4.50 qemu adds support for the second, large PCI MMIO window,
+which resides in 64-bit address space. This series addresses problems,
+which are triggered on non-LPAE kernels by this configuration.
 
-This all looks pretty reasonable to me, but I'm waiting for an ack from
-Simon before merging it.
+These patches do not depend on each other and can be applied individually.
+The first adds missing recognition of 64-bit resources (which is actually
+a bug). The second one changes the code to ignore unaccessible resources
+instead of completely bailing out. Since it touches generic of_pci code,
+the fix is expected to be applied to all drivers which use
+of_pci_get_host_bridge_resources().
 
-Bjorn
+v1 => v2:
+- Dropped #ifndef, use sizeof(resource_size_t) instead
+
+Pavel Fedin (2):
+  PCI: of: Add 64-bit address recognition without LPAE support
+  PCI: of: Ignore resources with failed translation
+
+ drivers/of/address.c | 6 ++++++
+ drivers/of/of_pci.c  | 6 ++++--
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+-- 
+2.4.4
+
