@@ -1,80 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:35262 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965499AbbJ0Uwf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 16:52:35 -0400
-Received: by pasz6 with SMTP id z6so232618108pas.2
-        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 13:52:35 -0700 (PDT)
-Subject: [PATCH 4/5] iov: Variable and loop cleanup for sriov_disable and
- sriov_enable
-From: Alexander Duyck <aduyck@mirantis.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 27 Oct 2015 13:52:33 -0700
-Message-ID: <20151027205233.14626.98836.stgit@localhost.localdomain>
-In-Reply-To: <20151027204607.14626.59671.stgit@localhost.localdomain>
-References: <20151027204607.14626.59671.stgit@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 40/60] PCI: Separate required+optional assigning to another function
+Date: Thu,  8 Oct 2015 14:38:59 -0700
+Message-Id: <1444340359-8011-41-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is just a minor cleanup to go through and group all of the
-variables into one declaration instead of a long string of single
-declarations for each int.  It also changes the direction for a couple
-loops as we are able to loop with less code this way as testing against 0
-can be done as a part of the decrement operation.
+__assign_resources_sorted() is getting too big if we put alt_size support
+into it.  Split out required+optional assigning code to another function.
 
-Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/iov.c |   13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
+ drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
+ 1 file changed, 27 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index cecc242c1af0..c0fc88fa7c4d 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -241,15 +241,11 @@ int __weak pcibios_sriov_disable(struct pci_dev *pdev)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 09844d9..c49bfde 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -473,20 +473,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
+ 	res->flags = save_res->flags;
+ }
  
- static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+-static void __assign_resources_sorted(struct list_head *head,
+-				 struct list_head *realloc_head,
+-				 struct list_head *fail_head)
++static bool __assign_resources_required_optional_sorted(struct list_head *head,
++				 struct list_head *realloc_head)
  {
--	int rc;
--	int i;
--	int nres;
- 	u16 offset, stride, initial;
+-	/*
+-	 * Should not assign requested resources at first.
+-	 *   they could be adjacent, so later reassign can not reallocate
+-	 *   them one by one in parent resource window.
+-	 * Try to assign requested + add_size at beginning
+-	 *  if could do that, could get out early.
+-	 *  if could not do that, we still try to assign requested at first,
+-	 *    then try to reassign add_size for some resources.
+-	 */
+-
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+@@ -495,12 +484,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	resource_size_t add_align;
  	struct resource *res;
- 	struct pci_dev *pdev;
- 	struct pci_sriov *iov = dev->sriov;
--	int bars = 0;
--	int bus;
-+	int rc, i, nres, bars, bus;
  
- 	if (!nr_virtfn)
- 		return 0;
-@@ -271,8 +267,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	if (!offset || (nr_virtfn > 1 && !stride))
- 		return -EIO;
+-	/* Check if optional add_size is there */
+-	if (!realloc_head || list_empty(realloc_head))
+-		goto requested_and_reassign;
+-
+ 	if (!save_resources(head, &save_head))
+-		goto requested_and_reassign;
++		return false;
  
--	nres = 0;
--	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-+	for (nres = 0, bars = 0, i = PCI_SRIOV_NUM_BARS; i--;) {
- 		bars |= (1 << (i + PCI_IOV_RESOURCES));
- 		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		if (res->parent)
-@@ -366,13 +361,13 @@ err_pcibios:
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+@@ -539,7 +524,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 			remove_from_list(realloc_head, dev_res->res);
+ 		free_list(&save_head);
+ 		free_list(head);
+-		return;
++
++		return true;
+ 	}
  
- static void sriov_disable(struct pci_dev *dev)
- {
--	int i;
- 	struct pci_sriov *iov = dev->sriov;
-+	int i = iov->num_VFs;
+ 	/* check failed type */
+@@ -574,7 +560,28 @@ static void __assign_resources_sorted(struct list_head *head,
  
- 	if (!iov->num_VFs)
- 		return;
+ 	free_list(&save_head);
  
--	for (i = 0; i < iov->num_VFs; i++)
-+	while (i--)
- 		virtfn_remove(dev, i, 0);
+-requested_and_reassign:
++	return false;
++}
++
++static void __assign_resources_sorted(struct list_head *head,
++				 struct list_head *realloc_head,
++				 struct list_head *fail_head)
++{
++	/*
++	 * Should not assign required resources at first.
++	 *   they could be adjacent, so later reassign can not reallocate
++	 *   them one by one in parent resource window.
++	 * Try to assign required + optional at beginning
++	 *  if could do that, could get out early.
++	 *  if could not do that, we still try to assign required at first,
++	 *    then try to reassign add_size for some resources.
++	 */
++
++	/* Check required+optional add */
++	if (realloc_head && !list_empty(realloc_head) &&
++	    __assign_resources_required_optional_sorted(head, realloc_head))
++		return;
++
+ 	sort_resources(head);
  
- 	pcibios_sriov_disable(dev);
+ 	/* Satisfy the must-have resource requests */
+-- 
+1.8.4.5
 
