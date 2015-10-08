@@ -1,68 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:32949 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933014AbbJHQ0f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Oct 2015 12:26:35 -0400
-Date: Thu, 8 Oct 2015 11:26:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/6] mvebu PCI fixes and cleanups
-Message-ID: <20151008162631.GE3885@localhost>
-References: <20150923171706.GL21084@n2100.arm.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150923171706.GL21084@n2100.arm.linux.org.uk>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 31/60] PCI: Rename pdev_sort_resources() to pdev_assign_resources_prepare()
+Date: Thu,  8 Oct 2015 14:38:50 -0700
+Message-Id: <1444340359-8011-32-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 23, 2015 at 06:17:07PM +0100, Russell King - ARM Linux wrote:
-> This small series contains a number of fixes and cleanups to the
-> mvebu PCI host code.
-> 
-> The first patch makes the PCIe host controller more conformant with the
-> requirements of the PCI specification, which requires where a device is
-> present, unused PCI configuration space returns zero.  This patch
-> ensures that is the case.
-> 
-> The second patch fixes the very broken idea that it's somehow legal to
-> read-modify-write the PCI configuration space using 32-bit accessors,
-> even when accessing a smaller register.  There are _multiple_ registers
-> in PCI space where bits are defined to be "RW1C" - which means "read,
-> write 1 to clear".  Registers include the PCI status register, and all
-> PCIe status registers.  Hardware which does not support generating 16-bit
-> and 8-bit configuration cycles is essentially broken and non-conformant.
-> Luckily, that is not true of Armada hardware.  This patch fixes it.
-> Tested on Armada 388.
-> 
-> These two patches should be considered as fixes.  I don't see a need for
-> them to be backported to stable kernels as there is no serious breakage
-> resulting from them with the driver in its current state.  The remainder
-> are cleanups.
-> 
-> Patch 3 gets rid of the open coded "of_get_available_child_count()"
-> implementation.
-> 
-> Patch 4 uses for_each_available_child_of_node(), rather than
-> for_each_child_of_node() and checking whether of_device_is_available()
-> returns true.  for_each_available_child_of_node() is meant for this.
-> 
-> Patch 5 makes the warning message for the lack of the "marvell,pcie-port"
-> property more useful, by printing the DT path of the offending node
-> rather than the wooly "PCIe DT node".
-> 
-> Lastly, patch 6 converts all the "PCIe%d.%d" and "pcie%d.%d" with the
-> port name string, which is a pre-prepared string of that format.  This
-> means we end up with a consistent name for the port being used everywhere
-> which is good for user experience.
-> 
->  drivers/pci/host/pci-mvebu.c | 87 ++++++++++++++++++++++++--------------------
->  1 file changed, 47 insertions(+), 40 deletions(-)
+pdev_sort_resources() etc was checking devices resources and putting
+resources that need to assign to one list in sorted order.
 
-Applied to pci/host-mvebu for v4.4, with Tested-by Thomas and Andrew
-and Reviewed-by Thomas.  Thanks, Russell!
+Now we don't do sorting in those functions anymore, so change to
+pdev_assign_resources_prepare() instead.
 
-Bjorn
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index bcf7cba..74ad4ce 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -205,8 +205,8 @@ static resource_size_t __pci_resource_alignment(
+ 	return r_align;
+ }
+ 
+-/* Sort resources by alignment */
+-static void pdev_sort_resources(struct pci_dev *dev,
++/* check resources and save to the list */
++static void pdev_assign_resources_prepare(struct pci_dev *dev,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *head)
+ {
+@@ -242,7 +242,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
+ 	}
+ }
+ 
+-static void __dev_sort_resources(struct pci_dev *dev,
++static void __dev_assign_resources_prepare(struct pci_dev *dev,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *head)
+ {
+@@ -260,7 +260,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ 			return;
+ 	}
+ 
+-	pdev_sort_resources(dev, realloc_head, head);
++	pdev_assign_resources_prepare(dev, realloc_head, head);
+ }
+ 
+ static inline void reset_resource(struct resource *res)
+@@ -566,7 +566,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+ {
+ 	LIST_HEAD(head);
+ 
+-	__dev_sort_resources(dev, add_head, &head);
++	__dev_assign_resources_prepare(dev, add_head, &head);
+ 	__assign_resources_sorted(&head, add_head, fail_head);
+ 
+ }
+@@ -579,7 +579,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
+ 	LIST_HEAD(head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+-		__dev_sort_resources(dev, realloc_head, &head);
++		__dev_assign_resources_prepare(dev, realloc_head, &head);
+ 
+ 	__assign_resources_sorted(&head, realloc_head, fail_head);
+ }
+-- 
+1.8.4.5
+
