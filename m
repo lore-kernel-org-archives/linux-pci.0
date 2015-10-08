@@ -1,96 +1,225 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 5 Oct 2015 15:54:05 -0700
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v4 5/5] PCI: Handle Enhanced Allocation (EA) capability
- for bridges
-Message-ID: <20151005225405.GC4821@sean.stalley.intel.com>
-References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
- <1443825476-26880-6-git-send-email-ddaney.cavm@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443825476-26880-6-git-send-email-ddaney.cavm@gmail.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 11/60] PCI: Check pref compatible bit for mem64 resource of PCIe device
+Date: Thu,  8 Oct 2015 14:38:30 -0700
+Message-Id: <1444340359-8011-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 02, 2015 at 03:37:56PM -0700, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> PCI bridges may have their properties be specified via EA entries.
-> 
-> Extend the EA parser to extract the bridge resources, and modify
-> pci_read_bridge_{io,mmio,mmio_pref}() to use resources previously
-> obtained via EA.
-> 
-> Save the offset to the EA capability in struct pci_dev, and use it to
-> easily find the EA bridge subordinate and secondary bus numbers.
-> 
-> When assigning the bridge resources a couple of changes are required
-> so that the EA obtained IORESOURCE_PCI_FIXED are not resized, and
-> correctly linked into the resource tree.
-> 
-> 1) In pbus_size_mem() do not attempt to resize the bridge resources if
->    they are marked as IORESOURCE_PCI_FIXED.
-> 
-> 2) In pci_bus_alloc_from_region()for IORESOURCE_PCI_FIXED resources, just
->    try to request the resource as is, without attempting to resize it.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  drivers/pci/bus.c       |  7 +++++++
->  drivers/pci/pci.c       | 13 +++++++++++++
->  drivers/pci/probe.c     | 31 +++++++++++++++++++++++++++++--
->  drivers/pci/setup-bus.c |  3 +++
->  include/linux/pci.h     |  1 +
->  5 files changed, 53 insertions(+), 2 deletions(-)
-> @@ -801,8 +813,23 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
->  
->  	pci_read_config_dword(dev, PCI_PRIMARY_BUS, &buses);
->  	primary = buses & 0xFF;
-> -	secondary = (buses >> 8) & 0xFF;
-> -	subordinate = (buses >> 16) & 0xFF;
-> +	if (dev->ea_cap) {
-> +		u32 dw1;
-> +
-> +		pci_read_config_dword(dev, dev->ea_cap + 4, &dw1);
-> +		if (dw1 & 0xFF)
-> +			secondary = dw1 & 0xFF;
-> +		else
-> +			secondary = (buses >> 8) & 0xFF;
-> +
-> +		if ((dw1 >> 8) & 0xFF)
-> +			subordinate = (dw1 >> 8) & 0xFF;
-> +		else
-> +			subordinate = (buses >> 16) & 0xFF;
-> +	} else {
-> +		secondary = (buses >> 8) & 0xFF;
-> +		subordinate = (buses >> 16) & 0xFF;
-> +	}
+We still get "no compatible bridge window" warning on sparc T5-8
+after we add support for 64bit resource parsing for root bus.
 
-We can refactor this to make it cleaner/more compact. from V3 review:
+ PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
+ PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
+ PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
+ PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
+ PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
+ PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
+ PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
+ pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
 
+All the bridges 64-bit resource have pref bit, but the device resource does not
+have pref set, then we can not find parent for the device resource,
+as we can not put non-pref mem under pref mem.
 
-	secondary = (buses >> 8) & 0xFF;
-	subordinate = (buses >> 16) & 0xFF;
-	if (dev->ea_cap) {
-		u32 sdw;
-		
-		pci_read_config_dword(dev, dev->ea_cap + 4, &sdw);
-		
-		if (sdw & 0xFF)
-			secondary = sdw & 0xFF;
-		
-		sdw >>= 8;
-		if (sdw & 0xFF)
-			subordinate = sdw & 0xFF;
-	}
+According to pcie spec errta
+https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
+page 13, in some case it is ok to mark some as pref.
 
+Mark if the entire path from the host to the adapter is over PCI Express.
+Then set pref compatible bit for claim/sizing/assign for 64bit mem resource
+on that pcie device.
 
--Sean
+-v2: set pref for mmio 64 when whole path is PCI Express, according to David Miller.
+-v3: don't set pref directly, change to UNDER_PREF, and set PREF before
+     sizing and assign resource, and cleart PREF afterwards. requested by BenH.
+-v4: use on_all_pcie_path device flag instead.
+
+Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+Reported-by: David Ahern <david.ahern@oracle.com>
+Tested-by: David Ahern <david.ahern@oracle.com>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Tested-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci.c       |  3 ++-
+ drivers/pci/pci.h       |  2 ++
+ drivers/pci/probe.c     | 33 +++++++++++++++++++++++++++++++++
+ drivers/pci/setup-bus.c | 21 ++++++++++++++++++---
+ drivers/pci/setup-res.c |  4 ++++
+ include/linux/pci.h     |  1 +
+ 6 files changed, 60 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6a9a111..f951cfb 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -425,6 +425,7 @@ EXPORT_SYMBOL_GPL(pci_find_ht_capability);
+ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 					  struct resource *res)
+ {
++	int flags = pci_resource_pref_compatible(dev, res);
+ 	const struct pci_bus *bus = dev->bus;
+ 	struct resource *r;
+ 	int i;
+@@ -439,7 +440,7 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 			 * not, the allocator made a mistake.
+ 			 */
+ 			if (r->flags & IORESOURCE_PREFETCH &&
+-			    !(res->flags & IORESOURCE_PREFETCH))
++			    !(flags & IORESOURCE_PREFETCH))
+ 				return NULL;
+ 
+ 			/*
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 24ba9dc..6ad0f05 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -337,4 +337,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ 
+ struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
+ 
++int pci_resource_pref_compatible(const struct pci_dev *dev,
++				 struct resource *res);
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8361d27..2c69441 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1633,6 +1633,36 @@ static void pci_set_msi_domain(struct pci_dev *dev)
+ 				   dev_get_msi_domain(&dev->bus->dev));
+ }
+ 
++static bool pci_up_path_over_pcie(struct pci_bus *bus)
++{
++	if (pci_is_root_bus(bus))
++		return true;
++
++	if (bus->self && !pci_is_pcie(bus->self))
++		return false;
++
++	return pci_up_path_over_pcie(bus->parent);
++}
++
++/*
++ * According to
++ * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
++ * page 13, system firmware could put some 64bit non-pref under 64bit pref,
++ * on some cases.
++ * Let's mark if entire path from the host to the adapter is over PCI
++ * Express. later will use that compute pref compaitable bit.
++ */
++static void pci_set_on_all_pcie_path(struct pci_dev *dev)
++{
++	if (!pci_is_pcie(dev))
++		return;
++
++	if (!pci_up_path_over_pcie(dev->bus))
++		return;
++
++	dev->on_all_pcie_path = 1;
++}
++
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	int ret;
+@@ -1663,6 +1693,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	/* Initialize various capabilities */
+ 	pci_init_capabilities(dev);
+ 
++	/* After pcie_cap is assigned */
++	pci_set_on_all_pcie_path(dev);
++
+ 	/*
+ 	 * Add the device to our list of discovered devices
+ 	 * and the bus list for fixup functions, etc.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 508cc56..6c43c43 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -739,6 +739,20 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 	return -EINVAL;
+ }
+ 
++int pci_resource_pref_compatible(const struct pci_dev *dev,
++				 struct resource *res)
++{
++	if (res->flags & IORESOURCE_PREFETCH)
++		return res->flags;
++
++	if ((res->flags & IORESOURCE_MEM) &&
++	    (res->flags & IORESOURCE_MEM_64) &&
++	    dev->on_all_pcie_path)
++		return res->flags | IORESOURCE_PREFETCH;
++
++	return res->flags;
++}
++
+ /* Check whether the bridge supports optional I/O and
+    prefetchable memory ranges. If not, the respective
+    base/limit registers must be read-only and read as 0. */
+@@ -1036,10 +1050,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+ 			resource_size_t r_size;
++			int flags = pci_resource_pref_compatible(dev, r);
+ 
+-			if (r->parent || ((r->flags & mask) != type &&
+-					  (r->flags & mask) != type2 &&
+-					  (r->flags & mask) != type3))
++			if (r->parent || ((flags & mask) != type &&
++					  (flags & mask) != type2 &&
++					  (flags & mask) != type3))
+ 				continue;
+ 			r_size = resource_size(r);
+ #ifdef CONFIG_PCI_IOV
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 232f925..b19aa5b 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -250,15 +250,19 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ static int _pci_assign_resource(struct pci_dev *dev, int resno,
+ 				resource_size_t size, resource_size_t min_align)
+ {
++	struct resource *res = dev->resource + resno;
++	int old_flags = res->flags;
+ 	struct pci_bus *bus;
+ 	int ret;
+ 
++	res->flags = pci_resource_pref_compatible(dev, res);
+ 	bus = dev->bus;
+ 	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
+ 		if (!bus->parent || !bus->self->transparent)
+ 			break;
+ 		bus = bus->parent;
+ 	}
++	res->flags = old_flags;
+ 
+ 	return ret;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e90eb22..42a267a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -311,6 +311,7 @@ struct pci_dev {
+ 						   powered on/off by the
+ 						   corresponding bridge */
+ 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
++	unsigned int	on_all_pcie_path:1;	/* up to host-bridge all pcie */
+ 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+ 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+ 
+-- 
+1.8.4.5
+
