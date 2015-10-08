@@ -1,57 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48173 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751231AbbJIXjs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Oct 2015 19:39:48 -0400
-Date: Fri, 9 Oct 2015 18:39:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexander Kuleshov <kuleshovmail@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] x86/pci/legacy: make pci_subsys_init static
-Message-ID: <20151009233944.GA623@localhost>
-References: <1444330306-14076-1-git-send-email-kuleshovmail@gmail.com>
+Received: from mout.kundenserver.de ([212.227.126.130]:58782 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933554AbbJHPKm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 11:10:42 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: David Daney <ddaney.cavm@gmail.com>, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v4 3/5] PCI: generic: Quit clobbering our pci_ops.
+Date: Thu, 08 Oct 2015 17:09:56 +0200
+Message-ID: <5128429.u9O5dh5qKB@wuerfel>
+In-Reply-To: <20151008150215.GB3885@localhost>
+References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com> <1443811443-18878-4-git-send-email-ddaney.cavm@gmail.com> <20151008150215.GB3885@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444330306-14076-1-git-send-email-kuleshovmail@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 09, 2015 at 12:51:46AM +0600, Alexander Kuleshov wrote:
-> The pci_subsys_init() is a subsys_initcall that can be declared
-> static.
+On Thursday 08 October 2015 10:02:16 Bjorn Helgaas wrote:
+> [+cc Arnd]
 > 
-> Signed-off-by: Alexander Kuleshov <kuleshovmail@gmail.com>
+> Arnd, you had comments on the previous version.  What do you think of
+> this one?
 
-Applied to pci/misc for v4.4, thanks, Alexander!
+Looks good to me
 
-I tweaked the subject to match the file's history.
-
-> ---
->  arch/x86/pci/legacy.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> On Fri, Oct 02, 2015 at 11:44:01AM -0700, David Daney wrote:
+> > From: David Daney <david.daney@cavium.com>
+> > 
+> > The pci-host-generic driver keeps a global struct pci_ops which it
+> > then patches with the .map_bus method appropriate for the bus device.
+> > A problem arises when the driver is used for two different types of
+> > bus devices, the .map_bus method for the last device probed clobbers
+> > the method for all previous devices.  The result, only the last bus
+> > device probed has the proper .map_bus, and the others fail.
+> > 
+> > Move the struct pci_ops into the bus specific structure, and
+> > initialize a pointer to it when the bus device is probed.
+> > 
+> > Acked-by: Will Deacon <will.deacon@arm.com>
+> > Signed-off-by: David Daney <david.daney@cavium.com>
 > 
-> diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
-> index 5b662c0..ea6f380 100644
-> --- a/arch/x86/pci/legacy.c
-> +++ b/arch/x86/pci/legacy.c
-> @@ -54,7 +54,7 @@ void pcibios_scan_specific_bus(int busn)
->  }
->  EXPORT_SYMBOL_GPL(pcibios_scan_specific_bus);
->  
-> -int __init pci_subsys_init(void)
-> +static int __init pci_subsys_init(void)
->  {
->  	/*
->  	 * The init function returns an non zero value when
-> -- 
-> 2.6.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
