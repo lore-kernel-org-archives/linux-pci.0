@@ -1,54 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:58782 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933554AbbJHPKm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 11:10:42 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: David Daney <ddaney.cavm@gmail.com>, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v4 3/5] PCI: generic: Quit clobbering our pci_ops.
-Date: Thu, 08 Oct 2015 17:09:56 +0200
-Message-ID: <5128429.u9O5dh5qKB@wuerfel>
-In-Reply-To: <20151008150215.GB3885@localhost>
-References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com> <1443811443-18878-4-git-send-email-ddaney.cavm@gmail.com> <20151008150215.GB3885@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v7 22/60] PCI: Don't release sibling bridge resources during hotplug
+Date: Thu,  8 Oct 2015 14:38:41 -0700
+Message-Id: <1444340359-8011-23-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 08 October 2015 10:02:16 Bjorn Helgaas wrote:
-> [+cc Arnd]
-> 
-> Arnd, you had comments on the previous version.  What do you think of
-> this one?
+On hotplug path, we can not touch sibling bridges that is outside
+of the slot.
 
-Looks good to me
+That could happen when BIOS does not assign some bridge BARs and
+later kernel can not assign resource to them in first try.
 
-> On Fri, Oct 02, 2015 at 11:44:01AM -0700, David Daney wrote:
-> > From: David Daney <david.daney@cavium.com>
-> > 
-> > The pci-host-generic driver keeps a global struct pci_ops which it
-> > then patches with the .map_bus method appropriate for the bus device.
-> > A problem arises when the driver is used for two different types of
-> > bus devices, the .map_bus method for the last device probed clobbers
-> > the method for all previous devices.  The result, only the last bus
-> > device probed has the proper .map_bus, and the others fail.
-> > 
-> > Move the struct pci_ops into the bus specific structure, and
-> > initialize a pointer to it when the bus device is probed.
-> > 
-> > Acked-by: Will Deacon <will.deacon@arm.com>
-> > Signed-off-by: David Daney <david.daney@cavium.com>
-> 
+Check if fail dev is the parent bridge, then just use subordinate
+bus instead use parent bus.
 
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+Reported-by: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 278cb6d..10270e4 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1858,10 +1858,16 @@ again:
+ 	 * Try to release leaf bridge's resources that doesn't fit resource of
+ 	 * child device under that bridge
+ 	 */
+-	list_for_each_entry(fail_res, &fail_head, list)
+-		pci_bus_release_bridge_resources(fail_res->dev->bus,
++	list_for_each_entry(fail_res, &fail_head, list) {
++		struct pci_bus *bus = fail_res->dev->bus;
++
++		if (fail_res->dev == bridge)
++			bus = bridge->subordinate;
++
++		pci_bus_release_bridge_resources(bus,
+ 						 fail_res->flags & type_mask,
+ 						 whole_subtree);
++	}
+ 
+ 	/* restore size and flags */
+ 	list_for_each_entry(fail_res, &fail_head, list) {
+-- 
+1.8.4.5
+
