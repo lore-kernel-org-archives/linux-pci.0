@@ -1,65 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50932 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965935AbbJ0VCW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 17:02:22 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 51/61] PCI: Allow bridge optional only io port resource required size to be 0
-Date: Tue, 27 Oct 2015 13:55:43 -0700
-Message-Id: <1445979353-1728-52-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:47689 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932722AbbJHNrH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Oct 2015 09:47:07 -0400
+Date: Thu, 8 Oct 2015 08:47:02 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device driver
+Message-ID: <20151008134702.GK27633@localhost>
+References: <1443721454-25467-1-git-send-email-keith.busch@intel.com>
+ <20151006231412.GF29420@localhost>
+ <alpine.LNX.2.00.1510062331220.23840@localhost.lm.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LNX.2.00.1510062331220.23840@localhost.lm.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When there is no child device under the non hotplug bridge,
-We can use 0 for required size, and do not use old size as required size.
+On Wed, Oct 07, 2015 at 12:21:02AM +0000, Keith Busch wrote:
+> Hi Bjorn,
+> 
+> Thanks for the feedback. Much of the issues you mentioned look pretty
+> straight forward to resolve, and will fix of for the next revision.
+> 
+> I have some immediate follow up comments to two issues you brought up:
+> 
+> On Tue, 6 Oct 2015, Bjorn Helgaas wrote:
+> >>+static int vmd_find_free_domain(void)
+> >>+{
+> >>+	int domain = -1;
+> >>+	struct pci_bus *bus = NULL;
+> >>+
+> >>+	while ((bus = pci_find_next_bus(bus)) != NULL)
+> >>+		domain = max_t(int, domain, pci_domain_nr(bus));
+> >>+	if (domain < 0)
+> >>+		return -ENODEV;
+> >>+	return domain + 1;
+> >>+}
+> >
+> >The PCI core should own domain number allocation.  We have a little
+> >bit of generic domain support, e.g., pci_get_new_domain_nr().  On x86,
+> >I think that is compiled-in, but currently not used -- currently x86
+> >only uses _SEG from ACPI.  How would you handle collisions between a
+> >domain number assigned here (or via pci_get_new_domain_nr()) and a
+> >hot-added host bridge where _SEG uses the same domain?
+> 
+> Thank you for bringing this up as I hadn't thought much about it and may
+> have misunderstood the meaning of _SEG. AIUI, it is used to identify a
+> logical grouping. The OS does not need to use the same identifier for
+> the domain, so we there's no need to collide if we can assign the domain
+> of a a new _SEG to the next available domain_nr.
 
-That will save some io port range for other bridges, as BIOS could do
-some partial assign, and we want to use those not used io port range.
+Yes, I guess it would be possible to decouple _SEG and Linux PCI
+domain numbers.  It's *convenient* to have them the same, so dmesg and
+lspci output matches _SEG directly, but I guess you could argue that's
+not essential.
 
-When there is child device, size will not be 0.
-when the bridge supports hotplug, min_size will not be 0.
-So they will still honor the old size as required size.
+I think we'd have to maintain a mapping from domain back to _SEG to
+deal with firmware interfaces that expect _SEG, e.g., ia64 PAL calls.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+> On pci_get_new_domain_nr(), can we make this use something like an
+> ida instead of an atomic? I think we'd like to put domains back into
+> the available pool if someone unbinds it. I imagine someone will test
+> unbinding/rebinding these devices in a loop for a while, and will file
+> a bug after the atomic increments to 64k. :)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a6eea60..bbc10d8 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1230,8 +1230,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 	size = size_aligned_for_isa(size);
- 	size += size1;
--	size0 = calculate_size(size, min_size,
--			resource_size(b_res), min_align);
-+	if (size || min_size)
-+		size0 = calculate_size(size, min_size,
-+					resource_size(b_res), min_align);
- 	sum_add_size = size_aligned_for_isa(sum_add_size);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
-@@ -1247,7 +1248,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		return;
- 	}
- 
--	b_res->start = min_align;
-+	b_res->start = size0 ? min_align : 0;
- 	b_res->end = b_res->start + size0 - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--- 
-1.8.4.5
+I assume you're talking about the "ID to pointer translation service"
+in lib/idr.c.  That looks like it would make sense to me.
 
+If we add such a mapping, it would be nice if we could attempt to
+allocate a domain equal to _SEG, and only fall back to a different
+domain if that fails.  Then the mapping would be invisible in the
+common case of all host bridges being present at boot.
+
+Bjorn
