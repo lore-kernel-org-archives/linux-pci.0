@@ -1,118 +1,110 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V4 0/8] PCI: ACPI: Setting up DMA coherency for PCI device
- from _CCA attribute
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Hanjun Guo <hanjun.guo@linaro.org>
-References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <24127028.eJSjD1i70u@vostro.rjw.lan> <5630D38F.804@linaro.org>
- <1545680.eQNYNjjaSj@vostro.rjw.lan>
-CC: Bjorn Helgaas <helgaas@kernel.org>, <bhelgaas@google.com>,
-	<lenb@kernel.org>, <catalin.marinas@arm.com>,
-	<will.deacon@arm.com>, <thomas.lendacky@amd.com>,
-	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
-	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Message-ID: <56310434.7070405@amd.com>
-Date: Wed, 28 Oct 2015 12:21:56 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 8 Oct 2015 18:27:38 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	devicetree@vger.kernel.org, Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	David Daney <david.daney@cavium.com>,
+	linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v4 4/5] PCI: generic: Correct, and avoid overflow, in
+ bus_max calculation.
+Message-ID: <20151008172738.GA2467@red-moon>
+References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com>
+ <20151008150243.GC3885@localhost>
+ <5230007.h2fkbnOlh5@wuerfel>
+ <5178627.ufUfdomGdT@wuerfel>
+ <56168E4E.3070405@caviumnetworks.com>
 MIME-Version: 1.0
-In-Reply-To: <1545680.eQNYNjjaSj@vostro.rjw.lan>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56168E4E.3070405@caviumnetworks.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks all for the review comments. I'll update the V5 and send it out 
-later on today.
+On Thu, Oct 08, 2015 at 08:39:58AM -0700, David Daney wrote:
+> On 10/08/2015 08:18 AM, Arnd Bergmann wrote:
+> >On Thursday 08 October 2015 17:11:32 Arnd Bergmann wrote:
+> >>>>--- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> >>>>+++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> >>>>@@ -34,7 +34,11 @@ Properties of the host controller node:
+> >>>>  - #size-cells    : Must be 2.
+> >>>>
+> >>>>  - reg            : The Configuration Space base address and size, as accessed
+> >>>>-                   from the parent bus.
+> >>>>+                   from the parent bus.  The base address corresponds to
+> >>>>+                   bus zero, even though the "bus-range" property may specify
+> >>>>+                   a different starting bus number.  The driver must only map
+> >>>>+                   or access the portion of the Configuration Space that
+> >>>>+                   corresponds to the "bus-range"
+> >>
+> >>I thought we had reached an agreement that it is a bad idea to have a 'reg'
+> >>property that lists registers belonging to a different device.
+> >>
+> >>
+> >
+> >To further clarify: the argument was to make it mirror what ACPI does for
+> >PCI. However, this is unlike what all other devices do with DT, where you
+> >have non-overlapping register ranges (start, length) for each device.
+> >ACPI as far as I understand it does not give a range for a PCIe host, but
+> >instead provides a way to get the start address of the ECAM register area
+> >for the domain that the host is part of, and that needs to be the same
+> >address for each host in the domain.
+> >
+> 
+> We are agreed that it is a bad thing to do.  There is disagreement
+> about if we should do it.
+> 
+> I think there are two schools of thought (I will attribute them to
+> their proponents and my apologies if I misrepresent someone's
+> stance):
+> 
+> 1) (Arnd) Don't make the the "reg" ranges overlap because it is
+> ugly, dangerous and arguably incorrect in general.
+> 
+> 2) (Me, Will Deacon, Lorenzo Pieralisi) Overlapping "reg" properties
+> should be maintained, as that is the current behavior and seems to
+> agree with legacy OF device-tree specifications (although there is
+> some debate about this).
 
-Suravee
+I have just quoted the PCI FW specification, 4.1.4 section:
 
-On 10/28/15 11:00, Rafael J. Wysocki wrote:
-> On Wednesday, October 28, 2015 09:54:23 PM Hanjun Guo wrote:
->> Hi Rafael,
->>
->> On 10/27/2015 11:27 PM, Rafael J. Wysocki wrote:
->>> On Tuesday, October 27, 2015 09:52:50 AM Bjorn Helgaas wrote:
->>>> Hi Suravee,
->>>>
->>>> On Wed, Oct 21, 2015 at 08:52:03AM -0700, Suravee Suthikulpanit wrote:
->>>>> This patch series adds support to setup DMA coherency for PCI device using
->>>>> the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
->>>>> is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
->>>>> support for ARM64 which is currently in development.  Also, this should
->>>>> not affect other architectures that does not define
->>>>> CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
->>>>>
->>>>> In the process, this series also introduces enum dev_dma_attr and a set
->>>>> of APIs to query device DMA attribute. These APIs replace the obsolete
->>>>> device_dma_is_coherent(), and acpi_check_dma().
->>>>>
->>>>> I have also included a patch from Jeremy posted here:
->>>>>       http://www.spinics.net/lists/linux-usb/msg128582.html
->>>>>
->>>>> This patch series  has been tested on AMD Seattle RevB platform.
->>>>> The git tree containing tested code and pre-req patches are posted here:
->>>>>
->>>>>       http://github.com/ssuthiku/linux.git pci-cca-v4
->>>>>
->>>>> Changes from V3: (https://lkml.org/lkml/2015/8/26/389)
->>>>>       * Clean up suggested by Bjorn
->>>>>       * Introduce enum dev_dma_attr
->>>>>       * Replace device_dma_is_coherent() and acpi_check_dma() with
->>>>>         new APIs.
->>>>>
->>>>> Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
->>>>>       * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
->>>>>       * Add WARN() when fail to setup DMA for PCI device when booting
->>>>>         ACPI (per Arnd's suggestion)
->>>>>       * Added Acked-by from Rob.
->>>>>       * Minor clean up
->>>>>
->>>>> Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
->>>>>       * Include patch 1 from Jeremy to enable support for _CCA=0
->>>>>       * Clean up acpi_check_dma() per Bjorn suggestions
->>>>>       * Split the original V1 patch into two patches (patch 3 and 4)
->>>>>
->>>>> Jeremy Linton (1):
->>>>>     Honor ACPI _CCA attribute setting
->>>>>
->>>>> Suravee Suthikulpanit (7):
->>>>>     device property: Introducing enum dev_dma_attr
->>>>>     acpi: Adding DMA Attribute APIs for ACPI Device
->>>>>     device property: Adding DMA Attribute APIs for Generic Devices
->>>>>     device property: acpi: Make use of the new DMA Attribute APIs
->>>>>     device property: acpi: Remove unused DMA APIs
->>>>>     PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
->>>>>     PCI: ACPI: Add support for PCI device DMA coherency
->>>>>
->>>>>    drivers/acpi/acpi_platform.c              |  7 +++++-
->>>>>    drivers/acpi/glue.c                       |  8 +++---
->>>>>    drivers/acpi/scan.c                       | 42 +++++++++++++++++++++++++++++++
->>>>>    drivers/base/property.c                   | 32 +++++++++++++++++------
->>>>>    drivers/crypto/ccp/ccp-platform.c         |  9 ++++++-
->>>>>    drivers/net/ethernet/amd/xgbe/xgbe-main.c |  9 ++++++-
->>>>>    drivers/of/of_pci.c                       | 20 ---------------
->>>>>    drivers/pci/probe.c                       | 36 ++++++++++++++++++++++++--
->>>>>    include/acpi/acpi_bus.h                   | 36 +++-----------------------
->>>>>    include/linux/acpi.h                      |  7 +++++-
->>>>>    include/linux/of_pci.h                    |  3 ---
->>>>>    include/linux/property.h                  | 10 +++++++-
->>>>>    12 files changed, 145 insertions(+), 74 deletions(-)
->>>>
->>>> I had a couple minor comments.  It's sort of a toss-up, but this feels
->>>> more ACPI-flavored than PCI, so I assume Rafael will take this whole
->>>> series unless I hear otherwise.
->>>
->>> I'll do that.
->>
->> If Suravee address the comments and send another version,
->> an it be merged into 4.4?
->
-> Well, it is likely, but not guaranteed.
->
-> We're only a few days from the beginning of the merge window and I'm still
-> in Seoul.
->
-> Thanks,
-> Rafael
->
+"System Software Implication of MCFG and _CBA"
+
+which defines the ACPI behaviour of MCFG and _CBA methods for
+hotplug bridges.
+
+I understand Arnd's concerns and I do not think the DT bindings are well
+defined in this respect, it is ok for me to define the DT bindings
+using the "usual" reg property bindings representation, as long as we
+document it and we all agree we are deviating from the PCI FW specs
+(that just cover ACPI, BTW).
+
+I think it is worth investigating why the current PCI FW specs were
+defined that way for ECAM config space before proceeding any further,
+to avoid pitfalls we might be missing.
+
+Thanks,
+Lorenzo
+
+> Because the driver is broken in this area (thus the patch), it
+> indicates that there are probably no users with non-zero starting
+> bus numbers. So, we may have some latitude to change it.
+> 
+> I will generate another patch that does it Arnd's way, and if Will
+> is OK with it, we might be able to do that instead.  One thing is
+> certain: The driver is currently broken for non-zero starting bus
+> numbers.
+> 
+> David Daney
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
