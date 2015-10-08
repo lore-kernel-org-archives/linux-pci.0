@@ -1,58 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:55117 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752426AbbJPTnT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Oct 2015 15:43:19 -0400
-Subject: Re: [PATCH] PCI: iproc: Fix company name
-To: Florian Fainelli <f.fainelli@gmail.com>,
-	<linux-pci@vger.kernel.org>
-References: <1445022248-12203-1-git-send-email-f.fainelli@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Markus Elfring <elfring@users.sourceforge.net>,
-	"moderated list:BROADCOM CYGNUS/IPROC ARM ARCHITECTURE"
-	<linux-arm-kernel@lists.infradead.org>,
-	"open list:BROADCOM CYGNUS/IPROC ARM ARCHITECTURE"
-	<bcm-kernel-feedback-list@broadcom.com>,
-	open list <linux-kernel@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-Message-ID: <56215355.4070009@broadcom.com>
-Date: Fri, 16 Oct 2015 12:43:17 -0700
+Received: from mout0.freenet.de ([195.4.92.90]:54446 "EHLO mout0.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752597AbbJHTGB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Oct 2015 15:06:01 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: Joerg Roedel <joro@8bytes.org>
+References: <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
+ <55FE5740.2060701@maya.org> <20150929152100.GL3036@8bytes.org>
+ <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
+ <20150929162042.GR3036@8bytes.org> <560BF73F.8000008@maya.org>
+ <20151006101356.GE12506@8bytes.org> <56141507.7040103@maya.org>
+ <20151007154005.GH28811@8bytes.org> <56155028.7060906@maya.org>
+ <20151008173007.GL28811@8bytes.org>
+Cc: Mikulas Patocka <mpatocka@redhat.com>,
+	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
+	Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <5616BCF4.10104@maya.org>
+Date: Thu, 8 Oct 2015 20:59:00 +0200
 MIME-Version: 1.0
-In-Reply-To: <1445022248-12203-1-git-send-email-f.fainelli@gmail.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20151008173007.GL28811@8bytes.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 10/16/2015 12:04 PM, Florian Fainelli wrote:
-> The header of pcie-iproc.c contains an obvious typo on Broadcom
-> Corporation, fix that.
+On 10/08/2015 at 07:30 PM Joerg Roedel wrote:
+> On Wed, Oct 07, 2015 at 07:02:32PM +0200, Andreas Hartmann wrote:
+>> Binding the device to vfio isn't a problem (it's done before the vm is
+>> started). The problem occurs during start of qemu-system-x86_64 (2.3.0).
+>>
+>> The attached dmesg.out doesn't show the trace, but the desired iommu dump.
+>>
+>>> Also, which device are you trying to attach to the guest (pci
+>>> bus/device/function)?
+>>
+>> See attached ath9k.device.
 > 
-> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
-> ---
->  drivers/pci/host/pcie-iproc.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> index fe2efb141a9b..6c3d4b54858c 100644
-> --- a/drivers/pci/host/pcie-iproc.c
-> +++ b/drivers/pci/host/pcie-iproc.c
-> @@ -1,6 +1,6 @@
->  /*
->   * Copyright (C) 2014 Hauke Mehrtens <hauke@hauke-m.de>
-> - * Copyright (C) 2015 Broadcom Corporatcommon ion
-> + * Copyright (C) 2015 Broadcom Corporation
->   *
->   * This program is free software; you can redistribute it and/or
->   * modify it under the terms of the GNU General Public License as
-> 
+> Hmm, can you also test this again with the v4.3-rc4 please? The device
+> you are attaching has its own group and no aliases, so I really can't
+> see how the trace could happen, and I can't reproduce it here either.
 
-When I saw the subject, for a while I thought you are going to change it
-to Broadcom Limited, :)
+Unchanged - this time hard locked machine and no trace at all because of
+data loss after reboot :-(.
 
-Thanks for fixing this!
+Btw: Linux 4.2 doesn't show this problem.
 
-Acked-by: Ray Jui <rjui@broadcom.com>
+Nevertheless I'll try to get a trace - maybe I'm lucky and the machine
+doesn't lock up completely another time :-).
+
+
+Regards,
+Andreas
+
