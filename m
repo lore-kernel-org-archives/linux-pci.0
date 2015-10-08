@@ -1,69 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:57843 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933103AbbJHQkA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Oct 2015 12:40:00 -0400
-Date: Thu, 8 Oct 2015 18:39:58 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: Mikulas Patocka <mpatocka@redhat.com>,
-	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
-	Christoph Hellwig <hch@lst.de>,
-	device-mapper development <dm-devel@redhat.com>,
-	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
- READ FPDMA QUEUED errors since Linux 4.0
-Message-ID: <20151008163957.GK28811@8bytes.org>
-References: <55FE5740.2060701@maya.org>
- <20150929152100.GL3036@8bytes.org>
- <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
- <20150929162042.GR3036@8bytes.org>
- <560BF73F.8000008@maya.org>
- <20151006101356.GE12506@8bytes.org>
- <56141507.7040103@maya.org>
- <56148A1B.5060506@maya.org>
- <20151007161022.GI28811@8bytes.org>
- <56154DEA.5050901@maya.org>
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:47494 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755224AbbJHJsD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 05:48:03 -0400
+Date: Thu, 8 Oct 2015 10:47:44 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lftan.linux@gmail.com,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v8 3/6] pci:host: Add Altera PCIe host controller driver
+Message-ID: <20151008094744.GD32532@n2100.arm.linux.org.uk>
+References: <1444297394-3122-1-git-send-email-lftan@altera.com>
+ <1444297394-3122-4-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56154DEA.5050901@maya.org>
+In-Reply-To: <1444297394-3122-4-git-send-email-lftan@altera.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 07, 2015 at 06:52:58PM +0200, Andreas Hartmann wrote:
-> To reproduce the error:
-> First I mounted /daten2, afterwards /raid/mt, which produces the errors.
-> The ssd mounts have been already active (during boot by fstab).
+On Thu, Oct 08, 2015 at 05:43:11PM +0800, Ley Foon Tan wrote:
+> +static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
+> +				 int where, int size, u32 value)
+> +{
+> +	struct altera_pcie *pcie = bus->sysdata;
+> +	u32 data32;
+> +	u32 shift = 8 * (where & 3);
+> +	int ret;
+> +
+> +	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn)))
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +
+> +	/* write partial */
+> +	if (size != sizeof(u32)) {
+> +		ret = tlp_cfg_dword_read(pcie, bus->number, devfn,
+> +					 where & ~DWORD_MASK, &data32);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+> +	switch (size) {
+> +	case 1:
+> +		data32 = (data32 & ~(0xff << shift)) |
+> +				((value & 0xff) << shift);
+> +		break;
+> +	case 2:
+> +		data32 = (data32 & ~(0xffff << shift)) |
+> +				((value & 0xffff) << shift);
+> +		break;
+> +	default:
+> +		data32 = value;
 
-Okay, I spent the day on that problem, and managed to reproduce it here
-on one of my AMD IOMMU boxes. I wasn't an easy journey, as I can only
-reproduce it if I setup the crypto partition and everything above that
-(like mounting the lvm volumes) _after_ the system has finished booting.
-If everything is setup during system boot it works fine and I don't see
-any IO_PAGE_FAULTS.
+Can you generate proper 1, 2 and 4 byte configuration accesses?  That
+is much preferred over the above read-modify-write, as there are
+registers in PCI and PCIe that are read/write-1-to-clear.  The above
+has the effect of inadvertently clearing those RW1C bits.
 
-I also tried kernel v4.3-rc4 first, to have it tested with a
-self-compiled kernel. It didn't show up there, so I built a 4.1.0, where
-it showed up again. Something seems to have fixed the issue in the
-latest kernels.
-
-So I looked a little bit around at the commits that were merged into the
-respective parts involved here, and found this one:
-
-	586b286 dm crypt: constrain crypt device's max_segment_size to PAGE_SIZE
-
-The problem fixed with this commit looks quite similar to what you have
-seen (execpt that there was no IOMMU involved). So I cherry-picked that
-commit on 4.1.0 and tested that. The problem was gone.
-
-So it looks like it was a dm-crypt issue, the patch went into v4.3-rc3,
-either this kernel of rc4 should fix the problem for you too. Can you
-please verify this is fixed for you too with v4.3-rc4?
-
-
-Thanks,
-
-	Joerg
-
+-- 
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
