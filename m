@@ -1,60 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47469 "EHLO mail.kernel.org"
+Received: from 8bytes.org ([81.169.241.247]:38481 "EHLO theia.8bytes.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750846AbbJUSnB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Oct 2015 14:43:01 -0400
-Subject: [PATCH v4 2/4] PCI: designware: Use common LTSSM_STATE_RCVRY_LOCK
- definition
-To: Fabio Estevam <festevam@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <fabio.estevam@freescale.com>,
-	linux-pci@vger.kernel.org, pratyush.anand@gmail.com,
-	m-karicheri2@ti.com, l.stach@pengutronix.de
-Date: Wed, 21 Oct 2015 13:42:58 -0500
-Message-ID: <20151021184258.28724.34444.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	id S1757232AbbJIO7w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Oct 2015 10:59:52 -0400
+Date: Fri, 9 Oct 2015 16:59:51 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Mikulas Patocka <mpatocka@redhat.com>,
+	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
+	Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+Message-ID: <20151009145951.GC27420@8bytes.org>
+References: <20151006101356.GE12506@8bytes.org>
+ <56141507.7040103@maya.org>
+ <56148A1B.5060506@maya.org>
+ <20151007161022.GI28811@8bytes.org>
+ <56154DEA.5050901@maya.org>
+ <20151008163957.GK28811@8bytes.org>
+ <5616B436.1000802@maya.org>
+ <5616C998.1010309@maya.org>
+ <56174EA6.7000106@maya.org>
+ <56178599.6010807@maya.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56178599.6010807@maya.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+On Fri, Oct 09, 2015 at 11:15:05AM +0200, Andreas Hartmann wrote:
+> v4.3-rc4 isn't usable at all for me as long as is hangs the machine on
+> the necessary PCI passthrough for VMs (I need them).
 
-Add a #define for LTSSM_STATE_RCVRY_LOCK and use it to improve code
-readability.
+If the fix I just sent you works, could you please test this again with
+a (patched) v4.3-rc4 kernel?
 
-[bhelgaas: include both definition and use for reviewability]
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-imx6.c        |    2 +-
- drivers/pci/host/pcie-designware.h |    1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 7b0d120..4c788d27 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -507,7 +507,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
- 	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
- 		return 0;
- 
--	if ((debug_r0 & LTSSM_STATE_MASK) != 0x0d)
-+	if ((debug_r0 & LTSSM_STATE_MASK) != LTSSM_STATE_RCVRY_LOCK)
- 		return 0;
- 
- 	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index a1a76ff..f3a7583 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -22,6 +22,7 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
- 
-+#define LTSSM_STATE_RCVRY_LOCK		0x0d
- #define LTSSM_STATE_MASK		0x1f
- 
- struct pcie_port {
+Thanks,
+
+	Joerg
 
