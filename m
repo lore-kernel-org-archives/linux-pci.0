@@ -1,43 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0079.outbound.protection.outlook.com ([65.55.169.79]:33800
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752302AbbJNGcG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 Oct 2015 02:32:06 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>
-CC: <linux-kernel@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Ley Foon Tan <lftan@altera.com>,
-	<lftan.linux@gmail.com>
-Subject: [PATCH v2 3/4] PCI: Build setup-irq.o for nios2
-Date: Wed, 14 Oct 2015 14:31:43 +0800
-Message-ID: <1444804304-5213-4-git-send-email-lftan@altera.com>
-In-Reply-To: <1444804304-5213-1-git-send-email-lftan@altera.com>
-References: <1444804304-5213-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.140]:26507 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754147AbbJINqD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 09:46:03 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH 4/4] arm64: defconfig: Enable PCI generic host bridge by default
+Date: Fri,  9 Oct 2015 14:45:23 +0100
+Message-Id: <1444398323-17354-5-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-nios2 requires setup-irq.o to provide pci_fixup_irqs() implementation.
+Now that pci-host-generic can be used under arm64, enable it by
+default so that SBSA compliant systems can use it.
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 ---
- drivers/pci/Makefile | 1 +
+ arch/arm64/configs/defconfig | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index be3f631..282b1b4 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -40,6 +40,7 @@ obj-$(CONFIG_MIPS) += setup-irq.o
- obj-$(CONFIG_TILE) += setup-irq.o
- obj-$(CONFIG_SPARC_LEON) += setup-irq.o
- obj-$(CONFIG_M68K) += setup-irq.o
-+obj-$(CONFIG_NIOS2) += setup-irq.o
- 
- #
- # ACPI Related PCI FW Functions
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 34d71dd..7c9455a 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -49,6 +49,7 @@ CONFIG_ARCH_XGENE=y
+ CONFIG_ARCH_ZYNQMP=y
+ CONFIG_PCI=y
+ CONFIG_PCI_MSI=y
++CONFIG_PCI_HOST_GENERIC=y
+ CONFIG_PCI_XGENE=y
+ CONFIG_SMP=y
+ CONFIG_PREEMPT=y
 -- 
-1.8.2.1
+2.6.0
 
