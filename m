@@ -1,99 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57329 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:46954 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752302AbbJOUsd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Oct 2015 16:48:33 -0400
-Date: Thu, 15 Oct 2015 15:48:29 -0500
+	id S1750841AbbJIXPo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Oct 2015 19:15:44 -0400
+Date: Fri, 9 Oct 2015 18:15:40 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-Subject: Re: [Patch v7 0/7] Consolidate ACPI PCI root common code into ACPI
- core
-Message-ID: <20151015204829.GH10442@localhost>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v8 3/6] pci:host: Add Altera PCIe host controller driver
+Message-ID: <20151009231540.GE16112@localhost>
+References: <1444297394-3122-1-git-send-email-lftan@altera.com>
+ <1444297394-3122-4-git-send-email-lftan@altera.com>
+ <20151008094744.GD32532@n2100.arm.linux.org.uk>
+ <CAFiDJ58oMa6rgQe_STCiWRpdL+P22BN1=Nin_+QnLXC9RGiSzQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <CAFiDJ58oMa6rgQe_STCiWRpdL+P22BN1=Nin_+QnLXC9RGiSzQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 14, 2015 at 02:29:35PM +0800, Jiang Liu wrote:
-> From: Liu Jiang <jiang.liu@linux.intel.com>
-> 
-> This patch set consolidates common code to support ACPI PCI root on x86
-> and IA64 platforms into ACPI core, to reproduce duplicated code and
-> simplify maintenance. And a patch set based on previous version to support
-> ACPI based PCIe host bridge on ARM64 has been posted at:
-> https://lkml.org/lkml/2015/5/26/207
-> 
-> It's based on latest mainstream kernel. It passes Fengguang's 0day test
-> suite and has been tested on two IA64 platforms and one x86 platform.
-> 
-> V6->V7:
-> 1) Improve commit message according to Bjorn's suggestion.
-> 2) Move arch specific logic(code) from ACPI core into arch code
->    according to Bjorn's review comments.
+On Thu, Oct 08, 2015 at 06:03:24PM +0800, Ley Foon Tan wrote:
+> On Thu, Oct 8, 2015 at 5:47 PM, Russell King - ARM Linux
+> <linux@arm.linux.org.uk> wrote:
+> >
+> > On Thu, Oct 08, 2015 at 05:43:11PM +0800, Ley Foon Tan wrote:
+> > > +static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
+> > > +                              int where, int size, u32 value)
+> > > +{
+> > > +     struct altera_pcie *pcie = bus->sysdata;
+> > > +     u32 data32;
+> > > +     u32 shift = 8 * (where & 3);
+> > > +     int ret;
+> > > +
+> > > +     if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn)))
+> > > +             return PCIBIOS_DEVICE_NOT_FOUND;
+> > > +
+> > > +     /* write partial */
+> > > +     if (size != sizeof(u32)) {
+> > > +             ret = tlp_cfg_dword_read(pcie, bus->number, devfn,
+> > > +                                      where & ~DWORD_MASK, &data32);
+> > > +             if (ret)
+> > > +                     return ret;
+> > > +     }
+> > > +
+> > > +     switch (size) {
+> > > +     case 1:
+> > > +             data32 = (data32 & ~(0xff << shift)) |
+> > > +                             ((value & 0xff) << shift);
+> > > +             break;
+> > > +     case 2:
+> > > +             data32 = (data32 & ~(0xffff << shift)) |
+> > > +                             ((value & 0xffff) << shift);
+> > > +             break;
+> > > +     default:
+> > > +             data32 = value;
+> >
+> > Can you generate proper 1, 2 and 4 byte configuration accesses?  That
+> > is much preferred over the above read-modify-write, as there are
+> > registers in PCI and PCIe that are read/write-1-to-clear.  The above
+> > has the effect of inadvertently clearing those RW1C bits.
+> No, hardware can only access 4-byte aligned address.
 
-Thanks for cleaning this up; I think it looks much better.
+This is non-spec compliant, and we really should have some way of
+flagging that because it may break things in ways that would be very
+difficult to debug, e.g., we can lose RW1C status bits when writing an
+adjacent register, so they would just silently disappear.
 
-As far as I'm concerned, this series is ready to go.  I assume Rafael
-will merge it.
+I don't know if this should be a kernel taint, a simple warning in
+dmesg, or what.  I guess the tainting mechanism is probably too
+general-purpose for this, and add_taint() doesn't give any dmesg
+indication.  We wouldn't see the taint unless the problem actually
+caused an oops or panic.  In this case, I think I want a clue in dmesg
+so we have a chance of seeing it even if there is no oops.  So
+probably something like a dev_warn("non-compliant config accesses")
+would work.
 
-> V5->V6:
-> 1) Patch 5 to reset domain number to 0 when pci_ignore_seg is set
-> 2) Remove parameter segment and node from function acpi_pci_root_create(),
->    as suggested by Lorenzo and Bjorn.
-> V4-V5:
-> 1) As suggested by Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, do not
->    introduce "struct pci_controller" into generic drivers/acpi/pci_root.c,
->    so ARM64 doesn't need to define a useless structure. And it simplifies
->    code a little too.
-> 
-> V3->V4:
-> 1) Add patch[05/08] support solve building issue on ARM64
-> 2) Solve an implicitly pointer cast issue.
-> 3) Rebase to latest mainstream kernel
-> 
-> V2->V3:
-> 1. Move memory allocation/free from ACPI core into arch
-> 2. Kill the field 'segment' in struct pci_root_info on x86
-> 
-> Thanks!
-> Gerry
-> 
-> Jiang Liu (7):
->   ACPI/PCI: Enhance ACPI core to support sparse IO space
->   ia64/PCI/ACPI: Use common ACPI resource parsing interface for host
->     bridge
->   ia64/PCI: Use common struct resource_entry to replace struct
->     iospace_resource
->   PCI/ACPI: Add interface acpi_pci_root_create()
->   ACPI, PCI: Reset acpi_root_dev->domain to 0 when pci_ignore_seg is
->     set
->   x86/PCI/ACPI: Use common interface to support PCI host bridge
->   ia64/PCI/ACPI: Use common interface to support PCI host bridge
-> 
->  arch/ia64/include/asm/pci.h |    5 -
->  arch/ia64/pci/pci.c         |  368 ++++++++++++-------------------------------
->  arch/x86/pci/acpi.c         |  296 +++++++++++-----------------------
->  drivers/acpi/pci_root.c     |  204 ++++++++++++++++++++++++
->  drivers/acpi/resource.c     |    9 +-
->  include/linux/ioport.h      |    1 +
->  include/linux/pci-acpi.h    |   24 +++
->  7 files changed, 423 insertions(+), 484 deletions(-)
-> 
-> -- 
-> 1.7.10.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+You really should double-check with the hardware guys, because it's
+pretty obvious that the PCI spec requires 1- and 2-byte config
+accesses to work correctly.  For example, if you read/modify/write to
+update PCI_COMMAND, you will inadvertently clear the RW1C bits in
+PCI_STATUS.
+
+Bjorn
