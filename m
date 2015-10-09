@@ -1,154 +1,73 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v11 0/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
-Date: Fri, 16 Oct 2015 18:23:35 +0800
-Message-ID: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"rjui@broadcom.com" <rjui@broadcom.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Ravikiran Gummaluri" <rgummal@xilinx.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH v3] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+Date: Fri, 9 Oct 2015 05:11:20 +0000
+Message-ID: <8520D5D51A55D047800579B09414719801690CD0@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1444146289-28940-1-git-send-email-bharatku@xilinx.com>
+ <5613F310.6060305@arm.com>
+ <8520D5D51A55D047800579B0941471980169063F@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5613F9C8.9020000@arm.com>
+In-Reply-To: <5613F9C8.9020000@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset adds PCIe host support for HiSilicon SoC Hip05. The PCIe hosts
-use PCIe IP core from Synopsys, So this driver is based on designware PCIe driver.
+> >> +struct nwl_msi {                  /* struct nwl_msi - MSI information
+> */
+> >> +  struct msi_controller chip;     /* chip: MSI controller */
+> >
+> >> We're moving away from msi_controller altogether, as the kernel now
+> >> has all the necessary infrastructure to do this properly.
+> >
+> > Our current GIC version does not have separate msi controller (we are
+> > not using GICv2m or GICv3), so is it necessary to have separate msi
+> > controller node ? Please give me clarity on this.
+>
+> This has nothing to do with the version of the GIC you are using (XGene
+> doesn't have GICv2m or v3 either). This is about reducing code duplication
+> and having something that we can maintain. See also
+> https://lkml.org/lkml/2015/9/20/193 for yet another example.
+>
+> I still plan to kill msi_controller, and I'd like to avoid more dependencies with
+> it. MSI domains are the way to do it.
+>
+Sorry previously I haven't configured my email client properly so resending.
 
-Hip05 is an ARMv8 architecture SoC. It should be able to use ARM64 PCIe API in
-designware PCIe driver. So this patch also adds ARM64 support for designware
-pcie.
+Since we don't have separate MSI controller, and our PCIe controller is handling MSI, is it necessary to create a separate MSI controller node because we don't have any 'reg' space.
+Please let me know whether we require a separate msi file as suggested in your previous comments to separate MSI controller and PCIE controller in two files, if we don't have separate node.
+If we do not need a separate node do we need to embed MSI controller child node  in PCIe controller node itself, and what properties does this child node will require other than 'interrupts'.
 
-This patchset is based on v4.3-rc1.
+Bharat
+> Thanks,
+>
+>       M.
+> --
+> Jazz is not dead. It just smells funny...
 
-Change from v10:
-- Remove MSI related setting and VMID/ASID table setting, they will be
-  implemented in BIOS.
-- Use module_platform_driver to init pcie-hisi.c
-- Add necessary comments.
 
-Change from v9:
-- Use syscon to get subctrl base address.
-- 5/6 is based on [PATCH v3 0/2] arm64: Support Hisilicon Hip05-D02 board
-  from Ding Tianhong
-- Add hisi_pcie_cfg_read in pcie-hisi.c to match
-  [PATCH v6 0/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-  from Gabriele.
-
-Change from v8:
-- Rebase on v4.3-rc1.
-- Add Tested-by from Gabriel and Minghuan.
-- Remove ITS domain parsing in msi_host_init in pcie-hisi.c, no need this as PCI
-  core does related job. Add ITS base address parsing in msi_host_init.
-- Change vmid/asid table configuration, previous configuration was wrong.
-- Add wr_own_conf callback in pcie-hisi.c.
-- Use subsys_initcall to init hisi PCIe.
-
-Change from v7:
-- Remove pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
-  spear13xx. Pass pp->busn->start to pci_create_root_bus as root bus number.
-- Remove bus-range parsing in pcie-hisi.c.
-
-Change from v6:
-- Add Pratyush's Acked-by for 1/6 and 2/6.
-- Add James' Tested-by for 3/6.
-
-Change from v5:
-- Merge 1/6 in this series, discussion about this can be found in [1]
-
-Change from v4:
-- Change the author of 1/5 to Gabriele.
-- Modify problems in 3/5 pointed by Bjorn.
-- Modify spelling problems in 4/5.
-
-Change from v3:
-- Change 1/5 to what Gabriele suggested.
-- Use win->__res.start to get *_mod_base in 2/5, this fix a bug in v3 series.
-
-Change from v2:
-- Move struct pci_dev *dev and struct pci_sys_data *sys in
-  pcibios_align_resource in 1/5.
-- Add Gabriele's codes in 2/5 which delete unnecessary information parse and
-  use of_pci_get_host_bridge_resources for both ARM32 and ARM64.
-- Add maintainer patch 5/5.
-
-Change from RFC v1:
-- Add 1/4 patch by Arnd which removes align_resource callback in ARM
-  pcibios_align_resource.
-- Change head file in pcie-designware from asm/hardirq.h to linux/hardirq.h.
-- Set pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
-  spear13xx.
-- Remove unnecessary parentheses of some macros in pcie-hisi.
-- Use macro to replace some magic values.
-- Merge two loops together and add some comments about it in context_config
-  function in pcie-hisi.
-- Modify some value of items in pcie node example in binding document. 
-
-Change from RFC:
-- delete dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
-  merge related operations into dw_pcie_host_init.
-
-Link of v10:
-- http://www.spinics.net/lists/linux-pci/msg45490.html
-Link of v9:
-- http://www.spinics.net/lists/linux-pci/msg44545.html
-Link of v8:
-- http://www.spinics.net/lists/linux-pci/msg44192.html
-Link of v7:
-- http://www.spinics.net/lists/devicetree/msg90690.html
-Link of v6:
-- http://www.spinics.net/lists/linux-pci/msg43669.html
-Link of v5:
-- http://www.spinics.net/lists/devicetree/msg87959.html
-Link of v4:
-- http://www.spinics.net/lists/arm-kernel/msg433050.html
-Link of v3:
-- http://www.spinics.net/lists/linux-pci/msg42539.html
-Link of v2:
-- http://www.spinics.net/lists/linux-pci/msg41844.html
-Link of RFC v1:
-- http://www.spinics.net/lists/linux-pci/msg41305.html
-Link of RFC:
-- http://www.spinics.net/lists/linux-pci/msg40434.html
-
-[1] http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/359741.html
-
-Zhou Wang (4):
-  PCI: designware: Add ARM64 support
-  PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
-  Documentation: DT: Add HiSilicon PCIe host binding
-  MAINTAINERS: Add pcie-hisi maintainer
-
-gabriele paoloni (2):
-  PCI: designware: move calculation of bus addresses to DRA7xx
-  ARM/PCI: remove align_resource in pci_sys_data
-
- .../bindings/arm/hisilicon/hisilicon.txt           |  17 ++
- .../devicetree/bindings/pci/hisilicon-pcie.txt     |  44 ++++
- MAINTAINERS                                        |   7 +
- arch/arm/include/asm/mach/pci.h                    |   6 -
- arch/arm/kernel/bios32.c                           |  12 +-
- drivers/pci/host/Kconfig                           |   8 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-dra7xx.c                      |  13 ++
- drivers/pci/host/pci-keystone-dw.c                 |   2 +-
- drivers/pci/host/pcie-designware.c                 | 245 +++++++--------------
- drivers/pci/host/pcie-designware.h                 |  14 +-
- drivers/pci/host/pcie-hisi.c                       | 196 +++++++++++++++++
- 12 files changed, 377 insertions(+), 188 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
- create mode 100644 drivers/pci/host/pcie-hisi.c
-
--- 
-1.9.1
+This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
 
