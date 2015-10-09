@@ -1,138 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1445506051-21688-6-git-send-email-lftan@altera.com>
-References: <1445506051-21688-1-git-send-email-lftan@altera.com> <1445506051-21688-6-git-send-email-lftan@altera.com>
-From: Rob Herring <robh+dt@kernel.org>
-Date: Thu, 22 Oct 2015 08:20:25 -0500
-Message-ID: <CAL_JsqJg6cqwsgN6yT_9rUJ3ayFWzxa1sU2qN33jRj+nuPvMmA@mail.gmail.com>
-Subject: Re: [PATCH v11 5/6] Documentation: dt-bindings: pci: altera pcie
- device tree binding
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan.linux@gmail.com>,
-	Pawel Moll <pawel.moll@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.140]:17028 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756451AbbJIQ6G (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 12:58:06 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Mark Rutland <mark.rutland@arm.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
 	Ian Campbell <ijc+devicetree@hellion.org.uk>,
 	Kumar Gala <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Andrew Murray <Andrew.Murray@arm.com>
+Subject: [PATCH v2 1/5] pci: Add PLDA's XpressRICH3 PCIe host bridge PCI ID
+Date: Fri,  9 Oct 2015 17:57:25 +0100
+Message-Id: <1444409849-5685-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1444409849-5685-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1444409849-5685-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 22, 2015 at 4:27 AM, Ley Foon Tan <lftan@altera.com> wrote:
-> This patch adds the bindings for Altera PCIe host controller driver and
-> Altera PCIe MSI driver.
->
-> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+From: Andrew Murray <Andrew.Murray@arm.com>
 
-Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ include/linux/pci_ids.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-> ---
->  .../devicetree/bindings/pci/altera-pcie-msi.txt    | 28 +++++++++++++
->  .../devicetree/bindings/pci/altera-pcie.txt        | 49 ++++++++++++++++++++++
->  2 files changed, 77 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
->  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
->
-> diff --git a/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-> new file mode 100644
-> index 0000000..09cd3bc
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-> @@ -0,0 +1,28 @@
-> +* Altera PCIe MSI controller
-> +
-> +Required properties:
-> +- compatible:  should contain "altr,msi-1.0"
-> +- reg:         specifies the physical base address of the controller and
-> +               the length of the memory mapped region.
-> +- reg-names:   must include the following entries:
-> +               "csr": CSR registers
-> +               "vector_slave": vectors slave port region
-> +- interrupt-parent:    interrupt source phandle.
-> +- interrupts:  specifies the interrupt source of the parent interrupt
-> +               controller. The format of the interrupt specifier depends on the
-> +               parent interrupt controller.
-> +- num-vectors: number of vectors, range 1 to 32.
-> +- msi-controller:      indicates that this is MSI controller node
-> +
-> +
-> +Example
-> +msi0: msi@0xFF200000 {
-> +       compatible = "altr,msi-1.0";
-> +       reg = <0xFF200000 0x00000010
-> +               0xFF200010 0x00000080>;
-> +       reg-names = "csr", "vector_slave";
-> +       interrupt-parent = <&hps_0_arm_gic_0>;
-> +       interrupts = <0 42 4>;
-> +       msi-controller;
-> +       num-vectors = <32>;
-> +};
-> diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-> new file mode 100644
-> index 0000000..2951a6a
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-> @@ -0,0 +1,49 @@
-> +* Altera PCIe controller
-> +
-> +Required properties:
-> +- compatible : should contain "altr,pcie-root-port-1.0"
-> +- reg:         a list of physical base address and length for TXS and CRA.
-> +- reg-names:   must include the following entries:
-> +               "Txs": TX slave port region
-> +               "Cra": Control register access region
-> +- interrupt-parent:    interrupt source phandle.
-> +- interrupts:  specifies the interrupt source of the parent interrupt controller.
-> +               The format of the interrupt specifier depends on the parent interrupt
-> +               controller.
-> +- device_type: must be "pci"
-> +- #address-cells:      set to <3>
-> +- #size-cells: set to <2>
-> +- #interrupt-cells:    set to <1>
-> +- ranges:              describes the translation of addresses for root ports and standard
-> +               PCI regions.
-> +- interrupt-map-mask and interrupt-map: standard PCI properties to define the
-> +               mapping of the PCIe interface to interrupt numbers.
-> +
-> +Optional properties:
-> +- msi-parent:  Link to the hardware entity that serves as the MSI controller for this PCIe
-> +               controller.
-> +- bus-range:   PCI bus numbers covered
-> +
-> +Example
-> +       pcie_0: pcie@0xc00000000 {
-> +               compatible = "altr,pcie-root-port-1.0";
-> +               reg = <0xc0000000 0x20000000>,
-> +                       <0xff220000 0x00004000>;
-> +               reg-names = "Txs", "Cra";
-> +               interrupt-parent = <&hps_0_arm_gic_0>;
-> +               interrupts = <0 40 4>;
-> +               interrupt-controller;
-> +               #interrupt-cells = <1>;
-> +               bus-range = <0x0 0xFF>;
-> +               device_type = "pci";
-> +               msi-parent = <&msi_to_gic_gen_0>;
-> +               #address-cells = <3>;
-> +               #size-cells = <2>;
-> +               interrupt-map-mask = <0 0 0 7>;
-> +               interrupt-map = <0 0 0 1 &pcie_0 1>,
-> +                                   <0 0 0 2 &pcie_0 2>,
-> +                                   <0 0 0 3 &pcie_0 3>,
-> +                                   <0 0 0 4 &pcie_0 4>;
-> +               ranges = <0x82000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x10000000
-> +                           0x82000000 0x00000000 0x10000000 0xd0000000 0x00000000 0x10000000>;
-> +       };
-> --
-> 1.8.2.1
->
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index d9ba49c..1542b2b 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1319,6 +1319,9 @@
+ #define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP79_SMBUS     0x0AA2
+ #define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP89_SATA	    0x0D85
+ 
++#define PCI_VENDOR_ID_PLDA		0x1556
++#define PCI_DEVICE_ID_XR3PCI		0x1100
++
+ #define PCI_VENDOR_ID_IMS		0x10e0
+ #define PCI_DEVICE_ID_IMS_TT128		0x9128
+ #define PCI_DEVICE_ID_IMS_TT3D		0x9135
+-- 
+2.6.0
+
