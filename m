@@ -1,100 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 9 Oct 2015 18:21:10 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:45850 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751313AbbJIWdS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Oct 2015 18:33:18 -0400
+Date: Fri, 9 Oct 2015 17:33:15 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH] PCI: generic: Fix address window calculation for
- non-zero starting bus.
-Message-ID: <20151009232110.GF16112@localhost>
-References: <1444334056-4870-1-git-send-email-ddaney.cavm@gmail.com>
+To: Romain Bezut <rbezut@gmail.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Neil Horman <nhorman@tuxdriver.com>
+Subject: Re: [PATCH] PCI/MSI: Export all remapped MSIs to sysfs attributes
+Message-ID: <20151009223315.GC16112@localhost>
+References: <1443051076-27716-1-git-send-email-rbezut@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444334056-4870-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1443051076-27716-1-git-send-email-rbezut@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 08, 2015 at 12:54:16PM -0700, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> Make the offset from the beginning of the "reg" property be from the
-> starting bus number, rather than zero.  Hoist the invariant size
-> calculation out of the mapping for loop.
-> 
-> Update host-generic-pci.txt to clarify the semantics of the "reg"
-> property with respect to non-zero starting bus numbers.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
+[+cc Neil, Thomas, linux-kernel]
 
-Applied to pci/host-generic for v4.4 with Reviewed-by and Acked-by from
-Arnd and Rob, thanks David!
+Hi Romain,
 
-Bjorn
+On Thu, Sep 24, 2015 at 01:31:16AM +0200, Romain Bezut wrote:
+> irqbalance uses these attributes to populate its internal database, which is
+> then used to bind the irq on the appropriate NUMA node.
+> 
+> On a device accepting multiple MSIs and with interrupt remapping enabled,
+> only the first irq entry is exported to msi_irqs directory.
+> This results in irqbalance having no clue of the NUMA affinity for the extra
+> irqs and starting to bind them on random nodes.
+> 
+> This patch exports all MSI interrupts as sysfs attributes when relevant.
+> 
+> Signed-off-by: Romain Bezut <rbezut@gmail.com>
+
+This seems like it makes sense to me.  Do you have any bug reports
+related to this problem?  If so, I'll mention them in the changelog.
+
+Added Neil, Thomas, and linux-kernel since this is of interest to folks
+beyond the usual linux-pci audience.
 
 > ---
-> This is a replacement for:
+>  drivers/pci/msi.c | 31 +++++++++++++++++--------------
+>  1 file changed, 17 insertions(+), 14 deletions(-)
 > 
-> https://lkml.org/lkml/2015/10/2/653
-> 
-> Since that patch is getting too much push-back, this is the only other
-> option for fixing the driver to be internally consistent in its
-> treatment of the offset from "reg" to the first bus in the "bus-range"
-> property.
-> 
->  Documentation/devicetree/bindings/pci/host-generic-pci.txt | 5 +++--
->  drivers/pci/host/pci-host-generic.c                        | 4 ++--
->  2 files changed, 5 insertions(+), 4 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> index cf3e205..3f1d3fc 100644
-> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> @@ -34,8 +34,9 @@ Properties of the host controller node:
->  - #size-cells    : Must be 2.
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index d449714..324a164 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -475,10 +475,11 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+>  	int ret = -ENOMEM;
+>  	int num_msi = 0;
+>  	int count = 0;
+> +	int i;
 >  
->  - reg            : The Configuration Space base address and size, as accessed
-> -                   from the parent bus.
+>  	/* Determine how many msi entries we have */
+>  	for_each_pci_msi_entry(entry, pdev)
+> -		++num_msi;
+> +		num_msi += entry->nvec_used;
+>  	if (!num_msi)
+>  		return 0;
+>  
+> @@ -487,19 +488,21 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+>  	if (!msi_attrs)
+>  		return -ENOMEM;
+>  	for_each_pci_msi_entry(entry, pdev) {
+> -		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
+> -		if (!msi_dev_attr)
+> -			goto error_attrs;
+> -		msi_attrs[count] = &msi_dev_attr->attr;
 > -
-> +                   from the parent bus.  The base address corresponds to
-> +                   the first bus in the "bus-range" property.  If no
-> +                   "bus-range" is specified, this will be bus 0 (the default).
+> -		sysfs_attr_init(&msi_dev_attr->attr);
+> -		msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
+> -						    entry->irq);
+> -		if (!msi_dev_attr->attr.name)
+> -			goto error_attrs;
+> -		msi_dev_attr->attr.mode = S_IRUGO;
+> -		msi_dev_attr->show = msi_mode_show;
+> -		++count;
+> +		for (i = 0; i < entry->nvec_used; i++) {
+> +			msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
+> +			if (!msi_dev_attr)
+> +				goto error_attrs;
+> +			msi_attrs[count] = &msi_dev_attr->attr;
+> +
+> +			sysfs_attr_init(&msi_dev_attr->attr);
+> +			msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
+> +							    entry->irq + i);
+> +			if (!msi_dev_attr->attr.name)
+> +				goto error_attrs;
+> +			msi_dev_attr->attr.mode = S_IRUGO;
+> +			msi_dev_attr->show = msi_mode_show;
+> +			++count;
+> +		}
+>  	}
 >  
->  Properties of the /chosen node:
->  
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index fe9a81b..bb93346 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -169,6 +169,7 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  	struct resource *bus_range;
->  	struct device *dev = pci->host.dev.parent;
->  	struct device_node *np = dev->of_node;
-> +	u32 sz = 1 << pci->cfg.ops->bus_shift;
->  
->  	err = of_address_to_resource(np, 0, &pci->cfg.res);
->  	if (err) {
-> @@ -196,10 +197,9 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  	bus_range = pci->cfg.bus_range;
->  	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
->  		u32 idx = busn - bus_range->start;
-> -		u32 sz = 1 << pci->cfg.ops->bus_shift;
->  
->  		pci->cfg.win[idx] = devm_ioremap(dev,
-> -						 pci->cfg.res.start + busn * sz,
-> +						 pci->cfg.res.start + idx * sz,
->  						 sz);
->  		if (!pci->cfg.win[idx])
->  			return -ENOMEM;
+>  	msi_irq_group = kzalloc(sizeof(*msi_irq_group), GFP_KERNEL);
 > -- 
-> 1.9.1
+> 2.4.9
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
