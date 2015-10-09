@@ -1,66 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28773 "EHLO mga02.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:48642 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750829AbbJYGpv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 25 Oct 2015 02:45:51 -0400
-Message-ID: <562C7A99.3030101@intel.com>
-Date: Sun, 25 Oct 2015 14:45:45 +0800
-From: "Lan, Tianyu" <tianyu.lan@intel.com>
+	id S1750948AbbJIXxg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Oct 2015 19:53:36 -0400
+Date: Fri, 9 Oct 2015 18:53:28 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: bhelgaas@google.com, linux-omap@vger.kernel.org,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, nsekhar@ti.com,
+	Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>
+Subject: Re: [RFC PATCH 0/2] DRA72/DRA74: Add 2 lane support
+Message-ID: <20151009235328.GB623@localhost>
+References: <1443445058-643-1-git-send-email-kishon@ti.com>
+ <20151009225056.GD16112@localhost>
+ <56184AE7.6060808@ti.com>
 MIME-Version: 1.0
-To: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
-	pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-Subject: Re: [RFC Patch 05/12] IXGBE: Add new sysfs interface of "notify_vf"
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com> <1445445464-5056-6-git-send-email-tianyu.lan@intel.com> <5627FB20.3020003@gmail.com> <562BA729.10903@intel.com> <562C7098.4030406@gmail.com>
-In-Reply-To: <562C7098.4030406@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56184AE7.6060808@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sat, Oct 10, 2015 at 04:46:55AM +0530, Kishon Vijay Abraham I wrote:
+> Hi Bjorn,
+> 
+> On Saturday 10 October 2015 04:20 AM, Bjorn Helgaas wrote:
+> > [+cc Arnd, Rob]
+> > 
+> > On Mon, Sep 28, 2015 at 06:27:36PM +0530, Kishon Vijay Abraham I wrote:
+> >> Add driver modifications in pci-dra7xx to get x2 mode working in
+> >> DRA72 and DRA74. Certain modifications is needed in PHY driver also
+> >> which I'll send as a separate series.
+> >>
+> >> Kishon Vijay Abraham I (2):
+> >>   pci: host: pci-dra7xx: use "num-lanes" property to find phy count
+> >>   pci: host: pci-dra7xx: Enable x2 mode support
+> > 
+> > Applied to pci/host-dra7xx for v4.4, thanks!
+> > 
+> > I adjusted the subject line capitalization & format to match the history.
+> > 
+> > Arnd, Rob, any comments on the DT updates or the "num-lanes" vs number of
+> > strings in "phy-names" changes?
+> 
+> I sent it as RFC since I didn't have the board to test 2 lane mode with
+> $patch. And just now I got a board to test x2 and I found a problem with
+> the 2nd patch.
+> 
+> .b1co_mode_sel_mask = GENMASK(2, 3), in the patch should be replaced with
+> .b1co_mode_sel_mask = GENMASK(3, 2).
+> 
+> I'll resend the patch fixing the above.
 
-
-On 10/25/2015 2:03 PM, Alexander Duyck wrote:
-> On 10/24/2015 08:43 AM, Lan, Tianyu wrote:
->>
->> On 10/22/2015 4:52 AM, Alexander Duyck wrote:
->>> Also have you even considered the MSI-X configuration on the VF?  I
->>> haven't seen anything anywhere that would have migrated the VF's MSI-X
->>> configuration from BAR 3 on one system to the new system.
->>
->> MSI-X migration is done by Hypervisor(Qemu).
->> Following link is my Qemu patch to do that.
->> http://marc.info/?l=kvm&m=144544706530484&w=2
->
-> I really don't like the idea of trying to migrate the MSI-X across from
-> host to host while it is still active.  I really think Qemu shouldn't be
-> moving this kind of data over in a migration.
-
-Hi Alex:
-
-VF MSI-X regs in the VM are faked by Qemu and Qemu maps host vectors of
-VF with guest's vector. The MSIX data migrated are for faked regs rather
-than the one on the host. After migration, Qemu will remap guest vectors
-with host vectors on the new machine. Moreover, VM is stopped during
-migrating MSI-X data.
-
-
->
-> I think that having the VF do a suspend/resume is the best way to go.
-> Then it simplifies things as all you have to deal with is the dirty page
-> tracking for the Rx DMA and you should be able to do this without making
-> things too difficult.
->
-
-Yes, that will be simple and most concern is service down time. I will
-test later.
-
-
-> - Alex
+OK, I dropped these two patches.  Thanks for letting me know.
