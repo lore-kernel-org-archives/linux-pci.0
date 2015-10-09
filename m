@@ -1,195 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:52903 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751590AbbJAJxv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 05:53:51 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	michal.simek@xilinx.com, soren.brinkmann@xilinx.com,
-	bhelgaas@google.com, tinamdar@apm.com, treding@nvidia.com,
-	rjui@broadcom.com, Minghuan.Lian@freescale.com,
-	m-karicheri2@ti.com, hauke@hauke-m.de, devicetree@vger.kernel.org,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 9 Oct 2015 11:26:08 +0100 (IST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Joerg Roedel <joro@8bytes.org>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH v2] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL PCIe Host Controller
-Date: Thu, 01 Oct 2015 11:52:58 +0200
-Message-ID: <2677327.lnRZhqx5GI@wuerfel>
-In-Reply-To: <1443689961-23909-1-git-send-email-bharatku@xilinx.com>
-References: <1443689961-23909-1-git-send-email-bharatku@xilinx.com>
+	Joerg Roedel <jroedel@suse.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH] x86/PCI: Don't alloc pcibios-irq when MSI is enabled
+In-Reply-To: <1444386214-26319-1-git-send-email-joro@8bytes.org>
+Message-ID: <alpine.DEB.2.11.1510091125560.6097@nanos>
+References: <1444386214-26319-1-git-send-email-joro@8bytes.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 01 October 2015 14:29:21 Bharat Kumar Gogada wrote:
-> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+On Fri, 9 Oct 2015, Joerg Roedel wrote:
+> From: Joerg Roedel <jroedel@suse.de>
 > 
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> ---
-> Removed unneccessary comments
-> Modified setup_sspl implementation
-> Added more details in binding Documentation
-> ---
->  .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   49 +
->  drivers/pci/host/Kconfig                           |    9 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pcie-xilinx-nwl.c                 | 1029 ++++++++++++++++++++
->  4 files changed, 1088 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
->  create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
+> The pcibios-irq and MSI both use dev->irq to store the IRQ
+> number. While the MSI code checks for that and frees the
+> pcibios-irq before overwriting dev->irq, the
+> pcibios_alloc_irq function does not.
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
-> new file mode 100644
-> index 0000000..ed87184
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
-> @@ -0,0 +1,49 @@
-> +* Xilinx NWL PCIe Root Port Bridge DT description
+> Usually this is not a problem, as the pcibios-irq is
+> allocated before probe time of the device and the MSI irq is
+> allocted from the drivers probe path.
+> 
+> But there are PCI devices handled by the core kernel and not
+> by a standard pci driver, like the AMD IOMMU for example.
+> For the AMD IOMMU a normal pci device driver does not make
+> sense, because a driver can be forcibly unbound from its
+> device, which is not a good idea for an IOMMU.
+> 
+> Nevertheless the PCI core code tries to match the PCI device
+> implementing the AMD IOMMU against drivers, and
+> allocates/frees a pcibios IRQ every time it tries out a new
+> driver. This overwrites the dev->irq field set by
+> pci_enable_msi() and sets it to 0 in the end (because the
+> probe fails and the pcibios-irq is freed again).
+> 
+> On suspend/resume this breaks the kernel, because the irq
+> descriptor for irq 0 is NULL.
+> 
+> Fix this by not allocating a pcibios-irq when MSI is
+> already active. This also has the benefit, that a device
+> claimed by the core kernel can not be probed by a pci driver
+> later.
+> 
+> Cc: Jiang Liu <jiang.liu@linux.intel.com>
+> Reported-by: Borislav Petkov <bp@alien8.de>
+> Signed-off-by: Joerg Roedel <jroedel@suse.de>
+
+Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
+
+> ---
+>  arch/x86/pci/common.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index dc78a4a..6254c06 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -675,6 +675,14 @@ int pcibios_add_device(struct pci_dev *dev)
+>  
+>  int pcibios_alloc_irq(struct pci_dev *dev)
+>  {
+> +	/*
+> +	 * If the PCI device was already claimed by core code and has
+> +	 * MSI enabled, probing of the pcibios irq will overwrite
+> +	 * dev->irq.  So bail out if MSI is already enabled.
+> +	 */
+> +	if (pci_dev_msi_enabled(dev))
+> +		return -EBUSY;
 > +
-> +Required properties:
-> +- compatible: Should contain "xlnx,nwl-pcie-2.11"
-> +- #address-cells: Address representation for root ports, set to <3>
-> +- #size-cells: Size representation for root ports, set to <2>
-> +- #interrupt-cells: specifies the number of cells needed to encode an
-> +	interrupt source. The value must be 1.
-> +- reg: Should contain Bridge, PCIe Controller registers location,
-> +	configuration sapce, and length
-> +- reg-names: Must include the following entries:
-> +	"breg": bridge registers
-> +	"pcireg": PCIe controller registers
-> +	"cfg": configuration space region
-> +- device_type: must be "pci"
-> +- interrupts: Should contain NWL PCIe interrupt
-> +- interrupt-names: Must include the following entries:
-> +	"misc": interrupt asserted when miscellaneous is recieved
-> +	"intx": interrupt that is asserted when an legacy interrupt is received
-> +	"msi_1, msi_0": interrupt asserted when msi is recieved
-
-The msi and intx interrupts don't really belong here: For intx, please
-use an interrupt-map property as the other host drivers do.
-
-For MSI, the usual answer is that there should be a separate device node
-for the MSI controller, and an msi-parent property in the PCI host.
-
-This lets you use the same code for hosts that have a GICv2m or GICv3
-that comes with its own MSI controller.
-
-> +/**
-> + * struct nwl_pcie - PCIe port information
-> + *
-> + * @dev: Device pointer
-> + * @breg_base: IO Mapped Bridge Register Base
-> + * @pcireg_base: IO Mapped PCIe controller attributes
-> + * @ecam_base: IO Mapped configuration space
-> + * @phys_breg_base: Physical Bridge Register Base
-> + * @phys_pcie_reg_base: Physical PCIe Controller Attributes
-> + * @phys_ecam_base: Physical Configuration Base
-> + * @breg_size: Bridge Register space
-> + * @pcie_reg_size: PCIe controller attributes space
-> + * @ecam_size: PCIe Configuration space
-> + * @irq_intx: Legacy interrupt number
-> + * @irq_misc: Misc interrupt number
-> + * @ecam_value: ECAM value
-> + * @last_busno: Last Bus number configured
-> + * @link_up: Link status flag
-> + * @enable_msi_fifo: Enable MSI FIFO mode
-> + * @bus: PCI bus
-> + * @msi: MSI interrupt info
-> + */
-> +struct nwl_pcie {
-> +	struct device *dev;
-> +	void __iomem *breg_base;
-> +	void __iomem *pcireg_base;
-> +	void __iomem *ecam_base;
-> +	u32 phys_breg_base;
-> +	u32 phys_pcie_reg_base;
-> +	u32 phys_ecam_base;
-
-These should probably be phys_addr_t.
-
-> + * nwl_setup_sspl - Set Slot Power limit
-> + *
-> + * @pcie: PCIe port information
-> + */
-> +static int nwl_setup_sspl(struct nwl_pcie *pcie)
-> +{
-> +	unsigned int status;
-> +	int retval = 0;
-> +
-> +	do {
-> +		status = nwl_bridge_readl(pcie, TX_PCIE_MSG) & MSG_BUSY_BIT;
-> +		if (!status) {
-> +			/*
-> +			 * Generate the TLP message for a single EP
-> +			 * [TODO] Add a multi-endpoint code
-> +			 */
-> +			nwl_bridge_writel(pcie, 0x0,
-> +					  TX_PCIE_MSG + TX_PCIE_MSG_CNTL);
-> +			nwl_bridge_writel(pcie, 0x0,
-> +					  TX_PCIE_MSG + TX_PCIE_MSG_SPEC_LO);
-> +			nwl_bridge_writel(pcie, 0x0,
-> +					  TX_PCIE_MSG + TX_PCIE_MSG_SPEC_HI);
-> +			nwl_bridge_writel(pcie, 0x0,
-> +					  TX_PCIE_MSG + TX_PCIE_MSG_DATA);
-> +			/* Pattern to generate SSLP TLP */
-> +			nwl_bridge_writel(pcie, PATTRN_SSLP_TLP,
-> +					  TX_PCIE_MSG + TX_PCIE_MSG_CNTL);
-> +			nwl_bridge_writel(pcie, RANDOM_DIGIT,
-> +					  TX_PCIE_MSG + TX_PCIE_MSG_DATA);
-> +			nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,
-> +					  TX_PCIE_MSG) | 0x1, TX_PCIE_MSG);
-> +			status = 0;
-> +			mdelay(2);
-
-That is a really long delay. Can you use msleep(2) instead here?
-
-> +
-> +/* PCIe operations */
-> +static struct pci_ops nwl_pcie_ops = {
-> +	.read  = nwl_nwl_readl_config,
-> +	.write = nwl_nwl_writel_config,
-> +};
-
-If the config space access is using ECAM, you should be able to use the
-generic implementation for that. I don't know how far we got in splitting
-that out, but it would be nice to not duplicate that here.
-
-> +
-> +static irqreturn_t nwl_pcie_leg_handler(int irq, void *data)
-> +{
-> +	struct nwl_pcie *pcie = (struct nwl_pcie *)data;
-> +	u32 leg_stat;
-> +
-> +	/* Checking for legacy interrupts */
-> +	leg_stat = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
-> +				MSGF_LEG_SR_MASKALL;
-> +	if (!leg_stat)
-> +		return IRQ_NONE;
-> +
-> +	if (leg_stat & MSGF_LEG_SR_INTA)
-> +		dev_dbg(pcie->dev, "legacy interruptA\n");
-> +
-> +	if (leg_stat & MSGF_LEG_SR_INTB)
-> +		dev_dbg(pcie->dev, "legacy interruptB\n");
-> +
-> +	if (leg_stat & MSGF_LEG_SR_INTC)
-> +		dev_dbg(pcie->dev, "legacy interruptC\n");
-> +
-> +	if (leg_stat & MSGF_LEG_SR_INTD)
-> +		dev_dbg(pcie->dev, "legacy interruptD\n");
-> +
-> +	return IRQ_HANDLED;
-> +}
-
-This does not appear to be an appropriate implementation. I suspect what
-you need to do here is to model this as an irq_chip_generic, which
-should be able to handle the status/mask/pending registers and
-provide the irq domain that you will need for your DT irq-map
-property.
-
-	Arnd
+>  	return pcibios_enable_irq(dev);
+>  }
+>  
+> -- 
+> 1.9.1
+> 
+> 
