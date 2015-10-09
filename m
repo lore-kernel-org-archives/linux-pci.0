@@ -1,75 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sauhun.de ([89.238.76.85]:51592 "EHLO pokefinder.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751055AbbJ2Qjj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 29 Oct 2015 12:39:39 -0400
-Date: Thu, 29 Oct 2015 17:39:31 +0100
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
- instances
-Message-ID: <20151029163930.GC22218@katana>
-References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
- <20151029123755.GC2351@katana>
- <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 9 Oct 2015 16:44:08 +0100
+From: Mark Rutland <mark.rutland@arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Rob Herring <robh@kernel.org>, Jon Medhurst <tixy@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Will Deacon <will.deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 3/4] arm64: Juno: Add support for the PCIe host bridge on
+ Juno R1
+Message-ID: <20151009154408.GD21629@leverpostej>
+References: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
+ <1444398323-17354-4-git-send-email-Liviu.Dudau@arm.com>
+ <CAL_JsqJsb53VXiUfjGBXK37dBEi1r-PXVohg-c-7_x63R04VMA@mail.gmail.com>
+ <20151009141107.GD3394@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="z4+8/lEcDcG5Ke9S"
-In-Reply-To: <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151009141107.GD3394@e106497-lin.cambridge.arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Oct 09, 2015 at 03:11:07PM +0100, Liviu Dudau wrote:
+> On Fri, Oct 09, 2015 at 08:54:33AM -0500, Rob Herring wrote:
+> > On Fri, Oct 9, 2015 at 8:45 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > > Juno R1 board sports a functional PCIe host bridge that is
+> > > compliant with the SBSA standard found here[1]. With the right
+> > > firmware that initialises the XpressRICH3 controller one can
+> > > use the generic Host Bridge driver to use the PCIe hardware.
+> > >
+> > > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > >
+> > > [1] http://infocenter.arm.com/help/topic/com.arm.doc.den0029a/
+> > > ---
+> > >  arch/arm64/boot/dts/arm/juno-r1.dts | 20 ++++++++++++++++++++
+> > >  1 file changed, 20 insertions(+)
+> > >
+> > > diff --git a/arch/arm64/boot/dts/arm/juno-r1.dts b/arch/arm64/boot/dts/arm/juno-r1.dts
+> > > index c627511..a702a6b 100644
+> > > --- a/arch/arm64/boot/dts/arm/juno-r1.dts
+> > > +++ b/arch/arm64/boot/dts/arm/juno-r1.dts
+> > > @@ -109,6 +109,26 @@
+> > >
+> > >         #include "juno-base.dtsi"
+> > >
+> > > +       pcie-controller@40000000 {
+> > > +               compatible = "pci-host-ecam-generic";
+> > 
+> > I think this is the first case of real h/w using this. We should have
+> > a specific compatible here additionally.
+> 
+> Or maybe I can claim the use of the string on account on being the first on arm64 ;)
+> 
+> I can add a vendor prefix if you want, but pci-host-generic is going to ignore it 
+> *because* it is trying to be a generic driver.
 
---z4+8/lEcDcG5Ke9S
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+The point here is to have the string ready if we need it later, so it's
+fine that it's not used currently.
 
+Rob's suggestion is that the compatible list should look something like:
 
-> Ouch, my bad. I have been working with our out-of-tree BSP for the Salvator-X board on
-> http://git.kernel.org/cgit/linux/kernel/git/horms/renesas-bsp.git,  rcar-3.0.2 tag along
-> with some patches from colleagues. I hadn't noticed this patch:
+compatible = "arm,juno-r1-pcie", "plda,xpressrich3", "pci-host-ecam-generic";
 
-Thanks! Any plans for pushing this upstream? We will have the build error
-otherwise...
+We can match on "pci-host-ecam-generic" for now (and hopefully forever),
+but if for some reason we need to special-case this host controller (or
+Juno's integration thereof), we can do that based on the compatible
+string.
 
-> > Any news if this is really HW related?
-> I found out that the PCIe controller HW only supports 32-bit AXI bus addresses, so it
-> works fine if you limit the available memory. The driver will need some work to use
-> the IPMMU at some point.
-
-Ah, okay.
-
-Can you send the dts patches, too? I checked the BSP this time, but to
-no avail...
-
-
---z4+8/lEcDcG5Ke9S
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJWMkvCAAoJEBQN5MwUoCm2vjUP+QGx8CpUw/4SiJxSa1cahXhk
-O6HBCiUjUYv8FBeVMUpcSfuguE/EvlyGZbaVZqsDx6YfjrkZGFzHVI3KVXKXo4TF
-b7AF+ZkaZQHDt0wuazmP9TKUhy9ST349G0OWF2ckApU8PbnO6XSJ8plbRm6G+VM2
-kFtM9hBhGw1VtPxMXGrxeHniS6xedkVx3MaBkXU3hiYv2txSdBZpx1T/nPcZg0pw
-9e6sc0h2uNEUYp8oyrttEP2cSpl902BIiO5oGCI/Wdd76s5naME/mr7qpZw1RU7k
-4t241GhtaBlzRzuY2f93bOIQH5u+67+Ir4u+nHNPN3Zzy+9+hMj0xw+eSjouSXBg
-MBuQc6wUh9YHS8/bElFQtMVagbe0G4CRD75jaM/XKFtyo4fQDZvFQIqpPA9wBx2b
-u8BU3+Ff15Kdp1U7UJtwFObpWFcfubxSx5uktcBQ6U8I1FFRgPIHEWvPCL3Afq87
-iWIVswlr5AlvQXqEplPBd8IjFpW910KMDId0fh+Qzp/6xTslxKLqMHIQ/ZHD2IKu
-DQR9ciJOGkn09kN54F2U4YyfzNkYSfTyeCRZI84eVDso0MT7n3o24mTOkr0rY04/
-FLVdhy1zJ1meaLqk9GE/UYpgIwOzqTuOQ9xQ2OW8UGoObl2I4yxQfO3ajXJtvJmR
-J6KdjeFqeXe5hMJCVhJL
-=G+mP
------END PGP SIGNATURE-----
-
---z4+8/lEcDcG5Ke9S--
+Thanks,
+Mark.
