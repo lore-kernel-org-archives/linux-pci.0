@@ -1,65 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:32846 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751176AbbJIOwn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 10:52:43 -0400
-Date: Fri, 9 Oct 2015 16:52:40 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Russell King <rmk+kernel@arm.linux.org.uk>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 2/9] pci: mvebu: fix memory leaks and refcount leaks
-Message-ID: <20151009165240.3ba17ece@free-electrons.com>
-In-Reply-To: <E1ZiRIs-0004Id-AN@rmk-PC.arm.linux.org.uk>
-References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
-	<E1ZiRIs-0004Id-AN@rmk-PC.arm.linux.org.uk>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 9 Oct 2015 18:04:20 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Mark Rutland <mark.rutland@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 3/5] of: Add vendor prefix for PLDA.
+Message-ID: <20151009170420.GH3394@e106497-lin.cambridge.arm.com>
+References: <1444409849-5685-1-git-send-email-Liviu.Dudau@arm.com>
+ <1444409849-5685-4-git-send-email-Liviu.Dudau@arm.com>
+ <20151009165929.GF21629@leverpostej>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20151009165929.GF21629@leverpostej>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Russell,
+On Fri, Oct 09, 2015 at 05:59:29PM +0100, Mark Rutland wrote:
+> On Fri, Oct 09, 2015 at 05:57:27PM +0100, Liviu Dudau wrote:
+> > Use "plda" as vendor prefix for PLDA.
+> > 
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> 
+> Having looked on PLDA's website it seems "PLDA" is their preferred name,
+> and I can't find any suffix used, so this looks fine to me:
+> 
+> Acked-by: Mark Rutland <mark.rutland@arm.com>
 
-On Sat, 03 Oct 2015 19:13:02 +0100, Russell King wrote:
+Thanks,
+Liviu
 
-> +	ret = devm_add_action(dev, mvebu_pcie_port_clk_put, port);
+> 
+> Mark.
+> 
+> > ---
+> >  Documentation/devicetree/bindings/vendor-prefixes.txt | 1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/vendor-prefixes.txt b/Documentation/devicetree/bindings/vendor-prefixes.txt
+> > index 82d2ac9..57653eb 100644
+> > --- a/Documentation/devicetree/bindings/vendor-prefixes.txt
+> > +++ b/Documentation/devicetree/bindings/vendor-prefixes.txt
+> > @@ -168,6 +168,7 @@ pericom	Pericom Technology Inc.
+> >  phytec	PHYTEC Messtechnik GmbH
+> >  picochip	Picochip Ltd
+> >  plathome	Plat'Home Co., Ltd.
+> > +plda	PLDA
+> >  pixcir  PIXCIR MICROELECTRONICS Co., Ltd
+> >  powervr	PowerVR (deprecated, use img)
+> >  qca	Qualcomm Atheros, Inc.
+> > -- 
+> > 2.6.0
+> > 
+> 
 
-I didn't know about devm_add_action(). Definitely very useful for such
-situations.
-
-> @@ -1052,10 +1086,12 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
->  		struct mvebu_pcie_port *port = &pcie->ports[i];
->  
->  		ret = mvebu_pcie_parse_port(pcie, port, child);
-> -		if (ret < 0)
-> +		if (ret < 0) {
-> +			of_node_put(child);
->  			return ret;
-> -		else if (ret == 0)
-> +		} else if (ret == 0) {
->  			continue;
-> +		}
-
-This is not trivial. If I understand correctly,
-for_each_available_child_of_node() will automatically release the
-reference on the previous node and take the reference on the new one
-before entering the loop code. So in the skipping case, we don't need
-to release the reference as it will be done by the next iteration of
-the loop, but in the error case, since we are unexpectedly breaking the
-loop, we need to do it manually.
-
-The sort of tricky thing that should be documented near
-for_each_child_of_node(), since I believe a lot of code gets this
-wrong. See:
-
-   http://lxr.free-electrons.com/source/arch/arm/mach-shmobile/pm-rmobile.c#L367
-   http://lxr.free-electrons.com/source/drivers/phy/phy-miphy365x.c#L564
-
-and many more.
-
-Thomas
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
