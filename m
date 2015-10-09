@@ -1,51 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46031 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750796AbbJTUrw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Oct 2015 16:47:52 -0400
-MIME-Version: 1.0
-In-Reply-To: <20151020153942.GE8224@localhost>
-References: <20151020153942.GE8224@localhost>
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 20 Oct 2015 15:47:29 -0500
-Message-ID: <CAL_Jsq+URYS5HSxLRuq7bhOtwGj_rySx2VqojivcoX0LproyoQ@mail.gmail.com>
-Subject: Re: PCI Device Tree binding documentation links broken
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.140]:26510 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756211AbbJINqD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 09:46:03 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH 0/4] arm64: Juno: Add support for PCIe on R1 board
+Date: Fri,  9 Oct 2015 14:45:19 +0100
+Message-Id: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 20, 2015 at 10:39 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> Hi Linus,
->
-> 301d2d87cb4f ("Documentation/devicetree: add a small note on PCI")
-> added some useful links:
->
->   +PCI Bus Binding to: IEEE Std 1275-1994
->   +http://www.openfirmware.org/ofwg/bindings/pci/pci2_1.pdf
+Juno R1 board has a working PCIe host bridge that can be enabled and
+configured by the firmware and made use of by Linux. For UEFI, the
+Linaro releases contain firmware that configure the XpressRICH3 host
+bridge correctly. For U-Boot based setups, one needs the patchset
+posted here[1].
 
-http://www.firmware.org/1275/bindings/pci/pci2_1.pdf
+This patchset adds a quirk for setting the correct class to the host
+bridge device and the device tree changes that enable PCIe on Juno R1.
+We also update the defconfig to enable the generic PCI host bridge driver.
 
->
->   +Open Firmware Recommended Practice: Interrupt Mapping
->   +http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
+Best regards,
+Liviu
 
-http://www.firmware.org/1275/practice/imap/imap0_9d.pdf
+1. http://lists.denx.de/pipermail/u-boot/2015-October/229669.html
 
-> But both links are now broken.  I looked a little bit, but didn't find
-> anything that looked like a reliable source.  Do you know of anything
-> better?
 
-Here's the top level:
+Andrew Murray (1):
+  pci: Add PLDA's XpressRICH3 PCIe host bridge PCI ID
 
-http://www.firmware.org/1275/home.html
+Liviu Dudau (3):
+  PCI: Add quirk for PLDA's XpressRICH3 host bridge class.
+  arm64: Juno: Add support for the PCIe host bridge on Juno R1
+  arm64: defconfig: Enable PCI generic host bridge by default
 
-There used to be several mirrors, but seems we're down to only this
-one. I've at least archived it myself now:
+ arch/arm64/boot/dts/arm/juno-r1.dts | 20 ++++++++++++++++++++
+ arch/arm64/configs/defconfig        |  1 +
+ drivers/pci/quirks.c                | 10 ++++++++++
+ include/linux/pci_ids.h             |  3 +++
+ 4 files changed, 34 insertions(+)
 
-wget -r http://www.firmware.org/1275/home.html
+-- 
+2.6.0
 
-Rob
