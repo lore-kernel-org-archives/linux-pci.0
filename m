@@ -1,45 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:33519 "EHLO
-	mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752234AbbJVP67 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Oct 2015 11:58:59 -0400
-MIME-Version: 1.0
-In-Reply-To: <1445455227.4059.867.camel@redhat.com>
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
-	<CAJ3xEMiStMJdGjgO9=MQrhLpBo8ZiTRoOL_P=aC9kyrNi91FSw@mail.gmail.com>
-	<1445455227.4059.867.camel@redhat.com>
-Date: Thu, 22 Oct 2015 18:58:58 +0300
-Message-ID: <CAJ3xEMhgzfbGf-3Z7GJGxg5VqbWGyKqoTt6c4C54sDNehdXVMg@mail.gmail.com>
-Subject: Re: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV NIC
-From: Or Gerlitz <gerlitz.or@gmail.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Lan Tianyu <tianyu.lan@intel.com>,
-	"Michael S. Tsirkin <mst@redhat.com> (mst@redhat.com)"
-	<mst@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	carolyn.wyborny@intel.com,
-	"Skidmore, Donald C" <donald.c.skidmore@intel.com>,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, Alexander Graf <agraf@suse.de>,
-	kvm@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>,
-	qemu-devel@nongnu.org, emil.s.tantilov@intel.com,
-	intel-wired-lan@lists.osuosl.org,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	john.ronciak@intel.com,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	Mitch Williams <mitch.a.williams@intel.com>,
-	Linux Netdev List <netdev@vger.kernel.org>,
-	Shannon Nelson <shannon.nelson@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from aserp1040.oracle.com ([141.146.126.69]:50589 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757783AbbJIQVr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 12:21:47 -0400
+Message-ID: <1444407689.17726.12.camel@oracle.com>
+Subject: Re: [PATCH v7 13/60] PCI: Add has_mem64 for struct host_bridge
+From: Khalid Aziz <khalid.aziz@oracle.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 09 Oct 2015 10:21:29 -0600
+In-Reply-To: <1444340359-8011-14-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+	 <1444340359-8011-14-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 21, 2015 at 10:20 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
+On Thu, 2015-10-08 at 14:38 -0700, Yinghai Lu wrote:
+> Add has_mem64 for struct host_bridge, on root bus that does not support
+> mmio64 above 4g, will not set that.
+> 
+> We will use that info next two following patches:
+> 1. Don't treat non-pref mmio64 as pref mmio, so will not put
+>    it under bridge's pref range when rescan the devices
+> 2. will keep pref mmio64 and pref mmio32 under bridge pref bar.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-> This is why the typical VF agnostic approach here is to using bonding
-> and fail over to a emulated device during migration, so performance
-> suffers, but downtime is something acceptable.
 
-bonding in the VM isn't a zero touch solution, right? is it really acceptable?
+Tested on sparc platforms
+
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com> 
+
+
