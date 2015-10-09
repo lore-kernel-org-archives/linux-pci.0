@@ -1,88 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:37694 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755958AbbJIIKW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Oct 2015 04:10:22 -0400
-Message-ID: <56177669.2000302@arm.com>
-Date: Fri, 09 Oct 2015 09:10:17 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:50710 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751276AbbJIPIH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 11:08:07 -0400
+Date: Fri, 9 Oct 2015 16:07:57 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 2/9] pci: mvebu: fix memory leaks and refcount leaks
+Message-ID: <20151009150757.GV32532@n2100.arm.linux.org.uk>
+References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+ <E1ZiRIs-0004Id-AN@rmk-PC.arm.linux.org.uk>
+ <20151009165240.3ba17ece@free-electrons.com>
 MIME-Version: 1.0
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"rjui@broadcom.com" <rjui@broadcom.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>
-CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v3] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-References: <1444146289-28940-1-git-send-email-bharatku@xilinx.com> <5613F310.6060305@arm.com> <8520D5D51A55D047800579B0941471980169063F@XAP-PVEXMBX01.xlnx.xilinx.com> <5613F9C8.9020000@arm.com> <8520D5D51A55D047800579B09414719801690CD0@XAP-PVEXMBX01.xlnx.xilinx.com>
-In-Reply-To: <8520D5D51A55D047800579B09414719801690CD0@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151009165240.3ba17ece@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/10/15 06:11, Bharat Kumar Gogada wrote:
->>>> +struct nwl_msi {                  /* struct nwl_msi - MSI information
->> */
->>>> +  struct msi_controller chip;     /* chip: MSI controller */
->>>
->>>> We're moving away from msi_controller altogether, as the kernel now
->>>> has all the necessary infrastructure to do this properly.
->>>
->>> Our current GIC version does not have separate msi controller (we are
->>> not using GICv2m or GICv3), so is it necessary to have separate msi
->>> controller node ? Please give me clarity on this.
->>
->> This has nothing to do with the version of the GIC you are using (XGene
->> doesn't have GICv2m or v3 either). This is about reducing code duplication
->> and having something that we can maintain. See also
->> https://lkml.org/lkml/2015/9/20/193 for yet another example.
->>
->> I still plan to kill msi_controller, and I'd like to avoid more dependencies with
->> it. MSI domains are the way to do it.
->>
-> Sorry previously I haven't configured my email client properly so resending.
+On Fri, Oct 09, 2015 at 04:52:40PM +0200, Thomas Petazzoni wrote:
+> Russell,
+> 
+> On Sat, 03 Oct 2015 19:13:02 +0100, Russell King wrote:
+> 
+> > +	ret = devm_add_action(dev, mvebu_pcie_port_clk_put, port);
+> 
+> I didn't know about devm_add_action(). Definitely very useful for such
+> situations.
+> 
+> > @@ -1052,10 +1086,12 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+> >  		struct mvebu_pcie_port *port = &pcie->ports[i];
+> >  
+> >  		ret = mvebu_pcie_parse_port(pcie, port, child);
+> > -		if (ret < 0)
+> > +		if (ret < 0) {
+> > +			of_node_put(child);
+> >  			return ret;
+> > -		else if (ret == 0)
+> > +		} else if (ret == 0) {
+> >  			continue;
+> > +		}
+> 
+> This is not trivial. If I understand correctly,
+> for_each_available_child_of_node() will automatically release the
+> reference on the previous node and take the reference on the new one
+> before entering the loop code.
 
-Thanks for doing so, much appreciated.
+Yes.
 
-> Since we don't have separate MSI controller, and our PCIe controller
-> is handling MSI, is it necessary to create a separate MSI controller
-> node because we don't have any 'reg' space.
+> So in the skipping case, we don't need
+> to release the reference as it will be done by the next iteration of
+> the loop, but in the error case, since we are unexpectedly breaking the
+> loop, we need to do it manually.
 
-No, your PCI controller can perfectly be part of the PCIe node.
+Correct.
 
-> Please let me know whether we require a separate msi file as
-> suggested in your previous comments to separate MSI controller and
-> PCIE controller in two files, if we don't have separate node. If we
-> do not need a separate node do we need to embed MSI controller child
-> node  in PCIe controller node itself, and what properties does this
-> child node will require other than 'interrupts'.
+> The sort of tricky thing that should be documented near
+> for_each_child_of_node(), since I believe a lot of code gets this
+> wrong.
 
-If you want to keep them in the same file, please at least have two
-separate patches. These are two different functions, and they should be
-reviewed separately.
+Yes, lots of code gets it wrong, even the core DT code gets it wrong.
+The problem will be stopping people getting it wrong in the future, now
+that they've learnt the wrong way to do it - I don't think documenting
+the site where for_each_child_of_node() is defined will work anymore -
+how many people know of for_each_child_of_node() and don't need to look
+it up, yet code exactly this bug?
 
-It will help everyone to understand your code, and speed up the
-reviewing process.
+TBH, the fundamental issue here is wrapping this all up in what looks
+to be a harmless for_each_child_of_node() thing.  for_each_child_of_node()
+has side-effects that are completely non-obvious, except to those who
+have been educated about it.
 
-Thanks,
+I think the only solution now is to kill for_each_child_of_node() and
+similar, and have people open-code the for() loop so they can _see_
+what's going on, because we can't stop people from breaking out of a
+for() loop.  That's a major change though, outside the scope of this
+series.
 
-	M.
+I raised the issue last month with DT people, but there isn't any
+interest in fixing the issue; they know about it but (iirc) have no
+plans to fix it.
+
 -- 
-Jazz is not dead. It just smells funny...
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
