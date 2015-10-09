@@ -1,194 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:36873 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750834AbbJCSNC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 14:13:02 -0400
-In-Reply-To: <20151003181228.GI21513@n2100.arm.linux.org.uk>
-References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 1/9] pci: mvebu: move port parsing and resource claiming to
- separate function
+Received: from 8bytes.org ([81.169.241.247]:36081 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752006AbbJIKkZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Oct 2015 06:40:25 -0400
+Date: Fri, 9 Oct 2015 12:40:23 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Mikulas Patocka <mpatocka@redhat.com>,
+	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
+	Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+Message-ID: <20151009104023.GN28811@8bytes.org>
+References: <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
+ <20150929162042.GR3036@8bytes.org>
+ <560BF73F.8000008@maya.org>
+ <20151006101356.GE12506@8bytes.org>
+ <56141507.7040103@maya.org>
+ <20151007154005.GH28811@8bytes.org>
+ <56155028.7060906@maya.org>
+ <20151008173007.GL28811@8bytes.org>
+ <5616BCF4.10104@maya.org>
+ <5616C850.2000906@maya.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1ZiRIn-0004IT-6Q@rmk-PC.arm.linux.org.uk>
-Date: Sat, 03 Oct 2015 19:12:57 +0100
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5616C850.2000906@maya.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move the PCIe port parsing and resource claiming to a separate function
-in preparation to add proper cleanup of claimed resources.
+On Thu, Oct 08, 2015 at 09:47:28PM +0200, Andreas Hartmann wrote:
+> Got it. I attached the complete oops and the output of objdump.
+> 
+> Kernel was linux 4.3-rc4
+> 
+> 
+> This time, the oops was caused by the second PCI card I'm passing
+> through to another VM (the ath9k card worked fine this time - chance?).
+> I added the lspci output to the attached file, too.
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/pci/host/pci-mvebu.c | 130 ++++++++++++++++++++++++-------------------
- 1 file changed, 74 insertions(+), 56 deletions(-)
+Okay, thanks, this makes more sense to me. It looks like you are
+attaching a 32bit PCI device, which has an alias. This is definitly a
+bug in the AMD IOMMU driver and I have an idea how to fix it. I'll look
+into this after lunch.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 19144ed7bdad..13ab0350f7fb 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -928,6 +928,76 @@ static int mvebu_pcie_resume(struct device *dev)
- 	return 0;
- }
- 
-+static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
-+	struct mvebu_pcie_port *port, struct device_node *child)
-+{
-+	struct device *dev = &pcie->pdev->dev;
-+	enum of_gpio_flags flags;
-+	int ret;
-+
-+	port->pcie = pcie;
-+
-+	if (of_property_read_u32(child, "marvell,pcie-port", &port->port)) {
-+		dev_warn(dev, "ignoring %s, missing pcie-port property\n",
-+			 of_node_full_name(child));
-+		goto skip;
-+	}
-+
-+	if (of_property_read_u32(child, "marvell,pcie-lane", &port->lane))
-+		port->lane = 0;
-+
-+	port->name = kasprintf(GFP_KERNEL, "pcie%d.%d", port->port, port->lane);
-+
-+	port->devfn = of_pci_get_devfn(child);
-+	if (port->devfn < 0)
-+		goto skip;
-+
-+	ret = mvebu_get_tgt_attr(dev->of_node, port->devfn, IORESOURCE_MEM,
-+				 &port->mem_target, &port->mem_attr);
-+	if (ret < 0) {
-+		dev_err(dev, "%s: cannot get tgt/attr for mem window\n",
-+			port->name);
-+		goto skip;
-+	}
-+
-+	if (resource_size(&pcie->io) != 0)
-+		mvebu_get_tgt_attr(dev->of_node, port->devfn, IORESOURCE_IO,
-+				   &port->io_target, &port->io_attr);
-+	else {
-+		port->io_target = -1;
-+		port->io_attr = -1;
-+	}
-+
-+	port->reset_gpio = of_get_named_gpio_flags(child, "reset-gpios", 0,
-+						   &flags);
-+	if (gpio_is_valid(port->reset_gpio)) {
-+		port->reset_active_low = flags & OF_GPIO_ACTIVE_LOW;
-+		port->reset_name = kasprintf(GFP_KERNEL, "%s-reset",
-+					     port->name);
-+
-+		ret = devm_gpio_request_one(dev, port->reset_gpio,
-+					    GPIOF_DIR_OUT, port->reset_name);
-+		if (ret) {
-+			if (ret == -EPROBE_DEFER)
-+				goto err;
-+			goto skip;
-+		}
-+	}
-+
-+	port->clk = of_clk_get_by_name(child, NULL);
-+	if (IS_ERR(port->clk)) {
-+		dev_err(dev, "%s: cannot get clock\n", port->name);
-+		goto skip;
-+	}
-+
-+	return 1;
-+
-+skip:
-+	ret = 0;
-+err:
-+	return ret;
-+}
-+
- static int mvebu_pcie_probe(struct platform_device *pdev)
- {
- 	struct mvebu_pcie *pcie;
-@@ -980,76 +1050,24 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 	i = 0;
- 	for_each_available_child_of_node(pdev->dev.of_node, child) {
- 		struct mvebu_pcie_port *port = &pcie->ports[i];
--		enum of_gpio_flags flags;
--
--		port->pcie = pcie;
- 
--		if (of_property_read_u32(child, "marvell,pcie-port",
--					 &port->port)) {
--			dev_warn(&pdev->dev,
--				 "ignoring %s, missing pcie-port property\n",
--				 of_node_full_name(child));
-+		ret = mvebu_pcie_parse_port(pcie, port, child);
-+		if (ret < 0)
-+			return ret;
-+		else if (ret == 0)
- 			continue;
--		}
- 
--		if (of_property_read_u32(child, "marvell,pcie-lane",
--					 &port->lane))
--			port->lane = 0;
--
--		port->name = kasprintf(GFP_KERNEL, "pcie%d.%d",
--				       port->port, port->lane);
--
--		port->devfn = of_pci_get_devfn(child);
--		if (port->devfn < 0)
--			continue;
--
--		ret = mvebu_get_tgt_attr(np, port->devfn, IORESOURCE_MEM,
--					 &port->mem_target, &port->mem_attr);
--		if (ret < 0) {
--			dev_err(&pdev->dev, "%s: cannot get tgt/attr for mem window\n",
--				port->name);
--			continue;
--		}
--
--		if (resource_size(&pcie->io) != 0)
--			mvebu_get_tgt_attr(np, port->devfn, IORESOURCE_IO,
--					   &port->io_target, &port->io_attr);
--		else {
--			port->io_target = -1;
--			port->io_attr = -1;
--		}
--
--		port->reset_gpio = of_get_named_gpio_flags(child,
--						   "reset-gpios", 0, &flags);
- 		if (gpio_is_valid(port->reset_gpio)) {
- 			u32 reset_udelay = 20000;
- 
--			port->reset_active_low = flags & OF_GPIO_ACTIVE_LOW;
--			port->reset_name = kasprintf(GFP_KERNEL, "%s-reset",
--						     port->name);
- 			of_property_read_u32(child, "reset-delay-us",
- 					     &reset_udelay);
- 
--			ret = devm_gpio_request_one(&pdev->dev,
--			    port->reset_gpio, GPIOF_DIR_OUT, port->reset_name);
--			if (ret) {
--				if (ret == -EPROBE_DEFER)
--					return ret;
--				continue;
--			}
--
- 			gpio_set_value(port->reset_gpio,
- 				       (port->reset_active_low) ? 1 : 0);
- 			msleep(reset_udelay/1000);
- 		}
- 
--		port->clk = of_clk_get_by_name(child, NULL);
--		if (IS_ERR(port->clk)) {
--			dev_err(&pdev->dev, "%s: cannot get clock\n",
--				port->name);
--			continue;
--		}
--
- 		ret = clk_prepare_enable(port->clk);
- 		if (ret)
- 			continue;
--- 
-2.1.0
+
+
+	Joerg
 
