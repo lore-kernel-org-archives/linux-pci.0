@@ -1,98 +1,70 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"rjui@broadcom.com" <rjui@broadcom.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>
-CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Ravikiran Gummaluri" <rgummal@xilinx.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v3] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Date: Fri, 9 Oct 2015 08:51:25 +0000
-Message-ID: <8520D5D51A55D047800579B09414719801690D3D@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1444146289-28940-1-git-send-email-bharatku@xilinx.com>
- <5613F310.6060305@arm.com>
- <8520D5D51A55D047800579B0941471980169063F@XAP-PVEXMBX01.xlnx.xilinx.com>
- <5613F9C8.9020000@arm.com>
- <8520D5D51A55D047800579B09414719801690CD0@XAP-PVEXMBX01.xlnx.xilinx.com>
- <56177669.2000302@arm.com>
-In-Reply-To: <56177669.2000302@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 4/5] arm64: Juno: Add support for the PCIe host bridge on Juno R1
+Date: Fri,  9 Oct 2015 17:57:28 +0100
+Message-Id: <1444409849-5685-5-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1444409849-5685-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1444409849-5685-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 09/10/15 06:11, Bharat Kumar Gogada wrote:
-> >>>> +struct nwl_msi {                  /* struct nwl_msi - MSI information
-> >> */
-> >>>> +  struct msi_controller chip;     /* chip: MSI controller */
-> >>>
-> >>>> We're moving away from msi_controller altogether, as the kernel now
-> >>>> has all the necessary infrastructure to do this properly.
-> >>>
-> >>> Our current GIC version does not have separate msi controller (we
-> >>> are not using GICv2m or GICv3), so is it necessary to have separate
-> >>> msi controller node ? Please give me clarity on this.
-> >>
-> >> This has nothing to do with the version of the GIC you are using
-> >> (XGene doesn't have GICv2m or v3 either). This is about reducing code
-> >> duplication and having something that we can maintain. See also
-> >> https://lkml.org/lkml/2015/9/20/193 for yet another example.
-> >>
-> >> I still plan to kill msi_controller, and I'd like to avoid more
-> >> dependencies with it. MSI domains are the way to do it.
-> >>
-> > Sorry previously I haven't configured my email client properly so resending.
-> 
-> Thanks for doing so, much appreciated.
-> 
-> > Since we don't have separate MSI controller, and our PCIe controller
-> > is handling MSI, is it necessary to create a separate MSI controller
-> > node because we don't have any 'reg' space.
-> 
-> No, your PCI controller can perfectly be part of the PCIe node.
-You meant 'msi-controller' property to be part of PCIe node?
+Juno R1 board sports a functional PCIe host bridge that is
+compliant with the SBSA standard found [1] here. With the right
+firmware that initialises the XpressRICH3 controller one can
+use the generic Host Bridge driver to use the PCIe hardware.
 
-> 
-> > Please let me know whether we require a separate msi file as suggested
-> > in your previous comments to separate MSI controller and PCIE
-> > controller in two files, if we don't have separate node. If we do not
-> > need a separate node do we need to embed MSI controller child node  in
-> > PCIe controller node itself, and what properties does this child node
-> > will require other than 'interrupts'.
-> 
-> If you want to keep them in the same file, please at least have two separate
-> patches. These are two different functions, and they should be reviewed
-> separately.
-> 
-What I meant is if we don't have separate msi node do we need separate file? 
-If you meant msi controller to be part of same node then we will use single file and will
-try to have two separate patches.
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-Thanks,
-Bharat
+[1] http://infocenter.arm.com/help/topic/com.arm.doc.den0029a/
+---
+ arch/arm64/boot/dts/arm/juno-r1.dts | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-> It will help everyone to understand your code, and speed up the reviewing
-> process.
-> 
-> Thanks,
-> 
-> 	M.
-> --
-> Jazz is not dead. It just smells funny...
+diff --git a/arch/arm64/boot/dts/arm/juno-r1.dts b/arch/arm64/boot/dts/arm/juno-r1.dts
+index c627511..a702a6b 100644
+--- a/arch/arm64/boot/dts/arm/juno-r1.dts
++++ b/arch/arm64/boot/dts/arm/juno-r1.dts
+@@ -109,7 +109,26 @@
+ 
+ 	#include "juno-base.dtsi"
+ 
++	pcie-controller@40000000 {
++		compatible = "arm,juno-r1-pcie", "plda,xpressrich3", "pci-host-ecam-generic";
++		device_type = "pci";
++		reg = <0 0x40000000 0 0x10000000>;	/* ECAM config space */
++		bus-range = <0 255>;
++		linux,pci-domain = <0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		dma-coherent;
++		ranges = <0x01000000 0x00 0x5f800000 0x00 0x5f800000 0x0 0x00800000
++			  0x02000000 0x00 0x50000000 0x00 0x50000000 0x0 0x08000000
++		          0x42000000 0x40 0x00000000 0x40 0x00000000 0x1 0x00000000>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &gic 0 0 0 136 4
++			         0 0 0 2 &gic 0 0 0 137 4
++				 0 0 0 3 &gic 0 0 0 138 4
++				 0 0 0 4 &gic 0 0 0 139 4>;
++		msi-parent = <&v2m_0>;
++	};
+ };
+ 
+ &memtimer {
+-- 
+2.6.0
+
