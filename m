@@ -1,81 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0099.outbound.protection.outlook.com ([207.46.100.99]:20637
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752910AbbJSITj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Oct 2015 04:19:39 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v10 0/6] Altera PCIe host controller driver with MSI support
-Date: Mon, 19 Oct 2015 16:19:22 +0800
-Message-ID: <1445242768-4423-1-git-send-email-lftan@altera.com>
+Received: from down.free-electrons.com ([37.187.137.238]:33359 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753859AbbJIPTO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 11:19:14 -0400
+Date: Fri, 9 Oct 2015 17:18:52 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/9] Further mvebu PCIe patches
+Message-ID: <20151009171852.35bd920d@free-electrons.com>
+In-Reply-To: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the 10th version of patch set to add support for Altera PCIe host
-controller with MSI feature on Altera FPGA device families. This patchset
-mainly resolve comments from Arnd to support loadable module and implement
-fixups within driver instead of calling *PCI_FIXUP* macro. Only PATCH 3/6 has
-changes, others unchanged.
+Rusell, all,
 
-This patchset is based on v4.3-rc6.
+On Sat, 3 Oct 2015 19:12:28 +0100, Russell King - ARM Linux wrote:
 
-v9->v10 changes:
-- altera-pcie: support loadable module
-- altera-pcie: implement fixups within driver instead of calling *PCI_FIXUP* macro
-- altera-pcie: remove altera_pcie_remove and add suppress_bind_attrs = true
+> Here are further PCIe patches which follow on from the previous set of
+> six I sent earlier in September.  This set:
+> 
+> * Separates the DT parsing from the use of this parsed data.
+> * Fixes memory leaks from kasprintf() and refcount leaks of the DT
+>   node where we break out from the loop early.
+> * Uses gpio_set_value_cansleep() so that GPIOs on I2C expanders can
+>   be used for the PCIe reset functionality.
+> * Switch to using devm_kcalloc() instead of devm_kzalloc(), which
+>   eliminates the multiplication, moving it into core code.
+> * Switch to using a gpio descriptor for the reset gpio, which can
+>   contain the active level information from DT.  (It would be nice
+>   if gpiolib automated some of the resource claiming there.)
+> * Make PERST# vs clock timing to match PCIe specifications.  PCIe
+>   specs require the clock to be running for 100us prior to releasing
+>   reset.
+> * Add the standard PCIe capability block in root port form to the
+>   emulated PCIe configuration block.  This allows the PCI layer to
+>   identify the "host bridge" as a PCIe device, and allows us to
+>   take advantage of the code in drivers/pci/pcie, particularly
+>   aspm for link power management.
+> * As a result of identifying ourselves as a PCIe root port, this
+>   eliminates the need to special case accesses to non-slot 0 in
+>   the driver; the lack of other "slots" is something which the
+>   generic PCI code knows about for PCIe root ports.
 
-History:
--------
-[v1]: https://lkml.org/lkml/2015/7/28/395
-[v2]: https://lkml.org/lkml/2015/7/31/267
-[v3]: http://www.kernelhub.org/?msg=811940&p=2
-[v4]: https://lkml.org/lkml/2015/8/17/141
-[v5]: https://lkml.org/lkml/2015/8/25/238
-[v6]: https://lkml.org/lkml/2015/9/1/177
-[v7]: https://lkml.org/lkml/2015/9/20/193
-[v8]: http://www.kernelhub.org/?msg=853553&p=2
-[v9]: https://lkml.org/lkml/2015/10/13/998
+Entire series tested on Armada XP GP, with 3 PCIe cards plugged in.
+They seem to work, and the lspci -v output seems sane. I've also
+reviewed the patch series, and it looks good to me.
 
-Ley Foon Tan (6):
-  arm: add msi.h to Kbuild
-  pci: add Altera PCI vendor ID
-  pci:host: Add Altera PCIe host controller driver
-  pci: altera: Add Altera PCIe MSI driver
-  Documentation: dt-bindings: pci: altera pcie device tree binding
-  MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+Reviewed-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com> 
+Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
- .../devicetree/bindings/pci/altera-pcie-msi.txt    |  28 +
- .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
- MAINTAINERS                                        |  16 +
- arch/arm/include/asm/Kbuild                        |   1 +
- drivers/pci/host/Kconfig                           |  15 +
- drivers/pci/host/Makefile                          |   2 +
- drivers/pci/host/pcie-altera-msi.c                 | 313 +++++++++++
- drivers/pci/host/pcie-altera.c                     | 581 +++++++++++++++++++++
- include/linux/pci_ids.h                            |   2 +
- 9 files changed, 1007 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
- create mode 100644 drivers/pci/host/pcie-altera-msi.c
- create mode 100644 drivers/pci/host/pcie-altera.c
+Thanks!
 
+Thomas
 -- 
-1.8.2.1
-
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
