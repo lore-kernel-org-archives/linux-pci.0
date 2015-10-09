@@ -1,46 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:49148 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751901AbbJBK3G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 06:29:06 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Simon Horman <horms@verge.net.au>,
-	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
-References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1443781507-5011-4-git-send-email-phil.edworthy@renesas.com>
-Date: Fri, 2 Oct 2015 11:25:06 +0100
-Subject: [PATCH 3/4] PCI: rcar-pcie: Set root bus nr to that provided in DT
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH 3/4] arm64: Juno: Add support for the PCIe host bridge on Juno R1
+Date: Fri,  9 Oct 2015 14:45:22 +0100
+Message-Id: <1444398323-17354-4-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On ARM64, setting the root bus number to -1 causes probe failure.
-Moreover, we should use the bus number specified in the DT as we
-could have multiple PCIe controllers with different bus ranges.
+Juno R1 board sports a functional PCIe host bridge that is
+compliant with the SBSA standard found here[1]. With the right
+firmware that initialises the XpressRICH3 controller one can
+use the generic Host Bridge driver to use the PCIe hardware.
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+
+[1] http://infocenter.arm.com/help/topic/com.arm.doc.den0029a/
 ---
- drivers/pci/host/pcie-rcar.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/arm64/boot/dts/arm/juno-r1.dts | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 6057e31..8e583c2 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -362,7 +362,7 @@ static int rcar_pcie_setup(int nr, struct list_head *resource, struct rcar_pcie
- 	struct resource *res;
- 	int i;
+diff --git a/arch/arm64/boot/dts/arm/juno-r1.dts b/arch/arm64/boot/dts/arm/juno-r1.dts
+index c627511..a702a6b 100644
+--- a/arch/arm64/boot/dts/arm/juno-r1.dts
++++ b/arch/arm64/boot/dts/arm/juno-r1.dts
+@@ -109,6 +109,26 @@
  
--	pcie->root_bus_nr = -1;
-+	pcie->root_bus_nr = pcie->busn.start;
+ 	#include "juno-base.dtsi"
  
- 	/* Setup PCI resources */
- 	for (i = 0; i < RCAR_PCI_MAX_RESOURCES; i++) {
++	pcie-controller@40000000 {
++		compatible = "pci-host-ecam-generic";
++		device_type = "pci";
++		reg = <0 0x40000000 0 0x10000000>;	/* ECAM config space */
++		bus-range = <0 255>;
++		linux,pci-domain = <0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		dma-coherent;
++		ranges = <0x01000000 0x00 0x5f800000 0x00 0x5f800000 0x0 0x00800000
++			  0x02000000 0x00 0x50000000 0x00 0x50000000 0x0 0x08000000
++			  0x42000000 0x40 0x00000000 0x40 0x00000000 0x1 0x00000000>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &gic 0 0 0 136 4
++				 0 0 0 2 &gic 0 0 0 137 4
++				 0 0 0 3 &gic 0 0 0 138 4
++				 0 0 0 4 &gic 0 0 0 139 4>;
++		msi-parent = <&v2m_0>;
++	};
+ };
+ 
+ &memtimer {
 -- 
-1.9.1
+2.6.0
 
