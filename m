@@ -1,101 +1,108 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 61/61] PCI: Only try to assign io port only for root bus that support it
-Date: Tue, 27 Oct 2015 13:55:53 -0700
-Message-Id: <1445979353-1728-62-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Subject: Re: [Patch v6 4/7] PCI/ACPI: Consolidate common PCI host bridge code
+ into ACPI core
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1442218057-4355-1-git-send-email-jiang.liu@linux.intel.com>
+ <1442218057-4355-5-git-send-email-jiang.liu@linux.intel.com>
+ <20151006174725.GA29420@localhost> <5615FFD4.3090202@linux.intel.com>
+ <20151008132010.GI27633@localhost>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <561778A1.6000408@linux.intel.com>
+Date: Fri, 9 Oct 2015 16:19:45 +0800
+MIME-Version: 1.0
+In-Reply-To: <20151008132010.GI27633@localhost>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI subsystem always assumes that I/O is supported on root bus and
-tries to assign an I/O window to each child bus even if that is not the
-case.
+On 2015/10/8 21:20, Bjorn Helgaas wrote:
+> On Thu, Oct 08, 2015 at 01:32:04PM +0800, Jiang Liu wrote:
+>> On 2015/10/7 1:47, Bjorn Helgaas wrote:
+>>>> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+>>>> +				     struct acpi_pci_root_ops *ops,
+>>>> +				     struct acpi_pci_root_info *info,
+>>>> +				     void *sysdata)
+>>>> +{
+>>>> +	int ret, busnum = root->secondary.start;
+>>>> +	struct acpi_device *device = root->device;
+>>>> +	int node = acpi_get_node(device->handle);
+>>>> +	struct pci_bus *bus;
+>>>> +
+>>>> +	info->root = root;
+>>>> +	info->bridge = device;
+>>>> +	info->ops = ops;
+>>>> +	INIT_LIST_HEAD(&info->resources);
+>>>> +	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
+>>>> +		 root->segment, busnum);
+>>>> +
+>>>> +	if (ops->init_info && ops->init_info(info))
+>>>> +		goto out_release_info;
+>>>> +	ret = acpi_pci_probe_root_resources(info);
+>>>> +	if (ops->prepare_resources)
+>>>> +		ret = ops->prepare_resources(info, ret);
+>>>> +	if (ret < 0)
+>>>> +		goto out_release_info;
+>>>> +	else if (ret > 0)
+>>>> +		pci_acpi_root_add_resources(info);
+>>>
+>>> This is unnecessarily complicated: you set "ret", then overwrite it if
+>>> ops->prepare_resources.  By the time you test "ret", it's messy to
+>>> figure out what it means.
+>>>
+>>> Both ops->prepare_resources() and pci_acpi_root_add_resources()
+>>> should be able to deal with empty resource lists, so can you do the
+>>> following instead?
+>>>
+>>>     ret = acpi_pci_probe_root_resources(info);
+>>>     if (ret < 0)
+>>>         goto out_release_info;
+>>
+>> 	The original code is used to handle a special case for x86,
+>> where acpi_pci_probe_root_resources() fails but ops->prepare_resources()
+>> succeeds. For x86, PCI host bridge resources may probed by means
+>> other than ACPI when pci_use_crs is true (AMD and Broadcom hostbridges).
+>> So we can't return failure when acpi_pci_probe_root_resources() fails.
+> 
+> That's even worse than I thought.  I take back my ack; I think this
+> really needs to be restructured so it does the right thing *and* reads
+> clearly.  Having convoluted generic code to deal with an arch-specific
+> special case is a recipe for breakage in the future.
+> 
+> Maybe you can move the non-ACPI resource probing from
+> prepare_resources() into acpi_pci_probe_root_resources() (you could
+> rename it to something more generic if that helps).
+Hi Bjorn,
+	How about this solution?
+1) export acpi_pci_probe_root_resources() as a helper to arch code
+2) change ACPI core code as below
+        if (ops->init_info && ops->init_info(info))
+                goto out_release_info;
+        if (ops->prepare_resources)
+                ret = ops->prepare_resources(info);
+        else
+                ret = acpi_pci_probe_root_resources(info);
+        if (ret < 0)
+                goto out_release_info;
 
-The use cases is on Intel 8 socket system that have 8 root buses,
-last two root buses would not have io port resources from _CRS.
+        pci_acpi_root_add_resources(info);
+        pci_add_resource(&info->resources, &root->secondary);
+        bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+                                  sysdata, &info->resources);
+        if (!bus)
+                goto out_release_info;
 
-Check if root bus supports I/O, and later during sizing and
-assigning, check that flags and skip those resources.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c     | 6 ++++++
- drivers/pci/setup-bus.c | 9 +++++++++
- include/linux/pci.h     | 1 +
- 3 files changed, 16 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index f9589d9..d5fca94 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -339,6 +339,9 @@ static void pci_read_bridge_io(struct pci_bus *child)
- 	struct pci_bus_region region;
- 	struct resource *res;
- 
-+	if (!pci_find_host_bridge(child)->has_ioport)
-+		return;
-+
- 	io_mask = PCI_IO_RANGE_MASK;
- 	io_granularity = 0x1000;
- 	if (dev->io_window_1k) {
-@@ -2126,6 +2129,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 			bus_addr[0] = '\0';
- 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
- 
-+		if (resource_type(res) == IORESOURCE_IO)
-+			bridge->has_ioport = 1;
-+
- 		if (resource_type(res) == IORESOURCE_MEM) {
- 			if ((res->end - offset) > 0xffffffff)
- 				bridge->has_mem64 = 1;
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 22ee1a1..f4918d7 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -226,6 +226,10 @@ static void pdev_assign_resources_prepare(struct pci_dev *dev,
- 		if (resource_disabled(r) || r->parent)
- 			continue;
- 
-+		if ((r->flags & IORESOURCE_IO) &&
-+		    !pci_find_host_bridge(dev->bus)->has_ioport)
-+			continue;
-+
- 		r_align = __pci_resource_alignment(dev, r, realloc_head);
- 		if (!r_align) {
- 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
-@@ -1189,6 +1193,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		min_size = 0;
- 	}
- 
-+	if (!pci_find_host_bridge(bus)->has_ioport) {
-+		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
-+		return;
-+	}
-+
- 	min_align = window_alignment(bus, IORESOURCE_IO);
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6bc56f1..9ffe03c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -414,6 +414,7 @@ struct pci_host_bridge {
- 	void *release_data;
- 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
- 	unsigned int has_mem64:1;
-+	unsigned int has_ioport:1;
- };
- 
- #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
--- 
-1.8.4.5
-
+By this way, if arch has special requirement, it could implement
+prepare_resources callback and make use of
+acpi_pci_probe_root_resources() if needed.
+Thanks!
+Gerry
