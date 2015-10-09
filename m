@@ -1,56 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:52629 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751475AbbJBV5D (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 17:57:03 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v7 5/6] Documentation: dt-bindings: pci: altera pcie device tree binding
-Date: Fri, 02 Oct 2015 23:56:37 +0200
-Message-ID: <6497772.rqSurELzER@wuerfel>
-In-Reply-To: <CAFiDJ5_MYC=V_L1LyRNq00z=DerzKAF=RF5av9vHnUPP+9a1nw@mail.gmail.com>
-References: <1442801587-3812-1-git-send-email-lftan@altera.com> <CAL_JsqL9eoTRa2-eeNJgVoO=0LyuaaJ87E4_BS0KocRKBXGdGA@mail.gmail.com> <CAFiDJ5_MYC=V_L1LyRNq00z=DerzKAF=RF5av9vHnUPP+9a1nw@mail.gmail.com>
+Received: from foss.arm.com ([217.140.101.70]:37694 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755958AbbJIIKW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Oct 2015 04:10:22 -0400
+Message-ID: <56177669.2000302@arm.com>
+Date: Fri, 09 Oct 2015 09:10:17 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"rjui@broadcom.com" <rjui@broadcom.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v3] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+References: <1444146289-28940-1-git-send-email-bharatku@xilinx.com> <5613F310.6060305@arm.com> <8520D5D51A55D047800579B0941471980169063F@XAP-PVEXMBX01.xlnx.xilinx.com> <5613F9C8.9020000@arm.com> <8520D5D51A55D047800579B09414719801690CD0@XAP-PVEXMBX01.xlnx.xilinx.com>
+In-Reply-To: <8520D5D51A55D047800579B09414719801690CD0@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 02 October 2015 15:53:44 Ley Foon Tan wrote:
-> > Strictly speaking, if you have undocumented bindings downstream that
-> > is your problem and we don't have to accept them as-is upstream. I'm
-> > not going to worry about that here.
-> >
-> >>> txs contains the config space?
-> >> It is not the config space, but a memory slave port.
-> >
-> > Then where is the config space? It should not be part of "ranges" is
-> > all I care about.
-> The config space is not part of "ranges". Our IP uses TLP packet to
-> access config space.
-> 
+On 09/10/15 06:11, Bharat Kumar Gogada wrote:
+>>>> +struct nwl_msi {                  /* struct nwl_msi - MSI information
+>> */
+>>>> +  struct msi_controller chip;     /* chip: MSI controller */
+>>>
+>>>> We're moving away from msi_controller altogether, as the kernel now
+>>>> has all the necessary infrastructure to do this properly.
+>>>
+>>> Our current GIC version does not have separate msi controller (we are
+>>> not using GICv2m or GICv3), so is it necessary to have separate msi
+>>> controller node ? Please give me clarity on this.
+>>
+>> This has nothing to do with the version of the GIC you are using (XGene
+>> doesn't have GICv2m or v3 either). This is about reducing code duplication
+>> and having something that we can maintain. See also
+>> https://lkml.org/lkml/2015/9/20/193 for yet another example.
+>>
+>> I still plan to kill msi_controller, and I'd like to avoid more dependencies with
+>> it. MSI domains are the way to do it.
+>>
+> Sorry previously I haven't configured my email client properly so resending.
 
-It took me a bit to figure out what you mean here. To save others
-from reading the source, here is what I found:
+Thanks for doing so, much appreciated.
 
-* The config space is accessed indirectly through registers from the
-  "cra" register range, which is the right approach according to the
-  point that Rob made.
-* hardware-wise this basically looks like bit-banged PCIe, which is
-  both awesome and scary ;-)
+> Since we don't have separate MSI controller, and our PCIe controller
+> is handling MSI, is it necessary to create a separate MSI controller
+> node because we don't have any 'reg' space.
 
-	Arnd
+No, your PCI controller can perfectly be part of the PCIe node.
+
+> Please let me know whether we require a separate msi file as
+> suggested in your previous comments to separate MSI controller and
+> PCIE controller in two files, if we don't have separate node. If we
+> do not need a separate node do we need to embed MSI controller child
+> node  in PCIe controller node itself, and what properties does this
+> child node will require other than 'interrupts'.
+
+If you want to keep them in the same file, please at least have two
+separate patches. These are two different functions, and they should be
+reviewed separately.
+
+It will help everyone to understand your code, and speed up the
+reviewing process.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
