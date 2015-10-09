@@ -1,122 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v5 2/7] drivers:hv: Export hv_do_hypercall()
-Date: Fri, 30 Oct 2015 21:11:10 +0000
-Message-Id: <1446239475-49480-3-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
-References: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:59058 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756950AbbJITWt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Oct 2015 15:22:49 -0400
+Date: Fri, 9 Oct 2015 19:22:48 +0000 (UTC)
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	Martin Mares <mj@ucw.cz>
+Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device
+ driver
+In-Reply-To: <20151009180910.GB16112@localhost>
+Message-ID: <alpine.LNX.2.00.1510091855080.27742@localhost.lm.intel.com>
+References: <1443721454-25467-1-git-send-email-keith.busch@intel.com> <20151006231412.GF29420@localhost> <alpine.LNX.2.00.1510062331220.23840@localhost.lm.intel.com> <20151008134702.GK27633@localhost> <alpine.LNX.2.00.1510082115120.27742@localhost.lm.intel.com>
+ <20151009180910.GB16112@localhost>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On Fri, 9 Oct 2015, Bjorn Helgaas wrote:
+>> Given that domain_nr is a 32-bit integer, APCI's _SEG is only 16 bits,
+>> and the pci domain is purely a software construct, do you see any problem
+>> if we start these 'special' domains at 0x10000? I've tested this in
+>> the driver and lspci + setpci with the single line update in pciutils'
+>> lib/pci.h, and it all seems to work just fine.
+>
+> If you make the kernel start using domain numbers that don't fit in 16
+> bits, what happens if you run the old lspci on a new kernel?
 
-This patch exposes the function that hv_vmbus.ko uses to make hypercalls. This
-is necessary for retargeting an interrupt when it is given a new affinity and
-vector.
+If VMD is enabled and enumerated by the driver with this proposal,
+older versions of pciutils will not work; lspci will exit with error
+status for being unable to find the sysfs entry for devices in that
+domain since the upper bits are truncated in the down cast.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/hv/hv.c           | 20 ++++++++++----------
- drivers/hv/hyperv_vmbus.h |  2 +-
- include/linux/hyperv.h    |  1 +
- 3 files changed, 12 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
-index 6341be8..7a06933 100644
---- a/drivers/hv/hv.c
-+++ b/drivers/hv/hv.c
-@@ -89,9 +89,9 @@ static int query_hypervisor_info(void)
- }
- 
- /*
-- * do_hypercall- Invoke the specified hypercall
-+ * hv_do_hypercall- Invoke the specified hypercall
-  */
--static u64 do_hypercall(u64 control, void *input, void *output)
-+u64 hv_do_hypercall(u64 control, void *input, void *output)
- {
- 	u64 input_address = (input) ? virt_to_phys(input) : 0;
- 	u64 output_address = (output) ? virt_to_phys(output) : 0;
-@@ -132,6 +132,7 @@ static u64 do_hypercall(u64 control, void *input, void *output)
- 	return hv_status_lo | ((u64)hv_status_hi << 32);
- #endif /* !x86_64 */
- }
-+EXPORT_SYMBOL_GPL(hv_do_hypercall);
- 
- #ifdef CONFIG_X86_64
- static cycle_t read_hv_clock_tsc(struct clocksource *arg)
-@@ -315,7 +316,7 @@ int hv_post_message(union hv_connection_id connection_id,
- {
- 
- 	struct hv_input_post_message *aligned_msg;
--	u16 status;
-+	u64 status;
- 
- 	if (payload_size > HV_MESSAGE_PAYLOAD_BYTE_COUNT)
- 		return -EMSGSIZE;
-@@ -329,11 +330,10 @@ int hv_post_message(union hv_connection_id connection_id,
- 	aligned_msg->payload_size = payload_size;
- 	memcpy((void *)aligned_msg->payload, payload, payload_size);
- 
--	status = do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL)
--		& 0xFFFF;
-+	status = hv_do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL);
- 
- 	put_cpu();
--	return status;
-+	return status & 0xFFFF;
- }
- 
- 
-@@ -343,13 +343,13 @@ int hv_post_message(union hv_connection_id connection_id,
-  *
-  * This involves a hypercall.
-  */
--u16 hv_signal_event(void *con_id)
-+int hv_signal_event(void *con_id)
- {
--	u16 status;
-+	u64 status;
- 
--	status = (do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL) & 0xFFFF);
-+	status = hv_do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL);
- 
--	return status;
-+	return status & 0xFFFF;
- }
- 
- static int hv_ce_set_next_event(unsigned long delta,
-diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
-index 3d70e36..18c66fc 100644
---- a/drivers/hv/hyperv_vmbus.h
-+++ b/drivers/hv/hyperv_vmbus.h
-@@ -587,7 +587,7 @@ extern int hv_post_message(union hv_connection_id connection_id,
- 			 enum hv_message_type message_type,
- 			 void *payload, size_t payload_size);
- 
--extern u16 hv_signal_event(void *con_id);
-+extern int hv_signal_event(void *con_id);
- 
- extern int hv_synic_alloc(void);
- 
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 02393b6..ea0a0e3 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -983,6 +983,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			bool fb_overlap_ok);
- 
- int vmbus_cpu_number_to_vp_number(int cpu_number);
-+u64 hv_do_hypercall(u64 control, void *input, void *output);
- 
- /**
-  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
--- 
-1.9.1
-
+Assuming we can change pciutils to use 'int' for domain, and have a
+driver for this new device merged in the near future, I'm not too worried
+about users and distros with older utils. I don't think this a device
+someone could turn on by accident, so their shouldn't be any fallout if
+I properly communicate the dependencies to those who do want to enable it.
