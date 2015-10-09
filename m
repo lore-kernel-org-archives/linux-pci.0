@@ -1,78 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:41339 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751973AbbJMUGx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 13 Oct 2015 16:06:53 -0400
-Subject: Re: [PATCH] PCI: iproc: fix 32-bit build error
-To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
-References: <1442363962-29805-1-git-send-email-rjui@broadcom.com>
- <1442363962-29805-8-git-send-email-rjui@broadcom.com>
- <CAMAWPa_Hsuv+skzt3S6e9X_kWY=2JXAScbVEVOVTGmn81_bcFw@mail.gmail.com>
- <11199595.GgDE2yo8AA@wuerfel>
-Cc: Kevin Hilman <khilman@kernel.org>, Ray Jui <rjui@broadcom.com>,
-	Tyler Baker <tyler.baker@linaro.org>,
-	lkml <linux-kernel@vger.kernel.org>,
-	Olof Johansson <olof@lixom.net>,
-	Mark Brown <broonie@kernel.org>,
-	bcm-kernel-feedback-list@broadcom.com,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-From: Hauke Mehrtens <hauke@hauke-m.de>
-Message-ID: <561D6458.40504@hauke-m.de>
-Date: Tue, 13 Oct 2015 22:06:48 +0200
-MIME-Version: 1.0
-In-Reply-To: <11199595.GgDE2yo8AA@wuerfel>
-Content-Type: text/plain; charset=windows-1252
+Received: from aserp1040.oracle.com ([141.146.126.69]:48565 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932217AbbJIQTk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 12:19:40 -0400
+Message-ID: <1444407541.17726.5.camel@oracle.com>
+Subject: Re: [PATCH v7 04/60] sparc/PCI: Reserve legacy mmio after PCI mmio
+From: Khalid Aziz <khalid.aziz@oracle.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 09 Oct 2015 10:19:01 -0600
+In-Reply-To: <1444340359-8011-5-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+	 <1444340359-8011-5-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/13/2015 10:02 PM, Arnd Bergmann wrote:
-> The iproc PCI driver tries to figure out whether the MMIO window has
-> a valid size, but does this using a 64-bit modulo operation, which
-> is not allowed on 32-bit kernels and leads to a link error:
+On Thu, 2015-10-08 at 14:38 -0700, Yinghai Lu wrote:
+> On one system found bunch of claim resource fail from pci device.
+> pci_sun4v f02b894c: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
+> pci_bus 0000:00: root bus resource [mem 0x2000000000000-0x200007effffff] (bus address [0x00000000-0x7effffff])
+> pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x20007ffffffff] (bus address [0x100000000-0x7ffffffff])
+> ...
+> PCI: Claiming 0000:00:02.0: Resource 14: 0002000000000000..00020000004fffff [200]
+> pci 0000:00:02.0: can't claim BAR 14 [mem 0x2000000000000-0x20000004fffff]: address conflict with Video RAM area [??? 0x20000000a0000-0x20000000bffff flags 0x80000000]
+> pci 0000:02:00.0: can't claim BAR 0 [mem 0x2000000000000-0x20000000fffff]: no compatible bridge window
+> PCI: Claiming 0000:02:00.0: Resource 3: 0002000000100000..0002000000103fff [200]
+> pci 0000:02:00.0: can't claim BAR 3 [mem 0x2000000100000-0x2000000103fff]: no compatible bridge window
+> PCI: Claiming 0000:02:00.1: Resource 0: 0002000000200000..00020000002fffff [200]
+> pci 0000:02:00.1: can't claim BAR 0 [mem 0x2000000200000-0x20000002fffff]: no compatible bridge window
+> PCI: Claiming 0000:02:00.1: Resource 3: 0002000000104000..0002000000107fff [200]
+> pci 0000:02:00.1: can't claim BAR 3 [mem 0x2000000104000-0x2000000107fff]: no compatible bridge window
+> PCI: Claiming 0000:02:00.2: Resource 0: 0002000000300000..00020000003fffff [200]
+> pci 0000:02:00.2: can't claim BAR 0 [mem 0x2000000300000-0x20000003fffff]: no compatible bridge window
+> PCI: Claiming 0000:02:00.2: Resource 3: 0002000000108000..000200000010bfff [200]
+> pci 0000:02:00.2: can't claim BAR 3 [mem 0x2000000108000-0x200000010bfff]: no compatible bridge window
+> PCI: Claiming 0000:02:00.3: Resource 0: 0002000000400000..00020000004fffff [200]
+> pci 0000:02:00.3: can't claim BAR 0 [mem 0x2000000400000-0x20000004fffff]: no compatible bridge window
+> PCI: Claiming 0000:02:00.3: Resource 3: 000200000010c000..000200000010ffff [200]
+> pci 0000:02:00.3: can't claim BAR 3 [mem 0x200000010c000-0x200000010ffff]: no compatible bridge window
 > 
-> drivers/built-in.o: In function `iproc_pcie_setup':
-> :(.text+0x4b798): undefined reference to `__aeabi_uldivmod'
+> The bridge 00:02.0 resource does not get reserved as Video RAM take the position early,
+> and following children all failed.
 > 
-> This works around that error by using the div64_u64() function
-> provided by the kernel. While this is an expensive operation,
-> it is harmless because we only call it during the probing
-> of the driver.
+> Move down Video RAM area reservation after pci mmio get reserved,
+> so we leave pci driver to use those regions.
 > 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 0ab99ca8eb6c ("PCI: iproc: Fix compile warnings")
-> 
-> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> index f3481ddff344..abcb4be2ee19 100644
-> --- a/drivers/pci/host/pcie-iproc.c
-> +++ b/drivers/pci/host/pcie-iproc.c
-> @@ -235,12 +235,13 @@ static void iproc_pcie_enable(struct iproc_pcie *pcie)
->   *
->   * axi_addr -> iproc_pcie_address -> OARR -> OMAP -> pci_address
->   */
-> -static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
-> +int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Why are you removing the static here?
+Tested on sparc platforms
 
->  			       u64 pci_addr, resource_size_t size)
->  {
->  	struct iproc_pcie_ob *ob = &pcie->ob;
->  	unsigned i;
->  	u64 max_size = (u64)ob->window_size * MAX_NUM_OB_WINDOWS;
-> +	u64 remainder;
->  
->  	if (size > max_size) {
->  		dev_err(pcie->dev,
-> @@ -249,7 +250,8 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
->  		return -EINVAL;
->  	}
->  
-> -	if (size % ob->window_size) {
-> +	div64_u64_rem(size, ob->window_size, &remainder);
-> +	if (remainder) {
->  		dev_err(pcie->dev,
->  			"res size %pap needs to be multiple of window size %pap\n",
->  			&size, &ob->window_size);
-> 
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com> 
+
+
 
