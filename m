@@ -1,70 +1,164 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v2 2/7] PCI: Remove redundant validation of SR-IOV
- offset/stride registers
-To: Alexander Duyck <aduyck@mirantis.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Ethan Zhao <ethan.zhao@oracle.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linux-kernel@vger.kernel.org
-Date: Thu, 29 Oct 2015 17:23:01 -0500
-Message-ID: <20151029222301.11908.97709.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:33521 "EHLO
+	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753361AbbJIBsu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 21:48:50 -0400
+Received: by qkas79 with SMTP id s79so27098510qka.0
+        for <linux-pci@vger.kernel.org>; Thu, 08 Oct 2015 18:48:49 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: pratyush.anand@gmail.com, m-karicheri2@ti.com,
+	l.stach@pengutronix.de, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: [PATCH v2 1/2] PCI: designware: Move LTSSM state definitions to pcie-designware.h
+Date: Thu,  8 Oct 2015 22:48:25 -0300
+Message-Id: <1444355306-21486-1-git-send-email-festevam@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alexander Duyck <aduyck@mirantis.com>
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-Previously, we read, validated, and cached PCI_SRIOV_VF_OFFSET and
-PCI_SRIOV_VF_STRIDE in sriov_enable().  But sriov_init() now does
-that via compute_max_vf_buses(), so we don't need to do it again.
+Move LTSSM state definitions to common pcie-designware.h so that other
+drivers can make use of them.
 
-Remove the PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE config reads from
-sriov_enable().  The pci_sriov structure already contains the offset and
-stride corresponding to the current NumVFs.
+Also, in order to avoid name collision define LTSSM_STATE_MASK_KS, as
+keystone uses a different LTSSM mask.
 
-[bhelgaas: split to separate patch for reviewability]
-Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
 ---
- drivers/pci/iov.c |   10 +---------
- 1 file changed, 1 insertion(+), 9 deletions(-)
+Changes since v1:
+- Fix build warning noticed by kbuild robot
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 1b1acc2..ca400a9 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -235,7 +235,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	int rc;
- 	int i, j;
- 	int nres;
--	u16 offset, stride, initial;
-+	u16 initial;
- 	struct resource *res;
- 	struct pci_dev *pdev;
- 	struct pci_sriov *iov = dev->sriov;
-@@ -258,11 +258,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	    (!(iov->cap & PCI_SRIOV_CAP_VFM) && (nr_virtfn > initial)))
- 		return -EINVAL;
+ drivers/pci/host/pci-keystone-dw.c |  4 ++--
+ drivers/pci/host/pci-layerscape.c  |  1 -
+ drivers/pci/host/pcie-designware.h | 34 ++++++++++++++++++++++++++++++++++
+ drivers/pci/host/pcie-spear13xx.c  | 33 ---------------------------------
+ 4 files changed, 36 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index 3cf55cd..004b677 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -25,7 +25,7 @@
  
--	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &offset);
--	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &stride);
--	if (!offset || (nr_virtfn > 1 && !stride))
--		return -EIO;
--
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		bars |= (1 << (i + PCI_IOV_RESOURCES));
-@@ -275,9 +270,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 		return -ENOMEM;
- 	}
+ /* Application register defines */
+ #define LTSSM_EN_VAL		        1
+-#define LTSSM_STATE_MASK		0x1f
++#define LTSSM_STATE_MASK_KS		0x1f
+ #define LTSSM_STATE_L0			0x11
+ #define DBI_CS2_EN_VAL			0x20
+ #define OB_XLAT_EN_VAL		        2
+@@ -445,7 +445,7 @@ int ks_dw_pcie_link_up(struct pcie_port *pp)
+ {
+ 	u32 val = readl(pp->dbi_base + DEBUG0);
  
--	iov->offset = offset;
--	iov->stride = stride;
--
- 	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
- 	if (bus > dev->bus->busn_res.end) {
- 		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
+-	return (val & LTSSM_STATE_MASK) == LTSSM_STATE_L0;
++	return (val & LTSSM_STATE_MASK_KS) == LTSSM_STATE_L0;
+ }
+ 
+ void ks_dw_pcie_initiate_link_train(struct keystone_pcie *ks_pcie)
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index b2328ea1..f02752e 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -29,7 +29,6 @@
+ /* PEX1/2 Misc Ports Status Register */
+ #define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
+ #define LTSSM_STATE_SHIFT	20
+-#define LTSSM_STATE_MASK	0x3f
+ #define LTSSM_PCIE_L0		0x11 /* L0 state */
+ 
+ /* Symbol Timer Register and Filter Mask Register 1 */
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 35123d9..97d6558 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -22,6 +22,40 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ 
++#define LTSSM_STATE_DETECT_QUIET	0x00
++#define LTSSM_STATE_DETECT_ACT		0x01
++#define LTSSM_STATE_POLL_ACTIVE		0x02
++#define LTSSM_STATE_POLL_COMPLIANCE	0x03
++#define LTSSM_STATE_POLL_CONFIG		0x04
++#define LTSSM_STATE_PRE_DETECT_QUIET	0x05
++#define LTSSM_STATE_DETECT_WAIT		0x06
++#define LTSSM_STATE_CFG_LINKWD_START	0x07
++#define LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
++#define LTSSM_STATE_CFG_LANENUM_WAIT	0x09
++#define LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
++#define LTSSM_STATE_CFG_COMPLETE	0x0B
++#define LTSSM_STATE_CFG_IDLE		0x0C
++#define LTSSM_STATE_RCVRY_LOCK		0x0D
++#define LTSSM_STATE_RCVRY_SPEED		0x0E
++#define LTSSM_STATE_RCVRY_RCVRCFG	0x0F
++#define LTSSM_STATE_RCVRY_IDLE		0x10
++#define LTSSM_STATE_L0			0x11
++#define LTSSM_STATE_L0S			0x12
++#define LTSSM_STATE_L123_SEND_EIDLE	0x13
++#define LTSSM_STATE_L1_IDLE		0x14
++#define LTSSM_STATE_L2_IDLE		0x15
++#define LTSSM_STATE_L2_WAKE		0x16
++#define LTSSM_STATE_DISABLED_ENTRY	0x17
++#define LTSSM_STATE_DISABLED_IDLE	0x18
++#define LTSSM_STATE_DISABLED		0x19
++#define LTSSM_STATE_LPBK_ENTRY		0x1A
++#define LTSSM_STATE_LPBK_ACTIVE		0x1B
++#define LTSSM_STATE_LPBK_EXIT		0x1C
++#define LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
++#define LTSSM_STATE_HOT_RESET_ENTRY	0x1E
++#define LTSSM_STATE_HOT_RESET		0x1F
++#define LTSSM_STATE_MASK		0x3F
++
+ struct pcie_port {
+ 	struct device		*dev;
+ 	u8			root_bus_nr;
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 98d2683..920d399 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -84,39 +84,6 @@ struct pcie_app_reg {
+ #define APPS_PM_XMT_PME_ID			5
+ 
+ /* CR3 ID */
+-#define XMLH_LTSSM_STATE_DETECT_QUIET		0x00
+-#define XMLH_LTSSM_STATE_DETECT_ACT		0x01
+-#define XMLH_LTSSM_STATE_POLL_ACTIVE		0x02
+-#define XMLH_LTSSM_STATE_POLL_COMPLIANCE	0x03
+-#define XMLH_LTSSM_STATE_POLL_CONFIG		0x04
+-#define XMLH_LTSSM_STATE_PRE_DETECT_QUIET	0x05
+-#define XMLH_LTSSM_STATE_DETECT_WAIT		0x06
+-#define XMLH_LTSSM_STATE_CFG_LINKWD_START	0x07
+-#define XMLH_LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
+-#define XMLH_LTSSM_STATE_CFG_LANENUM_WAIT	0x09
+-#define XMLH_LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
+-#define XMLH_LTSSM_STATE_CFG_COMPLETE		0x0B
+-#define XMLH_LTSSM_STATE_CFG_IDLE		0x0C
+-#define XMLH_LTSSM_STATE_RCVRY_LOCK		0x0D
+-#define XMLH_LTSSM_STATE_RCVRY_SPEED		0x0E
+-#define XMLH_LTSSM_STATE_RCVRY_RCVRCFG		0x0F
+-#define XMLH_LTSSM_STATE_RCVRY_IDLE		0x10
+-#define XMLH_LTSSM_STATE_L0			0x11
+-#define XMLH_LTSSM_STATE_L0S			0x12
+-#define XMLH_LTSSM_STATE_L123_SEND_EIDLE	0x13
+-#define XMLH_LTSSM_STATE_L1_IDLE		0x14
+-#define XMLH_LTSSM_STATE_L2_IDLE		0x15
+-#define XMLH_LTSSM_STATE_L2_WAKE		0x16
+-#define XMLH_LTSSM_STATE_DISABLED_ENTRY		0x17
+-#define XMLH_LTSSM_STATE_DISABLED_IDLE		0x18
+-#define XMLH_LTSSM_STATE_DISABLED		0x19
+-#define XMLH_LTSSM_STATE_LPBK_ENTRY		0x1A
+-#define XMLH_LTSSM_STATE_LPBK_ACTIVE		0x1B
+-#define XMLH_LTSSM_STATE_LPBK_EXIT		0x1C
+-#define XMLH_LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
+-#define XMLH_LTSSM_STATE_HOT_RESET_ENTRY	0x1E
+-#define XMLH_LTSSM_STATE_HOT_RESET		0x1F
+-#define XMLH_LTSSM_STATE_MASK			0x3F
+ #define XMLH_LINK_UP				(1 << 6)
+ 
+ /* CR4 ID */
+-- 
+1.9.1
 
