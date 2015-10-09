@@ -1,53 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0084.outbound.protection.outlook.com ([65.55.169.84]:61600
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751866AbbJNCnI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 13 Oct 2015 22:43:08 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC PATCH 0/2] DRA72/DRA74: Add 2 lane support
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1443445058-643-1-git-send-email-kishon@ti.com>
+ <20151009225056.GD16112@localhost> <56184AE7.6060808@ti.com>
+CC: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v9 2/6] pci: add Altera PCI vendor ID
-Date: Wed, 14 Oct 2015 10:41:28 +0800
-Message-ID: <1444790492-4051-3-git-send-email-lftan@altera.com>
-In-Reply-To: <1444790492-4051-1-git-send-email-lftan@altera.com>
-References: <1444790492-4051-1-git-send-email-lftan@altera.com>
+	<linux-kernel@vger.kernel.org>, <nsekhar@ti.com>,
+	Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <56184B3B.1050807@ti.com>
+Date: Sat, 10 Oct 2015 04:48:19 +0530
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <56184AE7.6060808@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- include/linux/pci_ids.h | 2 ++
- 1 file changed, 2 insertions(+)
+Hi,
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index d9ba49c..08e4462 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1550,6 +1550,8 @@
- #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
- #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
- 
-+#define PCI_VENDOR_ID_ALTERA		0x1172
-+
- #define PCI_VENDOR_ID_SBE		0x1176
- #define PCI_DEVICE_ID_SBE_WANXL100	0x0301
- #define PCI_DEVICE_ID_SBE_WANXL200	0x0302
--- 
-1.8.2.1
+On Saturday 10 October 2015 04:46 AM, Kishon Vijay Abraham I wrote:
+> Hi Bjorn,
+> 
+> On Saturday 10 October 2015 04:20 AM, Bjorn Helgaas wrote:
+>> [+cc Arnd, Rob]
+>>
+>> On Mon, Sep 28, 2015 at 06:27:36PM +0530, Kishon Vijay Abraham I wrote:
+>>> Add driver modifications in pci-dra7xx to get x2 mode working in
+>>> DRA72 and DRA74. Certain modifications is needed in PHY driver also
+>>> which I'll send as a separate series.
+>>>
+>>> Kishon Vijay Abraham I (2):
+>>>   pci: host: pci-dra7xx: use "num-lanes" property to find phy count
+>>>   pci: host: pci-dra7xx: Enable x2 mode support
+>>
+>> Applied to pci/host-dra7xx for v4.4, thanks!
+>>
+>> I adjusted the subject line capitalization & format to match the history.
+>>
+>> Arnd, Rob, any comments on the DT updates or the "num-lanes" vs number of
+>> strings in "phy-names" changes?
+> 
+> I sent it as RFC since I didn't have the board to test 2 lane mode with
+> $patch. And just now I got a board to test x2 and I found a problem with
+> the 2nd patch.
+> 
+> .b1co_mode_sel_mask = GENMASK(2, 3), in the patch should be replaced with
+> .b1co_mode_sel_mask = GENMASK(3, 2).
+> 
+> I'll resend the patch fixing the above.
 
+I'll resend after a couple of days to fix any comments from Arnd or Rob.
+
+Thanks
+Kishon
+
+> 
+> Thanks
+> Kishon
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
