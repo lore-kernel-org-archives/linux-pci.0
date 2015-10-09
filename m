@@ -1,94 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39668 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755170AbbJUQXd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Oct 2015 12:23:33 -0400
-Date: Wed, 21 Oct 2015 11:23:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joerg Roedel <joro@8bytes.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1444407723.17726.14.camel@oracle.com>
+Subject: Re: [PATCH v7 15/60] PCI: Restore pref MMIO allocation logic for
+ host bridge without mmio64
+From: Khalid Aziz <khalid.aziz@oracle.com>
+To: Yinghai Lu <yinghai@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Joerg Roedel <jroedel@suse.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH] x86/PCI: Don't alloc pcibios-irq when MSI is enabled
-Message-ID: <20151021162329.GB1583@localhost>
-References: <1444386214-26319-1-git-send-email-joro@8bytes.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444386214-26319-1-git-send-email-joro@8bytes.org>
-Sender: linux-pci-owner@vger.kernel.org
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 09 Oct 2015 10:22:03 -0600
+In-Reply-To: <1444340359-8011-16-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+	 <1444340359-8011-16-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 09, 2015 at 12:23:34PM +0200, Joerg Roedel wrote:
-> From: Joerg Roedel <jroedel@suse.de>
+On Thu, 2015-10-08 at 14:38 -0700, Yinghai Lu wrote:
+> From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
+> resources), we change the logic for pref mmio allocation:
+> When bridge pref support mmio64, we will only put children pref
+> that support mmio64 into it, and will put children pref mmio32
+> into bridge's non-pref mmio32.
 > 
-> The pcibios-irq and MSI both use dev->irq to store the IRQ
-> number. While the MSI code checks for that and frees the
-> pcibios-irq before overwriting dev->irq, the
-> pcibios_alloc_irq function does not.
+> That could leave bridge pref bar not used when that pref bar is mmio64,
+> and children res only has mmio32.
+> Also could have allocation failure when non-pref mmio32 is not big
+> enough space for those children pref mmio32.
 > 
-> Usually this is not a problem, as the pcibios-irq is
-> allocated before probe time of the device and the MSI irq is
-> allocted from the drivers probe path.
+> That is not rational when the host bridge does not 64bit mmio above 4g
+> at all.
 > 
-> But there are PCI devices handled by the core kernel and not
-> by a standard pci driver, like the AMD IOMMU for example.
-> For the AMD IOMMU a normal pci device driver does not make
-> sense, because a driver can be forcibly unbound from its
-> device, which is not a good idea for an IOMMU.
+> The patch restore to old logic:
+> when host bridge does not have has_mem64, put children pref mmio64 and
+> pref mmio32 all under bridges pref bars.
 > 
-> Nevertheless the PCI core code tries to match the PCI device
-> implementing the AMD IOMMU against drivers, and
-> allocates/frees a pcibios IRQ every time it tries out a new
-> driver. This overwrites the dev->irq field set by
-> pci_enable_msi() and sets it to 0 in the end (because the
-> probe fails and the pcibios-irq is freed again).
-> 
-> On suspend/resume this breaks the kernel, because the irq
-> descriptor for irq 0 is NULL.
-> 
-> Fix this by not allocating a pcibios-irq when MSI is
-> already active. This also has the benefit, that a device
-> claimed by the core kernel can not be probed by a pci driver
-> later.
-> 
-> Cc: Jiang Liu <jiang.liu@linux.intel.com>
-> Reported-by: Borislav Petkov <bp@alien8.de>
-> Signed-off-by: Joerg Roedel <jroedel@suse.de>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Applied with Thomas' reviewed-by to pci/msi for v4.4, thanks, Joerg!
+Tested on sparc platforms
 
-> ---
->  arch/x86/pci/common.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index dc78a4a..6254c06 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -675,6 +675,14 @@ int pcibios_add_device(struct pci_dev *dev)
->  
->  int pcibios_alloc_irq(struct pci_dev *dev)
->  {
-> +	/*
-> +	 * If the PCI device was already claimed by core code and has
-> +	 * MSI enabled, probing of the pcibios irq will overwrite
-> +	 * dev->irq.  So bail out if MSI is already enabled.
-> +	 */
-> +	if (pci_dev_msi_enabled(dev))
-> +		return -EBUSY;
-> +
->  	return pcibios_enable_irq(dev);
->  }
->  
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com> 
+
+
+
+
