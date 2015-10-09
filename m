@@ -1,76 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29903 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965240AbbJHVpO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:45:14 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 36/60] PCI: Cache window alignment value during bus sizing
-Date: Thu,  8 Oct 2015 14:38:55 -0700
-Message-Id: <1444340359-8011-37-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>, Borislav Petkov <bp@alien8.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Daniel Vetter <daniel@ffwll.ch>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Christian Knig <christian.koenig@amd.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-iommu@vger.kernel.org, linux-acpi@vger.kernel.org,
+	x86@kernel.org
+Subject: [Bugfix v4 0/2] Prevent binding PCI drivers to PCI devices used by non-pci drivers
+Date: Fri,  9 Oct 2015 22:07:30 +0800
+Message-Id: <1444399652-25920-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1444386214-26319-1-git-send-email-joro@8bytes.org>
+References: <1444386214-26319-1-git-send-email-joro@8bytes.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are several calling to window_alignment(), and we will have more
-for alt_size support, cache the value instead of keeping on getting it.
+Hi Joerg,
+	I prepared this patchset yesterday but forgot to send them out.
+I think it still worth sending out for review, so here we go:)
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+pcibios_free_irq()") breaks suspend/resume on some AMD platforms.
+The root cause is:
+1) AMD IOMMU drivers enables MSI on IOMMU PCI devices at early boot stage
+2) PCI driver binding code tries to allocate/free PCI legacy IRQ when
+   binding other PCI drivers to IOMMU PCI devices at later boot stage,
+   and breaks PCI MSI allocation information.
+3) System resume breaks when restoring PCI MSI state using the damaged
+   data.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b86417d..deed016 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1241,6 +1241,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					mask | IORESOURCE_PREFETCH, type);
- 	LIST_HEAD(align_test_list);
- 	LIST_HEAD(align_test_add_list);
-+	resource_size_t window_align;
- 
- 	if (!b_res)
- 		return -ENOSPC;
-@@ -1250,6 +1251,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		min_size = 0;
- 	}
- 
-+	window_align = window_alignment(bus, b_res->flags);
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -1311,10 +1314,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		}
- 	}
- 
--	max_align = max(max_align, window_alignment(bus, b_res->flags));
-+	max_align = max(max_align, window_align);
- 	if (size || min_size) {
- 		min_align = calculate_mem_align(&align_test_list, max_align,
--				 size, window_alignment(bus, b_res->flags));
-+						size, window_align);
- 		size0 = calculate_memsize(size, min_size,
- 				  resource_size(b_res), min_align);
- 	}
-@@ -1325,7 +1328,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (sum_add_size > size && realloc_head) {
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
--					window_alignment(bus, b_res->flags));
-+					window_align);
- 		size1 = calculate_memsize(sum_add_size, min_size,
- 				 resource_size(b_res), min_add_align);
- 	}
+We have tried on solution to detect that a PCI is in use by IOMMU driver
+by checking pci_msi_enabled(). But that's too specific, actually we should
+prevent binding PCI drivers to PCI devices used by non-PCI drivers.
+
+Fortunately, we could prevent binding PCI drivers to PCI devices by setting
+pci_dev->match_driver to false. If needed, we could implement a helper
+function to manipulate pci_dev->match_driver.
+
+Jiang Liu (2):
+  iommu/amd: Prevent binding other PCI drivers to IOMMU PCI devices
+  ACPI, PCI: Prevent binding other PCI drivers to IOAPIC PCI devices
+
+ drivers/acpi/ioapic.c          |    7 +++++--
+ drivers/iommu/amd_iommu_init.c |    3 +++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
 -- 
-1.8.4.5
+1.7.10.4
 
