@@ -1,117 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36204 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750892AbbJERwE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Oct 2015 13:52:04 -0400
-Date: Mon, 5 Oct 2015 12:52:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Frank de Jong <frapex@xs4all.nl>
-Cc: linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: missing PCI ID refs
-Message-ID: <20151005175159.GA18545@localhost>
-References: <56117FFE.6020304@xs4all.nl>
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:4172 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932682AbbJIPyg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 11:54:36 -0400
+Date: Fri, 9 Oct 2015 17:54:32 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+cc: Andrew Lunn <andrew@lunn.ch>,
+	Russell King <rmk+kernel@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 2/9] pci: mvebu: fix memory leaks and refcount leaks
+In-Reply-To: <20151009171442.52988f0b@free-electrons.com>
+Message-ID: <alpine.DEB.2.10.1510091753460.2665@hadrien>
+References: <20151003181228.GI21513@n2100.arm.linux.org.uk> <E1ZiRIs-0004Id-AN@rmk-PC.arm.linux.org.uk> <20151009165240.3ba17ece@free-electrons.com> <20151009150710.GJ14688@lunn.ch> <20151009171442.52988f0b@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56117FFE.6020304@xs4all.nl>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-ide]
 
-On Sun, Oct 04, 2015 at 09:37:34PM +0200, Frank de Jong wrote:
-> Hi,
-> 
-> Somewhere between kernel v3.15 and v3.18 several PCI ID refs went missing.
-> By accident, I presume. Kernel v3.14 is fine.
-> 
-> This might just be the tip of iceberg, so to speak, as more PCI ID
-> refs are probably missing.
-> 
-> In v3.14:
-> - "0000:03:00.0" was shown as "pata_pdc2027x" (PCI ID: 105a:4d68)
-> - "0000:00:1f.2" was shown as "ahci" (PCI ID: 8086:1c02)
-> - "0000:06:00.0" was shown as "ahci" (PCI ID: 1b21:0612)
-> 
->  # snippet from /proc/interrupts
->            CPU0       CPU1
->   0:         15          0   IO-APIC-edge      timer
->   1:         31          0   IO-APIC-edge      i8042
->   4:      39043          0   IO-APIC-edge      serial
->   5:          1          0   IO-APIC-edge      parport0
->   8:        111          0   IO-APIC-edge      rtc0
->   9:          3          0   IO-APIC-fasteoi   acpi
->  12:        144          0   IO-APIC-edge      i8042
->  16:         99          0   IO-APIC  16-fasteoi   ehci_hcd:usb1
->  18:       5173          0   IO-APIC  18-fasteoi   0000:03:00.0
->  19:    2871417          0   IO-APIC  19-fasteoi   eth0
->  23:         33          0   IO-APIC  23-fasteoi   ehci_hcd:usb4
->  24:        759          0   PCI-MSI-edge      0000:00:1f.2
->  25:      16582          0   PCI-MSI-edge      0000:06:00.0
 
-I think the names shown in /proc/interrupts are supplied by the driver
-when it calls request_irq(), so I don't think this is a PCI problem.
+On Fri, 9 Oct 2015, Thomas Petazzoni wrote:
 
-It might be a driver problem, but I think it's more likely an
-intentional change, either this one or something similar: 4f37b504768c
-("libata: Use dev_name() for request_irq() to distinguish devices")
+> Hello
+>
+> (Julia added in the list of recipients).
+>
+> On Fri, 9 Oct 2015 17:07:10 +0200, Andrew Lunn wrote:
+>
+> > > > @@ -1052,10 +1086,12 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+> > > >  		struct mvebu_pcie_port *port = &pcie->ports[i];
+> > > >
+> > > >  		ret = mvebu_pcie_parse_port(pcie, port, child);
+> > > > -		if (ret < 0)
+> > > > +		if (ret < 0) {
+> > > > +			of_node_put(child);
+> > > >  			return ret;
+> > > > -		else if (ret == 0)
+> > > > +		} else if (ret == 0) {
+> > > >  			continue;
+> > > > +		}
+> > >
+> > > This is not trivial. If I understand correctly,
+> > > for_each_available_child_of_node() will automatically release the
+> > > reference on the previous node and take the reference on the new one
+> > > before entering the loop code. So in the skipping case, we don't need
+> > > to release the reference as it will be done by the next iteration of
+> > > the loop, but in the error case, since we are unexpectedly breaking the
+> > > loop, we need to do it manually.
+> > >
+> > > The sort of tricky thing that should be documented near
+> > > for_each_child_of_node(), since I believe a lot of code gets this
+> > > wrong.
+> >
+> > Sounds like a good candidate for a coccinelle script. Maybe you could
+> > ask Julia Lawall?
+>
+> Julia: some of the Device Tree iterator functions have a somewhat
+> "interesting" behavior in that they take the reference on the current
+> child when entering the loop, and release it before entering the next
+> iteration (which will also take a reference to the next child).
+>
+> This means that if you have an exit point inside the loop (break or
+> return), you are loosing a reference. For example,
+> http://lxr.free-electrons.com/source/arch/arm/mach-shmobile/pm-rmobile.c#L367
+> is wrong because there is a missing of_node_put(np) before the "return
+> -ENOMEM".
+>
+> So essentially, every exit point in such Device Tree iteration loops
+> should make to call of_node_put() on the current element before exiting
+> the loop unexpectedly.
+>
+> As Andrew suggested, this is probably something a Coccinelle semantic
+> patch could easily detect and probably fix automatically.
 
->  26:      29172          0   PCI-MSI-edge      eth1
->  27:        502          0   PCI-MSI-edge      snd_hda_intel
->  28:          0          0   PCI-MSI-edge      xhci_hcd
->  29:          0          0   PCI-MSI-edge      xhci_hcd
->  30:          0          0   PCI-MSI-edge      xhci_hcd
->  31:         17          0   PCI-MSI-edge      i915
-> 
-> # snippet from lspci
-> 00:1f.2 SATA controller: Intel Corporation 6 Series/C200 Series
-> Chipset Family SATA AHCI Controller (rev 05) (prog-if 01 [AHCI 1.0])
->         Subsystem: Micro-Star International Co., Ltd. Device 7732
->         Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 24
->         I/O ports at f0b0 [size=8]
->         I/O ports at f0a0 [size=4]
->         I/O ports at f090 [size=8]
->         I/O ports at f080 [size=4]
->         I/O ports at f060 [size=32]
->         Memory at f7f05000 (32-bit, non-prefetchable) [size=2K]
->         Capabilities: [80] MSI: Enable+ Count=1/1 Maskable- 64bit-
->         Capabilities: [70] Power Management version 3
->         Capabilities: [a8] SATA HBA v1.0
->         Capabilities: [b0] PCI Advanced Features
->         Kernel driver in use: ahci
-> 
-> 03:00.0 Mass storage controller: Promise Technology, Inc. PDC20268
-> [Ultra100 TX2] (rev 02) (prog-if 85)
->         Subsystem: Promise Technology, Inc. Ultra100 TX2
->         Flags: bus master, 66MHz, slow devsel, latency 64, IRQ 18
->         I/O ports at e0c0 [size=8]
->         I/O ports at e0b0 [size=4]
->         I/O ports at e0a0 [size=8]
->         I/O ports at e090 [size=4]
->         I/O ports at e080 [size=16]
->         Memory at f7e24000 (32-bit, non-prefetchable) [size=16K]
->         Expansion ROM at f7e20000 [disabled] [size=16K]
->         Capabilities: [60] Power Management version 1
->         Kernel driver in use: pata_pdc2027x
-> 
-> 06:00.0 SATA controller: ASMedia Technology Inc. ASM1062 Serial ATA
-> Controller (rev 01) (prog-if 01 [AHCI 1.0])
->         Subsystem: Micro-Star International Co., Ltd. Device 7732
->         Flags: bus master, fast devsel, latency 0, IRQ 25
->         I/O ports at c050 [size=8]
->         I/O ports at c040 [size=4]
->         I/O ports at c030 [size=8]
->         I/O ports at c020 [size=4]
->         I/O ports at c000 [size=32]
->         Memory at f7c00000 (32-bit, non-prefetchable) [size=512]
->         Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit-
->         Capabilities: [78] Power Management version 3
->         Capabilities: [80] Express Legacy Endpoint, MSI 00
->         Capabilities: [100] Virtual Channel
->         Kernel driver in use: ahci
-> 
-> Kind regards,
-> Frank de Jong
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yeah, I looked at this along time ago, including the interesting
+loop behavior. I'll check on it again.  Thanks for the pointer.
+
+julia
