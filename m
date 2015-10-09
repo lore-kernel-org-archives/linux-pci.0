@@ -1,43 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:30537 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751973AbbJLVFs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 12 Oct 2015 17:05:48 -0400
-Date: Mon, 12 Oct 2015 21:05:46 +0000 (UTC)
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Keith Busch <keith.busch@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device
- driver
-In-Reply-To: <20151006231412.GF29420@localhost>
-Message-ID: <alpine.LNX.2.00.1510122050180.27742@localhost.lm.intel.com>
-References: <1443721454-25467-1-git-send-email-keith.busch@intel.com> <20151006231412.GF29420@localhost>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1444407378.17726.2.camel@oracle.com>
+Subject: Re: [PATCH v7 02/60] sparc/PCI: Use correct bus address to resource
+ offset
+From: Khalid Aziz <khalid.aziz@oracle.com>
+Reply-To: khalid.aziz@oracle.com
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 09 Oct 2015 10:16:18 -0600
+In-Reply-To: <1444340359-8011-3-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+	 <1444340359-8011-3-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 6 Oct 2015, Bjorn Helgaas wrote:
->> +static int __init vmd_init(void)
->> +{
->> +	return pci_register_driver(&vmd_drv);
->> +}
->> +module_init(vmd_init);
->
-> module_pci_driver(vmd_drv)?
+On Thu, 2015-10-08 at 14:38 -0700, Yinghai Lu wrote:
+> After we add 64bit mmio parsing, we got some "no compatible bridge window"
+> warning on anther new model that support 64bit resource.
+> 
+> It turns out that we can not use mem_space.start as 64bit mem space
+> offset, aka mem_space.start != offset.
+> 
+> Use child_phys_addr to calculate exact offset and recorder offset in
+> pbm.  Still assume all mem have same offset, otherwise panic early.
+> 
+> After patch we get correct offset.
+> 
+> /pci@305: PCI IO [io  0x2007e00000000-0x2007e0fffffff] offset 2007e00000000
+> /pci@305: PCI MEM [mem 0x2000000100000-0x200007effffff] offset 2000000000000
+> /pci@305: PCI MEM64 [mem 0x2000100000000-0x2000dffffffff] offset 2000000000000
+> ...
+> pci_sun4v f02ae7f8: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
+> pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
+> pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
+> 
+> 
+> -v2: to make is simple, do not add mem64_offset, and assume
+>      mem64_offset == mem_offset, otherwise would make
+>      pci_mmap_resource() path too complicated.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-We actually only have a module_init in this driver, and purposely left
-out module_exit. We don't want to be able to unload this because we
-can't reference count this module for modules depending on it.
+Tested on sparc platforms
 
-'rmmod <module>' returns busy if you're actively using a device that
-module is driving, but the end devices VMD provides are not driven by the
-VMD driver; it'd be kind of like being able to unload the pci core driver.
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com> 
+
+
+
