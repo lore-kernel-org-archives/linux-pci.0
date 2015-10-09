@@ -1,84 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
- <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
-Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Message-ID: <562761A1.4020306@linaro.org>
-Date: Wed, 21 Oct 2015 11:57:53 +0200
-MIME-Version: 1.0
-In-Reply-To: <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Joerg Roedel <joro@8bytes.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>
+Cc: x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [PATCH] x86/PCI: Don't alloc pcibios-irq when MSI is enabled
+Date: Fri,  9 Oct 2015 12:23:34 +0200
+Message-Id: <1444386214-26319-1-git-send-email-joro@8bytes.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14.10.2015 08:29, Jiang Liu wrote:
-> Introduce common interface acpi_pci_root_create() and related data
-> structures to create PCI root bus for ACPI PCI host bridges. It will
-> be used to kill duplicated arch specific code for IA64 and x86. It may
-> also help ARM64 in future.
->
-> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Tested-by: Tony Luck <tony.luck@intel.com>
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
-> ---
->   drivers/acpi/pci_root.c  |  204 ++++++++++++++++++++++++++++++++++++++++++++++
->   include/linux/pci-acpi.h |   24 ++++++
->   2 files changed, 228 insertions(+)
->
+From: Joerg Roedel <jroedel@suse.de>
 
-[...]
+The pcibios-irq and MSI both use dev->irq to store the IRQ
+number. While the MSI code checks for that and frees the
+pcibios-irq before overwriting dev->irq, the
+pcibios_alloc_irq function does not.
 
-> +
-> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
-> +				     struct acpi_pci_root_ops *ops,
-> +				     struct acpi_pci_root_info *info,
-> +				     void *sysdata)
-> +{
-> +	int ret, busnum = root->secondary.start;
-> +	struct acpi_device *device = root->device;
-> +	int node = acpi_get_node(device->handle);
-> +	struct pci_bus *bus;
-> +
-> +	info->root = root;
-> +	info->bridge = device;
-> +	info->ops = ops;
-> +	INIT_LIST_HEAD(&info->resources);
-> +	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
-> +		 root->segment, busnum);
-> +
-> +	if (ops->init_info && ops->init_info(info))
-> +		goto out_release_info;
-> +	if (ops->prepare_resources)
-> +		ret = ops->prepare_resources(info);
-> +	else
-> +		ret = acpi_pci_probe_root_resources(info);
-> +	if (ret < 0)
-> +		goto out_release_info;
-> +
-> +	pci_acpi_root_add_resources(info);
-> +	pci_add_resource(&info->resources, &root->secondary);
-> +	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
-> +				  sysdata, &info->resources);
+Usually this is not a problem, as the pcibios-irq is
+allocated before probe time of the device and the MSI irq is
+allocted from the drivers probe path.
 
-Thank a lot for this cleanup!!
+But there are PCI devices handled by the core kernel and not
+by a standard pci driver, like the AMD IOMMU for example.
+For the AMD IOMMU a normal pci device driver does not make
+sense, because a driver can be forcibly unbound from its
+device, which is not a good idea for an IOMMU.
 
-I recall you already considered passing segment (domain nr) to 
-pci_create_root_bus, right? Can you please remind me why we gave up on this?
+Nevertheless the PCI core code tries to match the PCI device
+implementing the AMD IOMMU against drivers, and
+allocates/frees a pcibios IRQ every time it tries out a new
+driver. This overwrites the dev->irq field set by
+pci_enable_msi() and sets it to 0 in the end (because the
+probe fails and the pcibios-irq is freed again).
 
-I am asking because currently I can not find the way to retrieve domain 
-number from pci_bus_assign_domain_nr (for those platforms which choose 
-PCI_DOMAINS_GENERIC and want to use segment nr from MCFG table) which is 
-the part of pci_create_root_bus.
+On suspend/resume this breaks the kernel, because the irq
+descriptor for irq 0 is NULL.
 
-Regards,
-Tomasz
+Fix this by not allocating a pcibios-irq when MSI is
+already active. This also has the benefit, that a device
+claimed by the core kernel can not be probed by a pci driver
+later.
+
+Cc: Jiang Liu <jiang.liu@linux.intel.com>
+Reported-by: Borislav Petkov <bp@alien8.de>
+Signed-off-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/pci/common.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index dc78a4a..6254c06 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -675,6 +675,14 @@ int pcibios_add_device(struct pci_dev *dev)
+ 
+ int pcibios_alloc_irq(struct pci_dev *dev)
+ {
++	/*
++	 * If the PCI device was already claimed by core code and has
++	 * MSI enabled, probing of the pcibios irq will overwrite
++	 * dev->irq.  So bail out if MSI is already enabled.
++	 */
++	if (pci_dev_msi_enabled(dev))
++		return -EBUSY;
++
+ 	return pcibios_enable_irq(dev);
+ }
+ 
+-- 
+1.9.1
+
