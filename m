@@ -1,84 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40195 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754719AbbJGQFC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Oct 2015 12:05:02 -0400
-Date: Wed, 7 Oct 2015 11:04:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sasha Levin <sasha.levin@oracle.com>
-Cc: Prarit Bhargava <prarit@redhat.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: prevent out of bounds access in numa_node override
-Message-ID: <20151007160458.GA27633@localhost>
-References: <1443995369-11399-1-git-send-email-sasha.levin@oracle.com>
- <20151006193627.GE29420@localhost>
- <561428CE.2040601@redhat.com>
- <56152725.10809@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56152725.10809@oracle.com>
+Received: from resqmta-po-10v.sys.comcast.net ([96.114.154.169]:39749 "EHLO
+	resqmta-po-10v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751047AbbJIQYI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 12:24:08 -0400
+Message-ID: <1444407355.17726.1.camel@oracle.com>
+Subject: Re: [PATCH v7 01/60] sparc/PCI: Add mem64 resource parsing for root
+ bus
+From: Khalid Aziz <khalid.aziz@oracle.com>
+Reply-To: khalid.aziz@oracle.com
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 09 Oct 2015 10:15:55 -0600
+In-Reply-To: <1444340359-8011-2-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+	 <1444340359-8011-2-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 07, 2015 at 10:07:33AM -0400, Sasha Levin wrote:
-> > On 10/06/2015 03:36 PM, Bjorn Helgaas wrote:
-> >> Hi Sasha,
-> >>
-> >> On Sun, Oct 04, 2015 at 05:49:29PM -0400, Sasha Levin wrote:
-> >>> Commit 63692df1 ("PCI: Allow numa_node override via sysfs") didn't check that
-> >>> the numa node provided by userspace is valid. Passing a node number too high
-> >>> would attempt to access invalid memory and trigger a kernel panic.
-> >>>
-> >>> Fixes: 63692df1 ("PCI: Allow numa_node override via sysfs")
-> >>> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
-> >>> ---
-> >>>  drivers/pci/pci-sysfs.c |    2 +-
-> >>>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>>
-> >>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> >>> index 312f23a..e9abca8 100644
-> >>> --- a/drivers/pci/pci-sysfs.c
-> >>> +++ b/drivers/pci/pci-sysfs.c
-> >>> @@ -216,7 +216,7 @@ static ssize_t numa_node_store(struct device *dev,
-> >>>  	if (ret)
-> >>>  		return ret;
-> >>>  
-> >>> -	if (!node_online(node))
-> >>> +	if (node > MAX_NUMNODES || !node_online(node))
-> >>
-> >> This needs to be "node >= MAX_NUMNODES", doesn't it?  I'll fix it up if
-> >> you agree.
+On Thu, 2015-10-08 at 14:38 -0700, Yinghai Lu wrote:
+> Found "no compatible bridge window" warning in boot log from T5-8.
 > 
-> Yup, you're right.
+> pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
+> 
+> That resource is above 4G, but does not get offset correctly as
+> root bus only report io and mem32.
+> 
+> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+> pci_bus 0000:00: root bus resource [bus 00-77]
+> 
+> Add mem64 handling in pci_common for sparc, so we can have 64bit resource
+> registered for root bus at first.
+> 
+> After patch, will have:
+> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+> pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
+> pci_bus 0000:00: root bus resource [bus 00-77]
+> 
+> -v2: mem64_space should use mem_space.start as offset.
+> -v3: add IORESOURCE_MEM_64 flag
+> -v4: set name for mem64_space, otherwise /proc/iomem will have <bad> for name
+> 
+> Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+> Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+> Reported-by: David Ahern <david.ahern@oracle.com>
+> Tested-by: David Ahern <david.ahern@oracle.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-OK, applied to for-linus for v4.3 as follows.  Thanks a lot, Sasha!
+
+Tested on sparc platforms
+
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com> 
 
 
-commit 0f7b9ad7477f7ce9b30e9ab0048f6e726f11a08a
-Author: Sasha Levin <sasha.levin@oracle.com>
-Date:   Sun Oct 4 17:49:29 2015 -0400
 
-    PCI: Prevent out of bounds access in numa_node override
-    
-    63692df103e9 ("PCI: Allow numa_node override via sysfs") didn't check that
-    the numa node provided by userspace is valid.  Passing a node number too
-    high would attempt to access invalid memory and trigger a kernel panic.
-    
-    Fixes: 63692df103e9 ("PCI: Allow numa_node override via sysfs")
-    Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    CC: stable@vger.kernel.org	# v3.19+
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 312f23a..9261868 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -216,7 +216,7 @@ static ssize_t numa_node_store(struct device *dev,
- 	if (ret)
- 		return ret;
- 
--	if (!node_online(node))
-+	if (node >= MAX_NUMNODES || !node_online(node))
- 		return -EINVAL;
- 
- 	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
