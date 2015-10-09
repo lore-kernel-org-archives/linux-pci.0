@@ -1,260 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f41.google.com ([209.85.192.41]:34830 "EHLO
-	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752879AbbJFXut (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Oct 2015 19:50:49 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v5 2/4] PCI: Add support for Enhanced Allocation devices
-Date: Tue,  6 Oct 2015 16:50:36 -0700
-Message-Id: <1444175438-7443-3-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from mout3.freenet.de ([195.4.92.93]:39029 "EHLO mout3.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753812AbbJIRrr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Oct 2015 13:47:47 -0400
+Subject: Re: [PATCH] iommu/amd: Fix NULL pointer deref on device detach READ
+ FPDMA QUEUED errors since Linux 4.0
+To: Joerg Roedel <joro@8bytes.org>
+References: <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
+ <20150929162042.GR3036@8bytes.org> <560BF73F.8000008@maya.org>
+ <20151006101356.GE12506@8bytes.org> <56141507.7040103@maya.org>
+ <20151007154005.GH28811@8bytes.org> <56155028.7060906@maya.org>
+ <20151008173007.GL28811@8bytes.org> <5616BCF4.10104@maya.org>
+ <5616C850.2000906@maya.org> <20151009144528.GA27420@8bytes.org>
+Cc: Mikulas Patocka <mpatocka@redhat.com>,
+	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
+	Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <5617FC71.1090301@maya.org>
+Date: Fri, 9 Oct 2015 19:42:09 +0200
+MIME-Version: 1.0
+In-Reply-To: <20151009144528.GA27420@8bytes.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Sean O. Stalley" <sean.stalley@intel.com>
+Hello Jörg,
 
-Add support for devices using Enhanced Allocation entries instead of BARs.
-This patch allows the kernel to parse the EA Extended Capability structure
-in PCI configspace and claim the BAR-equivalent resources.
+On 10/09/2015 at 04:45 PM, Joerg Roedel wrote:
+> Hi Andreas,
+> 
+> On Thu, Oct 08, 2015 at 09:47:28PM +0200, Andreas Hartmann wrote:
+>> This time, the oops was caused by the second PCI card I'm passing
+>> through to another VM (the ath9k card worked fine this time - chance?).
+>> I added the lspci output to the attached file, too.
+> 
+> I digged a little bit around here and found a 32bit PCI card and plugged
+> it into the AMD IOMMU box. I could reproduce the problem and here is
+> patch which fixes it for me. Can you test it too please?
 
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
-[david.daney@cavium.com: Add more support/checking for Entry Properties,
-allow EA behind bridges, rewrite some error messages.]
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/pci/pci.c   | 182 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h   |   1 +
- drivers/pci/probe.c |   3 +
- 3 files changed, 186 insertions(+)
+Works fine here. Thanks.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6a9a111..30a90d1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2148,6 +2148,188 @@ void pci_pm_init(struct pci_dev *dev)
- 	}
- }
- 
-+static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
-+{
-+	unsigned long flags = IORESOURCE_PCI_FIXED;
-+
-+	switch (prop) {
-+	case PCI_EA_P_MEM:
-+	case PCI_EA_P_VIRT_MEM:
-+		flags |= IORESOURCE_MEM;
-+		break;
-+	case PCI_EA_P_MEM_PREFETCH:
-+	case PCI_EA_P_VIRT_MEM_PREFETCH:
-+		flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
-+		break;
-+	case PCI_EA_P_IO:
-+		flags |= IORESOURCE_IO;
-+		break;
-+	default:
-+		return 0;
-+	}
-+
-+	return flags;
-+}
-+
-+static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei,
-+					    u8 prop)
-+{
-+	if (bei <= PCI_EA_BEI_BAR5 && prop <= PCI_EA_P_IO)
-+		return &dev->resource[bei];
-+	else if (bei == PCI_EA_BEI_ROM)
-+		return &dev->resource[PCI_ROM_RESOURCE];
-+	else
-+		return NULL;
-+}
-+
-+/* Read an Enhanced Allocation (EA) entry */
-+static int pci_ea_read(struct pci_dev *dev, int offset)
-+{
-+	struct resource *res;
-+	int ent_offset = offset;
-+	int ent_size;
-+	resource_size_t start;
-+	resource_size_t end;
-+	unsigned long flags;
-+	u32 dw0;
-+	u32 base;
-+	u32 max_offset;
-+	u8 prop;
-+	bool support_64 = (sizeof(resource_size_t) >= 8);
-+
-+	pci_read_config_dword(dev, ent_offset, &dw0);
-+	ent_offset += 4;
-+
-+	/* Entry size field indicates DWORDs after 1st */
-+	ent_size = ((dw0 & PCI_EA_ES) + 1) << 2;
-+
-+	if (!(dw0 & PCI_EA_ENABLE)) /* Entry not enabled */
-+		goto out;
-+
-+	prop = PCI_EA_PP(dw0);
-+	/*
-+	 * If the Property is in the reserved range, try the Secondary
-+	 * Property instead.
-+	 */
-+	if (prop > PCI_EA_P_BRIDGE_IO && prop < PCI_EA_P_MEM_RESERVED)
-+		prop = PCI_EA_SP(dw0);
-+	if (prop > PCI_EA_P_BRIDGE_IO)
-+		goto out;
-+
-+	res = pci_ea_get_resource(dev, PCI_EA_BEI(dw0), prop);
-+	if (!res) {
-+		dev_err(&dev->dev, "Unsupported EA entry BEI: %u\n",
-+			PCI_EA_BEI(dw0));
-+		goto out;
-+	}
-+
-+	flags = pci_ea_set_flags(dev, prop);
-+	if (!flags) {
-+		dev_err(&dev->dev, "Unsupported EA properties: %u\n", prop);
-+		goto out;
-+	}
-+
-+	/* Read Base */
-+	pci_read_config_dword(dev, ent_offset, &base);
-+	start = (base & PCI_EA_FIELD_MASK);
-+	ent_offset += 4;
-+
-+	/* Read MaxOffset */
-+	pci_read_config_dword(dev, ent_offset, &max_offset);
-+	ent_offset += 4;
-+
-+	/* Read Base MSBs (if 64-bit entry) */
-+	if (base & PCI_EA_IS_64) {
-+		u32 base_upper;
-+
-+		pci_read_config_dword(dev, ent_offset, &base_upper);
-+		ent_offset += 4;
-+
-+		flags |= IORESOURCE_MEM_64;
-+
-+		/* entry starts above 32-bit boundary, can't use */
-+		if (!support_64 && base_upper)
-+			goto out;
-+
-+		if (support_64)
-+			start |= ((u64)base_upper << 32);
-+	}
-+
-+	dev_dbg(&dev->dev,
-+		"EA (%u,%u) start = %pa\n", PCI_EA_BEI(dw0), prop, &start);
-+
-+	end = start + (max_offset | 0x03);
-+
-+	/* Read MaxOffset MSBs (if 64-bit entry) */
-+	if (max_offset & PCI_EA_IS_64) {
-+		u32 max_offset_upper;
-+
-+		pci_read_config_dword(dev, ent_offset, &max_offset_upper);
-+		ent_offset += 4;
-+
-+		flags |= IORESOURCE_MEM_64;
-+
-+		/* entry too big, can't use */
-+		if (!support_64 && max_offset_upper)
-+			goto out;
-+
-+		if (support_64)
-+			end += ((u64)max_offset_upper << 32);
-+	}
-+
-+	dev_dbg(&dev->dev,
-+		"EA (%u,%u) end = %pa\n", PCI_EA_BEI(dw0), prop, &end);
-+
-+	if (end < start) {
-+		dev_err(&dev->dev, "EA Entry crosses address boundary\n");
-+		goto out;
-+	}
-+
-+	if (ent_size != ent_offset - offset) {
-+		dev_err(&dev->dev,
-+			"EA Entry Size (%d) does not match length read (%d)\n",
-+			ent_size, ent_offset - offset);
-+		goto out;
-+	}
-+
-+	res->name = pci_name(dev);
-+	res->start = start;
-+	res->end = end;
-+	res->flags = flags;
-+
-+out:
-+	return offset + ent_size;
-+}
-+
-+/* Enhanced Allocation Initalization */
-+void pci_ea_init(struct pci_dev *dev)
-+{
-+	int ea;
-+	u8 num_ent;
-+	int offset;
-+	int i;
-+
-+	/* find PCI EA capability in list */
-+	ea = pci_find_capability(dev, PCI_CAP_ID_EA);
-+	if (!ea)
-+		return;
-+
-+	/* determine the number of entries */
-+	pci_bus_read_config_byte(dev->bus, dev->devfn, ea + PCI_EA_NUM_ENT,
-+					&num_ent);
-+	num_ent &= PCI_EA_NUM_ENT_MASK;
-+
-+	offset = ea + PCI_EA_FIRST_ENT;
-+
-+	/* Skip DWORD 2 for type 1 functions */
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-+		offset += 4;
-+
-+	/* parse each EA entry */
-+	for (i = 0; i < num_ent; ++i)
-+		offset = pci_ea_read(dev, offset);
-+}
-+
- static void pci_add_saved_cap(struct pci_dev *pci_dev,
- 	struct pci_cap_saved_state *new_cap)
- {
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 24ba9dc..a160733 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -78,6 +78,7 @@ bool pci_dev_keep_suspended(struct pci_dev *dev);
- void pci_config_pm_runtime_get(struct pci_dev *dev);
- void pci_config_pm_runtime_put(struct pci_dev *dev);
- void pci_pm_init(struct pci_dev *dev);
-+void pci_ea_init(struct pci_dev *dev);
- void pci_allocate_cap_save_buffers(struct pci_dev *dev);
- void pci_free_cap_save_buffers(struct pci_dev *dev);
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8361d27..4c4af78 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1597,6 +1597,9 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 
- static void pci_init_capabilities(struct pci_dev *dev)
- {
-+	/* Enhanced Allocation */
-+	pci_ea_init(dev);
-+
- 	/* MSI/MSI-X list */
- 	pci_msi_init_pci_dev(dev);
- 
--- 
-1.9.1
+
+But now, I can see the next big problem of v4.3-rc4: My VMs are
+connected on the host via tun/tap devices. They themselves are connected
+to a bridge device. If there is data sent between the VMs, the (system)
+load is more as double (!) of the load seen with 4.1.x e.g. . Having an
+allover throughput of about low 35 MBit/s seen by the host over all
+tun/tap devices / bridge creates a load of 3 (!!) with 3 VMs being
+involved. That's about half of the load produced by kernel compiling
+(make -j8).
+
+
+
+> I'd like to
+> send a pull-req with this fix included to Linus for rc5.
+> 
+> Thanks,
+> 
+> 	Joerg
+> 
+> From d07307c04edffaaa045fb83713f8808e55ffa895 Mon Sep 17 00:00:00 2001
+> From: Joerg Roedel <jroedel@suse.de>
+> Date: Fri, 9 Oct 2015 16:23:33 +0200
+> Subject: [PATCH] iommu/amd: Fix NULL pointer deref on device detach
+> 
+> When a device group is detached from its domain, the iommu
+> core code calls into the iommu driver to detach each device
+> individually.
+> 
+> Before this functionality went into the iommu core code, it
+> was implemented in the drivers, also in the AMD IOMMU
+> driver as the device alias handling code.
+> 
+> This code is still present, as there might be aliases that
+> don't exist as real PCI devices (and are therefore invisible
+> to the iommu core code).
+> 
+> Unfortunatly it might happen now, that a device is unbound
+> multiple times from its domain, first by the alias handling
+> code and then by the iommu core code (or vice verca).
+> 
+> This ends up in the do_detach function which dereferences
+> the dev_data->domain pointer. When the device is already
+> detached, this pointer is NULL and we get a kernel oops.
+> 
+> Removing the alias code completly is not an option, as that
+> would also remove the code which handles invisible aliases.
+> The code could be simplified, but this is too big of a
+> change outside the merge window.
+> 
+> For now, just check the dev_data->domain pointer in
+> do_detach and bail out if it is NULL.
+> 
+> Andreas Hartmann <andihartmann@freenet.de>
+> Signed-off-by: Joerg Roedel <jroedel@suse.de>
+> ---
+>  drivers/iommu/amd_iommu.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+> index f82060e7..08d2775 100644
+> --- a/drivers/iommu/amd_iommu.c
+> +++ b/drivers/iommu/amd_iommu.c
+> @@ -2006,6 +2006,15 @@ static void do_detach(struct iommu_dev_data *dev_data)
+>  {
+>  	struct amd_iommu *iommu;
+>  
+> +	/*
+> +	 * First check if the device is still attached. It might already
+> +	 * be detached from its domain because the generic
+> +	 * iommu_detach_group code detached it and we try again here in
+> +	 * our alias handling.
+> +	 */
+> +	if (!dev_data->domain)
+> +		return;
+> +
+>  	iommu = amd_iommu_rlookup_table[dev_data->devid];
+>  
+>  	/* decrease reference counters */
+> 
 
