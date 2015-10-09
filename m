@@ -1,81 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:59740 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751017AbbJ3BzP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 29 Oct 2015 21:55:15 -0400
-Subject: Re: [PATCH v4 4/7] PCI: Add fwnode_handle to pci_sysdata
-To: jakeo@microsoft.com, gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-References: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
- <1446162376-43419-5-git-send-email-jakeo@microsoft.com>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <5632CDF5.1000402@linux.intel.com>
-Date: Fri, 30 Oct 2015 09:55:01 +0800
+Received: from mail-yk0-f182.google.com ([209.85.160.182]:34613 "EHLO
+	mail-yk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752912AbbJIRtw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 13:49:52 -0400
 MIME-Version: 1.0
-In-Reply-To: <1446162376-43419-5-git-send-email-jakeo@microsoft.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20151009170448.GG21629@leverpostej>
+References: <1444409849-5685-1-git-send-email-Liviu.Dudau@arm.com>
+ <1444409849-5685-5-git-send-email-Liviu.Dudau@arm.com> <20151009170448.GG21629@leverpostej>
+From: Rob Herring <robherring2@gmail.com>
+Date: Fri, 9 Oct 2015 12:49:32 -0500
+Message-ID: <CAL_JsqKjXpa7R433MZn9O8XkJcEE9xWp4tYRUox5eSs+Dm+cJw@mail.gmail.com>
+Subject: Re: [PATCH v2 4/5] arm64: Juno: Add support for the PCIe host bridge
+ on Juno R1
+To: Mark Rutland <mark.rutland@arm.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Oct 9, 2015 at 12:04 PM, Mark Rutland <mark.rutland@arm.com> wrote:
+> On Fri, Oct 09, 2015 at 05:57:28PM +0100, Liviu Dudau wrote:
+>> Juno R1 board sports a functional PCIe host bridge that is
+>> compliant with the SBSA standard found [1] here. With the right
+>> firmware that initialises the XpressRICH3 controller one can
+>> use the generic Host Bridge driver to use the PCIe hardware.
+>>
+>> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>>
+>> [1] http://infocenter.arm.com/help/topic/com.arm.doc.den0029a/
+>> ---
+>>  arch/arm64/boot/dts/arm/juno-r1.dts | 20 ++++++++++++++++++++
+>>  1 file changed, 20 insertions(+)
+>>
+>> diff --git a/arch/arm64/boot/dts/arm/juno-r1.dts b/arch/arm64/boot/dts/arm/juno-r1.dts
+>> index c627511..a702a6b 100644
+>> --- a/arch/arm64/boot/dts/arm/juno-r1.dts
+>> +++ b/arch/arm64/boot/dts/arm/juno-r1.dts
+>> @@ -109,7 +109,26 @@
+>>
+>>       #include "juno-base.dtsi"
+>>
+>> +     pcie-controller@40000000 {
+>> +             compatible = "arm,juno-r1-pcie", "plda,xpressrich3", "pci-host-ecam-generic";
+>
+> Judging by a PLDA press release [1], it looks like Juno uses
+> "XpressRICH3-AXI" [2] rather than "XpressRICH3 for ASIC" [3].
+>
+> So sorry to bikeshed the name I suggested, but it's probably best to
+> s/plda,xpressrich3/plda,xpressrich3-axi/
+>
+> With that:
+>
+> Acked-by: Mark Rutland <mark.rutland@arm.com>
+>
+> I assume that can be fixed up when picking (or prior to a pull) without
+> the need to repost.
 
+Also, now these strings need to be documented. :)
 
-On 2015/10/30 7:46, jakeo@microsoft.com wrote:
-> From: Jake Oshins <jakeo@microsoft.com>
-> 
-> This patch adds an fwnode_handle to struct pci_sysdata, which is
-> used by the next patch in the series when trying to locate an
-> IRQ domain associated with a root PCI bus.
-> 
-> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
-> ---
->  arch/x86/include/asm/pci.h | 11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-> index 4625943..10213a1 100644
-> --- a/arch/x86/include/asm/pci.h
-> +++ b/arch/x86/include/asm/pci.h
-> @@ -20,6 +20,9 @@ struct pci_sysdata {
->  #ifdef CONFIG_X86_64
->  	void		*iommu;		/* IOMMU private data */
->  #endif
-> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-> +	void		*fwnode;	/* IRQ domain for MSI assignment */
-> +#endif
->  };
->  
->  extern int pci_routeirq;
-> @@ -41,6 +44,14 @@ static inline int pci_proc_domain(struct pci_bus *bus)
->  }
->  #endif
->  
-> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-> +static inline void *pci_fwnode(struct pci_bus *bus)
-> +{
-> +	struct pci_sysdata *sd = bus->sysdata;
-> +	return sd->fwnode;
-> +}
-> +#endif
-Hi Jakeo,
-	I would be better that if the function name indicates
-that we are getting PCI host bridge(root bus) firmware node.
-And you also need some magic here to avoid breaking compilation
-on other archs:
-in arch/x86/include/asm/pci.h
-#define pci_fwnode		pci_fwnode
+I would just adding to the generic host doc.
 
-in include/asm-generic/pci.h
-#ifndef pci_fwnode
-#define pci_fwnode(bus)         ((void)(bus),NULL)
-#endif
-
-Thanks,
-Gerry
-> +
->  /* Can be used to override the logic in pci_scan_bus for skipping
->     already-configured bus numbers - to be used for buggy BIOSes
->     or architectures with incomplete PCI setup by the loader */
-> 
+Rob
