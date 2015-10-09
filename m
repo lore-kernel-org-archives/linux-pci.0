@@ -1,151 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:45869 "EHLO bear.ext.ti.com"
+Received: from mout3.freenet.de ([195.4.92.93]:37186 "EHLO mout3.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750985AbbJSOsh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Oct 2015 10:48:37 -0400
-From: "Kwok, WingMan" <w-kwok2@ti.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	"Karicheri, Muralidharan" <m-karicheri2@ti.com>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	KISHON VIJAY ABRAHAM <kishon@ti.com>,
-	"Quadros, Roger" <rogerq@ti.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"ssantosh@kernel.org" <ssantosh@kernel.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v1 1/2] phy: keystone: serdes driver for gbe 10gbe and
- pcie
-Date: Mon, 19 Oct 2015 14:47:43 +0000
-Message-ID: <230CBA6E4B6B6B418E8730AC28E6FC7E04229363@DFLE11.ent.ti.com>
-References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com>
- <5192855.p6QLDWTiVi@wuerfel> <561FCDC0.3080109@ti.com>
- <6215485.RTPqreMEMX@wuerfel>
-In-Reply-To: <6215485.RTPqreMEMX@wuerfel>
-Content-Type: text/plain; charset="utf-8"
+	id S1750916AbbJIFXH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Oct 2015 01:23:07 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: Joerg Roedel <joro@8bytes.org>
+References: <55FE5740.2060701@maya.org> <20150929152100.GL3036@8bytes.org>
+ <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
+ <20150929162042.GR3036@8bytes.org> <560BF73F.8000008@maya.org>
+ <20151006101356.GE12506@8bytes.org> <56141507.7040103@maya.org>
+ <56148A1B.5060506@maya.org> <20151007161022.GI28811@8bytes.org>
+ <56154DEA.5050901@maya.org> <20151008163957.GK28811@8bytes.org>
+ <5616B436.1000802@maya.org> <5616C998.1010309@maya.org>
+Cc: Mikulas Patocka <mpatocka@redhat.com>,
+	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
+	Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <56174EA6.7000106@maya.org>
+Date: Fri, 9 Oct 2015 07:20:38 +0200
 MIME-Version: 1.0
+In-Reply-To: <5616C998.1010309@maya.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGksDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQXJuZCBCZXJnbWFu
-biBbbWFpbHRvOmFybmRAYXJuZGIuZGVdDQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDE1LCAy
-MDE1IDM6MzUgUE0NCj4gVG86IEthcmljaGVyaSwgTXVyYWxpZGhhcmFuDQo+IENjOiBsaW51eC1h
-cm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IEt3b2ssIFdpbmdNYW47IHJvYmgrZHRAa2Vy
-bmVsLm9yZzsNCj4gcGF3ZWwubW9sbEBhcm0uY29tOyBtYXJrLnJ1dGxhbmRAYXJtLmNvbTsgaWpj
-K2RldmljZXRyZWVAaGVsbGlvbi5vcmcudWs7DQo+IGdhbGFrQGNvZGVhdXJvcmEub3JnOyBLSVNI
-T04gVklKQVkgQUJSQUhBTTsgUXVhZHJvcywgUm9nZXI7DQo+IGJoZWxnYWFzQGdvb2dsZS5jb207
-IHNzYW50b3NoQGtlcm5lbC5vcmc7IGxpbnV4QGFybS5saW51eC5vcmcudWs7DQo+IGRldmljZXRy
-ZWVAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC0N
-Cj4gcGNpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYxIDEvMl0gcGh5
-OiBrZXlzdG9uZTogc2VyZGVzIGRyaXZlciBmb3IgZ2JlIDEwZ2JlIGFuZA0KPiBwY2llDQo+IA0K
-PiBPbiBUaHVyc2RheSAxNSBPY3RvYmVyIDIwMTUgMTI6MDE6MDQgTXVyYWxpIEthcmljaGVyaSB3
-cm90ZToNCj4gPg0KPiA+ID4+ICsgKiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVz
-dCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KPiA+ID4+ICsgKiBub3RpY2UsIHRoaXMg
-bGlzdCBvZiBjb25kaXRpb25zIGFuZCB0aGUgZm9sbG93aW5nIGRpc2NsYWltZXIgaW4gdGhlDQo+
-ID4gPj4gKyAqIGRvY3VtZW50YXRpb24gYW5kL29yIG90aGVyIG1hdGVyaWFscyBwcm92aWRlZCB3
-aXRoIHRoZQ0KPiA+ID4+ICsgKiBkaXN0cmlidXRpb24uDQo+ID4gPg0KPiA+ID4gVGhlIGN1cnJl
-bnQgY29kZSBkb2VzIG5vdCBkbyB0aGlzIHdoZW4gY29tcGlsZWQsIHdoaWNoIG1pZ2h0IGJlIGEN
-Cj4gPiA+IHByb2JsZW0gZm9yIGRpc3RyaWJ1dG9ycy4gQ2FuIHlvdSBjbGFyaWZ5IHRoZSBsaWNl
-bnNlPw0KPiA+ID4NCj4gPiBBcm5kLA0KPiA+DQo+ID4gQ2FuIHlvdSBlbGFib3JhdGUgb24gdGhp
-cz8gSSBkaWQgYSBncmVwIG9uIHRoZSBzdHJpbmcgIlJlZGlzdHJpYnV0aW9ucw0KPiA+IGluIGJp
-bmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQiIGFuZCBJIGNvdWxk
-IGZpbmQNCj4gPiBzZXZlcmFsIGluc3RhbmNlIG9mIHRoaXMuIFNvIEkgYW0gbm90IHN1cmUgd2hh
-dCB5b3UgbWVhbiBieSAiVGhlIGN1cnJlbnQNCj4gPiBjb2RlIGRvZXMgbm90IGRvIHRoaXMgd2hl
-biBjb21waWxlZCIuDQo+IA0KPiBZb3Ugd3JpdGUgdGhhdCB0aGUgYmluYXJ5IGZvcm0gb2YgdGhl
-IGNvZGUgbXVzdCBwcm9kdWNlIHRoZSBjb3B5cmlnaHQNCj4gbm90aWNlLiBJIGRvbid0IHNlZSBh
-bnkgY29kZSB0aGF0IGRvZXMgdGhpcy4gSWYgSSB3YXMgbG9va2luZyBpbiB0aGUNCj4gd3Jvbmcg
-cGxhY2UsIGxldCBtZSBrbm93Lg0KPiANCj4gCUFybmQNCg0KRm9yIGV4YW1wbGUsIHdlIGRpZCBh
-IGdyZXAgb2YgdGhlIGZvbGxvd2luZyANCg0KbXlwYzpsaW51eChwZXJzb25hbC9saW51eC9zZXJk
-ZXMpICQgZ3JlcCAtcm5JICJSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXBy
-b2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodCIgLi9uZXQvDQouL25ldC9zdW5ycGMvYXV0aF9nc3Mv
-YXV0aF9nc3MuYzoxODogKiAgMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3Qg
-cmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L3N1bnJwYy9hdXRoX2dzcy9nc3Nf
-bWVjaF9zd2l0Y2guYzoxNTogKiAgMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11
-c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L3N1bnJwYy9hdXRoX2dzcy9n
-c3Nfa3JiNV9tZWNoLmM6MTY6ICogIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBt
-dXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC9ibHVldG9vdGgvZWNjLmM6
-MTA6ICogICogUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRo
-ZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L2JsdWV0b290aC9lY2MuaDoxMDogKiAgKiBSZWRpc3Ry
-aWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdo
-dA0KLi9uZXQvY2FuL2d3LmM6MTI6ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3Jt
-IG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L2Nhbi9hZl9jYW4uYzox
-MzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhl
-IGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvY2FuL3Byb2MuYzoxMjogKiAyLiBSZWRpc3RyaWJ1dGlv
-bnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9u
-ZXQvY2FuL2JjbS5jOjEyOiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0
-IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC9jYW4vcmF3LmM6MTI6ICogMi4g
-UmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBj
-b3B5cmlnaHQNCi4vbmV0L2Nhbi9hZl9jYW4uaDoxMDogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4g
-YmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlw
-Yy9kaXNjb3Zlci5jOjEzOiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0
-IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC90aXBjL25vZGUuaDoxMzogKiAy
-LiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3Zl
-IGNvcHlyaWdodA0KLi9uZXQvdGlwYy9uZXRsaW5rX2NvbXBhdC5jOjEwOiAqIDIuIFJlZGlzdHJp
-YnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0
-DQouL25ldC90aXBjL25hbWVfZGlzdHIuaDoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmlu
-YXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9i
-ZWFyZXIuYzoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXBy
-b2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9uYW1lX3RhYmxlLmg6MTM6ICog
-Mi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92
-ZSBjb3B5cmlnaHQNCi4vbmV0L3RpcGMvbmFtZV9kaXN0ci5jOjEzOiAqIDIuIFJlZGlzdHJpYnV0
-aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQou
-L25ldC90aXBjL2FkZHIuYzoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0g
-bXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9zdWJzY3IuaDox
-MzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhl
-IGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9saW5rLmg6MTM6ICogMi4gUmVkaXN0cmlidXRp
-b25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4v
-bmV0L3RpcGMvbmV0Lmg6MTM6ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11
-c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L3RpcGMvbmV0bGluay5jOjEz
-OiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUg
-YWJvdmUgY29weXJpZ2h0DQouL25ldC90aXBjL3N5c2N0bC5jOjEyOiAqIDIuIFJlZGlzdHJpYnV0
-aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQou
-L25ldC90aXBjL3VkcF9tZWRpYS5jOjExOiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkg
-Zm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC90aXBjL3NvY2tl
-dC5oOjExOiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVj
-ZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC90aXBjL3N1YnNjci5jOjEzOiAqIDIuIFJlZGlz
-dHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJp
-Z2h0DQouL25ldC90aXBjL21zZy5jOjEzOiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkg
-Zm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC90aXBjL25hbWVf
-dGFibGUuYzoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXBy
-b2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9tc2cuaDoxMzogKiAyLiBSZWRp
-c3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHly
-aWdodA0KLi9uZXQvdGlwYy9jb3JlLmM6MTM6ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFy
-eSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L3RpcGMvc29j
-a2V0LmM6MTM6ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9k
-dWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L3RpcGMvbmV0LmM6MTM6ICogMi4gUmVkaXN0
-cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmln
-aHQNCi4vbmV0L3RpcGMvYmNhc3QuYzoxNDogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5
-IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9iZWFy
-ZXIuaDoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1
-Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9jb3JlLmg6MTM6ICogMi4gUmVkaXN0
-cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmln
-aHQNCi4vbmV0L3RpcGMvbm9kZS5jOjEzOiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkg
-Zm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC90aXBjL2FkZHIu
-aDoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2Ug
-dGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9pYl9tZWRpYS5jOjE3OiAqIDIuIFJlZGlz
-dHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJp
-Z2h0DQouL25ldC90aXBjL2xpbmsuYzoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5
-IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9uZXRs
-aW5rLmg6MTI6ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9k
-dWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L3RpcGMvc2VydmVyLmM6MTI6ICogMi4gUmVk
-aXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5
-cmlnaHQNCi4vbmV0L3RpcGMvZGlzY292ZXIuaDoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4g
-YmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlw
-Yy9ldGhfbWVkaWEuYzoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVz
-dCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9iY2FzdC5oOjEzOiAq
-IDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJv
-dmUgY29weXJpZ2h0DQouL25ldC90aXBjL3NlcnZlci5oOjEyOiAqIDIuIFJlZGlzdHJpYnV0aW9u
-cyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25l
-dC82bG93cGFuL2lwaGMuYzoyOTogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0g
-bXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvc2NoZWQvc2NoX2NvZGVs
-LmM6MTc6ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNl
-IHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L2llZWU4MDIxNTQvNmxvd3Bhbi9jb3JlLmM6Mjc6
-ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBh
-Ym92ZSBjb3B5cmlnaHQgDQoNClRoYW5rcywNCldpbmdNYW4NCg==
+On 10/08/2015 at 09:52 PM, Andreas Hartmann wrote:
+> On 10/08/2015 at 08:21 PM, Andreas Hartmann wrote:
+>> Am 08.10.2015 um 18:39 schrieb Joerg Roedel:
+>>> On Wed, Oct 07, 2015 at 06:52:58PM +0200, Andreas Hartmann wrote:
+>>>> To reproduce the error:
+>>>> First I mounted /daten2, afterwards /raid/mt, which produces the errors.
+>>>> The ssd mounts have been already active (during boot by fstab).
+>>>
+>>> Okay, I spent the day on that problem, and managed to reproduce it here
+>>> on one of my AMD IOMMU boxes. I wasn't an easy journey, as I can only
+>>> reproduce it if I setup the crypto partition and everything above that
+>>> (like mounting the lvm volumes) _after_ the system has finished booting.
+>>> If everything is setup during system boot it works fine and I don't see
+>>> any IO_PAGE_FAULTS.
+>>
+>> Thank you very much for spending so much of your time to reproduce the
+>> problem!
+>>
+>>> I also tried kernel v4.3-rc4 first, to have it tested with a
+>>> self-compiled kernel. It didn't show up there, so I built a 4.1.0, where
+>>> it showed up again. Something seems to have fixed the issue in the
+>>> latest kernels.
+>>>
+>>> So I looked a little bit around at the commits that were merged into the
+>>> respective parts involved here, and found this one:
+>>>
+>>>     586b286 dm crypt: constrain crypt device's max_segment_size to
+>>> PAGE_SIZE
+>>>
+>>> The problem fixed with this commit looks quite similar to what you have
+>>> seen (execpt that there was no IOMMU involved). So I cherry-picked that
+>>> commit on 4.1.0 and tested that. The problem was gone.
+>>
+>> That's true - I already knew this patch and tested it some weeks ago -
+>> unfortunately it doesn't fix the problem here.
+>>
+>> To be really sure, I just retested it now again. I couldn't see any
+>> IO_PAGE_FAULTS errors today (unfortunately I can't remember anymore if I
+>> didn't see them too a few weeks ago) - but the ata errors remain.
+>> Therefore, this patch isn't a solution for the problem I encounter here.
+>>
+>>> So it looks like it was a dm-crypt issue, the patch went into v4.3-rc3,
+>>> either this kernel of rc4 should fix the problem for you too. Can you
+>>> please verify this is fixed for you too with v4.3-rc4?
+>>
+>> As I already wrote, I even couldn't see the problem with v4.3-rc2 any
+>> more (as far as I was able to test because of the other problem). I have
+>> to do some more tests now with this kernel to be really sure.
+> 
+> I now tested w/ v4.3-rc4. I couldn't see any IO_PAGE_FAULTS but the ata
+> errors remain. The ata errors can be easily activated by copying a large
+> file (> 4 GB) from one partition on the raid to another partition on the
+> raid.
+
+Hmmm, I retested this morning w/ v4.3-rc4 and 4.1.10 (with the above
+mentioned patch applied) - and now, I didn't get any more ata errors.
+
+I'm confused now. The only difference between yesterday evening and this
+morning was, that the machine was over night completely powerless (via
+socket outlet switch). Could this really be the reason? Let's wait and
+see if this is a persistent state ... .
+
+But the other new error w/ 4.3-rc-2 or 4 while starting a VM with PCI
+passthrough remains even this morning :-(. Would have been nice if it
+would have gone over night, too ...
+
+
+Thanks,
+regards,
+Andreas
