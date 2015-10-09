@@ -1,168 +1,98 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	jiang.liu@linux.intel.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v3 4/7] PCI: Record an fwnode associated with root PCI buses, optionally
-Date: Mon, 26 Oct 2015 23:15:36 +0000
-Message-Id: <1445901339-11924-5-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1445901339-11924-1-git-send-email-jakeo@microsoft.com>
-References: <1445901339-11924-1-git-send-email-jakeo@microsoft.com>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"rjui@broadcom.com" <rjui@broadcom.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Ravikiran Gummaluri" <rgummal@xilinx.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH v3] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+Date: Fri, 9 Oct 2015 08:51:25 +0000
+Message-ID: <8520D5D51A55D047800579B09414719801690D3D@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1444146289-28940-1-git-send-email-bharatku@xilinx.com>
+ <5613F310.6060305@arm.com>
+ <8520D5D51A55D047800579B0941471980169063F@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5613F9C8.9020000@arm.com>
+ <8520D5D51A55D047800579B09414719801690CD0@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <56177669.2000302@arm.com>
+In-Reply-To: <56177669.2000302@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+> On 09/10/15 06:11, Bharat Kumar Gogada wrote:
+> >>>> +struct nwl_msi {                  /* struct nwl_msi - MSI information
+> >> */
+> >>>> +  struct msi_controller chip;     /* chip: MSI controller */
+> >>>
+> >>>> We're moving away from msi_controller altogether, as the kernel now
+> >>>> has all the necessary infrastructure to do this properly.
+> >>>
+> >>> Our current GIC version does not have separate msi controller (we
+> >>> are not using GICv2m or GICv3), so is it necessary to have separate
+> >>> msi controller node ? Please give me clarity on this.
+> >>
+> >> This has nothing to do with the version of the GIC you are using
+> >> (XGene doesn't have GICv2m or v3 either). This is about reducing code
+> >> duplication and having something that we can maintain. See also
+> >> https://lkml.org/lkml/2015/9/20/193 for yet another example.
+> >>
+> >> I still plan to kill msi_controller, and I'd like to avoid more
+> >> dependencies with it. MSI domains are the way to do it.
+> >>
+> > Sorry previously I haven't configured my email client properly so resending.
+> 
+> Thanks for doing so, much appreciated.
+> 
+> > Since we don't have separate MSI controller, and our PCIe controller
+> > is handling MSI, is it necessary to create a separate MSI controller
+> > node because we don't have any 'reg' space.
+> 
+> No, your PCI controller can perfectly be part of the PCIe node.
+You meant 'msi-controller' property to be part of PCIe node?
 
-This patch allows a PCI front-end implementation to supply an fwnode_handle
-associated with a root PCI bus, optionally.  If supplied, the PCI driver
-records this.
+> 
+> > Please let me know whether we require a separate msi file as suggested
+> > in your previous comments to separate MSI controller and PCIE
+> > controller in two files, if we don't have separate node. If we do not
+> > need a separate node do we need to embed MSI controller child node  in
+> > PCIe controller node itself, and what properties does this child node
+> > will require other than 'interrupts'.
+> 
+> If you want to keep them in the same file, please at least have two separate
+> patches. These are two different functions, and they should be reviewed
+> separately.
+> 
+What I meant is if we don't have separate msi node do we need separate file? 
+If you meant msi controller to be part of same node then we will use single file and will
+try to have two separate patches.
 
-This patch supports the next patch in the series, which looks up an IRQ domain
-through this handle.
+Thanks,
+Bharat
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- arch/sparc/kernel/pci.c       | 2 +-
- drivers/acpi/pci_root.c       | 2 +-
- drivers/parisc/lba_pci.c      | 2 +-
- drivers/pci/host/pci-xgene.c  | 2 +-
- drivers/pci/host/pcie-iproc.c | 3 ++-
- drivers/pci/probe.c           | 8 +++++---
- include/linux/pci.h           | 4 +++-
- 7 files changed, 14 insertions(+), 9 deletions(-)
-
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index b91d7f1..3d4e9f9 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -660,7 +660,7 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	pbm->busn.flags	= IORESOURCE_BUS;
- 	pci_add_resource(&resources, &pbm->busn);
- 	bus = pci_create_root_bus(parent, pbm->pci_first_busno, pbm->pci_ops,
--				  pbm, &resources);
-+				  pbm, &resources, NULL);
- 	if (!bus) {
- 		printk(KERN_ERR "Failed to create bus for %s\n",
- 		       node->full_name);
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 850d7bf..eab95bc 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -840,7 +840,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	pci_acpi_root_add_resources(info);
- 	pci_add_resource(&info->resources, &root->secondary);
- 	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
--				  sysdata, &info->resources);
-+				  sysdata, &info->resources, NULL);
- 	if (!bus)
- 		goto out_release_info;
- 
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index a32c1f6..a7b9d5c 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -1567,7 +1567,7 @@ lba_driver_probe(struct parisc_device *dev)
- 	dev->dev.platform_data = lba_dev;
- 	lba_bus = lba_dev->hba.hba_bus =
- 		pci_create_root_bus(&dev->dev, lba_dev->hba.bus_num.start,
--				    cfg_ops, NULL, &resources);
-+				    cfg_ops, NULL, &resources, NULL);
- 	if (!lba_bus) {
- 		pci_free_resource_list(&resources);
- 		return 0;
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index ae00ce2..95c20c8 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -545,7 +545,7 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
- 		return ret;
- 
- 	bus = pci_create_root_bus(&pdev->dev, 0,
--					&xgene_pcie_ops, port, &res);
-+					&xgene_pcie_ops, port, &res, NULL);
- 	if (!bus)
- 		return -ENOMEM;
- 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 9193951..bc999b7 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -357,7 +357,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 	sysdata = pcie;
- #endif
- 
--	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, sysdata, res);
-+	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, sysdata, res,
-+				  NULL);
- 	if (!bus) {
- 		dev_err(pcie->dev, "unable to create PCI root bus\n");
- 		ret = -ENOMEM;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index f441d1b..c0f2e44 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2039,7 +2039,8 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- }
- 
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+		struct pci_ops *ops, void *sysdata, struct list_head *resources,
-+		struct fwnode_handle *fwnode)
- {
- 	int error;
- 	struct pci_host_bridge *bridge;
-@@ -2069,6 +2070,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	if (!bridge)
- 		goto err_out;
- 
-+	bridge->fwnode = fwnode;
- 	bridge->dev.parent = parent;
- 	bridge->dev.release = pci_release_host_bridge_dev;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-@@ -2223,7 +2225,7 @@ struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
- 			break;
- 		}
- 
--	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
-+	b = pci_create_root_bus(parent, bus, ops, sysdata, resources, NULL);
- 	if (!b)
- 		return NULL;
- 
-@@ -2261,7 +2263,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
- 	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
-+	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources, NULL);
- 	if (b) {
- 		pci_scan_child_bus(b);
- 	} else {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b54fbf1..86ce5fa 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -409,6 +409,7 @@ struct pci_host_bridge {
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
- 	struct list_head windows;	/* resource_entry */
-+	struct fwnode_handle *fwnode;
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
-@@ -789,7 +790,8 @@ void pci_bus_add_devices(const struct pci_bus *bus);
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
--				    struct list_head *resources);
-+				    struct list_head *resources,
-+				    struct fwnode_handle *fwnode);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
--- 
-1.9.1
-
+> It will help everyone to understand your code, and speed up the reviewing
+> process.
+> 
+> Thanks,
+> 
+> 	M.
+> --
+> Jazz is not dead. It just smells funny...
