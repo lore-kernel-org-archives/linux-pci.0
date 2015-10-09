@@ -1,67 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:53501 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753031AbbJFRE0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 Oct 2015 13:04:26 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, Mark Rutland <Mark.Rutland@arm.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Robin Murphy <robin.murphy@arm.com>
-Subject: [PATCH v2 0/8] of: Handle multi-parent version of msi-parent & msi-map
-Date: Tue,  6 Oct 2015 18:03:55 +0100
-Message-Id: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1444407671.17726.11.camel@oracle.com>
+Subject: Re: [PATCH v7 12/60] PCI: Only treat non-pref mmio64 as pref if all
+ bridges have MEM_64
+From: Khalid Aziz <khalid.aziz@oracle.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 09 Oct 2015 10:21:11 -0600
+In-Reply-To: <1444340359-8011-13-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+	 <1444340359-8011-13-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we have a useable and documented version of msi-parent that
-can deal with multiple parenting, we can properly handle it in the
-kernel. This leads to a new OF helper, some rework in the PCI and
-platform layers, as well as a small patch for the ITS driver, which is
-the only thing in the kernel requirering this functionality so far.
+On Thu, 2015-10-08 at 14:38 -0700, Yinghai Lu wrote:
+> If any bridge up to root only have 32bit pref mmio, We don't need to
+> treat device non-pref mmio64 as as pref mmio64.
+> 
+> We need to move pci_bridge_check_ranges calling early.
+> for parent bridges pref mmio BAR may not allocated by BIOS, res flags
+> is still 0, we need to have it correct set before we check them for
+> child device resources.
+> 
+> -v2: check all bus resources instead of just res[15].
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-On top of that, the msi-map property also offers a new feature, which
-is that ability to have a per-device MSI controller (instead of having
-a global one). The last four patches enable this.
 
-These patches are on top of David Daney's series:
+Tested on sparc platforms
 
-http://lists.infradead.org/pipermail/linux-arm-kernel/2015-October/373986.html
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com> 
 
-(of_msi_map_rid is a dependency), and has been tested on 4.3-rc3,
-using both platform and PCI MSI devices.
 
-* From the initial version
-  - Dropped the of parsing patch
-  - Built on top of David's series to reuse of_msi_map_rid
-  - New per-device PCI/MSI domain assignment hook
-  - Parse msi-map at bus probing time and populate the msi_domain field
 
-Marc Zyngier (8):
-  of/irq: Add support code for multi-parent version of "msi-parent"
-  of/irq: Use of_msi_get_domain instead of open-coded "msi-parent"
-    parsing
-  PCI/MSI: Use of_msi_get_domain instead of open-coded "msi-parent"
-    parsing
-  irqchip/gic-v3-its: Parse new version of msi-parent property
-  of/irq: Split of_msi_map_rid to reuse msi-map lookup
-  of/irq: Use the msi-map property to provide device-specific MSI domain
-  PCI: Add per-device MSI domain hook
-  PCI/MSI: Allow the MSI domain to be device-specific
-
- drivers/irqchip/irq-gic-v3-its-platform-msi.c |  18 ++-
- drivers/of/irq.c                              | 151 ++++++++++++++++++++------
- drivers/pci/msi.c                             |  17 +++
- drivers/pci/of.c                              |  13 +--
- drivers/pci/probe.c                           |  43 +++++++-
- include/linux/msi.h                           |   6 +
- include/linux/of_irq.h                        |  16 +++
- 7 files changed, 214 insertions(+), 50 deletions(-)
-
--- 
-2.1.4
 
