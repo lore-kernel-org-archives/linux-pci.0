@@ -1,56 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:14742 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753406AbbJZLUv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 07:20:51 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v12 8/8] MAINTAINERS: Add pcie-hisi maintainer
-Date: Mon, 26 Oct 2015 19:35:50 +0800
-Message-ID: <1445859350-26375-9-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1444407602.17726.8.camel@oracle.com>
+Subject: Re: [PATCH v7 07/60] PCI: kill wrong quirk about M7101
+From: Khalid Aziz <khalid.aziz@oracle.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Meelis Roos <mroos@linux.ee>
+Date: Fri, 09 Oct 2015 10:20:02 -0600
+In-Reply-To: <1444340359-8011-8-git-send-email-yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+	 <1444340359-8011-8-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+On Thu, 2015-10-08 at 14:38 -0700, Yinghai Lu wrote:
+> Meelis reported that qla2000 driver does not get loaded on one sparc system.
+> 
+> schizo f00732d0: PCI host bridge to bus 0001:00
+> pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
+> pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
+> pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
+> pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
+> 
+> So the quirk for M7101 claim the io range early.
+> 
+> According to spec with M7101 in M1543 page 103/104,
+> 	http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
+> 0xe0, and 0xe2 do not include address info for acpi/smb.
+> 
+> Kill wrong quirk about them.
+> 
+> Link: http://kodu.ut.ee/~mroos/dm/dm.v240
+> Link: http://kodu.ut.ee/~mroos/dm/dm.sb100
+> Reported-by: Meelis Roos <mroos@linux.ee>
+> Cc: Meelis Roos <mroos@linux.ee>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 7ba7ab7..944a229 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8047,6 +8047,13 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
- F:	drivers/pci/host/pci-xgene-msi.c
- 
-+PCIE DRIVER FOR HISILICON
-+M:	Zhou Wang <wangzhou1@hisilicon.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+F:	drivers/pci/host/pcie-hisi.c
-+
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
--- 
-1.9.1
+
+Tested on sparc platforms
+
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com> 
+
 
