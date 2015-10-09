@@ -1,80 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.140]:24329 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754286AbbJPPWt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Oct 2015 11:22:49 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH v4 0/3] arm64: Juno: Add support for PCIe on R1 board
-Date: Fri, 16 Oct 2015 16:22:06 +0100
-Message-Id: <1445008929-32267-1-git-send-email-Liviu.Dudau@arm.com>
+Received: from mail.kernel.org ([198.145.29.136]:60361 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932540AbbJISJN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Oct 2015 14:09:13 -0400
+Date: Fri, 9 Oct 2015 13:09:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Martin Mares <mj@ucw.cz>
+Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device driver
+Message-ID: <20151009180910.GB16112@localhost>
+References: <1443721454-25467-1-git-send-email-keith.busch@intel.com>
+ <20151006231412.GF29420@localhost>
+ <alpine.LNX.2.00.1510062331220.23840@localhost.lm.intel.com>
+ <20151008134702.GK27633@localhost>
+ <alpine.LNX.2.00.1510082115120.27742@localhost.lm.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LNX.2.00.1510082115120.27742@localhost.lm.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes in v4 vs v3:
- - Dropped the quirks patches as the fixup can be done in firmware.
-Changes in v3 vs v2:
- - Add Documentation files describing the DT bindings for plda,xpressrich3-axi
-   and arm,juno-r1-pcie properties.
- - Cosmetic changes in the .dts to bracket range and interrupt-map entries
-   individually.
-Changes in v2 vs v1:
- - Add plda as OF vendor prefix
- - Add more specific compatible values to the Juno R1 DT
- 
+[+cc Martin]
 
-Juno R1 board has a working PCIe host bridge that can be enabled and
-configured by the firmware and made use of by Linux. For UEFI, the
-Linaro releases contain firmware that configure the XpressRICH3 host
-bridge correctly. For U-Boot based setups, one needs the patchset
-posted here[1].
+On Thu, Oct 08, 2015 at 09:33:10PM +0000, Keith Busch wrote:
+> On Thu, 8 Oct 2015, Bjorn Helgaas wrote:
+> >On Wed, Oct 07, 2015 at 12:21:02AM +0000, Keith Busch wrote:
+> >>Thank you for bringing this up as I hadn't thought much about it and may
+> >>have misunderstood the meaning of _SEG. AIUI, it is used to identify a
+> >>logical grouping. The OS does not need to use the same identifier for
+> >>the domain, so we there's no need to collide if we can assign the domain
+> >>of a a new _SEG to the next available domain_nr.
+> >
+> >Yes, I guess it would be possible to decouple _SEG and Linux PCI
+> >domain numbers.  It's *convenient* to have them the same, so dmesg and
+> >lspci output matches _SEG directly, but I guess you could argue that's
+> >not essential.
+> >
+> >I think we'd have to maintain a mapping from domain back to _SEG to
+> >deal with firmware interfaces that expect _SEG, e.g., ia64 PAL calls.
+> 
+> It looks like there are lots of assumptions in the kernel that segment
+> and domain are the same thing. I don't have the necessary h/w to test
+> any changes here to verify the mappings are handled correctly, so I'm
+> apprehensive to start changing this much code that I can't test.
 
-This patchset adds a quirk for setting the correct class to the host
-bridge device and the device tree changes that enable PCIe on Juno R1.
-We also update the defconfig to enable the generic PCI host bridge driver.
+Yes, this could be a real can of worms.
 
-The changes can also available in the git repository at:
+> Given that domain_nr is a 32-bit integer, APCI's _SEG is only 16 bits,
+> and the pci domain is purely a software construct, do you see any problem
+> if we start these 'special' domains at 0x10000? I've tested this in
+> the driver and lspci + setpci with the single line update in pciutils'
+> lib/pci.h, and it all seems to work just fine.
 
-  git://linux-arm.org/linux-ld.git for-upstream/juno-pcie
+If you make the kernel start using domain numbers that don't fit in 16
+bits, what happens if you run the old lspci on a new kernel?
 
-They are based on v4.3-rc5.
-
-Catalin, Will: This series has got Mark's ACKs for the DT changes and
-now with the quirks dropped it can be pulled into whatever arm64 -next
-branch you want to prepare. Do you want a formal pull request for this?
-
-Best regards,
-Liviu
-
-1. http://lists.denx.de/pipermail/u-boot/2015-October/229669.html
-
-Liviu Dudau (3):
-  Documentation: of: Document the bindings used by Juno R1 PCIe host bridge
-  arm64: Juno: Add support for the PCIe host bridge on Juno R1
-  arm64: defconfig: Enable PCI generic host bridge by default
-
- .../devicetree/bindings/pci/arm,juno-r1-pcie.txt     | 10 ++++++++++
- .../devicetree/bindings/pci/plda,xpressrich3-axi.txt | 12 ++++++++++++
- .../devicetree/bindings/vendor-prefixes.txt          |  1 +
- arch/arm64/boot/dts/arm/juno-r1.dts                  | 20 ++++++++++++++++++++
- arch/arm64/configs/defconfig                         |  1 +
- 5 files changed, 44 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/arm,juno-r1-pcie.txt
- create mode 100644 Documentation/devicetree/bindings/pci/plda,xpressrich3-axi.txt
-
--- 
-2.6.0
-
+Bjorn
