@@ -1,106 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Linaro-acpi] [PATCH V1 07/11] XEN / PCI: Remove the dependence
- on arch x86 when PCI_MMCONFIG=y
-To: Hanjun Guo <hanjun.guo@linaro.org>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Stefano Stabellini <stefano.stabellini@eu.citrix.com>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
- <1445963922-22711-8-git-send-email-tn@semihalf.com>
- <562FAA88.3020609@linaro.org> <562FB3A5.3050500@oracle.com>
- <alpine.DEB.2.02.1510281047460.15801@kaball.uk.xensource.com>
- <5630A9D3.1030607@linaro.org> <5630D179.9050403@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, Lorenzo.Pieralisi@arm.com,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	linux-pci@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, wangyijing@huawei.com,
-	tglx@linutronix.de, jiang.liu@linux.intel.com,
-	linux-arm-kernel@lists.infradead.org
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <5630D6BA.1080701@oracle.com>
-Date: Wed, 28 Oct 2015 10:07:54 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.13]:65452 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933355AbbJIISq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 04:18:46 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"rjui@broadcom.com" <rjui@broadcom.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v3] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL PCIe Host Controller
+Date: Fri, 09 Oct 2015 10:18:21 +0200
+Message-ID: <5676910.8cxuyuvhpA@wuerfel>
+In-Reply-To: <56177669.2000302@arm.com>
+References: <1444146289-28940-1-git-send-email-bharatku@xilinx.com> <8520D5D51A55D047800579B09414719801690CD0@XAP-PVEXMBX01.xlnx.xilinx.com> <56177669.2000302@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <5630D179.9050403@linaro.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/28/2015 09:45 AM, Hanjun Guo wrote:
-> On 10/28/2015 06:56 PM, Tomasz Nowicki wrote:
->> On 28.10.2015 11:49, Stefano Stabellini wrote:
->>> On Tue, 27 Oct 2015, Boris Ostrovsky wrote:
->>>> On 10/27/2015 12:47 PM, Tomasz Nowicki wrote:
->>>>> + Stefano
->>>>>
->>>>> On 27.10.2015 17:38, Tomasz Nowicki wrote:
->>>>>> From: Hanjun Guo <hanjun.guo@linaro.org>
->>>>>>
->>>>>> In drivers/xen/pci.c, there are arch x86 dependent codes when
->>>>>> CONFIG_PCI_MMCONFIG is enabled, since CONFIG_PCI_MMCONFIG
->>>>>> depends on ACPI, so this will prevent XEN PCI running on other
->>>>>> architectures using ACPI with PCI_MMCONFIG enabled (such as ARM64).
->>>>>>
->>>>>> Fortunatly, it can be sloved in a simple way. In drivers/xen/pci.c,
->>>>>> the only x86 dependent code is if ((pci_probe & PCI_PROBE_MMCONF)
->>>>>> == 0),
->>>>>> and it's defined in asm/pci_x86.h, the code means that
->>>>>> if the PCI resource is not probed in PCI_PROBE_MMCONF way, just
->>>>>> ingnore the xen mcfg init. Actually this is duplicate, because
->>>>>> if PCI resource is not probed in PCI_PROBE_MMCONF way, the
->>>>>> pci_mmconfig_list will be empty, and the if (list_empty())
->>>>>> after it will do the same job.
->>>>>>
->>>>>> So just remove the arch related code and the head file, this
->>>>>> will be no functional change for x86, and also makes xen/pci.c
->>>>>> usable for other architectures.
->>>>>>
->>>>>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
->>>>>> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
->>>>>> CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>
->>>>>> ---
->>>>>>    drivers/xen/pci.c | 6 ------
->>>>>>    1 file changed, 6 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/xen/pci.c b/drivers/xen/pci.c
->>>>>> index 6785ebb..9a8dbe3 100644
->>>>>> --- a/drivers/xen/pci.c
->>>>>> +++ b/drivers/xen/pci.c
->>>>>> @@ -28,9 +28,6 @@
->>>>>>    #include <asm/xen/hypervisor.h>
->>>>>>    #include <asm/xen/hypercall.h>
->>>>>>    #include "../pci/pci.h"
->>>>>> -#ifdef CONFIG_PCI_MMCONFIG
->>>>>> -#include <asm/pci_x86.h>
->>>>>> -#endif
->>>>
->>>> Assuming this still compiles on x86 now that this include file is
->>>> removed
->>>>
->>>> Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
->>>
->>> I think it does not:
->>>
->>> drivers/xen/pci.c: In function ‘xen_mcfg_late’:
->>> drivers/xen/pci.c:221:18: error: ‘pci_mmcfg_list’ undeclared (first
->>> use in this function)
->>> drivers/xen/pci.c:221:18: note: each undeclared identifier is reported
->>> only once for each f
->>
->> Right, we need:
->> +#include <linux/ecam.h>
->>
->> Will fix this in next version, thanks!
->
-> Hmm, I think we just missed the head file, but the logic
-> of this patch is still right.
->
+On Friday 09 October 2015 09:10:17 Marc Zyngier wrote:
+> > Please let me know whether we require a separate msi file as
+> > suggested in your previous comments to separate MSI controller and
+> > PCIE controller in two files, if we don't have separate node. If we
+> > do not need a separate node do we need to embed MSI controller child
+> > node  in PCIe controller node itself, and what properties does this
+> > child node will require other than 'interrupts'.
+> 
+> If you want to keep them in the same file, please at least have two
+> separate patches. These are two different functions, and they should be
+> reviewed separately.
+> 
+> It will help everyone to understand your code, and speed up the
+> reviewing process.
 
+Agreed. Also, the part we really want is to have the PCI controller
+code decoupled enough from the MSI code that it will not require
+further changes once Xilinx comes out with a chip that has a modern
+GIC in it and the same PCIe host.
 
-Yes, removing the test should be safe.
-
--boris
-
+	Arnd
