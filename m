@@ -1,44 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 5 Oct 2015 14:34:01 +0000 (UTC)
-From: Keith Busch <keith.busch@intel.com>
-To: Ingo Molnar <mingo@kernel.org>
-cc: Keith Busch <keith.busch@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device
- driver
-In-Reply-To: <20151003094512.GA29104@gmail.com>
-Message-ID: <alpine.LNX.2.00.1510051424000.23840@localhost.lm.intel.com>
-References: <1443721454-25467-1-git-send-email-keith.busch@intel.com> <20151003094512.GA29104@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:38195 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750779AbbJIXRD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 Oct 2015 19:17:03 -0400
+Subject: Re: [RFC PATCH 0/2] DRA72/DRA74: Add 2 lane support
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1443445058-643-1-git-send-email-kishon@ti.com>
+ <20151009225056.GD16112@localhost>
+CC: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <nsekhar@ti.com>,
+	Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <56184AE7.6060808@ti.com>
+Date: Sat, 10 Oct 2015 04:46:55 +0530
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20151009225056.GD16112@localhost>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 3 Oct 2015, Ingo Molnar wrote:
-> * Keith Busch <keith.busch@intel.com> wrote:
->> +config VMDDEV
->> +	depends on PCI && PCI_DOMAINS && PCI_MSI && GENERIC_MSI_IRQ_DOMAIN && IRQ_DOMAIN_HIERARCHY
->> +	tristate "Volume Management Device Driver"
->> +	default N
->> +	select HAVE_VMDDEV
->> +	---help---
->> +	Adds support for the Intel Volume Manage Device (VMD). VMD is
->> +	a secondary PCI host bridge that allows PCI Express root ports,
->> +	and devices attached to them, to be removed from the default PCI
->> +	domain and placed within the VMD domain. If your system provides
->> +	one of these and has devices attached to it, say "Y".
->
-> So what this text does not explain is why does the user care? What tangible
-> benefits does this feature offer to users?
+Hi Bjorn,
 
-Hi Ingo,
+On Saturday 10 October 2015 04:20 AM, Bjorn Helgaas wrote:
+> [+cc Arnd, Rob]
+> 
+> On Mon, Sep 28, 2015 at 06:27:36PM +0530, Kishon Vijay Abraham I wrote:
+>> Add driver modifications in pci-dra7xx to get x2 mode working in
+>> DRA72 and DRA74. Certain modifications is needed in PHY driver also
+>> which I'll send as a separate series.
+>>
+>> Kishon Vijay Abraham I (2):
+>>   pci: host: pci-dra7xx: use "num-lanes" property to find phy count
+>>   pci: host: pci-dra7xx: Enable x2 mode support
+> 
+> Applied to pci/host-dra7xx for v4.4, thanks!
+> 
+> I adjusted the subject line capitalization & format to match the history.
+> 
+> Arnd, Rob, any comments on the DT updates or the "num-lanes" vs number of
+> strings in "phy-names" changes?
 
-The immediate benefit is that devices on VMD domains do not use resources
-on the default PCI domain, so we have more than the 256 buses available.
+I sent it as RFC since I didn't have the board to test 2 lane mode with
+$patch. And just now I got a board to test x2 and I found a problem with
+the 2nd patch.
+
+.b1co_mode_sel_mask = GENMASK(2, 3), in the patch should be replaced with
+.b1co_mode_sel_mask = GENMASK(3, 2).
+
+I'll resend the patch fixing the above.
+
+Thanks
+Kishon
