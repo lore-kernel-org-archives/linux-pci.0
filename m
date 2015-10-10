@@ -1,489 +1,400 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43199 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752596AbbJHT0F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Oct 2015 15:26:05 -0400
-Date: Thu, 8 Oct 2015 14:25:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: bhelgaas@google.com, jingoohan1@gmail.com,
-	pratyush.anand@gmail.com, linux-pci@vger.kernel.org,
-	wangzhou1@hisilicon.com, yuanzhichang@hisilicon.com,
-	zhudacai@hisilicon.com, zhangjukuo@huawei.com,
-	qiuzhenfa@hisilicon.com, liguozhu@hisilicon.com
-Subject: Re: [PATCH v6 0/3] PCI: designware: change dw_pcie_cfg_write() and
- dw_pcie_cfg_read()
-Message-ID: <20151008192558.GF3885@localhost>
-References: <1443543636-35105-1-git-send-email-gabriele.paoloni@huawei.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:2370 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039AbbJJCqi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 22:46:38 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Kefeng Wang <wangkefeng.wang@huawei.com>
+Subject: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+Date: Sat, 10 Oct 2015 10:59:15 +0800
+Message-ID: <1444445957-239522-5-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443543636-35105-1-git-send-email-gabriele.paoloni@huawei.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 30, 2015 at 12:20:33AM +0800, Gabriele Paoloni wrote:
-> From: gabriele paoloni <gabriele.paoloni@huawei.com>
-> 
-> This patchset:
-> 1) fixes a bug in spear13xx when calling dw_pcie_cfg_read and
->    dw_pcie_cfg_write usign the patch from Pratyush in
->    https://lkml.org/lkml/2015/9/7/5
-> 2) reworks dw_pcie_cfg_read/dw_pcie_cfg_write in pcie-designware.c in
->    order to make it easier for callers to pass input parameters;
-> 3) changes dw_pcie_cfg_read implementation to make it symmetric with
->    dw_pcie_cfg_write 
-> 4) adds sanity checks in dw_pcie_cfg_read/dw_pcie_cfg_write to make
->    sure the PCI header offset does not conflict with the size of
->    the read/written field.
-> 
-> Changes from v5: sanity check readibility simplified
-> 
-> Changes from v4:
->    - included https://lkml.org/lkml/2015/9/7/5 back as it was lost in v4
-> 
-> Changes from v3:
->    - changed dw_pcie_cfg_read implementation to make it symmetric with
->      dw_pcie_cfg_write
->    - changed dw_pcie_cfg_read/dw_pcie_cfg_write implementations to take
->      as input param directly the address of the field to read/write rather
->      than the base address and the offset in the PCI header
-> 
-> Change from v2:
->    Replaced patch 1/3 with Pratyush one in
->    https://lkml.org/lkml/2015/9/7/5
-> 
-> gabriele paoloni (3):
->   PCIe: SPEAr13xx: fix dw_pcie_cfg_read/write() usage
->   PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
->   PCI: designware: add sanity checks on the header offset in
->     dw_pcie_cfg_read and dw_pcie_cfg_write
+This patch adds PCIe host support for HiSilicon SoC Hip05.
 
-Applied to pci/host-designware for v4.4.  I tweaked a couple things:
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: liudongdong <liudongdong3@huawei.com>
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+Signed-off-by: qiuzhenfa <qiuzhenfa@hisilicon.com>
+---
+ drivers/pci/host/Kconfig     |   8 ++
+ drivers/pci/host/Makefile    |   1 +
+ drivers/pci/host/pcie-hisi.c | 320 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 329 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-hisi.c
 
-  - Split out the dw_pcie_cfg_read() access size change into its own
-    patch.  This is an important change that got obscured by being
-    combined with the interface change.  Splitting it out makes both
-    patches much easier to review.
-
-  - In dw_pcie_cfg_read(), I set *val to zero when we return failure.
-    Previously we always set "*val = readl(addr)" even if we later
-    returned failure.  That could have been garbage or a misaligned
-    read.
-
-Below are the patches as I applied them.  Thanks!
-
-Bjorn
-
-
-commit 0951120a4c778cf043497e4af508588417bef29a
-Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Date:   Wed Sep 30 00:20:34 2015 +0800
-
-    PCI: spear: Fix dw_pcie_cfg_read/write() usage
-    
-    The first argument of dw_pcie_cfg_read/write() is a 32-bit aligned address.
-    The second argument is the byte offset into a 32-bit word, and
-    dw_pcie_cfg_read/write() only look at the low two bits.
-    
-    SPEAr13xx used dw_pcie_cfg_read() and dw_pcie_cfg_write() incorrectly: it
-    passed important address bits in the second argument, where they were
-    ignored.
-    
-    Pass the complete 32-bit word address in the first argument and only the
-    2-bit offset into that word in the second argument.
-    
-    Without this fix, SPEAr13xx host will never work with few buggy gen1 card
-    which connects with only gen1 host and also with any endpoint which would
-    generate a read request of more than 128 bytes.
-    
-    [bhelgaas: changelog]
-    Reported-by: Bjorn Helgaas <bhelgaas@google.com>
-    Signed-off-by: Pratyush Anand <panand@redhat.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    CC: stable@vger.kernel.org	# v3.17+
-
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 98d2683..0754ea3 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -163,34 +163,36 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	 * default value in capability register is 512 bytes. So force
- 	 * it to 128 here.
- 	 */
--	dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, &val);
-+	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
-+				0, 2, &val);
- 	val &= ~PCI_EXP_DEVCTL_READRQ;
--	dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, val);
-+	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
-+				0, 2, val);
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index d5e58ba..ae873be 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -145,4 +145,12 @@ config PCIE_IPROC_BCMA
+ 	  Say Y here if you want to use the Broadcom iProc PCIe controller
+ 	  through the BCMA bus interface
  
--	dw_pcie_cfg_write(pp->dbi_base, PCI_VENDOR_ID, 2, 0x104A);
--	dw_pcie_cfg_write(pp->dbi_base, PCI_DEVICE_ID, 2, 0xCD80);
-+	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 0, 2, 0x104A);
-+	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 2, 0xCD80);
- 
- 	/*
- 	 * if is_gen1 is set then handle it, so that some buggy card
- 	 * also works
- 	 */
- 	if (spear13xx_pcie->is_gen1) {
--		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCAP, 4,
--				 &val);
-+		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
-+					0, 4, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
--					  PCI_EXP_LNKCAP, 4, val);
-+			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
-+						PCI_EXP_LNKCAP, 0, 4, val);
- 		}
- 
--		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCTL2, 4,
--				 &val);
-+		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
-+					0, 2, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
--					  PCI_EXP_LNKCTL2, 4, val);
-+			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
-+						PCI_EXP_LNKCTL2, 0, 2, val);
- 		}
- 	}
- 
-
-commit 6e5d5205ccb07c95931412f1e6fdb9ec5abc8dfd
-Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Date:   Thu Oct 8 11:45:41 2015 -0500
-
-    PCI: designware: Use exact access size in dw_pcie_cfg_read()
-    
-    dw_pcie_cfg_write() uses the exact 8-, 16-, or 32-bit access size
-    requested, but dw_pcie_cfg_read() previously performed a 32-bit read and
-    masked out the bits requested.
-    
-    Use the exact access size in dw_pcie_cfg_read().  For example, if we want
-    an 8-bit read, use readb() instead of using readl() and masking out the 8
-    bits we need.  This makes it symmetric with dw_pcie_cfg_write().
-    
-    [bhelgaas: split into separate patch, set *val = 0 in failure case]
-    Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 52aa6e3..9073722 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -82,14 +82,16 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
- 
- int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
- {
--	*val = readl(addr);
--
--	if (size == 1)
--		*val = (*val >> (8 * (where & 3))) & 0xff;
++config PCI_HISI
++	depends on OF && ARM64
++	bool "HiSilicon SoC HIP05 PCIe controller"
++	select PCIEPORTBUS
++	select PCIE_DW
++	help
++	  Say Y here if you want PCIe controller support on HiSilicon HIP05 SoC
++
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 140d66f..ea1dbf2 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -17,3 +17,4 @@ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+ obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
++obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+new file mode 100644
+index 0000000..26aa0d9
+--- /dev/null
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -0,0 +1,320 @@
++/*
++ * PCIe host controller driver for HiSilicon Hip05 SoC
++ *
++ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
++ *
++ * Author: Zhou Wang <wangzhou1@hisilicon.com>
++ *         Dacai Zhu <zhudacai@hisilicon.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#include <linux/interrupt.h>
++#include <linux/irqdomain.h>
++#include <linux/module.h>
++#include <linux/mfd/syscon.h>
++#include <linux/of.h>
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
++#include <linux/platform_device.h>
++#include <linux/regmap.h>
++
++#include "pcie-designware.h"
++
++#define PCIE_SUBCTRL_MODE_REG                           0x2800
++#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
++#define PCIE_SLV_DBI_MODE                               0x0
++#define PCIE_SLV_SYSCTRL_MODE                           0x1
++#define PCIE_SLV_CONTENT_MODE                           0x2
++#define PCIE_SLV_MSI_ASID                               0x10
++#define PCIE_LTSSM_LINKUP_STATE                         0x11
++#define PCIE_LTSSM_STATE_MASK                           0x3F
++#define PCIE_MSI_ASID_ENABLE                            (0x1 << 12)
++#define PCIE_MSI_ASID_VALUE                             (0x1 << 16)
++#define PCIE_MSI_TRANS_ENABLE                           (0x1 << 12)
++#define PCIE_MSI_TRANS_REG                              0x1c8
++#define PCIE_MSI_LOW_ADDRESS                            0x1b4
++#define PCIE_MSI_HIGH_ADDRESS                           0x1c4
++#define PCIE_GITS_TRANSLATER                            0x10040
++
++#define PCIE_SYS_CTRL20_REG                             0x20
++#define PCIE_RD_TAB_SEL                                 BIT(31)
++#define PCIE_RD_TAB_EN                                  BIT(30)
++
++#define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
++
++struct hisi_pcie {
++	struct regmap *subctrl;
++	void __iomem *reg_base;
++	u32 port_id;
++	struct pcie_port pp;
++};
++
++static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
++					u32 val, u32 reg)
++{
++	writel(val, pcie->reg_base + reg);
++}
++
++static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
++{
++	return readl(pcie->reg_base + reg);
++}
++
++/*
++ * Change mode to indicate the same reg_base to base of PCIe host configure
++ * registers, base of RC configure space or base of vmid/asid context table
++ */
++static void hisi_pcie_change_apb_mode(struct hisi_pcie *pcie, u32 mode)
++{
++	u32 val;
++	u32 bit_mask;
++	u32 bit_shift;
++	u32 port_id = pcie->port_id;
++	u32 reg = PCIE_SUBCTRL_MODE_REG + 0x100 * port_id;
++
++	if ((port_id == 1) || (port_id == 2)) {
++		bit_mask = 0xc;
++		bit_shift = 0x2;
++	} else {
++		bit_mask = 0x6;
++		bit_shift = 0x1;
++	}
++
++	regmap_update_bits(pcie->subctrl, reg, bit_mask, mode << bit_shift);
++}
++
++/* Configure vmid/asid table in PCIe host */
++static void hisi_pcie_config_context(struct hisi_pcie *pcie)
++{
++	int i;
++	u32 val;
++
++	/* enable to clean vmid and asid tables though apb bus */
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
++
++	val = hisi_pcie_apb_readl(pcie, PCIE_SYS_CTRL20_REG);
++	/* enable ar channel */
++	val |= PCIE_RD_TAB_SEL | PCIE_RD_TAB_EN;
++	hisi_pcie_apb_writel(pcie, val, PCIE_SYS_CTRL20_REG);
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
++
++	/*
++	 * init vmid and asid tables for all PCIe devices as 0
++	 * vmid table: 0 ~ 0x3ff, asid table: 0x400 ~ 0x7ff
++	 */
++	for (i = 0; i < 0x800; i++)
++		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
++
++	/* enable aw channel */
++	val &= (~PCIE_RD_TAB_SEL);
++	val |= PCIE_RD_TAB_EN;
++	hisi_pcie_apb_writel(pcie, val, PCIE_SYS_CTRL20_REG);
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
++
++	for (i = 0; i < 0x800; i++)
++		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
++
++	val = hisi_pcie_apb_readl(pcie, PCIE_SYS_CTRL20_REG);
++	/* disable ar channel */
++	val |= PCIE_RD_TAB_SEL;
++	val &= (~PCIE_RD_TAB_EN);
++	hisi_pcie_apb_writel(pcie, val, PCIE_SYS_CTRL20_REG);
++	/* disable aw channel */
++	val &= ((~PCIE_RD_TAB_SEL) & (~PCIE_RD_TAB_EN));
++	hisi_pcie_apb_writel(pcie, val, PCIE_SYS_CTRL20_REG);
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
++}
++
++static int hisi_pcie_link_up(struct pcie_port *pp)
++{
++	u32 val;
++	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
++
++	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
++		    0x100 * hisi_pcie->port_id, &val);
++
++	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++}
++
++static
++int hisi_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
++{
++	u64 addr;
++	struct device_node *msi_node;
++	struct resource res;
++	struct device_node *np = pp->dev->of_node;
++	struct hisi_pcie *pcie = to_hisi_pcie(pp);
++
++	msi_node = of_parse_phandle(np, "msi-parent", 0);
++	if (!msi_node) {
++		dev_err(pp->dev, "failed to find msi-parent\n");
++		return -EINVAL;
++	}
++	of_address_to_resource(msi_node, 0, &res);
++	addr = res.start + PCIE_GITS_TRANSLATER;
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
++
++	hisi_pcie_apb_writel(pcie, addr & 0xffffffff, PCIE_MSI_LOW_ADDRESS);
++	hisi_pcie_apb_writel(pcie, addr >> 32, PCIE_MSI_HIGH_ADDRESS);
++	hisi_pcie_apb_writel(pcie, PCIE_MSI_ASID_ENABLE | PCIE_MSI_ASID_VALUE,
++			     PCIE_SLV_MSI_ASID);
++	hisi_pcie_apb_writel(pcie, PCIE_MSI_TRANS_ENABLE, PCIE_MSI_TRANS_REG);
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
++
++	return 0;
++}
++
++static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int  size,
++				u32 val)
++{
++	u32 reg_val;
++	u32 reg;
++	struct hisi_pcie *pcie = to_hisi_pcie(pp);
++	void *walker = &reg_val;
++
++	walker += (where & 0x3);
++	reg = where & ~0x3;
 +	if (size == 4)
-+		*val = readl(addr);
- 	else if (size == 2)
--		*val = (*val >> (8 * (where & 3))) & 0xffff;
--	else if (size != 4)
-+		*val = readw(addr + (where & 2));
-+	else if (size == 1)
-+		*val = readb(addr + (where & 1));
-+	else {
-+		*val = 0;
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
-+	}
- 
- 	return PCIBIOS_SUCCESSFUL;
- }
-
-commit 060ca07e0d22f150d237e8d8e7149a88c3055e9a
-Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Date:   Wed Sep 30 00:20:35 2015 +0800
-
-    PCI: designware: Simplify dw_pcie_cfg_read/write() interfaces
-    
-    Callers of dw_pcie_cfg_read() and dw_pcie_cfg_write() previously had to
-    split the address into "addr" and "where".  The callees assumed "addr" was
-    32-bit aligned (with zeros in the low two bits) and they used only the low
-    two bits of "where".
-    
-    Accept the entire address in "addr" and drop the now-redundant "where"
-    argument.  As an example, this replaces this:
-    
-      int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
-        *val = readb(addr + (where & 1));
-    
-    with this:
-    
-      int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
-        *val = readb(addr):
-    
-    [bhelgaas: changelog, split access size change to separate patch]
-    Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index f9f468d..01095e1 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -454,7 +454,7 @@ static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	int ret;
- 
- 	exynos_pcie_sideband_dbi_r_mode(pp, true);
--	ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, size, val);
-+	ret = dw_pcie_cfg_read(pp->dbi_base + where, size, val);
- 	exynos_pcie_sideband_dbi_r_mode(pp, false);
- 	return ret;
- }
-@@ -465,8 +465,7 @@ static int exynos_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	int ret;
- 
- 	exynos_pcie_sideband_dbi_w_mode(pp, true);
--	ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
--			where, size, val);
-+	ret = dw_pcie_cfg_write(pp->dbi_base + where, size, val);
- 	exynos_pcie_sideband_dbi_w_mode(pp, false);
- 	return ret;
- }
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index e71da99..51789b7 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -398,7 +398,7 @@ int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 
- 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
- 
--	return dw_pcie_cfg_read(addr + (where & ~0x3), where, size, val);
-+	return dw_pcie_cfg_read(addr + where, size, val);
- }
- 
- int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-@@ -410,7 +410,7 @@ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 
- 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
- 
--	return dw_pcie_cfg_write(addr + (where & ~0x3), where, size, val);
-+	return dw_pcie_cfg_write(addr + where, size, val);
- }
- 
- /**
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 9073722..a7d2352 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -80,14 +80,14 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
- 	return sys->private_data;
- }
- 
--int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
-+int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
- {
- 	if (size == 4)
- 		*val = readl(addr);
- 	else if (size == 2)
--		*val = readw(addr + (where & 2));
-+		*val = readw(addr);
- 	else if (size == 1)
--		*val = readb(addr + (where & 1));
-+		*val = readb(addr);
- 	else {
- 		*val = 0;
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
-@@ -96,14 +96,14 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
-+int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
- {
- 	if (size == 4)
- 		writel(val, addr);
- 	else if (size == 2)
--		writew(val, addr + (where & 2));
-+		writew(val, addr);
- 	else if (size == 1)
--		writeb(val, addr + (where & 3));
-+		writeb(val, addr);
- 	else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
-@@ -134,8 +134,7 @@ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	if (pp->ops->rd_own_conf)
- 		ret = pp->ops->rd_own_conf(pp, where, size, val);
- 	else
--		ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where,
--				size, val);
-+		ret = dw_pcie_cfg_read(pp->dbi_base + where, size, val);
- 
- 	return ret;
- }
-@@ -148,8 +147,7 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	if (pp->ops->wr_own_conf)
- 		ret = pp->ops->wr_own_conf(pp, where, size, val);
- 	else
--		ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where,
--				size, val);
-+		ret = dw_pcie_cfg_write(pp->dbi_base + where, size, val);
- 
- 	return ret;
- }
-@@ -541,13 +539,12 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 *val)
- {
- 	int ret, type;
--	u32 address, busdev, cfg_size;
-+	u32 busdev, cfg_size;
- 	u64 cpu_addr;
- 	void __iomem *va_cfg_base;
- 
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
--	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
- 		type = PCIE_ATU_TYPE_CFG0;
-@@ -564,7 +561,7 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
--	ret = dw_pcie_cfg_read(va_cfg_base + address, where, size, val);
-+	ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
- 				  pp->io_bus_addr, pp->io_size);
-@@ -576,13 +573,12 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 val)
- {
- 	int ret, type;
--	u32 address, busdev, cfg_size;
-+	u32 busdev, cfg_size;
- 	u64 cpu_addr;
- 	void __iomem *va_cfg_base;
- 
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
--	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
- 		type = PCIE_ATU_TYPE_CFG0;
-@@ -599,7 +595,7 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
--	ret = dw_pcie_cfg_write(va_cfg_base + address, where, size, val);
-+	ret = dw_pcie_cfg_write(va_cfg_base + where, size, val);
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
- 				  pp->io_bus_addr, pp->io_size);
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index d0bbd27..0b29194 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -76,8 +76,8 @@ struct pcie_host_ops {
- 	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
- };
- 
--int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
--int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
-+int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
-+int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
- void dw_pcie_msi_init(struct pcie_port *pp);
- int dw_pcie_link_up(struct pcie_port *pp);
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 0754ea3..b95b756 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -163,14 +163,12 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	 * default value in capability register is 512 bytes. So force
- 	 * it to 128 here.
- 	 */
--	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
--				0, 2, &val);
-+	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, &val);
- 	val &= ~PCI_EXP_DEVCTL_READRQ;
--	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
--				0, 2, val);
-+	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, val);
- 
--	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 0, 2, 0x104A);
--	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 2, 0xCD80);
-+	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 0x104A);
-+	dw_pcie_cfg_write(pp->dbi_base + PCI_DEVICE_ID, 2, 0xCD80);
- 
- 	/*
- 	 * if is_gen1 is set then handle it, so that some buggy card
-@@ -178,21 +176,21 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	 */
- 	if (spear13xx_pcie->is_gen1) {
- 		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
--					0, 4, &val);
-+					4, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
- 			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
--						PCI_EXP_LNKCAP, 0, 4, val);
-+				PCI_EXP_LNKCAP, 4, val);
- 		}
- 
- 		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
--					0, 2, &val);
-+					2, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
- 			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
--						PCI_EXP_LNKCTL2, 0, 2, val);
-+					PCI_EXP_LNKCTL2, 2, val);
- 		}
- 	}
- 
-
-commit 08a79800db364aabe4422ac4f2e2efdf450e1c31
-Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Date:   Wed Sep 30 00:20:36 2015 +0800
-
-    PCI: designware: Require config accesses to be naturally aligned
-    
-    Add sanity checks on "addr" input parameter in dw_pcie_cfg_read() and
-    dw_pcie_cfg_write().  These checks make sure that accesses are aligned on
-    their size, e.g., a 4-byte config access is aligned on a 4-byte boundary.
-    
-    [bhelgaas: changelog, set *val = 0 in failure case]
-    Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index a7d2352..6a71f99 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -82,6 +82,11 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
- 
- int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
- {
-+	if ((uintptr_t)addr & (size - 1)) {
-+		*val = 0;
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+	}
-+
- 	if (size == 4)
- 		*val = readl(addr);
- 	else if (size == 2)
-@@ -98,6 +103,9 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
- 
- int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
- {
-+	if ((uintptr_t)addr & (size - 1))
++		hisi_pcie_apb_writel(pcie, val, reg);
++	else if (size == 2) {
++		reg_val = hisi_pcie_apb_readl(pcie, reg);
++		*(u16 __force *) walker = val;
++		hisi_pcie_apb_writel(pcie, reg_val, reg);
++	} else if (size == 1) {
++		reg_val = hisi_pcie_apb_readl(pcie, reg);
++		*(u8 __force *) walker = val;
++		hisi_pcie_apb_writel(pcie, reg_val, reg);
++	} else
 +		return PCIBIOS_BAD_REGISTER_NUMBER;
 +
- 	if (size == 4)
- 		writel(val, addr);
- 	else if (size == 2)
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
++			      u32 *val)
++{
++	u32 reg;
++	u32 reg_val;
++	struct hisi_pcie *pcie = to_hisi_pcie(pp);
++	void *walker = &reg_val;
++
++	walker += (where & 0x3);
++	reg = where & ~0x3;
++	reg_val = hisi_pcie_apb_readl(pcie, reg);
++
++	if (size == 1)
++		*val = *(u8 __force *) walker;
++	else if (size == 2)
++		*val = *(u16 __force *) walker;
++	else if (size != 4)
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static struct pcie_host_ops hisi_pcie_host_ops = {
++	.link_up = hisi_pcie_link_up,
++	.msi_host_init = hisi_pcie_msi_host_init,
++	.wr_own_conf = hisi_pcie_cfg_write,
++	.rd_own_conf = hisi_pcie_cfg_read,
++};
++
++static int __init hisi_add_pcie_port(struct pcie_port *pp,
++				     struct platform_device *pdev)
++{
++	int ret;
++	u32 port_id;
++	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
++
++	if (of_property_read_u32(pdev->dev.of_node, "port-id", &port_id)) {
++		dev_err(&pdev->dev, "failed to read port-id\n");
++		return -EINVAL;
++	}
++	if (port_id > 3) {
++		dev_err(&pdev->dev, "Invalid port-id: %d\n", port_id);
++		return -EINVAL;
++	}
++	hisi_pcie->port_id = port_id;
++
++	pp->ops = &hisi_pcie_host_ops;
++
++	hisi_pcie_config_context(hisi_pcie);
++
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int __init hisi_pcie_probe(struct platform_device *pdev)
++{
++	struct hisi_pcie *hisi_pcie;
++	struct pcie_port *pp;
++	struct resource *reg;
++	int ret;
++
++	hisi_pcie = devm_kzalloc(&pdev->dev, sizeof(*hisi_pcie), GFP_KERNEL);
++	if (!hisi_pcie)
++		return -ENOMEM;
++
++	pp = &hisi_pcie->pp;
++	pp->dev = &pdev->dev;
++
++	hisi_pcie->subctrl =
++	syscon_regmap_lookup_by_compatible("hisilicon,pcie-sas-subctrl");
++	if (IS_ERR(hisi_pcie->subctrl)) {
++		dev_err(pp->dev, "cannot get subctrl base\n");
++		return PTR_ERR(hisi_pcie->subctrl);
++	}
++
++	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
++	hisi_pcie->reg_base = devm_ioremap_resource(&pdev->dev, reg);
++	if (IS_ERR(hisi_pcie->reg_base)) {
++		dev_err(pp->dev, "cannot get rc_dbi base\n");
++		return PTR_ERR(hisi_pcie->reg_base);
++	}
++
++	hisi_pcie->pp.dbi_base = hisi_pcie->reg_base;
++
++	ret = hisi_add_pcie_port(pp, pdev);
++	if (ret)
++		return ret;
++
++	platform_set_drvdata(pdev, hisi_pcie);
++
++	return 0;
++}
++
++static const struct of_device_id hisi_pcie_of_match[] = {
++	{.compatible = "hisilicon,hip05-pcie",},
++	{},
++};
++
++MODULE_DEVICE_TABLE(of, hisi_pcie_of_match);
++
++static struct platform_driver hisi_pcie_driver = {
++	.driver = {
++		   .name = "hisi-pcie",
++		   .of_match_table = hisi_pcie_of_match,
++	},
++};
++
++static int __init hisi_pcie_init(void)
++{
++	return platform_driver_probe(&hisi_pcie_driver, hisi_pcie_probe);
++}
++subsys_initcall(hisi_pcie_init);
+-- 
+1.9.1
+
