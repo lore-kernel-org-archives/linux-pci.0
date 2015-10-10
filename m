@@ -1,66 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:58348 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965045AbbJHRaJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Oct 2015 13:30:09 -0400
-Date: Thu, 8 Oct 2015 19:30:07 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: Mikulas Patocka <mpatocka@redhat.com>,
-	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
-	Christoph Hellwig <hch@lst.de>,
-	device-mapper development <dm-devel@redhat.com>,
-	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
- READ FPDMA QUEUED errors since Linux 4.0
-Message-ID: <20151008173007.GL28811@8bytes.org>
-References: <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
- <55FE5740.2060701@maya.org>
- <20150929152100.GL3036@8bytes.org>
- <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
- <20150929162042.GR3036@8bytes.org>
- <560BF73F.8000008@maya.org>
- <20151006101356.GE12506@8bytes.org>
- <56141507.7040103@maya.org>
- <20151007154005.GH28811@8bytes.org>
- <56155028.7060906@maya.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v10 6/6] MAINTAINERS: Add pcie-hisi maintainer
+Date: Sat, 10 Oct 2015 10:59:17 +0800
+Message-ID: <1444445957-239522-7-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56155028.7060906@maya.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 07, 2015 at 07:02:32PM +0200, Andreas Hartmann wrote:
-> Binding the device to vfio isn't a problem (it's done before the vm is
-> started). The problem occurs during start of qemu-system-x86_64 (2.3.0).
-> 
-> The attached dmesg.out doesn't show the trace, but the desired iommu dump.
-> 
-> > Also, which device are you trying to attach to the guest (pci
-> > bus/device/function)?
-> 
-> See attached ath9k.device.
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Hmm, can you also test this again with the v4.3-rc4 please? The device
-you are attaching has its own group and no aliases, so I really can't
-see how the trace could happen, and I can't reproduce it here either.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 7ba7ab7..944a229 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8047,6 +8047,13 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+ F:	drivers/pci/host/pci-xgene-msi.c
+ 
++PCIE DRIVER FOR HISILICON
++M:	Zhou Wang <wangzhou1@hisilicon.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++F:	drivers/pci/host/pcie-hisi.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
+-- 
+1.9.1
 
-So I just want to make sure it is not a follow-on bug from the previous
-problem.
-
-
-Thanks,
-
-	Joerg
-
-P.S.: When you build the kernel with debug symbols and the problem
-      occurs again, you can find out the source file and line where the
-      bug happened with
-
-      	$ objdump -Dlz --start-address=<rip> vmlinux | head
-
-      Replace <rip> with the RIP from the kernel oops and the output
-      should show you where in the source the bug comes from. The
-      vmlinux file is in the kernels build directory.
