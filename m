@@ -1,86 +1,116 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5632D8C8.3010101@intel.com>
-Date: Fri, 30 Oct 2015 10:41:12 +0800
-From: Lan Tianyu <tianyu.lan@intel.com>
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v10 5/6] Documentation: DT: Add HiSilicon PCIe host binding
+Date: Sat, 10 Oct 2015 10:59:16 +0800
+Message-ID: <1444445957-239522-6-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-To: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
-	pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-Subject: Re: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV
- NIC
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com> <562A7E33.4080800@gmail.com> <562DBBC9.4000104@intel.com> <562E40BB.6040404@gmail.com> <5631B8CA.9040805@intel.com> <5631C3A7.2070900@gmail.com> <5631D9C2.2040206@intel.com> <56324682.5060507@gmail.com>
-In-Reply-To: <56324682.5060507@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015年10月30日 00:17, Alexander Duyck wrote:
-> On 10/29/2015 01:33 AM, Lan Tianyu wrote:
->> On 2015年10月29日 14:58, Alexander Duyck wrote:
->>> Your code was having to do a bunch of shuffling in order to get things
->>> set up so that you could bring the interface back up.  I would argue
->>> that it may actually be faster at least on the bring-up to just drop the
->>> old rings and start over since it greatly reduced the complexity and the
->>> amount of device related data that has to be moved.
->> If give up the old ring after migration and keep DMA running before
->> stopping VCPU, it seems we don't need to track Tx/Rx descriptor ring and
->> just make sure that all Rx buffers delivered to stack has been migrated.
->>
->> 1) Dummy write Rx buffer before checking Rx descriptor to ensure packet
->> migrated first.
-> 
-> Don't dummy write the Rx descriptor.  You should only really need to
-> dummy write the Rx buffer and you would do so after checking the
-> descriptor, not before.  Otherwise you risk corrupting the Rx buffer
-> because it is possible for you to read the Rx buffer, DMA occurs, and
-> then you write back the Rx buffer and now you have corrupted the memory.
-> 
->> 2) Make a copy of Rx descriptor and then use the copied data to check
->> buffer status. Not use the original descriptor because it won't be
->> migrated and migration may happen between two access of the Rx
->> descriptor.
-> 
-> Do not just blindly copy the Rx descriptor ring.  That is a recipe for
-> disaster.  The problem is DMA has to happen in a very specific order for
-> things to function correctly.  The Rx buffer has to be written and then
-> the Rx descriptor.  The problem is you will end up getting a read-ahead
-> on the Rx descriptor ring regardless of which order you dirty things in.
+This patch adds related DTS binding document for HiSilicon PCIe host driver.
 
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ .../bindings/arm/hisilicon/hisilicon.txt           | 17 +++++++++
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     | 44 ++++++++++++++++++++++
+ 2 files changed, 61 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
 
-Sorry, I didn't say clearly.
-I meant to copy one Rx descriptor when receive rx irq and handle Rx ring.
-
-Current code in the ixgbevf_clean_rx_irq() checks status of the Rx
-descriptor whether its Rx buffer has been populated data and then read
-the packet length from Rx descriptor to handle the Rx buffer.
-
-My idea is to do the following three steps when receive Rx buffer in the
-ixgbevf_clean_rx_irq().
-
-(1) dummy write the Rx buffer first,
-(2) make a copy of its Rx descriptor
-(3) Check the buffer status and get length from the copy.
-
-Migration may happen every time.
-Happen between (1) and (2). If the Rx buffer has been populated data, VF
-driver will not know that on the new machine because the Rx descriptor
-isn't migrated. But it's still safe.
-
-Happen between (2) and (3). The copy will be migrated to new machine
-and Rx buffer is migrated firstly. If there is data in the Rx buffer,
-VF driver still can handle the buffer without migrating Rx descriptor.
-
-The next buffers will be ignored since we don't migrate Rx descriptor
-for them. Their status will be not completed on the new machine.
-
+diff --git a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
+index 3504dca..6ac7c00 100644
+--- a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
++++ b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
+@@ -171,6 +171,23 @@ Example:
+ 	};
+ 
+ -----------------------------------------------------------------------
++Hisilicon HiP05 PCIe-SAS system controller
++
++Required properties:
++- compatible : "hisilicon,pcie-sas-subctrl", "syscon";
++- reg : Register address and size
++
++The HiP05 PCIe-SAS system controller is shared by PCIe and SAS controllers in
++HiP05 Soc to implement some basic configurations.
++
++Example:
++	/* for HiP05 PCIe-SAS system */
++	pcie_sas: system_controller@0xb0000000 {
++		compatible = "hisilicon,pcie-sas-subctrl", "syscon";
++		reg = <0xb0000000 0x10000>;
++	};
++
++-----------------------------------------------------------------------
+ Hisilicon CPU controller
+ 
+ Required properties:
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+new file mode 100644
+index 0000000..17c6ed9
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -0,0 +1,44 @@
++HiSilicon PCIe host bridge DT description
++
++HiSilicon PCIe host controller is based on Designware PCI core.
++It shares common functions with PCIe Designware core driver and inherits
++common properties defined in
++Documentation/devicetree/bindings/pci/designware-pci.txt.
++
++Additional properties are described here:
++
++Required properties:
++- compatible: Should contain "hisilicon,hip05-pcie".
++- reg: Should contain rc_dbi, config registers location and length.
++- reg-names: Must include the following entries:
++  "rc_dbi": controller configuration registers;
++  "config": PCIe configuration space registers.
++- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
++- port-id: Should be 0, 1, 2 or 3.
++
++Optional properties:
++- status: Either "ok" or "disabled".
++- dma-coherent: Present if DMA operations are coherent.
++
++Example:
++	pcie@0xb0080000 {
++		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
++		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
++		reg-names = "rc_dbi", "config";
++		bus-range = <0  15>;
++		msi-parent = <&its_pcie>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		dma-coherent;
++		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
++		num-lanes = <8>;
++		port-id = <1>;
++		#interrupts-cells = <1>;
++		interrupts-map-mask = <0xf800 0 0 7>;
++		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
++				  0x0 0 0 2 &mbigen_pcie 2 11
++				  0x0 0 0 3 &mbigen_pcie 3 12
++				  0x0 0 0 4 &mbigen_pcie 4 13>;
++		status = "ok";
++	};
 -- 
-Best regards
-Tianyu Lan
+1.9.1
+
