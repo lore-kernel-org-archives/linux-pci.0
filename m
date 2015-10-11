@@ -1,51 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:16921 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752292AbbIKJbb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 05:31:31 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: [PATCH v3 0/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-Date: Fri, 11 Sep 2015 17:38:24 +0800
-Message-ID: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 11 Oct 2015 11:49:01 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Romain Bezut <rbezut@gmail.com>, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	Neil Horman <nhorman@tuxdriver.com>
+Subject: Re: [PATCH] PCI/MSI: Export all remapped MSIs to sysfs attributes
+In-Reply-To: <20151009223315.GC16112@localhost>
+Message-ID: <alpine.DEB.2.11.1510111148340.6097@nanos>
+References: <1443051076-27716-1-git-send-email-rbezut@gmail.com> <20151009223315.GC16112@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On Fri, 9 Oct 2015, Bjorn Helgaas wrote:
+> On Thu, Sep 24, 2015 at 01:31:16AM +0200, Romain Bezut wrote:
+> > irqbalance uses these attributes to populate its internal database, which is
+> > then used to bind the irq on the appropriate NUMA node.
+> > 
+> > On a device accepting multiple MSIs and with interrupt remapping enabled,
+> > only the first irq entry is exported to msi_irqs directory.
+> > This results in irqbalance having no clue of the NUMA affinity for the extra
+> > irqs and starting to bind them on random nodes.
+> > 
+> > This patch exports all MSI interrupts as sysfs attributes when relevant.
+> > 
+> > Signed-off-by: Romain Bezut <rbezut@gmail.com>
+> 
+> This seems like it makes sense to me.  Do you have any bug reports
+> related to this problem?  If so, I'll mention them in the changelog.
+> 
+> Added Neil, Thomas, and linux-kernel since this is of interest to folks
+> beyond the usual linux-pci audience.
 
-This patchset:
-1) fixes a bug in spear13xx when calling dw_pcie_cfg_read and
-   dw_pcie_cfg_write usign the patch from Pratyush in
-   https://lkml.org/lkml/2015/9/7/5
-2) reworks dw_pcie_cfg_read/dw_pcie_cfg_write in pcie-designware.c in
-   order to make it easier for callers to pass input parameters;
-3) adds sanity checks in dw_pcie_cfg_read/dw_pcie_cfg_write to make
-   sure the PCI header offset does not conflict with the size of
-   the read/written field.
-
-Change from v2:
-   Replaced patch 1/3 with Pratyush one in
-   https://lkml.org/lkml/2015/9/7/5
-
-gabriele paoloni (3):
-  PCIe: SPEAr13xx: fix dw_pcie_cfg_read/write() usage
-  PCI: designware: change dw_pcie_cfg_write() and  dw_pcie_cfg_read()
-  PCI: designware: add sanity checks on the header offset in
-    dw_pcie_cfg_read and dw_pcie_cfg_write
-
- drivers/pci/host/pci-exynos.c      |  5 ++--
- drivers/pci/host/pci-keystone-dw.c |  4 ++--
- drivers/pci/host/pcie-designware.c | 47 +++++++++++++++++++++++---------------
- drivers/pci/host/pcie-spear13xx.c  | 18 +++++++--------
- 4 files changed, 41 insertions(+), 33 deletions(-)
-
--- 
-1.9.1
-
+Acked-by: Thomas Gleixner <tglx@linutronix.de>
