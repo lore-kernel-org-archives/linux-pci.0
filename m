@@ -1,80 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:59134 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751704AbbJ0CW2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 22:22:28 -0400
-Date: Tue, 27 Oct 2015 10:18:20 +0800
-From: Jisheng Zhang <jszhang@marvell.com>
-To: Ray Jui <rjui@broadcom.com>
-CC: <bhelgaas@google.com>, <thierry.reding@gmail.com>,
-	<swarren@wwwdotorg.org>, <gnurou@gmail.com>, <tinamdar@apm.com>,
-	<sbranden@broadcom.com>, <linux@arm.linux.org.uk>,
-	<linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>
-Subject: Re: [RFC PATCH 1/3] PCI: iproc: generate proper configuration
- access cycles
-Message-ID: <20151027101820.2d2a1368@xhacker>
-In-Reply-To: <562E6056.3040203@broadcom.com>
-References: <1445857334-6936-1-git-send-email-jszhang@marvell.com>
-	<1445857334-6936-2-git-send-email-jszhang@marvell.com>
-	<562E6056.3040203@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.140]:25624 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751403AbbJLKIQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 06:08:16 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Andrew Murray <Andrew.Murray@arm.com>
+Subject: [PATCH v3 1/5] pci: Add PLDA's XpressRICH3 PCIe host bridge PCI ID
+Date: Mon, 12 Oct 2015 11:07:35 +0100
+Message-Id: <1444644459-2780-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1444644459-2780-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1444644459-2780-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 26 Oct 2015 10:18:14 -0700
-Ray Jui <rjui@broadcom.com> wrote:
+From: Andrew Murray <Andrew.Murray@arm.com>
 
-> Hi Jisheng,
-> 
-> On 10/26/2015 4:02 AM, Jisheng Zhang wrote:
-> > Inspired by Russell King's patch[1], I found current iproc also has the
-> > same issue of "reading 32-bits from the command register, modifying the
-> > command register, and then writing it back has the effect of clearing
-> > any status bits that were indicating at that time" as pointed out by
-> > Russell. This patch fix this issue by using the pci_generic_config_write.
-> >
-> > [1]http://www.spinics.net/lists/linux-pci/msg44869.html
-> >
-> > Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
-> > ---
-> >   drivers/pci/host/pcie-iproc.c | 2 +-
-> >   1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> > index fe2efb1..0c423f2 100644
-> > --- a/drivers/pci/host/pcie-iproc.c
-> > +++ b/drivers/pci/host/pcie-iproc.c
-> > @@ -111,7 +111,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
-> >   static struct pci_ops iproc_pcie_ops = {
-> >   	.map_bus = iproc_pcie_map_cfg_bus,
-> >   	.read = pci_generic_config_read32,
-> > -	.write = pci_generic_config_write32,
-> > +	.write = pci_generic_config_write,
-> >   };
-> >
-> >   static void iproc_pcie_reset(struct iproc_pcie *pcie)
-> >  
-> 
-> I have already confirmed with the ASIC team that the current iProc PCIe 
-> controller requires 32-bit aligned access into the configuration space 
-> due to the way how it was integrated into various iProc SoCs including 
-> NSP, Cygnus, and NS2.
-> 
-> This change will prevent the driver from working properly.
-> 
-> I've informed our ASIC team about this issue and all future iProc based 
-> SoCs should be able to support 8-bit, 16-bit access and therefore 
-> pci_generic_config_write/read can be used for those SoCs.
-> 
-> Thanks,
-> 
-> Ray
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ include/linux/pci_ids.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Got it. 
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index d9ba49c..1542b2b 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1319,6 +1319,9 @@
+ #define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP79_SMBUS     0x0AA2
+ #define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP89_SATA	    0x0D85
+ 
++#define PCI_VENDOR_ID_PLDA		0x1556
++#define PCI_DEVICE_ID_XR3PCI		0x1100
++
+ #define PCI_VENDOR_ID_IMS		0x10e0
+ #define PCI_DEVICE_ID_IMS_TT128		0x9128
+ #define PCI_DEVICE_ID_IMS_TT3D		0x9135
+-- 
+2.6.0
 
-Thanks for the information,
-Jisheng
