@@ -1,59 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [RFC PATCHv3 1/4] pci: skip child bus with conflicting resources
-Date: Tue, 27 Oct 2015 11:34:04 -0600
-Message-Id: <1445967247-24310-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1445967247-24310-1-git-send-email-keith.busch@intel.com>
-References: <1445967247-24310-1-git-send-email-keith.busch@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:54677 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751616AbbJLQGY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 12:06:24 -0400
+Message-ID: <1444665981.3364.21.camel@pengutronix.de>
+Subject: Re: [PATCH v3 3/3] PCI: imx6: Use the common LTSSM state mask
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: bhelgaas@google.com, pratyush.anand@gmail.com, m-karicheri2@ti.com,
+	linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Date: Mon, 12 Oct 2015 18:06:21 +0200
+In-Reply-To: <1444664808-16445-3-git-send-email-festevam@gmail.com>
+References: <1444664808-16445-1-git-send-email-festevam@gmail.com>
+	 <1444664808-16445-3-git-send-email-festevam@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-And use the max bus resource from the parent rather than assume 255.
+Am Montag, den 12.10.2015, 12:46 -0300 schrieb Fabio Estevam:
+> From: Fabio Estevam <fabio.estevam@freescale.com>
+> 
+> Use the common LTSSM_STATE_MASK instead of a local definition.
+> 
+> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/probe.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8361d27..1cb3be7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -856,7 +856,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 			if (!child)
- 				goto out;
- 			child->primary = primary;
--			pci_bus_insert_busn_res(child, secondary, subordinate);
-+			if (!pci_bus_insert_busn_res(child, secondary, subordinate)) {
-+				pci_remove_bus(child);
-+				goto out;
-+			}
- 			child->bridge_ctl = bctl;
- 		}
- 
-@@ -896,7 +899,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 			child = pci_add_new_bus(bus, dev, max+1);
- 			if (!child)
- 				goto out;
--			pci_bus_insert_busn_res(child, max+1, 0xff);
-+			if (!pci_bus_insert_busn_res(child, max+1, bus->busn_res.end)) {
-+				pci_remove_bus(child);
-+				goto out;
-+			}
- 		}
- 		max++;
- 		buses = (buses & 0xff000000)
+> ---
+> Changes since v2:
+> - Newly introduced in this version.
+> 
+>  drivers/pci/host/pci-imx6.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 4e7b577..4c788d27 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -55,7 +55,6 @@ struct imx6_pcie {
+>  #define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
+>  #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
+>  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+> -#define PCIE_PHY_DEBUG_R0_LTSSM_MASK		(0x3f << 0)
+>  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+>  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
+>  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
+> @@ -508,7 +507,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+>  	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
+>  		return 0;
+>  
+> -	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != LTSSM_STATE_RCVRY_LOCK)
+> +	if ((debug_r0 & LTSSM_STATE_MASK) != LTSSM_STATE_RCVRY_LOCK)
+>  		return 0;
+>  
+>  	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
+
 -- 
-1.7.10.4
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
