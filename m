@@ -1,51 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>, Borislav Petkov <bp@alien8.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:57555 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751840AbbJLTqy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 15:46:54 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Daniel Vetter <daniel@ffwll.ch>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Christian Knig <christian.koenig@amd.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-iommu@vger.kernel.org, linux-acpi@vger.kernel.org,
-	x86@kernel.org
-Subject: [Bugfix v4 1/2] iommu/amd: Prevent binding other PCI drivers to IOMMU PCI devices
-Date: Fri,  9 Oct 2015 22:07:31 +0800
-Message-Id: <1444399652-25920-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1444399652-25920-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1444386214-26319-1-git-send-email-joro@8bytes.org>
- <1444399652-25920-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] PM / sleep: Drop pm_request_idle() from pm_generic_complete()
+Date: Mon, 12 Oct 2015 22:15:33 +0200
+Message-ID: <1729985.4Y6lgbpPqx@vostro.rjw.lan>
+In-Reply-To: <4970284.9k6NVjxDce@vostro.rjw.lan>
+References: <4970284.9k6NVjxDce@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-AMD IOMMU driver makes use of IOMMU PCI devices, so prevent binding other
-PCI drivers to IOMMU PCI devices.
+On Wednesday, September 30, 2015 02:44:29 AM Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> The pm_request_idle() in pm_generic_complete() is pointless as it is
+> called with the runtime PM usage counter different from zero (bumped
+> up by the core during the prepare phase of system suspend) and the
+> core calls pm_runtime_put() for all devices after executing their
+> complete callbacks, so drop it.
+> 
+> This allows the PCI PM layer to use pm_generic_complete() too.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+> 
+> On top of https://patchwork.kernel.org/patch/7291251/ .
 
-This fixes a bug reported by Boris that system suspend/resume gets broken
-on AMD platforms. For more information, please refer to:
-	https://lkml.org/lkml/2015/9/26/89
+Due to the lack of comments for the last several days (which I'm taking as
+the lack of objections), I'm tentatively queing this up for v4.4.
 
-Fixes: 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Borislav Petkov <bp@alien8.de>
----
- drivers/iommu/amd_iommu_init.c |    3 +++
- 1 file changed, 3 insertions(+)
+Please let me know if there are any problems with that.
 
-diff --git a/drivers/iommu/amd_iommu_init.c b/drivers/iommu/amd_iommu_init.c
-index 5ef347a13cb5..1b066e7d144d 100644
---- a/drivers/iommu/amd_iommu_init.c
-+++ b/drivers/iommu/amd_iommu_init.c
-@@ -1256,6 +1256,9 @@ static int iommu_init_pci(struct amd_iommu *iommu)
- 	if (!iommu->dev)
- 		return -ENODEV;
- 
-+	/* Prevent binding other PCI device drivers to IOMMU devices */
-+	iommu->dev->match_driver = false;
-+
- 	pci_read_config_dword(iommu->dev, cap_ptr + MMIO_CAP_HDR_OFFSET,
- 			      &iommu->cap);
- 	pci_read_config_dword(iommu->dev, cap_ptr + MMIO_RANGE_OFFSET,
+Thanks,
+Rafael
+
+
+> ---
+>  drivers/base/power/generic_ops.c |    6 ------
+>  drivers/pci/pci-driver.c         |    9 ++-------
+>  2 files changed, 2 insertions(+), 13 deletions(-)
+> 
+> Index: linux-pm/drivers/base/power/generic_ops.c
+> ===================================================================
+> --- linux-pm.orig/drivers/base/power/generic_ops.c
+> +++ linux-pm/drivers/base/power/generic_ops.c
+> @@ -296,11 +296,5 @@ void pm_generic_complete(struct device *
+>  
+>  	if (drv && drv->pm && drv->pm->complete)
+>  		drv->pm->complete(dev);
+> -
+> -	/*
+> -	 * Let runtime PM try to suspend devices that haven't been in use before
+> -	 * going into the system-wide sleep state we're resuming from.
+> -	 */
+> -	pm_request_idle(dev);
+>  }
+>  #endif /* CONFIG_PM_SLEEP */
+> Index: linux-pm/drivers/pci/pci-driver.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci-driver.c
+> +++ linux-pm/drivers/pci/pci-driver.c
+> @@ -686,13 +686,8 @@ static int pci_pm_prepare(struct device
+>  
+>  static void pci_pm_complete(struct device *dev)
+>  {
+> -	struct device_driver *drv = dev->driver;
+> -	struct pci_dev *pci_dev = to_pci_dev(dev);
+> -
+> -	pci_dev_complete_resume(pci_dev);
+> -
+> -	if (drv && drv->pm && drv->pm->complete)
+> -		drv->pm->complete(dev);
+> +	pci_dev_complete_resume(to_pci_dev(dev));
+> +	pm_generic_complete(dev);
+>  }
+>  
+>  #else /* !CONFIG_PM_SLEEP */
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-1.7.10.4
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
