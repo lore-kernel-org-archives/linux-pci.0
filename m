@@ -1,97 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28192 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932432AbbJHVuU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:50:20 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 49/60] PCI: Unify calculate_size() for io port and MMIO
-Date: Thu,  8 Oct 2015 14:39:08 -0700
-Message-Id: <1444340359-8011-50-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Received: from mail-io0-f174.google.com ([209.85.223.174]:34083 "EHLO
+	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751765AbbJLPrz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 11:47:55 -0400
+Received: by iow1 with SMTP id 1so155739343iow.1
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2015 08:47:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1444659102.3364.19.camel@pengutronix.de>
+References: <1444355306-21486-1-git-send-email-festevam@gmail.com>
+	<1444645188.3364.5.camel@pengutronix.de>
+	<1444645685.3364.8.camel@pengutronix.de>
+	<CAOMZO5CyGybRSJfCNwJAXrPuKpJqsA_w0Qfb+vhUXCyCe-PKiQ@mail.gmail.com>
+	<1444656873.3364.14.camel@pengutronix.de>
+	<CAOMZO5CKWj9tWCOZV65xwFCB7b120weq3Aq7_de-aMdEYAZWpA@mail.gmail.com>
+	<1444659102.3364.19.camel@pengutronix.de>
+Date: Mon, 12 Oct 2015 12:47:55 -0300
+Message-ID: <CAOMZO5AsfsRiYLmAZVAoZgso_xuT0vTMAakn24yTH8y+8McQHQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] PCI: designware: Move LTSSM state definitions to pcie-designware.h
+From: Fabio Estevam <festevam@gmail.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
+	m-karicheri2 <m-karicheri2@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now calculate_memsize() and calculate_iosize() is the same.
+On Mon, Oct 12, 2015 at 11:11 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
 
-Change them to calculate_size().
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 25 +++++--------------------
- 1 file changed, 5 insertions(+), 20 deletions(-)
+> Still I would love to have a definition in the common header that's
+> usable for all drivers. So unless there is a reason to use 0x3f (and we
+> don't have any LTSSM state defines which would use the extra bit) keep
+> it at 0x1f. Simpler, cleaner... IMHO.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index d4e8da1..a6eea60 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1104,22 +1104,7 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
- 	return NULL;
- }
- 
--static resource_size_t calculate_iosize(resource_size_t size,
--		resource_size_t min_size,
--		resource_size_t old_size,
--		resource_size_t align)
--{
--	if (size < min_size)
--		size = min_size;
--	if (old_size == 1)
--		old_size = 0;
--	size = ALIGN(size, align);
--	if (size < old_size)
--		size = old_size;
--	return size;
--}
--
--static resource_size_t calculate_memsize(resource_size_t size,
-+static resource_size_t calculate_size(resource_size_t size,
- 		resource_size_t min_size,
- 		resource_size_t old_size,
- 		resource_size_t align)
-@@ -1245,14 +1230,14 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 	size = size_aligned_for_isa(size);
- 	size += size1;
--	size0 = calculate_iosize(size, min_size,
-+	size0 = calculate_size(size, min_size,
- 			resource_size(b_res), min_align);
- 	sum_add_size = size_aligned_for_isa(sum_add_size);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	size1 = !realloc_head ? size0 :
--		calculate_iosize(sum_add_size, min_size,
-+		calculate_size(sum_add_size, min_size,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
-@@ -1580,7 +1565,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (size || min_size) {
- 		min_align = calculate_mem_align(&align_test_list, max_align,
- 						size, window_align);
--		size0 = calculate_memsize(size, min_size,
-+		size0 = calculate_size(size, min_size,
- 				  resource_size(b_res), min_align);
- 	}
- 	free_align_test_list(&align_test_list);
-@@ -1605,7 +1590,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
- 					window_align);
--		size1 = calculate_memsize(sum_add_size, min_size,
-+		size1 = calculate_size(sum_add_size, min_size,
- 				 resource_size(b_res), min_add_align);
- 	}
- 	free_align_test_list(&align_test_add_list);
--- 
-1.8.4.5
-
+Sure, just did as suggested in v3. Thanks
