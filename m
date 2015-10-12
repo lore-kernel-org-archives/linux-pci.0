@@ -1,70 +1,36 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V1 08/11] pci, acpi, ecam: Add flag to indicate whether ECAM region was hot added or not.
-Date: Tue, 27 Oct 2015 17:38:39 +0100
-Message-Id: <1445963922-22711-9-git-send-email-tn@semihalf.com>
-In-Reply-To: <1445963922-22711-1-git-send-email-tn@semihalf.com>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+Subject: Re: [PATCH V3 0/4] PCI: ACPI: Setting up DMA coherency for PCI device
+ from _CCA attribute
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+ <55F0EF79.3090202@amd.com> <561C0F45.8090107@amd.com>
+ <3864683.NagPOmtRbX@vostro.rjw.lan>
+CC: <bhelgaas@google.com>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>,
+	<hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Message-ID: <561C11BE.3040301@amd.com>
+Date: Mon, 12 Oct 2015 15:02:06 -0500
+MIME-Version: 1.0
+In-Reply-To: <3864683.NagPOmtRbX@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are two ways we can get ECAM (aka MCFG) regions using ACPI,
-from MCFG static table and from _CBA method. We cannot remove static
-regions, however regions coming from _CBA should be removed while removing
-bridge device.
+Hi
 
-In the light of above we need flag to mark hot added ECAM entries
-so that user should use pci_mmconfig_inject while adding regions from
-_CBA method.
+On 10/12/15 15:27, Rafael J. Wysocki wrote:
+>> Just wondering if you are planning to queue this series up for 4.4 as well?
+> You don't seem to have addressed the Bjorn's comments on patch [2/4].
+>
+> They need to be addressed before I can take this series.
+>
+> Thanks,
+> Rafael
+>
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- drivers/pci/ecam.c   | 2 ++
- include/linux/ecam.h | 1 +
- 2 files changed, 3 insertions(+)
+Ah, I missed that one. Sorry. I'll get back on that.
 
-diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-index 8a5eef7..da35b4c 100644
---- a/drivers/pci/ecam.c
-+++ b/drivers/pci/ecam.c
-@@ -131,6 +131,7 @@ struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
- 	new->segment = segment;
- 	new->start_bus = start;
- 	new->end_bus = end;
-+	new->hot_added = false;
- 
- 	res = &new->res;
- 	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
-@@ -221,6 +222,7 @@ int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
- 		err = -ENOMEM;
- 		goto out;
- 	} else {
-+		cfg->hot_added = true;
- 		list_add_sorted(cfg);
- 		pr_info("MMCONFIG at %pR (base %#lx)\n",
- 			&cfg->res, (unsigned long)cfg->address);
-diff --git a/include/linux/ecam.h b/include/linux/ecam.h
-index 813acd1..e0f322e 100644
---- a/include/linux/ecam.h
-+++ b/include/linux/ecam.h
-@@ -17,6 +17,7 @@ struct pci_mmcfg_region {
- 	u8 start_bus;
- 	u8 end_bus;
- 	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
-+	bool hot_added;
- };
- 
- struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
--- 
-1.9.1
-
+Suravee
