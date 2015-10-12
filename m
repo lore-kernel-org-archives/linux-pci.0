@@ -1,105 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:40123 "EHLO bear.ext.ti.com"
+Received: from mout1.freenet.de ([195.4.92.91]:39965 "EHLO mout1.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751371AbbJOX6F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Oct 2015 19:58:05 -0400
-From: "Kwok, WingMan" <w-kwok2@ti.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	KISHON VIJAY ABRAHAM <kishon@ti.com>,
-	"Quadros, Roger" <rogerq@ti.com>,
-	"Karicheri, Muralidharan" <m-karicheri2@ti.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"ssantosh@kernel.org" <ssantosh@kernel.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v1 1/2] phy: keystone: serdes driver for gbe 10gbe and
- pcie
-Date: Thu, 15 Oct 2015 23:57:19 +0000
-Message-ID: <230CBA6E4B6B6B418E8730AC28E6FC7E04228DF2@DFLE11.ent.ti.com>
-References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com>
- <5192855.p6QLDWTiVi@wuerfel>
- <230CBA6E4B6B6B418E8730AC28E6FC7E04228DB8@DFLE11.ent.ti.com>
- <9008744.UmMoJzNEVK@wuerfel>
-In-Reply-To: <9008744.UmMoJzNEVK@wuerfel>
-Content-Type: text/plain; charset="utf-8"
+	id S1751719AbbJLMNe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 12 Oct 2015 08:13:34 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: Joerg Roedel <joro@8bytes.org>,
+	James.Bottomley@HansenPartnership.com,
+	Hannes Reinecke <hare@suse.de>
+References: <20151006101356.GE12506@8bytes.org> <56141507.7040103@maya.org>
+ <56148A1B.5060506@maya.org> <20151007161022.GI28811@8bytes.org>
+ <56154DEA.5050901@maya.org> <20151008163957.GK28811@8bytes.org>
+ <5616B436.1000802@maya.org> <5616C998.1010309@maya.org>
+ <56174EA6.7000106@maya.org> <56178599.6010807@maya.org>
+ <20151009145951.GC27420@8bytes.org> <5617FD6E.70802@maya.org>
+ <561A54B3.5000504@maya.org>
+Cc: Mikulas Patocka <mpatocka@redhat.com>,
+	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
+	Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <561BA278.4010702@maya.org>
+Date: Mon, 12 Oct 2015 14:07:20 +0200
 MIME-Version: 1.0
+In-Reply-To: <561A54B3.5000504@maya.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQXJuZCBCZXJn
-bWFubiBbbWFpbHRvOmFybmRAYXJuZGIuZGVdDQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDE1
-LCAyMDE1IDQ6NTMgUE0NCj4gVG86IEt3b2ssIFdpbmdNYW4NCj4gQ2M6IGxpbnV4LWFybS1rZXJu
-ZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgcm9iaCtkdEBrZXJuZWwub3JnOw0KPiBwYXdlbC5tb2xs
-QGFybS5jb207IG1hcmsucnV0bGFuZEBhcm0uY29tOyBpamMrZGV2aWNldHJlZUBoZWxsaW9uLm9y
-Zy51azsNCj4gZ2FsYWtAY29kZWF1cm9yYS5vcmc7IEtJU0hPTiBWSUpBWSBBQlJBSEFNOyBRdWFk
-cm9zLCBSb2dlcjsgS2FyaWNoZXJpLA0KPiBNdXJhbGlkaGFyYW47IGJoZWxnYWFzQGdvb2dsZS5j
-b207IHNzYW50b3NoQGtlcm5lbC5vcmc7DQo+IGxpbnV4QGFybS5saW51eC5vcmcudWs7IGRldmlj
-ZXRyZWVAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9yZzsg
-bGludXgtcGNpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYxIDEvMl0g
-cGh5OiBrZXlzdG9uZTogc2VyZGVzIGRyaXZlciBmb3IgZ2JlIDEwZ2JlIGFuZA0KPiBwY2llDQo+
-IA0KPiBPbiBUaHVyc2RheSAxNSBPY3RvYmVyIDIwMTUgMjA6MDg6MzIgS3dvaywgV2luZ01hbiB3
-cm90ZToNCj4gPg0KPiA+ID4gPiArI2RlZmluZSByZWdfcm13KGFkZHIsIHZhbHVlLCBtYXNrKSBc
-DQo+ID4gPiA+ICsgICBfX3Jhd193cml0ZWwoKChfX3Jhd19yZWFkbChhZGRyKSAmICh+KG1hc2sp
-KSkgfCBcDQo+ID4gPiA+ICsgICAgICAgICAgICAgICAgICAgKHZhbHVlICYgKG1hc2spKSksIChh
-ZGRyKSkNCj4gPiA+DQo+ID4gPiBub3QgZW5kaWFuIHNhZmUsIGFuZCBwb3RlbnRpYWxseSByYWN5
-Lg0KPiA+ID4NCj4gPg0KPiA+IHdpbGwgY2hhbmdlIHRvDQo+ID4NCj4gPiAjZGVmaW5lIHJlZ19y
-bXcoYWRkciwgdmFsdWUsIG1hc2spIFwNCj4gPiAgICAgICAgIHdyaXRlbCgoKHJlYWRsKGFkZHIp
-ICYgKH4obWFzaykpKSB8IFwNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICAodmFsdWUgJiAo
-bWFzaykpKSwgKGFkZHIpKQ0KPiANCj4gT2ssIHNvdW5kcyBnb29kLiBOb3RlIHRoYXQgaWYgYW55
-IG9mIHRoaXMgaXMgcGVyZm9ybWFuY2UgY3JpdGljYWwsDQo+IGJldHRlciB1c2UgcmVhZGxfcmVs
-YXhlZCgpLCBidXQgYXMgbG9uZyBhcyB0aGlzIGlzIGp1c3QgZm9yIHNldHVwDQo+IGNvZGUgYW5k
-IG5vdCBmb3IgZGF0YSB0cmFuc2ZlcnMsIHN0YXlpbmcgd2l0aCByZWFkbCgpIGFzIHlvdQ0KPiBz
-dWdnZXN0IGlzIGJldHRlci4NCj4gDQoNCnNpbmNlIHRoaXMgaXMgb25seSBmb3IgaW5pdGlhbGl6
-YXRpb24sIEknbGwgcHJvYmFibHkgc3RheSB3aXRoIHJlYWRsKCkuDQoNCj4gPiA+ID4gK3N0YXRp
-YyBpbmxpbmUgdm9pZCBfa3NlcmRlc19yZXNldF9jZHIodm9pZCBfX2lvbWVtICpzcmVncywgaW50
-IGxhbmUpDQo+ID4gPiA+ICt7DQo+ID4gPiA+ICsgICAvKiB0b2dnbGUgc2lnbmFsIGRldGVjdCAq
-Lw0KPiA+ID4gPiArICAgX2tzZXJkZXNfZm9yY2Vfc2lnbmFsX2RldGVjdF9sb3coc3JlZ3MsIGxh
-bmUpOw0KPiA+ID4gPiArICAgbWRlbGF5KDEpOw0KPiA+ID4gPiArICAgX2tzZXJkZXNfZm9yY2Vf
-c2lnbmFsX2RldGVjdF9oaWdoKHNyZWdzLCBsYW5lKTsNCj4gPiA+ID4gK30NCj4gPiA+DQo+ID4g
-PiBDYW4geW91IGNoYW5nZSB0aGUgY29kZSBzbyB5b3UgY2FuIHVzZSBtc2xlZXAoMSkgaGVyZT8N
-Cj4gPiA+DQo+ID4NCj4gPiB3aWxsIHJlcGxhY2UgZGVsYXlzIHdpdGggdXNsZWVwX3JhbmdlKCkN
-Cj4gDQo+IE9rLg0KPiANCj4gPiA+ID4gKw0KPiA+ID4gPiArICAgZG8gew0KPiA+ID4gPiArICAg
-ICAgICAgICBtZGVsYXkoMTApOw0KPiA+ID4gPiArICAgICAgICAgICBtZW1zZXQobGFuZV9kb3du
-LCAwLCBzaXplb2YobGFuZV9kb3duKSk7DQo+ID4gPiA+ICsNCj4gPiA+ID4gKyAgICAgICAgICAg
-bGlua191cCA9IF9rc2VyZGVzX2NoZWNrX2xpbmtfc3RhdHVzKGRldiwgc3JlZ3MsDQo+ID4gPiA+
-ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBwY3NyX3Jl
-Z21hcCwgbGFuZXMsDQo+ID4gPiA+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICBsYW5lc19lbmFibGUsDQo+ID4gPiA+ICsgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjdXJyZW50X3N0YXRlLA0KPiBsYW5lX2Rvd24p
-Ow0KPiA+ID4gPiArDQo+ID4gPiA+ICsgICAgICAgICAgIC8qIGlmIHdlIGRpZCBub3QgZ2V0IGxp
-bmsgdXAgdGhlbiB3YWl0IDEwMG1zDQo+ID4gPiA+ICsgICAgICAgICAgICAqIGJlZm9yZSBjYWxs
-aW5nIGl0IGFnYWluDQo+ID4gPiA+ICsgICAgICAgICAgICAqLw0KPiA+ID4gPiArICAgICAgICAg
-ICBpZiAobGlua191cCkNCj4gPiA+ID4gKyAgICAgICAgICAgICAgICAgICBicmVhazsNCj4gPiA+
-ID4gKw0KPiA+ID4gPiArICAgICAgICAgICBmb3IgKGkgPSAwOyBpIDwgbGFuZXM7IGkrKykgew0K
-PiA+ID4gPiArICAgICAgICAgICAgICAgICAgIGlmICgobGFuZXNfZW5hYmxlICYgKDEgPDwgaSkp
-ICYmIGxhbmVfZG93bltpXSkNCj4gPiA+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgIGRl
-dl9kYmcoZGV2LA0KPiA+ID4gPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAi
-WEdFOiBkZXRlY3RlZCBsYW5lIGRvd24gb24gbGFuZQ0KPiAlZFxuIiwNCj4gPiA+ID4gKyAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaSk7DQo+ID4gPiA+ICsgICAgICAgICAgIH0N
-Cj4gPiA+ID4gKw0KPiA+ID4gPiArICAgICAgICAgICBpZiAoKytyZXRyaWVzID4gMTAwKQ0KPiA+
-ID4gPiArICAgICAgICAgICAgICAgICAgIHJldHVybiAtRVRJTUVET1VUOw0KPiA+ID4gPiArDQo+
-ID4gPiA+ICsgICB9IHdoaWxlICghbGlua191cCk7DQo+ID4gPg0KPiA+ID4gYW4gbW9yZSBpbXBv
-cnRhbnRseSBoZXJlLiBCbG9ja2luZyB0aGUgQ1BVIGZvciBvdmVyIG9uZSBzZWNvbmQgaXMgbm90
-DQo+IGdvb2QuDQo+ID4gPg0KPiA+ID4gQW55IHVzZSBvZiBtZGVsYXkoKSBzaG91bGQgaGF2ZSBh
-IGNvbW1lbnQgZXhwbGFpbmluZyB3aHkgeW91IGNhbm5vdCB1c2UNCj4gPiA+IG1zbGVlcCgpIGlu
-IHRoYXQgaW5zdGFuY2UuDQo+ID4gPg0KPiA+DQo+ID4gd2lsbCByZXBsYWNlIGRlbGF5cyB3aXRo
-IHVzbGVlcF9yYW5nZSgpDQo+IA0KPiBIZXJlIHlvdSBoYXZlIHRvIGJlIGNhcmVmdWwgd2l0aCB0
-aGUgdG90YWwgcnVudGltZS4gVXNpbmcgdXNsZWVwX3JhbmdlKCkNCj4gaXMgYSBnb29kIGlkZWEs
-IGFuZCB5b3UgY2FuIGhhdmUgYSBwYXJ0aWN1bGFybHkgd2lkZSByYW5nZSwgYnV0IHRoZW4geW91
-DQo+IHNob3VsZCBjaGFuZ2VuIHRoZSB0aW1lb3V0IGNvbmRpdGlvbiBmcm9tIG51bWJlciBvZiBy
-ZXRyaWVzIHRvIHRvdGFsDQo+IGVsYXBzZWQgdGltZSBsaWtlDQo+IA0KPiAJdW5zaWduZWQgbG9u
-ZyB0aW1lb3V0ID0gamlmZmllcyArIEhaOyAvKiAxIHNlY29uZCBtYXhpbXVtICovDQo+IAlkbyB7
-DQo+IAkJLi4uDQo+IA0KPiAJCWlmIChsaW5rX3VwKQ0KPiAJCQlicmVhazsNCj4gDQo+IAkJaWYg
-KHRpbWVfYWZ0ZXIoamlmZmllcywgdGltZW91dCkNCj4gCQkJcmV0dXJuIC1FVElNRU9VVDsNCj4g
-DQo+IAkJdXNsZWVwX3JhbmdlKDEwMDAsIDUwMDAwKTsNCj4gCX0gd2hpbGUgKDEpOw0KPiANCg0K
-d2lsbCBkby4gIA0KDQo+IAlBcm5kDQoNClRoYW5rcyBzbyBtdWNoIGZvciB5b3VyIGNvbW1lbnRz
-Lg0KV2luZ01hbg0K
+On 10/11/2015 at 02:23 PM, Andreas Hartmann wrote:
+> On 10/09/2015 at 07:46 PM, Andreas Hartmann wrote:
+>> Hello Jörg,
+>>
+>> On 10/09/2015 at 04:59 PM, Joerg Roedel wrote:
+>>> On Fri, Oct 09, 2015 at 11:15:05AM +0200, Andreas Hartmann wrote:
+>>>> v4.3-rc4 isn't usable at all for me as long as is hangs the machine on
+>>>> the necessary PCI passthrough for VMs (I need them).
+>>>
+>>> If the fix I just sent you works, could you please test this again with
+>>> a (patched) v4.3-rc4 kernel?
+>>
+>> Your IOMMU-patch works fine - but the ata-problem can be seen here, too.
+>> Same behavior as with 4.1.10.
+>>
+> 
+> Ok, this patch seems to fix the ata errors (I did a lot of tests until
+> now w/ v4.1.10 - but anyway I'm cautious):
+> 
+> http://thread.gmane.org/gmane.linux.scsi/104141/focus=104267
+
+-> Forget it - doesn't fix it.
+
+
+Regards,
+Andreas
