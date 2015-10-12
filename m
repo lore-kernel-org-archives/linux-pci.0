@@ -1,96 +1,174 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:40785 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758448AbbJ3Gcm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 02:32:42 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 30 Oct 2015 16:32:39 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 3F19A3578047
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 17:32:33 +1100 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9U6WPCS58196064
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 17:32:33 +1100
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9U6W0eW030780
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 17:32:01 +1100
-Date: Fri, 30 Oct 2015 14:31:34 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com, mpe@ellerman.id.au,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V10 04/12] powerpc/pci: Remove VFs prior to PF
-Message-ID: <20151030063134.GA5940@richards-mbp.cn.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1445829362-2738-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <5632DE2C.4050306@ozlabs.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5632DE2C.4050306@ozlabs.ru>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Guenter Roeck <linux@roeck-us.net>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>
+Subject: [PATCH 1/2] PCI: pciehp: Queue power work requests in dedicated function
+Date: Mon, 12 Oct 2015 12:10:12 -0700
+Message-Id: <1444677013-3836-1-git-send-email-linux@roeck-us.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 30, 2015 at 02:04:12PM +1100, Alexey Kardashevskiy wrote:
->On 10/26/2015 02:15 PM, Wei Yang wrote:
->>As commit ac205b7bb72f ("PCI: make sriov work with hotplug remove") indicates,
->>VFs, which might be hooked to same PCI bus as their PF should be removed
->
->A comma is missing before "should be" (or you did not need a comma after
->"VFs" may be :) ).
->
+Up to now, work items to be queued to be handled by pciehp_power_thread()
+are allocated using kmalloc() in three different locations. If not needed,
+kfree() is called to free the allocated data.
 
-I think you are right.
+Introduce a separate function to allocate the work item and queue it,
+and call it only if needed. This reduces code ducplication and avoids
+having to free memory if the work item does not need to get executed.
 
->
->>before the PF. Otherwise, the PCI hot unplugging on the PCI bus would
->
->s/on/of/? "Unplugging on" does not make much sense to me in this context at
->least.
->
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c | 66 +++++++++++----------------------------
+ 1 file changed, 19 insertions(+), 47 deletions(-)
 
-Sounds I need to improve my English :-)
-
-"on" here means those PCI devices are attached to the PCI bus. So "of" is the
-correct word?
-
-Change "unplugging" to "removing" would be better?
-
->
->>cause kernel crash.
->>
->>The patch applies the above pattern to PowerPC PCI hotplug path.
->>
->>[gwshan: changelog]
->>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/kernel/pci-hotplug.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->>diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
->>index 7f9ed0c..59c4361 100644
->>--- a/arch/powerpc/kernel/pci-hotplug.c
->>+++ b/arch/powerpc/kernel/pci-hotplug.c
->>@@ -55,7 +55,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
->>
->>  	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
->>  		 pci_domain_nr(bus),  bus->number);
->>-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
->>+	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
->>  		pr_debug("   Removing %s...\n", pci_name(dev));
->>  		pci_stop_and_remove_bus_device(dev);
->>  	}
->>
->
->
->-- 
->Alexey
-
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index f3796124ad7c..ef96a1d51fac 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -204,11 +204,12 @@ static void pciehp_power_thread(struct work_struct *work)
+ 	kfree(info);
+ }
+ 
+-void pciehp_queue_pushbutton_work(struct work_struct *work)
++void pciehp_queue_power_work(struct slot *p_slot, int req)
+ {
+-	struct slot *p_slot = container_of(work, struct slot, work.work);
+ 	struct power_work_info *info;
+ 
++	p_slot->state = req == ENABLE_REQ ? POWERON_STATE : POWEROFF_STATE;
++
+ 	info = kmalloc(sizeof(*info), GFP_KERNEL);
+ 	if (!info) {
+ 		ctrl_err(p_slot->ctrl, "%s: Cannot allocate memory\n",
+@@ -217,23 +218,25 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
+ 	}
+ 	info->p_slot = p_slot;
+ 	INIT_WORK(&info->work, pciehp_power_thread);
++	info->req = req;
++	queue_work(p_slot->wq, &info->work);
++}
++
++void pciehp_queue_pushbutton_work(struct work_struct *work)
++{
++	struct slot *p_slot = container_of(work, struct slot, work.work);
+ 
+ 	mutex_lock(&p_slot->lock);
+ 	switch (p_slot->state) {
+ 	case BLINKINGOFF_STATE:
+-		p_slot->state = POWEROFF_STATE;
+-		info->req = DISABLE_REQ;
++		pciehp_queue_power_work(p_slot, DISABLE_REQ);
+ 		break;
+ 	case BLINKINGON_STATE:
+-		p_slot->state = POWERON_STATE;
+-		info->req = ENABLE_REQ;
++		pciehp_queue_power_work(p_slot, ENABLE_REQ);
+ 		break;
+ 	default:
+-		kfree(info);
+-		goto out;
++		break;
+ 	}
+-	queue_work(p_slot->wq, &info->work);
+- out:
+ 	mutex_unlock(&p_slot->lock);
+ }
+ 
+@@ -301,27 +304,13 @@ static void handle_button_press_event(struct slot *p_slot)
+ static void handle_surprise_event(struct slot *p_slot)
+ {
+ 	u8 getstatus;
+-	struct power_work_info *info;
+-
+-	info = kmalloc(sizeof(*info), GFP_KERNEL);
+-	if (!info) {
+-		ctrl_err(p_slot->ctrl, "%s: Cannot allocate memory\n",
+-			 __func__);
+-		return;
+-	}
+-	info->p_slot = p_slot;
+-	INIT_WORK(&info->work, pciehp_power_thread);
+ 
+ 	pciehp_get_adapter_status(p_slot, &getstatus);
+ 	if (!getstatus) {
+-		p_slot->state = POWEROFF_STATE;
+-		info->req = DISABLE_REQ;
++		pciehp_queue_power_work(p_slot, DISABLE_REQ);
+ 	} else {
+-		p_slot->state = POWERON_STATE;
+-		info->req = ENABLE_REQ;
++		pciehp_queue_power_work(p_slot, ENABLE_REQ);
+ 	}
+-
+-	queue_work(p_slot->wq, &info->work);
+ }
+ 
+ /*
+@@ -330,17 +319,6 @@ static void handle_surprise_event(struct slot *p_slot)
+ static void handle_link_event(struct slot *p_slot, u32 event)
+ {
+ 	struct controller *ctrl = p_slot->ctrl;
+-	struct power_work_info *info;
+-
+-	info = kmalloc(sizeof(*info), GFP_KERNEL);
+-	if (!info) {
+-		ctrl_err(p_slot->ctrl, "%s: Cannot allocate memory\n",
+-			 __func__);
+-		return;
+-	}
+-	info->p_slot = p_slot;
+-	info->req = event == INT_LINK_UP ? ENABLE_REQ : DISABLE_REQ;
+-	INIT_WORK(&info->work, pciehp_power_thread);
+ 
+ 	switch (p_slot->state) {
+ 	case BLINKINGON_STATE:
+@@ -348,22 +326,19 @@ static void handle_link_event(struct slot *p_slot, u32 event)
+ 		cancel_delayed_work(&p_slot->work);
+ 		/* Fall through */
+ 	case STATIC_STATE:
+-		p_slot->state = event == INT_LINK_UP ?
+-		    POWERON_STATE : POWEROFF_STATE;
+-		queue_work(p_slot->wq, &info->work);
++		pciehp_queue_power_work(p_slot, event == INT_LINK_UP ?
++					ENABLE_REQ : DISABLE_REQ);
+ 		break;
+ 	case POWERON_STATE:
+ 		if (event == INT_LINK_UP) {
+ 			ctrl_info(ctrl,
+ 				  "Link Up event ignored on slot(%s): already powering on\n",
+ 				  slot_name(p_slot));
+-			kfree(info);
+ 		} else {
+ 			ctrl_info(ctrl,
+ 				  "Link Down event queued on slot(%s): currently getting powered on\n",
+ 				  slot_name(p_slot));
+-			p_slot->state = POWEROFF_STATE;
+-			queue_work(p_slot->wq, &info->work);
++			pciehp_queue_power_work(p_slot, DISABLE_REQ);
+ 		}
+ 		break;
+ 	case POWEROFF_STATE:
+@@ -371,19 +346,16 @@ static void handle_link_event(struct slot *p_slot, u32 event)
+ 			ctrl_info(ctrl,
+ 				  "Link Up event queued on slot(%s): currently getting powered off\n",
+ 				  slot_name(p_slot));
+-			p_slot->state = POWERON_STATE;
+-			queue_work(p_slot->wq, &info->work);
++			pciehp_queue_power_work(p_slot, ENABLE_REQ);
+ 		} else {
+ 			ctrl_info(ctrl,
+ 				  "Link Down event ignored on slot(%s): already powering off\n",
+ 				  slot_name(p_slot));
+-			kfree(info);
+ 		}
+ 		break;
+ 	default:
+ 		ctrl_err(ctrl, "ignoring invalid state %#x on slot(%s)\n",
+ 			 p_slot->state, slot_name(p_slot));
+-		kfree(info);
+ 		break;
+ 	}
+ }
 -- 
-Richard Yang
-Help you, Help me
+2.1.4
 
