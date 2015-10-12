@@ -1,56 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5632F732.3030805@huawei.com>
-Date: Fri, 30 Oct 2015 12:50:58 +0800
-From: Hanjun Guo <guohanjun@huawei.com>
-MIME-Version: 1.0
-To: Jon Masters <jcm@redhat.com>, Tomasz Nowicki <tn@semihalf.com>,
-	<bhelgaas@google.com>, <arnd@arndb.de>, <will.deacon@arm.com>,
-	<catalin.marinas@arm.com>, <rjw@rjwysocki.net>,
-	<hanjun.guo@linaro.org>, <Lorenzo.Pieralisi@arm.com>
-CC: <jiang.liu@linux.intel.com>, <robert.richter@caviumnetworks.com>,
-	<Narinder.Dhillon@caviumnetworks.com>, <ddaney@caviumnetworks.com>,
-	<Liviu.Dudau@arm.com>, <tglx@linutronix.de>,
-	<wangyijing@huawei.com>, <Suravee.Suthikulpanit@amd.com>,
-	<msalter@redhat.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH V1 00/11] MMCONFIG refactoring and ARM64 PCI hostbridge
- init based on ACPI
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com> <5632ED1C.7050500@redhat.com>
-In-Reply-To: <5632ED1C.7050500@redhat.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f171.google.com ([209.85.220.171]:33221 "EHLO
+	mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751620AbbJLPtX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 11:49:23 -0400
+Received: by qkas79 with SMTP id s79so59514236qka.0
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2015 08:49:23 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: pratyush.anand@gmail.com, m-karicheri2@ti.com,
+	l.stach@pengutronix.de, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: [PATCH v3 2/3] PCI: imx6: Use define instead of hard coded value
+Date: Mon, 12 Oct 2015 12:46:47 -0300
+Message-Id: <1444664808-16445-2-git-send-email-festevam@gmail.com>
+In-Reply-To: <1444664808-16445-1-git-send-email-festevam@gmail.com>
+References: <1444664808-16445-1-git-send-email-festevam@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jon,
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-On 2015/10/30 12:07, Jon Masters wrote:
-> Hi Tomasz,
->
-> Thanks for posting this series.
->
-> On 10/27/2015 12:38 PM, Tomasz Nowicki wrote:
->
->> From the functionality point of view this series might be split into two logic parts:
->> 1. Making MMCONFIG code arch-agnostic which allows all architectures to collect
->>    PCI config regions and used when necessary.
->> 2. Using generic MMCONFIG code and introducing ACPI based PCI hostbridge
->>    initialization for ARM64
-> Can I confirm that the intention here is that this replaces Hanjun's
-> previous patch series? Here's the previous one we were tracking:
->
-> https://lkml.kernel.org/g/1432644564-24746-1-git-send-email-hanjun.guo@linaro.org
+Use LTSSM_STATE_RCVRY_LOCK define instead of hard coded value in order
+to improve the code readability.
 
-Yes, that's the new version according to the discussion from my version.
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+---
+Changes since v2:
+- Use . instead of ; in the commit log
 
->
-> Assuming that is the case, then we will ping a number of folks to
-> conduct testing and provide acks (this has already been discussed in a
-> number of conversations with semiconductors over the past few days).
+ drivers/pci/host/pci-imx6.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Much appreciated.
-
-Thanks
-Hanjun
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 6f43086..4e7b577 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -508,7 +508,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+ 	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
+ 		return 0;
+ 
+-	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != 0x0d)
++	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != LTSSM_STATE_RCVRY_LOCK)
+ 		return 0;
+ 
+ 	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
+-- 
+1.9.1
 
