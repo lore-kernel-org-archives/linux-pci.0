@@ -1,68 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:47669 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751370AbbJEWqt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Oct 2015 18:46:49 -0400
-Date: Mon, 5 Oct 2015 15:44:12 -0700
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: David Daney <ddaney@caviumnetworks.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org, Rajat Jain <rajatxjain@gmail.com>,
-	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v4 3/5] PCI: Handle IORESOURCE_PCI_FIXED when sizing and
- assigning resources.
-Message-ID: <20151005224412.GB4821@sean.stalley.intel.com>
-References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
- <1443825476-26880-4-git-send-email-ddaney.cavm@gmail.com>
- <CAE9FiQWnE3ucbjPKuXm5qhTGx7bYOBqnNoSNOMaJa_tEf3Z4=Q@mail.gmail.com>
- <560F158C.4040303@caviumnetworks.com>
- <CAE9FiQVr9E4w80ZSeTgKKwbGQ=NQiReSRnfoGF3D3+3NXj-G3Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQVr9E4w80ZSeTgKKwbGQ=NQiReSRnfoGF3D3+3NXj-G3Q@mail.gmail.com>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:46064 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176AbbJLK34 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 06:29:56 -0400
+Message-ID: <1444645794.3364.10.camel@pengutronix.de>
+Subject: Re: [PATCH v2 2/2] PCI: imx6: Use define instead of hard coded value
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: bhelgaas@google.com, pratyush.anand@gmail.com, m-karicheri2@ti.com,
+	linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Date: Mon, 12 Oct 2015 12:29:54 +0200
+In-Reply-To: <1444355306-21486-2-git-send-email-festevam@gmail.com>
+References: <1444355306-21486-1-git-send-email-festevam@gmail.com>
+	 <1444355306-21486-2-git-send-email-festevam@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 02, 2015 at 08:00:20PM -0700, Yinghai Lu wrote:
-> On Fri, Oct 2, 2015 at 4:38 PM, David Daney <ddaney@caviumnetworks.com> wrote:
-> > On 10/02/2015 04:14 PM, Yinghai Lu wrote:
-> >>
-> >> https://patchwork.kernel.org/patch/7304371/
-> >> [v6,06/53] PCI: Claim fixed resource during remove/rescan path
-> >
-> >
-> > This one is interesting, but I don't think it will work.
-> >
-> > pci_claim_resource() calls pci_find_parent_resource(), which will fail in
-> > important use cases.
-> >
-> > It is perfectly legal for a bridge provisioned by EA to not specify any
-> > resources.  In this case we must walk up the bus tree until we find
-> > something that contains the device resource, and can thus be a parent.
-> >
-> > That is a big part of what my patch is doing.
+Am Donnerstag, den 08.10.2015, 22:48 -0300 schrieb Fabio Estevam:
+> From: Fabio Estevam <fabio.estevam@freescale.com>
 > 
-> looks we need another resource flags for EA in addition to
-> FIXED as it could out side of bridge MMIO range.
+> Use LTSSM_STATE_RCVRY_LOCK define instead of hard coded value in order
+> to improve the code readability;
+> 
+Normally we end sentences to be parsed by humans with a full stop
+instead of a semicolon. ;)
 
-I think I get what you are saying, but let me check.
+> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
 
-If a bridge gets reconfigured, it needs to be able to tell if this resource is EA or not.
-If it is a fixed EA resource, it doesn't need to include it in its MMIO range.
-If it is fixed for some other reason,
-	we should make sure the bridges MMIO range includes the fixed region.
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 
-You are suggesting that we should add a flag for EA, so if a bridge tries to move,
-the bridge knows weather or not the resource is EA,
-and therefore if it needs to worry about the resource when setting it's range?
+> ---
+> Changes since v1:
+> - None
+> 
+>  drivers/pci/host/pci-imx6.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 6f43086..4e7b577 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivePCIE_PHY_DEBUG_R0_LTSSM_MASKrs/pci/host/pci-imx6.c
+> @@ -508,7 +508,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+>  	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
+>  		return 0;
+>  
+> -	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != 0x0d)
+> +	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != LTSSM_STATE_RCVRY_LOCK)
+>  		return 0;
+>  
+>  	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
 
-Is that what you are trying to say?
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
--Sean
