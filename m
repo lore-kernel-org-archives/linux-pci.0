@@ -1,71 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:34986 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753901AbbJUSHZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 14:07:25 -0400
-Subject: Re: [RFC Patch 01/12] PCI: Add virtfn_index for struct pci_device
-To: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
-	pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
- <1445445464-5056-2-git-send-email-tianyu.lan@intel.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <5627D45A.4040502@gmail.com>
-Date: Wed, 21 Oct 2015 11:07:22 -0700
-MIME-Version: 1.0
-In-Reply-To: <1445445464-5056-2-git-send-email-tianyu.lan@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.140]:25627 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751443AbbJLKIQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 06:08:16 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3 5/5] arm64: defconfig: Enable PCI generic host bridge by default
+Date: Mon, 12 Oct 2015 11:07:39 +0100
+Message-Id: <1444644459-2780-6-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1444644459-2780-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1444644459-2780-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/21/2015 09:37 AM, Lan Tianyu wrote:
-> Add "virtfn_index" member in the struct pci_device to record VF sequence
-> of PF. This will be used in the VF sysfs node handle.
->
-> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
-> ---
->   drivers/pci/iov.c   | 1 +
->   include/linux/pci.h | 1 +
->   2 files changed, 2 insertions(+)
->
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index ee0ebff..065b6bb 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -136,6 +136,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->   	virtfn->physfn = pci_dev_get(dev);
->   	virtfn->is_virtfn = 1;
->   	virtfn->multifunction = 0;
-> +	virtfn->virtfn_index = id;
->   
->   	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
->   		res = &dev->resource[i + PCI_IOV_RESOURCES];
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 353db8d..85c5531 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -356,6 +356,7 @@ struct pci_dev {
->   	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
->   	unsigned int	irq_managed:1;
->   	pci_dev_flags_t dev_flags;
-> +	unsigned int	virtfn_index;
->   	atomic_t	enable_cnt;	/* pci_enable_device has been called */
->   
->   	u32		saved_config_space[16]; /* config space saved at suspend time */
->
+Now that pci-host-generic can be used under arm64, enable it by
+default so that SBSA compliant systems can use it.
 
-Can't you just calculate the VF index based on the VF BDF number 
-combined with the information in the PF BDF number and VF 
-offset/stride?  Seems kind of pointless to add a variable that is only 
-used by one driver and is in a slowpath when you can just calculate it 
-pretty quickly.
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-- Alex
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 34d71dd..7c9455a 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -49,6 +49,7 @@ CONFIG_ARCH_XGENE=y
+ CONFIG_ARCH_ZYNQMP=y
+ CONFIG_PCI=y
+ CONFIG_PCI_MSI=y
++CONFIG_PCI_HOST_GENERIC=y
+ CONFIG_PCI_XGENE=y
+ CONFIG_SMP=y
+ CONFIG_PREEMPT=y
+-- 
+2.6.0
+
