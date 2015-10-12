@@ -1,43 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([104.200.29.153]:36197 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751100AbbJWFFp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:05:45 -0400
-From: Matthew Minter <matt@masarand.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	lorenzo.pieralisi@arm.com
-Cc: Matthew Minter <matt@masarand.com>
-Subject: [PATCH V4 03/29] PCI: Add IRQ mapping function pointers to pci_host_bridge struct
-Date: Fri, 23 Oct 2015 06:03:36 +0100
-Message-Id: <1445576642-29624-4-git-send-email-matt@masarand.com>
-In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
-References: <1445576642-29624-1-git-send-email-matt@masarand.com>
+Received: from mail-qk0-f171.google.com ([209.85.220.171]:36391 "EHLO
+	mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751643AbbJLPt0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 11:49:26 -0400
+Received: by qkht68 with SMTP id t68so59526801qkh.3
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2015 08:49:26 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: pratyush.anand@gmail.com, m-karicheri2@ti.com,
+	l.stach@pengutronix.de, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: [PATCH v3 3/3] PCI: imx6: Use the common LTSSM state mask
+Date: Mon, 12 Oct 2015 12:46:48 -0300
+Message-Id: <1444664808-16445-3-git-send-email-festevam@gmail.com>
+In-Reply-To: <1444664808-16445-1-git-send-email-festevam@gmail.com>
+References: <1444664808-16445-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to defer IRQ assignment arches must be able to register functions
-to map and swizzle interrupts. These registered functions are stored in
-the pci_host_bridge struct.
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-Signed-off-by: Matthew Minter <matt@masarand.com>
+Use the common LTSSM_STATE_MASK instead of a local definition.
+
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
 ---
- include/linux/pci.h | 2 ++
- 1 file changed, 2 insertions(+)
+Changes since v2:
+- Newly introduced in this version.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e90eb22..f1bae1d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -409,6 +409,8 @@ struct pci_host_bridge {
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
- 	struct list_head windows;	/* resource_entry */
-+	u8 (*swizzle_irq)(struct pci_dev *, u8 *); /* platform irq swizzler */
-+	int (*map_irq)(struct pci_dev *, u8, u8);
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
+ drivers/pci/host/pci-imx6.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 4e7b577..4c788d27 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -55,7 +55,6 @@ struct imx6_pcie {
+ #define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
+ #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
+ #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+-#define PCIE_PHY_DEBUG_R0_LTSSM_MASK		(0x3f << 0)
+ #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+ #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
+ #define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
+@@ -508,7 +507,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+ 	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
+ 		return 0;
+ 
+-	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != LTSSM_STATE_RCVRY_LOCK)
++	if ((debug_r0 & LTSSM_STATE_MASK) != LTSSM_STATE_RCVRY_LOCK)
+ 		return 0;
+ 
+ 	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
 -- 
-2.6.2
+1.9.1
 
