@@ -1,122 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:43302 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751691AbbJ2I6y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 04:58:54 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 29 Oct 2015 18:58:51 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 596482BB003F
-	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2015 19:58:46 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9T8wdaS23462092
-	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2015 19:58:47 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9T8wCJ7008375
-	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2015 19:58:14 +1100
-Date: Thu, 29 Oct 2015 16:57:47 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Daniel Axtens <dja@axtens.net>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V10 05/12] powerpc/eeh: Cache only BARs, not windows or
- IOV BARs
-Message-ID: <20151029085747.GA1400@richards-mbp.cn.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1445829362-2738-6-git-send-email-weiyang@linux.vnet.ibm.com>
- <87h9lapd2o.fsf@gamma.ozlabs.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 12 Oct 2015 22:46:42 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+To: Yinghai Lu <yinghai@kernel.org>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v7 07/60] PCI: kill wrong quirk about M7101
+In-Reply-To: <1444340359-8011-8-git-send-email-yinghai@kernel.org>
+Message-ID: <alpine.LRH.2.20.1510122243190.7065@math.ut.ee>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org> <1444340359-8011-8-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87h9lapd2o.fsf@gamma.ozlabs.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 29, 2015 at 02:29:19PM +1100, Daniel Axtens wrote:
->Wei Yang <weiyang@linux.vnet.ibm.com> writes:
->
->> EEH address cache, which helps to locate the PCI device according to
->> the given (physical) MMIO address, didn't cover PCI bridges. Also, it
->> shouldn't return PF with address in PF's IOV BARs. Instead, the VFs
->> should be returned.
->>
->> Also, by doing so, it removes the type check in
->> eeh_addr_cache_insert_dev(), since bridge's window would not be cached.
->>
->> The patch restricts the address cache to cover first 7 BARs for the
->> above purposes.
->If I've understoond the patch correctly, I think you want to swap the
->last two paragraphs in the commit message:
->
->"Restrict the address cache to cover the first 7 BARs...
->
->Since the window of a bridge will now not be cached, remove the type
->check..."
->
+> Meelis reported that qla2000 driver does not get loaded on one sparc system.
+> 
+> schizo f00732d0: PCI host bridge to bus 0001:00
+> pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
+> pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
+> pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
+> pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
+> 
+> So the quirk for M7101 claim the io range early.
+> 
+> According to spec with M7101 in M1543 page 103/104,
+> 	http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
+> 0xe0, and 0xe2 do not include address info for acpi/smb.
+> 
+> Kill wrong quirk about them.
+> 
+> Link: http://kodu.ut.ee/~mroos/dm/dm.v240
+> Link: http://kodu.ut.ee/~mroos/dm/dm.sb100
+> Reported-by: Meelis Roos <mroos@linux.ee>
+> Cc: Meelis Roos <mroos@linux.ee>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Hmm... my purpose in the last paragraphs is to state what the patch does and
-the 2nd one is to mention another change in the log.
+I tested it on Sub Blade 100 on top of 4.3-rc5 without your other 
+patchset. The quirk messages are gone but now there are even more BAR 
+allocation messages:
 
-The order is both fine to me.
+http://kodu.ut.ee/~mroos/dm/dm.sb100+quirkpatch
 
->With regards to the actual patch, I have now got access to the PCI and
->SR-IOV specs, but I'm still getting to grips with it all so let me know
->if something I say doesn't make sense.
->
->Here, you restrict the enumeration of resources to the standard and
->extension ROM resources (the first 7), which excludes enumeration of
->VF resources. That much I understand.
->
->I'm having more trouble convincing myself that it's safe or desirable to
->drop the test for bridges. I think I understand that the change to the
->for loop means it _should_ be safe, but is there any motivation for the
->change other than making the code more straightforward?
->
-
-The motivation is just make the code more straightforward.
-
-For a bridge device, the first 7 resources are not used and the last several
-are not cached, This is the reason why I remove it in the patch.
-
->>  	/* Walk resources on this device, poke them into the tree *
->This comment probably needs to be made more descriptive given the change.
-
-Right, will change it.
-
->> -	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
->> +	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
->>  		resource_size_t start = pci_resource_start(dev,i);
->>  		resource_size_t end = pci_resource_end(dev,i);
->>  		unsigned long flags = pci_resource_flags(dev,i);
->> @@ -222,10 +222,6 @@ void eeh_addr_cache_insert_dev(struct pci_dev *dev)
->>  {
->
->Regards,
->Daniel
->
->>  	unsigned long flags;
->>  
->> -	/* Ignore PCI bridges */
->> -	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
->> -		return;
->> -
->>  	spin_lock_irqsave(&pci_io_addr_cache_root.piar_lock, flags);
->>  	__eeh_addr_cache_insert_dev(dev);
->>  	spin_unlock_irqrestore(&pci_io_addr_cache_root.piar_lock, flags);
->> -- 
->> 2.5.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+Does your for-pci-v4.4-next patchset in your git repo already contain 
+that? On V240 it seemed to be applied in your git.
 
 -- 
-Richard Yang
-Help you, Help me
-
+Meelis Roos (mroos@linux.ee)
