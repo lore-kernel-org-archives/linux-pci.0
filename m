@@ -1,59 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:46064 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176AbbJLK34 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 06:29:56 -0400
-Message-ID: <1444645794.3364.10.camel@pengutronix.de>
-Subject: Re: [PATCH v2 2/2] PCI: imx6: Use define instead of hard coded value
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: bhelgaas@google.com, pratyush.anand@gmail.com, m-karicheri2@ti.com,
-	linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Date: Mon, 12 Oct 2015 12:29:54 +0200
-In-Reply-To: <1444355306-21486-2-git-send-email-festevam@gmail.com>
-References: <1444355306-21486-1-git-send-email-festevam@gmail.com>
-	 <1444355306-21486-2-git-send-email-festevam@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from v094114.home.net.pl ([79.96.170.134]:47273 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751539AbbJLTs0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 15:48:26 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [Update][PATCH 3/3] input: i8042: Avoid resetting controller on system suspend/resume
+Date: Mon, 12 Oct 2015 22:17:05 +0200
+Message-ID: <5474174.JsPHbLRjZ7@vostro.rjw.lan>
+In-Reply-To: <1738265.GZcYUZQGSy@vostro.rjw.lan>
+References: <10641052.oOBhM6BU9G@vostro.rjw.lan> <3385784.1Q539YNd1G@vostro.rjw.lan> <1738265.GZcYUZQGSy@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 08.10.2015, 22:48 -0300 schrieb Fabio Estevam:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
+On Wednesday, October 07, 2015 03:03:57 AM Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> Use LTSSM_STATE_RCVRY_LOCK define instead of hard coded value in order
-> to improve the code readability;
+> If the upcoming system suspend is not going to be handled by the
+> platform firmware, like in the suspend-to-idle case, it is not
+> necessary to reset the controller in i8042_pm_suspend(), so avoid
+> doing that.
 > 
-Normally we end sentences to be parsed by humans with a full stop
-instead of a semicolon. ;)
+> Moreover, if the system resume currently in progress has not been
+> started by the platform firmware, like in the suspend-to-idle case,
+> i8042_controller_resume() need not be called by i8042_pm_resume(),
+> so avoid doing that too in that case.
+> 
+> Additionally, try to catch the event that woke up the system by
+> calling the interrupt handler early during system resume if it has
+> not been started by the platform firmware.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+If there are no more comments here, I'll tentatively queue it up for v4.4
+along with the [1-2/3] from this series.
 
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Please let me know if there are any problems with that.
+
+Thanks,
+Rafael
+
 
 > ---
-> Changes since v1:
-> - None
+>  drivers/input/serio/i8042.c |   32 +++++++++++++++++++++++++++-----
+>  1 file changed, 27 insertions(+), 5 deletions(-)
 > 
->  drivers/pci/host/pci-imx6.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Index: linux-pm/drivers/input/serio/i8042.c
+> ===================================================================
+> --- linux-pm.orig/drivers/input/serio/i8042.c
+> +++ linux-pm/drivers/input/serio/i8042.c
+> @@ -24,6 +24,7 @@
+>  #include <linux/platform_device.h>
+>  #include <linux/i8042.h>
+>  #include <linux/slab.h>
+> +#include <linux/suspend.h>
+>  
+>  #include <asm/io.h>
+>  
+> @@ -1170,7 +1171,8 @@ static int i8042_pm_suspend(struct devic
+>  {
+>  	int i;
+>  
+> -	i8042_controller_reset(true);
+> +	if (pm_suspend_via_firmware())
+> +		i8042_controller_reset(true);
+>  
+>  	/* Set up serio interrupts for system wakeup. */
+>  	for (i = 0; i < I8042_NUM_PORTS; i++) {
+> @@ -1183,8 +1185,17 @@ static int i8042_pm_suspend(struct devic
+>  	return 0;
+>  }
+>  
+> +static int i8042_pm_resume_noirq(struct device *dev)
+> +{
+> +	if (!pm_resume_via_firmware())
+> +		i8042_interrupt(0, NULL);
+> +
+> +	return 0;
+> +}
+> +
+>  static int i8042_pm_resume(struct device *dev)
+>  {
+> +	bool force_reset;
+>  	int i;
+>  
+>  	for (i = 0; i < I8042_NUM_PORTS; i++) {
+> @@ -1195,11 +1206,21 @@ static int i8042_pm_resume(struct device
+>  	}
+>  
+>  	/*
+> -	 * On resume from S2R we always try to reset the controller
+> -	 * to bring it in a sane state. (In case of S2D we expect
+> -	 * BIOS to reset the controller for us.)
+> +	 * If platform firmware was not going to be involved in suspend, we did
+> +	 * not restore the controller state to whatever it had been at boot
+> +	 * time, so we do not need to do anything.
+>  	 */
+> -	return i8042_controller_resume(true);
+> +	if (!pm_suspend_via_firmware())
+> +		return 0;
+> +
+> +	/*
+> +	 * We only need to reset the controller if we are resuming after handing
+> +	 * off control to the platform firmware, otherwise we can simply restore
+> +	 * the mode.
+> +	 */
+> +	force_reset = pm_resume_via_firmware();
+> +
+> +	return i8042_controller_resume(force_reset);
+>  }
+>  
+>  static int i8042_pm_thaw(struct device *dev)
+> @@ -1223,6 +1244,7 @@ static int i8042_pm_restore(struct devic
+>  
+>  static const struct dev_pm_ops i8042_pm_ops = {
+>  	.suspend	= i8042_pm_suspend,
+> +	.resume_noirq	= i8042_pm_resume_noirq,
+>  	.resume		= i8042_pm_resume,
+>  	.thaw		= i8042_pm_thaw,
+>  	.poweroff	= i8042_pm_reset,
 > 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 6f43086..4e7b577 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivePCIE_PHY_DEBUG_R0_LTSSM_MASKrs/pci/host/pci-imx6.c
-> @@ -508,7 +508,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
->  	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
->  		return 0;
->  
-> -	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != 0x0d)
-> +	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != LTSSM_STATE_RCVRY_LOCK)
->  		return 0;
->  
->  	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
-
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+> --
 
