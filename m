@@ -1,119 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:46821 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752542AbbJZDTT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Oct 2015 23:19:19 -0400
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 26 Oct 2015 13:19:17 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 347DE3578047
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 14:19:14 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9Q3J0Hc16908496
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 14:19:08 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9Q3IfqD029697
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 14:18:41 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V10 07/12] powerpc/eeh: Create PE for VFs
-Date: Mon, 26 Oct 2015 11:15:57 +0800
-Message-Id: <1445829362-2738-8-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from down.free-electrons.com ([37.187.137.238]:60361 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751670AbbJLHPr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 03:15:47 -0400
+Date: Mon, 12 Oct 2015 09:15:44 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Li Yang <leoli@freescale.com>, Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH v2] PCI: layerscape: Add PCIe support for LS1043a and
+ LS2080a
+Message-ID: <20151012091544.7dbbe330@free-electrons.com>
+In-Reply-To: <20151011191027.GA29221@localhost>
+References: <1442481219-28299-1-git-send-email-Minghuan.Lian@freescale.com>
+	<20151007175725.GC27633@localhost>
+	<20151011191027.GA29221@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current EEH recovery code works with the assumption: the PE has primary
-bus. Unfortunately, that's not true for VF PEs, which generally contains
-one or multiple VFs (for VF group case).
+Bjorn,
 
-The patch creates PEs for VFs in the weak function
-pcibios_bus_add_device(). Those PEs for VFs are identified with newly
-introduced flag EEH_PE_VF so that we handle them differently during EEH
-recovery.
+On Sun, 11 Oct 2015 14:10:27 -0500, Bjorn Helgaas wrote:
 
-[gwshan: changelog and code refactoring]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h               |  1 +
- arch/powerpc/kernel/eeh_pe.c                 | 10 ++++++++--
- arch/powerpc/platforms/powernv/eeh-powernv.c | 16 ++++++++++++++++
- 3 files changed, 25 insertions(+), 2 deletions(-)
+> > driver/of/irq.c  void of_msi_configure(struct device *dev, struct
+> > device_node *np) will bind "msi-parent" to each device if there is
+> > "msi-parent" handler. The PCIe driver do not need to do anything. If
+> > we do not check "msi-parent" here, we will have no chance to check it.
+> > The common code of 'of' and 'pci' bus driver will not complain,
+> > because the msi controller may be found by other way.
+> 
+> Hmm.   In mvebu_pcie_msi_enable() and xgene_pcie_msi_enable(), we
+> also look for "msi-parent".  If that fails, mvebu continues silently
+> and xgene complains (but only if CONFIG_PCI_MSI=y).
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 6c383ad..ec21f8f 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -72,6 +72,7 @@ struct pci_dn;
- #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
- #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
- #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
-+#define EEH_PE_VF	(1 << 4)	/* VF PE     */
- 
- #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
- #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
-diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
-index 35f0b62..260a701 100644
---- a/arch/powerpc/kernel/eeh_pe.c
-+++ b/arch/powerpc/kernel/eeh_pe.c
-@@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
- 	 * EEH device already having associated PE, but
- 	 * the direct parent EEH device doesn't have yet.
- 	 */
--	pdn = pdn ? pdn->parent : NULL;
-+	if (edev->physfn)
-+		pdn = pci_get_pdn(edev->physfn);
-+	else
-+		pdn = pdn ? pdn->parent : NULL;
- 	while (pdn) {
- 		/* We're poking out of PCI territory */
- 		parent = pdn_to_eeh_dev(pdn);
-@@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
- 	}
- 
- 	/* Create a new EEH PE */
--	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
-+	if (edev->physfn)
-+		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
-+	else
-+		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
- 	if (!pe) {
- 		pr_err("%s: out of memory!\n", __func__);
- 		return -ENOMEM;
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 7cf0df8..cfd55dd 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1524,6 +1524,22 @@ static struct eeh_ops pnv_eeh_ops = {
- 	.restore_config		= pnv_eeh_restore_config
- };
- 
-+void pcibios_bus_add_device(struct pci_dev *pdev)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+
-+	if (!pdev->is_virtfn)
-+		return;
-+
-+	/*
-+	 * The following operations will fail if VF's sysfs files
-+	 * aren't created or its resources aren't finalized.
-+	 */
-+	eeh_add_device_early(pdn);
-+	eeh_add_device_late(pdev);
-+	eeh_sysfs_add_device(pdev);
-+}
-+
- /**
-  * eeh_powernv_init - Register platform dependent EEH operations
-  *
+I don't really have the context of the discussion here. But the reason
+why the mvebu pcie driver silently continues if msi-parent is missing
+is because we initially introduced the PCIe mvebu Device Tree binding
+without MSI support. When we later added MSI support thanks to the
+msi-parent property, we wanted to preserve backward compatibility with
+old DTs that didn't had the msi-parent property. Such DTs would
+continue to work, albeit without the MSI functionality obviously.
+
+Other drivers that had the MSI functionality from day 1 may want to
+make such a property mandatory rather than optional.
+
+Best regards,
+
+Thomas
 -- 
-2.5.0
-
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
