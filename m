@@ -1,211 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23340 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754412AbbJHVjz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:39:55 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 02/60] sparc/PCI: Use correct bus address to resource offset
-Date: Thu,  8 Oct 2015 14:38:21 -0700
-Message-Id: <1444340359-8011-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:44100 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752161AbbJLNei (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 09:34:38 -0400
+Message-ID: <1444656873.3364.14.camel@pengutronix.de>
+Subject: Re: [PATCH v2 1/2] PCI: designware: Move LTSSM state definitions to
+ pcie-designware.h
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
+	m-karicheri2 <m-karicheri2@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Date: Mon, 12 Oct 2015 15:34:33 +0200
+In-Reply-To: <CAOMZO5CyGybRSJfCNwJAXrPuKpJqsA_w0Qfb+vhUXCyCe-PKiQ@mail.gmail.com>
+References: <1444355306-21486-1-git-send-email-festevam@gmail.com>
+	 <1444645188.3364.5.camel@pengutronix.de>
+	 <1444645685.3364.8.camel@pengutronix.de>
+	 <CAOMZO5CyGybRSJfCNwJAXrPuKpJqsA_w0Qfb+vhUXCyCe-PKiQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After we add 64bit mmio parsing, we got some "no compatible bridge window"
-warning on anther new model that support 64bit resource.
+Am Montag, den 12.10.2015, 09:31 -0300 schrieb Fabio Estevam:
+> On Mon, Oct 12, 2015 at 7:28 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> 
+> > Actually the TRM states that i.MX6 is using the same narrower mask of
+> > 0x1f for the LTSSM state, so another reason to just use that.
+> 
+> The manual I have seems to tell a different value :-)
+> 
+> Please check: http://cache.freescale.com/files/32bit/doc/ref_manual/IMX6DQRM.pdf
+> 
+> "48.12.11
+> Debug Register 0 (PCIE_PL_DEBUG0)"
+> 
+> says "[5:0]: xmlh_ltssm_state LTSSM current state. See source for encodings"
+> 
+Urgh. Seems we got confused by all the different defines.
 
-It turns out that we can not use mem_space.start as 64bit mem space
-offset, aka mem_space.start != offset.
+In fact [5:0] is 0x1f, so i.MX6 uses the same mask as Keystone, yet the
+common and shared header now states a mask of 0x3f with Keystone being
+the exception. That doesn't reflect reality which isn't nice IMHO. I
+think it would be better to just use 0x1f as the LTSSM mask in the
+shared header and use this for all drivers until a need arises for using
+the extra bit on SPEAR.
 
-Use child_phys_addr to calculate exact offset and recorder offset in
-pbm.  Still assume all mem have same offset, otherwise panic early.
+Regards,
+Lucas
 
-After patch we get correct offset.
-
-/pci@305: PCI IO [io  0x2007e00000000-0x2007e0fffffff] offset 2007e00000000
-/pci@305: PCI MEM [mem 0x2000000100000-0x200007effffff] offset 2000000000000
-/pci@305: PCI MEM64 [mem 0x2000100000000-0x2000dffffffff] offset 2000000000000
-...
-pci_sun4v f02ae7f8: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
-pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
-pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
-
-
--v2: to make is simple, do not add mem64_offset, and assume
-     mem64_offset == mem_offset, otherwise would make
-     pci_mmap_resource() path too complicated.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/sparc/kernel/pci.c        | 14 +++++++-------
- arch/sparc/kernel/pci_common.c | 36 +++++++++++++++++++++++++++---------
- arch/sparc/kernel/pci_impl.h   |  3 +++
- 3 files changed, 37 insertions(+), 16 deletions(-)
-
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index badf095..451792e 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -654,12 +654,12 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	printk("PCI: Scanning PBM %s\n", node->full_name);
- 
- 	pci_add_resource_offset(&resources, &pbm->io_space,
--				pbm->io_space.start);
-+				pbm->io_offset);
- 	pci_add_resource_offset(&resources, &pbm->mem_space,
--				pbm->mem_space.start);
-+				pbm->mem_offset);
- 	if (pbm->mem64_space.flags)
- 		pci_add_resource_offset(&resources, &pbm->mem64_space,
--					pbm->mem_space.start);
-+					pbm->mem_offset);
- 	pbm->busn.start = pbm->pci_first_busno;
- 	pbm->busn.end	= pbm->pci_last_busno;
- 	pbm->busn.flags	= IORESOURCE_BUS;
-@@ -751,10 +751,10 @@ static int __pci_mmap_make_offset_bus(struct pci_dev *pdev, struct vm_area_struc
- 		return -EINVAL;
- 
- 	if (mmap_state == pci_mmap_io) {
--		vma->vm_pgoff = (pbm->io_space.start +
-+		vma->vm_pgoff = (pbm->io_offset +
- 				 user_offset) >> PAGE_SHIFT;
- 	} else {
--		vma->vm_pgoff = (pbm->mem_space.start +
-+		vma->vm_pgoff = (pbm->mem_offset +
- 				 user_offset) >> PAGE_SHIFT;
- 	}
- 
-@@ -981,9 +981,9 @@ void pci_resource_to_user(const struct pci_dev *pdev, int bar,
- 	unsigned long offset;
- 
- 	if (rp->flags & IORESOURCE_IO)
--		offset = pbm->io_space.start;
-+		offset = pbm->io_offset;
- 	else
--		offset = pbm->mem_space.start;
-+		offset = pbm->mem_offset;
- 
- 	*start = rp->start - offset;
- 	*end = rp->end - offset;
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 33524c1..28e976a 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -393,6 +393,7 @@ static void pci_register_iommu_region(struct pci_pbm_info *pbm)
- void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- {
- 	const struct linux_prom_pci_ranges *pbm_ranges;
-+	resource_size_t mem64_offset = 0;
- 	int i, saw_mem, saw_io;
- 	int num_pbm_ranges;
- 
-@@ -410,13 +411,16 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 
- 	for (i = 0; i < num_pbm_ranges; i++) {
- 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
--		unsigned long a, size;
-+		unsigned long a, size, region_a;
- 		u32 parent_phys_hi, parent_phys_lo;
-+		u32 child_phys_mid, child_phys_lo;
- 		u32 size_hi, size_lo;
- 		int type;
- 
- 		parent_phys_hi = pr->parent_phys_hi;
- 		parent_phys_lo = pr->parent_phys_lo;
-+		child_phys_mid = pr->child_phys_mid;
-+		child_phys_lo = pr->child_phys_lo;
- 		if (tlb_type == hypervisor)
- 			parent_phys_hi &= 0x0fffffff;
- 
-@@ -426,6 +430,8 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 		type = (pr->child_phys_hi >> 24) & 0x3;
- 		a = (((unsigned long)parent_phys_hi << 32UL) |
- 		     ((unsigned long)parent_phys_lo  <<  0UL));
-+		region_a = (((unsigned long)child_phys_mid << 32UL) |
-+		     ((unsigned long)child_phys_lo  <<  0UL));
- 		size = (((unsigned long)size_hi << 32UL) |
- 			((unsigned long)size_lo  <<  0UL));
- 
-@@ -440,6 +446,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->io_space.start = a;
- 			pbm->io_space.end = a + size - 1UL;
- 			pbm->io_space.flags = IORESOURCE_IO;
-+			pbm->io_offset = a - region_a;
- 			saw_io = 1;
- 			break;
- 
-@@ -448,6 +455,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->mem_space.start = a;
- 			pbm->mem_space.end = a + size - 1UL;
- 			pbm->mem_space.flags = IORESOURCE_MEM;
-+			pbm->mem_offset = a - region_a;
- 			saw_mem = 1;
- 			break;
- 
-@@ -456,6 +464,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->mem64_space.start = a;
- 			pbm->mem64_space.end = a + size - 1UL;
- 			pbm->mem64_space.flags = IORESOURCE_MEM;
-+			mem64_offset = a - region_a;
- 			saw_mem = 1;
- 			break;
- 
-@@ -471,14 +480,23 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 		prom_halt();
- 	}
- 
--	printk("%s: PCI IO[%llx] MEM[%llx]",
--	       pbm->name,
--	       pbm->io_space.start,
--	       pbm->mem_space.start);
--	if (pbm->mem64_space.flags)
--		printk(" MEM64[%llx]",
--		       pbm->mem64_space.start);
--	printk("\n");
-+	if (pbm->io_space.flags)
-+		printk("%s: PCI IO %pR offset %llx\n",
-+		       pbm->name, &pbm->io_space, pbm->io_offset);
-+	if (pbm->mem_space.flags)
-+		printk("%s: PCI MEM %pR offset %llx\n",
-+		       pbm->name, &pbm->mem_space, pbm->mem_offset);
-+	if (pbm->mem64_space.flags) {
-+		if (pbm->mem_space.flags) {
-+			if (mem64_offset != pbm->mem_offset)
-+				panic("mem offset %llx != mem64 offset %llx\n",
-+					pbm->mem_offset, mem64_offset);
-+		} else
-+			pbm->mem_offset = mem64_offset;
-+
-+		printk("%s: PCI MEM64 %pR offset %llx\n",
-+		       pbm->name, &pbm->mem64_space, pbm->mem_offset);
-+	}
- 
- 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
- 	pbm->mem64_space.name = pbm->name;
-diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
-index 37222ca..08b74af 100644
---- a/arch/sparc/kernel/pci_impl.h
-+++ b/arch/sparc/kernel/pci_impl.h
-@@ -99,6 +99,9 @@ struct pci_pbm_info {
- 	struct resource			mem_space;
- 	struct resource			mem64_space;
- 	struct resource			busn;
-+	/* offset */
-+	resource_size_t			io_offset;
-+	resource_size_t			mem_offset;
- 
- 	/* Base of PCI Config space, can be per-PBM or shared. */
- 	unsigned long			config_space;
 -- 
-1.8.4.5
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
