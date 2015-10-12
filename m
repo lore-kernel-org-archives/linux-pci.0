@@ -1,89 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:35301 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750730AbbJBHxr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 03:53:47 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Cc: bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
+	will.deacon@arm.com, hanjun.guo@linaro.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V3 0/4] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
+Date: Mon, 12 Oct 2015 22:27:29 +0200
+Message-ID: <3864683.NagPOmtRbX@vostro.rjw.lan>
+In-Reply-To: <561C0F45.8090107@amd.com>
+References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com> <55F0EF79.3090202@amd.com> <561C0F45.8090107@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <CAL_JsqL9eoTRa2-eeNJgVoO=0LyuaaJ87E4_BS0KocRKBXGdGA@mail.gmail.com>
-References: <1442801587-3812-1-git-send-email-lftan@altera.com>
-	<1442801587-3812-6-git-send-email-lftan@altera.com>
-	<5606171A.5000609@kernel.org>
-	<CAFiDJ59PuhRj3F288A_451pLiKnqPUKin9C2t5uuH2iNPnJfAg@mail.gmail.com>
-	<CAL_JsqL9eoTRa2-eeNJgVoO=0LyuaaJ87E4_BS0KocRKBXGdGA@mail.gmail.com>
-Date: Fri, 2 Oct 2015 15:53:44 +0800
-Message-ID: <CAFiDJ5_MYC=V_L1LyRNq00z=DerzKAF=RF5av9vHnUPP+9a1nw@mail.gmail.com>
-Subject: Re: [PATCH v7 5/6] Documentation: dt-bindings: pci: altera pcie
- device tree binding
-From: Ley Foon Tan <lftan@altera.com>
-To: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 29, 2015 at 1:31 AM, Rob Herring <robh@kernel.org> wrote:
-> On Mon, Sep 28, 2015 at 12:38 AM, Ley Foon Tan <lftan@altera.com> wrote:
->> On Sat, Sep 26, 2015 at 11:55 AM, Rob Herring <robh@kernel.org> wrote:
->>>
->>> On 09/20/2015 09:13 PM, Ley Foon Tan wrote:
->>> > This patch adds the bindings for Altera PCIe host controller driver and
->>> > Altera PCIe MSI driver.
->
-> [...]
->
->>> > +     num-vectors = <32>;
->>> > +};
->>> > diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
->>> > new file mode 100644
->>> > index 0000000..4440db1
->>> > --- /dev/null
->>> > +++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
->>> > @@ -0,0 +1,49 @@
->>> > +* Altera PCIe controller
->>> > +
->>> > +Required properties:
->>> > +- compatible :       should contain "altr,pcie-root-port-1.0"
->>> > +- reg:               a list of physical base address and length for TXS and CRA.
->>> > +- reg-names: must include the following entries:
->>> > +             "Txs" or "txs": TX slave port region
->>> > +             "Cra" or "cra": Control register access region
->>>
->>> Why both cases? Can we please just have one (or none is better IMO).
->> The PCIe IP on different device families use different register names.
->> And our device tree generator will auto generate the register names
->> based on the hardware description name. Too bad we can't change the
->> hardware description names now.
->
-> Okay, your problem to maintain. Hopefully the driver just goes by index then.
-Okay, we will fix our generator tool to standardize one reg-name case
-and driver  just use one reg-name case as well.
->
-> Strictly speaking, if you have undocumented bindings downstream that
-> is your problem and we don't have to accept them as-is upstream. I'm
-> not going to worry about that here.
->
->>> txs contains the config space?
->> It is not the config space, but a memory slave port.
->
-> Then where is the config space? It should not be part of "ranges" is
-> all I care about.
-The config space is not part of "ranges". Our IP uses TLP packet to
-access config space.
+On Monday, October 12, 2015 02:51:33 PM Suravee Suthikulpanit wrote:
+> Hi Rafael,
+> 
+> On 9/9/15 21:48, Suthikulpanit, Suravee wrote:
+> > Hi Rafael,
+> >
+> > On 9/10/2015 3:38 AM, Rafael J. Wysocki wrote:
+> >> On Wednesday, September 09, 2015 07:16:49 PM Suthikulpanit, Suravee
+> >> wrote:
+> >>> >Hi All,
+> >>> >
+> >>> >Are there any other concerns about this patch series?
+> >> I have none, but then it sort of missed the merge window.
+> >>
+> >> I can easily queue it up for the next one unless it is super-urgent,
+> >> but in that case I need to know why that's the case.
+> >>
+> >
+> > This is not urgent. This mainly needed to enable the ACPI PCI supports
+> > for ARM64 which is still work in progress.
+> >
+> > Thanks,
+> > Suravee
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Just wondering if you are planning to queue this series up for 4.4 as well?
 
-Regards
-Ley Foon
+You don't seem to have addressed the Bjorn's comments on patch [2/4].
+
+They need to be addressed before I can take this series.
+
+Thanks,
+Rafael
+
