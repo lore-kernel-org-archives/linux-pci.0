@@ -1,122 +1,159 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v5 3/4] PCI: Handle IORESOURCE_PCI_FIXED when sizing and assigning resources.
-Date: Tue,  6 Oct 2015 16:50:37 -0700
-Message-Id: <1444175438-7443-4-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:33196 "EHLO
+	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751094AbbJLPtU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 11:49:20 -0400
+Received: by qkas79 with SMTP id s79so59513636qka.0
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2015 08:49:19 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: pratyush.anand@gmail.com, m-karicheri2@ti.com,
+	l.stach@pengutronix.de, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: [PATCH v3 1/3] PCI: designware: Move LTSSM state definitions to pcie-designware.h
+Date: Mon, 12 Oct 2015 12:46:46 -0300
+Message-Id: <1444664808-16445-1-git-send-email-festevam@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-The new Enhanced Allocation (EA) capability support creates resources
-with the IORESOURCE_PCI_FIXED set.  This causes a couple of problems:
+Move LTSSM state definitions to common pcie-designware.h so that other
+drivers can make use of them.
 
-1) Since these resources cannot be relocated or resized, their
-   alignment is not really defined, and it is therefore not specified.
-   This causes a problem in pbus_size_mem() where resources with
-   unspecified alignment are disabled.
+Also, LTSSM states only use 5 bits so use 0x1f as its mask, so that we
+have a common LTSSM mask accross all PCIe designware drivers.
 
-2) During resource assignment in pci_bus_assign_resources(),
-   IORESOURCE_PCI_FIXED resources are not given a parent.  This, in
-   turn, causes pci_enable_resources() to fail with a "not claimed"
-   error.
+Keystone uses 5 bits for the LTSSM in its reference manual, others like
+i.MX6 uses 6 bits. However, the LTSSM states really have 5 bits, so we
+can safely use 5 bits (which corresponds to the 0x1f mask) for all the
+PCIe Designware cores.
 
-So, in pbus_size_mem() skip IORESOURCE_PCI_FIXED resources, instead of
-disabling them.
-
-In __pci_bus_assign_resources(), for IORESOURCE_PCI_FIXED resources,
-try to request the resource from a parent bus.
-
-Signed-off-by: David Daney <david.daney@cavium.com>
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
 ---
- drivers/pci/setup-bus.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 47 insertions(+), 3 deletions(-)
+Changes since v2:
+- Use LTSSM_STATE_MASK with value 0x1f for all the drivers (Lucas)
+- Use lowercase in pcie-designware.h (Lucas)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 508cc56..7239a2c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1037,9 +1037,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			struct resource *r = &dev->resource[i];
- 			resource_size_t r_size;
+ drivers/pci/host/pci-keystone-dw.c |  1 -
+ drivers/pci/host/pci-layerscape.c  |  1 -
+ drivers/pci/host/pcie-designware.h | 34 ++++++++++++++++++++++++++++++++++
+ drivers/pci/host/pcie-spear13xx.c  | 33 ---------------------------------
+ 4 files changed, 34 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index 0146b41..76edf92 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -25,7 +25,6 @@
  
--			if (r->parent || ((r->flags & mask) != type &&
--					  (r->flags & mask) != type2 &&
--					  (r->flags & mask) != type3))
-+			if (r->parent || (r->flags | IORESOURCE_PCI_FIXED) ||
-+			    ((r->flags & mask) != type &&
-+			     (r->flags & mask) != type2 &&
-+			     (r->flags & mask) != type3))
- 				continue;
- 			r_size = resource_size(r);
- #ifdef CONFIG_PCI_IOV
-@@ -1340,6 +1341,47 @@ void pci_bus_size_bridges(struct pci_bus *bus)
- }
- EXPORT_SYMBOL(pci_bus_size_bridges);
+ /* Application register defines */
+ #define LTSSM_EN_VAL		        1
+-#define LTSSM_STATE_MASK		0x1f
+ #define LTSSM_STATE_L0			0x11
+ #define DBI_CS2_EN_VAL			0x20
+ #define OB_XLAT_EN_VAL		        2
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index 495a7c3..f68b551 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -28,7 +28,6 @@
+ /* PEX1/2 Misc Ports Status Register */
+ #define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
+ #define LTSSM_STATE_SHIFT	20
+-#define LTSSM_STATE_MASK	0x3f
+ #define LTSSM_PCIE_L0		0x11 /* L0 state */
  
-+static void assign_fixed_resource_on_bus(struct pci_bus *b, struct resource *r)
-+{
-+	int i;
-+	struct resource *parent_r;
-+	unsigned long mask = IORESOURCE_IO | IORESOURCE_MEM |
-+			     IORESOURCE_PREFETCH;
-+
-+	pci_bus_for_each_resource(b, parent_r, i) {
-+		if (!parent_r)
-+			continue;
-+
-+		if ((r->flags & mask) == (parent_r->flags & mask) &&
-+		    resource_contains(parent_r, r))
-+			request_resource(parent_r, r);
-+	}
-+}
-+
-+/*
-+ * Try to assign any resources marked as IORESOURCE_PCI_FIXED, as they
-+ * are skipped by pbus_assign_resources_sorted().
-+ */
-+static void pdev_assign_fixed_resources(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	for (i = 0; i <  PCI_NUM_RESOURCES; i++) {
-+		struct pci_bus *b;
-+		struct resource *r = &dev->resource[i];
-+
-+		if (r->parent || !(r->flags & IORESOURCE_PCI_FIXED) ||
-+		    !(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
-+			continue;
-+
-+		b = dev->bus;
-+		while (b && !r->parent) {
-+			assign_fixed_resource_on_bus(b, r);
-+			b = b->parent;
-+		}
-+	}
-+}
-+
- void __pci_bus_assign_resources(const struct pci_bus *bus,
- 				struct list_head *realloc_head,
- 				struct list_head *fail_head)
-@@ -1350,6 +1392,8 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
- 	pbus_assign_resources_sorted(bus, realloc_head, fail_head);
+ /* PEX Internal Configuration Registers */
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index e7b3279..95846dd 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -22,6 +22,40 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
  
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		pdev_assign_fixed_resources(dev);
++#define LTSSM_STATE_DETECT_QUIET	0x00
++#define LTSSM_STATE_DETECT_ACT		0x01
++#define LTSSM_STATE_POLL_ACTIVE		0x02
++#define LTSSM_STATE_POLL_COMPLIANCE	0x03
++#define LTSSM_STATE_POLL_CONFIG		0x04
++#define LTSSM_STATE_PRE_DETECT_QUIET	0x05
++#define LTSSM_STATE_DETECT_WAIT		0x06
++#define LTSSM_STATE_CFG_LINKWD_START	0x07
++#define LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
++#define LTSSM_STATE_CFG_LANENUM_WAIT	0x09
++#define LTSSM_STATE_CFG_LANENUM_ACEPT	0x0a
++#define LTSSM_STATE_CFG_COMPLETE	0x0b
++#define LTSSM_STATE_CFG_IDLE		0x0c
++#define LTSSM_STATE_RCVRY_LOCK		0x0d
++#define LTSSM_STATE_RCVRY_SPEED		0x0e
++#define LTSSM_STATE_RCVRY_RCVRCFG	0x0f
++#define LTSSM_STATE_RCVRY_IDLE		0x10
++#define LTSSM_STATE_L0			0x11
++#define LTSSM_STATE_L0S			0x12
++#define LTSSM_STATE_L123_SEND_EIDLE	0x13
++#define LTSSM_STATE_L1_IDLE		0x14
++#define LTSSM_STATE_L2_IDLE		0x15
++#define LTSSM_STATE_L2_WAKE		0x16
++#define LTSSM_STATE_DISABLED_ENTRY	0x17
++#define LTSSM_STATE_DISABLED_IDLE	0x18
++#define LTSSM_STATE_DISABLED		0x19
++#define LTSSM_STATE_LPBK_ENTRY		0x1a
++#define LTSSM_STATE_LPBK_ACTIVE		0x1b
++#define LTSSM_STATE_LPBK_EXIT		0x1c
++#define LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1d
++#define LTSSM_STATE_HOT_RESET_ENTRY	0x1e
++#define LTSSM_STATE_HOT_RESET		0x1f
++#define LTSSM_STATE_MASK		0x1f
 +
- 		b = dev->subordinate;
- 		if (!b)
- 			continue;
+ struct pcie_port {
+ 	struct device		*dev;
+ 	u8			root_bus_nr;
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index b95b756..8f0a1a2 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -84,39 +84,6 @@ struct pcie_app_reg {
+ #define APPS_PM_XMT_PME_ID			5
+ 
+ /* CR3 ID */
+-#define XMLH_LTSSM_STATE_DETECT_QUIET		0x00
+-#define XMLH_LTSSM_STATE_DETECT_ACT		0x01
+-#define XMLH_LTSSM_STATE_POLL_ACTIVE		0x02
+-#define XMLH_LTSSM_STATE_POLL_COMPLIANCE	0x03
+-#define XMLH_LTSSM_STATE_POLL_CONFIG		0x04
+-#define XMLH_LTSSM_STATE_PRE_DETECT_QUIET	0x05
+-#define XMLH_LTSSM_STATE_DETECT_WAIT		0x06
+-#define XMLH_LTSSM_STATE_CFG_LINKWD_START	0x07
+-#define XMLH_LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
+-#define XMLH_LTSSM_STATE_CFG_LANENUM_WAIT	0x09
+-#define XMLH_LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
+-#define XMLH_LTSSM_STATE_CFG_COMPLETE		0x0B
+-#define XMLH_LTSSM_STATE_CFG_IDLE		0x0C
+-#define XMLH_LTSSM_STATE_RCVRY_LOCK		0x0D
+-#define XMLH_LTSSM_STATE_RCVRY_SPEED		0x0E
+-#define XMLH_LTSSM_STATE_RCVRY_RCVRCFG		0x0F
+-#define XMLH_LTSSM_STATE_RCVRY_IDLE		0x10
+-#define XMLH_LTSSM_STATE_L0			0x11
+-#define XMLH_LTSSM_STATE_L0S			0x12
+-#define XMLH_LTSSM_STATE_L123_SEND_EIDLE	0x13
+-#define XMLH_LTSSM_STATE_L1_IDLE		0x14
+-#define XMLH_LTSSM_STATE_L2_IDLE		0x15
+-#define XMLH_LTSSM_STATE_L2_WAKE		0x16
+-#define XMLH_LTSSM_STATE_DISABLED_ENTRY		0x17
+-#define XMLH_LTSSM_STATE_DISABLED_IDLE		0x18
+-#define XMLH_LTSSM_STATE_DISABLED		0x19
+-#define XMLH_LTSSM_STATE_LPBK_ENTRY		0x1A
+-#define XMLH_LTSSM_STATE_LPBK_ACTIVE		0x1B
+-#define XMLH_LTSSM_STATE_LPBK_EXIT		0x1C
+-#define XMLH_LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
+-#define XMLH_LTSSM_STATE_HOT_RESET_ENTRY	0x1E
+-#define XMLH_LTSSM_STATE_HOT_RESET		0x1F
+-#define XMLH_LTSSM_STATE_MASK			0x3F
+ #define XMLH_LINK_UP				(1 << 6)
+ 
+ /* CR4 ID */
 -- 
 1.9.1
 
