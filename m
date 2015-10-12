@@ -1,69 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Loc Ho <lho@apm.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	KISHON VIJAY <kishon@ti.com>, WingMan Kwok <w-kwok2@ti.com>,
-	Rob Herring <robh+dt@kernel.org>, pawel.moll@arm.com,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	galak@codeaurora.org, rogerq@ti.com, bhelgaas@google.com,
-	ssantosh@kernel.org,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2on0099.outbound.protection.outlook.com ([207.46.100.99]:45600
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752678AbbJLBzv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 11 Oct 2015 21:55:51 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Corentin LABBE <clabbe.montjoie@gmail.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v3 0/2] Common SerDes driver for TI's Keystone Platforms
-Date: Fri, 23 Oct 2015 11:17:06 +0200
-Message-ID: <3702663.07h6YO0UjY@wuerfel>
-In-Reply-To: <CAPw-ZTk1vJA3YSwLHBNMYP0t5k2tW0HTKse+37rL8izWN33y-w@mail.gmail.com>
-References: <1445432201-16007-1-git-send-email-w-kwok2@ti.com> <56295B9E.9030201@ti.com> <CAPw-ZTk1vJA3YSwLHBNMYP0t5k2tW0HTKse+37rL8izWN33y-w@mail.gmail.com>
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v8 4/6] pci: altera: Add Altera PCIe MSI driver
+Date: Mon, 12 Oct 2015 01:55:36 +0000
+Message-ID: <E7E66AD1AD65064486AD57C361DF091C05B2C950@PG-ITEXCH01.altera.priv.altera.com>
+References: <E1ZkHFw-0007bx-3v@feisty.vs19.net> <5616CC75.5030700@gmail.com>
+In-Reply-To: <5616CC75.5030700@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 22 October 2015 15:27:05 Loc Ho wrote:
-> >
-> > phy-xgene.c
-> > -----------
-> >
-> > Looking at other drivers under drivers/phy, I could find phy-xgene.c which
-> > is close Keystone SerDes driver (. This is called APM X-Gene Multi-Purpose
-> > PHY driver. It defines following mode per the driver code
-> >
-> >         MODE_SATA       = 0,    /* List them for simple reference */
-> >         MODE_SGMII      = 1,
-> >         MODE_PCIE       = 2,
-> >         MODE_USB        = 3,
-> >         MODE_XFI        = 4,
-> >
-> > But seems to support only MODE_SATA. From the code, it appears, this driver
-> > is expected to be enhanced in the future to support additional modes. I have
-> > copied the author to this email to participate in this discussion.
-> 
-> Let me comment on this APM X-Gene driver. This driver is dead and
-> won't be supported in near or foreseeable future. And someday, it will
-> be ripped out. Based on experience, this solution (having PHY driver
-> in Linux) can't be supported across boards and etc as it is just too
-> much maintenance. And therefore, we followed Arnd B guidance and move
-> all this into the boot loader. From Linux or OS perspective, it only
-> cares about the interface in which its interface with. This is just
-> your reference and may be this will help you as well.
-
-This depends a lot on the use case. If the chip is only used on server
-parts that have a real firmware and you can deliver bug fixes for the
-firmware if necessary, it's always best to do as much of the setup as
-possible there, and let Linux see a simplified view of the hardware.
-
-However, for embedded systems that tend to ship with a minimal binary
-bootloader and no way to update that as an end-user, we rely on Linux
-to know about all the hardware that requires some form of setup, which
-is why we have all sorts of drivers and frameworks in the kernel that
-a server can easily ignore.
-
-While keystone can show up in servers that won't use this driver, my
-impression is that its main market is actually in embedded space.
-
-	Arnd
+T24gS2hhLCAyMDE1LTEwLTA4IGF0IDIyOjA1ICswMjAwLCBDb3JlbnRpbiBMQUJCRSB3cm90ZToN
+Cj4gPiBUaGlzIHBhdGNoIGFkZHMgQWx0ZXJhIFBDSWUgTVNJIGRyaXZlci4gVGhpcyBzb2Z0IElQ
+IHN1cHBvcnRzIGNvbmZpZ3VyYWJsZQ0KPiA+IG51bWJlciBvZiB2ZWN0b3JzLCB3aGljaCBpcyBh
+IGR0cyBwYXJhbWV0ZXIuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBMZXkgRm9vbiBUYW4gPGxm
+dGFuQGFsdGVyYS5jb20+DQo+ID4gUmV2aWV3ZWQtYnk6IE1hcmMgWnluZ2llciA8bWFyYy56eW5n
+aWVyQGFybS5jb20+DQo+ID4gKw0KPiA+ICtzdGF0aWMgaW5saW5lIHZvaWQgbXNpX3dyaXRlbChz
+dHJ1Y3QgYWx0ZXJhX21zaSAqbXNpLCB1MzIgdmFsdWUsIHUzMiByZWcpDQo+ID4gK3sNCj4gPiAr
+ICAgd3JpdGVsX3JlbGF4ZWQodmFsdWUsIG1zaS0+Y3NyX2Jhc2UgKyByZWcpOw0KPiA+ICt9DQo+
+ID4gKw0KPiA+ICtzdGF0aWMgaW5saW5lIHUzMiBtc2lfcmVhZGwoc3RydWN0IGFsdGVyYV9tc2kg
+Km1zaSwgdTMyIHJlZykNCj4gPiArew0KPiA+ICsgICByZXR1cm4gcmVhZGxfcmVsYXhlZChtc2kt
+PmNzcl9iYXNlICsgcmVnKTsNCj4gPiArfQ0KPiA+ICsNCj4NCj4gWW91IGNvdWxkIHNldCB2YWx1
+ZSBhbmQgcmVnIHBhcmFtZXRlciBhcyBjb25zdA0KTm90ZWQuDQoNCj4NCj4gPiArDQo+ID4gK3N0
+YXRpYyBpbnQgYWx0ZXJhX2lycV9kb21haW5fYWxsb2Moc3RydWN0IGlycV9kb21haW4gKmRvbWFp
+biwgdW5zaWduZWQgaW50IHZpcnEsDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+IHVuc2lnbmVkIGludCBucl9pcnFzLCB2b2lkICphcmdzKQ0KPiA+ICt7DQo+ID4gKyAgIHN0cnVj
+dCBhbHRlcmFfbXNpICptc2kgPSBkb21haW4tPmhvc3RfZGF0YTsNCj4gPiArICAgdW5zaWduZWQg
+bG9uZyBiaXQ7DQo+ID4gKyAgIHUzMiBtYXNrOw0KPiA+ICsNCj4gPiArICAgV0FSTl9PTihucl9p
+cnFzICE9IDEpOw0KPiA+ICsgICBtdXRleF9sb2NrKCZtc2ktPmxvY2spOw0KPiA+ICsNCj4gPiAr
+ICAgYml0ID0gZmluZF9maXJzdF96ZXJvX2JpdChtc2ktPnVzZWQsIG1zaS0+bnVtX29mX3ZlY3Rv
+cnMpOw0KPiA+ICsgICBpZiAoYml0ID49IG1zaS0+bnVtX29mX3ZlY3RvcnMpDQo+ID4gKyAgICAg
+ICAgICAgcmV0dXJuIC1FTk9TUEM7DQo+ID4gKw0KPiA+ICsgICBzZXRfYml0KGJpdCwgbXNpLT51
+c2VkKTsNCj4gPiArDQo+ID4gKyAgIG11dGV4X3VubG9jaygmbXNpLT5sb2NrKTsNCj4gPiArDQo+
+ID4gKyAgIGlycV9kb21haW5fc2V0X2luZm8oZG9tYWluLCB2aXJxLCBiaXQsICZhbHRlcmFfbXNp
+X2JvdHRvbV9pcnFfY2hpcCwNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICBkb21haW4tPmhv
+c3RfZGF0YSwgaGFuZGxlX3NpbXBsZV9pcnEsDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAg
+TlVMTCwgTlVMTCk7DQo+ID4gKw0KPiA+ICsgICBtYXNrID0gbXNpX3JlYWRsKG1zaSwgTVNJX0lO
+VE1BU0spOw0KPiA+ICsgICBtYXNrIHw9IDEgPDwgYml0Ow0KPiA+ICsgICBtc2lfd3JpdGVsKG1z
+aSwgbWFzaywgTVNJX0lOVE1BU0spOw0KPiA+ICsNCj4gPiArICAgcmV0dXJuIDA7DQo+ID4gK30N
+Cj4NCj4gWW91IGRvIG5vdCB1bmxvY2sgdGhlIG11dGV4IHdoZW4gcmV0dXJuaW5nIC1FTk9TUEMN
+Cj4gQW5kIGFnYWluIHNvbWUgcGFyYW1ldGVyIGNvdWxkIGJlIHNldCBhcyBjb25zdA0KR29vZCBj
+YXRjaCwgd2lsbCBmaXggdGhhdC4NCkRvIHlvdSBtZWFuIGFkZCB0aGUgY29uc3QgZm9yIGFsdGVy
+YV9pcnFfZG9tYWluX2FsbG9jKCk/DQpJdCBpcyBkZWZpbmVkIGJ5IHRoZSBzdHJ1Y3QgaXJxX2Rv
+bWFpbl9vcHMuDQoNClJlZ2FyZHMNCkxleSBGb29uDQoNCg0KX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18NCg0KQ29uZmlkZW50aWFsaXR5IE5vdGljZS4NClRoaXMgbWVzc2FnZSBtYXkg
+Y29udGFpbiBpbmZvcm1hdGlvbiB0aGF0IGlzIGNvbmZpZGVudGlhbCBvciBvdGhlcndpc2UgcHJv
+dGVjdGVkIGZyb20gZGlzY2xvc3VyZS4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkIHJlY2lw
+aWVudCwgeW91IGFyZSBoZXJlYnkgbm90aWZpZWQgdGhhdCBhbnkgdXNlLCBkaXNjbG9zdXJlLCBk
+aXNzZW1pbmF0aW9uLCBkaXN0cmlidXRpb24sIG9yIGNvcHlpbmcgb2YgdGhpcyBtZXNzYWdlLCBv
+ciBhbnkgYXR0YWNobWVudHMsIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBoYXZlIHJl
+Y2VpdmVkIHRoaXMgbWVzc2FnZSBpbiBlcnJvciwgcGxlYXNlIGFkdmlzZSB0aGUgc2VuZGVyIGJ5
+IHJlcGx5IGUtbWFpbCwgYW5kIGRlbGV0ZSB0aGUgbWVzc2FnZSBhbmQgYW55IGF0dGFjaG1lbnRz
+LiBUaGFuayB5b3UuDQo=
