@@ -1,65 +1,69 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 20 Oct 2015 07:49:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: Re: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
- instances
-Message-ID: <20151020124933.GA8224@localhost>
-References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
- <20151019231634.GA13841@localhost>
- <20151020013650.GA13721@verge.net.au>
- <CAMuHMdWiH4ZUSmKQ01qQYvXcjb_3K4XBFLjVGSe1dUoKi=Jb_Q@mail.gmail.com>
- <SIXPR06MB04158545EDCA19F6C66A6783F5390@SIXPR06MB0415.apcprd06.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <SIXPR06MB04158545EDCA19F6C66A6783F5390@SIXPR06MB0415.apcprd06.prod.outlook.com>
+In-Reply-To: <7064179.1W3LTfFPxP@wuerfel>
+References: <1444297394-3122-1-git-send-email-lftan@altera.com>
+	<CAFiDJ58oMa6rgQe_STCiWRpdL+P22BN1=Nin_+QnLXC9RGiSzQ@mail.gmail.com>
+	<20151009231540.GE16112@localhost>
+	<7064179.1W3LTfFPxP@wuerfel>
+Date: Tue, 13 Oct 2015 15:47:41 +0800
+Message-ID: <CAFiDJ59=PaZ_MaHU_AZp756c-DC_BR7x6=oACntqD=jw0s6XBQ@mail.gmail.com>
+Subject: Re: [PATCH v8 3/6] pci:host: Add Altera PCIe host controller driver
+From: Ley Foon Tan <lftan@altera.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 20, 2015 at 08:00:10AM +0000, Phil Edworthy wrote:
-> Hi Geert,
-> 
-> On 20 October 2015 08:37, Geert wrote:
-> > On Tue, Oct 20, 2015 at 3:36 AM, Simon Horman <horms@verge.net.au> wrote:
-> > > On Mon, Oct 19, 2015 at 06:16:34PM -0500, Bjorn Helgaas wrote:
-> > >> [+cc Geert]
-> > >>
-> > >> On Fri, Oct 02, 2015 at 11:25:03AM +0100, Phil Edworthy wrote:
-> > >> > Fixes and changes to get PCIe working on ARM64 with mulitple instances.
-> > >> >
-> > >> > I've tested these on ARM (Koelsch board), and it works fine.
-> > >> > I've also tested on ARM64 (Salvator-X board), but I currently have an issue
-> > >> > with inbound PCI accesses. I am reasonably sure that this problem is
-> > hardware
-> > >> > related.
-> > >> >
-> > >> > Phil Edworthy (4):
-> > >> >   PCI: rcar-pcie: Make PCI aware of the IO resources
-> > >> >   PCI: rcar-pcie: Remove dependency on ARM-specific struct hw_pci
-> > >> >   PCI: rcar-pcie: Set root bus nr to that provided in DT
-> > >> >   PCI: rcar-pcie: Fix IO offset for multiple instances
-> > >>
-> > >> I applied these with Simon's ack to pci/host-rcar for v4.4.
-> > >>
-> > >> Note that these are on top of Geert's patch to make rcar build only
-> > >> for ARM, which is probably not necessary after you remove the struct
-> > >> hw_pci dependency.  I can drop Geert's patch if you want.
-> > >
-> > > I'm happy with that if Geert is.
-> > 
-> > Iff the driver compiles/works on arm64 now, my patch should/must be
-> > dropped/reverted.
-> Yes, the driver works on the ARM64 Salvator-X board. 
+On Mon, Oct 12, 2015 at 8:03 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>
+> On Friday 09 October 2015 18:15:40 Bjorn Helgaas wrote:
+> >
+> > I don't know if this should be a kernel taint, a simple warning in
+> > dmesg, or what.  I guess the tainting mechanism is probably too
+> > general-purpose for this, and add_taint() doesn't give any dmesg
+> > indication.  We wouldn't see the taint unless the problem actually
+> > caused an oops or panic.  In this case, I think I want a clue in dmesg
+> > so we have a chance of seeing it even if there is no oops.  So
+> > probably something like a dev_warn("non-compliant config accesses")
+> > would work.
+> >
+> > You really should double-check with the hardware guys, because it's
+> > pretty obvious that the PCI spec requires 1- and 2-byte config
+> > accesses to work correctly.  For example, if you read/modify/write to
+> > update PCI_COMMAND, you will inadvertently clear the RW1C bits in
+> > PCI_STATUS.
+>
+> Would it help to require a DT property here that flags the device
+> as having a broken config space?
+>
+> Then we could implement both in the driver, and only use the
+> RMW based implementation if the firmware describes the device
+> as "altera,broken-pci-config-space".
+>
 
-I dropped Geert's patch and redid the merges to my "next" branch, so
-rcar should build for both ARM and ARM64.
+I have checked the PCI/TLP specification, the address needs to be
+4-byte aligned. But, we can use "byte enable" field to update specific
+bytes.
+For example, if byte enable is 0x3 (0011b), that mean it only update
+lower 2 bytes. By doing this, we can resolve the RW1C issue here.
+I will update the driver with this in next revision.
 
-Bjorn
+Thanks for reviewing.
+
+Regards
+Ley Foon
