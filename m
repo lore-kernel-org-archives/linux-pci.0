@@ -1,272 +1,173 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 55/60] PCI, x86: Allocate from high in available window for MMIO
-Date: Thu,  8 Oct 2015 14:39:14 -0700
-Message-Id: <1444340359-8011-56-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+From: "Kwok, WingMan" <w-kwok2@ti.com>
+To: Mark Rutland <mark.rutland@arm.com>
+CC: "robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	KISHON VIJAY ABRAHAM <kishon@ti.com>,
+	"Quadros, Roger" <rogerq@ti.com>,
+	"Karicheri, Muralidharan" <m-karicheri2@ti.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"ssantosh@kernel.org" <ssantosh@kernel.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH 1/3] phy: keystone: serdes driver for gbe 10gbe and pcie
+Date: Tue, 13 Oct 2015 19:52:38 +0000
+Message-ID: <230CBA6E4B6B6B418E8730AC28E6FC7E0422898D@DFLE11.ent.ti.com>
+References: <1444759464-32299-1-git-send-email-w-kwok2@ti.com>
+ <1444759464-32299-2-git-send-email-w-kwok2@ti.com>
+ <20151013183327.GG24353@leverpostej>
+In-Reply-To: <20151013183327.GG24353@leverpostej>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code just use aligned start from avialable window, that could waste
-big alignment from start.
-
-We can align to the end from avialable window, so will save
-start with big align to others: like second try for pref mmio
-after first try already have non-pref assigned.
-
-pci tree:
--[0000:00]-+-00.0
-           +-1c.0-[01-10]--+-00.0-[02-10]--+-01.0-[03]----00.0  PLX Technology, Inc. Device 87b1
-           |               |               +-02.0-[04-09]--+-00.0-[05-09]--+-01.0-[06]----00.0  PLX Technology, Inc. Device 87b1
-           |               |               |               |               +-02.0-[07]----00.0  Broadcom Corporation Device 8650
-           |               |               |               |               +-03.0-[08]--
-           |               |               |               |               \-04.0-[09]----00.0  Altera Corporation Device 0201
-           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
-           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
-           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
-           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
-           |               |               +-03.0-[0a-0f]--+-00.0-[0b-0f]--+-01.0-[0c]----00.0  PLX Technology, Inc. Device 87b1
-           |               |               |               |               +-02.0-[0d]----00.0  Broadcom Corporation Device 8650
-           |               |               |               |               +-03.0-[0e]--
-           |               |               |               |               \-04.0-[0f]----00.0  Altera Corporation Device 0201
-           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
-           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
-           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
-           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
-           |               |               \-04.0-[10]--
-           |               +-00.1  PLX Technology, Inc. Device 87d0
-           |               +-00.2  PLX Technology, Inc. Device 87d0
-           |               +-00.3  PLX Technology, Inc. Device 87d0
-           |               \-00.4  PLX Technology, Inc. Device 87d0
-           +-1c.3-[11]----00.0
-
-hotplug device under 0000:02:03.0
-
-before the patch:
-
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 8: assigned [mem 0xb0000000-0xb01fffff]  **************
-pci 0000:0a:00.0: BAR 0: assigned [mem 0xb0200000-0xb023ffff]
-pci 0000:0a:00.1: BAR 0: assigned [mem 0xb0240000-0xb0241fff]
-pci 0000:0a:00.2: BAR 0: assigned [mem 0xb0242000-0xb0243fff]
-pci 0000:0a:00.3: BAR 0: assigned [mem 0xb0244000-0xb0245fff]
-pci 0000:0a:00.4: BAR 0: assigned [mem 0xb0246000-0xb0247fff]
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0b:01.0: BAR 8: assigned [mem 0xb0000000-0xb00fffff]
-pci 0000:0b:02.0: BAR 8: assigned [mem 0xb0100000-0xb01fffff]
-pci 0000:0c:00.0: BAR 0: assigned [mem 0xb0000000-0xb003ffff]
-pci 0000:0b:01.0: PCI bridge to [bus 0c]
-pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
-pci 0000:0d:00.0: BAR 0: assigned [mem 0xb0100000-0xb013ffff 64bit]
-pci 0000:0b:02.0: PCI bridge to [bus 0d]
-pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
-pci 0000:0b:03.0: PCI bridge to [bus 0e]
-pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
-pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
-pci 0000:0b:04.0: PCI bridge to [bus 0f]
-pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
-pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
-pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
-pcieport 0000:02:03.0:   bridge window [mem 0x80200000-0x803fffff 64bit pref]
-PCI: No. 2 try to assign unassigned res
-pcieport 0000:02:03.0: resource 9 [mem 0x80200000-0x803fffff 64bit pref] released
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
-pci 0000:0b:01.0: PCI bridge to [bus 0c]
-pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
-pci 0000:0b:02.0: PCI bridge to [bus 0d]
-pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
-pci 0000:0b:03.0: PCI bridge to [bus 0e]
-pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
-pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
-pci 0000:0b:04.0: PCI bridge to [bus 0f]
-pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
-pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
-pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
-
-
-after the patch:
-
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 8: assigned [mem 0xb2300000-0xb24fffff]   *************
-pci 0000:0a:00.0: BAR 0: assigned [mem 0xb22c0000-0xb22fffff]
-pci 0000:0a:00.1: BAR 0: assigned [mem 0xb22be000-0xb22bffff]
-pci 0000:0a:00.2: BAR 0: assigned [mem 0xb22bc000-0xb22bdfff]
-pci 0000:0a:00.3: BAR 0: assigned [mem 0xb22ba000-0xb22bbfff]
-pci 0000:0a:00.4: BAR 0: assigned [mem 0xb22b8000-0xb22b9fff]
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0b:01.0: BAR 8: assigned [mem 0xb2400000-0xb24fffff]
-pci 0000:0b:02.0: BAR 8: assigned [mem 0xb2300000-0xb23fffff]
-pci 0000:0c:00.0: BAR 0: assigned [mem 0xb24c0000-0xb24fffff]
-pci 0000:0b:01.0: PCI bridge to [bus 0c]
-pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
-pci 0000:0d:00.0: BAR 0: assigned [mem 0xb23c0000-0xb23fffff 64bit]
-pci 0000:0b:02.0: PCI bridge to [bus 0d]
-pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
-pci 0000:0b:03.0: PCI bridge to [bus 0e]
-pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
-pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
-pci 0000:0b:04.0: PCI bridge to [bus 0f]
-pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
-pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
-pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
-pcieport 0000:02:03.0:   bridge window [mem 0x9fc00000-0x9fdfffff 64bit pref]
-PCI: No. 2 try to assign unassigned res
-pcieport 0000:02:03.0: resource 9 [mem 0x9fc00000-0x9fdfffff 64bit pref] released
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
-pci 0000:0b:01.0: PCI bridge to [bus 0c]
-pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
-pci 0000:0b:02.0: PCI bridge to [bus 0d]
-pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
-pci 0000:0b:03.0: PCI bridge to [bus 0e]
-pci 0000:0f:00.0: BAR 0: assigned [mem 0xb0000000-0xb1ffffff 64bit pref]   ********
-pci 0000:0f:00.0: BAR 2: assigned [mem 0xb20f0000-0xb20fffff 64bit pref]   ********
-pci 0000:0b:04.0: PCI bridge to [bus 0f]
-pci 0000:0b:04.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
-pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
-pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
-pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
-pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
-
-So we allocate high for 0a:00.0 and etc, and leave low range like 0xb0000000 to
-0b:04.0 and 0f:00.0
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/i386.c     | 20 ++++++++++++++++++++
- drivers/pci/setup-bus.c | 11 ++++++++++-
- include/linux/pci.h     |  3 +++
- 3 files changed, 33 insertions(+), 1 deletion(-)
-
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 3f17726..21f3e3e 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -129,6 +129,24 @@ static void __init pcibios_fw_addr_list_del(void)
- 	pcibios_fw_addr_done = true;
- }
- 
-+resource_size_t
-+pcibios_align_end_resource(void *data, const struct resource *res,
-+			resource_size_t size, resource_size_t align)
-+{
-+	resource_size_t start = res->start;
-+
-+	/* Take near end */
-+	if (res->end + 1 > size) {
-+		resource_size_t new_start;
-+
-+		new_start = round_down(res->end + 1 - size, align);
-+		if (new_start > start)
-+			start = new_start;
-+	}
-+
-+	return start;
-+}
-+
- /*
-  * We need to avoid collisions with `mirrored' VGA ports
-  * and other strange ISA hardware, so we always want the
-@@ -155,6 +173,8 @@ pcibios_align_resource(void *data, const struct resource *res,
- 		if (start & 0x300)
- 			start = (start + 0x3ff) & ~0x3ff;
- 	} else if (res->flags & IORESOURCE_MEM) {
-+		start = pcibios_align_end_resource(data, res, size, align);
-+
- 		/* The low 1MB range is reserved for ISA cards */
- 		if (start < BIOS_END)
- 			start = BIOS_END;
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 419eaaf..1889351 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1319,6 +1319,15 @@ static void sort_align_test(struct list_head *head)
- 	}
- }
- 
-+resource_size_t __weak pcibios_align_end_resource(void *data,
-+					  const struct resource *res,
-+					  resource_size_t size,
-+					  resource_size_t align)
-+{
-+	/* default is not aligned to end */
-+	return res->start;
-+}
-+
- static bool is_align_size_good(struct list_head *head,
- 			resource_size_t min_align, resource_size_t size,
- 			resource_size_t start)
-@@ -1336,7 +1345,7 @@ static bool is_align_size_good(struct list_head *head,
- 	list_for_each_entry(p, head, list)
- 		if (allocate_resource(&root, &p->res, p->size,
- 				0, (resource_size_t)-1ULL,
--				p->align, NULL, NULL))
-+				p->align, pcibios_align_end_resource, NULL))
- 			return false;
- 
- 	return true;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f1c3f43..207ee64 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -774,6 +774,9 @@ char *pcibios_setup(char *str);
- resource_size_t pcibios_align_resource(void *, const struct resource *,
- 				resource_size_t,
- 				resource_size_t);
-+resource_size_t pcibios_align_end_resource(void *, const struct resource *,
-+				resource_size_t,
-+				resource_size_t);
- void pcibios_update_irq(struct pci_dev *, int irq);
- 
- /* Weak but can be overriden by arch */
--- 
-1.8.4.5
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTWFyayBSdXRsYW5kIFtt
+YWlsdG86bWFyay5ydXRsYW5kQGFybS5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIE9jdG9iZXIgMTMs
+IDIwMTUgMjozMyBQTQ0KPiBUbzogS3dvaywgV2luZ01hbg0KPiBDYzogcm9iaCtkdEBrZXJuZWwu
+b3JnOyBwYXdlbC5tb2xsQGFybS5jb207DQo+IGlqYytkZXZpY2V0cmVlQGhlbGxpb24ub3JnLnVr
+OyBnYWxha0Bjb2RlYXVyb3JhLm9yZzsgS0lTSE9OIFZJSkFZDQo+IEFCUkFIQU07IFF1YWRyb3Ms
+IFJvZ2VyOyBLYXJpY2hlcmksIE11cmFsaWRoYXJhbjsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsNCj4g
+c3NhbnRvc2hAa2VybmVsLm9yZzsgbGludXhAYXJtLmxpbnV4Lm9yZy51azsNCj4gZGV2aWNldHJl
+ZUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0K
+PiBwY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5v
+cmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAxLzNdIHBoeToga2V5c3RvbmU6IHNlcmRlcyBkcml2
+ZXIgZm9yIGdiZSAxMGdiZQ0KPiBhbmQgcGNpZQ0KPiANCj4gT24gVHVlLCBPY3QgMTMsIDIwMTUg
+YXQgMDI6MDQ6MjJQTSAtMDQwMCwgV2luZ01hbiBLd29rIHdyb3RlOg0KPiA+IE9uIFRJJ3MgS2V5
+c3RvbmUgcGxhdGZvcm1zLCBzZXZlcmFsIHBlcmlwaGVyYWxzIHN1Y2ggYXMgdGhlDQo+ID4gZ2Jl
+IGV0aGVybmV0IHN3aXRjaCwgMTBnYmUgZXRoZXJuZXQgc3dpdGNoIGFuZCBQQ0llIGNvbnRyb2xs
+ZXINCj4gPiByZXF1aXJlIHRoZSB1c2Ugb2YgYSBTZXJEZXMgZm9yIGNvbnZlcnRpbmcgU29DIHBh
+cmFsbGVsIGRhdGEgaW50bw0KPiA+IHNlcmlhbGl6ZWQgZGF0YSB0aGF0IGNhbiBiZSBvdXRwdXQg
+b3ZlciBhIGhpZ2gtc3BlZWQgZWxlY3RyaWNhbA0KPiA+IGludGVyZmFjZSwgYW5kIGFsc28gY29u
+dmVydGluZyBoaWdoLXNwZWVkIHNlcmlhbCBpbnB1dCBkYXRhDQo+ID4gaW50byBwYXJhbGxlbCBk
+YXRhIHRoYXQgY2FuIGJlIHByb2Nlc3NlZCBieSB0aGUgU29DLiAgVGhlDQo+ID4gU2VyRGVzZXMg
+dXNlZCBieSB0aG9zZSBwZXJpcGhlcmFscywgdGhvdWdoIHRoZXkgbWF5IGJlIGRpZmZlcmVudCwN
+Cj4gPiBhcmUgbGFyZ2VseSBzaW1pbGFyIGluIGZ1bmN0aW9uYWxpdHkgYW5kIHNldHVwLg0KPiA+
+DQo+ID4gVGhpcyBwYXRjaCBwcm92aWRlcyBhIFNlckRlcyBwaHkgZHJpdmVyIGltcGxlbWVudGF0
+aW9uIHRoYXQgY2FuIGJlDQo+ID4gdXNlZCBieSB0aGUgYWJvdmUgbWVudGlvbmVkIHBlcmlwaGVy
+YWwgZHJpdmVycyB0byBjb25maWd1cmUgdGhlaXINCj4gPiByZXNwZWN0aXZlIFNlckRlc2VzLg0K
+PiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogV2luZ01hbiBLd29rIDx3LWt3b2syQHRpLmNvbT4NCj4g
+PiAtLS0NCj4gPiAgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS90aS1waHku
+dHh0IHwgIDI1NiArKysNCj4gPiAgZHJpdmVycy9waHkvS2NvbmZpZyAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgIHwgICAgOCArDQo+ID4gIGRyaXZlcnMvcGh5L01ha2VmaWxlICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICB8ICAgIDEgKw0KPiA+ICBkcml2ZXJzL3BoeS9waHkta2V5c3Rv
+bmUtc2VyZGVzLmMgICAgICAgICAgICAgICAgfCAyNDY1DQo+ICsrKysrKysrKysrKysrKysrKysr
+KysNCj4gPiAgNCBmaWxlcyBjaGFuZ2VkLCAyNzMwIGluc2VydGlvbnMoKykNCj4gPiAgY3JlYXRl
+IG1vZGUgMTAwNjQ0IGRyaXZlcnMvcGh5L3BoeS1rZXlzdG9uZS1zZXJkZXMuYw0KPiA+DQo+ID4g
+ZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9waHkvdGktcGh5
+LnR4dA0KPiBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9waHkvdGktcGh5LnR4
+dA0KPiA+IGluZGV4IDljZjk0NDYuLjIzMTcxNmUgMTAwNjQ0DQo+ID4gLS0tIGEvRG9jdW1lbnRh
+dGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS90aS1waHkudHh0DQo+ID4gKysrIGIvRG9jdW1l
+bnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS90aS1waHkudHh0DQo+ID4gQEAgLTExNSw0
+ICsxMTUsMjYwIEBAIHNhdGFfcGh5OiBwaHlANEEwOTYwMDAgew0KPiA+ICAJY2xvY2stbmFtZXMg
+PSAic3lzY2xrIiwgInJlZmNsayI7DQo+ID4gIAlzeXNjb24tcGxscmVzZXQgPSA8JnNjbV9jb25m
+IDB4M2ZjPjsNCj4gPiAgCSNwaHktY2VsbHMgPSA8MD47DQo+ID4gKw0KPiA+ICtUSSBLZXlzdG9u
+ZSBTZXJEZXMgUEhZDQo+ID4gKz09PT09PT09PT09PT09PT09PT09PT0NCj4gPiArDQo+ID4gK1Jl
+cXVpcmVkIHByb3BlcnRpZXM6DQo+ID4gKyAtIGNvbXBhdGlibGU6IHNob3VsZCBiZSBvbmUgb2YN
+Cj4gPiArCSogInRpLGtleXN0b25lLXNlcmRlcy1nYmUiDQo+ID4gKwkqICJ0aSxrZXlzdG9uZS1z
+ZXJkZXMteGdiZSINCj4gPiArCSogInRpLGtleXN0b25lLXNlcmRlcy1wY2llIg0KPiA+ICsgLSBy
+ZWc6DQo+ID4gKwkqIGJhc2UgYWRkcmVzcyBhbmQgbGVuZ3RoIG9mIHRoZSBTZXJEZXMgcmVnaXN0
+ZXIgc2V0DQo+ID4gKyAtIHJlZy1uYW1lczoNCj4gPiArCSogInJlZ19zZXJkZXMiDQo+ID4gKwkJ
+LSBuYW1lIG9mIHRoZSByZWcgU2VyRGVzIHJlZ2lzdGVyIHNldA0KPiANCj4gSnVzdCBkZXNjcmli
+ZSByZWcgaW4gdGVybXMgb2YgcmVnLW5hbWVzLCBhbmQgZG9uJ3QgYm90aGVyIHdpdGggdGhlDQo+
+ICJyZWdfIiBwcmVmaXgsIHdlIGtub3cgdGhpcyBpcyBhIHJlZyBlbnRyeToNCj4gDQo+IC0gcmVn
+OiBhIGxpc3Qgb2YgYWRkcmVzcyBhbmQgbGVuZ3RoIHBhaXJzLCBjb3JyZXNwb25kaW5nIHRvIGVu
+dGlyZXMgaW4NCj4gICByZWctbmFtZXMNCj4gDQo+IC0gcmVnLW5hbWVzOiBzaG91bGQgY29udGFp
+bjoNCj4gICAqICJzZXJkZXMiDQo+IA0KPiA+ICsgLSAjcGh5LWNlbGxzOg0KPiA+ICsJKiBGcm9t
+IHRoZSBnZW5lcmljIHBoeSBiaW5kaW5ncywgbXVzdCBiZSAwOw0KPiA+ICsgLSBtYXgtbGFuZXM6
+DQo+ID4gKwkqIE51bWJlciBvZiBsYW5lcyBpbiBTZXJEZXMuDQo+IA0KPiBXaHkgaXMgdGhpcyBu
+b3QgIm51bS1sYW5lcyI/IFdoeSBkbyB5b3UgZXZlbiBuZWVkIHRoaXM/DQo+IA0KDQp3aWxsIGNo
+YW5nZSB0byAibnVtLWxhbmVzIi4NCg0Kc2VyZGVzIG9uIGRpZmZlcmVudCBwZXJpcGhlcmFscyBo
+YXZlIGRpZmZlcmVudCBudW1iZXIgb2YNCmxhbmVzIGFuZCBlYWNoIGluZGl2aWR1YWwgbGFuZSBj
+YW4gYmUgZW5hYmxlZCBvciBkaXNhYmxlZC4NCg0KPiA+ICsgLSBwaHktdHlwZTogc2hvdWxkIGJl
+IG9uZSBvZg0KPiA+ICsJKiAic2dtaWkiDQo+ID4gKwkqICJ4Z2UiDQo+ID4gKwkqICJwY2llIg0K
+PiA+ICsNCj4gPiArT3B0aW9uYWwgcHJvcGVydGllczoNCj4gPiArIC0gc3lzY29uLXBlcmlwaGVy
+YWw6DQo+ID4gKwkqIEhhbmRsZSB0byB0aGUgc3Vic3lzdGVtIHJlZ2lzdGVyIHJlZ2lvbiBvZiB0
+aGUgcGVyaXBoZXJhbA0KPiA+ICsJICBpbnNpZGUgd2hpY2ggdGhlIFNlckRlcyBleGlzdHMuDQo+
+ID4gKyAtIHN5c2Nvbi1saW5rOg0KPiA+ICsJKiBIYW5kbGUgdG8gdGhlIExpbmsgcmVnaXN0ZXIg
+cmVnaW9uIG9mIHRoZSBwZXJpcGhlcmFsIGluc2lkZQ0KPiA+ICsJICB3aGljaCB0aGUgU2VyRGVz
+IGV4aXN0cy4gIEV4YW1wbGU6IGl0IGlzIHRoZSBQQ1NSIHJlZ2lzdGVyDQo+ID4gKwkgIHJlZ2lv
+biBpbiB0aGUgY2FzZSBvZiAxMGdiZS4NCj4gPiArIC0gcmVmY2xrLWtoejoNCj4gPiArCSogUmVm
+ZXJlbmNlIGNsb2NrIHJhdGUgb2YgU2VyRGVzIGluIGtIei4NCj4gDQo+IFN1cmVseSB0aGlzIHNo
+b3VsZCBiZSBhbiBhY3R1YWwgY2xvY2s/DQo+IA0KDQpvaywgdGhpcyBpcyBub3QgYWN0dWFsbHkg
+bmVlZGVkIGFuZCB3aWxsIHJlbW92ZQ0KDQo+ID4gKyAtIGxpbmstcmF0ZS1rYnBzOg0KPiA+ICsJ
+KiBTZXJEZXMgbGluayByYXRlIHRvIGJlIGNvbmZpZ3VyZWQsIGluIGticHMuDQo+IA0KPiBXaHkg
+ZG9lcyB0aGlzIG5lZWQgdG8gYmUgaW4gdGhlIGJpbmRpbmc/IEhvdyBkb2VzIG9uZSBkZXJpdmUg
+dGhlDQo+IGNvcnJlY3QNCj4gdmFsdWU/DQo+IA0KDQphIHNlcmRlcyBjYW4gYmUgY29uZmlndXJl
+ZCBhdCBkaWZmZXJlbnQgbGluayByYXRlcy4gIGZvciBleGFtcGxlLA0KdGhlIDEwZ2JlIHNlcmRl
+cyBjYW4gYmUgY29uZmlndXJlZCBhdCAxLjI1RyBsaW5rIHJhdGUgdG8gc3VwcG9ydA0KMWdiZSBv
+biB0aGUgMTBnYmUgc3dpdGNoLg0KDQo+ID4gKyAtIGNvbnRyb2wtcmF0ZToNCj4gPiArCSogTGFu
+ZSBjb250cm9sIHJhdGUNCj4gPiArCQkwOiBmdWxsIHJhdGUNCj4gPiArCQkxOiBoYWxmIHJhdGUN
+Cj4gPiArCQkyOiBxdWFydGVyIHJhdGUNCj4gDQo+IExpa2V3aXNlIG9uIGJvdGggcG9pbnRzLg0K
+DQp0aGUgc2VyZGVzIGlzIGEgZ2VuZXJpYyBoYXJkd2FyZSBibG9jayB0aGF0IG5lZWRzIHRvIGJl
+IGNvbmZpZ3VyZWQNCndpdGggdGhlIHByb3BlciBsaW5rLXJhdGUgYW5kIGxhbmUgY29udHJvbCBy
+YXRlLg0KDQo+IA0KPiA+ICsgLSByeC1zdGFydDoNCj4gPiArCSogSW5pdGlhbCBsYW5lIHJ4IGVx
+dWFsaXplciBhdHRlbnVhdGlvbiBhbmQgYm9vc3QgY29uZmlndXJhdGlvbnMuDQo+ID4gKwkqIE11
+c3QgYmUgYXJyYXkgb2YgMiBpbnRlZ2Vycy4NCj4gPiArIC0gcngtZm9yY2U6DQo+ID4gKwkqIEZv
+cmNlZCBsYW5lIHJ4IGVxdWFsaXplciBhdHRlbnVhdGlvbiBhbmQgYm9vc3QgY29uZmlndXJhdGlv
+bnMuDQo+ID4gKwkqIE11c3QgYmUgYXJyYXkgb2YgMiBpbnRlZ2Vycy4NCj4gPiArIC0gdHgtY29l
+ZmY6DQo+ID4gKwkqIExhbmUgYzEsIGMyLCBjbSwgYXR0ZW51YXRpb24gYW5kIHJlZ3VsYXRvciBv
+dXRwdXN0IHZvbHRhZ2UNCj4gPiArCSAgY29uZmlndXJhdGlvbnMuDQo+ID4gKwkqIE11c3QgYmUg
+YXJyYXkgb2YgNSBpbnRlZ2Vycy4NCj4gDQo+IHMvb3V0cHVzdC9vdXRwdXQvDQo+IA0KDQpvay4N
+Cg0KPiA+ICsgLSBkZWJ1ZzoNCj4gPiArCSogZW5hYmxlIG1vcmUgZGVidWcgbWVzc2FnZXMuDQo+
+IA0KPiBOQUsuDQo+IA0KPiBUaGlzIGlzIGEgZHJpdmVyIG9wdGlvbiwgYW5kIGJlbG9uZ3Mgb24g
+dGhlIGtlcm5lbCBjb21tYW5kIGxpbmUuIEl0DQo+IGRvZXMNCj4gbm90IGRlc2NyaWJlIHRoZSBo
+YXJkd2FyZSwgYW5kIGRvZXMgbm90IGJlbG9uZyBpbiB0aGUgRFQuDQo+IA0KDQp3aWxsIHJlbW92
+ZS4NCg0KPiA+ICtFeGFtcGxlIGZvciBLZXlzdG9uZSBLMkUgR0JFOg0KPiA+ICstLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+ICsNCj4gPiArZ2JlX3NlcmRlczA6IGdiZV9zZXJkZXNA
+MjMyYTAwMCB7DQo+ID4gKwkjcGh5LWNlbGxzCQk9IDwwPjsNCj4gPiArCWNvbXBhdGlibGUJCT0g
+InRpLGtleXN0b25lLXNlcmRlcy1nYmUiOw0KPiA+ICsJcmVnCQkJPSA8MHgwMjMyYTAwMCAweDIw
+MDA+Ow0KPiA+ICsJcmVnLW5hbWVzCQk9ICJyZWdfc2VyZGVzIjsNCj4gPiArCXJlZmNsay1raHoJ
+CT0gPDE1NjI1MD47DQo+ID4gKwlsaW5rLXJhdGUta2JwcwkJPSA8MTI1MDAwMD47DQo+ID4gKwlw
+aHktdHlwZQkJPSAic2dtaWkiOw0KPiA+ICsJbWF4LWxhbmVzCQk9IDw0PjsNCj4gPiArCWxhbmUw
+IHsNCj4gPiArCQljb250cm9sLXJhdGUJPSA8Mj47IC8qIHF1YXJ0ICovDQo+ID4gKwkJcngtc3Rh
+cnQJPSA8NyA1PjsNCj4gPiArCQlyeC1mb3JjZQk9IDwxIDE+Ow0KPiA+ICsJCXR4LWNvZWZmCT0g
+PDAgMCAwIDEyIDQ+Ow0KPiA+ICsJCSAgICAgICAvKiBjMSBjMiBjbSBhdHQgdnJlZyAqLw0KPiA+
+ICsJfTsNCj4gPiArCWxhbmUxIHsNCj4gPiArCQljb250cm9sLXJhdGUJPSA8Mj47IC8qIHF1YXJ0
+ICovDQo+ID4gKwkJcngtc3RhcnQJPSA8NyA1PjsNCj4gPiArCQlyeC1mb3JjZQk9IDwxIDE+Ow0K
+PiA+ICsJCXR4LWNvZWZmCT0gPDAgMCAwIDEyIDQ+Ow0KPiA+ICsJCSAgICAgICAvKiBjMSBjMiBj
+bSBhdHQgdnJlZyAqLw0KPiA+ICsJfTsNCj4gDQo+IFRoZSBiaW5kaW5nIGRpZG4ndCBkZXNjcmli
+ZSB0aGUgc3ViLW5vZGVzLCBhbmQgd2hpY2ggcHJvcGVydGllcyBiZWxvbmcNCj4gdG8gdGhlbS4N
+Cj4gDQoNCndpbGwgYWRkIGRlc2NyaXB0aW9ucyBmb3IgbGFuZSBub2Rlcw0KDQo+IERvbid0IHVz
+ZSBtYWdpYyBuYW1lcy4gRGVmaW5lIGEgbmV3IGFkZHJlc3Mgc3BhY2UsIGFuZCB1c2UgcmVnIHRv
+DQo+IGlkZW50aWZ5IGxhbmVzLg0KPiANCg0Kd2lsbCB1cGRhdGUgdG8gdGhlIGZvbGxvd2luZw0K
+DQpsYW5lcyB7DQoJbGFuZUAwIHsNCgkJcmVnID0gPDA+Ow0KCQkuLi4NCgl9Ow0KDQoJbGFuZUAx
+IHsNCgkJcmVnID0gPDE+Ow0KCQkuLi4JDQoJfTsNCn07DQoNCg0KPiA+ICsJaWYgKG9mX2ZpbmRf
+cHJvcGVydHkobnAsICJkaXNhYmxlIiwgTlVMTCkpDQo+ID4gKwkJbGMtPmVuYWJsZSA9IDA7DQo+
+ID4gKwllbHNlDQo+ID4gKwkJbGMtPmVuYWJsZSA9IDE7DQo+IA0KPiBUaGlzIHdhcyBub3QgZGVz
+Y3JpYmVkIGluIHRoZSBiaW5kaW5nLCBhbmQgdXNlcyB0aGUgd3JvbmcgYWNjZXNzb3IuDQo+IFdo
+YXQNCj4gaXMgdGhpcyBmb3I/DQoNCmFmdGVyIHRoZSBhYm92ZSBtZW50aW9uZWQgdXBkYXRlLCB0
+aGlzIHdpbGwgYmVjb21lOiBzdGF0dXMgPSAiZGlzYWJsZWQvb2siLg0KPiANCj4gPiArCWlmIChv
+Zl9maW5kX3Byb3BlcnR5KG5wLCAibG9vcGJhY2siLCBOVUxMKSkNCj4gPiArCQlsYy0+bG9vcGJh
+Y2sgPSAxOw0KPiA+ICsJZWxzZQ0KPiA+ICsJCWxjLT5sb29wYmFjayA9IDA7DQo+IA0KPiBMaWtl
+d2lzZS4NCg0Kd2lsbCBhZGQgZG9jdW1lbnRhdGlvbg0KDQo+IA0KPiA+ICsJaWYgKG9mX3Byb3Bl
+cnR5X3JlYWRfYm9vbChucCwgInN5c2Nvbi1wZXJpcGhlcmFsIikpIHsNCj4gPiArCQlzYy0+cGVy
+aXBoZXJhbF9yZWdtYXAgPQ0KPiA+ICsJCQlzeXNjb25fcmVnbWFwX2xvb2t1cF9ieV9waGFuZGxl
+KG5wLA0KPiA+ICsJCQkJCQkJInN5c2Nvbi1wZXJpcGhlcmFsIik7DQo+IA0KPiBDYW4ndCB5b3Ug
+YWx3YXlzIGNhbGwgc3lzY29uX3JlZ21hcF9sb29rdXBfYnlfcGhhbmRsZSwgdGhlbiBjaGVjayB0
+aGUNCj4gcmV0dXJuIHZhbHVlIHRvIHNlZSBpZiB0aGUgcHJvcGVydHkgZXhpc3RlZD8NCj4gDQo+
+IFlvdSBjbGVhcmx5IGtub3cgdGhhdCBvZl9wcm9wZXJ0eV9yZWFkX2Jvb2wgZXhpc3RzLCB3aHkg
+ZGlkIHlvdSBub3QNCj4gdXNlDQo+IGl0IHRvIHJlYWQgcHJvcGVydGllcyB3aGljaCBhcmUgYm9v
+bGVhbj8NCj4gDQoNCm9rLg0KDQo+ID4gKwlpZiAob2ZfcHJvcGVydHlfcmVhZF9ib29sKG5wLCAi
+c3lzY29uLWxpbmsiKSkgew0KPiA+ICsJCXNjLT5wY3NyX3JlZ21hcCA9DQo+ID4gKwkJCXN5c2Nv
+bl9yZWdtYXBfbG9va3VwX2J5X3BoYW5kbGUobnAsICJzeXNjb24tbGluayIpOw0KPiANCj4gTGlr
+ZXdpc2UuDQo+IA0KDQpvay4NCg0KPiA+ICsJc2MtPmRlYnVnID0gb2ZfcHJvcGVydHlfcmVhZF9i
+b29sKG5wLCAiZGVidWciKTsNCj4gDQo+IEFzIHN0YXRlZCBhYm92ZSwgTkFLIGZvciB0aGlzIHBy
+b3BlcnR5Lg0KPiANCiANCndpbGwgcmVtb3ZlLg0KDQo+ID4gKw0KPiA+ICsJaWYgKG9mX2ZpbmRf
+cHJvcGVydHkobnAsICJyeC1mb3JjZS1lbmFibGUiLCBOVUxMKSkNCj4gPiArCQlzYy0+cnhfZm9y
+Y2VfZW5hYmxlID0gMTsNCj4gPiArCWVsc2UJDQo+ID4gKwkJc2MtPnJ4X2ZvcmNlX2VuYWJsZSA9
+IDA7DQo+IA0KPiBOb3QgaW4gdGhlIGJpbmRpbmcsIGFuZCB1c2VzIHRoZSB3cm9uZyBhY2Nlc3Nv
+ci4NCj4gDQoNCm9rLiB3aWxsIHVwZGF0ZSB0aGUgYmluZGluZyBhbmQgY2hhbmdlIG9mX2ZpbmRf
+cHJvcGVydHkgdG8NCm9mX3Byb3BlcnR5X3JlYWRfYm9vbC4NCg0KPiA+ICsNCj4gPiArCWZvciAo
+aSA9IDA7IGkgPCBzYy0+bGFuZXM7IGkrKykgew0KPiA+ICsJCXNwcmludGYoJm5hbWVbNF0sICIl
+ZCIsIGkpOw0KPiA+ICsJCWxwID0gb2ZfZmluZF9ub2RlX2J5X25hbWUobnAsIG5hbWUpOw0KPiA+
+ICsJCWlmIChscCkgew0KPiA+ICsJCQlpZiAoa3NlcmRlc19nZXRfbGFuZV9iaW5kaW5ncyhkZXYs
+IGxwLCAmc2MtPmxhbmVbaV0pKQ0KPiA+ICsJCQkJcmV0dXJuIC1FSU5WQUw7DQo+ID4gKwkJfQ0K
+PiA+ICsJfQ0KPiANCj4gQXMgYWJvdmUsIHVzZSByZWcsIG5vdCBtYWdpYyBuYW1lcy4NCg0Kb2su
+DQoNClRoYW5rcywNCldpbmdNYW4NCg==
