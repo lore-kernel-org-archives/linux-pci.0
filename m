@@ -1,149 +1,158 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
-	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
-	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V5 5/9] device property: ACPI: Make use of the new DMA Attribute APIs
-Date: Wed, 28 Oct 2015 15:50:50 -0700
-Message-ID: <1446072654-5608-6-git-send-email-Suravee.Suthikulpanit@amd.com>
-In-Reply-To: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:57141 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753051AbbJMSGC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Oct 2015 14:06:02 -0400
+From: WingMan Kwok <w-kwok2@ti.com>
+To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<kishon@ti.com>, <rogerq@ti.com>, <m-karicheri2@ti.com>,
+	<bhelgaas@google.com>, <ssantosh@kernel.org>,
+	<linux@arm.linux.org.uk>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: WingMan Kwok <w-kwok2@ti.com>
+Subject: [PATCH 2/3] PCI: keystone: update to use generic keystone serdes driver
+Date: Tue, 13 Oct 2015 14:04:23 -0400
+Message-ID: <1444759464-32299-3-git-send-email-w-kwok2@ti.com>
+In-Reply-To: <1444759464-32299-1-git-send-email-w-kwok2@ti.com>
+References: <1444759464-32299-1-git-send-email-w-kwok2@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we have the new DMA attribute APIs, we can replace the older
-acpi_check_dma() and device_dma_is_coherent().
+This patch updates the Keystone PCI driver to use the
+generic Keystone serdes driver for serdes initialization
+and configuration.  The generic serdes driver supports
+peripherals on Keystone platforms that require serdes.
 
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-CC: Rafael J. Wysocki <rjw@rjwysocki.net>
-CC: Tom Lendacky <thomas.lendacky@amd.com>
-CC: Herbert Xu <herbert@gondor.apana.org.au>
-CC: David S. Miller <davem@davemloft.net>
+Signed-off-by: WingMan Kwok <w-kwok2@ti.com>
 ---
- drivers/acpi/acpi_platform.c              |  7 ++++++-
- drivers/acpi/glue.c                       |  8 +++++---
- drivers/crypto/ccp/ccp-platform.c         | 15 +++++++++++----
- drivers/net/ethernet/amd/xgbe/xgbe-main.c |  8 +++++++-
- 4 files changed, 29 insertions(+), 9 deletions(-)
+ drivers/pci/host/pci-keystone.c |   54 ++++++++++++++++++++++++++++++++-------
+ drivers/pci/host/pci-keystone.h |    2 ++
+ 2 files changed, 47 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
-index 06a67d5..296b7a1 100644
---- a/drivers/acpi/acpi_platform.c
-+++ b/drivers/acpi/acpi_platform.c
-@@ -103,7 +103,12 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
- 	pdevinfo.res = resources;
- 	pdevinfo.num_res = count;
- 	pdevinfo.fwnode = acpi_fwnode_handle(adev);
--	pdevinfo.dma_mask = acpi_check_dma(adev, NULL) ? DMA_BIT_MASK(32) : 0;
-+
-+	if (acpi_dma_supported(adev))
-+		pdevinfo.dma_mask = DMA_BIT_MASK(32);
-+	else
-+		pdevinfo.dma_mask = 0;
-+
- 	pdev = platform_device_register_full(&pdevinfo);
- 	if (IS_ERR(pdev))
- 		dev_err(&adev->dev, "platform device creation failed: %ld\n",
-diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-index 1470ae4..5ea5dc2 100644
---- a/drivers/acpi/glue.c
-+++ b/drivers/acpi/glue.c
-@@ -168,7 +168,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
- 	struct list_head *physnode_list;
- 	unsigned int node_id;
- 	int retval = -EINVAL;
--	bool coherent;
-+	enum dev_dma_attr attr;
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index 0aa81bd..b4de05b 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -335,6 +335,7 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
  
- 	if (has_acpi_companion(dev)) {
- 		if (acpi_dev) {
-@@ -225,8 +225,10 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
- 	if (!has_acpi_companion(dev))
- 		ACPI_COMPANION_SET(dev, acpi_dev);
++	phy_exit(ks_pcie->serdes_phy);
+ 	clk_disable_unprepare(ks_pcie->clk);
  
--	if (acpi_check_dma(acpi_dev, &coherent))
--		arch_setup_dma_ops(dev, 0, 0, NULL, coherent);
-+	attr = acpi_get_dma_attr(acpi_dev);
-+	if (attr != DEV_DMA_NOT_SUPPORTED)
-+		arch_setup_dma_ops(dev, 0, 0, NULL,
-+				   attr == DEV_DMA_COHERENT);
+ 	return 0;
+@@ -342,6 +343,8 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
  
- 	acpi_physnode_link_name(physical_node_name, node_id);
- 	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
-diff --git a/drivers/crypto/ccp/ccp-platform.c b/drivers/crypto/ccp/ccp-platform.c
-index bb241c3..844118c 100644
---- a/drivers/crypto/ccp/ccp-platform.c
-+++ b/drivers/crypto/ccp/ccp-platform.c
-@@ -96,6 +96,7 @@ static int ccp_platform_probe(struct platform_device *pdev)
- 	struct ccp_platform *ccp_platform;
+ static int __init ks_pcie_probe(struct platform_device *pdev)
+ {
++	struct device_node *node = pdev->dev.of_node;
++	struct device_node *serdeses_np, *child;
  	struct device *dev = &pdev->dev;
- 	struct acpi_device *adev = ACPI_COMPANION(dev);
-+	enum dev_dma_attr attr;
- 	struct resource *ior;
- 	int ret;
+ 	struct keystone_pcie *ks_pcie;
+ 	struct pcie_port *pp;
+@@ -349,6 +352,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	void __iomem *reg_p;
+ 	struct phy *phy;
+ 	int ret = 0;
++	u32 phy_num;
  
-@@ -122,18 +123,24 @@ static int ccp_platform_probe(struct platform_device *pdev)
- 	}
- 	ccp->io_regs = ccp->io_map;
+ 	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
+ 				GFP_KERNEL);
+@@ -357,14 +361,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
  
--	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48));
--	if (ret) {
--		dev_err(dev, "dma_set_mask_and_coherent failed (%d)\n", ret);
-+	attr = device_get_dma_attr(dev);
-+	if (attr == DEV_DMA_NOT_SUPPORTED) {
-+		dev_err(dev, "DMA is not supported");
- 		goto e_err;
- 	}
+ 	pp = &ks_pcie->pp;
  
--	ccp_platform->coherent = device_dma_is_coherent(ccp->dev);
-+	ccp_platform->coherent = (attr == DEV_DMA_COHERENT);
- 	if (ccp_platform->coherent)
- 		ccp->axcache = CACHE_WB_NO_ALLOC;
- 	else
- 		ccp->axcache = CACHE_NONE;
+-	/* initialize SerDes Phy if present */
+-	phy = devm_phy_get(dev, "pcie-phy");
+-	if (!IS_ERR_OR_NULL(phy)) {
+-		ret = phy_init(phy);
+-		if (ret < 0)
+-			return ret;
+-	}
+-
+ 	/* index 2 is to read PCI DEVICE_ID */
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+ 	reg_p = devm_ioremap_resource(dev, res);
+@@ -385,6 +381,46 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
  
-+	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48));
-+	if (ret) {
-+		dev_err(dev, "dma_set_mask_and_coherent failed (%d)\n", ret);
-+		goto e_err;
++	serdeses_np = of_get_child_by_name(node, "serdeses");
++	if (serdeses_np) {
++		for_each_available_child_of_node(serdeses_np, child) {
++			ret = of_property_read_u32(child, "reg", &phy_num);
++			if (ret) {
++				dev_err(dev, "Failed to parse device tree\n");
++				of_node_put(child);
++				of_node_put(serdeses_np);
++				goto fail_clk;
++			}
++
++			if (phy_num >= MAX_NUM_PCI_SERDES) {
++				dev_err(dev, "Invalid phy number: %u\n",
++					phy_num);
++				of_node_put(child);
++				of_node_put(serdeses_np);
++				ret = -EINVAL;
++				goto fail_clk;
++			}
++
++			phy = devm_of_phy_get(dev, child, NULL);
++			of_node_put(child);
++			ks_pcie->serdes_phy = phy;
++			if (IS_ERR(phy)) {
++				dev_err(dev, "No %s serdes driver found: %ld\n",
++					node->name, PTR_ERR(phy));
++				of_node_put(serdeses_np);
++				ret = PTR_ERR(phy);
++				goto fail_clk;
++			}
++
++			ret = phy_init(phy);
++			if (ret < 0) {
++				of_node_put(serdeses_np);
++				goto fail_clk;
++			}
++		}
++		of_node_put(serdeses_np);
 +	}
 +
- 	dev_set_drvdata(dev, ccp);
+ 	ret = ks_add_pcie_port(ks_pcie, pdev);
+ 	if (ret < 0)
+ 		goto fail_clk;
+@@ -392,7 +428,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ fail_clk:
+ 	clk_disable_unprepare(ks_pcie->clk);
+-
++	phy_exit(ks_pcie->serdes_phy);
+ 	return ret;
+ }
  
- 	ret = ccp_init(ccp);
-diff --git a/drivers/net/ethernet/amd/xgbe/xgbe-main.c b/drivers/net/ethernet/amd/xgbe/xgbe-main.c
-index e83bd76..c607b3f 100644
---- a/drivers/net/ethernet/amd/xgbe/xgbe-main.c
-+++ b/drivers/net/ethernet/amd/xgbe/xgbe-main.c
-@@ -342,6 +342,7 @@ static int xgbe_probe(struct platform_device *pdev)
- 	struct resource *res;
- 	const char *phy_mode;
- 	unsigned int i, phy_memnum, phy_irqnum;
-+	enum dev_dma_attr attr;
- 	int ret;
+diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
+index 478d932..21662ba 100644
+--- a/drivers/pci/host/pci-keystone.h
++++ b/drivers/pci/host/pci-keystone.h
+@@ -15,6 +15,7 @@
+ #define MAX_LEGACY_IRQS			4
+ #define MAX_MSI_HOST_IRQS		8
+ #define MAX_LEGACY_HOST_IRQS		4
++#define MAX_NUM_PCI_SERDES		1
  
- 	DBGPR("--> xgbe_probe\n");
-@@ -609,7 +610,12 @@ static int xgbe_probe(struct platform_device *pdev)
- 		goto err_io;
+ struct keystone_pcie {
+ 	struct	clk		*clk;
+@@ -33,6 +34,7 @@ struct keystone_pcie {
+ 	/* Application register space */
+ 	void __iomem		*va_app_base;
+ 	struct resource		app;
++	struct phy		*serdes_phy;
+ };
  
- 	/* Set the DMA coherency values */
--	pdata->coherent = device_dma_is_coherent(pdata->dev);
-+	attr = device_get_dma_attr(dev);
-+	if (attr == DEV_DMA_NOT_SUPPORTED) {
-+		dev_err(dev, "DMA is not supported");
-+		goto err_io;
-+	}
-+	pdata->coherent = (attr == DEV_DMA_COHERENT);
- 	if (pdata->coherent) {
- 		pdata->axdomain = XGBE_DMA_OS_AXDOMAIN;
- 		pdata->arcache = XGBE_DMA_OS_ARCACHE;
+ /* Keystone DW specific MSI controller APIs/definitions */
 -- 
-2.1.0
+1.7.9.5
 
