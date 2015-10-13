@@ -1,127 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:14748 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753489AbbJZLUv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 07:20:51 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v12 1/8] PCI: designware: move calculation of bus addresses to DRA7xx
-Date: Mon, 26 Oct 2015 19:35:43 +0800
-Message-ID: <1445859350-26375-2-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:60798 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751834AbbJMUDU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Oct 2015 16:03:20 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Kevin Hilman <khilman@kernel.org>, Ray Jui <rjui@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Tyler Baker <tyler.baker@linaro.org>,
+	lkml <linux-kernel@vger.kernel.org>,
+	Olof Johansson <olof@lixom.net>,
+	Mark Brown <broonie@kernel.org>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] PCI: iproc: fix 32-bit build error
+Date: Tue, 13 Oct 2015 22:02:48 +0200
+Message-ID: <11199595.GgDE2yo8AA@wuerfel>
+In-Reply-To: <CAMAWPa_Hsuv+skzt3S6e9X_kWY=2JXAScbVEVOVTGmn81_bcFw@mail.gmail.com>
+References: <1442363962-29805-1-git-send-email-rjui@broadcom.com> <1442363962-29805-8-git-send-email-rjui@broadcom.com> <CAMAWPa_Hsuv+skzt3S6e9X_kWY=2JXAScbVEVOVTGmn81_bcFw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+The iproc PCI driver tries to figure out whether the MMIO window has
+a valid size, but does this using a 64-bit modulo operation, which
+is not allowed on 32-bit kernels and leads to a link error:
 
-Commit f4c55c5a3f7f ("PCI: designware: Program ATU with untranslated
-address") added the calculation of PCI BUS addresses in designware,
-storing them in new fields added in "struct pcie_port". This
-calculation is done for every designware user even if is only
-applicable to DRA7xx.
-This patch moves the calculation of the bus addresses to the DRA7xx
-driver and is needed to allow the rework of designware to use
-the new DT parsing API.
+drivers/built-in.o: In function `iproc_pcie_setup':
+:(.text+0x4b798): undefined reference to `__aeabi_uldivmod'
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
----
- drivers/pci/host/pci-dra7xx.c      |  7 +++++++
- drivers/pci/host/pcie-designware.c | 15 ++++-----------
- 2 files changed, 11 insertions(+), 11 deletions(-)
+This works around that error by using the div64_u64() function
+provided by the kernel. While this is an expensive operation,
+it is harmless because we only call it during the probing
+of the driver.
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 199e29a..0b4847a 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -62,6 +62,7 @@
- 
- #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
- #define	LINK_UP						BIT(16)
-+#define	DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
- 
- struct dra7xx_pcie {
- 	void __iomem		*base;
-@@ -151,6 +152,12 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
- static void dra7xx_pcie_host_init(struct pcie_port *pp)
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 0ab99ca8eb6c ("PCI: iproc: Fix compile warnings")
+
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index f3481ddff344..abcb4be2ee19 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -235,12 +235,13 @@ static void iproc_pcie_enable(struct iproc_pcie *pcie)
+  *
+  * axi_addr -> iproc_pcie_address -> OARR -> OMAP -> pci_address
+  */
+-static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
++int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
+ 			       u64 pci_addr, resource_size_t size)
  {
- 	dw_pcie_setup_rc(pp);
-+
-+	pp->io_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
-+	pp->mem_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
-+	pp->cfg0_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
-+	pp->cfg1_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
-+
- 	dra7xx_pcie_establish_link(pp);
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		dw_pcie_msi_init(pp);
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 52aa6e3..75338a6 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -365,14 +365,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	struct of_pci_range range;
- 	struct of_pci_range_parser parser;
- 	struct resource *cfg_res;
--	u32 val, na, ns;
-+	u32 val, ns;
- 	const __be32 *addrp;
- 	int i, index, ret;
+ 	struct iproc_pcie_ob *ob = &pcie->ob;
+ 	unsigned i;
+ 	u64 max_size = (u64)ob->window_size * MAX_NUM_OB_WINDOWS;
++	u64 remainder;
  
--	/* Find the address cell size and the number of cells in order to get
--	 * the untranslated address.
--	 */
--	of_property_read_u32(np, "#address-cells", &na);
- 	ns = of_n_size_cells(np);
+ 	if (size > max_size) {
+ 		dev_err(pcie->dev,
+@@ -249,7 +250,8 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
+ 		return -EINVAL;
+ 	}
  
- 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
-@@ -415,8 +411,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->io_base = range.cpu_addr;
- 
- 			/* Find the untranslated IO space address */
--			pp->io_mod_base = of_read_number(parser.range -
--							 parser.np + na, ns);
-+			pp->io_mod_base = range.cpu_addr;
- 		}
- 		if (restype == IORESOURCE_MEM) {
- 			of_pci_range_to_resource(&range, np, &pp->mem);
-@@ -425,8 +420,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->mem_bus_addr = range.pci_addr;
- 
- 			/* Find the untranslated MEM space address */
--			pp->mem_mod_base = of_read_number(parser.range -
--							  parser.np + na, ns);
-+			pp->mem_mod_base = range.cpu_addr;
- 		}
- 		if (restype == 0) {
- 			of_pci_range_to_resource(&range, np, &pp->cfg);
-@@ -436,8 +430,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
- 
- 			/* Find the untranslated configuration space address */
--			pp->cfg0_mod_base = of_read_number(parser.range -
--							   parser.np + na, ns);
-+			pp->cfg0_mod_base = range.cpu_addr;
- 			pp->cfg1_mod_base = pp->cfg0_mod_base +
- 					    pp->cfg0_size;
- 		}
--- 
-1.9.1
+-	if (size % ob->window_size) {
++	div64_u64_rem(size, ob->window_size, &remainder);
++	if (remainder) {
+ 		dev_err(pcie->dev,
+ 			"res size %pap needs to be multiple of window size %pap\n",
+ 			&size, &ob->window_size);
 
