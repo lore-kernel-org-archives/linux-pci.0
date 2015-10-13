@@ -1,79 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29908 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965245AbbJHVpP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:45:15 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 39/60] PCI: Move comment to pci_need_to_release()
-Date: Thu,  8 Oct 2015 14:38:58 -0700
-Message-Id: <1444340359-8011-40-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:54930 "EHLO smtp2.it.da.ut.ee"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932184AbbJMFEi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 13 Oct 2015 01:04:38 -0400
+Date: Tue, 13 Oct 2015 08:06:10 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+To: Yinghai Lu <yinghai@kernel.org>
+cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
+In-Reply-To: <CAE9FiQXHsgYaTgF2rsWFJXSYJ=kH3j63ageJ2H8F5wnzbFgxRg@mail.gmail.com>
+Message-ID: <alpine.LRH.2.20.1510130800380.3972@math.ut.ee>
+References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee> <CAE9FiQXM9YxRwcbG577Pcqmj7YbOa0yk6hYELb2FpTtct5u2jg@mail.gmail.com> <alpine.LRH.2.20.1510120808240.3251@math.ut.ee> <CAE9FiQXHsgYaTgF2rsWFJXSYJ=kH3j63ageJ2H8F5wnzbFgxRg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move comment from caller to pci_need_to_release(), as we will have one new
-caller for alt_size support.
+> >> > sparc64 machines:
+> >>
+> >> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> >> for-pci-v4.4-next
+> >>
+> >> It should fix some "no compatible bridge window"
+> >
+> > Blade 100: still has 2 address conflicts:
+> > http://kodu.ut.ee/~mroos/dm/dm.sb100+patch
+> >
+> > V240: still has a lot of address conflicts:
+> > http://kodu.ut.ee/~mroos/dm/dm.v240+patch
+> >
+> > V210: fixes the line
+> > pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
+> >
+> > These lines are still present:
+> >
+> > pci 0001:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+> > pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+> >
+> you should not have those.
+> 
+> Looks like you are using old branch before 2015-10-05.
+> 
+> If you use the git directly, please update the branch to local again.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 27 +++++++++++++++------------
- 1 file changed, 15 insertions(+), 12 deletions(-)
+Updated on V210 - the others were more recent. Now I get more BAR 
+warning there too:
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index dc83c2c..09844d9 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -415,6 +415,20 @@ static unsigned long pci_fail_res_type_mask(struct list_head *fail_head)
- 
- static bool pci_need_to_release(unsigned long mask, struct resource *res)
- {
-+	/*
-+	 * Separate three resource type checking if we need to release
-+	 * assigned resource.
-+	 *	1. if there is io port assign fail, will release assigned
-+	 *	   io port.
-+	 *	2. if there is pref mmio assign fail, release assigned
-+	 *	   pref mmio.
-+	 *	   if assigned pref mmio's parent is non-pref mmio and there
-+	 *	   is non-pref mmio assign fail, will release that assigned
-+	 *	   pref mmio.
-+	 *	3. if there is non-pref mmio assign fail or pref mmio
-+	 *	   assigned fail, will release assigned non-pref mmio.
-+	 */
-+
- 	if (res->flags & IORESOURCE_IO)
- 		return !!(mask & IORESOURCE_IO);
- 
-@@ -471,19 +485,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 *  if could do that, could get out early.
- 	 *  if could not do that, we still try to assign requested at first,
- 	 *    then try to reassign add_size for some resources.
--	 *
--	 * Separate three resource type checking if we need to release
--	 * assigned resource after requested + add_size try.
--	 *	1. if there is io port assign fail, will release assigned
--	 *	   io port.
--	 *	2. if there is pref mmio assign fail, release assigned
--	 *	   pref mmio.
--	 *	   if assigned pref mmio's parent is non-pref mmio and there
--	 *	   is non-pref mmio assign fail, will release that assigned
--	 *	   pref mmio.
--	 *	3. if there is non-pref mmio assign fail or pref mmio
--	 *	   assigned fail, will release assigned non-pref mmio.
- 	 */
-+
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
+http://kodu.ut.ee/~mroos/dm/dm.v210+patches
+
 -- 
-1.8.4.5
-
+Meelis Roos (mroos@linux.ee)
