@@ -1,65 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp09.in.ibm.com ([122.248.162.9]:44425 "EHLO
-	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753733AbbJ1BWb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 21:22:31 -0400
-Received: from /spool/local
-	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 28 Oct 2015 06:51:36 +0530
-Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id C20273940049
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 06:51:32 +0530 (IST)
-Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
-	by d28relay05.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9S1LWKH62521580
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 06:51:32 +0530
-Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
-	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9S1LV4G005914
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 06:51:32 +0530
-Date: Wed, 28 Oct 2015 09:21:22 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V10 01/12] PCI/IOV: Rename and export
- virtfn_add/virtfn_remove
-Message-ID: <20151028012122.GA16965@Richards-MacBook-Pro.local>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1445829362-2738-2-git-send-email-weiyang@linux.vnet.ibm.com>
- <20151027230654.GA5155@localhost>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:42307 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753127AbbJMSGD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 13 Oct 2015 14:06:03 -0400
+From: WingMan Kwok <w-kwok2@ti.com>
+To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<kishon@ti.com>, <rogerq@ti.com>, <m-karicheri2@ti.com>,
+	<bhelgaas@google.com>, <ssantosh@kernel.org>,
+	<linux@arm.linux.org.uk>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: WingMan Kwok <w-kwok2@ti.com>
+Subject: [PATCH 0/3] Common SerDes driver for TI's Keystone Platforms
+Date: Tue, 13 Oct 2015 14:04:21 -0400
+Message-ID: <1444759464-32299-1-git-send-email-w-kwok2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151027230654.GA5155@localhost>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 27, 2015 at 06:06:54PM -0500, Bjorn Helgaas wrote:
->On Mon, Oct 26, 2015 at 11:15:51AM +0800, Wei Yang wrote:
->> During EEH recovery, hotplug is applied to the devices which don't
->> have drivers or their drivers don't support EEH. However, the hotplug,
->> which was implemented based on PCI bus, can't be applied to VF directly.
->> 
->> The patch renames virtn_{add,remove}() and exports them so that they
->> can be used in PCI hotplug during EEH recovery.
->
->Trivial, but write this as an imperative sentence, e.g.,
->
->  Rename virtn_{add,remove}() and export them so they
->  can be used in PCI hotplug during EEH recovery.
->
->"The patch" doesn't add any useful information; it's obvious that the
->changelog applied to this patch.
+On TI's Keystone platforms, several peripherals such as the
+gbe ethernet switch, 10gbe ethether switch and PCIe controller
+require the use of a SerDes for converting SoC parallel data into
+serialized data that can be output over a high-speed electrical
+interface, and also converting high-speed serial input data
+into parallel data that can be processed by the SoC.  The
+SerDeses used by those peripherals, though they may be different,
+are largely similar in functionality and setup.
 
-Yep, thanks, will change in next version.
+This patch series provides a SerDes phy driver implementation that can be
+used by the above mentioned peripheral drivers to configure their
+respective SerDeses.
 
->
->This comment also applies to at least the next patch.
->
->Bjorn
+As an example of the using the SerDes driver, this patch series also
+updates the Keystone PCIe host driver to enable and use its SerDes block.
+
+References:
+
+[1] KeyStone II Architecture Serializer/Deserializer (SerDes) User's Guide
+    (http://www.ti.com/lit/ug/spruho3a/spruho3a.pdf)
+
+WingMan Kwok (3):
+  phy: keystone: serdes driver for gbe 10gbe and pcie
+  PCI: keystone: update to use generic keystone serdes driver
+  ARM: keystone: dts: add PCI serdes driver bindings
+
+ Documentation/devicetree/bindings/phy/ti-phy.txt |  256 +++
+ arch/arm/boot/dts/k2e.dtsi                       |   24 +
+ arch/arm/boot/dts/keystone.dtsi                  |   25 +
+ drivers/pci/host/pci-keystone.c                  |   54 +-
+ drivers/pci/host/pci-keystone.h                  |    2 +
+ drivers/phy/Kconfig                              |    8 +
+ drivers/phy/Makefile                             |    1 +
+ drivers/phy/phy-keystone-serdes.c                | 2465 ++++++++++++++++++++++
+ 8 files changed, 2826 insertions(+), 9 deletions(-)
+ create mode 100644 drivers/phy/phy-keystone-serdes.c
 
 -- 
-Richard Yang
-Help you, Help me
+1.7.9.5
 
