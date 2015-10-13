@@ -1,56 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:54647 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933786AbbJHPS2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 11:18:28 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	devicetree@vger.kernel.org, Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	David Daney <david.daney@cavium.com>,
-	Will Deacon <will.deacon@arm.com>,
-	linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v4 4/5] PCI: generic: Correct, and avoid overflow, in bus_max calculation.
-Date: Thu, 08 Oct 2015 17:18:15 +0200
-Message-ID: <5178627.ufUfdomGdT@wuerfel>
-In-Reply-To: <5230007.h2fkbnOlh5@wuerfel>
-References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com> <20151008150243.GC3885@localhost> <5230007.h2fkbnOlh5@wuerfel>
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	qiujiang <qiujiang@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"Wangkefeng (Kevin)" <wangkefeng.wang@huawei.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+Date: Tue, 13 Oct 2015 17:00:49 +0200
+Message-ID: <11677087.JbqAo0FWJE@wuerfel>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E16242C92@lhreml503-mbs>
+References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com> <6336414.HvfCQcuT3Y@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E16242C92@lhreml503-mbs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 08 October 2015 17:11:32 Arnd Bergmann wrote:
-> > > --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> > > +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> > > @@ -34,7 +34,11 @@ Properties of the host controller node:
-> > >  - #size-cells    : Must be 2.
-> > >  
-> > >  - reg            : The Configuration Space base address and size, as accessed
-> > > -                   from the parent bus.
-> > > +                   from the parent bus.  The base address corresponds to
-> > > +                   bus zero, even though the "bus-range" property may specify
-> > > +                   a different starting bus number.  The driver must only map
-> > > +                   or access the portion of the Configuration Space that
-> > > +                   corresponds to the "bus-range"
+On Tuesday 13 October 2015 14:49:07 Gabriele Paoloni wrote:
+> > On Monday 12 October 2015 16:35:45 Bjorn Helgaas wrote:
+> > >
+> > > > +{
+> > > > +     u64 addr;
+> > > > +     struct device_node *msi_node;
+> > > > +     struct resource res;
+> > > > +     struct device_node *np = pp->dev->of_node;
+> > > > +     struct hisi_pcie *pcie = to_hisi_pcie(pp);
+> > > > +
+> > > > +     msi_node = of_parse_phandle(np, "msi-parent", 0);
+> > > > +     if (!msi_node) {
+> > > > +             dev_err(pp->dev, "failed to find msi-parent\n");
+> > > > +             return -EINVAL;
+> > > > +     }
+> > > > +     of_address_to_resource(msi_node, 0, &res);
+> > >
+> > > Does this use the "msi-parent" node in the same way as other drivers
+> > > do?  I'm sure there must be other places where we extract struct
+> > > resource information from an "msi-parent" node, but I don't see them.
+> > >
+> > > I'm trying to verify that this isn't some kind of incompatible
+> > > extension of the "msi-parent" property.  I cc'd Arnd and Rob (DT
+> > > experts).
+> > 
+> > This is not ok, what this does is that it relies on a particular
+> > implementation of the MSI controller and directly accesses its
+> > registers.
 > 
-> I thought we had reached an agreement that it is a bad idea to have a 'reg'
-> property that lists registers belonging to a different device.
+> Hi Arnd, thanks for reviewing.
 > 
-> 
+> What we do is to retrieve the msi-parent physical address and we store it
+> in our internal PCIe register locations...
 
-To further clarify: the argument was to make it mirror what ACPI does for
-PCI. However, this is unlike what all other devices do with DT, where you
-have non-overlapping register ranges (start, length) for each device.
-ACPI as far as I understand it does not give a range for a PCIe host, but
-instead provides a way to get the start address of the ECAM register area
-for the domain that the host is part of, and that needs to be the same
-address for each host in the domain.
+Ah, thanks for the clarification, I missed that part.
+
+> So we do not operate directly on the msi controller registers...
+> 
+> So I wonder if the current implementation is Ok to retrieve the
+> msi-parent address....
+
+Not sure. Why do you do this? Normally the PCI host does not know
+or care about the address of the MSI controller, because the messages
+are just passed up to the parent bus as DMA transfers.
+
+I don't think what you do here is safe because the 'reg' property
+of the MSI controller might point to the address that is used for
+the message directly.
 
 	Arnd
