@@ -1,207 +1,387 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:32947 "EHLO mail.kernel.org"
+Received: from smtp1.it.da.ut.ee ([193.40.5.66]:35204 "EHLO smtp1.it.da.ut.ee"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751867AbbJTQmp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Oct 2015 12:42:45 -0400
-Date: Tue, 20 Oct 2015 11:42:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
+	id S1751973AbbJMUiB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 13 Oct 2015 16:38:01 -0400
+Date: Tue, 13 Oct 2015 23:39:34 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 01/60] sparc/PCI: Add mem64 resource parsing for root
- bus
-Message-ID: <20151020164235.GF8224@localhost>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
- <1444340359-8011-2-git-send-email-yinghai@kernel.org>
+cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
+In-Reply-To: <CAE9FiQWhE=-FtZjuC5-fTzuTq0tm9Zt1MiD8J0a_Q_jiB5RLNg@mail.gmail.com>
+Message-ID: <alpine.LRH.2.20.1510132338510.14105@math.ut.ee>
+References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee> <CAE9FiQXM9YxRwcbG577Pcqmj7YbOa0yk6hYELb2FpTtct5u2jg@mail.gmail.com> <alpine.LRH.2.20.1510120808240.3251@math.ut.ee> <CAE9FiQXHsgYaTgF2rsWFJXSYJ=kH3j63ageJ2H8F5wnzbFgxRg@mail.gmail.com>
+ <alpine.LRH.2.20.1510130800380.3972@math.ut.ee> <CAE9FiQVAtPGgzwwMaHjGjyzOD8wKb0TqCd1wynF6-ZmFqZzEaQ@mail.gmail.com> <alpine.LRH.2.20.1510131020140.9747@math.ut.ee> <CAE9FiQWhE=-FtZjuC5-fTzuTq0tm9Zt1MiD8J0a_Q_jiB5RLNg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444340359-8011-2-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 08, 2015 at 02:38:20PM -0700, Yinghai Lu wrote:
-> Found "no compatible bridge window" warning in boot log from T5-8.
+> >> Can you send boot log after booting with "debug ignore_loglevel ofpci_debug=1" ?
+> >
+> > http://kodu.ut.ee/~mroos/dm/dm.v210+patch+debug
 > 
-> pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
-> 
-> That resource is above 4G, but does not get offset correctly as
-> root bus only report io and mem32.
-> 
-> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
-> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
-> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
-> pci_bus 0000:00: root bus resource [bus 00-77]
-> 
-> Add mem64 handling in pci_common for sparc, so we can have 64bit resource
-> registered for root bus at first.
-> 
-> After patch, will have:
-> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
-> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
-> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
-> pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
-> pci_bus 0000:00: root bus resource [bus 00-77]
-> 
-> -v2: mem64_space should use mem_space.start as offset.
-> -v3: add IORESOURCE_MEM_64 flag
-> -v4: set name for mem64_space, otherwise /proc/iomem will have <bad> for name
-> 
-> Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
-> Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
-> Reported-by: David Ahern <david.ahern@oracle.com>
-> Tested-by: David Ahern <david.ahern@oracle.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
->  arch/sparc/kernel/pci.c        |    7 ++++++-
->  arch/sparc/kernel/pci_common.c |   17 +++++++++++++++--
->  arch/sparc/kernel/pci_impl.h   |    1 +
->  3 files changed, 22 insertions(+), 3 deletions(-)
-> ---
->  arch/sparc/kernel/pci.c        |  7 ++++++-
->  arch/sparc/kernel/pci_common.c | 17 +++++++++++++++--
->  arch/sparc/kernel/pci_impl.h   |  1 +
->  3 files changed, 22 insertions(+), 3 deletions(-)
+> Firmware does reported overlapped resources.
+[...] 
+> can you send out output for
+> lspci -vvxxx
+> lspci -tv
 
-Applied with Khalid's tested-by to pci/resource for v4.4 as follows.
-I cleaned up the changelog, URL, and diffstat for you.
+Here you are.
 
-We still need some unification of pci_parse_of_flags() (powerpc and
-sparc versions), of_bus_pci_get_flags() (two sparc versions and a
-generic version), and pci_determine_mem_io_space() (sparc version).
-All of these decode basically the same thing but in different ways.
+0000:00:02.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5704 Gigabit Ethernet
+	Subsystem: Broadcom Corporation NetXtreme BCM5704 Gigabit Ethernet
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 64 (16000ns min), Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 6
+	Region 0: Memory at 00200000 (64-bit, non-prefetchable) [size=2M]
+	Region 2: Memory at 00110000 (64-bit, non-prefetchable) [size=64K]
+	Region 4: [virtual] Memory at fffff80900000000 (32-bit, non-prefetchable)
+	Region 5: [virtual] Memory at fffff80900000000 (32-bit, non-prefetchable)
+	Expansion ROM at fffff80900000000 [disabled]
+	Capabilities: [40] PCI-X non-bridge device
+		Command: DPERE- ERO+ RBC=512 OST=1
+		Status: Dev=ff:1f.0 64bit+ 133MHz+ SCD- USC- DC=simple DMMRBC=2048 DMOST=1 DMCRS=16 RSCEM- 266MHz- 533MHz-
+	Capabilities: [48] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+	Capabilities: [50] Vital Product Data
+		Not readable
+	Capabilities: [58] MSI: Enable- Count=1/8 Maskable- 64bit+
+		Address: 2d92e07bc876dbd0  Data: 0c1b
+	Kernel driver in use: tg3
+00: e4 14 48 16 06 00 b0 02 00 00 00 02 10 40 80 00
+10: 04 00 20 00 00 00 00 00 04 00 11 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 e4 14 48 16
+30: 00 00 81 2b 40 00 00 00 00 00 00 00 a3 01 40 00
+40: 07 48 02 00 f8 ff 43 04 01 50 02 40 00 20 00 00
+50: 03 58 00 00 3b 79 48 4b 05 00 86 00 d0 db 76 c8
+60: 7b e0 92 2d 1b 0c 00 00 98 02 03 20 00 00 3f 76
+70: ee 00 00 00 c4 00 00 80 4c 5b 03 00 00 00 00 00
+80: 00 00 00 00 00 59 b0 00 36 00 13 04 82 90 20 02
+90: 09 97 00 01 01 00 00 00 00 00 00 00 f5 01 00 00
+a0: 00 00 00 00 2d 01 00 00 00 00 00 00 e3 01 00 00
+b0: 00 00 00 00 00 00 00 71 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-Bjorn
+0000:00:02.1 Ethernet controller: Broadcom Corporation NetXtreme BCM5704 Gigabit Ethernet
+	Subsystem: Oracle/SUN Device 1648
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 64 (16000ns min), Cache Line Size: 64 bytes
+	Interrupt: pin B routed to IRQ 7
+	Region 0: Memory at 00400000 (64-bit, non-prefetchable) [size=2M]
+	Region 2: Memory at 00120000 (64-bit, non-prefetchable) [size=64K]
+	Region 4: [virtual] Memory at fffff80900000000 (32-bit, non-prefetchable)
+	Region 5: [virtual] Memory at fffff80900000000 (32-bit, non-prefetchable)
+	[virtual] Expansion ROM at fffff80900000000 [disabled]
+	Capabilities: [40] PCI-X non-bridge device
+		Command: DPERE- ERO+ RBC=512 OST=1
+		Status: Dev=ff:1f.1 64bit+ 133MHz+ SCD- USC- DC=simple DMMRBC=2048 DMOST=1 DMCRS=16 RSCEM- 266MHz- 533MHz-
+	Capabilities: [48] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+	Capabilities: [50] Vital Product Data
+		Not readable
+	Capabilities: [58] MSI: Enable- Count=1/8 Maskable- 64bit+
+		Address: 2e047d69dfc7ac80  Data: d6f4
+	Kernel driver in use: tg3
+00: e4 14 48 16 06 00 b0 02 00 00 00 02 10 40 80 00
+10: 04 00 40 00 00 00 00 00 04 00 12 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 8e 10 48 16
+30: 00 00 00 00 40 00 00 00 00 00 00 00 22 02 40 00
+40: 07 48 02 00 f9 ff 43 04 01 50 02 40 00 20 00 00
+50: 03 58 00 00 d8 30 08 01 05 00 86 00 80 ac c7 df
+60: 69 7d 04 2e f4 d6 00 00 9a 02 03 20 00 00 3f 76
+70: 0e 02 00 00 c4 00 00 00 00 00 00 00 00 00 00 00
+80: e4 14 48 16 f8 80 3b 05 36 00 00 00 fe 90 60 02
+90: 01 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 04 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+0001:00:06.0 Non-VGA unclassified device: ULi Electronics Inc. M7101 Power Management Controller [PMU]
+	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Region 0: [virtual] I/O ports at <unassigned> [size=16]
+	Region 1: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	Region 2: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	Region 3: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	Region 4: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	Region 5: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	[virtual] Expansion ROM at fffff80100000000 [disabled]
+00: b9 10 01 71 00 00 00 02 00 00 00 00 00 00 00 00
+10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+40: 00 00 00 00 00 00 20 00 08 18 08 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 40 01
+70: 0f 11 00 00 00 00 00 08 00 00 00 00 00 00 00 00
+80: 00 00 10 10 00 00 00 00 01 02 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 08 00 00 01 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 40 40 01 00 00 02 00 60 00 00 03 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 06 00 00 00 00 00 00 00 00 00 00 0b 00 00 00
+e0: 00 08 00 06 01 00 01 00 00 00 00 00 00 00 00 00
+f0: 45 00 88 6e 00 00 00 00 00 00 00 00 00 00 00 00
+
+0001:00:07.0 ISA bridge: ULi Electronics Inc. M1533/M1535/M1543 PCI to ISA Bridge [Aladdin IV/V/V+]
+	Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Region 0: [virtual] I/O ports at 0000 [size=64K]
+	Region 1: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
+	Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
+	Region 3: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	Region 4: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	Region 5: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	[virtual] Expansion ROM at fffff80100000000 [disabled]
+	Capabilities: [a0] Power Management version 1
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+00: b9 10 33 15 0f 00 10 02 00 00 01 06 00 00 00 00
+10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+30: 00 00 00 00 a0 00 00 00 00 00 00 00 00 00 00 00
+40: 03 13 4b 80 83 09 00 47 00 00 06 00 00 00 eb 31
+50: 00 00 00 20 90 02 20 03 66 03 00 00 00 00 00 08
+60: 40 00 00 00 00 00 00 00 00 00 00 00 80 20 00 00
+70: 00 00 0a 00 47 00 00 db 04 02 00 04 00 80 01 90
+80: a5 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+0001:00:0a.0 USB controller: ULi Electronics Inc. USB 1.1 Controller (rev 03) (prog-if 10 [OHCI])
+	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Interrupt: pin A routed to IRQ 17
+	Region 0: Memory at 01000000 (32-bit, non-prefetchable) [disabled] [size=16M]
+	Region 1: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	Region 2: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	Region 3: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	Region 4: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	Region 5: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	[virtual] Expansion ROM at fffff80100000000 [disabled]
+	Capabilities: [60] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+00: b9 10 37 52 00 00 90 02 03 10 03 0c 00 40 00 00
+10: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+30: 00 00 00 00 60 00 00 00 00 00 00 00 00 01 00 50
+40: 00 00 0f 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 01 00 02 80 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+0001:00:0d.0 IDE interface: ULi Electronics Inc. M5229 IDE (rev c4) (prog-if ff)
+	Control: I/O- Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 64 (500ns min, 1000ns max)
+	Interrupt: pin A routed to IRQ 18
+	Region 0: I/O ports at 0900 [disabled] [size=8]
+	Region 1: I/O ports at 0918 [disabled] [size=8]
+	Region 2: I/O ports at 0910 [disabled] [size=8]
+	Region 3: I/O ports at 0908 [disabled] [size=8]
+	Region 4: I/O ports at 0920 [disabled] [size=16]
+	Region 5: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+	[virtual] Expansion ROM at fffff80100000000 [disabled]
+	Capabilities: [60] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+00: b9 10 29 52 04 00 90 02 c4 ff 01 01 00 40 00 00
+10: 01 09 00 00 19 09 00 00 11 09 00 00 09 09 00 00
+20: 21 09 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+30: 00 00 00 00 60 00 00 00 00 00 00 00 00 01 02 04
+40: 00 00 00 7f 00 00 00 00 30 00 02 c0 00 80 ba 1a
+50: 03 00 00 81 55 55 44 44 03 00 00 00 03 00 00 00
+60: 01 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+0002:00:02.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1010 66MHz  Ultra3 SCSI Adapter (rev 01)
+	Subsystem: LSI Logic / Symbios Logic LSI53C1000/1000R/1010R/1010-66 PCI to Ultra160 SCSI Controller
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+	Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 64 (4250ns min, 4500ns max), Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 24
+	Region 0: I/O ports at 0900 [size=256]
+	Region 1: Memory at 00100000 (64-bit, non-prefetchable) [size=8K]
+	Region 3: Memory at 00102000 (64-bit, non-prefetchable) [size=8K]
+	Region 5: [virtual] Memory at fffff83100000000 (32-bit, non-prefetchable)
+	[virtual] Expansion ROM at fffff83100000000 [disabled]
+	Capabilities: [40] Power Management version 2
+		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Kernel driver in use: sym53c8xx
+00: 00 10 21 00 57 01 30 02 01 00 00 01 10 40 80 00
+10: 01 09 00 00 04 00 10 00 00 00 00 00 04 20 10 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 10
+30: 00 00 00 00 40 00 00 00 00 00 00 00 00 01 11 12
+40: 01 00 02 06 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+0002:00:02.1 SCSI storage controller: LSI Logic / Symbios Logic 53c1010 66MHz  Ultra3 SCSI Adapter (rev 01)
+	Subsystem: LSI Logic / Symbios Logic LSI53C1000/1000R/1010R/1010-66 PCI to Ultra160 SCSI Controller
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+	Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 64 (4250ns min, 4500ns max), Cache Line Size: 64 bytes
+	Interrupt: pin B routed to IRQ 25
+	Region 0: I/O ports at 0a00 [size=256]
+	Region 1: Memory at 00104000 (64-bit, non-prefetchable) [size=8K]
+	Region 3: Memory at 00106000 (64-bit, non-prefetchable) [size=8K]
+	Region 5: [virtual] Memory at fffff83100000000 (32-bit, non-prefetchable)
+	[virtual] Expansion ROM at fffff83100000000 [disabled]
+	Capabilities: [40] Power Management version 2
+		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Kernel driver in use: sym53c8xx
+00: 00 10 21 00 57 01 30 02 01 00 00 01 10 40 80 00
+10: 01 0a 00 00 04 40 10 00 00 00 00 00 04 60 10 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 10
+30: 00 00 00 00 40 00 00 00 00 00 00 00 00 02 11 12
+40: 01 00 02 06 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+0003:00:02.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5704 Gigabit Ethernet
+	Subsystem: Oracle/SUN Device 1648
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 64 (16000ns min), Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 31
+	Region 0: Memory at 00200000 (64-bit, non-prefetchable) [size=2M]
+	Region 2: Memory at 00110000 (64-bit, non-prefetchable) [size=64K]
+	Region 4: [virtual] Memory at fffff83900000000 (32-bit, non-prefetchable)
+	Region 5: [virtual] Memory at fffff83900000000 (32-bit, non-prefetchable)
+	[virtual] Expansion ROM at fffff83900000000 [disabled]
+	Capabilities: [40] PCI-X non-bridge device
+		Command: DPERE- ERO+ RBC=512 OST=1
+		Status: Dev=ff:1f.0 64bit+ 133MHz+ SCD- USC- DC=simple DMMRBC=2048 DMOST=1 DMCRS=16 RSCEM- 266MHz- 533MHz-
+	Capabilities: [48] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+	Capabilities: [50] Vital Product Data
+		Not readable
+	Capabilities: [58] MSI: Enable- Count=1/8 Maskable- 64bit+
+		Address: 3080414020d22000  Data: 3000
+	Kernel driver in use: tg3
+00: e4 14 48 16 06 00 b0 02 00 00 00 02 10 40 80 00
+10: 04 00 20 00 00 00 00 00 04 00 11 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 8e 10 48 16
+30: 00 00 00 00 40 00 00 00 00 00 00 00 2d 01 40 00
+40: 07 48 02 00 f8 ff 43 04 01 50 02 40 00 20 00 00
+50: 03 58 00 00 08 04 10 40 05 00 86 00 00 20 d2 20
+60: 40 41 80 30 00 30 00 00 9a 02 03 20 00 00 3f 76
+70: 8e 02 00 00 c4 00 00 00 00 00 00 00 00 00 00 00
+80: e4 14 48 16 ea ec 23 13 36 00 00 00 fe 90 20 02
+90: 01 07 00 01 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+0003:00:02.1 Ethernet controller: Broadcom Corporation NetXtreme BCM5704 Gigabit Ethernet
+	Subsystem: Oracle/SUN Device 1648
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 64 (16000ns min), Cache Line Size: 64 bytes
+	Interrupt: pin B routed to IRQ 32
+	Region 0: Memory at 00400000 (64-bit, non-prefetchable) [size=2M]
+	Region 2: Memory at 00120000 (64-bit, non-prefetchable) [size=64K]
+	Region 4: [virtual] Memory at fffff83900000000 (32-bit, non-prefetchable)
+	Region 5: [virtual] Memory at fffff83900000000 (32-bit, non-prefetchable)
+	[virtual] Expansion ROM at fffff83900000000 [disabled]
+	Capabilities: [40] PCI-X non-bridge device
+		Command: DPERE- ERO+ RBC=512 OST=1
+		Status: Dev=ff:1f.1 64bit+ 133MHz+ SCD- USC- DC=simple DMMRBC=2048 DMOST=1 DMCRS=16 RSCEM- 266MHz- 533MHz-
+	Capabilities: [48] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+	Capabilities: [50] Vital Product Data
+		Not readable
+	Capabilities: [58] MSI: Enable- Count=1/8 Maskable- 64bit+
+		Address: 30001484410f4000  Data: 0500
+	Kernel driver in use: tg3
+00: e4 14 48 16 06 00 b0 02 00 00 00 02 10 40 80 00
+10: 04 00 40 00 00 00 00 00 04 00 12 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 8e 10 48 16
+30: 00 00 00 00 40 00 00 00 00 00 00 00 02 02 40 00
+40: 07 48 02 00 f9 ff 43 04 01 50 02 40 00 20 00 00
+50: 03 58 00 00 0c 01 12 02 05 00 86 00 00 40 0f 41
+60: 84 14 00 30 00 05 00 00 9a 02 03 20 00 00 3f 76
+70: 8e 02 00 00 c4 00 00 00 00 00 00 00 00 00 00 00
+80: e4 14 48 16 60 8b 36 00 36 00 00 00 fe 90 60 02
+90: 01 07 00 01 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 04 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
 
-commit 7ed9b592adee90a03e7212c097961909eda32f80
-Author: Yinghai Lu <yinghai@kernel.org>
-Date:   Tue Oct 20 11:36:53 2015 -0500
+-+-[0003:00]-+-02.0  Broadcom Corporation NetXtreme BCM5704 Gigabit Ethernet
+ |           \-02.1  Broadcom Corporation NetXtreme BCM5704 Gigabit Ethernet
+ +-[0002:00]-+-02.0  LSI Logic / Symbios Logic 53c1010 66MHz  Ultra3 SCSI Adapter
+ |           \-02.1  LSI Logic / Symbios Logic 53c1010 66MHz  Ultra3 SCSI Adapter
+ +-[0001:00]-+-06.0  ULi Electronics Inc. M7101 Power Management Controller [PMU]
+ |           +-07.0  ULi Electronics Inc. M1533/M1535/M1543 PCI to ISA Bridge [Aladdin IV/V/V+]
+ |           +-0a.0  ULi Electronics Inc. USB 1.1 Controller
+ |           \-0d.0  ULi Electronics Inc. M5229 IDE
+ \-[0000:00]-+-02.0  Broadcom Corporation NetXtreme BCM5704 Gigabit Ethernet
+             \-02.1  Broadcom Corporation NetXtreme BCM5704 Gigabit Ethernet
 
-    sparc/PCI: Add mem64 resource parsing for root bus
-    
-    David reported that a T5-8 sparc system failed to boot with:
-    
-      pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
-      pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
-      pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
-      pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
-    
-    Note that we don't know about a host bridge aperture that contains
-    BAR 15.  OF does report a MEM64 aperture, but before this patch,
-    pci_determine_mem_io_space() ignored it.
-    
-    Add support for host bridge apertures with 64-bit PCI addresses.  Also
-    set IORESOURCE_MEM_64 for PCI device and bridge resources in PCI 64-bit
-    memory space.
-    
-    Sparc doesn't actually print the device and bridge resources, but after
-    this patch, we should have the equivalent of this:
-    
-      pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
-      pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
-      pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
-      pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
-      pci 0000:00:01.0:   bridge window [mem 0x800100000000-0x8004afffffff 64bit pref]
-    
-    [bhelgaas: changelog, URL to David's report]
-    Fixes: d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
-    Link: http://lkml.kernel.org/r/5514391F.2030300@oracle.com
-    Reported-by: David Ahern <david.ahern@oracle.com>
-    Tested-by: David Ahern <david.ahern@oracle.com>
-    Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
-    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index b91d7f1..badf095 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -185,8 +185,10 @@ static unsigned long pci_parse_of_flags(u32 addr0)
- 
- 	if (addr0 & 0x02000000) {
- 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
--		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
-+		if (addr0 & 0x01000000)
-+			flags |= IORESOURCE_MEM_64
-+				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		if (addr0 & 0x40000000)
- 			flags |= IORESOURCE_PREFETCH
- 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
-@@ -655,6 +657,9 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 				pbm->io_space.start);
- 	pci_add_resource_offset(&resources, &pbm->mem_space,
- 				pbm->mem_space.start);
-+	if (pbm->mem64_space.flags)
-+		pci_add_resource_offset(&resources, &pbm->mem64_space,
-+					pbm->mem_space.start);
- 	pbm->busn.start = pbm->pci_first_busno;
- 	pbm->busn.end	= pbm->pci_last_busno;
- 	pbm->busn.flags	= IORESOURCE_BUS;
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 944a065..33524c1 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -406,6 +406,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 	}
- 
- 	num_pbm_ranges = i / sizeof(*pbm_ranges);
-+	memset(&pbm->mem64_space, 0, sizeof(struct resource));
- 
- 	for (i = 0; i < num_pbm_ranges; i++) {
- 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
-@@ -451,7 +452,12 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			break;
- 
- 		case 3:
--			/* XXX 64-bit MEM handling XXX */
-+			/* 64-bit MEM handling */
-+			pbm->mem64_space.start = a;
-+			pbm->mem64_space.end = a + size - 1UL;
-+			pbm->mem64_space.flags = IORESOURCE_MEM;
-+			saw_mem = 1;
-+			break;
- 
- 		default:
- 			break;
-@@ -465,15 +471,22 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 		prom_halt();
- 	}
- 
--	printk("%s: PCI IO[%llx] MEM[%llx]\n",
-+	printk("%s: PCI IO[%llx] MEM[%llx]",
- 	       pbm->name,
- 	       pbm->io_space.start,
- 	       pbm->mem_space.start);
-+	if (pbm->mem64_space.flags)
-+		printk(" MEM64[%llx]",
-+		       pbm->mem64_space.start);
-+	printk("\n");
- 
- 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
-+	pbm->mem64_space.name = pbm->name;
- 
- 	request_resource(&ioport_resource, &pbm->io_space);
- 	request_resource(&iomem_resource, &pbm->mem_space);
-+	if (pbm->mem64_space.flags)
-+		request_resource(&iomem_resource, &pbm->mem64_space);
- 
- 	pci_register_legacy_regions(&pbm->io_space,
- 				    &pbm->mem_space);
-diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
-index 75803c7..37222ca 100644
---- a/arch/sparc/kernel/pci_impl.h
-+++ b/arch/sparc/kernel/pci_impl.h
-@@ -97,6 +97,7 @@ struct pci_pbm_info {
- 	/* PBM I/O and Memory space resources. */
- 	struct resource			io_space;
- 	struct resource			mem_space;
-+	struct resource			mem64_space;
- 	struct resource			busn;
- 
- 	/* Base of PCI Config space, can be per-PBM or shared. */
+-- 
+Meelis Roos (mroos@linux.ee)
