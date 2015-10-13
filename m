@@ -1,59 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54785 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753167AbbJMR6b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 13 Oct 2015 13:58:31 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 21AF320805
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2015 17:58:30 +0000 (UTC)
+Received: from mail-wi0-f182.google.com (mail-wi0-f182.google.com [209.85.212.182])
+	(using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by mail.kernel.org (Postfix) with ESMTPSA id 095C6207FC
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2015 17:58:28 +0000 (UTC)
+Received: by wicgb1 with SMTP id gb1so199240541wic.1
+        for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2015 10:58:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <560F158C.4040303@caviumnetworks.com>
-References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
-	<1443825476-26880-4-git-send-email-ddaney.cavm@gmail.com>
-	<CAE9FiQWnE3ucbjPKuXm5qhTGx7bYOBqnNoSNOMaJa_tEf3Z4=Q@mail.gmail.com>
-	<560F158C.4040303@caviumnetworks.com>
-Date: Fri, 2 Oct 2015 20:00:20 -0700
-Message-ID: <CAE9FiQVr9E4w80ZSeTgKKwbGQ=NQiReSRnfoGF3D3+3NXj-G3Q@mail.gmail.com>
-Subject: Re: [PATCH v4 3/5] PCI: Handle IORESOURCE_PCI_FIXED when sizing and
- assigning resources.
-From: Yinghai Lu <yinghai@kernel.org>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: David Daney <ddaney.cavm@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
-	David Daney <david.daney@cavium.com>
+In-Reply-To: <1442363962-29805-8-git-send-email-rjui@broadcom.com>
+References: <1442363962-29805-1-git-send-email-rjui@broadcom.com>
+	<1442363962-29805-8-git-send-email-rjui@broadcom.com>
+Date: Tue, 13 Oct 2015 10:58:26 -0700
+Message-ID: <CAMAWPa_Hsuv+skzt3S6e9X_kWY=2JXAScbVEVOVTGmn81_bcFw@mail.gmail.com>
+Subject: Re: [PATCH 7/8] PCI: iproc: Add outbound mapping support
+From: Kevin Hilman <khilman@kernel.org>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Tyler Baker <tyler.baker@linaro.org>,
+	Mark Brown <broonie@kernel.org>,
+	Olof Johansson <olof@lixom.net>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 2, 2015 at 4:38 PM, David Daney <ddaney@caviumnetworks.com> wrote:
-> On 10/02/2015 04:14 PM, Yinghai Lu wrote:
->>
->> https://patchwork.kernel.org/patch/7304371/
->> [v6,06/53] PCI: Claim fixed resource during remove/rescan path
+On Tue, Sep 15, 2015 at 5:39 PM, Ray Jui <rjui@broadcom.com> wrote:
+> Certain iProc SoCs require the PCIe outbound mapping to be configured in
+> SW. This patch adds support for those chips
 >
->
-> This one is interesting, but I don't think it will work.
->
-> pci_claim_resource() calls pci_find_parent_resource(), which will fail in
-> important use cases.
->
-> It is perfectly legal for a bridge provisioned by EA to not specify any
-> resources.  In this case we must walk up the bus tree until we find
-> something that contains the device resource, and can thus be a parent.
->
-> That is a big part of what my patch is doing.
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
 
-looks we need another resource flags for EA in addition to
-FIXED as it could out side of bridge MMIO range.
+kernelci.org bot found a new build failure in linux-next[1] and it was
+bisected down to this patch, which landed in linux-next in the form of
+90e4032eeaf2 PCI: iproc: Add outbound mapping support.
 
->
-> As for the merits of assigning fixed resources from the FINAL fixup, rather
-> than in __pci_bus_assign_resources(), I am unsure.
+The build fails on arm[1] with multi_v7_defconfig and CONFIG_ARM_LPAE=y with:
 
-usually __pci_bus_assign_resources() is used for unassigned one. so
-I don't want it mixed with request resource there.
+drivers/built-in.o: In function `iproc_pcie_setup':
+:(.text+0x6d874): undefined reference to `__aeabi_uldivmod'
 
-Thanks
+Kevin
 
-Yinghai
+[1] http://storage.kernelci.org/next/next-20151013/arm-multi_v7_defconfig+CONFIG_ARM_LPAE=y/build.log
