@@ -1,96 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:33823 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752402AbbJGMvr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 08:51:47 -0400
-Received: by wicfx3 with SMTP id fx3so210897051wic.1
-        for <linux-pci@vger.kernel.org>; Wed, 07 Oct 2015 05:51:46 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: WingMan Kwok <w-kwok2@ti.com>
+To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<kishon@ti.com>, <rogerq@ti.com>, <m-karicheri2@ti.com>,
+	<bhelgaas@google.com>, <ssantosh@kernel.org>,
+	<linux@arm.linux.org.uk>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: WingMan Kwok <w-kwok2@ti.com>
+Subject: [PATCH 3/3] ARM: keystone: dts: add PCI serdes driver bindings
+Date: Tue, 13 Oct 2015 14:04:24 -0400
+Message-ID: <1444759464-32299-4-git-send-email-w-kwok2@ti.com>
+In-Reply-To: <1444759464-32299-1-git-send-email-w-kwok2@ti.com>
+References: <1444759464-32299-1-git-send-email-w-kwok2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20151006190121.GV21513@n2100.arm.linux.org.uk>
-References: <1444118168-13086-1-git-send-email-gabriel.fernandez@linaro.org>
- <1444118168-13086-2-git-send-email-gabriel.fernandez@linaro.org> <20151006190121.GV21513@n2100.arm.linux.org.uk>
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Date: Wed, 7 Oct 2015 14:51:06 +0200
-Message-ID: <CAG374jCugYayr7r+3jMH-EcqJPEOOqAzCztUSiuurW0edKnXfw@mail.gmail.com>
-Subject: Re: [PATCH v5 1/3] ARM: STi: Kconfig update for PCIe support
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Muralidharan Karicheri <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Russell
+Signed-off-by: WingMan Kwok <w-kwok2@ti.com>
+---
+ arch/arm/boot/dts/k2e.dtsi      |   24 ++++++++++++++++++++++++
+ arch/arm/boot/dts/keystone.dtsi |   25 +++++++++++++++++++++++++
+ 2 files changed, 49 insertions(+)
 
-no problem, i will fix it
+diff --git a/arch/arm/boot/dts/k2e.dtsi b/arch/arm/boot/dts/k2e.dtsi
+index 675fb8e..1ba47d8 100644
+--- a/arch/arm/boot/dts/k2e.dtsi
++++ b/arch/arm/boot/dts/k2e.dtsi
+@@ -86,6 +86,18 @@
+ 			gpio,syscon-dev = <&devctrl 0x240>;
+ 		};
+ 
++		pcie1_phy: pciephy@2326000 {
++			#phy-cells = <0>;
++			compatible = "ti,keystone-serdes-pcie";
++			reg = <0x02326000 0x4000>;
++			reg-names = "reg_serdes";
++			refclk-khz = <100000>;
++			link-rate-kbps = <5000000>;
++			phy-type = "pcie";
++			max-lanes = <2>;
++			status = "disabled";
++		};
++
+ 		pcie1: pcie@21020000 {
+ 			compatible = "ti,keystone-pcie","snps,dw-pcie";
+ 			clocks = <&clkpcie1>;
+@@ -130,6 +142,18 @@
+ 					<GIC_SPI 375 IRQ_TYPE_EDGE_RISING>,
+ 					<GIC_SPI 376 IRQ_TYPE_EDGE_RISING>;
+ 			};
++
++			/* PCIE phy */
++			serdeses {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				serdes@0 {
++					reg = <0>;
++					phys = <&pcie1_phy>;
++					status = "disabled";
++				};
++			};
++
+ 		};
+ 
+ 		mdio: mdio@24200f00 {
+diff --git a/arch/arm/boot/dts/keystone.dtsi b/arch/arm/boot/dts/keystone.dtsi
+index 72816d6..5312319 100644
+--- a/arch/arm/boot/dts/keystone.dtsi
++++ b/arch/arm/boot/dts/keystone.dtsi
+@@ -275,6 +275,19 @@
+ 			ti,syscon-dev = <&devctrl 0x2a0>;
+ 		};
+ 
++		pcie0_phy: pciephy@2320000 {
++			#phy-cells = <0>;
++			compatible = "ti,keystone-serdes-pcie";
++			reg = <0x02320000 0x4000>;
++			reg-names = "reg_serdes";
++			refclk-khz = <100000>;
++			link-rate-kbps = <5000000>;
++			init-firmware	= "k2_pcie_serdes_init.fw";
++			phy-type = "pcie";
++			max-lanes = <2>;
++			status = "disabled";
++		};
++
+ 		pcie0: pcie@21800000 {
+ 			compatible = "ti,keystone-pcie", "snps,dw-pcie";
+ 			clocks = <&clkpcie>;
+@@ -319,6 +332,18 @@
+ 					<GIC_SPI 28 IRQ_TYPE_EDGE_RISING>,
+ 					<GIC_SPI 29 IRQ_TYPE_EDGE_RISING>;
+ 			};
++
++			/* PCIE phy */
++			serdeses {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				serdes@0 {
++					reg = <0>;
++					phys = <&pcie0_phy>;
++					status = "disabled";
++				};
++			};
++
+ 		};
+ 	};
+ };
+-- 
+1.7.9.5
 
-Thanks for review.
-
-BR
-
-Gabriel
-
-On 6 October 2015 at 21:01, Russell King - ARM Linux
-<linux@arm.linux.org.uk> wrote:
-> On Tue, Oct 06, 2015 at 09:56:06AM +0200, Gabriel Fernandez wrote:
->> Update Kconfig:
->> - MIGHT_HAVE_PCI
->> - PCI_DOMAINS
->>
->> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
->> ---
->>  arch/arm/mach-sti/Kconfig | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/arch/arm/mach-sti/Kconfig b/arch/arm/mach-sti/Kconfig
->> index 125865d..5f99e93 100644
->> --- a/arch/arm/mach-sti/Kconfig
->> +++ b/arch/arm/mach-sti/Kconfig
->> @@ -9,6 +9,8 @@ menuconfig ARCH_STI
->>       select ARCH_HAS_RESET_CONTROLLER
->>       select HAVE_ARM_SCU if SMP
->>       select ARCH_REQUIRE_GPIOLIB
->> +     select PCI_DOMAINS if PCI
->> +     select MIGHT_HAVE_PCI
->>       select ARM_ERRATA_754322
->>       select ARM_ERRATA_764369 if SMP
->>       select ARM_ERRATA_775420
->
-> Please, alphabetical ordering for select statements.
->
-> --
-> FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-> according to speedtest.net.
