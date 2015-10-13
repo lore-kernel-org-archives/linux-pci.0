@@ -1,155 +1,226 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:43053 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752542AbbJZDRt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Oct 2015 23:17:49 -0400
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 26 Oct 2015 08:47:46 +0530
-Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id D4341E0054
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:47:50 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay05.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9Q3Hg4r1507658
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:47:42 +0530
-Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9Q3HfXN011045
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:47:41 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V10 00/12] VF EEH on Power8
-Date: Mon, 26 Oct 2015 11:15:50 +0800
-Message-Id: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 13 Oct 2015 19:33:27 +0100
+From: Mark Rutland <mark.rutland@arm.com>
+To: WingMan Kwok <w-kwok2@ti.com>
+Cc: robh+dt@kernel.org, pawel.moll@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, kishon@ti.com,
+	rogerq@ti.com, m-karicheri2@ti.com, bhelgaas@google.com,
+	ssantosh@kernel.org, linux@arm.linux.org.uk,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 1/3] phy: keystone: serdes driver for gbe 10gbe and pcie
+Message-ID: <20151013183327.GG24353@leverpostej>
+References: <1444759464-32299-1-git-send-email-w-kwok2@ti.com>
+ <1444759464-32299-2-git-send-email-w-kwok2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444759464-32299-2-git-send-email-w-kwok2@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset enables EEH on SRIOV VFs. The general idea is to create proper
-VF edev and VF PE and handle them properly.
+On Tue, Oct 13, 2015 at 02:04:22PM -0400, WingMan Kwok wrote:
+> On TI's Keystone platforms, several peripherals such as the
+> gbe ethernet switch, 10gbe ethernet switch and PCIe controller
+> require the use of a SerDes for converting SoC parallel data into
+> serialized data that can be output over a high-speed electrical
+> interface, and also converting high-speed serial input data
+> into parallel data that can be processed by the SoC.  The
+> SerDeses used by those peripherals, though they may be different,
+> are largely similar in functionality and setup.
+> 
+> This patch provides a SerDes phy driver implementation that can be
+> used by the above mentioned peripheral drivers to configure their
+> respective SerDeses.
+> 
+> Signed-off-by: WingMan Kwok <w-kwok2@ti.com>
+> ---
+>  Documentation/devicetree/bindings/phy/ti-phy.txt |  256 +++
+>  drivers/phy/Kconfig                              |    8 +
+>  drivers/phy/Makefile                             |    1 +
+>  drivers/phy/phy-keystone-serdes.c                | 2465 ++++++++++++++++++++++
+>  4 files changed, 2730 insertions(+)
+>  create mode 100644 drivers/phy/phy-keystone-serdes.c
+> 
+> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+> index 9cf9446..231716e 100644
+> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
+> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+> @@ -115,4 +115,260 @@ sata_phy: phy@4A096000 {
+>  	clock-names = "sysclk", "refclk";
+>  	syscon-pllreset = <&scm_conf 0x3fc>;
+>  	#phy-cells = <0>;
+> +
+> +TI Keystone SerDes PHY
+> +======================
+> +
+> +Required properties:
+> + - compatible: should be one of
+> +	* "ti,keystone-serdes-gbe"
+> +	* "ti,keystone-serdes-xgbe"
+> +	* "ti,keystone-serdes-pcie"
+> + - reg:
+> +	* base address and length of the SerDes register set
+> + - reg-names:
+> +	* "reg_serdes"
+> +		- name of the reg SerDes register set
 
-Different from the Bus PE, VF PE just contain one VF. This introduces the
-difference of EEH error handling on a VF PE. Generally, it has several
-differences.
+Just describe reg in terms of reg-names, and don't bother with the
+"reg_" prefix, we know this is a reg entry:
 
-First, the VF's removal and re-enumerate rely on its PF. VF has a tight
-relationship between its PF. This is not proper to enumerate a VF by usual
-scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
-set.
+- reg: a list of address and length pairs, corresponding to entires in
+  reg-names
 
-Second, the reset/restore of a VF is done in kernel space. FW is not aware of
-the VF, this means the usual reset function done in FW will not work. One of
-the patch will imitate the reset/restore function in kernel space.
+- reg-names: should contain:
+  * "serdes"
 
-Third, the VF may be removed during the PF's error_detected function. In this
-case, the original error_detected->slot_reset->resume sequence is not proper
-to those removed VFs, since they are re-created by PF in a fresh state. A flag
-in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
-track whether this device needs to be reset or not.
+> + - #phy-cells:
+> +	* From the generic phy bindings, must be 0;
+> + - max-lanes:
+> +	* Number of lanes in SerDes.
 
-This has been tested both on host and in guest on Power8 with latest kernel
-version.
+Why is this not "num-lanes"? Why do you even need this?
 
-v10:
-   * delete the last patch "powerpc/powernv: compound PE for VFs" since after
-     redesign of SRIOV, there is no compound PE for VFs now.
-   * add two patches which fix problems found during tests
-     powerpc/eeh: Support error recovery for VF PE                                 
-     powerpc/eeh: Handle hot removed VF when PF is EEH aware
-v9:
-   * split pcibios_bus_add_device() into a separate patch
-   * Bjorn acked the PCI part and agreed this patch set to be merged from ppc
-     tree
-   * rebased on mpe/linux.git next branch
-v8:
-   * fix on checking the return value of pnv_eeh_do_flr()
-   * introduced a weak function pcibios_bus_add_device() to create PE for VFs
-v7:
-   * fix compile error when PCI_IOV is not set
-v6:
-   * code / commit log refactor by Gavin
-v5:
-   * remove the compound field, iterate on Master VF PE instead
-   * some code refine on PCI config restore and reset on VF
-     the wait time for assert and deassert
-     PCI device address format
-     check on edev->pcie_cap and edev->aer_cap before access them
-v4:
-   * refine the change logs, comment and code style
-   * change pnv_pci_fixup_vf_eeh() to pnv_eeh_vf_final_fixup() and remove the
-     CONFIG_PCI_IOV macro
-   * reorder patch 5/6 to make the logic more reasonable
-   * remove remove_dev_pci_data()
-   * remove the EEH_DEV_VF flag, use edev->physfn to identify a VF EEH DEV and
-     remove related CONFIG_PCI_IOV macro
-   * add the option for VF reset
-   * fix the pnv_eeh_cfg_blocked() logic
-   * replace pnv_pci_cfg_{read,write} with eeh_ops->{read,write}_config in
-     pnv_eeh_vf_restore_config()
-   * rename pnv_eeh_vf_restore_config() to pnv_eeh_restore_vf_config()
-   * rename pnv_pci_fixup_vf_caps() to pnv_pci_vf_header_fixup() and move it
-     to arch/powerpc/platforms/powernv/pci.c
-   * add a field compound in pnv_ioda_pe to link compound PEs
-   * handle compound PE for VF PEs
-v3:
-   * add back vf_index in pci_dn to track the VF's index
-   * rename ppdev in eeh_dev to physfn for consistency
-   * move edev->physfn assignment before dev->dev.archdata.edev is set
-   * move pnv_pci_fixup_vf_eeh() and pnv_pci_fixup_vf_caps() to eeh-powernv.c
-   * more clear and detail in commit log and comment in code
-   * merge eeh_rmv_virt_device() with eeh_rmv_device()
-   * move the cfg_blocked check logic from pnv_eeh_read/write_config() to
-     pnv_eeh_cfg_blocked()
-   * move the vf reset/restore logic into its own patch, two patches are
-     created.
-     powerpc/powernv: Support PCI config restore for VFs
-     powerpc/powernv: Support EEH reset for VFs
-   * simplify the vf reset logic
-v2:
-   * add prefix pci_iov_ to virtfn_add/virtfn_remove
-   * use EEH_DEV_VF as a flag for a VF's eeh_dev
-   * use eeh_dev instead of edev in change log
-   * remove vf_index in eeh_dev, calculate it from pdn->busno and devfn
-   * do eeh_add_device_late() and eeh_sysfs_add_device() both after pci_dev is
-     well initialized
-   * do FLR to reset a VF PE
-   * imitate the restore function in FW for VF
-   * remove the reverse order patch, since it is still under discussion
+> + - phy-type: should be one of
+> +	* "sgmii"
+> +	* "xge"
+> +	* "pcie"
+> +
+> +Optional properties:
+> + - syscon-peripheral:
+> +	* Handle to the subsystem register region of the peripheral
+> +	  inside which the SerDes exists.
+> + - syscon-link:
+> +	* Handle to the Link register region of the peripheral inside
+> +	  which the SerDes exists.  Example: it is the PCSR register
+> +	  region in the case of 10gbe.
+> + - refclk-khz:
+> +	* Reference clock rate of SerDes in kHz.
 
-Gavin Shan (1):
-  powerpc/eeh: Don't block PCI config on resetting VF PE
+Surely this should be an actual clock?
 
-Wei Yang (11):
-  PCI/IOV: Rename and export virtfn_add/virtfn_remove
-  PCI: Add pcibios_bus_add_device() weak function
-  powerpc/pci: Cache VF index in pci_dn
-  powerpc/pci: Remove VFs prior to PF
-  powerpc/eeh: Cache only BARs, not windows or IOV BARs
-  powerpc/powernv: EEH device for VF
-  powerpc/eeh: Create PE for VFs
-  powerpc/powernv: Support EEH reset for VF PE
-  powerpc/powernv: Support PCI config restore for VFs
-  powerpc/eeh: Support error recovery for VF PE
-  powerpc/eeh: Handle hot removed VF when PF is EEH aware
+> + - link-rate-kbps:
+> +	* SerDes link rate to be configured, in kbps.
 
- arch/powerpc/include/asm/eeh.h               |  10 ++
- arch/powerpc/include/asm/pci-bridge.h        |   2 +
- arch/powerpc/kernel/eeh.c                    |  17 ++-
- arch/powerpc/kernel/eeh_cache.c              |   6 +-
- arch/powerpc/kernel/eeh_dev.c                |   1 +
- arch/powerpc/kernel/eeh_driver.c             | 130 ++++++++++++----
- arch/powerpc/kernel/eeh_pe.c                 |  13 +-
- arch/powerpc/kernel/pci-hotplug.c            |   2 +-
- arch/powerpc/kernel/pci_dn.c                 |  16 +-
- arch/powerpc/platforms/powernv/eeh-powernv.c | 220 ++++++++++++++++++++++++++-
- arch/powerpc/platforms/powernv/pci.c         |  18 +++
- drivers/pci/bus.c                            |   3 +
- drivers/pci/iov.c                            |  10 +-
- include/linux/pci.h                          |   8 +
- 14 files changed, 408 insertions(+), 48 deletions(-)
+Why does this need to be in the binding? How does one derive the correct
+value?
 
--- 
-2.5.0
+> + - control-rate:
+> +	* Lane control rate
+> +		0: full rate
+> +		1: half rate
+> +		2: quarter rate
 
+Likewise on both points.
+
+> + - rx-start:
+> +	* Initial lane rx equalizer attenuation and boost configurations.
+> +	* Must be array of 2 integers.
+> + - rx-force:
+> +	* Forced lane rx equalizer attenuation and boost configurations.
+> +	* Must be array of 2 integers.
+> + - tx-coeff:
+> +	* Lane c1, c2, cm, attenuation and regulator outpust voltage
+> +	  configurations.
+> +	* Must be array of 5 integers.
+
+s/outpust/output/
+
+> + - debug:
+> +	* enable more debug messages.
+
+NAK.
+
+This is a driver option, and belongs on the kernel command line. It does
+not describe the hardware, and does not belong in the DT.
+
+> +Example for Keystone K2E GBE:
+> +-----------------------------
+> +
+> +gbe_serdes0: gbe_serdes@232a000 {
+> +	#phy-cells		= <0>;
+> +	compatible		= "ti,keystone-serdes-gbe";
+> +	reg			= <0x0232a000 0x2000>;
+> +	reg-names		= "reg_serdes";
+> +	refclk-khz		= <156250>;
+> +	link-rate-kbps		= <1250000>;
+> +	phy-type		= "sgmii";
+> +	max-lanes		= <4>;
+> +	lane0 {
+> +		control-rate	= <2>; /* quart */
+> +		rx-start	= <7 5>;
+> +		rx-force	= <1 1>;
+> +		tx-coeff	= <0 0 0 12 4>;
+> +		       /* c1 c2 cm att vreg */
+> +	};
+> +	lane1 {
+> +		control-rate	= <2>; /* quart */
+> +		rx-start	= <7 5>;
+> +		rx-force	= <1 1>;
+> +		tx-coeff	= <0 0 0 12 4>;
+> +		       /* c1 c2 cm att vreg */
+> +	};
+
+The binding didn't describe the sub-nodes, and which properties belong
+to them.
+
+Don't use magic names. Define a new address space, and use reg to
+identify lanes.
+
+> +	if (of_find_property(np, "disable", NULL))
+> +		lc->enable = 0;
+> +	else
+> +		lc->enable = 1;
+
+This was not described in the binding, and uses the wrong accessor. What
+is this for?
+
+> +	if (of_find_property(np, "loopback", NULL))
+> +		lc->loopback = 1;
+> +	else
+> +		lc->loopback = 0;
+
+Likewise.
+
+> +	if (of_property_read_bool(np, "syscon-peripheral")) {
+> +		sc->peripheral_regmap =
+> +			syscon_regmap_lookup_by_phandle(np,
+> +							"syscon-peripheral");
+
+Can't you always call syscon_regmap_lookup_by_phandle, then check the
+return value to see if the property existed?
+
+You clearly know that of_property_read_bool exists, why did you not use
+it to read properties which are boolean?
+
+> +	if (of_property_read_bool(np, "syscon-link")) {
+> +		sc->pcsr_regmap =
+> +			syscon_regmap_lookup_by_phandle(np, "syscon-link");
+
+Likewise.
+
+> +	sc->debug = of_property_read_bool(np, "debug");
+
+As stated above, NAK for this property.
+
+> +
+> +	if (of_find_property(np, "rx-force-enable", NULL))
+> +		sc->rx_force_enable = 1;
+> +	else
+> +		sc->rx_force_enable = 0;
+
+Not in the binding, and uses the wrong accessor.
+
+> +
+> +	for (i = 0; i < sc->lanes; i++) {
+> +		sprintf(&name[4], "%d", i);
+> +		lp = of_find_node_by_name(np, name);
+> +		if (lp) {
+> +			if (kserdes_get_lane_bindings(dev, lp, &sc->lane[i]))
+> +				return -EINVAL;
+> +		}
+> +	}
+
+As above, use reg, not magic names.
+
+Thanks,
+Mark.
