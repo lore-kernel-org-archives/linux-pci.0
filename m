@@ -1,193 +1,521 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f182.google.com ([209.85.223.182]:34342 "EHLO
-	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751720AbbJBWiH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 18:38:07 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v4 5/5] PCI: Handle Enhanced Allocation (EA) capability for bridges
-Date: Fri,  2 Oct 2015 15:37:56 -0700
-Message-Id: <1443825476-26880-6-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:11960 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665AbbJMGdq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Oct 2015 02:33:46 -0400
+Message-ID: <561CA5AF.2080300@hisilicon.com>
+Date: Tue, 13 Oct 2015 14:33:19 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Kefeng Wang <wangkefeng.wang@huawei.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon
+ SoC Hip05
+References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com> <1444445957-239522-5-git-send-email-wangzhou1@hisilicon.com> <20151012213545.GA17479@localhost>
+In-Reply-To: <20151012213545.GA17479@localhost>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On 2015/10/13 5:35, Bjorn Helgaas wrote:
+> [+cc Arnd, Rob]
+> 
+> Hi Zhou,
+> 
+> I have a few minor comments and two questions: one about the fact
+> all the config accesses are 32 bits, and another about the use of the
+> "msi-parent" node.
+> 
+> On Sat, Oct 10, 2015 at 10:59:15AM +0800, Zhou Wang wrote:
+>> This patch adds PCIe host support for HiSilicon SoC Hip05.
+>>
+>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>> Signed-off-by: liudongdong <liudongdong3@huawei.com>
+>> Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+>> Signed-off-by: qiuzhenfa <qiuzhenfa@hisilicon.com>
+> 
+> This is a pretty long Signed-off-by chain.  If each of these people
+> created part of this patch, that's fine.  I'm just checking whether
+> that's the case, or whether some of these should be Reviewed-by,
+> Suggested-by, etc., per Documentation/SubmittingPatches.
+>
 
-PCI bridges may have their properties be specified via EA entries.
+Hi Bjorn,
 
-Extend the EA parser to extract the bridge resources, and modify
-pci_read_bridge_{io,mmio,mmio_pref}() to use resources previously
-obtained via EA.
+Thanks for reminding this. I had merged patches from those colleagues,
+so just add Signed-off-by from them.
 
-Save the offset to the EA capability in struct pci_dev, and use it to
-easily find the EA bridge subordinate and secondary bus numbers.
+>> ---
+>>  drivers/pci/host/Kconfig     |   8 ++
+>>  drivers/pci/host/Makefile    |   1 +
+>>  drivers/pci/host/pcie-hisi.c | 320 +++++++++++++++++++++++++++++++++++++++++++
+>>  3 files changed, 329 insertions(+)
+>>  create mode 100644 drivers/pci/host/pcie-hisi.c
+>>
+>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>> index d5e58ba..ae873be 100644
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
+>> @@ -145,4 +145,12 @@ config PCIE_IPROC_BCMA
+>>  	  Say Y here if you want to use the Broadcom iProc PCIe controller
+>>  	  through the BCMA bus interface
+>>  
+>> +config PCI_HISI
+>> +	depends on OF && ARM64
+>> +	bool "HiSilicon SoC HIP05 PCIe controller"
+>> +	select PCIEPORTBUS
+>> +	select PCIE_DW
+>> +	help
+>> +	  Say Y here if you want PCIe controller support on HiSilicon HIP05 SoC
+>> +
+>>  endmenu
+>> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+>> index 140d66f..ea1dbf2 100644
+>> --- a/drivers/pci/host/Makefile
+>> +++ b/drivers/pci/host/Makefile
+>> @@ -17,3 +17,4 @@ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+>>  obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+>>  obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+>>  obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+>> +obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
+>> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+>> new file mode 100644
+>> index 0000000..26aa0d9
+>> --- /dev/null
+>> +++ b/drivers/pci/host/pcie-hisi.c
+>> @@ -0,0 +1,320 @@
+>> +/*
+>> + * PCIe host controller driver for HiSilicon Hip05 SoC
+>> + *
+>> + * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
+>> + *
+>> + * Author: Zhou Wang <wangzhou1@hisilicon.com>
+>> + *         Dacai Zhu <zhudacai@hisilicon.com>
+>> + *
+>> + * This program is free software; you can redistribute it and/or modify
+>> + * it under the terms of the GNU General Public License version 2 as
+>> + * published by the Free Software Foundation.
+>> + */
+>> +#include <linux/interrupt.h>
+>> +#include <linux/irqdomain.h>
+>> +#include <linux/module.h>
+>> +#include <linux/mfd/syscon.h>
+>> +#include <linux/of.h>
+>> +#include <linux/of_address.h>
+>> +#include <linux/of_pci.h>
+>> +#include <linux/platform_device.h>
+>> +#include <linux/regmap.h>
+>> +
+>> +#include "pcie-designware.h"
+>> +
+>> +#define PCIE_SUBCTRL_MODE_REG                           0x2800
+>> +#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
+>> +#define PCIE_SLV_DBI_MODE                               0x0
+>> +#define PCIE_SLV_SYSCTRL_MODE                           0x1
+>> +#define PCIE_SLV_CONTENT_MODE                           0x2
+>> +#define PCIE_SLV_MSI_ASID                               0x10
+>> +#define PCIE_LTSSM_LINKUP_STATE                         0x11
+>> +#define PCIE_LTSSM_STATE_MASK                           0x3F
+>> +#define PCIE_MSI_ASID_ENABLE                            (0x1 << 12)
+>> +#define PCIE_MSI_ASID_VALUE                             (0x1 << 16)
+>> +#define PCIE_MSI_TRANS_ENABLE                           (0x1 << 12)
+>> +#define PCIE_MSI_TRANS_REG                              0x1c8
+>> +#define PCIE_MSI_LOW_ADDRESS                            0x1b4
+>> +#define PCIE_MSI_HIGH_ADDRESS                           0x1c4
+>> +#define PCIE_GITS_TRANSLATER                            0x10040
+> 
+> "TRANSLATOR" is the more common spelling.  But if you're matching
+> hardware documentation, you should follow that.
+>
 
-When assigning the bridge resources a couple of changes are required
-so that the EA obtained IORESOURCE_PCI_FIXED are not resized, and
-correctly linked into the resource tree.
+This is a copy from linux/include/linux/irqchip/arm-gic-v3.h:
+#define GITS_TRANSLATER 0X10040
+It indicates the offset of ITS's GITS_TRANSLATER register.
 
-1) In pbus_size_mem() do not attempt to resize the bridge resources if
-   they are marked as IORESOURCE_PCI_FIXED.
+>> +#define PCIE_SYS_CTRL20_REG                             0x20
+>> +#define PCIE_RD_TAB_SEL                                 BIT(31)
+>> +#define PCIE_RD_TAB_EN                                  BIT(30)
+>> +
+>> +#define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
+>> +
+>> +struct hisi_pcie {
+>> +	struct regmap *subctrl;
+>> +	void __iomem *reg_base;
+>> +	u32 port_id;
+>> +	struct pcie_port pp;
+>> +};
+>> +
+>> +static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
+>> +					u32 val, u32 reg)
+>> +{
+>> +	writel(val, pcie->reg_base + reg);
+>> +}
+>> +
+>> +static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
+>> +{
+>> +	return readl(pcie->reg_base + reg);
+>> +}
+>> +
+>> +/*
+>> + * Change mode to indicate the same reg_base to base of PCIe host configure
+>> + * registers, base of RC configure space or base of vmid/asid context table
+> 
+> It's fine to use lower-case in the C code, but in English text, it
+> reads a little better to capitalize acronyms like VMID, ASID, APB, AR,
+> AW, etc.  
+>
 
-2) In pci_bus_alloc_from_region()for IORESOURCE_PCI_FIXED resources, just
-   try to request the resource as is, without attempting to resize it.
+Thanks for reminding this, will modify this next version.
 
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/pci/bus.c       |  7 +++++++
- drivers/pci/pci.c       | 13 +++++++++++++
- drivers/pci/probe.c     | 31 +++++++++++++++++++++++++++++--
- drivers/pci/setup-bus.c |  3 +++
- include/linux/pci.h     |  1 +
- 5 files changed, 53 insertions(+), 2 deletions(-)
+>> + */
+>> +static void hisi_pcie_change_apb_mode(struct hisi_pcie *pcie, u32 mode)
+>> +{
+>> +	u32 val;
+>> +	u32 bit_mask;
+>> +	u32 bit_shift;
+>> +	u32 port_id = pcie->port_id;
+>> +	u32 reg = PCIE_SUBCTRL_MODE_REG + 0x100 * port_id;
+>> +
+>> +	if ((port_id == 1) || (port_id == 2)) {
+>> +		bit_mask = 0xc;
+>> +		bit_shift = 0x2;
+>> +	} else {
+>> +		bit_mask = 0x6;
+>> +		bit_shift = 0x1;
+>> +	}
+>> +
+>> +	regmap_update_bits(pcie->subctrl, reg, bit_mask, mode << bit_shift);
+>> +}
+>> +
+>> +/* Configure vmid/asid table in PCIe host */
+>> +static void hisi_pcie_config_context(struct hisi_pcie *pcie)
+>> +{
+>> +	int i;
+>> +	u32 val;
+>> +
+>> +	/* enable to clean vmid and asid tables though apb bus */
+>> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
+>> +
+>> +	val = hisi_pcie_apb_readl(pcie, PCIE_SYS_CTRL20_REG);
+>> +	/* enable ar channel */
+>> +	val |= PCIE_RD_TAB_SEL | PCIE_RD_TAB_EN;
+>> +	hisi_pcie_apb_writel(pcie, val, PCIE_SYS_CTRL20_REG);
+>> +
+>> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
+>> +
+>> +	/*
+>> +	 * init vmid and asid tables for all PCIe devices as 0
+> 
+> s/as 0/to 0./
+>
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 6fbd3f2..0556b33 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -153,6 +153,13 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
- 		    !(res->flags & IORESOURCE_PREFETCH))
- 			continue;
- 
-+		if (res->flags & IORESOURCE_PCI_FIXED) {
-+			/* Cannot change it, just try to claim it. */
-+			if (request_resource(r, res))
-+				continue;
-+			return 0;
-+		}
-+
- 		avail = *r;
- 		pci_clip_resource_to_region(bus, &avail, region);
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6750edf..c857632 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2183,6 +2183,17 @@ static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei, u8 prop
- 		 (prop == PCI_EA_P_VIRT_MEM || prop == PCI_EA_P_VIRT_MEM_PREFETCH))
- 		return &dev->resource[PCI_IOV_RESOURCES + bei - PCI_EA_BEI_VF_BAR0];
- #endif
-+	else if (bei == PCI_EA_BEI_BRIDGE)
-+		switch (prop) {
-+		case PCI_EA_P_BRIDGE_IO:
-+			return &dev->resource[PCI_BRIDGE_RESOURCES + 0];
-+		case PCI_EA_P_BRIDGE_MEM:
-+			return &dev->resource[PCI_BRIDGE_RESOURCES + 1];
-+		case PCI_EA_P_BRIDGE_MEM_PREFETCH:
-+			return &dev->resource[PCI_BRIDGE_RESOURCES + 2];
-+		default:
-+			return NULL;
-+		}
- 	else if (bei == PCI_EA_BEI_ROM)
- 		return &dev->resource[PCI_ROM_RESOURCE];
- 	else
-@@ -2321,6 +2332,8 @@ void pci_ea_init(struct pci_dev *dev)
- 	if (!ea)
- 		return;
- 
-+	dev->ea_cap = ea;
-+
- 	/* determine the number of entries */
- 	pci_bus_read_config_byte(dev->bus, dev->devfn, ea + PCI_EA_NUM_ENT,
- 					&num_ent);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 4293eec..e4bcb0b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -348,6 +348,10 @@ static void pci_read_bridge_io(struct pci_bus *child)
- 	}
- 
- 	res = child->resource[0];
-+	if (res->flags & IORESOURCE_PCI_FIXED) {
-+		dev_dbg(&dev->dev, "  bridge window %pR (fixed)\n", res);
-+		return;
-+	}
- 	pci_read_config_byte(dev, PCI_IO_BASE, &io_base_lo);
- 	pci_read_config_byte(dev, PCI_IO_LIMIT, &io_limit_lo);
- 	base = (io_base_lo & io_mask) << 8;
-@@ -380,6 +384,10 @@ static void pci_read_bridge_mmio(struct pci_bus *child)
- 	struct resource *res;
- 
- 	res = child->resource[1];
-+	if (res->flags & IORESOURCE_PCI_FIXED) {
-+		dev_dbg(&dev->dev, "  bridge window %pR (fixed)\n", res);
-+		return;
-+	}
- 	pci_read_config_word(dev, PCI_MEMORY_BASE, &mem_base_lo);
- 	pci_read_config_word(dev, PCI_MEMORY_LIMIT, &mem_limit_lo);
- 	base = ((unsigned long) mem_base_lo & PCI_MEMORY_RANGE_MASK) << 16;
-@@ -403,6 +411,10 @@ static void pci_read_bridge_mmio_pref(struct pci_bus *child)
- 	struct resource *res;
- 
- 	res = child->resource[2];
-+	if (res->flags & IORESOURCE_PCI_FIXED) {
-+		dev_dbg(&dev->dev, "  bridge window %pR (fixed)\n", res);
-+		return;
-+	}
- 	pci_read_config_word(dev, PCI_PREF_MEMORY_BASE, &mem_base_lo);
- 	pci_read_config_word(dev, PCI_PREF_MEMORY_LIMIT, &mem_limit_lo);
- 	base64 = (mem_base_lo & PCI_PREF_RANGE_MASK) << 16;
-@@ -801,8 +813,23 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 
- 	pci_read_config_dword(dev, PCI_PRIMARY_BUS, &buses);
- 	primary = buses & 0xFF;
--	secondary = (buses >> 8) & 0xFF;
--	subordinate = (buses >> 16) & 0xFF;
-+	if (dev->ea_cap) {
-+		u32 dw1;
-+
-+		pci_read_config_dword(dev, dev->ea_cap + 4, &dw1);
-+		if (dw1 & 0xFF)
-+			secondary = dw1 & 0xFF;
-+		else
-+			secondary = (buses >> 8) & 0xFF;
-+
-+		if ((dw1 >> 8) & 0xFF)
-+			subordinate = (dw1 >> 8) & 0xFF;
-+		else
-+			subordinate = (buses >> 16) & 0xFF;
-+	} else {
-+		secondary = (buses >> 8) & 0xFF;
-+		subordinate = (buses >> 16) & 0xFF;
-+	}
- 
- 	dev_dbg(&dev->dev, "scanning [bus %02x-%02x] behind bridge, pass %d\n",
- 		secondary, subordinate, pass);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 8f9ed9b..8b8cc32 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1086,6 +1086,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		}
- 	}
- 
-+	if (b_res->flags & IORESOURCE_PCI_FIXED)
-+		return 0;
-+
- 	min_align = calculate_mem_align(aligns, max_order);
- 	min_align = max(min_align, window_alignment(bus, b_res->flags));
- 	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b505b50..a8a177c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -384,6 +384,7 @@ struct pci_dev {
- 	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
- 	size_t romlen; /* Length of ROM if it's not from the BAR */
- 	char *driver_override; /* Driver name to force a match */
-+	u8		ea_cap; /* Enhanced Allocation capability offset */
- };
- 
- static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
--- 
-1.9.1
+Thanks.
+
+>> +	 * vmid table: 0 ~ 0x3ff, asid table: 0x400 ~ 0x7ff
+>> +	 */
+>> +	for (i = 0; i < 0x800; i++)
+>> +		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
+>> +
+>> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
+>> +
+>> +	/* enable aw channel */
+>> +	val &= (~PCIE_RD_TAB_SEL);
+>> +	val |= PCIE_RD_TAB_EN;
+>> +	hisi_pcie_apb_writel(pcie, val, PCIE_SYS_CTRL20_REG);
+>> +
+>> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
+>> +
+>> +	for (i = 0; i < 0x800; i++)
+>> +		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
+>> +
+>> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
+>> +
+>> +	val = hisi_pcie_apb_readl(pcie, PCIE_SYS_CTRL20_REG);
+>> +	/* disable ar channel */
+>> +	val |= PCIE_RD_TAB_SEL;
+>> +	val &= (~PCIE_RD_TAB_EN);
+>> +	hisi_pcie_apb_writel(pcie, val, PCIE_SYS_CTRL20_REG);
+>> +	/* disable aw channel */
+>> +	val &= ((~PCIE_RD_TAB_SEL) & (~PCIE_RD_TAB_EN));
+>> +	hisi_pcie_apb_writel(pcie, val, PCIE_SYS_CTRL20_REG);
+>> +
+>> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
+>> +}
+>> +
+>> +static int hisi_pcie_link_up(struct pcie_port *pp)
+>> +{
+>> +	u32 val;
+>> +	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
+>> +
+>> +	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
+>> +		    0x100 * hisi_pcie->port_id, &val);
+>> +
+>> +	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
+>> +}
+>> +
+>> +static
+>> +int hisi_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
+> 
+> "static int hisi_..." as in other cases (wrap before "struct
+> msi_controller" instead of before "int hisi_pcie_msi_host_init").
+>
+
+Thanks, will do like this.
+
+>> +{
+>> +	u64 addr;
+>> +	struct device_node *msi_node;
+>> +	struct resource res;
+>> +	struct device_node *np = pp->dev->of_node;
+>> +	struct hisi_pcie *pcie = to_hisi_pcie(pp);
+>> +
+>> +	msi_node = of_parse_phandle(np, "msi-parent", 0);
+>> +	if (!msi_node) {
+>> +		dev_err(pp->dev, "failed to find msi-parent\n");
+>> +		return -EINVAL;
+>> +	}
+>> +	of_address_to_resource(msi_node, 0, &res);
+> 
+> Does this use the "msi-parent" node in the same way as other drivers
+> do?  I'm sure there must be other places where we extract struct
+> resource information from an "msi-parent" node, but I don't see them.
+> 
+> I'm trying to verify that this isn't some kind of incompatible
+> extension of the "msi-parent" property.  I cc'd Arnd and Rob (DT
+> experts).
+>
+
+Here I just want to get the address of related ITS' GITS_TRANSLATER register,
+HiSilicon Hip05 PCIe controller need know this address to send MSI interrupt.
+I think other drivers need not to do this.
+
+struct resource above is for ITS base address which is extracted in GIC ITS
+driver also: drivers/irqchip/irq-gic-v3-its.c
+
+>> +	addr = res.start + PCIE_GITS_TRANSLATER;
+>> +
+>> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
+>> +
+>> +	hisi_pcie_apb_writel(pcie, addr & 0xffffffff, PCIE_MSI_LOW_ADDRESS);
+>> +	hisi_pcie_apb_writel(pcie, addr >> 32, PCIE_MSI_HIGH_ADDRESS);
+>> +	hisi_pcie_apb_writel(pcie, PCIE_MSI_ASID_ENABLE | PCIE_MSI_ASID_VALUE,
+>> +			     PCIE_SLV_MSI_ASID);
+>> +	hisi_pcie_apb_writel(pcie, PCIE_MSI_TRANS_ENABLE, PCIE_MSI_TRANS_REG);
+>> +
+>> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int  size,
+>> +				u32 val)
+>> +{
+>> +	u32 reg_val;
+>> +	u32 reg;
+>> +	struct hisi_pcie *pcie = to_hisi_pcie(pp);
+>> +	void *walker = &reg_val;
+>> +
+>> +	walker += (where & 0x3);
+>> +	reg = where & ~0x3;
+>> +	if (size == 4)
+>> +		hisi_pcie_apb_writel(pcie, val, reg);
+>> +	else if (size == 2) {
+>> +		reg_val = hisi_pcie_apb_readl(pcie, reg);
+>> +		*(u16 __force *) walker = val;
+>> +		hisi_pcie_apb_writel(pcie, reg_val, reg);
+>> +	} else if (size == 1) {
+>> +		reg_val = hisi_pcie_apb_readl(pcie, reg);
+>> +		*(u8 __force *) walker = val;
+>> +		hisi_pcie_apb_writel(pcie, reg_val, reg);
+> 
+> This has the read/modify/write problem pointed out by Russell King:
+> http://lkml.kernel.org/r/E1Zenfg-0004d5-Dg@rmk-PC.arm.linux.org.uk
+> 
+> Is the HiSilicon hardware limited to 32-bit config accesses?  If so,
+> that seems like a hardware implementation defect, and this needs at
+> least a comment in the code.  When we figure out a good mechanism,
+> we'll want to taint or warn about this hardware limitation somehow.
+>
+
+For config accesses of PCIe host, Hip05 PCIe only support 32-bit access
+that is why we need a private callback here.
+
+I will add a comment here in next version.
+
+>> +	} else
+>> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+>> +
+>> +	return PCIBIOS_SUCCESSFUL;
+>> +}
+>> +
+>> +static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
+>> +			      u32 *val)
+>> +{
+>> +	u32 reg;
+>> +	u32 reg_val;
+>> +	struct hisi_pcie *pcie = to_hisi_pcie(pp);
+>> +	void *walker = &reg_val;
+>> +
+>> +	walker += (where & 0x3);
+>> +	reg = where & ~0x3;
+>> +	reg_val = hisi_pcie_apb_readl(pcie, reg);
+>> +
+>> +	if (size == 1)
+>> +		*val = *(u8 __force *) walker;
+>> +	else if (size == 2)
+>> +		*val = *(u16 __force *) walker;
+>> +	else if (size != 4)
+>> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+>> +
+>> +	return PCIBIOS_SUCCESSFUL;
+>> +}
+>> +
+>> +static struct pcie_host_ops hisi_pcie_host_ops = {
+>> +	.link_up = hisi_pcie_link_up,
+>> +	.msi_host_init = hisi_pcie_msi_host_init,
+>> +	.wr_own_conf = hisi_pcie_cfg_write,
+>> +	.rd_own_conf = hisi_pcie_cfg_read,
+> 
+> Under the rule of "do it the same way unless there's a reason to be
+> different," please put the hisi_pcie_cfg_read() definition before the
+> hisi_pcie_cfg_write() definition, and change the order of these
+> function pointers similarly.  That matches the order in the struct
+> pcie_host_ops definition and in other drivers.
+> 
+
+Thanks for pointing this, will do like this.
+
+>> +};
+>> +
+>> +static int __init hisi_add_pcie_port(struct pcie_port *pp,
+>> +				     struct platform_device *pdev)
+>> +{
+>> +	int ret;
+>> +	u32 port_id;
+>> +	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
+>> +
+>> +	if (of_property_read_u32(pdev->dev.of_node, "port-id", &port_id)) {
+>> +		dev_err(&pdev->dev, "failed to read port-id\n");
+>> +		return -EINVAL;
+>> +	}
+>> +	if (port_id > 3) {
+>> +		dev_err(&pdev->dev, "Invalid port-id: %d\n", port_id);
+>> +		return -EINVAL;
+>> +	}
+>> +	hisi_pcie->port_id = port_id;
+>> +
+>> +	pp->ops = &hisi_pcie_host_ops;
+>> +
+>> +	hisi_pcie_config_context(hisi_pcie);
+>> +
+>> +	ret = dw_pcie_host_init(pp);
+>> +	if (ret) {
+>> +		dev_err(&pdev->dev, "failed to initialize host\n");
+>> +		return ret;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static int __init hisi_pcie_probe(struct platform_device *pdev)
+>> +{
+>> +	struct hisi_pcie *hisi_pcie;
+>> +	struct pcie_port *pp;
+>> +	struct resource *reg;
+>> +	int ret;
+>> +
+>> +	hisi_pcie = devm_kzalloc(&pdev->dev, sizeof(*hisi_pcie), GFP_KERNEL);
+>> +	if (!hisi_pcie)
+>> +		return -ENOMEM;
+>> +
+>> +	pp = &hisi_pcie->pp;
+>> +	pp->dev = &pdev->dev;
+>> +
+>> +	hisi_pcie->subctrl =
+>> +	syscon_regmap_lookup_by_compatible("hisilicon,pcie-sas-subctrl");
+> 
+> Indent a tab here.
+
+OK, will do like this.
+
+> 
+>> +	if (IS_ERR(hisi_pcie->subctrl)) {
+>> +		dev_err(pp->dev, "cannot get subctrl base\n");
+>> +		return PTR_ERR(hisi_pcie->subctrl);
+>> +	}
+>> +
+>> +	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
+>> +	hisi_pcie->reg_base = devm_ioremap_resource(&pdev->dev, reg);
+>> +	if (IS_ERR(hisi_pcie->reg_base)) {
+>> +		dev_err(pp->dev, "cannot get rc_dbi base\n");
+>> +		return PTR_ERR(hisi_pcie->reg_base);
+>> +	}
+>> +
+>> +	hisi_pcie->pp.dbi_base = hisi_pcie->reg_base;
+>> +
+>> +	ret = hisi_add_pcie_port(pp, pdev);
+>> +	if (ret)
+>> +		return ret;
+>> +
+>> +	platform_set_drvdata(pdev, hisi_pcie);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static const struct of_device_id hisi_pcie_of_match[] = {
+>> +	{.compatible = "hisilicon,hip05-pcie",},
+>> +	{},
+>> +};
+>> +
+>> +MODULE_DEVICE_TABLE(of, hisi_pcie_of_match);
+>> +
+>> +static struct platform_driver hisi_pcie_driver = {
+>> +	.driver = {
+>> +		   .name = "hisi-pcie",
+>> +		   .of_match_table = hisi_pcie_of_match,
+>> +	},
+>> +};
+>> +
+>> +static int __init hisi_pcie_init(void)
+>> +{
+>> +	return platform_driver_probe(&hisi_pcie_driver, hisi_pcie_probe);
+>> +}
+>> +subsys_initcall(hisi_pcie_init);
+> 
+> Can you use module_platform_driver() or module_platform_driver_probe()
+> here instead of the subsys_initcall()?  No, I don't really know what
+> the difference between module_platform_driver() and
+> module_platform_driver_probe() is, sorry :)
+
+In fact, I used module_platform_driver_probe in previous version, but
+A PCIe VGA card of HiSilicon will use Hip05 PCIe host, so we modified
+module_platform_driver_probe to subsys_initcall which will be called
+before module_platform_driver_probe.
+
+We will upstream the driver of above PCIe VGA card soon.
+
+Many thanks for your reviewing,
+Zhou
+
+> 
+> Bjorn
+> 
+> .
+> 
+
 
