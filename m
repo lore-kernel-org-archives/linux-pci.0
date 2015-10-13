@@ -1,48 +1,53 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v11 2/6] pci: add Altera PCI vendor ID
-Date: Thu, 22 Oct 2015 17:27:27 +0800
-Message-ID: <1445506051-21688-3-git-send-email-lftan@altera.com>
-In-Reply-To: <1445506051-21688-1-git-send-email-lftan@altera.com>
-References: <1445506051-21688-1-git-send-email-lftan@altera.com>
+Date: Tue, 13 Oct 2015 10:32:04 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+To: Yinghai Lu <yinghai@kernel.org>
+cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
+In-Reply-To: <CAE9FiQVAtPGgzwwMaHjGjyzOD8wKb0TqCd1wynF6-ZmFqZzEaQ@mail.gmail.com>
+Message-ID: <alpine.LRH.2.20.1510131020140.9747@math.ut.ee>
+References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee> <CAE9FiQXM9YxRwcbG577Pcqmj7YbOa0yk6hYELb2FpTtct5u2jg@mail.gmail.com> <alpine.LRH.2.20.1510120808240.3251@math.ut.ee> <CAE9FiQXHsgYaTgF2rsWFJXSYJ=kH3j63ageJ2H8F5wnzbFgxRg@mail.gmail.com>
+ <alpine.LRH.2.20.1510130800380.3972@math.ut.ee> <CAE9FiQVAtPGgzwwMaHjGjyzOD8wKb0TqCd1wynF6-ZmFqZzEaQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- include/linux/pci_ids.h | 2 ++
- 1 file changed, 2 insertions(+)
+> > Updated on V210 - the others were more recent. Now I get more BAR
+> > warning there too:
+> >
+> > http://kodu.ut.ee/~mroos/dm/dm.v210+patches
+> >
+> 
+> interesting, mem and mem64 is overlapping.
+> 
+> [   38.824625] /pci@1f,700000: TOMATILLO PCI Bus Module ver[4:0]
+> [   38.824654] /pci@1f,700000: PCI IO [io
+> 0x7f601000000-0x7f601ffffff] offset 7f601000000
+> [   38.824680] /pci@1f,700000: PCI MEM [mem
+> 0x7f700000000-0x7f7ffffffff] offset 7f700000000
+> [   38.824704] /pci@1f,700000: PCI MEM64 [mem
+> 0x7f700000000-0x7f7ffffffff] offset 7f700000000
+> [   38.826310] PCI: Scanning PBM /pci@1f,700000
+> [   38.826479] schizo f0069c00: PCI host bridge to bus 0000:00
+> [   38.826506] pci_bus 0000:00: root bus resource [io
+> 0x7f601000000-0x7f601ffffff] (bus address [0x0000-0xffffff])
+> [   38.826536] pci_bus 0000:00: root bus resource [mem
+> 0x7f700000000-0x7f7ffffffff] (bus address [0x00000000-0xffffffff])
+> [   38.826565] pci_bus 0000:00: root bus resource [mem
+> 0x7f700000000-0x7f7ffffffff] (bus address [0x00000000-0xffffffff])
+> 
+> We need to add more sanitary checking.
+> 
+> Can you send boot log after booting with "debug ignore_loglevel ofpci_debug=1" ?
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index d9ba49c..08e4462 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1550,6 +1550,8 @@
- #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
- #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
- 
-+#define PCI_VENDOR_ID_ALTERA		0x1172
-+
- #define PCI_VENDOR_ID_SBE		0x1176
- #define PCI_DEVICE_ID_SBE_WANXL100	0x0301
- #define PCI_DEVICE_ID_SBE_WANXL200	0x0302
+http://kodu.ut.ee/~mroos/dm/dm.v210+patch+debug
+
+Applied the fix_mem_mem64_overlapping.patch and retested. The BAR 
+allocation problems are still there:
+
+http://kodu.ut.ee/~mroos/dm/dm.v210+patch+mem64patch+debug
+
 -- 
-1.8.2.1
-
+Meelis Roos (mroos@linux.ee)
