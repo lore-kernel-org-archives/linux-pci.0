@@ -1,123 +1,114 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC Patch 05/12] IXGBE: Add new sysfs interface of "notify_vf"
-To: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
-	pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
- <1445445464-5056-6-git-send-email-tianyu.lan@intel.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <5627FB20.3020003@gmail.com>
-Date: Wed, 21 Oct 2015 13:52:48 -0700
-MIME-Version: 1.0
-In-Reply-To: <1445445464-5056-6-git-send-email-tianyu.lan@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:65178 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751954AbbJNGZq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 Oct 2015 02:25:46 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+Subject: [Patch v7 3/7] ia64/PCI: Use common struct resource_entry to replace struct iospace_resource
+Date: Wed, 14 Oct 2015 14:29:38 +0800
+Message-Id: <1444804182-6596-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/21/2015 09:37 AM, Lan Tianyu wrote:
-> This patch is to add new sysfs interface of "notify_vf" under sysfs
-> directory of VF PCI device for Qemu to notify VF when migration status
-> is changed.
->
-> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
-> ---
->   drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 30 ++++++++++++++++++++++++++
->   drivers/net/ethernet/intel/ixgbe/ixgbe_type.h  |  4 ++++
->   2 files changed, 34 insertions(+)
->
-> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-> index e247d67..5cc7817 100644
-> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-> @@ -217,10 +217,37 @@ static ssize_t ixgbe_store_state_in_pf(struct device *dev,
->   	return count;
->   }
->   
-> +static ssize_t ixgbe_store_notify_vf(struct device *dev,
-> +				       struct device_attribute *attr,
-> +				       const char *buf, size_t count)
-> +{
-> +	struct ixgbe_adapter *adapter = to_adapter(dev);
-> +	struct ixgbe_hw *hw = &adapter->hw;
-> +	struct pci_dev *vf_pdev = to_pci_dev(dev);
-> +	int vfn = vf_pdev->virtfn_index;
-> +	u32 ivar;
-> +
-> +	/* Enable VF mailbox irq first */
-> +	IXGBE_WRITE_REG(hw, IXGBE_PVTEIMS(vfn), 0x4);
-> +	IXGBE_WRITE_REG(hw, IXGBE_PVTEIAM(vfn), 0x4);
-> +	IXGBE_WRITE_REG(hw, IXGBE_PVTEIAC(vfn), 0x4);
-> +
-> +	ivar = IXGBE_READ_REG(hw, IXGBE_PVTIVAR_MISC(vfn));
-> +	ivar &= ~0xFF;
-> +	ivar |= 0x2 | IXGBE_IVAR_ALLOC_VAL;
-> +	IXGBE_WRITE_REG(hw, IXGBE_PVTIVAR_MISC(vfn), ivar);
-> +
-> +	ixgbe_ping_vf(adapter, vfn);
-> +	return count;
-> +}
-> +
+Use common struct resource_entry to replace private
+struct iospace_resource.
 
-NAK, this won't fly.  You can't just go in from the PF and enable 
-interrupts on the VF hoping they are configured well enough to handle an 
-interrupt you decide to trigger from them.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
+---
+ arch/ia64/include/asm/pci.h |    5 -----
+ arch/ia64/pci/pci.c         |   17 ++++++++---------
+ 2 files changed, 8 insertions(+), 14 deletions(-)
 
-Also have you even considered the MSI-X configuration on the VF?  I 
-haven't seen anything anywhere that would have migrated the VF's MSI-X 
-configuration from BAR 3 on one system to the new system.
-
->   static struct device_attribute ixgbe_per_state_in_pf_attribute =
->   	__ATTR(state_in_pf, S_IRUGO | S_IWUSR,
->   		ixgbe_show_state_in_pf, ixgbe_store_state_in_pf);
->   
-> +static struct device_attribute ixgbe_per_notify_vf_attribute =
-> +	__ATTR(notify_vf, S_IWUSR, NULL, ixgbe_store_notify_vf);
-> +
->   void ixgbe_add_vf_attrib(struct ixgbe_adapter *adapter)
->   {
->   	struct pci_dev *pdev = adapter->pdev;
-> @@ -241,6 +268,8 @@ void ixgbe_add_vf_attrib(struct ixgbe_adapter *adapter)
->   		if (vfdev->is_virtfn) {
->   			ret = device_create_file(&vfdev->dev,
->   					&ixgbe_per_state_in_pf_attribute);
-> +			ret |= device_create_file(&vfdev->dev,
-> +					&ixgbe_per_notify_vf_attribute);
->   			if (ret)
->   				pr_warn("Unable to add VF attribute for dev %s,\n",
->   					dev_name(&vfdev->dev));
-> @@ -269,6 +298,7 @@ void ixgbe_remove_vf_attrib(struct ixgbe_adapter *adapter)
->   	while (vfdev) {
->   		if (vfdev->is_virtfn) {
->   			device_remove_file(&vfdev->dev, &ixgbe_per_state_in_pf_attribute);
-> +			device_remove_file(&vfdev->dev, &ixgbe_per_notify_vf_attribute);
->   		}
->   
->   		vfdev = pci_get_device(pdev->vendor, vf_id, vfdev);
-
-More driver specific sysfs.  This needs to be moved out of the driver if 
-this is to be considered anything more than a proof of concept.
-
-> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_type.h b/drivers/net/ethernet/intel/ixgbe/ixgbe_type.h
-> index dd6ba59..c6ddb66 100644
-> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_type.h
-> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_type.h
-> @@ -2302,6 +2302,10 @@ enum {
->   #define IXGBE_PVFTDT(P)		(0x06018 + (0x40 * (P)))
->   #define IXGBE_PVFTDWBAL(P)	(0x06038 + (0x40 * (P)))
->   #define IXGBE_PVFTDWBAH(P)	(0x0603C + (0x40 * (P)))
-> +#define IXGBE_PVTEIMS(P)	(0x00D00 + (4 * (P)))
-> +#define IXGBE_PVTIVAR_MISC(P)	(0x04E00 + (4 * (P)))
-> +#define IXGBE_PVTEIAC(P)       (0x00F00 + (4 * P))
-> +#define IXGBE_PVTEIAM(P)       (0x04D00 + (4 * P))
->   
->   #define IXGBE_PVFTDWBALn(q_per_pool, vf_number, vf_q_index) \
->   		(IXGBE_PVFTDWBAL((q_per_pool)*(vf_number) + (vf_q_index)))
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 36d2c1e3928b..07039d168f37 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -64,11 +64,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ #define pci_legacy_read platform_pci_legacy_read
+ #define pci_legacy_write platform_pci_legacy_write
+ 
+-struct iospace_resource {
+-	struct list_head list;
+-	struct resource res;
+-};
+-
+ struct pci_controller {
+ 	struct acpi_device *companion;
+ 	void *iommu;
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index d20db9e48014..b1846b891ea5 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -154,14 +154,14 @@ new_space (u64 phys_base, int sparse)
+ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 			struct resource_entry *entry)
+ {
+-	struct iospace_resource *iospace;
++	struct resource_entry *iospace;
+ 	struct resource *resource, *res = entry->res;
+ 	char *name;
+ 	unsigned long base, min, max, base_port;
+ 	unsigned int sparse = 0, space_nr, len;
+ 
+ 	len = strlen(info->name) + 32;
+-	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
++	iospace = resource_list_create_entry(NULL, len);
+ 	if (!iospace) {
+ 		dev_err(dev, "PCI: No memory for %s I/O port space\n",
+ 			info->name);
+@@ -190,7 +190,7 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 	if (space_nr == 0)
+ 		sparse = 1;
+ 
+-	resource = &iospace->res;
++	resource = iospace->res;
+ 	resource->name  = name;
+ 	resource->flags = IORESOURCE_MEM;
+ 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
+@@ -205,12 +205,12 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 	entry->offset = base_port;
+ 	res->start = min + base_port;
+ 	res->end = max + base_port;
+-	list_add_tail(&iospace->list, &info->io_resources);
++	resource_list_add_tail(iospace, &info->io_resources);
+ 
+ 	return 0;
+ 
+ free_resource:
+-	kfree(iospace);
++	resource_list_free_entry(iospace);
+ 	return -ENOSPC;
+ }
+ 
+@@ -369,12 +369,11 @@ static void add_resources(struct pci_root_info *info, struct device *dev)
+ static void __release_pci_root_info(struct pci_root_info *info)
+ {
+ 	struct resource *res;
+-	struct iospace_resource *iospace, *tmp;
+ 	struct resource_entry *entry, *tentry;
+ 
+-	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list) {
+-		release_resource(&iospace->res);
+-		kfree(iospace);
++	resource_list_for_each_entry_safe(entry, tentry, &info->io_resources) {
++		release_resource(entry->res);
++		resource_list_destroy_entry(entry);
+ 	}
+ 
+ 	resource_list_for_each_entry_safe(entry, tentry, &info->resources) {
+-- 
+1.7.10.4
 
