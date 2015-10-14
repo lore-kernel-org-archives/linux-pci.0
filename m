@@ -1,52 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f45.google.com ([209.85.192.45]:35183 "EHLO
-	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751077AbbJEKxi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Oct 2015 06:53:38 -0400
-Received: by qgt47 with SMTP id 47so145544745qgt.2
-        for <linux-pci@vger.kernel.org>; Mon, 05 Oct 2015 03:53:37 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: m-karicheri2@ti.com, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [RFC v2] PCI: keystone: Fix definition of LTSSM_STATE_MASK
-Date: Mon,  5 Oct 2015 07:53:09 -0300
-Message-Id: <1444042389-8036-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>
+CC: <linux-kernel@vger.kernel.org>, <linux-arch@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Ley Foon Tan <lftan@altera.com>,
+	<lftan.linux@gmail.com>
+Subject: [PATCH v2 1/4] asm-generic: add pci required defines and functions
+Date: Wed, 14 Oct 2015 14:31:41 +0800
+Message-ID: <1444804304-5213-2-git-send-email-lftan@altera.com>
+In-Reply-To: <1444804304-5213-1-git-send-email-lftan@altera.com>
+References: <1444804304-5213-1-git-send-email-lftan@altera.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+Add the generic #define and functions that required by the PCI framework.
+Architecture pci.h can overwrite with their implementation if needed.
 
-Designware PCI block uses 0x3f for the LTSSM_STATE_MASK.
-
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
 ---
-Changes since v1:
-- Fix Subject
+ include/asm-generic/pci.h | 34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-Murali,
-
-I am doing some consolidation on the PCI DW drivers and I noticed that
-keystone uses a different LTSSM_STATE_MASK definition.
-
-Could you please double check it?
-
- drivers/pci/host/pci-keystone-dw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index 3cf55cd..78320e4 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -25,7 +25,7 @@
+diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
+index f24bc51..2771b32 100644
+--- a/include/asm-generic/pci.h
++++ b/include/asm-generic/pci.h
+@@ -21,4 +21,38 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ #define PCI_DMA_BUS_IS_PHYS	(1)
+ #endif
  
- /* Application register defines */
- #define LTSSM_EN_VAL		        1
--#define LTSSM_STATE_MASK		0x1f
-+#define LTSSM_STATE_MASK		0x3f
- #define LTSSM_STATE_L0			0x11
- #define DBI_CS2_EN_VAL			0x20
- #define OB_XLAT_EN_VAL		        2
++#ifdef CONFIG_PCI
++
++#ifndef PCIBIOS_MIN_IO
++#define PCIBIOS_MIN_IO	(0UL)
++#endif
++
++#ifndef PCIBIOS_MIN_MEM
++#define PCIBIOS_MIN_MEM	(0UL)
++#endif
++
++#ifndef pcibios_assign_all_busses
++#define pcibios_assign_all_busses()	(pci_has_flag(PCI_REASSIGN_ALL_BUS))
++#endif
++
++#ifndef pci_proc_domain
++#define pci_proc_domain pci_proc_domain
++static inline int pci_proc_domain(struct pci_bus *bus)
++{
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++	return pci_domain_nr(bus);
++#else
++	return 1;
++#endif
++}
++#endif
++
++extern int isa_dma_bridge_buggy;
++
++#else
++
++#define isa_dma_bridge_buggy	(0)
++
++#endif /* CONFIG_PCI */
++
+ #endif /* _ASM_GENERIC_PCI_H */
 -- 
-1.9.1
+1.8.2.1
 
