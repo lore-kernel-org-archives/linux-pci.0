@@ -1,143 +1,194 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
-	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
-	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:19870 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751048AbbJNJc2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Oct 2015 05:32:28 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V4 5/8] device property: acpi: Make use of the new DMA Attribute APIs
-Date: Wed, 21 Oct 2015 08:52:08 -0700
-Message-ID: <1445442731-28819-6-git-send-email-Suravee.Suthikulpanit@amd.com>
-In-Reply-To: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	qiujiang <qiujiang@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"Wangkefeng (Kevin)" <wangkefeng.wang@huawei.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: RE: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon
+ SoC Hip05
+Date: Wed, 14 Oct 2015 09:31:48 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1624367C@lhreml503-mbs>
+References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
+ <5549505.Kpo7ci0v8h@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E162435E7@lhreml503-mbs>
+ <7409042.iUdOP6FlU8@wuerfel>
+In-Reply-To: <7409042.iUdOP6FlU8@wuerfel>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we have the new DMA attribute APIs, we can replace the older
-acpi_check_dma() and device_dma_is_coherent().
 
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-CC: Rafael J. Wysocki <rjw@rjwysocki.net>
-CC: Tom Lendacky <thomas.lendacky@amd.com>
-CC: Herbert Xu <herbert@gondor.apana.org.au>
-CC: David S. Miller <davem@davemloft.net>
----
- drivers/acpi/acpi_platform.c              | 7 ++++++-
- drivers/acpi/glue.c                       | 8 +++++---
- drivers/crypto/ccp/ccp-platform.c         | 9 ++++++++-
- drivers/net/ethernet/amd/xgbe/xgbe-main.c | 9 ++++++++-
- 4 files changed, 27 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
-index 06a67d5..296b7a1 100644
---- a/drivers/acpi/acpi_platform.c
-+++ b/drivers/acpi/acpi_platform.c
-@@ -103,7 +103,12 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
- 	pdevinfo.res = resources;
- 	pdevinfo.num_res = count;
- 	pdevinfo.fwnode = acpi_fwnode_handle(adev);
--	pdevinfo.dma_mask = acpi_check_dma(adev, NULL) ? DMA_BIT_MASK(32) : 0;
-+
-+	if (acpi_dma_supported(adev))
-+		pdevinfo.dma_mask = DMA_BIT_MASK(32);
-+	else
-+		pdevinfo.dma_mask = 0;
-+
- 	pdev = platform_device_register_full(&pdevinfo);
- 	if (IS_ERR(pdev))
- 		dev_err(&adev->dev, "platform device creation failed: %ld\n",
-diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-index b9657af..a66e776 100644
---- a/drivers/acpi/glue.c
-+++ b/drivers/acpi/glue.c
-@@ -168,7 +168,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
- 	struct list_head *physnode_list;
- 	unsigned int node_id;
- 	int retval = -EINVAL;
--	bool coherent;
-+	enum dev_dma_attr attr;
- 
- 	if (has_acpi_companion(dev)) {
- 		if (acpi_dev) {
-@@ -225,8 +225,10 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
- 	if (!has_acpi_companion(dev))
- 		ACPI_COMPANION_SET(dev, acpi_dev);
- 
--	if (acpi_check_dma(acpi_dev, &coherent))
--		arch_setup_dma_ops(dev, 0, 0, NULL, coherent);
-+	attr = acpi_get_dma_attr(acpi_dev);
-+	if (attr != DEV_DMA_NOT_SUPPORTED)
-+		arch_setup_dma_ops(dev, 0, 0, NULL,
-+				   attr == DEV_DMA_COHERENT);
- 
- 	acpi_physnode_link_name(physical_node_name, node_id);
- 	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
-diff --git a/drivers/crypto/ccp/ccp-platform.c b/drivers/crypto/ccp/ccp-platform.c
-index bb241c3..edd9e16 100644
---- a/drivers/crypto/ccp/ccp-platform.c
-+++ b/drivers/crypto/ccp/ccp-platform.c
-@@ -96,6 +96,7 @@ static int ccp_platform_probe(struct platform_device *pdev)
- 	struct ccp_platform *ccp_platform;
- 	struct device *dev = &pdev->dev;
- 	struct acpi_device *adev = ACPI_COMPANION(dev);
-+	enum dev_dma_attr attr;
- 	struct resource *ior;
- 	int ret;
- 
-@@ -122,13 +123,19 @@ static int ccp_platform_probe(struct platform_device *pdev)
- 	}
- 	ccp->io_regs = ccp->io_map;
- 
-+	attr = device_get_dma_attr(dev);
-+	if (attr == DEV_DMA_NOT_SUPPORTED) {
-+		dev_err(dev, "DMA is not supported");
-+		goto e_err;
-+	}
-+	ccp_platform->coherent = (attr == DEV_DMA_COHERENT);
-+
- 	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48));
- 	if (ret) {
- 		dev_err(dev, "dma_set_mask_and_coherent failed (%d)\n", ret);
- 		goto e_err;
- 	}
- 
--	ccp_platform->coherent = device_dma_is_coherent(ccp->dev);
- 	if (ccp_platform->coherent)
- 		ccp->axcache = CACHE_WB_NO_ALLOC;
- 	else
-diff --git a/drivers/net/ethernet/amd/xgbe/xgbe-main.c b/drivers/net/ethernet/amd/xgbe/xgbe-main.c
-index e83bd76..b596c7f 100644
---- a/drivers/net/ethernet/amd/xgbe/xgbe-main.c
-+++ b/drivers/net/ethernet/amd/xgbe/xgbe-main.c
-@@ -342,6 +342,7 @@ static int xgbe_probe(struct platform_device *pdev)
- 	struct resource *res;
- 	const char *phy_mode;
- 	unsigned int i, phy_memnum, phy_irqnum;
-+	enum dev_dma_attr attr;
- 	int ret;
- 
- 	DBGPR("--> xgbe_probe\n");
-@@ -608,8 +609,14 @@ static int xgbe_probe(struct platform_device *pdev)
- 	if (ret)
- 		goto err_io;
- 
-+	attr = device_get_dma_attr(dev);
-+	if (attr == DEV_DMA_NOT_SUPPORTED) {
-+		dev_err(dev, "DMA is not supported");
-+		goto err_io;
-+	}
-+	pdata->coherent = (attr == DEV_DMA_COHERENT);
-+
- 	/* Set the DMA coherency values */
--	pdata->coherent = device_dma_is_coherent(pdata->dev);
- 	if (pdata->coherent) {
- 		pdata->axdomain = XGBE_DMA_OS_AXDOMAIN;
- 		pdata->arcache = XGBE_DMA_OS_ARCACHE;
--- 
-2.1.0
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: Wednesday, October 14, 2015 10:04 AM
+> To: Gabriele Paoloni
+> Cc: Wangzhou (B); Bjorn Helgaas; Bjorn Helgaas; jingoohan1@gmail.com;
+> pratyush.anand@gmail.com; linux@arm.linux.org.uk;
+> thomas.petazzoni@free-electrons.com; lorenzo.pieralisi@arm.com;
+> james.morse@arm.com; Liviu.Dudau@arm.com; jason@lakedaemon.net;
+> robh@kernel.org; gabriel.fernandez@linaro.org;
+> Minghuan.Lian@freescale.com; linux-pci@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org; devicetree@vger.kernel.org; linux-
+> kernel@vger.kernel.org; zhangjukuo; qiuzhenfa; liudongdong (C);
+> qiujiang; xuwei (O); Liguozhu (Kenneth); Wangkefeng (Kevin); Rob
+> Herring
+> Subject: Re: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for
+> HiSilicon SoC Hip05
+> 
+> On Wednesday 14 October 2015 08:34:43 Gabriele Paoloni wrote:
+> > > -----Original Message-----
+> > > From: Arnd Bergmann [mailto:arnd@arndb.de]
+> > > Sent: Tuesday, October 13, 2015 12:19 PM
+> > > To: Gabriele Paoloni
+> > > Cc: Wangzhou (B); Bjorn Helgaas; Bjorn Helgaas;
+> jingoohan1@gmail.com;
+> > > pratyush.anand@gmail.com; linux@arm.linux.org.uk;
+> > > thomas.petazzoni@free-electrons.com; lorenzo.pieralisi@arm.com;
+> > > james.morse@arm.com; Liviu.Dudau@arm.com; jason@lakedaemon.net;
+> > > robh@kernel.org; gabriel.fernandez@linaro.org;
+> > > Minghuan.Lian@freescale.com; linux-pci@vger.kernel.org; linux-arm-
+> > > kernel@lists.infradead.org; devicetree@vger.kernel.org; linux-
+> > > kernel@vger.kernel.org; zhangjukuo; qiuzhenfa; liudongdong (C);
+> > > qiujiang; xuwei (O); Liguozhu (Kenneth); Wangkefeng (Kevin); Rob
+> > > Herring
+> > > Subject: Re: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for
+> > > HiSilicon SoC Hip05
+> > >
+> > > On Tuesday 13 October 2015 06:58:42 Gabriele Paoloni wrote:
+> > > >
+> > > > > >> +
+> > > > > >> +static int __init hisi_pcie_init(void)
+> > > > > >> +{
+> > > > > >> +      return platform_driver_probe(&hisi_pcie_driver,
+> > > hisi_pcie_probe);
+> > > > > >> +}
+> > > > > >> +subsys_initcall(hisi_pcie_init);
+> > > > > >
+> > > > > > Can you use module_platform_driver() or
+> > > module_platform_driver_probe()
+> > > > > > here instead of the subsys_initcall()?  No, I don't really
+> know
+> > > what
+> > > > > > the difference between module_platform_driver() and
+> > > > > > module_platform_driver_probe() is, sorry
+> > >
+> > > module_platform_driver_probe() will only call the probe function
+> once
+> > > (and fail in case of -EPROBE_DEFER), while module_platform_driver()
+> > > installs the platform driver in a way that the device can be bound
+> > > and unbound at any point.
+> > >
+> > > > > In fact, I used module_platform_driver_probe in previous
+> version,
+> > > but
+> > > > > A PCIe VGA card of HiSilicon will use Hip05 PCIe host, so we
+> > > modified
+> > > > > module_platform_driver_probe to subsys_initcall which will be
+> > > called
+> > > > > before module_platform_driver_probe.
+> > > > >
+> > > > > We will upstream the driver of above PCIe VGA card soon.
+> > >
+> > > I don't see a reason why a VGA driver would need the PCI host to be
+> > > probed this early, unless it is the only usable console in the
+> system.
+> > >
+> > > > Hi Bjorn, firstly many thanks for looking at this.
+> > > >
+> > > > About this last bit the reason why we use subsys_initcall() is
+> that
+> > > > our host bridge is embedded in the SoC and as such is not hot-
+> > > pluggable
+> > > > for instance see:
+> > > > http://lxr.free-electrons.com/source/Documentation/driver-
+> > > model/platform.txt#L59
+> > >
+> > > We should still be able to build the driver as a loadable module,
+> > > even if you don't do that on your own kernels.
+> >
+> > Hi Arnd, I don't see the point of having loadable KOs for platform
+> > devices that are integrated into SoCs (like PCIe Host Controllers...)
+> 
+> Mainly we want as many drivers as possible to be loadable modules,
+> and there is no reason why PCI needs to be different from other
+> subsystems here.
 
+Ok I see now. Thanks
+
+> 
+> > > This doesn't mean that it has to be module_platform_driver,
+> > > subsys_initcall
+> > > will also work in a loadable module, it just won't be as early.
+> However,
+> > > we should try to come up with a consistent approach for all PCI
+> host
+> > > drivers,
+> > > I don't see any reason for hisi to be different from the others
+> here.
+> >
+> > To me it sounds more appropriate to adopt subsys_initcall() for all
+> the
+> > PCI Host Bridge controllers rather than having them as loadable
+> modules...
+> >
+> > What is your view?
+> 
+> subsys_initcall() sounds odd because it's a driver rather than a
+> subsystem,
+> but I realize that most of the other levels don't fit any better.
+
+Yes well I was seeing for example the vgaarb 
+http://lxr.free-electrons.com/source/drivers/gpu/vga/vgaarb.c#L1357
+
+That in the init is calling pci_get_subsys()
+
+So I was wondering that the PCI devices may not be registered unless
+we also init the PCI host bridge through subsys_initcall()...
+
+But then maybe is the vgaarb to be buggy...
+
+> 
+> As I said, it's not really a choice we have to make in the source code,
+> we can use subsys_initcall together with module_exit(), or we can
+> create a helper macro that is similar to module_platform_driver()
+> specifically for PCI that uses a particular initcall level.
+
+Ok got it. But I guess this needs to be thought and applied to all
+the PCI host bridge controllers...
+
+So maybe for this driver I can use module_platform_driver_probe()
+and then we can see...
+
+> 
+> 	Arnd
