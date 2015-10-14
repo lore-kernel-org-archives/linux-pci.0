@@ -1,54 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:38195 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750779AbbJIXRD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Oct 2015 19:17:03 -0400
-Subject: Re: [RFC PATCH 0/2] DRA72/DRA74: Add 2 lane support
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1443445058-643-1-git-send-email-kishon@ti.com>
- <20151009225056.GD16112@localhost>
-CC: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <nsekhar@ti.com>,
-	Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <56184AE7.6060808@ti.com>
-Date: Sat, 10 Oct 2015 04:46:55 +0530
+Received: from szxga01-in.huawei.com ([58.251.152.64]:35897 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752856AbbJNJoh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Oct 2015 05:44:37 -0400
+Message-ID: <561E23EB.7050504@hisilicon.com>
+Date: Wed, 14 Oct 2015 17:44:11 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <20151009225056.GD16112@localhost>
-Content-Type: text/plain; charset="windows-1252"
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	qiujiang <qiujiang@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"Wangkefeng (Kevin)" <wangkefeng.wang@huawei.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon
+ SoC Hip05
+References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com> <11677087.JbqAo0FWJE@wuerfel> <561E1957.5030503@hisilicon.com> <30775300.COZ4nEMWXC@wuerfel>
+In-Reply-To: <30775300.COZ4nEMWXC@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Saturday 10 October 2015 04:20 AM, Bjorn Helgaas wrote:
-> [+cc Arnd, Rob]
-> 
-> On Mon, Sep 28, 2015 at 06:27:36PM +0530, Kishon Vijay Abraham I wrote:
->> Add driver modifications in pci-dra7xx to get x2 mode working in
->> DRA72 and DRA74. Certain modifications is needed in PHY driver also
->> which I'll send as a separate series.
+On 2015/10/14 17:06, Arnd Bergmann wrote:
+> On Wednesday 14 October 2015 16:59:03 Zhou Wang wrote:
 >>
->> Kishon Vijay Abraham I (2):
->>   pci: host: pci-dra7xx: use "num-lanes" property to find phy count
->>   pci: host: pci-dra7xx: Enable x2 mode support
+>> Hi Arnd,
+>>
+>> In Hip05 PCIe host, it uses GITS_TRANSLATER's address to get TLP package
+>> which contains MSI address and MSI data, and then combine BDF and MSI data
+>> to a 32 bit data which will be writen to GITS_TRANSLATER register of ITS.
+>>
+>> I think maybe this is a defect of our PCIe controller.
 > 
-> Applied to pci/host-dra7xx for v4.4, thanks!
+> I'd consider it a bug in the firmware if this is not set up correctly
+> before boot.
 > 
-> I adjusted the subject line capitalization & format to match the history.
+>>> I don't think what you do here is safe because the 'reg' property
+>>> of the MSI controller might point to the address that is used for
+>>> the message directly.
+>>
+>> I see your point, however we must get address of GITS_TRANSLATER and
+>> set it to PCIe host. How about adding necessary comments here?
 > 
-> Arnd, Rob, any comments on the DT updates or the "num-lanes" vs number of
-> strings in "phy-names" changes?
+> This seems to just be static setup that should be done before Linux
+> is even loaded. Any reason you can't do it that way?
+>
 
-I sent it as RFC since I didn't have the board to test 2 lane mode with
-$patch. And just now I got a board to test x2 and I found a problem with
-the 2nd patch.
+There are some ITSs in Hip05-D02 platform, in fact, we can use any of them
+as a msi-controller,  which we can configure in dts. I am afraid that
+hard-setting the value in BIOS would lead to restrictions in terms of flexibility,
+as with the current implementation the same BIOS-driver can fit different
+DTS structures.
 
-.b1co_mode_sel_mask = GENMASK(2, 3), in the patch should be replaced with
-.b1co_mode_sel_mask = GENMASK(3, 2).
+Regards,
+Zhou
 
-I'll resend the patch fixing the above.
+> 	Arnd
+> 
+> .
+> 
 
-Thanks
-Kishon
+
