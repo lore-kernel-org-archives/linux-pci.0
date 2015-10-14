@@ -1,48 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([104.200.29.153]:36268 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751303AbbJWFGD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:06:03 -0400
-From: Matthew Minter <matt@masarand.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	lorenzo.pieralisi@arm.com
-Cc: Matthew Minter <matt@masarand.com>
-Subject: [PATCH V4 21/29] mn10300: Remove pcibios_enable_device function
-Date: Fri, 23 Oct 2015 06:03:54 +0100
-Message-Id: <1445576642-29624-22-git-send-email-matt@masarand.com>
-In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
-References: <1445576642-29624-1-git-send-email-matt@masarand.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:27191 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751980AbbJNJ4x convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Oct 2015 05:56:53 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	zhangjukuo <zhangjukuo@huawe.i.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	qiujiang <qiujiang@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"Wangkefeng (Kevin)" <wangkefeng.wang@huawei.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: RE: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon
+ SoC Hip05
+Date: Wed, 14 Oct 2015 09:56:09 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162436BC@lhreml503-mbs>
+References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
+ <7409042.iUdOP6FlU8@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1624367C@lhreml503-mbs>
+ <5959363.QRL4hSioHL@wuerfel>
+In-Reply-To: <5959363.QRL4hSioHL@wuerfel>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pcibios_enable_device is now identical to the generic version
-in non arch specific code, so we can delete this one.
 
-Signed-off-by: Matthew Minter <matt@masarand.com>
----
- arch/mn10300/unit-asb2305/pci.c | 8 --------
- 1 file changed, 8 deletions(-)
 
-diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-index 37a22a5..c9fc19d 100644
---- a/arch/mn10300/unit-asb2305/pci.c
-+++ b/arch/mn10300/unit-asb2305/pci.c
-@@ -398,14 +398,6 @@ char *__init pcibios_setup(char *str)
- 	return str;
- }
- 
--int pcibios_enable_device(struct pci_dev *dev, int mask)
--{
--	int err;
--
--	err = pci_enable_resources(dev, mask);
--	return err;
--}
--
- /*
-  * disable the ethernet chipset
-  */
--- 
-2.6.2
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: Wednesday, October 14, 2015 10:42 AM
+> To: Gabriele Paoloni
+> Cc: Wangzhou (B); Bjorn Helgaas; Bjorn Helgaas; jingoohan1@gmail.com;
+> pratyush.anand@gmail.com; linux@arm.linux.org.uk;
+> thomas.petazzoni@free-electrons.com; lorenzo.pieralisi@arm.com;
+> james.morse@arm.com; Liviu.Dudau@arm.com; jason@lakedaemon.net;
+> robh@kernel.org; gabriel.fernandez@linaro.org;
+> Minghuan.Lian@freescale.com; linux-pci@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org; devicetree@vger.kernel.org; linux-
+> kernel@vger.kernel.org; zhangjukuo; qiuzhenfa; liudongdong (C);
+> qiujiang; xuwei (O); Liguozhu (Kenneth); Wangkefeng (Kevin); Rob
+> Herring
+> Subject: Re: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for
+> HiSilicon SoC Hip05
+> 
+> On Wednesday 14 October 2015 09:31:48 Gabriele Paoloni wrote:
+> > >
+> > > > To me it sounds more appropriate to adopt subsys_initcall() for
+> all
+> > > the
+> > > > PCI Host Bridge controllers rather than having them as loadable
+> > > modules...
+> > > >
+> > > > What is your view?
+> > >
+> > > subsys_initcall() sounds odd because it's a driver rather than a
+> > > subsystem,
+> > > but I realize that most of the other levels don't fit any better.
+> >
+> > Yes well I was seeing for example the vgaarb
+> > http://lxr.free-electrons.com/source/drivers/gpu/vga/vgaarb.c#L1357
+> >
+> > That in the init is calling pci_get_subsys()
+> >
+> > So I was wondering that the PCI devices may not be registered unless
+> > we also init the PCI host bridge through subsys_initcall()...
+> 
+> I think this should work as is: the code first looks for devices
+> that are already there and then registers a notifier for devices
+> that show up later. This is meant to work for both devices that
+> are hotplugged at a later point as well as PCI buses that are
+> already there but not yet probed.
+> 
+> > But then maybe is the vgaarb to be buggy...
+> 
+> Possible. It may well be that the code is only tested on x86,
+> which always probes its PCI very early.
+> 
+> > > As I said, it's not really a choice we have to make in the source
+> code,
+> > > we can use subsys_initcall together with module_exit(), or we can
+> > > create a helper macro that is similar to module_platform_driver()
+> > > specifically for PCI that uses a particular initcall level.
+> >
+> > Ok got it. But I guess this needs to be thought and applied to all
+> > the PCI host bridge controllers...
+> >
+> > So maybe for this driver I can use module_platform_driver_probe()
+> > and then we can see...
+> 
+> Sounds good. Let's focus on getting the driver merged first and
+> then follow up with a patch to get this right for all PCI hosts.
 
+Ok good let's do like this then
+
+will change in v11
+
+Again Many Thanks
+
+Gab
+
+> 
+> 	Arnd
