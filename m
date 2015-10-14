@@ -1,88 +1,101 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 15 Oct 2015 15:10:50 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Rob Herring <robh+dt@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, Mark Rutland <Mark.Rutland@arm.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Robin Murphy <robin.murphy@arm.com>
-Subject: Re: [PATCH v2 3/8] PCI/MSI: Use of_msi_get_domain instead of
- open-coded "msi-parent" parsing
-Message-ID: <20151015201050.GC10442@localhost>
-References: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
- <1444151043-31084-4-git-send-email-marc.zyngier@arm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v9 3/6] pci:host: Add Altera PCIe host controller driver
+Date: Wed, 14 Oct 2015 15:32:35 +0200
+Message-ID: <5938877.UG8VySdxoE@wuerfel>
+In-Reply-To: <CAFiDJ59ZZ5TBZJ8wauEzP3Je=DeSaGG-PWvm87dkSLfjmyRwjQ@mail.gmail.com>
+References: <1444790492-4051-1-git-send-email-lftan@altera.com> <5210459.PtmhWaT6RM@wuerfel> <CAFiDJ59ZZ5TBZJ8wauEzP3Je=DeSaGG-PWvm87dkSLfjmyRwjQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444151043-31084-4-git-send-email-marc.zyngier@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 06, 2015 at 06:03:58PM +0100, Marc Zyngier wrote:
-> Now that we have a function that implements the complexity of the
-> "msi-parent" property parsing, switch to that.
+On Wednesday 14 October 2015 18:01:46 Ley Foon Tan wrote:
+> On Wed, Oct 14, 2015 at 5:36 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Wednesday 14 October 2015 17:28:45 Ley Foon Tan wrote:
+> >> On Wed, Oct 14, 2015 at 5:09 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> >
+> > Could we perhaps have a helper function that lets us register
+> > fixups dynamically?
+> >
+> >> The linker script keeps all pci fixup callbacks in pci fixup regions
+> >> during kernel compile time. So, it needs to be builtin module. Do you
+> >> know any way we can update those fixup regions?
+> >
+> > The only method I'm aware of at the moment is move the fixups to
+> > drivers/pci/quirks.c and enclose them in an #ifdef if you want them
+> > to not appear in kernels that don't support your SoC.
+> By looking at the drivers/pci/quirks.c, it looks like it is mainly for
+> the pci endpoint devices.
+> Fixups for host controller are in the driver itself.
 > 
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+But if it's for the host itself, there are usually other ways to
+do this without needing a fixup: you already have the device structure
+present in the driver, so you should just be able to modify it there.
 
-> ---
->  drivers/pci/of.c | 13 ++++++-------
->  1 file changed, 6 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index 2e99a50..e112da1 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -13,6 +13,7 @@
->  #include <linux/kernel.h>
->  #include <linux/pci.h>
->  #include <linux/of.h>
-> +#include <linux/of_irq.h>
->  #include <linux/of_pci.h>
->  #include "pci.h"
->  
-> @@ -64,27 +65,25 @@ struct device_node * __weak pcibios_get_phb_of_node(struct pci_bus *bus)
->  struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus)
->  {
->  #ifdef CONFIG_IRQ_DOMAIN
-> -	struct device_node *np;
->  	struct irq_domain *d;
->  
->  	if (!bus->dev.of_node)
->  		return NULL;
->  
->  	/* Start looking for a phandle to an MSI controller. */
-> -	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
-> +	d = of_msi_get_domain(&bus->dev, bus->dev.of_node, DOMAIN_BUS_PCI_MSI);
-> +	if (d)
-> +		return d;
->  
->  	/*
->  	 * If we don't have an msi-parent property, look for a domain
->  	 * directly attached to the host bridge.
->  	 */
-> -	if (!np)
-> -		np = bus->dev.of_node;
-> -
-> -	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
-> +	d = irq_find_matching_host(bus->dev.of_node, DOMAIN_BUS_PCI_MSI);
->  	if (d)
->  		return d;
->  
-> -	return irq_find_host(np);
-> +	return irq_find_host(bus->dev.of_node);
->  #else
->  	return NULL;
->  #endif
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+
+I'm looking at the code in your fixups now:
+
++static void altera_pcie_retrain(struct pci_dev *dev)
++{
++       u16 linkcap, linkstat;
++
++       /*
++        * Set the retrain bit if the PCIe rootport support > 2.5GB/s, but
++        * current speed is 2.5 GB/s.
++        */
++       pcie_capability_read_word(dev, PCI_EXP_LNKCAP, &linkcap);
++
++       if ((linkcap & PCI_EXP_LNKCAP_SLS) <= PCI_EXP_LNKCAP_SLS_2_5GB)
++               return;
++
++       pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &linkstat);
++       if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB)
++               pcie_capability_set_word(dev, PCI_EXP_LNKCTL,
++                                        PCI_EXP_LNKCTL_RL);
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ALTERA, PCI_ANY_ID, altera_pcie_retrain);
+
+This looks related to the code in pci_set_bus_speed(). What is
+missing from that code?
+
++static void altera_pcie_fixup_res(struct pci_dev *dev)
++{
++       /*
++        * Prevent enumeration of root port.
++        */
++       if (!dev->bus->parent && dev->devfn == 0) {
++               int i;
++
++               for (i = 0; i < PCI_NUM_RESOURCES; i++) {
++                       dev->resource[i].start = 0;
++                       dev->resource[i].end   = 0;
++                       dev->resource[i].flags   = 0;
++               }
++       }
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ALTERA, PCI_ANY_ID,
++                        altera_pcie_fixup_res);
+
+This seems really odd, too. Why is this needed?
+I think I've seen similar code in other host drivers, so
+it might be time to teach the PCI core about this kind of
+device.
+
+	Arnd
