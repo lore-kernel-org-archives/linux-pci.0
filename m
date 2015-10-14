@@ -1,53 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0095.outbound.protection.outlook.com ([207.46.100.95]:61865
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753383AbbJSITt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Oct 2015 04:19:49 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <5088538.zEUtS0EC0S@wuerfel>
+References: <1444790492-4051-1-git-send-email-lftan@altera.com>
+	<6044983.WR9BTgsOaA@wuerfel>
+	<CAFiDJ58Uwpv=xUXbBNQcd4FQq=fHGhtCnjTb7TKQBJ0TOxRLig@mail.gmail.com>
+	<5088538.zEUtS0EC0S@wuerfel>
+Date: Wed, 14 Oct 2015 17:28:45 +0800
+Message-ID: <CAFiDJ59AuXmM8vN9=ry8_UvS-paRN54CdCFw6EUMx9RV2TT3bQ@mail.gmail.com>
+Subject: Re: [PATCH v9 3/6] pci:host: Add Altera PCIe host controller driver
 From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	Rob Herring <robh+dt@kernel.org>,
 	Pawel Moll <pawel.moll@arm.com>,
 	Mark Rutland <mark.rutland@arm.com>,
 	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
+	Kumar Gala <galak@codeaurora.org>,
 	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v10 2/6] pci: add Altera PCI vendor ID
-Date: Mon, 19 Oct 2015 16:19:24 +0800
-Message-ID: <1445242768-4423-3-git-send-email-lftan@altera.com>
-In-Reply-To: <1445242768-4423-1-git-send-email-lftan@altera.com>
-References: <1445242768-4423-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- include/linux/pci_ids.h | 2 ++
- 1 file changed, 2 insertions(+)
+On Wed, Oct 14, 2015 at 5:09 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Wednesday 14 October 2015 16:32:25 Ley Foon Tan wrote:
+>> On Wed, Oct 14, 2015 at 4:20 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> > On Wednesday 14 October 2015 10:41:29 Ley Foon Tan wrote:
+>> >> +static int altera_pcie_remove(struct platform_device *pdev)
+>> >> +{
+>> >> +     struct altera_pcie *pcie = platform_get_drvdata(pdev);
+>> >> +
+>> >> +     altera_pcie_free_irq_domain(pcie);
+>> >> +     platform_set_drvdata(pdev, NULL);
+>> >> +     return 0;
+>> >> +}
+>> >
+>> > I just noticed this. Does it actually work to unload the module
+>> > and tear down all the pci_dev structures in a safe way?
+>> Good catch. It only can be compiled as builtin-moduley now, so we can
+>> remove this _remove callback function.
+>
+> I think we should change both: make it possible to load the
+> driver dynamically, and remove the altera_pcie_remove function.
+This driver depends on the pci fixups to work correctly. But, fixups
+callback functions in this driver are not being call if the driver is
+loadable module.
+The linker script keeps all pci fixup callbacks in pci fixup regions
+during kernel compile time. So, it needs to be builtin module. Do you
+know any way we can update those fixup regions?
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index d9ba49c..08e4462 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1550,6 +1550,8 @@
- #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
- #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
- 
-+#define PCI_VENDOR_ID_ALTERA		0x1172
-+
- #define PCI_VENDOR_ID_SBE		0x1176
- #define PCI_DEVICE_ID_SBE_WANXL100	0x0301
- #define PCI_DEVICE_ID_SBE_WANXL200	0x0302
--- 
-1.8.2.1
+>
+> You can prevent the module from being unloaded if you also remove
+> the module_platform_driver() directive and add a module_init()
+> without a matching module_exit().
+>
+> Please also add a '.suppress_bind_attrs = true,' flag in the driver
+> struct to prevent manual unbinding.
+I think we don't need these if it only can work as builtin module.
 
+Thanks for reviewing.
+
+Regards
+Ley Foon
