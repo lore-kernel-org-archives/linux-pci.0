@@ -1,213 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55774 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751153AbbJVMkg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Oct 2015 08:40:36 -0400
-Date: Thu, 22 Oct 2015 15:40:27 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Lan Tianyu <tianyu.lan@intel.com>
-Cc: bhelgaas@google.com, carolyn.wyborny@intel.com,
-	donald.c.skidmore@intel.com, eddie.dong@intel.com,
-	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
-	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-Subject: Re: [RFC Patch 10/12] IXGBEVF: Add lock to protect tx/rx ring
- operation
-Message-ID: <20151022153756-mutt-send-email-mst@redhat.com>
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
- <1445445464-5056-11-git-send-email-tianyu.lan@intel.com>
+Received: from mail-vk0-f47.google.com ([209.85.213.47]:36485 "EHLO
+	mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751986AbbJNAng (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Oct 2015 20:43:36 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445445464-5056-11-git-send-email-tianyu.lan@intel.com>
+In-Reply-To: <alpine.LRH.2.20.1510132338510.14105@math.ut.ee>
+References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee>
+	<CAE9FiQXM9YxRwcbG577Pcqmj7YbOa0yk6hYELb2FpTtct5u2jg@mail.gmail.com>
+	<alpine.LRH.2.20.1510120808240.3251@math.ut.ee>
+	<CAE9FiQXHsgYaTgF2rsWFJXSYJ=kH3j63ageJ2H8F5wnzbFgxRg@mail.gmail.com>
+	<alpine.LRH.2.20.1510130800380.3972@math.ut.ee>
+	<CAE9FiQVAtPGgzwwMaHjGjyzOD8wKb0TqCd1wynF6-ZmFqZzEaQ@mail.gmail.com>
+	<alpine.LRH.2.20.1510131020140.9747@math.ut.ee>
+	<CAE9FiQWhE=-FtZjuC5-fTzuTq0tm9Zt1MiD8J0a_Q_jiB5RLNg@mail.gmail.com>
+	<alpine.LRH.2.20.1510132338510.14105@math.ut.ee>
+Date: Tue, 13 Oct 2015 17:43:35 -0700
+Message-ID: <CAE9FiQXDCtL9nqQOVNspNc87=eY98NW=nrSZczbKVNYsPQuVJA@mail.gmail.com>
+Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
+From: Yinghai Lu <yinghai@kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=001a11438ee83ec831052205da29
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 22, 2015 at 12:37:42AM +0800, Lan Tianyu wrote:
-> Ring shifting during restoring VF function maybe race with original
-> ring operation(transmit/receive package). This patch is to add tx/rx
-> lock to protect ring related data.
-> 
-> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
+--001a11438ee83ec831052205da29
+Content-Type: text/plain; charset=UTF-8
 
-That's adding a bunch of locking on data path - what's the
-performance impact?
+On Tue, Oct 13, 2015 at 1:39 PM, Meelis Roos <mroos@linux.ee> wrote:
+>
+> 0001:00:07.0 ISA bridge: ULi Electronics Inc. M1533/M1535/M1543 PCI to ISA Bridge [Aladdin IV/V/V+]
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0
+>         Region 0: [virtual] I/O ports at 0000 [size=64K]
+>         Region 1: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
+>         Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
+>         Region 3: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+>         Region 4: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+>         Region 5: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
+>         [virtual] Expansion ROM at fffff80100000000 [disabled]
+>         Capabilities: [a0] Power Management version 1
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+> 00: b9 10 33 15 0f 00 10 02 00 00 01 06 00 00 00 00
+> 10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 30: 00 00 00 00 a0 00 00 00 00 00 00 00 00 00 00 00
+> 40: 03 13 4b 80 83 09 00 47 00 00 06 00 00 00 eb 31
+> 50: 00 00 00 20 90 02 20 03 66 03 00 00 00 00 00 08
+> 60: 40 00 00 00 00 00 00 00 00 00 00 00 80 20 00 00
+> 70: 00 00 0a 00 47 00 00 db 04 02 00 04 00 80 01 90
+> 80: a5 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> a0: 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
+> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-Can't you do something faster? E.g. migration things
-are slow path - can't you use something like RCU
-to flush outstanding work?
+Please check attached patch.
 
+Thanks
 
-> ---
->  drivers/net/ethernet/intel/ixgbevf/ixgbevf.h      |  2 ++
->  drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c | 28 ++++++++++++++++++++---
->  2 files changed, 27 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h b/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
-> index 6eab402e..3a748c8 100644
-> --- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
-> +++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
-> @@ -448,6 +448,8 @@ struct ixgbevf_adapter {
->  
->  	spinlock_t mbx_lock;
->  	unsigned long last_reset;
-> +	spinlock_t mg_rx_lock;
-> +	spinlock_t mg_tx_lock;
->  };
->  
->  enum ixbgevf_state_t {
-> diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> index 15ec361..04b6ce7 100644
-> --- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> +++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> @@ -227,8 +227,10 @@ static u64 ixgbevf_get_tx_completed(struct ixgbevf_ring *ring)
->  
->  int ixgbevf_tx_ring_shift(struct ixgbevf_ring *r, u32 head)
->  {
-> +	struct ixgbevf_adapter *adapter = netdev_priv(r->netdev);
->  	struct ixgbevf_tx_buffer *tx_buffer = NULL;
->  	static union ixgbevf_desc *tx_desc = NULL;
-> +	unsigned long flags;
->  
->  	tx_buffer = vmalloc(sizeof(struct ixgbevf_tx_buffer) * (r->count));
->  	if (!tx_buffer)
-> @@ -238,6 +240,7 @@ int ixgbevf_tx_ring_shift(struct ixgbevf_ring *r, u32 head)
->  	if (!tx_desc)
->  		return -ENOMEM;
->  
-> +	spin_lock_irqsave(&adapter->mg_tx_lock, flags);
->  	memcpy(tx_desc, r->desc, sizeof(union ixgbevf_desc) * r->count);
->  	memcpy(r->desc, &tx_desc[head], sizeof(union ixgbevf_desc) * (r->count - head));
->  	memcpy(&r->desc[r->count - head], tx_desc, sizeof(union ixgbevf_desc) * head);
-> @@ -256,6 +259,8 @@ int ixgbevf_tx_ring_shift(struct ixgbevf_ring *r, u32 head)
->  	else
->  		r->next_to_use += (r->count - head);
->  
-> +	spin_unlock_irqrestore(&adapter->mg_tx_lock, flags);
-> +
->  	vfree(tx_buffer);
->  	vfree(tx_desc);
->  	return 0;
-> @@ -263,8 +268,10 @@ int ixgbevf_tx_ring_shift(struct ixgbevf_ring *r, u32 head)
->  
->  int ixgbevf_rx_ring_shift(struct ixgbevf_ring *r, u32 head)
->  {
-> +	struct ixgbevf_adapter *adapter = netdev_priv(r->netdev);
->  	struct ixgbevf_rx_buffer *rx_buffer = NULL;
->  	static union ixgbevf_desc *rx_desc = NULL;
-> +	unsigned long flags;	
->  
->  	rx_buffer = vmalloc(sizeof(struct ixgbevf_rx_buffer) * (r->count));
->  	if (!rx_buffer)
-> @@ -274,6 +281,7 @@ int ixgbevf_rx_ring_shift(struct ixgbevf_ring *r, u32 head)
->  	if (!rx_desc)
->  		return -ENOMEM;
->  
-> +	spin_lock_irqsave(&adapter->mg_rx_lock, flags);
->  	memcpy(rx_desc, r->desc, sizeof(union ixgbevf_desc) * (r->count));
->  	memcpy(r->desc, &rx_desc[head], sizeof(union ixgbevf_desc) * (r->count - head));
->  	memcpy(&r->desc[r->count - head], rx_desc, sizeof(union ixgbevf_desc) * head);
-> @@ -291,6 +299,7 @@ int ixgbevf_rx_ring_shift(struct ixgbevf_ring *r, u32 head)
->  		r->next_to_use -= head;
->  	else
->  		r->next_to_use += (r->count - head);
-> +	spin_unlock_irqrestore(&adapter->mg_rx_lock, flags);
->  
->  	vfree(rx_buffer);
->  	vfree(rx_desc);
-> @@ -377,6 +386,8 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
->  	if (test_bit(__IXGBEVF_DOWN, &adapter->state))
->  		return true;
->  
-> +	spin_lock(&adapter->mg_tx_lock);
-> +	i = tx_ring->next_to_clean;
->  	tx_buffer = &tx_ring->tx_buffer_info[i];
->  	tx_desc = IXGBEVF_TX_DESC(tx_ring, i);
->  	i -= tx_ring->count;
-> @@ -471,6 +482,8 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
->  	q_vector->tx.total_bytes += total_bytes;
->  	q_vector->tx.total_packets += total_packets;
->  
-> +	spin_unlock(&adapter->mg_tx_lock);
-> +
->  	if (check_for_tx_hang(tx_ring) && ixgbevf_check_tx_hang(tx_ring)) {
->  		struct ixgbe_hw *hw = &adapter->hw;
->  		union ixgbe_adv_tx_desc *eop_desc;
-> @@ -999,10 +1012,12 @@ static int ixgbevf_clean_rx_irq(struct ixgbevf_q_vector *q_vector,
->  				struct ixgbevf_ring *rx_ring,
->  				int budget)
->  {
-> +	struct ixgbevf_adapter *adapter = netdev_priv(rx_ring->netdev);
->  	unsigned int total_rx_bytes = 0, total_rx_packets = 0;
->  	u16 cleaned_count = ixgbevf_desc_unused(rx_ring);
->  	struct sk_buff *skb = rx_ring->skb;
->  
-> +	spin_lock(&adapter->mg_rx_lock);
->  	while (likely(total_rx_packets < budget)) {
->  		union ixgbe_adv_rx_desc *rx_desc;
->  
-> @@ -1078,6 +1093,7 @@ static int ixgbevf_clean_rx_irq(struct ixgbevf_q_vector *q_vector,
->  	q_vector->rx.total_packets += total_rx_packets;
->  	q_vector->rx.total_bytes += total_rx_bytes;
->  
-> +	spin_unlock(&adapter->mg_rx_lock);
->  	return total_rx_packets;
->  }
->  
-> @@ -3572,14 +3588,17 @@ static void ixgbevf_tx_map(struct ixgbevf_ring *tx_ring,
->  	struct ixgbevf_tx_buffer *tx_buffer;
->  	union ixgbe_adv_tx_desc *tx_desc;
->  	struct skb_frag_struct *frag = &skb_shinfo(skb)->frags[0];
-> +	struct ixgbevf_adapter *adapter = netdev_priv(tx_ring->netdev);
->  	unsigned int data_len = skb->data_len;
->  	unsigned int size = skb_headlen(skb);
->  	unsigned int paylen = skb->len - hdr_len;
-> +	unsigned long flags;
->  	u32 tx_flags = first->tx_flags;
->  	__le32 cmd_type;
-> -	u16 i = tx_ring->next_to_use;
-> -	u16 start;
-> +	u16 i, start;     
->  
-> +	spin_lock_irqsave(&adapter->mg_tx_lock, flags);
-> +	i = tx_ring->next_to_use;
->  	tx_desc = IXGBEVF_TX_DESC(tx_ring, i);
->  
->  	ixgbevf_tx_olinfo_status(tx_desc, tx_flags, paylen);
-> @@ -3673,7 +3692,7 @@ static void ixgbevf_tx_map(struct ixgbevf_ring *tx_ring,
->  
->  	/* notify HW of packet */
->  	ixgbevf_write_tail(tx_ring, i);
-> -
-> +	spin_unlock_irqrestore(&adapter->mg_tx_lock, flags);
->  	return;
->  dma_error:
->  	dev_err(tx_ring->dev, "TX DMA map failed\n");
-> @@ -3690,6 +3709,7 @@ dma_error:
->  	}
->  
->  	tx_ring->next_to_use = i;
-> +	spin_unlock_irqrestore(&adapter->mg_tx_lock, flags);
->  }
->  
->  static int __ixgbevf_maybe_stop_tx(struct ixgbevf_ring *tx_ring, int size)
-> @@ -4188,6 +4208,8 @@ static int ixgbevf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->  		break;
->  	}
->  
-> +	spin_lock_init(&adapter->mg_tx_lock);
-> +	spin_lock_init(&adapter->mg_rx_lock);
->  	return 0;
->  
->  err_register:
-> -- 
-> 1.8.4.rc0.1.g8f6a3e5.dirty
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yinghai
+
+--001a11438ee83ec831052205da29
+Content-Type: text/x-patch; charset=US-ASCII; name="sparc_no_bar_for_uli_1533.patch"
+Content-Disposition: attachment; filename="sparc_no_bar_for_uli_1533.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ifq2qhrq0
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IElnbm9yZSBCQVIgZm9yIEFMaSBNMTUzMyBQQ0ktSVNBIGJy
+aWRnZQoKTWVlbGlzIHJlcG9ydGVkIHN0cmFuZ2UgY29uZmxpY3RzIG9uIHNwYXJjIHYyMTA6CnBj
+aSAwMDAxOjAwOjA3LjA6IGNhbid0IGNsYWltIEJBUiAyIFttZW0gMHg3ZmYwMDAwMDAwMC0weDdm
+ZjAwMGZmZmZmXTogYWRkcmVzcyBjb25mbGljdCB3aXRoIDAwMDE6MDA6MDcuMCBbbWVtIDB4N2Zm
+MDAwMDAwMDAtMHg3ZmYwMDBmZmZmZl0KcGNpIDAwMDE6MDA6MDYuMDogY2FuJ3QgY2xhaW0gQkFS
+IDAgW2lvIDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMTAwMDAwZl06IGFkZHJlc3MgY29uZmxpY3Qgd2l0
+aCAwMDAxOjAwOjA3LjAgW2lvIDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMTAwZmZmZl0KcGNpIDAwMDE6
+MDA6MGQuMDogY2FuJ3QgY2xhaW0gQkFSIDAgW2lvIDB4N2ZlMDEwMDA5MDAtMHg3ZmUwMTAwMDkw
+N106IGFkZHJlc3MgY29uZmxpY3Qgd2l0aCAwMDAxOjAwOjA3LjAgW2lvIDB4N2ZlMDEwMDAwMDAt
+MHg3ZmUwMTAwZmZmZl0KcGNpIDAwMDE6MDA6MGQuMDogY2FuJ3QgY2xhaW0gQkFSIDEgW2lvIDB4
+N2ZlMDEwMDA5MTgtMHg3ZmUwMTAwMDkxZl06IGFkZHJlc3MgY29uZmxpY3Qgd2l0aCAwMDAxOjAw
+OjA3LjAgW2lvIDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMTAwZmZmZl0KcGNpIDAwMDE6MDA6MGQuMDog
+Y2FuJ3QgY2xhaW0gQkFSIDIgW2lvIDB4N2ZlMDEwMDA5MTAtMHg3ZmUwMTAwMDkxN106IGFkZHJl
+c3MgY29uZmxpY3Qgd2l0aCAwMDAxOjAwOjA3LjAgW2lvIDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMTAw
+ZmZmZl0KcGNpIDAwMDE6MDA6MGQuMDogY2FuJ3QgY2xhaW0gQkFSIDMgW2lvIDB4N2ZlMDEwMDA5
+MDgtMHg3ZmUwMTAwMDkwZl06IGFkZHJlc3MgY29uZmxpY3Qgd2l0aCAwMDAxOjAwOjA3LjAgW2lv
+IDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMTAwZmZmZl0KcGNpIDAwMDE6MDA6MGQuMDogY2FuJ3QgY2xh
+aW0gQkFSIDQgW2lvIDB4N2ZlMDEwMDA5MjAtMHg3ZmUwMTAwMDkyZl06IGFkZHJlc3MgY29uZmxp
+Y3Qgd2l0aCAwMDAxOjAwOjA3LjAgW2lvIDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMTAwZmZmZl0KUENJ
+OiAvcGNpQDFlLDYwMDAwMCBjYW4ndCBjbGFpbSBWaWRlbyBSQU0gYXJlYSBbbWVtIDB4N2ZmMDAw
+YTAwMDAtMHg3ZmYwMDBiZmZmZl06IGFkZHJlc3MgY29uZmxpY3Qgd2l0aCAwMDAxOjAwOjA3LjAg
+W21lbSAweDdmZjAwMDAwMDAwLTB4N2ZmMDAwZmZmZmZdClBDSTogL3BjaUAxZSw2MDAwMDAgY2Fu
+J3QgY2xhaW0gU3lzdGVtIFJPTSBbbWVtIDB4N2ZmMDAwZjAwMDAtMHg3ZmYwMDBmZmZmZl06IGFk
+ZHJlc3MgY29uZmxpY3Qgd2l0aCAwMDAxOjAwOjA3LjAgW21lbSAweDdmZjAwMDAwMDAwLTB4N2Zm
+MDAwZmZmZmZdClBDSTogL3BjaUAxZSw2MDAwMDAgY2FuJ3QgY2xhaW0gVmlkZW8gUk9NIFttZW0g
+MHg3ZmYwMDBjMDAwMC0weDdmZjAwMGM3ZmZmXTogYWRkcmVzcyBjb25mbGljdCB3aXRoIDAwMDE6
+MDA6MDcuMCBbbWVtIDB4N2ZmMDAwMDAwMDAtMHg3ZmYwMDBmZmZmZl0KCndlIGhhdmUKcGNpX2J1
+cyAwMDAxOjAwOiByb290IGJ1cyByZXNvdXJjZSBbaW8gIDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMWZm
+ZmZmZl0gKGJ1cyBhZGRyZXNzIFsweDAwMDAtMHhmZmZmZmZdKQpwY2lfYnVzIDAwMDE6MDA6IHJv
+b3QgYnVzIHJlc291cmNlIFttZW0gMHg3ZmYwMDAwMDAwMC0weDdmZmZmZmZmZmZmXSAoYnVzIGFk
+ZHJlc3MgWzB4MDAwMDAwMDAtMHhmZmZmZmZmZl0pCgpzbyBwY2kgYnVzIGFkZHJlc3MgaW4gdGhl
+IGJhcnMgZm9yIDAwMDE6MDA6MDcuMCBoYXMgYWxsIDBzLgoKMDAwMTowMDowNy4wIElTQSBicmlk
+Z2U6IFVMaSBFbGVjdHJvbmljcyBJbmMuIE0xNTMzL00xNTM1L00xNTQzIFBDSSB0byBJU0EgQnJp
+ZGdlIFtBbGFkZGluIElWL1YvVitdCiAgICAgICAgUmVnaW9uIDA6IFt2aXJ0dWFsXSBJL08gcG9y
+dHMgYXQgMDAwMCBbc2l6ZT02NEtdCiAgICAgICAgUmVnaW9uIDE6IE1lbW9yeSBhdCA8dW5hc3Np
+Z25lZD4gKDMyLWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9MU1dCiAgICAgICAgUmVnaW9u
+IDI6IE1lbW9yeSBhdCA8dW5hc3NpZ25lZD4gKDMyLWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3Np
+emU9MU1dCjAwOiBiOSAxMCAzMyAxNSAwZiAwMCAxMCAwMiAwMCAwMCAwMSAwNiAwMCAwMCAwMCAw
+MAoxMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKMjA6
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCjMwOiAwMCAw
+MCAwMCAwMCBhMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMAoKQWNjb3JkaW5nIHRv
+IGh0dHA6Ly93d3cudmVyc2Fsb2dpYy5jb20vU3VwcG9ydC9Eb3dubG9hZHMvcGRmL2FsaTE1NDMu
+cGRmCnBhZ2UgMjg6IFRoZSBpbmRpY2VzIGJlZm9yZSA0MGggYXJlIHJlYWQtb25seS4KYW5kIHdl
+IGhhdmUgYWxsIDAgZnJvbSAweDEwLTB4MmYsIGFjY29yZGluZyB0byBsc3BjaS4KClNvIGNsZWFu
+IGZsYWdzLCBhbmQgaWdub3JlIHRoZW0gYWxsIHRoZSB3YXkgaW5jbHVkZQpjbGFpbSBhbmQgc2l6
+aW5nIGFuZCBhbGxvYyBldGMuCgpSZXBvcnRlZC1ieTogTWVlbGlzIFJvb3MgPG1yb29zQGxpbnV4
+LmVlPgpTaWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0K
+IGRyaXZlcnMvcGNpL3F1aXJrcy5jIHwgICAxNSArKysrKysrKysrKysrKysKIDEgZmlsZSBjaGFu
+Z2VkLCAxNSBpbnNlcnRpb25zKCspCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3F1aXJr
+cy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3F1aXJrcy5jCisr
+KyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcXVpcmtzLmMKQEAgLTQ3MCw2ICs0NzAsMjEgQEAgc3Rh
+dGljIHZvaWQgcXVpcmtfYW1kX25sX2NsYXNzKHN0cnVjdCBwYwogREVDTEFSRV9QQ0lfRklYVVBf
+SEVBREVSKFBDSV9WRU5ET1JfSURfQU1ELCBQQ0lfREVWSUNFX0lEX0FNRF9OTF9VU0IsCiAJCXF1
+aXJrX2FtZF9ubF9jbGFzcyk7CiAKKworLyoKKyAqIEFMaSBtMTUzMyBwY2kgdG8gaXNhIGJyaWRn
+ZSBkb2VzIG5vdCBoYXZlIEJBUiBhY2NvcmRpbmcgdG8gZGF0YXNoZWV0LAorICogY2xlYXIgdGhl
+IGZsYWdzLCBzbyB3ZSB3aWxsIHRyeSB0byBjbGFpbSB0aGVtIG9yIHJlYWxsb2NhdGUgcmVzLgor
+ICovCitzdGF0aWMgdm9pZCBxdWlya19hbGkxNTMzKHN0cnVjdCBwY2lfZGV2ICpkZXYpCit7CisJ
+aW50IGk7CisKKwlmb3IgKGkgPSAwOyBpIDwgUENJX1JPTV9SRVNPVVJDRTsgaSsrKQorCQlkZXYt
+PnJlc291cmNlW2ldLmZsYWdzID0gMDsKK30KK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lf
+VkVORE9SX0lEX0FMLCBQQ0lfREVWSUNFX0lEX0FMX00xNTMzLAorCQkJIHF1aXJrX2FsaTE1MzMp
+OworCiBzdGF0aWMgdm9pZCBwaWl4NF9pb19xdWlyayhzdHJ1Y3QgcGNpX2RldiAqZGV2LCBjb25z
+dCBjaGFyICpuYW1lLCB1bnNpZ25lZCBpbnQgcG9ydCwgdW5zaWduZWQgaW50IGVuYWJsZSkKIHsK
+IAl1MzIgZGV2cmVzOwo=
+--001a11438ee83ec831052205da29--
