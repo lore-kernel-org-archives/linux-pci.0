@@ -1,132 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0094.outbound.protection.outlook.com ([157.56.110.94]:51808
+Received: from mail-bn1bon0054.outbound.protection.outlook.com ([157.56.111.54]:62313
 	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754680AbbJ1WvU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 Oct 2015 18:51:20 -0400
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
-	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
-	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V5 3/9] ACPI: Adding DMA Attribute APIs for ACPI Device
-Date: Wed, 28 Oct 2015 15:50:48 -0700
-Message-ID: <1446072654-5608-4-git-send-email-Suravee.Suthikulpanit@amd.com>
-In-Reply-To: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+	id S1754268AbbJNQ0i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 Oct 2015 12:26:38 -0400
+Message-ID: <561E8221.7070701@caviumnetworks.com>
+Date: Wed, 14 Oct 2015 09:26:09 -0700
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Sean O. Stalley" <sean.stalley@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	"Rafal Milecki" <zajec5@gmail.com>,
+	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"rajatxjain@gmail.com" <rajatxjain@gmail.com>,
+	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v5 0/4] PCI: Add support for PCI Enhanced Allocation "BARs"
+References: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com> <5FE5E296BC647B42A2509AB982F88C1321D86B95@ORSMSX108.amr.corp.intel.com> <20151014161731.GA3029@sean.stalley.intel.com>
+In-Reply-To: <20151014161731.GA3029@sean.stalley.intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding acpi_get_dma_attr() to query DMA attributes of ACPI devices.
-It returns the enum dev_dma_attr, which communicates DMA information
-more clearly. This API replaces the acpi_check_dma(), which will be
-removed in subsequent patch.
+On 10/14/2015 09:17 AM, Sean O. Stalley wrote:
+> Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+>
 
-This patch also provides a convenient function, acpi_dma_supported(),
-to check DMA support of the specified ACPI device.
+Thanks a lot Sean.
 
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-CC: Rafael J. Wysocki <rjw@rjwysocki.net>
----
- drivers/acpi/scan.c     | 42 ++++++++++++++++++++++++++++++++++++++++++
- include/acpi/acpi_bus.h |  3 +++
- include/linux/acpi.h    | 10 ++++++++++
- 3 files changed, 55 insertions(+)
+I think you cannot SOB if the patches are not flowing through you (as 
+may be the case for my two additions).  Perhaps a Tested-by: or 
+Acked-by: would be more appropriate.
 
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index daf9fc8..78d5f02 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1308,6 +1308,48 @@ void acpi_free_pnp_ids(struct acpi_device_pnp *pnp)
- 	kfree(pnp->unique_id);
- }
- 
-+/**
-+ * acpi_dma_supported - Check DMA support for the specified device.
-+ * @adev: The pointer to acpi device
-+ *
-+ * Return false if DMA is not supported. Otherwise, return true
-+ */
-+bool acpi_dma_supported(struct acpi_device *adev)
-+{
-+	if (!adev)
-+		return false;
-+
-+	if (adev->flags.cca_seen)
-+		return true;
-+
-+	/*
-+	* Per ACPI 6.0 sec 6.2.17, assume devices can do cache-coherent
-+	* DMA on "Intel platforms".  Presumably that includes all x86 and
-+	* ia64, and other arches will set CONFIG_ACPI_CCA_REQUIRED=y.
-+	*/
-+	if (!IS_ENABLED(CONFIG_ACPI_CCA_REQUIRED))
-+		return true;
-+
-+	return false;
-+}
-+
-+/**
-+ * acpi_get_dma_attr - Check the supported DMA attr for the specified device.
-+ * @adev: The pointer to acpi device
-+ *
-+ * Return enum dev_dma_attr.
-+ */
-+enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
-+{
-+	if (!acpi_dma_supported(adev))
-+		return DEV_DMA_NOT_SUPPORTED;
-+
-+	if (adev->flags.coherent_dma)
-+		return DEV_DMA_COHERENT;
-+	else
-+		return DEV_DMA_NON_COHERENT;
-+}
-+
- static void acpi_init_coherency(struct acpi_device *adev)
- {
- 	unsigned long long cca = 0;
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 0f131d2..920b774 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -596,6 +596,9 @@ struct acpi_pci_root {
- 
- /* helper */
- 
-+bool acpi_dma_supported(struct acpi_device *adev);
-+enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
-+
- struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
- 					   u64 address, bool check_children);
- int acpi_is_root_bridge(acpi_handle);
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 82f56bb..6527920 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -598,6 +598,16 @@ static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
- 	return false;
- }
- 
-+static inline bool acpi_dma_supported(struct acpi_device *adev)
-+{
-+	return false;
-+}
-+
-+static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
-+{
-+	return DEV_DMA_NOT_SUPPORTED;
-+}
-+
- #define ACPI_PTR(_ptr)	(NULL)
- 
- #endif	/* !CONFIG_ACPI */
--- 
-2.1.0
+> I tested it out with the QEMU EA Patches here:
+> 	[https://lists.nongnu.org/archive/html/qemu-devel/2015-07/msg00348.html]
+>
+> Also, I found 1 trivial typo in the commit message of PATCH 1/4:
+> 	"Signed-off-by: Signed-off-by: David Daney <david.daney@cavium.com>"
+
+Aargh!  I need to be more careful.
+
+In any case, what should be the next course of action?
+
+   A) I receive Tested-by/Acked-by from Sean, and resend the four patches?
+
+   B) Bjorn takes these as is, but fixes the headers as needed.
+
+Bjorn, what do you think?
+
+Thanks,
+David Daney
+
+
+>
+> -Sean
+>
+> On Wed, Oct 07, 2015 at 06:44:52AM -0700, Stalley, Sean wrote:
+>> [PATCH 3/4 & 4/4] Acked-by: Sean O. Stalley <sean.stalley@intel.com>
+>>
+>> I won't be able to test it out until next week, but I like how it looks :)
+>>
+>> Thanks Again,
+>> Sean
+>>
+>>> -----Original Message-----
+>>> From: David Daney [mailto:ddaney.cavm@gmail.com]
+>>> Sent: Tuesday, October 06, 2015 4:51 PM
+>>> To: linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org; Bjorn Helgaas;
+>>> Michael S. Tsirkin; Rafał Miłecki; linux-api@vger.kernel.org; Stalley, Sean;
+>>> yinghai@kernel.org; rajatxjain@gmail.com; gong.chen@linux.intel.com
+>>> Cc: David Daney
+>>> Subject: [PATCH v5 0/4] PCI: Add support for PCI Enhanced Allocation
+>>> "BARs"
+>>>
+>>> From: David Daney <david.daney@cavium.com>
+>>>
+>>> The original patches are from Sean O. Stalley. I made a few tweaks, but feel
+>>> that it is substancially Sean's work, so I am keeping the patch set version
+>>> numbering scheme going.
+>>>
+>>> Tested on Cavium ThunderX system with 4 Root Complexes containing 50
+>>> devices/bridges provisioned with EA.
+>>>
+>>> Here is Sean's description of the patches:
+>>>
+>>> PCI Enhanced Allocation is a new method of allocating MMIO & IO
+>>> resources for PCI devices & bridges. It can be used instead of the traditional
+>>> PCI method of using BARs.
+>>>
+>>> EA entries are hardware-initialized to a fixed address.
+>>> Unlike BARs, regions described by EA are cannot be moved.
+>>> Because of this, only devices which are permanently connected to the PCI
+>>> bus can use EA. A removable PCI card must not use EA.
+>>>
+>>> This patchset adds support for using EA entries instead of BARs on Root
+>>> Complex Integrated Endpoints.
+>>>
+>>> The Enhanced Allocation ECN is publicly available here:
+>>> https://www.pcisig.com/specifications/conventional/ECN_Enhanced_Alloca
+>>> tion_23_Oct_2014_Final.pdf
+>>>
+>>>
+>>> Changes from V1:
+>>> 	- Use generic PCI resource claim functions (instead of EA-specific
+>>> functions)
+>>> 	- Only add support for RCiEPs (instead of all devices).
+>>> 	- Removed some debugging messages leftover from early testing.
+>>>
+>>> Changes from V2 (By David Daney):
+>>> 	- Add ea_cap to struct pci_device, to aid in finding the EA capability.
+>>> 	- Factored EA entity decoding into a separate function.
+>>> 	- Add functions to find EA entities by BEI or Property.
+>>> 	- Add handling of EA provisioned bridges.
+>>> 	- Add handling of EA SRIOV BARs.
+>>> 	- Try to assign proper resource parent so that SRIOV device creation
+>>> can occur.
+>>>
+>>> Changes from V3 (By David Daney):
+>>> 	- Discarded V3 changes and started over fresh based on Sean's V2.
+>>> 	- Add more support/checking for Entry Properties.
+>>> 	- Allow EA behind bridges.
+>>> 	- Rewrite some error messages.
+>>> 	- Add patch 3/5 to prevent resizing, and better handle
+>>>            assigning, of fixed EA resources.
+>>> 	- Add patch 4/5 to handle EA provisioned SRIOV devices.
+>>> 	- Add patch 5/5 to handle EA provisioned bridges.
+>>>
+>>> Changes from V4 (By David Daney):
+>>> 	- Drop patch 5/5 to handle EA provisioned bridges.
+>>> 	- Drop cases for bridge resources in 2/5.
+>>> 	- Drop unnecessary fallback resource parent handling in 3/5
+>>> 	- Small code formatting improvements.
+>>>
+>>> David Daney (2):
+>>>    PCI: Handle IORESOURCE_PCI_FIXED when sizing and assigning resources.
+>>>    PCI: Handle Enhanced Allocation (EA) capability for SRIOV devices.
+>>>
+>>> Sean O. Stalley (2):
+>>>    PCI: Add Enhanced Allocation register entries
+>>>    PCI: Add support for Enhanced Allocation devices
+>>>
+>>>   drivers/pci/iov.c             |  11 ++-
+>>>   drivers/pci/pci.c             | 189
+>>> ++++++++++++++++++++++++++++++++++++++++++
+>>>   drivers/pci/pci.h             |   1 +
+>>>   drivers/pci/probe.c           |   3 +
+>>>   drivers/pci/setup-bus.c       |  50 ++++++++++-
+>>>   include/uapi/linux/pci_regs.h |  44 +++++++++-
+>>>   6 files changed, 292 insertions(+), 6 deletions(-)
+>>>
+>>> --
+>>> 1.9.1
+>>
 
