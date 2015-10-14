@@ -1,49 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:55885 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269AbbJTPGl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 11:06:41 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Joao Pinto <Joao.Pinto@synopsys.com>,
-	"jg1.han@samsung.com" <jg1.han@samsung.com>
-CC: Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: pcie-designware build fails in ARM64
-Date: Tue, 20 Oct 2015 15:06:26 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E16271AB6@lhreml503-mbs>
-References: <56213393.8020606@synopsys.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1624ECFA@lhreml503-mbs>
- <56265538.40503@synopsys.com>
-In-Reply-To: <56265538.40503@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-bn1on0088.outbound.protection.outlook.com ([157.56.110.88]:7758
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750995AbbJNC6N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 13 Oct 2015 22:58:13 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v9 1/6] arm: add msi.h to Kbuild
+Date: Wed, 14 Oct 2015 10:41:27 +0800
+Message-ID: <1444790492-4051-2-git-send-email-lftan@altera.com>
+In-Reply-To: <1444790492-4051-1-git-send-email-lftan@altera.com>
+References: <1444790492-4051-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9hbyBQaW50byBbbWFp
-bHRvOkpvYW8uUGludG9Ac3lub3BzeXMuY29tXQ0KPiBTZW50OiBUdWVzZGF5LCBPY3RvYmVyIDIw
-LCAyMDE1IDM6NTMgUE0NCj4gVG86IEdhYnJpZWxlIFBhb2xvbmk7IEpvYW8gUGludG87IGpnMS5o
-YW5Ac2Ftc3VuZy5jb20NCj4gQ2M6IENhcmxvcyBQYWxtaW5oYTsgbGludXgtcGNpQHZnZXIua2Vy
-bmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogcGNpZS1kZXNpZ253YXJlIGJ1aWxkIGZhaWxzIGluIEFS
-TTY0DQo+IA0KPiBIaSBHYWJyaWVsZSwNCj4gDQo+IE9uIDEwLzE5LzIwMTUgODowNCBBTSwgR2Fi
-cmllbGUgUGFvbG9uaSB3cm90ZToNCj4gPiBIaSBKb2FvDQo+ID4NCj4gPj4gLS0tLS1PcmlnaW5h
-bCBNZXNzYWdlLS0tLS0NCj4gPj4gRnJvbTogbGludXgtcGNpLW93bmVyQHZnZXIua2VybmVsLm9y
-ZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gb3duZXJAdmdlci5rZXJuZWwub3JnXQ0KPiA+PiBPbiBC
-ZWhhbGYgT2YgSm9hbyBQaW50bw0KPiA+PiBTZW50OiAxNiBPY3RvYmVyIDIwMTUgMTg6MjgNCj4g
-Pj4gVG86IGpnMS5oYW5Ac2Ftc3VuZy5jb20NCj4gPj4gQ2M6IENhcmxvcyBQYWxtaW5oYTsgbGlu
-dXgtcGNpQHZnZXIua2VybmVsLm9yZw0KPiA+PiBTdWJqZWN0OiBwY2llLWRlc2lnbndhcmUgYnVp
-bGQgZmFpbHMgaW4gQVJNNjQNCj4gPj4NCj4gPj4gRGVhciBKaW5nb28gSGFuLA0KPiA+Pg0KPiA+
-PiBJIGFtIHRyeWluZyB0byBidWlsZCBwY2llLWRlc2lnbndhcmUgZm9yIEFSTTY0IGJ1dCB3aXRo
-IG5vIHN1Y2Nlc3MuDQo+IERpZCB5b3UNCj4gPj4gZXZlcg0KPiA+PiB0cmllZCB0byBidWlsZCB0
-aGUgY29yZSBkcml2ZXIgaW4gdGhpcyBwbGF0Zm9ybT8NCj4gPj4NCj4gPg0KPiA+IFBsZWFzZSBs
-b29rIGF0ICJbUEFUQ0ggdjExIDMvNl0gUENJOiBkZXNpZ253YXJlOiBBZGQgQVJNNjQgc3VwcG9y
-dCINCj4gPiBBbmQgcmVzcGVjdGl2ZSBwYXRjaHNldCBzdWJtaXR0ZWQgaW4gdGhlIG1haWxpbmcg
-bGlzdC4NCj4gDQo+IFRoYW5rcywgaXQgd29ya2VkIHdlbGwhDQoNCk9rIGdvb2QuDQoNCnAucy4g
-c29ycnkgZm9yIHByZXZpb3VzIGR1cGxpY2F0ZSBlbWFpbHMsIG15IG1haWwgc2VydmVyIHdlbnQg
-YSBiaXQgY3JhenkNCg0KPiANCj4gPg0KPiA+IFJlZ2FyZHMNCj4gPg0KPiA+IEdhYg0KPiA+DQo+
-ID4+IFRoYW5rcyB5b3UgZm9yIHlvdSBhdHRlbnRpb24uDQo+ID4+DQo+ID4+IFJlZ2FyZHMsDQo+
-ID4+IEpvYW8gUGludG8NCj4gPj4gLS0NCj4gPj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxp
-c3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSINCj4gaW4NCj4gPj4gdGhl
-IGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gPj4gTW9y
-ZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5m
-by5odG1sDQo+IA0KPiBSZWdhcmRzLA0KPiAtSm9hbw0K
+Include asm-generic/msi.h to support CONFIG_GENERIC_MSI_IRQ_DOMAIN.
+This to fix compilation error:
+"include/linux/msi.h:123:21: fatal error: asm/msi.h:
+No such file or directory"
+
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+ arch/arm/include/asm/Kbuild | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/include/asm/Kbuild b/arch/arm/include/asm/Kbuild
+index be648eb..bd42530 100644
+--- a/arch/arm/include/asm/Kbuild
++++ b/arch/arm/include/asm/Kbuild
+@@ -14,6 +14,7 @@ generic-y += local.h
+ generic-y += local64.h
+ generic-y += mm-arch-hooks.h
+ generic-y += msgbuf.h
++generic-y += msi.h
+ generic-y += param.h
+ generic-y += parport.h
+ generic-y += poll.h
+-- 
+1.8.2.1
+
