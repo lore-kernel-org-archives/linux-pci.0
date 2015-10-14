@@ -1,129 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([104.200.29.153]:36203 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751096AbbJWFFr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:05:47 -0400
-From: Matthew Minter <matt@masarand.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	lorenzo.pieralisi@arm.com
-Cc: Matthew Minter <matt@masarand.com>
-Subject: [PATCH V4 05/29] PCI: Add pci_assign_irq function and have pci_fixup_irqs use it
-Date: Fri, 23 Oct 2015 06:03:38 +0100
-Message-Id: <1445576642-29624-6-git-send-email-matt@masarand.com>
-In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
-References: <1445576642-29624-1-git-send-email-matt@masarand.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:2507 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820AbbJNIfY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Oct 2015 04:35:24 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	qiujiang <qiujiang@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"Wangkefeng (Kevin)" <wangkefeng.wang@huawei.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: RE: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon
+ SoC Hip05
+Date: Wed, 14 Oct 2015 08:34:43 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162435E7@lhreml503-mbs>
+References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
+ <561CA5AF.2080300@hisilicon.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E162428B1@lhreml503-mbs>
+ <5549505.Kpo7ci0v8h@wuerfel>
+In-Reply-To: <5549505.Kpo7ci0v8h@wuerfel>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Here we delete the static pdev_fixup_irq function which is currently
-what pci_fixup_irqs uses to actually assign the irqs and replace it
-with the pci_assign_irq function which changes the interface and
-makes use of the new function pointers stored in the host bridge
-structure.
 
-Eventually this will allow pci_fixup_irqs to be removed entirely
-and the new deffered assignment code path will call pci_assign_irq
-directly. However to ensure current users continue to work a
-new implementation of pci_fixup_irqs is introduced which simply
-wraps the functionality of pci_assign_irq.
 
-Signed-off-by: Matthew Minter <matt@masarand.com>
----
- drivers/pci/setup-irq.c | 35 ++++++++++++++++++++++++++---------
- include/linux/pci.h     |  1 +
- 2 files changed, 27 insertions(+), 9 deletions(-)
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: Tuesday, October 13, 2015 12:19 PM
+> To: Gabriele Paoloni
+> Cc: Wangzhou (B); Bjorn Helgaas; Bjorn Helgaas; jingoohan1@gmail.com;
+> pratyush.anand@gmail.com; linux@arm.linux.org.uk;
+> thomas.petazzoni@free-electrons.com; lorenzo.pieralisi@arm.com;
+> james.morse@arm.com; Liviu.Dudau@arm.com; jason@lakedaemon.net;
+> robh@kernel.org; gabriel.fernandez@linaro.org;
+> Minghuan.Lian@freescale.com; linux-pci@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org; devicetree@vger.kernel.org; linux-
+> kernel@vger.kernel.org; zhangjukuo; qiuzhenfa; liudongdong (C);
+> qiujiang; xuwei (O); Liguozhu (Kenneth); Wangkefeng (Kevin); Rob
+> Herring
+> Subject: Re: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for
+> HiSilicon SoC Hip05
+> 
+> On Tuesday 13 October 2015 06:58:42 Gabriele Paoloni wrote:
+> >
+> > > >> +
+> > > >> +static int __init hisi_pcie_init(void)
+> > > >> +{
+> > > >> +	return platform_driver_probe(&hisi_pcie_driver,
+> hisi_pcie_probe);
+> > > >> +}
+> > > >> +subsys_initcall(hisi_pcie_init);
+> > > >
+> > > > Can you use module_platform_driver() or
+> module_platform_driver_probe()
+> > > > here instead of the subsys_initcall()?  No, I don't really know
+> what
+> > > > the difference between module_platform_driver() and
+> > > > module_platform_driver_probe() is, sorry :)
+> 
+> module_platform_driver_probe() will only call the probe function once
+> (and fail in case of -EPROBE_DEFER), while module_platform_driver()
+> installs the platform driver in a way that the device can be bound
+> and unbound at any point.
+> 
+> > > In fact, I used module_platform_driver_probe in previous version,
+> but
+> > > A PCIe VGA card of HiSilicon will use Hip05 PCIe host, so we
+> modified
+> > > module_platform_driver_probe to subsys_initcall which will be
+> called
+> > > before module_platform_driver_probe.
+> > >
+> > > We will upstream the driver of above PCIe VGA card soon.
+> 
+> I don't see a reason why a VGA driver would need the PCI host to be
+> probed this early, unless it is the only usable console in the system.
+> 
+> > Hi Bjorn, firstly many thanks for looking at this.
+> >
+> > About this last bit the reason why we use subsys_initcall() is that
+> > our host bridge is embedded in the SoC and as such is not hot-
+> pluggable
+> > for instance see:
+> > http://lxr.free-electrons.com/source/Documentation/driver-
+> model/platform.txt#L59
+> 
+> We should still be able to build the driver as a loadable module,
+> even if you don't do that on your own kernels.
 
-diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-index c7d9f26..a9b7a30 100644
---- a/drivers/pci/setup-irq.c
-+++ b/drivers/pci/setup-irq.c
-@@ -15,6 +15,7 @@
- #include <linux/errno.h>
- #include <linux/ioport.h>
- #include <linux/cache.h>
-+#include "pci.h"
- 
- void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
- {
-@@ -22,12 +23,17 @@ void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
- }
- 
--static void pdev_fixup_irq(struct pci_dev *dev,
--			   u8 (*swizzle)(struct pci_dev *, u8 *),
--			   int (*map_irq)(const struct pci_dev *, u8, u8))
-+void pci_assign_irq(struct pci_dev *dev)
- {
--	u8 pin, slot;
-+	u8 pin;
-+	u8 slot = -1;
- 	int irq = 0;
-+	struct pci_host_bridge *hbrg = pci_find_host_bridge(dev->bus);
-+
-+	if (!(hbrg->map_irq)) {
-+		dev_dbg(&dev->dev, "runtime irq mapping not provided by arch\n");
-+		return;
-+	}
- 
- 	/* If this device is not on the primary bus, we need to figure out
- 	   which interrupt pin it will come in on.   We know which slot it
-@@ -40,17 +46,19 @@ static void pdev_fixup_irq(struct pci_dev *dev,
- 	if (pin > 4)
- 		pin = 1;
- 
--	if (pin != 0) {
-+	if (pin) {
- 		/* Follow the chain of bridges, swizzling as we go.  */
--		slot = (*swizzle)(dev, &pin);
-+		if(hbrg->swizzle_irq)
-+			slot = (*(hbrg->swizzle_irq))(dev, &pin);
- 
--		irq = (*map_irq)(dev, slot, pin);
-+		/* If a swizzling function is not used map_irq must ignore slot */
-+		irq = (*(hbrg->map_irq))(dev, slot, pin);
- 		if (irq == -1)
- 			irq = 0;
- 	}
- 	dev->irq = irq;
- 
--	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
-+	dev_dbg(&dev->dev, "assign irq: got %d\n", dev->irq);
- 
- 	/* Always tell the device, so the driver knows what is
- 	   the real IRQ to use; the device does not use it. */
-@@ -60,9 +68,18 @@ static void pdev_fixup_irq(struct pci_dev *dev,
- void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
- 		    int (*map_irq)(struct pci_dev *, u8, u8))
- {
-+	/* This code should be removed shortly, but in the mean time
-+	   it can wrap the new codepath in order to allow arches
-+	   still using it to continue working */
- 	struct pci_dev *dev = NULL;
-+	struct pci_host_bridge *hbrg = NULL;
- 
- 	for_each_pci_dev(dev)
--		pdev_fixup_irq(dev, swizzle, map_irq);
-+		hbrg = pci_find_host_bridge(dev->bus);
-+		hbrg->swizzle_irq = swizzle;
-+		hbrg->map_irq = map_irq;
-+		pci_assign_irq(dev);
-+		hbrg->swizzle_irq = NULL;
-+		hbrg->map_irq = NULL;
- }
- EXPORT_SYMBOL_GPL(pci_fixup_irqs);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1073f27..e88ad4f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1122,6 +1122,7 @@ void pdev_enable_device(struct pci_dev *);
- int pci_enable_resources(struct pci_dev *, int mask);
- void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
- 		    int (*)(struct pci_dev *, u8, u8));
-+void pci_assign_irq(struct pci_dev *dev);
- #define HAVE_PCI_REQ_REGIONS	2
- int __must_check pci_request_regions(struct pci_dev *, const char *);
- int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
--- 
-2.6.2
+Hi Arnd, I don't see the point of having loadable KOs for platform
+devices that are integrated into SoCs (like PCIe Host Controllers...)
 
+> 
+> This doesn't mean that it has to be module_platform_driver,
+> subsys_initcall
+> will also work in a loadable module, it just won't be as early. However,
+> we should try to come up with a consistent approach for all PCI host
+> drivers,
+> I don't see any reason for hisi to be different from the others here.
+
+To me it sounds more appropriate to adopt subsys_initcall() for all the
+PCI Host Bridge controllers rather than having them as loadable modules...
+
+What is your view?
+
+Thanks
+
+Gab
+
+> 
+> > Our approach is also used by Exynos:
+> > http://lxr.free-electrons.com/source/drivers/pci/host/pci-
+> exynos.c#L644
+> 
+> Maybe we should change that too.
+> 
+> 	Arnd
