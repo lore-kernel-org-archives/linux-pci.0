@@ -1,128 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39989 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965802AbbJ0VCH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 17:02:07 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 43/61] PCI: Move saved required resource list out of required+optional assigning
-Date: Tue, 27 Oct 2015 13:55:35 -0700
-Message-Id: <1445979353-1728-44-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: Ma Jun <majun258@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH RFC 3/7] irqdomain: Make irq_domain_alloc_irqs_recursive available
+Date: Thu, 15 Oct 2015 16:39:24 +0100
+Message-Id: <1444923568-17413-4-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
+References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We will need to share saved required list for alt_size support, so move
-it out from required+optional assigning.
+We are soon going to need the MSI layer to call into the domain
+allocators. Instead of open coding this, make the standard
+irq_domain_alloc_irqs_recursive function available to the MSI
+layer.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/setup-bus.c | 30 ++++++++++++++++--------------
- 1 file changed, 16 insertions(+), 14 deletions(-)
+ include/linux/irqdomain.h | 3 +++
+ kernel/irq/irqdomain.c    | 6 +++---
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 5143ea2..ede619c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -456,6 +456,9 @@ static bool has_addon(struct list_head *head,
- 	int add_count = 0;
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 
-+	if (!realloc_head)
-+		return false;
-+
- 	/* check if we have add really */
- 	list_for_each_entry(dev_res, head, list) {
- 		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
-@@ -492,9 +495,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index d5e5c5b..cf96c6a 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -367,6 +367,9 @@ static inline int irq_domain_alloc_irqs(struct irq_domain *domain,
+ 	return __irq_domain_alloc_irqs(domain, -1, nr_irqs, node, arg, false);
  }
  
- static bool __assign_resources_required_optional_sorted(struct list_head *head,
-+				 struct list_head *save_head,
- 				 struct list_head *realloc_head)
- {
--	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res, *tmp_res;
-@@ -502,12 +505,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 	resource_size_t add_align, add_size;
- 	struct resource *res;
- 
--	if (!has_addon(head, realloc_head))
--		return false;
--
--	if (!save_resources(head, &save_head))
--		return false;
--
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
-@@ -548,7 +545,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 		/* Remove head list from realloc_head list */
- 		list_for_each_entry(dev_res, head, list)
- 			remove_from_list(realloc_head, dev_res->res);
--		free_list(&save_head);
- 		free_list(head);
- 
- 		return true;
-@@ -562,7 +558,7 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 		if (res->parent && !pci_need_to_release(fail_type, res)) {
- 			/* remove it from realloc_head list */
- 			remove_from_list(realloc_head, res);
--			remove_from_list(&save_head, res);
-+			remove_from_list(save_head, res);
- 			list_del(&dev_res->list);
- 			kfree(dev_res);
- 		}
-@@ -581,11 +577,9 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 		}
++extern int irq_domain_alloc_irqs_recursive(struct irq_domain *domain,
++					   unsigned int irq_base,
++					   unsigned int nr_irqs, void *arg);
+ extern int irq_domain_set_hwirq_and_chip(struct irq_domain *domain,
+ 					 unsigned int virq,
+ 					 irq_hw_number_t hwirq,
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 22aa961..1c9973e 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -1125,9 +1125,9 @@ static void irq_domain_free_irqs_recursive(struct irq_domain *domain,
  	}
- 	/* Restore start/end/flags from saved list */
--	list_for_each_entry(save_res, &save_head, list)
-+	list_for_each_entry(save_res, save_head, list)
- 		restore_resource(save_res, save_res->res);
- 
--	free_list(&save_head);
--
- 	return false;
  }
  
-@@ -603,16 +597,24 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 *    then try to reassign add_size for some resources.
- 	 */
- 
-+	LIST_HEAD(save_head);
-+
- 	/* Check required+optional add */
--	if (realloc_head &&
--	    __assign_resources_required_optional_sorted(head, realloc_head))
-+	if (has_addon(head, realloc_head) &&
-+	    save_resources(head, &save_head) &&
-+	    __assign_resources_required_optional_sorted(head, &save_head,
-+					       realloc_head)) {
-+		free_list(&save_head);
- 		return;
-+	}
- 
- 	sort_resources(head);
- 
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
- 
-+	free_list(&save_head);
-+
- 	/* Try to satisfy any additional optional resource
- 		requests */
- 	if (realloc_head)
+-static int irq_domain_alloc_irqs_recursive(struct irq_domain *domain,
+-					   unsigned int irq_base,
+-					   unsigned int nr_irqs, void *arg)
++int irq_domain_alloc_irqs_recursive(struct irq_domain *domain,
++				    unsigned int irq_base,
++				    unsigned int nr_irqs, void *arg)
+ {
+ 	int ret = 0;
+ 	struct irq_domain *parent = domain->parent;
 -- 
-1.8.4.5
+2.1.4
 
