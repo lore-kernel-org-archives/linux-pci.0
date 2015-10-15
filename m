@@ -1,151 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59221 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932412AbbJ0PPr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Oct 2015 11:15:47 -0400
-Date: Tue, 27 Oct 2015 10:15:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <festevam@gmail.com>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	linux-pci@vger.kernel.org, pratyush.anand@gmail.com,
-	m-karicheri2@ti.com, l.stach@pengutronix.de,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Subject: Re: [PATCH v4 1/4] PCI: designware: Use common LTSSM_STATE_MASK
- definition
-Message-ID: <20151027151542.GF8660@localhost>
-References: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151021184250.28724.41928.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-io0-f180.google.com ([209.85.223.180]:35387 "EHLO
+	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401AbbJOWOm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Oct 2015 18:14:42 -0400
+Subject: Re: [PATCH v2] PCI: IOV: read SRIOV_NUM_VF after enabling ARI
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1444317617-13399-1-git-send-email-benjamin.h.shelton@intel.com>
+ <20151015175825.GD17702@localhost> <562005F7.7030205@gmail.com>
+ <20151015213603.GB13636@localhost>
+Cc: Ben Shelton <benjamin.h.shelton@intel.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <56202550.1060405@gmail.com>
+Date: Thu, 15 Oct 2015 15:14:40 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151021184250.28724.41928.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20151015213603.GB13636@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Minghuan]
+On 10/15/2015 02:36 PM, Bjorn Helgaas wrote:
+> On Thu, Oct 15, 2015 at 01:00:55PM -0700, Alexander Duyck wrote:
+>> On 10/15/2015 10:58 AM, Bjorn Helgaas wrote:
+>>> Hi Ben,
+>>>
+>>> On Thu, Oct 08, 2015 at 10:20:17AM -0500, Ben Shelton wrote:
+>>>> For some SR-IOV devices, the number of available virtual functions increases
+>>>> after enabling ARI.  Currently, SRIOV_NUM_VF is read and saved off before the
+>>>> ARI control bit is enabled in SRIOV_CTRL.  This causes an issue when VFs are
+>>>> enabled.
+>>>>
+>>>> At device init, SRIOV_INITIAL_VF and SRIOV_NUM_VF are specified to contain the
+>>>> number of available VFs for the device.  sriov_enable() does a sanity check
+>>>> that SRIOV_INITIAL_VF is not greater than iov->total_VFs, the saved-off value
+>>>> of SRIOV_NUM_VF.  Since the value of both SRIOV_INITIAL_VF and SRIOV_NUM_VF has
+>>>> increased after enabling the ARI bit, the check fails, and the VFs cannot be
+>>>> enabled.
+>>>>
+>>>> To fix the issue, write SRIOV_CTRL first, and then read SRIOV_NUM_VF.
+>>> I think you mean PCI_SRIOV_TOTAL_VR (not NUM_VF), right?
+>>>
+>>> This is interesting because the spec says TotalVFs is HwInit, which
+>>> means it's read-only, and it doesn't mention anything about it
+>>> changing when ARIis enabled.  I can see why it would change in that
+>>> case, so maybe this is just a goof in the spec.
+>> I think it is supposed to be HwInit because changing the value can
+>> cause issues with resource allocation for the VFs.  Specifically if
+>> the number of VFs increases after the BIOS has come through and
+>> assigned MMIO resources it is possible that there may not be
+>> resources available.
+> Maybe, although sufficiently smart software could deal with that by
+> reassigning resources.  Theoretically, anyway.
+>
+>> I suspect we are going to end up having to quirk a number of devices
+>> in the future because of this as I can see this easily causing
+>> issues.
+> I guess the issue if we made this change would be:
+>
+>    - BIOS sees "ARI Capable Hierarchy" is zero
+>    - BIOS sees TotalVFs = X
+>    - BIOS allocates space for X VFs (size = "S * X")
+>    - Linux sets ARI Capable Hierarchy
+>    - Linux sees TotalVFs = X + Y
+>    - Linux reads SR-IOV BAR, computes size as "S * (X + Y)"
+>    - Linux tries to claim SR-IOV BAR, but fails because size is now too
+>      large to fit where BIOS put it
+>
+> Right?  What sort of quirk would you envision?  Something to keep us
+> from increasing "total" beyond what it was before we turned on ARI
+> Capable?
 
-On Wed, Oct 21, 2015 at 01:42:50PM -0500, Bjorn Helgaas wrote:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
-> 
-> Add a common #define for LTSSM_STATE_MASK and use it in all the
-> DesignWare-based drivers.
-> 
-> Note that this changes LTSSM_STATE_MASK from 6 bits (0x3f) to 5 bits (0x1f)
-> for i.MX6 and Layerscape.  We believe this is safe for all DesignWare-based
-> PCIe cores.
+The thing we would have to do in such a situation is force a 
+reallocation of the BARs in the SR-IOV area.  Maybe instead of adding a 
+quirk we could just add code here so that if totalVFs increases after we 
+set ARI we clear the BAR registers and force reallocation.  If I am not 
+mistaken the reallocation for unassigned bars would take place after 
+this code is run so it is probably the right place to do it.
 
-OK, DesignWare experts, what's the story on this LTSSM_STATE_MASK?
+> What problem does this patch solve, Ben?  I assume you have devices
+> that do change TotalVFs when ARI is enabled, and you do want the new
+> value?
+>
+> Or is the problem something like the following:
+>
+>    - ...
+>    - Linux PCI core sees TotalVFs = X (saved as iov->total_VFs)
+>    - Linux sets ARI Capable Hierarchy
+>    - Device changes TotalVFs to X + Y (but PCI core doesn't notice)
+>    - Driver reads TotalVFs and sees X + Y
+>    - Driver attempts pci_enable_sriov(dev, X + Y), which fails because
+>      sriov_enable() sees "X + Y > iov->total_VFs"
+>
+> I'm a little dubious about drivers reading the SRIOV capability
+> directly, so maybe this is a symptom of deeper problems.
 
-Minghuan says Layerscape requires a mask of 0x3f and it actually uses
-states 0x20, 0x21, 0x22, and 0x23:
+I don't think the issue is the drivers reading the SR-IOV config, it is 
+likely the end users.  They will want to get full use of the device and 
+they would see the config lists something like 64 VFs being available 
+via lspci, but the kernel would have them capped at 7.
 
-MH> Our LTSSM mask is 0x3f because it includes the following states:
-MH> 0x20 S_RCVRY_EQ0
-MH> 0x21 S_RCVRY_EQ1
-MH> 0x22 S_RCVRY_EQ2
-MH> 0x23 S_RCVRY_EQ3
+I think instead of just moving the read we should read it before and 
+after.  If the value increases we should just drop the contents of the 
+base address registers so that they can be reallocated now that the 
+memory footprint has changed.
 
-MH> And I checked DesignWare Cores PCI Express Controller Databook
-MH> v4.21a and found the following descriptor:
+- Alex
 
-MH> [5:0]: smlh_ltssm_state: LTSSM current state. Encoding is defined in workspace/src/include/cxpl_defs.vh
-
-MH> So could we use the mask 0x3f for all SoCs?
-
-I couldn't find the "DesignWare Cores PCI Express Controller Databook
-v4.21a", but I do see the Keystone mask (sec 3.9.11 of
-http://www.ti.com/lit/ug/sprugs6d/sprugs6d.pdf) is definitely only 5
-bits, but that's clearly a TI register, not a generic DesignWare
-register.
-
-So it looks like a mistake to make a common LTSSM_STATE_MASK
-definition.  It looks like this is something with some variation and
-we shouldn't make assumptions about it being common.
-
-Now I'm concerned that the LTSSM state definitions I put in
-drivers/pci/host/pcie-designware.h might not actually apply to
-everything derived from DW.  For example, the Layerscape S_RCVRY
-states appear to be Layerscape-specific.
-
-I don't want to put misleading stuff in
-drivers/pci/host/pcie-designware.h if it's not really generic.  Better
-to have it in the individual drivers, with a prefix that indicates
-that it applies to that driver, e.g., KS_LTSSM_MASK, LS_LTSSM_MASK,
-etc.
-
-Bjorn
-
-> [bhelgaas: changelog, move removal of unused SPEAr13xx #defines to separate
-> patch, add only LTSSM_STATE_MASK and change all users for reviewability]
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/host/pci-imx6.c        |    3 +--
->  drivers/pci/host/pci-keystone-dw.c |    1 -
->  drivers/pci/host/pci-layerscape.c  |    1 -
->  drivers/pci/host/pcie-designware.h |    2 ++
->  4 files changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 6f43086..7b0d120 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -55,7 +55,6 @@ struct imx6_pcie {
->  #define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
->  #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
->  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
-> -#define PCIE_PHY_DEBUG_R0_LTSSM_MASK		(0x3f << 0)
->  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
->  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
->  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
-> @@ -508,7 +507,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
->  	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
->  		return 0;
->  
-> -	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != 0x0d)
-> +	if ((debug_r0 & LTSSM_STATE_MASK) != 0x0d)
->  		return 0;
->  
->  	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
-> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-> index e71da99..95a8b13 100644
-> --- a/drivers/pci/host/pci-keystone-dw.c
-> +++ b/drivers/pci/host/pci-keystone-dw.c
-> @@ -25,7 +25,6 @@
->  
->  /* Application register defines */
->  #define LTSSM_EN_VAL		        1
-> -#define LTSSM_STATE_MASK		0x1f
->  #define LTSSM_STATE_L0			0x11
->  #define DBI_CS2_EN_VAL			0x20
->  #define OB_XLAT_EN_VAL		        2
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> index b2328ea1..f02752e 100644
-> --- a/drivers/pci/host/pci-layerscape.c
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -29,7 +29,6 @@
->  /* PEX1/2 Misc Ports Status Register */
->  #define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
->  #define LTSSM_STATE_SHIFT	20
-> -#define LTSSM_STATE_MASK	0x3f
->  #define LTSSM_PCIE_L0		0x11 /* L0 state */
->  
->  /* Symbol Timer Register and Filter Mask Register 1 */
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index d0bbd27..a1a76ff 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -22,6 +22,8 @@
->  #define MAX_MSI_IRQS			32
->  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
->  
-> +#define LTSSM_STATE_MASK		0x1f
-> +
->  struct pcie_port {
->  	struct device		*dev;
->  	u8			root_bus_nr;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
