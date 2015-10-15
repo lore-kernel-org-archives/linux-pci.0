@@ -1,115 +1,105 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V1 10/11] pci, acpi: Provide generic way to assign bus domain number.
-Date: Tue, 27 Oct 2015 17:38:41 +0100
-Message-Id: <1445963922-22711-11-git-send-email-tn@semihalf.com>
-In-Reply-To: <1445963922-22711-1-git-send-email-tn@semihalf.com>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:40123 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751371AbbJOX6F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Oct 2015 19:58:05 -0400
+From: "Kwok, WingMan" <w-kwok2@ti.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	KISHON VIJAY ABRAHAM <kishon@ti.com>,
+	"Quadros, Roger" <rogerq@ti.com>,
+	"Karicheri, Muralidharan" <m-karicheri2@ti.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"ssantosh@kernel.org" <ssantosh@kernel.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v1 1/2] phy: keystone: serdes driver for gbe 10gbe and
+ pcie
+Date: Thu, 15 Oct 2015 23:57:19 +0000
+Message-ID: <230CBA6E4B6B6B418E8730AC28E6FC7E04228DF2@DFLE11.ent.ti.com>
+References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com>
+ <5192855.p6QLDWTiVi@wuerfel>
+ <230CBA6E4B6B6B418E8730AC28E6FC7E04228DB8@DFLE11.ent.ti.com>
+ <9008744.UmMoJzNEVK@wuerfel>
+In-Reply-To: <9008744.UmMoJzNEVK@wuerfel>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Architectures which support PCI_DOMAINS_GENERIC (like ARM64)
-cannot call pci_bus_assign_domain_nr along ACPI PCI host bridge
-initialization since this function needs valid parent device reference
-to be able to retrieve domain number (aka segment).
-
-We can omit that blocker and pass down host bridge device via
-pci_create_root_bus parameter and then be able to evaluate _SEG method
-being in pci_bus_assign_domain_nr.
-
-Note that _SEG method is optional, therefore _SEG absence means
-that all PCI buses belong to domain 0.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- drivers/acpi/pci_root.c |  2 +-
- drivers/pci/pci.c       | 32 +++++++++++++++++++++++++++-----
- 2 files changed, 28 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 850d7bf..e682dc6 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -839,7 +839,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 
- 	pci_acpi_root_add_resources(info);
- 	pci_add_resource(&info->resources, &root->secondary);
--	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
-+	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
- 				  sysdata, &info->resources);
- 	if (!bus)
- 		goto out_release_info;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6a9a111..17d1857 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -25,6 +25,7 @@
- #include <linux/device.h>
- #include <linux/pm_runtime.h>
- #include <linux/pci_hotplug.h>
-+#include <linux/acpi.h>
- #include <asm-generic/pci-bridge.h>
- #include <asm/setup.h>
- #include "pci.h"
-@@ -4501,7 +4502,7 @@ int pci_get_new_domain_nr(void)
- void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- {
- 	static int use_dt_domains = -1;
--	int domain = of_get_pci_domain_nr(parent->of_node);
-+	int domain;
- 
- 	/*
- 	 * Check DT domain and use_dt_domains values.
-@@ -4523,14 +4524,35 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- 	 * API and update the use_dt_domains value to keep track of method we
- 	 * are using to assign domain numbers (use_dt_domains = 0).
- 	 *
-+	 * IF ACPI, we expect non-DT method (use_dt_domains == -1)
-+	 * and call _SEG method for corresponding host bridge device.
-+	 * If _SEG method does not exist, following ACPI spec (6.5.6)
-+	 * all PCI buses belong to domain 0.
-+	 *
- 	 * All other combinations imply we have a platform that is trying
--	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
--	 * which is a recipe for domain mishandling and it is prevented by
--	 * invalidating the domain value (domain = -1) and printing a
--	 * corresponding error.
-+	 * to mix domain numbers obtained from DT, ACPI and
-+	 * pci_get_new_domain_nr(), which is a recipe for domain mishandling and
-+	 * it is prevented by invalidating the domain value (domain = -1) and
-+	 * printing a corresponding error.
- 	 */
-+
-+	domain = of_get_pci_domain_nr(parent->of_node);
- 	if (domain >= 0 && use_dt_domains) {
- 		use_dt_domains = 1;
-+#ifdef CONFIG_ACPI
-+	} else if (!acpi_disabled && use_dt_domains == -1) {
-+		struct acpi_device *acpi_dev = to_acpi_device(parent);
-+		unsigned long long segment = 0;
-+		acpi_status status;
-+
-+		status = acpi_evaluate_integer(acpi_dev->handle,
-+					       METHOD_NAME__SEG, NULL,
-+					       &segment);
-+		if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
-+			dev_err(&acpi_dev->dev,  "can't evaluate _SEG\n");
-+
-+		domain = segment;
-+#endif
- 	} else if (domain < 0 && use_dt_domains != 1) {
- 		use_dt_domains = 0;
- 		domain = pci_get_new_domain_nr();
--- 
-1.9.1
-
+SGVsbG8sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQXJuZCBCZXJn
+bWFubiBbbWFpbHRvOmFybmRAYXJuZGIuZGVdDQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDE1
+LCAyMDE1IDQ6NTMgUE0NCj4gVG86IEt3b2ssIFdpbmdNYW4NCj4gQ2M6IGxpbnV4LWFybS1rZXJu
+ZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgcm9iaCtkdEBrZXJuZWwub3JnOw0KPiBwYXdlbC5tb2xs
+QGFybS5jb207IG1hcmsucnV0bGFuZEBhcm0uY29tOyBpamMrZGV2aWNldHJlZUBoZWxsaW9uLm9y
+Zy51azsNCj4gZ2FsYWtAY29kZWF1cm9yYS5vcmc7IEtJU0hPTiBWSUpBWSBBQlJBSEFNOyBRdWFk
+cm9zLCBSb2dlcjsgS2FyaWNoZXJpLA0KPiBNdXJhbGlkaGFyYW47IGJoZWxnYWFzQGdvb2dsZS5j
+b207IHNzYW50b3NoQGtlcm5lbC5vcmc7DQo+IGxpbnV4QGFybS5saW51eC5vcmcudWs7IGRldmlj
+ZXRyZWVAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9yZzsg
+bGludXgtcGNpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYxIDEvMl0g
+cGh5OiBrZXlzdG9uZTogc2VyZGVzIGRyaXZlciBmb3IgZ2JlIDEwZ2JlIGFuZA0KPiBwY2llDQo+
+IA0KPiBPbiBUaHVyc2RheSAxNSBPY3RvYmVyIDIwMTUgMjA6MDg6MzIgS3dvaywgV2luZ01hbiB3
+cm90ZToNCj4gPg0KPiA+ID4gPiArI2RlZmluZSByZWdfcm13KGFkZHIsIHZhbHVlLCBtYXNrKSBc
+DQo+ID4gPiA+ICsgICBfX3Jhd193cml0ZWwoKChfX3Jhd19yZWFkbChhZGRyKSAmICh+KG1hc2sp
+KSkgfCBcDQo+ID4gPiA+ICsgICAgICAgICAgICAgICAgICAgKHZhbHVlICYgKG1hc2spKSksIChh
+ZGRyKSkNCj4gPiA+DQo+ID4gPiBub3QgZW5kaWFuIHNhZmUsIGFuZCBwb3RlbnRpYWxseSByYWN5
+Lg0KPiA+ID4NCj4gPg0KPiA+IHdpbGwgY2hhbmdlIHRvDQo+ID4NCj4gPiAjZGVmaW5lIHJlZ19y
+bXcoYWRkciwgdmFsdWUsIG1hc2spIFwNCj4gPiAgICAgICAgIHdyaXRlbCgoKHJlYWRsKGFkZHIp
+ICYgKH4obWFzaykpKSB8IFwNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICAodmFsdWUgJiAo
+bWFzaykpKSwgKGFkZHIpKQ0KPiANCj4gT2ssIHNvdW5kcyBnb29kLiBOb3RlIHRoYXQgaWYgYW55
+IG9mIHRoaXMgaXMgcGVyZm9ybWFuY2UgY3JpdGljYWwsDQo+IGJldHRlciB1c2UgcmVhZGxfcmVs
+YXhlZCgpLCBidXQgYXMgbG9uZyBhcyB0aGlzIGlzIGp1c3QgZm9yIHNldHVwDQo+IGNvZGUgYW5k
+IG5vdCBmb3IgZGF0YSB0cmFuc2ZlcnMsIHN0YXlpbmcgd2l0aCByZWFkbCgpIGFzIHlvdQ0KPiBz
+dWdnZXN0IGlzIGJldHRlci4NCj4gDQoNCnNpbmNlIHRoaXMgaXMgb25seSBmb3IgaW5pdGlhbGl6
+YXRpb24sIEknbGwgcHJvYmFibHkgc3RheSB3aXRoIHJlYWRsKCkuDQoNCj4gPiA+ID4gK3N0YXRp
+YyBpbmxpbmUgdm9pZCBfa3NlcmRlc19yZXNldF9jZHIodm9pZCBfX2lvbWVtICpzcmVncywgaW50
+IGxhbmUpDQo+ID4gPiA+ICt7DQo+ID4gPiA+ICsgICAvKiB0b2dnbGUgc2lnbmFsIGRldGVjdCAq
+Lw0KPiA+ID4gPiArICAgX2tzZXJkZXNfZm9yY2Vfc2lnbmFsX2RldGVjdF9sb3coc3JlZ3MsIGxh
+bmUpOw0KPiA+ID4gPiArICAgbWRlbGF5KDEpOw0KPiA+ID4gPiArICAgX2tzZXJkZXNfZm9yY2Vf
+c2lnbmFsX2RldGVjdF9oaWdoKHNyZWdzLCBsYW5lKTsNCj4gPiA+ID4gK30NCj4gPiA+DQo+ID4g
+PiBDYW4geW91IGNoYW5nZSB0aGUgY29kZSBzbyB5b3UgY2FuIHVzZSBtc2xlZXAoMSkgaGVyZT8N
+Cj4gPiA+DQo+ID4NCj4gPiB3aWxsIHJlcGxhY2UgZGVsYXlzIHdpdGggdXNsZWVwX3JhbmdlKCkN
+Cj4gDQo+IE9rLg0KPiANCj4gPiA+ID4gKw0KPiA+ID4gPiArICAgZG8gew0KPiA+ID4gPiArICAg
+ICAgICAgICBtZGVsYXkoMTApOw0KPiA+ID4gPiArICAgICAgICAgICBtZW1zZXQobGFuZV9kb3du
+LCAwLCBzaXplb2YobGFuZV9kb3duKSk7DQo+ID4gPiA+ICsNCj4gPiA+ID4gKyAgICAgICAgICAg
+bGlua191cCA9IF9rc2VyZGVzX2NoZWNrX2xpbmtfc3RhdHVzKGRldiwgc3JlZ3MsDQo+ID4gPiA+
+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBwY3NyX3Jl
+Z21hcCwgbGFuZXMsDQo+ID4gPiA+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICBsYW5lc19lbmFibGUsDQo+ID4gPiA+ICsgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjdXJyZW50X3N0YXRlLA0KPiBsYW5lX2Rvd24p
+Ow0KPiA+ID4gPiArDQo+ID4gPiA+ICsgICAgICAgICAgIC8qIGlmIHdlIGRpZCBub3QgZ2V0IGxp
+bmsgdXAgdGhlbiB3YWl0IDEwMG1zDQo+ID4gPiA+ICsgICAgICAgICAgICAqIGJlZm9yZSBjYWxs
+aW5nIGl0IGFnYWluDQo+ID4gPiA+ICsgICAgICAgICAgICAqLw0KPiA+ID4gPiArICAgICAgICAg
+ICBpZiAobGlua191cCkNCj4gPiA+ID4gKyAgICAgICAgICAgICAgICAgICBicmVhazsNCj4gPiA+
+ID4gKw0KPiA+ID4gPiArICAgICAgICAgICBmb3IgKGkgPSAwOyBpIDwgbGFuZXM7IGkrKykgew0K
+PiA+ID4gPiArICAgICAgICAgICAgICAgICAgIGlmICgobGFuZXNfZW5hYmxlICYgKDEgPDwgaSkp
+ICYmIGxhbmVfZG93bltpXSkNCj4gPiA+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgIGRl
+dl9kYmcoZGV2LA0KPiA+ID4gPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAi
+WEdFOiBkZXRlY3RlZCBsYW5lIGRvd24gb24gbGFuZQ0KPiAlZFxuIiwNCj4gPiA+ID4gKyAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaSk7DQo+ID4gPiA+ICsgICAgICAgICAgIH0N
+Cj4gPiA+ID4gKw0KPiA+ID4gPiArICAgICAgICAgICBpZiAoKytyZXRyaWVzID4gMTAwKQ0KPiA+
+ID4gPiArICAgICAgICAgICAgICAgICAgIHJldHVybiAtRVRJTUVET1VUOw0KPiA+ID4gPiArDQo+
+ID4gPiA+ICsgICB9IHdoaWxlICghbGlua191cCk7DQo+ID4gPg0KPiA+ID4gYW4gbW9yZSBpbXBv
+cnRhbnRseSBoZXJlLiBCbG9ja2luZyB0aGUgQ1BVIGZvciBvdmVyIG9uZSBzZWNvbmQgaXMgbm90
+DQo+IGdvb2QuDQo+ID4gPg0KPiA+ID4gQW55IHVzZSBvZiBtZGVsYXkoKSBzaG91bGQgaGF2ZSBh
+IGNvbW1lbnQgZXhwbGFpbmluZyB3aHkgeW91IGNhbm5vdCB1c2UNCj4gPiA+IG1zbGVlcCgpIGlu
+IHRoYXQgaW5zdGFuY2UuDQo+ID4gPg0KPiA+DQo+ID4gd2lsbCByZXBsYWNlIGRlbGF5cyB3aXRo
+IHVzbGVlcF9yYW5nZSgpDQo+IA0KPiBIZXJlIHlvdSBoYXZlIHRvIGJlIGNhcmVmdWwgd2l0aCB0
+aGUgdG90YWwgcnVudGltZS4gVXNpbmcgdXNsZWVwX3JhbmdlKCkNCj4gaXMgYSBnb29kIGlkZWEs
+IGFuZCB5b3UgY2FuIGhhdmUgYSBwYXJ0aWN1bGFybHkgd2lkZSByYW5nZSwgYnV0IHRoZW4geW91
+DQo+IHNob3VsZCBjaGFuZ2VuIHRoZSB0aW1lb3V0IGNvbmRpdGlvbiBmcm9tIG51bWJlciBvZiBy
+ZXRyaWVzIHRvIHRvdGFsDQo+IGVsYXBzZWQgdGltZSBsaWtlDQo+IA0KPiAJdW5zaWduZWQgbG9u
+ZyB0aW1lb3V0ID0gamlmZmllcyArIEhaOyAvKiAxIHNlY29uZCBtYXhpbXVtICovDQo+IAlkbyB7
+DQo+IAkJLi4uDQo+IA0KPiAJCWlmIChsaW5rX3VwKQ0KPiAJCQlicmVhazsNCj4gDQo+IAkJaWYg
+KHRpbWVfYWZ0ZXIoamlmZmllcywgdGltZW91dCkNCj4gCQkJcmV0dXJuIC1FVElNRU9VVDsNCj4g
+DQo+IAkJdXNsZWVwX3JhbmdlKDEwMDAsIDUwMDAwKTsNCj4gCX0gd2hpbGUgKDEpOw0KPiANCg0K
+d2lsbCBkby4gIA0KDQo+IAlBcm5kDQoNClRoYW5rcyBzbyBtdWNoIGZvciB5b3VyIGNvbW1lbnRz
+Lg0KV2luZ01hbg0K
