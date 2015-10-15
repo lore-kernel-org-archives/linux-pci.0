@@ -1,59 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f193.google.com ([209.85.160.193]:36824 "EHLO
-	mail-yk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756629AbbJ3A2X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 20:28:23 -0400
-MIME-Version: 1.0
-In-Reply-To: <1446162376-43419-6-git-send-email-jakeo@microsoft.com>
-References: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
-	<1446162376-43419-6-git-send-email-jakeo@microsoft.com>
-Date: Fri, 30 Oct 2015 02:28:22 +0200
-Message-ID: <CAHp75Vd=najBY7MJofStyLODWuG45=VzwLoWCSrQRm0nemuD4A@mail.gmail.com>
-Subject: Re: [PATCH v4 5/7] PCI: irqdomain: Look up IRQ domain by fwnode_handle
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: jakeo@microsoft.com
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, kys@microsoft.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	Vitaly Kuznetsov <vkuznets@redhat.com>, tglx@redhat.com,
-	haiyangz@microsoft.com, marc.zyngier@arm.com,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Jason Cooper <jason@lakedaemon.net>
+Cc: Ma Jun <majun258@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH RFC 2/7] platform-msi: Factor out allocation/free of private data
+Date: Thu, 15 Oct 2015 16:39:23 +0100
+Message-Id: <1444923568-17413-3-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
+References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 30, 2015 at 1:46 AM,  <jakeo@microsoft.com> wrote:
-> From: Jake Oshins <jakeo@microsoft.com>
->
-> This patch adds a second way of finding an IRQ domain associated with
-> a root PCI bus.  After looking to see if one can be found through
-> the OF tree, it attempts to look up the IRQ domain through an
-> fwnode_handle stored in the pci_sysdata struct.
+As we're going to have multiple paths to allocate/free the
+platform-msi private data, factor this out into separate
+utility functions.
 
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/base/platform-msi.c | 84 ++++++++++++++++++++++++++-------------------
+ 1 file changed, 48 insertions(+), 36 deletions(-)
 
-> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-> +       /*
-> +        * If no IRQ domain was found via the OF tree, try looking it up
-> +        * directly through the fwnode_handle.
-> +        */
-> +       if (!d) {
-> +               if (pci_fwnode(bus)) {
-
-Isn't it the same to
-if (!d && pci_fwnode(bus))
- d = ...
-
-?
-
-> +                       d = irq_find_matching_fwnode(pci_fwnode(bus),
-> +                                                    DOMAIN_BUS_PCI_MSI);
-> +               }
-> +       }
-> +#endif
-
-
+diff --git a/drivers/base/platform-msi.c b/drivers/base/platform-msi.c
+index 6148c78..92666cd 100644
+--- a/drivers/base/platform-msi.c
++++ b/drivers/base/platform-msi.c
+@@ -189,21 +189,11 @@ struct irq_domain *platform_msi_create_irq_domain(struct fwnode_handle *fwnode,
+ 	return domain;
+ }
+ 
+-/**
+- * platform_msi_domain_alloc_irqs - Allocate MSI interrupts for @dev
+- * @dev:		The device for which to allocate interrupts
+- * @nvec:		The number of interrupts to allocate
+- * @write_msi_msg:	Callback to write an interrupt message for @dev
+- *
+- * Returns:
+- * Zero for success, or an error code in case of failure
+- */
+-int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
+-				   irq_write_msi_msg_t write_msi_msg)
++static int platform_msi_alloc_priv_data(struct device *dev, unsigned int nvec,
++					irq_write_msi_msg_t write_msi_msg,
++					struct platform_msi_priv_data **data)
+ {
+-	struct platform_msi_priv_data *priv_data;
+-	int err;
+-
++	struct platform_msi_priv_data *datap;
+ 	/*
+ 	 * Limit the number of interrupts to 256 per device. Should we
+ 	 * need to bump this up, DEV_ID_SHIFT should be adjusted
+@@ -222,22 +212,51 @@ int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
+ 	if (!list_empty(dev_to_msi_list(dev)))
+ 		return -EBUSY;
+ 
+-	priv_data = kzalloc(sizeof(*priv_data), GFP_KERNEL);
+-	if (!priv_data)
++	datap = *data = kzalloc(sizeof(**data), GFP_KERNEL);
++	if (!datap)
+ 		return -ENOMEM;
+ 
+-	priv_data->devid = ida_simple_get(&platform_msi_devid_ida,
+-					  0, 1 << DEV_ID_SHIFT, GFP_KERNEL);
+-	if (priv_data->devid < 0) {
+-		err = priv_data->devid;
+-		goto out_free_data;
++	datap->devid = ida_simple_get(&platform_msi_devid_ida,
++				      0, 1 << DEV_ID_SHIFT, GFP_KERNEL);
++	if (datap->devid < 0) {
++		int err = datap->devid;
++		kfree(*data);
++		return err;
+ 	}
+ 
+-	priv_data->write_msg = write_msi_msg;
++	datap->write_msg = write_msi_msg;
++
++	return 0;
++}
++
++static void platform_msi_free_priv_data(struct platform_msi_priv_data *data)
++{
++	ida_simple_remove(&platform_msi_devid_ida, data->devid);
++	kfree(data);
++}
++
++/**
++ * platform_msi_domain_alloc_irqs - Allocate MSI interrupts for @dev
++ * @dev:		The device for which to allocate interrupts
++ * @nvec:		The number of interrupts to allocate
++ * @write_msi_msg:	Callback to write an interrupt message for @dev
++ *
++ * Returns:
++ * Zero for success, or an error code in case of failure
++ */
++int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
++				   irq_write_msi_msg_t write_msi_msg)
++{
++	struct platform_msi_priv_data *priv_data;
++	int err;
++
++	err = platform_msi_alloc_priv_data(dev, nvec, write_msi_msg, &priv_data);
++	if (err)
++		return err;
+ 
+ 	err = platform_msi_alloc_descs(dev, nvec, priv_data);
+ 	if (err)
+-		goto out_free_id;
++		goto out_free_priv_data;
+ 
+ 	err = msi_domain_alloc_irqs(dev->msi_domain, dev, nvec);
+ 	if (err)
+@@ -247,10 +266,8 @@ int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
+ 
+ out_free_desc:
+ 	platform_msi_free_descs(dev, 0, nvec);
+-out_free_id:
+-	ida_simple_remove(&platform_msi_devid_ida, priv_data->devid);
+-out_free_data:
+-	kfree(priv_data);
++out_free_priv_data:
++	platform_msi_free_priv_data(priv_data);
+ 
+ 	return err;
+ }
+@@ -261,16 +278,11 @@ out_free_data:
+  */
+ void platform_msi_domain_free_irqs(struct device *dev)
+ {
+-	struct msi_desc *desc;
+-
+-	desc = first_msi_entry(dev);
+-	if (desc) {
+-		struct platform_msi_priv_data *data;
+-
+-		data = desc->platform.msi_priv_data;
++	if (!list_empty(dev_to_msi_list(dev))) {
++		struct msi_desc *desc;
+ 
+-		ida_simple_remove(&platform_msi_devid_ida, data->devid);
+-		kfree(data);
++		desc = first_msi_entry(dev);
++		platform_msi_free_priv_data(desc->platform.msi_priv_data);
+ 	}
+ 
+ 	msi_domain_free_irqs(dev->msi_domain, dev);
 -- 
-With Best Regards,
-Andy Shevchenko
+2.1.4
+
