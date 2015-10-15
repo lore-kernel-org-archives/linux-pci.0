@@ -1,181 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47102 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:44457 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753232AbbJUSeH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Oct 2015 14:34:07 -0400
-Date: Wed, 21 Oct 2015 13:34:00 -0500
+	id S1752031AbbJORQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Oct 2015 13:16:03 -0400
+Date: Thu, 15 Oct 2015 12:16:00 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: bhelgaas@google.com, pratyush.anand@gmail.com, m-karicheri2@ti.com,
-	l.stach@pengutronix.de, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: Re: [PATCH v3 1/3] PCI: designware: Move LTSSM state definitions to
- pcie-designware.h
-Message-ID: <20151021183400.GC1583@localhost>
-References: <1444664808-16445-1-git-send-email-festevam@gmail.com>
+To: Ethan Zhao <ethan.zhao@oracle.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] iov: restore NumVFs register to 0 before return from
+ virtfn_max_buses()
+Message-ID: <20151015171600.GB17702@localhost>
+References: <1442373593-8342-1-git-send-email-ethan.zhao@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444664808-16445-1-git-send-email-festevam@gmail.com>
+In-Reply-To: <1442373593-8342-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Fabio,
+Hi Ethan,
 
-On Mon, Oct 12, 2015 at 12:46:46PM -0300, Fabio Estevam wrote:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
+On Wed, Sep 16, 2015 at 12:19:53PM +0900, Ethan Zhao wrote:
+> After commit 4449f079722c ("PCI: Calculate maximum number of buses
+> required for VFs"),the initial value of NumVFs register was left to
+> non-zero after sriov_init() and no VFs was enabled in device driver.
+> this changed the behaviour of kernel exported by lspci and sysfs etc.
+> so this patch restore the NumVFs register to zero after the
+> calculation of max_VF_buses was done and before return from
+> virtfn_max_buses().
 > 
-> Move LTSSM state definitions to common pcie-designware.h so that other
-> drivers can make use of them.
+> Tested on stable 4.1 and passed building on stable 4.3-rc1
 > 
-> Also, LTSSM states only use 5 bits so use 0x1f as its mask, so that we
-> have a common LTSSM mask accross all PCIe designware drivers.
-> 
-> Keystone uses 5 bits for the LTSSM in its reference manual, others like
-> i.MX6 uses 6 bits. However, the LTSSM states really have 5 bits, so we
-> can safely use 5 bits (which corresponds to the 0x1f mask) for all the
-> PCIe Designware cores.
+> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+> Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
 
-Thanks for cleaning this up!  I think if we split this up a little
-bit, the interesting parts will be more obvious.  For instance, as far
-as I can tell, none of the spear13xx #defines are used at all, so
-removing them could be done ina separate patch.  And I think it would
-be good to pull all the LTSSM_STATE_MASK-related changes into a single
-patch so it's obvious what's happening.
-
-I'll post the patches I propose as a v4 series so you can see what you
-think.
+Can you test the patch below?  I'm trying to avoid touching
+PCI_SRIOV_NUM_VF in more than one place, and I think it's OK to set it
+and test offset/stride at the end, instead of setting NUM_VF to zero,
+testing offset/stride, computing max_bus, then setting NUM_VF to zero
+again.
 
 Bjorn
 
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-> ---
-> Changes since v2:
-> - Use LTSSM_STATE_MASK with value 0x1f for all the drivers (Lucas)
-> - Use lowercase in pcie-designware.h (Lucas)
-> 
->  drivers/pci/host/pci-keystone-dw.c |  1 -
->  drivers/pci/host/pci-layerscape.c  |  1 -
->  drivers/pci/host/pcie-designware.h | 34 ++++++++++++++++++++++++++++++++++
->  drivers/pci/host/pcie-spear13xx.c  | 33 ---------------------------------
->  4 files changed, 34 insertions(+), 35 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-> index 0146b41..76edf92 100644
-> --- a/drivers/pci/host/pci-keystone-dw.c
-> +++ b/drivers/pci/host/pci-keystone-dw.c
-> @@ -25,7 +25,6 @@
->  
->  /* Application register defines */
->  #define LTSSM_EN_VAL		        1
-> -#define LTSSM_STATE_MASK		0x1f
->  #define LTSSM_STATE_L0			0x11
->  #define DBI_CS2_EN_VAL			0x20
->  #define OB_XLAT_EN_VAL		        2
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> index 495a7c3..f68b551 100644
-> --- a/drivers/pci/host/pci-layerscape.c
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -28,7 +28,6 @@
->  /* PEX1/2 Misc Ports Status Register */
->  #define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
->  #define LTSSM_STATE_SHIFT	20
-> -#define LTSSM_STATE_MASK	0x3f
->  #define LTSSM_PCIE_L0		0x11 /* L0 state */
->  
->  /* PEX Internal Configuration Registers */
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index e7b3279..95846dd 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -22,6 +22,40 @@
->  #define MAX_MSI_IRQS			32
->  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
->  
-> +#define LTSSM_STATE_DETECT_QUIET	0x00
-> +#define LTSSM_STATE_DETECT_ACT		0x01
-> +#define LTSSM_STATE_POLL_ACTIVE		0x02
-> +#define LTSSM_STATE_POLL_COMPLIANCE	0x03
-> +#define LTSSM_STATE_POLL_CONFIG		0x04
-> +#define LTSSM_STATE_PRE_DETECT_QUIET	0x05
-> +#define LTSSM_STATE_DETECT_WAIT		0x06
-> +#define LTSSM_STATE_CFG_LINKWD_START	0x07
-> +#define LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
-> +#define LTSSM_STATE_CFG_LANENUM_WAIT	0x09
-> +#define LTSSM_STATE_CFG_LANENUM_ACEPT	0x0a
-> +#define LTSSM_STATE_CFG_COMPLETE	0x0b
-> +#define LTSSM_STATE_CFG_IDLE		0x0c
-> +#define LTSSM_STATE_RCVRY_LOCK		0x0d
-> +#define LTSSM_STATE_RCVRY_SPEED		0x0e
-> +#define LTSSM_STATE_RCVRY_RCVRCFG	0x0f
-> +#define LTSSM_STATE_RCVRY_IDLE		0x10
-> +#define LTSSM_STATE_L0			0x11
-> +#define LTSSM_STATE_L0S			0x12
-> +#define LTSSM_STATE_L123_SEND_EIDLE	0x13
-> +#define LTSSM_STATE_L1_IDLE		0x14
-> +#define LTSSM_STATE_L2_IDLE		0x15
-> +#define LTSSM_STATE_L2_WAKE		0x16
-> +#define LTSSM_STATE_DISABLED_ENTRY	0x17
-> +#define LTSSM_STATE_DISABLED_IDLE	0x18
-> +#define LTSSM_STATE_DISABLED		0x19
-> +#define LTSSM_STATE_LPBK_ENTRY		0x1a
-> +#define LTSSM_STATE_LPBK_ACTIVE		0x1b
-> +#define LTSSM_STATE_LPBK_EXIT		0x1c
-> +#define LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1d
-> +#define LTSSM_STATE_HOT_RESET_ENTRY	0x1e
-> +#define LTSSM_STATE_HOT_RESET		0x1f
-> +#define LTSSM_STATE_MASK		0x1f
-> +
->  struct pcie_port {
->  	struct device		*dev;
->  	u8			root_bus_nr;
-> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-> index b95b756..8f0a1a2 100644
-> --- a/drivers/pci/host/pcie-spear13xx.c
-> +++ b/drivers/pci/host/pcie-spear13xx.c
-> @@ -84,39 +84,6 @@ struct pcie_app_reg {
->  #define APPS_PM_XMT_PME_ID			5
->  
->  /* CR3 ID */
-> -#define XMLH_LTSSM_STATE_DETECT_QUIET		0x00
-> -#define XMLH_LTSSM_STATE_DETECT_ACT		0x01
-> -#define XMLH_LTSSM_STATE_POLL_ACTIVE		0x02
-> -#define XMLH_LTSSM_STATE_POLL_COMPLIANCE	0x03
-> -#define XMLH_LTSSM_STATE_POLL_CONFIG		0x04
-> -#define XMLH_LTSSM_STATE_PRE_DETECT_QUIET	0x05
-> -#define XMLH_LTSSM_STATE_DETECT_WAIT		0x06
-> -#define XMLH_LTSSM_STATE_CFG_LINKWD_START	0x07
-> -#define XMLH_LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
-> -#define XMLH_LTSSM_STATE_CFG_LANENUM_WAIT	0x09
-> -#define XMLH_LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
-> -#define XMLH_LTSSM_STATE_CFG_COMPLETE		0x0B
-> -#define XMLH_LTSSM_STATE_CFG_IDLE		0x0C
-> -#define XMLH_LTSSM_STATE_RCVRY_LOCK		0x0D
-> -#define XMLH_LTSSM_STATE_RCVRY_SPEED		0x0E
-> -#define XMLH_LTSSM_STATE_RCVRY_RCVRCFG		0x0F
-> -#define XMLH_LTSSM_STATE_RCVRY_IDLE		0x10
-> -#define XMLH_LTSSM_STATE_L0			0x11
-> -#define XMLH_LTSSM_STATE_L0S			0x12
-> -#define XMLH_LTSSM_STATE_L123_SEND_EIDLE	0x13
-> -#define XMLH_LTSSM_STATE_L1_IDLE		0x14
-> -#define XMLH_LTSSM_STATE_L2_IDLE		0x15
-> -#define XMLH_LTSSM_STATE_L2_WAKE		0x16
-> -#define XMLH_LTSSM_STATE_DISABLED_ENTRY		0x17
-> -#define XMLH_LTSSM_STATE_DISABLED_IDLE		0x18
-> -#define XMLH_LTSSM_STATE_DISABLED		0x19
-> -#define XMLH_LTSSM_STATE_LPBK_ENTRY		0x1A
-> -#define XMLH_LTSSM_STATE_LPBK_ACTIVE		0x1B
-> -#define XMLH_LTSSM_STATE_LPBK_EXIT		0x1C
-> -#define XMLH_LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
-> -#define XMLH_LTSSM_STATE_HOT_RESET_ENTRY	0x1E
-> -#define XMLH_LTSSM_STATE_HOT_RESET		0x1F
-> -#define XMLH_LTSSM_STATE_MASK			0x3F
->  #define XMLH_LINK_UP				(1 << 6)
->  
->  /* CR4 ID */
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+commit 8e20e89658f23b8d16b1e21810e9f63c8625129c
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu Oct 15 11:31:21 2015 -0500
+
+    PCI: Set SR-IOV NumVFs to zero after enumeration
+    
+    The enumeration path should leave NumVFs set to zero.  But after
+    4449f079722c ("PCI: Calculate maximum number of buses required for VFs"),
+    we call virtfn_max_buses() in the enumeration path, which changes NumVFs.
+    This NumVFs change is visible via lspci and sysfs until a driver enables
+    SR-IOV.
+    
+    Set NumVFs to zero after virtfn_max_buses() computes the maximum number of
+    buses.
+    
+    Fixes: 4449f079722c ("PCI: Calculate maximum number of buses required for VFs")
+    Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee0ebff..0202ab0 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -384,7 +384,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 	int rc;
+ 	int nres;
+ 	u32 pgsz;
+-	u16 ctrl, total, offset, stride;
++	u16 ctrl, total;
+ 	struct pci_sriov *iov;
+ 	struct resource *res;
+ 	struct pci_dev *pdev;
+@@ -414,11 +414,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 
+ found:
+ 	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+-	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
+-	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
+-	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
+-	if (!offset || (total > 1 && !stride))
+-		return -EIO;
+ 
+ 	pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
+ 	i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
+@@ -456,8 +451,6 @@ found:
+ 	iov->nres = nres;
+ 	iov->ctrl = ctrl;
+ 	iov->total_VFs = total;
+-	iov->offset = offset;
+-	iov->stride = stride;
+ 	iov->pgsz = pgsz;
+ 	iov->self = dev;
+ 	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+@@ -475,6 +468,11 @@ found:
+ 	dev->sriov = iov;
+ 	dev->is_physfn = 1;
+ 	iov->max_VF_buses = virtfn_max_buses(dev);
++	pci_iov_set_numvfs(dev, 0);
++	if (!iov->offset || (total > 1 && !iov->stride)) {
++		rc = -EIO;
++		goto failed;
++	}
+ 
+ 	return 0;
+ 
+@@ -484,6 +482,7 @@ failed:
+ 		res->flags = 0;
+ 	}
+ 
++	dev->sriov = NULL;
+ 	kfree(iov);
+ 	return rc;
+ }
