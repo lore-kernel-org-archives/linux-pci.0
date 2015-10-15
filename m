@@ -1,102 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:30793 "EHLO mga02.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:58638 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751190AbbJGUVi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Oct 2015 16:21:38 -0400
-Date: Wed, 7 Oct 2015 15:21:36 -0500
-From: Ben Shelton <benjamin.h.shelton@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: IOV: reread SRIOV_NUM_VF after enabling ARI
-Message-ID: <20151007202136.GA19836@bhshelto-vm>
-References: <1442008500-3570-1-git-send-email-benjamin.h.shelton@intel.com>
- <20151007192940.GE27633@localhost>
+	id S1751244AbbJOVBR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Oct 2015 17:01:17 -0400
+Date: Thu, 15 Oct 2015 16:01:13 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Ray Jui <rjui@broadcom.com>, Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Kevin Hilman <khilman@kernel.org>,
+	Tyler Baker <tyler.baker@linaro.org>,
+	lkml <linux-kernel@vger.kernel.org>,
+	Olof Johansson <olof@lixom.net>,
+	Mark Brown <broonie@kernel.org>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2] PCI: iproc: fix 32-bit build error
+Message-ID: <20151015210113.GA13636@localhost>
+References: <1442363962-29805-1-git-send-email-rjui@broadcom.com>
+ <20151015160028.GA17702@localhost>
+ <561FD20F.1090004@broadcom.com>
+ <5754881.OPA6La0Zg0@wuerfel>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151007192940.GE27633@localhost>
+In-Reply-To: <5754881.OPA6La0Zg0@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Wed, Oct 07, 2015 at 02:29:40PM -0500, Bjorn Helgaas wrote:
-> Hi Ben,
+On Thu, Oct 15, 2015 at 09:40:45PM +0200, Arnd Bergmann wrote:
+> The iproc PCI driver tries to figure out whether the MMIO window has
+> a valid size, but does this using a 64-bit modulo operation, which
+> is not allowed on 32-bit kernels and leads to a link error:
 > 
-> On Fri, Sep 11, 2015 at 04:55:00PM -0500, Ben Shelton wrote:
-> > For some SR-IOV devices, the number of available virtual functions
-> > increases after enabling ARI.  Currently, SRIOV_NUM_VF is read and saved
-> > off before the ARI control bit is enabled.  This causes an issue when VFs
-> > are enabled.
-> > 
-> > At device init, SRIOV_INITIAL_VF and SRIOV_NUM_VF are specified to contain
-> > the number of available VFs for the device.  sriov_enable() does a sanity
-> > check that PCI_SRIOV_INITIAL_VF is not greater than iov->total_VFs, the
-> > saved-off value of SRIOV_NUM_VF.  Since the value of both SRIOV_INITIAL_VF
-> > and SRIOV_NUM_VF has increased after enabling the ARI bit, the check fails,
-> > and the VFs cannot be enabled.
-> > 
-> > To fix the issue, after ARI is enabled for a device, reread SRIOV_NUM_VF.
-> > 
-> > Signed-off-by: Ben Shelton <benjamin.h.shelton@intel.com>
-> > ---
-> >  drivers/pci/iov.c | 9 ++++++++-
-> >  1 file changed, 8 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> > index ee0ebff..88b1959 100644
-> > --- a/drivers/pci/iov.c
-> > +++ b/drivers/pci/iov.c
-> > @@ -388,6 +388,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
-> >  	struct pci_sriov *iov;
-> >  	struct resource *res;
-> >  	struct pci_dev *pdev;
-> > +	bool total_needs_reread = false;
-> >  
-> >  	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
-> >  	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
-> > @@ -409,12 +410,18 @@ static int sriov_init(struct pci_dev *dev, int pos)
-> >  			goto found;
-> >  
-> >  	pdev = NULL;
-> > -	if (pci_ari_enabled(dev->bus))
-> > +	if (pci_ari_enabled(dev->bus)) {
-> >  		ctrl |= PCI_SRIOV_CTRL_ARI;
-> > +		total_needs_reread = true;
-> > +	}
-> >  
-> >  found:
-> >  	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
-> >  	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
-> > +
-> > +	if (total_needs_reread)
-> > +		pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
+> drivers/built-in.o: In function `iproc_pcie_setup':
+> :(.text+0x4b798): undefined reference to `__aeabi_uldivmod'
 > 
-> Can we just *move* the PCI_SRIOV_TOTAL_VF read from its original
-> location and do it unconditionally here?  I don't think we use "total"
-> for anything in the interim, and it'd be nice if we could do this
-> without the "total_needs_reread" flag.
-
-The only thing we do with 'total' is return early if it's read as 0
-(i.e. for a device that does not support any VFs).  If we just move the
-read to here, a PCI device with no VFs would have its PCI_SRIOV_CTRL
-config word written before PCI_SRIOV_TOTAL_VF is read as 0 and
-sriov_init() returns.  The reread preserves the original behavior.
-
-If the change in behavior is OK, I'll make the change and submit a v2.
-
-Thanks,
-Ben
-
+> This works around that error by using the div64_u64() function
+> provided by the kernel. While this is an expensive operation,
+> it is harmless because we only call it during the probing
+> of the driver.
 > 
-> >  	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
-> >  	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
-> >  	if (!offset || (total > 1 && !stride))
-> > -- 
-> > 1.9.5
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Acked-by: Ray Jui <rjui@broadcom.com>
+> Fixes: 0ab99ca8eb6c ("PCI: iproc: Fix compile warnings")
+
+This *looks* like it should be fixing 90e4032eeaf2 ("PCI: iproc: Add
+outbound mapping support"), not 0ab99ca8eb6c.
+
+90e4032eeaf2 added the "if (size % ob->window_size)".
+
+Is this more subtle than that?
+
+> ---
+> On Thursday 15 October 2015 09:19:27 Ray Jui wrote:
+> > On 10/15/2015 9:00 AM, Bjorn Helgaas wrote:
+> > > 
+> > > Ping; I can easily fix up the static, but it'd be nice to have real acks
+> > > from Ray and Hauke.
+> 
+> 
+> Argh, I knew there was one patch from my build fixes that I needed to
+> redo, I just couldn't find it again. Thanks for the reminder.
+> 
+> 
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index f3481ddff344..9193951ae861 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -241,6 +241,7 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
+>  	struct iproc_pcie_ob *ob = &pcie->ob;
+>  	unsigned i;
+>  	u64 max_size = (u64)ob->window_size * MAX_NUM_OB_WINDOWS;
+> +	u64 remainder;
+>  
+>  	if (size > max_size) {
+>  		dev_err(pcie->dev,
+> @@ -249,7 +250,8 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
+>  		return -EINVAL;
+>  	}
+>  
+> -	if (size % ob->window_size) {
+> +	div64_u64_rem(size, ob->window_size, &remainder);
+> +	if (remainder) {
+>  		dev_err(pcie->dev,
+>  			"res size %pap needs to be multiple of window size %pap\n",
+>  			&size, &ob->window_size);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
