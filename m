@@ -1,53 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.140]:25624 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751403AbbJLKIQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 06:08:16 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <561FFB4C.1000500@redhat.com>
+Date: Thu, 15 Oct 2015 15:15:24 -0400
+From: Jon Masters <jcm@redhat.com>
+MIME-Version: 1.0
+To: Hanjun Guo <hanjun.guo@linaro.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Andrew Murray <Andrew.Murray@arm.com>
-Subject: [PATCH v3 1/5] pci: Add PLDA's XpressRICH3 PCIe host bridge PCI ID
-Date: Mon, 12 Oct 2015 11:07:35 +0100
-Message-Id: <1444644459-2780-2-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1444644459-2780-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1444644459-2780-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	linux-acpi@vger.kernel.org,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Salter <msalter@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 00/11] ARM64 PCI hostbridge init based on ACPI
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+In-Reply-To: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Andrew Murray <Andrew.Murray@arm.com>
+Hi Hanjun,
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- include/linux/pci_ids.h | 3 +++
- 1 file changed, 3 insertions(+)
+Thanks for your hard work on ARM64 PCI host bridge/root complex so far!
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index d9ba49c..1542b2b 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1319,6 +1319,9 @@
- #define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP79_SMBUS     0x0AA2
- #define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP89_SATA	    0x0D85
- 
-+#define PCI_VENDOR_ID_PLDA		0x1556
-+#define PCI_DEVICE_ID_XR3PCI		0x1100
-+
- #define PCI_VENDOR_ID_IMS		0x10e0
- #define PCI_DEVICE_ID_IMS_TT128		0x9128
- #define PCI_DEVICE_ID_IMS_TT3D		0x9135
--- 
-2.6.0
+On 05/26/2015 08:49 AM, Hanjun Guo wrote:
+> This patch set is introducing ARM64 PCI hostbridge init based on ACPI,
+> which based on Jiang Liu's patch set "Consolidate ACPI PCI root common
+> code into ACPI core":
+> 
+> https://lkml.org/lkml/2015/5/14/98
+
+The latest version (v7) of the ACPI PCI root common code consolidation
+series was posted by Gerry (Jiang Liu) yesterday:
+
+https://lkml.kernel.org/g/1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com
+
+This got me wondering what the status is of the ARM64 specific
+hostbridge patch series that has a dependency upon the former. Are you
+planning to wait for that series to be accepted or post a newer rebased
+version for additional review, or something else?
+
+Thanks very much in advance! :)
+
+Jon.
 
