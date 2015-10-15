@@ -1,59 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v5 4/7] PCI: Add fwnode_handle to pci_sysdata
-Date: Fri, 30 Oct 2015 21:11:12 +0000
-Message-Id: <1446239475-49480-5-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
-References: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <562039FE.9050004@linaro.org>
+Date: Fri, 16 Oct 2015 07:42:54 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
+MIME-Version: 1.0
+To: Jon Masters <jcm@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	linux-acpi@vger.kernel.org,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Salter <msalter@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 00/11] ARM64 PCI hostbridge init based on ACPI
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <561FFB4C.1000500@redhat.com>
+In-Reply-To: <561FFB4C.1000500@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On 10/16/2015 03:15 AM, Jon Masters wrote:
+> Hi Hanjun,
+>
+> Thanks for your hard work on ARM64 PCI host bridge/root complex so far!
+>
+> On 05/26/2015 08:49 AM, Hanjun Guo wrote:
+>> This patch set is introducing ARM64 PCI hostbridge init based on ACPI,
+>> which based on Jiang Liu's patch set "Consolidate ACPI PCI root common
+>> code into ACPI core":
+>>
+>> https://lkml.org/lkml/2015/5/14/98
+>
+> The latest version (v7) of the ACPI PCI root common code consolidation
+> series was posted by Gerry (Jiang Liu) yesterday:
+>
+> https://lkml.kernel.org/g/1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com
+>
+> This got me wondering what the status is of the ARM64 specific
+> hostbridge patch series that has a dependency upon the former. Are you
+> planning to wait for that series to be accepted or post a newer rebased
+> version for additional review, or something else?
 
-This patch adds an fwnode_handle to struct pci_sysdata, which is
-used by the next patch in the series when trying to locate an
-IRQ domain associated with a root PCI bus.
+Tomasz and Lorenzo are discussing about the PCI config based
+OperationRegions, which still have no conclusion yet, Lorenzo
+started a discussion on ASWG and hope can get some feedback.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- arch/x86/include/asm/pci.h | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+Other than that, Tomasz volunteered to cleanup this patch set, I
+think we need to rebase on Jiang's v7 patchset which was accepted
+By Rafael, of course I will work with Tomasz to prepare those
+patches.
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4625943..10213a1 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -20,6 +20,9 @@ struct pci_sysdata {
- #ifdef CONFIG_X86_64
- 	void		*iommu;		/* IOMMU private data */
- #endif
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+	void		*fwnode;	/* IRQ domain for MSI assignment */
-+#endif
- };
- 
- extern int pci_routeirq;
-@@ -41,6 +44,14 @@ static inline int pci_proc_domain(struct pci_bus *bus)
- }
- #endif
- 
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+static inline void *pci_fwnode(struct pci_bus *bus)
-+{
-+	struct pci_sysdata *sd = bus->sysdata;
-+	return sd->fwnode;
-+}
-+#endif
-+
- /* Can be used to override the logic in pci_scan_bus for skipping
-    already-configured bus numbers - to be used for buggy BIOSes
-    or architectures with incomplete PCI setup by the loader */
--- 
-1.9.1
-
+Thanks
+Hanjun
