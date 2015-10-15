@@ -1,36 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V3 0/4] PCI: ACPI: Setting up DMA coherency for PCI device
- from _CCA attribute
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <55F0EF79.3090202@amd.com> <561C0F45.8090107@amd.com>
- <3864683.NagPOmtRbX@vostro.rjw.lan>
-CC: <bhelgaas@google.com>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>,
-	<hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Message-ID: <561C11BE.3040301@amd.com>
-Date: Mon, 12 Oct 2015 15:02:06 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:51194 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753670AbbJOQBy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Oct 2015 12:01:54 -0400
+Message-ID: <561FCDC0.3080109@ti.com>
+Date: Thu, 15 Oct 2015 12:01:04 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <3864683.NagPOmtRbX@vostro.rjw.lan>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: WingMan Kwok <w-kwok2@ti.com>, <robh+dt@kernel.org>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<kishon@ti.com>, <rogerq@ti.com>, <bhelgaas@google.com>,
+	<ssantosh@kernel.org>, <linux@arm.linux.org.uk>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v1 1/2] phy: keystone: serdes driver for gbe 10gbe and
+ pcie
+References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com> <1444919145-30845-2-git-send-email-w-kwok2@ti.com> <5192855.p6QLDWTiVi@wuerfel>
+In-Reply-To: <5192855.p6QLDWTiVi@wuerfel>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi
+On 10/15/2015 10:51 AM, Arnd Bergmann wrote:
+> On Thursday 15 October 2015 10:25:44 WingMan Kwok wrote:
+>> On TI's Keystone platforms, several peripherals such as the
+>> gbe ethernet switch, 10gbe ethernet switch and PCIe controller
+>> require the use of a SerDes for converting SoC parallel data into
+>> serialized data that can be output over a high-speed electrical
+>> interface, and also converting high-speed serial input data
+>> into parallel data that can be processed by the SoC.  The
+>> SerDeses used by those peripherals, though they may be different,
+>> are largely similar in functionality and setup.
+>>
+>> This patch provides a SerDes phy driver implementation that can be
+>> used by the above mentioned peripheral drivers to configure their
+>> respective SerDeses.
+>>
+>> v1:
 
-On 10/12/15 15:27, Rafael J. Wysocki wrote:
->> Just wondering if you are planning to queue this series up for 4.4 as well?
-> You don't seem to have addressed the Bjorn's comments on patch [2/4].
->
-> They need to be addressed before I can take this series.
->
-> Thanks,
-> Rafael
->
+--------cut-------------------------------------------------------------
 
-Ah, I missed that one. Sorry. I'll get back on that.
+>> + * Redistributions in binary form must reproduce the above copyright
+>> + * notice, this list of conditions and the following disclaimer in the
+>> + * documentation and/or other materials provided with the
+>> + * distribution.
+>
+> The current code does not do this when compiled, which might be a
+> problem for distributors. Can you clarify the license?
+>
+Arnd,
 
-Suravee
+Can you elaborate on this? I did a grep on the string "Redistributions 
+in binary form must reproduce the above copyright" and I could find 
+several instance of this. So I am not sure what you mean by "The current 
+code does not do this when compiled".
+
+Thanks
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
