@@ -1,244 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:36909 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941AbbJCSNo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 14:13:44 -0400
-In-Reply-To: <20151003181228.GI21513@n2100.arm.linux.org.uk>
-References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 8/9] pci: mvebu: add PCI Express root complex capability block
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1ZiRJN-0004JH-1h@rmk-PC.arm.linux.org.uk>
-Date: Sat, 03 Oct 2015 19:13:33 +0100
+Received: from foss.arm.com ([217.140.101.70]:36731 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753249AbbJOPjf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Oct 2015 11:39:35 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: Ma Jun <majun258@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH RFC 1/7] platform-msi: Allow MSIs to be allocated in chunks
+Date: Thu, 15 Oct 2015 16:39:22 +0100
+Message-Id: <1444923568-17413-2-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
+References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a PCI Express root complex capability block so the PCI layer
-identifies the bridge as a PCI Express device.
+MSIs for a given device are normally all allocated in one go.
+Make sure the internal code can allocate them one at a time
+if required.
 
-We expose this as a version 1 PCIe capability block, with slot support.
-We disable the clock power management capability as this depends on
-boards wiring the CLKREQ# signal.
-
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/host/pci-mvebu.c | 137 +++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 133 insertions(+), 4 deletions(-)
+ drivers/base/platform-msi.c | 32 ++++++++++++++++++++------------
+ 1 file changed, 20 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 97208233d901..6310f2a84cfd 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -30,6 +30,7 @@
- #define PCIE_DEV_REV_OFF	0x0008
- #define PCIE_BAR_LO_OFF(n)	(0x0010 + ((n) << 3))
- #define PCIE_BAR_HI_OFF(n)	(0x0014 + ((n) << 3))
-+#define PCIE_CAP_PCIEXP		0x0060
- #define PCIE_HEADER_LOG_4_OFF	0x0128
- #define PCIE_BAR_CTRL_OFF(n)	(0x1804 + (((n) - 1) * 4))
- #define PCIE_WIN04_CTRL_OFF(n)	(0x1820 + ((n) << 4))
-@@ -57,14 +58,35 @@
- #define  PCIE_STAT_BUS                  0xff00
- #define  PCIE_STAT_DEV                  0x1f0000
- #define  PCIE_STAT_LINK_DOWN		BIT(0)
-+#define PCIE_RC_RTSTA		0x1a14
- #define PCIE_DEBUG_CTRL         0x1a60
- #define  PCIE_DEBUG_SOFT_RESET		BIT(20)
+diff --git a/drivers/base/platform-msi.c b/drivers/base/platform-msi.c
+index 5df4575..6148c78 100644
+--- a/drivers/base/platform-msi.c
++++ b/drivers/base/platform-msi.c
+@@ -25,6 +25,7 @@
+ #include <linux/slab.h>
  
-+enum {
-+	PCISWCAP = PCI_BRIDGE_CONTROL + 2,
-+	PCISWCAP_EXP_LIST_ID	= PCISWCAP + PCI_CAP_LIST_ID,
-+	PCISWCAP_EXP_DEVCAP	= PCISWCAP + PCI_EXP_DEVCAP,
-+	PCISWCAP_EXP_DEVCTL	= PCISWCAP + PCI_EXP_DEVCTL,
-+	PCISWCAP_EXP_LNKCAP	= PCISWCAP + PCI_EXP_LNKCAP,
-+	PCISWCAP_EXP_LNKCTL	= PCISWCAP + PCI_EXP_LNKCTL,
-+	PCISWCAP_EXP_SLTCAP	= PCISWCAP + PCI_EXP_SLTCAP,
-+	PCISWCAP_EXP_SLTCTL	= PCISWCAP + PCI_EXP_SLTCTL,
-+	PCISWCAP_EXP_RTCTL	= PCISWCAP + PCI_EXP_RTCTL,
-+	PCISWCAP_EXP_RTSTA	= PCISWCAP + PCI_EXP_RTSTA,
-+	PCISWCAP_EXP_DEVCAP2	= PCISWCAP + PCI_EXP_DEVCAP2,
-+	PCISWCAP_EXP_DEVCTL2	= PCISWCAP + PCI_EXP_DEVCTL2,
-+	PCISWCAP_EXP_LNKCAP2	= PCISWCAP + PCI_EXP_LNKCAP2,
-+	PCISWCAP_EXP_LNKCTL2	= PCISWCAP + PCI_EXP_LNKCTL2,
-+	PCISWCAP_EXP_SLTCAP2	= PCISWCAP + PCI_EXP_SLTCAP2,
-+	PCISWCAP_EXP_SLTCTL2	= PCISWCAP + PCI_EXP_SLTCTL2,
-+};
-+
- /* PCI configuration space of a PCI-to-PCI bridge */
- struct mvebu_sw_pci_bridge {
- 	u16 vendor;
- 	u16 device;
- 	u16 command;
-+	u16 status;
- 	u16 class;
- 	u8 interface;
- 	u8 revision;
-@@ -84,13 +106,15 @@ struct mvebu_sw_pci_bridge {
- 	u16 memlimit;
- 	u16 iobaseupper;
- 	u16 iolimitupper;
--	u8 cappointer;
--	u8 reserved1;
--	u16 reserved2;
- 	u32 romaddr;
- 	u8 intline;
- 	u8 intpin;
- 	u16 bridgectrl;
-+
-+	/* PCI express capability */
-+	u32 pcie_sltcap;
-+	u16 pcie_devctl;
-+	u16 pcie_rtctl;
- };
- 
- struct mvebu_pcie_port;
-@@ -451,6 +475,9 @@ static void mvebu_sw_pci_bridge_init(struct mvebu_pcie_port *port)
- 	/* We support 32 bits I/O addressing */
- 	bridge->iobase = PCI_IO_RANGE_TYPE_32;
- 	bridge->iolimit = PCI_IO_RANGE_TYPE_32;
-+
-+	/* Add capabilities */
-+	bridge->status = PCI_STATUS_CAP_LIST;
- }
+ #define DEV_ID_SHIFT	24
++#define MAX_DEV_MSIS	(1 << (32 - DEV_ID_SHIFT))
  
  /*
-@@ -468,7 +495,7 @@ static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
- 		break;
+  * Internal data structure containing a (made up, but unique) devid
+@@ -110,13 +111,16 @@ static void platform_msi_update_chip_ops(struct msi_domain_info *info)
+ 		chip->irq_write_msi_msg = platform_msi_write_msg;
+ }
  
- 	case PCI_COMMAND:
--		*value = bridge->command;
-+		*value = bridge->command | bridge->status << 16;
- 		break;
+-static void platform_msi_free_descs(struct device *dev)
++static void platform_msi_free_descs(struct device *dev, int base, int nvec)
+ {
+ 	struct msi_desc *desc, *tmp;
  
- 	case PCI_CLASS_REVISION:
-@@ -513,6 +540,10 @@ static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
- 		*value = (bridge->iolimitupper << 16 | bridge->iobaseupper);
- 		break;
- 
-+	case PCI_CAPABILITY_LIST:
-+		*value = PCISWCAP;
-+		break;
-+
- 	case PCI_ROM_ADDRESS1:
- 		*value = 0;
- 		break;
-@@ -522,6 +553,59 @@ static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
- 		*value = 0;
- 		break;
- 
-+	case PCISWCAP_EXP_LIST_ID:
-+		/* Set PCIe v2, root port, slot support */
-+		*value = (PCI_EXP_TYPE_ROOT_PORT << 4 | 2 |
-+			  PCI_EXP_FLAGS_SLOT) << 16 | PCI_CAP_ID_EXP;
-+		break;
-+
-+	case PCISWCAP_EXP_DEVCAP:
-+		*value = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_DEVCAP);
-+		break;
-+
-+	case PCISWCAP_EXP_DEVCTL:
-+		*value = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_DEVCTL) &
-+				 ~(PCI_EXP_DEVCTL_URRE | PCI_EXP_DEVCTL_FERE |
-+				   PCI_EXP_DEVCTL_NFERE | PCI_EXP_DEVCTL_CERE);
-+		*value |= bridge->pcie_devctl;
-+		break;
-+
-+	case PCISWCAP_EXP_LNKCAP:
-+		/*
-+		 * PCIe requires the clock power management capability to be
-+		 * hard-wired to zero for downstream ports
-+		 */
-+		*value = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_LNKCAP) &
-+			 ~PCI_EXP_LNKCAP_CLKPM;
-+		break;
-+
-+	case PCISWCAP_EXP_LNKCTL:
-+		*value = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_LNKCTL);
-+		break;
-+
-+	case PCISWCAP_EXP_SLTCAP:
-+		*value = bridge->pcie_sltcap;
-+		break;
-+
-+	case PCISWCAP_EXP_SLTCTL:
-+		*value = PCI_EXP_SLTSTA_PDS << 16;
-+		break;
-+
-+	case PCISWCAP_EXP_RTCTL:
-+		*value = bridge->pcie_rtctl;
-+		break;
-+
-+	case PCISWCAP_EXP_RTSTA:
-+		*value = mvebu_readl(port, PCIE_RC_RTSTA);
-+		break;
-+
-+	/* PCIe requires the v2 fields to be hard-wired to zero */
-+	case PCISWCAP_EXP_DEVCAP2:
-+	case PCISWCAP_EXP_DEVCTL2:
-+	case PCISWCAP_EXP_LNKCAP2:
-+	case PCISWCAP_EXP_LNKCTL2:
-+	case PCISWCAP_EXP_SLTCAP2:
-+	case PCISWCAP_EXP_SLTCTL2:
- 	default:
- 		/*
- 		 * PCI defines configuration read accesses to reserved or
-@@ -614,6 +698,51 @@ static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
- 		mvebu_pcie_set_local_bus_nr(port, bridge->secondary_bus);
- 		break;
- 
-+	case PCISWCAP_EXP_DEVCTL:
-+		/*
-+		 * Armada370 data says these bits must always
-+		 * be zero when in root complex mode.
-+		 */
-+		value &= ~(PCI_EXP_DEVCTL_URRE | PCI_EXP_DEVCTL_FERE |
-+			   PCI_EXP_DEVCTL_NFERE | PCI_EXP_DEVCTL_CERE);
-+
-+		/*
-+		 * If the mask is 0xffff0000, then we only want to write
-+		 * the device control register, rather than clearing the
-+		 * RW1C bits in the device status register.  Mask out the
-+		 * status register bits.
-+		 */
-+		if (mask == 0xffff0000)
-+			value &= 0xffff;
-+
-+		mvebu_writel(port, value, PCIE_CAP_PCIEXP + PCI_EXP_DEVCTL);
-+		break;
-+
-+	case PCISWCAP_EXP_LNKCTL:
-+		/*
-+		 * If we don't support CLKREQ, we must ensure that the
-+		 * CLKREQ enable bit always reads zero.  Since we haven't
-+		 * had this capability, and it's dependent on board wiring,
-+		 * disable it for the time being.
-+		 */
-+		value &= ~PCI_EXP_LNKCTL_CLKREQ_EN;
-+
-+		/*
-+		 * If the mask is 0xffff0000, then we only want to write
-+		 * the link control register, rather than clearing the
-+		 * RW1C bits in the link status register.  Mask out the
-+		 * status register bits.
-+		 */
-+		if (mask == 0xffff0000)
-+			value &= 0xffff;
-+
-+		mvebu_writel(port, value, PCIE_CAP_PCIEXP + PCI_EXP_LNKCTL);
-+		break;
-+
-+	case PCISWCAP_EXP_RTSTA:
-+		mvebu_writel(port, value, PCIE_RC_RTSTA);
-+		break;
-+
- 	default:
- 		break;
+ 	list_for_each_entry_safe(desc, tmp, dev_to_msi_list(dev), list) {
+-		list_del(&desc->list);
+-		free_msi_entry(desc);
++		if (desc->platform.msi_index >= base &&
++		    desc->platform.msi_index < (base + nvec)) {
++			list_del(&desc->list);
++			free_msi_entry(desc);
++		}
  	}
+ }
+ 
+@@ -124,17 +128,22 @@ static int platform_msi_alloc_descs(struct device *dev, int nvec,
+ 				    struct platform_msi_priv_data *data)
+ 
+ {
+-	int i;
++	struct msi_desc *desc;
++	int i, base = 0;
+ 
+-	for (i = 0; i < nvec; i++) {
+-		struct msi_desc *desc;
++	if (!list_empty(dev_to_msi_list(dev))) {
++		desc = list_last_entry(dev_to_msi_list(dev),
++				       struct msi_desc, list);
++		base = desc->platform.msi_index + 1;
++	}
+ 
++	for (i = 0; i < nvec; i++) {
+ 		desc = alloc_msi_entry(dev);
+ 		if (!desc)
+ 			break;
+ 
+ 		desc->platform.msi_priv_data = data;
+-		desc->platform.msi_index = i;
++		desc->platform.msi_index = base + i;
+ 		desc->nvec_used = 1;
+ 
+ 		list_add_tail(&desc->list, dev_to_msi_list(dev));
+@@ -142,7 +151,7 @@ static int platform_msi_alloc_descs(struct device *dev, int nvec,
+ 
+ 	if (i != nvec) {
+ 		/* Clean up the mess */
+-		platform_msi_free_descs(dev);
++		platform_msi_free_descs(dev, base, nvec);
+ 
+ 		return -ENOMEM;
+ 	}
+@@ -201,8 +210,7 @@ int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
+ 	 * accordingly (which would impact the max number of MSI
+ 	 * capable devices).
+ 	 */
+-	if (!dev->msi_domain || !write_msi_msg || !nvec ||
+-	    nvec > (1 << (32 - DEV_ID_SHIFT)))
++	if (!dev->msi_domain || !write_msi_msg || !nvec || nvec > MAX_DEV_MSIS)
+ 		return -EINVAL;
+ 
+ 	if (dev->msi_domain->bus_token != DOMAIN_BUS_PLATFORM_MSI) {
+@@ -238,7 +246,7 @@ int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
+ 	return 0;
+ 
+ out_free_desc:
+-	platform_msi_free_descs(dev);
++	platform_msi_free_descs(dev, 0, nvec);
+ out_free_id:
+ 	ida_simple_remove(&platform_msi_devid_ida, priv_data->devid);
+ out_free_data:
+@@ -266,5 +274,5 @@ void platform_msi_domain_free_irqs(struct device *dev)
+ 	}
+ 
+ 	msi_domain_free_irqs(dev->msi_domain, dev);
+-	platform_msi_free_descs(dev);
++	platform_msi_free_descs(dev, 0, MAX_DEV_MSIS);
+ }
 -- 
-2.1.0
+2.1.4
 
