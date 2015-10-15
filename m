@@ -1,56 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1445530650.5050.19.camel@redhat.com>
-Subject: Re: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV
- NIC
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Or Gerlitz <gerlitz.or@gmail.com>
-Cc: Lan Tianyu <tianyu.lan@intel.com>,
-	"Michael S. Tsirkin <mst@redhat.com> (mst@redhat.com)"
-	<mst@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	carolyn.wyborny@intel.com,
-	"Skidmore, Donald C" <donald.c.skidmore@intel.com>,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, Alexander Graf <agraf@suse.de>,
-	kvm@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>,
-	qemu-devel@nongnu.org, emil.s.tantilov@intel.com,
-	intel-wired-lan@lists.osuosl.org,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	john.ronciak@intel.com,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	Mitch Williams <mitch.a.williams@intel.com>,
-	Linux Netdev List <netdev@vger.kernel.org>,
-	Shannon Nelson <shannon.nelson@intel.com>
-Date: Thu, 22 Oct 2015 10:17:30 -0600
-In-Reply-To: <CAJ3xEMhgzfbGf-3Z7GJGxg5VqbWGyKqoTt6c4C54sDNehdXVMg@mail.gmail.com>
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
-	 <CAJ3xEMiStMJdGjgO9=MQrhLpBo8ZiTRoOL_P=aC9kyrNi91FSw@mail.gmail.com>
-	 <1445455227.4059.867.camel@redhat.com>
-	 <CAJ3xEMhgzfbGf-3Z7GJGxg5VqbWGyKqoTt6c4C54sDNehdXVMg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:53249 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752419AbbJOUBD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Oct 2015 16:01:03 -0400
+Date: Thu, 15 Oct 2015 15:00:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: bhelgaas@google.com, jingoohan1@gmail.com,
+	pratyush.anand@gmail.com, linux-pci@vger.kernel.org,
+	wangzhou1@hisilicon.com, yuanzhichang@hisilicon.com,
+	zhudacai@hisilicon.com, zhangjukuo@huawei.com,
+	qiuzhenfa@hisilicon.com, liguozhu@hisilicon.com
+Subject: Re: [PATCH v2 ] PCI: Designware: make num-lanes an optional DT
+ property
+Message-ID: <20151015200058.GA10442@localhost>
+References: <1443456190-225875-1-git-send-email-gabriele.paoloni@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443456190-225875-1-git-send-email-gabriele.paoloni@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-10-22 at 18:58 +0300, Or Gerlitz wrote:
-> On Wed, Oct 21, 2015 at 10:20 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
+On Tue, Sep 29, 2015 at 12:03:10AM +0800, Gabriele Paoloni wrote:
+> From: gabriele paoloni <gabriele.paoloni@huawei.com>
 > 
-> > This is why the typical VF agnostic approach here is to using bonding
-> > and fail over to a emulated device during migration, so performance
-> > suffers, but downtime is something acceptable.
+> Currently num-lanes is read in dw_pcie_host_init().
+> For a SoC that performs the link-up operation in UEFI, num-lanes
+> is not needed in the DTS; however currently it has to be specified
+> to some random value otherwise dw_pcie_host_init will fail.
+> If the link is brought up in BIOS dw_pcie_setup_rc should not
+> be called.
+> This patch reworks dw_pcie_host_init() so that, if num-lanes is
+> not specified, it sets pp->lanes = 0. If later on dw_pcie_setup_rc
+> is called and pp->num_lanes is not set to a valid value,
+> dw_pcie_setup_rc will send an error message and return.
 > 
-> bonding in the VM isn't a zero touch solution, right? is it really acceptable?
+> This patch is a follow-up of
+> http://www.spinics.net/lists/linux-pci/msg44394.html
+> 
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 
-The bonding solution requires configuring the bond in the guest and
-doing the hot unplug/re-plug around migration.  It's zero touch in that
-it works on current code with any PF/VF, but it's certainly not zero
-configuration in the guest.  Is what acceptable?  The configuration?
-The performance?  The downtime?  I don't think we can hope to improve on
-the downtime of an emulated device, but obviously the configuration and
-performance are not always acceptable or we wouldn't be seeing so many
-people working on migration of assigned devices.  Thanks,
+Applied to pci/host-designware for v4.4 with changelog as follows,
+thanks, Gabriele!
 
-Alex
+commit efe52075227729aa2a1ed55e34dd599b3bb0dbf1
+Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Date:   Tue Sep 29 00:03:10 2015 +0800
 
+    PCI: designware: Make num-lanes an optional DT property
+    
+    Currently "num-lanes" is read in dw_pcie_host_init(), but it is only used
+    if we call dw_pcie_setup_rc() while bringing up the link.  If the link has
+    already been brought up by firmware, we need not call dw_pcie_setup_rc(),
+    and "num-lanes" is unnecessary.
+    
+    Only complain about "num-lanes" if we actually need it and we didn't find a
+    valid value.
+    
+    [bhelgaas: changelog]
+    Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
