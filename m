@@ -1,114 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:65178 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751954AbbJNGZq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 Oct 2015 02:25:46 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-Subject: [Patch v7 3/7] ia64/PCI: Use common struct resource_entry to replace struct iospace_resource
-Date: Wed, 14 Oct 2015 14:29:38 +0800
-Message-Id: <1444804182-6596-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <561F64CA.7060606@hisilicon.com>
+Date: Thu, 15 Oct 2015 16:33:14 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	"Wangkefeng (Kevin)" <wangkefeng.wang@huawei.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	qiujiang <qiujiang@huawei.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon
+ SoC Hip05
+References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com> <30775300.COZ4nEMWXC@wuerfel> <561E23EB.7050504@hisilicon.com> <5572871.GecUyqk59W@wuerfel>
+In-Reply-To: <5572871.GecUyqk59W@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use common struct resource_entry to replace private
-struct iospace_resource.
+On 2015/10/15 5:56, Arnd Bergmann wrote:
+> On Wednesday 14 October 2015 17:44:11 Zhou Wang wrote:
+>> On 2015/10/14 17:06, Arnd Bergmann wrote:
+>>> On Wednesday 14 October 2015 16:59:03 Zhou Wang wrote:
+>>>>
+>>>> Hi Arnd,
+>>>>
+>>>> In Hip05 PCIe host, it uses GITS_TRANSLATER's address to get TLP package
+>>>> which contains MSI address and MSI data, and then combine BDF and MSI data
+>>>> to a 32 bit data which will be writen to GITS_TRANSLATER register of ITS.
+>>>>
+>>>> I think maybe this is a defect of our PCIe controller.
+>>>
+>>> I'd consider it a bug in the firmware if this is not set up correctly
+>>> before boot.
+>>>
+>>>>> I don't think what you do here is safe because the 'reg' property
+>>>>> of the MSI controller might point to the address that is used for
+>>>>> the message directly.
+>>>>
+>>>> I see your point, however we must get address of GITS_TRANSLATER and
+>>>> set it to PCIe host. How about adding necessary comments here?
+>>>
+>>> This seems to just be static setup that should be done before Linux
+>>> is even loaded. Any reason you can't do it that way?
+>>>
+>>
+>> There are some ITSs in Hip05-D02 platform, in fact, we can use any of them
+>> as a msi-controller,  which we can configure in dts. I am afraid that
+>> hard-setting the value in BIOS would lead to restrictions in terms of flexibility,
+>> as with the current implementation the same BIOS-driver can fit different
+>> DTS structures.
+> 
+> The dtb generally should be expected to match whatever the firmware sets up,
+> so if there is one reasonable setting here, I see no problem with hardcoding
+> it that way. In particular on server systems, we usually expect the firmware
+> to configure almost everything in advance and just tell us how it is
+> configured, while on embedded systems we can't trust the bootload and
+> usually set it all up in the kernel from scratch.
+>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
----
- arch/ia64/include/asm/pci.h |    5 -----
- arch/ia64/pci/pci.c         |   17 ++++++++---------
- 2 files changed, 8 insertions(+), 14 deletions(-)
+I see your point. Actually in order to support platforms without PCIe configuration
+support BIOS we planned to have a further commit once the driver was upstreamed,
+where we check if the link is already up, if not we would configure it in the kernel,
+otherwise we would return silently.
 
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 36d2c1e3928b..07039d168f37 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -64,11 +64,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- #define pci_legacy_read platform_pci_legacy_read
- #define pci_legacy_write platform_pci_legacy_write
- 
--struct iospace_resource {
--	struct list_head list;
--	struct resource res;
--};
--
- struct pci_controller {
- 	struct acpi_device *companion;
- 	void *iommu;
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index d20db9e48014..b1846b891ea5 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -154,14 +154,14 @@ new_space (u64 phys_base, int sparse)
- static int add_io_space(struct device *dev, struct pci_root_info *info,
- 			struct resource_entry *entry)
- {
--	struct iospace_resource *iospace;
-+	struct resource_entry *iospace;
- 	struct resource *resource, *res = entry->res;
- 	char *name;
- 	unsigned long base, min, max, base_port;
- 	unsigned int sparse = 0, space_nr, len;
- 
- 	len = strlen(info->name) + 32;
--	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
-+	iospace = resource_list_create_entry(NULL, len);
- 	if (!iospace) {
- 		dev_err(dev, "PCI: No memory for %s I/O port space\n",
- 			info->name);
-@@ -190,7 +190,7 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
- 	if (space_nr == 0)
- 		sparse = 1;
- 
--	resource = &iospace->res;
-+	resource = iospace->res;
- 	resource->name  = name;
- 	resource->flags = IORESOURCE_MEM;
- 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
-@@ -205,12 +205,12 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
- 	entry->offset = base_port;
- 	res->start = min + base_port;
- 	res->end = max + base_port;
--	list_add_tail(&iospace->list, &info->io_resources);
-+	resource_list_add_tail(iospace, &info->io_resources);
- 
- 	return 0;
- 
- free_resource:
--	kfree(iospace);
-+	resource_list_free_entry(iospace);
- 	return -ENOSPC;
- }
- 
-@@ -369,12 +369,11 @@ static void add_resources(struct pci_root_info *info, struct device *dev)
- static void __release_pci_root_info(struct pci_root_info *info)
- {
- 	struct resource *res;
--	struct iospace_resource *iospace, *tmp;
- 	struct resource_entry *entry, *tentry;
- 
--	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list) {
--		release_resource(&iospace->res);
--		kfree(iospace);
-+	resource_list_for_each_entry_safe(entry, tentry, &info->io_resources) {
-+		release_resource(entry->res);
-+		resource_list_destroy_entry(entry);
- 	}
- 
- 	resource_list_for_each_entry_safe(entry, tentry, &info->resources) {
--- 
-1.7.10.4
+Now about this patchset we can remove GITS_TRANSLATER address setting and do this
+in BIOS together with link-up setup; then in the next commit for supporting platforms
+without PCIe setup in UEFI, we can add this part back where we first check
+if the link is already up (we can assume that if BIOS has configured link-up,
+it has also setup the msi-parent address), if the link is up we skip reading
+msi-parent address.
+
+> What would be a reason to pick one ITS over another?
+
+In fact, we set PCIe host and ITS binding in dts. I mean that PCIe host can
+bind to any ITS nodes in system.
+
+> 
+> On a related note, don't you also need to describe in DT how PCI B/D/F
+> function numbers get turned into addresses in the ITS? Does that also
+> require configuration in the driver? I see this code here:
+
+We don't need to describe this. we need only describe the relationship between
+PCIe host and ITS, PCIe host will service PCIe devices which are connected to it.
+
+> 
+> 
+> +       hisi_pcie_apb_writel(pcie, PCIE_MSI_ASID_ENABLE | PCIE_MSI_ASID_VALUE,
+> +                            PCIE_SLV_MSI_ASID);
+> +       hisi_pcie_apb_writel(pcie, PCIE_MSI_TRANS_ENABLE, PCIE_MSI_TRANS_REG);
+> +       hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
+>
+
+This code is to enable MSI support in PCIe host.
+
+> plus all of hisi_pcie_config_context(). This looks like it will change
+> the way the MSI is interpreted. This also seems like something that
+> could be done in the firmware in advance, and just get reported in DT.
+
+I think all hisi_pcie_config_context can be move to BIOS for this patchset,
+however in order to support other BIOSs which have no PCIe setup we would plan
+a future commit adding this back and working as explained above.
+
+Thanks,
+Zhou
+
+> 
+> 	Arnd
+> 
+> .
+> 
+
 
