@@ -1,99 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27729 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756778AbbJHVkc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:40:32 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 45/60] PCI: Fix size calculation with old_size on rescan path
-Date: Thu,  8 Oct 2015 14:39:04 -0700
-Message-Id: <1444340359-8011-46-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51350 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751741AbbJOTbU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Oct 2015 15:31:20 -0400
+Date: Thu, 15 Oct 2015 14:31:16 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ben Shelton <benjamin.h.shelton@intel.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: IOV: read SRIOV_NUM_VF after enabling ARI
+Message-ID: <20151015193116.GE17702@localhost>
+References: <1444317617-13399-1-git-send-email-benjamin.h.shelton@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444317617-13399-1-git-send-email-benjamin.h.shelton@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On booting path, we don't pass realloc at first, and treat all optional
-just as required, in some case we can have smaller size/align with optional
-than required only.
+On Thu, Oct 08, 2015 at 10:20:17AM -0500, Ben Shelton wrote:
+> For some SR-IOV devices, the number of available virtual functions increases
+> after enabling ARI.  Currently, SRIOV_NUM_VF is read and saved off before the
+> ARI control bit is enabled in SRIOV_CTRL.  This causes an issue when VFs are
+> enabled.
+> 
+> At device init, SRIOV_INITIAL_VF and SRIOV_NUM_VF are specified to contain the
+> number of available VFs for the device.  sriov_enable() does a sanity check
+> that SRIOV_INITIAL_VF is not greater than iov->total_VFs, the saved-off value
+> of SRIOV_NUM_VF.  Since the value of both SRIOV_INITIAL_VF and SRIOV_NUM_VF has
+> increased after enabling the ARI bit, the check fails, and the VFs cannot be
+> enabled.
+> 
+> To fix the issue, write SRIOV_CTRL first, and then read SRIOV_NUM_VF.
+> 
+> Signed-off-by: Ben Shelton <benjamin.h.shelton@intel.com>
 
-  04:00.0 has children bridges: 05:03.0, 05:04.0
-pref layout after booting path like followings:
+I applied this as follows to pci/virtualization for v4.4, thanks, Ben!
 
-pci 0000:04:00.0: BAR 9: assigned [mem 0x84000000-0x9fffffff 64bit pref]
-pci 0000:05:04.0: BAR 9: assigned [mem 0x88000000-0x9fffffff 64bit pref]
-pci 0000:05:03.0: BAR 9: assigned [mem 0x84000000-0x841fffff 64bit pref]
-pci 0000:05:03.0: PCI bridge to [bus 08-0f]
-pci 0000:05:03.0:   bridge window [mem 0x84000000-0x841fffff 64bit pref]
-pci 0000:05:04.0: PCI bridge to [bus 10]
-pci 0000:05:04.0:   bridge window [mem 0x88000000-0x9fffffff 64bit pref]
-pci 0000:04:00.0: PCI bridge to [bus 05-10]
-pci 0000:04:00.0:   bridge window [mem 0x84000000-0x9fffffff 64bit pref]
+This is on top of a NumVFs-related patch, so the diff looks slightly
+different, but I think it's functionally equivalent.
 
-so the old size in rescan for 04:00.0 would be 0x1c000000, and align is 0x4000000
 
-during remove and rescan:
+commit 3aa71da412fedaee133b4b6e4be4b801c59d6c91
+Author: Ben Shelton <benjamin.h.shelton@intel.com>
+Date:   Thu Oct 15 12:35:17 2015 -0500
 
-pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff 64bit pref] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
-pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
-pci 0000:05:04.0: bridge window [mem 0x08000000-0x1fffffff 64bit pref] to [bus 10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 18000000 must_align 8000000
-pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_size add_size   200000
-pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_align min_align 100000
-pci 0000:04:00.0: bridge window [mem 0x08000000-0x27ffffff 64bit pref] to [bus 05-10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 20000000 must_align 8000000
+    PCI: Enable SR-IOV ARI Capable Hierarchy before reading TotalVFs
+    
+    For some SR-IOV devices, the number of available virtual functions, i.e.,
+    TotalVFs, increases after setting the ARI Capable Hierarchy bit in the
+    SR-IOV Control register.  This violates the SR-IOV spec, r1.1, sec 3.3.6,
+    which says TotalVFs is HwInit, but we don't need TotalVFs before setting
+    the ARI Capable bit anyway.
+    
+    Set the ARI Capable Hierarchy bit (if ARI is enabled in the upstream
+    bridge) before reading TotalVFs.
+    
+    [bhelgaas: changelog]
+    Signed-off-by: Ben Shelton <benjamin.h.shelton@intel.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-align old size 0x1c000000 to 0x2000000 as size0, 0x1c000000 as size1.
-so for 04:00.0 will have big must and no optional size anymore.
-
-So don't align old size, then we will have same size0 and size1,
-and use smaller add_align as must align.
-
-After the patch, rescan works properly.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7e7663a..00a39be 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1134,9 +1134,9 @@ static resource_size_t calculate_memsize(resource_size_t size,
- 		size = min_size;
- 	if (old_size == 1)
- 		old_size = 0;
-+	size = ALIGN(size, align);
- 	if (size < old_size)
- 		size = old_size;
--	size = ALIGN(size, align);
- 	return size;
- }
- 
-@@ -1595,6 +1595,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		b_res->flags = 0;
- 		return 0;
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 0202ab0..f8bfc1d 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -399,10 +399,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 		ssleep(1);
  	}
+ 
+-	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
+-	if (!total)
+-		return 0;
+-
+ 	ctrl = 0;
+ 	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
+ 		if (pdev->is_physfn)
+@@ -415,6 +411,10 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ found:
+ 	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+ 
++	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
++	if (!total)
++		return 0;
 +
-+	/*
-+	 * It happens when boot path is not passing realloc
-+	 * and later rescan is passing realloc.
-+	 * The old value from boot path is bigger, and calculate_size will
-+	 * use old value as size0 and size1, and also have
-+	 * chance optional align is smaller than must only align.
-+	 */
-+	if(size0 == size1 && min_align > min_add_align)
-+		min_align = min_add_align;
-+
- 	b_res->start = min_align;
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
--- 
-1.8.4.5
-
+ 	pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
+ 	i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
+ 	pgsz &= ~((1 << i) - 1);
