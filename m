@@ -1,68 +1,82 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5617E75F.2090907@caviumnetworks.com>
-Date: Fri, 9 Oct 2015 09:12:15 -0700
-From: David Daney <ddaney@caviumnetworks.com>
-MIME-Version: 1.0
-To: Rob Herring <robherring2@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: David Daney <ddaney.cavm@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: Ma Jun <majun258@huawei.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Frank Rowand <frowand.list@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v5 1/4] Docs: dt: Add PCI MSI map bindings
-References: <1444342250-6196-1-git-send-email-ddaney.cavm@gmail.com> <1444342250-6196-2-git-send-email-ddaney.cavm@gmail.com> <CAL_JsqK1kB30h=zse1LcaBisjYEGSBhD4FutvtqbUxpSU+2NjA@mail.gmail.com>
-In-Reply-To: <CAL_JsqK1kB30h=zse1LcaBisjYEGSBhD4FutvtqbUxpSU+2NjA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH RFC 4/7] genirq/msi: Make the .prepare callback reusable
+Date: Thu, 15 Oct 2015 16:39:25 +0100
+Message-Id: <1444923568-17413-5-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
+References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/09/2015 06:20 AM, Rob Herring wrote:
-> On Thu, Oct 8, 2015 at 5:10 PM, David Daney <ddaney.cavm@gmail.com> wrote:
->> From: Mark Rutland <mark.rutland@arm.com>
->>
->> Currently msi-parent is used by a few bindings to describe the
->> relationship between a PCI root complex and a single MSI controller, but
->> this property does not have a generic binding document.
->>
->> Additionally, msi-parent is insufficient to describe more complex
->> relationships between MSI controllers and devices under a root complex,
->> where devices may be able to target multiple MSI controllers, or where
->> MSI controllers use (non-probeable) sideband information to distinguish
->> devices.
->>
->> This patch adds a generic binding for mapping PCI devices to MSI
->> controllers. This document covers msi-parent, and a new msi-map property
->> (specific to PCI*) which may be used to map devices (identified by their
->> Requester ID) to sideband data for each MSI controller that they may
->> target.
->>
->> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
->> Signed-off-by: Mark Rutland <mark.rutland@arm.com>
->> Signed-off-by: David Daney <david.daney@cavium.com>
->
-> I acked v3. Please add it so I can stop paying attention.
->
+The .prepare callbacks are so far only called from msi_domain_alloc_irqs.
+In order to reuse that code, split that code and create a
+msi_domain_prepare_irqs function that the existing code can call into.
 
-My apologies for missing that.
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ include/linux/msi.h |  4 ++++
+ kernel/irq/msi.c    | 20 +++++++++++++++++---
+ 2 files changed, 21 insertions(+), 3 deletions(-)
 
-The Acked-by is now in my local tree.  Can the MSI maintainer take it as 
-is and add your Acked-by?  If not, I can resend with this added.
-
-Thanks for taking the time to review it,
-David Daney
-
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 32a24b9..5bb36a9 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -277,6 +277,10 @@ struct irq_domain *platform_msi_create_irq_domain(struct fwnode_handle *fwnode,
+ int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
+ 				   irq_write_msi_msg_t write_msi_msg);
+ void platform_msi_domain_free_irqs(struct device *dev);
++
++/* When an MSI domain is used as an intermediate domain */
++int msi_domain_prepare_irqs(struct irq_domain *domain, struct device *dev,
++			    int nvec, msi_alloc_info_t *args);
+ #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
+ 
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index 95354bb..8e6e112 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -256,6 +256,22 @@ struct irq_domain *msi_create_irq_domain(struct fwnode_handle *fwnode,
+ 					   &msi_domain_ops, info);
+ }
+ 
++int msi_domain_prepare_irqs(struct irq_domain *domain, struct device *dev,
++			    int nvec, msi_alloc_info_t *arg)
++{
++	struct msi_domain_info *info = domain->host_data;
++	struct msi_domain_ops *ops = info->ops;
++	int ret;
++
++	ret = ops->msi_check(domain, info, dev);
++	if (ret == 0)
++		ret = ops->msi_prepare(domain, dev, nvec, arg);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
+ /**
+  * msi_domain_alloc_irqs - Allocate interrupts from a MSI interrupt domain
+  * @domain:	The domain to allocate from
+@@ -274,9 +290,7 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+ 	struct msi_desc *desc;
+ 	int i, ret, virq = -1;
+ 
+-	ret = ops->msi_check(domain, info, dev);
+-	if (ret == 0)
+-		ret = ops->msi_prepare(domain, dev, nvec, &arg);
++	ret = msi_domain_prepare_irqs(domain, dev, nvec, &arg);
+ 	if (ret)
+ 		return ret;
+ 
+-- 
+2.1.4
 
