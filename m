@@ -1,89 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:61690 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390AbbJBWhJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 18:37:09 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Ray Jui <rjui@broadcom.com>, mark.rutland@arm.com,
-	devicetree@vger.kernel.org,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	pawel.moll@arm.com, ijc+devicetree@hellion.org.uk,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	hauke@hauke-m.de, linux-pci@vger.kernel.org,
-	michal.simek@xilinx.com, linux-kernel@vger.kernel.org,
-	m-karicheri2@ti.com, Minghuan.Lian@freescale.com,
-	robh+dt@kernel.org, Ravi Kiran Gummaluri <rgummal@xilinx.com>,
-	tinamdar@apm.com, galak@codeaurora.org, bhelgaas@google.com,
-	treding@nvidia.com, soren.brinkmann@xilinx.com
-Subject: Re: [PATCH v2] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL PCIe Host Controller
-Date: Sat, 03 Oct 2015 00:36:53 +0200
-Message-ID: <5225360.GkBHX0QnIA@wuerfel>
-In-Reply-To: <560DD374.4000708@broadcom.com>
-References: <1443689961-23909-1-git-send-email-bharatku@xilinx.com> <2677327.lnRZhqx5GI@wuerfel> <560DD374.4000708@broadcom.com>
+Received: from mail.kernel.org ([198.145.29.136]:57329 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752302AbbJOUsd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Oct 2015 16:48:33 -0400
+Date: Thu, 15 Oct 2015 15:48:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [Patch v7 0/7] Consolidate ACPI PCI root common code into ACPI
+ core
+Message-ID: <20151015204829.GH10442@localhost>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 01 October 2015 17:44:36 Ray Jui wrote:
+On Wed, Oct 14, 2015 at 02:29:35PM +0800, Jiang Liu wrote:
+> From: Liu Jiang <jiang.liu@linux.intel.com>
 > 
-> Sorry for stealing this discussion, :)
+> This patch set consolidates common code to support ACPI PCI root on x86
+> and IA64 platforms into ACPI core, to reproduce duplicated code and
+> simplify maintenance. And a patch set based on previous version to support
+> ACPI based PCIe host bridge on ARM64 has been posted at:
+> https://lkml.org/lkml/2015/5/26/207
 > 
-> I have some questions here, since this affects how I should implement
-> the MSI support for iProc based PCIe controller. I understand it makes
-> more sense to use separate device node for MSI and have "msi-parent"
-> from the pci node points to the MSI node, and that MSI node can be
-> gicv2m or gicv3 based on more advanced ARMv8 platforms.
+> It's based on latest mainstream kernel. It passes Fengguang's 0day test
+> suite and has been tested on two IA64 platforms and one x86 platform.
 > 
-> Then I would assume the MSI controller would deserve its own driver?
-> Which is a lot of people do nowadays. In that case, how I should handle
-> the case when the iProc MSI support is handled through some event queue
-> mechanism with their registers embedded in the PCIe controller register
-> space?
-> 
-> Does the following logic make sense to you?
-> 
-> 1. parse phandle of "msi-parent"
-> 2. Call of_pci_find_msi_chip_by_node to hook it up to msi chip already
-> registered (in the gicv2m and gicv3 case)
-> 3. If failed, fall back to use the iProc's own event queue logic by
-> calling iproc_pcie_msi_init.
-> 
-> The iProc MSI still has its own node that looks like this:
-> 141 msi0: msi@20020000 {
-> 142                         msi-controller;
-> 143                         interrupt-parent = <&gic>;
-> 144                         interrupts = <GIC_SPI 277 IRQ_TYPE_NONE>,
-> 145                                      <GIC_SPI 278 IRQ_TYPE_NONE>,
-> 146                                      <GIC_SPI 279 IRQ_TYPE_NONE>,
-> 147                                      <GIC_SPI 280 IRQ_TYPE_NONE>,
-> 148                                      <GIC_SPI 281 IRQ_TYPE_NONE>,
-> 149                                      <GIC_SPI 282 IRQ_TYPE_NONE>;
-> 150                         brcm,num-eq-region = <1>;
-> 151                         brcm,num-msi-msg-region = <1>;
-> 152                 };
-> 
-> But it does not have its own "reg" since they are embedded in the PCI
-> controller's registers and it relies on one calling iproc_pcie_msi_init
-> to pass in base register value and some other information.
+> V6->V7:
+> 1) Improve commit message according to Bjorn's suggestion.
+> 2) Move arch specific logic(code) from ACPI core into arch code
+>    according to Bjorn's review comments.
 
-I don't think I have a perfect answer to this. One way would be to
-separate the actual PCI root device node from the IP block that
-contains both the PCI root and the MSI catcher, but I guess that
-would require an incompatible change to your binding and it's not
-worth the pain.
+Thanks for cleaning this up; I think it looks much better.
 
-It's probably also ok to make the PCI host node itself be the msi-controller
-node and have an msi-parent phandle that points to the node itself. Not
-sure if that violates any rules that we may want or need to follow though.
+As far as I'm concerned, this series is ready to go.  I assume Rafael
+will merge it.
 
-Having a device node without registers is also a bit problematic,
-especially the 'msi@20020000' name doesn't make sense if 0x20020000
-is not the first number in the reg property. Maybe it's best to 
-put that node directly under the PCI host controller and not assign
-any registers. This is still a bit ugly because we'd expect devices
-under the host bridge to be PCI devices rather than random other things,
-but it may be the least of the evils.
-
-	Arnd
+> V5->V6:
+> 1) Patch 5 to reset domain number to 0 when pci_ignore_seg is set
+> 2) Remove parameter segment and node from function acpi_pci_root_create(),
+>    as suggested by Lorenzo and Bjorn.
+> V4-V5:
+> 1) As suggested by Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, do not
+>    introduce "struct pci_controller" into generic drivers/acpi/pci_root.c,
+>    so ARM64 doesn't need to define a useless structure. And it simplifies
+>    code a little too.
+> 
+> V3->V4:
+> 1) Add patch[05/08] support solve building issue on ARM64
+> 2) Solve an implicitly pointer cast issue.
+> 3) Rebase to latest mainstream kernel
+> 
+> V2->V3:
+> 1. Move memory allocation/free from ACPI core into arch
+> 2. Kill the field 'segment' in struct pci_root_info on x86
+> 
+> Thanks!
+> Gerry
+> 
+> Jiang Liu (7):
+>   ACPI/PCI: Enhance ACPI core to support sparse IO space
+>   ia64/PCI/ACPI: Use common ACPI resource parsing interface for host
+>     bridge
+>   ia64/PCI: Use common struct resource_entry to replace struct
+>     iospace_resource
+>   PCI/ACPI: Add interface acpi_pci_root_create()
+>   ACPI, PCI: Reset acpi_root_dev->domain to 0 when pci_ignore_seg is
+>     set
+>   x86/PCI/ACPI: Use common interface to support PCI host bridge
+>   ia64/PCI/ACPI: Use common interface to support PCI host bridge
+> 
+>  arch/ia64/include/asm/pci.h |    5 -
+>  arch/ia64/pci/pci.c         |  368 ++++++++++++-------------------------------
+>  arch/x86/pci/acpi.c         |  296 +++++++++++-----------------------
+>  drivers/acpi/pci_root.c     |  204 ++++++++++++++++++++++++
+>  drivers/acpi/resource.c     |    9 +-
+>  include/linux/ioport.h      |    1 +
+>  include/linux/pci-acpi.h    |   24 +++
+>  7 files changed, 423 insertions(+), 484 deletions(-)
+> 
+> -- 
+> 1.7.10.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
