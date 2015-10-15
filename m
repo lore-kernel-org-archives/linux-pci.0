@@ -1,135 +1,123 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, Mark Rutland <Mark.Rutland@arm.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Robin Murphy <robin.murphy@arm.com>
-Subject: [PATCH v2 1/8] of/irq: Add support code for multi-parent version of "msi-parent"
-Date: Tue,  6 Oct 2015 18:03:56 +0100
-Message-Id: <1444151043-31084-2-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
-References: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:53022 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752264AbbJOOFO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Oct 2015 10:05:14 -0400
+Date: Thu, 15 Oct 2015 09:05:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Wenlin Kang <wenlin.kang@windriver.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: restrict 64-bit pci device to assign resource from
+ behind of max_pfn
+Message-ID: <20151015140503.GA12958@localhost>
+References: <1444906004-2083-1-git-send-email-wenlin.kang@windriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444906004-2083-1-git-send-email-wenlin.kang@windriver.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since 126b16e2ad98 ("Docs: dt: add generic MSI bindings"),
-the definition of "msi-parent" has evolved, while maintaining
-some degree of compatibility. It can now express multiple MSI
-controllers as parents, as well as some sideband data being
-communicated to the controller.
+Hi Wenlin,
 
-This patch adds the parsing of the property, iterating over
-the multiple parents until a suitable irqdomain is found.
-It can also fallback to the original parsing if the old
-binding is detected.
+On Thu, Oct 15, 2015 at 06:46:44PM +0800, Wenlin Kang wrote:
+> This patch restricts 64-bit pci device to assign resource from behind of
+> max_pfn when kernel config enables CONFIG_64BIT.
+> 
+> On some system that pci device requires assignment of large resource(eg,
+> 1GB or larger), sometimes,the assignment of some devices may fail under
+> the current way.
+> 
+> e.g. the follow case is that.
+> 
+> ...
+> [    0.000000] e820: [mem 0x90000000-0xfed1bfff] available for PCI devices
+> [    0.000000] setup_percpu: NR_CPUS:128 nr_cpumask_bits:128 nr_cpu_ids:72 nr_node_ids:2
+> ...
+> [    6.564750] pci 0000:00:1c.7:   bridge window [mem 0x9f000000-0xa08fffff]
+> [    6.587130] pci 0000:84:06.0: BAR 14: can't assign mem (size 0x60000000)
+> [    6.609158] pci 0000:84:00.0: BAR 14: can't assign mem (size 0x100000)
+> ...
+> 
+> On this case, although the kernel has [0x90000000-0xfed1bfff] [1.73GB]
+> size space is available for PCI devices, assignment of some devices fail
+> yet, the cause is the resource isn't yet enough for devices.
 
-This support code gets used in the subsequent patches.
+We do PCI resource allocation inside the host bridge windows, which
+you didn't include here.
 
-Suggested-by: Robin Murphy <robin.murphy@arm.com>
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/of/irq.c       | 59 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/of_irq.h |  9 ++++++++
- 2 files changed, 68 insertions(+)
+The [mem 0x90000000-0xfed1bfff] range is derived from the E820 table
+and is sort of a theoretical maximum -- it's the range that isn't
+being used by anything else.  The "available for PCI devices" text is
+not quite accurate -- this range is potentially available for *any*
+device that has programmable addresses.
 
-diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-index c90bd4e..62cfdc2 100644
---- a/drivers/of/irq.c
-+++ b/drivers/of/irq.c
-@@ -682,3 +682,62 @@ u32 of_msi_map_rid(struct device *dev, struct device_node *msi_np, u32 rid_in)
- 
- 	return rid_out;
- }
-+
-+static struct irq_domain *__of_get_msi_domain(struct device_node *np,
-+					      enum irq_domain_bus_token token)
-+{
-+	struct irq_domain *d;
-+
-+	d = irq_find_matching_host(np, token);
-+	if (!d)
-+		d = irq_find_host(np);
-+
-+	return d;
-+}
-+
-+/**
-+ * of_msi_get_domain - Use msi-parent to find the relevant MSI domain
-+ * @dev: device for which the domain is requested
-+ * @np: device node for @dev
-+ * @token: bus type for this domain
-+ *
-+ * Parse the msi-parent property (both the simple and the complex
-+ * versions), and returns the corresponding MSI domain.
-+ *
-+ * Returns: the MSI domain for this device (or NULL on failure).
-+ */
-+struct irq_domain *of_msi_get_domain(struct device *dev,
-+				     struct device_node *np,
-+				     enum irq_domain_bus_token token)
-+{
-+	struct device_node *msi_np;
-+	struct irq_domain *d;
-+
-+	/* Check for a single msi-parent property */
-+	msi_np = of_parse_phandle(np, "msi-parent", 0);
-+	if (msi_np && !of_property_read_bool(msi_np, "#msi-cells")) {
-+		d = __of_get_msi_domain(msi_np, token);
-+		if (!d)
-+			of_node_put(msi_np);
-+		return d;
-+	}
-+
-+	if (token == DOMAIN_BUS_PLATFORM_MSI) {
-+		/* Check for the complex msi-parent version */
-+		struct of_phandle_args args;
-+		int index = 0;
-+
-+		while (!of_parse_phandle_with_args(np, "msi-parent",
-+						   "#msi-cells",
-+						   index, &args)) {
-+			d = __of_get_msi_domain(args.np, token);
-+			if (d)
-+				return d;
-+
-+			of_node_put(args.np);
-+			index++;
-+		}
-+	}
-+
-+	return NULL;
-+}
-diff --git a/include/linux/of_irq.h b/include/linux/of_irq.h
-index 8cd9334..62ae6ed 100644
---- a/include/linux/of_irq.h
-+++ b/include/linux/of_irq.h
-@@ -46,6 +46,9 @@ extern int of_irq_get(struct device_node *dev, int index);
- extern int of_irq_get_byname(struct device_node *dev, const char *name);
- extern int of_irq_to_resource_table(struct device_node *dev,
- 		struct resource *res, int nr_irqs);
-+extern struct irq_domain *of_msi_get_domain(struct device *dev,
-+					    struct device_node *np,
-+					    enum irq_domain_bus_token token);
- #else
- static inline int of_irq_count(struct device_node *dev)
- {
-@@ -64,6 +67,12 @@ static inline int of_irq_to_resource_table(struct device_node *dev,
- {
- 	return 0;
- }
-+static inline struct irq_domain *of_msi_get_domain(struct device *dev,
-+						   struct device_node *np,
-+						   enum irq_domain_bus_token token)
-+{
-+	return NULL;
-+}
- #endif
- 
- #if defined(CONFIG_OF)
--- 
-2.1.4
+Long ago, we did use that range directly for PCI allocation, but now
+that we have machines with multiple host bridges, it's not sufficient:
+the range may be carved up between several bridges.  We have to look
+at the host bridge windows to see what parts of the range are
+available for devices below each host bridge.
 
+That's a long-winded way of saying that we can't simply look at
+max_pfn as you do in this patch.  We need to look at the host bridge
+windows themselves.  On x86, these come from ACPI _CRS methods, and
+they probably aren't big enough to accommodate this device.  If that's
+the case, we can't do much about it.  If the BIOS tells us "this is
+the only range routed to the PCI bus," we have to assume it's telling
+us the truth.  The BIOS knows how the bridges are configured, and we
+don't.
+
+> After apply this patch, this problem get resolved, the patch makes kernel
+> assign resource from behind of max_pfn for 64-bit pci devices when kernel
+> is 64BIT, however, previous way always assigns resource below 4GB no
+> matter it is 32 or 64-bit devices, so this patch extends this window of
+> pci resource on 64-bit system that both 32 and 64-bit pci device exist or
+> only 64-bit device exists, makes it more likely that we can assign
+> resource to more or all devices.
+> 
+> Signed-off-by: wlkang <wlkang2008@126.com>
+> Signed-off-by: Wenlin Kang <wenlin.kang@windriver.com>
+
+I assume both of these Signed-off-by lines refer to you.  If that's
+the case, you should at least use the same "real name" (the "wlkang"
+and "Wenlin Kang" parts).  I think it makes the most sense to use a
+single address, but if you need both, I would put the second in a
+"CC:" line or something.  The Signed-off-by is more of an ownership
+thing where it doesn't really make sense to have two names for a
+single person.
+
+> ---
+>  drivers/pci/setup-res.c |   12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> index 232f925..dafd667 100644
+> --- a/drivers/pci/setup-res.c
+> +++ b/drivers/pci/setup-res.c
+> @@ -206,7 +206,19 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+>  	resource_size_t min;
+>  	int ret;
+>  
+> +#ifdef CONFIG_64BIT
+> +	/*
+> +	 * For 64-bit pci device, assign resource start from the next page
+> +	 * boundary above the maximum physical page address
+> +	 */
+> +	resource_size_t min_iomem;
+> +
+> +	min_iomem = (res->flags & IORESOURCE_MEM_64) ?
+> +				(max_pfn + 1) << PAGE_SHIFT : PCIBIOS_MIN_MEM;
+> +	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : min_iomem;
+> +#else
+>  	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
+> +#endif
+>  
+>  	/*
+>  	 * First, try exact prefetching match.  Even if a 64-bit
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
