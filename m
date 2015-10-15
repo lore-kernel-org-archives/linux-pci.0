@@ -1,78 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <56328826.2020406@caviumnetworks.com>
-Date: Thu, 29 Oct 2015 13:57:10 -0700
-From: David Daney <ddaney@caviumnetworks.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <561FD3BB.70501@arm.com>
+Date: Thu, 15 Oct 2015 17:26:35 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-To: David Daney <ddaney.cavm@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	<linux-api@vger.kernel.org>,
-	"Sean O. Stalley" <sean.stalley@intel.com>, <yinghai@kernel.org>,
-	<rajatxjain@gmail.com>, <gong.chen@linux.intel.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v6 1/5] PCI: Handle IORESOURCE_PCI_FIXED when sizing resources.
-References: <1445382282-2396-1-git-send-email-ddaney.cavm@gmail.com> <1445382282-2396-2-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1445382282-2396-2-git-send-email-ddaney.cavm@gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+To: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
+ ECAM) and ACPI code out of arch/x86/ directory
+References: <20150604102253.GA31773@red-moon> <5570447D.3020705@linaro.org> <557504A2.3060203@linaro.org> <20150608151443.GA16151@red-moon> <55E4340D.6050004@linaro.org> <55ED6010.3020406@linaro.org> <20150908150727.GF29293@red-moon> <55F0388B.1090607@linaro.org> <20150911112018.GA13033@red-moon> <55F6DFF6.4010807@linaro.org> <20151015132200.GA7621@red-moon> <561FB985.8070509@linaro.org>
+In-Reply-To: <561FB985.8070509@linaro.org>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+On 15/10/15 15:34, Tomasz Nowicki wrote:
 
-A small snafu...
+> Of course your help in testing is welcomed. Also please have a look at 
+> my GICv3/ITS patches, they are important for ACPI PCI.
 
-On 10/20/2015 04:04 PM, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
->
-> The new Enhanced Allocation (EA) capability support (patches to
-> follow) creates resources with the IORESOURCE_PCI_FIXED set. Since
-> these resources cannot be relocated or resized, their alignment is not
-> really defined, and it is therefore not specified.  This causes a
-> problem in pbus_size_mem() where resources with unspecified alignment
-> are disabled.
->
-> So, in pbus_size_mem() skip IORESOURCE_PCI_FIXED resources, instead of
-> disabling them.
->
-> Acked-by: Sean O. Stalley <sean.stalley@intel.com>
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->   drivers/pci/setup-bus.c | 7 ++++---
->   1 file changed, 4 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 508cc56..4dfef10 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1037,9 +1037,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->   			struct resource *r = &dev->resource[i];
->   			resource_size_t r_size;
->
-> -			if (r->parent || ((r->flags & mask) != type &&
-> -					  (r->flags & mask) != type2 &&
-> -					  (r->flags & mask) != type3))
-> +			if (r->parent || (r->flags | IORESOURCE_PCI_FIXED) ||
+Where is the dependency? ACPI/PCI should really be standalone.
 
-Should be:
+Thanks,
 
-   r->flags & IORESOURCE_PCI_FIXED
-
-With the erroneous '|', sizing of bridge resources can break.
-
-Q:  How to fix this.
-
-   A) Replace this patch entirely?
-
-   B) A patch on top of this one?
-
-
-> +			    ((r->flags & mask) != type &&
-> +			     (r->flags & mask) != type2 &&
-> +			     (r->flags & mask) != type3))
->   				continue;
->   			r_size = resource_size(r);
->   #ifdef CONFIG_PCI_IOV
->
-
+	M.
+-- 
+Jazz is not dead. It just smells funny...
