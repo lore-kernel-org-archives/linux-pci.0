@@ -1,85 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42549 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755901AbbJUQtX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Oct 2015 12:49:23 -0400
-From: Lan Tianyu <tianyu.lan@intel.com>
-To: bhelgaas@google.com, carolyn.wyborny@intel.com,
-	donald.c.skidmore@intel.com, eddie.dong@intel.com,
-	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
-	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-Cc: Lan Tianyu <tianyu.lan@intel.com>
-Subject: [RFC Patch 04/12] IXGBE: Add ixgbe_ping_vf() to notify a specified VF via mailbox msg.
-Date: Thu, 22 Oct 2015 00:37:36 +0800
-Message-Id: <1445445464-5056-5-git-send-email-tianyu.lan@intel.com>
-In-Reply-To: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <561FCDBE.8000407@arm.com>
+Date: Thu, 15 Oct 2015 17:01:02 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Ma Jun <majun258@huawei.com>
+Subject: Re: [PATCH RFC 0/7] Adding core support for wire-MSI bridges
+References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com> <5027676.zPNVVQXaP4@wuerfel>
+In-Reply-To: <5027676.zPNVVQXaP4@wuerfel>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is to add ixgbe_ping_vf() to notify a specified VF. When
-migration status is changed, it's necessary to notify VF the change.
-VF driver will check the migrate status when it gets mailbox msg.
+Hi Arnd,
 
-Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
----
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 19 ++++++++++++-------
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h |  1 +
- 2 files changed, 13 insertions(+), 7 deletions(-)
+On 15/10/15 16:46, Arnd Bergmann wrote:
+> On Thursday 15 October 2015 16:39:21 Marc Zyngier wrote:
+>> There seems to be a new class of interrupt controller out there whose
+>> sole purpose (apart from making everybody's life a nightmare) is to
+>> turn wired interrupts into MSIs.
+>>
+>> Instead of considering that the MSIs allocated to a device are for the
+>> direct use of that device, we can turn this set of MSIs into a irq
+>> domain, and use that domain to build a standard irqchip on top of
+>> that.
+>>
+>> This requires some (slightly ugly) surgery in both the generic MSI and
+>> platform MSI layers, but the amount of code is actually relatively
+>> small (about +150 LoC so far).
+>>
+>> On top of that, we add a dummy driver for a such a bridge, hoping that
+>> this will give enough information to driver authors so that they can
+>> use this new feature. An even more stupid client driver is provided to
+>> show the interrupt stack allocation:
+> 
+> I'm pretty sure you've thought of this before and it doesn't work, but
+> can you explain why we can't just treat this as an edge-triggered
+> nested irqchip? As long as the weird hardware can be preconfigured
+> by the bootloader, the device that is attached to it shouldn't
+> care how the interrupt ends up at the CPU.
 
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-index 89671eb..e247d67 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-@@ -1318,18 +1318,23 @@ void ixgbe_disable_tx_rx(struct ixgbe_adapter *adapter)
- 	IXGBE_WRITE_REG(hw, IXGBE_VFRE(1), 0);
- }
- 
--void ixgbe_ping_all_vfs(struct ixgbe_adapter *adapter)
-+void ixgbe_ping_vf(struct ixgbe_adapter *adapter, int vfn)
- {
- 	struct ixgbe_hw *hw = &adapter->hw;
- 	u32 ping;
-+
-+	ping = IXGBE_PF_CONTROL_MSG;
-+	if (adapter->vfinfo[vfn].clear_to_send)
-+		ping |= IXGBE_VT_MSGTYPE_CTS;
-+	ixgbe_write_mbx(hw, &ping, 1, vfn);
-+}
-+
-+void ixgbe_ping_all_vfs(struct ixgbe_adapter *adapter)
-+{
- 	int i;
- 
--	for (i = 0 ; i < adapter->num_vfs; i++) {
--		ping = IXGBE_PF_CONTROL_MSG;
--		if (adapter->vfinfo[i].clear_to_send)
--			ping |= IXGBE_VT_MSGTYPE_CTS;
--		ixgbe_write_mbx(hw, &ping, 1, i);
--	}
-+	for (i = 0 ; i < adapter->num_vfs; i++)
-+		ixgbe_ping_vf(adapter, i);
- }
- 
- int ixgbe_ndo_set_vf_mac(struct net_device *netdev, int vf, u8 *mac)
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
-index 2c197e6..143e2fd 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
-@@ -41,6 +41,7 @@ void ixgbe_msg_task(struct ixgbe_adapter *adapter);
- int ixgbe_vf_configuration(struct pci_dev *pdev, unsigned int event_mask);
- void ixgbe_disable_tx_rx(struct ixgbe_adapter *adapter);
- void ixgbe_ping_all_vfs(struct ixgbe_adapter *adapter);
-+void ixgbe_ping_vf(struct ixgbe_adapter *adapter, int vfn);
- int ixgbe_ndo_set_vf_mac(struct net_device *netdev, int queue, u8 *mac);
- int ixgbe_ndo_set_vf_vlan(struct net_device *netdev, int queue, u16 vlan,
- 			   u8 qos);
+"Preconfigured" is the key word. While you can do something like that if
+your hardware treats MSIs just as if they were wired interrupts
+(something like GICv2m), it becomes far more hairy if the target of MSIs
+is something like a GICv3 ITS (which is the case for HiSilicon mbigen).
+
+The main reason is that the ITS relies on "translation tables" kept in
+memory, which the OS has to configure, and handing over pre-configured
+tables is not something I'm looking forward to doing. From a CPU point
+of view, this is akin entering the kernel with the MMU already on and no
+idmap...
+
+The approach taken here is to make the MSI-ness explicit at the irqchip
+level, and keep the interrupting device oblivious of that feature. Also,
+this relies on the fact that we can have one MSI per wire, meaning that
+we don't have to multiplex anything (no nested irqchip), and that we can
+rely on hierarchical domains, which simplifies the code (at least for
+the irqchip).
+
+Thanks,
+
+	M.
 -- 
-1.8.4.rc0.1.g8f6a3e5.dirty
-
+Jazz is not dead. It just smells funny...
