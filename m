@@ -1,14 +1,7 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:50209 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751194AbbJSSvg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Oct 2015 14:51:36 -0400
-Message-ID: <56253B91.5040807@ti.com>
-Date: Mon, 19 Oct 2015 14:50:57 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: "Kwok, WingMan" <w-kwok2@ti.com>, Arnd Bergmann <arnd@arndb.de>
-CC: "linux-arm-kernel@lists.infradead.org"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: "Kwok, WingMan" <w-kwok2@ti.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
 	"robh+dt@kernel.org" <robh+dt@kernel.org>,
 	"pawel.moll@arm.com" <pawel.moll@arm.com>,
@@ -17,140 +10,110 @@ CC: "linux-arm-kernel@lists.infradead.org"
 	"galak@codeaurora.org" <galak@codeaurora.org>,
 	KISHON VIJAY ABRAHAM <kishon@ti.com>,
 	"Quadros, Roger" <rogerq@ti.com>,
+	"Karicheri, Muralidharan" <m-karicheri2@ti.com>,
 	"bhelgaas@google.com" <bhelgaas@google.com>,
 	"ssantosh@kernel.org" <ssantosh@kernel.org>,
 	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v1 1/2] phy: keystone: serdes driver for gbe 10gbe and
- pcie
-References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com> <5192855.p6QLDWTiVi@wuerfel> <561FCDC0.3080109@ti.com> <6215485.RTPqreMEMX@wuerfel> <230CBA6E4B6B6B418E8730AC28E6FC7E04229363@DFLE11.ent.ti.com>
-In-Reply-To: <230CBA6E4B6B6B418E8730AC28E6FC7E04229363@DFLE11.ent.ti.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v1 1/2] phy: keystone: serdes driver for gbe 10gbe and pcie
+Date: Thu, 15 Oct 2015 22:53:16 +0200
+Message-ID: <9008744.UmMoJzNEVK@wuerfel>
+In-Reply-To: <230CBA6E4B6B6B418E8730AC28E6FC7E04228DB8@DFLE11.ent.ti.com>
+References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com> <5192855.p6QLDWTiVi@wuerfel> <230CBA6E4B6B6B418E8730AC28E6FC7E04228DB8@DFLE11.ent.ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/19/2015 10:47 AM, Kwok, WingMan wrote:
-> Hi,
->
->> -----Original Message-----
->> From: Arnd Bergmann [mailto:arnd@arndb.de]
->> Sent: Thursday, October 15, 2015 3:35 PM
->> To: Karicheri, Muralidharan
->> Cc: linux-arm-kernel@lists.infradead.org; Kwok, WingMan; robh+dt@kernel.org;
->> pawel.moll@arm.com; mark.rutland@arm.com; ijc+devicetree@hellion.org.uk;
->> galak@codeaurora.org; KISHON VIJAY ABRAHAM; Quadros, Roger;
->> bhelgaas@google.com; ssantosh@kernel.org; linux@arm.linux.org.uk;
->> devicetree@vger.kernel.org; linux-kernel@vger.kernel.org; linux-
->> pci@vger.kernel.org
->> Subject: Re: [PATCH v1 1/2] phy: keystone: serdes driver for gbe 10gbe and
->> pcie
->>
->> On Thursday 15 October 2015 12:01:04 Murali Karicheri wrote:
->>>
->>>>> + * Redistributions in binary form must reproduce the above copyright
->>>>> + * notice, this list of conditions and the following disclaimer in the
->>>>> + * documentation and/or other materials provided with the
->>>>> + * distribution.
->>>>
->>>> The current code does not do this when compiled, which might be a
->>>> problem for distributors. Can you clarify the license?
->>>>
->>> Arnd,
->>>
->>> Can you elaborate on this? I did a grep on the string "Redistributions
->>> in binary form must reproduce the above copyright" and I could find
->>> several instance of this. So I am not sure what you mean by "The current
->>> code does not do this when compiled".
->>
->> You write that the binary form of the code must produce the copyright
->> notice. I don't see any code that does this. If I was looking in the
->> wrong place, let me know.
->>
->> 	Arnd
->
+On Thursday 15 October 2015 20:08:32 Kwok, WingMan wrote:
+> 
+> > > +#define reg_rmw(addr, value, mask) \
+> > > +   __raw_writel(((__raw_readl(addr) & (~(mask))) | \
+> > > +                   (value & (mask))), (addr))
+> > 
+> > not endian safe, and potentially racy.
+> > 
+> 
+> will change to 
+> 
+> #define reg_rmw(addr, value, mask) \
+>         writel(((readl(addr) & (~(mask))) | \
+>                         (value & (mask))), (addr))
 
-Thanks Wingman for the response.
+Ok, sounds good. Note that if any of this is performance critical,
+better use readl_relaxed(), but as long as this is just for setup
+code and not for data transfers, staying with readl() as you
+suggest is better.
 
-Arnd, by your statement 'I don't see any code that does this' do you 
-expect a piece of code that embed the license in the binary image? If 
-so, that seems weired to me.
+> > > +static inline void _kserdes_reset_cdr(void __iomem *sregs, int lane)
+> > > +{
+> > > +   /* toggle signal detect */
+> > > +   _kserdes_force_signal_detect_low(sregs, lane);
+> > > +   mdelay(1);
+> > > +   _kserdes_force_signal_detect_high(sregs, lane);
+> > > +}
+> > 
+> > Can you change the code so you can use msleep(1) here?
+> > 
+> 
+> will replace delays with usleep_range()
 
-Many of the drivers including this patch has the following statement in 
-the license that is additional company specific license such as BSD that 
-is applicable.
+Ok.
 
-==== Cut and pasted from drivers/crypto/fcrypt.c =======================
-  * 2. Redistributions in binary form must reproduce the above copyright
-  *    notice, this list of conditions and the following disclaimer in the
-  *    documentation and/or other materials provided with the distribution.
-=========================================================================
-I read this as if the source is compiled and distributed as a binary 
-either a kernel module ko file or as part of the kernel binary, this 
-term must apply. Usually this is part of documentation that goes with 
-the product AFAIK.
+> > > +
+> > > +   do {
+> > > +           mdelay(10);
+> > > +           memset(lane_down, 0, sizeof(lane_down));
+> > > +
+> > > +           link_up = _kserdes_check_link_status(dev, sregs,
+> > > +                                                pcsr_regmap, lanes,
+> > > +                                                lanes_enable,
+> > > +                                                current_state, lane_down);
+> > > +
+> > > +           /* if we did not get link up then wait 100ms
+> > > +            * before calling it again
+> > > +            */
+> > > +           if (link_up)
+> > > +                   break;
+> > > +
+> > > +           for (i = 0; i < lanes; i++) {
+> > > +                   if ((lanes_enable & (1 << i)) && lane_down[i])
+> > > +                           dev_dbg(dev,
+> > > +                                   "XGE: detected lane down on lane %d\n",
+> > > +                                   i);
+> > > +           }
+> > > +
+> > > +           if (++retries > 100)
+> > > +                   return -ETIMEDOUT;
+> > > +
+> > > +   } while (!link_up);
+> > 
+> > an more importantly here. Blocking the CPU for over one second is not good.
+> > 
+> > Any use of mdelay() should have a comment explaining why you cannot use
+> > msleep() in that instance.
+> > 
+> 
+> will replace delays with usleep_range()
 
-Murali
+Here you have to be careful with the total runtime. Using usleep_range()
+is a good idea, and you can have a particularly wide range, but then you
+should changen the timeout condition from number of retries to total
+elapsed time like
 
-> For example, we did a grep of the following
->
-> mypc:linux(personal/linux/serdes) $ grep -rnI "Redistributions in binary form must reproduce the above copyright" ./net/
-> ./net/sunrpc/auth_gss/auth_gss.c:18: *  2. Redistributions in binary form must reproduce the above copyright
-> ./net/sunrpc/auth_gss/gss_mech_switch.c:15: *  2. Redistributions in binary form must reproduce the above copyright
-> ./net/sunrpc/auth_gss/gss_krb5_mech.c:16: *  2. Redistributions in binary form must reproduce the above copyright
-> ./net/bluetooth/ecc.c:10: *  * Redistributions in binary form must reproduce the above copyright
-> ./net/bluetooth/ecc.h:10: *  * Redistributions in binary form must reproduce the above copyright
-> ./net/can/gw.c:12: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/can/af_can.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/can/proc.c:12: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/can/bcm.c:12: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/can/raw.c:12: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/can/af_can.h:10: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/discover.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/node.h:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/netlink_compat.c:10: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/name_distr.h:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/bearer.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/name_table.h:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/name_distr.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/addr.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/subscr.h:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/link.h:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/net.h:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/netlink.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/sysctl.c:12: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/udp_media.c:11: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/socket.h:11: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/subscr.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/msg.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/name_table.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/msg.h:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/core.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/socket.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/net.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/bcast.c:14: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/bearer.h:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/core.h:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/node.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/addr.h:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/ib_media.c:17: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/link.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/netlink.h:12: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/server.c:12: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/discover.h:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/eth_media.c:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/bcast.h:13: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/tipc/server.h:12: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/6lowpan/iphc.c:29: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/sched/sch_codel.c:17: * 2. Redistributions in binary form must reproduce the above copyright
-> ./net/ieee802154/6lowpan/core.c:27: * 2. Redistributions in binary form must reproduce the above copyright
->
-> Thanks,
-> WingMan
->
+	unsigned long timeout = jiffies + HZ; /* 1 second maximum */
+	do {
+		...
 
+		if (link_up)
+			break;
 
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+		if (time_after(jiffies, timeout)
+			return -ETIMEOUT;
+
+		usleep_range(1000, 50000);
+	} while (1);
+
+	Arnd
