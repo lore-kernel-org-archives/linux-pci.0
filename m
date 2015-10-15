@@ -1,85 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56550 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751268AbbJOUkU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Oct 2015 16:40:20 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 15 Oct 2015 16:36:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Ben Shelton <benjamin.h.shelton@intel.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: IOV: read SRIOV_NUM_VF after enabling ARI
+Message-ID: <20151015213603.GB13636@localhost>
+References: <1444317617-13399-1-git-send-email-benjamin.h.shelton@intel.com>
+ <20151015175825.GD17702@localhost>
+ <562005F7.7030205@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
-References: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
-From: Rob Herring <robh+dt@kernel.org>
-Date: Thu, 15 Oct 2015 15:39:56 -0500
-Message-ID: <CAL_Jsq+8y=rZbpVfLEX2-chR-qy30sHozZS0ACL0hu2feDXF7w@mail.gmail.com>
-Subject: Re: [PATCH v2 0/8] of: Handle multi-parent version of msi-parent & msi-map
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Robin Murphy <robin.murphy@arm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <562005F7.7030205@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 6, 2015 at 12:03 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> Now that we have a useable and documented version of msi-parent that
-> can deal with multiple parenting, we can properly handle it in the
-> kernel. This leads to a new OF helper, some rework in the PCI and
-> platform layers, as well as a small patch for the ITS driver, which is
-> the only thing in the kernel requirering this functionality so far.
->
-> On top of that, the msi-map property also offers a new feature, which
-> is that ability to have a per-device MSI controller (instead of having
-> a global one). The last four patches enable this.
->
-> These patches are on top of David Daney's series:
->
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-October/373986.html
->
-> (of_msi_map_rid is a dependency), and has been tested on 4.3-rc3,
-> using both platform and PCI MSI devices.
->
-> * From the initial version
->   - Dropped the of parsing patch
->   - Built on top of David's series to reuse of_msi_map_rid
->   - New per-device PCI/MSI domain assignment hook
->   - Parse msi-map at bus probing time and populate the msi_domain field
->
-> Marc Zyngier (8):
->   of/irq: Add support code for multi-parent version of "msi-parent"
->   of/irq: Use of_msi_get_domain instead of open-coded "msi-parent"
->     parsing
->   PCI/MSI: Use of_msi_get_domain instead of open-coded "msi-parent"
->     parsing
->   irqchip/gic-v3-its: Parse new version of msi-parent property
->   of/irq: Split of_msi_map_rid to reuse msi-map lookup
->   of/irq: Use the msi-map property to provide device-specific MSI domain
->   PCI: Add per-device MSI domain hook
->   PCI/MSI: Allow the MSI domain to be device-specific
+On Thu, Oct 15, 2015 at 01:00:55PM -0700, Alexander Duyck wrote:
+> On 10/15/2015 10:58 AM, Bjorn Helgaas wrote:
+> >Hi Ben,
+> >
+> >On Thu, Oct 08, 2015 at 10:20:17AM -0500, Ben Shelton wrote:
+> >>For some SR-IOV devices, the number of available virtual functions increases
+> >>after enabling ARI.  Currently, SRIOV_NUM_VF is read and saved off before the
+> >>ARI control bit is enabled in SRIOV_CTRL.  This causes an issue when VFs are
+> >>enabled.
+> >>
+> >>At device init, SRIOV_INITIAL_VF and SRIOV_NUM_VF are specified to contain the
+> >>number of available VFs for the device.  sriov_enable() does a sanity check
+> >>that SRIOV_INITIAL_VF is not greater than iov->total_VFs, the saved-off value
+> >>of SRIOV_NUM_VF.  Since the value of both SRIOV_INITIAL_VF and SRIOV_NUM_VF has
+> >>increased after enabling the ARI bit, the check fails, and the VFs cannot be
+> >>enabled.
+> >>
+> >>To fix the issue, write SRIOV_CTRL first, and then read SRIOV_NUM_VF.
+> >
+> >I think you mean PCI_SRIOV_TOTAL_VR (not NUM_VF), right?
+> >
+> >This is interesting because the spec says TotalVFs is HwInit, which
+> >means it's read-only, and it doesn't mention anything about it
+> >changing when ARIis enabled.  I can see why it would change in that
+> >case, so maybe this is just a goof in the spec.
+> 
+> I think it is supposed to be HwInit because changing the value can
+> cause issues with resource allocation for the VFs.  Specifically if
+> the number of VFs increases after the BIOS has come through and
+> assigned MMIO resources it is possible that there may not be
+> resources available.
 
-For the series:
+Maybe, although sufficiently smart software could deal with that by
+reassigning resources.  Theoretically, anyway.
 
-Acked-by: Rob Herring <robh@kernel.org>
+> I suspect we are going to end up having to quirk a number of devices
+> in the future because of this as I can see this easily causing
+> issues.
 
-I'm assuming Thomas is taking this and the dependency. It is mostly DT
-code so I'm happy take it if you want.
+I guess the issue if we made this change would be:
 
-Rob
+  - BIOS sees "ARI Capable Hierarchy" is zero
+  - BIOS sees TotalVFs = X
+  - BIOS allocates space for X VFs (size = "S * X")
+  - Linux sets ARI Capable Hierarchy
+  - Linux sees TotalVFs = X + Y
+  - Linux reads SR-IOV BAR, computes size as "S * (X + Y)"
+  - Linux tries to claim SR-IOV BAR, but fails because size is now too
+    large to fit where BIOS put it
 
->
->  drivers/irqchip/irq-gic-v3-its-platform-msi.c |  18 ++-
->  drivers/of/irq.c                              | 151 ++++++++++++++++++++------
->  drivers/pci/msi.c                             |  17 +++
->  drivers/pci/of.c                              |  13 +--
->  drivers/pci/probe.c                           |  43 +++++++-
->  include/linux/msi.h                           |   6 +
->  include/linux/of_irq.h                        |  16 +++
->  7 files changed, 214 insertions(+), 50 deletions(-)
->
-> --
-> 2.1.4
->
+Right?  What sort of quirk would you envision?  Something to keep us
+from increasing "total" beyond what it was before we turned on ARI
+Capable?
+
+What problem does this patch solve, Ben?  I assume you have devices
+that do change TotalVFs when ARI is enabled, and you do want the new
+value?
+
+Or is the problem something like the following:
+
+  - ...
+  - Linux PCI core sees TotalVFs = X (saved as iov->total_VFs)
+  - Linux sets ARI Capable Hierarchy
+  - Device changes TotalVFs to X + Y (but PCI core doesn't notice)
+  - Driver reads TotalVFs and sees X + Y
+  - Driver attempts pci_enable_sriov(dev, X + Y), which fails because
+    sriov_enable() sees "X + Y > iov->total_VFs"
+
+I'm a little dubious about drivers reading the SRIOV capability
+directly, so maybe this is a symptom of deeper problems.
+
+Bjorn
