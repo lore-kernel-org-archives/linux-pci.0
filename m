@@ -1,100 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f193.google.com ([209.85.160.193]:33719 "EHLO
-	mail-yk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030876AbbJ3Vnx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 17:43:53 -0400
+Received: from mail.kernel.org ([198.145.29.136]:56550 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751268AbbJOUkU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Oct 2015 16:40:20 -0400
 MIME-Version: 1.0
-In-Reply-To: <1446239475-49480-6-git-send-email-jakeo@microsoft.com>
-References: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
-	<1446239475-49480-6-git-send-email-jakeo@microsoft.com>
-Date: Fri, 30 Oct 2015 23:43:52 +0200
-Message-ID: <CAHp75VdSXLRAtgd-HLUhvPDJT6Wx=r2tPQHSFX69Exg9XFJKTQ@mail.gmail.com>
-Subject: Re: [PATCH v5 5/7] PCI: irqdomain: Look up IRQ domain by fwnode_handle
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: jakeo@microsoft.com
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, kys@microsoft.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	devel@linuxdriverproject.org, olaf@aepfle.de,
-	Robo Bot <apw@canonical.com>,
-	Vitaly Kuznetsov <vkuznets@redhat.com>, tglx@redhat.com,
-	haiyangz@microsoft.com, marc.zyngier@arm.com,
+In-Reply-To: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
+References: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
+From: Rob Herring <robh+dt@kernel.org>
+Date: Thu, 15 Oct 2015 15:39:56 -0500
+Message-ID: <CAL_Jsq+8y=rZbpVfLEX2-chR-qy30sHozZS0ACL0hu2feDXF7w@mail.gmail.com>
+Subject: Re: [PATCH v2 0/8] of: Handle multi-parent version of msi-parent & msi-map
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Robin Murphy <robin.murphy@arm.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 30, 2015 at 11:11 PM,  <jakeo@microsoft.com> wrote:
-> From: Jake Oshins <jakeo@microsoft.com>
+On Tue, Oct 6, 2015 at 12:03 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> Now that we have a useable and documented version of msi-parent that
+> can deal with multiple parenting, we can properly handle it in the
+> kernel. This leads to a new OF helper, some rework in the PCI and
+> platform layers, as well as a small patch for the ITS driver, which is
+> the only thing in the kernel requirering this functionality so far.
 >
-> This patch adds a second way of finding an IRQ domain associated with
-> a root PCI bus.  After looking to see if one can be found through
-> the OF tree, it attempts to look up the IRQ domain through an
-> fwnode_handle stored in the pci_sysdata struct.
+> On top of that, the msi-map property also offers a new feature, which
+> is that ability to have a per-device MSI controller (instead of having
+> a global one). The last four patches enable this.
 >
-> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
-> ---
->  arch/x86/include/asm/pci.h |  4 +++-
->  drivers/pci/probe.c        | 11 +++++++++++
->  include/asm-generic/pci.h  |  4 ++++
->  3 files changed, 18 insertions(+), 1 deletion(-)
+> These patches are on top of David Daney's series:
 >
-> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-> index 10213a1..fb74453 100644
-> --- a/arch/x86/include/asm/pci.h
-> +++ b/arch/x86/include/asm/pci.h
-> @@ -45,11 +45,13 @@ static inline int pci_proc_domain(struct pci_bus *bus)
->  #endif
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-October/373986.html
 >
->  #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-> -static inline void *pci_fwnode(struct pci_bus *bus)
-> +static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
-
-I'm sorry what is the point to rename?
-
->  {
->         struct pci_sysdata *sd = bus->sysdata;
->         return sd->fwnode;
->  }
-> +
-> +#define pci_root_bus_fwnode    _pci_root_bus_fwnode
->  #endif
+> (of_msi_map_rid is a dependency), and has been tested on 4.3-rc3,
+> using both platform and PCI MSI devices.
 >
->  /* Can be used to override the logic in pci_scan_bus for skipping
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index f441d1b..60e50a8 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -671,6 +671,17 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
->          */
->         d = pci_host_bridge_of_msi_domain(bus);
+> * From the initial version
+>   - Dropped the of parsing patch
+>   - Built on top of David's series to reuse of_msi_map_rid
+>   - New per-device PCI/MSI domain assignment hook
+>   - Parse msi-map at bus probing time and populate the msi_domain field
 >
-> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-> +       /*
-> +        * If no IRQ domain was found via the OF tree, try looking it up
-> +        * directly through the fwnode_handle.
-> +        */
-> +       if (!d && pci_root_bus_fwnode(bus)) {
-> +               d = irq_find_matching_fwnode(pci_root_bus_fwnode(bus),
-> +                                            DOMAIN_BUS_PCI_MSI);
+> Marc Zyngier (8):
+>   of/irq: Add support code for multi-parent version of "msi-parent"
+>   of/irq: Use of_msi_get_domain instead of open-coded "msi-parent"
+>     parsing
+>   PCI/MSI: Use of_msi_get_domain instead of open-coded "msi-parent"
+>     parsing
+>   irqchip/gic-v3-its: Parse new version of msi-parent property
+>   of/irq: Split of_msi_map_rid to reuse msi-map lookup
+>   of/irq: Use the msi-map property to provide device-specific MSI domain
+>   PCI: Add per-device MSI domain hook
+>   PCI/MSI: Allow the MSI domain to be device-specific
 
-Gave a second glance and now noticed that you call
-pci_root_bus_fwnode() twice. So, it actually might be more readable
-like your first but modified variant:
+For the series:
 
-if (!d) {
-  void *fwnode = pci_fwnode(bus);
+Acked-by: Rob Herring <robh@kernel.org>
 
-  if (fwnode)
-    d = irq_find_matching_fwnode(fwnode, DOMAIN_BUS_PCI_MSI);
-}
+I'm assuming Thomas is taking this and the dependency. It is mostly DT
+code so I'm happy take it if you want.
 
-> +       }
-> +#endif
-> +
->         return d;
->  }
+Rob
 
-
-With Best Regards,
-Andy Shevchenko
+>
+>  drivers/irqchip/irq-gic-v3-its-platform-msi.c |  18 ++-
+>  drivers/of/irq.c                              | 151 ++++++++++++++++++++------
+>  drivers/pci/msi.c                             |  17 +++
+>  drivers/pci/of.c                              |  13 +--
+>  drivers/pci/probe.c                           |  43 +++++++-
+>  include/linux/msi.h                           |   6 +
+>  include/linux/of_irq.h                        |  16 +++
+>  7 files changed, 214 insertions(+), 50 deletions(-)
+>
+> --
+> 2.1.4
+>
