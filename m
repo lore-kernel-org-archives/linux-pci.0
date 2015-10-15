@@ -1,106 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29891 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965238AbbJHVpM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:45:12 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 32/60] PCI: Treat ROM resource as optional during realloc
-Date: Thu,  8 Oct 2015 14:38:51 -0700
-Message-Id: <1444340359-8011-33-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:37006 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752077AbbJORQF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Oct 2015 13:16:05 -0400
+Received: by igbhv6 with SMTP id hv6so45937632igb.0
+        for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2015 10:16:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <561FD30E.20203@ti.com>
+References: <1444042389-8036-1-git-send-email-festevam@gmail.com>
+	<561FD30E.20203@ti.com>
+Date: Thu, 15 Oct 2015 14:16:04 -0300
+Message-ID: <CAOMZO5AfQrdv4zJT9rs=irkASZ_3fdeR_nth4JP6gUo-2TadSA@mail.gmail.com>
+Subject: Re: [RFC v2] PCI: keystone: Fix definition of LTSSM_STATE_MASK
+From: Fabio Estevam <festevam@gmail.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current on realloc path, we just ignore ROM resource if we can not assign
-them in first try.
+On Thu, Oct 15, 2015 at 1:23 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
 
-Treat ROM resources as optional resources,so try to allocate them together
-with required ones, if can not assign them, could go with other required
-resources only, and try to allocate them second time in expand path.
+> NACK
+>
+> The mask should be 0x1f as was originally as per document
+>
+>
+> 4-0                LTSSM_STATE        LTSSM current state. Please see
+> Appendix
+> A.1 for the names of the LTSSM states corresponding to
+> the encoded values.
+>
+> refer the document at http://www.ti.com/lit/ug/sprugs6d/sprugs6d.pdf
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 37 ++++++++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 74ad4ce..d2d38bc 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -377,18 +377,10 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		idx = res - &dev_res->dev->resource[0];
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
--			if (fail_head) {
--				/*
--				 * if the failed res is for ROM BAR, and it will
--				 * be enabled later, don't add it to the list
--				 */
--				if (!((idx == PCI_ROM_RESOURCE) &&
--				      (!(res->flags & IORESOURCE_ROM_ENABLE))))
--					add_to_list(fail_head,
--						    dev_res->dev, res,
--						    0 /* don't care */,
--						    0 /* don't care */);
--			}
-+			if (fail_head)
-+				add_to_list(fail_head, dev_res->dev, res,
-+					    0 /* don't care */,
-+					    0 /* don't care */);
- 			reset_resource(res);
- 		}
- 	}
-@@ -1186,6 +1178,19 @@ out:
- 	return good_align;
- }
- 
-+static inline bool is_optional(int i)
-+{
-+
-+	if (i == PCI_ROM_RESOURCE)
-+		return true;
-+
-+#ifdef CONFIG_PCI_IOV
-+	if (i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END)
-+		return true;
-+#endif
-+
-+	return false;
-+}
- /**
-  * pbus_size_mem() - size the memory window of a given bus
-  *
-@@ -1243,10 +1248,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 			r_size = resource_size(r);
- 			align = pci_resource_alignment(dev, r);
--#ifdef CONFIG_PCI_IOV
--			/* put SRIOV requested res to the optional list */
--			if (realloc_head && i >= PCI_IOV_RESOURCES &&
--					i <= PCI_IOV_RESOURCE_END) {
-+			/* put SRIOV/ROM res to realloc list */
-+			if (realloc_head && is_optional(i)) {
- 				add_to_align_test_list(&align_test_add_list,
- 							align, r_size);
- 				r->end = r->start - 1;
-@@ -1256,7 +1259,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					max_add_align = align;
- 				continue;
- 			}
--#endif
-+
- 			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
- 					i, r, (unsigned long long) align);
--- 
-1.8.4.5
-
+Yes, in the last version of the patch I use the 0x1f mask for all
+Designware PCI drivers.
