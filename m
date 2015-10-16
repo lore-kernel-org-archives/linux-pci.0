@@ -1,36 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:62657 "EHLO
+Received: from lhrrgout.huawei.com ([194.213.3.17]:19468 "EHLO
 	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751046AbbJRIcw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 Oct 2015 04:32:52 -0400
+	with ESMTP id S1752378AbbJPG04 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Oct 2015 02:26:56 -0400
 From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Joao Pinto <Joao.Pinto@synopsys.com>,
-	"jg1.han@samsung.com" <jg1.han@samsung.com>
-CC: Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: pcie-designware build fails in ARM64
-Date: Sun, 18 Oct 2015 08:32:40 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1624CDD3@lhreml503-mbs>
-References: <56213393.8020606@synopsys.com>
-In-Reply-To: <56213393.8020606@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v2 ] PCI: Designware: make num-lanes an optional DT
+ property
+Date: Fri, 16 Oct 2015 06:26:42 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162483B8@lhreml503-mbs>
+References: <1443456190-225875-1-git-send-email-gabriele.paoloni@huawei.com>
+ <20151015200058.GA10442@localhost>
+In-Reply-To: <20151015200058.GA10442@localhost>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgSm9hbw0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXBj
-aS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1wY2ktb3duZXJAdmdlci5rZXJu
-ZWwub3JnXQ0KPiBPbiBCZWhhbGYgT2YgSm9hbyBQaW50bw0KPiBTZW50OiAxNiBPY3RvYmVyIDIw
-MTUgMTg6MjgNCj4gVG86IGpnMS5oYW5Ac2Ftc3VuZy5jb20NCj4gQ2M6IENhcmxvcyBQYWxtaW5o
-YTsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBwY2llLWRlc2lnbndhcmUg
-YnVpbGQgZmFpbHMgaW4gQVJNNjQNCj4gDQo+IERlYXIgSmluZ29vIEhhbiwNCj4gDQo+IEkgYW0g
-dHJ5aW5nIHRvIGJ1aWxkIHBjaWUtZGVzaWdud2FyZSBmb3IgQVJNNjQgYnV0IHdpdGggbm8gc3Vj
-Y2Vzcy4gRGlkIHlvdQ0KPiBldmVyDQo+IHRyaWVkIHRvIGJ1aWxkIHRoZSBjb3JlIGRyaXZlciBp
-biB0aGlzIHBsYXRmb3JtPw0KPiANCg0KUGxlYXNlIGxvb2sgYXQgIltQQVRDSCB2MTEgMy82XSBQ
-Q0k6IGRlc2lnbndhcmU6IEFkZCBBUk02NCBzdXBwb3J0Ig0KQW5kIHJlc3BlY3RpdmUgcGF0Y2hz
-ZXQgc3VibWl0dGVkIGluIHRoZSBtYWlsaW5nIGxpc3QuDQoNClJlZ2FyZHMNCg0KR2FiDQoNCj4g
-VGhhbmtzIHlvdSBmb3IgeW91IGF0dGVudGlvbi4NCj4gDQo+IFJlZ2FyZHMsDQo+IEpvYW8gUGlu
-dG8NCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUg
-InVuc3Vic2NyaWJlIGxpbnV4LXBjaSIgaW4NCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1h
-am9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
-L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
+> 
+> Applied to pci/host-designware for v4.4 with changelog as follows,
+> thanks, Gabriele!
+
+Great, Thanks Bjorn
+
+> 
+> commit efe52075227729aa2a1ed55e34dd599b3bb0dbf1
+> Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> Date:   Tue Sep 29 00:03:10 2015 +0800
+> 
+>     PCI: designware: Make num-lanes an optional DT property
+> 
+>     Currently "num-lanes" is read in dw_pcie_host_init(), but it is only used
+>     if we call dw_pcie_setup_rc() while bringing up the link.  If the link has
+>     already been brought up by firmware, we need not call dw_pcie_setup_rc(),
+>     and "num-lanes" is unnecessary.
+> 
+>     Only complain about "num-lanes" if we actually need it and we didn't find
+> a
+>     valid value.
+> 
+>     [bhelgaas: changelog]
+>     Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
