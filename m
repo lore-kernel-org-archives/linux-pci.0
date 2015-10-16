@@ -1,52 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f49.google.com ([209.85.213.49]:35208 "EHLO
-	mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752524AbbJLWzZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 18:55:25 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v11 1/6] PCI: designware: move calculation of bus addresses to DRA7xx
+Date: Fri, 16 Oct 2015 18:23:36 +0800
+Message-ID: <1444991021-109306-2-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.20.1510120808240.3251@math.ut.ee>
-References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee>
-	<CAE9FiQXM9YxRwcbG577Pcqmj7YbOa0yk6hYELb2FpTtct5u2jg@mail.gmail.com>
-	<alpine.LRH.2.20.1510120808240.3251@math.ut.ee>
-Date: Mon, 12 Oct 2015 15:55:24 -0700
-Message-ID: <CAE9FiQXHsgYaTgF2rsWFJXSYJ=kH3j63ageJ2H8F5wnzbFgxRg@mail.gmail.com>
-Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
-From: Yinghai Lu <yinghai@kernel.org>
-To: Meelis Roos <mroos@linux.ee>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 12, 2015 at 6:04 AM, Meelis Roos <mroos@linux.ee> wrote:
->> > sparc64 machines:
->>
->> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->> for-pci-v4.4-next
->>
->> It should fix some "no compatible bridge window"
->
-> Blade 100: still has 2 address conflicts:
-> http://kodu.ut.ee/~mroos/dm/dm.sb100+patch
->
-> V240: still has a lot of address conflicts:
-> http://kodu.ut.ee/~mroos/dm/dm.v240+patch
->
-> V210: fixes the line
-> pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
->
-> These lines are still present:
->
-> pci 0001:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
-> pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
->
-you should not have those.
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Looks like you are using old branch before 2015-10-05.
+Commit f4c55c5a3f7f ("PCI: designware: Program ATU with untranslated
+address") added the calculation of PCI BUS addresses in designware,
+storing them in new fields added in "struct pcie_port". This
+calculation is done for every designware user even if is only
+applicable to DRA7xx.
+This patch moves the calculation of the bus addresses to the DRA7xx
+driver and is needed to allow the rework of designware to use
+the new DT parsing API.
 
-If you use the git directly, please update the branch to local again.
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+---
+ drivers/pci/host/pci-dra7xx.c      | 13 +++++++++++++
+ drivers/pci/host/pcie-designware.c | 15 ++++-----------
+ 2 files changed, 17 insertions(+), 11 deletions(-)
 
-Thanks
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 199e29a..ebdffa0 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -62,6 +62,7 @@
+ 
+ #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
+ #define	LINK_UP						BIT(16)
++#define	CPU_TO_BUS_ADDR					0x0FFFFFFF
+ 
+ struct dra7xx_pcie {
+ 	void __iomem		*base;
+@@ -151,6 +152,18 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
+ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+ {
+ 	dw_pcie_setup_rc(pp);
++
++	if (pp->io_mod_base)
++		pp->io_mod_base &= CPU_TO_BUS_ADDR;
++
++	if (pp->mem_mod_base)
++		pp->mem_mod_base &= CPU_TO_BUS_ADDR;
++
++	if (pp->cfg0_mod_base) {
++		pp->cfg0_mod_base &= CPU_TO_BUS_ADDR;
++		pp->cfg1_mod_base &= CPU_TO_BUS_ADDR;
++	}
++
+ 	dra7xx_pcie_establish_link(pp);
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		dw_pcie_msi_init(pp);
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 52aa6e3..75338a6 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -365,14 +365,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	struct of_pci_range range;
+ 	struct of_pci_range_parser parser;
+ 	struct resource *cfg_res;
+-	u32 val, na, ns;
++	u32 val, ns;
+ 	const __be32 *addrp;
+ 	int i, index, ret;
+ 
+-	/* Find the address cell size and the number of cells in order to get
+-	 * the untranslated address.
+-	 */
+-	of_property_read_u32(np, "#address-cells", &na);
+ 	ns = of_n_size_cells(np);
+ 
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+@@ -415,8 +411,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->io_base = range.cpu_addr;
+ 
+ 			/* Find the untranslated IO space address */
+-			pp->io_mod_base = of_read_number(parser.range -
+-							 parser.np + na, ns);
++			pp->io_mod_base = range.cpu_addr;
+ 		}
+ 		if (restype == IORESOURCE_MEM) {
+ 			of_pci_range_to_resource(&range, np, &pp->mem);
+@@ -425,8 +420,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->mem_bus_addr = range.pci_addr;
+ 
+ 			/* Find the untranslated MEM space address */
+-			pp->mem_mod_base = of_read_number(parser.range -
+-							  parser.np + na, ns);
++			pp->mem_mod_base = range.cpu_addr;
+ 		}
+ 		if (restype == 0) {
+ 			of_pci_range_to_resource(&range, np, &pp->cfg);
+@@ -436,8 +430,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
+ 
+ 			/* Find the untranslated configuration space address */
+-			pp->cfg0_mod_base = of_read_number(parser.range -
+-							   parser.np + na, ns);
++			pp->cfg0_mod_base = range.cpu_addr;
+ 			pp->cfg1_mod_base = pp->cfg0_mod_base +
+ 					    pp->cfg0_size;
+ 		}
+-- 
+1.9.1
 
-Yinghai
