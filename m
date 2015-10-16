@@ -1,64 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54446 "EHLO mail.kernel.org"
+Received: from mga01.intel.com ([192.55.52.88]:31019 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755656AbbJ2TuN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 29 Oct 2015 15:50:13 -0400
-Date: Thu, 29 Oct 2015 14:50:10 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Alexander Duyck <aduyck@mirantis.com>, bhelgaas@google.com,
+	id S1753004AbbJPFqt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 Oct 2015 01:46:49 -0400
+Subject: Re: [PATCH RFC 2/7] platform-msi: Factor out allocation/free of
+ private data
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>
+References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
+ <1444923568-17413-3-git-send-email-marc.zyngier@arm.com>
+Cc: Ma Jun <majun258@huawei.com>, linux-arm-kernel@lists.infradead.org,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/5] iov: Update virtfn_max_buses to validate offset and
- stride
-Message-ID: <20151029195010.GB19083@localhost>
-References: <20151027204607.14626.59671.stgit@localhost.localdomain>
- <20151027205215.14626.93504.stgit@localhost.localdomain>
- <20151028163216.GA2927@localhost>
- <20151028184324.GA10008@localhost>
- <5631424A.7010408@gmail.com>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <56208F46.7090402@linux.intel.com>
+Date: Fri, 16 Oct 2015 13:46:46 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5631424A.7010408@gmail.com>
+In-Reply-To: <1444923568-17413-3-git-send-email-marc.zyngier@arm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 28, 2015 at 02:46:50PM -0700, Alexander Duyck wrote:
-> On 10/28/2015 11:43 AM, Bjorn Helgaas wrote:
-> >On Wed, Oct 28, 2015 at 11:32:16AM -0500, Bjorn Helgaas wrote:
-
-> >Here's my new proposal:
-> >
-> >   static int compute_max_vf_buses(struct pci_dev *dev)
-> >   {
-> >           struct pci_sriov *iov = dev->sriov;
-> >           int nr_virtfn, busnr, rc = 0;
-> >
-> >           for (nr_virtfn = iov->total_VFs; nr_virtfn; nr_virtfn--) {
-> >                   pci_iov_set_numvfs(dev, nr_virtfn);
-> >                   if (!iov->offset || (nr_virtfn > 1 && !iov->stride)) {
-> >                           rc = -EIO;
-> >                           goto out;
-> >                   }
-> >
-> >                   busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
-> >                   if (busnr > iov->max_VF_buses)
-> >                           iov->max_VF_buses = busnr;
-> >           }
-> >
-> >   out:
-> >           pci_iov_set_numvfs(dev, 0);
-> >           return rc;
-> >   }
-> >
+On 2015/10/15 23:39, Marc Zyngier wrote:
+> As we're going to have multiple paths to allocate/free the
+> platform-msi private data, factor this out into separate
+> utility functions.
 > 
-> This looks good to me.  In theory you could save yourself a pair of
-> MMIO reads at the end of the loop by just writing numvfs without the
-> offset and stride read, but this should work.
-
-True.  It's called once per device at boot-time, so it's not a hot path,
-and I think it's worth two unnecessary MMIO reads to make it easier to
-analyze: there's exactly one place that updates PCI_SRIOV_NUM_VF, and that
-place always updates our caches of PCI_SRIOV_VF_OFFSET and
-PCI_SRIOV_VF_STRIDE.
-
-Bjorn
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/base/platform-msi.c | 84 ++++++++++++++++++++++++++-------------------
+>  1 file changed, 48 insertions(+), 36 deletions(-)
+> 
+> diff --git a/drivers/base/platform-msi.c b/drivers/base/platform-msi.c
+> index 6148c78..92666cd 100644
+> --- a/drivers/base/platform-msi.c
+> +++ b/drivers/base/platform-msi.c
+> @@ -189,21 +189,11 @@ struct irq_domain *platform_msi_create_irq_domain(struct fwnode_handle *fwnode,
+>  	return domain;
+>  }
+>  
+> -/**
+> - * platform_msi_domain_alloc_irqs - Allocate MSI interrupts for @dev
+> - * @dev:		The device for which to allocate interrupts
+> - * @nvec:		The number of interrupts to allocate
+> - * @write_msi_msg:	Callback to write an interrupt message for @dev
+> - *
+> - * Returns:
+> - * Zero for success, or an error code in case of failure
+> - */
+> -int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
+> -				   irq_write_msi_msg_t write_msi_msg)
+> +static int platform_msi_alloc_priv_data(struct device *dev, unsigned int nvec,
+> +					irq_write_msi_msg_t write_msi_msg,
+> +					struct platform_msi_priv_data **data)
+How about making platform_msi_alloc_priv_data() return a pointer
+instead of an int, that may simplify the code a bit.
