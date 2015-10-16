@@ -1,108 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
-	will.deacon@arm.com, thomas.lendacky@amd.com,
-	herbert@gondor.apana.org.au, davem@davemloft.net,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V4 0/8] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
-Date: Wed, 28 Oct 2015 17:00:02 +0100
-Message-ID: <1545680.eQNYNjjaSj@vostro.rjw.lan>
-In-Reply-To: <5630D38F.804@linaro.org>
-References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com> <24127028.eJSjD1i70u@vostro.rjw.lan> <5630D38F.804@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH v4 2/3] arm64: Juno: Add support for the PCIe host bridge on Juno R1
+Date: Fri, 16 Oct 2015 16:22:08 +0100
+Message-Id: <1445008929-32267-3-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1445008929-32267-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1445008929-32267-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, October 28, 2015 09:54:23 PM Hanjun Guo wrote:
-> Hi Rafael,
-> 
-> On 10/27/2015 11:27 PM, Rafael J. Wysocki wrote:
-> > On Tuesday, October 27, 2015 09:52:50 AM Bjorn Helgaas wrote:
-> >> Hi Suravee,
-> >>
-> >> On Wed, Oct 21, 2015 at 08:52:03AM -0700, Suravee Suthikulpanit wrote:
-> >>> This patch series adds support to setup DMA coherency for PCI device using
-> >>> the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
-> >>> is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
-> >>> support for ARM64 which is currently in development.  Also, this should
-> >>> not affect other architectures that does not define
-> >>> CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
-> >>>
-> >>> In the process, this series also introduces enum dev_dma_attr and a set
-> >>> of APIs to query device DMA attribute. These APIs replace the obsolete
-> >>> device_dma_is_coherent(), and acpi_check_dma().
-> >>>
-> >>> I have also included a patch from Jeremy posted here:
-> >>>      http://www.spinics.net/lists/linux-usb/msg128582.html
-> >>>
-> >>> This patch series  has been tested on AMD Seattle RevB platform.
-> >>> The git tree containing tested code and pre-req patches are posted here:
-> >>>
-> >>>      http://github.com/ssuthiku/linux.git pci-cca-v4
-> >>>
-> >>> Changes from V3: (https://lkml.org/lkml/2015/8/26/389)
-> >>>      * Clean up suggested by Bjorn
-> >>>      * Introduce enum dev_dma_attr
-> >>>      * Replace device_dma_is_coherent() and acpi_check_dma() with
-> >>>        new APIs.
-> >>>
-> >>> Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
-> >>>      * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
-> >>>      * Add WARN() when fail to setup DMA for PCI device when booting
-> >>>        ACPI (per Arnd's suggestion)
-> >>>      * Added Acked-by from Rob.
-> >>>      * Minor clean up
-> >>>
-> >>> Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
-> >>>      * Include patch 1 from Jeremy to enable support for _CCA=0
-> >>>      * Clean up acpi_check_dma() per Bjorn suggestions
-> >>>      * Split the original V1 patch into two patches (patch 3 and 4)
-> >>>
-> >>> Jeremy Linton (1):
-> >>>    Honor ACPI _CCA attribute setting
-> >>>
-> >>> Suravee Suthikulpanit (7):
-> >>>    device property: Introducing enum dev_dma_attr
-> >>>    acpi: Adding DMA Attribute APIs for ACPI Device
-> >>>    device property: Adding DMA Attribute APIs for Generic Devices
-> >>>    device property: acpi: Make use of the new DMA Attribute APIs
-> >>>    device property: acpi: Remove unused DMA APIs
-> >>>    PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
-> >>>    PCI: ACPI: Add support for PCI device DMA coherency
-> >>>
-> >>>   drivers/acpi/acpi_platform.c              |  7 +++++-
-> >>>   drivers/acpi/glue.c                       |  8 +++---
-> >>>   drivers/acpi/scan.c                       | 42 +++++++++++++++++++++++++++++++
-> >>>   drivers/base/property.c                   | 32 +++++++++++++++++------
-> >>>   drivers/crypto/ccp/ccp-platform.c         |  9 ++++++-
-> >>>   drivers/net/ethernet/amd/xgbe/xgbe-main.c |  9 ++++++-
-> >>>   drivers/of/of_pci.c                       | 20 ---------------
-> >>>   drivers/pci/probe.c                       | 36 ++++++++++++++++++++++++--
-> >>>   include/acpi/acpi_bus.h                   | 36 +++-----------------------
-> >>>   include/linux/acpi.h                      |  7 +++++-
-> >>>   include/linux/of_pci.h                    |  3 ---
-> >>>   include/linux/property.h                  | 10 +++++++-
-> >>>   12 files changed, 145 insertions(+), 74 deletions(-)
-> >>
-> >> I had a couple minor comments.  It's sort of a toss-up, but this feels
-> >> more ACPI-flavored than PCI, so I assume Rafael will take this whole
-> >> series unless I hear otherwise.
-> >
-> > I'll do that.
-> 
-> If Suravee address the comments and send another version,
-> an it be merged into 4.4?
+Juno R1 board sports a functional PCIe host bridge that is
+compliant with the SBSA standard found [1] here. With the right
+firmware that initialises the XpressRICH3 controller one can
+use the generic Host Bridge driver to use the PCIe hardware.
 
-Well, it is likely, but not guaranteed.
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Acked-by: Mark Rutland <mark.rutland@arm.com>
 
-We're only a few days from the beginning of the merge window and I'm still
-in Seoul.
+[1] http://infocenter.arm.com/help/topic/com.arm.doc.den0029a/
+---
+ arch/arm64/boot/dts/arm/juno-r1.dts | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-Thanks,
-Rafael
+diff --git a/arch/arm64/boot/dts/arm/juno-r1.dts b/arch/arm64/boot/dts/arm/juno-r1.dts
+index c627511..a25964d 100644
+--- a/arch/arm64/boot/dts/arm/juno-r1.dts
++++ b/arch/arm64/boot/dts/arm/juno-r1.dts
+@@ -109,6 +109,26 @@
+ 
+ 	#include "juno-base.dtsi"
+ 
++	pcie-controller@40000000 {
++		compatible = "arm,juno-r1-pcie", "plda,xpressrich3-axi", "pci-host-ecam-generic";
++		device_type = "pci";
++		reg = <0 0x40000000 0 0x10000000>;	/* ECAM config space */
++		bus-range = <0 255>;
++		linux,pci-domain = <0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		dma-coherent;
++		ranges = <0x01000000 0x00 0x5f800000 0x00 0x5f800000 0x0 0x00800000>,
++			 <0x02000000 0x00 0x50000000 0x00 0x50000000 0x0 0x08000000>,
++			 <0x42000000 0x40 0x00000000 0x40 0x00000000 0x1 0x00000000>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &gic 0 0 0 136 4>,
++				<0 0 0 2 &gic 0 0 0 137 4>,
++				<0 0 0 3 &gic 0 0 0 138 4>,
++				<0 0 0 4 &gic 0 0 0 139 4>;
++		msi-parent = <&v2m_0>;
++	};
+ };
+ 
+ &memtimer {
+-- 
+2.6.0
 
