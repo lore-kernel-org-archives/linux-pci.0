@@ -1,90 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:36367 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753828AbbJ3DWt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 23:22:49 -0400
-Received: by pacfv9 with SMTP id fv9so62254246pac.3
-        for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2015 20:22:48 -0700 (PDT)
-Subject: Re: [PATCH V10 05/12] powerpc/eeh: Cache only BARs, not windows or
- IOV BARs
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com, mpe@ellerman.id.au
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1445829362-2738-6-git-send-email-weiyang@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5632E283.7000601@ozlabs.ru>
-Date: Fri, 30 Oct 2015 14:22:43 +1100
+Received: from mail-bn1on0141.outbound.protection.outlook.com ([157.56.110.141]:45669
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752370AbbJPHSs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 Oct 2015 03:18:48 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	"Yoder Stuart-B08248" <stuart.yoder@freescale.com>,
+	Li Yang <leoli@freescale.com>, Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Jingoo Han" <jg1.han@samsung.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	"Minghuan Lian" <Minghuan.Lian@freescale.com>
+Subject: [PATCH v4 4/6] PCI: layerscape: update ls_add_pcie_port()
+Date: Fri, 16 Oct 2015 15:19:18 +0800
+Message-ID: <1444979960-24100-4-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <1445829362-2738-6-git-send-email-weiyang@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/26/2015 02:15 PM, Wei Yang wrote:
-> EEH address cache, which helps to locate the PCI device according to
-> the given (physical) MMIO address, didn't cover PCI bridges. Also, it
-> shouldn't return PF
+To keep consistent with the other DesignWare-based host drivers,
+The patch updates ls_add_pcie_port().
 
-"it shouldn't return" is about the cache, right? eeh_addr_cache_get_dev() - 
-this guy can "return", the cache cannot.
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+---
+Change log
+v4: split from [PATCH v3] PCI: layerscape: Add PCIe support for LS1043a and LS2080a
 
-> with address in PF's IOV BARs. Instead, the VFs
-> should be returned.
->
-> Also, by doing so, it removes the type check in
-> eeh_addr_cache_insert_dev(), since bridge's window would not be cached.
->
-> The patch restricts the address cache to cover first 7 BARs for the
-> above purposes.
+ drivers/pci/host/pci-layerscape.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-
-I'd better understand something like this :)
-
-This restricts the EEH address cache to use only first 7 BARs. This makes 
-__eeh_addr_cache_insert_dev() ignore PCI bridge windows and IOV BARs. As 
-the result of this change, eeh_addr_cache_get_dev() will return VFs from 
-VF's resource addresses instead of parent PFs.
-
-This removes extra check for a PCI bridge as we limit 
-__eeh_addr_cache_insert_dev() to 7 BARs and this effectively excludes PCI 
-bridges from being cached.
-
-
->
-> [gwshan: changelog]
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/kernel/eeh_cache.c | 6 +-----
->   1 file changed, 1 insertion(+), 5 deletions(-)
->
-> diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
-> index a1e86e1..e6887f0 100644
-> --- a/arch/powerpc/kernel/eeh_cache.c
-> +++ b/arch/powerpc/kernel/eeh_cache.c
-> @@ -196,7 +196,7 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
->   	}
->
->   	/* Walk resources on this device, poke them into the tree */
-> -	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-> +	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
->   		resource_size_t start = pci_resource_start(dev,i);
->   		resource_size_t end = pci_resource_end(dev,i);
->   		unsigned long flags = pci_resource_flags(dev,i);
-> @@ -222,10 +222,6 @@ void eeh_addr_cache_insert_dev(struct pci_dev *dev)
->   {
->   	unsigned long flags;
->
-> -	/* Ignore PCI bridges */
-> -	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
-> -		return;
-> -
->   	spin_lock_irqsave(&pci_io_addr_cache_root.piar_lock, flags);
->   	__eeh_addr_cache_insert_dev(dev);
->   	spin_unlock_irqrestore(&pci_io_addr_cache_root.piar_lock, flags);
->
-
-
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index 89b7eb8..891e504 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -125,15 +125,14 @@ static const struct of_device_id ls_pcie_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
+ 
+-static int ls_add_pcie_port(struct ls_pcie *pcie)
++static int __init
++ls_add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
+ {
+-	struct pcie_port *pp;
+ 	int ret;
++	struct ls_pcie *pcie = to_ls_pcie(pp);
+ 
+-	pp = &pcie->pp;
+-	pp->dev = pcie->dev;
++	pp->dev = &pdev->dev;
+ 	pp->dbi_base = pcie->dbi;
+-	pp->root_bus_nr = -1;
+ 	pp->ops = pcie->drvdata->ops;
+ 
+ 	ret = dw_pcie_host_init(pp);
+@@ -160,8 +159,6 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+ 	if (!pcie)
+ 		return -ENOMEM;
+ 
+-	pcie->dev = &pdev->dev;
+-
+ 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
+ 	pcie->dbi = devm_ioremap_resource(&pdev->dev, dbi_base);
+ 	if (IS_ERR(pcie->dbi)) {
+@@ -174,7 +171,7 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+ 	if (!ls_pcie_is_bridge(pcie))
+ 		return -ENODEV;
+ 
+-	ret = ls_add_pcie_port(pcie);
++	ret = ls_add_pcie_port(&pcie->pp, pdev);
+ 	if (ret < 0)
+ 		return ret;
+ 
 -- 
-Alexey
+1.9.1
+
