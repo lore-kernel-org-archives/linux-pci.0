@@ -1,64 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52486 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:35623 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757775AbbJVSq0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Oct 2015 14:46:26 -0400
-Date: Thu, 22 Oct 2015 13:46:22 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, jingoohan1@gmail.com,
-	pratyush.anand@gmail.com, Arnd Bergmann <arnd@arndb.de>,
-	linux@arm.linux.org.uk, thomas.petazzoni@free-electrons.com,
-	gabriele.paoloni@huawei.com, lorenzo.pieralisi@arm.com,
-	james.morse@arm.com, Liviu.Dudau@arm.com, jason@lakedaemon.net,
-	robh@kernel.org, gabriel.fernandez@linaro.org,
-	Minghuan.Lian@freescale.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, zhangjukuo@huawei.com,
-	qiuzhenfa@hisilicon.com, liudongdong3@huawei.com,
-	qiujiang@huawei.com, xuwei5@hisilicon.com, liguozhu@hisilicon.com
-Subject: Re: [PATCH v11 4/6] PCI: hisi: Add PCIe host support for HiSilicon
- SoC Hip05
-Message-ID: <20151022184622.GD21237@localhost>
-References: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com>
- <1444991021-109306-5-git-send-email-wangzhou1@hisilicon.com>
+	id S1750711AbbJPVQc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 Oct 2015 17:16:32 -0400
+Subject: [PATCH] PCI: Remove unnecessary re-read of SR-IOV offset/stride
+ registers
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ben Shelton <benjamin.h.shelton@intel.com>,
+	linux-kernel@vger.kernel.org,
+	Alexander Duyck <alexander.duyck@gmail.com>
+Date: Fri, 16 Oct 2015 16:16:28 -0500
+Message-ID: <20151016211628.31492.86258.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444991021-109306-5-git-send-email-wangzhou1@hisilicon.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Zhou,
+Previously, we read PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE from the
+SR-IOV capability in pci_iov_set_numvfs() after changing PCI_SRIOV_NUM_VF,
+and we read them again in sriov_enable().  But sriov_init() always calls
+pci_iov_set_numvfs() before a successful return, and it caches the offset
+and stride values, so there's no need to read the capability again in
+sriov_enable().
 
-This looks pretty good to me; just a mask question and add a printk.
+Remove the PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE config reads from
+sriov_enable() and use the cached values from the pci_sriov structure.
 
-On Fri, Oct 16, 2015 at 06:23:39PM +0800, Zhou Wang wrote:
-> This patch adds PCIe host support for HiSilicon SoC Hip05.
-> ...
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c |    9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-> +#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
-> +#define PCIE_LTSSM_LINKUP_STATE                         0x11
-> +#define PCIE_LTSSM_STATE_MASK                           0x3F
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 0202ab0..9b52ad4 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -230,7 +230,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	int rc;
+ 	int i, j;
+ 	int nres;
+-	u16 offset, stride, initial;
++	u16 initial;
+ 	struct resource *res;
+ 	struct pci_dev *pdev;
+ 	struct pci_sriov *iov = dev->sriov;
+@@ -253,9 +253,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	    (!(iov->cap & PCI_SRIOV_CAP_VFM) && (nr_virtfn > initial)))
+ 		return -EINVAL;
+ 
+-	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &offset);
+-	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &stride);
+-	if (!offset || (nr_virtfn > 1 && !stride))
++	if (!iov->offset || (nr_virtfn > 1 && !iov->stride))
+ 		return -EIO;
+ 
+ 	nres = 0;
+@@ -270,9 +268,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 		return -ENOMEM;
+ 	}
+ 
+-	iov->offset = offset;
+-	iov->stride = stride;
+-
+ 	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+ 	if (bus > dev->bus->busn_res.end) {
+ 		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
 
-Fabio unified some of this; see
-  https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-designware&id=4788fe6ebf4594c9a95b620cbff05147c8504823
-  https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-designware&id=b09464f77dd252a782da1f4e9925c1dbce4540ac
-
-So the question is, why do you use a 6-bit (0x3f) LTSSM_STATE_MASK?
-We think we can use a 5-bit mask (0x1f) for all the other
-DesignWare-based systems.
-
-> +/* Hip05 PCIe host only supports 32-bit config access */
-
-Thanks for the comment asserting that Hip05 only supports 32-bit
-config access.  I assume you confirmed that with the hardware
-designers.  As far as I can tell, this *is* a hardware defect, and at
-the minimum, I want a printk at driver probe-time so a dmesg log will
-have a clue that read/modify/write on config space might do the wrong
-thing.
-
-> +static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
-> +			      u32 *val)
-> ...
-
-Bjorn
