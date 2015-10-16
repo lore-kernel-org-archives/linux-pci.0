@@ -1,57 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lan Tianyu <tianyu.lan@intel.com>
-To: bhelgaas@google.com, carolyn.wyborny@intel.com,
-	donald.c.skidmore@intel.com, eddie.dong@intel.com,
-	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
-	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-Cc: Lan Tianyu <tianyu.lan@intel.com>
-Subject: [RFC Patch 01/12] PCI: Add virtfn_index for struct pci_device
-Date: Thu, 22 Oct 2015 00:37:33 +0800
-Message-Id: <1445445464-5056-2-git-send-email-tianyu.lan@intel.com>
-In-Reply-To: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:40808 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752772AbbJPLNZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 Oct 2015 07:13:25 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Rob Herring <robh+dt@kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: [PULL] msi-map support and msi-parent updates for 4.4
+Date: Fri, 16 Oct 2015 12:13:06 +0100
+Message-Id: <1444993986-31625-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add "virtfn_index" member in the struct pci_device to record VF sequence
-of PF. This will be used in the VF sysfs node handle.
+Hi Thomas,
 
-Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
----
- drivers/pci/iov.c   | 1 +
- include/linux/pci.h | 1 +
- 2 files changed, 2 insertions(+)
+Here's a number of patches that introduce the msi-map DT property, and
+puts it to a good use is the MSI layer. The msi-parent property also
+gets reworked in order to cope with its sideband information
+extension.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..065b6bb 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -136,6 +136,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	virtfn->physfn = pci_dev_get(dev);
- 	virtfn->is_virtfn = 1;
- 	virtfn->multifunction = 0;
-+	virtfn->virtfn_index = id;
- 
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &dev->resource[i + PCI_IOV_RESOURCES];
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 353db8d..85c5531 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -356,6 +356,7 @@ struct pci_dev {
- 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
- 	unsigned int	irq_managed:1;
- 	pci_dev_flags_t dev_flags;
-+	unsigned int	virtfn_index;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
- 	u32		saved_config_space[16]; /* config space saved at suspend time */
--- 
-1.8.4.rc0.1.g8f6a3e5.dirty
+Please pull!
 
+Thanks,
+
+	M.
+
+The following changes since commit a71225e204f5ba8b41e7bb100ca37c074861d5b1:
+
+  irqchip/gic-v2m: Add support for multiple MSI frames (2015-10-15 10:18:48 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git tags/msi-map-4.4
+
+for you to fetch changes up to 8666429c8e7232dc7bd92f17134bbd9f62e20d64:
+
+  PCI/MSI: Allow the MSI domain to be device-specific (2015-10-16 11:52:25 +0100)
+
+----------------------------------------------------------------
+Support for msi-map, and msi-parent update:
+
+- New map-map property to describe the remapping of requester-ids,
+  and the routing of MSIs to controllers
+- New hooks to make MSI domains per-device if required
+- Extension of msi-parent to provide sideband information
+- Extensive documentation for both msi-map and msi-parent
+
+----------------------------------------------------------------
+David Daney (3):
+      of/irq: Add new function of_msi_map_rid()
+      PCI/MSI: Add helper function pci_msi_domain_get_msi_rid().
+      irqchip/gic-v3-its: Add handling of PCI requester id.
+
+Marc Zyngier (8):
+      of/irq: Add support code for multi-parent version of "msi-parent"
+      of/irq: Use of_msi_get_domain instead of open-coded "msi-parent" parsing
+      PCI/MSI: Use of_msi_get_domain instead of open-coded "msi-parent" parsing
+      irqchip/gic-v3-its: Parse new version of msi-parent property
+      of/irq: Split of_msi_map_rid to reuse msi-map lookup
+      of/irq: Use the msi-map property to provide device-specific MSI domain
+      PCI: Add per-device MSI domain hook
+      PCI/MSI: Allow the MSI domain to be device-specific
+
+Mark Rutland (1):
+      Docs: dt: Add PCI MSI map bindings
+
+ Documentation/devicetree/bindings/pci/pci-msi.txt | 220 ++++++++++++++++++++++
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c          |   4 +-
+ drivers/irqchip/irq-gic-v3-its-platform-msi.c     |  18 +-
+ drivers/of/irq.c                                  | 185 +++++++++++++++++-
+ drivers/pci/msi.c                                 |  47 +++++
+ drivers/pci/of.c                                  |  13 +-
+ drivers/pci/probe.c                               |  43 ++++-
+ include/linux/msi.h                               |   7 +
+ include/linux/of_irq.h                            |  23 +++
+ 9 files changed, 532 insertions(+), 28 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/pci-msi.txt
