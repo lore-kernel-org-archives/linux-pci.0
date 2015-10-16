@@ -1,76 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, Meelis Roos <mroos@linux.ee>
-Subject: [PATCH v8 07/61] PCI: Kill wrong quirk about M7101
-Date: Tue, 27 Oct 2015 13:54:59 -0700
-Message-Id: <1445979353-1728-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:40981 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754234AbbJPMNc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 Oct 2015 08:13:32 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Rob Herring <robh+dt@kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: [PULL v2] msi-map support and msi-parent updates for 4.4
+Date: Fri, 16 Oct 2015 13:13:26 +0100
+Message-Id: <1444997606-12668-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Meelis reported that qla2000 driver does not get loaded on one sparc system.
+Hi Thomas,
 
-schizo f00732d0: PCI host bridge to bus 0001:00
-pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
-pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
-pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
-pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
+Here's a number of patches that introduce the msi-map DT property, and
+puts it to a good use is the MSI layer. The msi-parent property also
+gets reworked in order to cope with its sideband information
+extension.
 
-So the quirk for M7101 claim the io range early.
+This replaces the previous PR which had a couple of merge issues.
 
-According to spec with M7101 in M1543 page 103/104,
-	http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
-0xe0, and 0xe2 do not include address info for acpi/smb.
+Please pull!
 
-Kill wrong quirk about them.
+Thanks,
 
-Link: http://kodu.ut.ee/~mroos/dm/dm.v240
-Link: http://kodu.ut.ee/~mroos/dm/dm.sb100
-Reported-by: Meelis Roos <mroos@linux.ee>
-Cc: Meelis Roos <mroos@linux.ee>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- drivers/pci/quirks.c | 18 ------------------
- 1 file changed, 18 deletions(-)
+	M.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b03373f..55bb661 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -433,24 +433,6 @@ static void quirk_amd_nl_class(struct pci_dev *pdev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
- 		quirk_amd_nl_class);
- 
--/*
-- * Let's make the southbridge information explicit instead
-- * of having to worry about people probing the ACPI areas,
-- * for example.. (Yes, it happens, and if you read the wrong
-- * ACPI register it will put the machine to sleep with no
-- * way of waking it up again. Bummer).
-- *
-- * ALI M7101: Two IO regions pointed to by words at
-- *	0xE0 (64 bytes of ACPI registers)
-- *	0xE2 (32 bytes of SMB registers)
-- */
--static void quirk_ali7101_acpi(struct pci_dev *dev)
--{
--	quirk_io_region(dev, 0xE0, 64, PCI_BRIDGE_RESOURCES, "ali7101 ACPI");
--	quirk_io_region(dev, 0xE2, 32, PCI_BRIDGE_RESOURCES+1, "ali7101 SMB");
--}
--DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
--
- static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
- {
- 	u32 devres;
--- 
-1.8.4.5
+The following changes since commit a71225e204f5ba8b41e7bb100ca37c074861d5b1:
 
+  irqchip/gic-v2m: Add support for multiple MSI frames (2015-10-15 10:18:48 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git tags/msi-map-4.4
+
+for you to fetch changes up to 54fa97eeb9e22b47d68b67ee00987afa7fbc2178:
+
+  PCI/MSI: Allow the MSI domain to be device-specific (2015-10-16 13:07:16 +0100)
+
+----------------------------------------------------------------
+Support for msi-map, and msi-parent update:
+
+- New map-map property to describe the remapping of requester-ids,
+  and the routing of MSIs to controllers
+- New hooks to make MSI domains per-device if required
+- Extension of msi-parent to provide sideband information
+- Extensive documentation for both msi-map and msi-parent
+
+----------------------------------------------------------------
+David Daney (3):
+      of/irq: Add new function of_msi_map_rid()
+      PCI/MSI: Add helper function pci_msi_domain_get_msi_rid().
+      irqchip/gic-v3-its: Add handling of PCI requester id.
+
+Marc Zyngier (8):
+      of/irq: Add support code for multi-parent version of "msi-parent"
+      of/irq: Use of_msi_get_domain instead of open-coded "msi-parent" parsing
+      PCI/MSI: Use of_msi_get_domain instead of open-coded "msi-parent" parsing
+      irqchip/gic-v3-its: Parse new version of msi-parent property
+      of/irq: Split of_msi_map_rid to reuse msi-map lookup
+      of/irq: Use the msi-map property to provide device-specific MSI domain
+      PCI: Add per-device MSI domain hook
+      PCI/MSI: Allow the MSI domain to be device-specific
+
+Mark Rutland (1):
+      Docs: dt: Add PCI MSI map bindings
+
+ Documentation/devicetree/bindings/pci/pci-msi.txt | 220 ++++++++++++++++++++++
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c          |   4 +-
+ drivers/irqchip/irq-gic-v3-its-platform-msi.c     |  18 +-
+ drivers/of/irq.c                                  | 185 +++++++++++++++++-
+ drivers/pci/msi.c                                 |  49 +++++
+ drivers/pci/of.c                                  |  13 +-
+ drivers/pci/probe.c                               |  43 ++++-
+ include/linux/msi.h                               |   7 +
+ include/linux/of_irq.h                            |  23 +++
+ 9 files changed, 534 insertions(+), 28 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/pci-msi.txt
