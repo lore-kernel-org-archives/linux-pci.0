@@ -1,41 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:38621 "EHLO smtp1.it.da.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751187AbbJGJXy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Oct 2015 05:23:54 -0400
-Date: Wed, 7 Oct 2015 12:25:19 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: Yinghai Lu <yinghai@kernel.org>
-cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: 4.3-rc3 BAR allocation problems on multiple machines
-Message-ID: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:4508 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753898AbbJPKIs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Oct 2015 06:08:48 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v11 6/6] MAINTAINERS: Add pcie-hisi maintainer
+Date: Fri, 16 Oct 2015 18:23:41 +0800
+Message-ID: <1444991021-109306-7-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-First I noticed that on Sun Netra t1-150 (sparc64 CPU), PCI allocation 
-was failing for qla1280 scsi driver. Reading dmesg uncovered "can't 
-claim BAR" errors. Looking for this in my other test machines I see more 
-of them - on many sparc64 machines and some on x86.
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-In another thread for "Resource allocation cleanup for v4.4", Yinghai Lu 
-asked for full dmesg to solve another similar case. So to help 
-understanding this one, here are the dmesgs of my machines:
-
-sparc64 machines:
-
-http://kodu.ut.ee/~mroos/dm/dm.t1-105
-http://kodu.ut.ee/~mroos/dm/dm.t1-200
-http://kodu.ut.ee/~mroos/dm/dm.v120
-http://kodu.ut.ee/~mroos/dm/dm.v210
-http://kodu.ut.ee/~mroos/dm/dm.v240
-http://kodu.ut.ee/~mroos/dm/dm.sb100
-
-amd64 machine:
-
-http://kodu.ut.ee/~mroos/dm/dm.x2100
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 7ba7ab7..944a229 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8047,6 +8047,13 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+ F:	drivers/pci/host/pci-xgene-msi.c
+ 
++PCIE DRIVER FOR HISILICON
++M:	Zhou Wang <wangzhou1@hisilicon.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++F:	drivers/pci/host/pcie-hisi.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
 -- 
-Meelis Roos (mroos@linux.ee)
+1.9.1
+
