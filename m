@@ -1,174 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Guenter Roeck <linux@roeck-us.net>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>
-Subject: [PATCH 1/2] PCI: pciehp: Queue power work requests in dedicated function
-Date: Mon, 12 Oct 2015 12:10:12 -0700
-Message-Id: <1444677013-3836-1-git-send-email-linux@roeck-us.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.140]:24325 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754170AbbJPPWt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Oct 2015 11:22:49 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH v4 1/3] Documentation: of: Document the bindings used by Juno R1 PCIe host bridge
+Date: Fri, 16 Oct 2015 16:22:07 +0100
+Message-Id: <1445008929-32267-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1445008929-32267-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1445008929-32267-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Up to now, work items to be queued to be handled by pciehp_power_thread()
-are allocated using kmalloc() in three different locations. If not needed,
-kfree() is called to free the allocated data.
+ARM's Juno R1 board used PLDA XpressRICH3-AXI IP to implement a PCIe host
+bridge. Introduce "plda" as vendor prefix for PLDA and document the DT
+bindings for PLDA XpressRICH3-AXI IP as well as ARM's Juno R1.
 
-Introduce a separate function to allocate the work item and queue it,
-and call it only if needed. This reduces code ducplication and avoids
-having to free memory if the work item does not need to get executed.
-
-Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Acked-by: Mark Rutland <mark.rutland@arm.com>
 ---
- drivers/pci/hotplug/pciehp_ctrl.c | 66 +++++++++++----------------------------
- 1 file changed, 19 insertions(+), 47 deletions(-)
+ Documentation/devicetree/bindings/pci/arm,juno-r1-pcie.txt   | 10 ++++++++++
+ .../devicetree/bindings/pci/plda,xpressrich3-axi.txt         | 12 ++++++++++++
+ Documentation/devicetree/bindings/vendor-prefixes.txt        |  1 +
+ 3 files changed, 23 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/arm,juno-r1-pcie.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/plda,xpressrich3-axi.txt
 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index f3796124ad7c..ef96a1d51fac 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -204,11 +204,12 @@ static void pciehp_power_thread(struct work_struct *work)
- 	kfree(info);
- }
- 
--void pciehp_queue_pushbutton_work(struct work_struct *work)
-+void pciehp_queue_power_work(struct slot *p_slot, int req)
- {
--	struct slot *p_slot = container_of(work, struct slot, work.work);
- 	struct power_work_info *info;
- 
-+	p_slot->state = req == ENABLE_REQ ? POWERON_STATE : POWEROFF_STATE;
+diff --git a/Documentation/devicetree/bindings/pci/arm,juno-r1-pcie.txt b/Documentation/devicetree/bindings/pci/arm,juno-r1-pcie.txt
+new file mode 100644
+index 0000000..f7514c1
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/arm,juno-r1-pcie.txt
+@@ -0,0 +1,10 @@
++* ARM Juno R1 PCIe interface
 +
- 	info = kmalloc(sizeof(*info), GFP_KERNEL);
- 	if (!info) {
- 		ctrl_err(p_slot->ctrl, "%s: Cannot allocate memory\n",
-@@ -217,23 +218,25 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
- 	}
- 	info->p_slot = p_slot;
- 	INIT_WORK(&info->work, pciehp_power_thread);
-+	info->req = req;
-+	queue_work(p_slot->wq, &info->work);
-+}
++This PCIe host controller is based on PLDA XpressRICH3-AXI IP
++and thus inherits all the common properties defined in plda,xpressrich3-axi.txt
++as well as the base properties defined in host-generic-pci.txt.
 +
-+void pciehp_queue_pushbutton_work(struct work_struct *work)
-+{
-+	struct slot *p_slot = container_of(work, struct slot, work.work);
- 
- 	mutex_lock(&p_slot->lock);
- 	switch (p_slot->state) {
- 	case BLINKINGOFF_STATE:
--		p_slot->state = POWEROFF_STATE;
--		info->req = DISABLE_REQ;
-+		pciehp_queue_power_work(p_slot, DISABLE_REQ);
- 		break;
- 	case BLINKINGON_STATE:
--		p_slot->state = POWERON_STATE;
--		info->req = ENABLE_REQ;
-+		pciehp_queue_power_work(p_slot, ENABLE_REQ);
- 		break;
- 	default:
--		kfree(info);
--		goto out;
-+		break;
- 	}
--	queue_work(p_slot->wq, &info->work);
-- out:
- 	mutex_unlock(&p_slot->lock);
- }
- 
-@@ -301,27 +304,13 @@ static void handle_button_press_event(struct slot *p_slot)
- static void handle_surprise_event(struct slot *p_slot)
- {
- 	u8 getstatus;
--	struct power_work_info *info;
--
--	info = kmalloc(sizeof(*info), GFP_KERNEL);
--	if (!info) {
--		ctrl_err(p_slot->ctrl, "%s: Cannot allocate memory\n",
--			 __func__);
--		return;
--	}
--	info->p_slot = p_slot;
--	INIT_WORK(&info->work, pciehp_power_thread);
- 
- 	pciehp_get_adapter_status(p_slot, &getstatus);
- 	if (!getstatus) {
--		p_slot->state = POWEROFF_STATE;
--		info->req = DISABLE_REQ;
-+		pciehp_queue_power_work(p_slot, DISABLE_REQ);
- 	} else {
--		p_slot->state = POWERON_STATE;
--		info->req = ENABLE_REQ;
-+		pciehp_queue_power_work(p_slot, ENABLE_REQ);
- 	}
--
--	queue_work(p_slot->wq, &info->work);
- }
- 
- /*
-@@ -330,17 +319,6 @@ static void handle_surprise_event(struct slot *p_slot)
- static void handle_link_event(struct slot *p_slot, u32 event)
- {
- 	struct controller *ctrl = p_slot->ctrl;
--	struct power_work_info *info;
--
--	info = kmalloc(sizeof(*info), GFP_KERNEL);
--	if (!info) {
--		ctrl_err(p_slot->ctrl, "%s: Cannot allocate memory\n",
--			 __func__);
--		return;
--	}
--	info->p_slot = p_slot;
--	info->req = event == INT_LINK_UP ? ENABLE_REQ : DISABLE_REQ;
--	INIT_WORK(&info->work, pciehp_power_thread);
- 
- 	switch (p_slot->state) {
- 	case BLINKINGON_STATE:
-@@ -348,22 +326,19 @@ static void handle_link_event(struct slot *p_slot, u32 event)
- 		cancel_delayed_work(&p_slot->work);
- 		/* Fall through */
- 	case STATIC_STATE:
--		p_slot->state = event == INT_LINK_UP ?
--		    POWERON_STATE : POWEROFF_STATE;
--		queue_work(p_slot->wq, &info->work);
-+		pciehp_queue_power_work(p_slot, event == INT_LINK_UP ?
-+					ENABLE_REQ : DISABLE_REQ);
- 		break;
- 	case POWERON_STATE:
- 		if (event == INT_LINK_UP) {
- 			ctrl_info(ctrl,
- 				  "Link Up event ignored on slot(%s): already powering on\n",
- 				  slot_name(p_slot));
--			kfree(info);
- 		} else {
- 			ctrl_info(ctrl,
- 				  "Link Down event queued on slot(%s): currently getting powered on\n",
- 				  slot_name(p_slot));
--			p_slot->state = POWEROFF_STATE;
--			queue_work(p_slot->wq, &info->work);
-+			pciehp_queue_power_work(p_slot, DISABLE_REQ);
- 		}
- 		break;
- 	case POWEROFF_STATE:
-@@ -371,19 +346,16 @@ static void handle_link_event(struct slot *p_slot, u32 event)
- 			ctrl_info(ctrl,
- 				  "Link Up event queued on slot(%s): currently getting powered off\n",
- 				  slot_name(p_slot));
--			p_slot->state = POWERON_STATE;
--			queue_work(p_slot->wq, &info->work);
-+			pciehp_queue_power_work(p_slot, ENABLE_REQ);
- 		} else {
- 			ctrl_info(ctrl,
- 				  "Link Down event ignored on slot(%s): already powering off\n",
- 				  slot_name(p_slot));
--			kfree(info);
- 		}
- 		break;
- 	default:
- 		ctrl_err(ctrl, "ignoring invalid state %#x on slot(%s)\n",
- 			 p_slot->state, slot_name(p_slot));
--		kfree(info);
- 		break;
- 	}
- }
++Required properties:
++ - compatible: "arm,juno-r1-pcie"
++ - dma-coherent: The host controller bridges the AXI transactions into PCIe bus
++   in a manner that makes the DMA operations to appear coherent to the CPUs.
+diff --git a/Documentation/devicetree/bindings/pci/plda,xpressrich3-axi.txt b/Documentation/devicetree/bindings/pci/plda,xpressrich3-axi.txt
+new file mode 100644
+index 0000000..f3f75bf
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/plda,xpressrich3-axi.txt
+@@ -0,0 +1,12 @@
++* PLDA XpressRICH3-AXI host controller
++
++The PLDA XpressRICH3-AXI host controller can be configured in a manner that
++makes it compliant with the SBSA[1] standard published by ARM Ltd. For those
++scenarios, the host-generic-pci.txt bindings apply with the following additions
++to the compatible property:
++
++Required properties:
++ - compatible: should contain "plda,xpressrich3-axi" to identify the IP used.
++
++
++[1] http://infocenter.arm.com/help/topic/com.arm.doc.den0029a/
+diff --git a/Documentation/devicetree/bindings/vendor-prefixes.txt b/Documentation/devicetree/bindings/vendor-prefixes.txt
+index 82d2ac9..57653eb 100644
+--- a/Documentation/devicetree/bindings/vendor-prefixes.txt
++++ b/Documentation/devicetree/bindings/vendor-prefixes.txt
+@@ -168,6 +168,7 @@ pericom	Pericom Technology Inc.
+ phytec	PHYTEC Messtechnik GmbH
+ picochip	Picochip Ltd
+ plathome	Plat'Home Co., Ltd.
++plda	PLDA
+ pixcir  PIXCIR MICROELECTRONICS Co., Ltd
+ powervr	PowerVR (deprecated, use img)
+ qca	Qualcomm Atheros, Inc.
 -- 
-2.1.4
+2.6.0
 
