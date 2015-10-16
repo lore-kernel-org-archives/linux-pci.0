@@ -1,144 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:54897 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753153AbbJFWZ3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Oct 2015 18:25:29 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Daniel Vetter <daniel.vetter@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH v3 1/3] PM / sleep: Add flags to indicate platform firmware involvement
-Date: Wed, 07 Oct 2015 00:49:34 +0200
-Message-ID: <3703527.UxzUnnSz5F@vostro.rjw.lan>
-In-Reply-To: <2723857.EVg1dAvTli@vostro.rjw.lan>
-References: <10641052.oOBhM6BU9G@vostro.rjw.lan> <5472042.4c1h9diL7E@vostro.rjw.lan> <2723857.EVg1dAvTli@vostro.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 16 Oct 2015 13:07:02 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ben Shelton <benjamin.h.shelton@intel.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: IOV: read SRIOV_NUM_VF after enabling ARI
+Message-ID: <20151016180701.GB21346@localhost>
+References: <1444317617-13399-1-git-send-email-benjamin.h.shelton@intel.com>
+ <20151015175825.GD17702@localhost>
+ <562005F7.7030205@gmail.com>
+ <20151015213603.GB13636@localhost>
+ <20151016165627.GA52728@bhshelto-vm>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20151016165627.GA52728@bhshelto-vm>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Ben,
 
-There are quite a few cases in which device drivers, bus types or
-even the PM core itself may benefit from knowing whether or not
-the platform firmware will be involved in the upcoming system power
-transition (during system suspend) or whether or not it was involved
-in it (during system resume).
+Thanks for the detailed response!
 
-For this reason, introduce global system suspend flags that can be
-used by the platform code to expose that information for the benefit
-of the other parts of the kernel and make the ACPI core set them
-as appropriate.
+On Fri, Oct 16, 2015 at 11:56:28AM -0500, Ben Shelton wrote:
+> Hi Bjorn,
+> 
+> > What problem does this patch solve, Ben?  I assume you have devices
+> > that do change TotalVFs when ARI is enabled, and you do want the new
+> > value?
+> > 
+> > Or is the problem something like the following:
+> > 
+> >   - ...
+> >   - Linux PCI core sees TotalVFs = X (saved as iov->total_VFs)
+> >   - Linux sets ARI Capable Hierarchy
+> >   - Device changes TotalVFs to X + Y (but PCI core doesn't notice)
+> >   - Driver reads TotalVFs and sees X + Y
+> >   - Driver attempts pci_enable_sriov(dev, X + Y), which fails because
+> >     sriov_enable() sees "X + Y > iov->total_VFs"
+> 
+> Here's a short snippet from the databook for the PCI Express controller we're
+> using:
+> 
+> "Supports two sets of VF Stride, First VF Offset, InitialVFs, and TotalVFs
+> registers per PF—one each for ARI and non-ARI hierarchies. Selection is
+> performed by host software through the ARI Capable Hierarchy bit of the Control
+> register in the PF0 SR-IOV capability structure."
+> 
+> The values in InitialVFs and TotalVFs are HWinit for each set of registers.
 
-Users of the new flags will be added later.
+The HwInit description says "bits are read-only after initialization
+and can only be reset (for write-once by firmware) with 'Power Good
+Reset'."  I don't see any provision for different values based on a
+control register bit, so I think this device is actually out of spec.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/sleep.c    |    3 +++
- include/linux/suspend.h |   36 ++++++++++++++++++++++++++++++++++++
- kernel/power/suspend.c  |    4 ++++
- 3 files changed, 43 insertions(+)
+We should be able to deal with it, so it's not that big a deal, but we
+will have to keep it in mind and probably mention it in a comment in
+the code.
 
-Index: linux-pm/include/linux/suspend.h
-===================================================================
---- linux-pm.orig/include/linux/suspend.h
-+++ linux-pm/include/linux/suspend.h
-@@ -202,6 +202,36 @@ struct platform_freeze_ops {
- extern void suspend_set_ops(const struct platform_suspend_ops *ops);
- extern int suspend_valid_only_mem(suspend_state_t state);
- 
-+extern unsigned int pm_suspend_global_flags;
-+
-+#define PM_SUSPEND_FLAG_FW_SUSPEND	(1 << 0)
-+#define PM_SUSPEND_FLAG_FW_RESUME	(1 << 1)
-+
-+static inline void pm_suspend_clear_flags(void)
-+{
-+	pm_suspend_global_flags = 0;
-+}
-+
-+static inline void pm_set_suspend_via_firmware(void)
-+{
-+	pm_suspend_global_flags |= PM_SUSPEND_FLAG_FW_SUSPEND;
-+}
-+
-+static inline void pm_set_resume_via_firmware(void)
-+{
-+	pm_suspend_global_flags |= PM_SUSPEND_FLAG_FW_RESUME;
-+}
-+
-+static inline bool pm_suspend_via_firmware(void)
-+{
-+	return !!(pm_suspend_global_flags & PM_SUSPEND_FLAG_FW_SUSPEND);
-+}
-+
-+static inline bool pm_resume_via_firmware(void)
-+{
-+	return !!(pm_suspend_global_flags & PM_SUSPEND_FLAG_FW_RESUME);
-+}
-+
- /* Suspend-to-idle state machnine. */
- enum freeze_state {
- 	FREEZE_STATE_NONE,      /* Not suspended/suspending. */
-@@ -241,6 +271,12 @@ extern int pm_suspend(suspend_state_t st
- #else /* !CONFIG_SUSPEND */
- #define suspend_valid_only_mem	NULL
- 
-+static inline void pm_suspend_clear_flags(void) {}
-+static inline void pm_set_suspend_via_firmware(void) {}
-+static inline void pm_set_resume_via_firmware(void) {}
-+static inline bool pm_suspend_via_firmware(void) { return false; }
-+static inline bool pm_resume_via_firmware(void) { return false; }
-+
- static inline void suspend_set_ops(const struct platform_suspend_ops *ops) {}
- static inline int pm_suspend(suspend_state_t state) { return -ENOSYS; }
- static inline bool idle_should_freeze(void) { return false; }
-Index: linux-pm/kernel/power/suspend.c
-===================================================================
---- linux-pm.orig/kernel/power/suspend.c
-+++ linux-pm/kernel/power/suspend.c
-@@ -35,6 +35,9 @@
- const char *pm_labels[] = { "mem", "standby", "freeze", NULL };
- const char *pm_states[PM_SUSPEND_MAX];
- 
-+unsigned int pm_suspend_global_flags;
-+EXPORT_SYMBOL_GPL(pm_suspend_global_flags);
-+
- static const struct platform_suspend_ops *suspend_ops;
- static const struct platform_freeze_ops *freeze_ops;
- static DECLARE_WAIT_QUEUE_HEAD(suspend_freeze_wait_head);
-@@ -493,6 +496,7 @@ static int enter_state(suspend_state_t s
- #endif
- 
- 	pr_debug("PM: Preparing system for sleep (%s)\n", pm_states[state]);
-+	pm_suspend_clear_flags();
- 	error = suspend_prepare(state);
- 	if (error)
- 		goto Unlock;
-Index: linux-pm/drivers/acpi/sleep.c
-===================================================================
---- linux-pm.orig/drivers/acpi/sleep.c
-+++ linux-pm/drivers/acpi/sleep.c
-@@ -487,6 +487,8 @@ static int acpi_suspend_begin(suspend_st
- 		pr_err("ACPI does not support sleep state S%u\n", acpi_state);
- 		return -ENOSYS;
- 	}
-+	if (acpi_state > ACPI_STATE_S1)
-+		pm_set_suspend_via_firmware();
- 
- 	acpi_pm_start(acpi_state);
- 	return 0;
-@@ -522,6 +524,7 @@ static int acpi_suspend_enter(suspend_st
- 		if (error)
- 			return error;
- 		pr_info(PREFIX "Low-level resume complete\n");
-+		pm_set_resume_via_firmware();
- 		break;
- 	}
- 	trace_suspend_resume(TPS("acpi_suspend"), acpi_state, false);
+> So the issue this is intended to fix is the following:
+> 
+> - Linux PCI core sees TotalVFs = X (saved as iov->total_VFs).
+> - Linux sets ARI Capable Hierarchy.
+> - Device switches to exposing the second set of registers, where
+>   InitialVFs = TotalVFs = Y (where Y > X).
+> - User enables one or more VFs on the device, e.g. by writing a value to
+>   sriov_numvfs in the sysfs.
+> - Driver calls pci_enable_sriov() for the device, which then calls
+>   sriov_enable().  sriov_enable() reads InitialVFs (= Y) and then checks if it's
+>   greater than iov->total_VFs (= X).  Since Y > X, the comparison is true, so
+>   sriov_enable() fails out and returns -EIO.
 
+I think there are two problems here:
+
+  1) We should be reading some registers together to make sure we get
+     consistent values.  For example, we always read VFOffset and
+     VFStride immediately after writing NumVFs.  I think we should
+     read InitialVFs and TotalVFs together.  I don't see the point of
+     reading TotalVFs in sriov_init() and reading InitialVFs in
+     sriov_enable().  If we read them both in sriov_init(), I don't
+     think we'd have this problem of sriov_enable() returning -EIO.
+
+  2) To work around this non-compliant device, we should read InitialVFs
+     and TotalVFs after setting the ARI bit.
+
+Ideally, I think this would be two patches: one to move the InitialVFs
+read from sriov_enable() to sriov_init(), and a second to move the
+pair from before setting ARI to after.
+
+> > I'm a little dubious about drivers reading the SRIOV capability
+> > directly, so maybe this is a symptom of deeper problems.
+> 
+> I agree that the driver should not be reading the capability directly, but from
+> what I understand, it's intended for the device itself to do this.  From the PCI
+> SR-IOV spec revision 1.1:
+> 
+> "ARI Capable Hierarchy is a hint to the Device that ARI has been enabled in the
+> Root Port or Switch Downstream Port immediately above the Device."
+
+Sure, of course, the device should behave differently based on how the
+registers are programmed; that's the whole point of having writable
+registers.  I think the particular case of the device changing HwInit
+registers is out of spec, but changing things like VFOffset and
+VFStride is completely expected.
+
+Bjorn
