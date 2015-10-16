@@ -1,107 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 1/5] iov: Update virtfn_max_buses to validate offset and
- stride
-From: Alexander Duyck <aduyck@mirantis.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 27 Oct 2015 13:52:15 -0700
-Message-ID: <20151027205215.14626.93504.stgit@localhost.localdomain>
-In-Reply-To: <20151027204607.14626.59671.stgit@localhost.localdomain>
-References: <20151027204607.14626.59671.stgit@localhost.localdomain>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:43039 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753811AbbJPOLi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 Oct 2015 10:11:38 -0400
+Message-ID: <56210572.6020405@ti.com>
+Date: Fri, 16 Oct 2015 10:10:58 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Rob Herring <robh+dt@kernel.org>
+CC: WingMan Kwok <w-kwok2@ti.com>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Roger Quadros <rogerq@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Santosh Shilimkar <ssantosh@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v1 0/2] Common SerDes driver for TI's Keystone Platforms
+References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com> <20151015165105.GE32532@n2100.arm.linux.org.uk> <CAL_JsqJTjCT8D-3OryFPEF8nnaPtrai7Mvf-gJRkh60aDixx-g@mail.gmail.com> <20151016080222.GH32532@n2100.arm.linux.org.uk>
+In-Reply-To: <20151016080222.GH32532@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch pulls the validation of offset and stride into virtfn_max_buses.
-The general idea is to validate offset and stride for each possible value
-of numvfs in addition to still determining the maximum bus value for the
-VFs.
+On 10/16/2015 04:02 AM, Russell King - ARM Linux wrote:
+> On Thu, Oct 15, 2015 at 08:00:41PM -0500, Rob Herring wrote:
+>> On Thu, Oct 15, 2015 at 11:51 AM, Russell King - ARM Linux
+>> <linux@arm.linux.org.uk> wrote:
+>>> On Thu, Oct 15, 2015 at 10:25:43AM -0400, WingMan Kwok wrote:
+>>>> On TI's Keystone platforms, several peripherals such as the
+>>>> gbe ethernet switch, 10gbe ethether switch and PCIe controller
+>>>> require the use of a SerDes for converting SoC parallel data into
+>>>> serialized data that can be output over a high-speed electrical
+>>>> interface, and also converting high-speed serial input data
+>>>> into parallel data that can be processed by the SoC.  The
+>>>> SerDeses used by those peripherals, though they may be different,
+>>>> are largely similar in functionality and setup.
+>>>
+>>> Given that serdes is not specific to TI, should this be specific to
+>>> TI, or should there be an effort to come up with something which
+>>> everyone who has serdes links can make use of?
+>>>
+Russell,
 
-I also reversed the loop as the most likely maximum will be when numvfs is
-set to total_VFs.  In addition this makes it so that we loop down to a
-value of 0 for numvfs which should be the resting state for the register.
+The serdes on K2 are re-used on multiple hardware blocks as already 
+indicated in this thread. It has got multiple lanes, each lane can be 
+enabled/disabled, shutdown etc. Isn't generic phy framework added to 
+support this type of hardware block? I see some enhancements needed for 
+K2 serdes to support monitoring the serdes link and providing a status 
+to the higher layer device. So I am not clear what different way you 
+would like to handle serdes drivers? Why do you need a new framework?
 
-Fixes: 8e20e89658f2 ("PCI: Set SR-IOV NumVFs to zero after enumeration")
-Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
----
- drivers/pci/iov.c |   42 ++++++++++++++++++++++++------------------
- 1 file changed, 24 insertions(+), 18 deletions(-)
+Murali
+>>> Serdes comes in multiple different forms: PCIe, 1G SGMII ethernet,
+>>> 1000base-X ethernet, 10g ethernet, SATA... I'd hate to see a
+>>> plethora of SoC specific stuff for this.
+>>
+>> The licensed IP I've seen doesn't provide a standard register
+>> interface, but just signals to the IP block. Same with PLL IP. So
+>> we'll probably get to see vendors continue to differentiate on PHY
+>> register design. :)
+>
+> So what?  Network drivers differ radically in register design, yet we
+> still have a standardised interface to network drivers.
+>
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index f8bfc1d39845..099050d78a39 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -54,24 +54,33 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
-  * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
-  * determine how many additional bus numbers will be consumed by VFs.
-  *
-- * Iterate over all valid NumVFs and calculate the maximum number of bus
-- * numbers that could ever be required.
-+ * Iterate over all valid NumVFs, validate offset and stride, and calculate
-+ * the maximum number of bus numbers that could ever be required.
-  */
--static inline u8 virtfn_max_buses(struct pci_dev *dev)
-+static int virtfn_max_buses(struct pci_dev *dev)
- {
- 	struct pci_sriov *iov = dev->sriov;
--	int nr_virtfn;
--	u8 max = 0;
-+	int nr_virtfn = iov->total_VFs;
- 	int busnr;
- 
--	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
--		pci_iov_set_numvfs(dev, nr_virtfn);
-+	pci_iov_set_numvfs(dev, nr_virtfn);
-+
-+	while (nr_virtfn--) {
-+		if (!iov->offset || !iov->stride)
-+			goto err;
-+
- 		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
--		if (busnr > max)
--			max = busnr;
-+		if (busnr > iov->max_VF_buses)
-+			iov->max_VF_buses = busnr;
-+
-+		pci_iov_set_numvfs(dev, nr_virtfn);
- 	}
- 
--	return max;
-+	return 0;
-+err:
-+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
-+
-+	return -EIO;
- }
- 
- static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
-@@ -467,22 +476,19 @@ found:
- 
- 	dev->sriov = iov;
- 	dev->is_physfn = 1;
--	iov->max_VF_buses = virtfn_max_buses(dev);
--	pci_iov_set_numvfs(dev, 0);
--	if (!iov->offset || (total > 1 && !iov->stride)) {
--		rc = -EIO;
--		goto failed;
--	}
- 
--	return 0;
-+	rc = virtfn_max_buses(dev);
-+	if (!rc)
-+		return 0;
- 
-+	dev->sriov = NULL;
-+	dev->is_physfn = 0;
- failed:
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		res->flags = 0;
- 	}
- 
--	dev->sriov = NULL;
- 	kfree(iov);
- 	return rc;
- }
 
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
