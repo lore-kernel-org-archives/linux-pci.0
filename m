@@ -1,57 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.140]:26511 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756133AbbJINqD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 09:46:03 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH 2/4] PCI: Add quirk for PLDA's XpressRICH3 host bridge class.
-Date: Fri,  9 Oct 2015 14:45:21 +0100
-Message-Id: <1444398323-17354-3-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5620AF42.4070204@arm.com>
+Date: Fri, 16 Oct 2015 09:03:14 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: linux-arm-kernel@lists.infradead.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Ma Jun <majun258@huawei.com>
+Subject: Re: [PATCH RFC 0/7] Adding core support for wire-MSI bridges
+References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com> <5027676.zPNVVQXaP4@wuerfel> <561FCDBE.8000407@arm.com> <5879538.pKBkpUOxls@wuerfel>
+In-Reply-To: <5879538.pKBkpUOxls@wuerfel>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The XpressRICH3 host bridge at power up has an unassigned class on
-some of ARM Ltd boards, add a quirk to correct that.
+On 15/10/15 20:16, Arnd Bergmann wrote:
+> On Thursday 15 October 2015 17:01:02 Marc Zyngier wrote:
+>>
+>> "Preconfigured" is the key word. While you can do something like that if
+>> your hardware treats MSIs just as if they were wired interrupts
+>> (something like GICv2m), it becomes far more hairy if the target of MSIs
+>> is something like a GICv3 ITS (which is the case for HiSilicon mbigen).
+>>
+>> The main reason is that the ITS relies on "translation tables" kept in
+>> memory, which the OS has to configure, and handing over pre-configured
+>> tables is not something I'm looking forward to doing. From a CPU point
+>> of view, this is akin entering the kernel with the MMU already on and no
+>> idmap...
+>>
+>> The approach taken here is to make the MSI-ness explicit at the irqchip
+>> level, and keep the interrupting device oblivious of that feature. Also,
+>> this relies on the fact that we can have one MSI per wire, meaning that
+>> we don't have to multiplex anything (no nested irqchip), and that we can
+>> rely on hierarchical domains, which simplifies the code (at least for
+>> the irqchip).
+>>
+> 
+> Thanks, that already makes things much clearer. Just one more question:
+> why can't those translation tables be configured statically by the
+> irqchip driver? Is this all about being able to cut a few cycles
+> in case of virtualization? 
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- drivers/pci/quirks.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Having a static configuration, while doable, complicates things for
+everybody else. The LPI number used by the irqchip would need to be put
+an some "exclusion list" to make sure it is not reallocated for other
+subsystems (e.g PCI). The translation tables also define the target CPU,
+which could cause interesting problems once combined with CPU hotplug if
+the ITS is not completely in control of it.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b03373f..ae24bb4 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4149,3 +4149,13 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- 	}
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
-+
-+/*
-+ * The PLDA's XpressRICH3 doesn't describe itself as a bridge. This is required
-+ * for correct/normal enumeration.
-+ */
-+static void xr3pci_quirk_class(struct pci_dev *pdev)
-+{
-+	pdev->class = PCI_CLASS_BRIDGE_PCI << 8;
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_PLDA, PCI_DEVICE_ID_XR3PCI, xr3pci_quirk_class);
+I'm not really getting your point about virtualization though.
+
+> I would assume that once you have gone through the overhead of having
+> both an MSI and a normal interrupt line (with the need for
+> serialization vs DMA), you can just as well trap to user space to
+> deliver an IRQ to a guest.
+
+The whole idea behind this bridge is to move wired interrupts to the
+periphery of a SoC. I don't think virtualization was part of the
+equation, but of course I can't speak for the "geniuses" behind the idea.
+
+Or maybe I'm reading your question the wrong way, which is entirely
+possible given the lack of caffeine.
+
+Thanks,
+
+	M.
 -- 
-2.6.0
-
+Jazz is not dead. It just smells funny...
