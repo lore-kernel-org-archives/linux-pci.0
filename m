@@ -1,71 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:35198 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751265AbbJBAuj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 20:50:39 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v4 4/4] irqchip/gic-v3-its:  Add handling of PCI requester id.
-Date: Thu,  1 Oct 2015 17:50:25 -0700
-Message-Id: <1443747025-9918-5-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1443747025-9918-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1443747025-9918-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:56270 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752134AbbJPH4j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 Oct 2015 03:56:39 -0400
+Subject: Re: [PATCH] ARM: keystone: dts: add PCI serdes driver bindings
+To: WingMan Kwok <w-kwok2@ti.com>, <robh+dt@kernel.org>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<kishon@ti.com>, <m-karicheri2@ti.com>, <bhelgaas@google.com>,
+	<ssantosh@kernel.org>, <linux@arm.linux.org.uk>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+References: <1444919230-30932-1-git-send-email-w-kwok2@ti.com>
+From: Roger Quadros <rogerq@ti.com>
+Message-ID: <5620AD8B.3060503@ti.com>
+Date: Fri, 16 Oct 2015 10:55:55 +0300
+MIME-Version: 1.0
+In-Reply-To: <1444919230-30932-1-git-send-email-w-kwok2@ti.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+WingMan,
 
-Replace open coded generation PCI/MSI requester id with call to the
-new function pci_msi_domain_get_msi_rid() which applies the "msi-map"
-to the id value.
+On 15/10/15 17:27, WingMan Kwok wrote:
+> This patch adds the required PCI serdes bindings whcih can then be
+> enabled by setting the corresponding statuses to "ok" in order to
+> configure and start the PCI serdes.
+> 
+> This patch depends on the updates to the Keystone PCIe host driver
+> and common serdes driver patch series that is submitted separately.
+> 
+> Signed-off-by: WingMan Kwok <w-kwok2@ti.com>
+> ---
+>  arch/arm/boot/dts/k2e.dtsi      |   21 +++++++++++++++++++++
+>  arch/arm/boot/dts/keystone.dtsi |   21 +++++++++++++++++++++
+>  2 files changed, 42 insertions(+)
+> 
+> diff --git a/arch/arm/boot/dts/k2e.dtsi b/arch/arm/boot/dts/k2e.dtsi
+> index 675fb8e..3b36575 100644
+> --- a/arch/arm/boot/dts/k2e.dtsi
+> +++ b/arch/arm/boot/dts/k2e.dtsi
+> @@ -86,6 +86,16 @@
+>  			gpio,syscon-dev = <&devctrl 0x240>;
+>  		};
+>  
+> +		pcie1_phy: pciephy@2326000 {
 
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/irqchip/irq-gic-v3-its-pci-msi.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Should be
+		pcie1_phy: phy@2326000 {
 
-diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-index cf351c6..7bbf64a 100644
---- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-@@ -42,7 +42,6 @@ static struct irq_chip its_msi_irq_chip = {
- 
- struct its_pci_alias {
- 	struct pci_dev	*pdev;
--	u32		dev_id;
- 	u32		count;
- };
- 
-@@ -60,7 +59,6 @@ static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
- {
- 	struct its_pci_alias *dev_alias = data;
- 
--	dev_alias->dev_id = alias;
- 	if (pdev != dev_alias->pdev)
- 		dev_alias->count += its_pci_msi_vec_count(dev_alias->pdev);
- 
-@@ -86,7 +84,7 @@ static int its_pci_msi_prepare(struct irq_domain *domain, struct device *dev,
- 	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
- 
- 	/* ITS specific DeviceID, as the core ITS ignores dev. */
--	info->scratchpad[0].ul = dev_alias.dev_id;
-+	info->scratchpad[0].ul = pci_msi_domain_get_msi_rid(domain, pdev);
- 
- 	return msi_info->ops->msi_prepare(domain->parent,
- 					  dev, dev_alias.count, info);
--- 
-1.9.1
+> +			#phy-cells = <0>;
+> +			compatible = "ti,keystone-serdes-pcie";
+> +			reg = <0x02326000 0x4000>;
+> +			reg-names = "serdes";
+> +			link-rate-kbps = <5000000>;
+> +			num-lanes = <2>;
+> +			status = "disabled";
+> +		};
+> +
+>  		pcie1: pcie@21020000 {
+>  			compatible = "ti,keystone-pcie","snps,dw-pcie";
+>  			clocks = <&clkpcie1>;
+> @@ -130,6 +140,17 @@
+>  					<GIC_SPI 375 IRQ_TYPE_EDGE_RISING>,
+>  					<GIC_SPI 376 IRQ_TYPE_EDGE_RISING>;
+>  			};
+> +
+> +			/* PCIE phy */
+> +			serdeses {
+> +				#address-cells = <1>;
+> +				#size-cells = <0>;
+> +				serdes@0 {
+> +					reg = <0>;
+> +					phys = <&pcie1_phy>;
+> +				};
+> +			};
+> +
+>  		};
+>  
+>  		mdio: mdio@24200f00 {
+> diff --git a/arch/arm/boot/dts/keystone.dtsi b/arch/arm/boot/dts/keystone.dtsi
+> index 72816d6..6566cc4 100644
+> --- a/arch/arm/boot/dts/keystone.dtsi
+> +++ b/arch/arm/boot/dts/keystone.dtsi
+> @@ -275,6 +275,16 @@
+>  			ti,syscon-dev = <&devctrl 0x2a0>;
+>  		};
+>  
+> +		pcie0_phy: pciephy@2320000 {
 
+ditto.
+
+> +			#phy-cells = <0>;
+> +			compatible = "ti,keystone-serdes-pcie";
+> +			reg = <0x02320000 0x4000>;
+> +			reg-names = "serdes";
+> +			link-rate-kbps = <5000000>;
+> +			num-lanes = <2>;
+> +			status = "disabled";
+> +		};
+> +
+>  		pcie0: pcie@21800000 {
+>  			compatible = "ti,keystone-pcie", "snps,dw-pcie";
+>  			clocks = <&clkpcie>;
+> @@ -319,6 +329,17 @@
+>  					<GIC_SPI 28 IRQ_TYPE_EDGE_RISING>,
+>  					<GIC_SPI 29 IRQ_TYPE_EDGE_RISING>;
+>  			};
+> +
+> +			/* PCIE phy */
+> +			serdeses {
+> +				#address-cells = <1>;
+> +				#size-cells = <0>;
+> +				serdes@0 {
+> +					reg = <0>;
+> +					phys = <&pcie0_phy>;
+> +				};
+> +			};
+> +
+>  		};
+>  	};
+>  };
+> 
+
+--
+cheers,
+-roger
