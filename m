@@ -1,96 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:40211 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754828AbbJIQJM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Oct 2015 12:09:12 -0400
-Date: Fri, 9 Oct 2015 17:09:10 +0100
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.140]:24329 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754286AbbJPPWt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Oct 2015 11:22:49 -0400
 From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Mark Rutland <mark.rutland@arm.com>,
-	Jon Medhurst <tixy@linaro.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
+To: Will Deacon <will.deacon@arm.com>,
 	Catalin Marinas <catalin.marinas@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Robin Murphy <robin.murphy@arm.com>
-Subject: Re: [PATCH 3/4] arm64: Juno: Add support for the PCIe host bridge on
- Juno R1
-Message-ID: <20151009160910.GF3394@e106497-lin.cambridge.arm.com>
-References: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
- <20151009141107.GD3394@e106497-lin.cambridge.arm.com>
- <20151009154408.GD21629@leverpostej>
- <40550712.xdsq5nNSTG@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <40550712.xdsq5nNSTG@wuerfel>
+	Mark Rutland <mark.rutland@arm.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH v4 0/3] arm64: Juno: Add support for PCIe on R1 board
+Date: Fri, 16 Oct 2015 16:22:06 +0100
+Message-Id: <1445008929-32267-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 09, 2015 at 05:49:18PM +0200, Arnd Bergmann wrote:
-> On Friday 09 October 2015 16:44:08 Mark Rutland wrote:
-> > On Fri, Oct 09, 2015 at 03:11:07PM +0100, Liviu Dudau wrote:
-> > > On Fri, Oct 09, 2015 at 08:54:33AM -0500, Rob Herring wrote:
-> > > Or maybe I can claim the use of the string on account on being the first on arm64 
-> > > 
-> > > I can add a vendor prefix if you want, but pci-host-generic is going to ignore it 
-> > > *because* it is trying to be a generic driver.
-> > 
-> > The point here is to have the string ready if we need it later, so it's
-> > fine that it's not used currently.
-> > 
-> > Rob's suggestion is that the compatible list should look something like:
-> > 
-> > compatible = "arm,juno-r1-pcie", "plda,xpressrich3", "pci-host-ecam-generic";
-> > 
-> > We can match on "pci-host-ecam-generic" for now (and hopefully forever),
-> > but if for some reason we need to special-case this host controller (or
-> > Juno's integration thereof), we can do that based on the compatible
-> > string.
-> 
-> Sounds good to me, it certainly can't hurt.
-> 
-> 	Arnd
+Changes in v4 vs v3:
+ - Dropped the quirks patches as the fixup can be done in firmware.
+Changes in v3 vs v2:
+ - Add Documentation files describing the DT bindings for plda,xpressrich3-axi
+   and arm,juno-r1-pcie properties.
+ - Cosmetic changes in the .dts to bracket range and interrupt-map entries
+   individually.
+Changes in v2 vs v1:
+ - Add plda as OF vendor prefix
+ - Add more specific compatible values to the Juno R1 DT
+ 
 
-Hmm, I'm sorry, but this time I'm going to disagree.
+Juno R1 board has a working PCIe host bridge that can be enabled and
+configured by the firmware and made use of by Linux. For UEFI, the
+Linaro releases contain firmware that configure the XpressRICH3 host
+bridge correctly. For U-Boot based setups, one needs the patchset
+posted here[1].
 
-I understand the principle that the DTS is a description of the hardware and it should
-not have any built in knowledge of how a driver works but describe the physical properties
-of the device (where such description makes sense, in this case it does).
+This patchset adds a quirk for setting the correct class to the host
+bridge device and the device tree changes that enable PCIe on Juno R1.
+We also update the defconfig to enable the generic PCI host bridge driver.
 
-However, when ARM has created the Juno platform it has also created a standard called
-SBSA and has claimed that Juno is compliant with that standard. My current position (and
-it used to be MarkR's as well when we have argued internally the pros and cons of having
-a bespoke driver for PLDA's XpressRICH3) is that SBSA compliant behaviour *is* the expected
-behaviour and if the device doesn't conform it needs to be fixed in firmware.
+The changes can also available in the git repository at:
 
-Otherwise, I could've posted months ago the other public driver[1] that I've wrote that
-doesn't depend on firmware and could have been done with this long time ago.
+  git://linux-arm.org/linux-ld.git for-upstream/juno-pcie
+
+They are based on v4.3-rc5.
+
+Catalin, Will: This series has got Mark's ACKs for the DT changes and
+now with the quirks dropped it can be pulled into whatever arm64 -next
+branch you want to prepare. Do you want a formal pull request for this?
 
 Best regards,
 Liviu
 
-1. https://github.com/ARM-software/linux/commit/ca9d82679916c3b6bdb846319e343a43a6bbb31c
+1. http://lists.denx.de/pipermail/u-boot/2015-October/229669.html
 
+Liviu Dudau (3):
+  Documentation: of: Document the bindings used by Juno R1 PCIe host bridge
+  arm64: Juno: Add support for the PCIe host bridge on Juno R1
+  arm64: defconfig: Enable PCI generic host bridge by default
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+ .../devicetree/bindings/pci/arm,juno-r1-pcie.txt     | 10 ++++++++++
+ .../devicetree/bindings/pci/plda,xpressrich3-axi.txt | 12 ++++++++++++
+ .../devicetree/bindings/vendor-prefixes.txt          |  1 +
+ arch/arm64/boot/dts/arm/juno-r1.dts                  | 20 ++++++++++++++++++++
+ arch/arm64/configs/defconfig                         |  1 +
+ 5 files changed, 44 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/arm,juno-r1-pcie.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/plda,xpressrich3-axi.txt
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+2.6.0
+
