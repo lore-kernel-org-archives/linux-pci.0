@@ -1,87 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:58045 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269AbbJTPHS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 11:07:18 -0400
-Subject: Re: pcie-designware build fails in ARM64
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>,
-	"jg1.han@samsung.com" <jg1.han@samsung.com>
-References: <56213393.8020606@synopsys.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1624ECFA@lhreml503-mbs>
- <56265538.40503@synopsys.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E16271AB6@lhreml503-mbs>
-CC: Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <562658A0.8010802@synopsys.com>
-Date: Tue, 20 Oct 2015 16:07:12 +0100
+Received: from mail-bn1on0119.outbound.protection.outlook.com ([157.56.110.119]:60413
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752370AbbJPHSl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 Oct 2015 03:18:41 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	"Yoder Stuart-B08248" <stuart.yoder@freescale.com>,
+	Li Yang <leoli@freescale.com>, Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Jingoo Han" <jg1.han@samsung.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	"Minghuan Lian" <Minghuan.Lian@freescale.com>
+Subject: [PATCH v4 2/6] PCI: layerscape: check PCIe controller work mode
+Date: Fri, 16 Oct 2015 15:19:16 +0800
+Message-ID: <1444979960-24100-2-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E16271AB6@lhreml503-mbs>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Layerscape PCIe controller supports root complex (RC) and
+endpoint (EP) mode. The mode can be set by RCW. The patch
+will check it. If not in RC mode, the driver directly
+returns -ENODEV.
 
-No problem! Thanks for the help!
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+---
+Change log
+v4: split from [PATCH v3] PCI: layerscape: Add PCIe support for LS1043a and LS2080a
 
-On 10/20/2015 4:06 PM, Gabriele Paoloni wrote:
-> 
-> 
->> -----Original Message-----
->> From: Joao Pinto [mailto:Joao.Pinto@synopsys.com]
->> Sent: Tuesday, October 20, 2015 3:53 PM
->> To: Gabriele Paoloni; Joao Pinto; jg1.han@samsung.com
->> Cc: Carlos Palminha; linux-pci@vger.kernel.org
->> Subject: Re: pcie-designware build fails in ARM64
->>
->> Hi Gabriele,
->>
->> On 10/19/2015 8:04 AM, Gabriele Paoloni wrote:
->>> Hi Joao
->>>
->>>> -----Original Message-----
->>>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
->> owner@vger.kernel.org]
->>>> On Behalf Of Joao Pinto
->>>> Sent: 16 October 2015 18:28
->>>> To: jg1.han@samsung.com
->>>> Cc: Carlos Palminha; linux-pci@vger.kernel.org
->>>> Subject: pcie-designware build fails in ARM64
->>>>
->>>> Dear Jingoo Han,
->>>>
->>>> I am trying to build pcie-designware for ARM64 but with no success.
->> Did you
->>>> ever
->>>> tried to build the core driver in this platform?
->>>>
->>>
->>> Please look at "[PATCH v11 3/6] PCI: designware: Add ARM64 support"
->>> And respective patchset submitted in the mailing list.
->>
->> Thanks, it worked well!
-> 
-> Ok good.
-> 
-> p.s. sorry for previous duplicate emails, my mail server went a bit crazy
-> 
->>
->>>
->>> Regards
->>>
->>> Gab
->>>
->>>> Thanks you for you attention.
->>>>
->>>> Regards,
->>>> Joao Pinto
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-pci"
->> in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->> Regards,
->> -Joao
+ drivers/pci/host/pci-layerscape.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index 6dd44a0..5eabe92 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -47,6 +47,16 @@ struct ls_pcie {
+ 
+ #define to_ls_pcie(x)	container_of(x, struct ls_pcie, pp)
+ 
++static bool ls_pcie_is_bridge(struct ls_pcie *pcie)
++{
++	u32 header_type;
++
++	header_type = ioread8(pcie->dbi + PCI_HEADER_TYPE);
++	header_type &= 0x7f;
++
++	return header_type == PCI_HEADER_TYPE_BRIDGE;
++}
++
+ static int ls_pcie_link_up(struct pcie_port *pp)
+ {
+ 	u32 state;
+@@ -135,6 +145,9 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 	pcie->index = index[1];
+ 
++	if (!ls_pcie_is_bridge(pcie))
++		return -ENODEV;
++
+ 	ret = ls_add_pcie_port(pcie);
+ 	if (ret < 0)
+ 		return ret;
+-- 
+1.9.1
 
