@@ -1,59 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 22/60] PCI: Don't release sibling bridge resources during hotplug
-Date: Thu,  8 Oct 2015 14:38:41 -0700
-Message-Id: <1444340359-8011-23-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:55117 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752426AbbJPTnT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Oct 2015 15:43:19 -0400
+Subject: Re: [PATCH] PCI: iproc: Fix company name
+To: Florian Fainelli <f.fainelli@gmail.com>,
+	<linux-pci@vger.kernel.org>
+References: <1445022248-12203-1-git-send-email-f.fainelli@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Markus Elfring <elfring@users.sourceforge.net>,
+	"moderated list:BROADCOM CYGNUS/IPROC ARM ARCHITECTURE"
+	<linux-arm-kernel@lists.infradead.org>,
+	"open list:BROADCOM CYGNUS/IPROC ARM ARCHITECTURE"
+	<bcm-kernel-feedback-list@broadcom.com>,
+	open list <linux-kernel@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+Message-ID: <56215355.4070009@broadcom.com>
+Date: Fri, 16 Oct 2015 12:43:17 -0700
+MIME-Version: 1.0
+In-Reply-To: <1445022248-12203-1-git-send-email-f.fainelli@gmail.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On hotplug path, we can not touch sibling bridges that is outside
-of the slot.
 
-That could happen when BIOS does not assign some bridge BARs and
-later kernel can not assign resource to them in first try.
 
-Check if fail dev is the parent bridge, then just use subordinate
-bus instead use parent bus.
+On 10/16/2015 12:04 PM, Florian Fainelli wrote:
+> The header of pcie-iproc.c contains an obvious typo on Broadcom
+> Corporation, fix that.
+> 
+> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+> ---
+>  drivers/pci/host/pcie-iproc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index fe2efb141a9b..6c3d4b54858c 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -1,6 +1,6 @@
+>  /*
+>   * Copyright (C) 2014 Hauke Mehrtens <hauke@hauke-m.de>
+> - * Copyright (C) 2015 Broadcom Corporatcommon ion
+> + * Copyright (C) 2015 Broadcom Corporation
+>   *
+>   * This program is free software; you can redistribute it and/or
+>   * modify it under the terms of the GNU General Public License as
+> 
 
-Reported-by: Andreas Noever <andreas.noever@gmail.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+When I saw the subject, for a while I thought you are going to change it
+to Broadcom Limited, :)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 278cb6d..10270e4 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1858,10 +1858,16 @@ again:
- 	 * Try to release leaf bridge's resources that doesn't fit resource of
- 	 * child device under that bridge
- 	 */
--	list_for_each_entry(fail_res, &fail_head, list)
--		pci_bus_release_bridge_resources(fail_res->dev->bus,
-+	list_for_each_entry(fail_res, &fail_head, list) {
-+		struct pci_bus *bus = fail_res->dev->bus;
-+
-+		if (fail_res->dev == bridge)
-+			bus = bridge->subordinate;
-+
-+		pci_bus_release_bridge_resources(bus,
- 						 fail_res->flags & type_mask,
- 						 whole_subtree);
-+	}
- 
- 	/* restore size and flags */
- 	list_for_each_entry(fail_res, &fail_head, list) {
--- 
-1.8.4.5
+Thanks for fixing this!
 
+Acked-by: Ray Jui <rjui@broadcom.com>
