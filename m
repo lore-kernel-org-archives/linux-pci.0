@@ -1,118 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:51462 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753767AbbJUM5j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 08:57:39 -0400
-From: WingMan Kwok <w-kwok2@ti.com>
-To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<kishon@ti.com>, <rogerq@ti.com>, <m-karicheri2@ti.com>,
-	<bhelgaas@google.com>, <ssantosh@kernel.org>,
-	<linux@arm.linux.org.uk>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: WingMan Kwok <w-kwok2@ti.com>
-Subject: [PATCH v3 2/2] PCI: keystone: update to use generic keystone serdes driver
-Date: Wed, 21 Oct 2015 08:56:41 -0400
-Message-ID: <1445432201-16007-3-git-send-email-w-kwok2@ti.com>
-In-Reply-To: <1445432201-16007-1-git-send-email-w-kwok2@ti.com>
-References: <1445432201-16007-1-git-send-email-w-kwok2@ti.com>
+Received: from mail-bn1on0116.outbound.protection.outlook.com ([157.56.110.116]:6784
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753568AbbJPHSz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 Oct 2015 03:18:55 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	"Yoder Stuart-B08248" <stuart.yoder@freescale.com>,
+	Li Yang <leoli@freescale.com>, Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Jingoo Han" <jg1.han@samsung.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	"Minghuan Lian" <Minghuan.Lian@freescale.com>
+Subject: [PATCH v4 6/6] PCI: layerscape: add ls_pcie_msi_host_init
+Date: Fri, 16 Oct 2015 15:19:20 +0800
+Message-ID: <1444979960-24100-6-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch updates the Keystone PCI driver to use the
-generic Keystone serdes driver for serdes initialization
-and configuration.  The generic serdes driver supports
-peripherals on Keystone platforms that require serdes.
+Layerscape PCIe has its own MSI implementation. The patch registers
+ls_pcie_msi_host_init() to avoid using Designware's MSI.
 
-Signed-off-by: WingMan Kwok <w-kwok2@ti.com>
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
 ---
- drivers/pci/host/pci-keystone.c |   24 ++++++++++++++----------
- drivers/pci/host/pci-keystone.h |    1 +
- 2 files changed, 15 insertions(+), 10 deletions(-)
+Change log
+v4: split from [PATCH v3] PCI: layerscape: Add PCIe support for LS1043a and LS2080a
 
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index 0aa81bd..4cc8faa 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -335,6 +335,7 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
- {
- 	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
- 
-+	phy_exit(ks_pcie->serdes_phy);
- 	clk_disable_unprepare(ks_pcie->clk);
- 
- 	return 0;
-@@ -342,12 +343,12 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
- 
- static int __init ks_pcie_probe(struct platform_device *pdev)
- {
-+	struct device_node *node = pdev->dev.of_node;
- 	struct device *dev = &pdev->dev;
- 	struct keystone_pcie *ks_pcie;
- 	struct pcie_port *pp;
- 	struct resource *res;
- 	void __iomem *reg_p;
--	struct phy *phy;
- 	int ret = 0;
- 
- 	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
-@@ -357,14 +358,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 
- 	pp = &ks_pcie->pp;
- 
--	/* initialize SerDes Phy if present */
--	phy = devm_phy_get(dev, "pcie-phy");
--	if (!IS_ERR_OR_NULL(phy)) {
--		ret = phy_init(phy);
--		if (ret < 0)
--			return ret;
--	}
--
- 	/* index 2 is to read PCI DEVICE_ID */
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
- 	reg_p = devm_ioremap_resource(dev, res);
-@@ -385,6 +378,17 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
-+	ks_pcie->serdes_phy = devm_of_phy_get(dev, node, NULL);
-+	if (IS_ERR(ks_pcie->serdes_phy)) {
-+		dev_err(dev, "No %s serdes driver found: %ld\n",
-+			node->name, PTR_ERR(ks_pcie->serdes_phy));
-+		goto fail_clk;
-+	}
-+
-+	ret = phy_init(ks_pcie->serdes_phy);
-+	if (ret < 0)
-+		goto fail_clk;
-+
- 	ret = ks_add_pcie_port(ks_pcie, pdev);
- 	if (ret < 0)
- 		goto fail_clk;
-@@ -392,7 +396,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	return 0;
- fail_clk:
- 	clk_disable_unprepare(ks_pcie->clk);
--
-+	phy_exit(ks_pcie->serdes_phy);
- 	return ret;
+ drivers/pci/host/pci-layerscape.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index c53692a..8fac6c8 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -150,14 +150,31 @@ static void ls_pcie_host_init(struct pcie_port *pp)
+ 	iowrite32(0, pcie->dbi + PCIE_DBI_RO_WR_EN);
  }
  
-diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
-index 478d932..1e6d122 100644
---- a/drivers/pci/host/pci-keystone.h
-+++ b/drivers/pci/host/pci-keystone.h
-@@ -33,6 +33,7 @@ struct keystone_pcie {
- 	/* Application register space */
- 	void __iomem		*va_app_base;
- 	struct resource		app;
-+	struct phy		*serdes_phy;
++static int ls_pcie_msi_host_init(struct pcie_port *pp,
++				 struct msi_controller *chip)
++{
++	struct device_node *msi_node;
++	struct device_node *np = pp->dev->of_node;
++
++	msi_node = of_parse_phandle(np, "msi-parent", 0);
++	if (!msi_node) {
++		dev_err(pp->dev, "failed to find msi-parent\n");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ static struct pcie_host_ops ls1021_pcie_host_ops = {
+ 	.link_up = ls1021_pcie_link_up,
+ 	.host_init = ls1021_pcie_host_init,
++	.msi_host_init = ls_pcie_msi_host_init,
  };
  
- /* Keystone DW specific MSI controller APIs/definitions */
+ static struct pcie_host_ops ls_pcie_host_ops = {
+ 	.link_up = ls_pcie_link_up,
+ 	.host_init = ls_pcie_host_init,
++	.msi_host_init = ls_pcie_msi_host_init,
+ };
+ 
+ static struct ls_pcie_drvdata ls1021_drvdata = {
 -- 
-1.7.9.5
+1.9.1
 
