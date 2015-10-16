@@ -1,106 +1,154 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 16 Oct 2015 13:07:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ben Shelton <benjamin.h.shelton@intel.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: IOV: read SRIOV_NUM_VF after enabling ARI
-Message-ID: <20151016180701.GB21346@localhost>
-References: <1444317617-13399-1-git-send-email-benjamin.h.shelton@intel.com>
- <20151015175825.GD17702@localhost>
- <562005F7.7030205@gmail.com>
- <20151015213603.GB13636@localhost>
- <20151016165627.GA52728@bhshelto-vm>
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v11 0/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+Date: Fri, 16 Oct 2015 18:23:35 +0800
+Message-ID: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20151016165627.GA52728@bhshelto-vm>
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ben,
+This patchset adds PCIe host support for HiSilicon SoC Hip05. The PCIe hosts
+use PCIe IP core from Synopsys, So this driver is based on designware PCIe driver.
 
-Thanks for the detailed response!
+Hip05 is an ARMv8 architecture SoC. It should be able to use ARM64 PCIe API in
+designware PCIe driver. So this patch also adds ARM64 support for designware
+pcie.
 
-On Fri, Oct 16, 2015 at 11:56:28AM -0500, Ben Shelton wrote:
-> Hi Bjorn,
-> 
-> > What problem does this patch solve, Ben?  I assume you have devices
-> > that do change TotalVFs when ARI is enabled, and you do want the new
-> > value?
-> > 
-> > Or is the problem something like the following:
-> > 
-> >   - ...
-> >   - Linux PCI core sees TotalVFs = X (saved as iov->total_VFs)
-> >   - Linux sets ARI Capable Hierarchy
-> >   - Device changes TotalVFs to X + Y (but PCI core doesn't notice)
-> >   - Driver reads TotalVFs and sees X + Y
-> >   - Driver attempts pci_enable_sriov(dev, X + Y), which fails because
-> >     sriov_enable() sees "X + Y > iov->total_VFs"
-> 
-> Here's a short snippet from the databook for the PCI Express controller we're
-> using:
-> 
-> "Supports two sets of VF Stride, First VF Offset, InitialVFs, and TotalVFs
-> registers per PF—one each for ARI and non-ARI hierarchies. Selection is
-> performed by host software through the ARI Capable Hierarchy bit of the Control
-> register in the PF0 SR-IOV capability structure."
-> 
-> The values in InitialVFs and TotalVFs are HWinit for each set of registers.
+This patchset is based on v4.3-rc1.
 
-The HwInit description says "bits are read-only after initialization
-and can only be reset (for write-once by firmware) with 'Power Good
-Reset'."  I don't see any provision for different values based on a
-control register bit, so I think this device is actually out of spec.
+Change from v10:
+- Remove MSI related setting and VMID/ASID table setting, they will be
+  implemented in BIOS.
+- Use module_platform_driver to init pcie-hisi.c
+- Add necessary comments.
 
-We should be able to deal with it, so it's not that big a deal, but we
-will have to keep it in mind and probably mention it in a comment in
-the code.
+Change from v9:
+- Use syscon to get subctrl base address.
+- 5/6 is based on [PATCH v3 0/2] arm64: Support Hisilicon Hip05-D02 board
+  from Ding Tianhong
+- Add hisi_pcie_cfg_read in pcie-hisi.c to match
+  [PATCH v6 0/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
+  from Gabriele.
 
-> So the issue this is intended to fix is the following:
-> 
-> - Linux PCI core sees TotalVFs = X (saved as iov->total_VFs).
-> - Linux sets ARI Capable Hierarchy.
-> - Device switches to exposing the second set of registers, where
->   InitialVFs = TotalVFs = Y (where Y > X).
-> - User enables one or more VFs on the device, e.g. by writing a value to
->   sriov_numvfs in the sysfs.
-> - Driver calls pci_enable_sriov() for the device, which then calls
->   sriov_enable().  sriov_enable() reads InitialVFs (= Y) and then checks if it's
->   greater than iov->total_VFs (= X).  Since Y > X, the comparison is true, so
->   sriov_enable() fails out and returns -EIO.
+Change from v8:
+- Rebase on v4.3-rc1.
+- Add Tested-by from Gabriel and Minghuan.
+- Remove ITS domain parsing in msi_host_init in pcie-hisi.c, no need this as PCI
+  core does related job. Add ITS base address parsing in msi_host_init.
+- Change vmid/asid table configuration, previous configuration was wrong.
+- Add wr_own_conf callback in pcie-hisi.c.
+- Use subsys_initcall to init hisi PCIe.
 
-I think there are two problems here:
+Change from v7:
+- Remove pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
+  spear13xx. Pass pp->busn->start to pci_create_root_bus as root bus number.
+- Remove bus-range parsing in pcie-hisi.c.
 
-  1) We should be reading some registers together to make sure we get
-     consistent values.  For example, we always read VFOffset and
-     VFStride immediately after writing NumVFs.  I think we should
-     read InitialVFs and TotalVFs together.  I don't see the point of
-     reading TotalVFs in sriov_init() and reading InitialVFs in
-     sriov_enable().  If we read them both in sriov_init(), I don't
-     think we'd have this problem of sriov_enable() returning -EIO.
+Change from v6:
+- Add Pratyush's Acked-by for 1/6 and 2/6.
+- Add James' Tested-by for 3/6.
 
-  2) To work around this non-compliant device, we should read InitialVFs
-     and TotalVFs after setting the ARI bit.
+Change from v5:
+- Merge 1/6 in this series, discussion about this can be found in [1]
 
-Ideally, I think this would be two patches: one to move the InitialVFs
-read from sriov_enable() to sriov_init(), and a second to move the
-pair from before setting ARI to after.
+Change from v4:
+- Change the author of 1/5 to Gabriele.
+- Modify problems in 3/5 pointed by Bjorn.
+- Modify spelling problems in 4/5.
 
-> > I'm a little dubious about drivers reading the SRIOV capability
-> > directly, so maybe this is a symptom of deeper problems.
-> 
-> I agree that the driver should not be reading the capability directly, but from
-> what I understand, it's intended for the device itself to do this.  From the PCI
-> SR-IOV spec revision 1.1:
-> 
-> "ARI Capable Hierarchy is a hint to the Device that ARI has been enabled in the
-> Root Port or Switch Downstream Port immediately above the Device."
+Change from v3:
+- Change 1/5 to what Gabriele suggested.
+- Use win->__res.start to get *_mod_base in 2/5, this fix a bug in v3 series.
 
-Sure, of course, the device should behave differently based on how the
-registers are programmed; that's the whole point of having writable
-registers.  I think the particular case of the device changing HwInit
-registers is out of spec, but changing things like VFOffset and
-VFStride is completely expected.
+Change from v2:
+- Move struct pci_dev *dev and struct pci_sys_data *sys in
+  pcibios_align_resource in 1/5.
+- Add Gabriele's codes in 2/5 which delete unnecessary information parse and
+  use of_pci_get_host_bridge_resources for both ARM32 and ARM64.
+- Add maintainer patch 5/5.
 
-Bjorn
+Change from RFC v1:
+- Add 1/4 patch by Arnd which removes align_resource callback in ARM
+  pcibios_align_resource.
+- Change head file in pcie-designware from asm/hardirq.h to linux/hardirq.h.
+- Set pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
+  spear13xx.
+- Remove unnecessary parentheses of some macros in pcie-hisi.
+- Use macro to replace some magic values.
+- Merge two loops together and add some comments about it in context_config
+  function in pcie-hisi.
+- Modify some value of items in pcie node example in binding document. 
+
+Change from RFC:
+- delete dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
+  merge related operations into dw_pcie_host_init.
+
+Link of v10:
+- http://www.spinics.net/lists/linux-pci/msg45490.html
+Link of v9:
+- http://www.spinics.net/lists/linux-pci/msg44545.html
+Link of v8:
+- http://www.spinics.net/lists/linux-pci/msg44192.html
+Link of v7:
+- http://www.spinics.net/lists/devicetree/msg90690.html
+Link of v6:
+- http://www.spinics.net/lists/linux-pci/msg43669.html
+Link of v5:
+- http://www.spinics.net/lists/devicetree/msg87959.html
+Link of v4:
+- http://www.spinics.net/lists/arm-kernel/msg433050.html
+Link of v3:
+- http://www.spinics.net/lists/linux-pci/msg42539.html
+Link of v2:
+- http://www.spinics.net/lists/linux-pci/msg41844.html
+Link of RFC v1:
+- http://www.spinics.net/lists/linux-pci/msg41305.html
+Link of RFC:
+- http://www.spinics.net/lists/linux-pci/msg40434.html
+
+[1] http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/359741.html
+
+Zhou Wang (4):
+  PCI: designware: Add ARM64 support
+  PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+  Documentation: DT: Add HiSilicon PCIe host binding
+  MAINTAINERS: Add pcie-hisi maintainer
+
+gabriele paoloni (2):
+  PCI: designware: move calculation of bus addresses to DRA7xx
+  ARM/PCI: remove align_resource in pci_sys_data
+
+ .../bindings/arm/hisilicon/hisilicon.txt           |  17 ++
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     |  44 ++++
+ MAINTAINERS                                        |   7 +
+ arch/arm/include/asm/mach/pci.h                    |   6 -
+ arch/arm/kernel/bios32.c                           |  12 +-
+ drivers/pci/host/Kconfig                           |   8 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-dra7xx.c                      |  13 ++
+ drivers/pci/host/pci-keystone-dw.c                 |   2 +-
+ drivers/pci/host/pcie-designware.c                 | 245 +++++++--------------
+ drivers/pci/host/pcie-designware.h                 |  14 +-
+ drivers/pci/host/pcie-hisi.c                       | 196 +++++++++++++++++
+ 12 files changed, 377 insertions(+), 188 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-hisi.c
+
+-- 
+1.9.1
+
