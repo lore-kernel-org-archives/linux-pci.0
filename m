@@ -1,72 +1,92 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 16 Oct 2015 11:56:28 -0500
-From: Ben Shelton <benjamin.h.shelton@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: IOV: read SRIOV_NUM_VF after enabling ARI
-Message-ID: <20151016165627.GA52728@bhshelto-vm>
-References: <1444317617-13399-1-git-send-email-benjamin.h.shelton@intel.com>
- <20151015175825.GD17702@localhost>
- <562005F7.7030205@gmail.com>
- <20151015213603.GB13636@localhost>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	michal.simek@xilinx.com, soren.brinkmann@xilinx.com,
+	bhelgaas@google.com, tinamdar@apm.com, treding@nvidia.com,
+	rjui@broadcom.com, Minghuan.Lian@freescale.com,
+	m-karicheri2@ti.com, hauke@hauke-m.de, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH v4] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL PCIe Host Controller
+Date: Sat, 17 Oct 2015 13:49:25 +0200
+Message-ID: <5705956.6YyKSO4LdH@wuerfel>
+In-Reply-To: <1445066538-24638-1-git-send-email-bharatku@xilinx.com>
+References: <1445066538-24638-1-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20151015213603.GB13636@localhost>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Saturday 17 October 2015 12:52:18 Bharat Kumar Gogada wrote:
+> +       "msi_1, msi_0": interrupt asserted when msi is recieved
 
-> What problem does this patch solve, Ben?  I assume you have devices
-> that do change TotalVFs when ARI is enabled, and you do want the new
-> value?
-> 
-> Or is the problem something like the following:
-> 
->   - ...
->   - Linux PCI core sees TotalVFs = X (saved as iov->total_VFs)
->   - Linux sets ARI Capable Hierarchy
->   - Device changes TotalVFs to X + Y (but PCI core doesn't notice)
->   - Driver reads TotalVFs and sees X + Y
->   - Driver attempts pci_enable_sriov(dev, X + Y), which fails because
->     sriov_enable() sees "X + Y > iov->total_VFs"
+Better avoid underscores in DT, use "msi0" instead of "msi_0".
 
-Here's a short snippet from the databook for the PCI Express controller we're
-using:
+> +- interrupt-map-mask and interrupt-map: standard PCI properties to define the
+> +       mapping of the PCI interface to interrupt numbers.
+> +- ranges: ranges for the PCI memory regions (I/O space region is not
+> +       supported by hardware)
+> +       Please refer to the standard PCI bus binding document for a more
+> +       detailed explanation
+> +- msi-controller: indicates that this is MSI controller node
+> +- msi-parent:  MSI parent of the root complex itself
+> +- pcie_intc: Interrupt controller device node for Legacy interrupts
+> +       - interrupt-controller: identifies the node as an interrupt controller
+> +       - #interrupt-cells: should be set to 1
+> +       - #address-cells: specifies the number of cells needed to encode an
+> +               address. The value must be 0.
 
-"Supports two sets of VF Stride, First VF Offset, InitialVFs, and TotalVFs
-registers per PF—one each for ARI and non-ARI hierarchies. Selection is
-performed by host software through the ARI Capable Hierarchy bit of the Control
-register in the PF0 SR-IOV capability structure."
+The name doesn't match: below, the name is "legacy-interrupt-controller",
+not "pcie_intc". I suppose it should really be "interrupt-controller"
+anyway.
 
-The values in InitialVFs and TotalVFs are HWinit for each set of registers.
+> +
+> +Example:
+> +++++++++
+> +
+> +nwl_pcie: pcie@fd0e0000 {
+> +       #address-cells = >;
+> +       #size-cells = <2>;
+> +       compatible = "xlnx,nwl-pcie-2.11";
+> +       #interrupt-cells = <1>;
+> +       msi-controller;
+> +       device_type = "pci";
+> +       interrupt-parent = <&gic>;
+> +       interrupts = < 0 118 4
+> +                      0 116 4
+> +                      0 115 4          // MSI_1 [63...32]
+> +                      0 114 4 >;       // MSI_0 [31...0]
 
-So the issue this is intended to fix is the following:
+Better write these as tuples:
 
-- Linux PCI core sees TotalVFs = X (saved as iov->total_VFs).
-- Linux sets ARI Capable Hierarchy.
-- Device switches to exposing the second set of registers, where
-  InitialVFs = TotalVFs = Y (where Y > X).
-- User enables one or more VFs on the device, e.g. by writing a value to
-  sriov_numvfs in the sysfs.
-- Driver calls pci_enable_sriov() for the device, which then calls
-  sriov_enable().  sriov_enable() reads InitialVFs (= Y) and then checks if it's
-  greater than iov->total_VFs (= X).  Since Y > X, the comparison is true, so
-  sriov_enable() fails out and returns -EIO.
+	interrupts = <0 118 4>, <0 116 4>, <0 115 4>, <0 114 4>;
 
-> 
-> I'm a little dubious about drivers reading the SRIOV capability
-> directly, so maybe this is a symptom of deeper problems.
+And maybe reverse the order? It looks that might be what the
+soc integration person had in mind.
 
-I agree that the driver should not be reading the capability directly, but from
-what I understand, it's intended for the device itself to do this.  From the PCI
-SR-IOV spec revision 1.1:
+Also, what is interrupt <0 117 4>? Is that connected here as well?
+Better list it as well then, even if you don't use it.
 
-"ARI Capable Hierarchy is a hint to the Device that ARI has been enabled in the
-Root Port or Switch Downstream Port immediately above the Device."
+> +       interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+> +       interrupt-map = <0x0 0x0 0x0 0x1 &pcie_intc 0x1
+> +                        0x0 0x0 0x0 0x2 &pcie_intc 0x2
+> +                        0x0 0x0 0x0 0x3 &pcie_intc 0x3
+> +                        0x0 0x0 0x0 0x4 &pcie_intc 0x4>;
 
-Ben
+> +       msi-parent = <&nwl_pcie>;
+> +       reg = <0x0 0xfd0e0000 0x1000
+> +              0x0 0xfd480000 0x1000
+> +              0x0 0xE0000000 0x1000000>;
 
-> 
-> Bjorn
+Same grouping for reg and interrupt-map as above for interrupts.
+
+> +       reg-names = "breg", "pcireg", "cfg";
+> +       ranges = <0x02000000 0x00000000 0xE1000000 0x00000000 0xE1000000 0 0x0F000000>;
+
+No I/O space or prefetcheable memory?
+
+	Arnd
