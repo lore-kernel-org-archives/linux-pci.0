@@ -1,62 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 16 Oct 2015 08:23:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Kevin Hilman <khilman@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Ray Jui <rjui@broadcom.com>,
-	Tyler Baker <tyler.baker@linaro.org>,
-	lkml <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Brown <broonie@kernel.org>,
-	bcm-kernel-feedback-list@broadcom.com,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Olof Johansson <olof@lixom.net>,
-	Jon Mason <jonmason@broadcom.com>
-Subject: Re: [PATCH v2] PCI: iproc: fix 32-bit build error
-Message-ID: <20151016132344.GA21346@localhost>
-References: <1442363962-29805-1-git-send-email-rjui@broadcom.com>
- <5754881.OPA6La0Zg0@wuerfel>
- <20151015210113.GA13636@localhost>
- <5482493.6eNiKO1I30@wuerfel>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2on0095.outbound.protection.outlook.com ([207.46.100.95]:61865
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753383AbbJSITt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Oct 2015 04:19:49 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v10 2/6] pci: add Altera PCI vendor ID
+Date: Mon, 19 Oct 2015 16:19:24 +0800
+Message-ID: <1445242768-4423-3-git-send-email-lftan@altera.com>
+In-Reply-To: <1445242768-4423-1-git-send-email-lftan@altera.com>
+References: <1445242768-4423-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5482493.6eNiKO1I30@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 16, 2015 at 11:47:42AM +0200, Arnd Bergmann wrote:
-> On Thursday 15 October 2015 16:01:13 Bjorn Helgaas wrote:
-> > On Thu, Oct 15, 2015 at 09:40:45PM +0200, Arnd Bergmann wrote:
-> > > The iproc PCI driver tries to figure out whether the MMIO window has
-> > > a valid size, but does this using a 64-bit modulo operation, which
-> > > is not allowed on 32-bit kernels and leads to a link error:
-> > > 
-> > > drivers/built-in.o: In function `iproc_pcie_setup':
-> > > :(.text+0x4b798): undefined reference to `__aeabi_uldivmod'
-> > > 
-> > > This works around that error by using the div64_u64() function
-> > > provided by the kernel. While this is an expensive operation,
-> > > it is harmless because we only call it during the probing
-> > > of the driver.
-> > > 
-> > > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> > > Acked-by: Ray Jui <rjui@broadcom.com>
-> > > Fixes: 0ab99ca8eb6c ("PCI: iproc: Fix compile warnings")
-> > 
-> > This *looks* like it should be fixing 90e4032eeaf2 ("PCI: iproc: Add
-> > outbound mapping support"), not 0ab99ca8eb6c.
-> > 
-> > 90e4032eeaf2 added the "if (size % ob->window_size)".
-> > 
-> > Is this more subtle than that?
-> 
-> You are absolutely right, I must have copy-pasted the wrong entry.
-> Do you want me to resend this? I guess you can just remove the
-> line as this commit has not appeared in any release anyway.
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+ include/linux/pci_ids.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-I squashed this fix and Jon's %pap fix into Ray's original "Add outbound
-mapping support" patch and re-did the merge.  Thanks!
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index d9ba49c..08e4462 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1550,6 +1550,8 @@
+ #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
+ #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
+ 
++#define PCI_VENDOR_ID_ALTERA		0x1172
++
+ #define PCI_VENDOR_ID_SBE		0x1176
+ #define PCI_DEVICE_ID_SBE_WANXL100	0x0301
+ #define PCI_DEVICE_ID_SBE_WANXL200	0x0302
+-- 
+1.8.2.1
 
-Bjorn
