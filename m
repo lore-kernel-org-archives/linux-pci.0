@@ -1,72 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0143.outbound.protection.outlook.com ([157.56.110.143]:40571
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932874AbbJ3QBt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 12:01:49 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	KY Srinivasan <kys@microsoft.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"olaf@aepfle.de" <olaf@aepfle.de>,
-	"apw@canonical.com" <apw@canonical.com>,
-	"vkuznets@redhat.com" <vkuznets@redhat.com>,
-	"tglx@redhat.com" <tglx@redhat.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+Received: from bear.ext.ti.com ([192.94.94.41]:45869 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750985AbbJSOsh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Oct 2015 10:48:37 -0400
+From: "Kwok, WingMan" <w-kwok2@ti.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	"Karicheri, Muralidharan" <m-karicheri2@ti.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	KISHON VIJAY ABRAHAM <kishon@ti.com>,
+	"Quadros, Roger" <rogerq@ti.com>,
 	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"ssantosh@kernel.org" <ssantosh@kernel.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v4 4/7] PCI: Add fwnode_handle to pci_sysdata
-Date: Fri, 30 Oct 2015 16:01:41 +0000
-Message-ID: <DM2PR0301MB1232657EA30A824BB0C0984DAB2F0@DM2PR0301MB1232.namprd03.prod.outlook.com>
-References: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
- <1446162376-43419-5-git-send-email-jakeo@microsoft.com>
- <5632CDF5.1000402@linux.intel.com>
-In-Reply-To: <5632CDF5.1000402@linux.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Subject: RE: [PATCH v1 1/2] phy: keystone: serdes driver for gbe 10gbe and
+ pcie
+Date: Mon, 19 Oct 2015 14:47:43 +0000
+Message-ID: <230CBA6E4B6B6B418E8730AC28E6FC7E04229363@DFLE11.ent.ti.com>
+References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com>
+ <5192855.p6QLDWTiVi@wuerfel> <561FCDC0.3080109@ti.com>
+ <6215485.RTPqreMEMX@wuerfel>
+In-Reply-To: <6215485.RTPqreMEMX@wuerfel>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Jiang Liu [mailto:jiang.liu@linux.intel.com]
-> Sent: Thursday, October 29, 2015 6:55 PM
-> To: Jake Oshins <jakeo@microsoft.com>; gregkh@linuxfoundation.org; KY
-> Srinivasan <kys@microsoft.com>; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
-> vkuznets@redhat.com; tglx@redhat.com; Haiyang Zhang
-> <haiyangz@microsoft.com>; marc.zyngier@arm.com;
-> bhelgaas@google.com; linux-pci@vger.kernel.org
-> Subject: Re: [PATCH v4 4/7] PCI: Add fwnode_handle to pci_sysdata
-> 
-
-
-> >
-> > +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-> > +static inline void *pci_fwnode(struct pci_bus *bus)
-> > +{
-> > +	struct pci_sysdata *sd = bus->sysdata;
-> > +	return sd->fwnode;
-> > +}
-> > +#endif
-> Hi Jakeo,
-> 	I would be better that if the function name indicates
-> that we are getting PCI host bridge(root bus) firmware node.
-> And you also need some magic here to avoid breaking compilation
-> on other archs:
-> in arch/x86/include/asm/pci.h
-> #define pci_fwnode		pci_fwnode
-> 
-> in include/asm-generic/pci.h
-> #ifndef pci_fwnode
-> #define pci_fwnode(bus)         ((void)(bus),NULL)
-> #endif
-> 
-> Thanks,
-> Gerry
-
-Got it.  Thanks.  I'll fix and resend.
-
--- Jake Oshins
+SGksDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQXJuZCBCZXJnbWFu
+biBbbWFpbHRvOmFybmRAYXJuZGIuZGVdDQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDE1LCAy
+MDE1IDM6MzUgUE0NCj4gVG86IEthcmljaGVyaSwgTXVyYWxpZGhhcmFuDQo+IENjOiBsaW51eC1h
+cm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IEt3b2ssIFdpbmdNYW47IHJvYmgrZHRAa2Vy
+bmVsLm9yZzsNCj4gcGF3ZWwubW9sbEBhcm0uY29tOyBtYXJrLnJ1dGxhbmRAYXJtLmNvbTsgaWpj
+K2RldmljZXRyZWVAaGVsbGlvbi5vcmcudWs7DQo+IGdhbGFrQGNvZGVhdXJvcmEub3JnOyBLSVNI
+T04gVklKQVkgQUJSQUhBTTsgUXVhZHJvcywgUm9nZXI7DQo+IGJoZWxnYWFzQGdvb2dsZS5jb207
+IHNzYW50b3NoQGtlcm5lbC5vcmc7IGxpbnV4QGFybS5saW51eC5vcmcudWs7DQo+IGRldmljZXRy
+ZWVAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC0N
+Cj4gcGNpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYxIDEvMl0gcGh5
+OiBrZXlzdG9uZTogc2VyZGVzIGRyaXZlciBmb3IgZ2JlIDEwZ2JlIGFuZA0KPiBwY2llDQo+IA0K
+PiBPbiBUaHVyc2RheSAxNSBPY3RvYmVyIDIwMTUgMTI6MDE6MDQgTXVyYWxpIEthcmljaGVyaSB3
+cm90ZToNCj4gPg0KPiA+ID4+ICsgKiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVz
+dCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KPiA+ID4+ICsgKiBub3RpY2UsIHRoaXMg
+bGlzdCBvZiBjb25kaXRpb25zIGFuZCB0aGUgZm9sbG93aW5nIGRpc2NsYWltZXIgaW4gdGhlDQo+
+ID4gPj4gKyAqIGRvY3VtZW50YXRpb24gYW5kL29yIG90aGVyIG1hdGVyaWFscyBwcm92aWRlZCB3
+aXRoIHRoZQ0KPiA+ID4+ICsgKiBkaXN0cmlidXRpb24uDQo+ID4gPg0KPiA+ID4gVGhlIGN1cnJl
+bnQgY29kZSBkb2VzIG5vdCBkbyB0aGlzIHdoZW4gY29tcGlsZWQsIHdoaWNoIG1pZ2h0IGJlIGEN
+Cj4gPiA+IHByb2JsZW0gZm9yIGRpc3RyaWJ1dG9ycy4gQ2FuIHlvdSBjbGFyaWZ5IHRoZSBsaWNl
+bnNlPw0KPiA+ID4NCj4gPiBBcm5kLA0KPiA+DQo+ID4gQ2FuIHlvdSBlbGFib3JhdGUgb24gdGhp
+cz8gSSBkaWQgYSBncmVwIG9uIHRoZSBzdHJpbmcgIlJlZGlzdHJpYnV0aW9ucw0KPiA+IGluIGJp
+bmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQiIGFuZCBJIGNvdWxk
+IGZpbmQNCj4gPiBzZXZlcmFsIGluc3RhbmNlIG9mIHRoaXMuIFNvIEkgYW0gbm90IHN1cmUgd2hh
+dCB5b3UgbWVhbiBieSAiVGhlIGN1cnJlbnQNCj4gPiBjb2RlIGRvZXMgbm90IGRvIHRoaXMgd2hl
+biBjb21waWxlZCIuDQo+IA0KPiBZb3Ugd3JpdGUgdGhhdCB0aGUgYmluYXJ5IGZvcm0gb2YgdGhl
+IGNvZGUgbXVzdCBwcm9kdWNlIHRoZSBjb3B5cmlnaHQNCj4gbm90aWNlLiBJIGRvbid0IHNlZSBh
+bnkgY29kZSB0aGF0IGRvZXMgdGhpcy4gSWYgSSB3YXMgbG9va2luZyBpbiB0aGUNCj4gd3Jvbmcg
+cGxhY2UsIGxldCBtZSBrbm93Lg0KPiANCj4gCUFybmQNCg0KRm9yIGV4YW1wbGUsIHdlIGRpZCBh
+IGdyZXAgb2YgdGhlIGZvbGxvd2luZyANCg0KbXlwYzpsaW51eChwZXJzb25hbC9saW51eC9zZXJk
+ZXMpICQgZ3JlcCAtcm5JICJSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXBy
+b2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodCIgLi9uZXQvDQouL25ldC9zdW5ycGMvYXV0aF9nc3Mv
+YXV0aF9nc3MuYzoxODogKiAgMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3Qg
+cmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L3N1bnJwYy9hdXRoX2dzcy9nc3Nf
+bWVjaF9zd2l0Y2guYzoxNTogKiAgMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11
+c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L3N1bnJwYy9hdXRoX2dzcy9n
+c3Nfa3JiNV9tZWNoLmM6MTY6ICogIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBt
+dXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC9ibHVldG9vdGgvZWNjLmM6
+MTA6ICogICogUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRo
+ZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L2JsdWV0b290aC9lY2MuaDoxMDogKiAgKiBSZWRpc3Ry
+aWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdo
+dA0KLi9uZXQvY2FuL2d3LmM6MTI6ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3Jt
+IG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L2Nhbi9hZl9jYW4uYzox
+MzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhl
+IGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvY2FuL3Byb2MuYzoxMjogKiAyLiBSZWRpc3RyaWJ1dGlv
+bnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9u
+ZXQvY2FuL2JjbS5jOjEyOiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0
+IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC9jYW4vcmF3LmM6MTI6ICogMi4g
+UmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBj
+b3B5cmlnaHQNCi4vbmV0L2Nhbi9hZl9jYW4uaDoxMDogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4g
+YmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlw
+Yy9kaXNjb3Zlci5jOjEzOiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0
+IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC90aXBjL25vZGUuaDoxMzogKiAy
+LiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3Zl
+IGNvcHlyaWdodA0KLi9uZXQvdGlwYy9uZXRsaW5rX2NvbXBhdC5jOjEwOiAqIDIuIFJlZGlzdHJp
+YnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0
+DQouL25ldC90aXBjL25hbWVfZGlzdHIuaDoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmlu
+YXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9i
+ZWFyZXIuYzoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXBy
+b2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9uYW1lX3RhYmxlLmg6MTM6ICog
+Mi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92
+ZSBjb3B5cmlnaHQNCi4vbmV0L3RpcGMvbmFtZV9kaXN0ci5jOjEzOiAqIDIuIFJlZGlzdHJpYnV0
+aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQou
+L25ldC90aXBjL2FkZHIuYzoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0g
+bXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9zdWJzY3IuaDox
+MzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhl
+IGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9saW5rLmg6MTM6ICogMi4gUmVkaXN0cmlidXRp
+b25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4v
+bmV0L3RpcGMvbmV0Lmg6MTM6ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11
+c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L3RpcGMvbmV0bGluay5jOjEz
+OiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUg
+YWJvdmUgY29weXJpZ2h0DQouL25ldC90aXBjL3N5c2N0bC5jOjEyOiAqIDIuIFJlZGlzdHJpYnV0
+aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQou
+L25ldC90aXBjL3VkcF9tZWRpYS5jOjExOiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkg
+Zm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC90aXBjL3NvY2tl
+dC5oOjExOiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVj
+ZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC90aXBjL3N1YnNjci5jOjEzOiAqIDIuIFJlZGlz
+dHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJp
+Z2h0DQouL25ldC90aXBjL21zZy5jOjEzOiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkg
+Zm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC90aXBjL25hbWVf
+dGFibGUuYzoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXBy
+b2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9tc2cuaDoxMzogKiAyLiBSZWRp
+c3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHly
+aWdodA0KLi9uZXQvdGlwYy9jb3JlLmM6MTM6ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFy
+eSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L3RpcGMvc29j
+a2V0LmM6MTM6ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9k
+dWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L3RpcGMvbmV0LmM6MTM6ICogMi4gUmVkaXN0
+cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmln
+aHQNCi4vbmV0L3RpcGMvYmNhc3QuYzoxNDogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5
+IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9iZWFy
+ZXIuaDoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1
+Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9jb3JlLmg6MTM6ICogMi4gUmVkaXN0
+cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5cmln
+aHQNCi4vbmV0L3RpcGMvbm9kZS5jOjEzOiAqIDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkg
+Zm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25ldC90aXBjL2FkZHIu
+aDoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2Ug
+dGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9pYl9tZWRpYS5jOjE3OiAqIDIuIFJlZGlz
+dHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJp
+Z2h0DQouL25ldC90aXBjL2xpbmsuYzoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5
+IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9uZXRs
+aW5rLmg6MTI6ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9k
+dWNlIHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L3RpcGMvc2VydmVyLmM6MTI6ICogMi4gUmVk
+aXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBhYm92ZSBjb3B5
+cmlnaHQNCi4vbmV0L3RpcGMvZGlzY292ZXIuaDoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4g
+YmluYXJ5IGZvcm0gbXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlw
+Yy9ldGhfbWVkaWEuYzoxMzogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0gbXVz
+dCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvdGlwYy9iY2FzdC5oOjEzOiAq
+IDIuIFJlZGlzdHJpYnV0aW9ucyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJv
+dmUgY29weXJpZ2h0DQouL25ldC90aXBjL3NlcnZlci5oOjEyOiAqIDIuIFJlZGlzdHJpYnV0aW9u
+cyBpbiBiaW5hcnkgZm9ybSBtdXN0IHJlcHJvZHVjZSB0aGUgYWJvdmUgY29weXJpZ2h0DQouL25l
+dC82bG93cGFuL2lwaGMuYzoyOTogKiAyLiBSZWRpc3RyaWJ1dGlvbnMgaW4gYmluYXJ5IGZvcm0g
+bXVzdCByZXByb2R1Y2UgdGhlIGFib3ZlIGNvcHlyaWdodA0KLi9uZXQvc2NoZWQvc2NoX2NvZGVs
+LmM6MTc6ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNl
+IHRoZSBhYm92ZSBjb3B5cmlnaHQNCi4vbmV0L2llZWU4MDIxNTQvNmxvd3Bhbi9jb3JlLmM6Mjc6
+ICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3JtIG11c3QgcmVwcm9kdWNlIHRoZSBh
+Ym92ZSBjb3B5cmlnaHQgDQoNClRoYW5rcywNCldpbmdNYW4NCg==
