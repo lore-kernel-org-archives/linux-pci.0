@@ -1,90 +1,114 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, Mark Rutland <Mark.Rutland@arm.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Robin Murphy <robin.murphy@arm.com>
-Subject: [PATCH v2 6/8] of/irq: Use the msi-map property to provide device-specific MSI domain
-Date: Tue,  6 Oct 2015 18:04:01 +0100
-Message-Id: <1444151043-31084-7-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
-References: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
+From: WingMan Kwok <w-kwok2@ti.com>
+To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<kishon@ti.com>, <rogerq@ti.com>, <m-karicheri2@ti.com>,
+	<bhelgaas@google.com>, <ssantosh@kernel.org>,
+	<linux@arm.linux.org.uk>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: WingMan Kwok <w-kwok2@ti.com>
+Subject: [PATCH v2 2/2] PCI: keystone: update to use generic keystone serdes driver
+Date: Mon, 19 Oct 2015 14:57:20 -0400
+Message-ID: <1445281040-14742-3-git-send-email-w-kwok2@ti.com>
+In-Reply-To: <1445281040-14742-1-git-send-email-w-kwok2@ti.com>
+References: <1445281040-14742-1-git-send-email-w-kwok2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-While msi-parent is used to point to the MSI controller that
-works for all the devices behind a root complex, it doesn't
-allow configurations where each individual device can be routed
-to a separate MSI controller.
+This patch updates the Keystone PCI driver to use the
+generic Keystone serdes driver for serdes initialization
+and configuration.  The generic serdes driver supports
+peripherals on Keystone platforms that require serdes.
 
-The msi-map property provides this flexibility (and much more),
-so let's add a utility function that parses it, and return the
-corresponding MSI domain.
-
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: WingMan Kwok <w-kwok2@ti.com>
 ---
- drivers/of/irq.c       | 18 ++++++++++++++++++
- include/linux/of_irq.h |  7 +++++++
- 2 files changed, 25 insertions(+)
+ drivers/pci/host/pci-keystone.c |   24 ++++++++++++++----------
+ drivers/pci/host/pci-keystone.h |    1 +
+ 2 files changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-index ed64d98..0baf626d 100644
---- a/drivers/of/irq.c
-+++ b/drivers/of/irq.c
-@@ -689,6 +689,24 @@ static struct irq_domain *__of_get_msi_domain(struct device_node *np,
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index 0aa81bd..4cc8faa 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -335,6 +335,7 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
+ 
++	phy_exit(ks_pcie->serdes_phy);
+ 	clk_disable_unprepare(ks_pcie->clk);
+ 
+ 	return 0;
+@@ -342,12 +343,12 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
+ 
+ static int __init ks_pcie_probe(struct platform_device *pdev)
+ {
++	struct device_node *node = pdev->dev.of_node;
+ 	struct device *dev = &pdev->dev;
+ 	struct keystone_pcie *ks_pcie;
+ 	struct pcie_port *pp;
+ 	struct resource *res;
+ 	void __iomem *reg_p;
+-	struct phy *phy;
+ 	int ret = 0;
+ 
+ 	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
+@@ -357,14 +358,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 
+ 	pp = &ks_pcie->pp;
+ 
+-	/* initialize SerDes Phy if present */
+-	phy = devm_phy_get(dev, "pcie-phy");
+-	if (!IS_ERR_OR_NULL(phy)) {
+-		ret = phy_init(phy);
+-		if (ret < 0)
+-			return ret;
+-	}
+-
+ 	/* index 2 is to read PCI DEVICE_ID */
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+ 	reg_p = devm_ioremap_resource(dev, res);
+@@ -385,6 +378,17 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
++	ks_pcie->serdes_phy = devm_of_phy_get(dev, node, NULL);
++	if (IS_ERR(ks_pcie->serdes_phy)) {
++		dev_err(dev, "No %s serdes driver found: %ld\n",
++			node->name, PTR_ERR(ks_pcie->serdes_phy));
++		goto fail_clk;
++	}
++
++	ret = phy_init(ks_pcie->serdes_phy);
++	if (ret < 0)
++		goto fail_clk;
++
+ 	ret = ks_add_pcie_port(ks_pcie, pdev);
+ 	if (ret < 0)
+ 		goto fail_clk;
+@@ -392,7 +396,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ fail_clk:
+ 	clk_disable_unprepare(ks_pcie->clk);
+-
++	phy_exit(ks_pcie->serdes_phy);
+ 	return ret;
  }
  
- /**
-+ * of_msi_map_get_device_domain - Use msi-map to find the relevant MSI domain
-+ * @dev: device for which the mapping is to be done.
-+ * @rid: Requester ID for the device.
-+ *
-+ * Walk up the device hierarchy looking for devices with a "msi-map"
-+ * property.
-+ *
-+ * Returns: the MSI domain for this device (or NULL on failure)
-+ */
-+struct irq_domain *of_msi_map_get_device_domain(struct device *dev, u32 rid)
-+{
-+	struct device_node *np = NULL;
-+
-+	__of_msi_map_rid(dev, &np, rid);
-+	return __of_get_msi_domain(np, DOMAIN_BUS_PCI_MSI);
-+}
-+
-+/**
-  * of_msi_get_domain - Use msi-parent to find the relevant MSI domain
-  * @dev: device for which the domain is requested
-  * @np: device node for @dev
-diff --git a/include/linux/of_irq.h b/include/linux/of_irq.h
-index 62ae6ed..65d9692 100644
---- a/include/linux/of_irq.h
-+++ b/include/linux/of_irq.h
-@@ -49,6 +49,8 @@ extern int of_irq_to_resource_table(struct device_node *dev,
- extern struct irq_domain *of_msi_get_domain(struct device *dev,
- 					    struct device_node *np,
- 					    enum irq_domain_bus_token token);
-+extern struct irq_domain *of_msi_map_get_device_domain(struct device *dev,
-+						       u32 rid);
- #else
- static inline int of_irq_count(struct device_node *dev)
- {
-@@ -73,6 +75,11 @@ static inline struct irq_domain *of_msi_get_domain(struct device *dev,
- {
- 	return NULL;
- }
-+static inline struct irq_domain *of_msi_map_get_device_domain(struct device *dev,
-+							      u32 rid)
-+{
-+	return NULL;
-+}
- #endif
+diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
+index 478d932..1e6d122 100644
+--- a/drivers/pci/host/pci-keystone.h
++++ b/drivers/pci/host/pci-keystone.h
+@@ -33,6 +33,7 @@ struct keystone_pcie {
+ 	/* Application register space */
+ 	void __iomem		*va_app_base;
+ 	struct resource		app;
++	struct phy		*serdes_phy;
+ };
  
- #if defined(CONFIG_OF)
+ /* Keystone DW specific MSI controller APIs/definitions */
 -- 
-2.1.4
+1.7.9.5
 
