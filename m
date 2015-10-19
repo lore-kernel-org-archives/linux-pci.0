@@ -1,102 +1,46 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 33/61] PCI: Treat ROM resource as optional during realloc
-Date: Tue, 27 Oct 2015 13:55:25 -0700
-Message-Id: <1445979353-1728-34-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Date: Mon, 19 Oct 2015 17:29:33 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: kbuild-all@01.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+	lftan.linux@gmail.com, Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [RFC PATCH] pci:host: altera_pcie_fixups() can be static
+Message-ID: <20151019092933.GA19329@lkp-nex05>
+References: <201510191737.ufAp63BH%fengguang.wu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445242768-4423-4-git-send-email-lftan@altera.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current on realloc path, we just ignore ROM resource if we can not assign
-them in first try.
 
-Treat ROM resources as optional resources,so try to allocate them together
-with required ones, if can not assign them, could go with other required
-resources only, and try to allocate them second time in expand path.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
 ---
- drivers/pci/setup-bus.c | 37 ++++++++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 17 deletions(-)
+ pcie-altera.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 74ad4ce..d2d38bc 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -377,18 +377,10 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		idx = res - &dev_res->dev->resource[0];
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
--			if (fail_head) {
--				/*
--				 * if the failed res is for ROM BAR, and it will
--				 * be enabled later, don't add it to the list
--				 */
--				if (!((idx == PCI_ROM_RESOURCE) &&
--				      (!(res->flags & IORESOURCE_ROM_ENABLE))))
--					add_to_list(fail_head,
--						    dev_res->dev, res,
--						    0 /* don't care */,
--						    0 /* don't care */);
--			}
-+			if (fail_head)
-+				add_to_list(fail_head, dev_res->dev, res,
-+					    0 /* don't care */,
-+					    0 /* don't care */);
- 			reset_resource(res);
- 		}
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index b5e7bc2..45f03e3 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -114,7 +114,7 @@ static void altera_pcie_fixup_res(struct pci_dev *dev)
  	}
-@@ -1186,6 +1178,19 @@ out:
- 	return good_align;
  }
  
-+static inline bool is_optional(int i)
-+{
-+
-+	if (i == PCI_ROM_RESOURCE)
-+		return true;
-+
-+#ifdef CONFIG_PCI_IOV
-+	if (i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END)
-+		return true;
-+#endif
-+
-+	return false;
-+}
- /**
-  * pbus_size_mem() - size the memory window of a given bus
-  *
-@@ -1243,10 +1248,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+-void altera_pcie_fixups(struct pci_bus *bus)
++static void altera_pcie_fixups(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
  
- 			r_size = resource_size(r);
- 			align = pci_resource_alignment(dev, r);
--#ifdef CONFIG_PCI_IOV
--			/* put SRIOV requested res to the optional list */
--			if (realloc_head && i >= PCI_IOV_RESOURCES &&
--					i <= PCI_IOV_RESOURCE_END) {
-+			/* put SRIOV/ROM res to realloc list */
-+			if (realloc_head && is_optional(i)) {
- 				add_to_align_test_list(&align_test_add_list,
- 							align, r_size);
- 				r->end = r->start - 1;
-@@ -1256,7 +1259,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					max_add_align = align;
- 				continue;
- 			}
--#endif
-+
- 			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
- 					i, r, (unsigned long long) align);
--- 
-1.8.4.5
-
