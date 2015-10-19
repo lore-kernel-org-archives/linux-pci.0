@@ -1,71 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Robin Murphy <robin.murphy@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0058.outbound.protection.outlook.com ([65.55.169.58]:4333
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751274AbbJSIUQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Oct 2015 04:20:16 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
 	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
 	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH v4 2/3] arm64: Juno: Add support for the PCIe host bridge on Juno R1
-Date: Fri, 16 Oct 2015 16:22:08 +0100
-Message-Id: <1445008929-32267-3-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1445008929-32267-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1445008929-32267-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	"Kumar Gala" <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v10 6/6] MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+Date: Mon, 19 Oct 2015 16:19:28 +0800
+Message-ID: <1445242768-4423-7-git-send-email-lftan@altera.com>
+In-Reply-To: <1445242768-4423-1-git-send-email-lftan@altera.com>
+References: <1445242768-4423-1-git-send-email-lftan@altera.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Juno R1 board sports a functional PCIe host bridge that is
-compliant with the SBSA standard found [1] here. With the right
-firmware that initialises the XpressRICH3 controller one can
-use the generic Host Bridge driver to use the PCIe hardware.
-
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Acked-by: Mark Rutland <mark.rutland@arm.com>
-
-[1] http://infocenter.arm.com/help/topic/com.arm.doc.den0029a/
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
 ---
- arch/arm64/boot/dts/arm/juno-r1.dts | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ MAINTAINERS | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/arm/juno-r1.dts b/arch/arm64/boot/dts/arm/juno-r1.dts
-index c627511..a25964d 100644
---- a/arch/arm64/boot/dts/arm/juno-r1.dts
-+++ b/arch/arm64/boot/dts/arm/juno-r1.dts
-@@ -109,6 +109,26 @@
+diff --git a/MAINTAINERS b/MAINTAINERS
+index b8577ad9..96b9fac 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7958,6 +7958,14 @@ F:	include/linux/pci*
+ F:	arch/x86/pci/
+ F:	arch/x86/kernel/quirks.c
  
- 	#include "juno-base.dtsi"
++PCI DRIVER FOR ALTERA PCIE IP
++M:	Ley Foon Tan <lftan@altera.com>
++L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
++L:	linux-pci@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
++F:	drivers/pci/host/pcie-altera.c
++
+ PCI DRIVER FOR ARM VERSATILE PLATFORM
+ M:	Rob Herring <robh@kernel.org>
+ L:	linux-pci@vger.kernel.org
+@@ -8059,6 +8067,14 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*spear*
  
-+	pcie-controller@40000000 {
-+		compatible = "arm,juno-r1-pcie", "plda,xpressrich3-axi", "pci-host-ecam-generic";
-+		device_type = "pci";
-+		reg = <0 0x40000000 0 0x10000000>;	/* ECAM config space */
-+		bus-range = <0 255>;
-+		linux,pci-domain = <0>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		dma-coherent;
-+		ranges = <0x01000000 0x00 0x5f800000 0x00 0x5f800000 0x0 0x00800000>,
-+			 <0x02000000 0x00 0x50000000 0x00 0x50000000 0x0 0x08000000>,
-+			 <0x42000000 0x40 0x00000000 0x40 0x00000000 0x1 0x00000000>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &gic 0 0 0 136 4>,
-+				<0 0 0 2 &gic 0 0 0 137 4>,
-+				<0 0 0 3 &gic 0 0 0 138 4>,
-+				<0 0 0 4 &gic 0 0 0 139 4>;
-+		msi-parent = <&v2m_0>;
-+	};
- };
- 
- &memtimer {
++PCI MSI DRIVER FOR ALTERA MSI IP
++M:	Ley Foon Tan <lftan@altera.com>
++L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
++L:	linux-pci@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
++F:	drivers/pci/host/pcie-altera-msi.c
++
+ PCI MSI DRIVER FOR APPLIEDMICRO XGENE
+ M:	Duc Dang <dhdang@apm.com>
+ L:	linux-pci@vger.kernel.org
 -- 
-2.6.0
+1.8.2.1
 
