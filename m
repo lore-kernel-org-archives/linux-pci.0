@@ -1,155 +1,251 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 45/61] PCI: Add support for more than two alt_size entries under same bridge
-Date: Tue, 27 Oct 2015 13:55:37 -0700
-Message-Id: <1445979353-1728-46-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v6 4/5] PCI: Add support for Enhanced Allocation devices
+Date: Tue, 20 Oct 2015 16:04:41 -0700
+Message-Id: <1445382282-2396-5-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1445382282-2396-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1445382282-2396-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we have two bridges under parent bridge, and each child
-bridge has alt_size, we need to increase parent alt_size to make
-sure it could fit all alt entries.
+From: "Sean O. Stalley" <sean.stalley@intel.com>
 
-In the patch, we first select one big size, and then keep reducing
-the size and retrying to get the minimum value for alt_size.
+Add support for devices using Enhanced Allocation entries instead of BARs.
+This patch allows the kernel to parse the EA Extended Capability structure
+in PCI configspace and claim the BAR-equivalent resources.
 
-For example, two bridges:
-  one have 8M/8M, and 1M/1M children res.
-  one have 4M/4M, and 1M/1M children res.
-
-Then we have child pridges alt_align/alt_size: 8M/9M, 4M/5M.
-Before this patch, parent bridge alt_align/alt_size is 8M/14M
-that is wrong, as it can not fit two alt entries at all.
-With this patch	parent bridge alt_align/alt_size: 8M/17M.
-               8M            16M   20M   24M
-  |------------|-------------|-----|-----|
-	       8M			   25M
-	       |---------------------------|
-			       17M
-               |---9M----------|   |-5M----|
-
-
-At same time, child bridges required align/size: 4M/12M, 2M/6M.
-and prarent bridge required align/size: 4M/20M.
-
-So at last, we use 8M/17M as parent bridge alt_align/alt_size.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=100451
-Reported-by: Yijing Wang <wangyijing@huawei.com>
-Tested-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+[david.daney@cavium.com: Add more support/checking for Entry Properties,
+allow EA behind bridges, rewrite some error messages.]
+Signed-off-by: David Daney <david.daney@cavium.com>
 ---
- drivers/pci/setup-bus.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 54 insertions(+), 2 deletions(-)
+ drivers/pci/pci.c   | 177 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h   |   1 +
+ drivers/pci/probe.c |   3 +
+ 3 files changed, 181 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index dea0344..7e7663a 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1373,6 +1373,47 @@ out:
- 	return good_align;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6a9a111..f1f6308 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2148,6 +2148,183 @@ void pci_pm_init(struct pci_dev *dev)
+ 	}
  }
  
-+static resource_size_t calculate_mem_alt_size(struct list_head *head,
-+				resource_size_t max_align, resource_size_t size,
-+				resource_size_t align_low)
++static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
 +{
-+	struct align_test_res *p;
-+	resource_size_t tmp;
-+	resource_size_t good_size, bad_size;
-+	int count = 0, order;
++	unsigned long flags = IORESOURCE_PCI_FIXED;
 +
-+	good_size = ALIGN(size, align_low);
-+
-+	list_for_each_entry(p, head, list)
-+		count++;
-+
-+	if (count <= 1)
-+		goto out;
-+
-+	sort_align_test(head);
-+
-+	tmp = max(size, max_align);
-+	order = __fls(count);
-+	if ((1ULL << order) < count)
-+		order++;
-+	good_size = ALIGN((tmp << order), align_low);
-+	bad_size = ALIGN(size, align_low) - align_low;
-+	size = good_size;
-+	while (size > bad_size) {
-+		/* check if align/size fit all entries */
-+		if (is_align_size_good(head, max_align, size, 0))
-+			good_size = size;
-+		else
-+			bad_size = size;
-+
-+		size = bad_size + ((good_size - bad_size) >> 1);
-+		size = round_down(size, align_low);
++	switch (prop) {
++	case PCI_EA_P_MEM:
++	case PCI_EA_P_VF_MEM:
++		flags |= IORESOURCE_MEM;
++		break;
++	case PCI_EA_P_MEM_PREFETCH:
++	case PCI_EA_P_VF_MEM_PREFETCH:
++		flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
++		break;
++	case PCI_EA_P_IO:
++		flags |= IORESOURCE_IO;
++		break;
++	default:
++		return 0;
 +	}
 +
-+out:
-+	return good_size;
++	return flags;
 +}
 +
- static inline bool is_optional(int i)
++static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei,
++					    u8 prop)
++{
++	if (bei <= PCI_EA_BEI_BAR5 && prop <= PCI_EA_P_IO)
++		return &dev->resource[bei];
++	else if (bei == PCI_EA_BEI_ROM)
++		return &dev->resource[PCI_ROM_RESOURCE];
++	else
++		return NULL;
++}
++
++/* Read an Enhanced Allocation (EA) entry */
++static int pci_ea_read(struct pci_dev *dev, int offset)
++{
++	struct resource *res;
++	int ent_offset = offset;
++	int ent_size;
++	resource_size_t start;
++	resource_size_t end;
++	unsigned long flags;
++	u32 dw0;
++	u32 base;
++	u32 max_offset;
++	u8 prop;
++	bool support_64 = (sizeof(resource_size_t) >= 8);
++
++	pci_read_config_dword(dev, ent_offset, &dw0);
++	ent_offset += 4;
++
++	/* Entry size field indicates DWORDs after 1st */
++	ent_size = ((dw0 & PCI_EA_ES) + 1) << 2;
++
++	if (!(dw0 & PCI_EA_ENABLE)) /* Entry not enabled */
++		goto out;
++
++	prop = PCI_EA_PP(dw0);
++	/*
++	 * If the Property is in the reserved range, try the Secondary
++	 * Property instead.
++	 */
++	if (prop > PCI_EA_P_BRIDGE_IO && prop < PCI_EA_P_MEM_RESERVED)
++		prop = PCI_EA_SP(dw0);
++	if (prop > PCI_EA_P_BRIDGE_IO)
++		goto out;
++
++	res = pci_ea_get_resource(dev, PCI_EA_BEI(dw0), prop);
++	if (!res) {
++		dev_err(&dev->dev, "Unsupported EA entry BEI: %u\n",
++			PCI_EA_BEI(dw0));
++		goto out;
++	}
++
++	flags = pci_ea_set_flags(dev, prop);
++	if (!flags) {
++		dev_err(&dev->dev, "Unsupported EA properties: %u\n", prop);
++		goto out;
++	}
++
++	/* Read Base */
++	pci_read_config_dword(dev, ent_offset, &base);
++	start = (base & PCI_EA_FIELD_MASK);
++	ent_offset += 4;
++
++	/* Read MaxOffset */
++	pci_read_config_dword(dev, ent_offset, &max_offset);
++	ent_offset += 4;
++
++	/* Read Base MSBs (if 64-bit entry) */
++	if (base & PCI_EA_IS_64) {
++		u32 base_upper;
++
++		pci_read_config_dword(dev, ent_offset, &base_upper);
++		ent_offset += 4;
++
++		flags |= IORESOURCE_MEM_64;
++
++		/* entry starts above 32-bit boundary, can't use */
++		if (!support_64 && base_upper)
++			goto out;
++
++		if (support_64)
++			start |= ((u64)base_upper << 32);
++	}
++
++	end = start + (max_offset | 0x03);
++
++	/* Read MaxOffset MSBs (if 64-bit entry) */
++	if (max_offset & PCI_EA_IS_64) {
++		u32 max_offset_upper;
++
++		pci_read_config_dword(dev, ent_offset, &max_offset_upper);
++		ent_offset += 4;
++
++		flags |= IORESOURCE_MEM_64;
++
++		/* entry too big, can't use */
++		if (!support_64 && max_offset_upper)
++			goto out;
++
++		if (support_64)
++			end += ((u64)max_offset_upper << 32);
++	}
++
++	if (end < start) {
++		dev_err(&dev->dev, "EA Entry crosses address boundary\n");
++		goto out;
++	}
++
++	if (ent_size != ent_offset - offset) {
++		dev_err(&dev->dev,
++			"EA Entry Size (%d) does not match length read (%d)\n",
++			ent_size, ent_offset - offset);
++		goto out;
++	}
++
++	res->name = pci_name(dev);
++	res->start = start;
++	res->end = end;
++	res->flags = flags;
++	dev_printk(KERN_DEBUG, &dev->dev, "EA - BEI %2u, Prop 0x%02x: %pR\n",
++		   PCI_EA_BEI(dw0), prop, res);
++out:
++	return offset + ent_size;
++}
++
++/* Enhanced Allocation Initalization */
++void pci_ea_init(struct pci_dev *dev)
++{
++	int ea;
++	u8 num_ent;
++	int offset;
++	int i;
++
++	/* find PCI EA capability in list */
++	ea = pci_find_capability(dev, PCI_CAP_ID_EA);
++	if (!ea)
++		return;
++
++	/* determine the number of entries */
++	pci_bus_read_config_byte(dev->bus, dev->devfn, ea + PCI_EA_NUM_ENT,
++					&num_ent);
++	num_ent &= PCI_EA_NUM_ENT_MASK;
++
++	offset = ea + PCI_EA_FIRST_ENT;
++
++	/* Skip DWORD 2 for type 1 functions */
++	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
++		offset += 4;
++
++	/* parse each EA entry */
++	for (i = 0; i < num_ent; ++i)
++		offset = pci_ea_read(dev, offset);
++}
++
+ static void pci_add_saved_cap(struct pci_dev *pci_dev,
+ 	struct pci_cap_saved_state *new_cap)
  {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 24ba9dc..a160733 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -78,6 +78,7 @@ bool pci_dev_keep_suspended(struct pci_dev *dev);
+ void pci_config_pm_runtime_get(struct pci_dev *dev);
+ void pci_config_pm_runtime_put(struct pci_dev *dev);
+ void pci_pm_init(struct pci_dev *dev);
++void pci_ea_init(struct pci_dev *dev);
+ void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+ void pci_free_cap_save_buffers(struct pci_dev *dev);
  
-@@ -1419,6 +1460,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					mask | IORESOURCE_PREFETCH, type);
- 	LIST_HEAD(align_test_list);
- 	LIST_HEAD(align_test_add_list);
-+	LIST_HEAD(align_test_alt_list);
- 	resource_size_t alt_size = 0, alt_align = 0;
- 	resource_size_t window_align;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8361d27..4c4af78 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1597,6 +1597,9 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
  
-@@ -1493,10 +1535,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ static void pci_init_capabilities(struct pci_dev *dev)
+ {
++	/* Enhanced Allocation */
++	pci_ea_init(dev);
++
+ 	/* MSI/MSI-X list */
+ 	pci_msi_init_pci_dev(dev);
  
- 				dev_res = res_to_dev_res(realloc_head, r);
- 				if (dev_res && dev_res->alt_size) {
-+					add_to_align_test_list(
-+						&align_test_alt_list,
-+						dev_res->alt_align,
-+						dev_res->alt_size);
- 					alt_size += dev_res->alt_size;
- 					if (alt_align < dev_res->alt_align)
- 						alt_align = dev_res->alt_align;
- 				} else if (r_size > 1) {
-+					add_to_align_test_list(
-+						&align_test_alt_list,
-+						align, r_size);
- 					alt_size += r_size;
- 					if (alt_align < align)
- 						alt_align = align;
-@@ -1516,14 +1565,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 	if (size0 && realloc_head) {
- 		alt_align = max(alt_align, window_align);
--		alt_size = calculate_memsize(alt_size, min_size,
--					     0, window_align);
-+		/* need to increase size to fit more alt */
-+		alt_size = calculate_mem_alt_size(&align_test_alt_list,
-+						  alt_align, alt_size,
-+						  window_align);
- 		/* required is better ? */
- 		if (alt_size >= size0) {
- 			alt_align = 0;
- 			alt_size = 0;
- 		}
- 	}
-+	free_align_test_list(&align_test_alt_list);
- 
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
 -- 
-1.8.4.5
+1.9.1
 
