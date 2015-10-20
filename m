@@ -1,63 +1,46 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 3 Oct 2015 14:10:37 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Ley Foon Tan <lftan@altera.com>, Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v7 5/6] Documentation: dt-bindings: pci: altera pcie
- device tree binding
-Message-ID: <20151003141037.140fcbc3@arm.com>
-In-Reply-To: <6497772.rqSurELzER@wuerfel>
-References: <1442801587-3812-1-git-send-email-lftan@altera.com>
-	<CAL_JsqL9eoTRa2-eeNJgVoO=0LyuaaJ87E4_BS0KocRKBXGdGA@mail.gmail.com>
-	<CAFiDJ5_MYC=V_L1LyRNq00z=DerzKAF=RF5av9vHnUPP+9a1nw@mail.gmail.com>
-	<6497772.rqSurELzER@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <56269F0F.7000309@oracle.com>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+	<1444340359-8011-3-git-send-email-yinghai@kernel.org>
+	<20151020195413.GH8224@localhost>
+	<56269F0F.7000309@oracle.com>
+Date: Tue, 20 Oct 2015 13:34:42 -0700
+Message-ID: <CAE9FiQUTnG_fw9Y5VkwO7BmgYeJqQOKAyDh4JESOkOuOvjMThQ@mail.gmail.com>
+Subject: Re: [PATCH v7 02/60] sparc/PCI: Use correct bus address to resource offset
+From: Yinghai Lu <yinghai@kernel.org>
+To: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2 Oct 2015 23:56:37 +0200
-Arnd Bergmann <arnd@arndb.de> wrote:
+On Tue, Oct 20, 2015 at 1:07 PM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
+>> I don't want to argue about pci_resource_to_user() right now, so I
+>> guess you can just panic if the mem64 offset is different from the
+>> mem32 offset.  But you should at least add a comment about why you're
+>> doing that.  Otherwise it looks like you were just lazy.
 
-> On Friday 02 October 2015 15:53:44 Ley Foon Tan wrote:
-> > > Strictly speaking, if you have undocumented bindings downstream that
-> > > is your problem and we don't have to accept them as-is upstream. I'm
-> > > not going to worry about that here.
-> > >
-> > >>> txs contains the config space?
-> > >> It is not the config space, but a memory slave port.
-> > >
-> > > Then where is the config space? It should not be part of "ranges" is
-> > > all I care about.
-> > The config space is not part of "ranges". Our IP uses TLP packet to
-> > access config space.
-> > 
-> 
-> It took me a bit to figure out what you mean here. To save others
-> from reading the source, here is what I found:
-> 
-> * The config space is accessed indirectly through registers from the
->   "cra" register range, which is the right approach according to the
->   point that Rob made.
-> * hardware-wise this basically looks like bit-banged PCIe, which is
->   both awesome and scary ;-)
+I had one version for that, but it has big change to __pci_mmap_make_offset_bus
+for making pci_mmap_resource() working.
+And took it for granted that MEM/MEM64 should have same offet.
 
-drivers/pcie/host/pcie-host-gpio.c anyone? ;-)
+>
+>
+> I just hit this condition on a sparc platform where mem32 offset != mem64
+> offset. We need to handle this case, and not just call panic. I had not seen
+> this on 5 platforms and another 3 ldoms I had tested this on when I tested
+> this code earlier. I have sent panic log to Yinghai separately.
 
-	M.
--- 
-Jazz is not dead. It just smells funny.
+Did you get test result with updated patch2 and patch3?
+
+Thanks
+
+Yinghai
