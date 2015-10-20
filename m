@@ -1,76 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp06.in.ibm.com ([122.248.162.6]:33077 "EHLO
-	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752542AbbJZDSN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Oct 2015 23:18:13 -0400
-Received: from /spool/local
-	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 26 Oct 2015 08:48:11 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id D2C23E0058
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:48:15 +0530 (IST)
-Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
-	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9Q3I74I26083532
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:48:07 +0530
-Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
-	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9Q3I67k027744
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:48:06 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V10 05/12] powerpc/eeh: Cache only BARs, not windows or IOV BARs
-Date: Mon, 26 Oct 2015 11:15:55 +0800
-Message-Id: <1445829362-2738-6-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:41733 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751796AbbJTPME (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 20 Oct 2015 11:12:04 -0400
+Message-ID: <56265995.5000800@ti.com>
+Date: Tue, 20 Oct 2015 11:11:17 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "Kwok, WingMan" <w-kwok2@ti.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	KISHON VIJAY ABRAHAM <kishon@ti.com>,
+	"Quadros, Roger" <rogerq@ti.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"ssantosh@kernel.org" <ssantosh@kernel.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v1 1/2] phy: keystone: serdes driver for gbe 10gbe and
+ pcie
+References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com> <230CBA6E4B6B6B418E8730AC28E6FC7E04229363@DFLE11.ent.ti.com> <56253B91.5040807@ti.com> <4661946.mPHVFLWuan@wuerfel>
+In-Reply-To: <4661946.mPHVFLWuan@wuerfel>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-EEH address cache, which helps to locate the PCI device according to
-the given (physical) MMIO address, didn't cover PCI bridges. Also, it
-shouldn't return PF with address in PF's IOV BARs. Instead, the VFs
-should be returned.
+On 10/20/2015 04:24 AM, Arnd Bergmann wrote:
+> On Monday 19 October 2015 14:50:57 Murali Karicheri wrote:
+>> Arnd, by your statement 'I don't see any code that does this' do you
+>> expect a piece of code that embed the license in the binary image? If
+>> so, that seems weired to me.
+>>
+>> Many of the drivers including this patch has the following statement in
+>> the license that is additional company specific license such as BSD that
+>> is applicable.
+>>
+>> ==== Cut and pasted from drivers/crypto/fcrypt.c =======================
+>>    * 2. Redistributions in binary form must reproduce the above copyright
+>>    *    notice, this list of conditions and the following disclaimer in the
+>>    *    documentation and/or other materials provided with the distribution.
+>> =========================================================================
+>> I read this as if the source is compiled and distributed as a binary
+>> either a kernel module ko file or as part of the kernel binary, this
+>> term must apply. Usually this is part of documentation that goes with
+>> the product AFAIK.
+>
+> Sorry, my fault. This is indeed the standard BSD license, and
+> I misread this as having to produce the copyright statement
+> from the binary itself. Please ignore whatever I said on the
+> subject.
+>
+> 	Arnd
+>
+Thanks Arnd for the clarification.
 
-Also, by doing so, it removes the type check in
-eeh_addr_cache_insert_dev(), since bridge's window would not be cached.
-
-The patch restricts the address cache to cover first 7 BARs for the
-above purposes.
-
-[gwshan: changelog]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/eeh_cache.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
-
-diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
-index a1e86e1..e6887f0 100644
---- a/arch/powerpc/kernel/eeh_cache.c
-+++ b/arch/powerpc/kernel/eeh_cache.c
-@@ -196,7 +196,7 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
- 	}
- 
- 	/* Walk resources on this device, poke them into the tree */
--	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-+	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
- 		resource_size_t start = pci_resource_start(dev,i);
- 		resource_size_t end = pci_resource_end(dev,i);
- 		unsigned long flags = pci_resource_flags(dev,i);
-@@ -222,10 +222,6 @@ void eeh_addr_cache_insert_dev(struct pci_dev *dev)
- {
- 	unsigned long flags;
- 
--	/* Ignore PCI bridges */
--	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
--		return;
--
- 	spin_lock_irqsave(&pci_io_addr_cache_root.piar_lock, flags);
- 	__eeh_addr_cache_insert_dev(dev);
- 	spin_unlock_irqrestore(&pci_io_addr_cache_root.piar_lock, flags);
 -- 
-2.5.0
-
+Murali Karicheri
+Linux Kernel, Keystone
