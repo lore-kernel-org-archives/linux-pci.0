@@ -1,39 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:17318 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751854AbbJPFpI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 16 Oct 2015 01:45:08 -0400
-Subject: Re: [PATCH RFC 4/7] genirq/msi: Make the .prepare callback reusable
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>
-References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
- <1444923568-17413-5-git-send-email-marc.zyngier@arm.com>
-Cc: Ma Jun <majun258@huawei.com>, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <56208EE0.1030604@linux.intel.com>
-Date: Fri, 16 Oct 2015 13:45:04 +0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 20 Oct 2015 08:12:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com,
+	"Signed-off-by: David Daney" <david.daney@cavium.com>
+Subject: Re: [PATCH v5 1/4] PCI: Add Enhanced Allocation register entries
+Message-ID: <20151020131234.GB8224@localhost>
+References: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
+ <1444175438-7443-2-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1444923568-17413-5-git-send-email-marc.zyngier@arm.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444175438-7443-2-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/10/15 23:39, Marc Zyngier wrote:
-<snit>
-> +int msi_domain_prepare_irqs(struct irq_domain *domain, struct device *dev,
-> +			    int nvec, msi_alloc_info_t *arg)
-> +{
-> +	struct msi_domain_info *info = domain->host_data;
-> +	struct msi_domain_ops *ops = info->ops;
-> +	int ret;
+Hi David,
+
+On Tue, Oct 06, 2015 at 04:50:35PM -0700, David Daney wrote:
+> From: "Sean O. Stalley" <sean.stalley@intel.com>
+> 
+> Add registers defined in PCI-SIG's Enhanced allocation ECN.
+> 
+> Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+> [david.daney@cavium.com: Added more definitions for PCI_EA_BEI_*]
+> Signed-off-by: Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+>  include/uapi/linux/pci_regs.h | 44 ++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 43 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 413417f..352e418 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -216,7 +216,8 @@
+>  #define  PCI_CAP_ID_MSIX	0x11	/* MSI-X */
+>  #define  PCI_CAP_ID_SATA	0x12	/* SATA Data/Index Conf. */
+>  #define  PCI_CAP_ID_AF		0x13	/* PCI Advanced Features */
+> -#define  PCI_CAP_ID_MAX		PCI_CAP_ID_AF
+> +#define  PCI_CAP_ID_EA		0x14	/* PCI Enhanced Allocation */
+> +#define  PCI_CAP_ID_MAX		PCI_CAP_ID_EA
+>  #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
+>  #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
+>  #define PCI_CAP_SIZEOF		4
+> @@ -353,6 +354,47 @@
+>  #define  PCI_AF_STATUS_TP	0x01
+>  #define PCI_CAP_AF_SIZEOF	6	/* size of AF registers */
+>  
+> +/* PCI Enhanced Allocation registers */
 > +
-> +	ret = ops->msi_check(domain, info, dev);
-> +	if (ret == 0)
-> +		ret = ops->msi_prepare(domain, dev, nvec, arg);
-> +	if (ret)
-> +		return ret;
+> +#define PCI_EA_NUM_ENT		2	/* Number of Capability Entries */
+> +#define PCI_EA_NUM_ENT_MASK	0x3f	/* Num Entries Mask */
+
+Can you tweak this a bit to match the style of the rest of the file a
+bit closer?
+
+  - no indent (one space) for register offsets
+  - two spaces before masks for register fields
+  - write out masks showing register width
+  - use explicit mask, not BIT()
+
+> +#define PCI_EA_FIRST_ENT	4	/* First EA Entry in List */
+> +#define PCI_EA_FIRST_ENT_BRIDGE	8	/* First EA Entry for Bridges */
+> +#define PCI_EA_ES		0x7	/* Entry Size */
+
+  #define  PCI_EA_ES            0x00000007   /* Entry Size */
+
+> +#define PCI_EA_BEI(x)	(((x) >> 4) & 0xf) /* BAR Equivalent Indicator */
+> +/* 0-5 map to BARs 0-5 respectively */
+> +#define  PCI_EA_BEI_BAR0	0
+> +#define  PCI_EA_BEI_BAR5	5
+> +#define  PCI_EA_BEI_BRIDGE	6	/* Resource behind bridge */
+> +#define  PCI_EA_BEI_ENI		7	/* Equivalent Not Indicated */
+> +#define  PCI_EA_BEI_ROM		8	/* Expansion ROM */
+> +/* 9-14 map to VF BARs 0-5 respectively */
+> +#define  PCI_EA_BEI_VF_BAR0	9
+> +#define  PCI_EA_BEI_VF_BAR5	14
+> +#define  PCI_EA_BEI_RESERVED	15	/* Reserved - Treat like ENI */
 > +
-> +	return 0;
-Seems a simple "return ret" is enough:)
+> +#define PCI_EA_PP(x)	(((x) >>  8) & 0xff)	/* Primary Properties */
+> +#define PCI_EA_SP(x)	(((x) >> 16) & 0xff)	/* Secondary Properties */
+> +#define  PCI_EA_P_MEM			0x00	/* Non-Prefetch Memory */
+
+What does the "_P_" stand for?  Maybe it could be dropped?  Oh, I
+suppose it stands for "property."
+
+> +#define  PCI_EA_P_MEM_PREFETCH		0x01	/* Prefetchable Memory */
+> +#define  PCI_EA_P_IO			0x02	/* I/O Space */
+> +#define  PCI_EA_P_VIRT_MEM_PREFETCH	0x03	/* VF Prefetchable Memory */
+> +#define  PCI_EA_P_VIRT_MEM		0x04	/* VF Non-Prefetch Memory */
+
+_VIRT_MEM suggests "virtual memory"; maybe you could use "VF_MEM"
+instead?
+
+> +#define  PCI_EA_P_BRIDGE_MEM		0x05	/* Bridge Non-Prefetch Memory */
+> +#define  PCI_EA_P_BRIDGE_MEM_PREFETCH	0x06	/* Bridge Prefetchable Memory */
+> +#define  PCI_EA_P_BRIDGE_IO		0x07	/* Bridge I/O Space */
+> +/* 0x08-0xfc reserved */
+> +#define  PCI_EA_P_MEM_RESERVED		0xfd	/* Reserved Memory */
+> +#define  PCI_EA_P_IO_RESERVED		0xfe	/* Reserved I/O Space */
+> +#define  PCI_EA_P_UNAVAILABLE		0xff	/* Entry Unavailable */
+> +#define PCI_EA_WRITEABLE	BIT(30) /* Writable, 1 = RW, 0 = HwInit */
+> +#define PCI_EA_ENABLE		BIT(31) /* Enable for this entry */
+
+  #define  PCI_EA_WRITABLE      0x40000000
+  #define  PCI_EA_ENABLE        0x80000000
+
+(note s/WRITEABLE/WRITABLE/)
+
+> +#define PCI_EA_BASE		4	/* Base Address Offset */
+> +#define PCI_EA_MAX_OFFSET	8	/* MaxOffset (resource length) */
+> +/* bit 0 is reserved */
+> +#define PCI_EA_IS_64		BIT(1)	/* 64-bit field flag */
+> +#define PCI_EA_FIELD_MASK	0xfffffffc	/* For Base & Max Offset */
+> +
+>  /* PCI-X registers (Type 0 (non-bridge) devices) */
+>  
+>  #define PCI_X_CMD		2	/* Modes & Features */
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
