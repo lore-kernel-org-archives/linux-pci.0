@@ -1,62 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35451 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932409AbbJVWOA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Oct 2015 18:14:00 -0400
-Date: Thu, 22 Oct 2015 17:13:55 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lftan.linux@gmail.com,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v11 2/6] pci: add Altera PCI vendor ID
-Message-ID: <20151022221355.GJ21237@localhost>
-References: <1445506051-21688-1-git-send-email-lftan@altera.com>
- <1445506051-21688-3-git-send-email-lftan@altera.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46263 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751142AbbJTXvb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 19:51:31 -0400
+Subject: Re: [PATCH v7 02/60] sparc/PCI: Use correct bus address to resource
+ offset
+To: Yinghai Lu <yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+ <1444340359-8011-3-git-send-email-yinghai@kernel.org>
+ <20151020195413.GH8224@localhost> <56269F0F.7000309@oracle.com>
+ <CAE9FiQUTnG_fw9Y5VkwO7BmgYeJqQOKAyDh4JESOkOuOvjMThQ@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+From: Khalid Aziz <khalid.aziz@oracle.com>
+Message-ID: <5626D369.8020003@oracle.com>
+Date: Tue, 20 Oct 2015 17:51:05 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445506051-21688-3-git-send-email-lftan@altera.com>
+In-Reply-To: <CAE9FiQUTnG_fw9Y5VkwO7BmgYeJqQOKAyDh4JESOkOuOvjMThQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 22, 2015 at 05:27:27PM +0800, Ley Foon Tan wrote:
-> Signed-off-by: Ley Foon Tan <lftan@altera.com>
-> ---
->  include/linux/pci_ids.h | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index d9ba49c..08e4462 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -1550,6 +1550,8 @@
->  #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
->  #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
->  
-> +#define PCI_VENDOR_ID_ALTERA		0x1172
-> +
+On 10/20/2015 02:34 PM, Yinghai Lu wrote:
+> On Tue, Oct 20, 2015 at 1:07 PM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
+>>> I don't want to argue about pci_resource_to_user() right now, so I
+>>> guess you can just panic if the mem64 offset is different from the
+>>> mem32 offset.  But you should at least add a comment about why you're
+>>> doing that.  Otherwise it looks like you were just lazy.
+>
+> I had one version for that, but it has big change to __pci_mmap_make_offset_bus
+> for making pci_mmap_resource() working.
+> And took it for granted that MEM/MEM64 should have same offet.
+>
+>>
+>>
+>> I just hit this condition on a sparc platform where mem32 offset != mem64
+>> offset. We need to handle this case, and not just call panic. I had not seen
+>> this on 5 platforms and another 3 ldoms I had tested this on when I tested
+>> this code earlier. I have sent panic log to Yinghai separately.
+>
+> Did you get test result with updated patch2 and patch3?
+>
 
-This doesn't seem to be used anywhere, so I'll drop this patch.
+Hi Yinghai,
 
->  #define PCI_VENDOR_ID_SBE		0x1176
->  #define PCI_DEVICE_ID_SBE_WANXL100	0x0301
->  #define PCI_DEVICE_ID_SBE_WANXL200	0x0302
-> -- 
-> 1.8.2.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+The failing T4 booted up with updated patches.
+
+Thanks,
+Khalid
+
