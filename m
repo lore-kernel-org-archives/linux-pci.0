@@ -1,143 +1,244 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f48.google.com ([209.85.213.48]:36304 "EHLO
-	mail-vk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754164AbbJNVpd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Oct 2015 17:45:33 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 20 Oct 2015 14:54:13 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 02/60] sparc/PCI: Use correct bus address to resource
+ offset
+Message-ID: <20151020195413.GH8224@localhost>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+ <1444340359-8011-3-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.20.1510140816090.14105@math.ut.ee>
-References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee>
-	<CAE9FiQXM9YxRwcbG577Pcqmj7YbOa0yk6hYELb2FpTtct5u2jg@mail.gmail.com>
-	<alpine.LRH.2.20.1510120808240.3251@math.ut.ee>
-	<CAE9FiQXHsgYaTgF2rsWFJXSYJ=kH3j63ageJ2H8F5wnzbFgxRg@mail.gmail.com>
-	<alpine.LRH.2.20.1510130800380.3972@math.ut.ee>
-	<CAE9FiQVAtPGgzwwMaHjGjyzOD8wKb0TqCd1wynF6-ZmFqZzEaQ@mail.gmail.com>
-	<alpine.LRH.2.20.1510131020140.9747@math.ut.ee>
-	<CAE9FiQWhE=-FtZjuC5-fTzuTq0tm9Zt1MiD8J0a_Q_jiB5RLNg@mail.gmail.com>
-	<alpine.LRH.2.20.1510132338510.14105@math.ut.ee>
-	<CAE9FiQXDCtL9nqQOVNspNc87=eY98NW=nrSZczbKVNYsPQuVJA@mail.gmail.com>
-	<alpine.LRH.2.20.1510140816090.14105@math.ut.ee>
-Date: Wed, 14 Oct 2015 14:45:32 -0700
-Message-ID: <CAE9FiQUf1KBr_05R61F8CHJcBLV3LxW-jJvNCHNSqMYd6CS0QQ@mail.gmail.com>
-Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
-From: Yinghai Lu <yinghai@kernel.org>
-To: Meelis Roos <mroos@linux.ee>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444340359-8011-3-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 14, 2015 at 12:34 AM, Meelis Roos <mroos@linux.ee> wrote:
->> > 0001:00:07.0 ISA bridge: ULi Electronics Inc. M1533/M1535/M1543 PCI to ISA Bridge [Aladdin IV/V/V+]
->> >         Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->> >         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->> >         Latency: 0
->> >         Region 0: [virtual] I/O ports at 0000 [size=64K]
->> >         Region 1: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
->> >         Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
->> >         Region 3: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
->> >         Region 4: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
->> >         Region 5: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
->> >         [virtual] Expansion ROM at fffff80100000000 [disabled]
->> >         Capabilities: [a0] Power Management version 1
->> >                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
->> >                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
->> > 00: b9 10 33 15 0f 00 10 02 00 00 01 06 00 00 00 00
->> > 10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> > 20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> > 30: 00 00 00 00 a0 00 00 00 00 00 00 00 00 00 00 00
->> > 40: 03 13 4b 80 83 09 00 47 00 00 06 00 00 00 eb 31
->> > 50: 00 00 00 20 90 02 20 03 66 03 00 00 00 00 00 08
->> > 60: 40 00 00 00 00 00 00 00 00 00 00 00 80 20 00 00
->> > 70: 00 00 0a 00 47 00 00 db 04 02 00 04 00 80 01 90
->> > 80: a5 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> > 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> > a0: 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
->> > b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> > c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> > d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> > e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> > f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>
->> Please check attached patch.
->
-> Thank you, it seems to work. First, the following lines are gone:
-> PCI: Claiming 0001:00:07.0: Resource 0: 000007fe01000000..000007fe0100ffff [101]
-> PCI: Claiming 0001:00:07.0: Resource 1: 000007ff00000000..000007ff000fffff [200]
-> PCI: Claiming 0001:00:07.0: Resource 2: 000007ff00000000..000007ff000fffff [200]
->
-> And then all following PCI: Claiming... lines succeed, with no address
-> conflicts.
->
-> Now, how can I be sure that removing the ULi ISA bridge allocations does
-> not break anything? It seems I did not have I2C enabled in kernel conf -
-> I emabled it now, recompiled, got this but it seems to be for another
-> PCI device so not related?
-> ali15x3_smbus 0001:00:06.0: ALI15X3_smb region uninitialized - upgrade BIOS or use force_addr=0xaddr
-> ali15x3_smbus 0001:00:06.0: ALI15X3 not detected, module not inserted.
+On Thu, Oct 08, 2015 at 02:38:21PM -0700, Yinghai Lu wrote:
+> After we add 64bit mmio parsing, we got some "no compatible bridge window"
+> warning on anther new model that support 64bit resource.
+> 
+> It turns out that we can not use mem_space.start as 64bit mem space
+> offset, aka mem_space.start != offset.
+> 
+> Use child_phys_addr to calculate exact offset and recorder offset in
+> pbm.  Still assume all mem have same offset, otherwise panic early.
+> 
+> After patch we get correct offset.
+> 
+> /pci@305: PCI IO [io  0x2007e00000000-0x2007e0fffffff] offset 2007e00000000
+> /pci@305: PCI MEM [mem 0x2000000100000-0x200007effffff] offset 2000000000000
+> /pci@305: PCI MEM64 [mem 0x2000100000000-0x2000dffffffff] offset 2000000000000
+> ...
+> pci_sun4v f02ae7f8: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
+> pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
+> pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
 
-code segment:
-        /* Determine the address of the SMBus area */
-        pci_read_config_word(ALI15X3_dev, SMBBA, &ali15x3_smba);
-        ali15x3_smba &= (0xffff & ~(ALI15X3_SMB_IOSIZE - 1));
-        if (ali15x3_smba == 0 && force_addr == 0) {
-                dev_err(&ALI15X3_dev->dev, "ALI15X3_smb region uninitialized "
-                        "- upgrade BIOS or use force_addr=0xaddr\n");
-                return -ENODEV;
-        }
+I think this changelog is incorrect.  It suggests that this fixes a
+problem with 64-bit apertures, but in this example, *both* mem
+apertures are different from what they would have been before this
+patch.
 
-SMBBA is 0x14
+Before this patch, we used the mem32 aperture base (0x2000000100000)
+as the translation offset for both the mem32 and mem64 apertures, so I
+think we would have had this:
 
-from lspci:
+  pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00000000-0x7eefffff])
+  pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0xfff00000-0xdffefffff])
 
-0001:00:06.0 Non-VGA unclassified device: ULi Electronics Inc. M7101
-Power Management Controller [PMU]
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Region 0: [virtual] I/O ports at <unassigned> [size=16]
-        [virtual] Expansion ROM at fffff80100000000 [disabled]
-00: b9 10 01 71 00 00 00 02 00 00 00 00 00 00 00 00
-10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+After this patch, you compute the real mem32 offset (0x2000000000000)
+and use it for both mem32 and mem64:
 
-0x14 BAR has 0 really.
+  pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
+  pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
 
->
-> Additionally, another driver (i2c-ali1535) claimed 0001:00:06.0 and was
-> happy but did not find anything (but I do not know what it sahould find
-> so I can see no problem at the moment).
+> -v2: to make is simple, do not add mem64_offset, and assume
+>      mem64_offset == mem_offset, otherwise would make
+>      pci_mmap_resource() path too complicated.
 
-it should complain too:
+I missed this comment before, and I suppose it has something to do
+with why you decided to panic if the mem64 offset is different from
+the mem32 offset.  But I don't understand the reasoning.  Other
+architectures handle pci_mmap_resource() just fine, ...  oh, I see,
+this is related to the pci_resource_to_user() messiness.
 
-        /* Determine the address of the SMBus area */
-        pci_read_config_word(dev, SMBBA, &ali1535_offset);
-        dev_dbg(&dev->dev, "ALI1535_smb is at offset 0x%04x\n", ali1535_offset);
-        ali1535_offset &= (0xffff & ~(ALI1535_SMB_IOSIZE - 1));
-        if (ali1535_offset == 0) {
-                dev_warn(&dev->dev,
-                        "ALI1535_smb region uninitialized - upgrade BIOS?\n");
-                retval = -ENODEV;
-                goto exit;
-        }
+I don't want to argue about pci_resource_to_user() right now, so I
+guess you can just panic if the mem64 offset is different from the
+mem32 offset.  But you should at least add a comment about why you're
+doing that.  Otherwise it looks like you were just lazy.
 
-
->
-> I also applied the patch on Sun Blade 100 where i2c was working for me.
-> It was still working with this ali quirk patch applied, and no BAR
-> errors.
-
-Good.
-
-assume v210 does use those for i2c.
-
->
-> What about other arches - does this patch affect other arches where the
-> firmware has configured some addresses for this ULi bridge?
-
-According to data sheet, those BAR on 00:07.0 are all 0, and read only.
-Not sure how are those to to use them.
-
-Thanks
-
-Yinghai
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  arch/sparc/kernel/pci.c        | 14 +++++++-------
+>  arch/sparc/kernel/pci_common.c | 36 +++++++++++++++++++++++++++---------
+>  arch/sparc/kernel/pci_impl.h   |  3 +++
+>  3 files changed, 37 insertions(+), 16 deletions(-)
+> 
+> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+> index badf095..451792e 100644
+> --- a/arch/sparc/kernel/pci.c
+> +++ b/arch/sparc/kernel/pci.c
+> @@ -654,12 +654,12 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+>  	printk("PCI: Scanning PBM %s\n", node->full_name);
+>  
+>  	pci_add_resource_offset(&resources, &pbm->io_space,
+> -				pbm->io_space.start);
+> +				pbm->io_offset);
+>  	pci_add_resource_offset(&resources, &pbm->mem_space,
+> -				pbm->mem_space.start);
+> +				pbm->mem_offset);
+>  	if (pbm->mem64_space.flags)
+>  		pci_add_resource_offset(&resources, &pbm->mem64_space,
+> -					pbm->mem_space.start);
+> +					pbm->mem_offset);
+>  	pbm->busn.start = pbm->pci_first_busno;
+>  	pbm->busn.end	= pbm->pci_last_busno;
+>  	pbm->busn.flags	= IORESOURCE_BUS;
+> @@ -751,10 +751,10 @@ static int __pci_mmap_make_offset_bus(struct pci_dev *pdev, struct vm_area_struc
+>  		return -EINVAL;
+>  
+>  	if (mmap_state == pci_mmap_io) {
+> -		vma->vm_pgoff = (pbm->io_space.start +
+> +		vma->vm_pgoff = (pbm->io_offset +
+>  				 user_offset) >> PAGE_SHIFT;
+>  	} else {
+> -		vma->vm_pgoff = (pbm->mem_space.start +
+> +		vma->vm_pgoff = (pbm->mem_offset +
+>  				 user_offset) >> PAGE_SHIFT;
+>  	}
+>  
+> @@ -981,9 +981,9 @@ void pci_resource_to_user(const struct pci_dev *pdev, int bar,
+>  	unsigned long offset;
+>  
+>  	if (rp->flags & IORESOURCE_IO)
+> -		offset = pbm->io_space.start;
+> +		offset = pbm->io_offset;
+>  	else
+> -		offset = pbm->mem_space.start;
+> +		offset = pbm->mem_offset;
+>  
+>  	*start = rp->start - offset;
+>  	*end = rp->end - offset;
+> diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+> index 33524c1..28e976a 100644
+> --- a/arch/sparc/kernel/pci_common.c
+> +++ b/arch/sparc/kernel/pci_common.c
+> @@ -393,6 +393,7 @@ static void pci_register_iommu_region(struct pci_pbm_info *pbm)
+>  void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+>  {
+>  	const struct linux_prom_pci_ranges *pbm_ranges;
+> +	resource_size_t mem64_offset = 0;
+>  	int i, saw_mem, saw_io;
+>  	int num_pbm_ranges;
+>  
+> @@ -410,13 +411,16 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+>  
+>  	for (i = 0; i < num_pbm_ranges; i++) {
+>  		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
+> -		unsigned long a, size;
+> +		unsigned long a, size, region_a;
+>  		u32 parent_phys_hi, parent_phys_lo;
+> +		u32 child_phys_mid, child_phys_lo;
+>  		u32 size_hi, size_lo;
+>  		int type;
+>  
+>  		parent_phys_hi = pr->parent_phys_hi;
+>  		parent_phys_lo = pr->parent_phys_lo;
+> +		child_phys_mid = pr->child_phys_mid;
+> +		child_phys_lo = pr->child_phys_lo;
+>  		if (tlb_type == hypervisor)
+>  			parent_phys_hi &= 0x0fffffff;
+>  
+> @@ -426,6 +430,8 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+>  		type = (pr->child_phys_hi >> 24) & 0x3;
+>  		a = (((unsigned long)parent_phys_hi << 32UL) |
+>  		     ((unsigned long)parent_phys_lo  <<  0UL));
+> +		region_a = (((unsigned long)child_phys_mid << 32UL) |
+> +		     ((unsigned long)child_phys_lo  <<  0UL));
+>  		size = (((unsigned long)size_hi << 32UL) |
+>  			((unsigned long)size_lo  <<  0UL));
+>  
+> @@ -440,6 +446,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+>  			pbm->io_space.start = a;
+>  			pbm->io_space.end = a + size - 1UL;
+>  			pbm->io_space.flags = IORESOURCE_IO;
+> +			pbm->io_offset = a - region_a;
+>  			saw_io = 1;
+>  			break;
+>  
+> @@ -448,6 +455,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+>  			pbm->mem_space.start = a;
+>  			pbm->mem_space.end = a + size - 1UL;
+>  			pbm->mem_space.flags = IORESOURCE_MEM;
+> +			pbm->mem_offset = a - region_a;
+>  			saw_mem = 1;
+>  			break;
+>  
+> @@ -456,6 +464,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+>  			pbm->mem64_space.start = a;
+>  			pbm->mem64_space.end = a + size - 1UL;
+>  			pbm->mem64_space.flags = IORESOURCE_MEM;
+> +			mem64_offset = a - region_a;
+>  			saw_mem = 1;
+>  			break;
+>  
+> @@ -471,14 +480,23 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+>  		prom_halt();
+>  	}
+>  
+> -	printk("%s: PCI IO[%llx] MEM[%llx]",
+> -	       pbm->name,
+> -	       pbm->io_space.start,
+> -	       pbm->mem_space.start);
+> -	if (pbm->mem64_space.flags)
+> -		printk(" MEM64[%llx]",
+> -		       pbm->mem64_space.start);
+> -	printk("\n");
+> +	if (pbm->io_space.flags)
+> +		printk("%s: PCI IO %pR offset %llx\n",
+> +		       pbm->name, &pbm->io_space, pbm->io_offset);
+> +	if (pbm->mem_space.flags)
+> +		printk("%s: PCI MEM %pR offset %llx\n",
+> +		       pbm->name, &pbm->mem_space, pbm->mem_offset);
+> +	if (pbm->mem64_space.flags) {
+> +		if (pbm->mem_space.flags) {
+> +			if (mem64_offset != pbm->mem_offset)
+> +				panic("mem offset %llx != mem64 offset %llx\n",
+> +					pbm->mem_offset, mem64_offset);
+> +		} else
+> +			pbm->mem_offset = mem64_offset;
+> +
+> +		printk("%s: PCI MEM64 %pR offset %llx\n",
+> +		       pbm->name, &pbm->mem64_space, pbm->mem_offset);
+> +	}
+>  
+>  	pbm->io_space.name = pbm->mem_space.name = pbm->name;
+>  	pbm->mem64_space.name = pbm->name;
+> diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+> index 37222ca..08b74af 100644
+> --- a/arch/sparc/kernel/pci_impl.h
+> +++ b/arch/sparc/kernel/pci_impl.h
+> @@ -99,6 +99,9 @@ struct pci_pbm_info {
+>  	struct resource			mem_space;
+>  	struct resource			mem64_space;
+>  	struct resource			busn;
+> +	/* offset */
+> +	resource_size_t			io_offset;
+> +	resource_size_t			mem_offset;
+>  
+>  	/* Base of PCI Config space, can be per-PBM or shared. */
+>  	unsigned long			config_space;
+> -- 
+> 1.8.4.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
