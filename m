@@ -1,39 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:7996 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750953AbbJESDL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Oct 2015 14:03:11 -0400
-Date: Mon, 5 Oct 2015 18:03:09 +0000 (UTC)
-From: Keith Busch <keith.busch@intel.com>
-To: Ingo Molnar <mingo@kernel.org>
-cc: Keith Busch <keith.busch@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device
- driver
-In-Reply-To: <20151005164624.GA13737@gmail.com>
-Message-ID: <alpine.LNX.2.00.1510051734310.23840@localhost.lm.intel.com>
-References: <1443721454-25467-1-git-send-email-keith.busch@intel.com> <20151003094512.GA29104@gmail.com> <alpine.LNX.2.00.1510051424000.23840@localhost.lm.intel.com> <20151005164624.GA13737@gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com
+Cc: "Signed-off-by: David Daney" <david.daney@cavium.com>
+Subject: [PATCH v6 3/5] PCI: Add Enhanced Allocation register entries
+Date: Tue, 20 Oct 2015 16:04:40 -0700
+Message-Id: <1445382282-2396-4-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1445382282-2396-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1445382282-2396-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 5 Oct 2015, Ingo Molnar wrote:
-> * Keith Busch <keith.busch@intel.com> wrote:
->> The immediate benefit is that devices on VMD domains do not use resources
->> on the default PCI domain, so we have more than the 256 buses available.
->
-> Would be nice to incorporate that information in the help text and in the
-> changelog.
+From: "Sean O. Stalley" <sean.stalley@intel.com>
 
-Fair enough. Perhaps we thought the "secondary domain" description
-implied that information, but maybe we've been doing this too long. :)
+Add registers defined in PCI-SIG's Enhanced allocation ECN.
 
-Thanks for the feedback.
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+[david.daney@cavium.com: Added more definitions for PCI_EA_BEI_*]
+Signed-off-by: Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ include/uapi/linux/pci_regs.h | 44 ++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 43 insertions(+), 1 deletion(-)
+
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 413417f..199ea45 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -216,7 +216,8 @@
+ #define  PCI_CAP_ID_MSIX	0x11	/* MSI-X */
+ #define  PCI_CAP_ID_SATA	0x12	/* SATA Data/Index Conf. */
+ #define  PCI_CAP_ID_AF		0x13	/* PCI Advanced Features */
+-#define  PCI_CAP_ID_MAX		PCI_CAP_ID_AF
++#define  PCI_CAP_ID_EA		0x14	/* PCI Enhanced Allocation */
++#define  PCI_CAP_ID_MAX		PCI_CAP_ID_EA
+ #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
+ #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
+ #define PCI_CAP_SIZEOF		4
+@@ -353,6 +354,47 @@
+ #define  PCI_AF_STATUS_TP	0x01
+ #define PCI_CAP_AF_SIZEOF	6	/* size of AF registers */
+ 
++/* PCI Enhanced Allocation registers */
++
++#define PCI_EA_NUM_ENT		2	/* Number of Capability Entries */
++#define  PCI_EA_NUM_ENT_MASK	0x3f	/* Num Entries Mask */
++#define PCI_EA_FIRST_ENT	4	/* First EA Entry in List */
++#define PCI_EA_FIRST_ENT_BRIDGE	8	/* First EA Entry for Bridges */
++#define  PCI_EA_ES		0x7	/* Entry Size */
++#define  PCI_EA_BEI(x)	(((x) >> 4) & 0xf) /* BAR Equivalent Indicator */
++/* 0-5 map to BARs 0-5 respectively */
++#define   PCI_EA_BEI_BAR0	0
++#define   PCI_EA_BEI_BAR5	5
++#define   PCI_EA_BEI_BRIDGE	6	/* Resource behind bridge */
++#define   PCI_EA_BEI_ENI	7	/* Equivalent Not Indicated */
++#define   PCI_EA_BEI_ROM	8	/* Expansion ROM */
++/* 9-14 map to VF BARs 0-5 respectively */
++#define   PCI_EA_BEI_VF_BAR0	9
++#define   PCI_EA_BEI_VF_BAR5	14
++#define   PCI_EA_BEI_RESERVED	15	/* Reserved - Treat like ENI */
++
++#define  PCI_EA_PP(x)	(((x) >>  8) & 0xff)	/* Primary Properties */
++#define  PCI_EA_SP(x)	(((x) >> 16) & 0xff)	/* Secondary Properties */
++#define   PCI_EA_P_MEM			0x00	/* Non-Prefetch Memory */
++#define   PCI_EA_P_MEM_PREFETCH		0x01	/* Prefetchable Memory */
++#define   PCI_EA_P_IO			0x02	/* I/O Space */
++#define   PCI_EA_P_VF_MEM_PREFETCH	0x03	/* VF Prefetchable Memory */
++#define   PCI_EA_P_VF_MEM		0x04	/* VF Non-Prefetch Memory */
++#define   PCI_EA_P_BRIDGE_MEM		0x05	/* Bridge Non-Prefetch Memory */
++#define   PCI_EA_P_BRIDGE_MEM_PREFETCH	0x06	/* Bridge Prefetchable Memory */
++#define   PCI_EA_P_BRIDGE_IO		0x07	/* Bridge I/O Space */
++/* 0x08-0xfc reserved */
++#define   PCI_EA_P_MEM_RESERVED		0xfd	/* Reserved Memory */
++#define   PCI_EA_P_IO_RESERVED		0xfe	/* Reserved I/O Space */
++#define   PCI_EA_P_UNAVAILABLE		0xff	/* Entry Unavailable */
++#define  PCI_EA_WRITEABLE	0x40000000	/* Writable: 1 = RW, 0 = HwInit */
++#define  PCI_EA_ENABLE		0x80000000	/* Enable for this entry */
++#define PCI_EA_BASE		4		/* Base Address Offset */
++#define PCI_EA_MAX_OFFSET	8		/* MaxOffset (resource length) */
++/* bit 0 is reserved */
++#define  PCI_EA_IS_64		0x00000002	/* 64-bit field flag */
++#define  PCI_EA_FIELD_MASK	0xfffffffc	/* For Base & Max Offset */
++
+ /* PCI-X registers (Type 0 (non-bridge) devices) */
+ 
+ #define PCI_X_CMD		2	/* Modes & Features */
+-- 
+1.9.1
+
