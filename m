@@ -1,263 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:34624 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750729AbbJ3EL0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 00:11:26 -0400
-Received: by padhk11 with SMTP id hk11so61075434pad.1
-        for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2015 21:11:26 -0700 (PDT)
-Subject: Re: [PATCH V10 08/12] powerpc/powernv: Support EEH reset for VF PE
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com, mpe@ellerman.id.au
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1445829362-2738-9-git-send-email-weiyang@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5632EDE8.2010601@ozlabs.ru>
-Date: Fri, 30 Oct 2015 15:11:20 +1100
+Received: from mail-vk0-f66.google.com ([209.85.213.66]:34374 "EHLO
+	mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754419AbbJTWQq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 18:16:46 -0400
 MIME-Version: 1.0
-In-Reply-To: <1445829362-2738-9-git-send-email-weiyang@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+In-Reply-To: <20151020215714.GI8224@localhost>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+	<1444340359-8011-4-git-send-email-yinghai@kernel.org>
+	<20151020215714.GI8224@localhost>
+Date: Tue, 20 Oct 2015 15:16:45 -0700
+Message-ID: <CAE9FiQVC+r=7NrCvwq9+1XVQD9CGf_3+-4VO9kFPSGqMTR5cBw@mail.gmail.com>
+Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/26/2015 02:15 PM, Wei Yang wrote:
-> PEs for VFs don't have primary bus. So they have to have their own reset
-> backend, which is used during EEH recovery. The patch implements the reset
-> backend for VF's PE by issuing FLR or AF FLR to the VFs, which are contained
-> in the PE.
+On Tue, Oct 20, 2015 at 2:57 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Oct 08, 2015 at 02:38:22PM -0700, Yinghai Lu wrote:
+>> We register regions for legacy and iommu and all have open code.
+>>
+>> Unify them to pci_register_region() and call it accordingly.
+>>
+>> +     if (!mem_res->flags)
+>>               return;
+>>
+>> -     p->name = "Video RAM area";
+>> -     p->start = mem_res->start + 0xa0000UL;
+>> -     p->end = p->start + 0x1ffffUL;
+>> -     p->flags = IORESOURCE_BUSY;
+>> -     request_resource(mem_res, p);
+>> +     mem_rstart = mem_res->start - offset;
+>> +     mem_rend = mem_res->end - offset;
 >
-> [gwshan: changelog and code refactoring]
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/include/asm/eeh.h               |   1 +
->   arch/powerpc/platforms/powernv/eeh-powernv.c | 134 ++++++++++++++++++++++++++-
->   2 files changed, 134 insertions(+), 1 deletion(-)
+> This is essentially doing pcibios_bus_to_resource(), except in an
+> unnecessarily arch-dependent way.  Can you rework it to use
+> pcibios_bus_to_resource()?  I think you'll have to do
+> pci_register_legacy_regions() in pci_scan_one_pbm() instead of in
+> pci_determine_mem_io_space(), so that you have a struct pci_bus to
+> use, but your next patch does that anyway.
 >
-> diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-> index ec21f8f..331c856 100644
-> --- a/arch/powerpc/include/asm/eeh.h
-> +++ b/arch/powerpc/include/asm/eeh.h
-> @@ -136,6 +136,7 @@ struct eeh_dev {
->   	int pcix_cap;			/* Saved PCIx capability	*/
->   	int pcie_cap;			/* Saved PCIe capability	*/
->   	int aer_cap;			/* Saved AER capability		*/
-> +	int af_cap;			/* Saved AF capability		*/
->   	struct eeh_pe *pe;		/* Associated PE		*/
->   	struct list_head list;		/* Form link list in the PE	*/
->   	struct pci_controller *phb;	/* Associated PHB		*/
-> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> index cfd55dd..017cd72 100644
-> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> @@ -404,6 +404,7 @@ static void *pnv_eeh_probe(struct pci_dn *pdn, void *data)
->   	edev->pcix_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_PCIX);
->   	edev->pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
->   	edev->aer_cap  = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
-> +	edev->af_cap   = pnv_eeh_find_cap(pdn, PCI_CAP_ID_AF);
->   	if ((edev->class_code >> 8) == PCI_CLASS_BRIDGE_PCI) {
->   		edev->mode |= EEH_DEV_BRIDGE;
->   		if (edev->pcie_cap) {
-> @@ -893,6 +894,127 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->   	return 0;
->   }
->
-> +static void pnv_eeh_wait_for_pending(struct pci_dn *pdn, int pos,
-> +				     u16 mask, bool af_flr_rst)
-> +{
-> +	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-> +	int status, i;
-> +
-> +	/* Wait for Transaction Pending bit to be cleared */
-> +	for (i = 0; i < 4; i++) {
-> +		eeh_ops->read_config(pdn, pos, 2, &status);
+>>
+>> -     p = kzalloc(sizeof(*p), GFP_KERNEL);
+>> -     if (!p)
+>> +     /* contain checking */
+>> +     if (!(mem_rstart <= rstart && mem_rend >= rend))
+>>               return;
 
+Difference is here.
 
-gcc should have complained on using uninitialized @status here.
+pcibios_bus_to_resource() would return resource even region is not contained.
 
+>> +     res->name = name;
+>> +     res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+>> +     res->start = rstart + offset;
+>> +     res->end = rend + offset;
+>> +     conflict = request_resource_conflict(mem_res, res);
+>> +     if (conflict) {
+>> +             printk(KERN_DEBUG "PCI: %s can't claim %s %pR: address conflict with %s %pR\n",
+>> +                     pbm->name, res->name, res, conflict->name, conflict);
+>> +             kfree(res);
+>> +     }
 
-> +		if (!(status & mask))
-> +			return;
-> +
-> +		msleep((1 << i) * 100);
-> +	}
-> +
-> +	pr_warn("%s: Pending transaction while issuing %s FLR to "
-> +		"%04x:%02x:%02x.%01x\n",
+also we will need to get parent resource to use request_resource_conflict.
 
-Do not wrap user-visible strings.
+otherwise we need to use insert_resource(), but that will prevent driver to use
+the resource.
 
-
-> +		__func__, af_flr_rst ? "AF" : "",
-> +		edev->phb->global_number, pdn->busno,
-> +		PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
-> +}
-> +
-> +static int pnv_eeh_do_flr(struct pci_dn *pdn, int option)
-> +{
-> +	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-> +	u32 reg;
-> +
-> +	if (!edev->pcie_cap)
-> +		return -ENOTTY;
-
-
-Can pnv_eeh_do_flr() be really called on a non PCIe device, can we get that 
-far? WARN_ON_ONCE() may be?
-
-
-> +
-> +	eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP, 4, &reg);
-
-
-... and here about uninitialized @reg.
-
-
-> +	if (!(reg & PCI_EXP_DEVCAP_FLR))
-> +		return -ENOTTY;
-> +
-> +	switch (option) {
-> +	case EEH_RESET_HOT:
-> +	case EEH_RESET_FUNDAMENTAL:
-> +		pnv_eeh_wait_for_pending(pdn, edev->pcie_cap + PCI_EXP_DEVSTA,
-> +					 PCI_EXP_DEVSTA_TRPND, false);
-> +		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-> +				     4, &reg);
-> +		reg |= PCI_EXP_DEVCTL_BCR_FLR;
-> +		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-> +				      4, reg);
-> +		msleep(EEH_PE_RST_HOLD_TIME);
-> +		break;
-> +	case EEH_RESET_DEACTIVATE:
-> +		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-> +				     4, &reg);
-> +		reg &= ~PCI_EXP_DEVCTL_BCR_FLR;
-> +		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-> +				      4, reg);
-> +		msleep(EEH_PE_RST_SETTLE_TIME);
-> +		break;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int pnv_eeh_do_af_flr(struct pci_dn *pdn, int option)
-> +{
-> +	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-> +	u32 cap;
-> +
-> +	if (!edev->af_cap)
-> +		return -ENOTTY;
-> +
-> +	eeh_ops->read_config(pdn, edev->af_cap + PCI_AF_CAP, 1, &cap);
-
-
-... and here about @cap.
-
-> +	if (!(cap & PCI_AF_CAP_TP) || !(cap & PCI_AF_CAP_FLR))
-> +		return -ENOTTY;
-> +
-> +	switch (option) {
-> +	case EEH_RESET_HOT:
-> +	case EEH_RESET_FUNDAMENTAL:
-> +		/*
-> +		 * Wait for Transaction Pending bit to clear. A word-aligned
-> +		 * test is used, so we use the conrol offset rather than status
-> +		 * and shift the test bit to match.
-
-
-Why word-aligned (not byte or double word)?
-
-> +		 */
-> +		pnv_eeh_wait_for_pending(pdn, edev->af_cap + PCI_AF_CTRL,
-> +					 PCI_AF_STATUS_TP << 8, true);
-> +		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL,
-> +				      1, PCI_AF_CTRL_FLR);
-> +		msleep(EEH_PE_RST_HOLD_TIME);
-> +		break;
-> +	case EEH_RESET_DEACTIVATE:
-> +		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL, 1, 0);
-> +		msleep(EEH_PE_RST_SETTLE_TIME);
-
-
-btw there is an unrelated issue with EEH_PE_RST_SETTLE_TIME which is 
-defined as 1800 which is A LOT (+250ms from EEH_PE_RST_HOLD_TIME and for 
-some reason this is actually doubled so there is another reset somewhere).
-
-Booting a guest with 63 VFs takes 6 minutes or so, is there a good reason 
-for such a huge timeout?
-
-
-> +		break;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int pnv_eeh_reset_vf(struct pci_dn *pdn, int option)
-> +{
-> +	int ret;
-> +
-> +	ret = pnv_eeh_do_flr(pdn, option);
-> +	if (ret != -ENOTTY)
-> +		return ret;
-> +
-> +	return pnv_eeh_do_af_flr(pdn, option);
-> +}
-> +
-> +static int pnv_eeh_vf_pe_reset(struct eeh_pe *pe, int option)
-> +{
-> +	struct eeh_dev *edev, *tmp;
-> +	struct pci_dn *pdn;
-> +	int ret;
-> +
-> +	eeh_pe_for_each_dev(pe, edev, tmp) {
-> +		pdn = eeh_dev_to_pdn(edev);
-> +		ret = pnv_eeh_reset_vf(pdn, option);
-> +		if (ret)
-> +			return ret;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->   void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
->   {
->   	struct pci_controller *hose;
-> @@ -968,7 +1090,9 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
->   		}
->
->   		bus = eeh_pe_bus_get(pe);
-> -		if (pci_is_root_bus(bus) ||
-> +		if (pe->type & EEH_PE_VF)
-> +			ret = pnv_eeh_vf_pe_reset(pe, option);
-> +		else if (pci_is_root_bus(bus) ||
->   			pci_is_root_bus(bus->parent))
->   			ret = pnv_eeh_root_reset(hose, option);
->   		else
-> @@ -1108,6 +1232,14 @@ static inline bool pnv_eeh_cfg_blocked(struct pci_dn *pdn)
->   	if (!edev || !edev->pe)
->   		return false;
->
-> +	/*
-> +	 * We will issue FLR or AF FLR to all VFs, which are contained
-> +	 * in VF PE. It relies on the EEH PCI config accessors. So we
-> +	 * can't block them during the window.
-> +	 */
-> +	if ((edev->physfn) && (edev->pe->state & EEH_PE_RESET))
-
-
-Extra braces around edev->physfn.
-
-
-
-> +		return false;
-> +
->   	if (edev->pe->state & EEH_PE_CFG_BLOCKED)
->   		return true;
->
->
-
-
--- 
-Alexey
+        Yinghai
