@@ -1,55 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:61744 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753235AbbJGQEW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Oct 2015 12:04:22 -0400
-Date: Wed, 7 Oct 2015 16:04:07 +0000 (UTC)
-From: Keith Busch <keith.busch@intel.com>
-To: Keith Busch <keith.busch@intel.com>
-cc: Bjorn Helgaas <helgaas@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device
- driver
-In-Reply-To: <alpine.LNX.2.00.1510062331220.23840@localhost.lm.intel.com>
-Message-ID: <alpine.LNX.2.00.1510071546080.23840@localhost.lm.intel.com>
-References: <1443721454-25467-1-git-send-email-keith.busch@intel.com> <20151006231412.GF29420@localhost> <alpine.LNX.2.00.1510062331220.23840@localhost.lm.intel.com>
+Received: from mout.kundenserver.de ([212.227.17.10]:49335 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750966AbbJTIZG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 04:25:06 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: "Kwok, WingMan" <w-kwok2@ti.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	KISHON VIJAY ABRAHAM <kishon@ti.com>,
+	"Quadros, Roger" <rogerq@ti.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"ssantosh@kernel.org" <ssantosh@kernel.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v1 1/2] phy: keystone: serdes driver for gbe 10gbe and pcie
+Date: Tue, 20 Oct 2015 10:24:18 +0200
+Message-ID: <4661946.mPHVFLWuan@wuerfel>
+In-Reply-To: <56253B91.5040807@ti.com>
+References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com> <230CBA6E4B6B6B418E8730AC28E6FC7E04229363@DFLE11.ent.ti.com> <56253B91.5040807@ti.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 6 Oct 2015, Keith Busch wrote:
-> On Tue, 6 Oct 2015, Bjorn Helgaas wrote:
->>> +	resource_list_for_each_entry(entry, &resources) {
->>> +		struct resource *source, *resource = entry->res;
->>> +
->>> +		if (!i) {
->>> +			resource->start = 0;
->>> +			resource->end = (resource_size(
->>> +					&vmd->dev->resource[0]) >> 20) - 1;
->>> +			resource->flags = IORESOURCE_BUS | 
->>> IORESOURCE_PCI_FIXED;
->> 
->> I thought BAR0 was CFGBAR.  I missed the connection to a bus number
->> aperture.
->
-> Right, BAR0 is the CFGBAR and is the device's aperture to access its
-> domain's config space.
+On Monday 19 October 2015 14:50:57 Murali Karicheri wrote:
+> Arnd, by your statement 'I don't see any code that does this' do you 
+> expect a piece of code that embed the license in the binary image? If 
+> so, that seems weired to me.
+> 
+> Many of the drivers including this patch has the following statement in 
+> the license that is additional company specific license such as BSD that 
+> is applicable.
+> 
+> ==== Cut and pasted from drivers/crypto/fcrypt.c =======================
+>   * 2. Redistributions in binary form must reproduce the above copyright
+>   *    notice, this list of conditions and the following disclaimer in the
+>   *    documentation and/or other materials provided with the distribution.
+> =========================================================================
+> I read this as if the source is compiled and distributed as a binary 
+> either a kernel module ko file or as part of the kernel binary, this 
+> term must apply. Usually this is part of documentation that goes with 
+> the product AFAIK.
 
-It's a new day, I'll try a new explanation on what this is about. The size
-of the CFGBAR determines how many bus numbers can be reached through the
-device's config space aperture. We are not setting the bus resource to
-BAR0; just determining the bus resource ending based on BAR0's size. We
-expect the bar to be 256M to access config space for 256 buses:
+Sorry, my fault. This is indeed the standard BSD license, and
+I misread this as having to produce the copyright statement
+from the binary itself. Please ignore whatever I said on the
+subject.
 
-   8 functions * 32 devices * 256 buses * 4k config space per function = 256M
-
-If the BAR wasn't provided 256M for any reason, we reduce the number of
-bus resources this domain can provide.
+	Arnd
