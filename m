@@ -1,87 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51350 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751741AbbJOTbU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Oct 2015 15:31:20 -0400
-Date: Thu, 15 Oct 2015 14:31:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ben Shelton <benjamin.h.shelton@intel.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: IOV: read SRIOV_NUM_VF after enabling ARI
-Message-ID: <20151015193116.GE17702@localhost>
-References: <1444317617-13399-1-git-send-email-benjamin.h.shelton@intel.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:55885 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752269AbbJTPGl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 11:06:41 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Joao Pinto <Joao.Pinto@synopsys.com>,
+	"jg1.han@samsung.com" <jg1.han@samsung.com>
+CC: Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: pcie-designware build fails in ARM64
+Date: Tue, 20 Oct 2015 15:06:26 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E16271AB6@lhreml503-mbs>
+References: <56213393.8020606@synopsys.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1624ECFA@lhreml503-mbs>
+ <56265538.40503@synopsys.com>
+In-Reply-To: <56265538.40503@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444317617-13399-1-git-send-email-benjamin.h.shelton@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 08, 2015 at 10:20:17AM -0500, Ben Shelton wrote:
-> For some SR-IOV devices, the number of available virtual functions increases
-> after enabling ARI.  Currently, SRIOV_NUM_VF is read and saved off before the
-> ARI control bit is enabled in SRIOV_CTRL.  This causes an issue when VFs are
-> enabled.
-> 
-> At device init, SRIOV_INITIAL_VF and SRIOV_NUM_VF are specified to contain the
-> number of available VFs for the device.  sriov_enable() does a sanity check
-> that SRIOV_INITIAL_VF is not greater than iov->total_VFs, the saved-off value
-> of SRIOV_NUM_VF.  Since the value of both SRIOV_INITIAL_VF and SRIOV_NUM_VF has
-> increased after enabling the ARI bit, the check fails, and the VFs cannot be
-> enabled.
-> 
-> To fix the issue, write SRIOV_CTRL first, and then read SRIOV_NUM_VF.
-> 
-> Signed-off-by: Ben Shelton <benjamin.h.shelton@intel.com>
-
-I applied this as follows to pci/virtualization for v4.4, thanks, Ben!
-
-This is on top of a NumVFs-related patch, so the diff looks slightly
-different, but I think it's functionally equivalent.
-
-
-commit 3aa71da412fedaee133b4b6e4be4b801c59d6c91
-Author: Ben Shelton <benjamin.h.shelton@intel.com>
-Date:   Thu Oct 15 12:35:17 2015 -0500
-
-    PCI: Enable SR-IOV ARI Capable Hierarchy before reading TotalVFs
-    
-    For some SR-IOV devices, the number of available virtual functions, i.e.,
-    TotalVFs, increases after setting the ARI Capable Hierarchy bit in the
-    SR-IOV Control register.  This violates the SR-IOV spec, r1.1, sec 3.3.6,
-    which says TotalVFs is HwInit, but we don't need TotalVFs before setting
-    the ARI Capable bit anyway.
-    
-    Set the ARI Capable Hierarchy bit (if ARI is enabled in the upstream
-    bridge) before reading TotalVFs.
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Ben Shelton <benjamin.h.shelton@intel.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 0202ab0..f8bfc1d 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -399,10 +399,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
- 		ssleep(1);
- 	}
- 
--	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
--	if (!total)
--		return 0;
--
- 	ctrl = 0;
- 	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
- 		if (pdev->is_physfn)
-@@ -415,6 +411,10 @@ static int sriov_init(struct pci_dev *dev, int pos)
- found:
- 	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
- 
-+	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
-+	if (!total)
-+		return 0;
-+
- 	pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
- 	i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
- 	pgsz &= ~((1 << i) - 1);
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9hbyBQaW50byBbbWFp
+bHRvOkpvYW8uUGludG9Ac3lub3BzeXMuY29tXQ0KPiBTZW50OiBUdWVzZGF5LCBPY3RvYmVyIDIw
+LCAyMDE1IDM6NTMgUE0NCj4gVG86IEdhYnJpZWxlIFBhb2xvbmk7IEpvYW8gUGludG87IGpnMS5o
+YW5Ac2Ftc3VuZy5jb20NCj4gQ2M6IENhcmxvcyBQYWxtaW5oYTsgbGludXgtcGNpQHZnZXIua2Vy
+bmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogcGNpZS1kZXNpZ253YXJlIGJ1aWxkIGZhaWxzIGluIEFS
+TTY0DQo+IA0KPiBIaSBHYWJyaWVsZSwNCj4gDQo+IE9uIDEwLzE5LzIwMTUgODowNCBBTSwgR2Fi
+cmllbGUgUGFvbG9uaSB3cm90ZToNCj4gPiBIaSBKb2FvDQo+ID4NCj4gPj4gLS0tLS1PcmlnaW5h
+bCBNZXNzYWdlLS0tLS0NCj4gPj4gRnJvbTogbGludXgtcGNpLW93bmVyQHZnZXIua2VybmVsLm9y
+ZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gb3duZXJAdmdlci5rZXJuZWwub3JnXQ0KPiA+PiBPbiBC
+ZWhhbGYgT2YgSm9hbyBQaW50bw0KPiA+PiBTZW50OiAxNiBPY3RvYmVyIDIwMTUgMTg6MjgNCj4g
+Pj4gVG86IGpnMS5oYW5Ac2Ftc3VuZy5jb20NCj4gPj4gQ2M6IENhcmxvcyBQYWxtaW5oYTsgbGlu
+dXgtcGNpQHZnZXIua2VybmVsLm9yZw0KPiA+PiBTdWJqZWN0OiBwY2llLWRlc2lnbndhcmUgYnVp
+bGQgZmFpbHMgaW4gQVJNNjQNCj4gPj4NCj4gPj4gRGVhciBKaW5nb28gSGFuLA0KPiA+Pg0KPiA+
+PiBJIGFtIHRyeWluZyB0byBidWlsZCBwY2llLWRlc2lnbndhcmUgZm9yIEFSTTY0IGJ1dCB3aXRo
+IG5vIHN1Y2Nlc3MuDQo+IERpZCB5b3UNCj4gPj4gZXZlcg0KPiA+PiB0cmllZCB0byBidWlsZCB0
+aGUgY29yZSBkcml2ZXIgaW4gdGhpcyBwbGF0Zm9ybT8NCj4gPj4NCj4gPg0KPiA+IFBsZWFzZSBs
+b29rIGF0ICJbUEFUQ0ggdjExIDMvNl0gUENJOiBkZXNpZ253YXJlOiBBZGQgQVJNNjQgc3VwcG9y
+dCINCj4gPiBBbmQgcmVzcGVjdGl2ZSBwYXRjaHNldCBzdWJtaXR0ZWQgaW4gdGhlIG1haWxpbmcg
+bGlzdC4NCj4gDQo+IFRoYW5rcywgaXQgd29ya2VkIHdlbGwhDQoNCk9rIGdvb2QuDQoNCnAucy4g
+c29ycnkgZm9yIHByZXZpb3VzIGR1cGxpY2F0ZSBlbWFpbHMsIG15IG1haWwgc2VydmVyIHdlbnQg
+YSBiaXQgY3JhenkNCg0KPiANCj4gPg0KPiA+IFJlZ2FyZHMNCj4gPg0KPiA+IEdhYg0KPiA+DQo+
+ID4+IFRoYW5rcyB5b3UgZm9yIHlvdSBhdHRlbnRpb24uDQo+ID4+DQo+ID4+IFJlZ2FyZHMsDQo+
+ID4+IEpvYW8gUGludG8NCj4gPj4gLS0NCj4gPj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxp
+c3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSINCj4gaW4NCj4gPj4gdGhl
+IGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gPj4gTW9y
+ZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5m
+by5odG1sDQo+IA0KPiBSZWdhcmRzLA0KPiAtSm9hbw0K
