@@ -1,69 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35623 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750711AbbJPVQc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 16 Oct 2015 17:16:32 -0400
-Subject: [PATCH] PCI: Remove unnecessary re-read of SR-IOV offset/stride
- registers
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ben Shelton <benjamin.h.shelton@intel.com>,
-	linux-kernel@vger.kernel.org,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Date: Fri, 16 Oct 2015 16:16:28 -0500
-Message-ID: <20151016211628.31492.86258.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:51737 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751195AbbJTOwo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 10:52:44 -0400
+Subject: Re: pcie-designware build fails in ARM64
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	"jg1.han@samsung.com" <jg1.han@samsung.com>
+References: <56213393.8020606@synopsys.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1624ECFA@lhreml503-mbs>
+CC: Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56265538.40503@synopsys.com>
+Date: Tue, 20 Oct 2015 15:52:40 +0100
 MIME-Version: 1.0
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1624ECFA@lhreml503-mbs>
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously, we read PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE from the
-SR-IOV capability in pci_iov_set_numvfs() after changing PCI_SRIOV_NUM_VF,
-and we read them again in sriov_enable().  But sriov_init() always calls
-pci_iov_set_numvfs() before a successful return, and it caches the offset
-and stride values, so there's no need to read the capability again in
-sriov_enable().
+Hi Gabriele,
 
-Remove the PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE config reads from
-sriov_enable() and use the cached values from the pci_sriov structure.
+On 10/19/2015 8:04 AM, Gabriele Paoloni wrote:
+> Hi Joao
+> 
+>> -----Original Message-----
+>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
+>> On Behalf Of Joao Pinto
+>> Sent: 16 October 2015 18:28
+>> To: jg1.han@samsung.com
+>> Cc: Carlos Palminha; linux-pci@vger.kernel.org
+>> Subject: pcie-designware build fails in ARM64
+>>
+>> Dear Jingoo Han,
+>>
+>> I am trying to build pcie-designware for ARM64 but with no success. Did you
+>> ever
+>> tried to build the core driver in this platform?
+>>
+> 
+> Please look at "[PATCH v11 3/6] PCI: designware: Add ARM64 support"
+> And respective patchset submitted in the mailing list.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c |    9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+Thanks, it worked well!
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 0202ab0..9b52ad4 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -230,7 +230,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	int rc;
- 	int i, j;
- 	int nres;
--	u16 offset, stride, initial;
-+	u16 initial;
- 	struct resource *res;
- 	struct pci_dev *pdev;
- 	struct pci_sriov *iov = dev->sriov;
-@@ -253,9 +253,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	    (!(iov->cap & PCI_SRIOV_CAP_VFM) && (nr_virtfn > initial)))
- 		return -EINVAL;
- 
--	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &offset);
--	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &stride);
--	if (!offset || (nr_virtfn > 1 && !stride))
-+	if (!iov->offset || (nr_virtfn > 1 && !iov->stride))
- 		return -EIO;
- 
- 	nres = 0;
-@@ -270,9 +268,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 		return -ENOMEM;
- 	}
- 
--	iov->offset = offset;
--	iov->stride = stride;
--
- 	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
- 	if (bus > dev->bus->busn_res.end) {
- 		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
+> 
+> Regards
+> 
+> Gab
+> 
+>> Thanks you for you attention.
+>>
+>> Regards,
+>> Joao Pinto
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+Regards,
+-Joao
