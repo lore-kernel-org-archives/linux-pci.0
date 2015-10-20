@@ -1,64 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:42358 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751276AbbJIPHO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Oct 2015 11:07:14 -0400
-Date: Fri, 9 Oct 2015 17:07:10 +0200
-From: Andrew Lunn <andrew@lunn.ch>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Russell King <rmk+kernel@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 2/9] pci: mvebu: fix memory leaks and refcount leaks
-Message-ID: <20151009150710.GJ14688@lunn.ch>
-References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
- <E1ZiRIs-0004Id-AN@rmk-PC.arm.linux.org.uk>
- <20151009165240.3ba17ece@free-electrons.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:41638 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751071AbbJTUtg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 16:49:36 -0400
+Subject: Re: [PATCH v7 02/60] sparc/PCI: Use correct bus address to resource
+ offset
+To: Yinghai Lu <yinghai@kernel.org>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+ <1444340359-8011-3-git-send-email-yinghai@kernel.org>
+ <20151020195413.GH8224@localhost> <56269F0F.7000309@oracle.com>
+ <CAE9FiQUTnG_fw9Y5VkwO7BmgYeJqQOKAyDh4JESOkOuOvjMThQ@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+From: Khalid Aziz <khalid.aziz@oracle.com>
+Message-ID: <5626A8C0.1010409@oracle.com>
+Date: Tue, 20 Oct 2015 14:49:04 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151009165240.3ba17ece@free-electrons.com>
+In-Reply-To: <CAE9FiQUTnG_fw9Y5VkwO7BmgYeJqQOKAyDh4JESOkOuOvjMThQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 09, 2015 at 04:52:40PM +0200, Thomas Petazzoni wrote:
-> Russell,
-> 
-> On Sat, 03 Oct 2015 19:13:02 +0100, Russell King wrote:
-> 
-> > +	ret = devm_add_action(dev, mvebu_pcie_port_clk_put, port);
-> 
-> I didn't know about devm_add_action(). Definitely very useful for such
-> situations.
+On 10/20/2015 02:34 PM, Yinghai Lu wrote:
+> On Tue, Oct 20, 2015 at 1:07 PM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
+>>> I don't want to argue about pci_resource_to_user() right now, so I
+>>> guess you can just panic if the mem64 offset is different from the
+>>> mem32 offset.  But you should at least add a comment about why you're
+>>> doing that.  Otherwise it looks like you were just lazy.
+>
+> I had one version for that, but it has big change to __pci_mmap_make_offset_bus
+> for making pci_mmap_resource() working.
+> And took it for granted that MEM/MEM64 should have same offet.
+>
+>>
+>>
+>> I just hit this condition on a sparc platform where mem32 offset != mem64
+>> offset. We need to handle this case, and not just call panic. I had not seen
+>> this on 5 platforms and another 3 ldoms I had tested this on when I tested
+>> this code earlier. I have sent panic log to Yinghai separately.
+>
+> Did you get test result with updated patch2 and patch3?
 
-I was also surprised by this. Nice.
- 
-> > @@ -1052,10 +1086,12 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
-> >  		struct mvebu_pcie_port *port = &pcie->ports[i];
-> >  
-> >  		ret = mvebu_pcie_parse_port(pcie, port, child);
-> > -		if (ret < 0)
-> > +		if (ret < 0) {
-> > +			of_node_put(child);
-> >  			return ret;
-> > -		else if (ret == 0)
-> > +		} else if (ret == 0) {
-> >  			continue;
-> > +		}
-> 
-> This is not trivial. If I understand correctly,
-> for_each_available_child_of_node() will automatically release the
-> reference on the previous node and take the reference on the new one
-> before entering the loop code. So in the skipping case, we don't need
-> to release the reference as it will be done by the next iteration of
-> the loop, but in the error case, since we are unexpectedly breaking the
-> loop, we need to do it manually.
-> 
-> The sort of tricky thing that should be documented near
-> for_each_child_of_node(), since I believe a lot of code gets this
-> wrong.
+I should have it by the end of day today.
 
-Sounds like a good candidate for a coccinelle script. Maybe you could
-ask Julia Lawall?
+--
+Khalid
 
-    Andrew
