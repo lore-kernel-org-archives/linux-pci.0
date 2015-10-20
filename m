@@ -1,49 +1,127 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1444407723.17726.14.camel@oracle.com>
-Subject: Re: [PATCH v7 15/60] PCI: Restore pref MMIO allocation logic for
- host bridge without mmio64
-From: Khalid Aziz <khalid.aziz@oracle.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Fri, 09 Oct 2015 10:22:03 -0600
-In-Reply-To: <1444340359-8011-16-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-	 <1444340359-8011-16-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:35729 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753204AbbJTXEs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 19:04:48 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v6 0/5] PCI: Add support for PCI Enhanced Allocation "BARs"
+Date: Tue, 20 Oct 2015 16:04:37 -0700
+Message-Id: <1445382282-2396-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-10-08 at 14:38 -0700, Yinghai Lu wrote:
-> From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
-> resources), we change the logic for pref mmio allocation:
-> When bridge pref support mmio64, we will only put children pref
-> that support mmio64 into it, and will put children pref mmio32
-> into bridge's non-pref mmio32.
-> 
-> That could leave bridge pref bar not used when that pref bar is mmio64,
-> and children res only has mmio32.
-> Also could have allocation failure when non-pref mmio32 is not big
-> enough space for those children pref mmio32.
-> 
-> That is not rational when the host bridge does not 64bit mmio above 4g
-> at all.
-> 
-> The patch restore to old logic:
-> when host bridge does not have has_mem64, put children pref mmio64 and
-> pref mmio32 all under bridges pref bars.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+From: David Daney <david.daney@cavium.com>
 
-Tested on sparc platforms
+The original patches are from Sean O. Stalley. I made a few tweaks,
+but feel that it is substancially Sean's work, so I am keeping the
+patch set version numbering scheme going.
 
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com> 
+Tested on Cavium ThunderX system with 4 Root Complexes containing 50
+devices/bridges provisioned with EA.
+
+Here is Sean's description of the patches:
+
+PCI Enhanced Allocation is a new method of allocating MMIO & IO
+resources for PCI devices & bridges. It can be used instead
+of the traditional PCI method of using BARs.
+
+EA entries are hardware-initialized to a fixed address.
+Unlike BARs, regions described by EA are cannot be moved.
+Because of this, only devices which are permanently connected to
+the PCI bus can use EA. A removable PCI card must not use EA.
+
+This patchset adds support for using EA entries instead of BARs
+on Root Complex Integrated Endpoints.
+
+The Enhanced Allocation ECN is publicly available here:
+https://www.pcisig.com/specifications/conventional/ECN_Enhanced_Allocation_23_Oct_2014_Final.pdf
 
 
+Changes from V1:
+	- Use generic PCI resource claim functions (instead of EA-specific functions)
+	- Only add support for RCiEPs (instead of all devices).
+	- Removed some debugging messages leftover from early testing.
 
+Changes from V2 (By David Daney):
+	- Add ea_cap to struct pci_device, to aid in finding the EA capability.
+	- Factored EA entity decoding into a separate function.
+	- Add functions to find EA entities by BEI or Property.
+	- Add handling of EA provisioned bridges.
+	- Add handling of EA SRIOV BARs.
+	- Try to assign proper resource parent so that SRIOV device creation can occur.
+
+Changes from V3 (By David Daney):
+	- Discarded V3 changes and started over fresh based on Sean's V2.
+	- Add more support/checking for Entry Properties.
+	- Allow EA behind bridges.
+	- Rewrite some error messages.
+	- Add patch 3/5 to prevent resizing, and better handle
+          assigning, of fixed EA resources.
+	- Add patch 4/5 to handle EA provisioned SRIOV devices.
+	- Add patch 5/5 to handle EA provisioned bridges.
+
+Changes from V4 (By David Daney):
+	- Drop patch 5/5 to handle EA provisioned bridges.
+	- Drop cases for bridge resources in 2/5.
+	- Drop unnecessary fallback resource parent handling in 3/5
+	- Small code formatting improvements.
+
+Changes from V5: (By David Daney) cosmetic only, as requested by Bjorn Helgaas:
+	- Split previous 3/4 into two patches, which are now 1/5 and 2/5
+	- Improve indentation of register definitions.
+	- Renamed PCI_EA_P_VIRT_MEM* to PCI_EA_P_VF_MEM*
+	- Remove use of BIT() macro from register definitions.
+	- Changed debug messages when probing EA entries to be like this:
+.
+.
+.
+pci 0002:01:00.0: [177d:a01e] type 00 class 0x020000
+pci 0002:01:00.0: EA - BEI  0, Prop 0x00: [mem 0x843000000000-0x84303fffffff 64bit]
+pci 0002:01:00.0: EA - BEI  4, Prop 0x00: [mem 0x843060000000-0x8430600fffff 64bit]
+pci 0002:01:00.0: EA - BEI  9, Prop 0x04: [mem 0x8430a0000000-0x8430a01fffff 64bit]
+pci 0002:01:00.0: EA - BEI 13, Prop 0x04: [mem 0x8430e0000000-0x8430e01fffff 64bit]
+pci 0002:01:00.0: VF(n) BAR0 space: [mem 0x8430a0000000-0x8430afffffff 64bit] (contains BAR0 for 128 VFs)
+pci 0002:01:00.0: VF(n) BAR4 space: [mem 0x8430e0000000-0x8430efffffff 64bit] (contains BAR4 for 128 VFs)
+.
+.
+.
+pci 0004:21:00.0: [1a03:2000] type 00 class 0x030000
+pci 0004:21:00.0: reg 0x10: [mem 0x881010000000-0x881010ffffff]
+pci 0004:21:00.0: reg 0x14: [mem 0x881011000000-0x88101101ffff]
+pci 0004:21:00.0: reg 0x18: [io  0x0000-0x007f]
+pci 0004:21:00.0: supports D1 D2
+.
+.
+.
+
+BEI and Prop values are represented as decimal and hexadecimal
+respectively to match the EA specification.
+
+David Daney (3):
+  PCI: Handle IORESOURCE_PCI_FIXED when sizing resources.
+  PCI: Handle IORESOURCE_PCI_FIXED when assigning resources.
+  PCI: Handle Enhanced Allocation (EA) capability for SRIOV devices.
+
+Sean O. Stalley (2):
+  PCI: Add Enhanced Allocation register entries
+  PCI: Add support for Enhanced Allocation devices
+
+ drivers/pci/iov.c             |  11 ++-
+ drivers/pci/pci.c             | 183 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h             |   1 +
+ drivers/pci/probe.c           |   3 +
+ drivers/pci/setup-bus.c       |  50 +++++++++++-
+ include/uapi/linux/pci_regs.h |  44 +++++++++-
+ 6 files changed, 286 insertions(+), 6 deletions(-)
+
+-- 
+1.9.1
 
