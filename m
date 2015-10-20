@@ -1,91 +1,272 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
+Date: Tue, 20 Oct 2015 08:48:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	qiujiang <qiujiang@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"Wangkefeng (Kevin)" <wangkefeng.wang@huawei.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: Re: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
-Date: Tue, 13 Oct 2015 13:18:33 +0200
-Message-ID: <5549505.Kpo7ci0v8h@wuerfel>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E162428B1@lhreml503-mbs>
-References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com> <561CA5AF.2080300@hisilicon.com> <EE11001F9E5DDD47B7634E2F8A612F2E162428B1@lhreml503-mbs>
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v5 2/4] PCI: Add support for Enhanced Allocation devices
+Message-ID: <20151020134759.GC8224@localhost>
+References: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
+ <1444175438-7443-3-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444175438-7443-3-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 13 October 2015 06:58:42 Gabriele Paoloni wrote:
+On Tue, Oct 06, 2015 at 04:50:36PM -0700, David Daney wrote:
+> From: "Sean O. Stalley" <sean.stalley@intel.com>
 > 
-> > >> +
-> > >> +static int __init hisi_pcie_init(void)
-> > >> +{
-> > >> +	return platform_driver_probe(&hisi_pcie_driver, hisi_pcie_probe);
-> > >> +}
-> > >> +subsys_initcall(hisi_pcie_init);
-> > >
-> > > Can you use module_platform_driver() or module_platform_driver_probe()
-> > > here instead of the subsys_initcall()?  No, I don't really know what
-> > > the difference between module_platform_driver() and
-> > > module_platform_driver_probe() is, sorry :)
-
-module_platform_driver_probe() will only call the probe function once
-(and fail in case of -EPROBE_DEFER), while module_platform_driver()
-installs the platform driver in a way that the device can be bound
-and unbound at any point.
-
-> > In fact, I used module_platform_driver_probe in previous version, but
-> > A PCIe VGA card of HiSilicon will use Hip05 PCIe host, so we modified
-> > module_platform_driver_probe to subsys_initcall which will be called
-> > before module_platform_driver_probe.
-> > 
-> > We will upstream the driver of above PCIe VGA card soon.
-
-I don't see a reason why a VGA driver would need the PCI host to be
-probed this early, unless it is the only usable console in the system.
-
-> Hi Bjorn, firstly many thanks for looking at this.
+> Add support for devices using Enhanced Allocation entries instead of BARs.
+> This patch allows the kernel to parse the EA Extended Capability structure
+> in PCI configspace and claim the BAR-equivalent resources.
 > 
-> About this last bit the reason why we use subsys_initcall() is that
-> our host bridge is embedded in the SoC and as such is not hot-pluggable
-> for instance see:
-> http://lxr.free-electrons.com/source/Documentation/driver-model/platform.txt#L59
+> Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+> [david.daney@cavium.com: Add more support/checking for Entry Properties,
+> allow EA behind bridges, rewrite some error messages.]
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+>  drivers/pci/pci.c   | 182 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.h   |   1 +
+>  drivers/pci/probe.c |   3 +
+>  3 files changed, 186 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 6a9a111..30a90d1 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2148,6 +2148,188 @@ void pci_pm_init(struct pci_dev *dev)
+>  	}
+>  }
+>  
+> +static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
+> +{
+> +	unsigned long flags = IORESOURCE_PCI_FIXED;
+> +
+> +	switch (prop) {
+> +	case PCI_EA_P_MEM:
+> +	case PCI_EA_P_VIRT_MEM:
+> +		flags |= IORESOURCE_MEM;
+> +		break;
+> +	case PCI_EA_P_MEM_PREFETCH:
+> +	case PCI_EA_P_VIRT_MEM_PREFETCH:
+> +		flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
+> +		break;
+> +	case PCI_EA_P_IO:
+> +		flags |= IORESOURCE_IO;
+> +		break;
+> +	default:
+> +		return 0;
+> +	}
+> +
+> +	return flags;
+> +}
+> +
+> +static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei,
+> +					    u8 prop)
+> +{
+> +	if (bei <= PCI_EA_BEI_BAR5 && prop <= PCI_EA_P_IO)
+> +		return &dev->resource[bei];
+> +	else if (bei == PCI_EA_BEI_ROM)
+> +		return &dev->resource[PCI_ROM_RESOURCE];
+> +	else
+> +		return NULL;
+> +}
+> +
+> +/* Read an Enhanced Allocation (EA) entry */
+> +static int pci_ea_read(struct pci_dev *dev, int offset)
+> +{
+> +	struct resource *res;
+> +	int ent_offset = offset;
+> +	int ent_size;
+> +	resource_size_t start;
+> +	resource_size_t end;
+> +	unsigned long flags;
+> +	u32 dw0;
+> +	u32 base;
+> +	u32 max_offset;
+> +	u8 prop;
+> +	bool support_64 = (sizeof(resource_size_t) >= 8);
+> +
+> +	pci_read_config_dword(dev, ent_offset, &dw0);
+> +	ent_offset += 4;
+> +
+> +	/* Entry size field indicates DWORDs after 1st */
+> +	ent_size = ((dw0 & PCI_EA_ES) + 1) << 2;
+> +
+> +	if (!(dw0 & PCI_EA_ENABLE)) /* Entry not enabled */
+> +		goto out;
+> +
+> +	prop = PCI_EA_PP(dw0);
+> +	/*
+> +	 * If the Property is in the reserved range, try the Secondary
+> +	 * Property instead.
+> +	 */
+> +	if (prop > PCI_EA_P_BRIDGE_IO && prop < PCI_EA_P_MEM_RESERVED)
+> +		prop = PCI_EA_SP(dw0);
+> +	if (prop > PCI_EA_P_BRIDGE_IO)
+> +		goto out;
+> +
+> +	res = pci_ea_get_resource(dev, PCI_EA_BEI(dw0), prop);
+> +	if (!res) {
+> +		dev_err(&dev->dev, "Unsupported EA entry BEI: %u\n",
+> +			PCI_EA_BEI(dw0));
+> +		goto out;
+> +	}
+> +
+> +	flags = pci_ea_set_flags(dev, prop);
+> +	if (!flags) {
+> +		dev_err(&dev->dev, "Unsupported EA properties: %u\n", prop);
+> +		goto out;
+> +	}
+> +
+> +	/* Read Base */
+> +	pci_read_config_dword(dev, ent_offset, &base);
+> +	start = (base & PCI_EA_FIELD_MASK);
+> +	ent_offset += 4;
+> +
+> +	/* Read MaxOffset */
+> +	pci_read_config_dword(dev, ent_offset, &max_offset);
+> +	ent_offset += 4;
+> +
+> +	/* Read Base MSBs (if 64-bit entry) */
+> +	if (base & PCI_EA_IS_64) {
+> +		u32 base_upper;
+> +
+> +		pci_read_config_dword(dev, ent_offset, &base_upper);
+> +		ent_offset += 4;
+> +
+> +		flags |= IORESOURCE_MEM_64;
+> +
+> +		/* entry starts above 32-bit boundary, can't use */
+> +		if (!support_64 && base_upper)
+> +			goto out;
+> +
+> +		if (support_64)
+> +			start |= ((u64)base_upper << 32);
+> +	}
+> +
+> +	dev_dbg(&dev->dev,
+> +		"EA (%u,%u) start = %pa\n", PCI_EA_BEI(dw0), prop, &start);
+> +
+> +	end = start + (max_offset | 0x03);
+> +
+> +	/* Read MaxOffset MSBs (if 64-bit entry) */
+> +	if (max_offset & PCI_EA_IS_64) {
+> +		u32 max_offset_upper;
+> +
+> +		pci_read_config_dword(dev, ent_offset, &max_offset_upper);
+> +		ent_offset += 4;
+> +
+> +		flags |= IORESOURCE_MEM_64;
+> +
+> +		/* entry too big, can't use */
+> +		if (!support_64 && max_offset_upper)
+> +			goto out;
+> +
+> +		if (support_64)
+> +			end += ((u64)max_offset_upper << 32);
+> +	}
+> +
+> +	dev_dbg(&dev->dev,
+> +		"EA (%u,%u) end = %pa\n", PCI_EA_BEI(dw0), prop, &end);
+> +
+> +	if (end < start) {
+> +		dev_err(&dev->dev, "EA Entry crosses address boundary\n");
+> +		goto out;
+> +	}
+> +
+> +	if (ent_size != ent_offset - offset) {
+> +		dev_err(&dev->dev,
+> +			"EA Entry Size (%d) does not match length read (%d)\n",
+> +			ent_size, ent_offset - offset);
+> +		goto out;
+> +	}
+> +
+> +	res->name = pci_name(dev);
+> +	res->start = start;
+> +	res->end = end;
+> +	res->flags = flags;
 
-We should still be able to build the driver as a loadable module,
-even if you don't do that on your own kernels. 
+This is similar to reading a BAR from a normal device; can you print what
+we found so it looks similar in dmesg, e.g., similar to what
+__pci_read_base() does?  Note that "dev_dbg" is not equivalent to
+dev_printk(KERN_DEBUG).  I want the output in dmesg all the time, without
+having to enable something via dyndbg.
 
-This doesn't mean that it has to be module_platform_driver, subsys_initcall
-will also work in a loadable module, it just won't be as early. However,
-we should try to come up with a consistent approach for all PCI host drivers,
-I don't see any reason for hisi to be different from the others here.
-
-> Our approach is also used by Exynos:
-> http://lxr.free-electrons.com/source/drivers/pci/host/pci-exynos.c#L644
-
-Maybe we should change that too.
-
-	Arnd
+> +
+> +out:
+> +	return offset + ent_size;
+> +}
+> +
+> +/* Enhanced Allocation Initalization */
+> +void pci_ea_init(struct pci_dev *dev)
+> +{
+> +	int ea;
+> +	u8 num_ent;
+> +	int offset;
+> +	int i;
+> +
+> +	/* find PCI EA capability in list */
+> +	ea = pci_find_capability(dev, PCI_CAP_ID_EA);
+> +	if (!ea)
+> +		return;
+> +
+> +	/* determine the number of entries */
+> +	pci_bus_read_config_byte(dev->bus, dev->devfn, ea + PCI_EA_NUM_ENT,
+> +					&num_ent);
+> +	num_ent &= PCI_EA_NUM_ENT_MASK;
+> +
+> +	offset = ea + PCI_EA_FIRST_ENT;
+> +
+> +	/* Skip DWORD 2 for type 1 functions */
+> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+> +		offset += 4;
+> +
+> +	/* parse each EA entry */
+> +	for (i = 0; i < num_ent; ++i)
+> +		offset = pci_ea_read(dev, offset);
+> +}
+> +
+>  static void pci_add_saved_cap(struct pci_dev *pci_dev,
+>  	struct pci_cap_saved_state *new_cap)
+>  {
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 24ba9dc..a160733 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -78,6 +78,7 @@ bool pci_dev_keep_suspended(struct pci_dev *dev);
+>  void pci_config_pm_runtime_get(struct pci_dev *dev);
+>  void pci_config_pm_runtime_put(struct pci_dev *dev);
+>  void pci_pm_init(struct pci_dev *dev);
+> +void pci_ea_init(struct pci_dev *dev);
+>  void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+>  void pci_free_cap_save_buffers(struct pci_dev *dev);
+>  
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 8361d27..4c4af78 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1597,6 +1597,9 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+>  
+>  static void pci_init_capabilities(struct pci_dev *dev)
+>  {
+> +	/* Enhanced Allocation */
+> +	pci_ea_init(dev);
+> +
+>  	/* MSI/MSI-X list */
+>  	pci_msi_init_pci_dev(dev);
+>  
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
