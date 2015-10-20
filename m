@@ -1,56 +1,163 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f171.google.com ([209.85.220.171]:36391 "EHLO
-	mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751643AbbJLPt0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 11:49:26 -0400
-Received: by qkht68 with SMTP id t68so59526801qkh.3
-        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2015 08:49:26 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: pratyush.anand@gmail.com, m-karicheri2@ti.com,
-	l.stach@pengutronix.de, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH v3 3/3] PCI: imx6: Use the common LTSSM state mask
-Date: Mon, 12 Oct 2015 12:46:48 -0300
-Message-Id: <1444664808-16445-3-git-send-email-festevam@gmail.com>
-In-Reply-To: <1444664808-16445-1-git-send-email-festevam@gmail.com>
-References: <1444664808-16445-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 20 Oct 2015 16:57:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
+Message-ID: <20151020215714.GI8224@localhost>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+ <1444340359-8011-4-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444340359-8011-4-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+On Thu, Oct 08, 2015 at 02:38:22PM -0700, Yinghai Lu wrote:
+> We register regions for legacy and iommu and all have open code.
+> 
+> Unify them to pci_register_region() and call it accordingly.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  arch/sparc/kernel/pci_common.c | 83 +++++++++++++++++++-----------------------
+>  1 file changed, 37 insertions(+), 46 deletions(-)
+> 
+> diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+> index 28e976a..c4b6989 100644
+> --- a/arch/sparc/kernel/pci_common.c
+> +++ b/arch/sparc/kernel/pci_common.c
+> @@ -328,41 +328,49 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm)
+>  	}
+>  }
+>  
+> -static void pci_register_legacy_regions(struct resource *io_res,
+> -					struct resource *mem_res)
+> +static void pci_register_region(struct pci_pbm_info *pbm, const char *name,
+> +				resource_size_t rstart, resource_size_t size)
+>  {
+> -	struct resource *p;
+> +	struct resource *res, *conflict;
+> +	struct resource *mem_res = &pbm->mem_space;
+> +	resource_size_t offset = pbm->mem_offset;
+> +	resource_size_t mem_rstart, mem_rend;
+> +	resource_size_t rend = rstart + size - 1UL;
+>  
+> -	/* VGA Video RAM. */
+> -	p = kzalloc(sizeof(*p), GFP_KERNEL);
+> -	if (!p)
+> +	if (!mem_res->flags)
+>  		return;
+>  
+> -	p->name = "Video RAM area";
+> -	p->start = mem_res->start + 0xa0000UL;
+> -	p->end = p->start + 0x1ffffUL;
+> -	p->flags = IORESOURCE_BUSY;
+> -	request_resource(mem_res, p);
+> +	mem_rstart = mem_res->start - offset;
+> +	mem_rend = mem_res->end - offset;
 
-Use the common LTSSM_STATE_MASK instead of a local definition.
+This is essentially doing pcibios_bus_to_resource(), except in an
+unnecessarily arch-dependent way.  Can you rework it to use
+pcibios_bus_to_resource()?  I think you'll have to do
+pci_register_legacy_regions() in pci_scan_one_pbm() instead of in
+pci_determine_mem_io_space(), so that you have a struct pci_bus to
+use, but your next patch does that anyway.
 
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
----
-Changes since v2:
-- Newly introduced in this version.
-
- drivers/pci/host/pci-imx6.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 4e7b577..4c788d27 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -55,7 +55,6 @@ struct imx6_pcie {
- #define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
- #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
- #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
--#define PCIE_PHY_DEBUG_R0_LTSSM_MASK		(0x3f << 0)
- #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
- #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
- #define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
-@@ -508,7 +507,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
- 	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
- 		return 0;
- 
--	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != LTSSM_STATE_RCVRY_LOCK)
-+	if ((debug_r0 & LTSSM_STATE_MASK) != LTSSM_STATE_RCVRY_LOCK)
- 		return 0;
- 
- 	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
--- 
-1.9.1
-
+>  
+> -	p = kzalloc(sizeof(*p), GFP_KERNEL);
+> -	if (!p)
+> +	/* contain checking */
+> +	if (!(mem_rstart <= rstart && mem_rend >= rend))
+>  		return;
+>  
+> -	p->name = "System ROM";
+> -	p->start = mem_res->start + 0xf0000UL;
+> -	p->end = p->start + 0xffffUL;
+> -	p->flags = IORESOURCE_BUSY;
+> -	request_resource(mem_res, p);
+> -
+> -	p = kzalloc(sizeof(*p), GFP_KERNEL);
+> -	if (!p)
+> +	res = kzalloc(sizeof(*res), GFP_KERNEL);
+> +	if (!res)
+>  		return;
+>  
+> -	p->name = "Video ROM";
+> -	p->start = mem_res->start + 0xc0000UL;
+> -	p->end = p->start + 0x7fffUL;
+> -	p->flags = IORESOURCE_BUSY;
+> -	request_resource(mem_res, p);
+> +	res->name = name;
+> +	res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+> +	res->start = rstart + offset;
+> +	res->end = rend + offset;
+> +	conflict = request_resource_conflict(mem_res, res);
+> +	if (conflict) {
+> +		printk(KERN_DEBUG "PCI: %s can't claim %s %pR: address conflict with %s %pR\n",
+> +			pbm->name, res->name, res, conflict->name, conflict);
+> +		kfree(res);
+> +	}
+> +}
+> +
+> +static void pci_register_legacy_regions(struct pci_pbm_info *pbm)
+> +{
+> +	/* VGA Video RAM. */
+> +	pci_register_region(pbm, "Video RAM area", 0xa0000UL, 0x20000UL);
+> +
+> +	pci_register_region(pbm, "System ROM",     0xf0000UL, 0x10000UL);
+> +
+> +	pci_register_region(pbm, "Video ROM",      0xc0000UL,  0x8000UL);
+>  }
+>  
+>  static void pci_register_iommu_region(struct pci_pbm_info *pbm)
+> @@ -370,24 +378,8 @@ static void pci_register_iommu_region(struct pci_pbm_info *pbm)
+>  	const u32 *vdma = of_get_property(pbm->op->dev.of_node, "virtual-dma",
+>  					  NULL);
+>  
+> -	if (vdma) {
+> -		struct resource *rp = kzalloc(sizeof(*rp), GFP_KERNEL);
+> -
+> -		if (!rp) {
+> -			pr_info("%s: Cannot allocate IOMMU resource.\n",
+> -				pbm->name);
+> -			return;
+> -		}
+> -		rp->name = "IOMMU";
+> -		rp->start = pbm->mem_space.start + (unsigned long) vdma[0];
+> -		rp->end = rp->start + (unsigned long) vdma[1] - 1UL;
+> -		rp->flags = IORESOURCE_BUSY;
+> -		if (request_resource(&pbm->mem_space, rp)) {
+> -			pr_info("%s: Unable to request IOMMU resource.\n",
+> -				pbm->name);
+> -			kfree(rp);
+> -		}
+> -	}
+> +	if (vdma)
+> +		pci_register_region(pbm, "IOMMU", vdma[0], vdma[1]);
+>  }
+>  
+>  void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+> @@ -506,8 +498,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+>  	if (pbm->mem64_space.flags)
+>  		request_resource(&iomem_resource, &pbm->mem64_space);
+>  
+> -	pci_register_legacy_regions(&pbm->io_space,
+> -				    &pbm->mem_space);
+> +	pci_register_legacy_regions(pbm);
+>  	pci_register_iommu_region(pbm);
+>  }
+>  
+> -- 
+> 1.8.4.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
