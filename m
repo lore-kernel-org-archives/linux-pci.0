@@ -1,79 +1,123 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Liu Jiang <jiang.liu@linux.intel.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-Subject: [Patch v7 0/7] Consolidate ACPI PCI root common code into ACPI core
-Date: Wed, 14 Oct 2015 14:29:35 +0800
-Message-Id: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+Date: Tue, 20 Oct 2015 09:59:19 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Alex Shi <lkml.alex@gmail.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	device-tree <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 2/3] arm64: Juno: Add support for the PCIe host bridge
+ on Juno R1
+Message-ID: <20151020085919.GZ3394@e106497-lin.cambridge.arm.com>
+References: <1445008929-32267-1-git-send-email-Liviu.Dudau@arm.com>
+ <1445008929-32267-3-git-send-email-Liviu.Dudau@arm.com>
+ <CAGjg+kGhTPXxYS84DTgwhHwqct2Enz_L1Cxsx+QR+tvyU6JzLQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAGjg+kGhTPXxYS84DTgwhHwqct2Enz_L1Cxsx+QR+tvyU6JzLQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Liu Jiang <jiang.liu@linux.intel.com>
+On Tue, Oct 20, 2015 at 11:33:13AM +0800, Alex Shi wrote:
+>    Is there any concern to merge the juno r1 pcie DT part into upstream?
 
-This patch set consolidates common code to support ACPI PCI root on x86
-and IA64 platforms into ACPI core, to reproduce duplicated code and
-simplify maintenance. And a patch set based on previous version to support
-ACPI based PCIe host bridge on ARM64 has been posted at:
-https://lkml.org/lkml/2015/5/26/207
+Not that I've heard of. I've asked Catalin and Will if they need a pull request to get
+the patch into the arm64 tree but I haven't got an answer yet.
 
-It's based on latest mainstream kernel. It passes Fengguang's 0day test
-suite and has been tested on two IA64 platforms and one x86 platform.
+Catalin, Will, are you OK with pulling this patch into arm64 and if so do you want
+me to send a different pull request or are you happy to fetch it from the git tree
 
-V6->V7:
-1) Improve commit message according to Bjorn's suggestion.
-2) Move arch specific logic(code) from ACPI core into arch code
-   according to Bjorn's review comments.
+git://linux-arm.org/linux-ld.git for-upstream/juno-pcie.
 
-V5->V6:
-1) Patch 5 to reset domain number to 0 when pci_ignore_seg is set
-2) Remove parameter segment and node from function acpi_pci_root_create(),
-   as suggested by Lorenzo and Bjorn.
-V4-V5:
-1) As suggested by Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, do not
-   introduce "struct pci_controller" into generic drivers/acpi/pci_root.c,
-   so ARM64 doesn't need to define a useless structure. And it simplifies
-   code a little too.
+Best regards,
+Liviu
 
-V3->V4:
-1) Add patch[05/08] support solve building issue on ARM64
-2) Solve an implicitly pointer cast issue.
-3) Rebase to latest mainstream kernel
-
-V2->V3:
-1. Move memory allocation/free from ACPI core into arch
-2. Kill the field 'segment' in struct pci_root_info on x86
-
-Thanks!
-Gerry
-
-Jiang Liu (7):
-  ACPI/PCI: Enhance ACPI core to support sparse IO space
-  ia64/PCI/ACPI: Use common ACPI resource parsing interface for host
-    bridge
-  ia64/PCI: Use common struct resource_entry to replace struct
-    iospace_resource
-  PCI/ACPI: Add interface acpi_pci_root_create()
-  ACPI, PCI: Reset acpi_root_dev->domain to 0 when pci_ignore_seg is
-    set
-  x86/PCI/ACPI: Use common interface to support PCI host bridge
-  ia64/PCI/ACPI: Use common interface to support PCI host bridge
-
- arch/ia64/include/asm/pci.h |    5 -
- arch/ia64/pci/pci.c         |  368 ++++++++++++-------------------------------
- arch/x86/pci/acpi.c         |  296 +++++++++++-----------------------
- drivers/acpi/pci_root.c     |  204 ++++++++++++++++++++++++
- drivers/acpi/resource.c     |    9 +-
- include/linux/ioport.h      |    1 +
- include/linux/pci-acpi.h    |   24 +++
- 7 files changed, 423 insertions(+), 484 deletions(-)
+>    On Fri, Oct 16, 2015 at 11:22 PM, Liviu Dudau <[1]Liviu.Dudau@arm.com> wrote:
+> 
+>      Juno R1 board sports a functional PCIe host bridge that is
+>      compliant with the SBSA standard found [1] here. With the right
+>      firmware that initialises the XpressRICH3 controller one can
+>      use the generic Host Bridge driver to use the PCIe hardware.
+> 
+>      Signed-off-by: Liviu Dudau <[2]Liviu.Dudau@arm.com>
+>      Acked-by: Mark Rutland <[3]mark.rutland@arm.com>
+> 
+>      [1] [4]http://infocenter.arm.com/help/topic/com.arm.doc.den0029a/
+>      ---
+>       arch/arm64/boot/dts/arm/juno-r1.dts | 20 ++++++++++++++++++++
+>       1 file changed, 20 insertions(+)
+> 
+>      diff --git a/arch/arm64/boot/dts/arm/juno-r1.dts b/arch/arm64/boot/dts/arm/juno-r1.dts
+>      index c627511..a25964d 100644
+>      --- a/arch/arm64/boot/dts/arm/juno-r1.dts
+>      +++ b/arch/arm64/boot/dts/arm/juno-r1.dts
+>      @@ -109,6 +109,26 @@
+> 
+>              #include "juno-base.dtsi"
+> 
+>      +       pcie-controller@40000000 {
+>      +               compatible = "arm,juno-r1-pcie", "plda,xpressrich3-axi", "pci-host-ecam-generic";
+>      +               device_type = "pci";
+>      +               reg = <0 0x40000000 0 0x10000000>;      /* ECAM config space */
+>      +               bus-range = <0 255>;
+>      +               linux,pci-domain = <0>;
+>      +               #address-cells = <3>;
+>      +               #size-cells = <2>;
+>      +               dma-coherent;
+>      +               ranges = <0x01000000 0x00 0x5f800000 0x00 0x5f800000 0x0 0x00800000>,
+>      +                        <0x02000000 0x00 0x50000000 0x00 0x50000000 0x0 0x08000000>,
+>      +                        <0x42000000 0x40 0x00000000 0x40 0x00000000 0x1 0x00000000>;
+>      +               #interrupt-cells = <1>;
+>      +               interrupt-map-mask = <0 0 0 7>;
+>      +               interrupt-map = <0 0 0 1 &gic 0 0 0 136 4>,
+>      +                               <0 0 0 2 &gic 0 0 0 137 4>,
+>      +                               <0 0 0 3 &gic 0 0 0 138 4>,
+>      +                               <0 0 0 4 &gic 0 0 0 139 4>;
+>      +               msi-parent = <&v2m_0>;
+>      +       };
+>       };
+> 
+>       &memtimer {
+>      --
+>      2.6.0
+> 
+>      --
+>      To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>      the body of a message to [5]majordomo@vger.kernel.org
+>      More majordomo info at  [6]http://vger.kernel.org/majordomo-info.html
+>      Please read the FAQ at  [7]http://www.tux.org/lkml/
+> 
+>    --
+>    Thanks
+>        Alex
+> 
+> References
+> 
+>    Visible links
+>    1. mailto:Liviu.Dudau@arm.com
+>    2. mailto:Liviu.Dudau@arm.com
+>    3. mailto:mark.rutland@arm.com
+>    4. http://infocenter.arm.com/help/topic/com.arm.doc.den0029a/
+>    5. mailto:majordomo@vger.kernel.org
+>    6. http://vger.kernel.org/majordomo-info.html
+>    7. http://www.tux.org/lkml/
 
 -- 
-1.7.10.4
-
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
