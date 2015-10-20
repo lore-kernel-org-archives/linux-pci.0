@@ -1,49 +1,207 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37455 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755117AbbJ1Rvu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2015 13:51:50 -0400
-Received: from [10.228.68.96] (rrcs-67-52-130-30.west.biz.rr.com [67.52.130.30])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: okaya@smtp.codeaurora.org)
-	by smtp.codeaurora.org (Postfix) with ESMTPSA id 3F716140E9D
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 17:51:49 +0000 (UTC)
-To: linux-pci@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Subject: ECRC and Max Read Request Size
-Message-ID: <56310B34.6000102@codeaurora.org>
-Date: Wed, 28 Oct 2015 13:51:48 -0400
+Received: from mail.kernel.org ([198.145.29.136]:32947 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751867AbbJTQmp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 20 Oct 2015 12:42:45 -0400
+Date: Tue, 20 Oct 2015 11:42:35 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 01/60] sparc/PCI: Add mem64 resource parsing for root
+ bus
+Message-ID: <20151020164235.GF8224@localhost>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+ <1444340359-8011-2-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444340359-8011-2-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm seeing two problems with the current PCI framework when it comes to 
-end-to-end CRC (ECRC) and Max Read Request Size.
+On Thu, Oct 08, 2015 at 02:38:20PM -0700, Yinghai Lu wrote:
+> Found "no compatible bridge window" warning in boot log from T5-8.
+> 
+> pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
+> 
+> That resource is above 4G, but does not get offset correctly as
+> root bus only report io and mem32.
+> 
+> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+> pci_bus 0000:00: root bus resource [bus 00-77]
+> 
+> Add mem64 handling in pci_common for sparc, so we can have 64bit resource
+> registered for root bus at first.
+> 
+> After patch, will have:
+> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+> pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
+> pci_bus 0000:00: root bus resource [bus 00-77]
+> 
+> -v2: mem64_space should use mem_space.start as offset.
+> -v3: add IORESOURCE_MEM_64 flag
+> -v4: set name for mem64_space, otherwise /proc/iomem will have <bad> for name
+> 
+> Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+> Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+> Reported-by: David Ahern <david.ahern@oracle.com>
+> Tested-by: David Ahern <david.ahern@oracle.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+>  arch/sparc/kernel/pci.c        |    7 ++++++-
+>  arch/sparc/kernel/pci_common.c |   17 +++++++++++++++--
+>  arch/sparc/kernel/pci_impl.h   |    1 +
+>  3 files changed, 22 insertions(+), 3 deletions(-)
+> ---
+>  arch/sparc/kernel/pci.c        |  7 ++++++-
+>  arch/sparc/kernel/pci_common.c | 17 +++++++++++++++--
+>  arch/sparc/kernel/pci_impl.h   |  1 +
+>  3 files changed, 22 insertions(+), 3 deletions(-)
 
-The problem with ECRC is that it blindly enables ECRC generation on 
-devices without checking if it is supported by the entire bus with 
-ECRC=on option.
+Applied with Khalid's tested-by to pci/resource for v4.4 as follows.
+I cleaned up the changelog, URL, and diffstat for you.
 
-ECRC check can be enabled on all devices but ECRC generation on the root 
-complex and switches needs to be set only if all devices support ECRC 
-checking.
+We still need some unification of pci_parse_of_flags() (powerpc and
+sparc versions), of_bus_pci_get_flags() (two sparc versions and a
+generic version), and pci_determine_mem_io_space() (sparc version).
+All of these decode basically the same thing but in different ways.
 
-I'm thinking of making changes in this area to cover this gap with 
-ECRC=safe option.
+Bjorn
 
-The other problem I'm seeing is about the maximum read request size. If 
-I choose the PCI bus performance mode, maximum read request size is 
-being limited to the maximum payload size.
 
-I'd like to add a new mode where I can have bigger read request size 
-than the maximum payload size.
+commit 7ed9b592adee90a03e7212c097961909eda32f80
+Author: Yinghai Lu <yinghai@kernel.org>
+Date:   Tue Oct 20 11:36:53 2015 -0500
 
-Opinions?
+    sparc/PCI: Add mem64 resource parsing for root bus
+    
+    David reported that a T5-8 sparc system failed to boot with:
+    
+      pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+      pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+      pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+      pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
+    
+    Note that we don't know about a host bridge aperture that contains
+    BAR 15.  OF does report a MEM64 aperture, but before this patch,
+    pci_determine_mem_io_space() ignored it.
+    
+    Add support for host bridge apertures with 64-bit PCI addresses.  Also
+    set IORESOURCE_MEM_64 for PCI device and bridge resources in PCI 64-bit
+    memory space.
+    
+    Sparc doesn't actually print the device and bridge resources, but after
+    this patch, we should have the equivalent of this:
+    
+      pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+      pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+      pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+      pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
+      pci 0000:00:01.0:   bridge window [mem 0x800100000000-0x8004afffffff 64bit pref]
+    
+    [bhelgaas: changelog, URL to David's report]
+    Fixes: d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+    Link: http://lkml.kernel.org/r/5514391F.2030300@oracle.com
+    Reported-by: David Ahern <david.ahern@oracle.com>
+    Tested-by: David Ahern <david.ahern@oracle.com>
+    Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index b91d7f1..badf095 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -185,8 +185,10 @@ static unsigned long pci_parse_of_flags(u32 addr0)
+ 
+ 	if (addr0 & 0x02000000) {
+ 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
+-		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
++		if (addr0 & 0x01000000)
++			flags |= IORESOURCE_MEM_64
++				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		if (addr0 & 0x40000000)
+ 			flags |= IORESOURCE_PREFETCH
+ 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
+@@ -655,6 +657,9 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 				pbm->io_space.start);
+ 	pci_add_resource_offset(&resources, &pbm->mem_space,
+ 				pbm->mem_space.start);
++	if (pbm->mem64_space.flags)
++		pci_add_resource_offset(&resources, &pbm->mem64_space,
++					pbm->mem_space.start);
+ 	pbm->busn.start = pbm->pci_first_busno;
+ 	pbm->busn.end	= pbm->pci_last_busno;
+ 	pbm->busn.flags	= IORESOURCE_BUS;
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 944a065..33524c1 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -406,6 +406,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 	}
+ 
+ 	num_pbm_ranges = i / sizeof(*pbm_ranges);
++	memset(&pbm->mem64_space, 0, sizeof(struct resource));
+ 
+ 	for (i = 0; i < num_pbm_ranges; i++) {
+ 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
+@@ -451,7 +452,12 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 			break;
+ 
+ 		case 3:
+-			/* XXX 64-bit MEM handling XXX */
++			/* 64-bit MEM handling */
++			pbm->mem64_space.start = a;
++			pbm->mem64_space.end = a + size - 1UL;
++			pbm->mem64_space.flags = IORESOURCE_MEM;
++			saw_mem = 1;
++			break;
+ 
+ 		default:
+ 			break;
+@@ -465,15 +471,22 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 		prom_halt();
+ 	}
+ 
+-	printk("%s: PCI IO[%llx] MEM[%llx]\n",
++	printk("%s: PCI IO[%llx] MEM[%llx]",
+ 	       pbm->name,
+ 	       pbm->io_space.start,
+ 	       pbm->mem_space.start);
++	if (pbm->mem64_space.flags)
++		printk(" MEM64[%llx]",
++		       pbm->mem64_space.start);
++	printk("\n");
+ 
+ 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
++	pbm->mem64_space.name = pbm->name;
+ 
+ 	request_resource(&ioport_resource, &pbm->io_space);
+ 	request_resource(&iomem_resource, &pbm->mem_space);
++	if (pbm->mem64_space.flags)
++		request_resource(&iomem_resource, &pbm->mem64_space);
+ 
+ 	pci_register_legacy_regions(&pbm->io_space,
+ 				    &pbm->mem_space);
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 75803c7..37222ca 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -97,6 +97,7 @@ struct pci_pbm_info {
+ 	/* PBM I/O and Memory space resources. */
+ 	struct resource			io_space;
+ 	struct resource			mem_space;
++	struct resource			mem64_space;
+ 	struct resource			busn;
+ 
+ 	/* Base of PCI Config space, can be per-PBM or shared. */
