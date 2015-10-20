@@ -1,44 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.w1.samsung.com ([210.118.77.14]:39229 "EHLO
-	mailout4.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753723AbbJHHYe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 03:24:34 -0400
-From: Pavel Fedin <p.fedin@samsung.com>
-To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Cc: Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: [PATCH v2 0/2] PCI: of: Fix handling 64-bit PCI resources on non-LPAE
- kernels
-Date: Thu, 08 Oct 2015 10:24:24 +0300
-Message-id: <cover.1444288748.git.p.fedin@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>
+CC: Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Geert Uytterhoeven" <geert+renesas@glider.be>
+Subject: RE: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
+ instances
+Date: Tue, 20 Oct 2015 08:00:10 +0000
+Message-ID: <SIXPR06MB04158545EDCA19F6C66A6783F5390@SIXPR06MB0415.apcprd06.prod.outlook.com>
+References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
+	<20151019231634.GA13841@localhost>	<20151020013650.GA13721@verge.net.au>
+ <CAMuHMdWiH4ZUSmKQ01qQYvXcjb_3K4XBFLjVGSe1dUoKi=Jb_Q@mail.gmail.com>
+In-Reply-To: <CAMuHMdWiH4ZUSmKQ01qQYvXcjb_3K4XBFLjVGSe1dUoKi=Jb_Q@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The initial aim of this series is to fix long-standing problem with generic
-PCI host controller, triggered by ARM "virt" machine in the recent qemu.
-Since v2.4.50 qemu adds support for the second, large PCI MMIO window,
-which resides in 64-bit address space. This series addresses problems,
-which are triggered on non-LPAE kernels by this configuration.
-
-These patches do not depend on each other and can be applied individually.
-The first adds missing recognition of 64-bit resources (which is actually
-a bug). The second one changes the code to ignore unaccessible resources
-instead of completely bailing out. Since it touches generic of_pci code,
-the fix is expected to be applied to all drivers which use
-of_pci_get_host_bridge_resources().
-
-v1 => v2:
-- Dropped #ifndef, use sizeof(resource_size_t) instead
-
-Pavel Fedin (2):
-  PCI: of: Add 64-bit address recognition without LPAE support
-  PCI: of: Ignore resources with failed translation
-
- drivers/of/address.c | 6 ++++++
- drivers/of/of_pci.c  | 6 ++++--
- 2 files changed, 10 insertions(+), 2 deletions(-)
-
--- 
-2.4.4
-
+SGkgR2VlcnQsDQoNCk9uIDIwIE9jdG9iZXIgMjAxNSAwODozNywgR2VlcnQgd3JvdGU6DQo+IE9u
+IFR1ZSwgT2N0IDIwLCAyMDE1IGF0IDM6MzYgQU0sIFNpbW9uIEhvcm1hbiA8aG9ybXNAdmVyZ2Uu
+bmV0LmF1PiB3cm90ZToNCj4gPiBPbiBNb24sIE9jdCAxOSwgMjAxNSBhdCAwNjoxNjozNFBNIC0w
+NTAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0KPiA+PiBbK2NjIEdlZXJ0XQ0KPiA+Pg0KPiA+PiBP
+biBGcmksIE9jdCAwMiwgMjAxNSBhdCAxMToyNTowM0FNICswMTAwLCBQaGlsIEVkd29ydGh5IHdy
+b3RlOg0KPiA+PiA+IEZpeGVzIGFuZCBjaGFuZ2VzIHRvIGdldCBQQ0llIHdvcmtpbmcgb24gQVJN
+NjQgd2l0aCBtdWxpdHBsZSBpbnN0YW5jZXMuDQo+ID4+ID4NCj4gPj4gPiBJJ3ZlIHRlc3RlZCB0
+aGVzZSBvbiBBUk0gKEtvZWxzY2ggYm9hcmQpLCBhbmQgaXQgd29ya3MgZmluZS4NCj4gPj4gPiBJ
+J3ZlIGFsc28gdGVzdGVkIG9uIEFSTTY0IChTYWx2YXRvci1YIGJvYXJkKSwgYnV0IEkgY3VycmVu
+dGx5IGhhdmUgYW4gaXNzdWUNCj4gPj4gPiB3aXRoIGluYm91bmQgUENJIGFjY2Vzc2VzLiBJIGFt
+IHJlYXNvbmFibHkgc3VyZSB0aGF0IHRoaXMgcHJvYmxlbSBpcw0KPiBoYXJkd2FyZQ0KPiA+PiA+
+IHJlbGF0ZWQuDQo+ID4+ID4NCj4gPj4gPiBQaGlsIEVkd29ydGh5ICg0KToNCj4gPj4gPiAgIFBD
+STogcmNhci1wY2llOiBNYWtlIFBDSSBhd2FyZSBvZiB0aGUgSU8gcmVzb3VyY2VzDQo+ID4+ID4g
+ICBQQ0k6IHJjYXItcGNpZTogUmVtb3ZlIGRlcGVuZGVuY3kgb24gQVJNLXNwZWNpZmljIHN0cnVj
+dCBod19wY2kNCj4gPj4gPiAgIFBDSTogcmNhci1wY2llOiBTZXQgcm9vdCBidXMgbnIgdG8gdGhh
+dCBwcm92aWRlZCBpbiBEVA0KPiA+PiA+ICAgUENJOiByY2FyLXBjaWU6IEZpeCBJTyBvZmZzZXQg
+Zm9yIG11bHRpcGxlIGluc3RhbmNlcw0KPiA+Pg0KPiA+PiBJIGFwcGxpZWQgdGhlc2Ugd2l0aCBT
+aW1vbidzIGFjayB0byBwY2kvaG9zdC1yY2FyIGZvciB2NC40Lg0KPiA+Pg0KPiA+PiBOb3RlIHRo
+YXQgdGhlc2UgYXJlIG9uIHRvcCBvZiBHZWVydCdzIHBhdGNoIHRvIG1ha2UgcmNhciBidWlsZCBv
+bmx5DQo+ID4+IGZvciBBUk0sIHdoaWNoIGlzIHByb2JhYmx5IG5vdCBuZWNlc3NhcnkgYWZ0ZXIg
+eW91IHJlbW92ZSB0aGUgc3RydWN0DQo+ID4+IGh3X3BjaSBkZXBlbmRlbmN5LiAgSSBjYW4gZHJv
+cCBHZWVydCdzIHBhdGNoIGlmIHlvdSB3YW50Lg0KPiA+DQo+ID4gSSdtIGhhcHB5IHdpdGggdGhh
+dCBpZiBHZWVydCBpcy4NCj4gDQo+IElmZiB0aGUgZHJpdmVyIGNvbXBpbGVzL3dvcmtzIG9uIGFy
+bTY0IG5vdywgbXkgcGF0Y2ggc2hvdWxkL211c3QgYmUNCj4gZHJvcHBlZC9yZXZlcnRlZC4NClll
+cywgdGhlIGRyaXZlciB3b3JrcyBvbiB0aGUgQVJNNjQgU2FsdmF0b3ItWCBib2FyZC4gDQoNClRo
+YW5rcw0KUGhpbA0K
