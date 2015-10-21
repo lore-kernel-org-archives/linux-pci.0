@@ -1,130 +1,57 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v8 5/6] Documentation: dt-bindings: pci: altera pcie device tree binding
-Date: Thu, 8 Oct 2015 17:43:13 +0800
-Message-ID: <1444297394-3122-6-git-send-email-lftan@altera.com>
-In-Reply-To: <1444297394-3122-1-git-send-email-lftan@altera.com>
-References: <1444297394-3122-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: Lan Tianyu <tianyu.lan@intel.com>
+To: bhelgaas@google.com, carolyn.wyborny@intel.com,
+	donald.c.skidmore@intel.com, eddie.dong@intel.com,
+	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
+	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Cc: Lan Tianyu <tianyu.lan@intel.com>
+Subject: [RFC Patch 01/12] PCI: Add virtfn_index for struct pci_device
+Date: Thu, 22 Oct 2015 00:37:33 +0800
+Message-Id: <1445445464-5056-2-git-send-email-tianyu.lan@intel.com>
+In-Reply-To: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the bindings for Altera PCIe host controller driver and
-Altera PCIe MSI driver.
+Add "virtfn_index" member in the struct pci_device to record VF sequence
+of PF. This will be used in the VF sysfs node handle.
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
+Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
 ---
- .../devicetree/bindings/pci/altera-pcie-msi.txt    | 28 +++++++++++++
- .../devicetree/bindings/pci/altera-pcie.txt        | 49 ++++++++++++++++++++++
- 2 files changed, 77 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
+ drivers/pci/iov.c   | 1 +
+ include/linux/pci.h | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-new file mode 100644
-index 0000000..09cd3bc
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-@@ -0,0 +1,28 @@
-+* Altera PCIe MSI controller
-+
-+Required properties:
-+- compatible:	should contain "altr,msi-1.0"
-+- reg:		specifies the physical base address of the controller and
-+		the length of the memory mapped region.
-+- reg-names:	must include the following entries:
-+		"csr": CSR registers
-+		"vector_slave": vectors slave port region
-+- interrupt-parent:	interrupt source phandle.
-+- interrupts:	specifies the interrupt source of the parent interrupt
-+		controller. The format of the interrupt specifier depends on the
-+		parent interrupt controller.
-+- num-vectors:	number of vectors, range 1 to 32.
-+- msi-controller:	indicates that this is MSI controller node
-+
-+
-+Example
-+msi0: msi@0xFF200000 {
-+	compatible = "altr,msi-1.0";
-+	reg = <0xFF200000 0x00000010
-+		0xFF200010 0x00000080>;
-+	reg-names = "csr", "vector_slave";
-+	interrupt-parent = <&hps_0_arm_gic_0>;
-+	interrupts = <0 42 4>;
-+	msi-controller;
-+	num-vectors = <32>;
-+};
-diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-new file mode 100644
-index 0000000..2951a6a
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-@@ -0,0 +1,49 @@
-+* Altera PCIe controller
-+
-+Required properties:
-+- compatible :	should contain "altr,pcie-root-port-1.0"
-+- reg:		a list of physical base address and length for TXS and CRA.
-+- reg-names:	must include the following entries:
-+		"Txs": TX slave port region
-+		"Cra": Control register access region
-+- interrupt-parent:	interrupt source phandle.
-+- interrupts:	specifies the interrupt source of the parent interrupt controller.
-+		The format of the interrupt specifier depends on the parent interrupt
-+		controller.
-+- device_type:	must be "pci"
-+- #address-cells:	set to <3>
-+- #size-cells:	set to <2>
-+- #interrupt-cells:	set to <1>
-+- ranges:		describes the translation of addresses for root ports and standard
-+		PCI regions.
-+- interrupt-map-mask and interrupt-map: standard PCI properties to define the
-+		mapping of the PCIe interface to interrupt numbers.
-+
-+Optional properties:
-+- msi-parent:	Link to the hardware entity that serves as the MSI controller for this PCIe
-+		controller.
-+- bus-range:	PCI bus numbers covered
-+
-+Example
-+	pcie_0: pcie@0xc00000000 {
-+		compatible = "altr,pcie-root-port-1.0";
-+		reg = <0xc0000000 0x20000000>,
-+			<0xff220000 0x00004000>;
-+		reg-names = "Txs", "Cra";
-+		interrupt-parent = <&hps_0_arm_gic_0>;
-+		interrupts = <0 40 4>;
-+		interrupt-controller;
-+		#interrupt-cells = <1>;
-+		bus-range = <0x0 0xFF>;
-+		device_type = "pci";
-+		msi-parent = <&msi_to_gic_gen_0>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_0 1>,
-+			            <0 0 0 2 &pcie_0 2>,
-+			            <0 0 0 3 &pcie_0 3>,
-+			            <0 0 0 4 &pcie_0 4>;
-+		ranges = <0x82000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x10000000
-+			    0x82000000 0x00000000 0x10000000 0xd0000000 0x00000000 0x10000000>;
-+	};
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee0ebff..065b6bb 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -136,6 +136,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	virtfn->physfn = pci_dev_get(dev);
+ 	virtfn->is_virtfn = 1;
+ 	virtfn->multifunction = 0;
++	virtfn->virtfn_index = id;
+ 
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = &dev->resource[i + PCI_IOV_RESOURCES];
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 353db8d..85c5531 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -356,6 +356,7 @@ struct pci_dev {
+ 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
+ 	unsigned int	irq_managed:1;
+ 	pci_dev_flags_t dev_flags;
++	unsigned int	virtfn_index;
+ 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+ 
+ 	u32		saved_config_space[16]; /* config space saved at suspend time */
 -- 
-1.8.2.1
+1.8.4.rc0.1.g8f6a3e5.dirty
 
