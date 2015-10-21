@@ -1,121 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:2106 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752604AbbJZH1w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 03:27:52 -0400
-Message-ID: <562DD5D2.9000705@hisilicon.com>
-Date: Mon, 26 Oct 2015 15:27:14 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+Received: from mail.kernel.org ([198.145.29.136]:48339 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755492AbbJUSuu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 Oct 2015 14:50:50 -0400
+Date: Wed, 21 Oct 2015 13:50:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	qiujiang <qiujiang@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v11 1/6] PCI: designware: move calculation of bus addresses
- to DRA7xx
-References: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com> <1444991021-109306-2-git-send-email-wangzhou1@hisilicon.com> <20151021221524.GM1583@localhost> <EE11001F9E5DDD47B7634E2F8A612F2E16274DCC@lhreml503-mbs> <20151022163534.GB21237@localhost>
-In-Reply-To: <20151022163534.GB21237@localhost>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
+Message-ID: <20151021185046.GD1583@localhost>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+ <1444340359-8011-4-git-send-email-yinghai@kernel.org>
+ <20151020215714.GI8224@localhost>
+ <CAE9FiQVC+r=7NrCvwq9+1XVQD9CGf_3+-4VO9kFPSGqMTR5cBw@mail.gmail.com>
+ <CAE9FiQUdKdyipTw3KSVL0Kr1FFvki5Un3NuUuXpw4TXoWi1Tpg@mail.gmail.com>
+ <20151021023522.GJ8224@localhost>
+ <CAE9FiQXXP8-5hNvKXuh5mu6Xu_9yFufmpZaXv0V95TwBBnxCpA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQXXP8-5hNvKXuh5mu6Xu_9yFufmpZaXv0V95TwBBnxCpA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/10/23 0:35, Bjorn Helgaas wrote:
-> Hi Gabriele,
+On Wed, Oct 21, 2015 at 11:16:53AM -0700, Yinghai Lu wrote:
+> On Tue, Oct 20, 2015 at 7:35 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, Oct 20, 2015 at 03:30:44PM -0700, Yinghai Lu wrote:
+> > I doubt I would agree with a change like this, but maybe, if you can
+> > explain what's unique about the sparc architecture that would require
+> > a change like this.
 > 
-> On Thu, Oct 22, 2015 at 07:21:41AM +0000, Gabriele Paoloni wrote:
->>> -----Original Message-----
->>> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Then how about this one ?
 > 
->>>>  #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
->>>>  #define	LINK_UP						BIT(16)
->>>> +#define	CPU_TO_BUS_ADDR					0x0FFFFFFF
->>>
->>> "CPU_TO_BUS_ADDR" is a very generic name.  Since you do have DRA7XX in
->>> other #defines and static symbols in this file, maybe it could be DRA7XX to
->>> make it obvious that it only applies here?
->>
->> Ok will change to DRA7XX_CPU_TO_BUS_ADRR in v12
->> ..
-> 
->>>> +	if (pp->io_mod_base)
->>>> +		pp->io_mod_base &= CPU_TO_BUS_ADDR;
->>>
->>> These are equivalent to
->>>
->>>   pp->io_mod_base &= CPU_TO_BUS_ADDR;
->>>
->>> (You don't need to test whether they're zero first.)
->>
->> Yes agreed, will change in v12
->> ...
-> 
->>>>  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
->>>> @@ -415,8 +411,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->>>>  			pp->io_base = range.cpu_addr;
->>>>
->>>>  			/* Find the untranslated IO space address */
->>>> -			pp->io_mod_base = of_read_number(parser.range -
->>>> -							 parser.np + na, ns);
->>>> +			pp->io_mod_base = range.cpu_addr;
->>>
->>> So apparently
->>>
->>>   "of_read_number() == range.cpu_addr & CPU_TO_BUS_ADDR" on DRA7xx
->>>   "of_read_number() == range.cpu_addr" everywhere else?
->>
->> Yes correct
->>
->>> Is that right?  Is that a valid assumption, i.e., are we assuming
->>> anything about DTs in the field that we shouldn't?
->>
->> Before I wrote a patch that was generic to accommodate intermediate level
->> of translation between PCI_addr -> BUS_addr -> CPU_addr
->>
->> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/360922.html
->>
->> After discussion we agreed to solve it with a bitmask rather than adding
->> a field to of_pci_range to make it generic.
->> The bitmask only applies to DRA7xx
-> 
-> I haven't gotten all the way through this series yet, but don't bother with
-> a v12 just for these minor changes.  I can easily fix them up when applying
-> it.
-> 
-> Bjorn
->
+> otherwise we need to compare res with pbm->mem_space or pbm->mem64_space
+> to get direct parent for request_resource_conflict() calling in
+> pci_register_legacy_regions().
 
-Hi Gabriele and Bjorn,
+Lots of other architectures have both mem32 and mem64 apertures.  You
+haven't explained what's unique about sparc yet.  Does
+pci_find_parent_resource() not work on sparc?  If not, is that because the
+resource tree looks different on sparc than on other architectures?  If so,
+is that difference something intentional that we want to keep, or should we
+converge on a single resource tree format across all architectures?
 
-Sorry for late, I am preparing v12 patchset and I will fix above problems together
-with other patches.
-
-Many thanks,
-Zhou
-
-> .
+> also check if if return is NULL to decide if it is valid region.
+> ---
+>  drivers/pci/host-bridge.c |   10 +++++++++-
+>  include/linux/pci.h       |    5 +++--
+>  2 files changed, 12 insertions(+), 3 deletions(-)
 > 
-
-
+> Index: linux-2.6/drivers/pci/host-bridge.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/host-bridge.c
+> +++ linux-2.6/drivers/pci/host-bridge.c
+> @@ -70,12 +70,17 @@ static bool region_contains(struct pci_b
+>      return region1->start <= region2->start && region1->end >= region2->end;
+>  }
+> 
+> -void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+> +/*
+> + * return host bridge window resource
+> + */
+> +struct resource *pcibios_bus_to_resource(struct pci_bus *bus,
+> +                 struct resource *res,
+>                   struct pci_bus_region *region)
+>  {
+>      struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
+>      struct resource_entry *window;
+>      resource_size_t offset = 0;
+> +    struct resource *res_ret = NULL;
+> 
+>      resource_list_for_each_entry(window, &bridge->windows) {
+>          struct pci_bus_region bus_region;
+> @@ -88,11 +93,14 @@ void pcibios_bus_to_resource(struct pci_
+> 
+>          if (region_contains(&bus_region, region)) {
+>              offset = window->offset;
+> +            res_ret = window->res;
+>              break;
+>          }
+>      }
+> 
+>      res->start = region->start + offset;
+>      res->end = region->end + offset;
+> +
+> +    return res_ret;
+>  }
+>  EXPORT_SYMBOL(pcibios_bus_to_resource);
+> Index: linux-2.6/include/linux/pci.h
+> ===================================================================
+> --- linux-2.6.orig/include/linux/pci.h
+> +++ linux-2.6/include/linux/pci.h
+> @@ -781,8 +781,9 @@ void pci_fixup_cardbus(struct pci_bus *)
+> 
+>  void pcibios_resource_to_bus(struct pci_bus *bus, struct
+> pci_bus_region *region,
+>                   struct resource *res);
+> -void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+> -                 struct pci_bus_region *region);
+> +struct resource *pcibios_bus_to_resource(struct pci_bus *bus,
+> +                     struct resource *res,
+> +                     struct pci_bus_region *region);
+>  void pcibios_scan_specific_bus(int busn);
+>  struct pci_bus *pci_find_bus(int domain, int busnr);
+>  void pci_bus_add_devices(const struct pci_bus *bus);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
