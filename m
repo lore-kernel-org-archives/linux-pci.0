@@ -1,66 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 22 Oct 2015 13:28:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, jingoohan1@gmail.com,
-	pratyush.anand@gmail.com, Arnd Bergmann <arnd@arndb.de>,
-	linux@arm.linux.org.uk, thomas.petazzoni@free-electrons.com,
-	gabriele.paoloni@huawei.com, lorenzo.pieralisi@arm.com,
-	james.morse@arm.com, Liviu.Dudau@arm.com, jason@lakedaemon.net,
-	robh@kernel.org, gabriel.fernandez@linaro.org,
-	Minghuan.Lian@freescale.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, zhangjukuo@huawei.com,
-	qiuzhenfa@hisilicon.com, liudongdong3@huawei.com,
-	qiujiang@huawei.com, xuwei5@hisilicon.com, liguozhu@hisilicon.com
-Subject: Re: [PATCH v11 3/6] PCI: designware: Add ARM64 support
-Message-ID: <20151022182853.GC21237@localhost>
-References: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com>
- <1444991021-109306-4-git-send-email-wangzhou1@hisilicon.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:47469 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750846AbbJUSnB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 Oct 2015 14:43:01 -0400
+Subject: [PATCH v4 2/4] PCI: designware: Use common LTSSM_STATE_RCVRY_LOCK
+ definition
+To: Fabio Estevam <festevam@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fabio Estevam <fabio.estevam@freescale.com>,
+	linux-pci@vger.kernel.org, pratyush.anand@gmail.com,
+	m-karicheri2@ti.com, l.stach@pengutronix.de
+Date: Wed, 21 Oct 2015 13:42:58 -0500
+Message-ID: <20151021184258.28724.34444.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444991021-109306-4-git-send-email-wangzhou1@hisilicon.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Zhou,
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-On Fri, Oct 16, 2015 at 06:23:38PM +0800, Zhou Wang wrote:
-> This patch tries to unify ARM32 and ARM64 PCIe in designware driver. Delete
-> function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
-> move related operations to dw_pcie_host_init.
-> 
-> This patch also try to use of_pci_get_host_bridge_resources for ARM32 and ARM64
-> according to the suggestion for Gabriele[1]
-> 
-> This patch reverts commit f4c55c5a3f7f ("PCI: designware: Program ATU with
-> untranslated address") based on 1/6 in this series. we delete *_mod_base in
-> pcie-designware. This was discussed in [2]
-> 
-> I have compiled the driver with multi_v7_defconfig. However, I don't have
-> ARM32 PCIe related board to do test. It will be appreciated if someone could
-> help to test it.
+Add a #define for LTSSM_STATE_RCVRY_LOCK and use it to improve code
+readability.
 
-There's a lot going on this patch.  Can you split it up at all?  For
-example, maybe:
+[bhelgaas: include both definition and use for reviewability]
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-imx6.c        |    2 +-
+ drivers/pci/host/pcie-designware.h |    1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-  - Revert f4c55c5a3f7f (and move to right after the related [1/6]
-    patch
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 7b0d120..4c788d27 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -507,7 +507,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+ 	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
+ 		return 0;
+ 
+-	if ((debug_r0 & LTSSM_STATE_MASK) != 0x0d)
++	if ((debug_r0 & LTSSM_STATE_MASK) != LTSSM_STATE_RCVRY_LOCK)
+ 		return 0;
+ 
+ 	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index a1a76ff..f3a7583 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -22,6 +22,7 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ 
++#define LTSSM_STATE_RCVRY_LOCK		0x0d
+ #define LTSSM_STATE_MASK		0x1f
+ 
+ struct pcie_port {
 
-  - Switch to using of_pci_get_host_bridge_resources()
-
-  - Replacing the call of pci_common_init_dev() with equivalent code in
-    pcie-designware.c.  This one in particular needs to be easy to review.
-    It's not clear to me that this new code is equivalent.  For example,
-    pci_common_init_dev() calls pcie_bus_configure_settings(), but I don't
-    see that in your new code.
-
-You already have acks and tested-by, so I assume you probably did all the
-right things, but it will help me out a lot if you can break it into
-bite-sized pieces.  It's always better to make patches too small rather
-than too large, because it's trivial to squash them back together if
-needed.  I think we're going to have some conflicts between this and other
-pcie-designware.c changes, and small patches will also make those easier to
-resolve.
-
-Bjorn
