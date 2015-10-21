@@ -1,46 +1,122 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 38/61] PCI: Check if resource is allocated before trying to assign one
-Date: Tue, 27 Oct 2015 13:55:30 -0700
-Message-Id: <1445979353-1728-39-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:5395 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755829AbbJUQuD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 Oct 2015 12:50:03 -0400
+From: Lan Tianyu <tianyu.lan@intel.com>
+To: bhelgaas@google.com, carolyn.wyborny@intel.com,
+	donald.c.skidmore@intel.com, eddie.dong@intel.com,
+	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
+	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Cc: Lan Tianyu <tianyu.lan@intel.com>
+Subject: [RFC Patch 06/12] IXGBEVF: Add self emulation layer
+Date: Thu, 22 Oct 2015 00:37:38 +0800
+Message-Id: <1445445464-5056-7-git-send-email-tianyu.lan@intel.com>
+In-Reply-To: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In following alt_size support, we will call pci_assign_resource() several
-times on one resource list, and some resources could have been assigned
-already.
+In order to restore VF function after migration, add self emulation layer
+to record regs' values during accessing regs.
 
-Skip allocated resource in the list, as pci_assign_resource()
-only can handle not assigned resource.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
 ---
- drivers/pci/setup-bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/ethernet/intel/ixgbevf/Makefile        |  3 ++-
+ drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c  |  2 +-
+ .../net/ethernet/intel/ixgbevf/self-emulation.c    | 26 ++++++++++++++++++++++
+ drivers/net/ethernet/intel/ixgbevf/vf.h            |  5 ++++-
+ 4 files changed, 33 insertions(+), 3 deletions(-)
+ create mode 100644 drivers/net/ethernet/intel/ixgbevf/self-emulation.c
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index deed016..ca34346 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -386,7 +386,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
- 		idx = res - &dev_res->dev->resource[0];
--		if (resource_size(res) &&
-+		if (!res->parent && resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
- 				add_to_list(fail_head, dev_res->dev, res);
+diff --git a/drivers/net/ethernet/intel/ixgbevf/Makefile b/drivers/net/ethernet/intel/ixgbevf/Makefile
+index 4ce4c97..841c884 100644
+--- a/drivers/net/ethernet/intel/ixgbevf/Makefile
++++ b/drivers/net/ethernet/intel/ixgbevf/Makefile
+@@ -31,7 +31,8 @@
+ 
+ obj-$(CONFIG_IXGBEVF) += ixgbevf.o
+ 
+-ixgbevf-objs := vf.o \
++ixgbevf-objs := self-emulation.o \
++		vf.o \
+                 mbx.o \
+                 ethtool.o \
+                 ixgbevf_main.o
+diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+index a16d267..4446916 100644
+--- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
++++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+@@ -156,7 +156,7 @@ u32 ixgbevf_read_reg(struct ixgbe_hw *hw, u32 reg)
+ 
+ 	if (IXGBE_REMOVED(reg_addr))
+ 		return IXGBE_FAILED_READ_REG;
+-	value = readl(reg_addr + reg);
++	value = ixgbe_self_emul_readl(reg_addr, reg);
+ 	if (unlikely(value == IXGBE_FAILED_READ_REG))
+ 		ixgbevf_check_remove(hw, reg);
+ 	return value;
+diff --git a/drivers/net/ethernet/intel/ixgbevf/self-emulation.c b/drivers/net/ethernet/intel/ixgbevf/self-emulation.c
+new file mode 100644
+index 0000000..d74b2da
+--- /dev/null
++++ b/drivers/net/ethernet/intel/ixgbevf/self-emulation.c
+@@ -0,0 +1,26 @@
++#include <linux/netdevice.h>
++#include <linux/pci.h>
++#include <linux/delay.h>
++#include <linux/interrupt.h>
++#include <net/arp.h>
++
++#include "vf.h"
++#include "ixgbevf.h"
++
++static u32 hw_regs[0x4000];
++
++u32 ixgbe_self_emul_readl(volatile void __iomem *base, u32 addr)
++{
++	u32 tmp;
++
++	tmp = readl(base + addr);
++	hw_regs[(unsigned long)addr] = tmp;
++
++	return tmp;
++}
++
++void ixgbe_self_emul_writel(u32 val, volatile void __iomem *base, u32  addr)
++{
++	hw_regs[(unsigned long)addr] = val;
++	writel(val, (volatile void __iomem *)(base + addr));
++}
+diff --git a/drivers/net/ethernet/intel/ixgbevf/vf.h b/drivers/net/ethernet/intel/ixgbevf/vf.h
+index d40f036..6a3f4eb 100644
+--- a/drivers/net/ethernet/intel/ixgbevf/vf.h
++++ b/drivers/net/ethernet/intel/ixgbevf/vf.h
+@@ -39,6 +39,9 @@
+ 
+ struct ixgbe_hw;
+ 
++u32 ixgbe_self_emul_readl(volatile void __iomem *base, u32 addr);
++void ixgbe_self_emul_writel(u32 val, volatile void __iomem *base, u32  addr);
++
+ /* iterator type for walking multicast address lists */
+ typedef u8* (*ixgbe_mc_addr_itr) (struct ixgbe_hw *hw, u8 **mc_addr_ptr,
+ 				  u32 *vmdq);
+@@ -182,7 +185,7 @@ static inline void ixgbe_write_reg(struct ixgbe_hw *hw, u32 reg, u32 value)
+ 
+ 	if (IXGBE_REMOVED(reg_addr))
+ 		return;
+-	writel(value, reg_addr + reg);
++	ixgbe_self_emul_writel(value, reg_addr, reg);
+ }
+ 
+ #define IXGBE_WRITE_REG(h, r, v) ixgbe_write_reg(h, r, v)
 -- 
-1.8.4.5
+1.8.4.rc0.1.g8f6a3e5.dirty
 
