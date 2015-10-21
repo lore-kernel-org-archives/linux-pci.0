@@ -1,81 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:30414 "EHLO mga11.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:41096 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752657AbbJGAVD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 Oct 2015 20:21:03 -0400
-Date: Wed, 7 Oct 2015 00:21:02 +0000 (UTC)
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Keith Busch <keith.busch@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device
- driver
-In-Reply-To: <20151006231412.GF29420@localhost>
-Message-ID: <alpine.LNX.2.00.1510062331220.23840@localhost.lm.intel.com>
-References: <1443721454-25467-1-git-send-email-keith.busch@intel.com> <20151006231412.GF29420@localhost>
+	id S1754718AbbJULtS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 Oct 2015 07:49:18 -0400
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+To: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
+ <562761A1.4020306@linaro.org>
+ <20151021110201.GE3394@e106497-lin.cambridge.arm.com>
+ <562776A5.7000303@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <56277BB9.8090508@linux.intel.com>
+Date: Wed, 21 Oct 2015 19:49:13 +0800
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+In-Reply-To: <562776A5.7000303@linaro.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On 2015/10/21 19:27, Tomasz Nowicki wrote:
+> On 21.10.2015 13:02, Liviu Dudau wrote:
+>> On Wed, Oct 21, 2015 at 11:57:53AM +0200, Tomasz Nowicki wrote:
+>>> On 14.10.2015 08:29, Jiang Liu wrote:
+>>>> Introduce common interface acpi_pci_root_create() and related data
+>>>> structures to create PCI root bus for ACPI PCI host bridges. It will
+>>>> be used to kill duplicated arch specific code for IA64 and x86. It may
+>>>> also help ARM64 in future.
+>>>>
+>>>> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>>> Tested-by: Tony Luck <tony.luck@intel.com>
+>>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>>>> Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
+>>>> ---
+>>>>   drivers/acpi/pci_root.c  |  204
+>>>> ++++++++++++++++++++++++++++++++++++++++++++++
+>>>>   include/linux/pci-acpi.h |   24 ++++++
+>>>>   2 files changed, 228 insertions(+)
+>>>>
+>>>
+>>> [...]
+>>>
+>>>> +
+>>>> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+>>>> +                     struct acpi_pci_root_ops *ops,
+>>>> +                     struct acpi_pci_root_info *info,
+>>>> +                     void *sysdata)
+>>>> +{
+>>>> +    int ret, busnum = root->secondary.start;
+>>>> +    struct acpi_device *device = root->device;
+>>>> +    int node = acpi_get_node(device->handle);
+>>>> +    struct pci_bus *bus;
+>>>> +
+>>>> +    info->root = root;
+>>>> +    info->bridge = device;
+>>>> +    info->ops = ops;
+>>>> +    INIT_LIST_HEAD(&info->resources);
+>>>> +    snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
+>>>> +         root->segment, busnum);
+>>>> +
+>>>> +    if (ops->init_info && ops->init_info(info))
+>>>> +        goto out_release_info;
+>>>> +    if (ops->prepare_resources)
+>>>> +        ret = ops->prepare_resources(info);
+>>>> +    else
+>>>> +        ret = acpi_pci_probe_root_resources(info);
+>>>> +    if (ret < 0)
+>>>> +        goto out_release_info;
+>>>> +
+>>>> +    pci_acpi_root_add_resources(info);
+>>>> +    pci_add_resource(&info->resources, &root->secondary);
+>>>> +    bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+>>>> +                  sysdata, &info->resources);
+>>>
+>>> Thank a lot for this cleanup!!
+>>>
+>>> I recall you already considered passing segment (domain nr) to
+>>> pci_create_root_bus, right? Can you please remind me why we gave up
+>>> on this?
+>>>
+>>> I am asking because currently I can not find the way to retrieve domain
+>>> number from pci_bus_assign_domain_nr (for those platforms which choose
+>>> PCI_DOMAINS_GENERIC and want to use segment nr from MCFG table) which
+>>> is the
+>>> part of pci_create_root_bus.
+>>
+>> Not sure I fully understand your question, but
+>> pci_bus_assign_domain_nr() will
+>> put the assigned domain number in bus->domain_nr if you chose
+>> PCI_DOMAINS_GENERIC.
+>> Do you want to override that value with the segment nr from MCFG?
+>>
+> 
+> Let me give ACPI ARM64 example:
+> 
+> 1. We parse MCFG table and get segment nr assigned to root bridge
+> 2. Then PCI host bridge calls acpi_pci_root_create ->
+> pci_create_root_bus -> pci_bus_assign_domain_nr
+> 3. At this point we cannot get segment nr for ACPI
+> 
+> So I would like to assign MCFG segment nr to bus->domain_nr being in
+> pci_bus_assign_domain_nr giving we have scenario above.
+Please use sysdata for that, IA64 and x86 are making use of sysdata
+to store such information:
+struct pci_sysdata {
+        int             domain;         /* PCI domain */
+        int             node;           /* NUMA node */
+#ifdef CONFIG_ACPI
+        struct acpi_device *companion;  /* ACPI companion device */
+#endif
+#ifdef CONFIG_X86_64
+        void            *iommu;         /* IOMMU private data */
+#endif
+};
 
-Thanks for the feedback. Much of the issues you mentioned look pretty
-straight forward to resolve, and will fix of for the next revision.
+Hanjun once tried to introduce struct pci_sysdata for ARM64, but
+seems it has been rejected.
 
-I have some immediate follow up comments to two issues you brought up:
-
-On Tue, 6 Oct 2015, Bjorn Helgaas wrote:
->> +static int vmd_find_free_domain(void)
->> +{
->> +	int domain = -1;
->> +	struct pci_bus *bus = NULL;
->> +
->> +	while ((bus = pci_find_next_bus(bus)) != NULL)
->> +		domain = max_t(int, domain, pci_domain_nr(bus));
->> +	if (domain < 0)
->> +		return -ENODEV;
->> +	return domain + 1;
->> +}
->
-> The PCI core should own domain number allocation.  We have a little
-> bit of generic domain support, e.g., pci_get_new_domain_nr().  On x86,
-> I think that is compiled-in, but currently not used -- currently x86
-> only uses _SEG from ACPI.  How would you handle collisions between a
-> domain number assigned here (or via pci_get_new_domain_nr()) and a
-> hot-added host bridge where _SEG uses the same domain?
-
-Thank you for bringing this up as I hadn't thought much about it and may
-have misunderstood the meaning of _SEG. AIUI, it is used to identify a
-logical grouping. The OS does not need to use the same identifier for
-the domain, so we there's no need to collide if we can assign the domain
-of a a new _SEG to the next available domain_nr.
-
-On pci_get_new_domain_nr(), can we make this use something like an
-ida instead of an atomic? I think we'd like to put domains back into
-the available pool if someone unbinds it. I imagine someone will test
-unbinding/rebinding these devices in a loop for a while, and will file
-a bug after the atomic increments to 64k. :)
-
->> +	resource_list_for_each_entry(entry, &resources) {
->> +		struct resource *source, *resource = entry->res;
->> +
->> +		if (!i) {
->> +			resource->start = 0;
->> +			resource->end = (resource_size(
->> +					&vmd->dev->resource[0]) >> 20) - 1;
->> +			resource->flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED;
->
-> I thought BAR0 was CFGBAR.  I missed the connection to a bus number
-> aperture.
-
-Right, BAR0 is the CFGBAR and is the device's aperture to access its
-domain's config space. Based on your comment, I assume that's not
-a bus resource, though it seems to work with the posted code. :)
+> 
+> Thanks,
+> Tomasz
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
