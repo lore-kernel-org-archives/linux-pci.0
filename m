@@ -1,53 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:36081 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752006AbbJIKkZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Oct 2015 06:40:25 -0400
-Date: Fri, 9 Oct 2015 12:40:23 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: Mikulas Patocka <mpatocka@redhat.com>,
-	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
-	Christoph Hellwig <hch@lst.de>,
-	device-mapper development <dm-devel@redhat.com>,
-	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
- READ FPDMA QUEUED errors since Linux 4.0
-Message-ID: <20151009104023.GN28811@8bytes.org>
-References: <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
- <20150929162042.GR3036@8bytes.org>
- <560BF73F.8000008@maya.org>
- <20151006101356.GE12506@8bytes.org>
- <56141507.7040103@maya.org>
- <20151007154005.GH28811@8bytes.org>
- <56155028.7060906@maya.org>
- <20151008173007.GL28811@8bytes.org>
- <5616BCF4.10104@maya.org>
- <5616C850.2000906@maya.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5616C850.2000906@maya.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lan Tianyu <tianyu.lan@intel.com>
+To: bhelgaas@google.com, carolyn.wyborny@intel.com,
+	donald.c.skidmore@intel.com, eddie.dong@intel.com,
+	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
+	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Cc: Lan Tianyu <tianyu.lan@intel.com>
+Subject: [RFC Patch 11/12] IXGBEVF: Migrate VF statistic data
+Date: Thu, 22 Oct 2015 00:37:43 +0800
+Message-Id: <1445445464-5056-12-git-send-email-tianyu.lan@intel.com>
+In-Reply-To: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 08, 2015 at 09:47:28PM +0200, Andreas Hartmann wrote:
-> Got it. I attached the complete oops and the output of objdump.
-> 
-> Kernel was linux 4.3-rc4
-> 
-> 
-> This time, the oops was caused by the second PCI card I'm passing
-> through to another VM (the ath9k card worked fine this time - chance?).
-> I added the lspci output to the attached file, too.
+VF statistic regs are read-only and can't be migrated via writing back
+directly.
 
-Okay, thanks, this makes more sense to me. It looks like you are
-attaching a 32bit PCI device, which has an alias. This is definitly a
-bug in the AMD IOMMU driver and I have an idea how to fix it. I'll look
-into this after lunch.
+Currently, statistic data returned to user space by the driver is not equal
+to value of statistic regs. VF driver records value of statistic regs as base data
+when net interface is up or open, calculate increased count of regs during
+last period of online service and added it to saved_reset data. When user
+space collects statistic data, VF driver returns result of
+"current - base + saved_reset". "Current" is reg value at that point.
 
+Restoring net function after migration just likes net interface is up or open.
+Call existed function to update base and saved_reset data to keep statistic
+data continual during migration.
 
+Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
+---
+ drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-	Joerg
+diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+index 04b6ce7..d22160f 100644
+--- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
++++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+@@ -3005,6 +3005,7 @@ int ixgbevf_live_mg(struct ixgbevf_adapter *adapter)
+ 			return 0;
+ 
+ 		del_timer_sync(&adapter->service_timer);
++		ixgbevf_update_stats(adapter);
+ 		pr_info("migration start\n");
+ 		migration_status = MIGRATION_IN_PROGRESS; 
+ 
+@@ -3017,6 +3018,8 @@ int ixgbevf_live_mg(struct ixgbevf_adapter *adapter)
+ 			return 1;
+ 
+ 		ixgbevf_restore_state(adapter);
++		ixgbevf_save_reset_stats(adapter);
++		ixgbevf_init_last_counter_stats(adapter);
+ 		migration_status = MIGRATION_COMPLETED;
+ 		pr_info("migration end\n");
+ 		return 0;
+-- 
+1.8.4.rc0.1.g8f6a3e5.dirty
 
