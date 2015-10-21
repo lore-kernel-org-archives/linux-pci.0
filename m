@@ -1,81 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v9 3/6] pci:host: Add Altera PCIe host controller driver
-Date: Wed, 14 Oct 2015 11:36:04 +0200
-Message-ID: <5210459.PtmhWaT6RM@wuerfel>
-In-Reply-To: <CAFiDJ59AuXmM8vN9=ry8_UvS-paRN54CdCFw6EUMx9RV2TT3bQ@mail.gmail.com>
-References: <1444790492-4051-1-git-send-email-lftan@altera.com> <5088538.zEUtS0EC0S@wuerfel> <CAFiDJ59AuXmM8vN9=ry8_UvS-paRN54CdCFw6EUMx9RV2TT3bQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f68.google.com ([209.85.213.68]:34444 "EHLO
+	mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753917AbbJUW7k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 18:59:40 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQWzRbXOZCsPueERgw1gE=LpDxEkf_sYCvyJErUr+qgzow@mail.gmail.com>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+	<1444340359-8011-4-git-send-email-yinghai@kernel.org>
+	<20151020215714.GI8224@localhost>
+	<CAE9FiQVC+r=7NrCvwq9+1XVQD9CGf_3+-4VO9kFPSGqMTR5cBw@mail.gmail.com>
+	<CAE9FiQUdKdyipTw3KSVL0Kr1FFvki5Un3NuUuXpw4TXoWi1Tpg@mail.gmail.com>
+	<20151021023522.GJ8224@localhost>
+	<CAE9FiQXXP8-5hNvKXuh5mu6Xu_9yFufmpZaXv0V95TwBBnxCpA@mail.gmail.com>
+	<20151021185046.GD1583@localhost>
+	<CAE9FiQWzRbXOZCsPueERgw1gE=LpDxEkf_sYCvyJErUr+qgzow@mail.gmail.com>
+Date: Wed, 21 Oct 2015 15:59:39 -0700
+Message-ID: <CAE9FiQXpdw+e2BXDwvRnzUs8D1gdngz61nXFV5xKy9TLsvEvUw@mail.gmail.com>
+Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 14 October 2015 17:28:45 Ley Foon Tan wrote:
-> On Wed, Oct 14, 2015 at 5:09 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Wednesday 14 October 2015 16:32:25 Ley Foon Tan wrote:
-> >> On Wed, Oct 14, 2015 at 4:20 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> >> > On Wednesday 14 October 2015 10:41:29 Ley Foon Tan wrote:
-> >> >> +static int altera_pcie_remove(struct platform_device *pdev)
-> >> >> +{
-> >> >> +     struct altera_pcie *pcie = platform_get_drvdata(pdev);
-> >> >> +
-> >> >> +     altera_pcie_free_irq_domain(pcie);
-> >> >> +     platform_set_drvdata(pdev, NULL);
-> >> >> +     return 0;
-> >> >> +}
-> >> >
-> >> > I just noticed this. Does it actually work to unload the module
-> >> > and tear down all the pci_dev structures in a safe way?
-> >> Good catch. It only can be compiled as builtin-moduley now, so we can
-> >> remove this _remove callback function.
-> >
-> > I think we should change both: make it possible to load the
-> > driver dynamically, and remove the altera_pcie_remove function.
-> This driver depends on the pci fixups to work correctly. But, fixups
-> callback functions in this driver are not being call if the driver is
-> loadable module.
+On Wed, Oct 21, 2015 at 3:32 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Oct 21, 2015 at 11:50 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> Lots of other architectures have both mem32 and mem64 apertures.  You
+>> haven't explained what's unique about sparc yet.  Does
+>> pci_find_parent_resource() not work on sparc?  If not, is that because the
+>> resource tree looks different on sparc than on other architectures?  If so,
+>> is that difference something intentional that we want to keep, or should we
+>> converge on a single resource tree format across all architectures?
+>
+> In the new pci_register_legacy_regions(), we only have root bus.
+> but current pci_find_parent_resource is taking pci dev.
+>
+> So will need to change it to take bus instead, please check if you are ok
+> with following, then I would update other two.
 
-Ah, I see. We should find a better way to deal with this, as we
-are getting an increasing number of host driver specific fixups.
+Never mind, I could just one dummy pci device to work around it.
+so don't need to change that.
 
-Bjorn, do you have any idea here?
+Thanks
 
-Could we perhaps have a helper function that lets us register
-fixups dynamically?
-
-> The linker script keeps all pci fixup callbacks in pci fixup regions
-> during kernel compile time. So, it needs to be builtin module. Do you
-> know any way we can update those fixup regions?
-
-The only method I'm aware of at the moment is move the fixups to
-drivers/pci/quirks.c and enclose them in an #ifdef if you want them
-to not appear in kernels that don't support your SoC.
-
-> > You can prevent the module from being unloaded if you also remove
-> > the module_platform_driver() directive and add a module_init()
-> > without a matching module_exit().
-> >
-> > Please also add a '.suppress_bind_attrs = true,' flag in the driver
-> > struct to prevent manual unbinding.
-> I think we don't need these if it only can work as builtin module.
-
-No, this is orthogonal, you need it either way, as built-in drivers
-can still be unbound by writing to sysfs. Try writing the device name
-to /sys/bus/platform/drivers/altera-pcie/unbind and watch it blow up ;-)
-
-	Arnd
+Yinghai
