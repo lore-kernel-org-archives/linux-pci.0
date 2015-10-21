@@ -1,169 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:11681 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932949AbbJ3VMD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 17:12:03 -0400
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v5 3/7] PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
-Date: Fri, 30 Oct 2015 21:11:11 +0000
-Message-Id: <1446239475-49480-4-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
-References: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 21 Oct 2015 12:52:24 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+Message-ID: <20151021115224.GH3394@e106497-lin.cambridge.arm.com>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
+ <562761A1.4020306@linaro.org>
+ <20151021110201.GE3394@e106497-lin.cambridge.arm.com>
+ <562776A5.7000303@linaro.org>
+ <56277BB9.8090508@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <56277BB9.8090508@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On Wed, Oct 21, 2015 at 07:49:13PM +0800, Jiang Liu wrote:
+> On 2015/10/21 19:27, Tomasz Nowicki wrote:
+> > On 21.10.2015 13:02, Liviu Dudau wrote:
+> >> On Wed, Oct 21, 2015 at 11:57:53AM +0200, Tomasz Nowicki wrote:
+> >>> On 14.10.2015 08:29, Jiang Liu wrote:
+> >>>> Introduce common interface acpi_pci_root_create() and related data
+> >>>> structures to create PCI root bus for ACPI PCI host bridges. It will
+> >>>> be used to kill duplicated arch specific code for IA64 and x86. It may
+> >>>> also help ARM64 in future.
+> >>>>
+> >>>> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >>>> Tested-by: Tony Luck <tony.luck@intel.com>
+> >>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> >>>> Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
+> >>>> ---
+> >>>>   drivers/acpi/pci_root.c  |  204
+> >>>> ++++++++++++++++++++++++++++++++++++++++++++++
+> >>>>   include/linux/pci-acpi.h |   24 ++++++
+> >>>>   2 files changed, 228 insertions(+)
+> >>>>
+> >>>
+> >>> [...]
+> >>>
+> >>>> +
+> >>>> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+> >>>> +                     struct acpi_pci_root_ops *ops,
+> >>>> +                     struct acpi_pci_root_info *info,
+> >>>> +                     void *sysdata)
+> >>>> +{
+> >>>> +    int ret, busnum = root->secondary.start;
+> >>>> +    struct acpi_device *device = root->device;
+> >>>> +    int node = acpi_get_node(device->handle);
+> >>>> +    struct pci_bus *bus;
+> >>>> +
+> >>>> +    info->root = root;
+> >>>> +    info->bridge = device;
+> >>>> +    info->ops = ops;
+> >>>> +    INIT_LIST_HEAD(&info->resources);
+> >>>> +    snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
+> >>>> +         root->segment, busnum);
+> >>>> +
+> >>>> +    if (ops->init_info && ops->init_info(info))
+> >>>> +        goto out_release_info;
+> >>>> +    if (ops->prepare_resources)
+> >>>> +        ret = ops->prepare_resources(info);
+> >>>> +    else
+> >>>> +        ret = acpi_pci_probe_root_resources(info);
+> >>>> +    if (ret < 0)
+> >>>> +        goto out_release_info;
+> >>>> +
+> >>>> +    pci_acpi_root_add_resources(info);
+> >>>> +    pci_add_resource(&info->resources, &root->secondary);
+> >>>> +    bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+> >>>> +                  sysdata, &info->resources);
+> >>>
+> >>> Thank a lot for this cleanup!!
+> >>>
+> >>> I recall you already considered passing segment (domain nr) to
+> >>> pci_create_root_bus, right? Can you please remind me why we gave up
+> >>> on this?
+> >>>
+> >>> I am asking because currently I can not find the way to retrieve domain
+> >>> number from pci_bus_assign_domain_nr (for those platforms which choose
+> >>> PCI_DOMAINS_GENERIC and want to use segment nr from MCFG table) which
+> >>> is the
+> >>> part of pci_create_root_bus.
+> >>
+> >> Not sure I fully understand your question, but
+> >> pci_bus_assign_domain_nr() will
+> >> put the assigned domain number in bus->domain_nr if you chose
+> >> PCI_DOMAINS_GENERIC.
+> >> Do you want to override that value with the segment nr from MCFG?
+> >>
+> > 
+> > Let me give ACPI ARM64 example:
+> > 
+> > 1. We parse MCFG table and get segment nr assigned to root bridge
+> > 2. Then PCI host bridge calls acpi_pci_root_create ->
+> > pci_create_root_bus -> pci_bus_assign_domain_nr
+> > 3. At this point we cannot get segment nr for ACPI
+> > 
+> > So I would like to assign MCFG segment nr to bus->domain_nr being in
+> > pci_bus_assign_domain_nr giving we have scenario above.
+> Please use sysdata for that, IA64 and x86 are making use of sysdata
+> to store such information:
+> struct pci_sysdata {
+>         int             domain;         /* PCI domain */
+>         int             node;           /* NUMA node */
+> #ifdef CONFIG_ACPI
+>         struct acpi_device *companion;  /* ACPI companion device */
+> #endif
+> #ifdef CONFIG_X86_64
+>         void            *iommu;         /* IOMMU private data */
+> #endif
+> };
+> 
+> Hanjun once tried to introduce struct pci_sysdata for ARM64, but
+> seems it has been rejected.
 
-The Linux kernel already has the concpet of IRQ domain, whereing a component
-can expose a set of IRQs which are managed by a particular interrupt controller
-chip or other subsystem. The PCI driver exposes the notion of an IRQ domain
-for Message-Signaled Interrupts (MSI) from PCI Express devices. This patch
-exposes the functions which are necessary for making an MSI IRQ domain within
-a module.
+For good reason! There is a lot of duplication between different arches notion
+of the pci_sysdata and they can be moved into pci_bus or pci_host_bridge
+structures. The goal is to get rid of multiple pci_sysdata structures, not
+to add more.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- arch/x86/include/asm/msi.h    | 4 ++++
- arch/x86/kernel/apic/msi.c    | 5 +++--
- arch/x86/kernel/apic/vector.c | 2 ++
- drivers/pci/msi.c             | 4 ++++
- kernel/irq/chip.c             | 1 +
- kernel/irq/irqdomain.c        | 2 ++
- 6 files changed, 16 insertions(+), 2 deletions(-)
+Best regards,
+Liviu
 
-diff --git a/arch/x86/include/asm/msi.h b/arch/x86/include/asm/msi.h
-index 93724cc..e8b7924 100644
---- a/arch/x86/include/asm/msi.h
-+++ b/arch/x86/include/asm/msi.h
-@@ -1,7 +1,11 @@
- #ifndef _ASM_X86_MSI_H
- #define _ASM_X86_MSI_H
- #include <asm/hw_irq.h>
-+#include <asm/irqdomain.h>
- 
- typedef struct irq_alloc_info msi_alloc_info_t;
- 
-+int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
-+		    msi_alloc_info_t *arg);
-+
- #endif /* _ASM_X86_MSI_H */
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 5f1feb6..bdb28fc 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -96,8 +96,8 @@ static irq_hw_number_t pci_msi_get_hwirq(struct msi_domain_info *info,
- 	return arg->msi_hwirq;
- }
- 
--static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
--			   int nvec, msi_alloc_info_t *arg)
-+int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
-+		    msi_alloc_info_t *arg)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct msi_desc *desc = first_pci_msi_entry(pdev);
-@@ -113,6 +113,7 @@ static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(pci_msi_prepare);
- 
- static void pci_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
- {
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 836d11b..f3ac5e1 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -29,6 +29,7 @@ struct apic_chip_data {
- };
- 
- struct irq_domain *x86_vector_domain;
-+EXPORT_SYMBOL_GPL(x86_vector_domain);
- static DEFINE_RAW_SPINLOCK(vector_lock);
- static cpumask_var_t vector_cpumask;
- static struct irq_chip lapic_controller;
-@@ -66,6 +67,7 @@ struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
- 
- 	return data ? &data->cfg : NULL;
- }
-+EXPORT_SYMBOL_GPL(irqd_cfg);
- 
- struct irq_cfg *irq_cfg(unsigned int irq)
- {
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 53e4632..3915a99 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -257,6 +257,7 @@ void pci_msi_mask_irq(struct irq_data *data)
- {
- 	msi_set_mask_bit(data, 1);
- }
-+EXPORT_SYMBOL_GPL(pci_msi_mask_irq);
- 
- /**
-  * pci_msi_unmask_irq - Generic irq chip callback to unmask PCI/MSI interrupts
-@@ -266,6 +267,7 @@ void pci_msi_unmask_irq(struct irq_data *data)
- {
- 	msi_set_mask_bit(data, 0);
- }
-+EXPORT_SYMBOL_GPL(pci_msi_unmask_irq);
- 
- void default_restore_msi_irqs(struct pci_dev *dev)
- {
-@@ -1126,6 +1128,7 @@ struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
- {
- 	return to_pci_dev(desc->dev);
- }
-+EXPORT_SYMBOL(msi_desc_to_pci_dev);
- 
- void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
- {
-@@ -1285,6 +1288,7 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
- 	domain->bus_token = DOMAIN_BUS_PCI_MSI;
- 	return domain;
- }
-+EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
- 
- /**
-  * pci_msi_domain_alloc_irqs - Allocate interrupts for @dev in @domain
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 1520645..2414775 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -950,6 +950,7 @@ void irq_chip_ack_parent(struct irq_data *data)
- 	data = data->parent_data;
- 	data->chip->irq_ack(data);
- }
-+EXPORT_SYMBOL_GPL(irq_chip_ack_parent);
- 
- /**
-  * irq_chip_mask_parent - Mask the parent interrupt
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 22aa961..174d7e0 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -60,6 +60,7 @@ struct fwnode_handle *irq_domain_alloc_fwnode(void *data)
- 	fwid->fwnode.type = FWNODE_IRQCHIP;
- 	return &fwid->fwnode;
- }
-+EXPORT_SYMBOL_GPL(irq_domain_alloc_fwnode);
- 
- /**
-  * irq_domain_free_fwnode - Free a non-OF-backed fwnode_handle
-@@ -77,6 +78,7 @@ void irq_domain_free_fwnode(struct fwnode_handle *fwnode)
- 	kfree(fwid->name);
- 	kfree(fwid);
- }
-+EXPORT_SYMBOL_GPL(irq_domain_free_fwnode);
- 
- /**
-  * __irq_domain_add() - Allocate a new irq_domain data structure
+> 
+> > 
+> > Thanks,
+> > Tomasz
+> > -- 
+> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Please read the FAQ at  http://www.tux.org/lkml/
+> 
+
 -- 
-1.9.1
-
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
