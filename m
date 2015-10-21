@@ -1,144 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:36878 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750892AbbJCSNL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 14:13:11 -0400
-In-Reply-To: <20151003181228.GI21513@n2100.arm.linux.org.uk>
-References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 2/9] pci: mvebu: fix memory leaks and refcount leaks
+Received: from foss.arm.com ([217.140.101.70]:60397 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752382AbbJULCF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 Oct 2015 07:02:05 -0400
+Date: Wed, 21 Oct 2015 12:02:01 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+Message-ID: <20151021110201.GE3394@e106497-lin.cambridge.arm.com>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
+ <562761A1.4020306@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1ZiRIs-0004Id-AN@rmk-PC.arm.linux.org.uk>
-Date: Sat, 03 Oct 2015 19:13:02 +0100
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <562761A1.4020306@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The mvebu PCI port parsing is weak due to:
+On Wed, Oct 21, 2015 at 11:57:53AM +0200, Tomasz Nowicki wrote:
+> On 14.10.2015 08:29, Jiang Liu wrote:
+> >Introduce common interface acpi_pci_root_create() and related data
+> >structures to create PCI root bus for ACPI PCI host bridges. It will
+> >be used to kill duplicated arch specific code for IA64 and x86. It may
+> >also help ARM64 in future.
+> >
+> >Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >Tested-by: Tony Luck <tony.luck@intel.com>
+> >Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> >Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
+> >---
+> >  drivers/acpi/pci_root.c  |  204 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  include/linux/pci-acpi.h |   24 ++++++
+> >  2 files changed, 228 insertions(+)
+> >
+> 
+> [...]
+> 
+> >+
+> >+struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+> >+				     struct acpi_pci_root_ops *ops,
+> >+				     struct acpi_pci_root_info *info,
+> >+				     void *sysdata)
+> >+{
+> >+	int ret, busnum = root->secondary.start;
+> >+	struct acpi_device *device = root->device;
+> >+	int node = acpi_get_node(device->handle);
+> >+	struct pci_bus *bus;
+> >+
+> >+	info->root = root;
+> >+	info->bridge = device;
+> >+	info->ops = ops;
+> >+	INIT_LIST_HEAD(&info->resources);
+> >+	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
+> >+		 root->segment, busnum);
+> >+
+> >+	if (ops->init_info && ops->init_info(info))
+> >+		goto out_release_info;
+> >+	if (ops->prepare_resources)
+> >+		ret = ops->prepare_resources(info);
+> >+	else
+> >+		ret = acpi_pci_probe_root_resources(info);
+> >+	if (ret < 0)
+> >+		goto out_release_info;
+> >+
+> >+	pci_acpi_root_add_resources(info);
+> >+	pci_add_resource(&info->resources, &root->secondary);
+> >+	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+> >+				  sysdata, &info->resources);
+> 
+> Thank a lot for this cleanup!!
+> 
+> I recall you already considered passing segment (domain nr) to
+> pci_create_root_bus, right? Can you please remind me why we gave up on this?
+> 
+> I am asking because currently I can not find the way to retrieve domain
+> number from pci_bus_assign_domain_nr (for those platforms which choose
+> PCI_DOMAINS_GENERIC and want to use segment nr from MCFG table) which is the
+> part of pci_create_root_bus.
 
-1) allocations via kasprintf() were not cleaned up when we encounter an
-   error or decide to skip the port.
-2) kasprintf() wasn't checked for failure.
-3) of_get_named_gpio_flags() returns EPROBE_DEFER if the GPIO is not
-   present, not devm_gpio_request_one().
-4) the of_node was not being put when terminating the loop.
+Not sure I fully understand your question, but pci_bus_assign_domain_nr() will
+put the assigned domain number in bus->domain_nr if you chose PCI_DOMAINS_GENERIC.
+Do you want to override that value with the segment nr from MCFG?
 
-Fix these oversights.
+Best regards,
+Liviu
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/pci/host/pci-mvebu.c | 50 +++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 43 insertions(+), 7 deletions(-)
+> 
+> Regards,
+> Tomasz
+> 
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 13ab0350f7fb..e8c51bb58e99 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -928,6 +928,13 @@ static int mvebu_pcie_resume(struct device *dev)
- 	return 0;
- }
- 
-+static void mvebu_pcie_port_clk_put(void *data)
-+{
-+	struct mvebu_pcie_port *port = data;
-+
-+	clk_put(port->clk);
-+}
-+
- static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
- 	struct mvebu_pcie_port *port, struct device_node *child)
- {
-@@ -946,7 +953,12 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
- 	if (of_property_read_u32(child, "marvell,pcie-lane", &port->lane))
- 		port->lane = 0;
- 
--	port->name = kasprintf(GFP_KERNEL, "pcie%d.%d", port->port, port->lane);
-+	port->name = devm_kasprintf(dev, GFP_KERNEL, "pcie%d.%d", port->port,
-+				    port->lane);
-+	if (!port->name) {
-+		ret = -ENOMEM;
-+		goto err;
-+	}
- 
- 	port->devfn = of_pci_get_devfn(child);
- 	if (port->devfn < 0)
-@@ -960,20 +972,29 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
- 		goto skip;
- 	}
- 
--	if (resource_size(&pcie->io) != 0)
-+	if (resource_size(&pcie->io) != 0) {
- 		mvebu_get_tgt_attr(dev->of_node, port->devfn, IORESOURCE_IO,
- 				   &port->io_target, &port->io_attr);
--	else {
-+	} else {
- 		port->io_target = -1;
- 		port->io_attr = -1;
- 	}
- 
- 	port->reset_gpio = of_get_named_gpio_flags(child, "reset-gpios", 0,
- 						   &flags);
-+	if (port->reset_gpio == -EPROBE_DEFER) {
-+		ret = port->reset_gpio;
-+		goto err;
-+	}
-+
- 	if (gpio_is_valid(port->reset_gpio)) {
- 		port->reset_active_low = flags & OF_GPIO_ACTIVE_LOW;
--		port->reset_name = kasprintf(GFP_KERNEL, "%s-reset",
--					     port->name);
-+		port->reset_name = devm_kasprintf(dev, GFP_KERNEL, "%s-reset",
-+						  port->name);
-+		if (!port->reset_name) {
-+			ret = -ENOMEM;
-+			goto err;
-+		}
- 
- 		ret = devm_gpio_request_one(dev, port->reset_gpio,
- 					    GPIOF_DIR_OUT, port->reset_name);
-@@ -990,10 +1011,23 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
- 		goto skip;
- 	}
- 
-+	ret = devm_add_action(dev, mvebu_pcie_port_clk_put, port);
-+	if (ret < 0) {
-+		clk_put(port->clk);
-+		goto err;
-+	}
-+
- 	return 1;
- 
- skip:
- 	ret = 0;
-+
-+	/* In the case of skipping, we need to free these */
-+	devm_kfree(dev, port->reset_name);
-+	port->reset_name = NULL;
-+	devm_kfree(dev, port->name);
-+	port->name = NULL;
-+
- err:
- 	return ret;
- }
-@@ -1052,10 +1086,12 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 		struct mvebu_pcie_port *port = &pcie->ports[i];
- 
- 		ret = mvebu_pcie_parse_port(pcie, port, child);
--		if (ret < 0)
-+		if (ret < 0) {
-+			of_node_put(child);
- 			return ret;
--		else if (ret == 0)
-+		} else if (ret == 0) {
- 			continue;
-+		}
- 
- 		if (gpio_is_valid(port->reset_gpio)) {
- 			u32 reset_udelay = 20000;
 -- 
-2.1.0
-
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
