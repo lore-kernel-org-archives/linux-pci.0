@@ -1,157 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: WingMan Kwok <w-kwok2@ti.com>
-To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<kishon@ti.com>, <rogerq@ti.com>, <m-karicheri2@ti.com>,
-	<bhelgaas@google.com>, <ssantosh@kernel.org>,
-	<linux@arm.linux.org.uk>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: WingMan Kwok <w-kwok2@ti.com>
-Subject: [PATCH v1 2/2] PCI: keystone: update to use generic keystone serdes driver
-Date: Thu, 15 Oct 2015 10:25:45 -0400
-Message-ID: <1444919145-30845-3-git-send-email-w-kwok2@ti.com>
-In-Reply-To: <1444919145-30845-1-git-send-email-w-kwok2@ti.com>
-References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39668 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755170AbbJUQXd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 Oct 2015 12:23:33 -0400
+Date: Wed, 21 Oct 2015 11:23:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Joerg Roedel <jroedel@suse.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH] x86/PCI: Don't alloc pcibios-irq when MSI is enabled
+Message-ID: <20151021162329.GB1583@localhost>
+References: <1444386214-26319-1-git-send-email-joro@8bytes.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444386214-26319-1-git-send-email-joro@8bytes.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch updates the Keystone PCI driver to use the
-generic Keystone serdes driver for serdes initialization
-and configuration.  The generic serdes driver supports
-peripherals on Keystone platforms that require serdes.
+On Fri, Oct 09, 2015 at 12:23:34PM +0200, Joerg Roedel wrote:
+> From: Joerg Roedel <jroedel@suse.de>
+> 
+> The pcibios-irq and MSI both use dev->irq to store the IRQ
+> number. While the MSI code checks for that and frees the
+> pcibios-irq before overwriting dev->irq, the
+> pcibios_alloc_irq function does not.
+> 
+> Usually this is not a problem, as the pcibios-irq is
+> allocated before probe time of the device and the MSI irq is
+> allocted from the drivers probe path.
+> 
+> But there are PCI devices handled by the core kernel and not
+> by a standard pci driver, like the AMD IOMMU for example.
+> For the AMD IOMMU a normal pci device driver does not make
+> sense, because a driver can be forcibly unbound from its
+> device, which is not a good idea for an IOMMU.
+> 
+> Nevertheless the PCI core code tries to match the PCI device
+> implementing the AMD IOMMU against drivers, and
+> allocates/frees a pcibios IRQ every time it tries out a new
+> driver. This overwrites the dev->irq field set by
+> pci_enable_msi() and sets it to 0 in the end (because the
+> probe fails and the pcibios-irq is freed again).
+> 
+> On suspend/resume this breaks the kernel, because the irq
+> descriptor for irq 0 is NULL.
+> 
+> Fix this by not allocating a pcibios-irq when MSI is
+> already active. This also has the benefit, that a device
+> claimed by the core kernel can not be probed by a pci driver
+> later.
+> 
+> Cc: Jiang Liu <jiang.liu@linux.intel.com>
+> Reported-by: Borislav Petkov <bp@alien8.de>
+> Signed-off-by: Joerg Roedel <jroedel@suse.de>
 
-v1:
-	- no change.
+Applied with Thomas' reviewed-by to pci/msi for v4.4, thanks, Joerg!
 
-Signed-off-by: WingMan Kwok <w-kwok2@ti.com>
----
- drivers/pci/host/pci-keystone.c |   54 ++++++++++++++++++++++++++++++++-------
- drivers/pci/host/pci-keystone.h |    2 ++
- 2 files changed, 47 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index 0aa81bd..b4de05b 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -335,6 +335,7 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
- {
- 	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
- 
-+	phy_exit(ks_pcie->serdes_phy);
- 	clk_disable_unprepare(ks_pcie->clk);
- 
- 	return 0;
-@@ -342,6 +343,8 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
- 
- static int __init ks_pcie_probe(struct platform_device *pdev)
- {
-+	struct device_node *node = pdev->dev.of_node;
-+	struct device_node *serdeses_np, *child;
- 	struct device *dev = &pdev->dev;
- 	struct keystone_pcie *ks_pcie;
- 	struct pcie_port *pp;
-@@ -349,6 +352,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	void __iomem *reg_p;
- 	struct phy *phy;
- 	int ret = 0;
-+	u32 phy_num;
- 
- 	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
- 				GFP_KERNEL);
-@@ -357,14 +361,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 
- 	pp = &ks_pcie->pp;
- 
--	/* initialize SerDes Phy if present */
--	phy = devm_phy_get(dev, "pcie-phy");
--	if (!IS_ERR_OR_NULL(phy)) {
--		ret = phy_init(phy);
--		if (ret < 0)
--			return ret;
--	}
--
- 	/* index 2 is to read PCI DEVICE_ID */
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
- 	reg_p = devm_ioremap_resource(dev, res);
-@@ -385,6 +381,46 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
-+	serdeses_np = of_get_child_by_name(node, "serdeses");
-+	if (serdeses_np) {
-+		for_each_available_child_of_node(serdeses_np, child) {
-+			ret = of_property_read_u32(child, "reg", &phy_num);
-+			if (ret) {
-+				dev_err(dev, "Failed to parse device tree\n");
-+				of_node_put(child);
-+				of_node_put(serdeses_np);
-+				goto fail_clk;
-+			}
-+
-+			if (phy_num >= MAX_NUM_PCI_SERDES) {
-+				dev_err(dev, "Invalid phy number: %u\n",
-+					phy_num);
-+				of_node_put(child);
-+				of_node_put(serdeses_np);
-+				ret = -EINVAL;
-+				goto fail_clk;
-+			}
-+
-+			phy = devm_of_phy_get(dev, child, NULL);
-+			of_node_put(child);
-+			ks_pcie->serdes_phy = phy;
-+			if (IS_ERR(phy)) {
-+				dev_err(dev, "No %s serdes driver found: %ld\n",
-+					node->name, PTR_ERR(phy));
-+				of_node_put(serdeses_np);
-+				ret = PTR_ERR(phy);
-+				goto fail_clk;
-+			}
-+
-+			ret = phy_init(phy);
-+			if (ret < 0) {
-+				of_node_put(serdeses_np);
-+				goto fail_clk;
-+			}
-+		}
-+		of_node_put(serdeses_np);
-+	}
-+
- 	ret = ks_add_pcie_port(ks_pcie, pdev);
- 	if (ret < 0)
- 		goto fail_clk;
-@@ -392,7 +428,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	return 0;
- fail_clk:
- 	clk_disable_unprepare(ks_pcie->clk);
--
-+	phy_exit(ks_pcie->serdes_phy);
- 	return ret;
- }
- 
-diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
-index 478d932..21662ba 100644
---- a/drivers/pci/host/pci-keystone.h
-+++ b/drivers/pci/host/pci-keystone.h
-@@ -15,6 +15,7 @@
- #define MAX_LEGACY_IRQS			4
- #define MAX_MSI_HOST_IRQS		8
- #define MAX_LEGACY_HOST_IRQS		4
-+#define MAX_NUM_PCI_SERDES		1
- 
- struct keystone_pcie {
- 	struct	clk		*clk;
-@@ -33,6 +34,7 @@ struct keystone_pcie {
- 	/* Application register space */
- 	void __iomem		*va_app_base;
- 	struct resource		app;
-+	struct phy		*serdes_phy;
- };
- 
- /* Keystone DW specific MSI controller APIs/definitions */
--- 
-1.7.9.5
-
+> ---
+>  arch/x86/pci/common.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index dc78a4a..6254c06 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -675,6 +675,14 @@ int pcibios_add_device(struct pci_dev *dev)
+>  
+>  int pcibios_alloc_irq(struct pci_dev *dev)
+>  {
+> +	/*
+> +	 * If the PCI device was already claimed by core code and has
+> +	 * MSI enabled, probing of the pcibios irq will overwrite
+> +	 * dev->irq.  So bail out if MSI is already enabled.
+> +	 */
+> +	if (pci_dev_msi_enabled(dev))
+> +		return -EBUSY;
+> +
+>  	return pcibios_enable_irq(dev);
+>  }
+>  
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
