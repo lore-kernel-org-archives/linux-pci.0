@@ -1,65 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([104.200.29.153]:36191 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750974AbbJWFFo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:05:44 -0400
-From: Matthew Minter <matt@masarand.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	lorenzo.pieralisi@arm.com
-Cc: Matthew Minter <matt@masarand.com>
-Subject: [PATCH V4 01/29] PCI: Build setup-irq.o on all arches
-Date: Fri, 23 Oct 2015 06:03:34 +0100
-Message-Id: <1445576642-29624-2-git-send-email-matt@masarand.com>
-In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
-References: <1445576642-29624-1-git-send-email-matt@masarand.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
+	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH V4 3/8] acpi: Adding DMA Attribute APIs for ACPI Device
+Date: Wed, 21 Oct 2015 08:52:06 -0700
+Message-ID: <1445442731-28819-4-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The functions included in setup-irq.o currently apply only to a selection
-of architectures which share common IRQ assignment code. However this
-code needs to be generalised for all arches to allow deferred IRQ
-assignment. So the first step is to build it on all architectures.
+Adding acpi_get_dma_attr() to query DMA attributes of ACPI devices.
+It returns the enum dev_dma_attr, which communicates DMA information
+more clearly. This API replaces the acpi_check_dma(), which will be
+removed in subsequent patch.
 
-Signed-off-by: Matthew Minter <matt@masarand.com>
+This patch also provides a convenient function, acpi_dma_supported(),
+to check DMA support of the specified ACPI device.
+
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rafael J. Wysocki <rjw@rjwysocki.net>
 ---
- drivers/pci/Makefile | 16 ++--------------
- 1 file changed, 2 insertions(+), 14 deletions(-)
+ drivers/acpi/scan.c     | 42 ++++++++++++++++++++++++++++++++++++++++++
+ include/acpi/acpi_bus.h |  3 +++
+ include/linux/acpi.h    | 10 ++++++++++
+ 3 files changed, 55 insertions(+)
 
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index be3f631..8417f55 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -4,7 +4,8 @@
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 01136b8..3be213e 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1328,6 +1328,48 @@ void acpi_free_pnp_ids(struct acpi_device_pnp *pnp)
+ 	kfree(pnp->unique_id);
+ }
  
- obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
- 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
--			irq.o vpd.o setup-bus.o vc.o
-+			irq.o vpd.o setup-bus.o vc.o setup-irq.o
++/**
++ * acpi_dma_supported - Check DMA support for the specified device.
++ * @adev: The pointer to acpi device
++ *
++ * Return false if DMA is not supported. Otherwise, return true
++ */
++bool acpi_dma_supported(struct acpi_device *adev)
++{
++	if (!adev)
++		return false;
 +
- obj-$(CONFIG_PROC_FS) += proc.o
- obj-$(CONFIG_SYSFS) += slot.o
++	if (adev->flags.cca_seen)
++		return true;
++
++	/*
++	* Per ACPI 6.0 sec 6.2.17, assume devices can do cache-coherent
++	* DMA on "Intel platforms".  Presumably that includes all x86 and
++	* ia64, and other arches will set CONFIG_ACPI_CCA_REQUIRED=y.
++	*/
++	if (!IS_ENABLED(CONFIG_ACPI_CCA_REQUIRED))
++		return true;
++
++	return false;
++}
++
++/**
++ * acpi_get_dma_attr - Check the supported DMA attr for the specified device.
++ * @adev: The pointer to acpi device
++ *
++ * Return enum dev_dma_attr.
++ */
++enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
++{
++	if (!acpi_dma_supported(adev))
++		return DEV_DMA_NOT_SUPPORTED;
++
++	if (adev->flags.coherent_dma)
++		return DEV_DMA_COHERENT;
++	else
++		return DEV_DMA_NON_COHERENT;
++}
++
+ static void acpi_init_coherency(struct acpi_device *adev)
+ {
+ 	unsigned long long cca = 0;
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 5a42204..13417d0 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -567,6 +567,9 @@ struct acpi_pci_root {
  
-@@ -29,19 +30,6 @@ obj-$(CONFIG_PCI_ATS) += ats.o
- obj-$(CONFIG_PCI_IOV) += iov.o
+ /* helper */
  
- #
--# Some architectures use the generic PCI setup functions
--#
--obj-$(CONFIG_ALPHA) += setup-irq.o
--obj-$(CONFIG_ARM) += setup-irq.o
--obj-$(CONFIG_ARM64) += setup-irq.o
--obj-$(CONFIG_UNICORE32) += setup-irq.o
--obj-$(CONFIG_SUPERH) += setup-irq.o
--obj-$(CONFIG_MIPS) += setup-irq.o
--obj-$(CONFIG_TILE) += setup-irq.o
--obj-$(CONFIG_SPARC_LEON) += setup-irq.o
--obj-$(CONFIG_M68K) += setup-irq.o
--
--#
- # ACPI Related PCI FW Functions
- # ACPI _DSM provided firmware instance and string name
- #
++bool acpi_dma_supported(struct acpi_device *adev);
++enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
++
+ struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
+ 					   u64 address, bool check_children);
+ int acpi_is_root_bridge(acpi_handle);
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index dd39202..c47892c 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -569,6 +569,16 @@ static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+ 	return false;
+ }
+ 
++static inline bool acpi_dma_supported(struct acpi_device *adev)
++{
++	return false;
++}
++
++static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
++{
++	return DEV_DMA_NOT_SUPPORTED;
++}
++
+ #define ACPI_PTR(_ptr)	(NULL)
+ 
+ #endif	/* !CONFIG_ACPI */
 -- 
-2.6.2
+2.1.0
 
