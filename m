@@ -1,392 +1,251 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0063.outbound.protection.outlook.com ([65.55.169.63]:50336
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752920AbbJSIUA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Oct 2015 04:20:00 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v10 4/6] pci: altera: Add Altera PCIe MSI driver
-Date: Mon, 19 Oct 2015 16:19:26 +0800
-Message-ID: <1445242768-4423-5-git-send-email-lftan@altera.com>
-In-Reply-To: <1445242768-4423-1-git-send-email-lftan@altera.com>
-References: <1445242768-4423-1-git-send-email-lftan@altera.com>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:34637 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753158AbbJUUpr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 16:45:47 -0400
+Subject: Re: [RFC Patch 03/12] IXGBE: Add sysfs interface for Qemu to migrate
+ VF status in the PF driver
+To: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	eddie.dong@intel.com, nrupal.jani@intel.com,
+	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
+	pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+ <1445445464-5056-4-git-send-email-tianyu.lan@intel.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <5627F979.8070104@gmail.com>
+Date: Wed, 21 Oct 2015 13:45:45 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1445445464-5056-4-git-send-email-tianyu.lan@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds Altera PCIe MSI driver. This soft IP supports configurable
-number of vectors, which is a dts parameter.
+On 10/21/2015 09:37 AM, Lan Tianyu wrote:
+> This patch is to add sysfs interface state_in_pf under sysfs directory
+> of VF PCI device for Qemu to get and put VF status in the PF driver during
+> migration.
+>
+> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
+> ---
+>   drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 156 ++++++++++++++++++++++++-
+>   1 file changed, 155 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+> index ab2a2e2..89671eb 100644
+> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+> @@ -124,6 +124,157 @@ static int __ixgbe_enable_sriov(struct ixgbe_adapter *adapter)
+>   	return -ENOMEM;
+>   }
+>   
+> +#define IXGBE_PCI_VFCOMMAND   0x4
+> +#define IXGBE_PCI_VFMSIXMC    0x72
+> +#define IXGBE_SRIOV_VF_OFFSET 0x180
+> +#define IXGBE_SRIOV_VF_STRIDE 0x2
+> +
+> +#define to_adapter(dev) ((struct ixgbe_adapter *)(pci_get_drvdata(to_pci_dev(dev)->physfn)))
+> +
+> +struct state_in_pf {
+> +	u16 command;
+> +	u16 msix_message_control;
+> +	struct vf_data_storage vf_data;
+> +};
+> +
+> +static struct pci_dev *ixgbe_get_virtfn_dev(struct pci_dev *pdev, int vfn)
+> +{
+> +	u16 rid = pdev->devfn + IXGBE_SRIOV_VF_OFFSET + IXGBE_SRIOV_VF_STRIDE * vfn;
+> +	return pci_get_bus_and_slot(pdev->bus->number + (rid >> 8), rid & 0xff);
+> +}
+> +
+> +static ssize_t ixgbe_show_state_in_pf(struct device *dev,
+> +				      struct device_attribute *attr, char *buf)
+> +{
+> +	struct ixgbe_adapter *adapter = to_adapter(dev);
+> +	struct pci_dev *pdev = adapter->pdev, *vdev;
+> +	struct pci_dev *vf_pdev = to_pci_dev(dev);
+> +	struct ixgbe_hw *hw = &adapter->hw;
+> +	struct state_in_pf *state = (struct state_in_pf *)buf;
+> +	int vfn = vf_pdev->virtfn_index;
+> +	u32 reg, reg_offset, vf_shift;
+> +
+> +	/* Clear VF mac and disable VF */
+> +	ixgbe_del_mac_filter(adapter, adapter->vfinfo[vfn].vf_mac_addresses, vfn);
+> +
+> +	/* Record PCI configurations */
+> +	vdev = ixgbe_get_virtfn_dev(pdev, vfn);
+> +	if (vdev) {
+> +		pci_read_config_word(vdev, IXGBE_PCI_VFCOMMAND, &state->command);
+> +		pci_read_config_word(vdev, IXGBE_PCI_VFMSIXMC, &state->msix_message_control);
+> +	}
+> +	else
+> +		printk(KERN_WARNING "Unable to find VF device.\n");
+> +
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
-Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/pci/host/Kconfig           |   8 +
- drivers/pci/host/Makefile          |   1 +
- drivers/pci/host/pcie-altera-msi.c | 313 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 322 insertions(+)
- create mode 100644 drivers/pci/host/pcie-altera-msi.c
+Formatting for the if/else is incorrect.  The else condition should be 
+in brackets as well.
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index a9f6db4..35eba16 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -152,4 +152,12 @@ config PCIE_ALTERA
- 	  Say Y here if you want to enable PCIe controller support on Altera
- 	  FPGA.
- 
-+config PCIE_ALTERA_MSI
-+	bool "Altera PCIe MSI feature"
-+	depends on PCI_MSI
-+	select PCI_MSI_IRQ_DOMAIN
-+	help
-+	  Say Y here if you want PCIe MSI support for the Altera FPGA.
-+	  This MSI driver supports Altera MSI to GIC controller IP.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 6954f76..6c4913d 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -18,3 +18,4 @@ obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
- obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
- obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
- obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
-+obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
-diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/host/pcie-altera-msi.c
-new file mode 100644
-index 0000000..1d8a1b6
---- /dev/null
-+++ b/drivers/pci/host/pcie-altera-msi.c
-@@ -0,0 +1,313 @@
-+/*
-+ * Copyright Altera Corporation (C) 2013-2015. All rights reserved
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+#include <linux/interrupt.h>
-+#include <linux/irqchip/chained_irq.h>
-+#include <linux/module.h>
-+#include <linux/msi.h>
-+#include <linux/of_address.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_pci.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/slab.h>
-+
-+#define MSI_STATUS		0x0
-+#define MSI_ERROR		0x4
-+#define MSI_INTMASK		0x8
-+
-+#define MAX_MSI_VECTORS		32
-+struct altera_msi {
-+	DECLARE_BITMAP(used, MAX_MSI_VECTORS);
-+	struct mutex		lock;	/* proctect used variable */
-+	struct platform_device	*pdev;
-+	struct irq_domain		*msi_domain;
-+	struct irq_domain		*inner_domain;
-+	void __iomem		*csr_base;
-+	void __iomem		*vector_base;
-+	phys_addr_t		vector_phy;
-+	u32			num_of_vectors;
-+	int			irq;
-+};
-+
-+static inline void msi_writel(struct altera_msi *msi, const u32 value,
-+			      const u32 reg)
-+{
-+	writel_relaxed(value, msi->csr_base + reg);
-+}
-+
-+static inline u32 msi_readl(struct altera_msi *msi, const u32 reg)
-+{
-+	return readl_relaxed(msi->csr_base + reg);
-+}
-+
-+static void altera_msi_isr(struct irq_desc *desc)
-+{
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	struct altera_msi *msi;
-+	unsigned long status;
-+	u32 num_of_vectors;
-+	u32 bit;
-+	u32 virq;
-+
-+	chained_irq_enter(chip, desc);
-+	msi = irq_desc_get_handler_data(desc);
-+	num_of_vectors = msi->num_of_vectors;
-+
-+	while ((status = msi_readl(msi, MSI_STATUS)) != 0) {
-+		for_each_set_bit(bit, &status, msi->num_of_vectors) {
-+			/* Dummy read from vector to clear the interrupt */
-+			readl_relaxed(msi->vector_base + (bit * sizeof(u32)));
-+
-+			virq = irq_find_mapping(msi->inner_domain, bit);
-+			if (virq)
-+				generic_handle_irq(virq);
-+			else
-+				dev_err(&msi->pdev->dev, "unexpected MSI\n");
-+		}
-+	}
-+
-+	chained_irq_exit(chip, desc);
-+}
-+
-+static struct irq_chip altera_msi_irq_chip = {
-+	.name = "Altera PCIe MSI",
-+	.irq_mask = pci_msi_mask_irq,
-+	.irq_unmask = pci_msi_unmask_irq,
-+};
-+
-+static struct msi_domain_info altera_msi_domain_info = {
-+	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-+		     MSI_FLAG_PCI_MSIX),
-+	.chip	= &altera_msi_irq_chip,
-+};
-+
-+static void altera_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-+{
-+	struct altera_msi *msi = irq_data_get_irq_chip_data(data);
-+	phys_addr_t addr = msi->vector_phy + (data->hwirq * sizeof(u32));
-+
-+	msg->address_lo = lower_32_bits(addr);
-+	msg->address_hi = upper_32_bits(addr);
-+	msg->data = data->hwirq;
-+
-+	dev_dbg(&msi->pdev->dev, "msi#%d address_hi 0x%x address_lo 0x%x\n",
-+		(int)data->hwirq, msg->address_hi, msg->address_lo);
-+}
-+
-+static int altera_msi_set_affinity(struct irq_data *irq_data,
-+				   const struct cpumask *mask, bool force)
-+{
-+	 return -EINVAL;
-+}
-+
-+static struct irq_chip altera_msi_bottom_irq_chip = {
-+	.name			= "Altera MSI",
-+	.irq_compose_msi_msg	= altera_compose_msi_msg,
-+	.irq_set_affinity	= altera_msi_set_affinity,
-+};
-+
-+static int altera_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+				   unsigned int nr_irqs, void *args)
-+{
-+	struct altera_msi *msi = domain->host_data;
-+	unsigned long bit;
-+	u32 mask;
-+
-+	WARN_ON(nr_irqs != 1);
-+	mutex_lock(&msi->lock);
-+
-+	bit = find_first_zero_bit(msi->used, msi->num_of_vectors);
-+	if (bit >= msi->num_of_vectors) {
-+		mutex_unlock(&msi->lock);
-+		return -ENOSPC;
-+	}
-+
-+	set_bit(bit, msi->used);
-+
-+	mutex_unlock(&msi->lock);
-+
-+	irq_domain_set_info(domain, virq, bit, &altera_msi_bottom_irq_chip,
-+			    domain->host_data, handle_simple_irq,
-+			    NULL, NULL);
-+
-+	mask = msi_readl(msi, MSI_INTMASK);
-+	mask |= 1 << bit;
-+	msi_writel(msi, mask, MSI_INTMASK);
-+
-+	return 0;
-+}
-+
-+static void altera_irq_domain_free(struct irq_domain *domain,
-+				   unsigned int virq, unsigned int nr_irqs)
-+{
-+	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
-+	struct altera_msi *msi = irq_data_get_irq_chip_data(d);
-+	u32 mask;
-+
-+	mutex_lock(&msi->lock);
-+
-+	if (!test_bit(d->hwirq, msi->used)) {
-+		dev_err(&msi->pdev->dev, "trying to free unused MSI#%lu\n",
-+			d->hwirq);
-+	} else {
-+		__clear_bit(d->hwirq, msi->used);
-+		mask = msi_readl(msi, MSI_INTMASK);
-+		mask &= ~(1 << d->hwirq);
-+		msi_writel(msi, mask, MSI_INTMASK);
-+	}
-+
-+	mutex_unlock(&msi->lock);
-+}
-+
-+static const struct irq_domain_ops msi_domain_ops = {
-+	.alloc	= altera_irq_domain_alloc,
-+	.free	= altera_irq_domain_free,
-+};
-+
-+static int altera_allocate_domains(struct altera_msi *msi)
-+{
-+	msi->inner_domain = irq_domain_add_linear(NULL, msi->num_of_vectors,
-+					     &msi_domain_ops, msi);
-+	if (!msi->inner_domain) {
-+		dev_err(&msi->pdev->dev, "failed to create IRQ domain\n");
-+		return -ENOMEM;
-+	}
-+
-+	msi->msi_domain = pci_msi_create_irq_domain(msi->pdev->dev.of_node,
-+				&altera_msi_domain_info, msi->inner_domain);
-+	if (!msi->msi_domain) {
-+		dev_err(&msi->pdev->dev, "failed to create MSI domain\n");
-+		irq_domain_remove(msi->inner_domain);
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+static void altera_free_domains(struct altera_msi *msi)
-+{
-+	irq_domain_remove(msi->msi_domain);
-+	irq_domain_remove(msi->inner_domain);
-+}
-+
-+static int altera_msi_remove(struct platform_device *pdev)
-+{
-+	struct altera_msi *msi = platform_get_drvdata(pdev);
-+
-+	msi_writel(msi, 0, MSI_INTMASK);
-+	irq_set_chained_handler(msi->irq, NULL);
-+	irq_set_handler_data(msi->irq, NULL);
-+
-+	altera_free_domains(msi);
-+
-+	platform_set_drvdata(pdev, NULL);
-+	return 0;
-+}
-+
-+static int altera_msi_probe(struct platform_device *pdev)
-+{
-+	struct altera_msi *msi;
-+	struct device_node *np = pdev->dev.of_node;
-+	struct resource *res;
-+	int ret;
-+
-+	msi = devm_kzalloc(&pdev->dev, sizeof(struct altera_msi),
-+			   GFP_KERNEL);
-+	if (!msi)
-+		return -ENOMEM;
-+
-+	mutex_init(&msi->lock);
-+	msi->pdev = pdev;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "csr");
-+	if (!res) {
-+		dev_err(&pdev->dev,
-+			"no csr memory resource defined\n");
-+		return -ENODEV;
-+	}
-+
-+	msi->csr_base = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(msi->csr_base)) {
-+		dev_err(&pdev->dev, "failed to map csr memory\n");
-+		return PTR_ERR(msi->csr_base);
-+	}
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-+					   "vector_slave");
-+	if (!res) {
-+		dev_err(&pdev->dev,
-+			"no vector_slave memory resource defined\n");
-+		return -ENODEV;
-+	}
-+
-+	msi->vector_base = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(msi->vector_base)) {
-+		dev_err(&pdev->dev, "failed to map vector_slave memory\n");
-+		return PTR_ERR(msi->vector_base);
-+	}
-+
-+	msi->vector_phy = res->start;
-+
-+	if (of_property_read_u32(np, "num-vectors", &msi->num_of_vectors)) {
-+		dev_err(&pdev->dev, "failed to parse the number of vectors\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = altera_allocate_domains(msi);
-+	if (ret)
-+		return ret;
-+
-+	msi->irq = platform_get_irq(pdev, 0);
-+	if (msi->irq <= 0) {
-+		dev_err(&pdev->dev, "failed to map IRQ: %d\n", msi->irq);
-+		ret = -ENODEV;
-+		goto err;
-+	}
-+
-+	irq_set_chained_handler_and_data(msi->irq, altera_msi_isr, msi);
-+	platform_set_drvdata(pdev, msi);
-+
-+	return 0;
-+
-+err:
-+	altera_msi_remove(pdev);
-+	return ret;
-+}
-+
-+static const struct of_device_id altera_msi_of_match[] = {
-+	{ .compatible = "altr,msi-1.0", NULL },
-+	{ },
-+};
-+
-+static struct platform_driver altera_msi_driver = {
-+	.driver = {
-+		.name = "altera-msi",
-+		.of_match_table = altera_msi_of_match,
-+	},
-+	.probe = altera_msi_probe,
-+	.remove = altera_msi_remove,
-+};
-+
-+static int __init altera_msi_init(void)
-+{
-+	return platform_driver_register(&altera_msi_driver);
-+}
-+
-+subsys_initcall(altera_msi_init);
-+
-+MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
-+MODULE_DESCRIPTION("Altera PCIe MSI support");
-+MODULE_LICENSE("GPL v2");
--- 
-1.8.2.1
+> +	/* Record states hold by PF */
+> +	memcpy(&state->vf_data, &adapter->vfinfo[vfn], sizeof(struct vf_data_storage));
+> +
+> +	vf_shift = vfn % 32;
+> +	reg_offset = vfn / 32;
+> +
+> +	reg = IXGBE_READ_REG(hw, IXGBE_VFTE(reg_offset));
+> +	reg &= ~(1 << vf_shift);
+> +	IXGBE_WRITE_REG(hw, IXGBE_VFTE(reg_offset), reg);
+> +
+> +	reg = IXGBE_READ_REG(hw, IXGBE_VFRE(reg_offset));
+> +	reg &= ~(1 << vf_shift);
+> +	IXGBE_WRITE_REG(hw, IXGBE_VFRE(reg_offset), reg);
+> +
+> +	reg = IXGBE_READ_REG(hw, IXGBE_VMECM(reg_offset));
+> +	reg &= ~(1 << vf_shift);
+> +	IXGBE_WRITE_REG(hw, IXGBE_VMECM(reg_offset), reg);
+> +
+> +	return sizeof(struct state_in_pf);
+> +}
+> +
 
+This is a read.  Why does it need to switch off the VF?  Also why turn 
+of the anti-spoof, it doesn't make much sense.
+
+> +static ssize_t ixgbe_store_state_in_pf(struct device *dev,
+> +				       struct device_attribute *attr,
+> +				       const char *buf, size_t count)
+> +{
+> +	struct ixgbe_adapter *adapter = to_adapter(dev);
+> +	struct pci_dev *pdev = adapter->pdev, *vdev;
+> +	struct pci_dev *vf_pdev = to_pci_dev(dev);
+> +	struct state_in_pf *state = (struct state_in_pf *)buf;
+> +	int vfn = vf_pdev->virtfn_index;
+> +
+> +	/* Check struct size */
+> +	if (count != sizeof(struct state_in_pf)) {
+> +		printk(KERN_ERR "State in PF size does not fit.\n");
+> +		goto out;
+> +	}
+> +
+> +	/* Restore PCI configurations */
+> +	vdev = ixgbe_get_virtfn_dev(pdev, vfn);
+> +	if (vdev) {
+> +		pci_write_config_word(vdev, IXGBE_PCI_VFCOMMAND, state->command);
+> +		pci_write_config_word(vdev, IXGBE_PCI_VFMSIXMC, state->msix_message_control);
+> +	}
+> +
+> +	/* Restore states hold by PF */
+> +	memcpy(&adapter->vfinfo[vfn], &state->vf_data, sizeof(struct vf_data_storage));
+> +
+> +  out:
+> +	return count;
+> +}
+
+Just doing a memcpy to move the vfinfo over adds no value.  The fact is 
+there are a number of filters that have to be configured in hardware 
+after, and it isn't as simple as just migrating the values stored.  As I 
+mentioned in the case of the 82598 there is also jumbo frames to take 
+into account.  If the first PF didn't have it enabled, but the second 
+one does that implies the state of the VF needs to change to account for 
+that.
+
+I really think you would be better off only migrating the data related 
+to what can be configured using the ip link command and leaving other 
+values such as clear_to_send at the reset value of 0. Then you can at 
+least restore state from the VF after just a couple of quick messages.
+
+> +static struct device_attribute ixgbe_per_state_in_pf_attribute =
+> +	__ATTR(state_in_pf, S_IRUGO | S_IWUSR,
+> +		ixgbe_show_state_in_pf, ixgbe_store_state_in_pf);
+> +
+> +void ixgbe_add_vf_attrib(struct ixgbe_adapter *adapter)
+> +{
+> +	struct pci_dev *pdev = adapter->pdev;
+> +	struct pci_dev *vfdev;
+> +	unsigned short vf_id;
+> +	int pos, ret;
+> +
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_SRIOV);
+> +	if (!pos)
+> +		return;
+> +
+> +	/* get the device ID for the VF */
+> +	pci_read_config_word(pdev, pos + PCI_SRIOV_VF_DID, &vf_id);
+> +
+> +	vfdev = pci_get_device(pdev->vendor, vf_id, NULL);
+> +
+> +	while (vfdev) {
+> +		if (vfdev->is_virtfn) {
+> +			ret = device_create_file(&vfdev->dev,
+> +					&ixgbe_per_state_in_pf_attribute);
+> +			if (ret)
+> +				pr_warn("Unable to add VF attribute for dev %s,\n",
+> +					dev_name(&vfdev->dev));
+> +		}
+> +
+> +		vfdev = pci_get_device(pdev->vendor, vf_id, vfdev);
+> +	}
+> +}
+
+Driver specific sysfs is a no-go.  Otherwise we will end up with a 
+different implementation of this for every driver.  You will need to 
+find a way to make this generic in order to have a hope of getting this 
+to be acceptable.
+
+> +void ixgbe_remove_vf_attrib(struct ixgbe_adapter *adapter)
+> +{
+> +	struct pci_dev *pdev = adapter->pdev;
+> +	struct pci_dev *vfdev;
+> +	unsigned short vf_id;
+> +	int pos;
+> +
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_SRIOV);
+> +	if (!pos)
+> +		return;
+> +
+> +	/* get the device ID for the VF */
+> +	pci_read_config_word(pdev, pos + PCI_SRIOV_VF_DID, &vf_id);
+> +
+> +	vfdev = pci_get_device(pdev->vendor, vf_id, NULL);
+> +
+> +	while (vfdev) {
+> +		if (vfdev->is_virtfn) {
+> +			device_remove_file(&vfdev->dev, &ixgbe_per_state_in_pf_attribute);
+> +		}
+> +
+> +		vfdev = pci_get_device(pdev->vendor, vf_id, vfdev);
+> +	}
+> +}
+> +
+>   /* Note this function is called when the user wants to enable SR-IOV
+>    * VFs using the now deprecated module parameter
+>    */
+> @@ -198,6 +349,9 @@ int ixgbe_disable_sriov(struct ixgbe_adapter *adapter)
+>   	if (!(adapter->flags & IXGBE_FLAG_SRIOV_ENABLED))
+>   		return 0;
+>   
+> +
+> +	ixgbe_remove_vf_attrib(adapter);
+> +
+>   #ifdef CONFIG_PCI_IOV
+>   	/*
+>   	 * If our VFs are assigned we cannot shut down SR-IOV
+
+You can probably drop the extra space you added before the function.
+
+> @@ -284,7 +438,7 @@ static int ixgbe_pci_sriov_enable(struct pci_dev *dev, int num_vfs)
+>   		return err;
+>   	}
+>   	ixgbe_sriov_reinit(adapter);
+> -
+> +	ixgbe_add_vf_attrib(adapter);
+>   	return num_vfs;
+>   #else
+>   	return 0;
+
+You should probably add a space here before the return.
