@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:51468 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754921AbbJUM5u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 08:57:50 -0400
 From: WingMan Kwok <w-kwok2@ti.com>
 To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
 	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
@@ -8,14 +12,14 @@ To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
 	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>
 CC: WingMan Kwok <w-kwok2@ti.com>
-Subject: [PATCH 1/3] phy: keystone: serdes driver for gbe 10gbe and pcie
-Date: Tue, 13 Oct 2015 14:04:22 -0400
-Message-ID: <1444759464-32299-2-git-send-email-w-kwok2@ti.com>
-In-Reply-To: <1444759464-32299-1-git-send-email-w-kwok2@ti.com>
-References: <1444759464-32299-1-git-send-email-w-kwok2@ti.com>
+Subject: [PATCH v3 1/2] phy: keystone: serdes driver for gbe 10gbe and pcie
+Date: Wed, 21 Oct 2015 08:56:40 -0400
+Message-ID: <1445432201-16007-2-git-send-email-w-kwok2@ti.com>
+In-Reply-To: <1445432201-16007-1-git-send-email-w-kwok2@ti.com>
+References: <1445432201-16007-1-git-send-email-w-kwok2@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 On TI's Keystone platforms, several peripherals such as the
@@ -33,18 +37,18 @@ respective SerDeses.
 
 Signed-off-by: WingMan Kwok <w-kwok2@ti.com>
 ---
- Documentation/devicetree/bindings/phy/ti-phy.txt |  256 +++
+ Documentation/devicetree/bindings/phy/ti-phy.txt |  239 +++
  drivers/phy/Kconfig                              |    8 +
  drivers/phy/Makefile                             |    1 +
- drivers/phy/phy-keystone-serdes.c                | 2465 ++++++++++++++++++++++
- 4 files changed, 2730 insertions(+)
+ drivers/phy/phy-keystone-serdes.c                | 2366 ++++++++++++++++++++++
+ 4 files changed, 2614 insertions(+)
  create mode 100644 drivers/phy/phy-keystone-serdes.c
 
 diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
-index 9cf9446..231716e 100644
+index 9cf9446..704329f 100644
 --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
 +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
-@@ -115,4 +115,260 @@ sata_phy: phy@4A096000 {
+@@ -115,4 +115,243 @@ sata_phy: phy@4A096000 {
  	clock-names = "sysclk", "refclk";
  	syscon-pllreset = <&scm_conf 0x3fc>;
  	#phy-cells = <0>;
@@ -59,30 +63,36 @@ index 9cf9446..231716e 100644
 +	* "ti,keystone-serdes-pcie"
 + - reg:
 +	* base address and length of the SerDes register set
-+ - reg-names:
-+	* "reg_serdes"
-+		- name of the reg SerDes register set
 + - #phy-cells:
 +	* From the generic phy bindings, must be 0;
-+ - max-lanes:
++ - num-lanes:
 +	* Number of lanes in SerDes.
-+ - phy-type: should be one of
-+	* "sgmii"
-+	* "xge"
-+	* "pcie"
 +
 +Optional properties:
 + - syscon-peripheral:
 +	* Handle to the subsystem register region of the peripheral
-+	  inside which the SerDes exists.
++	  inside which the SerDes exists.  Required for 10gbe.
 + - syscon-link:
 +	* Handle to the Link register region of the peripheral inside
 +	  which the SerDes exists.  Example: it is the PCSR register
-+	  region in the case of 10gbe.
-+ - refclk-khz:
-+	* Reference clock rate of SerDes in kHz.
++	  region in the case of 10gbe.  Required for 10gbe.
++ - rx-force-enable:
++	* Include this property if receiver attenuation and boost are
++	  to be configured with specific values defined in rx-force.
 + - link-rate-kbps:
 +	* SerDes link rate to be configured, in kbps.
++
++
++For gbe and 10gbe SerDes, it is optional to represent each lane as
++a sub-node, which can be enabled or disabled individually using
++the "status" property.  If a lane is not represented by a node, the
++lane is disabled.
++
++Required properties (lane sub-node):
++ - reg:
++	* lane number
++
++Optional properties (lane sub-node):
 + - control-rate:
 +	* Lane control rate
 +		0: full rate
@@ -95,62 +105,73 @@ index 9cf9446..231716e 100644
 +	* Forced lane rx equalizer attenuation and boost configurations.
 +	* Must be array of 2 integers.
 + - tx-coeff:
-+	* Lane c1, c2, cm, attenuation and regulator outpust voltage
++	* Lane c1, c2, cm, attenuation and regulator output voltage
 +	  configurations.
 +	* Must be array of 5 integers.
-+ - debug:
-+	* enable more debug messages.
++ - loopback:
++	* Include this property to enable loopback at the SerDes
++	  lane level.
 +
 +Example for Keystone K2E GBE:
 +-----------------------------
 +
-+gbe_serdes0: gbe_serdes@232a000 {
++gbe_serdes0: phy@232a000 {
 +	#phy-cells		= <0>;
 +	compatible		= "ti,keystone-serdes-gbe";
 +	reg			= <0x0232a000 0x2000>;
-+	reg-names		= "reg_serdes";
-+	refclk-khz		= <156250>;
 +	link-rate-kbps		= <1250000>;
-+	phy-type		= "sgmii";
-+	max-lanes		= <4>;
-+	lane0 {
-+		control-rate	= <2>; /* quart */
-+		rx-start	= <7 5>;
-+		rx-force	= <1 1>;
-+		tx-coeff	= <0 0 0 12 4>;
-+		       /* c1 c2 cm att vreg */
-+	};
-+	lane1 {
-+		control-rate	= <2>; /* quart */
-+		rx-start	= <7 5>;
-+		rx-force	= <1 1>;
-+		tx-coeff	= <0 0 0 12 4>;
-+		       /* c1 c2 cm att vreg */
++	num-lanes		= <4>;
++	lanes {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		lane@0 {
++			/*loopback;*/
++			reg		= <0>;
++			control-rate	= <2>; /* quart */
++			rx-start	= <7 5>;
++			rx-force	= <1 1>;
++			tx-coeff	= <0 0 0 12 4>;
++			       /* c1 c2 cm att vreg */
++		};
++		lane@1 {
++			/*loopback;*/
++			reg		= <1>;
++			control-rate	= <2>; /* quart */
++			rx-start	= <7 5>;
++			rx-force	= <1 1>;
++			tx-coeff	= <0 0 0 12 4>;
++			       /* c1 c2 cm att vreg */
++		};
 +	};
 +};
 +
-+gbe_serdes1: gbe_serdes@2324000 {
++gbe_serdes1: phy@2324000 {
 +	#phy-cells		= <0>;
 +	compatible		= "ti,keystone-serdes-gbe";
 +	reg			= <0x02324000 0x2000>;
-+	reg-names		= "reg_serdes";
-+	refclk-khz		= <156250>;
 +	link-rate-kbps		= <1250000>;
-+	phy-type		= "sgmii";
-+	max-lanes		= <4>;
-+	lane0 {
-+		control-rate	= <2>; /* quart */
-+		rx-start	= <7 5>;
-+		rx-force	= <1 1>;
-+		tx-coeff	= <0 0 0 12 4>;
-+		       /* c1 c2 cm att vreg */
-+	};
-+	lane1 {
-+		control-rate	= <2>; /* quart */
-+		rx-start	= <7 5>;
-+		rx-force	= <1 1>;
-+		tx-coeff	= <0 0 0 12 4>;
-+		       /* c1 c2 cm att vreg */
++	num-lanes		= <4>;
++	lanes {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		lane@0 {
++			/*loopback;*/
++			reg		= <0>;
++			control-rate	= <2>; /* quart */
++			rx-start	= <7 5>;
++			rx-force	= <1 1>;
++			tx-coeff	= <0 0 0 12 4>;
++			       /* c1 c2 cm att vreg */
++		};
++		lane@1 {
++			/*loopback;*/
++			reg		= <1>;
++			control-rate	= <2>; /* quart */
++			rx-start	= <7 5>;
++			rx-force	= <1 1>;
++			tx-coeff	= <0 0 0 12 4>;
++			       /* c1 c2 cm att vreg */
++		};
 +	};
 +};
 +
@@ -162,40 +183,25 @@ index 9cf9446..231716e 100644
 +
 +		gbe@200000 { /* ETHSS */
 +			...
-+			serdeses {
-+				#address-cells = <1>;
-+				#size-cells = <0>;
-+				serdes@0 {
-+					reg = <0>;
-+					phys = <&gbe_serdes0>;
-+					status = "ok";
-+				};
-+				serdes@1 {
-+					reg = <1>;
-+					phys = <&gbe_serdes1>;
-+					status = "ok";
-+				};
++
++			phys = <&gbe_serdes0>, <&gbe_serdes1>;
 +
 +			...
-+			};
-+
-+		...
 +		};
 +
-+	...
++		...
 +	};
 +};
 +
 +Example for Keystone PCIE:
 +--------------------------
 +
-+	pcie0_phy: serdes_phy@2320000 {
++	pcie0_phy: phy@2320000 {
 +		#phy-cells = <0>;
-+		compatible = "ti,keystone-serdes-phy";
-+		reg = <0x02320000 0x4000>, <0x21800000 0x2000>;
-+		reg-names = "reg_serdes", "reg_peripheral";
-+		phy-type = "pcie";
-+		max-lanes = <2>;
++		compatible = "ti,keystone-serdes-pcie";
++		reg = <0x02320000 0x4000>;
++		link-rate-kbps = <5000000>;
++		num-lanes = <2>;
 +	};
 +
 +
@@ -204,15 +210,7 @@ index 9cf9446..231716e 100644
 +	pcie0: pcie@21800000 {
 +		...
 +
-+		serdeses {
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+			serdes@0 {
-+				reg = <0>;
-+				phys = <&pcie0_phy>;
-+				status = "disabled";
-+			};
-+		};
++		phys = <&pcie0_phy>;
 +	}
 +
 +Example for K2E 10GBE:
@@ -220,7 +218,7 @@ index 9cf9446..231716e 100644
 +
 +Define the syscon regmaps for 10gbe subsystem:
 +
-+xgbe_subsys: xgbe_subsys@2f00000 {
++xgbe_subsys: subsys@2f00000 {
 +	status		= "ok";
 +	compatible	= "syscon";
 +	reg		= <0x02f00000 0x100>;
@@ -228,7 +226,7 @@ index 9cf9446..231716e 100644
 +
 +Define the syscon regmaps for 10gbe pcsr:
 +
-+xgbe_pcsr: xgbe_pcsr@2f00000 {
++xgbe_pcsr: pcsr@2f00000 {
 +	status		= "ok";
 +	compatible	= "syscon";
 +	reg		= <0x02f00600 0x100>;
@@ -236,35 +234,36 @@ index 9cf9446..231716e 100644
 +
 +Define the 10gbe SerDes node:
 +
-+xgbe_serdes: xgbe_serdes@231e000 {
++xgbe_serdes: phy@231e000 {
 +	status			= "ok";
 +	#phy-cells		= <0>;
 +	compatible		= "ti,keystone-serdes-xgbe";
 +	reg			= <0x0231e000 0x2000>;
-+	reg-names		= "reg_serdes";
-+	refclk-khz		= <156250>;
 +	link-rate-kbps		= <10312500>;
-+	phy-type		= "xge";
-+	max-lanes		= <2>;
++	num-lanes		= <2>;
 +	syscon-peripheral	= <&xgbe_subsys>;
 +	syscon-link		= <&xgbe_pcsr>;
-+	lane0 {
-+		/*disable;*/
-+		/*loopback;*/
-+		control-rate	= <0>; /* full */
-+		rx-start	= <7 5>;
-+		rx-force	= <1 1>;
-+		tx-coeff	= <2 0 0 12 4>;
-+			/* c1 c2 cm att vreg */
-+	};
-+	lane1 {
-+		/*disable;*/
-+		/*loopback;*/
-+		control-rate	= <0>; /* full */
-+		rx-start	= <7 5>;
-+		rx-force	= <1 1>;
-+		tx-coeff	= <2 0 0 12 4>;
-+			/* c1 c2 cm att vreg */
++	lanes {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		lane@0 {
++			/*loopback;*/
++			reg		= <0>;
++			control-rate	= <0>; /* full */
++			rx-start	= <7 5>;
++			rx-force	= <1 1>;
++			tx-coeff	= <2 0 0 12 4>;
++				/* c1 c2 cm att vreg */
++		};
++		lane@1 {
++			/*loopback;*/
++			reg		= <1>;
++			control-rate	= <0>; /* full */
++			rx-start	= <7 5>;
++			rx-force	= <1 1>;
++			tx-coeff	= <2 0 0 12 4>;
++				/* c1 c2 cm att vreg */
++		};
 +	};
 +};
 +
@@ -283,22 +282,10 @@ index 9cf9446..231716e 100644
 +			...
 +
 +			syscon-subsys = <&xgbe_subsys>;
-+			syscon-link = <&xgbe_pcsr>;
++			syscon-pcsr = <&xgbe_pcsr>;
++			phys = <&xgbe_serdes>;
 +
 +			...
-+
-+			serdeses {
-+				#address-cells = <1>;
-+				#size-cells = <0>;
-+				serdes@0 {
-+					reg = <0>;
-+					phys = <&xgbe_serdes>;
-+				};
-+			};
-+
-+
-+			...
-+
 +		};
 +	};
 +
@@ -306,7 +293,7 @@ index 9cf9446..231716e 100644
 +
  };
 diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-index 47da573..8fc21a4 100644
+index 47da573..00ffb1b 100644
 --- a/drivers/phy/Kconfig
 +++ b/drivers/phy/Kconfig
 @@ -118,6 +118,14 @@ config PHY_RCAR_GEN2
@@ -315,7 +302,7 @@ index 47da573..8fc21a4 100644
  
 +config PHY_TI_KEYSTONE_SERDES
 +	tristate "TI Keystone SerDes PHY support"
-+	depends on OF && ARCH_KEYSTONE
++	depends on OF && ARCH_KEYSTONE || COMPILE_TEST
 +	select GENERIC_PHY
 +	help
 +	  This option enables support for TI Keystone SerDes PHY found
@@ -335,10 +322,10 @@ index a5b18c1..8cb365b 100644
 +obj-$(CONFIG_PHY_TI_KEYSTONE_SERDES)	+= phy-keystone-serdes.o
 diff --git a/drivers/phy/phy-keystone-serdes.c b/drivers/phy/phy-keystone-serdes.c
 new file mode 100644
-index 0000000..c73d4de
+index 0000000..5cfe9bd
 --- /dev/null
 +++ b/drivers/phy/phy-keystone-serdes.c
-@@ -0,0 +1,2465 @@
+@@ -0,0 +1,2366 @@
 +/*
 + * Texas Instruments Keystone SerDes driver
 + * Authors: WingMan Kwok <w-kwok2@ti.com>
@@ -387,9 +374,6 @@ index 0000000..c73d4de
 + * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 + * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ * The contents of the array k2_100mhz_pcie_5gbps_serdes is covered by BSD
-+ * license.
 + */
 +#include <linux/module.h>
 +#include <linux/io.h>
@@ -403,6 +387,7 @@ index 0000000..c73d4de
 +#include <linux/of_address.h>
 +#include <linux/of_platform.h>
 +#include <linux/regmap.h>
++#include <linux/sizes.h>
 +#include <linux/phy/phy.h>
 +#include <linux/platform_device.h>
 +
@@ -459,19 +444,13 @@ index 0000000..c73d4de
 +#define PCIE_PL_GEN2_OFFSET	0x180c
 +
 +#define reg_rmw(addr, value, mask) \
-+	__raw_writel(((__raw_readl(addr) & (~(mask))) | \
-+			(value & (mask))), (addr))
-+
-+/* bit mask from bit-a to bit-b inclusive */
-+#define MASK(msb, lsb) \
-+	((((msb) - (lsb)) == 31) ? 0xffffffff :  \
-+		((((u32)1 << ((msb) - (lsb) + 1)) - 1) << (lsb)))
++	writel(((readl(addr) & (~(mask))) | (value & (mask))), (addr))
 +
 +/* Replaces bit field [msb:lsb] in register located
 + * at (base + offset) by val
 + */
 +#define FINSR(base, offset, msb, lsb, val) \
-+	reg_rmw((base) + (offset), ((val) << (lsb)), MASK((msb), (lsb)))
++	reg_rmw((base) + (offset), ((val) << (lsb)), GENMASK((msb), (lsb)))
 +
 +/* This version of FEXTR is NOT safe for msb = 31, lsb = 0
 + * but then why would we need FEXTR for that case.
@@ -522,17 +501,6 @@ index 0000000..c73d4de
 +		}					\
 +	} while (0)
 +
-+#define for_each_lane_return(func, sc, r)		\
-+	do {						\
-+		int i;					\
-+		(r) = 0;				\
-+		for (i = 0; i < (sc)->lanes; i++) {	\
-+			(r) = (func)((sc), i);		\
-+			if ((r))			\
-+				break;			\
-+		}					\
-+	} while (0)
-+
 +#define MAX_COMPARATORS			5
 +#define DFE_OFFSET_SAMPLES		100
 +
@@ -545,32 +513,34 @@ index 0000000..c73d4de
 +#define DATASPLIT		BIT(26)
 +#define LNKTRN_SIG_DET		BIT(8)
 +
-+#define ANEG_LINK_CTL_10GKR_MASK	MASK(21, 20)
-+#define ANEG_LINK_CTL_1GKX_MASK		MASK(17, 16)
++#define ANEG_LINK_CTL_10GKR_MASK	GENMASK(21, 20)
++#define ANEG_LINK_CTL_1GKX_MASK		GENMASK(17, 16)
 +#define ANEG_LINK_CTL_1G10G_MASK \
 +	(ANEG_LINK_CTL_10GKR_MASK | ANEG_LINK_CTL_1GKX_MASK)
 +
-+#define ANEG_1G_10G_OPT_MASK	MASK(7, 5)
++#define ANEG_1G_10G_OPT_MASK		GENMASK(7, 5)
 +
 +#define SERDES_REG_INDEX		0
++
++/* SERDES internal memory */
++#define KSERDES_XFW_MEM_SIZE		SZ_64K
++#define KSERDES_XFW_CONFIG_MEM_SIZE	SZ_64
++#define KSERDES_XFW_NUM_PARAMS		5
++
++/* Last 64B of the 64KB internal mem is for parameters */
++#define KSERDES_XFW_CONFIG_START_ADDR \
++	(KSERDES_XFW_MEM_SIZE - KSERDES_XFW_CONFIG_MEM_SIZE)
++
++#define KSERDES_XFW_PARAM_START_ADDR \
++	(KSERDES_XFW_MEM_SIZE - (KSERDES_XFW_NUM_PARAMS * 4))
 +
 +/* All firmware file names end up here. List the firmware file names below.
 + * Newest first. Search starts from the 0-th array entry until a firmware
 + * file is found.
 + */
-+const char *ks2_gbe_serdes_firmwares[] = {"ks2_gbe_serdes.bin"};
-+const char *ks2_xgbe_serdes_firmwares[] = {"ks2_xgbe_serdes.bin"};
-+const char *ks2_pcie_serdes_firmwares[] = {"ks2_pcie_serdes.bin"};
-+
-+/* SERDES Reference clock KHz */
-+enum KSERDES_CLOCK_RATE {
-+	KSERDES_CLOCK_RATE_100M		= 100000,
-+	KSERDES_CLOCK_RATE_122P88M	= 122880,
-+	KSERDES_CLOCK_RATE_125M		= 125000,
-+	KSERDES_CLOCK_RATE_153P6M	= 153600,
-+	KSERDES_CLOCK_RATE_156P25M	= 156250,
-+	KSERDES_CLOCK_RATE_312P5M	= 312500,
-+};
++static const char *ks2_gbe_serdes_firmwares[] = {"ks2_gbe_serdes.bin"};
++static const char *ks2_xgbe_serdes_firmwares[] = {"ks2_xgbe_serdes.bin"};
++static const char *ks2_pcie_serdes_firmwares[] = {"ks2_pcie_serdes.bin"};
 +
 +/* SERDES Link Rate Kbps */
 +enum KSERDES_LINK_RATE {
@@ -615,12 +585,12 @@ index 0000000..c73d4de
 +};
 +
 +struct kserdes_lane_config {
-+	u32				enable;
++	bool				enable;
 +	u32				ctrl_rate;
 +	struct kserdes_tx_coeff		tx_coeff;
 +	struct kserdes_equalizer	rx_start;
 +	struct kserdes_equalizer	rx_force;
-+	u32				loopback;
++	bool				loopback;
 +};
 +
 +#define KSERDES_MAX_LANES		4
@@ -638,10 +608,8 @@ index 0000000..c73d4de
 +
 +struct kserdes_config {
 +	struct device			*dev;
-+	enum KSERDES_CLOCK_RATE		clk_rate;
 +	enum KSERDES_PHY_TYPE		phy_type;
 +	u32				lanes;
-+	bool				debug;
 +	void __iomem			*regs;
 +	struct regmap			*peripheral_regmap;
 +	struct regmap			*pcsr_regmap;
@@ -650,7 +618,7 @@ index 0000000..c73d4de
 +	struct serdes_cfg		*init_cfg;
 +	int				init_cfg_len;
 +	enum KSERDES_LINK_RATE		link_rate;
-+	u32				rx_force_enable;
++	bool				rx_force_enable;
 +	struct kserdes_lane_config	lane[KSERDES_MAX_LANES];
 +	/* fw specific */
 +	bool				firmware;
@@ -1294,7 +1262,7 @@ index 0000000..c73d4de
 +	return val;
 +}
 +
-+int kserdes_get_status(struct kserdes_config *sc)
++static int kserdes_get_status(struct kserdes_config *sc)
 +{
 +	unsigned long timeout;
 +
@@ -1929,7 +1897,7 @@ index 0000000..c73d4de
 +		for_each_lane(kserdes_att_boost_phyb_patch, sc);
 +}
 +
-+int kserdes_sgmii_lanes_enable(struct kserdes_config *sc)
++static int kserdes_sgmii_lanes_enable(struct kserdes_config *sc)
 +{
 +	int ret, i;
 +	u32 val, lanes_enable = 0;
@@ -2031,10 +1999,6 @@ index 0000000..c73d4de
 +
 +static int kserdes_sgmii_init(struct kserdes_config *sc)
 +{
-+	if ((sc->clk_rate != KSERDES_CLOCK_RATE_156P25M) ||
-+	    (sc->link_rate != KSERDES_LINK_RATE_1P25G))
-+		return -EINVAL;
-+
 +	return kserdes_load_init_fw(sc, ks2_gbe_serdes_firmwares,
 +				    ARRAY_SIZE(ks2_gbe_serdes_firmwares));
 +}
@@ -2101,14 +2065,14 @@ index 0000000..c73d4de
 +					      u32 port)
 +{
 +	regmap_update_bits(peripheral_regmap, XGE_CTRL_OFFSET,
-+			   MASK(port, port), BIT(port));
++			   GENMASK(port, port), BIT(port));
 +}
 +
 +static inline void _kserdes_reset_cdr(void __iomem *sregs, int lane)
 +{
 +	/* toggle signal detect */
 +	_kserdes_force_signal_detect_low(sregs, lane);
-+	mdelay(1);
++	usleep_range(1000, 2000);
 +	_kserdes_force_signal_detect_high(sregs, lane);
 +}
 +
@@ -2192,9 +2156,9 @@ index 0000000..c73d4de
 +		if (blk_errs) {
 +			/* Reset the Error counts! */
 +			regmap_update_bits(pcsr_regmap, PCSR_RX_CTL(i),
-+					   MASK(7, 0), 0x19);
++					   GENMASK(7, 0), 0x19);
 +			regmap_update_bits(pcsr_regmap, PCSR_RX_CTL(i),
-+					   MASK(7, 0), 0x00);
++					   GENMASK(7, 0), 0x00);
 +		}
 +
 +		status &= (current_state[i] == 1);
@@ -2208,9 +2172,9 @@ index 0000000..c73d4de
 +				 u32 lanes, u32 lanes_enable)
 +{
 +	u32 current_state[KSERDES_MAX_LANES];
-+	int retries = 0, link_up;
 +	u32 lane_down[KSERDES_MAX_LANES];
-+	int i;
++	unsigned long timeout;
++	int i, link_up;
 +
 +	if (lanes > KSERDES_MAX_LANES)
 +		return -EINVAL;
@@ -2218,10 +2182,10 @@ index 0000000..c73d4de
 +	memset(current_state, 0, sizeof(current_state));
 +	memset(lane_down, 0, sizeof(lane_down));
 +
++	timeout = jiffies + 2 * HZ; /* 1 second maximum */
 +	do {
-+		mdelay(10);
++		usleep_range(10000, 20000);
 +		memset(lane_down, 0, sizeof(lane_down));
-+
 +		link_up = _kserdes_check_link_status(dev, sregs,
 +						     pcsr_regmap, lanes,
 +						     lanes_enable,
@@ -2240,12 +2204,12 @@ index 0000000..c73d4de
 +					i);
 +		}
 +
-+		if (++retries > 100)
++		if (time_after(jiffies, timeout))
 +			return -ETIMEDOUT;
 +
-+	} while (!link_up);
++	} while (1);
 +
-+	dev_info(dev, "XGE: serdes link up: retried %d times\n", retries);
++	dev_dbg(dev, "xge serdes link up\n");
 +	return 0;
 +}
 +
@@ -2340,10 +2304,12 @@ index 0000000..c73d4de
 +
 +	lane_config <<= 8;
 +
-+	/* initialize 64B data mem */
-+	kserdes_writel(sc->regs, MEM_ADR_REG, 0x0000ffc0);
++	/* initialize internal parameter area */
++	kserdes_writel(sc->regs, MEM_ADR_REG, KSERDES_XFW_CONFIG_START_ADDR);
 +
-+	for (i = 0; i < 11; i++)
++	/* clean out unused config area */
++	for (i = KSERDES_XFW_CONFIG_START_ADDR;
++	     i < KSERDES_XFW_PARAM_START_ADDR; i += 4)
 +		kserdes_writel(sc->regs, MEM_DATINC_REG, 0x00000000);
 +
 +	/* Flush 64 bytes 10,11,12,13 */
@@ -2361,9 +2327,6 @@ index 0000000..c73d4de
 +
 +static int kserdes_xge_init(struct kserdes_config *sc)
 +{
-+	if (sc->clk_rate != KSERDES_CLOCK_RATE_156P25M)
-+		return -EINVAL;
-+
 +	return kserdes_load_init_fw(sc, ks2_xgbe_serdes_firmwares,
 +				    ARRAY_SIZE(ks2_xgbe_serdes_firmwares));
 +}
@@ -2396,86 +2359,22 @@ index 0000000..c73d4de
 +
 +static int kserdes_pcie_init(struct kserdes_config *sc)
 +{
-+	if ((sc->clk_rate != KSERDES_CLOCK_RATE_100M) ||
-+	    (sc->link_rate != KSERDES_LINK_RATE_5G))
-+		return -EINVAL;
-+
 +	return kserdes_load_init_fw(sc, ks2_pcie_serdes_firmwares,
 +				    ARRAY_SIZE(ks2_pcie_serdes_firmwares));
 +}
 +
-+static void kserdes_show_fw_config(struct kserdes_config *sc)
-+{
-+	struct kserdes_fw_config *fw = &sc->fw;
-+
-+	dev_info(sc->dev, "fw configs:\n");
-+	dev_info(sc->dev, "  lane_configs: 0x%02x, 0x%02x\n",
-+		 fw->lane_config[0], fw->lane_config[1]);
-+	dev_info(sc->dev,
-+		 "  lnk_loss_wait: %d, lane_seeds: 0x%08x, fast_train: 0x%08x\n",
-+		 fw->link_loss_wait, fw->lane_seeds, fw->fast_train);
-+}
-+
-+static void kserdes_show_lane_config(struct device *dev,
-+				     struct kserdes_lane_config *lc)
-+{
-+	dev_info(dev, "%s\n", lc->enable ? "enable" : "disable");
-+	dev_info(dev, "ctrl_rate 0x%x\n", lc->ctrl_rate);
-+	dev_info(dev, "rx_start %u %u\n",
-+		 lc->rx_start.att, lc->rx_start.boost);
-+	dev_info(dev, "rx_force %u %u\n",
-+		 lc->rx_force.att, lc->rx_force.boost);
-+	dev_info(dev, "tx_coeff %u %u %u %u %u\n",
-+		 lc->tx_coeff.c1, lc->tx_coeff.c2, lc->tx_coeff.cm,
-+		 lc->tx_coeff.att, lc->tx_coeff.vreg);
-+	dev_info(dev, "loopback %u\n", lc->loopback);
-+}
-+
-+static void kserdes_show_config(struct kserdes_config *sc)
-+{
-+	u32 i;
-+
-+	if (!sc->debug)
-+		return;
-+
-+	dev_info(sc->dev, "serdes regs 0x%p\n", sc->regs);
-+	if (sc->peripheral_regmap)
-+		dev_info(sc->dev, "peripheral regmap handle defined\n");
-+	dev_info(sc->dev, "phy_type %u\n", sc->phy_type);
-+	dev_info(sc->dev, "clk_rate %u\n", sc->clk_rate);
-+	dev_info(sc->dev, "link_rate %u\n", sc->link_rate);
-+	dev_info(sc->dev, "lanes %u\n", sc->lanes);
-+	if ((sc->phy_type == KSERDES_PHY_XGE) && sc->pcsr_regmap)
-+		dev_info(sc->dev, "pcsr regmap handle defined\n");
-+
-+	if (sc->firmware) {
-+		kserdes_show_fw_config(sc);
-+		return;
-+	} else if (sc->init_fw) {
-+		dev_info(sc->dev, "init fw: %s\n", sc->init_fw);
-+	}
-+
-+	dev_info(sc->dev, "rx-force-%s\n",
-+		 (sc->rx_force_enable ? "enable" : "disable"));
-+
-+	for (i = 0; i < sc->lanes; i++) {
-+		dev_info(sc->dev, "lane[%u]:\n", i);
-+		kserdes_show_lane_config(sc->dev, &sc->lane[i]);
-+	}
-+}
-+
 +static int kserdes_lanes_enable(struct kserdes_config *sc)
 +{
-+	int ret = -EINVAL;
-+
-+	if (sc->phy_type == KSERDES_PHY_SGMII)
-+		ret = kserdes_sgmii_lanes_enable(sc);
-+	else if (sc->phy_type == KSERDES_PHY_XGE)
-+		ret = kserdes_xge_lanes_enable(sc);
-+	else if (sc->phy_type == KSERDES_PHY_PCIE)
-+		ret = kserdes_pcie_lanes_enable(sc);
-+
-+	return ret;
++	switch (sc->phy_type) {
++	case KSERDES_PHY_SGMII:
++		return kserdes_sgmii_lanes_enable(sc);
++	case KSERDES_PHY_XGE:
++		return kserdes_xge_lanes_enable(sc);
++	case KSERDES_PHY_PCIE:
++		return kserdes_pcie_lanes_enable(sc);
++	default:
++		return -EINVAL;
++	}
 +}
 +
 +static int kserdes_init(struct phy *phy)
@@ -2484,14 +2383,19 @@ index 0000000..c73d4de
 +	struct kserdes_config *sc = &sd->sc;
 +	int ret;
 +
-+	if (sc->phy_type == KSERDES_PHY_SGMII)
++	switch (sc->phy_type) {
++	case KSERDES_PHY_SGMII:
 +		ret = kserdes_sgmii_init(sc);
-+	else if (sc->phy_type == KSERDES_PHY_XGE)
++		break;
++	case KSERDES_PHY_XGE:
 +		ret = kserdes_xge_init(sc);
-+	else if (sc->phy_type == KSERDES_PHY_PCIE)
++		break;
++	case KSERDES_PHY_PCIE:
 +		ret = kserdes_pcie_init(sc);
-+	else
++		break;
++	default:
 +		ret = -EINVAL;
++	}
 +
 +	if (ret < 0) {
 +		dev_err(sd->dev, "serdes initialization failed %d\n", ret);
@@ -2504,32 +2408,35 @@ index 0000000..c73d4de
 +		goto done;
 +	}
 +
-+	dev_info(sd->dev, "serdes config done lanes(mask) 0x%x\n", ret);
++	dev_dbg(sd->dev, "serdes config done lanes(mask) 0x%x\n", ret);
 +
 +done:
 +	return ret;
 +}
 +
-+struct phy *kserdes_phy_xlate(struct device *dev, struct of_phandle_args *args)
++static int kserdes_of_parse_lane(struct device *dev,
++				 struct device_node *np,
++				 struct kserdes_config *sc)
 +{
-+	struct kserdes_dev *sd = dev_get_drvdata(dev);
-+
-+	return sd->phy;
-+}
-+
-+static int kserdes_get_lane_bindings(struct device *dev,
-+				     struct device_node *np,
-+				     struct kserdes_lane_config *lc)
-+{
++	struct kserdes_lane_config *lc;
 +	struct kserdes_equalizer *eq;
 +	struct kserdes_tx_coeff *tc;
++	int lane_num, ret;
 +
-+	if (of_find_property(np, "disable", NULL))
-+		lc->enable = 0;
-+	else
-+		lc->enable = 1;
++	ret = of_property_read_u32(np, "reg", &lane_num);
++	if (ret) {
++		dev_err(dev, "Failed to parse reg\n");
++		return -EINVAL;
++	}
 +
-+	dev_dbg(dev, "lane enable: %d\n", lc->enable);
++	if (lane_num >= sc->lanes) {
++		dev_err(dev, "Invalid lane number %u\n", lane_num);
++		return -EINVAL;
++	}
++
++	lc = &sc->lane[lane_num];
++	lc->enable = true;
++	dev_dbg(dev, "lane %d enabled\n", lane_num);
 +
 +	if (of_property_read_u32(np, "control-rate", &lc->ctrl_rate)) {
 +		dev_info(dev, "use default lane control-rate: %u\n",
@@ -2538,9 +2445,9 @@ index 0000000..c73d4de
 +	dev_dbg(dev, "lane control-rate: %d\n", lc->ctrl_rate);
 +
 +	if (of_find_property(np, "loopback", NULL))
-+		lc->loopback = 1;
++		lc->loopback = true;
 +	else
-+		lc->loopback = 0;
++		lc->loopback = false;
 +
 +	dev_dbg(dev, "lane loopback: %d\n", lc->loopback);
 +
@@ -2575,10 +2482,9 @@ index 0000000..c73d4de
 +{
 +	int i;
 +
-+	sc->clk_rate		= KSERDES_CLOCK_RATE_156P25M;
 +	sc->link_rate		= KSERDES_LINK_RATE_1P25G;
 +	sc->lanes		= 4;
-+	sc->rx_force_enable	= 0;
++	sc->rx_force_enable	= false;
 +
 +	for (i = 0; i < sc->lanes; i++) {
 +		memset(&sc->lane[i], 0, sizeof(sc->lane[i]));
@@ -2590,10 +2496,9 @@ index 0000000..c73d4de
 +{
 +	int i;
 +
-+	sc->clk_rate		= KSERDES_CLOCK_RATE_156P25M;
 +	sc->link_rate		= KSERDES_LINK_RATE_10P3125G;
 +	sc->lanes		= 2;
-+	sc->rx_force_enable	= 0;
++	sc->rx_force_enable	= false;
 +
 +	for (i = 0; i < sc->lanes; i++) {
 +		memset(&sc->lane[i], 0, sizeof(sc->lane[i]));
@@ -2605,10 +2510,9 @@ index 0000000..c73d4de
 +{
 +	int i;
 +
-+	sc->clk_rate		= KSERDES_CLOCK_RATE_100M;
 +	sc->link_rate		= KSERDES_LINK_RATE_5G;
 +	sc->lanes		= 2;
-+	sc->rx_force_enable	= 0;
++	sc->rx_force_enable	= false;
 +
 +	for (i = 0; i < sc->lanes; i++)
 +		memset(&sc->lane[i], 0, sizeof(sc->lane[i]));
@@ -2632,17 +2536,15 @@ index 0000000..c73d4de
 +	}
 +}
 +
-+static int kserdes_get_properties(struct kserdes_dev *sd,
-+				  struct device_node *np)
++static int kserdes_of_parse(struct kserdes_dev *sd,
++			    struct device_node *np)
 +{
 +	struct kserdes_config *sc = &sd->sc;
-+	struct device_node *lp;
++	struct device_node *lanes_np, *child;
 +	struct device *dev = sd->dev;
 +	struct resource res;
 +	void __iomem *regs;
-+	const char *phy_type;
-+	char name[16] = {'l', 'a', 'n', 'e'};
-+	int ret, i;
++	int ret;
 +
 +	ret = of_address_to_resource(np, SERDES_REG_INDEX, &res);
 +	if (ret) {
@@ -2658,16 +2560,15 @@ index 0000000..c73d4de
 +	}
 +	sc->regs = regs;
 +
-+	ret = of_property_read_string(np, "phy-type", &phy_type);
-+	if (!ret) {
-+		if (strcmp(phy_type, "sgmii") == 0)
-+			sc->phy_type = KSERDES_PHY_SGMII;
-+		else if (strcmp(phy_type, "xge") == 0)
-+			sc->phy_type = KSERDES_PHY_XGE;
-+		else if (strcmp(phy_type, "pcie") == 0)
-+			sc->phy_type = KSERDES_PHY_PCIE;
-+		else
-+			return -EINVAL;
++	if (of_device_is_compatible(np, "ti,keystone-serdes-gbe")) {
++		sc->phy_type = KSERDES_PHY_SGMII;
++	} else if (of_device_is_compatible(np, "ti,keystone-serdes-xgbe")) {
++		sc->phy_type = KSERDES_PHY_XGE;
++	} else if (of_device_is_compatible(np, "ti,keystone-serdes-pcie")) {
++		sc->phy_type = KSERDES_PHY_PCIE;
++	} else {
++		dev_err(dev, "unknown phy type\n");
++		return -EINVAL;
 +	}
 +
 +	sc->dev = dev;
@@ -2675,57 +2576,58 @@ index 0000000..c73d4de
 +	/* Set the defaults base on phy type */
 +	kserdes_set_defaults(sc, sc->phy_type);
 +
-+	if (of_property_read_bool(np, "syscon-peripheral")) {
++	if (sc->phy_type == KSERDES_PHY_XGE) {
 +		sc->peripheral_regmap =
 +			syscon_regmap_lookup_by_phandle(np,
 +							"syscon-peripheral");
++
 +		if (IS_ERR(sc->peripheral_regmap)) {
 +			dev_err(sc->dev,
-+				"failed to get syscon-peripheral regmap\n");
++				"peripheral regmap lookup failed: %ld\n",
++				PTR_ERR(sc->peripheral_regmap));
 +			return PTR_ERR(sc->peripheral_regmap);
 +		}
-+	}
 +
-+	if (of_property_read_bool(np, "syscon-link")) {
 +		sc->pcsr_regmap =
 +			syscon_regmap_lookup_by_phandle(np, "syscon-link");
++
 +		if (IS_ERR(sc->pcsr_regmap)) {
-+			dev_err(sc->dev,
-+				"failed to get syscon-link regmap\n");
++			dev_err(sc->dev, "link regmap lookup failed: %ld\n",
++				PTR_ERR(sc->pcsr_regmap));
 +			return PTR_ERR(sc->pcsr_regmap);
 +		}
 +	}
-+
-+	if (of_property_read_u32(np, "refclk-khz", &sc->clk_rate))
-+		dev_info(dev, "use default refclk-khz: %u\n", sc->clk_rate);
 +
 +	if (of_property_read_u32(np, "link-rate-kbps", &sc->link_rate)) {
 +		dev_info(dev, "use default link-rate-kbps: %u\n",
 +			 sc->link_rate);
 +	}
 +
-+	if (of_property_read_u32(np, "max-lanes", &sc->lanes))
-+		dev_info(dev, "use default max-lanes %d\n", sc->lanes);
++	if (of_property_read_u32(np, "num-lanes", &sc->lanes))
++		dev_info(dev, "use default num-lanes %d\n", sc->lanes);
 +
 +	if (sc->lanes > KSERDES_MAX_LANES) {
 +		sc->lanes = KSERDES_MAX_LANES;
 +		dev_info(dev, "use max allowed lanes %d\n", sc->lanes);
 +	}
 +
-+	sc->debug = of_property_read_bool(np, "debug");
-+
-+	if (of_find_property(np, "rx-force-enable", NULL))
-+		sc->rx_force_enable = 1;
++	if (of_property_read_bool(np, "rx-force-enable"))
++		sc->rx_force_enable = true;
 +	else
-+		sc->rx_force_enable = 0;
++		sc->rx_force_enable = false;
 +
-+	for (i = 0; i < sc->lanes; i++) {
-+		sprintf(&name[4], "%d", i);
-+		lp = of_find_node_by_name(np, name);
-+		if (lp) {
-+			if (kserdes_get_lane_bindings(dev, lp, &sc->lane[i]))
-+				return -EINVAL;
++	lanes_np = of_get_child_by_name(np, "lanes");
++	if (lanes_np) {
++		for_each_available_child_of_node(lanes_np, child) {
++			ret = kserdes_of_parse_lane(dev, child, sc);
++			if (ret) {
++				of_node_put(child);
++				of_node_put(lanes_np);
++				return ret;
++			}
++			of_node_put(child);
 +		}
++		of_node_put(lanes_np);
 +	}
 +
 +	return 0;
@@ -2750,11 +2652,9 @@ index 0000000..c73d4de
 +
 +	sd->dev = dev;
 +
-+	ret = kserdes_get_properties(sd, np);
++	ret = kserdes_of_parse(sd, np);
 +	if (ret)
 +		return ret;
-+
-+	kserdes_show_config(&sd->sc);
 +
 +	dev_set_drvdata(dev, sd);
 +	sd->phy = devm_phy_create(dev, NULL, &kserdes_ops);
@@ -2763,12 +2663,12 @@ index 0000000..c73d4de
 +
 +	phy_set_drvdata(sd->phy, sd);
 +	phy_provider = devm_of_phy_provider_register(sd->dev,
-+						     kserdes_phy_xlate);
++						     of_phy_simple_xlate);
 +
 +	if (IS_ERR(phy_provider))
 +		return PTR_ERR_OR_ZERO(phy_provider);
 +
-+	dev_info(&pdev->dev, "probed");
++	dev_vdbg(&pdev->dev, "probed");
 +	return 0;
 +}
 +
@@ -2785,21 +2685,9 @@ index 0000000..c73d4de
 +	.driver = {
 +		.of_match_table	= kserdes_of_match,
 +		.name  = "ti,keystone-serdes",
-+		.owner = THIS_MODULE,
 +	}
 +};
-+
-+static int __init keystone_serdes_phy_init(void)
-+{
-+	return platform_driver_register(&kserdes_driver);
-+}
-+subsys_initcall(keystone_serdes_phy_init);
-+
-+static void __exit keystone_serdes_phy_exit(void)
-+{
-+	platform_driver_unregister(&kserdes_driver);
-+}
-+module_exit(keystone_serdes_phy_exit);
++module_platform_driver(kserdes_driver);
 +
 +MODULE_AUTHOR("WingMan Kwok <w-kwok2@ti.com>");
 +MODULE_DESCRIPTION("TI Keystone SerDes driver");
