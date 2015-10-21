@@ -1,117 +1,181 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV NIC
-To: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
-	pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <562A7E33.4080800@gmail.com>
-Date: Fri, 23 Oct 2015 11:36:35 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:47102 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753232AbbJUSeH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 Oct 2015 14:34:07 -0400
+Date: Wed, 21 Oct 2015 13:34:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: bhelgaas@google.com, pratyush.anand@gmail.com, m-karicheri2@ti.com,
+	l.stach@pengutronix.de, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: Re: [PATCH v3 1/3] PCI: designware: Move LTSSM state definitions to
+ pcie-designware.h
+Message-ID: <20151021183400.GC1583@localhost>
+References: <1444664808-16445-1-git-send-email-festevam@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444664808-16445-1-git-send-email-festevam@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/21/2015 09:37 AM, Lan Tianyu wrote:
-> This patchset is to propose a new solution to add live migration support for 82599
-> SRIOV network card.
->
-> Im our solution, we prefer to put all device specific operation into VF and
-> PF driver and make code in the Qemu more general.
->
->
-> VF status migration
-> =================================================================
-> VF status can be divided into 4 parts
-> 1) PCI configure regs
-> 2) MSIX configure
-> 3) VF status in the PF driver
-> 4) VF MMIO regs
->
-> The first three status are all handled by Qemu.
-> The PCI configure space regs and MSIX configure are originally
-> stored in Qemu. To save and restore "VF status in the PF driver"
-> by Qemu during migration, adds new sysfs node "state_in_pf" under
-> VF sysfs directory.
->
-> For VF MMIO regs, we introduce self emulation layer in the VF
-> driver to record MMIO reg values during reading or writing MMIO
-> and put these data in the guest memory. It will be migrated with
-> guest memory to new machine.
->
->
-> VF function restoration
-> ================================================================
-> Restoring VF function operation are done in the VF and PF driver.
->
-> In order to let VF driver to know migration status, Qemu fakes VF
-> PCI configure regs to indicate migration status and add new sysfs
-> node "notify_vf" to trigger VF mailbox irq in order to notify VF
-> about migration status change.
->
-> Transmit/Receive descriptor head regs are read-only and can't
-> be restored via writing back recording reg value directly and they
-> are set to 0 during VF reset. To reuse original tx/rx rings, shift
-> desc ring in order to move the desc pointed by original head reg to
-> first entry of the ring and then enable tx/rx rings. VF restarts to
-> receive and transmit from original head desc.
->
->
-> Tracking DMA accessed memory
-> =================================================================
-> Migration relies on tracking dirty page to migrate memory.
-> Hardware can't automatically mark a page as dirty after DMA
-> memory access. VF descriptor rings and data buffers are modified
-> by hardware when receive and transmit data. To track such dirty memory
-> manually, do dummy writes(read a byte and write it back) when receive
-> and transmit data.
+Hi Fabio,
 
-I was thinking about it and I am pretty sure the dummy write approach is 
-problematic at best.  Specifically the issue is that while you are 
-performing a dummy write you risk pulling in descriptors for data that 
-hasn't been dummy written to yet.  So when you resume and restore your 
-descriptors you will have once that may contain Rx descriptors 
-indicating they contain data when after the migration they don't.
+On Mon, Oct 12, 2015 at 12:46:46PM -0300, Fabio Estevam wrote:
+> From: Fabio Estevam <fabio.estevam@freescale.com>
+> 
+> Move LTSSM state definitions to common pcie-designware.h so that other
+> drivers can make use of them.
+> 
+> Also, LTSSM states only use 5 bits so use 0x1f as its mask, so that we
+> have a common LTSSM mask accross all PCIe designware drivers.
+> 
+> Keystone uses 5 bits for the LTSSM in its reference manual, others like
+> i.MX6 uses 6 bits. However, the LTSSM states really have 5 bits, so we
+> can safely use 5 bits (which corresponds to the 0x1f mask) for all the
+> PCIe Designware cores.
 
-I really think the best approach to take would be to look at 
-implementing an emulated IOMMU so that you could track DMA mapped pages 
-and avoid migrating the ones marked as DMA_FROM_DEVICE until they are 
-unmapped.  The advantage to this is that in the case of the ixgbevf 
-driver it now reuses the same pages for Rx DMA.  As a result it will be 
-rewriting the same pages often and if you are marking those pages as 
-dirty and transitioning them it is possible for a flow of small packets 
-to really make a mess of things since you would be rewriting the same 
-pages in a loop while the device is processing packets.
+Thanks for cleaning this up!  I think if we split this up a little
+bit, the interesting parts will be more obvious.  For instance, as far
+as I can tell, none of the spear13xx #defines are used at all, so
+removing them could be done ina separate patch.  And I think it would
+be good to pull all the LTSSM_STATE_MASK-related changes into a single
+patch so it's obvious what's happening.
 
-Beyond that I would say you could suspend/resume the device in order to 
-get it to stop and flush the descriptor rings and any outstanding 
-packets.  The code for suspend would unmap the DMA memory which would 
-then be the trigger to flush it across in the migration, and the resume 
-code would take care of any state restoration needed beyond any values 
-that can be configured with the ip link command.
+I'll post the patches I propose as a v4 series so you can see what you
+think.
 
-If you wanted to do a proof of concept of this you could probably do so 
-with very little overhead.  Basically you would need the "page_addr" 
-portion of patch 12 to emulate a slightly migration aware DMA API, and 
-then beyond that you would need something like patch 9 but instead of 
-adding new functions and API you would be switching things on and off 
-via the ixgbevf_suspend/resume calls.
+Bjorn
 
-- Alex
-
-
-
-
-
-
-
-
+> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+> ---
+> Changes since v2:
+> - Use LTSSM_STATE_MASK with value 0x1f for all the drivers (Lucas)
+> - Use lowercase in pcie-designware.h (Lucas)
+> 
+>  drivers/pci/host/pci-keystone-dw.c |  1 -
+>  drivers/pci/host/pci-layerscape.c  |  1 -
+>  drivers/pci/host/pcie-designware.h | 34 ++++++++++++++++++++++++++++++++++
+>  drivers/pci/host/pcie-spear13xx.c  | 33 ---------------------------------
+>  4 files changed, 34 insertions(+), 35 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+> index 0146b41..76edf92 100644
+> --- a/drivers/pci/host/pci-keystone-dw.c
+> +++ b/drivers/pci/host/pci-keystone-dw.c
+> @@ -25,7 +25,6 @@
+>  
+>  /* Application register defines */
+>  #define LTSSM_EN_VAL		        1
+> -#define LTSSM_STATE_MASK		0x1f
+>  #define LTSSM_STATE_L0			0x11
+>  #define DBI_CS2_EN_VAL			0x20
+>  #define OB_XLAT_EN_VAL		        2
+> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+> index 495a7c3..f68b551 100644
+> --- a/drivers/pci/host/pci-layerscape.c
+> +++ b/drivers/pci/host/pci-layerscape.c
+> @@ -28,7 +28,6 @@
+>  /* PEX1/2 Misc Ports Status Register */
+>  #define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
+>  #define LTSSM_STATE_SHIFT	20
+> -#define LTSSM_STATE_MASK	0x3f
+>  #define LTSSM_PCIE_L0		0x11 /* L0 state */
+>  
+>  /* PEX Internal Configuration Registers */
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index e7b3279..95846dd 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -22,6 +22,40 @@
+>  #define MAX_MSI_IRQS			32
+>  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+>  
+> +#define LTSSM_STATE_DETECT_QUIET	0x00
+> +#define LTSSM_STATE_DETECT_ACT		0x01
+> +#define LTSSM_STATE_POLL_ACTIVE		0x02
+> +#define LTSSM_STATE_POLL_COMPLIANCE	0x03
+> +#define LTSSM_STATE_POLL_CONFIG		0x04
+> +#define LTSSM_STATE_PRE_DETECT_QUIET	0x05
+> +#define LTSSM_STATE_DETECT_WAIT		0x06
+> +#define LTSSM_STATE_CFG_LINKWD_START	0x07
+> +#define LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
+> +#define LTSSM_STATE_CFG_LANENUM_WAIT	0x09
+> +#define LTSSM_STATE_CFG_LANENUM_ACEPT	0x0a
+> +#define LTSSM_STATE_CFG_COMPLETE	0x0b
+> +#define LTSSM_STATE_CFG_IDLE		0x0c
+> +#define LTSSM_STATE_RCVRY_LOCK		0x0d
+> +#define LTSSM_STATE_RCVRY_SPEED		0x0e
+> +#define LTSSM_STATE_RCVRY_RCVRCFG	0x0f
+> +#define LTSSM_STATE_RCVRY_IDLE		0x10
+> +#define LTSSM_STATE_L0			0x11
+> +#define LTSSM_STATE_L0S			0x12
+> +#define LTSSM_STATE_L123_SEND_EIDLE	0x13
+> +#define LTSSM_STATE_L1_IDLE		0x14
+> +#define LTSSM_STATE_L2_IDLE		0x15
+> +#define LTSSM_STATE_L2_WAKE		0x16
+> +#define LTSSM_STATE_DISABLED_ENTRY	0x17
+> +#define LTSSM_STATE_DISABLED_IDLE	0x18
+> +#define LTSSM_STATE_DISABLED		0x19
+> +#define LTSSM_STATE_LPBK_ENTRY		0x1a
+> +#define LTSSM_STATE_LPBK_ACTIVE		0x1b
+> +#define LTSSM_STATE_LPBK_EXIT		0x1c
+> +#define LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1d
+> +#define LTSSM_STATE_HOT_RESET_ENTRY	0x1e
+> +#define LTSSM_STATE_HOT_RESET		0x1f
+> +#define LTSSM_STATE_MASK		0x1f
+> +
+>  struct pcie_port {
+>  	struct device		*dev;
+>  	u8			root_bus_nr;
+> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+> index b95b756..8f0a1a2 100644
+> --- a/drivers/pci/host/pcie-spear13xx.c
+> +++ b/drivers/pci/host/pcie-spear13xx.c
+> @@ -84,39 +84,6 @@ struct pcie_app_reg {
+>  #define APPS_PM_XMT_PME_ID			5
+>  
+>  /* CR3 ID */
+> -#define XMLH_LTSSM_STATE_DETECT_QUIET		0x00
+> -#define XMLH_LTSSM_STATE_DETECT_ACT		0x01
+> -#define XMLH_LTSSM_STATE_POLL_ACTIVE		0x02
+> -#define XMLH_LTSSM_STATE_POLL_COMPLIANCE	0x03
+> -#define XMLH_LTSSM_STATE_POLL_CONFIG		0x04
+> -#define XMLH_LTSSM_STATE_PRE_DETECT_QUIET	0x05
+> -#define XMLH_LTSSM_STATE_DETECT_WAIT		0x06
+> -#define XMLH_LTSSM_STATE_CFG_LINKWD_START	0x07
+> -#define XMLH_LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
+> -#define XMLH_LTSSM_STATE_CFG_LANENUM_WAIT	0x09
+> -#define XMLH_LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
+> -#define XMLH_LTSSM_STATE_CFG_COMPLETE		0x0B
+> -#define XMLH_LTSSM_STATE_CFG_IDLE		0x0C
+> -#define XMLH_LTSSM_STATE_RCVRY_LOCK		0x0D
+> -#define XMLH_LTSSM_STATE_RCVRY_SPEED		0x0E
+> -#define XMLH_LTSSM_STATE_RCVRY_RCVRCFG		0x0F
+> -#define XMLH_LTSSM_STATE_RCVRY_IDLE		0x10
+> -#define XMLH_LTSSM_STATE_L0			0x11
+> -#define XMLH_LTSSM_STATE_L0S			0x12
+> -#define XMLH_LTSSM_STATE_L123_SEND_EIDLE	0x13
+> -#define XMLH_LTSSM_STATE_L1_IDLE		0x14
+> -#define XMLH_LTSSM_STATE_L2_IDLE		0x15
+> -#define XMLH_LTSSM_STATE_L2_WAKE		0x16
+> -#define XMLH_LTSSM_STATE_DISABLED_ENTRY		0x17
+> -#define XMLH_LTSSM_STATE_DISABLED_IDLE		0x18
+> -#define XMLH_LTSSM_STATE_DISABLED		0x19
+> -#define XMLH_LTSSM_STATE_LPBK_ENTRY		0x1A
+> -#define XMLH_LTSSM_STATE_LPBK_ACTIVE		0x1B
+> -#define XMLH_LTSSM_STATE_LPBK_EXIT		0x1C
+> -#define XMLH_LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
+> -#define XMLH_LTSSM_STATE_HOT_RESET_ENTRY	0x1E
+> -#define XMLH_LTSSM_STATE_HOT_RESET		0x1F
+> -#define XMLH_LTSSM_STATE_MASK			0x3F
+>  #define XMLH_LINK_UP				(1 << 6)
+>  
+>  /* CR4 ID */
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
