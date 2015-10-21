@@ -1,10 +1,10 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35846 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751508AbbJUVO7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 17:14:59 -0400
-Subject: Re: [RFC Patch 08/12] IXGBEVF: Rework code of finding the end
- transmit desc of package
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:33365 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756606AbbJUVz5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 17:55:57 -0400
+Subject: Re: [RFC Patch 10/12] IXGBEVF: Add lock to protect tx/rx ring
+ operation
 To: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
 	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
 	eddie.dong@intel.com, nrupal.jani@intel.com,
@@ -17,134 +17,200 @@ To: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
 	mitch.a.williams@intel.com, netdev@vger.kernel.org,
 	shannon.nelson@intel.com
 References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
- <1445445464-5056-9-git-send-email-tianyu.lan@intel.com>
+ <1445445464-5056-11-git-send-email-tianyu.lan@intel.com>
 From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <56280050.9020301@gmail.com>
-Date: Wed, 21 Oct 2015 14:14:56 -0700
+Message-ID: <562809EA.2070601@gmail.com>
+Date: Wed, 21 Oct 2015 14:55:54 -0700
 MIME-Version: 1.0
-In-Reply-To: <1445445464-5056-9-git-send-email-tianyu.lan@intel.com>
+In-Reply-To: <1445445464-5056-11-git-send-email-tianyu.lan@intel.com>
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 On 10/21/2015 09:37 AM, Lan Tianyu wrote:
-> When transmit a package, the end transmit desc of package
-> indicates whether package is sent already. Current code records
-> the end desc's pointer in the next_to_watch of struct tx buffer.
-> This code will be broken if shifting desc ring after migration.
-> The pointer will be invalid. This patch is to replace recording
-> pointer with recording the desc number of the package and find
-> the end decs via the first desc and desc number.
+> Ring shifting during restoring VF function maybe race with original
+> ring operation(transmit/receive package). This patch is to add tx/rx
+> lock to protect ring related data.
 >
 > Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
 > ---
->   drivers/net/ethernet/intel/ixgbevf/ixgbevf.h      |  1 +
->   drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c | 19 ++++++++++++++++---
->   2 files changed, 17 insertions(+), 3 deletions(-)
+>   drivers/net/ethernet/intel/ixgbevf/ixgbevf.h      |  2 ++
+>   drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c | 28 ++++++++++++++++++++---
+>   2 files changed, 27 insertions(+), 3 deletions(-)
 >
 > diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h b/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
-> index 775d089..c823616 100644
+> index 6eab402e..3a748c8 100644
 > --- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
 > +++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
-> @@ -54,6 +54,7 @@
->    */
->   struct ixgbevf_tx_buffer {
->   	union ixgbe_adv_tx_desc *next_to_watch;
-> +	u16 desc_num;
->   	unsigned long time_stamp;
->   	struct sk_buff *skb;
->   	unsigned int bytecount;
+> @@ -448,6 +448,8 @@ struct ixgbevf_adapter {
+>
+>   	spinlock_t mbx_lock;
+>   	unsigned long last_reset;
+> +	spinlock_t mg_rx_lock;
+> +	spinlock_t mg_tx_lock;
+>   };
+>
 
-So if you can't use next_to_watch why is it left in here?  Also you 
-might want to take a look at moving desc_num to a different spot in the 
-buffer as you are leaving a 6 byte hole in the descriptor.
+Really, a shared lock for all of the Rx or Tx rings?  This is going to 
+kill any chance at performance.  Especially since just recently the VFs 
+got support for RSS.
 
+To top it off it also means we cannot clean Tx while adding new buffers 
+which will kill Tx performance.
+
+The other concern I have is what is supposed to prevent the hardware 
+from accessing the rings while you are reading?  I suspect nothing so I 
+don't see how this helps anything.
+
+I would honestly say you are better off just giving up on all of the 
+data stored in the descriptor rings rather than trying to restore them. 
+  Yes you are going to lose a few packets but you don't have the risk 
+for races that this code introduces.
+
+>   enum ixbgevf_state_t {
 > diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> index 4446916..056841c 100644
+> index 15ec361..04b6ce7 100644
 > --- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
 > +++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> @@ -210,6 +210,7 @@ static void ixgbevf_unmap_and_free_tx_resource(struct ixgbevf_ring *tx_ring,
->   			       DMA_TO_DEVICE);
->   	}
->   	tx_buffer->next_to_watch = NULL;
-> +	tx_buffer->desc_num = 0;
->   	tx_buffer->skb = NULL;
->   	dma_unmap_len_set(tx_buffer, len, 0);
-
-This opens up a race condition.  If you have a descriptor ready to be 
-cleaned at offset 0 what is to prevent you from just running through the 
-ring?  You likely need to find a descriptor number that cannot be valid 
-to use here.
-
->   	/* tx_buffer must be completely set up in the transmit path */
-> @@ -295,7 +296,7 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
->   	union ixgbe_adv_tx_desc *tx_desc;
->   	unsigned int total_bytes = 0, total_packets = 0;
->   	unsigned int budget = tx_ring->count / 2;
-> -	unsigned int i = tx_ring->next_to_clean;
-> +	int i, watch_index;
->   
-
-Where is i being initialized?  It was here but you removed it.  Are you 
-using i without initializing it?
-
+> @@ -227,8 +227,10 @@ static u64 ixgbevf_get_tx_completed(struct ixgbevf_ring *ring)
+>
+>   int ixgbevf_tx_ring_shift(struct ixgbevf_ring *r, u32 head)
+>   {
+> +	struct ixgbevf_adapter *adapter = netdev_priv(r->netdev);
+>   	struct ixgbevf_tx_buffer *tx_buffer = NULL;
+>   	static union ixgbevf_desc *tx_desc = NULL;
+> +	unsigned long flags;
+>
+>   	tx_buffer = vmalloc(sizeof(struct ixgbevf_tx_buffer) * (r->count));
+>   	if (!tx_buffer)
+> @@ -238,6 +240,7 @@ int ixgbevf_tx_ring_shift(struct ixgbevf_ring *r, u32 head)
+>   	if (!tx_desc)
+>   		return -ENOMEM;
+>
+> +	spin_lock_irqsave(&adapter->mg_tx_lock, flags);
+>   	memcpy(tx_desc, r->desc, sizeof(union ixgbevf_desc) * r->count);
+>   	memcpy(r->desc, &tx_desc[head], sizeof(union ixgbevf_desc) * (r->count - head));
+>   	memcpy(&r->desc[r->count - head], tx_desc, sizeof(union ixgbevf_desc) * head);
+> @@ -256,6 +259,8 @@ int ixgbevf_tx_ring_shift(struct ixgbevf_ring *r, u32 head)
+>   	else
+>   		r->next_to_use += (r->count - head);
+>
+> +	spin_unlock_irqrestore(&adapter->mg_tx_lock, flags);
+> +
+>   	vfree(tx_buffer);
+>   	vfree(tx_desc);
+>   	return 0;
+> @@ -263,8 +268,10 @@ int ixgbevf_tx_ring_shift(struct ixgbevf_ring *r, u32 head)
+>
+>   int ixgbevf_rx_ring_shift(struct ixgbevf_ring *r, u32 head)
+>   {
+> +	struct ixgbevf_adapter *adapter = netdev_priv(r->netdev);
+>   	struct ixgbevf_rx_buffer *rx_buffer = NULL;
+>   	static union ixgbevf_desc *rx_desc = NULL;
+> +	unsigned long flags;	
+>
+>   	rx_buffer = vmalloc(sizeof(struct ixgbevf_rx_buffer) * (r->count));
+>   	if (!rx_buffer)
+> @@ -274,6 +281,7 @@ int ixgbevf_rx_ring_shift(struct ixgbevf_ring *r, u32 head)
+>   	if (!rx_desc)
+>   		return -ENOMEM;
+>
+> +	spin_lock_irqsave(&adapter->mg_rx_lock, flags);
+>   	memcpy(rx_desc, r->desc, sizeof(union ixgbevf_desc) * (r->count));
+>   	memcpy(r->desc, &rx_desc[head], sizeof(union ixgbevf_desc) * (r->count - head));
+>   	memcpy(&r->desc[r->count - head], rx_desc, sizeof(union ixgbevf_desc) * head);
+> @@ -291,6 +299,7 @@ int ixgbevf_rx_ring_shift(struct ixgbevf_ring *r, u32 head)
+>   		r->next_to_use -= head;
+>   	else
+>   		r->next_to_use += (r->count - head);
+> +	spin_unlock_irqrestore(&adapter->mg_rx_lock, flags);
+>
+>   	vfree(rx_buffer);
+>   	vfree(rx_desc);
+> @@ -377,6 +386,8 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
 >   	if (test_bit(__IXGBEVF_DOWN, &adapter->state))
 >   		return true;
-> @@ -305,9 +306,17 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
+>
+> +	spin_lock(&adapter->mg_tx_lock);
+> +	i = tx_ring->next_to_clean;
+>   	tx_buffer = &tx_ring->tx_buffer_info[i];
+>   	tx_desc = IXGBEVF_TX_DESC(tx_ring, i);
 >   	i -= tx_ring->count;
->   
->   	do {
-> -		union ixgbe_adv_tx_desc *eop_desc = tx_buffer->next_to_watch;
-> +		union ixgbe_adv_tx_desc *eop_desc;
+> @@ -471,6 +482,8 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
+>   	q_vector->tx.total_bytes += total_bytes;
+>   	q_vector->tx.total_packets += total_packets;
+>
+> +	spin_unlock(&adapter->mg_tx_lock);
 > +
-> +		if (!tx_buffer->desc_num)
-> +			break;
-> +
-> +		if (i + tx_buffer->desc_num >= 0)
-> +			watch_index = i + tx_buffer->desc_num;
-> +		else
-> +			watch_index = i + tx_ring->count + tx_buffer->desc_num;
->   
-> -		/* if next_to_watch is not set then there is no work pending */
-> +		eop_desc = IXGBEVF_TX_DESC(tx_ring, watch_index);
->   		if (!eop_desc)
->   			break;
->   
-
-So I don't see how this isn't triggering Tx hangs.  I suspect for the 
-simple ping case desc_num will often be 0.  The fact is there are many 
-cases where first and tx_buffer_info are the same descriptor.
-
-> @@ -320,6 +329,7 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
->   
->   		/* clear next_to_watch to prevent false hangs */
->   		tx_buffer->next_to_watch = NULL;
-> +		tx_buffer->desc_num = 0;
->   
->   		/* update the statistics for this packet */
->   		total_bytes += tx_buffer->bytecount;
-
-You cannot use 0 because 0 is a valid number.  You are using it as a 
-look-ahead currently and there are cases where i is the eop_desc index.
-
-> @@ -3457,6 +3467,7 @@ static void ixgbevf_tx_map(struct ixgbevf_ring *tx_ring,
+>   	if (check_for_tx_hang(tx_ring) && ixgbevf_check_tx_hang(tx_ring)) {
+>   		struct ixgbe_hw *hw = &adapter->hw;
+>   		union ixgbe_adv_tx_desc *eop_desc;
+> @@ -999,10 +1012,12 @@ static int ixgbevf_clean_rx_irq(struct ixgbevf_q_vector *q_vector,
+>   				struct ixgbevf_ring *rx_ring,
+>   				int budget)
+>   {
+> +	struct ixgbevf_adapter *adapter = netdev_priv(rx_ring->netdev);
+>   	unsigned int total_rx_bytes = 0, total_rx_packets = 0;
+>   	u16 cleaned_count = ixgbevf_desc_unused(rx_ring);
+>   	struct sk_buff *skb = rx_ring->skb;
+>
+> +	spin_lock(&adapter->mg_rx_lock);
+>   	while (likely(total_rx_packets < budget)) {
+>   		union ixgbe_adv_rx_desc *rx_desc;
+>
+> @@ -1078,6 +1093,7 @@ static int ixgbevf_clean_rx_irq(struct ixgbevf_q_vector *q_vector,
+>   	q_vector->rx.total_packets += total_rx_packets;
+>   	q_vector->rx.total_bytes += total_rx_bytes;
+>
+> +	spin_unlock(&adapter->mg_rx_lock);
+>   	return total_rx_packets;
+>   }
+>
+> @@ -3572,14 +3588,17 @@ static void ixgbevf_tx_map(struct ixgbevf_ring *tx_ring,
+>   	struct ixgbevf_tx_buffer *tx_buffer;
+>   	union ixgbe_adv_tx_desc *tx_desc;
+>   	struct skb_frag_struct *frag = &skb_shinfo(skb)->frags[0];
+> +	struct ixgbevf_adapter *adapter = netdev_priv(tx_ring->netdev);
+>   	unsigned int data_len = skb->data_len;
+>   	unsigned int size = skb_headlen(skb);
+>   	unsigned int paylen = skb->len - hdr_len;
+> +	unsigned long flags;
 >   	u32 tx_flags = first->tx_flags;
 >   	__le32 cmd_type;
->   	u16 i = tx_ring->next_to_use;
-> +	u16 start;
->   
+> -	u16 i = tx_ring->next_to_use;
+> -	u16 start;
+> +	u16 i, start;
+>
+> +	spin_lock_irqsave(&adapter->mg_tx_lock, flags);
+> +	i = tx_ring->next_to_use;
 >   	tx_desc = IXGBEVF_TX_DESC(tx_ring, i);
->   
-> @@ -3540,6 +3551,8 @@ static void ixgbevf_tx_map(struct ixgbevf_ring *tx_ring,
->   
->   	/* set next_to_watch value indicating a packet is present */
->   	first->next_to_watch = tx_desc;
-> +	start = first - tx_ring->tx_buffer_info;
-> +	first->desc_num = (i - start >= 0) ? i - start: i + tx_ring->count - start;
->   
->   	i++;
->   	if (i == tx_ring->count)
+>
+>   	ixgbevf_tx_olinfo_status(tx_desc, tx_flags, paylen);
+> @@ -3673,7 +3692,7 @@ static void ixgbevf_tx_map(struct ixgbevf_ring *tx_ring,
+>
+>   	/* notify HW of packet */
+>   	ixgbevf_write_tail(tx_ring, i);
+> -
+> +	spin_unlock_irqrestore(&adapter->mg_tx_lock, flags);
+>   	return;
+>   dma_error:
+>   	dev_err(tx_ring->dev, "TX DMA map failed\n");
+> @@ -3690,6 +3709,7 @@ dma_error:
+>   	}
+>
+>   	tx_ring->next_to_use = i;
+> +	spin_unlock_irqrestore(&adapter->mg_tx_lock, flags);
+>   }
+>
+>   static int __ixgbevf_maybe_stop_tx(struct ixgbevf_ring *tx_ring, int size)
+> @@ -4188,6 +4208,8 @@ static int ixgbevf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+>   		break;
+>   	}
+>
+> +	spin_lock_init(&adapter->mg_tx_lock);
+> +	spin_lock_init(&adapter->mg_rx_lock);
+>   	return 0;
+>
+>   err_register:
+>
 
-start and i could be the same value.  If you look at ixgbevf_tx_map you 
-should find that if the packet is contained in a single buffer then the 
-first and last descriptor in your send will be the same one.
