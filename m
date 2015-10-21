@@ -1,251 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:34637 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753158AbbJUUpr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 16:45:47 -0400
-Subject: Re: [RFC Patch 03/12] IXGBE: Add sysfs interface for Qemu to migrate
- VF status in the PF driver
-To: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
-	pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
- <1445445464-5056-4-git-send-email-tianyu.lan@intel.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <5627F979.8070104@gmail.com>
-Date: Wed, 21 Oct 2015 13:45:45 -0700
+Received: from devils.ext.ti.com ([198.47.26.153]:51462 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753767AbbJUM5j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 08:57:39 -0400
+From: WingMan Kwok <w-kwok2@ti.com>
+To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<kishon@ti.com>, <rogerq@ti.com>, <m-karicheri2@ti.com>,
+	<bhelgaas@google.com>, <ssantosh@kernel.org>,
+	<linux@arm.linux.org.uk>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: WingMan Kwok <w-kwok2@ti.com>
+Subject: [PATCH v3 2/2] PCI: keystone: update to use generic keystone serdes driver
+Date: Wed, 21 Oct 2015 08:56:41 -0400
+Message-ID: <1445432201-16007-3-git-send-email-w-kwok2@ti.com>
+In-Reply-To: <1445432201-16007-1-git-send-email-w-kwok2@ti.com>
+References: <1445432201-16007-1-git-send-email-w-kwok2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1445445464-5056-4-git-send-email-tianyu.lan@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/21/2015 09:37 AM, Lan Tianyu wrote:
-> This patch is to add sysfs interface state_in_pf under sysfs directory
-> of VF PCI device for Qemu to get and put VF status in the PF driver during
-> migration.
->
-> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
-> ---
->   drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 156 ++++++++++++++++++++++++-
->   1 file changed, 155 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-> index ab2a2e2..89671eb 100644
-> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-> @@ -124,6 +124,157 @@ static int __ixgbe_enable_sriov(struct ixgbe_adapter *adapter)
->   	return -ENOMEM;
->   }
->   
-> +#define IXGBE_PCI_VFCOMMAND   0x4
-> +#define IXGBE_PCI_VFMSIXMC    0x72
-> +#define IXGBE_SRIOV_VF_OFFSET 0x180
-> +#define IXGBE_SRIOV_VF_STRIDE 0x2
-> +
-> +#define to_adapter(dev) ((struct ixgbe_adapter *)(pci_get_drvdata(to_pci_dev(dev)->physfn)))
-> +
-> +struct state_in_pf {
-> +	u16 command;
-> +	u16 msix_message_control;
-> +	struct vf_data_storage vf_data;
-> +};
-> +
-> +static struct pci_dev *ixgbe_get_virtfn_dev(struct pci_dev *pdev, int vfn)
-> +{
-> +	u16 rid = pdev->devfn + IXGBE_SRIOV_VF_OFFSET + IXGBE_SRIOV_VF_STRIDE * vfn;
-> +	return pci_get_bus_and_slot(pdev->bus->number + (rid >> 8), rid & 0xff);
-> +}
-> +
-> +static ssize_t ixgbe_show_state_in_pf(struct device *dev,
-> +				      struct device_attribute *attr, char *buf)
-> +{
-> +	struct ixgbe_adapter *adapter = to_adapter(dev);
-> +	struct pci_dev *pdev = adapter->pdev, *vdev;
-> +	struct pci_dev *vf_pdev = to_pci_dev(dev);
-> +	struct ixgbe_hw *hw = &adapter->hw;
-> +	struct state_in_pf *state = (struct state_in_pf *)buf;
-> +	int vfn = vf_pdev->virtfn_index;
-> +	u32 reg, reg_offset, vf_shift;
-> +
-> +	/* Clear VF mac and disable VF */
-> +	ixgbe_del_mac_filter(adapter, adapter->vfinfo[vfn].vf_mac_addresses, vfn);
-> +
-> +	/* Record PCI configurations */
-> +	vdev = ixgbe_get_virtfn_dev(pdev, vfn);
-> +	if (vdev) {
-> +		pci_read_config_word(vdev, IXGBE_PCI_VFCOMMAND, &state->command);
-> +		pci_read_config_word(vdev, IXGBE_PCI_VFMSIXMC, &state->msix_message_control);
-> +	}
-> +	else
-> +		printk(KERN_WARNING "Unable to find VF device.\n");
-> +
+This patch updates the Keystone PCI driver to use the
+generic Keystone serdes driver for serdes initialization
+and configuration.  The generic serdes driver supports
+peripherals on Keystone platforms that require serdes.
 
-Formatting for the if/else is incorrect.  The else condition should be 
-in brackets as well.
+Signed-off-by: WingMan Kwok <w-kwok2@ti.com>
+---
+ drivers/pci/host/pci-keystone.c |   24 ++++++++++++++----------
+ drivers/pci/host/pci-keystone.h |    1 +
+ 2 files changed, 15 insertions(+), 10 deletions(-)
 
-> +	/* Record states hold by PF */
-> +	memcpy(&state->vf_data, &adapter->vfinfo[vfn], sizeof(struct vf_data_storage));
-> +
-> +	vf_shift = vfn % 32;
-> +	reg_offset = vfn / 32;
-> +
-> +	reg = IXGBE_READ_REG(hw, IXGBE_VFTE(reg_offset));
-> +	reg &= ~(1 << vf_shift);
-> +	IXGBE_WRITE_REG(hw, IXGBE_VFTE(reg_offset), reg);
-> +
-> +	reg = IXGBE_READ_REG(hw, IXGBE_VFRE(reg_offset));
-> +	reg &= ~(1 << vf_shift);
-> +	IXGBE_WRITE_REG(hw, IXGBE_VFRE(reg_offset), reg);
-> +
-> +	reg = IXGBE_READ_REG(hw, IXGBE_VMECM(reg_offset));
-> +	reg &= ~(1 << vf_shift);
-> +	IXGBE_WRITE_REG(hw, IXGBE_VMECM(reg_offset), reg);
-> +
-> +	return sizeof(struct state_in_pf);
-> +}
-> +
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index 0aa81bd..4cc8faa 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -335,6 +335,7 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
+ 
++	phy_exit(ks_pcie->serdes_phy);
+ 	clk_disable_unprepare(ks_pcie->clk);
+ 
+ 	return 0;
+@@ -342,12 +343,12 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
+ 
+ static int __init ks_pcie_probe(struct platform_device *pdev)
+ {
++	struct device_node *node = pdev->dev.of_node;
+ 	struct device *dev = &pdev->dev;
+ 	struct keystone_pcie *ks_pcie;
+ 	struct pcie_port *pp;
+ 	struct resource *res;
+ 	void __iomem *reg_p;
+-	struct phy *phy;
+ 	int ret = 0;
+ 
+ 	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
+@@ -357,14 +358,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 
+ 	pp = &ks_pcie->pp;
+ 
+-	/* initialize SerDes Phy if present */
+-	phy = devm_phy_get(dev, "pcie-phy");
+-	if (!IS_ERR_OR_NULL(phy)) {
+-		ret = phy_init(phy);
+-		if (ret < 0)
+-			return ret;
+-	}
+-
+ 	/* index 2 is to read PCI DEVICE_ID */
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+ 	reg_p = devm_ioremap_resource(dev, res);
+@@ -385,6 +378,17 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
++	ks_pcie->serdes_phy = devm_of_phy_get(dev, node, NULL);
++	if (IS_ERR(ks_pcie->serdes_phy)) {
++		dev_err(dev, "No %s serdes driver found: %ld\n",
++			node->name, PTR_ERR(ks_pcie->serdes_phy));
++		goto fail_clk;
++	}
++
++	ret = phy_init(ks_pcie->serdes_phy);
++	if (ret < 0)
++		goto fail_clk;
++
+ 	ret = ks_add_pcie_port(ks_pcie, pdev);
+ 	if (ret < 0)
+ 		goto fail_clk;
+@@ -392,7 +396,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ fail_clk:
+ 	clk_disable_unprepare(ks_pcie->clk);
+-
++	phy_exit(ks_pcie->serdes_phy);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
+index 478d932..1e6d122 100644
+--- a/drivers/pci/host/pci-keystone.h
++++ b/drivers/pci/host/pci-keystone.h
+@@ -33,6 +33,7 @@ struct keystone_pcie {
+ 	/* Application register space */
+ 	void __iomem		*va_app_base;
+ 	struct resource		app;
++	struct phy		*serdes_phy;
+ };
+ 
+ /* Keystone DW specific MSI controller APIs/definitions */
+-- 
+1.7.9.5
 
-This is a read.  Why does it need to switch off the VF?  Also why turn 
-of the anti-spoof, it doesn't make much sense.
-
-> +static ssize_t ixgbe_store_state_in_pf(struct device *dev,
-> +				       struct device_attribute *attr,
-> +				       const char *buf, size_t count)
-> +{
-> +	struct ixgbe_adapter *adapter = to_adapter(dev);
-> +	struct pci_dev *pdev = adapter->pdev, *vdev;
-> +	struct pci_dev *vf_pdev = to_pci_dev(dev);
-> +	struct state_in_pf *state = (struct state_in_pf *)buf;
-> +	int vfn = vf_pdev->virtfn_index;
-> +
-> +	/* Check struct size */
-> +	if (count != sizeof(struct state_in_pf)) {
-> +		printk(KERN_ERR "State in PF size does not fit.\n");
-> +		goto out;
-> +	}
-> +
-> +	/* Restore PCI configurations */
-> +	vdev = ixgbe_get_virtfn_dev(pdev, vfn);
-> +	if (vdev) {
-> +		pci_write_config_word(vdev, IXGBE_PCI_VFCOMMAND, state->command);
-> +		pci_write_config_word(vdev, IXGBE_PCI_VFMSIXMC, state->msix_message_control);
-> +	}
-> +
-> +	/* Restore states hold by PF */
-> +	memcpy(&adapter->vfinfo[vfn], &state->vf_data, sizeof(struct vf_data_storage));
-> +
-> +  out:
-> +	return count;
-> +}
-
-Just doing a memcpy to move the vfinfo over adds no value.  The fact is 
-there are a number of filters that have to be configured in hardware 
-after, and it isn't as simple as just migrating the values stored.  As I 
-mentioned in the case of the 82598 there is also jumbo frames to take 
-into account.  If the first PF didn't have it enabled, but the second 
-one does that implies the state of the VF needs to change to account for 
-that.
-
-I really think you would be better off only migrating the data related 
-to what can be configured using the ip link command and leaving other 
-values such as clear_to_send at the reset value of 0. Then you can at 
-least restore state from the VF after just a couple of quick messages.
-
-> +static struct device_attribute ixgbe_per_state_in_pf_attribute =
-> +	__ATTR(state_in_pf, S_IRUGO | S_IWUSR,
-> +		ixgbe_show_state_in_pf, ixgbe_store_state_in_pf);
-> +
-> +void ixgbe_add_vf_attrib(struct ixgbe_adapter *adapter)
-> +{
-> +	struct pci_dev *pdev = adapter->pdev;
-> +	struct pci_dev *vfdev;
-> +	unsigned short vf_id;
-> +	int pos, ret;
-> +
-> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_SRIOV);
-> +	if (!pos)
-> +		return;
-> +
-> +	/* get the device ID for the VF */
-> +	pci_read_config_word(pdev, pos + PCI_SRIOV_VF_DID, &vf_id);
-> +
-> +	vfdev = pci_get_device(pdev->vendor, vf_id, NULL);
-> +
-> +	while (vfdev) {
-> +		if (vfdev->is_virtfn) {
-> +			ret = device_create_file(&vfdev->dev,
-> +					&ixgbe_per_state_in_pf_attribute);
-> +			if (ret)
-> +				pr_warn("Unable to add VF attribute for dev %s,\n",
-> +					dev_name(&vfdev->dev));
-> +		}
-> +
-> +		vfdev = pci_get_device(pdev->vendor, vf_id, vfdev);
-> +	}
-> +}
-
-Driver specific sysfs is a no-go.  Otherwise we will end up with a 
-different implementation of this for every driver.  You will need to 
-find a way to make this generic in order to have a hope of getting this 
-to be acceptable.
-
-> +void ixgbe_remove_vf_attrib(struct ixgbe_adapter *adapter)
-> +{
-> +	struct pci_dev *pdev = adapter->pdev;
-> +	struct pci_dev *vfdev;
-> +	unsigned short vf_id;
-> +	int pos;
-> +
-> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_SRIOV);
-> +	if (!pos)
-> +		return;
-> +
-> +	/* get the device ID for the VF */
-> +	pci_read_config_word(pdev, pos + PCI_SRIOV_VF_DID, &vf_id);
-> +
-> +	vfdev = pci_get_device(pdev->vendor, vf_id, NULL);
-> +
-> +	while (vfdev) {
-> +		if (vfdev->is_virtfn) {
-> +			device_remove_file(&vfdev->dev, &ixgbe_per_state_in_pf_attribute);
-> +		}
-> +
-> +		vfdev = pci_get_device(pdev->vendor, vf_id, vfdev);
-> +	}
-> +}
-> +
->   /* Note this function is called when the user wants to enable SR-IOV
->    * VFs using the now deprecated module parameter
->    */
-> @@ -198,6 +349,9 @@ int ixgbe_disable_sriov(struct ixgbe_adapter *adapter)
->   	if (!(adapter->flags & IXGBE_FLAG_SRIOV_ENABLED))
->   		return 0;
->   
-> +
-> +	ixgbe_remove_vf_attrib(adapter);
-> +
->   #ifdef CONFIG_PCI_IOV
->   	/*
->   	 * If our VFs are assigned we cannot shut down SR-IOV
-
-You can probably drop the extra space you added before the function.
-
-> @@ -284,7 +438,7 @@ static int ixgbe_pci_sriov_enable(struct pci_dev *dev, int num_vfs)
->   		return err;
->   	}
->   	ixgbe_sriov_reinit(adapter);
-> -
-> +	ixgbe_add_vf_attrib(adapter);
->   	return num_vfs;
->   #else
->   	return 0;
-
-You should probably add a space here before the return.
