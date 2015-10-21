@@ -1,71 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 0/5] arm64: Juno: Add support for PCIe on R1 board
-Date: Mon, 12 Oct 2015 11:07:34 +0100
-Message-Id: <1444644459-2780-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
+	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Jeremy Linton <jeremy.linton@arm.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH V4 1/8] acpi: Honor ACPI _CCA attribute setting
+Date: Wed, 21 Oct 2015 08:52:04 -0700
+Message-ID: <1445442731-28819-2-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes in v3 vs v2:
- - Add Documentation files describing the DT bindings for plda,xpressrich3-axi
-   and arm,juno-r1-pcie properties.
- - Cosmetic changes in the .dts to bracket range and interrupt-map entries
-   individually.
-Changes in v2 vs v1:
- - Add plda as OF vendor prefix
- - Add more specific compatible values to the Juno R1 DT
- 
+From: Jeremy Linton <jeremy.linton@arm.com>
 
-Juno R1 board has a working PCIe host bridge that can be enabled and
-configured by the firmware and made use of by Linux. For UEFI, the
-Linaro releases contain firmware that configure the XpressRICH3 host
-bridge correctly. For U-Boot based setups, one needs the patchset
-posted here[1].
+ACPI configurations can now mark devices as noncoherent,
+support that choice.
 
-This patchset adds a quirk for setting the correct class to the host
-bridge device and the device tree changes that enable PCIe on Juno R1.
-We also update the defconfig to enable the generic PCI host bridge driver.
+NOTE: This is required to support USB on ARM Juno Development Board.
 
-Best regards,
-Liviu
+Signed-off-by: Jeremy Linton <jeremy.linton@arm.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Catalin Marinas <catalin.marinas@arm.com>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Will Deacon <will.deacon@arm.com>
+CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+---
+ include/acpi/acpi_bus.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-1. http://lists.denx.de/pipermail/u-boot/2015-October/229669.html
-
-
-Andrew Murray (1):
-  pci: Add PLDA's XpressRICH3 PCIe host bridge PCI ID
-
-Liviu Dudau (4):
-  PCI: Add quirk for PLDA's XpressRICH3 host bridge class.
-  Documentation: of: Document the bindings used by Juno R1 PCIe host bridge
-  arm64: Juno: Add support for the PCIe host bridge on Juno R1
-  arm64: defconfig: Enable PCI generic host bridge by default
-
- .../devicetree/bindings/pci/arm,juno-r1-pcie.txt     | 10 ++++++++++
- .../devicetree/bindings/pci/plda,xpressrich3-axi.txt | 12 ++++++++++++
- .../devicetree/bindings/vendor-prefixes.txt          |  1 +
- arch/arm64/boot/dts/arm/juno-r1.dts                  | 20 ++++++++++++++++++++
- arch/arm64/configs/defconfig                         |  1 +
- drivers/pci/quirks.c                                 | 10 ++++++++++
- include/linux/pci_ids.h                              |  3 +++
- 7 files changed, 57 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/arm,juno-r1-pcie.txt
- create mode 100644 Documentation/devicetree/bindings/pci/plda,xpressrich3-axi.txt
-
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 5ba8fb6..5a42204 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -395,7 +395,7 @@ static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+ 	 * case 1. Do not support and disable DMA.
+ 	 * case 2. Support but rely on arch-specific cache maintenance for
+ 	 *         non-coherence DMA operations.
+-	 * Currently, we implement case 1 above.
++	 * Currently, we implement case 2 above.
+ 	 *
+ 	 * For the case when _CCA is missing (i.e. cca_seen=0) and
+ 	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
+@@ -403,7 +403,8 @@ static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+ 	 *
+ 	 * See acpi_init_coherency() for more info.
+ 	 */
+-	if (adev->flags.coherent_dma) {
++	if (adev->flags.coherent_dma ||
++	    (adev->flags.cca_seen && IS_ENABLED(CONFIG_ARM64))) {
+ 		ret = true;
+ 		if (coherent)
+ 			*coherent = adev->flags.coherent_dma;
 -- 
-2.6.0
+2.1.0
 
