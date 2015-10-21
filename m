@@ -1,92 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55668 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754330AbbJUUwM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Oct 2015 16:52:12 -0400
-Date: Wed, 21 Oct 2015 15:52:08 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ben Shelton <benjamin.h.shelton@intel.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: IOV: read SRIOV_NUM_VF after enabling ARI
-Message-ID: <20151021205208.GH1583@localhost>
-References: <1444317617-13399-1-git-send-email-benjamin.h.shelton@intel.com>
- <20151015193116.GE17702@localhost>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:34986 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753901AbbJUSHZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 14:07:25 -0400
+Subject: Re: [RFC Patch 01/12] PCI: Add virtfn_index for struct pci_device
+To: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	eddie.dong@intel.com, nrupal.jani@intel.com,
+	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
+	pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+ <1445445464-5056-2-git-send-email-tianyu.lan@intel.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <5627D45A.4040502@gmail.com>
+Date: Wed, 21 Oct 2015 11:07:22 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151015193116.GE17702@localhost>
+In-Reply-To: <1445445464-5056-2-git-send-email-tianyu.lan@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 15, 2015 at 02:31:16PM -0500, Bjorn Helgaas wrote:
-> On Thu, Oct 08, 2015 at 10:20:17AM -0500, Ben Shelton wrote:
-> > For some SR-IOV devices, the number of available virtual functions increases
-> > after enabling ARI.  Currently, SRIOV_NUM_VF is read and saved off before the
-> > ARI control bit is enabled in SRIOV_CTRL.  This causes an issue when VFs are
-> > enabled.
-> > 
-> > At device init, SRIOV_INITIAL_VF and SRIOV_NUM_VF are specified to contain the
-> > number of available VFs for the device.  sriov_enable() does a sanity check
-> > that SRIOV_INITIAL_VF is not greater than iov->total_VFs, the saved-off value
-> > of SRIOV_NUM_VF.  Since the value of both SRIOV_INITIAL_VF and SRIOV_NUM_VF has
-> > increased after enabling the ARI bit, the check fails, and the VFs cannot be
-> > enabled.
-> > 
-> > To fix the issue, write SRIOV_CTRL first, and then read SRIOV_NUM_VF.
-> > 
-> > Signed-off-by: Ben Shelton <benjamin.h.shelton@intel.com>
-> 
-> I applied this as follows to pci/virtualization for v4.4, thanks, Ben!
-
-I dropped this one for now, pending the resolution of my questions in
-http://lkml.kernel.org/r/20151016180701.GB21346@localhost
-
-> commit 3aa71da412fedaee133b4b6e4be4b801c59d6c91
-> Author: Ben Shelton <benjamin.h.shelton@intel.com>
-> Date:   Thu Oct 15 12:35:17 2015 -0500
-> 
->     PCI: Enable SR-IOV ARI Capable Hierarchy before reading TotalVFs
->     
->     For some SR-IOV devices, the number of available virtual functions, i.e.,
->     TotalVFs, increases after setting the ARI Capable Hierarchy bit in the
->     SR-IOV Control register.  This violates the SR-IOV spec, r1.1, sec 3.3.6,
->     which says TotalVFs is HwInit, but we don't need TotalVFs before setting
->     the ARI Capable bit anyway.
->     
->     Set the ARI Capable Hierarchy bit (if ARI is enabled in the upstream
->     bridge) before reading TotalVFs.
->     
->     [bhelgaas: changelog]
->     Signed-off-by: Ben Shelton <benjamin.h.shelton@intel.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
+On 10/21/2015 09:37 AM, Lan Tianyu wrote:
+> Add "virtfn_index" member in the struct pci_device to record VF sequence
+> of PF. This will be used in the VF sysfs node handle.
+>
+> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
+> ---
+>   drivers/pci/iov.c   | 1 +
+>   include/linux/pci.h | 1 +
+>   2 files changed, 2 insertions(+)
+>
 > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 0202ab0..f8bfc1d 100644
+> index ee0ebff..065b6bb 100644
 > --- a/drivers/pci/iov.c
 > +++ b/drivers/pci/iov.c
-> @@ -399,10 +399,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
->  		ssleep(1);
->  	}
->  
-> -	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
-> -	if (!total)
-> -		return 0;
-> -
->  	ctrl = 0;
->  	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
->  		if (pdev->is_physfn)
-> @@ -415,6 +411,10 @@ static int sriov_init(struct pci_dev *dev, int pos)
->  found:
->  	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
->  
-> +	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
-> +	if (!total)
-> +		return 0;
-> +
->  	pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
->  	i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
->  	pgsz &= ~((1 << i) - 1);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> @@ -136,6 +136,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>   	virtfn->physfn = pci_dev_get(dev);
+>   	virtfn->is_virtfn = 1;
+>   	virtfn->multifunction = 0;
+> +	virtfn->virtfn_index = id;
+>   
+>   	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>   		res = &dev->resource[i + PCI_IOV_RESOURCES];
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 353db8d..85c5531 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -356,6 +356,7 @@ struct pci_dev {
+>   	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
+>   	unsigned int	irq_managed:1;
+>   	pci_dev_flags_t dev_flags;
+> +	unsigned int	virtfn_index;
+>   	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+>   
+>   	u32		saved_config_space[16]; /* config space saved at suspend time */
+>
+
+Can't you just calculate the VF index based on the VF BDF number 
+combined with the information in the PF BDF number and VF 
+offset/stride?  Seems kind of pointless to add a variable that is only 
+used by one driver and is in a slowpath when you can just calculate it 
+pretty quickly.
+
+- Alex
