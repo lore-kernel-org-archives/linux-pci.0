@@ -1,307 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:58967 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758636AbbJ3HTJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 03:19:09 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 30 Oct 2015 17:19:06 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 7947C2CE8055
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 18:19:05 +1100 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9U7Ihv311927708
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 18:18:51 +1100
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9U7IWHs010480
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 18:18:33 +1100
-Date: Fri, 30 Oct 2015 15:18:06 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com, mpe@ellerman.id.au,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V10 08/12] powerpc/powernv: Support EEH reset for VF PE
-Message-ID: <20151030071806.GE5940@richards-mbp.cn.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1445829362-2738-9-git-send-email-weiyang@linux.vnet.ibm.com>
- <5632EDE8.2010601@ozlabs.ru>
+Received: from mail.kernel.org ([198.145.29.136]:47440 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750846AbbJUSmy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 Oct 2015 14:42:54 -0400
+Subject: [PATCH v4 1/4] PCI: designware: Use common LTSSM_STATE_MASK
+ definition
+To: Fabio Estevam <festevam@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fabio Estevam <fabio.estevam@freescale.com>,
+	linux-pci@vger.kernel.org, pratyush.anand@gmail.com,
+	m-karicheri2@ti.com, l.stach@pengutronix.de
+Date: Wed, 21 Oct 2015 13:42:50 -0500
+Message-ID: <20151021184250.28724.41928.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5632EDE8.2010601@ozlabs.ru>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 30, 2015 at 03:11:20PM +1100, Alexey Kardashevskiy wrote:
->On 10/26/2015 02:15 PM, Wei Yang wrote:
->>PEs for VFs don't have primary bus. So they have to have their own reset
->>backend, which is used during EEH recovery. The patch implements the reset
->>backend for VF's PE by issuing FLR or AF FLR to the VFs, which are contained
->>in the PE.
->>
->>[gwshan: changelog and code refactoring]
->>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/include/asm/eeh.h               |   1 +
->>  arch/powerpc/platforms/powernv/eeh-powernv.c | 134 ++++++++++++++++++++++++++-
->>  2 files changed, 134 insertions(+), 1 deletion(-)
->>
->>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
->>index ec21f8f..331c856 100644
->>--- a/arch/powerpc/include/asm/eeh.h
->>+++ b/arch/powerpc/include/asm/eeh.h
->>@@ -136,6 +136,7 @@ struct eeh_dev {
->>  	int pcix_cap;			/* Saved PCIx capability	*/
->>  	int pcie_cap;			/* Saved PCIe capability	*/
->>  	int aer_cap;			/* Saved AER capability		*/
->>+	int af_cap;			/* Saved AF capability		*/
->>  	struct eeh_pe *pe;		/* Associated PE		*/
->>  	struct list_head list;		/* Form link list in the PE	*/
->>  	struct pci_controller *phb;	/* Associated PHB		*/
->>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>index cfd55dd..017cd72 100644
->>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
->>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>@@ -404,6 +404,7 @@ static void *pnv_eeh_probe(struct pci_dn *pdn, void *data)
->>  	edev->pcix_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_PCIX);
->>  	edev->pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
->>  	edev->aer_cap  = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
->>+	edev->af_cap   = pnv_eeh_find_cap(pdn, PCI_CAP_ID_AF);
->>  	if ((edev->class_code >> 8) == PCI_CLASS_BRIDGE_PCI) {
->>  		edev->mode |= EEH_DEV_BRIDGE;
->>  		if (edev->pcie_cap) {
->>@@ -893,6 +894,127 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->>  	return 0;
->>  }
->>
->>+static void pnv_eeh_wait_for_pending(struct pci_dn *pdn, int pos,
->>+				     u16 mask, bool af_flr_rst)
->>+{
->>+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
->>+	int status, i;
->>+
->>+	/* Wait for Transaction Pending bit to be cleared */
->>+	for (i = 0; i < 4; i++) {
->>+		eeh_ops->read_config(pdn, pos, 2, &status);
->
->
->gcc should have complained on using uninitialized @status here.
->
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-I remove the obj file and re-compile the file, not the warning.
-And took a look at other places where read_config() is called. The laster
-parameter is not initialized before called.
+Add a common #define for LTSSM_STATE_MASK and use it in all the
+DesignWare-based drivers.
 
-You see the error during build?
+Note that this changes LTSSM_STATE_MASK from 6 bits (0x3f) to 5 bits (0x1f)
+for i.MX6 and Layerscape.  We believe this is safe for all DesignWare-based
+PCIe cores.
 
->
->>+		if (!(status & mask))
->>+			return;
->>+
->>+		msleep((1 << i) * 100);
->>+	}
->>+
->>+	pr_warn("%s: Pending transaction while issuing %s FLR to "
->>+		"%04x:%02x:%02x.%01x\n",
->
->Do not wrap user-visible strings.
->
+[bhelgaas: changelog, move removal of unused SPEAr13xx #defines to separate
+patch, add only LTSSM_STATE_MASK and change all users for reviewability]
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-imx6.c        |    3 +--
+ drivers/pci/host/pci-keystone-dw.c |    1 -
+ drivers/pci/host/pci-layerscape.c  |    1 -
+ drivers/pci/host/pcie-designware.h |    2 ++
+ 4 files changed, 3 insertions(+), 4 deletions(-)
 
-Will change this.
-
->
->>+		__func__, af_flr_rst ? "AF" : "",
->>+		edev->phb->global_number, pdn->busno,
->>+		PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
->>+}
->>+
->>+static int pnv_eeh_do_flr(struct pci_dn *pdn, int option)
->>+{
->>+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
->>+	u32 reg;
->>+
->>+	if (!edev->pcie_cap)
->>+		return -ENOTTY;
->
->
->Can pnv_eeh_do_flr() be really called on a non PCIe device, can we get that
->far? WARN_ON_ONCE() may be?
->
-
-So you suggest to add a WARN_ON_ONCE() in this condition, right?
-
->
->>+
->>+	eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP, 4, &reg);
->
->
->... and here about uninitialized @reg.
->
->
->>+	if (!(reg & PCI_EXP_DEVCAP_FLR))
->>+		return -ENOTTY;
->>+
->>+	switch (option) {
->>+	case EEH_RESET_HOT:
->>+	case EEH_RESET_FUNDAMENTAL:
->>+		pnv_eeh_wait_for_pending(pdn, edev->pcie_cap + PCI_EXP_DEVSTA,
->>+					 PCI_EXP_DEVSTA_TRPND, false);
->>+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
->>+				     4, &reg);
->>+		reg |= PCI_EXP_DEVCTL_BCR_FLR;
->>+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
->>+				      4, reg);
->>+		msleep(EEH_PE_RST_HOLD_TIME);
->>+		break;
->>+	case EEH_RESET_DEACTIVATE:
->>+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
->>+				     4, &reg);
->>+		reg &= ~PCI_EXP_DEVCTL_BCR_FLR;
->>+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
->>+				      4, reg);
->>+		msleep(EEH_PE_RST_SETTLE_TIME);
->>+		break;
->>+	}
->>+
->>+	return 0;
->>+}
->>+
->>+static int pnv_eeh_do_af_flr(struct pci_dn *pdn, int option)
->>+{
->>+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
->>+	u32 cap;
->>+
->>+	if (!edev->af_cap)
->>+		return -ENOTTY;
->>+
->>+	eeh_ops->read_config(pdn, edev->af_cap + PCI_AF_CAP, 1, &cap);
->
->
->... and here about @cap.
->
->>+	if (!(cap & PCI_AF_CAP_TP) || !(cap & PCI_AF_CAP_FLR))
->>+		return -ENOTTY;
->>+
->>+	switch (option) {
->>+	case EEH_RESET_HOT:
->>+	case EEH_RESET_FUNDAMENTAL:
->>+		/*
->>+		 * Wait for Transaction Pending bit to clear. A word-aligned
->>+		 * test is used, so we use the conrol offset rather than status
->>+		 * and shift the test bit to match.
->
->
->Why word-aligned (not byte or double word)?
->
-
-I copied this words from pci_af_flr(). Actually, I don't tried to understand
-this reason.
-
->>+		 */
->>+		pnv_eeh_wait_for_pending(pdn, edev->af_cap + PCI_AF_CTRL,
->>+					 PCI_AF_STATUS_TP << 8, true);
->>+		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL,
->>+				      1, PCI_AF_CTRL_FLR);
->>+		msleep(EEH_PE_RST_HOLD_TIME);
->>+		break;
->>+	case EEH_RESET_DEACTIVATE:
->>+		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL, 1, 0);
->>+		msleep(EEH_PE_RST_SETTLE_TIME);
->
->
->btw there is an unrelated issue with EEH_PE_RST_SETTLE_TIME which is defined
->as 1800 which is A LOT (+250ms from EEH_PE_RST_HOLD_TIME and for some reason
->this is actually doubled so there is another reset somewhere).
->
-
-I don't know the reason for this value. This code keeps aligned with other
-reset functions, like pnv_eeh_bridge_reset().
-
->Booting a guest with 63 VFs takes 6 minutes or so, is there a good reason for
->such a huge timeout?
->
->
->>+		break;
->>+	}
->>+
->>+	return 0;
->>+}
->>+
->>+static int pnv_eeh_reset_vf(struct pci_dn *pdn, int option)
->>+{
->>+	int ret;
->>+
->>+	ret = pnv_eeh_do_flr(pdn, option);
->>+	if (ret != -ENOTTY)
->>+		return ret;
->>+
->>+	return pnv_eeh_do_af_flr(pdn, option);
->>+}
->>+
->>+static int pnv_eeh_vf_pe_reset(struct eeh_pe *pe, int option)
->>+{
->>+	struct eeh_dev *edev, *tmp;
->>+	struct pci_dn *pdn;
->>+	int ret;
->>+
->>+	eeh_pe_for_each_dev(pe, edev, tmp) {
->>+		pdn = eeh_dev_to_pdn(edev);
->>+		ret = pnv_eeh_reset_vf(pdn, option);
->>+		if (ret)
->>+			return ret;
->>+	}
->>+
->>+	return 0;
->>+}
->>+
->>  void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
->>  {
->>  	struct pci_controller *hose;
->>@@ -968,7 +1090,9 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
->>  		}
->>
->>  		bus = eeh_pe_bus_get(pe);
->>-		if (pci_is_root_bus(bus) ||
->>+		if (pe->type & EEH_PE_VF)
->>+			ret = pnv_eeh_vf_pe_reset(pe, option);
->>+		else if (pci_is_root_bus(bus) ||
->>  			pci_is_root_bus(bus->parent))
->>  			ret = pnv_eeh_root_reset(hose, option);
->>  		else
->>@@ -1108,6 +1232,14 @@ static inline bool pnv_eeh_cfg_blocked(struct pci_dn *pdn)
->>  	if (!edev || !edev->pe)
->>  		return false;
->>
->>+	/*
->>+	 * We will issue FLR or AF FLR to all VFs, which are contained
->>+	 * in VF PE. It relies on the EEH PCI config accessors. So we
->>+	 * can't block them during the window.
->>+	 */
->>+	if ((edev->physfn) && (edev->pe->state & EEH_PE_RESET))
->
->
->Extra braces around edev->physfn.
->
-
-Will remove it.
-
->
->
->>+		return false;
->>+
->>  	if (edev->pe->state & EEH_PE_CFG_BLOCKED)
->>  		return true;
->>
->>
->
->
->-- 
->Alexey
-
--- 
-Richard Yang
-Help you, Help me
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 6f43086..7b0d120 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -55,7 +55,6 @@ struct imx6_pcie {
+ #define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
+ #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
+ #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+-#define PCIE_PHY_DEBUG_R0_LTSSM_MASK		(0x3f << 0)
+ #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+ #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
+ #define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
+@@ -508,7 +507,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+ 	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
+ 		return 0;
+ 
+-	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != 0x0d)
++	if ((debug_r0 & LTSSM_STATE_MASK) != 0x0d)
+ 		return 0;
+ 
+ 	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index e71da99..95a8b13 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -25,7 +25,6 @@
+ 
+ /* Application register defines */
+ #define LTSSM_EN_VAL		        1
+-#define LTSSM_STATE_MASK		0x1f
+ #define LTSSM_STATE_L0			0x11
+ #define DBI_CS2_EN_VAL			0x20
+ #define OB_XLAT_EN_VAL		        2
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index b2328ea1..f02752e 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -29,7 +29,6 @@
+ /* PEX1/2 Misc Ports Status Register */
+ #define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
+ #define LTSSM_STATE_SHIFT	20
+-#define LTSSM_STATE_MASK	0x3f
+ #define LTSSM_PCIE_L0		0x11 /* L0 state */
+ 
+ /* Symbol Timer Register and Filter Mask Register 1 */
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index d0bbd27..a1a76ff 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -22,6 +22,8 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ 
++#define LTSSM_STATE_MASK		0x1f
++
+ struct pcie_port {
+ 	struct device		*dev;
+ 	u8			root_bus_nr;
 
