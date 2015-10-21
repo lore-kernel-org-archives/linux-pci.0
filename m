@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:42549 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752016AbbJUQtS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 Oct 2015 12:49:18 -0400
 From: Lan Tianyu <tianyu.lan@intel.com>
 To: bhelgaas@google.com, carolyn.wyborny@intel.com,
 	donald.c.skidmore@intel.com, eddie.dong@intel.com,
@@ -11,158 +15,113 @@ To: bhelgaas@google.com, carolyn.wyborny@intel.com,
 	mitch.a.williams@intel.com, netdev@vger.kernel.org,
 	shannon.nelson@intel.com
 Cc: Lan Tianyu <tianyu.lan@intel.com>
-Subject: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV NIC
-Date: Thu, 22 Oct 2015 00:37:32 +0800
-Message-Id: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [RFC Patch 02/12] IXGBE: Add new mail box event to restore VF status in the PF driver
+Date: Thu, 22 Oct 2015 00:37:34 +0800
+Message-Id: <1445445464-5056-3-git-send-email-tianyu.lan@intel.com>
+In-Reply-To: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset is to propose a new solution to add live migration support for 82599
-SRIOV network card.
+This patch is to restore VF status in the PF driver when get event
+from VF.
 
-Im our solution, we prefer to put all device specific operation into VF and
-PF driver and make code in the Qemu more general.
+Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
+---
+ drivers/net/ethernet/intel/ixgbe/ixgbe.h       |  1 +
+ drivers/net/ethernet/intel/ixgbe/ixgbe_mbx.h   |  1 +
+ drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 40 ++++++++++++++++++++++++++
+ 3 files changed, 42 insertions(+)
 
-
-VF status migration
-=================================================================
-VF status can be divided into 4 parts
-1) PCI configure regs
-2) MSIX configure
-3) VF status in the PF driver
-4) VF MMIO regs 
-
-The first three status are all handled by Qemu. 
-The PCI configure space regs and MSIX configure are originally
-stored in Qemu. To save and restore "VF status in the PF driver"
-by Qemu during migration, adds new sysfs node "state_in_pf" under
-VF sysfs directory.
-
-For VF MMIO regs, we introduce self emulation layer in the VF
-driver to record MMIO reg values during reading or writing MMIO
-and put these data in the guest memory. It will be migrated with
-guest memory to new machine.
-
-
-VF function restoration
-================================================================
-Restoring VF function operation are done in the VF and PF driver.
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe.h b/drivers/net/ethernet/intel/ixgbe/ixgbe.h
+index 636f9e3..9d5669a 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe.h
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe.h
+@@ -148,6 +148,7 @@ struct vf_data_storage {
+ 	bool pf_set_mac;
+ 	u16 pf_vlan; /* When set, guest VLAN config not allowed. */
+ 	u16 pf_qos;
++	u32 vf_lpe;
+ 	u16 tx_rate;
+ 	u16 vlan_count;
+ 	u8 spoofchk_enabled;
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_mbx.h b/drivers/net/ethernet/intel/ixgbe/ixgbe_mbx.h
+index b1e4703..8fdb38d 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_mbx.h
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_mbx.h
+@@ -91,6 +91,7 @@ enum ixgbe_pfvf_api_rev {
  
-In order to let VF driver to know migration status, Qemu fakes VF
-PCI configure regs to indicate migration status and add new sysfs
-node "notify_vf" to trigger VF mailbox irq in order to notify VF 
-about migration status change.
-
-Transmit/Receive descriptor head regs are read-only and can't
-be restored via writing back recording reg value directly and they
-are set to 0 during VF reset. To reuse original tx/rx rings, shift
-desc ring in order to move the desc pointed by original head reg to
-first entry of the ring and then enable tx/rx rings. VF restarts to
-receive and transmit from original head desc.
-
-
-Tracking DMA accessed memory
-=================================================================
-Migration relies on tracking dirty page to migrate memory.
-Hardware can't automatically mark a page as dirty after DMA
-memory access. VF descriptor rings and data buffers are modified
-by hardware when receive and transmit data. To track such dirty memory
-manually, do dummy writes(read a byte and write it back) when receive
-and transmit data.
-
-
-Service down time test
-=================================================================
-So far, we tested migration between two laptops with 82599 nic which
-are connected to a gigabit switch. Ping VF in the 0.001s interval
-during migration on the host of source side. It service down
-time is about 180ms.
-
-[983769928.053604] 64 bytes from 10.239.48.100: icmp_seq=4131 ttl=64 time=2.79 ms
-[983769928.056422] 64 bytes from 10.239.48.100: icmp_seq=4132 ttl=64 time=2.79 ms
-[983769928.059241] 64 bytes from 10.239.48.100: icmp_seq=4133 ttl=64 time=2.79 ms
-[983769928.062071] 64 bytes from 10.239.48.100: icmp_seq=4134 ttl=64 time=2.80 ms
-[983769928.064890] 64 bytes from 10.239.48.100: icmp_seq=4135 ttl=64 time=2.79 ms
-[983769928.067716] 64 bytes from 10.239.48.100: icmp_seq=4136 ttl=64 time=2.79 ms
-[983769928.070538] 64 bytes from 10.239.48.100: icmp_seq=4137 ttl=64 time=2.79 ms
-[983769928.073360] 64 bytes from 10.239.48.100: icmp_seq=4138 ttl=64 time=2.79 ms
-[983769928.083444] no answer yet for icmp_seq=4139
-[983769928.093524] no answer yet for icmp_seq=4140
-[983769928.103602] no answer yet for icmp_seq=4141
-[983769928.113684] no answer yet for icmp_seq=4142
-[983769928.123763] no answer yet for icmp_seq=4143
-[983769928.133854] no answer yet for icmp_seq=4144
-[983769928.143931] no answer yet for icmp_seq=4145
-[983769928.154008] no answer yet for icmp_seq=4146
-[983769928.164084] no answer yet for icmp_seq=4147
-[983769928.174160] no answer yet for icmp_seq=4148
-[983769928.184236] no answer yet for icmp_seq=4149
-[983769928.194313] no answer yet for icmp_seq=4150
-[983769928.204390] no answer yet for icmp_seq=4151
-[983769928.214468] no answer yet for icmp_seq=4152
-[983769928.224556] no answer yet for icmp_seq=4153
-[983769928.234632] no answer yet for icmp_seq=4154
-[983769928.244709] no answer yet for icmp_seq=4155
-[983769928.254783] no answer yet for icmp_seq=4156
-[983769928.256094] 64 bytes from 10.239.48.100: icmp_seq=4139 ttl=64 time=182 ms
-[983769928.256107] 64 bytes from 10.239.48.100: icmp_seq=4140 ttl=64 time=172 ms
-[983769928.256114] no answer yet for icmp_seq=4157
-[983769928.256236] 64 bytes from 10.239.48.100: icmp_seq=4141 ttl=64 time=162 ms
-[983769928.256245] 64 bytes from 10.239.48.100: icmp_seq=4142 ttl=64 time=152 ms
-[983769928.256272] 64 bytes from 10.239.48.100: icmp_seq=4143 ttl=64 time=142 ms
-[983769928.256310] 64 bytes from 10.239.48.100: icmp_seq=4144 ttl=64 time=132 ms
-[983769928.256325] 64 bytes from 10.239.48.100: icmp_seq=4145 ttl=64 time=122 ms
-[983769928.256332] 64 bytes from 10.239.48.100: icmp_seq=4146 ttl=64 time=112 ms
-[983769928.256440] 64 bytes from 10.239.48.100: icmp_seq=4147 ttl=64 time=102 ms
-[983769928.256455] 64 bytes from 10.239.48.100: icmp_seq=4148 ttl=64 time=92.3 ms
-[983769928.256494] 64 bytes from 10.239.48.100: icmp_seq=4149 ttl=64 time=82.3 ms
-[983769928.256503] 64 bytes from 10.239.48.100: icmp_seq=4150 ttl=64 time=72.2 ms
-[983769928.256631] 64 bytes from 10.239.48.100: icmp_seq=4158 ttl=64 time=0.500 ms
-[983769928.257284] 64 bytes from 10.239.48.100: icmp_seq=4159 ttl=64 time=0.154 ms
-[983769928.258297] 64 bytes from 10.239.48.100: icmp_seq=4160 ttl=64 time=0.165 ms
-
-Todo
-=======================================================
-So far, the patchset isn't perfect. VF net interface can't be open, closed, down 
-and up during migration. Will prevent such operation during migration in the
-future job.
-
-Very appreciate for your comments.
-
-
-Lan Tianyu (12):
-  PCI: Add virtfn_index for struct pci_device
-  IXGBE: Add new mail box event to restore VF status in the PF driver
-  IXGBE: Add sysfs interface for Qemu to migrate VF status in the PF
-    driver
-  IXGBE: Add ixgbe_ping_vf() to notify a specified VF via mailbox msg.
-  IXGBE: Add new sysfs interface of "notify_vf"
-  IXGBEVF: Add self emulation layer
-  IXGBEVF: Add new mail box event for migration
-  IXGBEVF: Rework code of finding the end transmit desc of package
-  IXGBEVF: Add live migration support for VF driver
-  IXGBEVF: Add lock to protect tx/rx ring operation
-  IXGBEVF: Migrate VF statistic data
-  IXGBEVF: Track dma dirty pages
-
- drivers/net/ethernet/intel/ixgbe/ixgbe.h           |   1 +
- drivers/net/ethernet/intel/ixgbe/ixgbe_mbx.h       |   1 +
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c     | 245 ++++++++++++++++++++-
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h     |   1 +
- drivers/net/ethernet/intel/ixgbe/ixgbe_type.h      |   4 +
- drivers/net/ethernet/intel/ixgbevf/Makefile        |   3 +-
- drivers/net/ethernet/intel/ixgbevf/defines.h       |   6 +
- drivers/net/ethernet/intel/ixgbevf/ixgbevf.h       |  10 +-
- drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c  | 179 ++++++++++++++-
- drivers/net/ethernet/intel/ixgbevf/mbx.h           |   3 +
- .../net/ethernet/intel/ixgbevf/self-emulation.c    | 133 +++++++++++
- drivers/net/ethernet/intel/ixgbevf/vf.c            |  10 +
- drivers/net/ethernet/intel/ixgbevf/vf.h            |   6 +-
- drivers/pci/iov.c                                  |   1 +
- include/linux/pci.h                                |   1 +
- 15 files changed, 582 insertions(+), 22 deletions(-)
- create mode 100644 drivers/net/ethernet/intel/ixgbevf/self-emulation.c
-
+ /* mailbox API, version 1.1 VF requests */
+ #define IXGBE_VF_GET_QUEUES	0x09 /* get queue configuration */
++#define IXGBE_VF_NOTIFY_RESUME    0x0c /* VF notify PF migration finishing */
+ 
+ /* GET_QUEUES return data indices within the mailbox */
+ #define IXGBE_VF_TX_QUEUES	1	/* number of Tx queues supported */
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+index 1d17b58..ab2a2e2 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+@@ -648,6 +648,42 @@ static inline void ixgbe_write_qde(struct ixgbe_adapter *adapter, u32 vf,
+ 	}
+ }
+ 
++/**
++ *  Restore the settings by mailbox, after migration
++ **/
++void ixgbe_restore_setting(struct ixgbe_adapter *adapter, u32 vf)
++{
++	struct ixgbe_hw *hw = &adapter->hw;
++	u32 reg, reg_offset, vf_shift;
++	int rar_entry = hw->mac.num_rar_entries - (vf + 1);
++
++	vf_shift = vf % 32;
++	reg_offset = vf / 32;
++
++	/* enable transmit and receive for vf */
++	reg = IXGBE_READ_REG(hw, IXGBE_VFTE(reg_offset));
++	reg |= (1 << vf_shift);
++	IXGBE_WRITE_REG(hw, IXGBE_VFTE(reg_offset), reg);
++
++	reg = IXGBE_READ_REG(hw, IXGBE_VFRE(reg_offset));
++	reg |= (1 << vf_shift);
++	IXGBE_WRITE_REG(hw, IXGBE_VFRE(reg_offset), reg);
++
++	reg = IXGBE_READ_REG(hw, IXGBE_VMECM(reg_offset));
++	reg |= (1 << vf_shift);
++	IXGBE_WRITE_REG(hw, IXGBE_VMECM(reg_offset), reg);
++
++	ixgbe_vf_reset_event(adapter, vf);
++
++	hw->mac.ops.set_rar(hw, rar_entry,
++			    adapter->vfinfo[vf].vf_mac_addresses,
++			    vf, IXGBE_RAH_AV);
++
++
++	if (adapter->vfinfo[vf].vf_lpe)
++		ixgbe_set_vf_lpe(adapter, &adapter->vfinfo[vf].vf_lpe, vf);
++}
++
+ static int ixgbe_vf_reset_msg(struct ixgbe_adapter *adapter, u32 vf)
+ {
+ 	struct ixgbe_ring_feature *vmdq = &adapter->ring_feature[RING_F_VMDQ];
+@@ -1047,6 +1083,7 @@ static int ixgbe_rcv_msg_from_vf(struct ixgbe_adapter *adapter, u32 vf)
+ 		break;
+ 	case IXGBE_VF_SET_LPE:
+ 		retval = ixgbe_set_vf_lpe(adapter, msgbuf, vf);
++		adapter->vfinfo[vf].vf_lpe = *msgbuf;
+ 		break;
+ 	case IXGBE_VF_SET_MACVLAN:
+ 		retval = ixgbe_set_vf_macvlan_msg(adapter, msgbuf, vf);
+@@ -1063,6 +1100,9 @@ static int ixgbe_rcv_msg_from_vf(struct ixgbe_adapter *adapter, u32 vf)
+ 	case IXGBE_VF_GET_RSS_KEY:
+ 		retval = ixgbe_get_vf_rss_key(adapter, msgbuf, vf);
+ 		break;
++	case IXGBE_VF_NOTIFY_RESUME:
++		ixgbe_restore_setting(adapter, vf);
++		break;
+ 	default:
+ 		e_err(drv, "Unhandled Msg %8.8x\n", msgbuf[0]);
+ 		retval = IXGBE_ERR_MBX;
 -- 
 1.8.4.rc0.1.g8f6a3e5.dirty
 
