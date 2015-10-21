@@ -1,163 +1,191 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 20 Oct 2015 16:57:14 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
-Message-ID: <20151020215714.GI8224@localhost>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
- <1444340359-8011-4-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444340359-8011-4-git-send-email-yinghai@kernel.org>
+From: Lan Tianyu <tianyu.lan@intel.com>
+To: bhelgaas@google.com, carolyn.wyborny@intel.com,
+	donald.c.skidmore@intel.com, eddie.dong@intel.com,
+	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
+	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Cc: Lan Tianyu <tianyu.lan@intel.com>
+Subject: [RFC Patch 10/12] IXGBEVF: Add lock to protect tx/rx ring operation
+Date: Thu, 22 Oct 2015 00:37:42 +0800
+Message-Id: <1445445464-5056-11-git-send-email-tianyu.lan@intel.com>
+In-Reply-To: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 08, 2015 at 02:38:22PM -0700, Yinghai Lu wrote:
-> We register regions for legacy and iommu and all have open code.
-> 
-> Unify them to pci_register_region() and call it accordingly.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  arch/sparc/kernel/pci_common.c | 83 +++++++++++++++++++-----------------------
->  1 file changed, 37 insertions(+), 46 deletions(-)
-> 
-> diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-> index 28e976a..c4b6989 100644
-> --- a/arch/sparc/kernel/pci_common.c
-> +++ b/arch/sparc/kernel/pci_common.c
-> @@ -328,41 +328,49 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm)
->  	}
->  }
->  
-> -static void pci_register_legacy_regions(struct resource *io_res,
-> -					struct resource *mem_res)
-> +static void pci_register_region(struct pci_pbm_info *pbm, const char *name,
-> +				resource_size_t rstart, resource_size_t size)
->  {
-> -	struct resource *p;
-> +	struct resource *res, *conflict;
-> +	struct resource *mem_res = &pbm->mem_space;
-> +	resource_size_t offset = pbm->mem_offset;
-> +	resource_size_t mem_rstart, mem_rend;
-> +	resource_size_t rend = rstart + size - 1UL;
->  
-> -	/* VGA Video RAM. */
-> -	p = kzalloc(sizeof(*p), GFP_KERNEL);
-> -	if (!p)
-> +	if (!mem_res->flags)
->  		return;
->  
-> -	p->name = "Video RAM area";
-> -	p->start = mem_res->start + 0xa0000UL;
-> -	p->end = p->start + 0x1ffffUL;
-> -	p->flags = IORESOURCE_BUSY;
-> -	request_resource(mem_res, p);
-> +	mem_rstart = mem_res->start - offset;
-> +	mem_rend = mem_res->end - offset;
+Ring shifting during restoring VF function maybe race with original
+ring operation(transmit/receive package). This patch is to add tx/rx
+lock to protect ring related data.
 
-This is essentially doing pcibios_bus_to_resource(), except in an
-unnecessarily arch-dependent way.  Can you rework it to use
-pcibios_bus_to_resource()?  I think you'll have to do
-pci_register_legacy_regions() in pci_scan_one_pbm() instead of in
-pci_determine_mem_io_space(), so that you have a struct pci_bus to
-use, but your next patch does that anyway.
+Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
+---
+ drivers/net/ethernet/intel/ixgbevf/ixgbevf.h      |  2 ++
+ drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c | 28 ++++++++++++++++++++---
+ 2 files changed, 27 insertions(+), 3 deletions(-)
 
->  
-> -	p = kzalloc(sizeof(*p), GFP_KERNEL);
-> -	if (!p)
-> +	/* contain checking */
-> +	if (!(mem_rstart <= rstart && mem_rend >= rend))
->  		return;
->  
-> -	p->name = "System ROM";
-> -	p->start = mem_res->start + 0xf0000UL;
-> -	p->end = p->start + 0xffffUL;
-> -	p->flags = IORESOURCE_BUSY;
-> -	request_resource(mem_res, p);
-> -
-> -	p = kzalloc(sizeof(*p), GFP_KERNEL);
-> -	if (!p)
-> +	res = kzalloc(sizeof(*res), GFP_KERNEL);
-> +	if (!res)
->  		return;
->  
-> -	p->name = "Video ROM";
-> -	p->start = mem_res->start + 0xc0000UL;
-> -	p->end = p->start + 0x7fffUL;
-> -	p->flags = IORESOURCE_BUSY;
-> -	request_resource(mem_res, p);
-> +	res->name = name;
-> +	res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
-> +	res->start = rstart + offset;
-> +	res->end = rend + offset;
-> +	conflict = request_resource_conflict(mem_res, res);
-> +	if (conflict) {
-> +		printk(KERN_DEBUG "PCI: %s can't claim %s %pR: address conflict with %s %pR\n",
-> +			pbm->name, res->name, res, conflict->name, conflict);
-> +		kfree(res);
-> +	}
-> +}
-> +
-> +static void pci_register_legacy_regions(struct pci_pbm_info *pbm)
-> +{
-> +	/* VGA Video RAM. */
-> +	pci_register_region(pbm, "Video RAM area", 0xa0000UL, 0x20000UL);
-> +
-> +	pci_register_region(pbm, "System ROM",     0xf0000UL, 0x10000UL);
-> +
-> +	pci_register_region(pbm, "Video ROM",      0xc0000UL,  0x8000UL);
->  }
->  
->  static void pci_register_iommu_region(struct pci_pbm_info *pbm)
-> @@ -370,24 +378,8 @@ static void pci_register_iommu_region(struct pci_pbm_info *pbm)
->  	const u32 *vdma = of_get_property(pbm->op->dev.of_node, "virtual-dma",
->  					  NULL);
->  
-> -	if (vdma) {
-> -		struct resource *rp = kzalloc(sizeof(*rp), GFP_KERNEL);
-> -
-> -		if (!rp) {
-> -			pr_info("%s: Cannot allocate IOMMU resource.\n",
-> -				pbm->name);
-> -			return;
-> -		}
-> -		rp->name = "IOMMU";
-> -		rp->start = pbm->mem_space.start + (unsigned long) vdma[0];
-> -		rp->end = rp->start + (unsigned long) vdma[1] - 1UL;
-> -		rp->flags = IORESOURCE_BUSY;
-> -		if (request_resource(&pbm->mem_space, rp)) {
-> -			pr_info("%s: Unable to request IOMMU resource.\n",
-> -				pbm->name);
-> -			kfree(rp);
-> -		}
-> -	}
-> +	if (vdma)
-> +		pci_register_region(pbm, "IOMMU", vdma[0], vdma[1]);
->  }
->  
->  void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
-> @@ -506,8 +498,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  	if (pbm->mem64_space.flags)
->  		request_resource(&iomem_resource, &pbm->mem64_space);
->  
-> -	pci_register_legacy_regions(&pbm->io_space,
-> -				    &pbm->mem_space);
-> +	pci_register_legacy_regions(pbm);
->  	pci_register_iommu_region(pbm);
->  }
->  
-> -- 
-> 1.8.4.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h b/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
+index 6eab402e..3a748c8 100644
+--- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
++++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
+@@ -448,6 +448,8 @@ struct ixgbevf_adapter {
+ 
+ 	spinlock_t mbx_lock;
+ 	unsigned long last_reset;
++	spinlock_t mg_rx_lock;
++	spinlock_t mg_tx_lock;
+ };
+ 
+ enum ixbgevf_state_t {
+diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+index 15ec361..04b6ce7 100644
+--- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
++++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+@@ -227,8 +227,10 @@ static u64 ixgbevf_get_tx_completed(struct ixgbevf_ring *ring)
+ 
+ int ixgbevf_tx_ring_shift(struct ixgbevf_ring *r, u32 head)
+ {
++	struct ixgbevf_adapter *adapter = netdev_priv(r->netdev);
+ 	struct ixgbevf_tx_buffer *tx_buffer = NULL;
+ 	static union ixgbevf_desc *tx_desc = NULL;
++	unsigned long flags;
+ 
+ 	tx_buffer = vmalloc(sizeof(struct ixgbevf_tx_buffer) * (r->count));
+ 	if (!tx_buffer)
+@@ -238,6 +240,7 @@ int ixgbevf_tx_ring_shift(struct ixgbevf_ring *r, u32 head)
+ 	if (!tx_desc)
+ 		return -ENOMEM;
+ 
++	spin_lock_irqsave(&adapter->mg_tx_lock, flags);
+ 	memcpy(tx_desc, r->desc, sizeof(union ixgbevf_desc) * r->count);
+ 	memcpy(r->desc, &tx_desc[head], sizeof(union ixgbevf_desc) * (r->count - head));
+ 	memcpy(&r->desc[r->count - head], tx_desc, sizeof(union ixgbevf_desc) * head);
+@@ -256,6 +259,8 @@ int ixgbevf_tx_ring_shift(struct ixgbevf_ring *r, u32 head)
+ 	else
+ 		r->next_to_use += (r->count - head);
+ 
++	spin_unlock_irqrestore(&adapter->mg_tx_lock, flags);
++
+ 	vfree(tx_buffer);
+ 	vfree(tx_desc);
+ 	return 0;
+@@ -263,8 +268,10 @@ int ixgbevf_tx_ring_shift(struct ixgbevf_ring *r, u32 head)
+ 
+ int ixgbevf_rx_ring_shift(struct ixgbevf_ring *r, u32 head)
+ {
++	struct ixgbevf_adapter *adapter = netdev_priv(r->netdev);
+ 	struct ixgbevf_rx_buffer *rx_buffer = NULL;
+ 	static union ixgbevf_desc *rx_desc = NULL;
++	unsigned long flags;	
+ 
+ 	rx_buffer = vmalloc(sizeof(struct ixgbevf_rx_buffer) * (r->count));
+ 	if (!rx_buffer)
+@@ -274,6 +281,7 @@ int ixgbevf_rx_ring_shift(struct ixgbevf_ring *r, u32 head)
+ 	if (!rx_desc)
+ 		return -ENOMEM;
+ 
++	spin_lock_irqsave(&adapter->mg_rx_lock, flags);
+ 	memcpy(rx_desc, r->desc, sizeof(union ixgbevf_desc) * (r->count));
+ 	memcpy(r->desc, &rx_desc[head], sizeof(union ixgbevf_desc) * (r->count - head));
+ 	memcpy(&r->desc[r->count - head], rx_desc, sizeof(union ixgbevf_desc) * head);
+@@ -291,6 +299,7 @@ int ixgbevf_rx_ring_shift(struct ixgbevf_ring *r, u32 head)
+ 		r->next_to_use -= head;
+ 	else
+ 		r->next_to_use += (r->count - head);
++	spin_unlock_irqrestore(&adapter->mg_rx_lock, flags);
+ 
+ 	vfree(rx_buffer);
+ 	vfree(rx_desc);
+@@ -377,6 +386,8 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
+ 	if (test_bit(__IXGBEVF_DOWN, &adapter->state))
+ 		return true;
+ 
++	spin_lock(&adapter->mg_tx_lock);
++	i = tx_ring->next_to_clean;
+ 	tx_buffer = &tx_ring->tx_buffer_info[i];
+ 	tx_desc = IXGBEVF_TX_DESC(tx_ring, i);
+ 	i -= tx_ring->count;
+@@ -471,6 +482,8 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
+ 	q_vector->tx.total_bytes += total_bytes;
+ 	q_vector->tx.total_packets += total_packets;
+ 
++	spin_unlock(&adapter->mg_tx_lock);
++
+ 	if (check_for_tx_hang(tx_ring) && ixgbevf_check_tx_hang(tx_ring)) {
+ 		struct ixgbe_hw *hw = &adapter->hw;
+ 		union ixgbe_adv_tx_desc *eop_desc;
+@@ -999,10 +1012,12 @@ static int ixgbevf_clean_rx_irq(struct ixgbevf_q_vector *q_vector,
+ 				struct ixgbevf_ring *rx_ring,
+ 				int budget)
+ {
++	struct ixgbevf_adapter *adapter = netdev_priv(rx_ring->netdev);
+ 	unsigned int total_rx_bytes = 0, total_rx_packets = 0;
+ 	u16 cleaned_count = ixgbevf_desc_unused(rx_ring);
+ 	struct sk_buff *skb = rx_ring->skb;
+ 
++	spin_lock(&adapter->mg_rx_lock);
+ 	while (likely(total_rx_packets < budget)) {
+ 		union ixgbe_adv_rx_desc *rx_desc;
+ 
+@@ -1078,6 +1093,7 @@ static int ixgbevf_clean_rx_irq(struct ixgbevf_q_vector *q_vector,
+ 	q_vector->rx.total_packets += total_rx_packets;
+ 	q_vector->rx.total_bytes += total_rx_bytes;
+ 
++	spin_unlock(&adapter->mg_rx_lock);
+ 	return total_rx_packets;
+ }
+ 
+@@ -3572,14 +3588,17 @@ static void ixgbevf_tx_map(struct ixgbevf_ring *tx_ring,
+ 	struct ixgbevf_tx_buffer *tx_buffer;
+ 	union ixgbe_adv_tx_desc *tx_desc;
+ 	struct skb_frag_struct *frag = &skb_shinfo(skb)->frags[0];
++	struct ixgbevf_adapter *adapter = netdev_priv(tx_ring->netdev);
+ 	unsigned int data_len = skb->data_len;
+ 	unsigned int size = skb_headlen(skb);
+ 	unsigned int paylen = skb->len - hdr_len;
++	unsigned long flags;
+ 	u32 tx_flags = first->tx_flags;
+ 	__le32 cmd_type;
+-	u16 i = tx_ring->next_to_use;
+-	u16 start;
++	u16 i, start;     
+ 
++	spin_lock_irqsave(&adapter->mg_tx_lock, flags);
++	i = tx_ring->next_to_use;
+ 	tx_desc = IXGBEVF_TX_DESC(tx_ring, i);
+ 
+ 	ixgbevf_tx_olinfo_status(tx_desc, tx_flags, paylen);
+@@ -3673,7 +3692,7 @@ static void ixgbevf_tx_map(struct ixgbevf_ring *tx_ring,
+ 
+ 	/* notify HW of packet */
+ 	ixgbevf_write_tail(tx_ring, i);
+-
++	spin_unlock_irqrestore(&adapter->mg_tx_lock, flags);
+ 	return;
+ dma_error:
+ 	dev_err(tx_ring->dev, "TX DMA map failed\n");
+@@ -3690,6 +3709,7 @@ dma_error:
+ 	}
+ 
+ 	tx_ring->next_to_use = i;
++	spin_unlock_irqrestore(&adapter->mg_tx_lock, flags);
+ }
+ 
+ static int __ixgbevf_maybe_stop_tx(struct ixgbevf_ring *tx_ring, int size)
+@@ -4188,6 +4208,8 @@ static int ixgbevf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		break;
+ 	}
+ 
++	spin_lock_init(&adapter->mg_tx_lock);
++	spin_lock_init(&adapter->mg_rx_lock);
+ 	return 0;
+ 
+ err_register:
+-- 
+1.8.4.rc0.1.g8f6a3e5.dirty
+
