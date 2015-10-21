@@ -1,89 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 15 Oct 2015 16:36:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Ben Shelton <benjamin.h.shelton@intel.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: IOV: read SRIOV_NUM_VF after enabling ARI
-Message-ID: <20151015213603.GB13636@localhost>
-References: <1444317617-13399-1-git-send-email-benjamin.h.shelton@intel.com>
- <20151015175825.GD17702@localhost>
- <562005F7.7030205@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <562005F7.7030205@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e24smtp03.br.ibm.com ([32.104.18.24]:53526 "EHLO
+	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750847AbbJUORq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 10:17:46 -0400
+Received: from /spool/local
+	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Wed, 21 Oct 2015 12:17:42 -0200
+Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.13.184.26])
+	by d24dlp01.br.ibm.com (Postfix) with ESMTP id ACB933520080
+	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2015 10:16:28 -0400 (EDT)
+Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
+	by d24relay02.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9LEFbtf33030270
+	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2015 12:15:37 -0200
+Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
+	by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9LEHarV006420
+	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2015 12:17:37 -0200
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: bhelgaas@google.com, mpe@ellerman.id.au, paulus@samba.org,
+	benh@kernel.crashing.org, mst@redhat.com,
+	shangw@linux.vnet.ibm.com, gpiccoli@linux.vnet.ibm.com
+Subject: [PATCH] Enable MSI/MSI-X caps and disable MSI interrupts at PCI probe time - code move
+Date: Wed, 21 Oct 2015 12:17:35 -0200
+Message-Id: <1445437055-7017-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 15, 2015 at 01:00:55PM -0700, Alexander Duyck wrote:
-> On 10/15/2015 10:58 AM, Bjorn Helgaas wrote:
-> >Hi Ben,
-> >
-> >On Thu, Oct 08, 2015 at 10:20:17AM -0500, Ben Shelton wrote:
-> >>For some SR-IOV devices, the number of available virtual functions increases
-> >>after enabling ARI.  Currently, SRIOV_NUM_VF is read and saved off before the
-> >>ARI control bit is enabled in SRIOV_CTRL.  This causes an issue when VFs are
-> >>enabled.
-> >>
-> >>At device init, SRIOV_INITIAL_VF and SRIOV_NUM_VF are specified to contain the
-> >>number of available VFs for the device.  sriov_enable() does a sanity check
-> >>that SRIOV_INITIAL_VF is not greater than iov->total_VFs, the saved-off value
-> >>of SRIOV_NUM_VF.  Since the value of both SRIOV_INITIAL_VF and SRIOV_NUM_VF has
-> >>increased after enabling the ARI bit, the check fails, and the VFs cannot be
-> >>enabled.
-> >>
-> >>To fix the issue, write SRIOV_CTRL first, and then read SRIOV_NUM_VF.
-> >
-> >I think you mean PCI_SRIOV_TOTAL_VR (not NUM_VF), right?
-> >
-> >This is interesting because the spec says TotalVFs is HwInit, which
-> >means it's read-only, and it doesn't mention anything about it
-> >changing when ARIis enabled.  I can see why it would change in that
-> >case, so maybe this is just a goof in the spec.
-> 
-> I think it is supposed to be HwInit because changing the value can
-> cause issues with resource allocation for the VFs.  Specifically if
-> the number of VFs increases after the BIOS has come through and
-> assigned MMIO resources it is possible that there may not be
-> resources available.
+Commit 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel
+doesn't support MSI") changed the location of the code that initializes
+dev->msi_cap/msix_cap and disables MSI/MSI-X interrupts at PCI probe
+time in devices that have this flag set. It moved the code from
+pci_msi_init_pci_dev() to a new function named pci_msi_setup_pci_dev(),
+called by pci_setup_device().
 
-Maybe, although sufficiently smart software could deal with that by
-reassigning resources.  Theoretically, anyway.
+In Open Firmware code path (PowerPC pSeries/SPARC archs) the function
+pci_setup_device() is not called, so MSI capabilities are never enabled,
+leading to error messages as:
 
-> I suspect we are going to end up having to quirk a number of devices
-> in the future because of this as I can see this easily causing
-> issues.
+	bnx2x 0000:01:00.0: no msix capability found
 
-I guess the issue if we made this change would be:
+Commit 4d9aac397a5d ("powerpc/PCI: Disable MSI/MSI-X interrupts at PCI
+probe time in OF case") solved the issue on PowerPC pSeries arch calling
+manually pci_msi_setup_pci_dev() on appropriate place. However, this
+modification does not solve the general case (SPARC arch should be
+modified too) and duplicates a lot of code, as pointed by Bjorn Helgaas.
+As suggested by him, worth to reorganize the code to generally solve the
+MSI caps issue and avoid too much code duplication.
 
-  - BIOS sees "ARI Capable Hierarchy" is zero
-  - BIOS sees TotalVFs = X
-  - BIOS allocates space for X VFs (size = "S * X")
-  - Linux sets ARI Capable Hierarchy
-  - Linux sees TotalVFs = X + Y
-  - Linux reads SR-IOV BAR, computes size as "S * (X + Y)"
-  - Linux tries to claim SR-IOV BAR, but fails because size is now too
-    large to fit where BIOS put it
+This patch does exactly this: we remove both the pci_msi_setup_pci_dev()
+call from pci_setup_device() and the same call in OF code path of PowerPC
+pSeries arch. Then, we call pci_msi_setup_pci_dev() directly from
+pci_init_capabilities(). So, we can initialize MSI caps and disable MSI
+interruptions during PCI probe in general fashion, avoiding code
+duplication.
 
-Right?  What sort of quirk would you envision?  Something to keep us
-from increasing "total" beyond what it was before we turned on ARI
-Capable?
+Notice that this patch has the same practical effect of reverting
+commit 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel
+doesn't support MSI") and commit 4d9aac397a5d ("powerpc/PCI: Disable
+MSI/MSI-X interrupts at PCI probe time in OF case"). Regarding the
+former, the author called pci_msi_setup_pci_dev() from pci_setup_device()
+because there was an early quirk used in pci_msi_off(), which depended on
+pci_msi_setup_pci_dev(). Since pci_msi_off() was completely removed by
+commit c6201cd8513d ("PCI/MSI: Remove unused pci_msi_off()"), we can call
+pci_msi_setup_pci_dev() directly from pci_init_capabilities().
 
-What problem does this patch solve, Ben?  I assume you have devices
-that do change TotalVFs when ARI is enabled, and you do want the new
-value?
+Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/pci_of_scan.c | 3 ---
+ drivers/pci/probe.c               | 5 +++--
+ 2 files changed, 3 insertions(+), 5 deletions(-)
 
-Or is the problem something like the following:
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 2e710c1..526ac67 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -187,9 +187,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+ 
+ 	pci_device_add(dev, bus);
+ 
+-	/* Setup MSI caps & disable MSI/MSI-X interrupts */
+-	pci_msi_setup_pci_dev(dev);
+-
+ 	return dev;
+ }
+ EXPORT_SYMBOL(of_create_pci_dev);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8361d27..0aac86e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1209,8 +1209,6 @@ int pci_setup_device(struct pci_dev *dev)
+ 	/* "Unknown power state" */
+ 	dev->current_state = PCI_UNKNOWN;
+ 
+-	pci_msi_setup_pci_dev(dev);
+-
+ 	/* Early fixups, before probing the BARs */
+ 	pci_fixup_device(pci_fixup_early, dev);
+ 	/* device class may be changed after fixup */
+@@ -1600,6 +1598,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	/* MSI/MSI-X list */
+ 	pci_msi_init_pci_dev(dev);
+ 
++	/* Setup MSI caps & disable MSI/MSI-X interrupts */
++	pci_msi_setup_pci_dev(dev);
++
+ 	/* Buffers for saving PCIe and PCI-X capabilities */
+ 	pci_allocate_cap_save_buffers(dev);
+ 
+-- 
+2.1.0
 
-  - ...
-  - Linux PCI core sees TotalVFs = X (saved as iov->total_VFs)
-  - Linux sets ARI Capable Hierarchy
-  - Device changes TotalVFs to X + Y (but PCI core doesn't notice)
-  - Driver reads TotalVFs and sees X + Y
-  - Driver attempts pci_enable_sriov(dev, X + Y), which fails because
-    sriov_enable() sees "X + Y > iov->total_VFs"
-
-I'm a little dubious about drivers reading the SRIOV capability
-directly, so maybe this is a symptom of deeper problems.
-
-Bjorn
