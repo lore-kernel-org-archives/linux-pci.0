@@ -1,93 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60086 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751104AbbJGXNU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Oct 2015 19:13:20 -0400
-Date: Wed, 7 Oct 2015 18:13:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ben Shelton <benjamin.h.shelton@intel.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: IOV: reread SRIOV_NUM_VF after enabling ARI
-Message-ID: <20151007231317.GH27633@localhost>
-References: <1442008500-3570-1-git-send-email-benjamin.h.shelton@intel.com>
- <20151007192940.GE27633@localhost>
- <20151007202136.GA19836@bhshelto-vm>
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:36119 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753273AbbJUX0u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 19:26:50 -0400
+Subject: Re: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV NIC
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Or Gerlitz <gerlitz.or@gmail.com>
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+ <CAJ3xEMiStMJdGjgO9=MQrhLpBo8ZiTRoOL_P=aC9kyrNi91FSw@mail.gmail.com>
+ <1445455227.4059.867.camel@redhat.com>
+Cc: Lan Tianyu <tianyu.lan@intel.com>,
+	"Michael S. Tsirkin <mst@redhat.com> (mst@redhat.com)"
+	<mst@redhat.com>, bhelgaas@google.com, carolyn.wyborny@intel.com,
+	"Skidmore, Donald C" <donald.c.skidmore@intel.com>,
+	eddie.dong@intel.com, nrupal.jani@intel.com,
+	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
+	Paolo Bonzini <pbonzini@redhat.com>, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	john.ronciak@intel.com,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	Mitch Williams <mitch.a.williams@intel.com>,
+	Linux Netdev List <netdev@vger.kernel.org>,
+	Shannon Nelson <shannon.nelson@intel.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <56281F37.1050506@gmail.com>
+Date: Wed, 21 Oct 2015 16:26:47 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151007202136.GA19836@bhshelto-vm>
+In-Reply-To: <1445455227.4059.867.camel@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 07, 2015 at 03:21:36PM -0500, Ben Shelton wrote:
-> Hi Bjorn,
-> 
-> On Wed, Oct 07, 2015 at 02:29:40PM -0500, Bjorn Helgaas wrote:
-> > Hi Ben,
-> > 
-> > On Fri, Sep 11, 2015 at 04:55:00PM -0500, Ben Shelton wrote:
-> > > For some SR-IOV devices, the number of available virtual functions
-> > > increases after enabling ARI.  Currently, SRIOV_NUM_VF is read and saved
-> > > off before the ARI control bit is enabled.  This causes an issue when VFs
-> > > are enabled.
-> > > 
-> > > At device init, SRIOV_INITIAL_VF and SRIOV_NUM_VF are specified to contain
-> > > the number of available VFs for the device.  sriov_enable() does a sanity
-> > > check that PCI_SRIOV_INITIAL_VF is not greater than iov->total_VFs, the
-> > > saved-off value of SRIOV_NUM_VF.  Since the value of both SRIOV_INITIAL_VF
-> > > and SRIOV_NUM_VF has increased after enabling the ARI bit, the check fails,
-> > > and the VFs cannot be enabled.
-> > > 
-> > > To fix the issue, after ARI is enabled for a device, reread SRIOV_NUM_VF.
-> > > 
-> > > Signed-off-by: Ben Shelton <benjamin.h.shelton@intel.com>
-> > > ---
-> > >  drivers/pci/iov.c | 9 ++++++++-
-> > >  1 file changed, 8 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> > > index ee0ebff..88b1959 100644
-> > > --- a/drivers/pci/iov.c
-> > > +++ b/drivers/pci/iov.c
-> > > @@ -388,6 +388,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
-> > >  	struct pci_sriov *iov;
-> > >  	struct resource *res;
-> > >  	struct pci_dev *pdev;
-> > > +	bool total_needs_reread = false;
-> > >  
-> > >  	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
-> > >  	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
-> > > @@ -409,12 +410,18 @@ static int sriov_init(struct pci_dev *dev, int pos)
-> > >  			goto found;
-> > >  
-> > >  	pdev = NULL;
-> > > -	if (pci_ari_enabled(dev->bus))
-> > > +	if (pci_ari_enabled(dev->bus)) {
-> > >  		ctrl |= PCI_SRIOV_CTRL_ARI;
-> > > +		total_needs_reread = true;
-> > > +	}
-> > >  
-> > >  found:
-> > >  	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
-> > >  	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
-> > > +
-> > > +	if (total_needs_reread)
-> > > +		pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
-> > 
-> > Can we just *move* the PCI_SRIOV_TOTAL_VF read from its original
-> > location and do it unconditionally here?  I don't think we use "total"
-> > for anything in the interim, and it'd be nice if we could do this
-> > without the "total_needs_reread" flag.
-> 
-> The only thing we do with 'total' is return early if it's read as 0
-> (i.e. for a device that does not support any VFs).  If we just move the
-> read to here, a PCI device with no VFs would have its PCI_SRIOV_CTRL
-> config word written before PCI_SRIOV_TOTAL_VF is read as 0 and
-> sriov_init() returns.  The reread preserves the original behavior.
-> 
-> If the change in behavior is OK, I'll make the change and submit a v2.
+On 10/21/2015 12:20 PM, Alex Williamson wrote:
+> On Wed, 2015-10-21 at 21:45 +0300, Or Gerlitz wrote:
+>> On Wed, Oct 21, 2015 at 7:37 PM, Lan Tianyu <tianyu.lan@intel.com> wrote:
+>>> This patchset is to propose a new solution to add live migration support
+>>> for 82599 SRIOV network card.
+>>
+>>> In our solution, we prefer to put all device specific operation into VF and
+>>> PF driver and make code in the Qemu more general.
+>>
+>> [...]
+>>
+>>> Service down time test
+>>> So far, we tested migration between two laptops with 82599 nic which
+>>> are connected to a gigabit switch. Ping VF in the 0.001s interval
+>>> during migration on the host of source side. It service down
+>>> time is about 180ms.
+>>
+>> So... what would you expect service down wise for the following
+>> solution which is zero touch and I think should work for any VF
+>> driver:
+>>
+>> on host A: unplug the VM and conduct live migration to host B ala the
+>> no-SRIOV case.
+>
+> The trouble here is that the VF needs to be unplugged prior to the start
+> of migration because we can't do effective dirty page tracking while the
+> device is connected and doing DMA.  So the downtime, assuming we're
+> counting only VF connectivity, is dependent on memory size, rate of
+> dirtying, and network bandwidth; seconds for small guests, minutes or
+> more (maybe much, much more) for large guests.
 
-I think that's OK.  We do return some other errors after modifying
-PCI_SRIOV_CTRL, so I don't know that this would be any worse.
+The question of dirty page tracking though should be pretty simple.  We 
+start the Tx packets out as dirty so we don't need to add anything 
+there.  It seems like the Rx data and Tx/Rx descriptor rings are the issue.
 
-Bjorn
+> This is why the typical VF agnostic approach here is to using bonding
+> and fail over to a emulated device during migration, so performance
+> suffers, but downtime is something acceptable.
+>
+> If we want the ability to defer the VF unplug until just before the
+> final stages of the migration, we need the VF to participate in dirty
+> page tracking.  Here it's done via an enlightened guest driver.  Alex
+> Graf presented a solution using a device specific enlightenment in QEMU.
+> Otherwise we'd need hardware support from the IOMMU.
+
+My only real complaint with this patch series is that it seems like 
+there was to much focus on instrumenting the driver instead of providing 
+the code necessary to enable a driver ecosystem that enables migration.
+
+I don't know if what we need is a full hardware IOMMU.  It seems like a 
+good way to take care of the need to flag dirty pages for DMA capable 
+devices would be to add functionality to the dma_map_ops calls 
+sync_{sg|single}for_cpu and unmap_{page|sg} so that they would take care 
+of mapping the pages as dirty for us when needed.  We could probably 
+make do with just a few tweaks to existing API in order to make this work.
+
+As far as the descriptor rings I would argue they are invalid as soon as 
+we migrate.  The problem is there is no way to guarantee ordering as we 
+cannot pre-emptively mark an Rx data buffer as being a dirty page when 
+we haven't even looked at the Rx descriptor for the given buffer yet. 
+Tx has similar issues as we cannot guarantee the Tx will disable itself 
+after a complete frame.  As such I would say the moment we migrate we 
+should just give up on the frames that are still in the descriptor 
+rings, drop them, and then start over with fresh rings.
+
+- Alex
