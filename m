@@ -1,145 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:46112 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751255AbbJ3Gxt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 02:53:49 -0400
-Received: from localhost
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 30 Oct 2015 16:53:46 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id B61692CE8055
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 17:53:44 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9U6rM0O31588438
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 17:53:30 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9U6rBoF012741
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 17:53:12 +1100
-Date: Fri, 30 Oct 2015 14:52:46 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com, mpe@ellerman.id.au,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V10 06/12] powerpc/powernv: EEH device for VF
-Message-ID: <20151030065246.GC5940@richards-mbp.cn.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1445829362-2738-7-git-send-email-weiyang@linux.vnet.ibm.com>
- <5632E51D.30805@ozlabs.ru>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
+ <562761A1.4020306@linaro.org>
+ <20151021110201.GE3394@e106497-lin.cambridge.arm.com>
+ <562776A5.7000303@linaro.org> <20151021114218.GA18602@red-moon>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Message-ID: <56278233.1020308@linaro.org>
+Date: Wed, 21 Oct 2015 14:16:51 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5632E51D.30805@ozlabs.ru>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20151021114218.GA18602@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 30, 2015 at 02:33:49PM +1100, Alexey Kardashevskiy wrote:
->On 10/26/2015 02:15 PM, Wei Yang wrote:
->>VFs and their corresponding pci_dn instances are created and released
->>dynamically as their PF's SRIOV capability is enabled and disabled.
->>The patch creates and releases EEH devices for VFs when creating and
->>releasing their pci_dn instances, which means EEH devices and pci_dn
->>instances have same life cycle. Also, VF's EEH device is identified
->>by (struct eeh_dev::physfn).
->
->
->The add_dev_pci_data() helper (the one you hack) does not create pci_dn
->instances. The add_one_dev_pci_data() helper does.
->
-
-Yes, you are right. The patch here create edev after the pci_dn is created.
-
-So which part in the log you think is not accurate?
-
->
+On 21.10.2015 13:42, Lorenzo Pieralisi wrote:
+> On Wed, Oct 21, 2015 at 01:27:33PM +0200, Tomasz Nowicki wrote:
+>> On 21.10.2015 13:02, Liviu Dudau wrote:
+>>> On Wed, Oct 21, 2015 at 11:57:53AM +0200, Tomasz Nowicki wrote:
+>>>> On 14.10.2015 08:29, Jiang Liu wrote:
+>>>>> Introduce common interface acpi_pci_root_create() and related data
+>>>>> structures to create PCI root bus for ACPI PCI host bridges. It will
+>>>>> be used to kill duplicated arch specific code for IA64 and x86. It may
+>>>>> also help ARM64 in future.
+>>>>>
+>>>>> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>>>> Tested-by: Tony Luck <tony.luck@intel.com>
+>>>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>>>>> Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
+>>>>> ---
+>>>>>   drivers/acpi/pci_root.c  |  204 ++++++++++++++++++++++++++++++++++++++++++++++
+>>>>>   include/linux/pci-acpi.h |   24 ++++++
+>>>>>   2 files changed, 228 insertions(+)
+>>>>>
+>>>>
+>>>> [...]
+>>>>
+>>>>> +
+>>>>> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+>>>>> +				     struct acpi_pci_root_ops *ops,
+>>>>> +				     struct acpi_pci_root_info *info,
+>>>>> +				     void *sysdata)
+>>>>> +{
+>>>>> +	int ret, busnum = root->secondary.start;
+>>>>> +	struct acpi_device *device = root->device;
+>>>>> +	int node = acpi_get_node(device->handle);
+>>>>> +	struct pci_bus *bus;
+>>>>> +
+>>>>> +	info->root = root;
+>>>>> +	info->bridge = device;
+>>>>> +	info->ops = ops;
+>>>>> +	INIT_LIST_HEAD(&info->resources);
+>>>>> +	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
+>>>>> +		 root->segment, busnum);
+>>>>> +
+>>>>> +	if (ops->init_info && ops->init_info(info))
+>>>>> +		goto out_release_info;
+>>>>> +	if (ops->prepare_resources)
+>>>>> +		ret = ops->prepare_resources(info);
+>>>>> +	else
+>>>>> +		ret = acpi_pci_probe_root_resources(info);
+>>>>> +	if (ret < 0)
+>>>>> +		goto out_release_info;
+>>>>> +
+>>>>> +	pci_acpi_root_add_resources(info);
+>>>>> +	pci_add_resource(&info->resources, &root->secondary);
+>>>>> +	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+>>>>> +				  sysdata, &info->resources);
+>>>>
+>>>> Thank a lot for this cleanup!!
+>>>>
+>>>> I recall you already considered passing segment (domain nr) to
+>>>> pci_create_root_bus, right? Can you please remind me why we gave up on this?
+>>>>
+>>>> I am asking because currently I can not find the way to retrieve domain
+>>>> number from pci_bus_assign_domain_nr (for those platforms which choose
+>>>> PCI_DOMAINS_GENERIC and want to use segment nr from MCFG table) which is the
+>>>> part of pci_create_root_bus.
+>>>
+>>> Not sure I fully understand your question, but pci_bus_assign_domain_nr() will
+>>> put the assigned domain number in bus->domain_nr if you chose PCI_DOMAINS_GENERIC.
+>>> Do you want to override that value with the segment nr from MCFG?
+>>>
 >>
->>[gwshan: changelog and removed CONFIG_PCI_IOV]
->>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/include/asm/eeh.h |  1 +
->>  arch/powerpc/kernel/pci_dn.c   | 12 ++++++++++++
->>  2 files changed, 13 insertions(+)
+>> Let me give ACPI ARM64 example:
 >>
->>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
->>index c5eb86f..6c383ad 100644
->>--- a/arch/powerpc/include/asm/eeh.h
->>+++ b/arch/powerpc/include/asm/eeh.h
->>@@ -140,6 +140,7 @@ struct eeh_dev {
->>  	struct pci_controller *phb;	/* Associated PHB		*/
->>  	struct pci_dn *pdn;		/* Associated PCI device node	*/
->>  	struct pci_dev *pdev;		/* Associated PCI device	*/
->>+	struct pci_dev *physfn;		/* Associated PF PORT		*/
->>  	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
->>  };
+>> 1. We parse MCFG table and get segment nr assigned to root bridge
+>> 2. Then PCI host bridge calls acpi_pci_root_create ->
+>> pci_create_root_bus -> pci_bus_assign_domain_nr
+>> 3. At this point we cannot get segment nr for ACPI
 >>
->>diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
->>index f771130..f0ddde7 100644
->>--- a/arch/powerpc/kernel/pci_dn.c
->>+++ b/arch/powerpc/kernel/pci_dn.c
->>@@ -180,7 +180,9 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
->>  struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
->>  {
->>  #ifdef CONFIG_PCI_IOV
->>+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
->>  	struct pci_dn *parent, *pdn;
->>+	struct eeh_dev *edev;
->>  	int i;
->>
->>  	/* Only support IOV for now */
->>@@ -206,6 +208,9 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
->>  				 __func__, i);
->>  			return NULL;
->>  		}
->>+		eeh_dev_init(pdn, hose);
->>+		edev = pdn_to_eeh_dev(pdn);
+>> So I would like to assign MCFG segment nr to bus->domain_nr being in
+>> pci_bus_assign_domain_nr giving we have scenario above.
 >
+> I do not understand what you mean by "assign MCFG segment" here, please
+> explain. The MCFG segment group number is used to look-up the configuration
+> space for a given host bridge, not to assign a domain number to it.
 >
->In theory, pdn_to_eeh_dev() can return NULL. In this patch, it is not clear
->if pdn->edev gets initialized before or after add_dev_pci_data().
->
+> The domain_nr above is the value returned by the _SEG object for the host
+> bridge device.
 
-Yep, the return value should be checked.
+If I read the code correctly, MCFG region assigned to PCI host bridge X 
+should have the same value for its segment field and corresponding _SEG 
+object. Anyway, you are right, the MCFG segment group number should be 
+used to look-up the configuration space and _SEG object to retrieve 
+domain nr.
 
-pdn->edev is initialized in eeh_dev_init() which is called in
-add_dev_pci_data(). The order is not clear?
+To evaluate _SEG object being in pci_bus_assign_domain_nr we still miss 
+there the PCI host bridge device. So I should change my previous 
+question, can we pass down the PCI host bridge device to be able to call 
+_SEG object being in pci_bus_assign_domain_nr?
 
->
->
->>+		edev->physfn = pdev;
->>  	}
->>  #endif /* CONFIG_PCI_IOV */
->>
->>@@ -254,10 +259,17 @@ void remove_dev_pci_data(struct pci_dev *pdev)
->>  	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
->>  		list_for_each_entry_safe(pdn, tmp,
->>  			&parent->child_list, list) {
->>+			struct eeh_dev *edev;
->>  			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
->>  			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
->>  				continue;
->>
->>+			edev = pdn_to_eeh_dev(pdn);
->>+			if (edev) {
->>+				pdn->edev = NULL;
->>+				kfree(edev);
->>+			}
->>+
->>  			if (!list_empty(&pdn->list))
->>  				list_del(&pdn->list);
->>
->>
->
->
->-- 
->Alexey
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Richard Yang
-Help you, Help me
-
+Thanks,
+Tomasz
