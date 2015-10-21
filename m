@@ -1,53 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:54930 "EHLO smtp2.it.da.ut.ee"
+Received: from mga02.intel.com ([134.134.136.20]:42549 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932184AbbJMFEi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 13 Oct 2015 01:04:38 -0400
-Date: Tue, 13 Oct 2015 08:06:10 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: Yinghai Lu <yinghai@kernel.org>
-cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
-In-Reply-To: <CAE9FiQXHsgYaTgF2rsWFJXSYJ=kH3j63ageJ2H8F5wnzbFgxRg@mail.gmail.com>
-Message-ID: <alpine.LRH.2.20.1510130800380.3972@math.ut.ee>
-References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee> <CAE9FiQXM9YxRwcbG577Pcqmj7YbOa0yk6hYELb2FpTtct5u2jg@mail.gmail.com> <alpine.LRH.2.20.1510120808240.3251@math.ut.ee> <CAE9FiQXHsgYaTgF2rsWFJXSYJ=kH3j63ageJ2H8F5wnzbFgxRg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1755901AbbJUQtX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 Oct 2015 12:49:23 -0400
+From: Lan Tianyu <tianyu.lan@intel.com>
+To: bhelgaas@google.com, carolyn.wyborny@intel.com,
+	donald.c.skidmore@intel.com, eddie.dong@intel.com,
+	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
+	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Cc: Lan Tianyu <tianyu.lan@intel.com>
+Subject: [RFC Patch 04/12] IXGBE: Add ixgbe_ping_vf() to notify a specified VF via mailbox msg.
+Date: Thu, 22 Oct 2015 00:37:36 +0800
+Message-Id: <1445445464-5056-5-git-send-email-tianyu.lan@intel.com>
+In-Reply-To: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> >> > sparc64 machines:
-> >>
-> >> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-> >> for-pci-v4.4-next
-> >>
-> >> It should fix some "no compatible bridge window"
-> >
-> > Blade 100: still has 2 address conflicts:
-> > http://kodu.ut.ee/~mroos/dm/dm.sb100+patch
-> >
-> > V240: still has a lot of address conflicts:
-> > http://kodu.ut.ee/~mroos/dm/dm.v240+patch
-> >
-> > V210: fixes the line
-> > pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
-> >
-> > These lines are still present:
-> >
-> > pci 0001:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
-> > pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
-> >
-> you should not have those.
-> 
-> Looks like you are using old branch before 2015-10-05.
-> 
-> If you use the git directly, please update the branch to local again.
+This patch is to add ixgbe_ping_vf() to notify a specified VF. When
+migration status is changed, it's necessary to notify VF the change.
+VF driver will check the migrate status when it gets mailbox msg.
 
-Updated on V210 - the others were more recent. Now I get more BAR 
-warning there too:
+Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
+---
+ drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 19 ++++++++++++-------
+ drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h |  1 +
+ 2 files changed, 13 insertions(+), 7 deletions(-)
 
-http://kodu.ut.ee/~mroos/dm/dm.v210+patches
-
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+index 89671eb..e247d67 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+@@ -1318,18 +1318,23 @@ void ixgbe_disable_tx_rx(struct ixgbe_adapter *adapter)
+ 	IXGBE_WRITE_REG(hw, IXGBE_VFRE(1), 0);
+ }
+ 
+-void ixgbe_ping_all_vfs(struct ixgbe_adapter *adapter)
++void ixgbe_ping_vf(struct ixgbe_adapter *adapter, int vfn)
+ {
+ 	struct ixgbe_hw *hw = &adapter->hw;
+ 	u32 ping;
++
++	ping = IXGBE_PF_CONTROL_MSG;
++	if (adapter->vfinfo[vfn].clear_to_send)
++		ping |= IXGBE_VT_MSGTYPE_CTS;
++	ixgbe_write_mbx(hw, &ping, 1, vfn);
++}
++
++void ixgbe_ping_all_vfs(struct ixgbe_adapter *adapter)
++{
+ 	int i;
+ 
+-	for (i = 0 ; i < adapter->num_vfs; i++) {
+-		ping = IXGBE_PF_CONTROL_MSG;
+-		if (adapter->vfinfo[i].clear_to_send)
+-			ping |= IXGBE_VT_MSGTYPE_CTS;
+-		ixgbe_write_mbx(hw, &ping, 1, i);
+-	}
++	for (i = 0 ; i < adapter->num_vfs; i++)
++		ixgbe_ping_vf(adapter, i);
+ }
+ 
+ int ixgbe_ndo_set_vf_mac(struct net_device *netdev, int vf, u8 *mac)
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
+index 2c197e6..143e2fd 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
+@@ -41,6 +41,7 @@ void ixgbe_msg_task(struct ixgbe_adapter *adapter);
+ int ixgbe_vf_configuration(struct pci_dev *pdev, unsigned int event_mask);
+ void ixgbe_disable_tx_rx(struct ixgbe_adapter *adapter);
+ void ixgbe_ping_all_vfs(struct ixgbe_adapter *adapter);
++void ixgbe_ping_vf(struct ixgbe_adapter *adapter, int vfn);
+ int ixgbe_ndo_set_vf_mac(struct net_device *netdev, int queue, u8 *mac);
+ int ixgbe_ndo_set_vf_vlan(struct net_device *netdev, int queue, u16 vlan,
+ 			   u8 qos);
 -- 
-Meelis Roos (mroos@linux.ee)
+1.8.4.rc0.1.g8f6a3e5.dirty
+
