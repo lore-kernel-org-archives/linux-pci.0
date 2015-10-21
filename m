@@ -1,223 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] PCI / PM: Avoid resuming more devices during system suspend
-Date: Mon, 12 Oct 2015 22:14:56 +0200
-Message-ID: <3330655.Bgztt1gtic@vostro.rjw.lan>
-In-Reply-To: <1927695.BMWSBQyHBQ@vostro.rjw.lan>
-References: <1885084.5xWH6KN36q@vostro.rjw.lan> <1927695.BMWSBQyHBQ@vostro.rjw.lan>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 21 Oct 2015 12:42:18 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+Message-ID: <20151021114218.GA18602@red-moon>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
+ <562761A1.4020306@linaro.org>
+ <20151021110201.GE3394@e106497-lin.cambridge.arm.com>
+ <562776A5.7000303@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <562776A5.7000303@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 30, 2015 01:10:24 AM Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, Oct 21, 2015 at 01:27:33PM +0200, Tomasz Nowicki wrote:
+> On 21.10.2015 13:02, Liviu Dudau wrote:
+> >On Wed, Oct 21, 2015 at 11:57:53AM +0200, Tomasz Nowicki wrote:
+> >>On 14.10.2015 08:29, Jiang Liu wrote:
+> >>>Introduce common interface acpi_pci_root_create() and related data
+> >>>structures to create PCI root bus for ACPI PCI host bridges. It will
+> >>>be used to kill duplicated arch specific code for IA64 and x86. It may
+> >>>also help ARM64 in future.
+> >>>
+> >>>Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >>>Tested-by: Tony Luck <tony.luck@intel.com>
+> >>>Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> >>>Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
+> >>>---
+> >>>  drivers/acpi/pci_root.c  |  204 ++++++++++++++++++++++++++++++++++++++++++++++
+> >>>  include/linux/pci-acpi.h |   24 ++++++
+> >>>  2 files changed, 228 insertions(+)
+> >>>
+> >>
+> >>[...]
+> >>
+> >>>+
+> >>>+struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+> >>>+				     struct acpi_pci_root_ops *ops,
+> >>>+				     struct acpi_pci_root_info *info,
+> >>>+				     void *sysdata)
+> >>>+{
+> >>>+	int ret, busnum = root->secondary.start;
+> >>>+	struct acpi_device *device = root->device;
+> >>>+	int node = acpi_get_node(device->handle);
+> >>>+	struct pci_bus *bus;
+> >>>+
+> >>>+	info->root = root;
+> >>>+	info->bridge = device;
+> >>>+	info->ops = ops;
+> >>>+	INIT_LIST_HEAD(&info->resources);
+> >>>+	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
+> >>>+		 root->segment, busnum);
+> >>>+
+> >>>+	if (ops->init_info && ops->init_info(info))
+> >>>+		goto out_release_info;
+> >>>+	if (ops->prepare_resources)
+> >>>+		ret = ops->prepare_resources(info);
+> >>>+	else
+> >>>+		ret = acpi_pci_probe_root_resources(info);
+> >>>+	if (ret < 0)
+> >>>+		goto out_release_info;
+> >>>+
+> >>>+	pci_acpi_root_add_resources(info);
+> >>>+	pci_add_resource(&info->resources, &root->secondary);
+> >>>+	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+> >>>+				  sysdata, &info->resources);
+> >>
+> >>Thank a lot for this cleanup!!
+> >>
+> >>I recall you already considered passing segment (domain nr) to
+> >>pci_create_root_bus, right? Can you please remind me why we gave up on this?
+> >>
+> >>I am asking because currently I can not find the way to retrieve domain
+> >>number from pci_bus_assign_domain_nr (for those platforms which choose
+> >>PCI_DOMAINS_GENERIC and want to use segment nr from MCFG table) which is the
+> >>part of pci_create_root_bus.
+> >
+> >Not sure I fully understand your question, but pci_bus_assign_domain_nr() will
+> >put the assigned domain number in bus->domain_nr if you chose PCI_DOMAINS_GENERIC.
+> >Do you want to override that value with the segment nr from MCFG?
+> >
 > 
-> Commit bac2a909a096 (PCI / PM: Avoid resuming PCI devices during
-> system suspend) introduced a mechanism by which some PCI devices that
-> were runtime-suspended at the system suspend time might be left in
-> that state for the duration of the system suspend-resume cycle.
-> However, it overlooked devices that were marked as capable of waking
-> up the system just because PME support was detected in their PCI
-> config space.
+> Let me give ACPI ARM64 example:
 > 
-> Namely, in that case, device_can_wakeup(dev) returns 'true' for the
-> device and if the device is not configured for system wakeup,
-> device_may_wakeup(dev) returns 'false' and it will be resumed during
-> system suspend even though configuring it for system wakeup may not
-> really make sense at all.
+> 1. We parse MCFG table and get segment nr assigned to root bridge
+> 2. Then PCI host bridge calls acpi_pci_root_create ->
+> pci_create_root_bus -> pci_bus_assign_domain_nr
+> 3. At this point we cannot get segment nr for ACPI
 > 
-> To avoid this problem, simply disable PME for PCI devices that have
-> not been configured for system wakeup and are runtime-suspended at
-> the system suspend time for the duration of the suspend-resume cycle.
-> 
-> If the device is in D3cold, its config space is not available and it
-> shouldn't be written to, but that's only possible if the device
-> has platform PM support and the platform code is responsible for
-> checking whether or not the device's configuration is suitable for
-> system suspend in that case.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
-> 
-> v1 -> v2: pci_dev_run_wake() doesn't need to be called under the spinlock,
-> so don't do that.
-> 
-> Also this has been (lightly) tested on Acer Aspire S5 and appears to work.
+> So I would like to assign MCFG segment nr to bus->domain_nr being in
+> pci_bus_assign_domain_nr giving we have scenario above.
 
-Due to the lack of comments for the last several days (which I'm taking as
-the lack of objections), I'm tentatively queing this up for v4.4.
+I do not understand what you mean by "assign MCFG segment" here, please
+explain. The MCFG segment group number is used to look-up the configuration
+space for a given host bridge, not to assign a domain number to it.
 
-Please let me know if there are any problems with that.
+The domain_nr above is the value returned by the _SEG object for the host
+bridge device.
 
-Thanks,
-Rafael
-
-
-> ---
->  drivers/pci/pci-driver.c |   12 ++++++++
->  drivers/pci/pci.c        |   70 +++++++++++++++++++++++++++++++++++++++--------
->  drivers/pci/pci.h        |    1 
->  3 files changed, 72 insertions(+), 11 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/pci.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci.c
-> +++ linux-pm/drivers/pci/pci.c
-> @@ -1710,15 +1710,7 @@ static void pci_pme_list_scan(struct wor
->  	mutex_unlock(&pci_pme_list_mutex);
->  }
->  
-> -/**
-> - * pci_pme_active - enable or disable PCI device's PME# function
-> - * @dev: PCI device to handle.
-> - * @enable: 'true' to enable PME# generation; 'false' to disable it.
-> - *
-> - * The caller must verify that the device is capable of generating PME# before
-> - * calling this function with @enable equal to 'true'.
-> - */
-> -void pci_pme_active(struct pci_dev *dev, bool enable)
-> +static void __pci_pme_active(struct pci_dev *dev, bool enable)
->  {
->  	u16 pmcsr;
->  
-> @@ -1732,6 +1724,19 @@ void pci_pme_active(struct pci_dev *dev,
->  		pmcsr &= ~PCI_PM_CTRL_PME_ENABLE;
->  
->  	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
-> +}
-> +
-> +/**
-> + * pci_pme_active - enable or disable PCI device's PME# function
-> + * @dev: PCI device to handle.
-> + * @enable: 'true' to enable PME# generation; 'false' to disable it.
-> + *
-> + * The caller must verify that the device is capable of generating PME# before
-> + * calling this function with @enable equal to 'true'.
-> + */
-> +void pci_pme_active(struct pci_dev *dev, bool enable)
-> +{
-> +	__pci_pme_active(dev, enable);
->  
->  	/*
->  	 * PCI (as opposed to PCIe) PME requires that the device have
-> @@ -2032,17 +2037,60 @@ EXPORT_SYMBOL_GPL(pci_dev_run_wake);
->   * reconfigured due to wakeup settings difference between system and runtime
->   * suspend and the current power state of it is suitable for the upcoming
->   * (system) transition.
-> + *
-> + * If the device is not configured for system wakeup, disable PME for it before
-> + * returning 'true' to prevent it from waking up the system unnecessarily.
->   */
->  bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
->  {
->  	struct device *dev = &pci_dev->dev;
->  
->  	if (!pm_runtime_suspended(dev)
-> -	    || (device_can_wakeup(dev) && !device_may_wakeup(dev))
-> +	    || pci_target_state(pci_dev) != pci_dev->current_state
->  	    || platform_pci_need_resume(pci_dev))
->  		return false;
->  
-> -	return pci_target_state(pci_dev) == pci_dev->current_state;
-> +	/*
-> +	 * At this point the device is good to go unless it's been configured
-> +	 * to generate PME at the runtime suspend time, but it is not supposed
-> +	 * to wake up the system.  In that case, simply disable PME for it
-> +	 * (it will have to be re-enabled on exit from system resume).
-> +	 *
-> +	 * If the device's power state is D3cold and the platform check above
-> +	 * hasn't triggered, the device's configuration is suitable and we don't
-> +	 * need to manipulate it at all.
-> +	 */
-> +	spin_lock_irq(&dev->power.lock);
-> +
-> +	if (pm_runtime_suspended(dev) && pci_dev->current_state < PCI_D3cold &&
-> +	    !device_may_wakeup(dev))
-> +		__pci_pme_active(pci_dev, false);
-> +
-> +	spin_unlock_irq(&dev->power.lock);
-> +	return true;
-> +}
-> +
-> +/**
-> + * pci_dev_complete_resume - Finalize resume from system sleep for a device.
-> + * @pci_dev: Device to handle.
-> + *
-> + * If the device is runtime suspended and wakeup-capable, enable PME for it as
-> + * it might have been disabled during the prepare phase of system suspend if
-> + * the device was not configured for system wakeup.
-> + */
-> +void pci_dev_complete_resume(struct pci_dev *pci_dev)
-> +{
-> +	struct device *dev = &pci_dev->dev;
-> +
-> +	if (!pci_dev_run_wake(pci_dev))
-> +		return;
-> +
-> +	spin_lock_irq(&dev->power.lock);
-> +
-> +	if (pm_runtime_suspended(dev) && pci_dev->current_state < PCI_D3cold)
-> +		__pci_pme_active(pci_dev, true);
-> +
-> +	spin_unlock_irq(&dev->power.lock);
->  }
->  
->  void pci_config_pm_runtime_get(struct pci_dev *pdev)
-> Index: linux-pm/drivers/pci/pci.h
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci.h
-> +++ linux-pm/drivers/pci/pci.h
-> @@ -75,6 +75,7 @@ void pci_disable_enabled_device(struct p
->  int pci_finish_runtime_suspend(struct pci_dev *dev);
->  int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
->  bool pci_dev_keep_suspended(struct pci_dev *dev);
-> +void pci_dev_complete_resume(struct pci_dev *pci_dev);
->  void pci_config_pm_runtime_get(struct pci_dev *dev);
->  void pci_config_pm_runtime_put(struct pci_dev *dev);
->  void pci_pm_init(struct pci_dev *dev);
-> Index: linux-pm/drivers/pci/pci-driver.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-driver.c
-> +++ linux-pm/drivers/pci/pci-driver.c
-> @@ -684,10 +684,21 @@ static int pci_pm_prepare(struct device
->  	return pci_dev_keep_suspended(to_pci_dev(dev));
->  }
->  
-> +static void pci_pm_complete(struct device *dev)
-> +{
-> +	struct device_driver *drv = dev->driver;
-> +	struct pci_dev *pci_dev = to_pci_dev(dev);
-> +
-> +	pci_dev_complete_resume(pci_dev);
-> +
-> +	if (drv && drv->pm && drv->pm->complete)
-> +		drv->pm->complete(dev);
-> +}
->  
->  #else /* !CONFIG_PM_SLEEP */
->  
->  #define pci_pm_prepare	NULL
-> +#define pci_pm_complete	NULL
->  
->  #endif /* !CONFIG_PM_SLEEP */
->  
-> @@ -1218,6 +1229,7 @@ static int pci_pm_runtime_idle(struct de
->  
->  static const struct dev_pm_ops pci_dev_pm_ops = {
->  	.prepare = pci_pm_prepare,
-> +	.complete = pci_pm_complete,
->  	.suspend = pci_pm_suspend,
->  	.resume = pci_pm_resume,
->  	.freeze = pci_pm_freeze,
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Lorenzo
