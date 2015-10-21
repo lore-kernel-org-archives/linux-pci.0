@@ -1,57 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0088.outbound.protection.outlook.com ([157.56.110.88]:7758
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750995AbbJNC6N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 13 Oct 2015 22:58:13 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v9 1/6] arm: add msi.h to Kbuild
-Date: Wed, 14 Oct 2015 10:41:27 +0800
-Message-ID: <1444790492-4051-2-git-send-email-lftan@altera.com>
-In-Reply-To: <1444790492-4051-1-git-send-email-lftan@altera.com>
-References: <1444790492-4051-1-git-send-email-lftan@altera.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 21 Oct 2015 15:54:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ethan Zhao <ethan.zhao@oracle.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] iov: restore NumVFs register to 0 before return from
+ virtfn_max_buses()
+Message-ID: <20151021205452.GI1583@localhost>
+References: <1442373593-8342-1-git-send-email-ethan.zhao@oracle.com>
+ <20151015171600.GB17702@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151015171600.GB17702@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Include asm-generic/msi.h to support CONFIG_GENERIC_MSI_IRQ_DOMAIN.
-This to fix compilation error:
-"include/linux/msi.h:123:21: fatal error: asm/msi.h:
-No such file or directory"
+On Thu, Oct 15, 2015 at 12:16:00PM -0500, Bjorn Helgaas wrote:
+> Hi Ethan,
+> 
+> On Wed, Sep 16, 2015 at 12:19:53PM +0900, Ethan Zhao wrote:
+> > After commit 4449f079722c ("PCI: Calculate maximum number of buses
+> > required for VFs"),the initial value of NumVFs register was left to
+> > non-zero after sriov_init() and no VFs was enabled in device driver.
+> > this changed the behaviour of kernel exported by lspci and sysfs etc.
+> > so this patch restore the NumVFs register to zero after the
+> > calculation of max_VF_buses was done and before return from
+> > virtfn_max_buses().
+> > 
+> > Tested on stable 4.1 and passed building on stable 4.3-rc1
+> > 
+> > Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+> > Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
+> 
+> Can you test the patch below?  I'm trying to avoid touching
+> PCI_SRIOV_NUM_VF in more than one place, and I think it's OK to set it
+> and test offset/stride at the end, instead of setting NUM_VF to zero,
+> testing offset/stride, computing max_bus, then setting NUM_VF to zero
+> again.
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- arch/arm/include/asm/Kbuild | 1 +
- 1 file changed, 1 insertion(+)
+I applied the patch below to pci/virtualization for v4.4.
 
-diff --git a/arch/arm/include/asm/Kbuild b/arch/arm/include/asm/Kbuild
-index be648eb..bd42530 100644
---- a/arch/arm/include/asm/Kbuild
-+++ b/arch/arm/include/asm/Kbuild
-@@ -14,6 +14,7 @@ generic-y += local.h
- generic-y += local64.h
- generic-y += mm-arch-hooks.h
- generic-y += msgbuf.h
-+generic-y += msi.h
- generic-y += param.h
- generic-y += parport.h
- generic-y += poll.h
--- 
-1.8.2.1
-
+> commit 8e20e89658f23b8d16b1e21810e9f63c8625129c
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Thu Oct 15 11:31:21 2015 -0500
+> 
+>     PCI: Set SR-IOV NumVFs to zero after enumeration
+>     
+>     The enumeration path should leave NumVFs set to zero.  But after
+>     4449f079722c ("PCI: Calculate maximum number of buses required for VFs"),
+>     we call virtfn_max_buses() in the enumeration path, which changes NumVFs.
+>     This NumVFs change is visible via lspci and sysfs until a driver enables
+>     SR-IOV.
+>     
+>     Set NumVFs to zero after virtfn_max_buses() computes the maximum number of
+>     buses.
+>     
+>     Fixes: 4449f079722c ("PCI: Calculate maximum number of buses required for VFs")
+>     Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index ee0ebff..0202ab0 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -384,7 +384,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>  	int rc;
+>  	int nres;
+>  	u32 pgsz;
+> -	u16 ctrl, total, offset, stride;
+> +	u16 ctrl, total;
+>  	struct pci_sriov *iov;
+>  	struct resource *res;
+>  	struct pci_dev *pdev;
+> @@ -414,11 +414,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>  
+>  found:
+>  	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+> -	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
+> -	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
+> -	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
+> -	if (!offset || (total > 1 && !stride))
+> -		return -EIO;
+>  
+>  	pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
+>  	i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
+> @@ -456,8 +451,6 @@ found:
+>  	iov->nres = nres;
+>  	iov->ctrl = ctrl;
+>  	iov->total_VFs = total;
+> -	iov->offset = offset;
+> -	iov->stride = stride;
+>  	iov->pgsz = pgsz;
+>  	iov->self = dev;
+>  	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+> @@ -475,6 +468,11 @@ found:
+>  	dev->sriov = iov;
+>  	dev->is_physfn = 1;
+>  	iov->max_VF_buses = virtfn_max_buses(dev);
+> +	pci_iov_set_numvfs(dev, 0);
+> +	if (!iov->offset || (total > 1 && !iov->stride)) {
+> +		rc = -EIO;
+> +		goto failed;
+> +	}
+>  
+>  	return 0;
+>  
+> @@ -484,6 +482,7 @@ failed:
+>  		res->flags = 0;
+>  	}
+>  
+> +	dev->sriov = NULL;
+>  	kfree(iov);
+>  	return rc;
+>  }
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
