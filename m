@@ -1,111 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:40433 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750991AbbJBWom (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 18:44:42 -0400
-Subject: Re: [PATCH v2] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-To: Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Kwok, WingMan" <w-kwok2@ti.com>
+To: "robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	KISHON VIJAY ABRAHAM <kishon@ti.com>,
+	"Quadros, Roger" <rogerq@ti.com>,
+	"Karicheri, Muralidharan" <m-karicheri2@ti.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"ssantosh@kernel.org" <ssantosh@kernel.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>
-References: <1443689961-23909-1-git-send-email-bharatku@xilinx.com>
- <2677327.lnRZhqx5GI@wuerfel> <560DD374.4000708@broadcom.com>
- <5225360.GkBHX0QnIA@wuerfel>
-CC: <mark.rutland@arm.com>, <devicetree@vger.kernel.org>,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	<pawel.moll@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	<hauke@hauke-m.de>, <linux-pci@vger.kernel.org>,
-	<michal.simek@xilinx.com>, <linux-kernel@vger.kernel.org>,
-	<m-karicheri2@ti.com>, <Minghuan.Lian@freescale.com>,
-	<robh+dt@kernel.org>, Ravi Kiran Gummaluri <rgummal@xilinx.com>,
-	<tinamdar@apm.com>, <galak@codeaurora.org>, <bhelgaas@google.com>,
-	<treding@nvidia.com>, <soren.brinkmann@xilinx.com>
-From: Ray Jui <rjui@broadcom.com>
-Message-ID: <560F08D7.7040707@broadcom.com>
-Date: Fri, 2 Oct 2015 15:44:39 -0700
+CC: "Kwok, WingMan" <w-kwok2@ti.com>
+Subject: RE: [PATCH] ARM: keystone: dts: add PCI serdes driver bindings
+Date: Wed, 21 Oct 2015 15:14:58 +0000
+Message-ID: <230CBA6E4B6B6B418E8730AC28E6FC7E04229FCB@DFLE11.ent.ti.com>
+References: <1445432242-16129-1-git-send-email-w-kwok2@ti.com>
+In-Reply-To: <1445432242-16129-1-git-send-email-w-kwok2@ti.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <5225360.GkBHX0QnIA@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 10/2/2015 3:36 PM, Arnd Bergmann wrote:
-> On Thursday 01 October 2015 17:44:36 Ray Jui wrote:
->>
->> Sorry for stealing this discussion, :)
->>
->> I have some questions here, since this affects how I should implement
->> the MSI support for iProc based PCIe controller. I understand it makes
->> more sense to use separate device node for MSI and have "msi-parent"
->> from the pci node points to the MSI node, and that MSI node can be
->> gicv2m or gicv3 based on more advanced ARMv8 platforms.
->>
->> Then I would assume the MSI controller would deserve its own driver?
->> Which is a lot of people do nowadays. In that case, how I should handle
->> the case when the iProc MSI support is handled through some event queue
->> mechanism with their registers embedded in the PCIe controller register
->> space?
->>
->> Does the following logic make sense to you?
->>
->> 1. parse phandle of "msi-parent"
->> 2. Call of_pci_find_msi_chip_by_node to hook it up to msi chip already
->> registered (in the gicv2m and gicv3 case)
->> 3. If failed, fall back to use the iProc's own event queue logic by
->> calling iproc_pcie_msi_init.
->>
->> The iProc MSI still has its own node that looks like this:
->> 141 msi0: msi@20020000 {
->> 142                         msi-controller;
->> 143                         interrupt-parent = <&gic>;
->> 144                         interrupts = <GIC_SPI 277 IRQ_TYPE_NONE>,
->> 145                                      <GIC_SPI 278 IRQ_TYPE_NONE>,
->> 146                                      <GIC_SPI 279 IRQ_TYPE_NONE>,
->> 147                                      <GIC_SPI 280 IRQ_TYPE_NONE>,
->> 148                                      <GIC_SPI 281 IRQ_TYPE_NONE>,
->> 149                                      <GIC_SPI 282 IRQ_TYPE_NONE>;
->> 150                         brcm,num-eq-region = <1>;
->> 151                         brcm,num-msi-msg-region = <1>;
->> 152                 };
->>
->> But it does not have its own "reg" since they are embedded in the PCI
->> controller's registers and it relies on one calling iproc_pcie_msi_init
->> to pass in base register value and some other information.
-> 
-> I don't think I have a perfect answer to this. One way would be to
-> separate the actual PCI root device node from the IP block that
-> contains both the PCI root and the MSI catcher, but I guess that
-> would require an incompatible change to your binding and it's not
-> worth the pain.
-
-Indeed, that's going to be very painful given that this iProc PCIe
-controller driver is used on multiple platforms including Northstar,
-Cygnus, Northstar+, and Northstar 2.
-
-> 
-> It's probably also ok to make the PCI host node itself be the msi-controller
-> node and have an msi-parent phandle that points to the node itself. Not
-> sure if that violates any rules that we may want or need to follow though.
-> 
-> Having a device node without registers is also a bit problematic,
-> especially the 'msi@20020000' name doesn't make sense if 0x20020000
-> is not the first number in the reg property. Maybe it's best to 
-> put that node directly under the PCI host controller and not assign
-> any registers. This is still a bit ugly because we'd expect devices
-> under the host bridge to be PCI devices rather than random other things,
-> but it may be the least of the evils.
-
-This is what I have right now. With the msi node under the PCIe
-controller node and have msi-parent points to the msi node. Maybe it
-will be a lot easier to discuss this when I submit the code for review
-within the next couple weeks.
-
-> 
-> 	Arnd
-> 
-
-Thanks,
-
-Ray
+SGksDQoNClBsZWFzZSBpZ25vcmUgdGhlIHN1YmplY3QgcGF0Y2ggd2hpY2ggaXMgZXhhY3RseQ0K
+dGhlIHNhbWUgYXMgdGhlIG9uZQ0KDQpbUEFUQ0ggdjFdIEFSTToga2V5c3RvbmU6IGR0czogYWRk
+IFBDSSBzZXJkZXMgZHJpdmVyIGJpbmRpbmdzDQoNCnN1Ym1pdHRlZCBlYXJsaWVyLg0KDQpUaGFu
+a3MsDQpXaW5nTWFuDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS3dv
+aywgV2luZ01hbg0KPiBTZW50OiBXZWRuZXNkYXksIE9jdG9iZXIgMjEsIDIwMTUgODo1NyBBTQ0K
+PiBUbzogcm9iaCtkdEBrZXJuZWwub3JnOyBwYXdlbC5tb2xsQGFybS5jb207IG1hcmsucnV0bGFu
+ZEBhcm0uY29tOw0KPiBpamMrZGV2aWNldHJlZUBoZWxsaW9uLm9yZy51azsgZ2FsYWtAY29kZWF1
+cm9yYS5vcmc7IEtJU0hPTiBWSUpBWSBBQlJBSEFNOw0KPiBRdWFkcm9zLCBSb2dlcjsgS2FyaWNo
+ZXJpLCBNdXJhbGlkaGFyYW47IGJoZWxnYWFzQGdvb2dsZS5jb207DQo+IHNzYW50b3NoQGtlcm5l
+bC5vcmc7IGxpbnV4QGFybS5saW51eC5vcmcudWs7IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3Jn
+Ow0KPiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5rZXJuZWwu
+b3JnOyBsaW51eC1hcm0tDQo+IGtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnDQo+IENjOiBLd29r
+LCBXaW5nTWFuDQo+IFN1YmplY3Q6IFtQQVRDSF0gQVJNOiBrZXlzdG9uZTogZHRzOiBhZGQgUENJ
+IHNlcmRlcyBkcml2ZXIgYmluZGluZ3MNCj4gDQo+IFRoaXMgcGF0Y2ggYWRkcyB0aGUgc2VyZGVz
+IHBoeSBkcml2ZXIgZHRzIGJpbmRpbmdzDQo+IGZvciB0aGUga2V5c3RvbmUgUENJZSBob3N0IGRy
+aXZlci4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IFdpbmdNYW4gS3dvayA8dy1rd29rMkB0aS5jb20+
+DQo+IC0tLQ0KPiAgYXJjaC9hcm0vYm9vdC9kdHMvazJlLmR0c2kgICAgICB8ICAgMTAgKysrKysr
+KysrKw0KPiAgYXJjaC9hcm0vYm9vdC9kdHMva2V5c3RvbmUuZHRzaSB8ICAgMTAgKysrKysrKysr
+Kw0KPiAgMiBmaWxlcyBjaGFuZ2VkLCAyMCBpbnNlcnRpb25zKCspDQo+IA0KPiBkaWZmIC0tZ2l0
+IGEvYXJjaC9hcm0vYm9vdC9kdHMvazJlLmR0c2kgYi9hcmNoL2FybS9ib290L2R0cy9rMmUuZHRz
+aQ0KPiBpbmRleCA2NzVmYjhlLi41ZjdjYzBhIDEwMDY0NA0KPiAtLS0gYS9hcmNoL2FybS9ib290
+L2R0cy9rMmUuZHRzaQ0KPiArKysgYi9hcmNoL2FybS9ib290L2R0cy9rMmUuZHRzaQ0KPiBAQCAt
+ODYsNiArODYsMTUgQEANCj4gIAkJCWdwaW8sc3lzY29uLWRldiA9IDwmZGV2Y3RybCAweDI0MD47
+DQo+ICAJCX07DQo+IA0KPiArCQlwY2llMV9waHk6IHBoeUAyMzI2MDAwIHsNCj4gKwkJCSNwaHkt
+Y2VsbHMgPSA8MD47DQo+ICsJCQljb21wYXRpYmxlID0gInRpLGtleXN0b25lLXNlcmRlcy1wY2ll
+IjsNCj4gKwkJCXJlZyA9IDwweDAyMzI2MDAwIDB4NDAwMD47DQo+ICsJCQlsaW5rLXJhdGUta2Jw
+cyA9IDw1MDAwMDAwPjsNCj4gKwkJCW51bS1sYW5lcyA9IDwyPjsNCj4gKwkJCXN0YXR1cyA9ICJk
+aXNhYmxlZCI7DQo+ICsJCX07DQo+ICsNCj4gIAkJcGNpZTE6IHBjaWVAMjEwMjAwMDAgew0KPiAg
+CQkJY29tcGF0aWJsZSA9ICJ0aSxrZXlzdG9uZS1wY2llIiwic25wcyxkdy1wY2llIjsNCj4gIAkJ
+CWNsb2NrcyA9IDwmY2xrcGNpZTE+Ow0KPiBAQCAtOTksNiArMTA4LDcgQEANCj4gIAkJCXN0YXR1
+cyA9ICJkaXNhYmxlZCI7DQo+ICAJCQlkZXZpY2VfdHlwZSA9ICJwY2kiOw0KPiAgCQkJbnVtLWxh
+bmVzID0gPDI+Ow0KPiArCQkJcGh5cyA9IDwmcGNpZTFfcGh5PjsNCj4gDQo+ICAJCQkjaW50ZXJy
+dXB0LWNlbGxzID0gPDE+Ow0KPiAgCQkJaW50ZXJydXB0LW1hcC1tYXNrID0gPDAgMCAwIDc+Ow0K
+PiBkaWZmIC0tZ2l0IGEvYXJjaC9hcm0vYm9vdC9kdHMva2V5c3RvbmUuZHRzaQ0KPiBiL2FyY2gv
+YXJtL2Jvb3QvZHRzL2tleXN0b25lLmR0c2kNCj4gaW5kZXggNzI4MTZkNi4uNWM3YzU4YSAxMDA2
+NDQNCj4gLS0tIGEvYXJjaC9hcm0vYm9vdC9kdHMva2V5c3RvbmUuZHRzaQ0KPiArKysgYi9hcmNo
+L2FybS9ib290L2R0cy9rZXlzdG9uZS5kdHNpDQo+IEBAIC0yNzUsNiArMjc1LDE1IEBADQo+ICAJ
+CQl0aSxzeXNjb24tZGV2ID0gPCZkZXZjdHJsIDB4MmEwPjsNCj4gIAkJfTsNCj4gDQo+ICsJCXBj
+aWUwX3BoeTogcGh5QDIzMjAwMDAgew0KPiArCQkJI3BoeS1jZWxscyA9IDwwPjsNCj4gKwkJCWNv
+bXBhdGlibGUgPSAidGksa2V5c3RvbmUtc2VyZGVzLXBjaWUiOw0KPiArCQkJcmVnID0gPDB4MDIz
+MjAwMDAgMHg0MDAwPjsNCj4gKwkJCWxpbmstcmF0ZS1rYnBzID0gPDUwMDAwMDA+Ow0KPiArCQkJ
+bnVtLWxhbmVzID0gPDI+Ow0KPiArCQkJc3RhdHVzID0gImRpc2FibGVkIjsNCj4gKwkJfTsNCj4g
+Kw0KPiAgCQlwY2llMDogcGNpZUAyMTgwMDAwMCB7DQo+ICAJCQljb21wYXRpYmxlID0gInRpLGtl
+eXN0b25lLXBjaWUiLCAic25wcyxkdy1wY2llIjsNCj4gIAkJCWNsb2NrcyA9IDwmY2xrcGNpZT47
+DQo+IEBAIC0yODgsNiArMjk3LDcgQEANCj4gIAkJCXN0YXR1cyA9ICJkaXNhYmxlZCI7DQo+ICAJ
+CQlkZXZpY2VfdHlwZSA9ICJwY2kiOw0KPiAgCQkJbnVtLWxhbmVzID0gPDI+Ow0KPiArCQkJcGh5
+cyA9IDwmcGNpZTBfcGh5PjsNCj4gDQo+ICAJCQkjaW50ZXJydXB0LWNlbGxzID0gPDE+Ow0KPiAg
+CQkJaW50ZXJydXB0LW1hcC1tYXNrID0gPDAgMCAwIDc+Ow0KPiAtLQ0KPiAxLjcuOS41DQoNCg==
