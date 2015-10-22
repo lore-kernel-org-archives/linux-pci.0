@@ -1,58 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:50605 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751337AbbJLMg7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 08:36:59 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Li Yang <leoli@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: Re: [PATCH v2] PCI: layerscape: Add PCIe support for LS1043a and LS2080a
-Date: Mon, 12 Oct 2015 14:36:29 +0200
-Message-ID: <5274293.94FcFfK0fd@wuerfel>
-In-Reply-To: <20151007175725.GC27633@localhost>
-References: <1442481219-28299-1-git-send-email-Minghuan.Lian@freescale.com> <20151007175725.GC27633@localhost>
+Received: from mail-vk0-f45.google.com ([209.85.213.45]:33486 "EHLO
+	mail-vk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757307AbbJVT4R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Oct 2015 15:56:17 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAE9FiQX4XujVNBXTL_TaEyPPiGgANwa9eavBL23eyZOJbG2f5w@mail.gmail.com>
+References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+	<1444340359-8011-4-git-send-email-yinghai@kernel.org>
+	<20151020215714.GI8224@localhost>
+	<CAE9FiQVC+r=7NrCvwq9+1XVQD9CGf_3+-4VO9kFPSGqMTR5cBw@mail.gmail.com>
+	<CAE9FiQUdKdyipTw3KSVL0Kr1FFvki5Un3NuUuXpw4TXoWi1Tpg@mail.gmail.com>
+	<20151021023522.GJ8224@localhost>
+	<CAE9FiQXXP8-5hNvKXuh5mu6Xu_9yFufmpZaXv0V95TwBBnxCpA@mail.gmail.com>
+	<20151021185046.GD1583@localhost>
+	<CAE9FiQWzRbXOZCsPueERgw1gE=LpDxEkf_sYCvyJErUr+qgzow@mail.gmail.com>
+	<CAE9FiQXpdw+e2BXDwvRnzUs8D1gdngz61nXFV5xKy9TLsvEvUw@mail.gmail.com>
+	<CAE9FiQX4XujVNBXTL_TaEyPPiGgANwa9eavBL23eyZOJbG2f5w@mail.gmail.com>
+Date: Thu, 22 Oct 2015 12:56:16 -0700
+Message-ID: <CAE9FiQV1WOJj3Qc2M6q7qWy2G2Y4DbAL9EnY9ziaZO4UH9=WFA@mail.gmail.com>
+Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 07 October 2015 12:57:25 Bjorn Helgaas wrote:
-> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> > index ae873be..38fe8a8 100644
-> > --- a/drivers/pci/host/Kconfig
-> > +++ b/drivers/pci/host/Kconfig
-> > @@ -105,7 +105,7 @@ config PCI_XGENE_MSI
-> >  
-> >  config PCI_LAYERSCAPE
-> >       bool "Freescale Layerscape PCIe controller"
-> > -     depends on OF && ARM
-> > +     depends on OF && (ARM || ARM64)
-> 
-> It seems like there are a couple things going on here, and I wonder if
-> you can split them out into separate patches.
-> 
-> 1) Making this work on ARM64 as well as on ARM.  This may be of
-> interest for other DesignWare-based drivers, so if you split this out,
-> maybe it would be a useful template for converting the other drivers,
-> too.
-
-The Kconfig change apparently made it into linux-next now, but it
-doesn't actually build on arm64, because the dependency that was
-mentioned in the cover letter [0] is not there.
-
-	Arnd
-
-
-[0] This patch is based on v4.3-rc1 and [PATCH v9 0/6]
-PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
-patchset from Zhou Wang.
-
-
+On Wed, Oct 21, 2015 at 6:15 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Oct 21, 2015 at 3:59 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Wed, Oct 21, 2015 at 3:32 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> On Wed, Oct 21, 2015 at 11:50 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>>> Lots of other architectures have both mem32 and mem64 apertures.  You
+>>>> haven't explained what's unique about sparc yet.  Does
+>>>> pci_find_parent_resource() not work on sparc?  If not, is that because the
+>>>> resource tree looks different on sparc than on other architectures?  If so,
+>>>> is that difference something intentional that we want to keep, or should we
+>>>> converge on a single resource tree format across all architectures?
+>>>
+>>> In the new pci_register_legacy_regions(), we only have root bus.
+>>> but current pci_find_parent_resource is taking pci dev.
+>>>
+>>> So will need to change it to take bus instead, please check if you are ok
+>>> with following, then I would update other two.
+>>
+>> Never mind, I could just one dummy pci device to work around it.
+>> so don't need to change that.
+>
+> Khalid,
+>
+> Please use attached two to replace patch2, patch3 and patch4.
+>
+looks like i mix the use root bus resource with parent bus resource ...
+so that still have problem.
