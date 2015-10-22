@@ -1,139 +1,122 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:36238 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756936AbbJVPuD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Oct 2015 11:50:03 -0400
+Subject: Re: [Qemu-devel] [RFC Patch 06/12] IXGBEVF: Add self emulation layer
+To: "Michael S. Tsirkin" <mst@redhat.com>
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+ <1445445464-5056-7-git-send-email-tianyu.lan@intel.com>
+ <5627FC6B.8060004@gmail.com> <20151022154802-mutt-send-email-mst@redhat.com>
+Cc: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	eddie.dong@intel.com, nrupal.jani@intel.com,
+	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
+	pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <562905A8.5010200@gmail.com>
+Date: Thu, 22 Oct 2015 08:50:00 -0700
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVC+r=7NrCvwq9+1XVQD9CGf_3+-4VO9kFPSGqMTR5cBw@mail.gmail.com>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-	<1444340359-8011-4-git-send-email-yinghai@kernel.org>
-	<20151020215714.GI8224@localhost>
-	<CAE9FiQVC+r=7NrCvwq9+1XVQD9CGf_3+-4VO9kFPSGqMTR5cBw@mail.gmail.com>
-Date: Tue, 20 Oct 2015 15:30:44 -0700
-Message-ID: <CAE9FiQUdKdyipTw3KSVL0Kr1FFvki5Un3NuUuXpw4TXoWi1Tpg@mail.gmail.com>
-Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20151022154802-mutt-send-email-mst@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 20, 2015 at 3:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Oct 20, 2015 at 2:57 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> On Thu, Oct 08, 2015 at 02:38:22PM -0700, Yinghai Lu wrote:
->>> We register regions for legacy and iommu and all have open code.
+On 10/22/2015 05:50 AM, Michael S. Tsirkin wrote:
+> On Wed, Oct 21, 2015 at 01:58:19PM -0700, Alexander Duyck wrote:
+>> On 10/21/2015 09:37 AM, Lan Tianyu wrote:
+>>> In order to restore VF function after migration, add self emulation layer
+>>> to record regs' values during accessing regs.
 >>>
->>> Unify them to pci_register_region() and call it accordingly.
+>>> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
+>>> ---
+>>>   drivers/net/ethernet/intel/ixgbevf/Makefile        |  3 ++-
+>>>   drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c  |  2 +-
+>>>   .../net/ethernet/intel/ixgbevf/self-emulation.c    | 26 ++++++++++++++++++++++
+>>>   drivers/net/ethernet/intel/ixgbevf/vf.h            |  5 ++++-
+>>>   4 files changed, 33 insertions(+), 3 deletions(-)
+>>>   create mode 100644 drivers/net/ethernet/intel/ixgbevf/self-emulation.c
 >>>
->>> +     if (!mem_res->flags)
->>>               return;
->>>
->>> -     p->name = "Video RAM area";
->>> -     p->start = mem_res->start + 0xa0000UL;
->>> -     p->end = p->start + 0x1ffffUL;
->>> -     p->flags = IORESOURCE_BUSY;
->>> -     request_resource(mem_res, p);
->>> +     mem_rstart = mem_res->start - offset;
->>> +     mem_rend = mem_res->end - offset;
->>
->> This is essentially doing pcibios_bus_to_resource(), except in an
->> unnecessarily arch-dependent way.  Can you rework it to use
->> pcibios_bus_to_resource()?  I think you'll have to do
->> pci_register_legacy_regions() in pci_scan_one_pbm() instead of in
->> pci_determine_mem_io_space(), so that you have a struct pci_bus to
->> use, but your next patch does that anyway.
->>
->>>
->>> -     p = kzalloc(sizeof(*p), GFP_KERNEL);
->>> -     if (!p)
->>> +     /* contain checking */
->>> +     if (!(mem_rstart <= rstart && mem_rend >= rend))
->>>               return;
+>>> diff --git a/drivers/net/ethernet/intel/ixgbevf/Makefile b/drivers/net/ethernet/intel/ixgbevf/Makefile
+>>> index 4ce4c97..841c884 100644
+>>> --- a/drivers/net/ethernet/intel/ixgbevf/Makefile
+>>> +++ b/drivers/net/ethernet/intel/ixgbevf/Makefile
+>>> @@ -31,7 +31,8 @@
+>>>   obj-$(CONFIG_IXGBEVF) += ixgbevf.o
+>>> -ixgbevf-objs := vf.o \
+>>> +ixgbevf-objs := self-emulation.o \
+>>> +		vf.o \
+>>>                   mbx.o \
+>>>                   ethtool.o \
+>>>                   ixgbevf_main.o
+>>> diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+>>> index a16d267..4446916 100644
+>>> --- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+>>> +++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+>>> @@ -156,7 +156,7 @@ u32 ixgbevf_read_reg(struct ixgbe_hw *hw, u32 reg)
+>>>   	if (IXGBE_REMOVED(reg_addr))
+>>>   		return IXGBE_FAILED_READ_REG;
+>>> -	value = readl(reg_addr + reg);
+>>> +	value = ixgbe_self_emul_readl(reg_addr, reg);
+>>>   	if (unlikely(value == IXGBE_FAILED_READ_REG))
+>>>   		ixgbevf_check_remove(hw, reg);
+>>>   	return value;
+>>> diff --git a/drivers/net/ethernet/intel/ixgbevf/self-emulation.c b/drivers/net/ethernet/intel/ixgbevf/self-emulation.c
+>>> new file mode 100644
+>>> index 0000000..d74b2da
+>>> --- /dev/null
+>>> +++ b/drivers/net/ethernet/intel/ixgbevf/self-emulation.c
+>>> @@ -0,0 +1,26 @@
+>>> +#include <linux/netdevice.h>
+>>> +#include <linux/pci.h>
+>>> +#include <linux/delay.h>
+>>> +#include <linux/interrupt.h>
+>>> +#include <net/arp.h>
+>>> +
+>>> +#include "vf.h"
+>>> +#include "ixgbevf.h"
+>>> +
+>>> +static u32 hw_regs[0x4000];
+>>> +
+>>> +u32 ixgbe_self_emul_readl(volatile void __iomem *base, u32 addr)
+>>> +{
+>>> +	u32 tmp;
+>>> +
+>>> +	tmp = readl(base + addr);
+>>> +	hw_regs[(unsigned long)addr] = tmp;
+>>> +
+>>> +	return tmp;
+>>> +}
+>>> +
+>>> +void ixgbe_self_emul_writel(u32 val, volatile void __iomem *base, u32  addr)
+>>> +{
+>>> +	hw_regs[(unsigned long)addr] = val;
+>>> +	writel(val, (volatile void __iomem *)(base + addr));
+>>> +}
+>> So I see what you are doing, however I don't think this adds much value.
+>> Many of the key registers for the device are not simple Read/Write
+>> registers.  Most of them are things like write 1 to clear or some other sort
+>> of value where writing doesn't set the bit but has some other side effect.
+>> Just take a look through the Datasheet at registers such as the VFCTRL,
+>> VFMAILBOX, or most of the interrupt registers.  The fact is simply storing
+>> the values off doesn't give you any real idea of what the state of things
+>> are.
+> It doesn't, but I guess the point is to isolate the migration-related logic
+> in the recovery code.
 >
-> Difference is here.
->
-> pcibios_bus_to_resource() would return resource even region is not contained.
->
->>> +     res->name = name;
->>> +     res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
->>> +     res->start = rstart + offset;
->>> +     res->end = rend + offset;
->>> +     conflict = request_resource_conflict(mem_res, res);
->>> +     if (conflict) {
->>> +             printk(KERN_DEBUG "PCI: %s can't claim %s %pR: address conflict with %s %pR\n",
->>> +                     pbm->name, res->name, res, conflict->name, conflict);
->>> +             kfree(res);
->>> +     }
->
-> also we will need to get parent resource to use request_resource_conflict.
+> An alternative would be to have some smart logic all over the place to
+> only store what's required - that would be much more intrusive.
 
-so do you agree following change to pcibios_bus_to_resource() ?
-then we can use __pcibios_bus_resource().
+After reviewing all of the patches yesterday I would say that almost all 
+the values being stored aren't needed.  They can be restored from the 
+settings of the driver itself anyway.  Copying the values out don't make 
+much sense here since there are already enough caches for almost all of 
+this data.
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 5f4a2e0..6c73327 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -70,12 +70,15 @@ static bool region_contains(struct pci_bus_region *region1,
-     return region1->start <= region2->start && region1->end >= region2->end;
- }
-
--void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
--                 struct pci_bus_region *region)
-+int __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
-+                 struct pci_bus_region *region,
-+                 struct resource **res_ret,
-+                 resource_size *off_ret)
- {
-     struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
-     struct resource_entry *window;
-     resource_size_t offset = 0;
-+    int found = 0;
-
-     resource_list_for_each_entry(window, &bridge->windows) {
-         struct pci_bus_region bus_region;
-@@ -88,11 +91,23 @@ void pcibios_bus_to_resource(struct pci_bus *bus,
-struct resource *res,
-
-         if (region_contains(&bus_region, region)) {
-             offset = window->offset;
-+            if (off_ret)
-+                *off_ret = offset;
-+            if (res_ret)
-+                *res_ret = window->res;
-+            found = 1;
-             break;
-         }
-     }
-
-     res->start = region->start + offset;
-     res->end = region->end + offset;
-+
-+    return found;
-+}
-+void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
-+                 struct pci_bus_region *region)
-+{
-+    __pcibios_bus_to_resource(bus, res, region, NULL, NULL);
- }
- EXPORT_SYMBOL(pcibios_bus_to_resource);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b54fbf1..bec3eed 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -781,6 +781,10 @@ void pci_fixup_cardbus(struct pci_bus *);
-
- void pcibios_resource_to_bus(struct pci_bus *bus, struct
-pci_bus_region *region,
-                  struct resource *res);
-+int __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
-+                  struct pci_bus_region *region,
-+                  struct resource **res_ret,
-+                  resource_size *off_ret);
- void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
-                  struct pci_bus_region *region);
- void pcibios_scan_specific_bus(int busn);
+- Alex
