@@ -1,35 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:33238 "EHLO
-	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbbJEGDq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Oct 2015 02:03:46 -0400
+Received: from mail-bn1on0053.outbound.protection.outlook.com ([157.56.110.53]:58464
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965034AbbJVJ21 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 Oct 2015 05:28:27 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v11 1/6] arm: add msi.h to Kbuild
+Date: Thu, 22 Oct 2015 17:27:26 +0800
+Message-ID: <1445506051-21688-2-git-send-email-lftan@altera.com>
+In-Reply-To: <1445506051-21688-1-git-send-email-lftan@altera.com>
+References: <1445506051-21688-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-Date: Mon, 5 Oct 2015 08:03:45 +0200
-Message-ID: <CAKsTQnnuRzWjTtjLSt2FhPuy7s6V=oO5R7WKC0G4=VnR5s_AfQ@mail.gmail.com>
-Subject: Which PCI development git repo to use?
-From: Ruud <netwerkforens@gmail.com>
-To: linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello all,
+Include asm-generic/msi.h to support CONFIG_GENERIC_MSI_IRQ_DOMAIN.
+This to fix compilation error:
+"include/linux/msi.h:123:21: fatal error: asm/msi.h:
+No such file or directory"
 
-Looking at the changes in this sundays rc, it seems the PCI patches of
-Yinghai do not get picked up in RC2 and later. I did see some patches
-from helgaas.
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+ arch/arm/include/asm/Kbuild | 1 +
+ 1 file changed, 1 insertion(+)
 
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+diff --git a/arch/arm/include/asm/Kbuild b/arch/arm/include/asm/Kbuild
+index be648eb..bd42530 100644
+--- a/arch/arm/include/asm/Kbuild
++++ b/arch/arm/include/asm/Kbuild
+@@ -14,6 +14,7 @@ generic-y += local.h
+ generic-y += local64.h
+ generic-y += mm-arch-hooks.h
+ generic-y += msgbuf.h
++generic-y += msi.h
+ generic-y += param.h
+ generic-y += parport.h
+ generic-y += poll.h
+-- 
+1.8.2.1
 
-Does someone know the plans with regard to PCIe support for big
-systems with problematic bioses (aka high density GPU computing
-clusters) in the linus tree. Or is it just too much of a risk to
-migrate to new PCIe configuration code as most users do not need it?
-
-If the latter is the case, it is at least good to know now beforehand...
-
-Best regards,
-
-Ruud
