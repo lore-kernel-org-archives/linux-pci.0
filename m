@@ -1,71 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([104.200.29.153]:36239 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751096AbbJWFF4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:05:56 -0400
-From: Matthew Minter <matt@masarand.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	lorenzo.pieralisi@arm.com
-Cc: Matthew Minter <matt@masarand.com>
-Subject: [PATCH V4 14/29] alpha/PCI: Defer IRQ assignment to device enable time
-Date: Fri, 23 Oct 2015 06:03:47 +0100
-Message-Id: <1445576642-29624-15-git-send-email-matt@masarand.com>
-In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
-References: <1445576642-29624-1-git-send-email-matt@masarand.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	qiujiang <qiujiang@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v11 1/6] PCI: designware: move calculation of bus
+ addresses to DRA7xx
+Date: Thu, 22 Oct 2015 16:37:17 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162759DA@lhreml503-mbs>
+References: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com>
+ <1444991021-109306-2-git-send-email-wangzhou1@hisilicon.com>
+ <20151021221524.GM1583@localhost>
+ <EE11001F9E5DDD47B7634E2F8A612F2E16274DCC@lhreml503-mbs>
+ <20151022163534.GB21237@localhost>
+In-Reply-To: <20151022163534.GB21237@localhost>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI IRQ initialisation is currently run during the boot code on alpha,
-this has the issue that firstly an extra pass over the PCI bus is
-required and second hot-plugged devices which are added after boot have
-no way to be assigned an IRQ. This patch set fixes this by defering the
-assignment of PCI IRQs untill device enable time which should solve
-both of these issues.
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
+> Sent: Thursday, October 22, 2015 5:36 PM
+> To: Gabriele Paoloni
+> Cc: Wangzhou (B); Bjorn Helgaas; jingoohan1@gmail.com;
+> pratyush.anand@gmail.com; Arnd Bergmann; linux@arm.linux.org.uk;
+> thomas.petazzoni@free-electrons.com; lorenzo.pieralisi@arm.com;
+> james.morse@arm.com; Liviu.Dudau@arm.com; jason@lakedaemon.net;
+> robh@kernel.org; gabriel.fernandez@linaro.org;
+> Minghuan.Lian@freescale.com; linux-pci@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org; devicetree@vger.kernel.org; linux-
+> kernel@vger.kernel.org; zhangjukuo; qiuzhenfa; liudongdong (C);
+> qiujiang; xuwei (O); Liguozhu (Kenneth)
+> Subject: Re: [PATCH v11 1/6] PCI: designware: move calculation of bus
+> addresses to DRA7xx
+> 
+> Hi Gabriele,
+> 
+> On Thu, Oct 22, 2015 at 07:21:41AM +0000, Gabriele Paoloni wrote:
+> > > -----Original Message-----
+> > > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> 
+> > > >  #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
+> > > >  #define	LINK_UP						BIT(16)
+> > > > +#define	CPU_TO_BUS_ADDR					0x0FFFFFFF
+> > >
+> > > "CPU_TO_BUS_ADDR" is a very generic name.  Since you do have DRA7XX
+> in
+> > > other #defines and static symbols in this file, maybe it could be
+> DRA7XX to
+> > > make it obvious that it only applies here?
+> >
+> > Ok will change to DRA7XX_CPU_TO_BUS_ADRR in v12
+> > ..
+> 
+> > > > +	if (pp->io_mod_base)
+> > > > +		pp->io_mod_base &= CPU_TO_BUS_ADDR;
+> > >
+> > > These are equivalent to
+> > >
+> > >   pp->io_mod_base &= CPU_TO_BUS_ADDR;
+> > >
+> > > (You don't need to test whether they're zero first.)
+> >
+> > Yes agreed, will change in v12
+> > ...
+> 
+> > > >  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+> "config");
+> > > > @@ -415,8 +411,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> > > >  			pp->io_base = range.cpu_addr;
+> > > >
+> > > >  			/* Find the untranslated IO space address */
+> > > > -			pp->io_mod_base = of_read_number(parser.range -
+> > > > -							 parser.np + na, ns);
+> > > > +			pp->io_mod_base = range.cpu_addr;
+> > >
+> > > So apparently
+> > >
+> > >   "of_read_number() == range.cpu_addr & CPU_TO_BUS_ADDR" on DRA7xx
+> > >   "of_read_number() == range.cpu_addr" everywhere else?
+> >
+> > Yes correct
+> >
+> > > Is that right?  Is that a valid assumption, i.e., are we assuming
+> > > anything about DTs in the field that we shouldn't?
+> >
+> > Before I wrote a patch that was generic to accommodate intermediate
+> level
+> > of translation between PCI_addr -> BUS_addr -> CPU_addr
+> >
+> > http://lists.infradead.org/pipermail/linux-arm-kernel/2015-
+> July/360922.html
+> >
+> > After discussion we agreed to solve it with a bitmask rather than
+> adding
+> > a field to of_pci_range to make it generic.
+> > The bitmask only applies to DRA7xx
+> 
+> I haven't gotten all the way through this series yet, but don't bother
+> with
+> a v12 just for these minor changes.  I can easily fix them up when
+> applying
+> it.
 
-Signed-off-by: Matthew Minter <matt@masarand.com>
----
- arch/alpha/kernel/pci.c          | 7 ++++++-
- arch/alpha/kernel/sys_nautilus.c | 1 -
- 2 files changed, 6 insertions(+), 2 deletions(-)
+Great Many Thanks for this!
 
-diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-index 5f387ee..1c3c513 100644
---- a/arch/alpha/kernel/pci.c
-+++ b/arch/alpha/kernel/pci.c
-@@ -354,7 +354,6 @@ common_init_pci(void)
- 	pcibios_claim_console_setup();
- 
- 	pci_assign_unassigned_resources();
--	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
- 	for (hose = hose_head; hose; hose = hose->next) {
- 		bus = hose->bus;
- 		if (bus)
-@@ -362,6 +361,12 @@ common_init_pci(void)
- 	}
- }
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = alpha_mv.pci_swizzle;
-+	bridge->map_irq = alpha_mv.pci_map_irq;
-+	return 0;
-+}
- 
- struct pci_controller * __init
- alloc_pci_controller(void)
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index 2cfaa0e..a3086dc 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -254,7 +254,6 @@ nautilus_init_pci(void)
- 	/* pci_common_swizzle() relies on bus->self being NULL
- 	   for the root bus, so just clear it. */
- 	bus->self = NULL;
--	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
- 	pci_bus_add_devices(bus);
- }
- 
--- 
-2.6.2
+Gab
 
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
