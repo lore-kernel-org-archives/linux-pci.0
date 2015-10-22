@@ -1,101 +1,131 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
- hostbridge init
-To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
- <1445963922-22711-12-git-send-email-tn@semihalf.com>
- <5631180D.2000902@codeaurora.org> <563131B0.9060305@codeaurora.org>
- <56320538.6000905@semihalf.com>
-Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <563234E6.4050109@codeaurora.org>
-Date: Thu, 29 Oct 2015 11:01:58 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 22 Oct 2015 15:58:55 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Lan Tianyu <tianyu.lan@intel.com>
+Cc: bhelgaas@google.com, carolyn.wyborny@intel.com,
+	donald.c.skidmore@intel.com, eddie.dong@intel.com,
+	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
+	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Subject: Re: [RFC Patch 08/12] IXGBEVF: Rework code of finding the end
+ transmit desc of package
+Message-ID: <20151022155650-mutt-send-email-mst@redhat.com>
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+ <1445445464-5056-9-git-send-email-tianyu.lan@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <56320538.6000905@semihalf.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445445464-5056-9-git-send-email-tianyu.lan@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Oct 22, 2015 at 12:37:40AM +0800, Lan Tianyu wrote:
+> When transmit a package, the end transmit desc of package
+> indicates whether package is sent already. Current code records
+> the end desc's pointer in the next_to_watch of struct tx buffer.
+> This code will be broken if shifting desc ring after migration.
+> The pointer will be invalid. This patch is to replace recording
+> pointer with recording the desc number of the package and find
+> the end decs via the first desc and desc number.
+> 
+> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
 
+Do you really need to play the shifting games?
+Can't you just reset everything and re-initialize the rings?
+It's slower but way less intrusive.
+Also removes the need to track writes into rings.
 
-On 10/29/2015 7:38 AM, Tomasz Nowicki wrote:
-> On 28.10.2015 21:36, Sinan Kaya wrote:
->> 1. ACPI code is unable to discover the interrupt numbers when objects
->> are ordered as follows in the ACPI file
->>
->> PNP0A08 object
->> PNP0C0F INTA object
->> PNP0C0F INTB object
->> PNP0C0F INTC object
->> PNP0C0F INTD object
->>
->> This gives me invalid link context error.
->>
->> pci 0000:00:00.0: PCI INT A: no GSI
->> pci 0000:01:00.0: Derived GSI for 0000:01:00.0 INT A from 0000:00:00.0
->> acpi PNP0C0F:00: Invalid link context
->>
->> If I order it like this in the ACPI file,
->>
->> PNP0C0F INTA object
->> PNP0C0F INTB object
->> PNP0C0F INTC object
->> PNP0C0F INTD object
->> PNP0A08 object
->>
->> then, the legacy interrupt numbers can be discovered properly.
->
-> Can you show full content of your PNP0C0F and PNP0A08 objects?
->
-
-ACPI table is considered proprietary. I don't think I can get the legal 
-approval in time. I can give you pieces though.
-
-Here is the _PRT
-Device (PCI0) { // PCIe port 0
-	Name(_HID, EISAID("PNP0A08"))	// PCI express
-	Name(_CID, EISAID("PNP0A03"))	// Compatible PCI Root Bridge
-{
-	....
-	Name(_PRT, Package(){
-		Package(){0x0FFFF, 0, \_SB.LN0A, 0},  // Slot 0, INTA
-		Package(){0x0FFFF, 1, \_SB.LN0B, 0},  // Slot 0, INTB
-		Package(){0x0FFFF, 2, \_SB.LN0C, 0},  // Slot 0, INTC
-		Package(){0x0FFFF, 3, \_SB.LN0D, 0}   // Slot 0, INTD
-	})
-}
-
-Here is the PNP0C0F
-
-Device(LN0A){
-	Name(_HID, EISAID("PNP0C0F")) // PCI interrupt link
-	Name(_UID, 1)
-	Name(_PRS, ResourceTemplate(){
-	Interrupt(ResourceProducer, Level, ActiveHigh, Exclusive, , ,) {0xE8}
-	})
-	Method(_DIS) {}
-	Method(_CRS) { Return (_PRS) }
-	Method(_SRS, 1) {}
-}
-
-
-
-> Regards,
-> Tomasz
+> ---
+>  drivers/net/ethernet/intel/ixgbevf/ixgbevf.h      |  1 +
+>  drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c | 19 ++++++++++++++++---
+>  2 files changed, 17 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h b/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
+> index 775d089..c823616 100644
+> --- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
+> +++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf.h
+> @@ -54,6 +54,7 @@
+>   */
+>  struct ixgbevf_tx_buffer {
+>  	union ixgbe_adv_tx_desc *next_to_watch;
+> +	u16 desc_num;
+>  	unsigned long time_stamp;
+>  	struct sk_buff *skb;
+>  	unsigned int bytecount;
+> diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+> index 4446916..056841c 100644
+> --- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+> +++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+> @@ -210,6 +210,7 @@ static void ixgbevf_unmap_and_free_tx_resource(struct ixgbevf_ring *tx_ring,
+>  			       DMA_TO_DEVICE);
+>  	}
+>  	tx_buffer->next_to_watch = NULL;
+> +	tx_buffer->desc_num = 0;
+>  	tx_buffer->skb = NULL;
+>  	dma_unmap_len_set(tx_buffer, len, 0);
+>  	/* tx_buffer must be completely set up in the transmit path */
+> @@ -295,7 +296,7 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
+>  	union ixgbe_adv_tx_desc *tx_desc;
+>  	unsigned int total_bytes = 0, total_packets = 0;
+>  	unsigned int budget = tx_ring->count / 2;
+> -	unsigned int i = tx_ring->next_to_clean;
+> +	int i, watch_index;
+>  
+>  	if (test_bit(__IXGBEVF_DOWN, &adapter->state))
+>  		return true;
+> @@ -305,9 +306,17 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
+>  	i -= tx_ring->count;
+>  
+>  	do {
+> -		union ixgbe_adv_tx_desc *eop_desc = tx_buffer->next_to_watch;
+> +		union ixgbe_adv_tx_desc *eop_desc;
+> +
+> +		if (!tx_buffer->desc_num)
+> +			break;
+> +
+> +		if (i + tx_buffer->desc_num >= 0)
+> +			watch_index = i + tx_buffer->desc_num;
+> +		else
+> +			watch_index = i + tx_ring->count + tx_buffer->desc_num;
+>  
+> -		/* if next_to_watch is not set then there is no work pending */
+> +		eop_desc = IXGBEVF_TX_DESC(tx_ring, watch_index);
+>  		if (!eop_desc)
+>  			break;
+>  
+> @@ -320,6 +329,7 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
+>  
+>  		/* clear next_to_watch to prevent false hangs */
+>  		tx_buffer->next_to_watch = NULL;
+> +		tx_buffer->desc_num = 0;
+>  
+>  		/* update the statistics for this packet */
+>  		total_bytes += tx_buffer->bytecount;
+> @@ -3457,6 +3467,7 @@ static void ixgbevf_tx_map(struct ixgbevf_ring *tx_ring,
+>  	u32 tx_flags = first->tx_flags;
+>  	__le32 cmd_type;
+>  	u16 i = tx_ring->next_to_use;
+> +	u16 start;
+>  
+>  	tx_desc = IXGBEVF_TX_DESC(tx_ring, i);
+>  
+> @@ -3540,6 +3551,8 @@ static void ixgbevf_tx_map(struct ixgbevf_ring *tx_ring,
+>  
+>  	/* set next_to_watch value indicating a packet is present */
+>  	first->next_to_watch = tx_desc;
+> +	start = first - tx_ring->tx_buffer_info;
+> +	first->desc_num = (i - start >= 0) ? i - start: i + tx_ring->count - start;
+>  
+>  	i++;
+>  	if (i == tx_ring->count)
+> -- 
+> 1.8.4.rc0.1.g8f6a3e5.dirty
+> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
