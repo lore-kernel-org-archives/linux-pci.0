@@ -1,120 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33037 "EHLO mail.kernel.org"
+Received: from bear.ext.ti.com ([192.94.94.41]:43734 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755530AbbJ1Mce (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 Oct 2015 08:32:34 -0400
-Date: Wed, 28 Oct 2015 07:32:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: "robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"rjui@broadcom.com" <rjui@broadcom.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH v5] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Message-ID: <20151028123228.GA30510@localhost>
-References: <1445871386-2377-1-git-send-email-bharatku@xilinx.com>
- <20151027234032.GA7238@localhost>
- <8520D5D51A55D047800579B0941471980169316D@XAP-PVEXMBX01.xlnx.xilinx.com>
+	id S1750877AbbJVPGG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 Oct 2015 11:06:06 -0400
+Message-ID: <5628FB36.4010303@ti.com>
+Date: Thu, 22 Oct 2015 11:05:26 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8520D5D51A55D047800579B0941471980169316D@XAP-PVEXMBX01.xlnx.xilinx.com>
+To: WingMan Kwok <w-kwok2@ti.com>, <robh+dt@kernel.org>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<kishon@ti.com>, <rogerq@ti.com>, <bhelgaas@google.com>,
+	<ssantosh@kernel.org>, <linux@arm.linux.org.uk>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v3 0/2] Common SerDes driver for TI's Keystone Platforms
+References: <1445432201-16007-1-git-send-email-w-kwok2@ti.com>
+In-Reply-To: <1445432201-16007-1-git-send-email-w-kwok2@ti.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 28, 2015 at 10:17:22AM +0000, Bharat Kumar Gogada wrote:
-> > On Mon, Oct 26, 2015 at 08:26:26PM +0530, Bharat Kumar Gogada wrote:
-> > > Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
-> 
-> > > +
-> > > +	while ((status = nwl_bridge_readl(pcie, MSGF_MSI_STATUS_LO)) !=
-> > 0) {
-> > > +		for_each_set_bit(bit, &status, 32) {
-> > > +			nwl_bridge_writel(pcie, 1 << bit,
-> > MSGF_MSI_STATUS_LO);
-> > > +			virq = irq_find_mapping(msi->dev_domain, bit);
-> > > +			if (virq)
-> > > +				generic_handle_irq(virq);
-> > > +		}
-> > > +	}
-> > > +
-> > > +	chained_irq_exit(chip, desc);
-> > > +}
-> > 
-> > These are basically identical.  Can you factor them out somehow to avoid
-> > repeating the code?
-> 
-> Is it okay if irq_set_chained_handler_and_data being invoked with two different interrupt numbers, but pointing to 
-> same interrupt handler?
+On 10/21/2015 08:56 AM, WingMan Kwok wrote:
+> On TI's Keystone platforms, several peripherals such as the
+> gbe ethernet switch, 10gbe ethernet switch and PCIe controller
+> require the use of a SerDes for converting SoC parallel data into
+> serialized data that can be output over a high-speed electrical
+> interface, and also converting high-speed serial input data
+> into parallel data that can be processed by the SoC.  The
+> SerDeses used by those peripherals, though they may be different,
+> are largely similar in functionality and setup.
+>
+> This patch series provides a SerDes phy driver implementation that can be
+> used by the above mentioned peripheral drivers to configure their
+> respective SerDeses.
+>
+> As an example of the using the SerDes driver, this patch series also
+> updates the Keystone PCIe host driver to enable and use its SerDes block.
+>
+> References:
+> [1] KeyStone II Architecture Serializer/Deserializer (SerDes) User's Guide
+>      (http://www.ti.com/lit/ug/spruho3a/spruho3a.pdf)
+>
+> v3:
+> 	- addresses the following review comments
+> 		1. https://lkml.org/lkml/2015/10/19/756
+> 			-- included sizes.h
+> 		2. https://lkml.org/lkml/2015/10/19/781
+> 			-- updated base on Fengguang Wu's suggestions.
+> 		3. https://lkml.org/lkml/2015/10/15/896
+> 			-- clarified here https://lkml.org/lkml/2015/10/20/512
+> 			-- nothing to do.
+>
+> v2:
+> 	- addresses the following review comments on v1:
+> 		1. https://lkml.org/lkml/2015/10/15/896
+> 			-- this does not address the question:
+> 			   "The current code does not do this when compiled,
+> 			    which might be a problem for distributors.
+> 			    Can you clarify the license?"
+> 			-- the question is still under discussion here:
+> 			   https://lkml.org/lkml/2015/10/19/471
+> 		2. https://lkml.org/lkml/2015/10/15/895
+>
+> v1:
+> 	- addresses the following review comments
+> 		1. https://lkml.org/lkml/2015/10/13/803
+> 		2. https://lkml.org/lkml/2015/10/14/613
+> 		3. https://lkml.org/lkml/2015/10/13/818
+>
+> 	- An update to PCIe dts bindings to enable the PCIe SerDes is
+> 	  submitted in a separate patch.
+>
+> WingMan Kwok (2):
+>    phy: keystone: serdes driver for gbe 10gbe and pcie
+>    PCI: keystone: update to use generic keystone serdes driver
+>
+>   Documentation/devicetree/bindings/phy/ti-phy.txt |  239 +++
+>   drivers/pci/host/pci-keystone.c                  |   24 +-
+>   drivers/pci/host/pci-keystone.h                  |    1 +
+>   drivers/phy/Kconfig                              |    8 +
+>   drivers/phy/Makefile                             |    1 +
+>   drivers/phy/phy-keystone-serdes.c                | 2366 ++++++++++++++++++++++
+>   6 files changed, 2629 insertions(+), 10 deletions(-)
+>   create mode 100644 drivers/phy/phy-keystone-serdes.c
+>
+Kishon, Bjorn
 
-Yes, that should be fine.
-
-> > > +
-> > > +	pcie->legacy_irq_domain =
-> > irq_domain_add_linear(legacy_intc_node, 4,
-> > > +
-> > 	&legacy_domain_ops,
-> > > +							pcie);
-> > > +
-> > > +	if (!pcie->legacy_irq_domain) {
-> > > +		dev_err(pcie->dev, "failed to create IRQ domain\n");
-> > > +		return -ENOMEM;
-> > > +	}
-> > > +
-> > > +#ifdef CONFIG_PCI_MSI
-> > > +	msi->dev_domain = irq_domain_add_linear(NULL,
-> > INT_PCI_MSI_NR,
-> > > +					&dev_msi_domain_ops, pcie);
-> > > +	if (!msi->dev_domain) {
-> > > +		dev_err(pcie->dev, "failed to create dev IRQ domain\n");
-> > > +		return -ENOMEM;
-> > > +	}
-> > > +	msi->msi_chip.domain = pci_msi_create_irq_domain(node,
-> > > +
-> > 	&nwl_msi_domain_info,
-> > > +							msi->dev_domain);
-> > > +	if (!msi->msi_chip.domain) {
-> > > +		dev_err(pcie->dev, "failed to create msi IRQ domain\n");
-> > > +		irq_domain_remove(msi->dev_domain);
-> > > +		return -ENOMEM;
-> > > +	}
-> > > +#endif
-> > > +	return 0;
-> > > +}
-> > > +
-> > > +static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus
-> > > +*bus) {
-> > 
-> > It looks strange to have all the "#ifdef CONFIG_PCI_MSI" above, and here
-> > we have this long MSI-related function without any ifdefs around it.  Seems
-> > like this should be ifdef'ed also?  What about nwl_pcie_msi_handler_high(),
-> > nwl_pcie_msi_handler_low(), nwl_compose_msi_msg(),
-> > nwl_msi_set_affinity(), etc.?
-> > 
-> In probe I'm invoking "nwl_pcie_enable_msi" using "if (IS_ENABLED(CONFIG_PCI_MSI)) " check, since this is at run time 
-> I haven't kept above mentioned functions under #ifdef CONFIG_PCI_MSI.
-> The above MSI domain allocation was under ifdef, since if driver was compiled for legacy some of the MSI hierarchy API's and structures aren't available.
-
-OK.  It *looks* strange, but maybe it's the best we can do.  I'm not
-enamored of IS_ENABLED() thing yet; I guess I just haven't
-internalized the combination compile-time and run-time behavior.
-
-Bjorn
+Who will pick this up? Do we have time to get this in 4.4?
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
