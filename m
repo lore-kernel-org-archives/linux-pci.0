@@ -1,70 +1,48 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>
-CC: <linux-kernel@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Ley Foon Tan <lftan@altera.com>,
-	<lftan.linux@gmail.com>
-Subject: [PATCH v2 1/4] asm-generic: add pci required defines and functions
-Date: Wed, 14 Oct 2015 14:31:41 +0800
-Message-ID: <1444804304-5213-2-git-send-email-lftan@altera.com>
-In-Reply-To: <1444804304-5213-1-git-send-email-lftan@altera.com>
-References: <1444804304-5213-1-git-send-email-lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v11 2/6] pci: add Altera PCI vendor ID
+Date: Thu, 22 Oct 2015 17:27:27 +0800
+Message-ID: <1445506051-21688-3-git-send-email-lftan@altera.com>
+In-Reply-To: <1445506051-21688-1-git-send-email-lftan@altera.com>
+References: <1445506051-21688-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the generic #define and functions that required by the PCI framework.
-Architecture pci.h can overwrite with their implementation if needed.
-
 Signed-off-by: Ley Foon Tan <lftan@altera.com>
 ---
- include/asm-generic/pci.h | 34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+ include/linux/pci_ids.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
-index f24bc51..2771b32 100644
---- a/include/asm-generic/pci.h
-+++ b/include/asm-generic/pci.h
-@@ -21,4 +21,38 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- #define PCI_DMA_BUS_IS_PHYS	(1)
- #endif
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index d9ba49c..08e4462 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1550,6 +1550,8 @@
+ #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
+ #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
  
-+#ifdef CONFIG_PCI
++#define PCI_VENDOR_ID_ALTERA		0x1172
 +
-+#ifndef PCIBIOS_MIN_IO
-+#define PCIBIOS_MIN_IO	(0UL)
-+#endif
-+
-+#ifndef PCIBIOS_MIN_MEM
-+#define PCIBIOS_MIN_MEM	(0UL)
-+#endif
-+
-+#ifndef pcibios_assign_all_busses
-+#define pcibios_assign_all_busses()	(pci_has_flag(PCI_REASSIGN_ALL_BUS))
-+#endif
-+
-+#ifndef pci_proc_domain
-+#define pci_proc_domain pci_proc_domain
-+static inline int pci_proc_domain(struct pci_bus *bus)
-+{
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+	return pci_domain_nr(bus);
-+#else
-+	return 1;
-+#endif
-+}
-+#endif
-+
-+extern int isa_dma_bridge_buggy;
-+
-+#else
-+
-+#define isa_dma_bridge_buggy	(0)
-+
-+#endif /* CONFIG_PCI */
-+
- #endif /* _ASM_GENERIC_PCI_H */
+ #define PCI_VENDOR_ID_SBE		0x1176
+ #define PCI_DEVICE_ID_SBE_WANXL100	0x0301
+ #define PCI_DEVICE_ID_SBE_WANXL200	0x0302
 -- 
 1.8.2.1
 
