@@ -1,37 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:35451 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932409AbbJVWOA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 Oct 2015 18:14:00 -0400
+Date: Thu, 22 Oct 2015 17:13:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lftan.linux@gmail.com,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v11 2/6] pci: add Altera PCI vendor ID
+Message-ID: <20151022221355.GJ21237@localhost>
+References: <1445506051-21688-1-git-send-email-lftan@altera.com>
+ <1445506051-21688-3-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-In-Reply-To: <CAHhAz+iwiXihW11FK7tDQyCGMN0k10fRLLtfnQ49V2ncBRidvQ@mail.gmail.com>
-References: <CAHhAz+iwiXihW11FK7tDQyCGMN0k10fRLLtfnQ49V2ncBRidvQ@mail.gmail.com>
-Date: Thu, 15 Oct 2015 13:31:13 +0200
-Message-ID: <CAFLxGvxLtxxja=yAyC=Z4LjvfPkp8NW0vFa4NJg7dmYFjan+3Q@mail.gmail.com>
-Subject: Re: sdhci-pci or sdhci_pci
-From: Richard Weinberger <richard.weinberger@gmail.com>
-To: Muni Sekhar <munisekharrms@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Rusty Russell <rusty@rustcorp.com.au>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445506051-21688-3-git-send-email-lftan@altera.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 15, 2015 at 1:00 PM, Muni Sekhar <munisekharrms@gmail.com> wrote:
->  [ Please keep me in CC as I'm not subscribed to the list]
->
-> Hello,
->
-> I loaded sdhci-pci.ko, but lsmod shows it as sdhci_pci.
-> Why is that lsmod shows wrong module name( '-' changed to '_')?
->
->
-> # lsmod
-> Module                  Size  Used by
-> sdhci_pci              23301  0
-> sdhci                  43685  1 sdhci_pci
+On Thu, Oct 22, 2015 at 05:27:27PM +0800, Ley Foon Tan wrote:
+> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+> ---
+>  include/linux/pci_ids.h | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index d9ba49c..08e4462 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -1550,6 +1550,8 @@
+>  #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
+>  #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
+>  
+> +#define PCI_VENDOR_ID_ALTERA		0x1172
+> +
 
-The problem is that module names must contain a dash. This is why kbuild
-is renaming them.
-IIRC because the modalias mechanism is using them.
-CC'ing Rusty. Maybe he can give more details. :)
+This doesn't seem to be used anywhere, so I'll drop this patch.
 
--- 
-Thanks,
-//richard
+>  #define PCI_VENDOR_ID_SBE		0x1176
+>  #define PCI_DEVICE_ID_SBE_WANXL100	0x0301
+>  #define PCI_DEVICE_ID_SBE_WANXL200	0x0302
+> -- 
+> 1.8.2.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
