@@ -1,57 +1,41 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 7 Oct 2015 07:45:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [Patch v6 6/7] x86/PCI/ACPI: Use common interface to support PCI
- host bridge
-Message-ID: <20151007124554.GA22797@localhost>
-References: <1442218057-4355-1-git-send-email-jiang.liu@linux.intel.com>
- <1442218057-4355-7-git-send-email-jiang.liu@linux.intel.com>
- <20151006180144.GC29420@localhost>
- <5614DD67.4070801@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34787 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751352AbbJVMv7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 Oct 2015 08:51:59 -0400
+Date: Thu, 22 Oct 2015 15:51:51 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	eddie.dong@intel.com, nrupal.jani@intel.com,
+	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
+	pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Subject: Re: [Qemu-devel] [RFC Patch 05/12] IXGBE: Add new sysfs interface of
+ "notify_vf"
+Message-ID: <20151022155111-mutt-send-email-mst@redhat.com>
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+ <1445445464-5056-6-git-send-email-tianyu.lan@intel.com>
+ <5627FB20.3020003@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5614DD67.4070801@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <5627FB20.3020003@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 07, 2015 at 04:52:55PM +0800, Hanjun Guo wrote:
-> On 10/07/2015 02:01 AM, Bjorn Helgaas wrote:
-> >On Mon, Sep 14, 2015 at 04:07:35PM +0800, Jiang Liu wrote:
-> >>Use common interface to simplify ACPI PCI host bridge implementation.
-> >>
-> >>Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> >>Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-> >
-> >Is there a corresponding ia64 patch?  If we're really consolidating
-> >this code (which I completely support), we need to do the whole job.
-> 
-> Yes, there is a patch for it:
-> 
-> [Patch v6 7/7] ia64/PCI/ACPI: Use common interface to support PCI
-> host bridge
-> 
-> which has lots of code simplification [1],
-> 
->  arch/ia64/pci/pci.c |  232
-> ++++++++++-----------------------------------------
->  1 file changed, 46 insertions(+), 186 deletions(-)
-> 
-> [1]: https://lkml.org/lkml/2015/9/14/84
+On Wed, Oct 21, 2015 at 01:52:48PM -0700, Alexander Duyck wrote:
+> Also have you even considered the MSI-X configuration on the VF?  I haven't
+> seen anything anywhere that would have migrated the VF's MSI-X configuration
+> from BAR 3 on one system to the new system.
 
-Oh, sorry I missed that.  I review things that appear on linux-pci,
-and several patches in this series weren't posted there, so I didn't
-see them.
+Hypervisors do this for virtual devices so they can do this
+for physical devices too.
 
-Bjorn
+-- 
+MST
