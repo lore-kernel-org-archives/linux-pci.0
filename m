@@ -1,96 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	" David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Subject: [PATCH v5 0/3] PCI: st: provide support for dw pcie
-Date: Tue,  6 Oct 2015 09:56:05 +0200
-Message-Id: <1444118168-13086-1-git-send-email-gabriel.fernandez@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:38772 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752408AbbJVDtF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 Oct 2015 23:49:05 -0400
+Message-ID: <1445485662.2935.17.camel@kernel.crashing.org>
+Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: David Miller <davem@davemloft.net>, yinghai@kernel.org
+Cc: helgaas@kernel.org, bhelgaas@google.com,
+	weiyang@linux.vnet.ibm.com, linux@iam.tj, wangyijing@huawei.com,
+	khalid.aziz@oracle.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Thu, 22 Oct 2015 14:47:42 +1100
+In-Reply-To: <20151021.182714.551622926534141857.davem@davemloft.net>
+References: <CAE9FiQUdKdyipTw3KSVL0Kr1FFvki5Un3NuUuXpw4TXoWi1Tpg@mail.gmail.com>
+	 <20151021023522.GJ8224@localhost>
+	 <CAE9FiQXXP8-5hNvKXuh5mu6Xu_9yFufmpZaXv0V95TwBBnxCpA@mail.gmail.com>
+	 <20151021.182714.551622926534141857.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset is based on v4.3-rc3 and is based on 
-[PATCH v9 0/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
-patchset from Zhou Wang (to disable IO support)
+On Wed, 2015-10-21 at 18:27 -0700, David Miller wrote:
+> From: Yinghai Lu <yinghai@kernel.org>
+> Date: Wed, 21 Oct 2015 11:16:53 -0700
+> 
+> > otherwise we need to compare res with pbm->mem_space or pbm
+> ->mem64_space
+> > to get direct parent for request_resource_conflict() calling in
+> > pci_register_legacy_regions().
+> 
+> Right, this is the issue.
+> 
+> On sparc64, the cpu physical base address used for accessing 64-bit
+> and non-64-bit memory spaces is different.
+> 
+> And that's why the resource values will be different.
 
-Changes in v5:
- - Move wait after link training completes
- - Minor fixes in devitree binding
- - Merge  'PCI: st: Provide support for the sti PCIe controller' and
- 'MAINTAINERS: Add pci-st.c to ARCH/STI architecture' patches.
+This is the same on power btw, we have separate PowerBus windows to the
+PHB that get mapped respectively to 32-bit PCI MMIO and 64-bit PCI
+MMIO. The former gets "remapped" to generates 0-based PCI cycles, while
+the latter is 1:1. So the offset between CPU and PCI changes depending
+on which window you hit.
 
-Changes in v4:
- - Remove pci: designware: remove my pci_common_init_dev() patch and
-	use [PATCH v8 3/6] PCI: designware: Add ARM64 support instead.
-	This patch is a good solution for me to disable IO support.
- - add __init to st_pcie_probe() and use module_init() instead
-	device_initcall() to prevent the probe function from being
-	deferred and to prevent module unloading.
-
-Changes in v3:
- - Remove power management functions (was not fully tested)
- - Remove configuration space range from dt binding
- - Remove pci_common_init_dev() call in pcie-designware.c to avoid 
-   default IO space declaration. 
-
-Changes in v2:
- - comestic corrections in device tree binding
- - add pci-st.c into MAINTAINERS
- - remove st_pcie_ops structure to avoid another level of indirection
- - remove nasty busy-loop
- - remove useless test using virt_to_phys()
- - move disable io support into dw-pcie driver
-
-I don't change the st_pcie_abort_handler() function because abort handling
-is masked during boot.
-
-
-This patch-set introduces a STMicroelectronics PCIe controller.
-It's based on designware PCIe driver.
-
-Gabriel Fernandez (3):
-  ARM: STi: Kconfig update for PCIe support
-  PCI: st: Add Device Tree bindings for sti pcie
-  PCI: st: Provide support for the sti PCIe controller
-
- Documentation/devicetree/bindings/pci/st-pcie.txt |  56 +++
- MAINTAINERS                                       |   1 +
- arch/arm/mach-sti/Kconfig                         |   2 +
- drivers/pci/host/Kconfig                          |   9 +
- drivers/pci/host/Makefile                         |   1 +
- drivers/pci/host/pci-st.c                         | 587 ++++++++++++++++++++++
- 6 files changed, 656 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
- create mode 100644 drivers/pci/host/pci-st.c
-
--- 
-1.9.1
+Cheers,
+Ben.
 
