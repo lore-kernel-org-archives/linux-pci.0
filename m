@@ -1,258 +1,82 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v4 2/5] PCI: Add support for Enhanced Allocation devices
-Date: Fri,  2 Oct 2015 15:37:53 -0700
-Message-Id: <1443825476-26880-3-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com>
+Date: Thu, 22 Oct 2015 15:36:50 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Lan Tianyu <tianyu.lan@intel.com>
+Cc: bhelgaas@google.com, carolyn.wyborny@intel.com,
+	donald.c.skidmore@intel.com, eddie.dong@intel.com,
+	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
+	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Subject: Re: [RFC Patch 11/12] IXGBEVF: Migrate VF statistic data
+Message-ID: <20151022153330-mutt-send-email-mst@redhat.com>
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+ <1445445464-5056-12-git-send-email-tianyu.lan@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445445464-5056-12-git-send-email-tianyu.lan@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Sean O. Stalley" <sean.stalley@intel.com>
+On Thu, Oct 22, 2015 at 12:37:43AM +0800, Lan Tianyu wrote:
+> VF statistic regs are read-only and can't be migrated via writing back
+> directly.
+> 
+> Currently, statistic data returned to user space by the driver is not equal
+> to value of statistic regs. VF driver records value of statistic regs as base data
+> when net interface is up or open, calculate increased count of regs during
+> last period of online service and added it to saved_reset data. When user
+> space collects statistic data, VF driver returns result of
+> "current - base + saved_reset". "Current" is reg value at that point.
+> 
+> Restoring net function after migration just likes net interface is up or open.
+> Call existed function to update base and saved_reset data to keep statistic
+> data continual during migration.
+> 
+> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
+> ---
+>  drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+> index 04b6ce7..d22160f 100644
+> --- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+> +++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+> @@ -3005,6 +3005,7 @@ int ixgbevf_live_mg(struct ixgbevf_adapter *adapter)
+>  			return 0;
+>  
+>  		del_timer_sync(&adapter->service_timer);
+> +		ixgbevf_update_stats(adapter);
+>  		pr_info("migration start\n");
+>  		migration_status = MIGRATION_IN_PROGRESS; 
+>  
 
-Add support for devices using Enhanced Allocation entries instead of BARs.
-This patch allows the kernel to parse the EA Extended Capability structure
-in PCI configspace and claim the BAR-equivalent resources.
+So far, it seems that the only two things done when
+starting migration are very small.
 
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
-[david.daney@cavium.com: Add more support/checking for Entry Properties,
-allow EA behind bridges, rewrite some error messages.]
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/pci/pci.c   | 184 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h   |   1 +
- drivers/pci/probe.c |   3 +
- 3 files changed, 188 insertions(+)
+It doesn't seem worth it to let guests defer migration for things like
+this.  Surely, cancelling a timer can be done later after VM is
+migrated?
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6a9a111..54a0a98 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2148,6 +2148,190 @@ void pci_pm_init(struct pci_dev *dev)
- 	}
- }
- 
-+static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
-+{
-+	unsigned long flags = IORESOURCE_PCI_FIXED;
-+
-+	switch (prop) {
-+	case PCI_EA_P_MEM:
-+	case PCI_EA_P_VIRT_MEM:
-+	case PCI_EA_P_BRIDGE_MEM:
-+		flags |= IORESOURCE_MEM;
-+		break;
-+	case PCI_EA_P_MEM_PREFETCH:
-+	case PCI_EA_P_VIRT_MEM_PREFETCH:
-+	case PCI_EA_P_BRIDGE_MEM_PREFETCH:
-+		flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
-+		break;
-+	case PCI_EA_P_IO:
-+	case PCI_EA_P_BRIDGE_IO:
-+		flags |= IORESOURCE_IO;
-+		break;
-+	default:
-+		return 0;
-+	}
-+
-+	return flags;
-+}
-+
-+static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei, u8 prop)
-+{
-+	if (bei <= PCI_EA_BEI_BAR5 && prop <= PCI_EA_P_IO)
-+		return &dev->resource[bei];
-+	else if (bei == PCI_EA_BEI_ROM)
-+		return &dev->resource[PCI_ROM_RESOURCE];
-+	else
-+		return NULL;
-+}
-+
-+/* Read an Enhanced Allocation (EA) entry */
-+static int pci_ea_read(struct pci_dev *dev, int offset)
-+{
-+	struct resource *res;
-+	int ent_offset = offset;
-+	int ent_size;
-+	resource_size_t start;
-+	resource_size_t end;
-+	unsigned long flags;
-+	u32 dw0;
-+	u32 base;
-+	u32 max_offset;
-+	u8 prop;
-+	bool support_64 = (sizeof(resource_size_t) >= 8);
-+
-+	pci_read_config_dword(dev, ent_offset, &dw0);
-+	ent_offset += 4;
-+
-+	/* Entry size field indicates DWORDs after 1st */
-+	ent_size = ((dw0 & PCI_EA_ES) + 1) << 2;
-+
-+	if (!(dw0 & PCI_EA_ENABLE)) /* Entry not enabled */
-+		goto out;
-+
-+	prop = PCI_EA_PP(dw0);
-+	/*
-+	 * If the Property is in the reserved range, try the Secondary
-+	 * Property instead.
-+	 */
-+	if (prop > PCI_EA_P_BRIDGE_IO && prop < PCI_EA_P_MEM_RESERVED)
-+		prop = PCI_EA_SP(dw0);
-+	if (prop > PCI_EA_P_BRIDGE_IO)
-+		goto out;
-+
-+	res = pci_ea_get_resource(dev, PCI_EA_BEI(dw0), prop);
-+	if (!res) {
-+		dev_err(&dev->dev, "Unsupported EA entry BEI: %u\n",
-+			PCI_EA_BEI(dw0));
-+		goto out;
-+	}
-+
-+	flags = pci_ea_set_flags(dev, prop);
-+	if (!flags) {
-+		dev_err(&dev->dev, "Unsupported EA properties: %u\n", prop);
-+		goto out;
-+	}
-+
-+	/* Read Base */
-+	pci_read_config_dword(dev, ent_offset, &base);
-+	start = (base & PCI_EA_FIELD_MASK);
-+	ent_offset += 4;
-+
-+	/* Read MaxOffset */
-+	pci_read_config_dword(dev, ent_offset, &max_offset);
-+	ent_offset += 4;
-+
-+	/* Read Base MSBs (if 64-bit entry) */
-+	if (base & PCI_EA_IS_64) {
-+		u32 base_upper;
-+
-+		pci_read_config_dword(dev, ent_offset, &base_upper);
-+		ent_offset += 4;
-+
-+		flags |= IORESOURCE_MEM_64;
-+
-+		/* entry starts above 32-bit boundary, can't use */
-+		if (!support_64 && base_upper)
-+			goto out;
-+
-+		if (support_64)
-+			start |= ((u64)base_upper << 32);
-+	}
-+
-+	dev_dbg(&dev->dev,
-+		"EA (%u,%u) start = %pa\n", PCI_EA_BEI(dw0), prop, &start);
-+
-+	end = start + (max_offset | 0x03);
-+
-+	/* Read MaxOffset MSBs (if 64-bit entry) */
-+	if (max_offset & PCI_EA_IS_64) {
-+		u32 max_offset_upper;
-+
-+		pci_read_config_dword(dev, ent_offset, &max_offset_upper);
-+		ent_offset += 4;
-+
-+		flags |= IORESOURCE_MEM_64;
-+
-+		/* entry too big, can't use */
-+		if (!support_64 && max_offset_upper)
-+			goto out;
-+
-+		if (support_64)
-+			end += ((u64)max_offset_upper << 32);
-+	}
-+
-+	dev_dbg(&dev->dev,
-+		"EA (%u,%u) end = %pa\n", PCI_EA_BEI(dw0), prop, &end);
-+
-+	if (end < start) {
-+		dev_err(&dev->dev, "EA Entry crosses address boundary\n");
-+		goto out;
-+	}
-+
-+	if (ent_size != ent_offset - offset) {
-+		dev_err(&dev->dev,
-+			"EA Entry Size (%d) does not match length read (%d)\n",
-+			ent_size, ent_offset - offset);
-+		goto out;
-+	}
-+
-+	res->name = pci_name(dev);
-+	res->start = start;
-+	res->end = end;
-+	res->flags = flags;
-+
-+out:
-+	return offset + ent_size;
-+}
-+
-+/* Enhanced Allocation Initalization */
-+void pci_ea_init(struct pci_dev *dev)
-+{
-+	int ea;
-+	u8 num_ent;
-+	int offset;
-+	int i;
-+
-+	/* find PCI EA capability in list */
-+	ea = pci_find_capability(dev, PCI_CAP_ID_EA);
-+	if (!ea)
-+		return;
-+
-+	/* determine the number of entries */
-+	pci_bus_read_config_byte(dev->bus, dev->devfn, ea + PCI_EA_NUM_ENT,
-+					&num_ent);
-+	num_ent &= PCI_EA_NUM_ENT_MASK;
-+
-+	offset = ea + PCI_EA_FIRST_ENT;
-+
-+	/* Skip DWORD 2 for type 1 functions */
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-+		offset += 4;
-+
-+	/* parse each EA entry */
-+	for (i = 0; i < num_ent; ++i)
-+		offset = pci_ea_read(dev, offset);
-+}
-+
- static void pci_add_saved_cap(struct pci_dev *pci_dev,
- 	struct pci_cap_saved_state *new_cap)
- {
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 24ba9dc..a160733 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -78,6 +78,7 @@ bool pci_dev_keep_suspended(struct pci_dev *dev);
- void pci_config_pm_runtime_get(struct pci_dev *dev);
- void pci_config_pm_runtime_put(struct pci_dev *dev);
- void pci_pm_init(struct pci_dev *dev);
-+void pci_ea_init(struct pci_dev *dev);
- void pci_allocate_cap_save_buffers(struct pci_dev *dev);
- void pci_free_cap_save_buffers(struct pci_dev *dev);
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 0b2be17..4293eec 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1598,6 +1598,9 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 
- static void pci_init_capabilities(struct pci_dev *dev)
- {
-+	/* Enhanced Allocation */
-+	pci_ea_init(dev);
-+
- 	/* MSI/MSI-X list */
- 	pci_msi_init_pci_dev(dev);
- 
--- 
-1.9.1
 
+
+> @@ -3017,6 +3018,8 @@ int ixgbevf_live_mg(struct ixgbevf_adapter *adapter)
+>  			return 1;
+>  
+>  		ixgbevf_restore_state(adapter);
+> +		ixgbevf_save_reset_stats(adapter);
+> +		ixgbevf_init_last_counter_stats(adapter);
+>  		migration_status = MIGRATION_COMPLETED;
+>  		pr_info("migration end\n");
+>  		return 0;
+> -- 
+> 1.8.4.rc0.1.g8f6a3e5.dirty
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe kvm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
