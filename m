@@ -1,233 +1,188 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:48945 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096AbbJ2Cvn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2015 22:51:43 -0400
-Message-ID: <563189A0.4060805@hisilicon.com>
-Date: Thu, 29 Oct 2015 10:51:12 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <56295FAE.5040108@ti.com>
+Date: Thu, 22 Oct 2015 18:14:06 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>, <lho@apm.com>,
+	KISHON VIJAY <kishon@ti.com>, <alexandre.torgue@st.com>
+CC: WingMan Kwok <w-kwok2@ti.com>, <robh+dt@kernel.org>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rogerq@ti.com>, <bhelgaas@google.com>, <ssantosh@kernel.org>,
 	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v12 0/8] PCI: hisi: Add PCIe host support for HiSilicon
- SoC Hip05
-References: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com> <20151027223257.GA3786@localhost>
-In-Reply-To: <20151027223257.GA3786@localhost>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+	<linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v3 0/2] Common SerDes driver for TI's Keystone Platforms
+References: <1445432201-16007-1-git-send-email-w-kwok2@ti.com> <5628FB36.4010303@ti.com> <20151022174812.GX32532@n2100.arm.linux.org.uk> <56295B9E.9030201@ti.com>
+In-Reply-To: <56295B9E.9030201@ti.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/10/28 6:32, Bjorn Helgaas wrote:
-> Hi Zhou,
-> 
-> On Mon, Oct 26, 2015 at 07:35:42PM +0800, Zhou Wang wrote:
->> This patchset adds PCIe host support for HiSilicon SoC Hip05. The PCIe hosts
->> use PCIe IP core from Synopsys, So this driver is based on designware PCIe driver.
++ Alexandre Torgue <alexandre.torgue@st.com> (Owner of phy-miphy28lp.c)
++ Loc Ho <lho@apm.com> (Owner of phy-miphy28lp.c)
+
+On 10/22/2015 05:56 PM, Murali Karicheri wrote:
+> On 10/22/2015 01:48 PM, Russell King - ARM Linux wrote:
+>> On Thu, Oct 22, 2015 at 11:05:26AM -0400, Murali Karicheri wrote:
+>>> On 10/21/2015 08:56 AM, WingMan Kwok wrote:
+>>>> On TI's Keystone platforms, several peripherals such as the
+>>>> gbe ethernet switch, 10gbe ethernet switch and PCIe controller
+>>>> require the use of a SerDes for converting SoC parallel data into
+>>>> serialized data that can be output over a high-speed electrical
+>>>> interface, and also converting high-speed serial input data
+>>>> into parallel data that can be processed by the SoC.  The
+>>>> SerDeses used by those peripherals, though they may be different,
+>>>> are largely similar in functionality and setup.
+> ------------Cut-------------------------------------------------
+>>>>
+>>>>   Documentation/devicetree/bindings/phy/ti-phy.txt |  239 +++
+>>>>   drivers/pci/host/pci-keystone.c                  |   24 +-
+>>>>   drivers/pci/host/pci-keystone.h                  |    1 +
+>>>>   drivers/phy/Kconfig                              |    8 +
+>>>>   drivers/phy/Makefile                             |    1 +
+>>>>   drivers/phy/phy-keystone-serdes.c                | 2366
+>>>> ++++++++++++++++++++++
+>>>>   6 files changed, 2629 insertions(+), 10 deletions(-)
+>>>>   create mode 100644 drivers/phy/phy-keystone-serdes.c
+>>>>
+>>> Kishon, Bjorn
+>>>
+>>> Who will pick this up? Do we have time to get this in 4.4?
 >>
->> Hip05 is an ARMv8 architecture SoC. It should be able to use ARM64 PCIe API in
->> designware PCIe driver. So this patch also adds ARM64 support for designware
->> pcie.
+>> I've been avoiding this since my initial comments, but if you're wanting
+>> to get it into v4.4, then I have to say something.
+> Russell,
+>
+> I saw you have raised this point earlier against v1 of the patch series.
+> I have responded as below  (cut-n-pasted from that email)
+>
+> "The serdes on K2 are re-used on multiple hardware blocks as already
+> indicated in this thread. It has got multiple lanes, each lane can be
+> enabled/disabled, shutdown etc. Isn't generic phy framework added to
+> support this type of hardware block? I see some enhancements needed for
+> K2 serdes to support monitoring the serdes link and providing a status
+> to the higher layer device. So I am not clear what different way you
+> would like to handle serdes drivers? Why do you need a new framework?
+> "
+>
+> KISHON VIJAY had responded saying
+>
+> "The PHY framework (in drivers/phy/) already provides a standard
+> interface to be used by the controller drivers no?"
+>
+> But I have not seen your response to these questions from us. v2 and v3
+> has gone by and since all of the outstanding comments have been
+> addressed and you have not responded to our questions, I thought this
+> can be merged for 4.4. Good to see you have responded now :)
 >>
->> This patchset is based on v4.3-rc1.
-> 
-> OK, this is pretty close to being ready to go.  But the patch ordering is
-> more complicated than it needs to be.  You have:
-> 
->   PCI: designware: move calculation of bus addresses to DRA7xx
->   ARM/PCI: remove align_resource in pci_sys_data
->   PCI: designware: Replace DT PCI ranges parse with of_pci_get_host_bridge_resources
->   PCI: designware: Add ARM64 support
->   PCI: designware: Remove *_mod_base
->   PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
->   Documentation: DT: Add HiSilicon PCIe host binding
->   MAINTAINERS: Add pcie-hisi maintainer
-> 
-> But you should have this:
-> 
->   PCI: designware: Move calculation of bus addresses to DRA7xx
->   PCI: designware: Remove *_mod_base
->   PCI: designware: Replace DT PCI ranges parse with of_pci_get_host_bridge_resources
->   ARM/PCI: remove align_resource in pci_sys_data
->   PCI: designware: Add ARM64 support
->   PCI: hisi: Add HiSilicon SoC Hip05 driver
+>> Again, there's other SoCs out there which have serdes.  Adding 2.5k of
+>> lines for vendor serdes implementations does not scale - this needs to
+>> be re-thought in a way which reduces the code maintanence burden.
+>>
+>> Other SoCs like Marvell Armada have serdes links which can be configured
+>> between SATA, PCIe and Gbe.  Should Armada end up adding another 2.5k
+>> lines to support their device too?  What happens when we have 10 of
+>> these, and we have 25k lines of code here?
+>>
+>> Again, this does not scale.  Please look at what can be done to reduce
+>> the code size when other implementations come along.
+>
+> Well, per our understanding, this driver is a Generic phy driver and we
+> have implemented a device driver based on Generic Phy API. This driver
+> is expected to support all of the 3 peripherals :- PCIe, 1G and 10G
+> Ethernet.  You have mentioned about Marvell & Armada . Did Marvell post
+> any patch already? Without seeing their code, how will we be able to
+> investigate what can be factored out to a generic serdes core driver? By
+> making this statement, I assume you are still considering using the
+> Generic Phy driver framework for SerDes drivers. Don't you?
+>
+> I did a search in the phy folder and these are the top ones that came
+> out in terms of number of lines of code after Phy-core.c.
+>
+> ls *.[ch] | xargs wc -l | sort -n
+>
+>     943 phy-core.c
+>    1279 phy-miphy28lp.c
+>    1735 phy-xgene.c
+>    2367 phy-keystone-serdes.c
+>
+> So focusing on the top 3 drivers (including keystone serdes) under phy.
+>
+> phy-xgene.c
+> -----------
+>
+> Looking at other drivers under drivers/phy, I could find phy-xgene.c
+> which is close Keystone SerDes driver (. This is called APM X-Gene
+> Multi-Purpose PHY driver. It defines following mode per the driver code
+>
+>          MODE_SATA       = 0,    /* List them for simple reference */
+>          MODE_SGMII      = 1,
+>          MODE_PCIE       = 2,
+>          MODE_USB        = 3,
+>          MODE_XFI        = 4,
+>
+> But seems to support only MODE_SATA. From the code, it appears, this
+> driver is expected to be enhanced in the future to support additional
+> modes. I have copied the author to this email to participate in this
+> discussion.
+>
+> Keystone SerDes supports following modes
+> ----------------------------------------
+>      KSERDES_PHY_SGMII,
+>      KSERDES_PHY_XGE,
+>      KSERDES_PHY_PCIE,
+>      KSERDES_PHY_HYPERLINK,
+>      KSERDES_PHY_SRIO
+>
+> And phy-miphy28lp.c
+> ---------------------
+>
+> +#define PHY_TYPE_SATA          1
+> +#define PHY_TYPE_PCIE          2
+> +#define PHY_TYPE_USB2          3
+> +#define PHY_TYPE_USB3          4
+>
+> Keystone SerDes hardware is highly parameterized. The init has following
+> steps:-
+>    - Configure the Phy to one of the mode (SATA,SGMII,PCIE,USB,XFI)
+>    - Configure the Phy to the specific mode
+>    - Configure N lanes for the selected mode
+>    - Enable N Lanes
+>
+> So at a high level, I can imagine these kind of Phys require additionally
+>
+>    - Enable/Disable Lane
+>    - check lane status periodically
+>
+> So there is a scope for enhancing the Phy core API to handle these kinds
+> of phy ops. This might help to re-use some code. But at the lower level
+> driver, we still need to write to vendor specific registers and
+> configure the SerDes which is the major part of the driver and that
+> still will be a major part of these drivers.
+>
+> I would also like to hear from Kishon (Maintainer) on his ideas for
+> Generic Phy driver to support these kind of SerDes hardwares.
+>
+> I think it is fair to ask to merge the Keystone SerDes driver right now
+> as we have spend considerable time reviewing the current series and
+> taken care of all other outstanding comments. We are most happy to
+> enhance the Phy core framework to help re-use code across the above and
+> future SerDes driver that supports multiple modes.
+>
+> Or do you have some other ideas that you would like to share?
+>
+> Murali
+>
+>>
+>> (I am aware that guys working on Marvell Armada are looking into this
+>> problem - but I know they're ready to post anything yet.)
+>>
+>
 >
 
-Hi Bjorn,
 
-I will reorder patchset in new version.
-In fact, a temporary variable need to be introduced to solve a problem,
-will show this in new version.
-
-> In other words,
-> 
->   - capitalize the subject lines correctly (follow previous practice),
->   - do all the bus address patches together,
->   - then the ARM sysdata tweak,
->   - then add ARM64 support,
->   - then add HiSilicon,
->   - and merge the hisi driver, DT update, and maintainer update into one
->     patch since they're all one package.
-
-OK, will merge driver, DT binding, maintainer update into one patch.
-
-Thanks,
-Zhou
-
-> 
-> If you do them out of order, the changes get tangled up and it makes them
-> harder to backport and harder to revert individually.
-> 
-> Bjorn
-> 
->> Change from v11:
->> - Split 3/6 in v11 to 3/8, 4/8, 5/8 in v12.
->> - Add print in pcie-hisi.c to indicate read/write hardware defect.
->> - Modify macro in 1/8 pointed by Bjorn.
->>
->> Change from v10:
->> - Remove MSI related setting and VMID/ASID table setting, they will be
->>   implemented in BIOS.
->> - Use module_platform_driver to init pcie-hisi.c
->> - Add necessary comments.
->>
->> Change from v9:
->> - Use syscon to get subctrl base address.
->> - 5/6 is based on [PATCH v3 0/2] arm64: Support Hisilicon Hip05-D02 board
->>   from Ding Tianhong
->> - Add hisi_pcie_cfg_read in pcie-hisi.c to match
->>   [PATCH v6 0/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
->>   from Gabriele.
->>
->> Change from v8:
->> - Rebase on v4.3-rc1.
->> - Add Tested-by from Gabriel and Minghuan.
->> - Remove ITS domain parsing in msi_host_init in pcie-hisi.c, no need this as PCI
->>   core does related job. Add ITS base address parsing in msi_host_init.
->> - Change vmid/asid table configuration, previous configuration was wrong.
->> - Add wr_own_conf callback in pcie-hisi.c.
->> - Use subsys_initcall to init hisi PCIe.
->>
->> Change from v7:
->> - Remove pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
->>   spear13xx. Pass pp->busn->start to pci_create_root_bus as root bus number.
->> - Remove bus-range parsing in pcie-hisi.c.
->>
->> Change from v6:
->> - Add Pratyush's Acked-by for 1/6 and 2/6.
->> - Add James' Tested-by for 3/6.
->>
->> Change from v5:
->> - Merge 1/6 in this series, discussion about this can be found in [1]
->>
->> Change from v4:
->> - Change the author of 1/5 to Gabriele.
->> - Modify problems in 3/5 pointed by Bjorn.
->> - Modify spelling problems in 4/5.
->>
->> Change from v3:
->> - Change 1/5 to what Gabriele suggested.
->> - Use win->__res.start to get *_mod_base in 2/5, this fix a bug in v3 series.
->>
->> Change from v2:
->> - Move struct pci_dev *dev and struct pci_sys_data *sys in
->>   pcibios_align_resource in 1/5.
->> - Add Gabriele's codes in 2/5 which delete unnecessary information parse and
->>   use of_pci_get_host_bridge_resources for both ARM32 and ARM64.
->> - Add maintainer patch 5/5.
->>
->> Change from RFC v1:
->> - Add 1/4 patch by Arnd which removes align_resource callback in ARM
->>   pcibios_align_resource.
->> - Change head file in pcie-designware from asm/hardirq.h to linux/hardirq.h.
->> - Set pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
->>   spear13xx.
->> - Remove unnecessary parentheses of some macros in pcie-hisi.
->> - Use macro to replace some magic values.
->> - Merge two loops together and add some comments about it in context_config
->>   function in pcie-hisi.
->> - Modify some value of items in pcie node example in binding document. 
->>
->> Change from RFC:
->> - delete dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
->>   merge related operations into dw_pcie_host_init.
->>
->> Link of v11:
->> - https://lkml.org/lkml/2015/10/16/228
->> Link of v10:
->> - http://www.spinics.net/lists/linux-pci/msg45490.html
->> Link of v9:
->> - http://www.spinics.net/lists/linux-pci/msg44545.html
->> Link of v8:
->> - http://www.spinics.net/lists/linux-pci/msg44192.html
->> Link of v7:
->> - http://www.spinics.net/lists/devicetree/msg90690.html
->> Link of v6:
->> - http://www.spinics.net/lists/linux-pci/msg43669.html
->> Link of v5:
->> - http://www.spinics.net/lists/devicetree/msg87959.html
->> Link of v4:
->> - http://www.spinics.net/lists/arm-kernel/msg433050.html
->> Link of v3:
->> - http://www.spinics.net/lists/linux-pci/msg42539.html
->> Link of v2:
->> - http://www.spinics.net/lists/linux-pci/msg41844.html
->> Link of RFC v1:
->> - http://www.spinics.net/lists/linux-pci/msg41305.html
->> Link of RFC:
->> - http://www.spinics.net/lists/linux-pci/msg40434.html
->>
->> [1] http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/359741.html
->>
->> Zhou Wang (6):
->>   PCI: designware: Replace DT PCI ranges parse with of_pci_get_host_bridge_resources
->>   PCI: designware: Add ARM64 support
->>   PCI: designware: Remove *_mod_base
->>   PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
->>   Documentation: DT: Add HiSilicon PCIe host binding
->>   MAINTAINERS: Add pcie-hisi maintainer
->>
->> gabriele paoloni (2):
->>   PCI: designware: move calculation of bus addresses to DRA7xx
->>   ARM/PCI: remove align_resource in pci_sys_data
->>
->>  .../bindings/arm/hisilicon/hisilicon.txt           |  17 ++
->>  .../devicetree/bindings/pci/hisilicon-pcie.txt     |  44 ++++
->>  MAINTAINERS                                        |   7 +
->>  arch/arm/include/asm/mach/pci.h                    |   6 -
->>  arch/arm/kernel/bios32.c                           |  12 +-
->>  drivers/pci/host/Kconfig                           |   8 +
->>  drivers/pci/host/Makefile                          |   1 +
->>  drivers/pci/host/pci-dra7xx.c                      |   7 +
->>  drivers/pci/host/pci-keystone-dw.c                 |   2 +-
->>  drivers/pci/host/pcie-designware.c                 | 248 +++++++--------------
->>  drivers/pci/host/pcie-designware.h                 |  14 +-
->>  drivers/pci/host/pcie-hisi.c                       | 198 ++++++++++++++++
->>  12 files changed, 377 insertions(+), 187 deletions(-)
->>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->>  create mode 100644 drivers/pci/host/pcie-hisi.c
->>
->> -- 
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-> .
-> 
-
-
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
