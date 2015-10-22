@@ -1,64 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0099.outbound.protection.outlook.com ([207.46.100.99]:45600
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752678AbbJLBzv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 11 Oct 2015 21:55:51 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Corentin LABBE <clabbe.montjoie@gmail.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v8 4/6] pci: altera: Add Altera PCIe MSI driver
-Date: Mon, 12 Oct 2015 01:55:36 +0000
-Message-ID: <E7E66AD1AD65064486AD57C361DF091C05B2C950@PG-ITEXCH01.altera.priv.altera.com>
-References: <E1ZkHFw-0007bx-3v@feisty.vs19.net> <5616CC75.5030700@gmail.com>
-In-Reply-To: <5616CC75.5030700@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.kernel.org ([198.145.29.136]:53812 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758150AbbJVS4v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 Oct 2015 14:56:51 -0400
+Date: Thu, 22 Oct 2015 13:56:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Ben Shelton <benjamin.h.shelton@intel.com>,
+	linux-kernel@vger.kernel.org,
+	Alexander Duyck <alexander.duyck@gmail.com>
+Subject: Re: [PATCH] PCI: Remove unnecessary re-read of SR-IOV offset/stride
+ registers
+Message-ID: <20151022185647.GF21237@localhost>
+References: <20151016211628.31492.86258.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151016211628.31492.86258.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gS2hhLCAyMDE1LTEwLTA4IGF0IDIyOjA1ICswMjAwLCBDb3JlbnRpbiBMQUJCRSB3cm90ZToN
-Cj4gPiBUaGlzIHBhdGNoIGFkZHMgQWx0ZXJhIFBDSWUgTVNJIGRyaXZlci4gVGhpcyBzb2Z0IElQ
-IHN1cHBvcnRzIGNvbmZpZ3VyYWJsZQ0KPiA+IG51bWJlciBvZiB2ZWN0b3JzLCB3aGljaCBpcyBh
-IGR0cyBwYXJhbWV0ZXIuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBMZXkgRm9vbiBUYW4gPGxm
-dGFuQGFsdGVyYS5jb20+DQo+ID4gUmV2aWV3ZWQtYnk6IE1hcmMgWnluZ2llciA8bWFyYy56eW5n
-aWVyQGFybS5jb20+DQo+ID4gKw0KPiA+ICtzdGF0aWMgaW5saW5lIHZvaWQgbXNpX3dyaXRlbChz
-dHJ1Y3QgYWx0ZXJhX21zaSAqbXNpLCB1MzIgdmFsdWUsIHUzMiByZWcpDQo+ID4gK3sNCj4gPiAr
-ICAgd3JpdGVsX3JlbGF4ZWQodmFsdWUsIG1zaS0+Y3NyX2Jhc2UgKyByZWcpOw0KPiA+ICt9DQo+
-ID4gKw0KPiA+ICtzdGF0aWMgaW5saW5lIHUzMiBtc2lfcmVhZGwoc3RydWN0IGFsdGVyYV9tc2kg
-Km1zaSwgdTMyIHJlZykNCj4gPiArew0KPiA+ICsgICByZXR1cm4gcmVhZGxfcmVsYXhlZChtc2kt
-PmNzcl9iYXNlICsgcmVnKTsNCj4gPiArfQ0KPiA+ICsNCj4NCj4gWW91IGNvdWxkIHNldCB2YWx1
-ZSBhbmQgcmVnIHBhcmFtZXRlciBhcyBjb25zdA0KTm90ZWQuDQoNCj4NCj4gPiArDQo+ID4gK3N0
-YXRpYyBpbnQgYWx0ZXJhX2lycV9kb21haW5fYWxsb2Moc3RydWN0IGlycV9kb21haW4gKmRvbWFp
-biwgdW5zaWduZWQgaW50IHZpcnEsDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-IHVuc2lnbmVkIGludCBucl9pcnFzLCB2b2lkICphcmdzKQ0KPiA+ICt7DQo+ID4gKyAgIHN0cnVj
-dCBhbHRlcmFfbXNpICptc2kgPSBkb21haW4tPmhvc3RfZGF0YTsNCj4gPiArICAgdW5zaWduZWQg
-bG9uZyBiaXQ7DQo+ID4gKyAgIHUzMiBtYXNrOw0KPiA+ICsNCj4gPiArICAgV0FSTl9PTihucl9p
-cnFzICE9IDEpOw0KPiA+ICsgICBtdXRleF9sb2NrKCZtc2ktPmxvY2spOw0KPiA+ICsNCj4gPiAr
-ICAgYml0ID0gZmluZF9maXJzdF96ZXJvX2JpdChtc2ktPnVzZWQsIG1zaS0+bnVtX29mX3ZlY3Rv
-cnMpOw0KPiA+ICsgICBpZiAoYml0ID49IG1zaS0+bnVtX29mX3ZlY3RvcnMpDQo+ID4gKyAgICAg
-ICAgICAgcmV0dXJuIC1FTk9TUEM7DQo+ID4gKw0KPiA+ICsgICBzZXRfYml0KGJpdCwgbXNpLT51
-c2VkKTsNCj4gPiArDQo+ID4gKyAgIG11dGV4X3VubG9jaygmbXNpLT5sb2NrKTsNCj4gPiArDQo+
-ID4gKyAgIGlycV9kb21haW5fc2V0X2luZm8oZG9tYWluLCB2aXJxLCBiaXQsICZhbHRlcmFfbXNp
-X2JvdHRvbV9pcnFfY2hpcCwNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICBkb21haW4tPmhv
-c3RfZGF0YSwgaGFuZGxlX3NpbXBsZV9pcnEsDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAg
-TlVMTCwgTlVMTCk7DQo+ID4gKw0KPiA+ICsgICBtYXNrID0gbXNpX3JlYWRsKG1zaSwgTVNJX0lO
-VE1BU0spOw0KPiA+ICsgICBtYXNrIHw9IDEgPDwgYml0Ow0KPiA+ICsgICBtc2lfd3JpdGVsKG1z
-aSwgbWFzaywgTVNJX0lOVE1BU0spOw0KPiA+ICsNCj4gPiArICAgcmV0dXJuIDA7DQo+ID4gK30N
-Cj4NCj4gWW91IGRvIG5vdCB1bmxvY2sgdGhlIG11dGV4IHdoZW4gcmV0dXJuaW5nIC1FTk9TUEMN
-Cj4gQW5kIGFnYWluIHNvbWUgcGFyYW1ldGVyIGNvdWxkIGJlIHNldCBhcyBjb25zdA0KR29vZCBj
-YXRjaCwgd2lsbCBmaXggdGhhdC4NCkRvIHlvdSBtZWFuIGFkZCB0aGUgY29uc3QgZm9yIGFsdGVy
-YV9pcnFfZG9tYWluX2FsbG9jKCk/DQpJdCBpcyBkZWZpbmVkIGJ5IHRoZSBzdHJ1Y3QgaXJxX2Rv
-bWFpbl9vcHMuDQoNClJlZ2FyZHMNCkxleSBGb29uDQoNCg0KX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18NCg0KQ29uZmlkZW50aWFsaXR5IE5vdGljZS4NClRoaXMgbWVzc2FnZSBtYXkg
-Y29udGFpbiBpbmZvcm1hdGlvbiB0aGF0IGlzIGNvbmZpZGVudGlhbCBvciBvdGhlcndpc2UgcHJv
-dGVjdGVkIGZyb20gZGlzY2xvc3VyZS4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkIHJlY2lw
-aWVudCwgeW91IGFyZSBoZXJlYnkgbm90aWZpZWQgdGhhdCBhbnkgdXNlLCBkaXNjbG9zdXJlLCBk
-aXNzZW1pbmF0aW9uLCBkaXN0cmlidXRpb24sIG9yIGNvcHlpbmcgb2YgdGhpcyBtZXNzYWdlLCBv
-ciBhbnkgYXR0YWNobWVudHMsIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBoYXZlIHJl
-Y2VpdmVkIHRoaXMgbWVzc2FnZSBpbiBlcnJvciwgcGxlYXNlIGFkdmlzZSB0aGUgc2VuZGVyIGJ5
-IHJlcGx5IGUtbWFpbCwgYW5kIGRlbGV0ZSB0aGUgbWVzc2FnZSBhbmQgYW55IGF0dGFjaG1lbnRz
-LiBUaGFuayB5b3UuDQo=
+On Fri, Oct 16, 2015 at 04:16:28PM -0500, Bjorn Helgaas wrote:
+> Previously, we read PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE from the
+> SR-IOV capability in pci_iov_set_numvfs() after changing PCI_SRIOV_NUM_VF,
+> and we read them again in sriov_enable().  But sriov_init() always calls
+> pci_iov_set_numvfs() before a successful return, and it caches the offset
+> and stride values, so there's no need to read the capability again in
+> sriov_enable().
+> 
+> Remove the PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE config reads from
+> sriov_enable() and use the cached values from the pci_sriov structure.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+I haven't seen any objections, so I applied this to pci/virtualization for
+v4.4.
+
+> ---
+>  drivers/pci/iov.c |    9 ++-------
+>  1 file changed, 2 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 0202ab0..9b52ad4 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -230,7 +230,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	int rc;
+>  	int i, j;
+>  	int nres;
+> -	u16 offset, stride, initial;
+> +	u16 initial;
+>  	struct resource *res;
+>  	struct pci_dev *pdev;
+>  	struct pci_sriov *iov = dev->sriov;
+> @@ -253,9 +253,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	    (!(iov->cap & PCI_SRIOV_CAP_VFM) && (nr_virtfn > initial)))
+>  		return -EINVAL;
+>  
+> -	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &offset);
+> -	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &stride);
+> -	if (!offset || (nr_virtfn > 1 && !stride))
+> +	if (!iov->offset || (nr_virtfn > 1 && !iov->stride))
+>  		return -EIO;
+>  
+>  	nres = 0;
+> @@ -270,9 +268,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  		return -ENOMEM;
+>  	}
+>  
+> -	iov->offset = offset;
+> -	iov->stride = stride;
+> -
+>  	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+>  	if (bus > dev->bus->busn_res.end) {
+>  		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
