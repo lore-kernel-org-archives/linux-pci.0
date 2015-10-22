@@ -1,91 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:53559 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.136]:48707 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753508AbbJFREj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 Oct 2015 13:04:39 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, Mark Rutland <Mark.Rutland@arm.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Robin Murphy <robin.murphy@arm.com>
-Subject: [PATCH v2 7/8] PCI: Add per-device MSI domain hook
-Date: Tue,  6 Oct 2015 18:04:02 +0100
-Message-Id: <1444151043-31084-8-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
-References: <1444151043-31084-1-git-send-email-marc.zyngier@arm.com>
+	id S965512AbbJVSIS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 Oct 2015 14:08:18 -0400
+Date: Thu, 22 Oct 2015 13:08:13 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Li Yang <leoli@freescale.com>
+Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	Jingoo Han <jg1.han@samsung.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v4 5/6] PCI: layerscape: add PCIe support for LS1043a and
+ LS2080a
+Message-ID: <20151022180813.GA25693@localhost>
+References: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1444979960-24100-5-git-send-email-Minghuan.Lian@freescale.com>
+ <20151021213612.GK1583@localhost>
+ <CADRPPNSPP1m_7zNF6wEfw9+Bpe=Z_gUA81cSaV4SENVpR34YWQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CADRPPNSPP1m_7zNF6wEfw9+Bpe=Z_gUA81cSaV4SENVpR34YWQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So far, we have considered that the MSI domain for a device was
-either set via the architecture-dependent pcibios implementation
-or inherited from the host bridge.
+Hi Leo,
 
-As we're about to break that assumption, add pci_dev_msi_domain
-which is the equivalent of pci_host_bridge_msi_domain, but for
-a single device.
+On Thu, Oct 22, 2015 at 12:38:48PM -0500, Li Yang wrote:
+> On Wed, Oct 21, 2015 at 4:36 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Fri, Oct 16, 2015 at 03:19:19PM +0800, Minghuan Lian wrote:
+> >> Both LS1043a and LS2080a are based on ARMv8 64-bit architecture
+> >> and have similar PCIe implementation. LUT is added to controller.
+> >> The patch removes the necessary fields from struct ls_pcie.
+> >>
+> >> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> >> ---
+> >> This patch is based on v4.3-rc4 and [PATCH v10 3/6]
+> >> PCI: designware: Add ARM64 support.
+> 
+> Hi Bjorn,
+> 
+> Are you also applying this patch
+> https://patchwork.ozlabs.org/patch/531184/ in this merge windows?
+> Because the new hardware can only work with the generic ARM64 support
+> added in the designware pcie driver.
 
-Other than moving things around a bit, this patch on its own
-has no effect.
+I'm reviewing that patch right now, and I do hope to apply it for
+v4.4.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/pci/probe.c | 35 ++++++++++++++++++++++++++++++-----
- 1 file changed, 30 insertions(+), 5 deletions(-)
+There was no cover letter for this series (Minghuan's Layerscape v4
+series), and I didn't see any mention of dependencies, so I applied it
+on top of v4.3-rc1.  Is that the wrong thing to do?  If it depends on
+the Zhou's v11 series, I can hold the Layerscape branch until after
+that.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8361d27..7c333f8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1622,15 +1622,40 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_enable_acs(dev);
- }
- 
-+/*
-+ * This is the equivalent of pci_host_bridge_msi_domain that acts on
-+ * devices. Firmware interfaces that can select the MSI domain on a
-+ * per-device basis should be called from here.
-+ */
-+static struct irq_domain *pci_dev_msi_domain(struct pci_dev *dev)
-+{
-+	struct irq_domain *d;
-+
-+	/*
-+	 * If a domain has been set through the pcibios_add_device
-+	 * callback, then this is the one (platform code knows best).
-+	 */
-+	d = dev_get_msi_domain(&dev->dev);
-+	if (d)
-+		return d;
-+
-+	return NULL;
-+}
-+
- static void pci_set_msi_domain(struct pci_dev *dev)
- {
-+	struct irq_domain *d;
-+
- 	/*
--	 * If no domain has been set through the pcibios_add_device
--	 * callback, inherit the default from the bus device.
-+	 * If the platform or firmware interfaces cannot supply a
-+	 * device-specific MSI domain, then inherit the default domain
-+	 * from the host bridge itself.
- 	 */
--	if (!dev_get_msi_domain(&dev->dev))
--		dev_set_msi_domain(&dev->dev,
--				   dev_get_msi_domain(&dev->bus->dev));
-+	d = pci_dev_msi_domain(dev);
-+	if (!d)
-+		d = dev_get_msi_domain(&dev->bus->dev);
-+
-+	dev_set_msi_domain(&dev->dev, d);
- }
- 
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
--- 
-2.1.4
-
+Bjorn
