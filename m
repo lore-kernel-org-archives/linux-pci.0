@@ -1,46 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:36475 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932103AbbJPTHv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Oct 2015 15:07:51 -0400
-From: Florian Fainelli <f.fainelli@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Markus Elfring <elfring@users.sourceforge.net>,
-	linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
-	CYGNUS/IPROC ARM ARCHITECTURE),
-	bcm-kernel-feedback-list@broadcom.com (open list:BROADCOM CYGNUS/IPROC
-	ARM ARCHITECTURE), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] PCI: iproc: Fix company name
-Date: Fri, 16 Oct 2015 12:04:04 -0700
-Message-Id: <1445022248-12203-1-git-send-email-f.fainelli@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:40228 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750910AbbJVMzn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 Oct 2015 08:55:43 -0400
+Date: Thu, 22 Oct 2015 15:55:34 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Lan Tianyu <tianyu.lan@intel.com>
+Cc: bhelgaas@google.com, carolyn.wyborny@intel.com,
+	donald.c.skidmore@intel.com, eddie.dong@intel.com,
+	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
+	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Subject: Re: [Qemu-devel] [RFC Patch 00/12] IXGBE: Add live migration support
+ for SRIOV NIC
+Message-ID: <20151022155234-mutt-send-email-mst@redhat.com>
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The header of pcie-iproc.c contains an obvious typo on Broadcom
-Corporation, fix that.
+On Thu, Oct 22, 2015 at 12:37:32AM +0800, Lan Tianyu wrote:
+> This patchset is to propose a new solution to add live migration support for 82599
+> SRIOV network card.
+> 
+> Im our solution, we prefer to put all device specific operation into VF and
+> PF driver and make code in the Qemu more general.
 
-Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
----
- drivers/pci/host/pcie-iproc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Adding code to VF driver makes sense.  However, adding code to PF driver
+is problematic: PF and VF run within different environments, you can't
+assume PF and VF drivers are the same version.
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index fe2efb141a9b..6c3d4b54858c 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (C) 2014 Hauke Mehrtens <hauke@hauke-m.de>
-- * Copyright (C) 2015 Broadcom Corporatcommon ion
-+ * Copyright (C) 2015 Broadcom Corporation
-  *
-  * This program is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU General Public License as
+I guess that would be acceptable if these messages make
+it into the official intel spec, along with
+hardware registers.
+
 -- 
-2.1.0
-
+MST
