@@ -1,44 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50688 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933474AbbJIQTv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 12:19:51 -0400
-Message-ID: <1444407560.17726.6.camel@oracle.com>
-Subject: Re: [PATCH v7 05/60] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit
- resource in OF parsing
-From: Khalid Aziz <khalid.aziz@oracle.com>
-To: Yinghai Lu <yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:38567 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964894AbbJVPfB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 Oct 2015 11:35:01 -0400
+Date: Thu, 22 Oct 2015 10:34:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lucas Stach <l.stach@pengutronix.de>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sparclinux@vger.kernel.org
-Date: Fri, 09 Oct 2015 10:19:20 -0600
-In-Reply-To: <1444340359-8011-6-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-	 <1444340359-8011-6-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fabio Estevam <festevam@gmail.com>,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	linux-pci@vger.kernel.org, pratyush.anand@gmail.com,
+	m-karicheri2@ti.com
+Subject: Re: [PATCH v4 0/4] PCI: designware: LTSSM #define cleanup
+Message-ID: <20151022153455.GA16360@localhost>
+References: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <1445504666.3173.20.camel@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445504666.3173.20.camel@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-10-08 at 14:38 -0700, Yinghai Lu wrote:
-> For device resource PREF bit setting under bridge 64-bit pref resource,
-> we need to make sure only set PREF for 64bit resource, so set
-> IORESOUCE_MEM_64 for 64bit resource during of device resource flags
-> parsing.
+On Thu, Oct 22, 2015 at 11:04:26AM +0200, Lucas Stach wrote:
+> Hi Bjorn,
 > 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: sparclinux@vger.kernel.org
+> Am Mittwoch, den 21.10.2015, 13:42 -0500 schrieb Bjorn Helgaas:
+> > This is a revision of Fabio's series:
+> > http://lkml.kernel.org/r/1444664808-16445-1-git-send-email-festevam@gmail.com
+> > 
+> > Lucas, you reviewed the v3 patches, but I fiddled enough with this that I
+> > didn't want to blindly carry your review forward.  I don't *think* I
+> > changed anything substantive, but I might have missed something.
+> > 
+> I'm not sure if I like the removal of all the LTSSM state defines, as
+> not all reference manuals include them and so I liked to have the header
+> as a reference. But if you prefer to not carry unused defines in the
+> kernel I won't object strongly to the removal.
+> 
+> Otherwise the series looks fine, which you may take as a Reviewed-by.
 
-Tested on sparc platforms
+Thanks, Lucas.
 
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com> 
+OK, I put the rest of the LTSSM #defines back in
+drivers/pci/host/pcie-designware.h as a separate patch (below):
 
 
+commit 25026d3fcff7dd0e139b04cb52436b9c7e0e545e
+Author: Fabio Estevam <fabio.estevam@freescale.com>
+Date:   Thu Oct 22 10:24:52 2015 -0500
 
+    PCI: designware: Add LTSSM state definitions
+    
+    Add the rest of the LTSSM state definitions.  These aren't currently used,
+    so they're here as documentation.
+    
+    [bhelgaas: split into separate patch]
+    Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index efe5fca..8cb5725 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -22,8 +22,39 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ 
++#define LTSSM_STATE_DETECT_QUIET	0x00
++#define LTSSM_STATE_DETECT_ACT		0x01
++#define LTSSM_STATE_POLL_ACTIVE		0x02
++#define LTSSM_STATE_POLL_COMPLIANCE	0x03
++#define LTSSM_STATE_POLL_CONFIG		0x04
++#define LTSSM_STATE_PRE_DETECT_QUIET	0x05
++#define LTSSM_STATE_DETECT_WAIT		0x06
++#define LTSSM_STATE_CFG_LINKWD_START	0x07
++#define LTSSM_STATE_CFG_LINKWD_ACCEPT	0x08
++#define LTSSM_STATE_CFG_LANENUM_WAIT	0x09
++#define LTSSM_STATE_CFG_LANENUM_ACCEPT	0x0a
++#define LTSSM_STATE_CFG_COMPLETE	0x0b
++#define LTSSM_STATE_CFG_IDLE		0x0c
+ #define LTSSM_STATE_RCVRY_LOCK		0x0d
++#define LTSSM_STATE_RCVRY_SPEED		0x0e
++#define LTSSM_STATE_RCVRY_RCVRCFG	0x0f
++#define LTSSM_STATE_RCVRY_IDLE		0x10
+ #define LTSSM_STATE_L0			0x11
++#define LTSSM_STATE_L0S			0x12
++#define LTSSM_STATE_L123_SEND_EIDLE	0x13
++#define LTSSM_STATE_L1_IDLE		0x14
++#define LTSSM_STATE_L2_IDLE		0x15
++#define LTSSM_STATE_L2_WAKE		0x16
++#define LTSSM_STATE_DISABLED_ENTRY	0x17
++#define LTSSM_STATE_DISABLED_IDLE	0x18
++#define LTSSM_STATE_DISABLED		0x19
++#define LTSSM_STATE_LPBK_ENTRY		0x1a
++#define LTSSM_STATE_LPBK_ACTIVE		0x1b
++#define LTSSM_STATE_LPBK_EXIT		0x1c
++#define LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1d
++#define LTSSM_STATE_HOT_RESET_ENTRY	0x1e
++#define LTSSM_STATE_HOT_RESET		0x1f
++
+ #define LTSSM_STATE_MASK		0x1f
+ 
+ struct pcie_port {
