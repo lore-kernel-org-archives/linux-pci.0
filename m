@@ -1,81 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0118.outbound.protection.outlook.com ([207.46.100.118]:22592
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751082AbbJPHSh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 16 Oct 2015 03:18:37 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	"Yoder Stuart-B08248" <stuart.yoder@freescale.com>,
-	Li Yang <leoli@freescale.com>, Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Jingoo Han" <jg1.han@samsung.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	"Minghuan Lian" <Minghuan.Lian@freescale.com>
-Subject: [PATCH v4 1/6] PCI: layerscape: remove ls_pcie_establish_link()
-Date: Fri, 16 Oct 2015 15:19:15 +0800
-Message-ID: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:41091 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752443AbbJVJE3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Oct 2015 05:04:29 -0400
+Message-ID: <1445504666.3173.20.camel@pengutronix.de>
+Subject: Re: [PATCH v4 0/4] PCI: designware: LTSSM #define cleanup
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fabio Estevam <festevam@gmail.com>,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	linux-pci@vger.kernel.org, pratyush.anand@gmail.com,
+	m-karicheri2@ti.com
+Date: Thu, 22 Oct 2015 11:04:26 +0200
+In-Reply-To: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ls_pcie_establish_link() does not do any real operation, except
-to wait for the linkup establishment. In fact, this is not
-necessary. Moreover, each PCIe controller not inserted device
-will increase the Linux startup time about 200ms.
+Hi Bjorn,
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
----
-Change log
-v4: split from [PATCH v3] PCI: layerscape: Add PCIe support for LS1043a and LS2080a
+Am Mittwoch, den 21.10.2015, 13:42 -0500 schrieb Bjorn Helgaas:
+> This is a revision of Fabio's series:
+> http://lkml.kernel.org/r/1444664808-16445-1-git-send-email-festevam@gmail.com
+> 
+> Lucas, you reviewed the v3 patches, but I fiddled enough with this that I
+> didn't want to blindly carry your review forward.  I don't *think* I
+> changed anything substantive, but I might have missed something.
+> 
+I'm not sure if I like the removal of all the LTSSM state defines, as
+not all reference manuals include them and so I liked to have the header
+as a reference. But if you prefer to not carry unused defines in the
+kernel I won't object strongly to the removal.
 
- drivers/pci/host/pci-layerscape.c | 16 ----------------
- 1 file changed, 16 deletions(-)
+Otherwise the series looks fine, which you may take as a Reviewed-by.
 
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index b2328ea1..6dd44a0 100644
---- a/drivers/pci/host/pci-layerscape.c
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -11,7 +11,6 @@
-  */
- 
- #include <linux/kernel.h>
--#include <linux/delay.h>
- #include <linux/interrupt.h>
- #include <linux/module.h>
- #include <linux/of_pci.h>
-@@ -62,27 +61,12 @@ static int ls_pcie_link_up(struct pcie_port *pp)
- 	return 1;
- }
- 
--static int ls_pcie_establish_link(struct pcie_port *pp)
--{
--	unsigned int retries;
--
--	for (retries = 0; retries < 200; retries++) {
--		if (dw_pcie_link_up(pp))
--			return 0;
--		usleep_range(100, 1000);
--	}
--
--	dev_err(pp->dev, "phy link never came up\n");
--	return -EINVAL;
--}
--
- static void ls_pcie_host_init(struct pcie_port *pp)
- {
- 	struct ls_pcie *pcie = to_ls_pcie(pp);
- 	u32 val;
- 
- 	dw_pcie_setup_rc(pp);
--	ls_pcie_establish_link(pp);
- 
- 	/*
- 	 * LS1021A Workaround for internal TKT228622
+Regards,
+Lucas
+
+> Changes since Fabio's v3:
+>   - Split removal of spear unused #defines to separate patch
+>   - Combine LTSSM_STATE_MASK definition and use changes in one patch
+>   - Combine LTSSM_STATE_RCVRY_LOCK definition and use in one patch
+>   - Use common LTSSM_STATE_L0 definition
+> 
+> ---
+> 
+> Bjorn Helgaas (1):
+>       PCI: designware: Use common LTSSM_STATE_L0 definition
+> 
+> Fabio Estevam (3):
+>       PCI: designware: Use common LTSSM_STATE_MASK definition
+>       PCI: designware: Use common LTSSM_STATE_RCVRY_LOCK definition
+>       PCI: spear: Remove unused #defines
+> 
+> 
+>  drivers/pci/host/pci-imx6.c        |    3 +-
+>  drivers/pci/host/pci-keystone-dw.c |    2 -
+>  drivers/pci/host/pci-layerscape.c  |    4 +-
+>  drivers/pci/host/pcie-designware.h |    4 ++
+>  drivers/pci/host/pcie-spear13xx.c  |   70 ------------------------------------
+>  5 files changed, 6 insertions(+), 77 deletions(-)
+
 -- 
-1.9.1
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
