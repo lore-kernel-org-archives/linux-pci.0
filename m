@@ -1,78 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:35254 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751666AbbJXAwE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Oct 2015 20:52:04 -0400
-Subject: Re: [PATCH] pci: Update VPD size with correct length
-To: Hannes Reinecke <hare@suse.de>, Bjorn Helgaas <bhelgaas@google.com>
-References: <1445591396-95395-1-git-send-email-hare@suse.de>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <562AD631.3040603@gmail.com>
-Date: Fri, 23 Oct 2015 17:52:01 -0700
-MIME-Version: 1.0
-In-Reply-To: <1445591396-95395-1-git-send-email-hare@suse.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from foo.masarand.uk ([104.200.29.153]:36236 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751096AbbJWFFz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:05:55 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 13/29] sh/PCI: Defer IRQ assignment to device enable time
+Date: Fri, 23 Oct 2015 06:03:46 +0100
+Message-Id: <1445576642-29624-14-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/23/2015 02:09 AM, Hannes Reinecke wrote:
-> PCI-2.2 VPD entries have a maximum size of 32k, but might actually
-> be smaller than that. To figure out the actual size one has to read
-> the VPD area until the 'end marker' is reached.
-> Trying to read VPD data beyond that marker results in 'interesting'
-> effects, from simple read errors to crashing the card.
-> This path modifies the attribute size to the avialable VPD size.
->
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->   drivers/pci/access.c | 29 +++++++++++++++++++++++++++++
->   1 file changed, 29 insertions(+)
->
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index 6bc9b12..4f8208e 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -409,6 +409,34 @@ static int pci_vpd_f0_dev_check(struct pci_dev *dev)
->   	return ret;
->   }
->
-> +/**
-> + * pci_vpd_size - determine actual size of Vital Product Data
-> + * @dev:	pci device struct
-> + * @old_size:	current assumed size, also maximum allowed size
-> + *
-> + */
-> +size_t
-> +pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
-> +{
-> +	loff_t off = 0;
-> +	unsigned char header[1+2];	/* 1 byte tag, 2 bytes length */
-> +
-> +	while (off < old_size && pci_read_vpd(dev, off, 1, header)) {
-> +		if (header[0] == 0x78)	/* End tag descriptor */
-> +			return off + 1;
-> +		if (header[0] & 0x80) {
-> +			/* Large Resource Data Type Tag */
-> +			if (pci_read_vpd(dev, off+1, 2, &header[1]) != 2)
-> +				return off + 1;
-> +			off += 3 + ((header[2] << 8) | header[1]);
-> +		} else {
-> +			/* Short Resource Data Type Tag */
-> +			off += 1 + (header[0] & 0x07);
-> +		}
-> +	}
-> +	return old_size;
-> +}
-> +
+Currently platform specific PCI device IRQ assignment is run during
+the boot code, this results in a wide array of differing code paths
+and causes hot-plugged PCI devices to not be assigned IRQs, this
+patch removes the boot time initialisation of such IRQs and instead
+registers assignment functions to be run during the PCI device enable
+path.
 
-My understanding is that the end tag can have some data associated with 
-it such as a checksum.  What you may want to look at doing is process 
-long tag and short tag bits first.  Then you could do a mask and compare 
-after and if ((header[0] & ~0x7) == 0x78) then you return off + 1.
+Signed-off-by: Matthew Minter <matt@masarand.com>
+---
+ arch/sh/drivers/pci/pci.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-Also I was wondering if you have looked at the cxgb4 network driver? 
-They are using the vpd read/write calls to access their EEPROM and I 
-assume they are doing so outside the actual VPD fields.
+diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
+index d5462b7..28f8c90 100644
+--- a/arch/sh/drivers/pci/pci.c
++++ b/arch/sh/drivers/pci/pci.c
+@@ -144,16 +144,20 @@ static int __init pcibios_init(void)
+ 	for (hose = hose_head; hose; hose = hose->next)
+ 		pcibios_scanbus(hose);
+ 
+-	pci_fixup_irqs(pci_common_swizzle, pcibios_map_platform_irq);
+-
+ 	dma_debug_add_bus(&pci_bus_type);
+-
+ 	pci_initialized = 1;
+ 
+ 	return 0;
+ }
+ subsys_initcall(pcibios_init);
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = pcibios_map_platform_irq;
++	return 0;
++}
++
+ /*
+  *  Called after each bus is probed, but before its children
+  *  are examined.
+-- 
+2.6.2
 
-- Alex
