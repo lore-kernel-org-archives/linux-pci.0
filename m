@@ -1,49 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:26241 "EHLO
-	ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751807AbbJCLO3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 07:14:29 -0400
-Message-ID: <560FB882.5050107@internode.on.net>
-Date: Sat, 03 Oct 2015 20:44:10 +0930
-From: Arthur Marsh <arthur.marsh@internode.on.net>
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:36051 "EHLO
+	mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754826AbbJWBzG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Oct 2015 21:55:06 -0400
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	James Bottomley <James.Bottomley@HansenPartnership.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Ballabio Dario <dario.ballabio@emc.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Dario Ballabio <ballabio_dario@emc.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, x86@kernel.org
-Subject: Re: [RFT v3] eata: Convert eata driver as normal PCI and platform
- device drivers
-References: <20150916134211.GA21535@infradead.org> <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com> <5601D550.5000801@internode.on.net> <1442961929.15264.4.camel@HansenPartnership.com> <5601E5FE.7020706@internode.on.net> <56023771.5010006@linux.intel.com> <5602829C.5090500@internode.on.net> <1443019207.2240.27.camel@HansenPartnership.com> <56037C09.5050201@linux.intel.com> <560390A1.5060503@internode.on.net> <56063AB7.9030309@internode.on.net> <560F8DB0.8030704@linux.intel.com>
-In-Reply-To: <560F8DB0.8030704@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20151022221355.GJ21237@localhost>
+References: <1445506051-21688-1-git-send-email-lftan@altera.com>
+	<1445506051-21688-3-git-send-email-lftan@altera.com>
+	<20151022221355.GJ21237@localhost>
+Date: Fri, 23 Oct 2015 09:55:04 +0800
+Message-ID: <CAFiDJ59j5KZej+PgiFVTO2ob5=w79yF=c6RAzrrWQHEi8AwOAA@mail.gmail.com>
+Subject: Re: [PATCH v11 2/6] pci: add Altera PCI vendor ID
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-Jiang Liu wrote on 03/10/15 17:41:
-
-> Hi Arthur,
-> 	The above results suggest that we need to shutdown eata
-> controller for kexec. So could you please try to apply the attached
-> patch upon the previous two patches?
-> Thanks!
-> Gerry
+On Fri, Oct 23, 2015 at 6:13 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Oct 22, 2015 at 05:27:27PM +0800, Ley Foon Tan wrote:
+>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+>> ---
+>>  include/linux/pci_ids.h | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>> index d9ba49c..08e4462 100644
+>> --- a/include/linux/pci_ids.h
+>> +++ b/include/linux/pci_ids.h
+>> @@ -1550,6 +1550,8 @@
+>>  #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
+>>  #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
+>>
+>> +#define PCI_VENDOR_ID_ALTERA         0x1172
+>> +
 >
+> This doesn't seem to be used anywhere, so I'll drop this patch.
+Okay.
 
-Hi, I still get kexec shutdown errors like this with the 3rd patch applied:
+Thanks.
 
-http://www.users.on.net/~arthur.marsh/20151003566.jpg
-
-I can still unmount filesystems, modprobe -r eata and modprobe eata to 
-get things into a state where a kexec reboot works.
-
-Regards,
-
-Arthur.
+Regards
+Ley Foon
