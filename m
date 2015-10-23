@@ -1,99 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50723 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965287AbbJ0VBz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 17:01:55 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
+Received: from mx2.suse.de ([195.135.220.15]:55482 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751114AbbJWJJ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 05:09:59 -0400
+From: Hannes Reinecke <hare@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
-Subject: [PATCH v8 19/61] PCI: Set resource to FIXED for LSI devices
-Date: Tue, 27 Oct 2015 13:55:11 -0700
-Message-Id: <1445979353-1728-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+	Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] pci: Update VPD size with correct length
+Date: Fri, 23 Oct 2015 11:09:56 +0200
+Message-Id: <1445591396-95395-1-git-send-email-hare@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-LSI HBA firmware stop responding pci read from host if pci core ever change
-pci device BAR values.
+PCI-2.2 VPD entries have a maximum size of 32k, but might actually
+be smaller than that. To figure out the actual size one has to read
+the VPD area until the 'end marker' is reached.
+Trying to read VPD data beyond that marker results in 'interesting'
+effects, from simple read errors to crashing the card.
+This path modifies the attribute size to the avialable VPD size.
 
-Set their resources to FIXED, so will allow realloc to skip them.
-
-Reported-by: Paul Johnson <pjay@nwtrail.com>
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@vger.kernel.org
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/pci/pci.h       |  1 +
- drivers/pci/quirks.c    | 20 ++++++++++++++++++++
- drivers/pci/setup-bus.c |  4 ++++
- 3 files changed, 25 insertions(+)
+ drivers/pci/access.c | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6ad0f05..39d2c50 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -170,6 +170,7 @@ static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 6bc9b12..4f8208e 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -409,6 +409,34 @@ static int pci_vpd_f0_dev_check(struct pci_dev *dev)
+ 	return ret;
  }
  
- void pci_realloc_get_opt(char *);
-+bool pci_realloc_user_enabled(void);
- 
- static inline int pci_no_d1d2(struct pci_dev *dev)
- {
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 1d85f37..be0bdfb 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -323,6 +323,26 @@ static void quirk_s3_64M(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
- 
-+/*
-+ * LSI devices firmware does not like BAR get changed
++/**
++ * pci_vpd_size - determine actual size of Vital Product Data
++ * @dev:	pci device struct
++ * @old_size:	current assumed size, also maximum allowed size
++ *
 + */
-+static void quirk_bar_fixed(struct pci_dev *dev)
++size_t
++pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
 +{
-+	int i;
++	loff_t off = 0;
++	unsigned char header[1+2];	/* 1 byte tag, 2 bytes length */
 +
-+	if (pci_realloc_user_enabled())
-+		return;
-+
-+	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
-+		struct resource *r = &dev->resource[i];
-+
-+		if (!r->start || !r->flags)
-+			continue;
-+		r->flags |= IORESOURCE_PCI_FIXED;
++	while (off < old_size && pci_read_vpd(dev, off, 1, header)) {
++		if (header[0] == 0x78)	/* End tag descriptor */
++			return off + 1;
++		if (header[0] & 0x80) {
++			/* Large Resource Data Type Tag */
++			if (pci_read_vpd(dev, off+1, 2, &header[1]) != 2)
++				return off + 1;
++			off += 3 + ((header[2] << 8) | header[1]);
++		} else {
++			/* Short Resource Data Type Tag */
++			off += 1 + (header[0] & 0x07);
++		}
 +	}
++	return old_size;
 +}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC,	PCI_ANY_ID,	quirk_bar_fixed);
 +
- /* for pci remove and rescan */
- static void quirk_allocate_fixed(struct pci_dev *dev)
+ int pci_vpd_pci22_init(struct pci_dev *dev)
  {
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 8cd6c6b..d49c6e5 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1634,6 +1634,10 @@ void __init pci_realloc_get_opt(char *str)
- 	else if (!strncmp(str, "on", 2))
- 		pci_realloc_enable = user_enabled;
+ 	struct pci_vpd_pci22 *vpd;
+@@ -436,6 +464,7 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+ 	vpd->cap = cap;
+ 	vpd->busy = false;
+ 	dev->vpd = &vpd->base;
++	vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
+ 	return 0;
  }
-+bool pci_realloc_user_enabled(void)
-+{
-+	return pci_realloc_enable == user_enabled;
-+}
- static bool pci_realloc_enabled(enum enable_type enable)
- {
- 	return enable >= user_enabled;
+ 
 -- 
-1.8.4.5
+1.8.5.6
 
