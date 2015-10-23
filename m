@@ -1,83 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:33244 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753137AbbJIPPL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 11:15:11 -0400
-Date: Fri, 9 Oct 2015 17:14:42 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Andrew Lunn <andrew@lunn.ch>, Julia Lawall <julia.lawall@lip6.fr>
-Cc: Russell King <rmk+kernel@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 2/9] pci: mvebu: fix memory leaks and refcount leaks
-Message-ID: <20151009171442.52988f0b@free-electrons.com>
-In-Reply-To: <20151009150710.GJ14688@lunn.ch>
-References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
-	<E1ZiRIs-0004Id-AN@rmk-PC.arm.linux.org.uk>
-	<20151009165240.3ba17ece@free-electrons.com>
-	<20151009150710.GJ14688@lunn.ch>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from foo.masarand.uk ([104.200.29.153]:36277 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751303AbbJWFGG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:06:06 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 24/29] unicore32/PCI: Defer IRQ assignment to device enable time
+Date: Fri, 23 Oct 2015 06:03:57 +0100
+Message-Id: <1445576642-29624-25-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello
+PCI IRQs are currently assigned during pci_common_init, this is only run
+at boot time so devices hot-plugged after boot will not be allocated an IRQ.
+this is fixed here by defering the assignment untill the device enable code,
+instead registering the function pointer at boot time.
 
-(Julia added in the list of recipients).
+Signed-off-by: Matthew Minter <matt@masarand.com>
+---
+ arch/unicore32/kernel/pci.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-On Fri, 9 Oct 2015 17:07:10 +0200, Andrew Lunn wrote:
-
-> > > @@ -1052,10 +1086,12 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
-> > >  		struct mvebu_pcie_port *port = &pcie->ports[i];
-> > >  
-> > >  		ret = mvebu_pcie_parse_port(pcie, port, child);
-> > > -		if (ret < 0)
-> > > +		if (ret < 0) {
-> > > +			of_node_put(child);
-> > >  			return ret;
-> > > -		else if (ret == 0)
-> > > +		} else if (ret == 0) {
-> > >  			continue;
-> > > +		}
-> > 
-> > This is not trivial. If I understand correctly,
-> > for_each_available_child_of_node() will automatically release the
-> > reference on the previous node and take the reference on the new one
-> > before entering the loop code. So in the skipping case, we don't need
-> > to release the reference as it will be done by the next iteration of
-> > the loop, but in the error case, since we are unexpectedly breaking the
-> > loop, we need to do it manually.
-> > 
-> > The sort of tricky thing that should be documented near
-> > for_each_child_of_node(), since I believe a lot of code gets this
-> > wrong.
-> 
-> Sounds like a good candidate for a coccinelle script. Maybe you could
-> ask Julia Lawall?
-
-Julia: some of the Device Tree iterator functions have a somewhat
-"interesting" behavior in that they take the reference on the current
-child when entering the loop, and release it before entering the next
-iteration (which will also take a reference to the next child).
-
-This means that if you have an exit point inside the loop (break or
-return), you are loosing a reference. For example,
-http://lxr.free-electrons.com/source/arch/arm/mach-shmobile/pm-rmobile.c#L367
-is wrong because there is a missing of_node_put(np) before the "return
--ENOMEM".
-
-So essentially, every exit point in such Device Tree iteration loops
-should make to call of_node_put() on the current element before exiting
-the loop unexpectedly.
-
-As Andrew suggested, this is probably something a Coccinelle semantic
-patch could easily detect and probably fix automatically.
-
-Thanks,
-
-Thomas
+diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+index d45fa5f..42295b2 100644
+--- a/arch/unicore32/kernel/pci.c
++++ b/arch/unicore32/kernel/pci.c
+@@ -101,7 +101,7 @@ void pci_puv3_preinit(void)
+ 	writel(readl(PCIBRI_CMD) | PCIBRI_CMD_IO | PCIBRI_CMD_MEM, PCIBRI_CMD);
+ }
+ 
+-static int __init pci_puv3_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++static int pci_puv3_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	if (dev->bus->number == 0) {
+ #ifdef CONFIG_ARCH_FPGA /* 4 pci slots */
+@@ -263,8 +263,6 @@ static int __init pci_common_init(void)
+ 	if (!puv3_bus)
+ 		panic("PCI: unable to scan bus!");
+ 
+-	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
+-
+ 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+ 		pci_bus_size_bridges(puv3_bus);
+ 		pci_bus_assign_resources(puv3_bus);
+@@ -274,6 +272,13 @@ static int __init pci_common_init(void)
+ }
+ subsys_initcall(pci_common_init);
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = pci_puv3_map_irq;
++	return 0;
++}
++
+ char * __init pcibios_setup(char *str)
+ {
+ 	if (!strcmp(str, "debug")) {
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+2.6.2
+
