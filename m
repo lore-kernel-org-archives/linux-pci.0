@@ -1,56 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-Subject: [PATCH v8 11/61] OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
-Date: Tue, 27 Oct 2015 13:55:03 -0700
-Message-Id: <1445979353-1728-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foo.masarand.uk ([104.200.29.153]:36212 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751096AbbJWFFt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:05:49 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 07/29] x86/pci: Move pcibios_root_bridge_prepare from acpi.c to irq.c
+Date: Fri, 23 Oct 2015 06:03:40 +0100
+Message-Id: <1445576642-29624-8-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource, so set
-IORESOUCE_MEM_64 for 64bit resource during OF device resource flags
-parsing.
+It is always safe to run ACPI_COMPANION_SET even if we are using
+a non acpi system. Therefore we move pcibios_root_bridge_prepare
+into irq.c.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: devicetree@vger.kernel.org
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+This should make no difference to behaviour at this time but
+prepares for additional changes to pcibios_root_bridge_prepare
+which must apply both to acpi and non acpi systems.
+
+Signed-off-by: Matthew Minter <matt@masarand.com>
 ---
- drivers/of/address.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ arch/x86/pci/acpi.c | 15 ---------------
+ arch/x86/pci/irq.c  | 15 +++++++++++++++
+ 2 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 384574c..3399602 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -128,9 +128,11 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
- 		flags |= IORESOURCE_IO;
- 		break;
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index ff99117..9b2f170 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -493,21 +493,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	return bus;
+ }
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	/*
+-	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
+-	 * here, pci_create_root_bus() has been called by someone else and
+-	 * sysdata is likely to be different from what we expect.  Let it go in
+-	 * that case.
+-	 */
+-	if (!bridge->dev.parent) {
+-		struct pci_sysdata *sd = bridge->bus->sysdata;
+-		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+-	}
+-	return 0;
+-}
+-
+ int __init pci_acpi_init(void)
+ {
+ 	struct pci_dev *dev = NULL;
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 32e7034..350e785 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1162,6 +1162,21 @@ void __init pcibios_irq_init(void)
  	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
+ }
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	/*
++	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
++	 * here, pci_create_root_bus() has been called by someone else and
++	 * sysdata is likely to be different from what we expect.  Let it go in
++	 * that case.
++	 */
++	if (!bridge->dev.parent) {
++		struct pci_sysdata *sd = bridge->bus->sysdata;
++		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
++	}
++	return 0;
++}
++
+ static void pirq_penalize_isa_irq(int irq, int active)
+ {
+ 	/*
 -- 
-1.8.4.5
+2.6.2
 
