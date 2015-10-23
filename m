@@ -1,46 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:53271 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752221AbbJOTfE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Oct 2015 15:35:04 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	WingMan Kwok <w-kwok2@ti.com>, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, kishon@ti.com,
-	rogerq@ti.com, bhelgaas@google.com, ssantosh@kernel.org,
-	linux@arm.linux.org.uk, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v1 1/2] phy: keystone: serdes driver for gbe 10gbe and pcie
-Date: Thu, 15 Oct 2015 21:34:51 +0200
-Message-ID: <6215485.RTPqreMEMX@wuerfel>
-In-Reply-To: <561FCDC0.3080109@ti.com>
-References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com> <5192855.p6QLDWTiVi@wuerfel> <561FCDC0.3080109@ti.com>
+Received: from mail-bl2on0062.outbound.protection.outlook.com ([65.55.169.62]:40279
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752988AbbJWK2F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 06:28:05 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v12 6/6] MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+Date: Fri, 23 Oct 2015 18:27:15 +0800
+Message-ID: <1445596035-27733-7-git-send-email-lftan@altera.com>
+In-Reply-To: <1445596035-27733-1-git-send-email-lftan@altera.com>
+References: <1445596035-27733-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 15 October 2015 12:01:04 Murali Karicheri wrote:
-> 
-> >> + * Redistributions in binary form must reproduce the above copyright
-> >> + * notice, this list of conditions and the following disclaimer in the
-> >> + * documentation and/or other materials provided with the
-> >> + * distribution.
-> >
-> > The current code does not do this when compiled, which might be a
-> > problem for distributors. Can you clarify the license?
-> >
-> Arnd,
-> 
-> Can you elaborate on this? I did a grep on the string "Redistributions 
-> in binary form must reproduce the above copyright" and I could find 
-> several instance of this. So I am not sure what you mean by "The current 
-> code does not do this when compiled".
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+ MAINTAINERS | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-You write that the binary form of the code must produce the copyright
-notice. I don't see any code that does this. If I was looking in the
-wrong place, let me know.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index b8577ad9..96b9fac 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7958,6 +7958,14 @@ F:	include/linux/pci*
+ F:	arch/x86/pci/
+ F:	arch/x86/kernel/quirks.c
+ 
++PCI DRIVER FOR ALTERA PCIE IP
++M:	Ley Foon Tan <lftan@altera.com>
++L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
++L:	linux-pci@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
++F:	drivers/pci/host/pcie-altera.c
++
+ PCI DRIVER FOR ARM VERSATILE PLATFORM
+ M:	Rob Herring <robh@kernel.org>
+ L:	linux-pci@vger.kernel.org
+@@ -8059,6 +8067,14 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*spear*
+ 
++PCI MSI DRIVER FOR ALTERA MSI IP
++M:	Ley Foon Tan <lftan@altera.com>
++L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
++L:	linux-pci@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
++F:	drivers/pci/host/pcie-altera-msi.c
++
+ PCI MSI DRIVER FOR APPLIEDMICRO XGENE
+ M:	Duc Dang <dhdang@apm.com>
+ L:	linux-pci@vger.kernel.org
+-- 
+1.8.2.1
 
-	Arnd
