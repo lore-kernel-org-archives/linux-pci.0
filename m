@@ -1,128 +1,206 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42174 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751970AbbJ0J3A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 05:29:00 -0400
-Message-ID: <562F43C6.7000009@oracle.com>
-Date: Tue, 27 Oct 2015 17:28:38 +0800
-From: ethan zhao <ethan.zhao@oracle.com>
-MIME-Version: 1.0
-To: Alexander Duyck <alexander.duyck@gmail.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] iov: restore NumVFs register to 0 before return from
- virtfn_max_buses()
-References: <1442373593-8342-1-git-send-email-ethan.zhao@oracle.com> <20151015171600.GB17702@localhost> <562F1024.70001@gmail.com>
-In-Reply-To: <562F1024.70001@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from foo.masarand.uk ([104.200.29.153]:36229 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751096AbbJWFFy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:05:54 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 12/29] sh/PCI: Remove __init optimisations from IRQ mapping functions/data
+Date: Fri, 23 Oct 2015 06:03:45 +0100
+Message-Id: <1445576642-29624-13-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alexander,
-On 2015/10/27 13:48, Alexander Duyck wrote:
-> On 10/15/2015 10:16 AM, Bjorn Helgaas wrote:
->> Hi Ethan,
->>
->> On Wed, Sep 16, 2015 at 12:19:53PM +0900, Ethan Zhao wrote:
->>> After commit 4449f079722c ("PCI: Calculate maximum number of buses
->>> required for VFs"),the initial value of NumVFs register was left to
->>> non-zero after sriov_init() and no VFs was enabled in device driver.
->>> this changed the behaviour of kernel exported by lspci and sysfs etc.
->>> so this patch restore the NumVFs register to zero after the
->>> calculation of max_VF_buses was done and before return from
->>> virtfn_max_buses().
->>>
->>> Tested on stable 4.1 and passed building on stable 4.3-rc1
->>>
->>> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
->>> Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
->> Can you test the patch below?  I'm trying to avoid touching
->> PCI_SRIOV_NUM_VF in more than one place, and I think it's OK to set it
->> and test offset/stride at the end, instead of setting NUM_VF to zero,
->> testing offset/stride, computing max_bus, then setting NUM_VF to zero
->> again.
->>
->> Bjorn
->>
->>
->> commit 8e20e89658f23b8d16b1e21810e9f63c8625129c
->> Author: Bjorn Helgaas <bhelgaas@google.com>
->> Date:   Thu Oct 15 11:31:21 2015 -0500
->>
->>      PCI: Set SR-IOV NumVFs to zero after enumeration
->>           The enumeration path should leave NumVFs set to zero. But 
->> after
->>      4449f079722c ("PCI: Calculate maximum number of buses required 
->> for VFs"),
->>      we call virtfn_max_buses() in the enumeration path, which 
->> changes NumVFs.
->>      This NumVFs change is visible via lspci and sysfs until a driver 
->> enables
->>      SR-IOV.
->>           Set NumVFs to zero after virtfn_max_buses() computes the 
->> maximum number of
->>      buses.
->>           Fixes: 4449f079722c ("PCI: Calculate maximum number of 
->> buses required for VFs")
->>      Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
->>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index ee0ebff..0202ab0 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -384,7 +384,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
->>       int rc;
->>       int nres;
->>       u32 pgsz;
->> -    u16 ctrl, total, offset, stride;
->> +    u16 ctrl, total;
->>       struct pci_sriov *iov;
->>       struct resource *res;
->>       struct pci_dev *pdev;
->> @@ -414,11 +414,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
->>     found:
->>       pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
->> -    pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
->> -    pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
->> -    pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
->> -    if (!offset || (total > 1 && !stride))
->> -        return -EIO;
->>         pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
->>       i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
->> @@ -456,8 +451,6 @@ found:
->>       iov->nres = nres;
->>       iov->ctrl = ctrl;
->>       iov->total_VFs = total;
->> -    iov->offset = offset;
->> -    iov->stride = stride;
->>       iov->pgsz = pgsz;
->>       iov->self = dev;
->>       pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
->> @@ -475,6 +468,11 @@ found:
->>       dev->sriov = iov;
->>       dev->is_physfn = 1;
->>       iov->max_VF_buses = virtfn_max_buses(dev);
->> +    pci_iov_set_numvfs(dev, 0);
->> +    if (!iov->offset || (total > 1 && !iov->stride)) {
->> +        rc = -EIO;
->> +        goto failed;
->> +    }
->>         return 0;
->
-> You might want to reorder this a bit.  The problem is offset and 
-> stride can be 0 if numvfs is 0.  So you should probably test offset 
-> and stride 
-  Yes, the spec says "Note: First VF Offset is unused if NumVFs is 0. If 
-NumVFs is greater than 0, First VF Offset must
-25 not be zero. "
-> first, and then reset numvfs to 0.
-  Why test it before reset numvfs ?
+Currently the many IRQ mapping functions and data structures use
+the __init and __initdata optimisations. These result in the
+relevant functions being innacessable after boot time.
 
-Thanks,
-Ethan
->
-> - Alex
->
+However for deferred IRQ assignment it is important to have
+access to these functions at PCI device enable time.
+
+Therefore the optimisation is removed from the relevant data
+structures and functions to prepare for deferred IRQ assignment.
+
+Signed-off-by: Matthew Minter <matt@masarand.com>
+---
+ arch/sh/drivers/pci/fixups-cayman.c     | 2 +-
+ arch/sh/drivers/pci/fixups-dreamcast.c  | 2 +-
+ arch/sh/drivers/pci/fixups-r7780rp.c    | 2 +-
+ arch/sh/drivers/pci/fixups-rts7751r2d.c | 6 +++---
+ arch/sh/drivers/pci/fixups-sdk7780.c    | 4 ++--
+ arch/sh/drivers/pci/fixups-se7751.c     | 2 +-
+ arch/sh/drivers/pci/fixups-sh03.c       | 2 +-
+ arch/sh/drivers/pci/fixups-snapgear.c   | 2 +-
+ arch/sh/drivers/pci/fixups-titan.c      | 4 ++--
+ arch/sh/drivers/pci/pcie-sh7786.c       | 2 +-
+ 10 files changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/arch/sh/drivers/pci/fixups-cayman.c b/arch/sh/drivers/pci/fixups-cayman.c
+index edc2fb7..3246788 100644
+--- a/arch/sh/drivers/pci/fixups-cayman.c
++++ b/arch/sh/drivers/pci/fixups-cayman.c
+@@ -5,7 +5,7 @@
+ #include <cpu/irq.h>
+ #include "pci-sh5.h"
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	int result = -1;
+ 
+diff --git a/arch/sh/drivers/pci/fixups-dreamcast.c b/arch/sh/drivers/pci/fixups-dreamcast.c
+index 1d1c5a2..9d597f7 100644
+--- a/arch/sh/drivers/pci/fixups-dreamcast.c
++++ b/arch/sh/drivers/pci/fixups-dreamcast.c
+@@ -76,7 +76,7 @@ static void gapspci_fixup_resources(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, gapspci_fixup_resources);
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	/*
+ 	 * The interrupt routing semantics here are quite trivial.
+diff --git a/arch/sh/drivers/pci/fixups-r7780rp.c b/arch/sh/drivers/pci/fixups-r7780rp.c
+index 57ed3f0..2c9b58f 100644
+--- a/arch/sh/drivers/pci/fixups-r7780rp.c
++++ b/arch/sh/drivers/pci/fixups-r7780rp.c
+@@ -15,7 +15,7 @@
+ #include <linux/sh_intc.h>
+ #include "pci-sh4.h"
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	return evt2irq(0xa20) + slot;
+ }
+diff --git a/arch/sh/drivers/pci/fixups-rts7751r2d.c b/arch/sh/drivers/pci/fixups-rts7751r2d.c
+index eaddb56..358ac10 100644
+--- a/arch/sh/drivers/pci/fixups-rts7751r2d.c
++++ b/arch/sh/drivers/pci/fixups-rts7751r2d.c
+@@ -20,18 +20,18 @@
+ #define PCIMCR_MRSET_OFF	0xBFFFFFFF
+ #define PCIMCR_RFSH_OFF		0xFFFFFFFB
+ 
+-static u8 rts7751r2d_irq_tab[] __initdata = {
++static u8 rts7751r2d_irq_tab[] = {
+ 	IRQ_PCI_INTA,
+ 	IRQ_PCI_INTB,
+ 	IRQ_PCI_INTC,
+ 	IRQ_PCI_INTD,
+ };
+ 
+-static char lboxre2_irq_tab[] __initdata = {
++static char lboxre2_irq_tab[] = {
+ 	IRQ_ETH0, IRQ_ETH1, IRQ_INTA, IRQ_INTD,
+ };
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	if (mach_is_lboxre2())
+ 		return lboxre2_irq_tab[slot];
+diff --git a/arch/sh/drivers/pci/fixups-sdk7780.c b/arch/sh/drivers/pci/fixups-sdk7780.c
+index c0a015a..24e96df 100644
+--- a/arch/sh/drivers/pci/fixups-sdk7780.c
++++ b/arch/sh/drivers/pci/fixups-sdk7780.c
+@@ -22,7 +22,7 @@
+ #define IRQ_INTD	evt2irq(0xa80)
+ 
+ /* IDSEL [16][17][18][19][20][21][22][23][24][25][26][27][28][29][30][31] */
+-static char sdk7780_irq_tab[4][16] __initdata = {
++static char sdk7780_irq_tab[4][16] = {
+ 	/* INTA */
+ 	{ IRQ_INTA, IRQ_INTD, IRQ_INTC, IRQ_INTD, -1, -1, -1, -1, -1, -1,
+ 	  -1, -1, -1, -1, -1, -1 },
+@@ -37,7 +37,7 @@ static char sdk7780_irq_tab[4][16] __initdata = {
+ 	  -1, -1, -1 },
+ };
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+        return sdk7780_irq_tab[pin-1][slot];
+ }
+diff --git a/arch/sh/drivers/pci/fixups-se7751.c b/arch/sh/drivers/pci/fixups-se7751.c
+index 84a88ca..1cb8d0a 100644
+--- a/arch/sh/drivers/pci/fixups-se7751.c
++++ b/arch/sh/drivers/pci/fixups-se7751.c
+@@ -7,7 +7,7 @@
+ #include <linux/sh_intc.h>
+ #include "pci-sh4.h"
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *, u8 slot, u8 pin)
+ {
+         switch (slot) {
+         case 0: return evt2irq(0x3a0);
+diff --git a/arch/sh/drivers/pci/fixups-sh03.c b/arch/sh/drivers/pci/fixups-sh03.c
+index 16207be..55ac1ba 100644
+--- a/arch/sh/drivers/pci/fixups-sh03.c
++++ b/arch/sh/drivers/pci/fixups-sh03.c
+@@ -4,7 +4,7 @@
+ #include <linux/pci.h>
+ #include <linux/sh_intc.h>
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	int irq;
+ 
+diff --git a/arch/sh/drivers/pci/fixups-snapgear.c b/arch/sh/drivers/pci/fixups-snapgear.c
+index 6e33ba4..a931e59 100644
+--- a/arch/sh/drivers/pci/fixups-snapgear.c
++++ b/arch/sh/drivers/pci/fixups-snapgear.c
+@@ -19,7 +19,7 @@
+ #include <linux/sh_intc.h>
+ #include "pci-sh4.h"
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	int irq = -1;
+ 
+diff --git a/arch/sh/drivers/pci/fixups-titan.c b/arch/sh/drivers/pci/fixups-titan.c
+index bd1addb..a9d563e 100644
+--- a/arch/sh/drivers/pci/fixups-titan.c
++++ b/arch/sh/drivers/pci/fixups-titan.c
+@@ -19,7 +19,7 @@
+ #include <mach/titan.h>
+ #include "pci-sh4.h"
+ 
+-static char titan_irq_tab[] __initdata = {
++static char titan_irq_tab[] = {
+ 	TITAN_IRQ_WAN,
+ 	TITAN_IRQ_LAN,
+ 	TITAN_IRQ_MPCIA,
+@@ -27,7 +27,7 @@ static char titan_irq_tab[] __initdata = {
+ 	TITAN_IRQ_USB,
+ };
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	int irq = titan_irq_tab[slot];
+ 
+diff --git a/arch/sh/drivers/pci/pcie-sh7786.c b/arch/sh/drivers/pci/pcie-sh7786.c
+index a162a7f..0167a73 100644
+--- a/arch/sh/drivers/pci/pcie-sh7786.c
++++ b/arch/sh/drivers/pci/pcie-sh7786.c
+@@ -467,7 +467,7 @@ static int __init pcie_init(struct sh7786_pcie_port *port)
+ 	return 0;
+ }
+ 
+-int __init pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
++int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+         return evt2irq(0xae0);
+ }
+-- 
+2.6.2
 
