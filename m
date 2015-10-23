@@ -1,111 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 8bytes.org ([81.169.241.247]:43507 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751412AbbJWIXR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 04:23:17 -0400
+Date: Fri, 23 Oct 2015 10:23:15 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [RFC PATCHv3 2/4] x86-pci: allow pci domain specific dma ops
-Date: Tue, 27 Oct 2015 11:34:05 -0600
-Message-Id: <1445967247-24310-3-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1445967247-24310-1-git-send-email-keith.busch@intel.com>
-References: <1445967247-24310-1-git-send-email-keith.busch@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Joerg Roedel <jroedel@suse.de>
+Subject: Re: [PATCH] x86/PCI: Don't alloc pcibios-irq when MSI is enabled
+Message-ID: <20151023082314.GW27420@8bytes.org>
+References: <1444386214-26319-1-git-send-email-joro@8bytes.org>
+ <20151021162329.GB1583@localhost>
+ <56299523.1010201@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56299523.1010201@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-New x86 pci h/w will require dma operations specific to that domain. This
-patch allows those domains to register their operations, and sets devices
-as they are discovere3d in that domain to use them.
+On Fri, Oct 23, 2015 at 10:02:11AM +0800, Jiang Liu wrote:
+> 	There's another patch already merged into mainstream kernel,
+> which solves this issue in another way by making use of
+> pci_dev->match_driver flag. Please refer to:
+> cbbc00be2ce3 ("iommu/amd: Prevent binding other PCI drivers to IOMMU PCI
+> devices")
+> 	So I think this patch is redundant now.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- arch/x86/include/asm/device.h |   10 ++++++++++
- arch/x86/pci/common.c         |   38 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 48 insertions(+)
+Yeah, it fixes the same problem already fixed by your match_driver fix.
+But I think this fix makes still sense as it avoids that the problem can
+reappear in the future with other drivers. Setting pci_dev->match_driver
+could be easily forgotten when writing new code.
 
-diff --git a/arch/x86/include/asm/device.h b/arch/x86/include/asm/device.h
-index 03dd729..3b23897 100644
---- a/arch/x86/include/asm/device.h
-+++ b/arch/x86/include/asm/device.h
-@@ -10,6 +10,16 @@ struct dev_archdata {
- #endif
- };
- 
-+#if defined(CONFIG_X86_DEV_DMA_OPS) && defined(CONFIG_PCI_DOMAINS)
-+struct dma_domain {
-+	struct list_head node;
-+	struct dma_map_ops *dma_ops;
-+	int domain_nr;
-+};
-+extern void add_dma_domain(struct dma_domain *domain);
-+extern void del_dma_domain(struct dma_domain *domain);
-+#endif
-+
- struct pdev_archdata {
- };
- 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index dc78a4a..524183d 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -641,6 +641,43 @@ unsigned int pcibios_assign_all_busses(void)
- 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
- }
- 
-+#if defined(CONFIG_X86_DEV_DMA_OPS) && defined(CONFIG_PCI_DOMAINS)
-+LIST_HEAD(dma_domain_list);
-+DEFINE_SPINLOCK(dma_domain_list_lock);
-+
-+void add_dma_domain(struct dma_domain *domain)
-+{
-+	spin_lock(&dma_domain_list_lock);
-+	list_add(&domain->node, &dma_domain_list);
-+	spin_unlock(&dma_domain_list_lock);
-+}
-+EXPORT_SYMBOL_GPL(add_dma_domain);
-+
-+void del_dma_domain(struct dma_domain *domain)
-+{
-+	spin_lock(&dma_domain_list_lock);
-+	list_del(&domain->node);
-+	spin_unlock(&dma_domain_list_lock);
-+}
-+EXPORT_SYMBOL_GPL(del_dma_domain);
-+
-+static void set_dma_domain_ops(struct pci_dev *pdev)
-+{
-+	struct dma_domain *domain;
-+
-+	spin_lock(&dma_domain_list_lock);
-+	list_for_each_entry(domain, &dma_domain_list, node) {
-+		if (pci_domain_nr(pdev->bus) == domain->domain_nr) {
-+			pdev->dev.archdata.dma_ops = domain->dma_ops;
-+			break;
-+		}
-+	}
-+	spin_unlock(&dma_domain_list_lock);
-+}
-+#else
-+static void set_dma_domain_ops(struct pci_dev *pdev) {}
-+#endif
-+
- int pcibios_add_device(struct pci_dev *dev)
- {
- 	struct setup_data *data;
-@@ -670,6 +707,7 @@ int pcibios_add_device(struct pci_dev *dev)
- 		pa_data = data->next;
- 		iounmap(data);
- 	}
-+	set_dma_domain_ops(dev);
- 	return 0;
- }
- 
--- 
-1.7.10.4
+
+	Joerg
 
