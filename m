@@ -1,158 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47996 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752497AbbJTOEY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Oct 2015 10:04:24 -0400
-Date: Tue, 20 Oct 2015 09:04:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v5 3/4] PCI: Handle IORESOURCE_PCI_FIXED when sizing and
- assigning resources.
-Message-ID: <20151020140416.GD8224@localhost>
-References: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
- <1444175438-7443-4-git-send-email-ddaney.cavm@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV NIC
+To: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	eddie.dong@intel.com, nrupal.jani@intel.com,
+	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
+	pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <562A7E33.4080800@gmail.com>
+Date: Fri, 23 Oct 2015 11:36:35 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444175438-7443-4-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 06, 2015 at 04:50:37PM -0700, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> The new Enhanced Allocation (EA) capability support creates resources
-> with the IORESOURCE_PCI_FIXED set.  This causes a couple of problems:
-> 
-> 1) Since these resources cannot be relocated or resized, their
->    alignment is not really defined, and it is therefore not specified.
->    This causes a problem in pbus_size_mem() where resources with
->    unspecified alignment are disabled.
-> 
-> 2) During resource assignment in pci_bus_assign_resources(),
->    IORESOURCE_PCI_FIXED resources are not given a parent.  This, in
->    turn, causes pci_enable_resources() to fail with a "not claimed"
->    error.
-> 
-> So, in pbus_size_mem() skip IORESOURCE_PCI_FIXED resources, instead of
-> disabling them.
-> 
-> In __pci_bus_assign_resources(), for IORESOURCE_PCI_FIXED resources,
-> try to request the resource from a parent bus.
+On 10/21/2015 09:37 AM, Lan Tianyu wrote:
+> This patchset is to propose a new solution to add live migration support for 82599
+> SRIOV network card.
+>
+> Im our solution, we prefer to put all device specific operation into VF and
+> PF driver and make code in the Qemu more general.
+>
+>
+> VF status migration
+> =================================================================
+> VF status can be divided into 4 parts
+> 1) PCI configure regs
+> 2) MSIX configure
+> 3) VF status in the PF driver
+> 4) VF MMIO regs
+>
+> The first three status are all handled by Qemu.
+> The PCI configure space regs and MSIX configure are originally
+> stored in Qemu. To save and restore "VF status in the PF driver"
+> by Qemu during migration, adds new sysfs node "state_in_pf" under
+> VF sysfs directory.
+>
+> For VF MMIO regs, we introduce self emulation layer in the VF
+> driver to record MMIO reg values during reading or writing MMIO
+> and put these data in the guest memory. It will be migrated with
+> guest memory to new machine.
+>
+>
+> VF function restoration
+> ================================================================
+> Restoring VF function operation are done in the VF and PF driver.
+>
+> In order to let VF driver to know migration status, Qemu fakes VF
+> PCI configure regs to indicate migration status and add new sysfs
+> node "notify_vf" to trigger VF mailbox irq in order to notify VF
+> about migration status change.
+>
+> Transmit/Receive descriptor head regs are read-only and can't
+> be restored via writing back recording reg value directly and they
+> are set to 0 during VF reset. To reuse original tx/rx rings, shift
+> desc ring in order to move the desc pointed by original head reg to
+> first entry of the ring and then enable tx/rx rings. VF restarts to
+> receive and transmit from original head desc.
+>
+>
+> Tracking DMA accessed memory
+> =================================================================
+> Migration relies on tracking dirty page to migrate memory.
+> Hardware can't automatically mark a page as dirty after DMA
+> memory access. VF descriptor rings and data buffers are modified
+> by hardware when receive and transmit data. To track such dirty memory
+> manually, do dummy writes(read a byte and write it back) when receive
+> and transmit data.
 
-This is fixing two problems; can you just split this into two patches?
-I think the changelogs will read more easily then.
+I was thinking about it and I am pretty sure the dummy write approach is 
+problematic at best.  Specifically the issue is that while you are 
+performing a dummy write you risk pulling in descriptors for data that 
+hasn't been dummy written to yet.  So when you resume and restore your 
+descriptors you will have once that may contain Rx descriptors 
+indicating they contain data when after the migration they don't.
 
-It seems like maybe these fixes should also precede the "add support
-for EA devices" patch.  We already use IORESOURCE_PCI_FIXED in a few
-cases, and these are probably applicable to them, and if you have the
-fixes in first, we'll have less of a bisection hole when we add EA
-support.
+I really think the best approach to take would be to look at 
+implementing an emulated IOMMU so that you could track DMA mapped pages 
+and avoid migrating the ones marked as DMA_FROM_DEVICE until they are 
+unmapped.  The advantage to this is that in the case of the ixgbevf 
+driver it now reuses the same pages for Rx DMA.  As a result it will be 
+rewriting the same pages often and if you are marking those pages as 
+dirty and transitioning them it is possible for a flow of small packets 
+to really make a mess of things since you would be rewriting the same 
+pages in a loop while the device is processing packets.
 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  drivers/pci/setup-bus.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 47 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 508cc56..7239a2c 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1037,9 +1037,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->  			struct resource *r = &dev->resource[i];
->  			resource_size_t r_size;
->  
-> -			if (r->parent || ((r->flags & mask) != type &&
-> -					  (r->flags & mask) != type2 &&
-> -					  (r->flags & mask) != type3))
-> +			if (r->parent || (r->flags | IORESOURCE_PCI_FIXED) ||
-> +			    ((r->flags & mask) != type &&
-> +			     (r->flags & mask) != type2 &&
-> +			     (r->flags & mask) != type3))
->  				continue;
->  			r_size = resource_size(r);
->  #ifdef CONFIG_PCI_IOV
-> @@ -1340,6 +1341,47 @@ void pci_bus_size_bridges(struct pci_bus *bus)
->  }
->  EXPORT_SYMBOL(pci_bus_size_bridges);
->  
-> +static void assign_fixed_resource_on_bus(struct pci_bus *b, struct resource *r)
-> +{
-> +	int i;
-> +	struct resource *parent_r;
-> +	unsigned long mask = IORESOURCE_IO | IORESOURCE_MEM |
-> +			     IORESOURCE_PREFETCH;
-> +
-> +	pci_bus_for_each_resource(b, parent_r, i) {
-> +		if (!parent_r)
-> +			continue;
-> +
-> +		if ((r->flags & mask) == (parent_r->flags & mask) &&
-> +		    resource_contains(parent_r, r))
-> +			request_resource(parent_r, r);
+Beyond that I would say you could suspend/resume the device in order to 
+get it to stop and flush the descriptor rings and any outstanding 
+packets.  The code for suspend would unmap the DMA memory which would 
+then be the trigger to flush it across in the migration, and the resume 
+code would take care of any state restoration needed beyond any values 
+that can be configured with the ip link command.
 
-If request_resource() fails, it seems like it'd useful to know about
-it.  Can you use request_resource_conflict() and add a diagnostic
-similar to what's in pci_claim_resource()?
+If you wanted to do a proof of concept of this you could probably do so 
+with very little overhead.  Basically you would need the "page_addr" 
+portion of patch 12 to emulate a slightly migration aware DMA API, and 
+then beyond that you would need something like patch 9 but instead of 
+adding new functions and API you would be switching things on and off 
+via the ixgbevf_suspend/resume calls.
 
-> +	}
-> +}
-> +
-> +/*
-> + * Try to assign any resources marked as IORESOURCE_PCI_FIXED, as they
-> + * are skipped by pbus_assign_resources_sorted().
-> + */
-> +static void pdev_assign_fixed_resources(struct pci_dev *dev)
+- Alex
 
-"assign" seems like the wrong verb here (and above).  I think of
-"assign" as the process where we might change the addresses to which
-the device responds, seting res->start accordingly.  But here, we
-already know those addresses, and we're merely telling the resource
-manager what we're using.
 
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i <  PCI_NUM_RESOURCES; i++) {
-> +		struct pci_bus *b;
-> +		struct resource *r = &dev->resource[i];
-> +
-> +		if (r->parent || !(r->flags & IORESOURCE_PCI_FIXED) ||
-> +		    !(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
-> +			continue;
-> +
-> +		b = dev->bus;
-> +		while (b && !r->parent) {
-> +			assign_fixed_resource_on_bus(b, r);
-> +			b = b->parent;
-> +		}
-> +	}
-> +}
-> +
->  void __pci_bus_assign_resources(const struct pci_bus *bus,
->  				struct list_head *realloc_head,
->  				struct list_head *fail_head)
-> @@ -1350,6 +1392,8 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
->  	pbus_assign_resources_sorted(bus, realloc_head, fail_head);
->  
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> +		pdev_assign_fixed_resources(dev);
-> +
->  		b = dev->subordinate;
->  		if (!b)
->  			continue;
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+
+
+
+
+
+
