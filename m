@@ -1,35 +1,48 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 9 Oct 2015 17:45:17 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Borislav Petkov <bp@alien8.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Daniel Vetter <daniel@ffwll.ch>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-iommu@vger.kernel.org, linux-acpi@vger.kernel.org,
-	x86@kernel.org
-Subject: Re: [Bugfix v4 2/2] ACPI, PCI: Prevent binding other PCI drivers to
- IOAPIC PCI devices
-Message-ID: <20151009154517.GF27420@8bytes.org>
-References: <1444386214-26319-1-git-send-email-joro@8bytes.org>
- <1444399652-25920-1-git-send-email-jiang.liu@linux.intel.com>
- <1444399652-25920-3-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v12 2/6] pci: add Altera PCI vendor ID
+Date: Fri, 23 Oct 2015 18:27:11 +0800
+Message-ID: <1445596035-27733-3-git-send-email-lftan@altera.com>
+In-Reply-To: <1445596035-27733-1-git-send-email-lftan@altera.com>
+References: <1445596035-27733-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444399652-25920-3-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 09, 2015 at 10:07:32PM +0800, Jiang Liu wrote:
-> The ACPI IOAPIC driver makes use of IOAPIC PCI devices, so prevent
-> binding other PCI drivers to IOAPIC PCI devices used by ACPI IOAPIC
-> driver.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/acpi/ioapic.c |    7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+ include/linux/pci_ids.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Reviewed-by: Joerg Roedel <jroedel@suse.de>
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index d9ba49c..08e4462 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1550,6 +1550,8 @@
+ #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
+ #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
+ 
++#define PCI_VENDOR_ID_ALTERA		0x1172
++
+ #define PCI_VENDOR_ID_SBE		0x1176
+ #define PCI_DEVICE_ID_SBE_WANXL100	0x0301
+ #define PCI_DEVICE_ID_SBE_WANXL200	0x0302
+-- 
+1.8.2.1
+
