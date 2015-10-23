@@ -1,94 +1,129 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V1 00/11] MMCONFIG refactoring and ARM64 PCI hostbridge
- init based on ACPI
-To: Tomasz Nowicki <tn@semihalf.com>, <bhelgaas@google.com>,
-	<arnd@arndb.de>, <will.deacon@arm.com>, <catalin.marinas@arm.com>,
-	<rjw@rjwysocki.net>, <hanjun.guo@linaro.org>,
-	<Lorenzo.Pieralisi@arm.com>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
-CC: <jiang.liu@linux.intel.com>, <robert.richter@caviumnetworks.com>,
-	<Narinder.Dhillon@caviumnetworks.com>, <ddaney@caviumnetworks.com>,
-	<Liviu.Dudau@arm.com>, <tglx@linutronix.de>,
-	<wangyijing@huawei.com>, <msalter@redhat.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linaro-acpi@lists.linaro.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Message-ID: <56339D1E.20605@amd.com>
-Date: Fri, 30 Oct 2015 11:38:54 -0500
-MIME-Version: 1.0
-In-Reply-To: <1445963922-22711-1-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foo.masarand.uk ([104.200.29.153]:36203 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751096AbbJWFFr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:05:47 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 05/29] PCI: Add pci_assign_irq function and have pci_fixup_irqs use it
+Date: Fri, 23 Oct 2015 06:03:38 +0100
+Message-Id: <1445576642-29624-6-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tested on AMD Seattle platform (Overdrive revB) w/ both MSI and legacy 
-interrupt.
+Here we delete the static pdev_fixup_irq function which is currently
+what pci_fixup_irqs uses to actually assign the irqs and replace it
+with the pci_assign_irq function which changes the interface and
+makes use of the new function pointers stored in the host bridge
+structure.
 
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Eventually this will allow pci_fixup_irqs to be removed entirely
+and the new deffered assignment code path will call pci_assign_irq
+directly. However to ensure current users continue to work a
+new implementation of pci_fixup_irqs is introduced which simply
+wraps the functionality of pci_assign_irq.
 
-Thanks,
-Suravee
+Signed-off-by: Matthew Minter <matt@masarand.com>
+---
+ drivers/pci/setup-irq.c | 35 ++++++++++++++++++++++++++---------
+ include/linux/pci.h     |  1 +
+ 2 files changed, 27 insertions(+), 9 deletions(-)
 
-On 10/27/15 11:38, Tomasz Nowicki wrote:
->  From the functionality point of view this series might be split into two logic parts:
-> 1. Making MMCONFIG code arch-agnostic which allows all architectures to collect
->     PCI config regions and used when necessary.
-> 2. Using generic MMCONFIG code and introducing ACPI based PCI hostbridge
->     initialization for ARM64
->
-> Patches has been built on top of:
-> [Patch v7 0/7] Consolidate ACPI PCI root common code into ACPI core
-> https://lkml.org/lkml/2015/10/14/31
-> Git branch can be found here:
-> https://git.linaro.org/leg/acpi/acpi.git/shortlog/refs/heads/pci-acpi-upstream
->
-> This has been tested on Cavium ThunderX 1 socket server.
-> Any help in reviewing and testing is very appreciated.
->
-> Hanjun Guo (1):
->    XEN / PCI: Remove the dependence on arch x86 when PCI_MMCONFIG=y
->
-> Tomasz Nowicki (10):
->    x86, pci: Reorder logic of pci_mmconfig_insert() function
->    x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
->      out of arch/x86/ directory
->    pci, acpi, mcfg: Provide generic implementation of MCFG code
->      initialization.
->    x86, pci: mmconfig_{32,64}.c code refactoring - remove code
->      duplication.
->    x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
->      driver.
->    pci, acpi, mcfg: Provide default RAW ACPI PCI config space accessors.
->    pci, acpi, ecam: Add flag to indicate whether ECAM region was hot
->      added or not.
->    x86, pci: Use previously added ECAM hot_added flag to remove ECAM
->      regions.
->    pci, acpi: Provide generic way to assign bus domain number.
->    arm64, pci, acpi: Support for ACPI based PCI hostbridge init
->
->   arch/arm64/Kconfig             |   6 +
->   arch/arm64/kernel/pci.c        | 208 ++++++++++++++++++++++++++++++++--
->   arch/x86/Kconfig               |   4 +
->   arch/x86/include/asm/pci_x86.h |  28 +----
->   arch/x86/pci/acpi.c            |  17 +--
->   arch/x86/pci/mmconfig-shared.c | 250 +++++++----------------------------------
->   arch/x86/pci/mmconfig_32.c     |  11 +-
->   arch/x86/pci/mmconfig_64.c     |  67 +----------
->   arch/x86/pci/numachip.c        |   1 +
->   drivers/acpi/Makefile          |   1 +
->   drivers/acpi/mcfg.c            | 104 +++++++++++++++++
->   drivers/acpi/pci_root.c        |   2 +-
->   drivers/pci/Kconfig            |  10 ++
->   drivers/pci/Makefile           |   5 +
->   drivers/pci/ecam.c             | 234 ++++++++++++++++++++++++++++++++++++++
->   drivers/pci/pci.c              |  30 ++++-
->   drivers/xen/pci.c              |   7 +-
->   include/linux/acpi.h           |   2 +
->   include/linux/ecam.h           |  44 ++++++++
->   19 files changed, 691 insertions(+), 340 deletions(-)
->   create mode 100644 drivers/acpi/mcfg.c
->   create mode 100644 drivers/pci/ecam.c
->   create mode 100644 include/linux/ecam.h
->
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index c7d9f26..a9b7a30 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -15,6 +15,7 @@
+ #include <linux/errno.h>
+ #include <linux/ioport.h>
+ #include <linux/cache.h>
++#include "pci.h"
+ 
+ void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
+ {
+@@ -22,12 +23,17 @@ void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
+ 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+ }
+ 
+-static void pdev_fixup_irq(struct pci_dev *dev,
+-			   u8 (*swizzle)(struct pci_dev *, u8 *),
+-			   int (*map_irq)(const struct pci_dev *, u8, u8))
++void pci_assign_irq(struct pci_dev *dev)
+ {
+-	u8 pin, slot;
++	u8 pin;
++	u8 slot = -1;
+ 	int irq = 0;
++	struct pci_host_bridge *hbrg = pci_find_host_bridge(dev->bus);
++
++	if (!(hbrg->map_irq)) {
++		dev_dbg(&dev->dev, "runtime irq mapping not provided by arch\n");
++		return;
++	}
+ 
+ 	/* If this device is not on the primary bus, we need to figure out
+ 	   which interrupt pin it will come in on.   We know which slot it
+@@ -40,17 +46,19 @@ static void pdev_fixup_irq(struct pci_dev *dev,
+ 	if (pin > 4)
+ 		pin = 1;
+ 
+-	if (pin != 0) {
++	if (pin) {
+ 		/* Follow the chain of bridges, swizzling as we go.  */
+-		slot = (*swizzle)(dev, &pin);
++		if(hbrg->swizzle_irq)
++			slot = (*(hbrg->swizzle_irq))(dev, &pin);
+ 
+-		irq = (*map_irq)(dev, slot, pin);
++		/* If a swizzling function is not used map_irq must ignore slot */
++		irq = (*(hbrg->map_irq))(dev, slot, pin);
+ 		if (irq == -1)
+ 			irq = 0;
+ 	}
+ 	dev->irq = irq;
+ 
+-	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
++	dev_dbg(&dev->dev, "assign irq: got %d\n", dev->irq);
+ 
+ 	/* Always tell the device, so the driver knows what is
+ 	   the real IRQ to use; the device does not use it. */
+@@ -60,9 +68,18 @@ static void pdev_fixup_irq(struct pci_dev *dev,
+ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+ 		    int (*map_irq)(struct pci_dev *, u8, u8))
+ {
++	/* This code should be removed shortly, but in the mean time
++	   it can wrap the new codepath in order to allow arches
++	   still using it to continue working */
+ 	struct pci_dev *dev = NULL;
++	struct pci_host_bridge *hbrg = NULL;
+ 
+ 	for_each_pci_dev(dev)
+-		pdev_fixup_irq(dev, swizzle, map_irq);
++		hbrg = pci_find_host_bridge(dev->bus);
++		hbrg->swizzle_irq = swizzle;
++		hbrg->map_irq = map_irq;
++		pci_assign_irq(dev);
++		hbrg->swizzle_irq = NULL;
++		hbrg->map_irq = NULL;
+ }
+ EXPORT_SYMBOL_GPL(pci_fixup_irqs);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1073f27..e88ad4f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1122,6 +1122,7 @@ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+ 		    int (*)(struct pci_dev *, u8, u8));
++void pci_assign_irq(struct pci_dev *dev);
+ #define HAVE_PCI_REQ_REGIONS	2
+ int __must_check pci_request_regions(struct pci_dev *, const char *);
+ int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
+-- 
+2.6.2
+
