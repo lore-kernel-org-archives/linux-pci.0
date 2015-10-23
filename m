@@ -1,73 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:10720 "EHLO mga09.intel.com"
+Received: from foo.masarand.uk ([104.200.29.153]:36291 "EHLO foo.masarand.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753722AbbJ0HKj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Oct 2015 03:10:39 -0400
-Subject: Re: [PATCH v3 5/7] PCI: irqdomain: Look up IRQ domain by
- fwnode_handle
-To: jakeo@microsoft.com, gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-References: <1445901339-11924-1-git-send-email-jakeo@microsoft.com>
- <1445901339-11924-6-git-send-email-jakeo@microsoft.com>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <562F236B.7050600@linux.intel.com>
-Date: Tue, 27 Oct 2015 15:10:35 +0800
-MIME-Version: 1.0
-In-Reply-To: <1445901339-11924-6-git-send-email-jakeo@microsoft.com>
-Content-Type: text/plain; charset=windows-1252
+	id S1751345AbbJWFGL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:06:11 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 28/29] of/pci: Fix comment for pci_fixup_irqs changing to pci_assign_irq
+Date: Fri, 23 Oct 2015 06:04:01 +0100
+Message-Id: <1445576642-29624-29-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Signed-off-by: Matthew Minter <matt@masarand.com>
+---
+ drivers/of/of_pci_irq.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+index 2306313..a742447 100644
+--- a/drivers/of/of_pci_irq.c
++++ b/drivers/of/of_pci_irq.c
+@@ -105,7 +105,7 @@ EXPORT_SYMBOL_GPL(of_irq_parse_pci);
+  * @pin: PCI irq pin number; passed when used as map_irq callback. Unused
+  *
+  * @slot and @pin are unused, but included in the function so that this
+- * function can be used directly as the map_irq callback to pci_fixup_irqs().
++ * function can be used directly as the map_irq callback to pci_assign_irq().
+  */
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-- 
+2.6.2
 
-On 2015/10/27 7:15, jakeo@microsoft.com wrote:
-> From: Jake Oshins <jakeo@microsoft.com>
-> 
-> The existing PCI code looks for an IRQ domain associated with a root PCI bus
-> by looking in the Open Firmware tree.  This patch introduces a second way
-> to identify the associated IRQ domain, if the lookup in the OF tree fails.
-> The handle used for the IRQ domain lookup was introduced in the previous patch
-> in the series.
-> 
-> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
-> ---
->  drivers/pci/probe.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index c0f2e44..62c9ac7 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -664,6 +664,7 @@ static void pci_set_bus_speed(struct pci_bus *bus)
->  static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
->  {
->  	struct irq_domain *d;
-> +	struct pci_host_bridge *host_bridge;
->  
->  	/*
->  	 * Any firmware interface that can resolve the msi_domain
-> @@ -671,6 +672,18 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
->  	 */
->  	d = pci_host_bridge_of_msi_domain(bus);
->  
-> +	/*
-> +	 * If no IRQ domain was found via the OF tree, try looking it up
-> +	 * directly through the fwnode_handle.
-> +	 */
-> +	if (!d) {
-> +		host_bridge = to_pci_host_bridge(bus->bridge);
-> +		if (host_bridge->fwnode) {
-> +			d = irq_find_matching_fwnode(host_bridge->fwnode,
-> +						     DOMAIN_BUS_ANY);
-Should we use DOMAIN_BUS_PCI_MSI instead here?
-
-> +		}
-> +	}
-> +
->  	return d;
->  }
->  
-> 
