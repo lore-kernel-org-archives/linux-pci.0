@@ -1,93 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:37671 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751764AbbJMG7V convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Oct 2015 02:59:21 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	qiujiang <qiujiang@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"Wangkefeng (Kevin)" <wangkefeng.wang@huawei.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: RE: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon
- SoC Hip05
-Date: Tue, 13 Oct 2015 06:58:42 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162428B1@lhreml503-mbs>
-References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
- <1444445957-239522-5-git-send-email-wangzhou1@hisilicon.com>
- <20151012213545.GA17479@localhost> <561CA5AF.2080300@hisilicon.com>
-In-Reply-To: <561CA5AF.2080300@hisilicon.com>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+Received: from foo.masarand.uk ([104.200.29.153]:36266 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751300AbbJWFGC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:06:02 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 20/29] mn10300: Defer PCI IRQ assignment to device enable time
+Date: Fri, 23 Oct 2015 06:03:53 +0100
+Message-Id: <1445576642-29624-21-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+PCI IRQs are being assigned during pcibios_irq_init currently, this causes
+a problem by which hot-plug devices connected after boot will not recieve
+an IRQ, this patch-set fixes this by registering the IRQ assignment
+functions at boot, to then be called later by the device enable code.
 
-> >> +
-> >> +static int __init hisi_pcie_init(void)
-> >> +{
-> >> +	return platform_driver_probe(&hisi_pcie_driver, hisi_pcie_probe);
-> >> +}
-> >> +subsys_initcall(hisi_pcie_init);
-> >
-> > Can you use module_platform_driver() or module_platform_driver_probe()
-> > here instead of the subsys_initcall()?  No, I don't really know what
-> > the difference between module_platform_driver() and
-> > module_platform_driver_probe() is, sorry :)
-> 
-> In fact, I used module_platform_driver_probe in previous version, but
-> A PCIe VGA card of HiSilicon will use Hip05 PCIe host, so we modified
-> module_platform_driver_probe to subsys_initcall which will be called
-> before module_platform_driver_probe.
-> 
-> We will upstream the driver of above PCIe VGA card soon.
-> 
-> Many thanks for your reviewing,
-> Zhou
+Signed-off-by: Matthew Minter <matt@masarand.com>
+---
+ arch/mn10300/unit-asb2305/pci-asb2305.h |  5 +----
+ arch/mn10300/unit-asb2305/pci-irq.c     | 24 ++++--------------------
+ arch/mn10300/unit-asb2305/pci.c         | 11 ++++++-----
+ 3 files changed, 11 insertions(+), 29 deletions(-)
 
-Hi Bjorn, firstly many thanks for looking at this.
-
-About this last bit the reason why we use subsys_initcall() is that
-our host bridge is embedded in the SoC and as such is not hot-pluggable
-for instance see:
-http://lxr.free-electrons.com/source/Documentation/driver-model/platform.txt#L59
-
-Our approach is also used by Exynos:
-http://lxr.free-electrons.com/source/drivers/pci/host/pci-exynos.c#L644
-
-Cheers
-
-Gab
-
-> 
-> >
-> > Bjorn
-> >
-> > .
-> >
-> 
+diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.h b/arch/mn10300/unit-asb2305/pci-asb2305.h
+index 96c484b..b7d5526 100644
+--- a/arch/mn10300/unit-asb2305/pci-asb2305.h
++++ b/arch/mn10300/unit-asb2305/pci-asb2305.h
+@@ -60,9 +60,6 @@ struct irq_routing_table {
+ } __attribute__((packed));
+ 
+ extern unsigned int pcibios_irq_mask;
+-
+-extern void pcibios_irq_init(void);
+-extern void pcibios_fixup_irqs(void);
+-extern void pcibios_enable_irq(struct pci_dev *dev);
++extern int pci_map_irq(struct pci_dev *, u8 slot, u8 pin);
+ 
+ #endif /* PCI_ASB2305_H */
+diff --git a/arch/mn10300/unit-asb2305/pci-irq.c b/arch/mn10300/unit-asb2305/pci-irq.c
+index fcb28ce..d7d2ce9 100644
+--- a/arch/mn10300/unit-asb2305/pci-irq.c
++++ b/arch/mn10300/unit-asb2305/pci-irq.c
+@@ -20,27 +20,11 @@
+ #include <asm/smp.h>
+ #include "pci-asb2305.h"
+ 
+-void __init pcibios_irq_init(void)
++int pci_map_irq(struct pci_dev *, u8 slot, u8 pin)
+ {
+-}
+-
+-void __init pcibios_fixup_irqs(void)
+-{
+-	struct pci_dev *dev = NULL;
+-	u8 line, pin;
++	u8 line;
+ 
+-	for_each_pci_dev(dev) {
+-		pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+-		if (pin) {
+-			dev->irq = XIRQ1;
+-			pci_write_config_byte(dev, PCI_INTERRUPT_LINE,
+-					      dev->irq);
+-		}
+-		pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
+-	}
+-}
+-
+-void pcibios_enable_irq(struct pci_dev *dev)
+-{
++	dev->irq = XIRQ1;
+ 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
++	pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
+ }
+diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
+index 3dfe2d3..37a22a5 100644
+--- a/arch/mn10300/unit-asb2305/pci.c
++++ b/arch/mn10300/unit-asb2305/pci.c
+@@ -375,14 +375,17 @@ static int __init pcibios_init(void)
+ 	bus = pci_scan_root_bus(NULL, 0, &pci_direct_ampci, NULL, &resources);
+ 	if (!bus)
+ 		return 0;
+-
+-	pcibios_irq_init();
+-	pcibios_fixup_irqs();
+ 	pcibios_resource_survey();
+ 	pci_bus_add_devices(bus);
+ 	return 0;
+ }
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->map_irq = pci_map_irq;
++	return 0;
++}
++
+ arch_initcall(pcibios_init);
+ 
+ char *__init pcibios_setup(char *str)
+@@ -400,8 +403,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	int err;
+ 
+ 	err = pci_enable_resources(dev, mask);
+-	if (err == 0)
+-		pcibios_enable_irq(dev);
+ 	return err;
+ }
+ 
+-- 
+2.6.2
 
