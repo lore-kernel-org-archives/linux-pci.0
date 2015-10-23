@@ -1,93 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:43734 "EHLO bear.ext.ti.com"
+Received: from foo.masarand.uk ([104.200.29.153]:36283 "EHLO foo.masarand.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750877AbbJVPGG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Oct 2015 11:06:06 -0400
-Message-ID: <5628FB36.4010303@ti.com>
-Date: Thu, 22 Oct 2015 11:05:26 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: WingMan Kwok <w-kwok2@ti.com>, <robh+dt@kernel.org>,
-	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<kishon@ti.com>, <rogerq@ti.com>, <bhelgaas@google.com>,
-	<ssantosh@kernel.org>, <linux@arm.linux.org.uk>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v3 0/2] Common SerDes driver for TI's Keystone Platforms
-References: <1445432201-16007-1-git-send-email-w-kwok2@ti.com>
-In-Reply-To: <1445432201-16007-1-git-send-email-w-kwok2@ti.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+	id S1751322AbbJWFGJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:06:09 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 26/29] PCI: Update pcie-iproc to use IRQ deffered assignment
+Date: Fri, 23 Oct 2015 06:03:59 +0100
+Message-Id: <1445576642-29624-27-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/21/2015 08:56 AM, WingMan Kwok wrote:
-> On TI's Keystone platforms, several peripherals such as the
-> gbe ethernet switch, 10gbe ethernet switch and PCIe controller
-> require the use of a SerDes for converting SoC parallel data into
-> serialized data that can be output over a high-speed electrical
-> interface, and also converting high-speed serial input data
-> into parallel data that can be processed by the SoC.  The
-> SerDeses used by those peripherals, though they may be different,
-> are largely similar in functionality and setup.
->
-> This patch series provides a SerDes phy driver implementation that can be
-> used by the above mentioned peripheral drivers to configure their
-> respective SerDeses.
->
-> As an example of the using the SerDes driver, this patch series also
-> updates the Keystone PCIe host driver to enable and use its SerDes block.
->
-> References:
-> [1] KeyStone II Architecture Serializer/Deserializer (SerDes) User's Guide
->      (http://www.ti.com/lit/ug/spruho3a/spruho3a.pdf)
->
-> v3:
-> 	- addresses the following review comments
-> 		1. https://lkml.org/lkml/2015/10/19/756
-> 			-- included sizes.h
-> 		2. https://lkml.org/lkml/2015/10/19/781
-> 			-- updated base on Fengguang Wu's suggestions.
-> 		3. https://lkml.org/lkml/2015/10/15/896
-> 			-- clarified here https://lkml.org/lkml/2015/10/20/512
-> 			-- nothing to do.
->
-> v2:
-> 	- addresses the following review comments on v1:
-> 		1. https://lkml.org/lkml/2015/10/15/896
-> 			-- this does not address the question:
-> 			   "The current code does not do this when compiled,
-> 			    which might be a problem for distributors.
-> 			    Can you clarify the license?"
-> 			-- the question is still under discussion here:
-> 			   https://lkml.org/lkml/2015/10/19/471
-> 		2. https://lkml.org/lkml/2015/10/15/895
->
-> v1:
-> 	- addresses the following review comments
-> 		1. https://lkml.org/lkml/2015/10/13/803
-> 		2. https://lkml.org/lkml/2015/10/14/613
-> 		3. https://lkml.org/lkml/2015/10/13/818
->
-> 	- An update to PCIe dts bindings to enable the PCIe SerDes is
-> 	  submitted in a separate patch.
->
-> WingMan Kwok (2):
->    phy: keystone: serdes driver for gbe 10gbe and pcie
->    PCI: keystone: update to use generic keystone serdes driver
->
->   Documentation/devicetree/bindings/phy/ti-phy.txt |  239 +++
->   drivers/pci/host/pci-keystone.c                  |   24 +-
->   drivers/pci/host/pci-keystone.h                  |    1 +
->   drivers/phy/Kconfig                              |    8 +
->   drivers/phy/Makefile                             |    1 +
->   drivers/phy/phy-keystone-serdes.c                | 2366 ++++++++++++++++++++++
->   6 files changed, 2629 insertions(+), 10 deletions(-)
->   create mode 100644 drivers/phy/phy-keystone-serdes.c
->
-Kishon, Bjorn
+The pcie-iproc device is using the fixup irqs code which
+will be removed later in the code to migrate to deffered irq
+assignment. This patch migrates it to use the new code path and
+adds support for deffered irq assignment.
 
-Who will pick this up? Do we have time to get this in 4.4?
+Signed-off-by: Matthew Minter <matt@masarand.com>
+---
+ drivers/pci/host/pcie-iproc.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index fe2efb1..b2e3305 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -195,6 +195,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 	int ret;
+ 	void *sysdata;
+ 	struct pci_bus *bus;
++#ifdef CONFIG_ARM
++	struct pci_host_bridge *bridge;
++#endif
+ 
+ 	if (!pcie || !pcie->dev || !pcie->base)
+ 		return -EINVAL;
+@@ -235,12 +238,13 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 	}
+ 
+ 	iproc_pcie_enable(pcie);
+-
+-	pci_scan_child_bus(bus);
+-	pci_assign_unassigned_bus_resources(bus);
+ #ifdef CONFIG_ARM
+-	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
++	bridge = pci_find_host_bridge(bus);
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = pcie->map_irq;
+ #endif
++	pci_scan_child_bus(bus);
++	pci_assign_unassigned_bus_resources(bus);
+ 	pci_bus_add_devices(bus);
+ 
+ 	return 0;
 -- 
-Murali Karicheri
-Linux Kernel, Keystone
+2.6.2
+
