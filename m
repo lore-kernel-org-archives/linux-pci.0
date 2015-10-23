@@ -1,73 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v6 5/5] PCI: Handle Enhanced Allocation (EA) capability for SRIOV devices.
-Date: Tue, 20 Oct 2015 16:04:42 -0700
-Message-Id: <1445382282-2396-6-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1445382282-2396-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1445382282-2396-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56803 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751425AbbJWFip (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:38:45 -0400
+Date: Fri, 23 Oct 2015 00:38:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: David Miller <davem@davemloft.net>, yinghai@kernel.org,
+	bhelgaas@google.com, weiyang@linux.vnet.ibm.com, linux@iam.tj,
+	wangyijing@huawei.com, khalid.aziz@oracle.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
+Message-ID: <20151023053842.GB20335@localhost>
+References: <CAE9FiQUdKdyipTw3KSVL0Kr1FFvki5Un3NuUuXpw4TXoWi1Tpg@mail.gmail.com>
+ <20151021023522.GJ8224@localhost>
+ <CAE9FiQXXP8-5hNvKXuh5mu6Xu_9yFufmpZaXv0V95TwBBnxCpA@mail.gmail.com>
+ <20151021.182714.551622926534141857.davem@davemloft.net>
+ <1445485662.2935.17.camel@kernel.crashing.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445485662.2935.17.camel@kernel.crashing.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On Thu, Oct 22, 2015 at 02:47:42PM +1100, Benjamin Herrenschmidt wrote:
+> On Wed, 2015-10-21 at 18:27 -0700, David Miller wrote:
+> > From: Yinghai Lu <yinghai@kernel.org>
+> > Date: Wed, 21 Oct 2015 11:16:53 -0700
+> > 
+> > > otherwise we need to compare res with pbm->mem_space or pbm
+> > ->mem64_space
+> > > to get direct parent for request_resource_conflict() calling in
+> > > pci_register_legacy_regions().
+> > 
+> > Right, this is the issue.
+> > 
+> > On sparc64, the cpu physical base address used for accessing 64-bit
+> > and non-64-bit memory spaces is different.
+> > 
+> > And that's why the resource values will be different.
+> 
+> This is the same on power btw, we have separate PowerBus windows to the
+> PHB that get mapped respectively to 32-bit PCI MMIO and 64-bit PCI
+> MMIO. The former gets "remapped" to generates 0-based PCI cycles, while
+> the latter is 1:1. So the offset between CPU and PCI changes depending
+> on which window you hit.
 
-SRIOV BARs can be specified via EA entries.  Extend the EA parser to
-extract the SRIOV BAR resources, and modify sriov_init() to use
-resources previously obtained via EA.
+Lots of architectures do this, and the PCI core supports it by keeping
+a list of all the host bridge windows.  Each entry has a struct
+resource that contains the CPU address, as well as the offset from the
+CPU address to the PCI address.  The arch or host bridge driver uses
+pci_add_resource_offset() to tell the core about the window and the
+offset.
 
-Acked-by: Sean O. Stalley <sean.stalley@intel.com>
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/pci/iov.c | 11 +++++++++--
- drivers/pci/pci.c |  6 ++++++
- 2 files changed, 15 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..c789e68 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -436,8 +436,15 @@ found:
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &dev->resource[i + PCI_IOV_RESOURCES];
--		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
--					pos + PCI_SRIOV_BAR + i * 4);
-+		/*
-+		 * If it is already FIXED, don't change it, something
-+		 * (perhaps EA or header fixups) wants it this way.
-+		 */
-+		if (res->flags & IORESOURCE_PCI_FIXED)
-+			bar64 = (res->flags & IORESOURCE_MEM_64) ? 1 : 0;
-+		else
-+			bar64 = __pci_read_base(dev, pci_bar_unknown, res,
-+						pos + PCI_SRIOV_BAR + i * 4);
- 		if (!res->flags)
- 			continue;
- 		if (resource_size(res) & (PAGE_SIZE - 1)) {
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f1f6308..c048d69 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2176,6 +2176,12 @@ static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei,
- {
- 	if (bei <= PCI_EA_BEI_BAR5 && prop <= PCI_EA_P_IO)
- 		return &dev->resource[bei];
-+#ifdef CONFIG_PCI_IOV
-+	else if (bei >= PCI_EA_BEI_VF_BAR0 && bei <= PCI_EA_BEI_VF_BAR5 &&
-+		 (prop == PCI_EA_P_VF_MEM || prop == PCI_EA_P_VF_MEM_PREFETCH))
-+		return &dev->resource[PCI_IOV_RESOURCES +
-+				      bei - PCI_EA_BEI_VF_BAR0];
-+#endif
- 	else if (bei == PCI_EA_BEI_ROM)
- 		return &dev->resource[PCI_ROM_RESOURCE];
- 	else
--- 
-1.9.1
-
+Bjorn
