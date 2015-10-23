@@ -1,66 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:41733 "EHLO comal.ext.ti.com"
+Received: from foo.masarand.uk ([104.200.29.153]:36218 "EHLO foo.masarand.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751796AbbJTPME (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Oct 2015 11:12:04 -0400
-Message-ID: <56265995.5000800@ti.com>
-Date: Tue, 20 Oct 2015 11:11:17 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "Kwok, WingMan" <w-kwok2@ti.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	KISHON VIJAY ABRAHAM <kishon@ti.com>,
-	"Quadros, Roger" <rogerq@ti.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"ssantosh@kernel.org" <ssantosh@kernel.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v1 1/2] phy: keystone: serdes driver for gbe 10gbe and
- pcie
-References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com> <230CBA6E4B6B6B418E8730AC28E6FC7E04229363@DFLE11.ent.ti.com> <56253B91.5040807@ti.com> <4661946.mPHVFLWuan@wuerfel>
-In-Reply-To: <4661946.mPHVFLWuan@wuerfel>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+	id S1751096AbbJWFFu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:05:50 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 08/29] x86/pci: Defer IRQ assignment to device enable time
+Date: Fri, 23 Oct 2015 06:03:41 +0100
+Message-Id: <1445576642-29624-9-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/20/2015 04:24 AM, Arnd Bergmann wrote:
-> On Monday 19 October 2015 14:50:57 Murali Karicheri wrote:
->> Arnd, by your statement 'I don't see any code that does this' do you
->> expect a piece of code that embed the license in the binary image? If
->> so, that seems weired to me.
->>
->> Many of the drivers including this patch has the following statement in
->> the license that is additional company specific license such as BSD that
->> is applicable.
->>
->> ==== Cut and pasted from drivers/crypto/fcrypt.c =======================
->>    * 2. Redistributions in binary form must reproduce the above copyright
->>    *    notice, this list of conditions and the following disclaimer in the
->>    *    documentation and/or other materials provided with the distribution.
->> =========================================================================
->> I read this as if the source is compiled and distributed as a binary
->> either a kernel module ko file or as part of the kernel binary, this
->> term must apply. Usually this is part of documentation that goes with
->> the product AFAIK.
->
-> Sorry, my fault. This is indeed the standard BSD license, and
-> I misread this as having to produce the copyright statement
-> from the binary itself. Please ignore whatever I said on the
-> subject.
->
-> 	Arnd
->
-Thanks Arnd for the clarification.
+The x86 architecture boot code currently traverses the PCI buses with
+an extra pass in order to initialise the PCI device IRQs at boot, this
+patch avoids this pass and defers the IRQ assignment untill device
+enable time which also has the benefit that hot-plugged devices are
+assigned IRQs without additional code.
 
+Signed-off-by: Matthew Minter <matt@masarand.com>
+---
+ arch/x86/include/asm/pci_x86.h |  7 +++--
+ arch/x86/kernel/x86_init.c     |  1 -
+ arch/x86/pci/irq.c             | 70 +++++++++++++++++++++---------------------
+ 3 files changed, 39 insertions(+), 39 deletions(-)
+
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index fa1195d..16fd8e9 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -90,6 +90,7 @@ extern unsigned int pcibios_irq_mask;
+ 
+ extern raw_spinlock_t pci_config_lock;
+ 
++extern int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin);
+ extern int (*pcibios_enable_irq)(struct pci_dev *dev);
+ extern void (*pcibios_disable_irq)(struct pci_dev *dev);
+ 
+@@ -119,7 +120,7 @@ extern int __init pci_acpi_init(void);
+ extern void __init pcibios_irq_init(void);
+ extern int __init pcibios_init(void);
+ extern int pci_legacy_init(void);
+-extern void pcibios_fixup_irqs(void);
++extern int pcibios_fixup_irq(struct pci_dev *dev, u8 pin);
+ 
+ /* pci-mmconfig.c */
+ 
+@@ -200,9 +201,9 @@ static inline void mmio_config_writel(void __iomem *pos, u32 val)
+ #  define x86_default_pci_init		pci_legacy_init
+ # endif
+ # define x86_default_pci_init_irq	pcibios_irq_init
+-# define x86_default_pci_fixup_irqs	pcibios_fixup_irqs
++# define x86_default_pci_fixup_irq	pcibios_fixup_irq
+ #else
+ # define x86_default_pci_init		NULL
+ # define x86_default_pci_init_irq	NULL
+-# define x86_default_pci_fixup_irqs	NULL
++# define x86_default_pci_fixup_irq	NULL
+ #endif
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 3839628..810f1dd 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -80,7 +80,6 @@ struct x86_init_ops x86_init __initdata = {
+ 	.pci = {
+ 		.init			= x86_default_pci_init,
+ 		.init_irq		= x86_default_pci_init_irq,
+-		.fixup_irqs		= x86_default_pci_fixup_irqs,
+ 	},
+ };
+ 
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 350e785..15c507b 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1021,47 +1021,38 @@ static int pcibios_lookup_irq(struct pci_dev *dev, int assign)
+ 	return 1;
+ }
+ 
+-void __init pcibios_fixup_irqs(void)
++int pcibios_fixup_irq(struct pci_dev *dev, u8 pin)
+ {
+-	struct pci_dev *dev = NULL;
+-	u8 pin;
+-
++	int irq = dev->irq;
+ 	DBG(KERN_DEBUG "PCI: IRQ fixup\n");
+-	for_each_pci_dev(dev) {
+-		/*
+-		 * If the BIOS has set an out of range IRQ number, just
+-		 * ignore it.  Also keep track of which IRQ's are
+-		 * already in use.
+-		 */
+-		if (dev->irq >= 16) {
+-			dev_dbg(&dev->dev, "ignoring bogus IRQ %d\n", dev->irq);
+-			dev->irq = 0;
+-		}
+-		/*
+-		 * If the IRQ is already assigned to a PCI device,
+-		 * ignore its ISA use penalty
+-		 */
+-		if (pirq_penalty[dev->irq] >= 100 &&
+-				pirq_penalty[dev->irq] < 100000)
+-			pirq_penalty[dev->irq] = 0;
+-		pirq_penalty[dev->irq]++;
++	/*
++	 * If the BIOS has set an out of range IRQ number, just
++	 * ignore it.  Also keep track of which IRQ's are
++	 * already in use.
++	 */
++	if (irq >= 16) {
++		dev_dbg(&dev->dev, "ignoring bogus IRQ %d\n", irq);
++		irq = 0;
+ 	}
++	/*
++	 * If the IRQ is already assigned to a PCI device,
++	 * ignore its ISA use penalty
++	 */
++	if (pirq_penalty[irq] >= 100 &&
++			pirq_penalty[irq] < 100000)
++		pirq_penalty[irq] = 0;
++	pirq_penalty[irq]++;
+ 
+-	if (io_apic_assign_pci_irqs)
+-		return;
++	if (io_apic_assign_pci_irqs || !pin)
++		return irq;
+ 
+-	dev = NULL;
+-	for_each_pci_dev(dev) {
+-		pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+-		if (!pin)
+-			continue;
++	/*
++	 * Still no IRQ? Try to lookup one...
++	 */
++	if (!irq && pcibios_lookup_irq(dev, 0))
++		irq = dev->irq;
+ 
+-		/*
+-		 * Still no IRQ? Try to lookup one...
+-		 */
+-		if (!dev->irq)
+-			pcibios_lookup_irq(dev, 0);
+-	}
++	return irq;
+ }
+ 
+ /*
+@@ -1174,6 +1165,7 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ 		struct pci_sysdata *sd = bridge->bus->sysdata;
+ 		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+ 	}
++	bridge->map_irq = pci_map_irq;
+ 	return 0;
+ }
+ 
+@@ -1201,6 +1193,14 @@ void pcibios_penalize_isa_irq(int irq, int active)
+ 		pirq_penalize_isa_irq(irq, active);
+ }
+ 
++int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
++{
++	dev->irq = pcibios_fixup_irq(dev, pin);
++	if (pcibios_enable_irq(dev))
++		return -1;
++	return dev->irq;
++}
++
+ static int pirq_enable_irq(struct pci_dev *dev)
+ {
+ 	u8 pin = 0;
 -- 
-Murali Karicheri
-Linux Kernel, Keystone
+2.6.2
+
