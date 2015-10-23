@@ -1,104 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38567 "EHLO mail.kernel.org"
+Received: from foo.masarand.uk ([104.200.29.153]:36271 "EHLO foo.masarand.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964894AbbJVPfB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Oct 2015 11:35:01 -0400
-Date: Thu, 22 Oct 2015 10:34:55 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Fabio Estevam <festevam@gmail.com>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	linux-pci@vger.kernel.org, pratyush.anand@gmail.com,
-	m-karicheri2@ti.com
-Subject: Re: [PATCH v4 0/4] PCI: designware: LTSSM #define cleanup
-Message-ID: <20151022153455.GA16360@localhost>
-References: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <1445504666.3173.20.camel@pengutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445504666.3173.20.camel@pengutronix.de>
+	id S1751303AbbJWFGE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:06:04 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 22/29] sparc/PCI: Defer IRQ assignment to device enable time
+Date: Fri, 23 Oct 2015 06:03:55 +0100
+Message-Id: <1445576642-29624-23-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 22, 2015 at 11:04:26AM +0200, Lucas Stach wrote:
-> Hi Bjorn,
-> 
-> Am Mittwoch, den 21.10.2015, 13:42 -0500 schrieb Bjorn Helgaas:
-> > This is a revision of Fabio's series:
-> > http://lkml.kernel.org/r/1444664808-16445-1-git-send-email-festevam@gmail.com
-> > 
-> > Lucas, you reviewed the v3 patches, but I fiddled enough with this that I
-> > didn't want to blindly carry your review forward.  I don't *think* I
-> > changed anything substantive, but I might have missed something.
-> > 
-> I'm not sure if I like the removal of all the LTSSM state defines, as
-> not all reference manuals include them and so I liked to have the header
-> as a reference. But if you prefer to not carry unused defines in the
-> kernel I won't object strongly to the removal.
-> 
-> Otherwise the series looks fine, which you may take as a Reviewed-by.
+Currently sparc allocates PCI IRQs through several different methods
+based on device. This is done during the boot stage and faces a draw-back
+by which hot-plugged devices will not be allocated an IRQ, this is fixed
+by registering IRQ allocation functions for later use during the device
+enable path.
 
-Thanks, Lucas.
+Signed-off-by: Matthew Minter <matt@masarand.com>
+---
+ arch/sparc/kernel/leon_pci.c | 12 ++++++++++--
+ arch/sparc/kernel/pci.c      | 23 +++++++++++++++++++----
+ 2 files changed, 29 insertions(+), 6 deletions(-)
 
-OK, I put the rest of the LTSSM #defines back in
-drivers/pci/host/pcie-designware.h as a separate patch (below):
-
-
-commit 25026d3fcff7dd0e139b04cb52436b9c7e0e545e
-Author: Fabio Estevam <fabio.estevam@freescale.com>
-Date:   Thu Oct 22 10:24:52 2015 -0500
-
-    PCI: designware: Add LTSSM state definitions
-    
-    Add the rest of the LTSSM state definitions.  These aren't currently used,
-    so they're here as documentation.
-    
-    [bhelgaas: split into separate patch]
-    Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index efe5fca..8cb5725 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -22,8 +22,39 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+diff --git a/arch/sparc/kernel/leon_pci.c b/arch/sparc/kernel/leon_pci.c
+index 4371f72..ca11fb8 100644
+--- a/arch/sparc/kernel/leon_pci.c
++++ b/arch/sparc/kernel/leon_pci.c
+@@ -13,6 +13,8 @@
+ #include <asm/leon.h>
+ #include <asm/leon_pci.h>
  
-+#define LTSSM_STATE_DETECT_QUIET	0x00
-+#define LTSSM_STATE_DETECT_ACT		0x01
-+#define LTSSM_STATE_POLL_ACTIVE		0x02
-+#define LTSSM_STATE_POLL_COMPLIANCE	0x03
-+#define LTSSM_STATE_POLL_CONFIG		0x04
-+#define LTSSM_STATE_PRE_DETECT_QUIET	0x05
-+#define LTSSM_STATE_DETECT_WAIT		0x06
-+#define LTSSM_STATE_CFG_LINKWD_START	0x07
-+#define LTSSM_STATE_CFG_LINKWD_ACCEPT	0x08
-+#define LTSSM_STATE_CFG_LANENUM_WAIT	0x09
-+#define LTSSM_STATE_CFG_LANENUM_ACCEPT	0x0a
-+#define LTSSM_STATE_CFG_COMPLETE	0x0b
-+#define LTSSM_STATE_CFG_IDLE		0x0c
- #define LTSSM_STATE_RCVRY_LOCK		0x0d
-+#define LTSSM_STATE_RCVRY_SPEED		0x0e
-+#define LTSSM_STATE_RCVRY_RCVRCFG	0x0f
-+#define LTSSM_STATE_RCVRY_IDLE		0x10
- #define LTSSM_STATE_L0			0x11
-+#define LTSSM_STATE_L0S			0x12
-+#define LTSSM_STATE_L123_SEND_EIDLE	0x13
-+#define LTSSM_STATE_L1_IDLE		0x14
-+#define LTSSM_STATE_L2_IDLE		0x15
-+#define LTSSM_STATE_L2_WAKE		0x16
-+#define LTSSM_STATE_DISABLED_ENTRY	0x17
-+#define LTSSM_STATE_DISABLED_IDLE	0x18
-+#define LTSSM_STATE_DISABLED		0x19
-+#define LTSSM_STATE_LPBK_ENTRY		0x1a
-+#define LTSSM_STATE_LPBK_ACTIVE		0x1b
-+#define LTSSM_STATE_LPBK_EXIT		0x1c
-+#define LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1d
-+#define LTSSM_STATE_HOT_RESET_ENTRY	0x1e
-+#define LTSSM_STATE_HOT_RESET		0x1f
++int (*leon_pci_map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
 +
- #define LTSSM_STATE_MASK		0x1f
+ /* The LEON architecture does not rely on a BIOS or bootloader to setup
+  * PCI for us. The Linux generic routines are used to setup resources,
+  * reset values of configuration-space register settings are preserved.
+@@ -39,14 +41,20 @@ void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
+ 		return;
+ 	}
  
- struct pcie_port {
+-	/* Setup IRQs of all devices using custom routines */
+-	pci_fixup_irqs(pci_common_swizzle, info->map_irq);
++	leon_pci_map_irq = info->map_irq;
+ 
+ 	/* Assign devices with resources */
+ 	pci_assign_unassigned_resources();
+ 	pci_bus_add_devices(root_bus);
+ }
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = leon_pci_map_irq;
++	return 0;
++}
++
+ void pcibios_fixup_bus(struct pci_bus *pbus)
+ {
+ 	struct pci_dev *dev;
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index b91d7f1..4841066 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -335,10 +335,6 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+ 	} else {
+ 		dev->hdr_type = PCI_HEADER_TYPE_NORMAL;
+ 		dev->rom_base_reg = PCI_ROM_ADDRESS;
+-
+-		dev->irq = sd->op->archdata.irqs[0];
+-		if (dev->irq == 0xffffffff)
+-			dev->irq = PCI_IRQ_NONE;
+ 	}
+ 
+ 	pci_parse_of_addrs(sd->op, node, dev);
+@@ -351,6 +347,25 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+ 	return dev;
+ }
+ 
++int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
++{
++	int irq;
++	struct platform_device *op = of_find_device_by_node(dev->sysdata);
++
++	irq = op->archdata.irqs[0];
++	if (irq == 0xffffffff)
++		irq = PCI_IRQ_NONE;
++	return irq;
++}
++
++#ifndef CONFIG_LEON_PCI
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->map_irq = pci_map_irq;
++	return 0;
++}
++#endif
++
+ static void apb_calc_first_last(u8 map, u32 *first_p, u32 *last_p)
+ {
+ 	u32 idx, first, last;
+-- 
+2.6.2
+
