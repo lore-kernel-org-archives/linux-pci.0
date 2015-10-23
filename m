@@ -1,120 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54234 "EHLO mail.kernel.org"
+Received: from foo.masarand.uk ([104.200.29.153]:36248 "EHLO foo.masarand.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752145AbbJOUIk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Oct 2015 16:08:40 -0400
-Date: Thu, 15 Oct 2015 15:08:36 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v5 3/4] PCI/MSI:  Add helper function
- pci_msi_domain_get_msi_rid().
-Message-ID: <20151015200836.GB10442@localhost>
-References: <1444342250-6196-1-git-send-email-ddaney.cavm@gmail.com>
- <1444342250-6196-4-git-send-email-ddaney.cavm@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444342250-6196-4-git-send-email-ddaney.cavm@gmail.com>
+	id S1751096AbbJWFF6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:05:58 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 16/29] frv/PCI: Defer IRQ assignment to device enable time
+Date: Fri, 23 Oct 2015 06:03:49 +0100
+Message-Id: <1445576642-29624-17-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 08, 2015 at 03:10:49PM -0700, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> Add pci_msi_domain_get_msi_rid() to return the MSI requester id (RID).
-> Initially needed by gic-v3 based systems. It will be used by follow on
-> patch to drivers/irqchip/irq-gic-v3-its-pci-msi.c
-> 
-> Initially supports mapping the RID via OF device tree.  In the future,
-> this could be extended to use ACPI _IORT tables as well.
-> 
-> Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
-> Signed-off-by: David Daney <david.daney@cavium.com>
+PCI IRQs are being assigned during the frv pcibios phase. This causes
+devices which are not connected at boot but are later hot-plugged
+to not receive an IRQ. This patch set causes the pcibios to instead
+register an IRQ assignment function which is called during the enable
+device path to apply to all devices.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Matthew Minter <matt@masarand.com>
+---
+ arch/frv/mb93090-mb00/pci-frv.h |  1 -
+ arch/frv/mb93090-mb00/pci-irq.c | 24 ++++++++++++------------
+ arch/frv/mb93090-mb00/pci-vdk.c |  1 -
+ 3 files changed, 12 insertions(+), 14 deletions(-)
 
-I assume Thomas will take these (or at least, somebody other than me).
+diff --git a/arch/frv/mb93090-mb00/pci-frv.h b/arch/frv/mb93090-mb00/pci-frv.h
+index d51992f..1537700 100644
+--- a/arch/frv/mb93090-mb00/pci-frv.h
++++ b/arch/frv/mb93090-mb00/pci-frv.h
+@@ -28,5 +28,4 @@ extern struct pci_ops *__nongpreldata pci_root_ops;
+ extern unsigned int pcibios_irq_mask;
+ 
+ void pcibios_irq_init(void);
+-void pcibios_fixup_irqs(void);
+ void pcibios_enable_irq(struct pci_dev *dev);
+diff --git a/arch/frv/mb93090-mb00/pci-irq.c b/arch/frv/mb93090-mb00/pci-irq.c
+index 1c35c93..2fde211 100644
+--- a/arch/frv/mb93090-mb00/pci-irq.c
++++ b/arch/frv/mb93090-mb00/pci-irq.c
+@@ -40,19 +40,19 @@ void __init pcibios_irq_init(void)
+ {
+ }
+ 
+-void __init pcibios_fixup_irqs(void)
++int pcibios_map_irq(struct pci_dev *dev, uint8_t slot, uint8_t pin)
+ {
+-	struct pci_dev *dev = NULL;
+-	uint8_t line, pin;
+-
+-	for_each_pci_dev(dev) {
+-		pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+-		if (pin) {
+-			dev->irq = pci_bus0_irq_routing[PCI_SLOT(dev->devfn)][pin - 1];
+-			pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
+-		}
+-		pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
+-	}
++	int irq;
++
++	irq = pci_bus0_irq_routing[PCI_SLOT(dev->devfn)][pin - 1];
++	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
++	return irq;
++}
++
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->map_irq = pcibios_map_irq;
++	return 0;
+ }
+ 
+ void pcibios_enable_irq(struct pci_dev *dev)
+diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
+index f211839..22d59ed 100644
+--- a/arch/frv/mb93090-mb00/pci-vdk.c
++++ b/arch/frv/mb93090-mb00/pci-vdk.c
+@@ -387,7 +387,6 @@ int __init pcibios_init(void)
+ 	bus = pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
+ 
+ 	pcibios_irq_init();
+-	pcibios_fixup_irqs();
+ 	pcibios_resource_survey();
+ 	if (!bus)
+ 		return 0;
+-- 
+2.6.2
 
-> ---
->  drivers/pci/msi.c   | 30 ++++++++++++++++++++++++++++++
->  include/linux/msi.h |  1 +
->  2 files changed, 31 insertions(+)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index d449714..81a2798 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -20,6 +20,7 @@
->  #include <linux/io.h>
->  #include <linux/slab.h>
->  #include <linux/irqdomain.h>
-> +#include <linux/of_irq.h>
->  
->  #include "pci.h"
->  
-> @@ -1327,4 +1328,33 @@ struct irq_domain *pci_msi_create_default_irq_domain(struct device_node *node,
->  
->  	return domain;
->  }
-> +
-> +static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
-> +{
-> +	u32 *pa = data;
-> +
-> +	*pa = alias;
-> +	return 0;
-> +}
-> +/**
-> + * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
-> + * @domain:	The interrupt domain
-> + * @pdev:	The PCI device.
-> + *
-> + * The RID for a device is formed from the alias, with a firmware
-> + * supplied mapping applied
-> + *
-> + * Returns: The RID.
-> + */
-> +u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
-> +{
-> +	u32 rid = 0;
-> +
-> +	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
-> +
-> +	if (domain->of_node)
-> +		rid = of_msi_map_rid(&pdev->dev, domain->of_node, rid);
-> +
-> +	return rid;
-> +}
->  #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index ad939d0..56e3b76 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -293,6 +293,7 @@ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
->  					  struct msi_desc *desc);
->  int pci_msi_domain_check_cap(struct irq_domain *domain,
->  			     struct msi_domain_info *info, struct device *dev);
-> +u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
->  #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
->  
->  #endif /* LINUX_MSI_H */
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
