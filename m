@@ -1,57 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46263 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751142AbbJTXvb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 19:51:31 -0400
-Subject: Re: [PATCH v7 02/60] sparc/PCI: Use correct bus address to resource
- offset
-To: Yinghai Lu <yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
- <1444340359-8011-3-git-send-email-yinghai@kernel.org>
- <20151020195413.GH8224@localhost> <56269F0F.7000309@oracle.com>
- <CAE9FiQUTnG_fw9Y5VkwO7BmgYeJqQOKAyDh4JESOkOuOvjMThQ@mail.gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-From: Khalid Aziz <khalid.aziz@oracle.com>
-Message-ID: <5626D369.8020003@oracle.com>
-Date: Tue, 20 Oct 2015 17:51:05 -0600
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUTnG_fw9Y5VkwO7BmgYeJqQOKAyDh4JESOkOuOvjMThQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from foo.masarand.uk ([104.200.29.153]:36208 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751096AbbJWFFs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:05:48 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 06/29] PCI: Add a call to pci_assign_irq in do_pci_enable_device
+Date: Fri, 23 Oct 2015 06:03:39 +0100
+Message-Id: <1445576642-29624-7-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/20/2015 02:34 PM, Yinghai Lu wrote:
-> On Tue, Oct 20, 2015 at 1:07 PM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
->>> I don't want to argue about pci_resource_to_user() right now, so I
->>> guess you can just panic if the mem64 offset is different from the
->>> mem32 offset.  But you should at least add a comment about why you're
->>> doing that.  Otherwise it looks like you were just lazy.
->
-> I had one version for that, but it has big change to __pci_mmap_make_offset_bus
-> for making pci_mmap_resource() working.
-> And took it for granted that MEM/MEM64 should have same offet.
->
->>
->>
->> I just hit this condition on a sparc platform where mem32 offset != mem64
->> offset. We need to handle this case, and not just call panic. I had not seen
->> this on 5 platforms and another 3 ldoms I had tested this on when I tested
->> this code earlier. I have sent panic log to Yinghai separately.
->
-> Did you get test result with updated patch2 and patch3?
->
+The pci_assign_irq function allows assignment of an irq to devices
+during device enable time rather than only at boot. Therefore call it
+in the do_pci_enable_device function during the enable device
+code path so this assignment can be performed.
 
-Hi Yinghai,
+This patch will do nothing on arches which do not set the irq mapping
+function pointers and is therefore currently a noop, however as support
+for these function pointers is added to arch specific code this will
+cause irq asignment to migrate to device enable time allowing the new
+codepaths to be used.
 
-The failing T4 booted up with updated patches.
+Signed-off-by: Matthew Minter <matt@masarand.com>
+---
+ drivers/pci/pci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks,
-Khalid
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6a9a111..6907312 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1226,6 +1226,8 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+ 	if (err < 0 && err != -EIO)
+ 		return err;
+ 
++	pci_assign_irq(dev);
++
+ 	bridge = pci_upstream_bridge(dev);
+ 	if (bridge)
+ 		pcie_aspm_powersave_config_link(bridge);
+-- 
+2.6.2
 
