@@ -1,126 +1,69 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 48/61] PCI: Move ISA io port align out of calculate_iosize()
-Date: Tue, 27 Oct 2015 13:55:40 -0700
-Message-Id: <1445979353-1728-49-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Loc Ho <lho@apm.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	KISHON VIJAY <kishon@ti.com>, WingMan Kwok <w-kwok2@ti.com>,
+	Rob Herring <robh+dt@kernel.org>, pawel.moll@arm.com,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	galak@codeaurora.org, rogerq@ti.com, bhelgaas@google.com,
+	ssantosh@kernel.org,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v3 0/2] Common SerDes driver for TI's Keystone Platforms
+Date: Fri, 23 Oct 2015 11:17:06 +0200
+Message-ID: <3702663.07h6YO0UjY@wuerfel>
+In-Reply-To: <CAPw-ZTk1vJA3YSwLHBNMYP0t5k2tW0HTKse+37rL8izWN33y-w@mail.gmail.com>
+References: <1445432201-16007-1-git-send-email-w-kwok2@ti.com> <56295B9E.9030201@ti.com> <CAPw-ZTk1vJA3YSwLHBNMYP0t5k2tW0HTKse+37rL8izWN33y-w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to move ISA io port align out of calculate_iosize(),
-so we could unify calculate_iosize and calculate_memsize later.
+On Thursday 22 October 2015 15:27:05 Loc Ho wrote:
+> >
+> > phy-xgene.c
+> > -----------
+> >
+> > Looking at other drivers under drivers/phy, I could find phy-xgene.c which
+> > is close Keystone SerDes driver (. This is called APM X-Gene Multi-Purpose
+> > PHY driver. It defines following mode per the driver code
+> >
+> >         MODE_SATA       = 0,    /* List them for simple reference */
+> >         MODE_SGMII      = 1,
+> >         MODE_PCIE       = 2,
+> >         MODE_USB        = 3,
+> >         MODE_XFI        = 4,
+> >
+> > But seems to support only MODE_SATA. From the code, it appears, this driver
+> > is expected to be enhanced in the future to support additional modes. I have
+> > copied the author to this email to participate in this discussion.
+> 
+> Let me comment on this APM X-Gene driver. This driver is dead and
+> won't be supported in near or foreseeable future. And someday, it will
+> be ripped out. Based on experience, this solution (having PHY driver
+> in Linux) can't be supported across boards and etc as it is just too
+> much maintenance. And therefore, we followed Arnd B guidance and move
+> all this into the boot loader. From Linux or OS perspective, it only
+> cares about the interface in which its interface with. This is just
+> your reference and may be this will help you as well.
 
-That extra aligning or offset is to work around ISA devices:
-When one bridge have several children devices, and every device
-has several io port resources and resource size < 0x400.
-We need to check size, and add extra size to make sure bit8/9
-to be zero.
+This depends a lot on the use case. If the chip is only used on server
+parts that have a real firmware and you can deliver bug fixes for the
+firmware if necessary, it's always best to do as much of the setup as
+possible there, and let Linux see a simplified view of the hardware.
 
-Also need to apply same checking for optional size path.
+However, for embedded systems that tend to ship with a minimal binary
+bootloader and no way to update that as an end-user, we rely on Linux
+to know about all the hardware that requires some form of setup, which
+is why we have all sorts of drivers and frameworks in the kernel that
+a server can easily ignore.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
- 1 file changed, 27 insertions(+), 12 deletions(-)
+While keystone can show up in servers that won't use this driver, my
+impression is that its main market is actually in embedded space.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index d4aeedc..4e7f0aa 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1114,11 +1114,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 		size = min_size;
- 	if (old_size == 1)
- 		old_size = 0;
--	/* To be fixed in 2.5: we should have sort of HAVE_ISA
--	   flag in the struct pci_bus. */
--#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
--	size = (size & 0xff) + ((size & ~0xffUL) << 2);
--#endif
- 	size = ALIGN(size + size1, align);
- 	if (size < old_size)
- 		size = old_size;
-@@ -1172,6 +1167,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
- 	return max(align, arch_align);
- }
- 
-+static resource_size_t size_aligned_for_isa(resource_size_t size)
-+{
-+	/*
-+	 * To be fixed in 2.5: we should have sort of HAVE_ISA
-+	 *  flag in the struct pci_bus.
-+	 */
-+#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
-+	size = (size & 0xff) + ((size & ~0xffUL) << 2);
-+#endif
-+	return size;
-+}
-+
- /**
-  * pbus_size_io() - size the io window of a given bus
-  *
-@@ -1189,11 +1196,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- {
- 	struct pci_dev *dev;
- 	resource_size_t min_sum_size = 0;
--	resource_size_t sum_add_size;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
- 							IORESOURCE_IO);
- 	resource_size_t size = 0, size0 = 0, size1 = 0;
--	resource_size_t children_add_size = 0;
-+	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
- 	resource_size_t min_align, align;
- 
- 	if (!b_res)
-@@ -1210,7 +1216,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
--			unsigned long r_size;
-+			unsigned long r_size, r_add_size;
- 
- 			if (r->parent || !(r->flags & IORESOURCE_IO))
- 				continue;
-@@ -1226,18 +1232,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 			if (align > min_align)
- 				min_align = align;
- 
--			if (realloc_head)
--				children_add_size += get_res_add_size(realloc_head, r);
-+			if (realloc_head) {
-+				r_add_size = get_res_add_size(realloc_head, r);
-+				r_add_size += r_size;
-+				if (r_add_size < 0x400)
-+					/* Might be re-aligned for ISA */
-+					sum_add_size += r_add_size;
-+				else
-+					sum_add_size1 += r_add_size;
-+			}
- 		}
- 	}
- 
-+	size = size_aligned_for_isa(size);
- 	size0 = calculate_iosize(size, min_size, size1,
- 			resource_size(b_res), min_align);
--	sum_add_size = children_add_size + size + size1;
-+	sum_add_size = size_aligned_for_isa(sum_add_size);
-+	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	size1 = !realloc_head ? size0 :
--		calculate_iosize(size, min_size, sum_add_size - size,
-+		calculate_iosize(sum_add_size, min_size, 0,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
--- 
-1.8.4.5
-
+	Arnd
