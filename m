@@ -1,61 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([104.200.29.153]:36236 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751096AbbJWFFz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:05:55 -0400
-From: Matthew Minter <matt@masarand.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	lorenzo.pieralisi@arm.com
-Cc: Matthew Minter <matt@masarand.com>
-Subject: [PATCH V4 13/29] sh/PCI: Defer IRQ assignment to device enable time
-Date: Fri, 23 Oct 2015 06:03:46 +0100
-Message-Id: <1445576642-29624-14-git-send-email-matt@masarand.com>
-In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
-References: <1445576642-29624-1-git-send-email-matt@masarand.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v12 5/6] Documentation: dt-bindings: pci: altera pcie device tree binding
+Date: Fri, 23 Oct 2015 18:27:14 +0800
+Message-ID: <1445596035-27733-6-git-send-email-lftan@altera.com>
+In-Reply-To: <1445596035-27733-1-git-send-email-lftan@altera.com>
+References: <1445596035-27733-1-git-send-email-lftan@altera.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently platform specific PCI device IRQ assignment is run during
-the boot code, this results in a wide array of differing code paths
-and causes hot-plugged PCI devices to not be assigned IRQs, this
-patch removes the boot time initialisation of such IRQs and instead
-registers assignment functions to be run during the PCI device enable
-path.
+This patch adds the bindings for Altera PCIe host controller driver and
+Altera PCIe MSI driver.
 
-Signed-off-by: Matthew Minter <matt@masarand.com>
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+Acked-by: Rob Herring <robh@kernel.org>
 ---
- arch/sh/drivers/pci/pci.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ .../devicetree/bindings/pci/altera-pcie-msi.txt    | 28 +++++++++++++
+ .../devicetree/bindings/pci/altera-pcie.txt        | 49 ++++++++++++++++++++++
+ 2 files changed, 77 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
 
-diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-index d5462b7..28f8c90 100644
---- a/arch/sh/drivers/pci/pci.c
-+++ b/arch/sh/drivers/pci/pci.c
-@@ -144,16 +144,20 @@ static int __init pcibios_init(void)
- 	for (hose = hose_head; hose; hose = hose->next)
- 		pcibios_scanbus(hose);
- 
--	pci_fixup_irqs(pci_common_swizzle, pcibios_map_platform_irq);
--
- 	dma_debug_add_bus(&pci_bus_type);
--
- 	pci_initialized = 1;
- 
- 	return 0;
- }
- subsys_initcall(pcibios_init);
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->map_irq = pcibios_map_platform_irq;
-+	return 0;
-+}
+diff --git a/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+new file mode 100644
+index 0000000..09cd3bc
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+@@ -0,0 +1,28 @@
++* Altera PCIe MSI controller
 +
- /*
-  *  Called after each bus is probed, but before its children
-  *  are examined.
++Required properties:
++- compatible:	should contain "altr,msi-1.0"
++- reg:		specifies the physical base address of the controller and
++		the length of the memory mapped region.
++- reg-names:	must include the following entries:
++		"csr": CSR registers
++		"vector_slave": vectors slave port region
++- interrupt-parent:	interrupt source phandle.
++- interrupts:	specifies the interrupt source of the parent interrupt
++		controller. The format of the interrupt specifier depends on the
++		parent interrupt controller.
++- num-vectors:	number of vectors, range 1 to 32.
++- msi-controller:	indicates that this is MSI controller node
++
++
++Example
++msi0: msi@0xFF200000 {
++	compatible = "altr,msi-1.0";
++	reg = <0xFF200000 0x00000010
++		0xFF200010 0x00000080>;
++	reg-names = "csr", "vector_slave";
++	interrupt-parent = <&hps_0_arm_gic_0>;
++	interrupts = <0 42 4>;
++	msi-controller;
++	num-vectors = <32>;
++};
+diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+new file mode 100644
+index 0000000..2951a6a
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+@@ -0,0 +1,49 @@
++* Altera PCIe controller
++
++Required properties:
++- compatible :	should contain "altr,pcie-root-port-1.0"
++- reg:		a list of physical base address and length for TXS and CRA.
++- reg-names:	must include the following entries:
++		"Txs": TX slave port region
++		"Cra": Control register access region
++- interrupt-parent:	interrupt source phandle.
++- interrupts:	specifies the interrupt source of the parent interrupt controller.
++		The format of the interrupt specifier depends on the parent interrupt
++		controller.
++- device_type:	must be "pci"
++- #address-cells:	set to <3>
++- #size-cells:	set to <2>
++- #interrupt-cells:	set to <1>
++- ranges:		describes the translation of addresses for root ports and standard
++		PCI regions.
++- interrupt-map-mask and interrupt-map: standard PCI properties to define the
++		mapping of the PCIe interface to interrupt numbers.
++
++Optional properties:
++- msi-parent:	Link to the hardware entity that serves as the MSI controller for this PCIe
++		controller.
++- bus-range:	PCI bus numbers covered
++
++Example
++	pcie_0: pcie@0xc00000000 {
++		compatible = "altr,pcie-root-port-1.0";
++		reg = <0xc0000000 0x20000000>,
++			<0xff220000 0x00004000>;
++		reg-names = "Txs", "Cra";
++		interrupt-parent = <&hps_0_arm_gic_0>;
++		interrupts = <0 40 4>;
++		interrupt-controller;
++		#interrupt-cells = <1>;
++		bus-range = <0x0 0xFF>;
++		device_type = "pci";
++		msi-parent = <&msi_to_gic_gen_0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_0 1>,
++			            <0 0 0 2 &pcie_0 2>,
++			            <0 0 0 3 &pcie_0 3>,
++			            <0 0 0 4 &pcie_0 4>;
++		ranges = <0x82000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x10000000
++			    0x82000000 0x00000000 0x10000000 0xd0000000 0x00000000 0x10000000>;
++	};
 -- 
-2.6.2
+1.8.2.1
 
