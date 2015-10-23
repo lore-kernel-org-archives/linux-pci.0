@@ -1,99 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50933 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965936AbbJ0VCW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 17:02:22 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 46/61] PCI: Fix size calculation with old_size on rescan path
-Date: Tue, 27 Oct 2015 13:55:38 -0700
-Message-Id: <1445979353-1728-47-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Received: from foo.masarand.uk ([104.200.29.153]:36294 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751351AbbJWFGM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:06:12 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 29/29] PCI: Remove pci_fixup_irqs function
+Date: Fri, 23 Oct 2015 06:04:02 +0100
+Message-Id: <1445576642-29624-30-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On booting path, we don't pass realloc at first, and treat all optional
-just as required, in some case we can have smaller size/align with optional
-than required only.
+Now we have removed all callers of pci_fixup_irqs and
+migrated everything to pci_assign_irq delete the
+pci_fixup_irqs function completely.
 
-  04:00.0 has children bridges: 05:03.0, 05:04.0
-pref layout after booting path like followings:
-
-pci 0000:04:00.0: BAR 9: assigned [mem 0x84000000-0x9fffffff 64bit pref]
-pci 0000:05:04.0: BAR 9: assigned [mem 0x88000000-0x9fffffff 64bit pref]
-pci 0000:05:03.0: BAR 9: assigned [mem 0x84000000-0x841fffff 64bit pref]
-pci 0000:05:03.0: PCI bridge to [bus 08-0f]
-pci 0000:05:03.0:   bridge window [mem 0x84000000-0x841fffff 64bit pref]
-pci 0000:05:04.0: PCI bridge to [bus 10]
-pci 0000:05:04.0:   bridge window [mem 0x88000000-0x9fffffff 64bit pref]
-pci 0000:04:00.0: PCI bridge to [bus 05-10]
-pci 0000:04:00.0:   bridge window [mem 0x84000000-0x9fffffff 64bit pref]
-
-so the old size in rescan for 04:00.0 would be 0x1c000000, and align is 0x4000000
-
-during remove and rescan:
-
-pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff 64bit pref] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
-pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
-pci 0000:05:04.0: bridge window [mem 0x08000000-0x1fffffff 64bit pref] to [bus 10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 18000000 must_align 8000000
-pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_size add_size   200000
-pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_align min_align 100000
-pci 0000:04:00.0: bridge window [mem 0x08000000-0x27ffffff 64bit pref] to [bus 05-10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 20000000 must_align 8000000
-
-align old size 0x1c000000 to 0x2000000 as size0, 0x1c000000 as size1.
-so for 04:00.0 will have big must and no optional size anymore.
-
-So don't align old size, then we will have same size0 and size1,
-and use smaller add_align as must align.
-
-After the patch, rescan works properly.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Matthew Minter <matt@masarand.com>
 ---
- drivers/pci/setup-bus.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ drivers/pci/setup-irq.c | 19 -------------------
+ include/linux/pci.h     |  2 --
+ 2 files changed, 21 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7e7663a..00a39be 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1134,9 +1134,9 @@ static resource_size_t calculate_memsize(resource_size_t size,
- 		size = min_size;
- 	if (old_size == 1)
- 		old_size = 0;
-+	size = ALIGN(size, align);
- 	if (size < old_size)
- 		size = old_size;
--	size = ALIGN(size, align);
- 	return size;
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index a9b7a30..0d4b83a 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -64,22 +64,3 @@ void pci_assign_irq(struct pci_dev *dev)
+ 	   the real IRQ to use; the device does not use it. */
+ 	pcibios_update_irq(dev, irq);
  }
- 
-@@ -1595,6 +1595,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		b_res->flags = 0;
- 		return 0;
- 	}
-+
-+	/*
-+	 * It happens when boot path is not passing realloc
-+	 * and later rescan is passing realloc.
-+	 * The old value from boot path is bigger, and calculate_size will
-+	 * use old value as size0 and size1, and also have
-+	 * chance optional align is smaller than must only align.
-+	 */
-+	if(size0 == size1 && min_align > min_add_align)
-+		min_align = min_add_align;
-+
- 	b_res->start = min_align;
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
+-
+-void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+-		    int (*map_irq)(struct pci_dev *, u8, u8))
+-{
+-	/* This code should be removed shortly, but in the mean time
+-	   it can wrap the new codepath in order to allow arches
+-	   still using it to continue working */
+-	struct pci_dev *dev = NULL;
+-	struct pci_host_bridge *hbrg = NULL;
+-
+-	for_each_pci_dev(dev)
+-		hbrg = pci_find_host_bridge(dev->bus);
+-		hbrg->swizzle_irq = swizzle;
+-		hbrg->map_irq = map_irq;
+-		pci_assign_irq(dev);
+-		hbrg->swizzle_irq = NULL;
+-		hbrg->map_irq = NULL;
+-}
+-EXPORT_SYMBOL_GPL(pci_fixup_irqs);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e88ad4f..6771d62 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1120,8 +1120,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
+ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+-void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+-		    int (*)(struct pci_dev *, u8, u8));
+ void pci_assign_irq(struct pci_dev *dev);
+ #define HAVE_PCI_REQ_REGIONS	2
+ int __must_check pci_request_regions(struct pci_dev *, const char *);
 -- 
-1.8.4.5
+2.6.2
 
