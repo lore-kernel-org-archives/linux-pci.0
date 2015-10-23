@@ -1,50 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>
-CC: Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Geert Uytterhoeven" <geert+renesas@glider.be>
-Subject: RE: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
- instances
-Date: Tue, 20 Oct 2015 08:00:10 +0000
-Message-ID: <SIXPR06MB04158545EDCA19F6C66A6783F5390@SIXPR06MB0415.apcprd06.prod.outlook.com>
-References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
-	<20151019231634.GA13841@localhost>	<20151020013650.GA13721@verge.net.au>
- <CAMuHMdWiH4ZUSmKQ01qQYvXcjb_3K4XBFLjVGSe1dUoKi=Jb_Q@mail.gmail.com>
-In-Reply-To: <CAMuHMdWiH4ZUSmKQ01qQYvXcjb_3K4XBFLjVGSe1dUoKi=Jb_Q@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foo.masarand.uk ([104.200.29.153]:36257 "EHLO foo.masarand.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751096AbbJWFGA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:06:00 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 18/29] microblaze/PCI: Defer IRQ assignment to device enable time
+Date: Fri, 23 Oct 2015 06:03:51 +0100
+Message-Id: <1445576642-29624-19-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgR2VlcnQsDQoNCk9uIDIwIE9jdG9iZXIgMjAxNSAwODozNywgR2VlcnQgd3JvdGU6DQo+IE9u
-IFR1ZSwgT2N0IDIwLCAyMDE1IGF0IDM6MzYgQU0sIFNpbW9uIEhvcm1hbiA8aG9ybXNAdmVyZ2Uu
-bmV0LmF1PiB3cm90ZToNCj4gPiBPbiBNb24sIE9jdCAxOSwgMjAxNSBhdCAwNjoxNjozNFBNIC0w
-NTAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0KPiA+PiBbK2NjIEdlZXJ0XQ0KPiA+Pg0KPiA+PiBP
-biBGcmksIE9jdCAwMiwgMjAxNSBhdCAxMToyNTowM0FNICswMTAwLCBQaGlsIEVkd29ydGh5IHdy
-b3RlOg0KPiA+PiA+IEZpeGVzIGFuZCBjaGFuZ2VzIHRvIGdldCBQQ0llIHdvcmtpbmcgb24gQVJN
-NjQgd2l0aCBtdWxpdHBsZSBpbnN0YW5jZXMuDQo+ID4+ID4NCj4gPj4gPiBJJ3ZlIHRlc3RlZCB0
-aGVzZSBvbiBBUk0gKEtvZWxzY2ggYm9hcmQpLCBhbmQgaXQgd29ya3MgZmluZS4NCj4gPj4gPiBJ
-J3ZlIGFsc28gdGVzdGVkIG9uIEFSTTY0IChTYWx2YXRvci1YIGJvYXJkKSwgYnV0IEkgY3VycmVu
-dGx5IGhhdmUgYW4gaXNzdWUNCj4gPj4gPiB3aXRoIGluYm91bmQgUENJIGFjY2Vzc2VzLiBJIGFt
-IHJlYXNvbmFibHkgc3VyZSB0aGF0IHRoaXMgcHJvYmxlbSBpcw0KPiBoYXJkd2FyZQ0KPiA+PiA+
-IHJlbGF0ZWQuDQo+ID4+ID4NCj4gPj4gPiBQaGlsIEVkd29ydGh5ICg0KToNCj4gPj4gPiAgIFBD
-STogcmNhci1wY2llOiBNYWtlIFBDSSBhd2FyZSBvZiB0aGUgSU8gcmVzb3VyY2VzDQo+ID4+ID4g
-ICBQQ0k6IHJjYXItcGNpZTogUmVtb3ZlIGRlcGVuZGVuY3kgb24gQVJNLXNwZWNpZmljIHN0cnVj
-dCBod19wY2kNCj4gPj4gPiAgIFBDSTogcmNhci1wY2llOiBTZXQgcm9vdCBidXMgbnIgdG8gdGhh
-dCBwcm92aWRlZCBpbiBEVA0KPiA+PiA+ICAgUENJOiByY2FyLXBjaWU6IEZpeCBJTyBvZmZzZXQg
-Zm9yIG11bHRpcGxlIGluc3RhbmNlcw0KPiA+Pg0KPiA+PiBJIGFwcGxpZWQgdGhlc2Ugd2l0aCBT
-aW1vbidzIGFjayB0byBwY2kvaG9zdC1yY2FyIGZvciB2NC40Lg0KPiA+Pg0KPiA+PiBOb3RlIHRo
-YXQgdGhlc2UgYXJlIG9uIHRvcCBvZiBHZWVydCdzIHBhdGNoIHRvIG1ha2UgcmNhciBidWlsZCBv
-bmx5DQo+ID4+IGZvciBBUk0sIHdoaWNoIGlzIHByb2JhYmx5IG5vdCBuZWNlc3NhcnkgYWZ0ZXIg
-eW91IHJlbW92ZSB0aGUgc3RydWN0DQo+ID4+IGh3X3BjaSBkZXBlbmRlbmN5LiAgSSBjYW4gZHJv
-cCBHZWVydCdzIHBhdGNoIGlmIHlvdSB3YW50Lg0KPiA+DQo+ID4gSSdtIGhhcHB5IHdpdGggdGhh
-dCBpZiBHZWVydCBpcy4NCj4gDQo+IElmZiB0aGUgZHJpdmVyIGNvbXBpbGVzL3dvcmtzIG9uIGFy
-bTY0IG5vdywgbXkgcGF0Y2ggc2hvdWxkL211c3QgYmUNCj4gZHJvcHBlZC9yZXZlcnRlZC4NClll
-cywgdGhlIGRyaXZlciB3b3JrcyBvbiB0aGUgQVJNNjQgU2FsdmF0b3ItWCBib2FyZC4gDQoNClRo
-YW5rcw0KUGhpbA0K
+Currently microblaze assigns PCI IRQs during the pcibios phase, this means
+that devices connected after boot will not be assigned an IRQ, instead the
+boot code now registers IRQ assignment functions to be called later by the
+device enable code paths.
+
+Signed-off-by: Matthew Minter <matt@masarand.com>
+---
+ arch/microblaze/pci/pci-common.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index ae838ed..99ea108 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -855,12 +855,15 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
+ 		 * code and is needed by the DMA init
+ 		 */
+ 		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+-
+-		/* Read default IRQs and fixup if necessary */
+-		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+ 	}
+ }
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->map_irq = of_irq_parse_and_map_pci;
++	return 0;
++}
++
+ void pcibios_fixup_bus(struct pci_bus *bus)
+ {
+ 	/* When called from the generic PCI probe, read PCI<->PCI bridge
+-- 
+2.6.2
+
