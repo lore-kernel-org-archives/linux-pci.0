@@ -1,54 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:48365 "EHLO theia.8bytes.org"
+Received: from foo.masarand.uk ([104.200.29.153]:36199 "EHLO foo.masarand.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752376AbbJGPkH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Oct 2015 11:40:07 -0400
-Date: Wed, 7 Oct 2015 17:40:05 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: Mikulas Patocka <mpatocka@redhat.com>,
-	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
-	Christoph Hellwig <hch@lst.de>,
-	device-mapper development <dm-devel@redhat.com>,
-	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
- READ FPDMA QUEUED errors since Linux 4.0
-Message-ID: <20151007154005.GH28811@8bytes.org>
-References: <55BCD5A7.2080708@maya.org>
- <55BE1D5E.6020709@maya.org>
- <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
- <55FE5740.2060701@maya.org>
- <20150929152100.GL3036@8bytes.org>
- <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
- <20150929162042.GR3036@8bytes.org>
- <560BF73F.8000008@maya.org>
- <20151006101356.GE12506@8bytes.org>
- <56141507.7040103@maya.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56141507.7040103@maya.org>
+	id S1751096AbbJWFFq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Oct 2015 01:05:46 -0400
+From: Matthew Minter <matt@masarand.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com
+Cc: Matthew Minter <matt@masarand.com>
+Subject: [PATCH V4 04/29] PCI: Remove const from the pci_dev struct passed to pci_fixup_irqs
+Date: Fri, 23 Oct 2015 06:03:37 +0100
+Message-Id: <1445576642-29624-5-git-send-email-matt@masarand.com>
+In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 06, 2015 at 08:37:59PM +0200, Andreas Hartmann wrote:
-> But there is another problem w/ 4.3-rc2: Starting a VM w/ PCIe
-> passthrough doesn't work any more. I'm getting the attached null pointer
-> dereference and the machine hangs.
+The pci_fixup_irqs function currently gets passed a const struct pci_dev *.
+This is fine for the current implementation which never modifies the pci_dev
+however the deferred IRQ assignment version may have to modify this pci_dev
+on some architectures so the const is no longer correct.
 
-Weird, probably a do_detach call for a device that is already detached.
-Anyway, I can't reproduce this here on my two AMD IOMMU machines.  Can
-you please boot the machine with amd_iommu_dump on the kernel command
-line and send me dmesg after boot?
+Therefore we remove it, fortunately no users currently seem to rely on it
+being a const so no changes to callers are needed.
 
-Also, which device are you trying to attach to the guest (pci
-bus/device/function)?
+Signed-off-by: Matthew Minter <matt@masarand.com>
+---
+ drivers/pci/setup-irq.c | 2 +-
+ include/linux/pci.h     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Output of lspci might also be helpful.
-
-
-Thanks,
-
-	Joerg
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index 95c225b..c7d9f26 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -58,7 +58,7 @@ static void pdev_fixup_irq(struct pci_dev *dev,
+ }
+ 
+ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+-		    int (*map_irq)(const struct pci_dev *, u8, u8))
++		    int (*map_irq)(struct pci_dev *, u8, u8))
+ {
+ 	struct pci_dev *dev = NULL;
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f1bae1d..1073f27 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1121,7 +1121,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+-		    int (*)(const struct pci_dev *, u8, u8));
++		    int (*)(struct pci_dev *, u8, u8));
+ #define HAVE_PCI_REQ_REGIONS	2
+ int __must_check pci_request_regions(struct pci_dev *, const char *);
+ int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
+-- 
+2.6.2
 
