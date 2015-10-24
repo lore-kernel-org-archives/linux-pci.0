@@ -1,151 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 28/60] PCI: Don't add too much optional size for hotplug bridge MMIO
-Date: Thu,  8 Oct 2015 14:38:47 -0700
-Message-Id: <1444340359-8011-29-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:18968 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752260AbbJXQIS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 24 Oct 2015 12:08:18 -0400
+Message-ID: <562BACE8.8070507@intel.com>
+Date: Sun, 25 Oct 2015 00:08:08 +0800
+From: "Lan, Tianyu" <tianyu.lan@intel.com>
+MIME-Version: 1.0
+To: "Michael S. Tsirkin" <mst@redhat.com>
+CC: bhelgaas@google.com, carolyn.wyborny@intel.com,
+	donald.c.skidmore@intel.com, eddie.dong@intel.com,
+	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
+	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Subject: Re: [RFC Patch 08/12] IXGBEVF: Rework code of finding the end transmit
+ desc of package
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com> <1445445464-5056-9-git-send-email-tianyu.lan@intel.com> <20151022155650-mutt-send-email-mst@redhat.com>
+In-Reply-To: <20151022155650-mutt-send-email-mst@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code will always add 2M for hotplug bridge MMIO even
-there is child device under it already.
 
-For example:
-	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
-					 \- 45:00.1
 
-44:02.0 will need 1M as must for 45:00.0 and 45:00.1
-When we calculate add_size for 44:02.0, we pass 2M as additional
-size for hotplug bridge, total will be 3M.
+On 10/22/2015 8:58 PM, Michael S. Tsirkin wrote:
+> Do you really need to play the shifting games?
+> Can't you just reset everything and re-initialize the rings?
+> It's slower but way less intrusive.
+> Also removes the need to track writes into rings.
 
-That is different from code before changes for optional support,
-or even current code that treat optional as required directly by
-not passing realloc list. We only need 2M as total.
-
-The optional size should be 1M, and total size should be 2M.
-
-This patch change to comparing required+optional with min_sum_size to
-get smaller optional size.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 0c6977c9..5e1cc7e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1199,7 +1199,6 @@ out:
-  * @type2: second match type
-  * @type3: third match type
-  * @min_size : the minimum memory window that must to be allocated
-- * @add_size : additional optional memory window
-  * @realloc_head : track the additional memory window on this list
-  *
-  * Calculate the size of the bus and minimal alignment which
-@@ -1212,10 +1211,11 @@ out:
- static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			 unsigned long type, unsigned long type2,
- 			 unsigned long type3,
--			 resource_size_t min_size, resource_size_t add_size,
-+			 resource_size_t min_size,
- 			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
- 	resource_size_t min_align = 0, min_add_align = 0;
- 	resource_size_t max_align = 0, max_add_align = 0;
- 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
-@@ -1227,6 +1227,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (!b_res)
- 		return -ENOSPC;
- 
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -1298,8 +1303,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	}
- 	free_align_test_list(&align_test_list);
- 
--	if ((sum_add_size - size) < add_size)
--		sum_add_size = size + add_size;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
- 	if (sum_add_size > size && realloc_head) {
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
-@@ -1436,7 +1441,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t additional_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, additional_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1473,7 +1478,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	case PCI_CLASS_BRIDGE_PCI:
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
--			additional_mem_size = pci_hotplug_mem_size;
-+			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
-@@ -1493,8 +1498,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
--				  realloc_head ? 0 : additional_mem_size,
--				  additional_mem_size, realloc_head);
-+				  min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, all non-prefetchable resources
-@@ -1517,8 +1521,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask &= ~IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 					 prefmask, prefmask,
--					 realloc_head ? 0 : additional_mem_size,
--					 additional_mem_size, realloc_head);
-+					 min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, only non-prefetchable resources
-@@ -1527,7 +1530,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			if (ret == 0)
- 				mask = prefmask;
- 			else
--				additional_mem_size += additional_mem_size;
-+				min_mem_size += min_mem_size;
- 
- 			type2 = type3 = IORESOURCE_MEM;
- 		}
-@@ -1548,8 +1551,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		 * window.
- 		 */
- 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
--				realloc_head ? 0 : additional_mem_size,
--				additional_mem_size, realloc_head);
-+				min_mem_size, realloc_head);
- 		break;
- 	}
- }
--- 
-1.8.4.5
+Shift ring is to avoid losing those packets in the ring.
+This may cause some race condition and so I introduced a
+lock to prevent such cases in the latter patch.
+Yes, reset everything after migration can make thing easy.
+But just like you said it would affect performance and loss
+more packets. I can do a test later to get data about these
+two way.
 
