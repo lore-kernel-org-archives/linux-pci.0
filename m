@@ -1,115 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:14749 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753517AbbJZLUv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 07:20:51 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v12 2/8] ARM/PCI: remove align_resource in pci_sys_data
-Date: Mon, 26 Oct 2015 19:35:44 +0800
-Message-ID: <1445859350-26375-3-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <562B36EC.3040406@huawei.com>
+Date: Sat, 24 Oct 2015 15:44:44 +0800
+From: Hanjun Guo <guohanjun@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	<bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <thomas.lendacky@amd.com>, <herbert@gondor.apana.org.au>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	<hanjun.guo@linaro.org>, <davem@davemloft.net>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH V4 7/8] PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
+References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com> <1445442731-28819-8-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1445442731-28819-8-git-send-email-Suravee.Suthikulpanit@amd.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+Hi Suravee,
 
-This patch is needed in order to unify the PCIe designware framework for ARM and
-ARM64 architectures. In the PCIe designware unification process we are calling
-pci_create_root_bus() passing a "sysdata" parameter that is the same for both
-ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
-cause a problem with the function pcibios_align_resource(); in fact this will
-cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
-"struct pcie_port*" pointer.
+Some minor comments  below:
 
-This patch solves the issue by removing "align_resource" from "pci_sys_data"
-struct and defining a static global function pointer in "bios32.c"
+On 2015/10/21 23:52, Suravee Suthikulpanit wrote:
+[...]
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index eea8b42..09264f8 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -6,12 +6,14 @@
+>  #include <linux/delay.h>
+>  #include <linux/init.h>
+>  #include <linux/pci.h>
+> -#include <linux/of_pci.h>
+> +#include <linux/of_device.h>
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
----
- arch/arm/include/asm/mach/pci.h |  6 ------
- arch/arm/kernel/bios32.c        | 12 ++++++++----
- 2 files changed, 8 insertions(+), 10 deletions(-)
+Seems it's needed for GICv2m patch but not this one?
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 8857d28..0070e85 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -52,12 +52,6 @@ struct pci_sys_data {
- 	u8		(*swizzle)(struct pci_dev *, u8 *);
- 					/* IRQ mapping				*/
- 	int		(*map_irq)(const struct pci_dev *, u8, u8);
--					/* Resource alignement requirements	*/
--	resource_size_t (*align_resource)(struct pci_dev *dev,
--					  const struct resource *res,
--					  resource_size_t start,
--					  resource_size_t size,
--					  resource_size_t align);
- 	void		*private_data;	/* platform controller private data	*/
- };
- 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 874e182..6551d28 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -17,6 +17,11 @@
- #include <asm/mach/pci.h>
- 
- static int debug_pci;
-+static resource_size_t (*align_resource)(struct pci_dev *dev,
-+		  const struct resource *res,
-+		  resource_size_t start,
-+		  resource_size_t size,
-+		  resource_size_t align) = NULL;
- 
- /*
-  * We can't use pci_get_device() here since we are
-@@ -456,7 +461,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 		sys->busnr   = busnr;
- 		sys->swizzle = hw->swizzle;
- 		sys->map_irq = hw->map_irq;
--		sys->align_resource = hw->align_resource;
-+		align_resource = hw->align_resource;
- 		INIT_LIST_HEAD(&sys->resources);
- 
- 		if (hw->private_data)
-@@ -572,7 +577,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
- {
- 	struct pci_dev *dev = data;
--	struct pci_sys_data *sys = dev->sysdata;
- 	resource_size_t start = res->start;
- 
- 	if (res->flags & IORESOURCE_IO && start & 0x300)
-@@ -580,8 +584,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 
- 	start = (start + align - 1) & ~(align - 1);
- 
--	if (sys->align_resource)
--		return sys->align_resource(dev, res, start, size, align);
-+	if (align_resource)
-+		return align_resource(dev, res, start, size, align);
- 
- 	return start;
- }
--- 
-1.9.1
+>  #include <linux/pci_hotplug.h>
+>  #include <linux/slab.h>
+>  #include <linux/module.h>
+>  #include <linux/cpumask.h>
+>  #include <linux/pci-aspm.h>
+> +#include <linux/acpi.h>
+
+I think acpi.h should be introduced by the next patch.
+
+> +#include <linux/property.h>
+
+And property.h is also not needed for this patch set.
+
+Thanks
+Hanjun
 
