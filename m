@@ -1,77 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 5/7] PCI: Wait 1 second between disabling VFs and
- clearing NumVFs
-To: ethan zhao <ethan.zhao@oracle.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151029222322.11908.13738.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151030051458.GD5119@richards-mbp.cn.ibm.com> <56330771.90509@oracle.com>
-Cc: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <5633935D.10807@gmail.com>
-Date: Fri, 30 Oct 2015 08:57:17 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:28773 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750829AbbJYGpv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 25 Oct 2015 02:45:51 -0400
+Message-ID: <562C7A99.3030101@intel.com>
+Date: Sun, 25 Oct 2015 14:45:45 +0800
+From: "Lan, Tianyu" <tianyu.lan@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <56330771.90509@oracle.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	eddie.dong@intel.com, nrupal.jani@intel.com,
+	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
+	pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Subject: Re: [RFC Patch 05/12] IXGBE: Add new sysfs interface of "notify_vf"
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com> <1445445464-5056-6-git-send-email-tianyu.lan@intel.com> <5627FB20.3020003@gmail.com> <562BA729.10903@intel.com> <562C7098.4030406@gmail.com>
+In-Reply-To: <562C7098.4030406@gmail.com>
 Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/29/2015 11:00 PM, ethan zhao wrote:
-> Wei,
+
+
+On 10/25/2015 2:03 PM, Alexander Duyck wrote:
+> On 10/24/2015 08:43 AM, Lan, Tianyu wrote:
+>>
+>> On 10/22/2015 4:52 AM, Alexander Duyck wrote:
+>>> Also have you even considered the MSI-X configuration on the VF?  I
+>>> haven't seen anything anywhere that would have migrated the VF's MSI-X
+>>> configuration from BAR 3 on one system to the new system.
+>>
+>> MSI-X migration is done by Hypervisor(Qemu).
+>> Following link is my Qemu patch to do that.
+>> http://marc.info/?l=kvm&m=144544706530484&w=2
 >
-> On 2015/10/30 13:14, Wei Yang wrote:
->> On Thu, Oct 29, 2015 at 05:23:22PM -0500, Bjorn Helgaas wrote:
->>> From: Alexander Duyck <aduyck@mirantis.com>
->>>
->>> Per sec 3.3.3.1 of the SR-IOV spec, r1.1, we must allow 1.0s after 
->>> clearing
->>> VF Enable before reading any field in the SR-IOV Extended Capability.
->>>
->>> Wait 1 second before calling pci_iov_set_numvfs(), which reads
->>> PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE after it sets 
->>> PCI_SRIOV_NUM_VF.
->>>
->>> [bhelgaas: split to separate patch for reviewability, add spec 
->>> reference]
->>> Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
->>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>> ---
->>> drivers/pci/iov.c |    2 +-
->>> 1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>> index fada98d..24428d5 100644
->>> --- a/drivers/pci/iov.c
->>> +++ b/drivers/pci/iov.c
->>> @@ -339,13 +339,13 @@ failed:
->>>     iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
->>>     pci_cfg_access_lock(dev);
->>>     pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->>> -    pci_iov_set_numvfs(dev, 0);
->>>     ssleep(1);
->>>     pci_cfg_access_unlock(dev);
->>>
->>>     if (iov->link != dev->devfn)
->>>         sysfs_remove_link(&dev->dev.kobj, "dep_link");
->>>
->>> +    pci_iov_set_numvfs(dev, 0);
->> One small question, any specific reason put it here instead of just 
->> after
->> sleep()?
->  Agree,  pci_iov_set_numvfs(dev, 0) should be put before 
-> pci_cfg_access_unlock(dev) to avoid race,  because "NumVFs may only be 
-> written while VF Enable is Clear"
+> I really don't like the idea of trying to migrate the MSI-X across from
+> host to host while it is still active.  I really think Qemu shouldn't be
+> moving this kind of data over in a migration.
 
-We are already guaranteeing that aren't we?  I'm assuming there is 
-already code in place here somewhere that prevents us from both enabling 
-and disabling SR-IOV from more than one thread.  Otherwise how could we 
-hope to have any sort of consistent state?
+Hi Alex:
 
-I'm fine with us being more explicit about it if we want to be, but if 
-we are going to do it we should probably update all 3 spots where we 
-update NumVFs after init instead of just this one.  Perhaps it should be 
-a separate patch.
+VF MSI-X regs in the VM are faked by Qemu and Qemu maps host vectors of
+VF with guest's vector. The MSIX data migrated are for faked regs rather
+than the one on the host. After migration, Qemu will remap guest vectors
+with host vectors on the new machine. Moreover, VM is stopped during
+migrating MSI-X data.
 
-- Alex
+
+>
+> I think that having the VF do a suspend/resume is the best way to go.
+> Then it simplifies things as all you have to deal with is the dirty page
+> tracking for the Rx DMA and you should be able to do this without making
+> things too difficult.
+>
+
+Yes, that will be simple and most concern is service down time. I will
+test later.
+
+
+> - Alex
