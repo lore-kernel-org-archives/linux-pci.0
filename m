@@ -1,37 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:49549 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767AbbJVBKt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 21:10:49 -0400
-Date: Wed, 21 Oct 2015 18:27:14 -0700 (PDT)
-Message-Id: <20151021.182714.551622926534141857.davem@davemloft.net>
-To: yinghai@kernel.org
-Cc: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
-	weiyang@linux.vnet.ibm.com, linux@iam.tj, wangyijing@huawei.com,
-	khalid.aziz@oracle.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CAE9FiQXXP8-5hNvKXuh5mu6Xu_9yFufmpZaXv0V95TwBBnxCpA@mail.gmail.com>
-References: <CAE9FiQUdKdyipTw3KSVL0Kr1FFvki5Un3NuUuXpw4TXoWi1Tpg@mail.gmail.com>
-	<20151021023522.GJ8224@localhost>
-	<CAE9FiQXXP8-5hNvKXuh5mu6Xu_9yFufmpZaXv0V95TwBBnxCpA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:35578 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750802AbbJYGDI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Oct 2015 02:03:08 -0400
+Subject: Re: [RFC Patch 05/12] IXGBE: Add new sysfs interface of "notify_vf"
+To: "Lan, Tianyu" <tianyu.lan@intel.com>, bhelgaas@google.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	eddie.dong@intel.com, nrupal.jani@intel.com,
+	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
+	pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+ <1445445464-5056-6-git-send-email-tianyu.lan@intel.com>
+ <5627FB20.3020003@gmail.com> <562BA729.10903@intel.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <562C7098.4030406@gmail.com>
+Date: Sat, 24 Oct 2015 23:03:04 -0700
+MIME-Version: 1.0
+In-Reply-To: <562BA729.10903@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Wed, 21 Oct 2015 11:16:53 -0700
+On 10/24/2015 08:43 AM, Lan, Tianyu wrote:
+>
+> On 10/22/2015 4:52 AM, Alexander Duyck wrote:
+>> Also have you even considered the MSI-X configuration on the VF?  I
+>> haven't seen anything anywhere that would have migrated the VF's MSI-X
+>> configuration from BAR 3 on one system to the new system.
+>
+> MSI-X migration is done by Hypervisor(Qemu).
+> Following link is my Qemu patch to do that.
+> http://marc.info/?l=kvm&m=144544706530484&w=2
 
-> otherwise we need to compare res with pbm->mem_space or pbm->mem64_space
-> to get direct parent for request_resource_conflict() calling in
-> pci_register_legacy_regions().
+I really don't like the idea of trying to migrate the MSI-X across from 
+host to host while it is still active.  I really think Qemu shouldn't be 
+moving this kind of data over in a migration.
 
-Right, this is the issue.
+I think that having the VF do a suspend/resume is the best way to go.  
+Then it simplifies things as all you have to deal with is the dirty page 
+tracking for the Rx DMA and you should be able to do this without making 
+things too difficult.
 
-On sparc64, the cpu physical base address used for accessing 64-bit
-and non-64-bit memory spaces is different.
-
-And that's why the resource values will be different.
-
+- Alex
