@@ -1,59 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:55761 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750817AbbJNJJd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Oct 2015 05:09:33 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v9 3/6] pci:host: Add Altera PCIe host controller driver
-Date: Wed, 14 Oct 2015 11:09:16 +0200
-Message-ID: <5088538.zEUtS0EC0S@wuerfel>
-In-Reply-To: <CAFiDJ58Uwpv=xUXbBNQcd4FQq=fHGhtCnjTb7TKQBJ0TOxRLig@mail.gmail.com>
-References: <1444790492-4051-1-git-send-email-lftan@altera.com> <6044983.WR9BTgsOaA@wuerfel> <CAFiDJ58Uwpv=xUXbBNQcd4FQq=fHGhtCnjTb7TKQBJ0TOxRLig@mail.gmail.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:2106 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752604AbbJZH1w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 03:27:52 -0400
+Message-ID: <562DD5D2.9000705@hisilicon.com>
+Date: Mon, 26 Oct 2015 15:27:14 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	qiujiang <qiujiang@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v11 1/6] PCI: designware: move calculation of bus addresses
+ to DRA7xx
+References: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com> <1444991021-109306-2-git-send-email-wangzhou1@hisilicon.com> <20151021221524.GM1583@localhost> <EE11001F9E5DDD47B7634E2F8A612F2E16274DCC@lhreml503-mbs> <20151022163534.GB21237@localhost>
+In-Reply-To: <20151022163534.GB21237@localhost>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 14 October 2015 16:32:25 Ley Foon Tan wrote:
-> On Wed, Oct 14, 2015 at 4:20 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Wednesday 14 October 2015 10:41:29 Ley Foon Tan wrote:
-> >> +static int altera_pcie_remove(struct platform_device *pdev)
-> >> +{
-> >> +     struct altera_pcie *pcie = platform_get_drvdata(pdev);
-> >> +
-> >> +     altera_pcie_free_irq_domain(pcie);
-> >> +     platform_set_drvdata(pdev, NULL);
-> >> +     return 0;
-> >> +}
-> >
-> > I just noticed this. Does it actually work to unload the module
-> > and tear down all the pci_dev structures in a safe way?
-> Good catch. It only can be compiled as builtin-moduley now, so we can
-> remove this _remove callback function.
+On 2015/10/23 0:35, Bjorn Helgaas wrote:
+> Hi Gabriele,
+> 
+> On Thu, Oct 22, 2015 at 07:21:41AM +0000, Gabriele Paoloni wrote:
+>>> -----Original Message-----
+>>> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> 
+>>>>  #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
+>>>>  #define	LINK_UP						BIT(16)
+>>>> +#define	CPU_TO_BUS_ADDR					0x0FFFFFFF
+>>>
+>>> "CPU_TO_BUS_ADDR" is a very generic name.  Since you do have DRA7XX in
+>>> other #defines and static symbols in this file, maybe it could be DRA7XX to
+>>> make it obvious that it only applies here?
+>>
+>> Ok will change to DRA7XX_CPU_TO_BUS_ADRR in v12
+>> ..
+> 
+>>>> +	if (pp->io_mod_base)
+>>>> +		pp->io_mod_base &= CPU_TO_BUS_ADDR;
+>>>
+>>> These are equivalent to
+>>>
+>>>   pp->io_mod_base &= CPU_TO_BUS_ADDR;
+>>>
+>>> (You don't need to test whether they're zero first.)
+>>
+>> Yes agreed, will change in v12
+>> ...
+> 
+>>>>  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+>>>> @@ -415,8 +411,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>>>  			pp->io_base = range.cpu_addr;
+>>>>
+>>>>  			/* Find the untranslated IO space address */
+>>>> -			pp->io_mod_base = of_read_number(parser.range -
+>>>> -							 parser.np + na, ns);
+>>>> +			pp->io_mod_base = range.cpu_addr;
+>>>
+>>> So apparently
+>>>
+>>>   "of_read_number() == range.cpu_addr & CPU_TO_BUS_ADDR" on DRA7xx
+>>>   "of_read_number() == range.cpu_addr" everywhere else?
+>>
+>> Yes correct
+>>
+>>> Is that right?  Is that a valid assumption, i.e., are we assuming
+>>> anything about DTs in the field that we shouldn't?
+>>
+>> Before I wrote a patch that was generic to accommodate intermediate level
+>> of translation between PCI_addr -> BUS_addr -> CPU_addr
+>>
+>> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/360922.html
+>>
+>> After discussion we agreed to solve it with a bitmask rather than adding
+>> a field to of_pci_range to make it generic.
+>> The bitmask only applies to DRA7xx
+> 
+> I haven't gotten all the way through this series yet, but don't bother with
+> a v12 just for these minor changes.  I can easily fix them up when applying
+> it.
+> 
+> Bjorn
+>
 
-I think we should change both: make it possible to load the
-driver dynamically, and remove the altera_pcie_remove function.
+Hi Gabriele and Bjorn,
 
-You can prevent the module from being unloaded if you also remove
-the module_platform_driver() directive and add a module_init()
-without a matching module_exit().
+Sorry for late, I am preparing v12 patchset and I will fix above problems together
+with other patches.
 
-Please also add a '.suppress_bind_attrs = true,' flag in the driver
-struct to prevent manual unbinding.
+Many thanks,
+Zhou
 
-	Arnd
+> .
+> 
+
+
