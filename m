@@ -1,76 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f182.google.com ([209.85.160.182]:34613 "EHLO
-	mail-yk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752912AbbJIRtw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 13:49:52 -0400
-MIME-Version: 1.0
-In-Reply-To: <20151009170448.GG21629@leverpostej>
-References: <1444409849-5685-1-git-send-email-Liviu.Dudau@arm.com>
- <1444409849-5685-5-git-send-email-Liviu.Dudau@arm.com> <20151009170448.GG21629@leverpostej>
-From: Rob Herring <robherring2@gmail.com>
-Date: Fri, 9 Oct 2015 12:49:32 -0500
-Message-ID: <CAL_JsqKjXpa7R433MZn9O8XkJcEE9xWp4tYRUox5eSs+Dm+cJw@mail.gmail.com>
-Subject: Re: [PATCH v2 4/5] arm64: Juno: Add support for the PCIe host bridge
- on Juno R1
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:21781 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752038AbbJZXW6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 19:22:58 -0400
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	jiang.liu@linux.intel.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v3 5/7] PCI: irqdomain: Look up IRQ domain by fwnode_handle
+Date: Mon, 26 Oct 2015 23:15:37 +0000
+Message-Id: <1445901339-11924-6-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1445901339-11924-1-git-send-email-jakeo@microsoft.com>
+References: <1445901339-11924-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 9, 2015 at 12:04 PM, Mark Rutland <mark.rutland@arm.com> wrote:
-> On Fri, Oct 09, 2015 at 05:57:28PM +0100, Liviu Dudau wrote:
->> Juno R1 board sports a functional PCIe host bridge that is
->> compliant with the SBSA standard found [1] here. With the right
->> firmware that initialises the XpressRICH3 controller one can
->> use the generic Host Bridge driver to use the PCIe hardware.
->>
->> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->>
->> [1] http://infocenter.arm.com/help/topic/com.arm.doc.den0029a/
->> ---
->>  arch/arm64/boot/dts/arm/juno-r1.dts | 20 ++++++++++++++++++++
->>  1 file changed, 20 insertions(+)
->>
->> diff --git a/arch/arm64/boot/dts/arm/juno-r1.dts b/arch/arm64/boot/dts/arm/juno-r1.dts
->> index c627511..a702a6b 100644
->> --- a/arch/arm64/boot/dts/arm/juno-r1.dts
->> +++ b/arch/arm64/boot/dts/arm/juno-r1.dts
->> @@ -109,7 +109,26 @@
->>
->>       #include "juno-base.dtsi"
->>
->> +     pcie-controller@40000000 {
->> +             compatible = "arm,juno-r1-pcie", "plda,xpressrich3", "pci-host-ecam-generic";
->
-> Judging by a PLDA press release [1], it looks like Juno uses
-> "XpressRICH3-AXI" [2] rather than "XpressRICH3 for ASIC" [3].
->
-> So sorry to bikeshed the name I suggested, but it's probably best to
-> s/plda,xpressrich3/plda,xpressrich3-axi/
->
-> With that:
->
-> Acked-by: Mark Rutland <mark.rutland@arm.com>
->
-> I assume that can be fixed up when picking (or prior to a pull) without
-> the need to repost.
+From: Jake Oshins <jakeo@microsoft.com>
 
-Also, now these strings need to be documented. :)
+The existing PCI code looks for an IRQ domain associated with a root PCI bus
+by looking in the Open Firmware tree.  This patch introduces a second way
+to identify the associated IRQ domain, if the lookup in the OF tree fails.
+The handle used for the IRQ domain lookup was introduced in the previous patch
+in the series.
 
-I would just adding to the generic host doc.
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/pci/probe.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-Rob
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c0f2e44..62c9ac7 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -664,6 +664,7 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
+ {
+ 	struct irq_domain *d;
++	struct pci_host_bridge *host_bridge;
+ 
+ 	/*
+ 	 * Any firmware interface that can resolve the msi_domain
+@@ -671,6 +672,18 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
+ 	 */
+ 	d = pci_host_bridge_of_msi_domain(bus);
+ 
++	/*
++	 * If no IRQ domain was found via the OF tree, try looking it up
++	 * directly through the fwnode_handle.
++	 */
++	if (!d) {
++		host_bridge = to_pci_host_bridge(bus->bridge);
++		if (host_bridge->fwnode) {
++			d = irq_find_matching_fwnode(host_bridge->fwnode,
++						     DOMAIN_BUS_ANY);
++		}
++	}
++
+ 	return d;
+ }
+ 
+-- 
+1.9.1
+
