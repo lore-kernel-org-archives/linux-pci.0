@@ -1,83 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58074 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751658AbbJLP1D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 12 Oct 2015 11:27:03 -0400
-Date: Mon, 12 Oct 2015 10:26:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Li Yang <leoli@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: Re: [PATCH v2] PCI: layerscape: Add PCIe support for LS1043a and
- LS2080a
-Message-ID: <20151012152656.GB29221@localhost>
-References: <1442481219-28299-1-git-send-email-Minghuan.Lian@freescale.com>
- <20151007175725.GC27633@localhost>
- <5274293.94FcFfK0fd@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5274293.94FcFfK0fd@wuerfel>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:51411 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542AbbJZDUb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Oct 2015 23:20:31 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 26 Oct 2015 13:20:29 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 4C18A357804F
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 14:20:27 +1100 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9Q3KJBJ23134428
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 14:20:27 +1100
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9Q3JsdR030684
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 14:19:54 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: [PATCH V10 11/12] powerpc/eeh: Don't block PCI config on resetting VF PE
+Date: Mon, 26 Oct 2015 11:16:01 +0800
+Message-Id: <1445829362-2738-12-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 12, 2015 at 02:36:29PM +0200, Arnd Bergmann wrote:
-> On Wednesday 07 October 2015 12:57:25 Bjorn Helgaas wrote:
-> > > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> > > index ae873be..38fe8a8 100644
-> > > --- a/drivers/pci/host/Kconfig
-> > > +++ b/drivers/pci/host/Kconfig
-> > > @@ -105,7 +105,7 @@ config PCI_XGENE_MSI
-> > >  
-> > >  config PCI_LAYERSCAPE
-> > >       bool "Freescale Layerscape PCIe controller"
-> > > -     depends on OF && ARM
-> > > +     depends on OF && (ARM || ARM64)
-> > 
-> > It seems like there are a couple things going on here, and I wonder if
-> > you can split them out into separate patches.
-> > 
-> > 1) Making this work on ARM64 as well as on ARM.  This may be of
-> > interest for other DesignWare-based drivers, so if you split this out,
-> > maybe it would be a useful template for converting the other drivers,
-> > too.
-> 
-> The Kconfig change apparently made it into linux-next now, but it
-> doesn't actually build on arm64, because the dependency that was
-> mentioned in the cover letter [0] is not there.
-> ...
-> [0] This patch is based on v4.3-rc1 and [PATCH v9 0/6]
-> PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
-> patchset from Zhou Wang.
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-Oops, my fault.  I read that as "this patch is derived from, e.g., it
-a newer version of, the HiSilicon patchset."  But that's obviously
-a silly way to read it.  I re-did the merge without the Layerscape
-patch and repushed it to my "next" branch.
+When passing through SRIOV VF from host to guest via VFIO PCI
+infrastructure, the VF is resetted by EEH specific backend
+(pcibios_set_pcie_reset_state()). We can't block the PCI config,
+otherwise, the reset (FLR or AF FLR), to be completed by PCI
+config access to the VF, can't be done. Then the VF can't be
+put into initial state when passing it to the guest and returning
+back to the host.
 
-I'll work on Zhou's series, then revisit Minghuan's patch(es).  I'm
-hoping the Layerscape patch can be split up a bit, both to split out
-the ARM64 config change and to make a cleaner "LS1043a and LS2080a"
-support patch.  The current patch changes several things that are not
-obviously directly related to LS1043a and LS2080a.  It would be ideal
-to have a series of things like:
+The patch just doesn't block the VF's PCI config space when doing
+the reset. It fixes EEH error caused by DMA traffic to bogus DMA
+address on restarting guest after killing the QEMU process, which
+includes Mellanox VF passed through from host.
 
-  - add ARM64 build support (maybe just the Kconfig change)
-  - make the ls_pcie_probe() changes that are apparently generic
-    across all the LS devices
-  - add driver data to lc_pcie_of_match[] (this wouldn't change any
-    behavior at all; it would just add the ls1021_drvdata that works
-    for the already-supported devices)
-  - add ls1032_drvdata and ls2080_drvdata for the new devices
-  - add the "msi-parent" diagnostic (this seems to be basically new
-    functionality that applies to all devices, not just the new ones)
+Reported-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Tested-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+---
+ arch/powerpc/kernel/eeh.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-That way, each individual change would be easier to review.
+diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+index 28e4d73..e1846f5 100644
+--- a/arch/powerpc/kernel/eeh.c
++++ b/arch/powerpc/kernel/eeh.c
+@@ -745,7 +745,8 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
+ 	case pcie_deassert_reset:
+ 		eeh_ops->reset(pe, EEH_RESET_DEACTIVATE);
+ 		eeh_unfreeze_pe(pe, false);
+-		eeh_pe_state_clear(pe, EEH_PE_CFG_BLOCKED);
++		if (!(pe->type & EEH_PE_VF))
++			eeh_pe_state_clear(pe, EEH_PE_CFG_BLOCKED);
+ 		eeh_pe_dev_traverse(pe, eeh_restore_dev_state, dev);
+ 		eeh_pe_state_clear(pe, EEH_PE_ISOLATED);
+ 		break;
+@@ -753,14 +754,16 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
+ 		eeh_pe_state_mark(pe, EEH_PE_ISOLATED);
+ 		eeh_ops->set_option(pe, EEH_OPT_FREEZE_PE);
+ 		eeh_pe_dev_traverse(pe, eeh_disable_and_save_dev_state, dev);
+-		eeh_pe_state_mark(pe, EEH_PE_CFG_BLOCKED);
++		if (!(pe->type & EEH_PE_VF))
++			eeh_pe_state_mark(pe, EEH_PE_CFG_BLOCKED);
+ 		eeh_ops->reset(pe, EEH_RESET_HOT);
+ 		break;
+ 	case pcie_warm_reset:
+ 		eeh_pe_state_mark(pe, EEH_PE_ISOLATED);
+ 		eeh_ops->set_option(pe, EEH_OPT_FREEZE_PE);
+ 		eeh_pe_dev_traverse(pe, eeh_disable_and_save_dev_state, dev);
+-		eeh_pe_state_mark(pe, EEH_PE_CFG_BLOCKED);
++		if (!(pe->type & EEH_PE_VF))
++			eeh_pe_state_mark(pe, EEH_PE_CFG_BLOCKED);
+ 		eeh_ops->reset(pe, EEH_RESET_FUNDAMENTAL);
+ 		break;
+ 	default:
+-- 
+2.5.0
 
-Bjorn
