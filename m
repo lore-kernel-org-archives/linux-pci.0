@@ -1,70 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:65157 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757049AbbJIQju (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 12:39:50 -0400
-Date: Fri, 9 Oct 2015 18:39:47 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 2/9] pci: mvebu: fix memory leaks and refcount leaks
-In-Reply-To: <20151009153543.GX32532@n2100.arm.linux.org.uk>
-Message-ID: <alpine.DEB.2.10.1510091838440.2665@hadrien>
-References: <20151003181228.GI21513@n2100.arm.linux.org.uk> <E1ZiRIs-0004Id-AN@rmk-PC.arm.linux.org.uk> <20151009165240.3ba17ece@free-electrons.com> <20151009150710.GJ14688@lunn.ch> <20151009171442.52988f0b@free-electrons.com>
- <20151009153543.GX32532@n2100.arm.linux.org.uk>
+Received: from mga09.intel.com ([134.134.136.24]:36346 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751632AbbJZFrM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 26 Oct 2015 01:47:12 -0400
+Message-ID: <562DBBC9.4000104@intel.com>
+Date: Mon, 26 Oct 2015 13:36:09 +0800
+From: Lan Tianyu <tianyu.lan@intel.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	eddie.dong@intel.com, nrupal.jani@intel.com,
+	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
+	pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Subject: Re: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV
+ NIC
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com> <562A7E33.4080800@gmail.com>
+In-Reply-To: <562A7E33.4080800@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 2015年10月24日 02:36, Alexander Duyck wrote:
+> I was thinking about it and I am pretty sure the dummy write approach is
+> problematic at best.  Specifically the issue is that while you are
+> performing a dummy write you risk pulling in descriptors for data that
+> hasn't been dummy written to yet.  So when you resume and restore your
+> descriptors you will have once that may contain Rx descriptors
+> indicating they contain data when after the migration they don't.
 
+How about changing sequence? dummy writing Rx packet data fist and then
+its desc. This can ensure that RX data is migrated before its desc and
+prevent such case.
 
-On Fri, 9 Oct 2015, Russell King - ARM Linux wrote:
-
-> On Fri, Oct 09, 2015 at 05:14:42PM +0200, Thomas Petazzoni wrote:
-> > Julia: some of the Device Tree iterator functions have a somewhat
-> > "interesting" behavior in that they take the reference on the current
-> > child when entering the loop, and release it before entering the next
-> > iteration (which will also take a reference to the next child).
-> >
-> > This means that if you have an exit point inside the loop (break or
-> > return), you are loosing a reference. For example,
-> > http://lxr.free-electrons.com/source/arch/arm/mach-shmobile/pm-rmobile.c#L367
-> > is wrong because there is a missing of_node_put(np) before the "return
-> > -ENOMEM".
-> >
-> > So essentially, every exit point in such Device Tree iteration loops
-> > should make to call of_node_put() on the current element before exiting
-> > the loop unexpectedly.
->
-> There is an exception to that... if the loop is part of a DT node lookup
-> function, which would return a DT node based on some search criteria, it
-> would be valid to break out of the loop while holding a reference.
->
-> For example, of_get_child_by_name(), of_find_next_cache_node(),
-> of_graph_get_port_by_id(), are valid breaker-outer cases. ;)
->
-> However, of_platform_bus_probe(), of_platform_populate(),
-> of_overlay_apply_one(), overlay_subtree_check() are examples of
-> incorrect break-out cases.
-
-Thanks for the examples.
-
-I guess that this incorrect too, for the opposite reason (double put)?
-
-drivers/clk/tegra/clk-emc.c:
-
-	for_each_child_of_node(np, node) {
-                err = of_property_read_u32(node, "nvidia,ram-code",
-                                           &node_ram_code);
-                if (err) {
-                        of_node_put(node);
-                        continue;
-		}
-
-julia
+-- 
+Best regards
+Tianyu Lan
