@@ -1,57 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:44100 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752161AbbJLNei (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 09:34:38 -0400
-Message-ID: <1444656873.3364.14.camel@pengutronix.de>
-Subject: Re: [PATCH v2 1/2] PCI: designware: Move LTSSM state definitions to
- pcie-designware.h
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
-	m-karicheri2 <m-karicheri2@ti.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v4] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+To: Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+References: <1445066538-24638-1-git-send-email-bharatku@xilinx.com>
+ <5705956.6YyKSO4LdH@wuerfel>
+ <8520D5D51A55D047800579B09414719801692D8E@XAP-PVEXMBX01.xlnx.xilinx.com>
+CC: "robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"rjui@broadcom.com" <rjui@broadcom.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Date: Mon, 12 Oct 2015 15:34:33 +0200
-In-Reply-To: <CAOMZO5CyGybRSJfCNwJAXrPuKpJqsA_w0Qfb+vhUXCyCe-PKiQ@mail.gmail.com>
-References: <1444355306-21486-1-git-send-email-festevam@gmail.com>
-	 <1444645188.3364.5.camel@pengutronix.de>
-	 <1444645685.3364.8.camel@pengutronix.de>
-	 <CAOMZO5CyGybRSJfCNwJAXrPuKpJqsA_w0Qfb+vhUXCyCe-PKiQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+From: Michal Simek <michal.simek@xilinx.com>
+Message-ID: <562E20CB.4020401@xilinx.com>
+Date: Mon, 26 Oct 2015 13:47:07 +0100
+MIME-Version: 1.0
+In-Reply-To: <8520D5D51A55D047800579B09414719801692D8E@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 12.10.2015, 09:31 -0300 schrieb Fabio Estevam:
-> On Mon, Oct 12, 2015 at 7:28 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+On 10/26/2015 11:26 AM, Bharat Kumar Gogada wrote:
+>>> +       device_type = "pci";
+>>> +       interrupt-parent = <&gic>;
+>>> +       interrupts = < 0 118 4
+>>> +                      0 116 4
+>>> +                      0 115 4          // MSI_1 [63...32]
+>>> +                      0 114 4 >;       // MSI_0 [31...0]
+>>
+>> Better write these as tuples:
+>>
+>> 	interrupts = <0 118 4>, <0 116 4>, <0 115 4>, <0 114 4>;
+>>
+>> And maybe reverse the order? It looks that might be what the soc
+>> integration person had in mind.
+>>
+>> Also, what is interrupt <0 117 4>? Is that connected here as well?
+>> Better list it as well then, even if you don't use it.
+>>
+> We have it but not using it, we will list it.
 > 
-> > Actually the TRM states that i.MX6 is using the same narrower mask of
-> > 0x1f for the LTSSM state, so another reason to just use that.
+>>> +       interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+>>> +       interrupt-map = <0x0 0x0 0x0 0x1 &pcie_intc 0x1
+>>> +                        0x0 0x0 0x0 0x2 &pcie_intc 0x2
+>>> +                        0x0 0x0 0x0 0x3 &pcie_intc 0x3
+>>> +                        0x0 0x0 0x0 0x4 &pcie_intc 0x4>;
+>>
+>>> +       msi-parent = <&nwl_pcie>;
+>>> +       reg = <0x0 0xfd0e0000 0x1000
+>>> +              0x0 0xfd480000 0x1000
+>>> +              0x0 0xE0000000 0x1000000>;
+>>
+>> Same grouping for reg and interrupt-map as above for interrupts.
 > 
-> The manual I have seems to tell a different value :-)
-> 
-> Please check: http://cache.freescale.com/files/32bit/doc/ref_manual/IMX6DQRM.pdf
-> 
-> "48.12.11
-> Debug Register 0 (PCIE_PL_DEBUG0)"
-> 
-> says "[5:0]: xmlh_ltssm_state LTSSM current state. See source for encodings"
-> 
-Urgh. Seems we got confused by all the different defines.
+> Grouping reg and interrupt-map as tuples will make lengthy line and reduces readability, is it compulsory ?
 
-In fact [5:0] is 0x1f, so i.MX6 uses the same mask as Keystone, yet the
-common and shared header now states a mask of 0x3f with Keystone being
-the exception. That doesn't reflect reality which isn't nice IMHO. I
-think it would be better to just use 0x1f as the LTSSM mask in the
-shared header and use this for all drivers until a need arises for using
-the extra bit on SPEAR.
 
-Regards,
-Lucas
+FYI: Just this.
+      reg = <0x0 0xfd0e0000 0x1000>,
+            <0x0 0xfd480000 0x1000>,
+            <0x0 0xe0000000 0x1000000>;
 
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+Also please make sure that you are using the same case for addresses.
+That 0xE0000000 case above.
 
+Thanks,
+Michal
