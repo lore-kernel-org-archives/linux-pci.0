@@ -1,75 +1,245 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:33822 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752050AbbJ2G6t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 02:58:49 -0400
-Subject: Re: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV NIC
-To: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
-	pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
- <562A7E33.4080800@gmail.com> <562DBBC9.4000104@intel.com>
- <562E40BB.6040404@gmail.com> <5631B8CA.9040805@intel.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <5631C3A7.2070900@gmail.com>
-Date: Wed, 28 Oct 2015 23:58:47 -0700
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v12 3/8] PCI: designware: Replace DT PCI ranges parse with of_pci_get_host_bridge_resources
+Date: Mon, 26 Oct 2015 19:35:45 +0800
+Message-ID: <1445859350-26375-4-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <5631B8CA.9040805@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/28/2015 11:12 PM, Lan Tianyu wrote:
-> On 2015年10月26日 23:03, Alexander Duyck wrote:
->> No.  I think you are missing the fact that there are 256 descriptors per
->> page.  As such if you dirty just 1 you will be pulling in 255 more, of
->> which you may or may not have pulled in the receive buffer for.
->>
->> So for example if you have the descriptor ring size set to 256 then that
->> means you are going to get whatever the descriptor ring has since you
->> will be marking the entire ring dirty with every packet processed,
->> however you cannot guarantee that you are going to get all of the
->> receive buffers unless you go through and flush the entire ring prior to
->> migrating.
->
-> Yes, that will be a problem. How about adding tag for each Rx buffer and
-> check the tag when deliver the Rx buffer to stack? If tag has been
-> overwritten, this means the packet data has been migrated.
+This patch uses the new of_pci_get_host_bridge_resources
+API in place of the PCI OF DT parser
 
-Then you have to come up with a pattern that you can guarantee is the 
-tag and not part of the packet data.  That isn't going to be something 
-that is easy to do.  It would also have a serious performance impact on 
-the VF.
+For reference see previous suggestions from Gabriele[1]
 
->> This is why I have said you will need to do something to force the rings
->> to be flushed such as initiating a PM suspend prior to migrating.  You
->> need to do something to stop the DMA and flush the remaining Rx buffers
->> if you want to have any hope of being able to migrate the Rx in a
->> consistent state.  Beyond that the only other thing you have to worry
->> about are the Rx buffers that have already been handed off to the
->> stack.  However those should be handled if you do a suspend and somehow
->> flag pages as dirty when they are unmapped from the DMA.
->>
->> - Alex
-> This will be simple and maybe our first version to enable migration. But
-> we still hope to find a way not to disable DMA before stopping VCPU to
-> decrease service down time.
+[1] http://www.spinics.net/lists/linux-pci/msg42194.html
 
-You have to stop the Rx DMA at some point anyway.  It is the only means 
-to guarantee that the device stops updating buffers and descriptors so 
-that you will have a consistent state.
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Tested-by: James Morse <james.morse@arm.com>
+Tested-by: Gabriel Fernandez <gabriel.fernandez@st.com>
+Tested-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+---
+ drivers/pci/host/pci-keystone-dw.c |   2 +-
+ drivers/pci/host/pcie-designware.c | 106 +++++++++++++++++--------------------
+ drivers/pci/host/pcie-designware.h |  10 ++--
+ 3 files changed, 55 insertions(+), 63 deletions(-)
 
-Your code was having to do a bunch of shuffling in order to get things 
-set up so that you could bring the interface back up.  I would argue 
-that it may actually be faster at least on the bring-up to just drop the 
-old rings and start over since it greatly reduced the complexity and the 
-amount of device related data that has to be moved.
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index e71da99..8062ddb 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -322,7 +322,7 @@ static void ks_dw_pcie_clear_dbi_mode(void __iomem *reg_virt)
+ void ks_dw_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie)
+ {
+ 	struct pcie_port *pp = &ks_pcie->pp;
+-	u32 start = pp->mem.start, end = pp->mem.end;
++	u32 start = pp->mem->start, end = pp->mem->end;
+ 	int i, tr_size;
+ 
+ 	/* Disable BARs for inbound access */
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 75338a6..b914424 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -362,12 +362,12 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct device_node *np = pp->dev->of_node;
+ 	struct platform_device *pdev = to_platform_device(pp->dev);
+-	struct of_pci_range range;
+-	struct of_pci_range_parser parser;
+ 	struct resource *cfg_res;
+ 	u32 val, ns;
+ 	const __be32 *addrp;
+ 	int i, index, ret;
++	LIST_HEAD(res);
++	struct resource_entry *win;
+ 
+ 	ns = of_n_size_cells(np);
+ 
+@@ -387,75 +387,67 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		dev_err(pp->dev, "missing *config* reg space\n");
+ 	}
+ 
+-	if (of_pci_range_parser_init(&parser, np)) {
+-		dev_err(pp->dev, "missing ranges property\n");
+-		return -EINVAL;
+-	}
++	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
++	if (ret)
++		return ret;
+ 
+ 	/* Get the I/O and memory ranges from DT */
+-	for_each_of_pci_range(&parser, &range) {
+-		unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
+-
+-		if (restype == IORESOURCE_IO) {
+-			of_pci_range_to_resource(&range, np, &pp->io);
+-			pp->io.name = "I/O";
+-			pp->io.start = max_t(resource_size_t,
+-					     PCIBIOS_MIN_IO,
+-					     range.pci_addr + global_io_offset);
+-			pp->io.end = min_t(resource_size_t,
+-					   IO_SPACE_LIMIT,
+-					   range.pci_addr + range.size
+-					   + global_io_offset - 1);
+-			pp->io_size = resource_size(&pp->io);
+-			pp->io_bus_addr = range.pci_addr;
+-			pp->io_base = range.cpu_addr;
++	resource_list_for_each_entry(win, &res) {
++		switch (resource_type(win->res)) {
++		case IORESOURCE_IO:
++			pp->io = win->res;
++			pp->io->name = "I/O";
++			pp->io_size = resource_size(pp->io);
++			pp->io_bus_addr = pp->io->start - win->offset;
++			pp->io->start = max_t(resource_size_t, PCIBIOS_MIN_IO,
++					      pp->io_bus_addr +
++					      global_io_offset);
++			pp->io->end = min_t(resource_size_t, IO_SPACE_LIMIT,
++					    pp->io_bus_addr + pp->io_size +
++					    global_io_offset - 1);
++			pp->io_base = pp->io->start;
+ 
+ 			/* Find the untranslated IO space address */
+-			pp->io_mod_base = range.cpu_addr;
+-		}
+-		if (restype == IORESOURCE_MEM) {
+-			of_pci_range_to_resource(&range, np, &pp->mem);
+-			pp->mem.name = "MEM";
+-			pp->mem_size = resource_size(&pp->mem);
+-			pp->mem_bus_addr = range.pci_addr;
++			pp->io_mod_base = pp->io->start;;
++			break;
++		case IORESOURCE_MEM:
++			pp->mem = win->res;
++			pp->mem->name = "MEM";
++			pp->mem_size = resource_size(pp->mem);
++			pp->mem_bus_addr = pp->mem->start - win->offset;
+ 
+ 			/* Find the untranslated MEM space address */
+-			pp->mem_mod_base = range.cpu_addr;
+-		}
+-		if (restype == 0) {
+-			of_pci_range_to_resource(&range, np, &pp->cfg);
+-			pp->cfg0_size = resource_size(&pp->cfg)/2;
+-			pp->cfg1_size = resource_size(&pp->cfg)/2;
+-			pp->cfg0_base = pp->cfg.start;
+-			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
++			pp->mem_mod_base = pp->mem->start;
++			break;
++		case 0:
++			pp->cfg = win->res;
++			pp->cfg0_size = resource_size(pp->cfg)/2;
++			pp->cfg1_size = resource_size(pp->cfg)/2;
++			pp->cfg0_base = pp->cfg->start;
++			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
+ 
+ 			/* Find the untranslated configuration space address */
+-			pp->cfg0_mod_base = range.cpu_addr;
+-			pp->cfg1_mod_base = pp->cfg0_mod_base +
+-					    pp->cfg0_size;
++			pp->cfg0_mod_base = pp->cfg->start;
++			pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
++			break;
++		case IORESOURCE_BUS:
++			pp->busn = win->res;
++			break;
++		default:
++			continue;
+ 		}
+ 	}
+ 
+-	ret = of_pci_parse_bus_range(np, &pp->busn);
+-	if (ret < 0) {
+-		pp->busn.name = np->name;
+-		pp->busn.start = 0;
+-		pp->busn.end = 0xff;
+-		pp->busn.flags = IORESOURCE_BUS;
+-		dev_dbg(pp->dev, "failed to parse bus-range property: %d, using default %pR\n",
+-			ret, &pp->busn);
+-	}
+-
+ 	if (!pp->dbi_base) {
+-		pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
+-					resource_size(&pp->cfg));
++		pp->dbi_base = devm_ioremap(pp->dev, pp->cfg->start,
++					resource_size(pp->cfg));
+ 		if (!pp->dbi_base) {
+ 			dev_err(pp->dev, "error with ioremap\n");
+ 			return -ENOMEM;
+ 		}
+ 	}
+ 
+-	pp->mem_base = pp->mem.start;
++	pp->mem_base = pp->mem->start;
+ 
+ 	if (!pp->va_cfg0_base) {
+ 		pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+@@ -682,13 +674,13 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+ 		sys->io_offset = global_io_offset - pp->io_bus_addr;
+ 		pci_ioremap_io(global_io_offset, pp->io_base);
+ 		global_io_offset += SZ_64K;
+-		pci_add_resource_offset(&sys->resources, &pp->io,
++		pci_add_resource_offset(&sys->resources, pp->io,
+ 					sys->io_offset);
+ 	}
+ 
+-	sys->mem_offset = pp->mem.start - pp->mem_bus_addr;
+-	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
+-	pci_add_resource(&sys->resources, &pp->busn);
++	sys->mem_offset = pp->mem->start - pp->mem_bus_addr;
++	pci_add_resource_offset(&sys->resources, pp->mem, sys->mem_offset);
++	pci_add_resource(&sys->resources, pp->busn);
+ 
+ 	return 1;
+ }
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index d0bbd27..41d137c 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -34,18 +34,18 @@ struct pcie_port {
+ 	u64			cfg1_mod_base;
+ 	void __iomem		*va_cfg1_base;
+ 	u32			cfg1_size;
+-	u64			io_base;
+ 	u64			io_mod_base;
++	resource_size_t		io_base;
+ 	phys_addr_t		io_bus_addr;
+ 	u32			io_size;
+ 	u64			mem_base;
+ 	u64			mem_mod_base;
+ 	phys_addr_t		mem_bus_addr;
+ 	u32			mem_size;
+-	struct resource		cfg;
+-	struct resource		io;
+-	struct resource		mem;
+-	struct resource		busn;
++	struct resource		*cfg;
++	struct resource		*io;
++	struct resource		*mem;
++	struct resource		*busn;
+ 	int			irq;
+ 	u32			lanes;
+ 	struct pcie_host_ops	*ops;
+-- 
+1.9.1
 
