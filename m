@@ -1,71 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bbn0101.outbound.protection.outlook.com ([157.56.111.101]:61056
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965134AbbJ0Rfb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 13:35:31 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	KY Srinivasan <kys@microsoft.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"olaf@aepfle.de" <olaf@aepfle.de>,
-	"apw@canonical.com" <apw@canonical.com>,
-	"vkuznets@redhat.com" <vkuznets@redhat.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v3 4/7] PCI: Record an fwnode associated with root PCI
- buses, optionally
-Date: Tue, 27 Oct 2015 17:19:48 +0000
-Message-ID: <DM2PR0301MB12325E39B9C769A6AECDCCB0AB220@DM2PR0301MB1232.namprd03.prod.outlook.com>
-References: <1445901339-11924-1-git-send-email-jakeo@microsoft.com>
- <1445901339-11924-5-git-send-email-jakeo@microsoft.com>
- <562F2354.8040802@linux.intel.com>
-In-Reply-To: <562F2354.8040802@linux.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from szxga02-in.huawei.com ([119.145.14.65]:14749 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753517AbbJZLUv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 07:20:51 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v12 2/8] ARM/PCI: remove align_resource in pci_sys_data
+Date: Mon, 26 Oct 2015 19:35:44 +0800
+Message-ID: <1445859350-26375-3-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Jiang Liu [mailto:jiang.liu@linux.intel.com]
-> Sent: Tuesday, October 27, 2015 12:10 AM
-> To: Jake Oshins <jakeo@microsoft.com>; gregkh@linuxfoundation.org; KY
-> Srinivasan <kys@microsoft.com>; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
-> vkuznets@redhat.com; tglx@linutronix.de; Haiyang Zhang
-> <haiyangz@microsoft.com>; marc.zyngier@arm.com;
-> bhelgaas@google.com; linux-pci@vger.kernel.org
-> Subject: Re: [PATCH v3 4/7] PCI: Record an fwnode associated with root PCI
-> buses, optionally
-> 
-> On 2015/10/27 7:15, jakeo@microsoft.com wrote:
-> > From: Jake Oshins <jakeo@microsoft.com>
-> >
-> > This patch allows a PCI front-end implementation to supply an
-> fwnode_handle
-> > associated with a root PCI bus, optionally.  If supplied, the PCI driver
-> > records this.
-> >
-> > This patch supports the next patch in the series, which looks up an IRQ
-> domain
-> > through this handle.
-> Hi JaKeo,
-> 	Instead of changing the pci_create_root_bus() interface,
-> how about packing fwnode into sysdata, then we may
-> either 1) introduce a helper to retrieve fwnode from sysdata
-> or 2) set host_bridge->fwnode = sysdata in function
-> pcibios_root_bridge_prepare.
-> 
-> Thanks,
-> Gerry
-> 
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Thanks for the review.  I'll work up a version that uses this suggestion and resend.  (I'll respond to your feedback on the other patches, too.)
+This patch is needed in order to unify the PCIe designware framework for ARM and
+ARM64 architectures. In the PCIe designware unification process we are calling
+pci_create_root_bus() passing a "sysdata" parameter that is the same for both
+ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
+cause a problem with the function pcibios_align_resource(); in fact this will
+cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
+"struct pcie_port*" pointer.
 
--- Jake Oshins
+This patch solves the issue by removing "align_resource" from "pci_sys_data"
+struct and defining a static global function pointer in "bios32.c"
+
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+---
+ arch/arm/include/asm/mach/pci.h |  6 ------
+ arch/arm/kernel/bios32.c        | 12 ++++++++----
+ 2 files changed, 8 insertions(+), 10 deletions(-)
+
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index 8857d28..0070e85 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -52,12 +52,6 @@ struct pci_sys_data {
+ 	u8		(*swizzle)(struct pci_dev *, u8 *);
+ 					/* IRQ mapping				*/
+ 	int		(*map_irq)(const struct pci_dev *, u8, u8);
+-					/* Resource alignement requirements	*/
+-	resource_size_t (*align_resource)(struct pci_dev *dev,
+-					  const struct resource *res,
+-					  resource_size_t start,
+-					  resource_size_t size,
+-					  resource_size_t align);
+ 	void		*private_data;	/* platform controller private data	*/
+ };
+ 
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 874e182..6551d28 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -17,6 +17,11 @@
+ #include <asm/mach/pci.h>
+ 
+ static int debug_pci;
++static resource_size_t (*align_resource)(struct pci_dev *dev,
++		  const struct resource *res,
++		  resource_size_t start,
++		  resource_size_t size,
++		  resource_size_t align) = NULL;
+ 
+ /*
+  * We can't use pci_get_device() here since we are
+@@ -456,7 +461,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 		sys->busnr   = busnr;
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
+-		sys->align_resource = hw->align_resource;
++		align_resource = hw->align_resource;
+ 		INIT_LIST_HEAD(&sys->resources);
+ 
+ 		if (hw->private_data)
+@@ -572,7 +577,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 				resource_size_t size, resource_size_t align)
+ {
+ 	struct pci_dev *dev = data;
+-	struct pci_sys_data *sys = dev->sysdata;
+ 	resource_size_t start = res->start;
+ 
+ 	if (res->flags & IORESOURCE_IO && start & 0x300)
+@@ -580,8 +584,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 
+ 	start = (start + align - 1) & ~(align - 1);
+ 
+-	if (sys->align_resource)
+-		return sys->align_resource(dev, res, start, size, align);
++	if (align_resource)
++		return align_resource(dev, res, start, size, align);
+ 
+ 	return start;
+ }
+-- 
+1.9.1
 
