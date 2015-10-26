@@ -1,106 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 28 Oct 2015 10:49:15 +0000
-From: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
-To: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-CC: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Tomasz Nowicki <tn@semihalf.com>, <bhelgaas@google.com>,
-	<arnd@arndb.de>, <will.deacon@arm.com>, <catalin.marinas@arm.com>,
-	<rjw@rjwysocki.net>, <hanjun.guo@linaro.org>,
-	<Lorenzo.Pieralisi@arm.com>, <linux-kernel@vger.kernel.org>,
-	<linaro-acpi@lists.linaro.org>, <linux-pci@vger.kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<Liviu.Dudau@arm.com>, <ddaney@caviumnetworks.com>,
-	<Narinder.Dhillon@caviumnetworks.com>,
-	<linux-acpi@vger.kernel.org>, <robert.richter@caviumnetworks.com>,
-	<wangyijing@huawei.com>, <tglx@linutronix.de>,
-	<jiang.liu@linux.intel.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<Stefano.Stabellini@eu.citrix.com>
-Subject: Re: [Linaro-acpi] [PATCH V1 07/11] XEN / PCI: Remove the dependence
- on arch x86 when PCI_MMCONFIG=y
-In-Reply-To: <562FB3A5.3050500@oracle.com>
-Message-ID: <alpine.DEB.2.02.1510281047460.15801@kaball.uk.xensource.com>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
- <1445963922-22711-8-git-send-email-tn@semihalf.com>
- <562FAA88.3020609@linaro.org> <562FB3A5.3050500@oracle.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="1342847746-1160060852-1446029363=:15801"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp06.in.ibm.com ([122.248.162.6]:33077 "EHLO
+	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542AbbJZDSN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Oct 2015 23:18:13 -0400
+Received: from /spool/local
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 26 Oct 2015 08:48:11 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id D2C23E0058
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:48:15 +0530 (IST)
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9Q3I74I26083532
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:48:07 +0530
+Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9Q3I67k027744
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:48:06 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V10 05/12] powerpc/eeh: Cache only BARs, not windows or IOV BARs
+Date: Mon, 26 Oct 2015 11:15:55 +0800
+Message-Id: <1445829362-2738-6-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---1342847746-1160060852-1446029363=:15801
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+EEH address cache, which helps to locate the PCI device according to
+the given (physical) MMIO address, didn't cover PCI bridges. Also, it
+shouldn't return PF with address in PF's IOV BARs. Instead, the VFs
+should be returned.
 
-On Tue, 27 Oct 2015, Boris Ostrovsky wrote:
-> On 10/27/2015 12:47 PM, Tomasz Nowicki wrote:
-> > + Stefano
-> > 
-> > On 27.10.2015 17:38, Tomasz Nowicki wrote:
-> > > From: Hanjun Guo <hanjun.guo@linaro.org>
-> > > 
-> > > In drivers/xen/pci.c, there are arch x86 dependent codes when
-> > > CONFIG_PCI_MMCONFIG is enabled, since CONFIG_PCI_MMCONFIG
-> > > depends on ACPI, so this will prevent XEN PCI running on other
-> > > architectures using ACPI with PCI_MMCONFIG enabled (such as ARM64).
-> > > 
-> > > Fortunatly, it can be sloved in a simple way. In drivers/xen/pci.c,
-> > > the only x86 dependent code is if ((pci_probe & PCI_PROBE_MMCONF) == 0),
-> > > and it's defined in asm/pci_x86.h, the code means that
-> > > if the PCI resource is not probed in PCI_PROBE_MMCONF way, just
-> > > ingnore the xen mcfg init. Actually this is duplicate, because
-> > > if PCI resource is not probed in PCI_PROBE_MMCONF way, the
-> > > pci_mmconfig_list will be empty, and the if (list_empty())
-> > > after it will do the same job.
-> > > 
-> > > So just remove the arch related code and the head file, this
-> > > will be no functional change for x86, and also makes xen/pci.c
-> > > usable for other architectures.
-> > > 
-> > > Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-> > > CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> > > CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-> > > ---
-> > >   drivers/xen/pci.c | 6 ------
-> > >   1 file changed, 6 deletions(-)
-> > > 
-> > > diff --git a/drivers/xen/pci.c b/drivers/xen/pci.c
-> > > index 6785ebb..9a8dbe3 100644
-> > > --- a/drivers/xen/pci.c
-> > > +++ b/drivers/xen/pci.c
-> > > @@ -28,9 +28,6 @@
-> > >   #include <asm/xen/hypervisor.h>
-> > >   #include <asm/xen/hypercall.h>
-> > >   #include "../pci/pci.h"
-> > > -#ifdef CONFIG_PCI_MMCONFIG
-> > > -#include <asm/pci_x86.h>
-> > > -#endif
-> 
-> Assuming this still compiles on x86 now that this include file is removed
-> 
-> Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Also, by doing so, it removes the type check in
+eeh_addr_cache_insert_dev(), since bridge's window would not be cached.
 
-I think it does not:
+The patch restricts the address cache to cover first 7 BARs for the
+above purposes.
 
-drivers/xen/pci.c: In function ‘xen_mcfg_late’:
-drivers/xen/pci.c:221:18: error: ‘pci_mmcfg_list’ undeclared (first use in this function)
-drivers/xen/pci.c:221:18: note: each undeclared identifier is reported only once for each f
+[gwshan: changelog]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/eeh_cache.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
+diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
+index a1e86e1..e6887f0 100644
+--- a/arch/powerpc/kernel/eeh_cache.c
++++ b/arch/powerpc/kernel/eeh_cache.c
+@@ -196,7 +196,7 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
+ 	}
+ 
+ 	/* Walk resources on this device, poke them into the tree */
+-	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
++	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+ 		resource_size_t start = pci_resource_start(dev,i);
+ 		resource_size_t end = pci_resource_end(dev,i);
+ 		unsigned long flags = pci_resource_flags(dev,i);
+@@ -222,10 +222,6 @@ void eeh_addr_cache_insert_dev(struct pci_dev *dev)
+ {
+ 	unsigned long flags;
+ 
+-	/* Ignore PCI bridges */
+-	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
+-		return;
+-
+ 	spin_lock_irqsave(&pci_io_addr_cache_root.piar_lock, flags);
+ 	__eeh_addr_cache_insert_dev(dev);
+ 	spin_unlock_irqrestore(&pci_io_addr_cache_root.piar_lock, flags);
+-- 
+2.5.0
 
-> > > 
-> > >   static bool __read_mostly pci_seg_supported = true;
-> > > 
-> > > @@ -222,9 +219,6 @@ static int __init xen_mcfg_late(void)
-> > >       if (!xen_initial_domain())
-> > >           return 0;
-> > > 
-> > > -    if ((pci_probe & PCI_PROBE_MMCONF) == 0)
-> > > -        return 0;
-> > > -
-> > >       if (list_empty(&pci_mmcfg_list))
-> > >           return 0;
-> > > 
-> > > 
-> 
---1342847746-1160060852-1446029363=:15801--
