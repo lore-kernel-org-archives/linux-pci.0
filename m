@@ -1,218 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:16533 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753319AbbJUQtT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Oct 2015 12:49:19 -0400
-From: Lan Tianyu <tianyu.lan@intel.com>
-To: bhelgaas@google.com, carolyn.wyborny@intel.com,
-	donald.c.skidmore@intel.com, eddie.dong@intel.com,
-	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
-	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-Cc: Lan Tianyu <tianyu.lan@intel.com>
-Subject: [RFC Patch 03/12] IXGBE: Add sysfs interface for Qemu to migrate VF status in the PF driver
-Date: Thu, 22 Oct 2015 00:37:35 +0800
-Message-Id: <1445445464-5056-4-git-send-email-tianyu.lan@intel.com>
-In-Reply-To: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:11970 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753090AbbJZHh6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 03:37:58 -0400
+Message-ID: <562DD839.8050504@hisilicon.com>
+Date: Mon, 26 Oct 2015 15:37:29 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v11 3/6] PCI: designware: Add ARM64 support
+References: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com> <1444991021-109306-4-git-send-email-wangzhou1@hisilicon.com> <20151022182853.GC21237@localhost>
+In-Reply-To: <20151022182853.GC21237@localhost>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is to add sysfs interface state_in_pf under sysfs directory
-of VF PCI device for Qemu to get and put VF status in the PF driver during
-migration.
+On 2015/10/23 2:28, Bjorn Helgaas wrote:
+> Hi Zhou,
+> 
+> On Fri, Oct 16, 2015 at 06:23:38PM +0800, Zhou Wang wrote:
+>> This patch tries to unify ARM32 and ARM64 PCIe in designware driver. Delete
+>> function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
+>> move related operations to dw_pcie_host_init.
+>>
+>> This patch also try to use of_pci_get_host_bridge_resources for ARM32 and ARM64
+>> according to the suggestion for Gabriele[1]
+>>
+>> This patch reverts commit f4c55c5a3f7f ("PCI: designware: Program ATU with
+>> untranslated address") based on 1/6 in this series. we delete *_mod_base in
+>> pcie-designware. This was discussed in [2]
+>>
+>> I have compiled the driver with multi_v7_defconfig. However, I don't have
+>> ARM32 PCIe related board to do test. It will be appreciated if someone could
+>> help to test it.
+> 
+> There's a lot going on this patch.  Can you split it up at all?  For
+> example, maybe:
+>
 
-Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
----
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 156 ++++++++++++++++++++++++-
- 1 file changed, 155 insertions(+), 1 deletion(-)
+Hi Bjorn,
 
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-index ab2a2e2..89671eb 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-@@ -124,6 +124,157 @@ static int __ixgbe_enable_sriov(struct ixgbe_adapter *adapter)
- 	return -ENOMEM;
- }
- 
-+#define IXGBE_PCI_VFCOMMAND   0x4
-+#define IXGBE_PCI_VFMSIXMC    0x72
-+#define IXGBE_SRIOV_VF_OFFSET 0x180
-+#define IXGBE_SRIOV_VF_STRIDE 0x2
-+
-+#define to_adapter(dev) ((struct ixgbe_adapter *)(pci_get_drvdata(to_pci_dev(dev)->physfn)))
-+
-+struct state_in_pf {
-+	u16 command;
-+	u16 msix_message_control;
-+	struct vf_data_storage vf_data;
-+};
-+
-+static struct pci_dev *ixgbe_get_virtfn_dev(struct pci_dev *pdev, int vfn)
-+{
-+	u16 rid = pdev->devfn + IXGBE_SRIOV_VF_OFFSET + IXGBE_SRIOV_VF_STRIDE * vfn;
-+	return pci_get_bus_and_slot(pdev->bus->number + (rid >> 8), rid & 0xff);
-+}
-+
-+static ssize_t ixgbe_show_state_in_pf(struct device *dev,
-+				      struct device_attribute *attr, char *buf)
-+{
-+	struct ixgbe_adapter *adapter = to_adapter(dev);
-+	struct pci_dev *pdev = adapter->pdev, *vdev;
-+	struct pci_dev *vf_pdev = to_pci_dev(dev);
-+	struct ixgbe_hw *hw = &adapter->hw;
-+	struct state_in_pf *state = (struct state_in_pf *)buf;
-+	int vfn = vf_pdev->virtfn_index;
-+	u32 reg, reg_offset, vf_shift;
-+
-+	/* Clear VF mac and disable VF */
-+	ixgbe_del_mac_filter(adapter, adapter->vfinfo[vfn].vf_mac_addresses, vfn);
-+
-+	/* Record PCI configurations */
-+	vdev = ixgbe_get_virtfn_dev(pdev, vfn);
-+	if (vdev) {
-+		pci_read_config_word(vdev, IXGBE_PCI_VFCOMMAND, &state->command);
-+		pci_read_config_word(vdev, IXGBE_PCI_VFMSIXMC, &state->msix_message_control);
-+	}
-+	else
-+		printk(KERN_WARNING "Unable to find VF device.\n");
-+
-+	/* Record states hold by PF */
-+	memcpy(&state->vf_data, &adapter->vfinfo[vfn], sizeof(struct vf_data_storage));
-+
-+	vf_shift = vfn % 32;
-+	reg_offset = vfn / 32;
-+
-+	reg = IXGBE_READ_REG(hw, IXGBE_VFTE(reg_offset));
-+	reg &= ~(1 << vf_shift);
-+	IXGBE_WRITE_REG(hw, IXGBE_VFTE(reg_offset), reg);
-+
-+	reg = IXGBE_READ_REG(hw, IXGBE_VFRE(reg_offset));
-+	reg &= ~(1 << vf_shift);
-+	IXGBE_WRITE_REG(hw, IXGBE_VFRE(reg_offset), reg);
-+
-+	reg = IXGBE_READ_REG(hw, IXGBE_VMECM(reg_offset));
-+	reg &= ~(1 << vf_shift);
-+	IXGBE_WRITE_REG(hw, IXGBE_VMECM(reg_offset), reg);
-+
-+	return sizeof(struct state_in_pf);
-+}
-+
-+static ssize_t ixgbe_store_state_in_pf(struct device *dev,
-+				       struct device_attribute *attr,
-+				       const char *buf, size_t count)
-+{
-+	struct ixgbe_adapter *adapter = to_adapter(dev);
-+	struct pci_dev *pdev = adapter->pdev, *vdev;
-+	struct pci_dev *vf_pdev = to_pci_dev(dev);
-+	struct state_in_pf *state = (struct state_in_pf *)buf;
-+	int vfn = vf_pdev->virtfn_index;
-+
-+	/* Check struct size */
-+	if (count != sizeof(struct state_in_pf)) {
-+		printk(KERN_ERR "State in PF size does not fit.\n");
-+		goto out;
-+	}
-+
-+	/* Restore PCI configurations */
-+	vdev = ixgbe_get_virtfn_dev(pdev, vfn);
-+	if (vdev) {
-+		pci_write_config_word(vdev, IXGBE_PCI_VFCOMMAND, state->command);
-+		pci_write_config_word(vdev, IXGBE_PCI_VFMSIXMC, state->msix_message_control);
-+	}
-+
-+	/* Restore states hold by PF */
-+	memcpy(&adapter->vfinfo[vfn], &state->vf_data, sizeof(struct vf_data_storage));
-+
-+  out:
-+	return count;
-+}
-+
-+static struct device_attribute ixgbe_per_state_in_pf_attribute =
-+	__ATTR(state_in_pf, S_IRUGO | S_IWUSR,
-+		ixgbe_show_state_in_pf, ixgbe_store_state_in_pf);
-+
-+void ixgbe_add_vf_attrib(struct ixgbe_adapter *adapter)
-+{
-+	struct pci_dev *pdev = adapter->pdev;
-+	struct pci_dev *vfdev;
-+	unsigned short vf_id;
-+	int pos, ret;
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_SRIOV);
-+	if (!pos)
-+		return;
-+
-+	/* get the device ID for the VF */
-+	pci_read_config_word(pdev, pos + PCI_SRIOV_VF_DID, &vf_id);
-+
-+	vfdev = pci_get_device(pdev->vendor, vf_id, NULL);
-+
-+	while (vfdev) {
-+		if (vfdev->is_virtfn) {
-+			ret = device_create_file(&vfdev->dev,
-+					&ixgbe_per_state_in_pf_attribute);
-+			if (ret)
-+				pr_warn("Unable to add VF attribute for dev %s,\n",
-+					dev_name(&vfdev->dev));
-+		}
-+
-+		vfdev = pci_get_device(pdev->vendor, vf_id, vfdev);
-+	}
-+}
-+
-+void ixgbe_remove_vf_attrib(struct ixgbe_adapter *adapter)
-+{
-+	struct pci_dev *pdev = adapter->pdev;
-+	struct pci_dev *vfdev;
-+	unsigned short vf_id;
-+	int pos;
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_SRIOV);
-+	if (!pos)
-+		return;
-+
-+	/* get the device ID for the VF */
-+	pci_read_config_word(pdev, pos + PCI_SRIOV_VF_DID, &vf_id);
-+
-+	vfdev = pci_get_device(pdev->vendor, vf_id, NULL);
-+
-+	while (vfdev) {
-+		if (vfdev->is_virtfn) {
-+			device_remove_file(&vfdev->dev, &ixgbe_per_state_in_pf_attribute);
-+		}
-+
-+		vfdev = pci_get_device(pdev->vendor, vf_id, vfdev);
-+	}
-+}
-+
- /* Note this function is called when the user wants to enable SR-IOV
-  * VFs using the now deprecated module parameter
-  */
-@@ -198,6 +349,9 @@ int ixgbe_disable_sriov(struct ixgbe_adapter *adapter)
- 	if (!(adapter->flags & IXGBE_FLAG_SRIOV_ENABLED))
- 		return 0;
- 
-+
-+	ixgbe_remove_vf_attrib(adapter);
-+
- #ifdef CONFIG_PCI_IOV
- 	/*
- 	 * If our VFs are assigned we cannot shut down SR-IOV
-@@ -284,7 +438,7 @@ static int ixgbe_pci_sriov_enable(struct pci_dev *dev, int num_vfs)
- 		return err;
- 	}
- 	ixgbe_sriov_reinit(adapter);
--
-+	ixgbe_add_vf_attrib(adapter);
- 	return num_vfs;
- #else
- 	return 0;
--- 
-1.8.4.rc0.1.g8f6a3e5.dirty
+No problem, I will split this patch to three patches.
+
+>   - Revert f4c55c5a3f7f (and move to right after the related [1/6]
+>     patch
+> 
+>   - Switch to using of_pci_get_host_bridge_resources()
+> 
+>   - Replacing the call of pci_common_init_dev() with equivalent code in
+>     pcie-designware.c.  This one in particular needs to be easy to review.
+>     It's not clear to me that this new code is equivalent.  For example,
+>     pci_common_init_dev() calls pcie_bus_configure_settings(), but I don't
+>     see that in your new code.
+
+I will add pcie_bus_configure_settings in v12.
+
+Thanks,
+Zhou
+
+>
+> You already have acks and tested-by, so I assume you probably did all the
+> right things, but it will help me out a lot if you can break it into
+> bite-sized pieces.  It's always better to make patches too small rather
+> than too large, because it's trivial to squash them back together if
+> needed.  I think we're going to have some conflicts between this and other
+> pcie-designware.c changes, and small patches will also make those easier to
+> resolve.
+> 
+> Bjorn
+> 
+> .
+> 
+
 
