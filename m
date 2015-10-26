@@ -1,111 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:42956 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932412AbbJVOvj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Oct 2015 10:51:39 -0400
-Message-ID: <5628F7F7.4070201@ti.com>
-Date: Thu, 22 Oct 2015 10:51:35 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:14748 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753489AbbJZLUv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 07:20:51 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v12 1/8] PCI: designware: move calculation of bus addresses to DRA7xx
+Date: Mon, 26 Oct 2015 19:35:43 +0800
+Message-ID: <1445859350-26375-2-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Fabio Estevam <festevam@gmail.com>
-CC: Fabio Estevam <fabio.estevam@freescale.com>,
-	<linux-pci@vger.kernel.org>, <pratyush.anand@gmail.com>,
-	<l.stach@pengutronix.de>
-Subject: Re: [PATCH v4 1/4] PCI: designware: Use common LTSSM_STATE_MASK definition
-References: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20151021184250.28724.41928.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20151021184250.28724.41928.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/21/2015 02:42 PM, Bjorn Helgaas wrote:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
->
-> Add a common #define for LTSSM_STATE_MASK and use it in all the
-> DesignWare-based drivers.
->
-> Note that this changes LTSSM_STATE_MASK from 6 bits (0x3f) to 5 bits (0x1f)
-> for i.MX6 and Layerscape.  We believe this is safe for all DesignWare-based
-> PCIe cores.
->
-> [bhelgaas: changelog, move removal of unused SPEAr13xx #defines to separate
-> patch, add only LTSSM_STATE_MASK and change all users for reviewability]
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->   drivers/pci/host/pci-imx6.c        |    3 +--
->   drivers/pci/host/pci-keystone-dw.c |    1 -
->   drivers/pci/host/pci-layerscape.c  |    1 -
->   drivers/pci/host/pcie-designware.h |    2 ++
->   4 files changed, 3 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 6f43086..7b0d120 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -55,7 +55,6 @@ struct imx6_pcie {
->   #define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
->   #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
->   #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
-> -#define PCIE_PHY_DEBUG_R0_LTSSM_MASK		(0x3f << 0)
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
->   #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
->   #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
->   #define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
-> @@ -508,7 +507,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
->   	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
->   		return 0;
->
-> -	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != 0x0d)
-> +	if ((debug_r0 & LTSSM_STATE_MASK) != 0x0d)
->   		return 0;
->
->   	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
-> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-> index e71da99..95a8b13 100644
-> --- a/drivers/pci/host/pci-keystone-dw.c
-> +++ b/drivers/pci/host/pci-keystone-dw.c
-> @@ -25,7 +25,6 @@
->
->   /* Application register defines */
->   #define LTSSM_EN_VAL		        1
-> -#define LTSSM_STATE_MASK		0x1f
->   #define LTSSM_STATE_L0			0x11
->   #define DBI_CS2_EN_VAL			0x20
->   #define OB_XLAT_EN_VAL		        2
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> index b2328ea1..f02752e 100644
-> --- a/drivers/pci/host/pci-layerscape.c
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -29,7 +29,6 @@
->   /* PEX1/2 Misc Ports Status Register */
->   #define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
->   #define LTSSM_STATE_SHIFT	20
-> -#define LTSSM_STATE_MASK	0x3f
->   #define LTSSM_PCIE_L0		0x11 /* L0 state */
->
->   /* Symbol Timer Register and Filter Mask Register 1 */
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index d0bbd27..a1a76ff 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -22,6 +22,8 @@
->   #define MAX_MSI_IRQS			32
->   #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
->
-> +#define LTSSM_STATE_MASK		0x1f
-> +
->   struct pcie_port {
->   	struct device		*dev;
->   	u8			root_bus_nr;
->
->
->
+Commit f4c55c5a3f7f ("PCI: designware: Program ATU with untranslated
+address") added the calculation of PCI BUS addresses in designware,
+storing them in new fields added in "struct pcie_port". This
+calculation is done for every designware user even if is only
+applicable to DRA7xx.
+This patch moves the calculation of the bus addresses to the DRA7xx
+driver and is needed to allow the rework of designware to use
+the new DT parsing API.
 
-For pci-keystone-dw.c
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+---
+ drivers/pci/host/pci-dra7xx.c      |  7 +++++++
+ drivers/pci/host/pcie-designware.c | 15 ++++-----------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-Acked-by: Murali Karicheri <m-karicheri2@ti.com>
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 199e29a..0b4847a 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -62,6 +62,7 @@
+ 
+ #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
+ #define	LINK_UP						BIT(16)
++#define	DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
+ 
+ struct dra7xx_pcie {
+ 	void __iomem		*base;
+@@ -151,6 +152,12 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
+ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+ {
+ 	dw_pcie_setup_rc(pp);
++
++	pp->io_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
++	pp->mem_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
++	pp->cfg0_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
++	pp->cfg1_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
++
+ 	dra7xx_pcie_establish_link(pp);
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		dw_pcie_msi_init(pp);
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 52aa6e3..75338a6 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -365,14 +365,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	struct of_pci_range range;
+ 	struct of_pci_range_parser parser;
+ 	struct resource *cfg_res;
+-	u32 val, na, ns;
++	u32 val, ns;
+ 	const __be32 *addrp;
+ 	int i, index, ret;
+ 
+-	/* Find the address cell size and the number of cells in order to get
+-	 * the untranslated address.
+-	 */
+-	of_property_read_u32(np, "#address-cells", &na);
+ 	ns = of_n_size_cells(np);
+ 
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+@@ -415,8 +411,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->io_base = range.cpu_addr;
+ 
+ 			/* Find the untranslated IO space address */
+-			pp->io_mod_base = of_read_number(parser.range -
+-							 parser.np + na, ns);
++			pp->io_mod_base = range.cpu_addr;
+ 		}
+ 		if (restype == IORESOURCE_MEM) {
+ 			of_pci_range_to_resource(&range, np, &pp->mem);
+@@ -425,8 +420,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->mem_bus_addr = range.pci_addr;
+ 
+ 			/* Find the untranslated MEM space address */
+-			pp->mem_mod_base = of_read_number(parser.range -
+-							  parser.np + na, ns);
++			pp->mem_mod_base = range.cpu_addr;
+ 		}
+ 		if (restype == 0) {
+ 			of_pci_range_to_resource(&range, np, &pp->cfg);
+@@ -436,8 +430,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
+ 
+ 			/* Find the untranslated configuration space address */
+-			pp->cfg0_mod_base = of_read_number(parser.range -
+-							   parser.np + na, ns);
++			pp->cfg0_mod_base = range.cpu_addr;
+ 			pp->cfg1_mod_base = pp->cfg0_mod_base +
+ 					    pp->cfg0_size;
+ 		}
 -- 
-Murali Karicheri
-Linux Kernel, Keystone
+1.9.1
+
