@@ -1,39 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:34083 "EHLO
-	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765AbbJLPrz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 11:47:55 -0400
-Received: by iow1 with SMTP id 1so155739343iow.1
-        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2015 08:47:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1444659102.3364.19.camel@pengutronix.de>
-References: <1444355306-21486-1-git-send-email-festevam@gmail.com>
-	<1444645188.3364.5.camel@pengutronix.de>
-	<1444645685.3364.8.camel@pengutronix.de>
-	<CAOMZO5CyGybRSJfCNwJAXrPuKpJqsA_w0Qfb+vhUXCyCe-PKiQ@mail.gmail.com>
-	<1444656873.3364.14.camel@pengutronix.de>
-	<CAOMZO5CKWj9tWCOZV65xwFCB7b120weq3Aq7_de-aMdEYAZWpA@mail.gmail.com>
-	<1444659102.3364.19.camel@pengutronix.de>
-Date: Mon, 12 Oct 2015 12:47:55 -0300
-Message-ID: <CAOMZO5AsfsRiYLmAZVAoZgso_xuT0vTMAakn24yTH8y+8McQHQ@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] PCI: designware: Move LTSSM state definitions to pcie-designware.h
-From: Fabio Estevam <festevam@gmail.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
-	m-karicheri2 <m-karicheri2@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:46821 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542AbbJZDTT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Oct 2015 23:19:19 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 26 Oct 2015 13:19:17 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 347DE3578047
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 14:19:14 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9Q3J0Hc16908496
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 14:19:08 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9Q3IfqD029697
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 14:18:41 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V10 07/12] powerpc/eeh: Create PE for VFs
+Date: Mon, 26 Oct 2015 11:15:57 +0800
+Message-Id: <1445829362-2738-8-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 12, 2015 at 11:11 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+Current EEH recovery code works with the assumption: the PE has primary
+bus. Unfortunately, that's not true for VF PEs, which generally contains
+one or multiple VFs (for VF group case).
 
+The patch creates PEs for VFs in the weak function
+pcibios_bus_add_device(). Those PEs for VFs are identified with newly
+introduced flag EEH_PE_VF so that we handle them differently during EEH
+recovery.
 
-> Still I would love to have a definition in the common header that's
-> usable for all drivers. So unless there is a reason to use 0x3f (and we
-> don't have any LTSSM state defines which would use the extra bit) keep
-> it at 0x1f. Simpler, cleaner... IMHO.
+[gwshan: changelog and code refactoring]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/eeh.h               |  1 +
+ arch/powerpc/kernel/eeh_pe.c                 | 10 ++++++++--
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 16 ++++++++++++++++
+ 3 files changed, 25 insertions(+), 2 deletions(-)
 
-Sure, just did as suggested in v3. Thanks
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 6c383ad..ec21f8f 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -72,6 +72,7 @@ struct pci_dn;
+ #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+ #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+ #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
++#define EEH_PE_VF	(1 << 4)	/* VF PE     */
+ 
+ #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+ #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+index 35f0b62..260a701 100644
+--- a/arch/powerpc/kernel/eeh_pe.c
++++ b/arch/powerpc/kernel/eeh_pe.c
+@@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+ 	 * EEH device already having associated PE, but
+ 	 * the direct parent EEH device doesn't have yet.
+ 	 */
+-	pdn = pdn ? pdn->parent : NULL;
++	if (edev->physfn)
++		pdn = pci_get_pdn(edev->physfn);
++	else
++		pdn = pdn ? pdn->parent : NULL;
+ 	while (pdn) {
+ 		/* We're poking out of PCI territory */
+ 		parent = pdn_to_eeh_dev(pdn);
+@@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
+ 	}
+ 
+ 	/* Create a new EEH PE */
+-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
++	if (edev->physfn)
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
++	else
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+ 	if (!pe) {
+ 		pr_err("%s: out of memory!\n", __func__);
+ 		return -ENOMEM;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 7cf0df8..cfd55dd 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1524,6 +1524,22 @@ static struct eeh_ops pnv_eeh_ops = {
+ 	.restore_config		= pnv_eeh_restore_config
+ };
+ 
++void pcibios_bus_add_device(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++
++	if (!pdev->is_virtfn)
++		return;
++
++	/*
++	 * The following operations will fail if VF's sysfs files
++	 * aren't created or its resources aren't finalized.
++	 */
++	eeh_add_device_early(pdn);
++	eeh_add_device_late(pdev);
++	eeh_sysfs_add_device(pdev);
++}
++
+ /**
+  * eeh_powernv_init - Register platform dependent EEH operations
+  *
+-- 
+2.5.0
+
