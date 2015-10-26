@@ -1,290 +1,116 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1443653222-24924-2-git-send-email-ddaney.cavm@gmail.com>
-References: <1443653222-24924-1-git-send-email-ddaney.cavm@gmail.com> <1443653222-24924-2-git-send-email-ddaney.cavm@gmail.com>
-From: Rob Herring <robh@kernel.org>
-Date: Thu, 1 Oct 2015 08:02:07 -0500
-Message-ID: <CAL_JsqJu2BuaGzdT-DUwX0bv1Scev7h2atBMi+7mdF=ObbgXuw@mail.gmail.com>
-Subject: Re: [PATCH v3 1/4] Docs: dt: Add PCI MSI map bindings
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	David Daney <david.daney@cavium.com>
-Content-Type: text/plain; charset=UTF-8
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v12 7/8] Documentation: DT: Add HiSilicon PCIe host binding
+Date: Mon, 26 Oct 2015 19:35:49 +0800
+Message-ID: <1445859350-26375-8-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 30, 2015 at 5:46 PM, David Daney <ddaney.cavm@gmail.com> wrote:
-> From: Mark Rutland <mark.rutland@arm.com>
->
-> Currently msi-parent is used by a few bindings to describe the
-> relationship between a PCI root complex and a single MSI controller, but
-> this property does not have a generic binding document.
->
-> Additionally, msi-parent is insufficient to describe more complex
-> relationships between MSI controllers and devices under a root complex,
-> where devices may be able to target multiple MSI controllers, or where
-> MSI controllers use (non-probeable) sideband information to distinguish
-> devices.
->
-> This patch adds a generic binding for mapping PCI devices to MSI
-> controllers. This document covers msi-parent, and a new msi-map property
-> (specific to PCI*) which may be used to map devices (identified by their
-> Requester ID) to sideband data for each MSI controller that they may
-> target.
->
-> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-> Signed-off-by: Mark Rutland <mark.rutland@arm.com>
-> Signed-off-by: David Daney <david.daney@cavium.com>
+This patch adds related DTS binding document for HiSilicon PCIe host driver.
 
-Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ .../bindings/arm/hisilicon/hisilicon.txt           | 17 +++++++++
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     | 44 ++++++++++++++++++++++
+ 2 files changed, 61 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
 
-> ---
->  Documentation/devicetree/bindings/pci/pci-msi.txt | 220 ++++++++++++++++++++++
->  1 file changed, 220 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/pci-msi.txt
->
-> diff --git a/Documentation/devicetree/bindings/pci/pci-msi.txt b/Documentation/devicetree/bindings/pci/pci-msi.txt
-> new file mode 100644
-> index 0000000..9b3cc81
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/pci-msi.txt
-> @@ -0,0 +1,220 @@
-> +This document describes the generic device tree binding for describing the
-> +relationship between PCI devices and MSI controllers.
-> +
-> +Each PCI device under a root complex is uniquely identified by its Requester ID
-> +(AKA RID). A Requester ID is a triplet of a Bus number, Device number, and
-> +Function number.
-> +
-> +For the purpose of this document, when treated as a numeric value, a RID is
-> +formatted such that:
-> +
-> +* Bits [15:8] are the Bus number.
-> +* Bits [7:3] are the Device number.
-> +* Bits [2:0] are the Function number.
-> +* Any other bits required for padding must be zero.
-> +
-> +MSIs may be distinguished in part through the use of sideband data accompanying
-> +writes. In the case of PCI devices, this sideband data may be derived from the
-> +Requester ID. A mechanism is required to associate a device with both the MSI
-> +controllers it can address, and the sideband data that will be associated with
-> +its writes to those controllers.
-> +
-> +For generic MSI bindings, see
-> +Documentation/devicetree/bindings/interrupt-controller/msi.txt.
-> +
-> +
-> +PCI root complex
-> +================
-> +
-> +Optional properties
-> +-------------------
-> +
-> +- msi-map: Maps a Requester ID to an MSI controller and associated
-> +  msi-specifier data. The property is an arbitrary number of tuples of
-> +  (rid-base,msi-controller,msi-base,length), where:
-> +
-> +  * rid-base is a single cell describing the first RID matched by the entry.
-> +
-> +  * msi-controller is a single phandle to an MSI controller
-> +
-> +  * msi-base is an msi-specifier describing the msi-specifier produced for the
-> +    first RID matched by the entry.
-> +
-> +  * length is a single cell describing how many consecutive RIDs are matched
-> +    following the rid-base.
-> +
-> +  Any RID r in the interval [rid-base, rid-base + length) is associated with
-> +  the listed msi-controller, with the msi-specifier (r - rid-base + msi-base).
-> +
-> +- msi-map-mask: A mask to be applied to each Requester ID prior to being mapped
-> +  to an msi-specifier per the msi-map property.
-> +
-> +- msi-parent: Describes the MSI parent of the root complex itself. Where
-> +  the root complex and MSI controller do not pass sideband data with MSI
-> +  writes, this property may be used to describe the MSI controller(s)
-> +  used by PCI devices under the root complex, if defined as such in the
-> +  binding for the root complex.
-> +
-> +
-> +Example (1)
-> +===========
-> +
-> +/ {
-> +       #address-cells = <1>;
-> +       #size-cells = <1>;
-> +
-> +       msi: msi-controller@a {
-> +               reg = <0xa 0x1>;
-> +               compatible = "vendor,some-controller";
-> +               msi-controller;
-> +               #msi-cells = <1>;
-> +       };
-> +
-> +       pci: pci@f {
-> +               reg = <0xf 0x1>;
-> +               compatible = "vendor,pcie-root-complex";
-> +               device_type = "pci";
-> +
-> +               /*
-> +                * The sideband data provided to the MSI controller is
-> +                * the RID, identity-mapped.
-> +                */
-> +               msi-map = <0x0 &msi_a 0x0 0x10000>,
-> +       };
-> +};
-> +
-> +
-> +Example (2)
-> +===========
-> +
-> +/ {
-> +       #address-cells = <1>;
-> +       #size-cells = <1>;
-> +
-> +       msi: msi-controller@a {
-> +               reg = <0xa 0x1>;
-> +               compatible = "vendor,some-controller";
-> +               msi-controller;
-> +               #msi-cells = <1>;
-> +       };
-> +
-> +       pci: pci@f {
-> +               reg = <0xf 0x1>;
-> +               compatible = "vendor,pcie-root-complex";
-> +               device_type = "pci";
-> +
-> +               /*
-> +                * The sideband data provided to the MSI controller is
-> +                * the RID, masked to only the device and function bits.
-> +                */
-> +               msi-map = <0x0 &msi_a 0x0 0x100>,
-> +               msi-map-mask = <0xff>
-> +       };
-> +};
-> +
-> +
-> +Example (3)
-> +===========
-> +
-> +/ {
-> +       #address-cells = <1>;
-> +       #size-cells = <1>;
-> +
-> +       msi: msi-controller@a {
-> +               reg = <0xa 0x1>;
-> +               compatible = "vendor,some-controller";
-> +               msi-controller;
-> +               #msi-cells = <1>;
-> +       };
-> +
-> +       pci: pci@f {
-> +               reg = <0xf 0x1>;
-> +               compatible = "vendor,pcie-root-complex";
-> +               device_type = "pci";
-> +
-> +               /*
-> +                * The sideband data provided to the MSI controller is
-> +                * the RID, but the high bit of the bus number is
-> +                * ignored.
-> +                */
-> +               msi-map = <0x0000 &msi 0x0000 0x8000>,
-> +                         <0x8000 &msi 0x0000 0x8000>;
-> +       };
-> +};
-> +
-> +
-> +Example (4)
-> +===========
-> +
-> +/ {
-> +       #address-cells = <1>;
-> +       #size-cells = <1>;
-> +
-> +       msi: msi-controller@a {
-> +               reg = <0xa 0x1>;
-> +               compatible = "vendor,some-controller";
-> +               msi-controller;
-> +               #msi-cells = <1>;
-> +       };
-> +
-> +       pci: pci@f {
-> +               reg = <0xf 0x1>;
-> +               compatible = "vendor,pcie-root-complex";
-> +               device_type = "pci";
-> +
-> +               /*
-> +                * The sideband data provided to the MSI controller is
-> +                * the RID, but the high bit of the bus number is
-> +                * negated.
-> +                */
-> +               msi-map = <0x0000 &msi 0x8000 0x8000>,
-> +                         <0x8000 &msi 0x0000 0x8000>;
-> +       };
-> +};
-> +
-> +
-> +Example (5)
-> +===========
-> +
-> +/ {
-> +       #address-cells = <1>;
-> +       #size-cells = <1>;
-> +
-> +       msi_a: msi-controller@a {
-> +               reg = <0xa 0x1>;
-> +               compatible = "vendor,some-controller";
-> +               msi-controller;
-> +               #msi-cells = <1>;
-> +       };
-> +
-> +       msi_b: msi-controller@b {
-> +               reg = <0xb 0x1>;
-> +               compatible = "vendor,some-controller";
-> +               msi-controller;
-> +               #msi-cells = <1>;
-> +       };
-> +
-> +       msi_c: msi-controller@c {
-> +               reg = <0xc 0x1>;
-> +               compatible = "vendor,some-controller";
-> +               msi-controller;
-> +               #msi-cells = <1>;
-> +       };
-> +
-> +       pci: pci@c {
-> +               reg = <0xf 0x1>;
-> +               compatible = "vendor,pcie-root-complex";
-> +               device_type = "pci";
-> +
-> +               /*
-> +                * The sideband data provided to MSI controller a is the
-> +                * RID, but the high bit of the bus number is negated.
-> +                * The sideband data provided to MSI controller b is the
-> +                * RID, identity-mapped.
-> +                * MSI controller c is not addressable.
-> +                */
-> +               msi-map = <0x0000 &msi_a 0x8000 0x08000>,
-> +                         <0x8000 &msi_a 0x0000 0x08000>,
-> +                         <0x0000 &msi_b 0x0000 0x10000>;
-> +       };
-> +};
-> --
-> 1.9.1
->
+diff --git a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
+index 3504dca..6ac7c00 100644
+--- a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
++++ b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
+@@ -171,6 +171,23 @@ Example:
+ 	};
+ 
+ -----------------------------------------------------------------------
++Hisilicon HiP05 PCIe-SAS system controller
++
++Required properties:
++- compatible : "hisilicon,pcie-sas-subctrl", "syscon";
++- reg : Register address and size
++
++The HiP05 PCIe-SAS system controller is shared by PCIe and SAS controllers in
++HiP05 Soc to implement some basic configurations.
++
++Example:
++	/* for HiP05 PCIe-SAS system */
++	pcie_sas: system_controller@0xb0000000 {
++		compatible = "hisilicon,pcie-sas-subctrl", "syscon";
++		reg = <0xb0000000 0x10000>;
++	};
++
++-----------------------------------------------------------------------
+ Hisilicon CPU controller
+ 
+ Required properties:
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+new file mode 100644
+index 0000000..17c6ed9
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -0,0 +1,44 @@
++HiSilicon PCIe host bridge DT description
++
++HiSilicon PCIe host controller is based on Designware PCI core.
++It shares common functions with PCIe Designware core driver and inherits
++common properties defined in
++Documentation/devicetree/bindings/pci/designware-pci.txt.
++
++Additional properties are described here:
++
++Required properties:
++- compatible: Should contain "hisilicon,hip05-pcie".
++- reg: Should contain rc_dbi, config registers location and length.
++- reg-names: Must include the following entries:
++  "rc_dbi": controller configuration registers;
++  "config": PCIe configuration space registers.
++- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
++- port-id: Should be 0, 1, 2 or 3.
++
++Optional properties:
++- status: Either "ok" or "disabled".
++- dma-coherent: Present if DMA operations are coherent.
++
++Example:
++	pcie@0xb0080000 {
++		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
++		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
++		reg-names = "rc_dbi", "config";
++		bus-range = <0  15>;
++		msi-parent = <&its_pcie>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		dma-coherent;
++		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
++		num-lanes = <8>;
++		port-id = <1>;
++		#interrupts-cells = <1>;
++		interrupts-map-mask = <0xf800 0 0 7>;
++		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
++				  0x0 0 0 2 &mbigen_pcie 2 11
++				  0x0 0 0 3 &mbigen_pcie 3 12
++				  0x0 0 0 4 &mbigen_pcie 4 13>;
++		status = "ok";
++	};
+-- 
+1.9.1
+
