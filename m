@@ -1,83 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0078.outbound.protection.outlook.com ([207.46.100.78]:14296
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965011AbbJVJ2U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Oct 2015 05:28:20 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v11 0/6] Altera PCIe host controller driver with MSI support
-Date: Thu, 22 Oct 2015 17:27:25 +0800
-Message-ID: <1445506051-21688-1-git-send-email-lftan@altera.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:8426 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753374AbbJZIZJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 04:25:09 -0400
+Message-ID: <562DE342.2000104@hisilicon.com>
+Date: Mon, 26 Oct 2015 16:24:34 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v11 4/6] PCI: hisi: Add PCIe host support for HiSilicon
+ SoC Hip05
+References: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com> <1444991021-109306-5-git-send-email-wangzhou1@hisilicon.com> <20151022184622.GD21237@localhost>
+In-Reply-To: <20151022184622.GD21237@localhost>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the 11th version of patch set to add support for Altera PCIe host
-controller with MSI feature on Altera FPGA device families. This patchset
-mainly resovle the warning/error caught by kbuild test.
+On 2015/10/23 2:46, Bjorn Helgaas wrote:
+> Hi Zhou,
+> 
+> This looks pretty good to me; just a mask question and add a printk.
+> 
+> On Fri, Oct 16, 2015 at 06:23:39PM +0800, Zhou Wang wrote:
+>> This patch adds PCIe host support for HiSilicon SoC Hip05.
+>> ...
+> 
+>> +#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
+>> +#define PCIE_LTSSM_LINKUP_STATE                         0x11
+>> +#define PCIE_LTSSM_STATE_MASK                           0x3F
+> 
+> Fabio unified some of this; see
+>   https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-designware&id=4788fe6ebf4594c9a95b620cbff05147c8504823
+>   https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-designware&id=b09464f77dd252a782da1f4e9925c1dbce4540ac
+> 
+> So the question is, why do you use a 6-bit (0x3f) LTSSM_STATE_MASK?
+> We think we can use a 5-bit mask (0x1f) for all the other
+> DesignWare-based systems.
 
 Hi Bjorn,
-Do you have further comment on this patchset? Any chance this can go into 4.4?
-Thanks.
 
-This patchset is based on v4.3-rc6.
+LTSSM_STATE_MASK indicates the status of LTSSM, it should be 6-bit
+in Hip05 PCIe host. I checked Designware hardware manual, its
+LTSSM current state is 6-bit too(smlh_ltssm_state).
 
-v10->v11 changes:
-- altera-pcie: change altera_pcie_fixups to static function
-- Kconfig: add depends on ARM || NIOS2 for PCIE_ALTERA
+> 
+>> +/* Hip05 PCIe host only supports 32-bit config access */
+> 
+> Thanks for the comment asserting that Hip05 only supports 32-bit
+> config access.  I assume you confirmed that with the hardware
+> designers.  As far as I can tell, this *is* a hardware defect, and at
+> the minimum, I want a printk at driver probe-time so a dmesg log will
+> have a clue that read/modify/write on config space might do the wrong
+> thing.
+>
 
-History:
--------
-[v1]: https://lkml.org/lkml/2015/7/28/395
-[v2]: https://lkml.org/lkml/2015/7/31/267
-[v3]: http://www.kernelhub.org/?msg=811940&p=2
-[v4]: https://lkml.org/lkml/2015/8/17/141
-[v5]: https://lkml.org/lkml/2015/8/25/238
-[v6]: https://lkml.org/lkml/2015/9/1/177
-[v7]: https://lkml.org/lkml/2015/9/20/193
-[v8]: http://www.kernelhub.org/?msg=853553&p=2
-[v9]: https://lkml.org/lkml/2015/10/13/998
-[v10]: https://lkml.org/lkml/2015/10/19/139
+Yes, I had checked this with hardware guys. Will add a print during probe-time.
 
-Ley Foon Tan (6):
-  arm: add msi.h to Kbuild
-  pci: add Altera PCI vendor ID
-  pci:host: Add Altera PCIe host controller driver
-  pci: altera: Add Altera PCIe MSI driver
-  Documentation: dt-bindings: pci: altera pcie device tree binding
-  MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+Many thanks,
+Zhou
 
- .../devicetree/bindings/pci/altera-pcie-msi.txt    |  28 +
- .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
- MAINTAINERS                                        |  16 +
- arch/arm/include/asm/Kbuild                        |   1 +
- drivers/pci/host/Kconfig                           |  16 +
- drivers/pci/host/Makefile                          |   2 +
- drivers/pci/host/pcie-altera-msi.c                 | 314 +++++++++++
- drivers/pci/host/pcie-altera.c                     | 579 +++++++++++++++++++++
- include/linux/pci_ids.h                            |   2 +
- 9 files changed, 1007 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
- create mode 100644 drivers/pci/host/pcie-altera-msi.c
- create mode 100644 drivers/pci/host/pcie-altera.c
+>> +static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
+>> +			      u32 *val)
+>> ...
+> 
+> Bjorn
+> 
+> .
+> 
 
--- 
-1.8.2.1
 
