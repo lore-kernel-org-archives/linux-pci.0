@@ -1,42 +1,226 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 14/60] PCI: Only treat non-pref mmio64 as pref if host bridge has mmio64
-Date: Thu,  8 Oct 2015 14:38:33 -0700
-Message-Id: <1444340359-8011-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:57538 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753262AbbJZWKA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 26 Oct 2015 18:10:00 -0400
+Message-ID: <562EA484.7050509@ti.com>
+Date: Mon, 26 Oct 2015 18:09:08 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>
+CC: Loc Ho <lho@apm.com>, WingMan Kwok <w-kwok2@ti.com>,
+	Rob Herring <robh+dt@kernel.org>, <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>, <rogerq@ti.com>, <bhelgaas@google.com>,
+	<ssantosh@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v3 0/2] Common SerDes driver for TI's Keystone Platforms
+References: <1445432201-16007-1-git-send-email-w-kwok2@ti.com> <56295B9E.9030201@ti.com> <CAPw-ZTk1vJA3YSwLHBNMYP0t5k2tW0HTKse+37rL8izWN33y-w@mail.gmail.com> <3702663.07h6YO0UjY@wuerfel> <20151023144631.GZ32532@n2100.arm.linux.org.uk> <562A81F8.1060608@ti.com>
+In-Reply-To: <562A81F8.1060608@ti.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If host bridge does not have mmio64 above 4G, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
+Russell,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 10/23/2015 02:52 PM, Kishon Vijay Abraham I wrote:
+> Hi,
+>
+> On Friday 23 October 2015 08:16 PM, Russell King - ARM Linux wrote:
+>> On Fri, Oct 23, 2015 at 11:17:06AM +0200, Arnd Bergmann wrote:
+>>> On Thursday 22 October 2015 15:27:05 Loc Ho wrote:
+>>>>>
+>>>>> phy-xgene.c
+>>>>> -----------
+>>>>>
+---CUT-------------------------------------------------------------------
+>>>>
+>>>> Let me comment on this APM X-Gene driver. This driver is dead and
+>>>> won't be supported in near or foreseeable future. And someday, it will
+>>>> be ripped out. Based on experience, this solution (having PHY driver
+>>>> in Linux) can't be supported across boards and etc as it is just too
+>>>> much maintenance. And therefore, we followed Arnd B guidance and move
+>>>> all this into the boot loader. From Linux or OS perspective, it only
+>>>> cares about the interface in which its interface with. This is just
+>>>> your reference and may be this will help you as well.
+>>>
+>>> This depends a lot on the use case. If the chip is only used on server
+>>> parts that have a real firmware and you can deliver bug fixes for the
+>>> firmware if necessary, it's always best to do as much of the setup as
+>>> possible there, and let Linux see a simplified view of the hardware.
+>>>
+>>> However, for embedded systems that tend to ship with a minimal binary
+>>> bootloader and no way to update that as an end-user, we rely on Linux
+>>> to know about all the hardware that requires some form of setup, which
+>>> is why we have all sorts of drivers and frameworks in the kernel that
+>>> a server can easily ignore.
+>>>
+>>> While keystone can show up in servers that won't use this driver, my
+>>> impression is that its main market is actually in embedded space.
+>>
+>> That's an interesting point of view - especially as you can't make the
+>> argument that Marvell Armada chips would ever be anything but the
+>> embedded space, but we're so far getting away with having the serdes
+>> setup in u-boot - and even Marvell's BSP doesn't have it in the kernel.
+>>
+>> The real question here is:
+>>
+>>    Why would we want to statically setup serdes links in the kernel
+>>    according to the DTB, rather than having the boot loader set them up?
+>
+> Lot of PHYs have HW configure the parameters with default values so the
+> driver really doesn't have to touch them (like programming the equalizer
+> and the various digital mode configuration and analog mode
+> configuration). Then the SW just has to take care of clock programming
+> and powering on/off the PHY.
+>
+> Some platforms require the controller core be in reset before powering
+> on the PHY, so we can't have all the configurations done in bootloader
+> for all the platforms.
+>
+> The problem w.r.t code size starts when the drivers starts to configure
+> the analog and digital components inside the PHY (like equalizer,
+> attenuation etc..).
+>
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b1e4595..95d18ef 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -742,7 +742,7 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
- {
- 	if (pci_is_root_bus(bus))
--		return true;
-+		return to_pci_host_bridge(bus->bridge)->has_mem64;
- 
- 	if (bus->self) {
- 		int i;
--- 
-1.8.4.5
+Agree. There are also calibration required on the receive side for 10G 
+and SRIO that adds to the code size. SRIO is currently not supported, 
+but expected to be supported in the future. For 10G, and SRIO, it is 
+expected that user may need to tune the coefficients on a per board 
+basis and hence we can't afford to have the driver in the boot loader.
+
+> While performing all these configurations in bootloader will help reduce
+> the code size, as Arnd pointed out, it'll cause problems if the PHY
+> loses the contents after a suspend/resume cycle.
+>>
+
+Agree.
+
+>> For the most part, the choice between the serdes modes is fairly static,
+>> depending on the board wiring.  You wouldn't ever want to configure a
+>> mini-PCIe socket for gigabit ethernet.
+>>
+This is true for most of the serdes except 10G. 10G would require 
+reconfiguration of the SerDes if it has to work in 1G mode. You wouldn't 
+want to power cycle the board in case user wants to plug in a 1G link. 
+We plan to add 10G support based on this serdes patch and also need to 
+handle 1G mode on 10G as well in the future.
+
+10G also has another mode to use a firmware that handles auto 
+negotiation. User may use different firmware as well and has to be taken 
+care of in the driver. How do we support this if this has to be in boot 
+loader?
+
+>> However, there are cases when you would want to change it, and I'm
+>> aware of these cases:
+>>
+>> * Serdes routed to a mini-PCIe socket, which is compatible with mSATA.
+>>    There's an argument here to allow the serdes link to be switched at
+>>    runtime between PCIe and mSATA.  However, the card type can't be
+>>    detected at run time, so this would have to be a manual configuration
+>>    change by the user.
+>>
+>>    Since mini-PCIe is not hot-pluggable, this configuration isn't
+>>    something that could be changed without powering the system down.
+>>
+>> * Serdes routed to a SFP cage, where the serdes link is configured
+>>    for gigabit (or faster for SFP+) ethernet.  For gigabit only, serdes
+>>    is configured in either 1000base-X or Cisco SGMII mode (SGMII is a
+>>    non-802.3 modification to 1000base-X) depending on the type of
+>>    transceiver plugged in.
+>>
+>>    Arguably, there's a third option here, which is SATA as well -  I'm
+>>    aware of one non-standard SFP module on the market which provides a
+>>    SATA connector, but this is highly non-standard, is not covered by
+>>    the SFP specifications, so such a switch to this mode would have to
+>>    be done manually.
+>>
+>> The difference between 1000base-X vs SGMII is to do with the generation
+>> and interpretation of a 16-bit configuration word passed across the
+>> link.  Otherwise, the two are identical - and so far I've seen the
+>> configuration word mode is determined by the ethernet block rather than
+>> the serdes block.
+>>
+>> My argument would be that even in the case of the last paragraph,
+>> normal use for serdes reconfiguration would be a power cycle, even in
+>> the embedded environment.
+>>
+>> Now, that all said, it looks to me like TI's serdes implementation can't
+>> be switched between different modes - it's statically configured to
+>> whatever the DTB says it should be.
+>>
+
+For 10G and SRIO, there are coefficients (tx-coeff in DTS) that needs to 
+be tuned on a per board basis. How would you do that if this has to be 
+added to boot loader? Not scalable as boot loader has to be different 
+for different boards
+
+>> So, this brings up the obvious question: why do we need to support
+>> serdes configuration in the kernel rather than statically in the boot
+>> loader according to the board setup?
+>>
+
+The cases described above makes it clear we need a Linux driver for 
+these SerDes.
+
+>> Specifically on this patch series, I think that if we're going to have
+>> code doing serdes configuration in the kernel, we need to come up with
+>> a common set of DT properties for it, rather than having everyone doing
+>> their own thing.
+
+Not sure if there are standard configuration across various SERDES 
+hardware provided by different vendors that we can identify. Some of the 
+common are probably num-lanes, phy-mode etc. Do you know who can help us 
+find these?
+
+I'd also like to see the code shrink in size - it
+>> doesn't do anything beyond configuring the hardware for the settings
+>> that DTB tells it to, so why it has to be 2.5k lines I've no idea.
+>>
+
+Kishon has described the reason above.
+
+>> There's some specific comments I have about it using readl/writel, and
+>> its wrapping of those, which IMHO it shouldn't be doing,
+
+Are you referring to below code?
+
++static inline u32 kserdes_readl(void __iomem *base, u32 offset)
++{
++	return readl(base + offset);
++}
++
++static inline void kserdes_writel(void __iomem *base, u32 offset, u32 
+value)
++{
++	writel(value, base + offset);
++}
+
+Any reason why you don't like these in the driver code?
+
+  and the horrid
+>> for loops (what's wrong with the standard Linux way of defining a
+>> for_each_xxx() operator and leaving the body at the callsite?)
+>
+
+Will add for_each_xxx() in the next version.
+
+Thanks
+
+Murali & Wingman
+
+> +1
+>
+> Thanks
+> Kishon
+>
+>
+
 
