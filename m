@@ -1,105 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f179.google.com ([209.85.223.179]:35669 "EHLO
-	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754365AbbJHWLB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 18:11:01 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v5 3/4] PCI/MSI:  Add helper function pci_msi_domain_get_msi_rid().
-Date: Thu,  8 Oct 2015 15:10:49 -0700
-Message-Id: <1444342250-6196-4-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1444342250-6196-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1444342250-6196-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:7047 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751651AbbJZRSV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 13:18:21 -0400
+Subject: Re: [RFC PATCH 1/3] PCI: iproc: generate proper configuration access
+ cycles
+To: Jisheng Zhang <jszhang@marvell.com>, <bhelgaas@google.com>,
+	<thierry.reding@gmail.com>, <swarren@wwwdotorg.org>,
+	<gnurou@gmail.com>, <tinamdar@apm.com>, <sbranden@broadcom.com>,
+	<linux@arm.linux.org.uk>
+References: <1445857334-6936-1-git-send-email-jszhang@marvell.com>
+ <1445857334-6936-2-git-send-email-jszhang@marvell.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>
+From: Ray Jui <rjui@broadcom.com>
+Message-ID: <562E6056.3040203@broadcom.com>
+Date: Mon, 26 Oct 2015 10:18:14 -0700
+MIME-Version: 1.0
+In-Reply-To: <1445857334-6936-2-git-send-email-jszhang@marvell.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+Hi Jisheng,
 
-Add pci_msi_domain_get_msi_rid() to return the MSI requester id (RID).
-Initially needed by gic-v3 based systems. It will be used by follow on
-patch to drivers/irqchip/irq-gic-v3-its-pci-msi.c
+On 10/26/2015 4:02 AM, Jisheng Zhang wrote:
+> Inspired by Russell King's patch[1], I found current iproc also has the
+> same issue of "reading 32-bits from the command register, modifying the
+> command register, and then writing it back has the effect of clearing
+> any status bits that were indicating at that time" as pointed out by
+> Russell. This patch fix this issue by using the pci_generic_config_write.
+>
+> [1]http://www.spinics.net/lists/linux-pci/msg44869.html
+>
+> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+> ---
+>   drivers/pci/host/pcie-iproc.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index fe2efb1..0c423f2 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -111,7 +111,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+>   static struct pci_ops iproc_pcie_ops = {
+>   	.map_bus = iproc_pcie_map_cfg_bus,
+>   	.read = pci_generic_config_read32,
+> -	.write = pci_generic_config_write32,
+> +	.write = pci_generic_config_write,
+>   };
+>
+>   static void iproc_pcie_reset(struct iproc_pcie *pcie)
+>
 
-Initially supports mapping the RID via OF device tree.  In the future,
-this could be extended to use ACPI _IORT tables as well.
+I have already confirmed with the ASIC team that the current iProc PCIe 
+controller requires 32-bit aligned access into the configuration space 
+due to the way how it was integrated into various iProc SoCs including 
+NSP, Cygnus, and NS2.
 
-Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/pci/msi.c   | 30 ++++++++++++++++++++++++++++++
- include/linux/msi.h |  1 +
- 2 files changed, 31 insertions(+)
+This change will prevent the driver from working properly.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d449714..81a2798 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -20,6 +20,7 @@
- #include <linux/io.h>
- #include <linux/slab.h>
- #include <linux/irqdomain.h>
-+#include <linux/of_irq.h>
- 
- #include "pci.h"
- 
-@@ -1327,4 +1328,33 @@ struct irq_domain *pci_msi_create_default_irq_domain(struct device_node *node,
- 
- 	return domain;
- }
-+
-+static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
-+{
-+	u32 *pa = data;
-+
-+	*pa = alias;
-+	return 0;
-+}
-+/**
-+ * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
-+ * @domain:	The interrupt domain
-+ * @pdev:	The PCI device.
-+ *
-+ * The RID for a device is formed from the alias, with a firmware
-+ * supplied mapping applied
-+ *
-+ * Returns: The RID.
-+ */
-+u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
-+{
-+	u32 rid = 0;
-+
-+	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
-+
-+	if (domain->of_node)
-+		rid = of_msi_map_rid(&pdev->dev, domain->of_node, rid);
-+
-+	return rid;
-+}
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index ad939d0..56e3b76 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -293,6 +293,7 @@ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
- 					  struct msi_desc *desc);
- int pci_msi_domain_check_cap(struct irq_domain *domain,
- 			     struct msi_domain_info *info, struct device *dev);
-+u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
- 
- #endif /* LINUX_MSI_H */
--- 
-1.9.1
+I've informed our ASIC team about this issue and all future iProc based 
+SoCs should be able to support 8-bit, 16-bit access and therefore 
+pci_generic_config_write/read can be used for those SoCs.
 
+Thanks,
+
+Ray
