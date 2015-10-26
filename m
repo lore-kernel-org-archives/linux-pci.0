@@ -1,66 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:38769 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbbJLOLq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 10:11:46 -0400
-Message-ID: <1444659102.3364.19.camel@pengutronix.de>
-Subject: Re: [PATCH v2 1/2] PCI: designware: Move LTSSM state definitions to
- pcie-designware.h
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
-	m-karicheri2 <m-karicheri2@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Date: Mon, 12 Oct 2015 16:11:42 +0200
-In-Reply-To: <CAOMZO5CKWj9tWCOZV65xwFCB7b120weq3Aq7_de-aMdEYAZWpA@mail.gmail.com>
-References: <1444355306-21486-1-git-send-email-festevam@gmail.com>
-	 <1444645188.3364.5.camel@pengutronix.de>
-	 <1444645685.3364.8.camel@pengutronix.de>
-	 <CAOMZO5CyGybRSJfCNwJAXrPuKpJqsA_w0Qfb+vhUXCyCe-PKiQ@mail.gmail.com>
-	 <1444656873.3364.14.camel@pengutronix.de>
-	 <CAOMZO5CKWj9tWCOZV65xwFCB7b120weq3Aq7_de-aMdEYAZWpA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from e28smtp01.in.ibm.com ([122.248.162.1]:43099 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542AbbJZDRy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Oct 2015 23:17:54 -0400
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 26 Oct 2015 08:47:52 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 55EAC394005C
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:47:48 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9Q3Hl7A56885440
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:47:47 +0530
+Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9Q3HkNc010269
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:47:47 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V10 03/12] powerpc/pci: Cache VF index in pci_dn
+Date: Mon, 26 Oct 2015 11:15:53 +0800
+Message-Id: <1445829362-2738-4-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 12.10.2015, 11:04 -0300 schrieb Fabio Estevam:
-> On Mon, Oct 12, 2015 at 10:34 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> > Am Montag, den 12.10.2015, 09:31 -0300 schrieb Fabio Estevam:
-> >> On Mon, Oct 12, 2015 at 7:28 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> >>
-> >> > Actually the TRM states that i.MX6 is using the same narrower mask of
-> >> > 0x1f for the LTSSM state, so another reason to just use that.
-> >>
-> >> The manual I have seems to tell a different value :-)
-> >>
-> >> Please check: http://cache.freescale.com/files/32bit/doc/ref_manual/IMX6DQRM.pdf
-> >>
-> >> "48.12.11
-> >> Debug Register 0 (PCIE_PL_DEBUG0)"
-> >>
-> >> says "[5:0]: xmlh_ltssm_state LTSSM current state. See source for encodings"
-> >>
-> > Urgh. Seems we got confused by all the different defines.
-> >
-> > In fact [5:0] is 0x1f, so i.MX6 uses the same mask as Keystone, yet the
-> 
-> No, bits [5..0] means 0x3f. What am I missing here?
+The patch caches the VF index in pci_dn, which can be used to calculate
+VF's bus, device and function number. Those information helps to locate
+the VF's PCI device instance when doing hotplug during EEH recovery if
+necessary.
 
-That you have to deal with people who are apparently unable to count to
-5. *me puts on the brown paper bag*
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h | 1 +
+ arch/powerpc/kernel/pci_dn.c          | 4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-Still I would love to have a definition in the common header that's
-usable for all drivers. So unless there is a reason to use 0x3f (and we
-don't have any LTSSM state defines which would use the extra bit) keep
-it at 0x1f. Simpler, cleaner... IMHO.
-
-Regards,
-Lucas
-
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index b3a226b..3d7e537 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -210,6 +210,7 @@ struct pci_dn {
+ #define IODA_INVALID_PE		(-1)
+ #ifdef CONFIG_PPC_POWERNV
+ 	int	pe_number;
++	int     vf_index;		/* VF index in the PF */
+ #ifdef CONFIG_PCI_IOV
+ 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
+ 	u16     num_vfs;		/* number of VFs enabled*/
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index b3b4df9..f771130 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -139,6 +139,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
+ #ifdef CONFIG_PCI_IOV
+ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+ 					   struct pci_dev *pdev,
++					   int vf_index,
+ 					   int busno, int devfn)
+ {
+ 	struct pci_dn *pdn;
+@@ -157,6 +158,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+ 	pdn->parent = parent;
+ 	pdn->busno = busno;
+ 	pdn->devfn = devfn;
++	pdn->vf_index = vf_index;
+ #ifdef CONFIG_PPC_POWERNV
+ 	pdn->pe_number = IODA_INVALID_PE;
+ #endif
+@@ -196,7 +198,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+ 		return NULL;
+ 
+ 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
+-		pdn = add_one_dev_pci_data(parent, NULL,
++		pdn = add_one_dev_pci_data(parent, NULL, i,
+ 					   pci_iov_virtfn_bus(pdev, i),
+ 					   pci_iov_virtfn_devfn(pdev, i));
+ 		if (!pdn) {
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+2.5.0
 
