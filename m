@@ -1,388 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
- hostbridge init
-To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
- <1445963922-22711-12-git-send-email-tn@semihalf.com>
- <5631180D.2000902@codeaurora.org>
-Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <563131B0.9060305@codeaurora.org>
-Date: Wed, 28 Oct 2015 16:36:00 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:33382 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965331AbbJ0UwK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 16:52:10 -0400
+Received: by pabla5 with SMTP id la5so39776848pab.0
+        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 13:52:10 -0700 (PDT)
+Subject: [PATCH 0/5] Various of SR-IOV fixes and cleanup
+From: Alexander Duyck <aduyck@mirantis.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 27 Oct 2015 13:52:08 -0700
+Message-ID: <20151027204607.14626.59671.stgit@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <5631180D.2000902@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch set is meant to address several issues found in recent patches
+currently in the pci/virtualization branch.
+
+The first two patches address possible issues in initialization.
+Specifically the fact that offset and stride cannot be read while numvfs is
+0, and that the BARs need to be reset if totalVFs has increased because the
+BIOS likely allocated the given resources under the assumption of a smaller
+number of VFs being available.
+
+The last 3 address a number of issues in sriov_enable.  They started as
+just a patch to address the offset and stride issues, however there were
+some other issues found related to pcibios_enable_sriov that I decided to
+address as well, and then there was some minor cleanup in addition to all
+of that.
+
+---
+
+Alexander Duyck (5):
+      iov: Update virtfn_max_buses to validate offset and stride
+      iov: Reset resources to 0 if totalVFs increases after enabling ARI
+      iov: Fix sriov_enable exception handling path
+      iov: Variable and loop cleanup for sriov_disable and sriov_enable
+      iov: Update sriov_enable to correctly handle offset and stride
 
 
-On 10/28/2015 2:46 PM, Sinan Kaya wrote:
->
-> On 10/27/2015 12:38 PM, Tomasz Nowicki wrote:
->> Because of two patch series:
->> 1. Jiang Liu's common interface to support PCI host bridge init
->> 2. Refactoring of MMCONFIG, part of this patch set
->> now we can think about PCI buses enumeration for ARM64 and ACPI tables.
->>
->> This patch introduce ACPI based PCI hostbridge init calls which
->> use information from MCFG table (PCI config space regions) and
->> _CRS (IO/irq resources) to initialize PCI hostbridge.
->>
->> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
->> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> CC: Arnd Bergmann <arnd@arndb.de>
->> CC: Catalin Marinas <catalin.marinas@arm.com>
->> CC: Liviu Dudau <Liviu.Dudau@arm.com>
->> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
->> CC: Will Deacon <will.deacon@arm.com>
->> ---
->>   arch/arm64/Kconfig      |   6 ++
->>   arch/arm64/kernel/pci.c | 208
->> +++++++++++++++++++++++++++++++++++++++++++++---
->>   2 files changed, 202 insertions(+), 12 deletions(-)
->>
->> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
->> index 07d1811..bbcc6b1 100644
->> --- a/arch/arm64/Kconfig
->> +++ b/arch/arm64/Kconfig
->> @@ -89,6 +89,7 @@ config ARM64
->>       select SPARSE_IRQ
->>       select SYSCTL_EXCEPTION_TRACE
->>       select HAVE_CONTEXT_TRACKING
->> +    select HAVE_PCI_ECAM
->>       help
->>         ARM 64-bit (AArch64) Linux support.
->>
->> @@ -202,6 +203,11 @@ source "drivers/pci/Kconfig"
->>   source "drivers/pci/pcie/Kconfig"
->>   source "drivers/pci/hotplug/Kconfig"
->>
->> +config PCI_MMCONFIG
->> +    def_bool y
->> +    select PCI_ECAM
->> +    depends on ACPI
->> +
->>   endmenu
->>
->>   menu "Kernel Features"
->> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->> index b3d098b..66cc1ae 100644
->> --- a/arch/arm64/kernel/pci.c
->> +++ b/arch/arm64/kernel/pci.c
->> @@ -11,12 +11,15 @@
->>    */
->>
->>   #include <linux/acpi.h>
->> +#include <linux/ecam.h>
->>   #include <linux/init.h>
->>   #include <linux/io.h>
->>   #include <linux/kernel.h>
->>   #include <linux/mm.h>
->> +#include <linux/of_address.h>
->>   #include <linux/of_pci.h>
->>   #include <linux/of_platform.h>
->> +#include <linux/pci-acpi.h>
->>   #include <linux/slab.h>
->>
->>   #include <asm/pci-bridge.h>
->> @@ -52,35 +55,216 @@ int pcibios_enable_device(struct pci_dev *dev,
->> int mask)
->>   }
->>
->>   /*
->> - * Try to assign the IRQ number from DT when adding a new device
->> + * Try to assign the IRQ number from DT/ACPI when adding a new device
->>    */
->>   int pcibios_add_device(struct pci_dev *dev)
->>   {
->> -    dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->> +    if (acpi_disabled)
->> +        dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->> +#ifdef CONFIG_ACPI
->> +    else
->> +        acpi_pci_irq_enable(dev);
->> +#endif
->>
->>       return 0;
->>   }
->>
->> +#ifdef CONFIG_ACPI
->> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->> +{
->> +    struct acpi_pci_root *root = bridge->bus->sysdata;
->> +
->> +    ACPI_COMPANION_SET(&bridge->dev, root->device);
->> +    return 0;
->> +}
->> +
->> +void pcibios_add_bus(struct pci_bus *bus)
->> +{
->> +    acpi_pci_add_bus(bus);
->> +}
->> +
->> +void pcibios_remove_bus(struct pci_bus *bus)
->> +{
->> +    acpi_pci_remove_bus(bus);
->> +}
->> +
->> +static int __init pcibios_assign_resources(void)
->> +{
->> +    if (acpi_disabled)
->> +        return 0;
->> +
->> +    pci_assign_unassigned_resources();
->> +    return 0;
->> +}
->>   /*
->> - * raw_pci_read/write - Platform-specific PCI config space access.
->> + * rootfs_initcall comes after subsys_initcall and fs_initcall_sync,
->> + * so we know acpi scan and PCI_FIXUP_FINAL quirks have both run.
->>    */
->> -int raw_pci_read(unsigned int domain, unsigned int bus,
->> -          unsigned int devfn, int reg, int len, u32 *val)
->> +rootfs_initcall(pcibios_assign_resources);
->> +
->> +static void __iomem *
->> +pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
->>   {
->> -    return -ENXIO;
->> +    struct pci_mmcfg_region *cfg;
->> +
->> +    cfg = pci_mmconfig_lookup(pci_domain_nr(bus), bus->number);
->> +    if (cfg && cfg->virt)
->> +        return cfg->virt +
->> +            (PCI_MMCFG_BUS_OFFSET(bus->number) | (devfn << 12)) +
->> +            offset;
->> +    return NULL;
->>   }
->>
->> -int raw_pci_write(unsigned int domain, unsigned int bus,
->> -        unsigned int devfn, int reg, int len, u32 val)
->> +struct pci_ops pci_root_ops = {
->> +    .map_bus = pci_mcfg_dev_base,
->> +    .read = pci_generic_config_read,
->> +    .write = pci_generic_config_write,
->
->
-> Can you change these with pci_generic_config_read32 and
-> pci_generic_config_write32? We have some targets that can only do 32
-> bits PCI config space access.
->
->> +};
->> +
->> +#ifdef CONFIG_PCI_MMCONFIG
->> +static int pci_add_mmconfig_region(struct acpi_pci_root_info *ci)
->>   {
->> -    return -ENXIO;
->> +    struct pci_mmcfg_region *cfg;
->> +    struct acpi_pci_root *root;
->> +    int seg, start, end, err;
->> +
->> +    root = ci->root;
->> +    seg = root->segment;
->> +    start = root->secondary.start;
->> +    end = root->secondary.end;
->> +
->> +    cfg = pci_mmconfig_lookup(seg, start);
->> +    if (cfg)
->> +        return 0;
->> +
->> +    cfg = pci_mmconfig_alloc(seg, start, end, root->mcfg_addr);
->> +    if (!cfg)
->> +        return -ENOMEM;
->> +
->> +    err = pci_mmconfig_inject(cfg);
->> +    return err;
->>   }
->>
->> -#ifdef CONFIG_ACPI
->> +static void pci_remove_mmconfig_region(struct acpi_pci_root_info *ci)
->> +{
->> +    struct acpi_pci_root *root = ci->root;
->> +    struct pci_mmcfg_region *cfg;
->> +
->> +    cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
->> +    if (cfg)
->> +        return;
->> +
->> +    if (cfg->hot_added)
->> +        pci_mmconfig_delete(root->segment, root->secondary.start,
->> +                    root->secondary.end);
->> +}
->> +#else
->> +static int pci_add_mmconfig_region(struct acpi_pci_root_info *ci)
->> +{
->> +    return 0;
->> +}
->> +
->> +static void pci_remove_mmconfig_region(struct acpi_pci_root_info *ci)
->> { }
->> +#endif
->> +
->> +static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
->> +{
->> +    return pci_add_mmconfig_region(ci);
->> +}
->> +
->> +static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
->> +{
->> +    pci_remove_mmconfig_region(ci);
->> +    kfree(ci);
->> +}
->> +
->> +static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info
->> *ci)
->> +{
->> +    struct resource_entry *entry, *tmp;
->> +    int ret;
->> +
->> +    ret = acpi_pci_probe_root_resources(ci);
->> +    if (ret < 0)
->> +        return ret;
->> +
->> +    resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
->> +        struct resource *res = entry->res;
->> +
->> +        /*
->> +         * Special handling for ARM IO range
->> +         * TODO: need to move pci_register_io_range() function out
->> +         * of drivers/of/address.c for both used by DT and ACPI
->> +         */
->> +        if (res->flags & IORESOURCE_IO) {
->> +            unsigned long port;
->> +            int err;
->> +            resource_size_t length = res->end - res->start;
->> +
->> +            err = pci_register_io_range(res->start, length);
->> +            if (err) {
->> +                resource_list_destroy_entry(entry);
->> +                continue;
->> +            }
->> +
->> +            port = pci_address_to_pio(res->start);
->> +            if (port == (unsigned long)-1) {
->> +                resource_list_destroy_entry(entry);
->> +                continue;
->> +            }
->> +
->> +            res->start = port;
->> +            res->end = res->start + length - 1;
->> +
->> +            if (pci_remap_iospace(res, res->start) < 0)
->> +                resource_list_destroy_entry(entry);
->> +        }
->> +    }
->> +
->> +    return 0;
->> +}
->> +
->> +static struct acpi_pci_root_ops acpi_pci_root_ops = {
->> +    .pci_ops = &pci_root_ops,
->> +    .init_info = pci_acpi_root_init_info,
->> +    .release_info = pci_acpi_root_release_info,
->> +    .prepare_resources = pci_acpi_root_prepare_resources,
->> +};
->> +
->>   /* Root bridge scanning */
->>   struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->>   {
->> -    /* TODO: Should be revisited when implementing PCI on ACPI */
->> -    return NULL;
->> +    int node = acpi_get_node(root->device->handle);
->> +    int domain = root->segment;
->> +    int busnum = root->secondary.start;
->> +    struct acpi_pci_root_info *info;
->> +    struct pci_bus *bus;
->> +
->> +    if (domain && !pci_domains_supported) {
->> +        pr_warn("PCI %04x:%02x: multiple domains not supported.\n",
->> +            domain, busnum);
->> +        return NULL;
->> +    }
->> +
->> +    info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
->> +    if (!info) {
->> +        dev_err(&root->device->dev,
->> +            "pci_bus %04x:%02x: ignored (out of memory)\n",
->> +            domain, busnum);
->> +        return NULL;
->> +    }
->> +
->> +    bus = acpi_pci_root_create(root, &acpi_pci_root_ops, info, root);
->> +
->> +    /* After the PCI-E bus has been walked and all devices discovered,
->> +     * configure any settings of the fabric that might be necessary.
->> +     */
->> +    if (bus) {
->> +        struct pci_bus *child;
->> +
->> +        list_for_each_entry(child, &bus->children, node)
->> +            pcie_bus_configure_settings(child);
->> +    }
->> +
->> +    return bus;
->>   }
->>   #endif
->>
->
+ drivers/pci/iov.c |  123 ++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 65 insertions(+), 58 deletions(-)
 
-Tomasz,
-I was asked to test your new patchset on our platform. With the new 
-patchset, I'm seeing two problems.
-
-1. ACPI code is unable to discover the interrupt numbers when objects 
-are ordered as follows in the ACPI file
-
-PNP0A08 object
-PNP0C0F INTA object
-PNP0C0F INTB object
-PNP0C0F INTC object
-PNP0C0F INTD object
-
-This gives me invalid link context error.
-
-pci 0000:00:00.0: PCI INT A: no GSI
-pci 0000:01:00.0: Derived GSI for 0000:01:00.0 INT A from 0000:00:00.0
-acpi PNP0C0F:00: Invalid link context
-
-If I order it like this in the ACPI file,
-
-PNP0C0F INTA object
-PNP0C0F INTB object
-PNP0C0F INTC object
-PNP0C0F INTD object
-PNP0A08 object
-
-then, the legacy interrupt numbers can be discovered properly.
-
-2. The second problem is about the PCIe resources.
-
-pci_0000:01:00.0:_can't_enable_device:_BAR_0_[mem_0x80100100000-0x80100101fff_64bit]_not_claimed
-pci 0000:01:00.0: Can't enable PCI device, BIOS handoff failed.
-pci 0000:00:00.0: BAR 14: assigned [mem 0x80100100000-0x801003fffff]
-pci 0000:00:00.0: BAR 13: no space for [io  size 0x1000]
-pci 0000:00:00.0: BAR 13: failed to assign [io  size 0x1000]
-pci 0000:00:00.0: BAR 13: no space for [io  size 0x1000]
-pci 0000:00:00.0: BAR 13: failed to assign [io  size 0x1000]
-pci 0000:01:00.0: BAR 0: assigned [mem 0x80100100000-0x80100101fff 64bit]
-
-For some reason, the kernel is unable to assign resources.
-
-I appreciate any pointers you might give.
-
-
-
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+--
