@@ -1,32 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55699 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750796AbbJTPjp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Oct 2015 11:39:45 -0400
-Date: Tue, 20 Oct 2015 10:39:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Subject: PCI Device Tree binding documentation links broken
-Message-ID: <20151020153942.GE8224@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from userp1040.oracle.com ([156.151.31.81]:50809 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965710AbbJ0VCE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 17:02:04 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 29/61] PCI: Don't add too much optional size for hotplug bridge MMIO
+Date: Tue, 27 Oct 2015 13:55:21 -0700
+Message-Id: <1445979353-1728-30-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+Current code will always add 2M for hotplug bridge MMIO even
+there is child device under it already.
 
-301d2d87cb4f ("Documentation/devicetree: add a small note on PCI")
-added some useful links:
+For example:
+	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
+					 \- 45:00.1
 
-  +PCI Bus Binding to: IEEE Std 1275-1994
-  +http://www.openfirmware.org/ofwg/bindings/pci/pci2_1.pdf
+44:02.0 will need 1M as must for 45:00.0 and 45:00.1
+When we calculate add_size for 44:02.0, we pass 2M as additional
+size for hotplug bridge, total will be 3M.
 
-  +Open Firmware Recommended Practice: Interrupt Mapping
-  +http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
+That is different from code before changes for optional support,
+or even current code that treat optional as required directly by
+not passing realloc list. We only need 2M as total.
 
-But both links are now broken.  I looked a little bit, but didn't find
-anything that looked like a reliable source.  Do you know of anything
-better?
+The optional size should be 1M, and total size should be 2M.
 
-Bjorn
+This patch change to comparing required+optional with min_sum_size to
+get smaller optional size.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 0c6977c9..5e1cc7e 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1199,7 +1199,6 @@ out:
+  * @type2: second match type
+  * @type3: third match type
+  * @min_size : the minimum memory window that must to be allocated
+- * @add_size : additional optional memory window
+  * @realloc_head : track the additional memory window on this list
+  *
+  * Calculate the size of the bus and minimal alignment which
+@@ -1212,10 +1211,11 @@ out:
+ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			 unsigned long type, unsigned long type2,
+ 			 unsigned long type3,
+-			 resource_size_t min_size, resource_size_t add_size,
++			 resource_size_t min_size,
+ 			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
++	resource_size_t min_sum_size = 0;
+ 	resource_size_t min_align = 0, min_add_align = 0;
+ 	resource_size_t max_align = 0, max_add_align = 0;
+ 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
+@@ -1227,6 +1227,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (!b_res)
+ 		return -ENOSPC;
+ 
++	if (realloc_head) {
++		min_sum_size = min_size;
++		min_size = 0;
++	}
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+@@ -1298,8 +1303,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	}
+ 	free_align_test_list(&align_test_list);
+ 
+-	if ((sum_add_size - size) < add_size)
+-		sum_add_size = size + add_size;
++	if (sum_add_size < min_sum_size)
++		sum_add_size = min_sum_size;
+ 	if (sum_add_size > size && realloc_head) {
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+@@ -1436,7 +1441,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+-	resource_size_t additional_mem_size = 0, additional_io_size = 0;
++	resource_size_t min_mem_size = 0, additional_io_size = 0;
+ 	struct resource *b_res;
+ 	int ret;
+ 
+@@ -1473,7 +1478,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	case PCI_CLASS_BRIDGE_PCI:
+ 		if (bus->self->is_hotplug_bridge) {
+ 			additional_io_size  = pci_hotplug_io_size;
+-			additional_mem_size = pci_hotplug_mem_size;
++			min_mem_size = pci_hotplug_mem_size;
+ 		}
+ 		/* Fall through */
+ 	default:
+@@ -1493,8 +1498,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			prefmask |= IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 				  prefmask, prefmask,
+-				  realloc_head ? 0 : additional_mem_size,
+-				  additional_mem_size, realloc_head);
++				  min_mem_size, realloc_head);
+ 
+ 			/*
+ 			 * If successful, all non-prefetchable resources
+@@ -1517,8 +1521,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			prefmask &= ~IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 					 prefmask, prefmask,
+-					 realloc_head ? 0 : additional_mem_size,
+-					 additional_mem_size, realloc_head);
++					 min_mem_size, realloc_head);
+ 
+ 			/*
+ 			 * If successful, only non-prefetchable resources
+@@ -1527,7 +1530,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			if (ret == 0)
+ 				mask = prefmask;
+ 			else
+-				additional_mem_size += additional_mem_size;
++				min_mem_size += min_mem_size;
+ 
+ 			type2 = type3 = IORESOURCE_MEM;
+ 		}
+@@ -1548,8 +1551,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		 * window.
+ 		 */
+ 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
+-				realloc_head ? 0 : additional_mem_size,
+-				additional_mem_size, realloc_head);
++				min_mem_size, realloc_head);
+ 		break;
+ 	}
+ }
+-- 
+1.8.4.5
+
