@@ -7,149 +7,55 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Khalid Aziz <khalid.aziz@oracle.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 44/60] PCI: Add support for more than two alt_size entries under same bridge
-Date: Thu,  8 Oct 2015 14:39:03 -0700
-Message-Id: <1444340359-8011-45-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Anton Blanchard <anton@samba.org>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH v8 10/61] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+Date: Tue, 27 Oct 2015 13:55:02 -0700
+Message-Id: <1445979353-1728-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we have two bridges under parent bridge, and each child
-bridge has alt_size, we need to increase parent alt_size to make
-sure it could fit all alt entries.
+For device resource PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource, so set
+IORESOUCE_MEM_64 for 64bit resource during of device resource flags
+parsing.
 
-In the patch, we first select one big size, and then keep reducing
-the size and retrying to get the minimum value for alt_size.
-
-For example, two bridges:
-  one have 8M/8M, and 1M/1M children res.
-  one have 4M/4M, and 1M/1M children res.
-
-Then we have child pridges alt_align/alt_size: 8M/9M, 4M/5M.
-Before this patch, parent bridge alt_align/alt_size is 8M/14M
-that is wrong, as it can not fit two alt entries at all.
-With this patch	parent bridge alt_align/alt_size: 8M/17M.
-               8M            16M   20M   24M
-  |------------|-------------|-----|-----|
-	       8M			   25M
-	       |---------------------------|
-			       17M
-               |---9M----------|   |-5M----|
-
-
-At same time, child bridges required align/size: 4M/12M, 2M/6M.
-and prarent bridge required align/size: 4M/20M.
-
-So at last, we use 8M/17M as parent bridge alt_align/alt_size.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=100451
-Reported-by: Yijing Wang <wangyijing@huawei.com>
-Tested-by: Yijing Wang <wangyijing@huawei.com>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Yijing Wang <wangyijing@huawei.com>
+Cc: Anton Blanchard <anton@samba.org>
+Cc: linuxppc-dev@lists.ozlabs.org
 ---
- drivers/pci/setup-bus.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 54 insertions(+), 2 deletions(-)
+ arch/powerpc/kernel/pci_of_scan.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index dea0344..7e7663a 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1373,6 +1373,47 @@ out:
- 	return good_align;
- }
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 349ed11..d7305d7 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -44,8 +44,10 @@ static unsigned int pci_parse_of_flags(u32 addr0, int bridge)
  
-+static resource_size_t calculate_mem_alt_size(struct list_head *head,
-+				resource_size_t max_align, resource_size_t size,
-+				resource_size_t align_low)
-+{
-+	struct align_test_res *p;
-+	resource_size_t tmp;
-+	resource_size_t good_size, bad_size;
-+	int count = 0, order;
-+
-+	good_size = ALIGN(size, align_low);
-+
-+	list_for_each_entry(p, head, list)
-+		count++;
-+
-+	if (count <= 1)
-+		goto out;
-+
-+	sort_align_test(head);
-+
-+	tmp = max(size, max_align);
-+	order = __fls(count);
-+	if ((1ULL << order) < count)
-+		order++;
-+	good_size = ALIGN((tmp << order), align_low);
-+	bad_size = ALIGN(size, align_low) - align_low;
-+	size = good_size;
-+	while (size > bad_size) {
-+		/* check if align/size fit all entries */
-+		if (is_align_size_good(head, max_align, size, 0))
-+			good_size = size;
-+		else
-+			bad_size = size;
-+
-+		size = bad_size + ((good_size - bad_size) >> 1);
-+		size = round_down(size, align_low);
-+	}
-+
-+out:
-+	return good_size;
-+}
-+
- static inline bool is_optional(int i)
- {
- 
-@@ -1419,6 +1460,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					mask | IORESOURCE_PREFETCH, type);
- 	LIST_HEAD(align_test_list);
- 	LIST_HEAD(align_test_add_list);
-+	LIST_HEAD(align_test_alt_list);
- 	resource_size_t alt_size = 0, alt_align = 0;
- 	resource_size_t window_align;
- 
-@@ -1493,10 +1535,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 				dev_res = res_to_dev_res(realloc_head, r);
- 				if (dev_res && dev_res->alt_size) {
-+					add_to_align_test_list(
-+						&align_test_alt_list,
-+						dev_res->alt_align,
-+						dev_res->alt_size);
- 					alt_size += dev_res->alt_size;
- 					if (alt_align < dev_res->alt_align)
- 						alt_align = dev_res->alt_align;
- 				} else if (r_size > 1) {
-+					add_to_align_test_list(
-+						&align_test_alt_list,
-+						align, r_size);
- 					alt_size += r_size;
- 					if (alt_align < align)
- 						alt_align = align;
-@@ -1516,14 +1565,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 	if (size0 && realloc_head) {
- 		alt_align = max(alt_align, window_align);
--		alt_size = calculate_memsize(alt_size, min_size,
--					     0, window_align);
-+		/* need to increase size to fit more alt */
-+		alt_size = calculate_mem_alt_size(&align_test_alt_list,
-+						  alt_align, alt_size,
-+						  window_align);
- 		/* required is better ? */
- 		if (alt_size >= size0) {
- 			alt_align = 0;
- 			alt_size = 0;
- 		}
- 	}
-+	free_align_test_list(&align_test_alt_list);
- 
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
+ 	if (addr0 & 0x02000000) {
+ 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
+-		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
++		if (addr0 & 0x01000000)
++			flags |= IORESOURCE_MEM_64
++				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		if (addr0 & 0x40000000)
+ 			flags |= IORESOURCE_PREFETCH
+ 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
 -- 
 1.8.4.5
 
