@@ -1,64 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 21 Oct 2015 15:44:30 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	linux-pci@vger.kernel.org, lftan.linux@gmail.com
-Subject: Re: [PATCH v2 0/4] Add PCI support on nios2 architecture
-Message-ID: <20151021204430.GG1583@localhost>
-References: <1444804304-5213-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444804304-5213-1-git-send-email-lftan@altera.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f49.google.com ([209.85.213.49]:35506 "EHLO
+	mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753402AbbJ0XmM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 19:42:12 -0400
+Received: by vkfw189 with SMTP id w189so131516333vkf.2
+        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 16:42:12 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: l.stach@pengutronix.de, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: [PATCH] PCI: imx6: Use gpio_set_value_cansleep()
+Date: Tue, 27 Oct 2015 21:41:58 -0200
+Message-Id: <1445989318-26461-1-git-send-email-festevam@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ley,
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-I'm ignoring this series for now because of the build errors reported by
-the kbuild test robot.
+We are in a context where we can sleep, and the PCIe reset gpio may be
+on an I2C expander.  Use the cansleep() variant when setting the GPIO
+value.
 
-Bjorn
+Based on a patch from Russell King for pci-mvebu.c.
 
-On Wed, Oct 14, 2015 at 02:31:40PM +0800, Ley Foon Tan wrote:
-> This is 2nd version of patch to add pci support for nios2 architecture.
-> This patchset also update asm-generic/pci.h to include PCI generic define/function
-> as suggested by Arnd.
-> It requires pci_fixup_irqs() from setup-irq.c.
-> 
-> v1->v2 changes:
-> - nios2: remove PCI_SYSCALL from Kconfig
-> - nios2: set IO_SPACE_LIMIT to 0xffff
-> - nios2: remove arch/nios2/include/asm/pci.h and use asm-generic pci.h
-> - pci: add include <linux/dma-mapping.h> to pci.c
-> - asm-generic: add pci generic functions/defines to pci.h
-> 
-> History
-> -------
-> [v1]: https://lkml.org/lkml/2015/9/22/44
-> 
-> Ley Foon Tan (4):
->   asm-generic: add pci required defines and functions
->   pci: add include <linux/dma-mapping.h>
->   PCI: Build setup-irq.o for nios2
->   nios2: Add architectural support for PCIe
-> 
->  arch/nios2/Kconfig            | 21 +++++++++++++++++++++
->  arch/nios2/include/asm/Kbuild |  1 +
->  arch/nios2/include/asm/io.h   | 12 ++++++++++--
->  arch/nios2/kernel/Makefile    |  1 +
->  arch/nios2/kernel/pci.c       | 33 +++++++++++++++++++++++++++++++++
->  drivers/pci/Makefile          |  1 +
->  drivers/pci/pci.c             |  1 +
->  include/asm-generic/pci.h     | 34 ++++++++++++++++++++++++++++++++++
->  8 files changed, 102 insertions(+), 2 deletions(-)
->  create mode 100644 arch/nios2/kernel/pci.c
-> 
-> -- 
-> 1.8.2.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arch" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+---
+ drivers/pci/host/pci-imx6.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 6f43086..e73b7f2 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -289,9 +289,9 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+-		gpio_set_value(imx6_pcie->reset_gpio, 0);
++		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
+ 		msleep(100);
+-		gpio_set_value(imx6_pcie->reset_gpio, 1);
++		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+ 	}
+ 	return 0;
+ 
+-- 
+1.9.1
+
