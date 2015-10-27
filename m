@@ -1,51 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:34179 "EHLO
-	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965451AbbJVRit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Oct 2015 13:38:49 -0400
-Received: by lfaz124 with SMTP id z124so56754035lfa.1
-        for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2015 10:38:48 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 2/5] iov: Reset resources to 0 if totalVFs increases after
+ enabling ARI
+From: Alexander Duyck <aduyck@mirantis.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 27 Oct 2015 13:52:21 -0700
+Message-ID: <20151027205221.14626.8940.stgit@localhost.localdomain>
+In-Reply-To: <20151027204607.14626.59671.stgit@localhost.localdomain>
+References: <20151027204607.14626.59671.stgit@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <20151021213612.GK1583@localhost>
-References: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
-	<1444979960-24100-5-git-send-email-Minghuan.Lian@freescale.com>
-	<20151021213612.GK1583@localhost>
-Date: Thu, 22 Oct 2015 12:38:48 -0500
-Message-ID: <CADRPPNSPP1m_7zNF6wEfw9+Bpe=Z_gUA81cSaV4SENVpR34YWQ@mail.gmail.com>
-Subject: Re: [PATCH v4 5/6] PCI: layerscape: add PCIe support for LS1043a and LS2080a
-From: Li Yang <leoli@freescale.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 21, 2015 at 4:36 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Fri, Oct 16, 2015 at 03:19:19PM +0800, Minghuan Lian wrote:
->> Both LS1043a and LS2080a are based on ARMv8 64-bit architecture
->> and have similar PCIe implementation. LUT is added to controller.
->> The patch removes the necessary fields from struct ls_pcie.
->>
->> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
->> ---
->> This patch is based on v4.3-rc4 and [PATCH v10 3/6]
->> PCI: designware: Add ARM64 support.
+This patch forces us to reallocate VF BARs if the totalVFs value has
+increased after enabling ARI.  This normally shouldn't occur, however I
+have seen some non-spec devices that shift between 7 and some value greater
+than 7 based on the ARI value and we want to avoid triggering any issues
+with such devices.
 
-Hi Bjorn,
+Fixes: 3aa71da412fe ("PCI: Enable SR-IOV ARI Capable Hierarchy before reading TotalVFs")
+Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+---
+ drivers/pci/iov.c |   11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-Are you also applying this patch
-https://patchwork.ozlabs.org/patch/531184/ in this merge windows?
-Because the new hardware can only work with the generic ARM64 support
-added in the designware pcie driver.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 099050d78a39..238950412de0 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -393,7 +393,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 	int rc;
+ 	int nres;
+ 	u32 pgsz;
+-	u16 ctrl, total;
++	u16 ctrl, total, orig_total;
+ 	struct pci_sriov *iov;
+ 	struct resource *res;
+ 	struct pci_dev *pdev;
+@@ -402,6 +402,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
+ 		return -ENODEV;
+ 
++	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &orig_total);
+ 	pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl);
+ 	if (ctrl & PCI_SRIOV_CTRL_VFE) {
+ 		pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, 0);
+@@ -450,6 +451,14 @@ found:
+ 		}
+ 		iov->barsz[i] = resource_size(res);
+ 		res->end = res->start + resource_size(res) * total - 1;
++
++		/* force reallocation of BARs if total VFs increased */
++		if (orig_total < total) {
++			res->flags |= IORESOURCE_UNSET;
++			res->end -= res->start;
++			res->start = 0;
++		}
++
+ 		dev_info(&dev->dev, "VF(n) BAR%d space: %pR (contains BAR%d for %d VFs)\n",
+ 			 i, res, i, total);
+ 		i += bar64;
 
-Regards,
-Leo
