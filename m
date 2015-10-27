@@ -8,80 +8,103 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Khalid Aziz <khalid.aziz@oracle.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 21/60] PCI: Get new realloc size for bridge for last try
-Date: Thu,  8 Oct 2015 14:38:40 -0700
-Message-Id: <1444340359-8011-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v8 47/61] PCI: Don't add too much optional size for hotplug bridge io
+Date: Tue, 27 Oct 2015 13:55:39 -0700
+Message-Id: <1445979353-1728-48-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current realloc path would not shrink bridge resource through
-pbus_size_mem() checking with the old size.
+Same as patch for MMIO (PCI: Don't add too much optional size for hotplug
+bridge MMIO), and this one is for io port.
 
-That cause problem: when "required+optional" resource allocation fails,
-the cached bridge resource size will prevent "required" resource to get
-allocated smaller resource.
+It will compare required+optional with min_sum_size to get smaller
+optional size.
 
-Clear the old resource size for last try or third and later try.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Tested-by: TJ <linux@iam.tj>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
+ drivers/pci/setup-bus.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 5505942..278cb6d 100644
+index 00a39be..d4aeedc 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1695,6 +1695,17 @@ static enum enable_type pci_realloc_detect(struct pci_bus *bus,
- }
- #endif
+@@ -1177,7 +1177,6 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+  *
+  * @bus : the bus
+  * @min_size : the minimum io window that must to be allocated
+- * @add_size : additional optional io window
+  * @realloc_head : track the additional io window on this list
+  *
+  * Sizing the IO windows of the PCI-PCI bridge is trivial,
+@@ -1186,9 +1185,11 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+  * We must be careful with the ISA aliasing though.
+  */
+ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+-		resource_size_t add_size, struct list_head *realloc_head)
++			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
++	resource_size_t min_sum_size = 0;
++	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+@@ -1198,6 +1199,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	if (!b_res)
+ 		return;
  
-+static void reset_bridge_resource_size(struct pci_dev *dev,
-+				       struct resource *res)
-+{
-+	int idx = res - &dev->resource[0];
-+
-+	if (idx >= PCI_BRIDGE_RESOURCES && idx <= PCI_BRIDGE_RESOURCE_END) {
-+		res->start = 0;
-+		res->end = res->start - 1;
++	if (realloc_head) {
++		min_sum_size = min_size;
++		min_size = 0;
 +	}
-+}
 +
- /*
-  * first try will not touch pci bridge res
-  * second and later try will clear small leaf bridge res
-@@ -1779,8 +1790,13 @@ again:
- 		res->start = fail_res->start;
- 		res->end = fail_res->end;
- 		res->flags = fail_res->flags;
--		if (fail_res->dev->subordinate)
-+		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
-+			/* last or third times and later */
-+			if (tried_times + 1 == pci_try_num ||
-+			    tried_times + 1 > 2)
-+				reset_bridge_resource_size(fail_res->dev, res);
-+		}
- 	}
- 	free_list(&fail_head);
+ 	min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+@@ -1227,10 +1233,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
  
-@@ -1854,8 +1870,11 @@ again:
- 		res->start = fail_res->start;
- 		res->end = fail_res->end;
- 		res->flags = fail_res->flags;
--		if (fail_res->dev->subordinate)
-+		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
-+			/* last time */
-+			reset_bridge_resource_size(fail_res->dev, res);
-+		}
- 	}
- 	free_list(&fail_head);
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	if (children_add_size > add_size)
+-		add_size = children_add_size;
+-	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+-		calculate_iosize(size, min_size, add_size + size1,
++	sum_add_size = children_add_size + size + size1;
++	if (sum_add_size < min_sum_size)
++		sum_add_size = min_sum_size;
++	size1 = !realloc_head ? size0 :
++		calculate_iosize(size, min_size, sum_add_size - size,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+@@ -1757,7 +1764,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+-	resource_size_t min_mem_size = 0, additional_io_size = 0;
++	resource_size_t min_mem_size = 0, min_io_size = 0;
+ 	struct resource *b_res;
+ 	int ret;
  
+@@ -1793,13 +1800,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 
+ 	case PCI_CLASS_BRIDGE_PCI:
+ 		if (bus->self->is_hotplug_bridge) {
+-			additional_io_size  = pci_hotplug_io_size;
++			min_io_size  = pci_hotplug_io_size;
+ 			min_mem_size = pci_hotplug_mem_size;
+ 		}
+ 		/* Fall through */
+ 	default:
+-		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
+-			     additional_io_size, realloc_head);
++		pbus_size_io(bus, min_io_size, realloc_head);
+ 
+ 		/*
+ 		 * If there's a 64-bit prefetchable MMIO window, compute
 -- 
 1.8.4.5
 
