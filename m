@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36725 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965331AbbJ0U4n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 16:56:43 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:17594 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965807AbbJ0VHM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 17:07:12 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -12,145 +12,110 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Khalid Aziz <khalid.aziz@oracle.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 01/61] sparc/PCI: Add mem64 resource parsing for root bus
-Date: Tue, 27 Oct 2015 13:54:53 -0700
-Message-Id: <1445979353-1728-2-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v8 39/61] PCI: Separate out save_resources()/restore_resources()
+Date: Tue, 27 Oct 2015 13:55:31 -0700
+Message-Id: <1445979353-1728-40-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Found "no compatible bridge window" warning in boot log from T5-8.
+We need to save/restore resources several times for alt_size support,
+separate the save_resources()/resources() to save some lines later.
 
-pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
-
-That resource is above 4G, but does not get offset correctly as
-root bus only report io and mem32.
-
-pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
-pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
-pci_bus 0000:00: root bus resource [bus 00-77]
-
-Add mem64 handling in pci_common for sparc, so we can have 64bit resource
-registered for root bus at first.
-
-After patch, will have:
-pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
-pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
-pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
-pci_bus 0000:00: root bus resource [bus 00-77]
-
--v2: mem64_space should use mem_space.start as offset.
--v3: add IORESOURCE_MEM_64 flag
--v4: set name for mem64_space, otherwise /proc/iomem will have <bad> for name
-
-Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
-Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
-Reported-by: David Ahern <david.ahern@oracle.com>
-Tested-by: David Ahern <david.ahern@oracle.com>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
-
- arch/sparc/kernel/pci.c        |    7 ++++++-
- arch/sparc/kernel/pci_common.c |   17 +++++++++++++++--
- arch/sparc/kernel/pci_impl.h   |    1 +
- 3 files changed, 22 insertions(+), 3 deletions(-)
 ---
- arch/sparc/kernel/pci.c        |  7 ++++++-
- arch/sparc/kernel/pci_common.c | 17 +++++++++++++++--
- arch/sparc/kernel/pci_impl.h   |  1 +
- 3 files changed, 22 insertions(+), 3 deletions(-)
+ drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 30 insertions(+), 19 deletions(-)
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index b91d7f1..badf095 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -185,8 +185,10 @@ static unsigned long pci_parse_of_flags(u32 addr0)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index ca34346..dc83c2c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -436,6 +436,29 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
+ 	return false;	/* should not get here */
+ }
  
- 	if (addr0 & 0x02000000) {
- 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
--		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
-+		if (addr0 & 0x01000000)
-+			flags |= IORESOURCE_MEM_64
-+				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		if (addr0 & 0x40000000)
- 			flags |= IORESOURCE_PREFETCH
- 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
-@@ -655,6 +657,9 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 				pbm->io_space.start);
- 	pci_add_resource_offset(&resources, &pbm->mem_space,
- 				pbm->mem_space.start);
-+	if (pbm->mem64_space.flags)
-+		pci_add_resource_offset(&resources, &pbm->mem64_space,
-+					pbm->mem_space.start);
- 	pbm->busn.start = pbm->pci_first_busno;
- 	pbm->busn.end	= pbm->pci_last_busno;
- 	pbm->busn.flags	= IORESOURCE_BUS;
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 944a065..33524c1 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -406,6 +406,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
++static bool save_resources(struct list_head *head,
++			   struct list_head *save_head)
++{
++	struct pci_dev_resource *dev_res;
++
++	/* Save original start, end, flags etc at first */
++	list_for_each_entry(dev_res, head, list)
++		if (add_to_list(save_head, dev_res->dev, dev_res->res)) {
++			free_list(save_head);
++			return false;
++		}
++
++	return true;
++}
++
++static void restore_resource(struct pci_dev_resource *save_res,
++			     struct resource *res)
++{
++	res->start = save_res->start;
++	res->end = save_res->end;
++	res->flags = save_res->flags;
++}
++
+ static void __assign_resources_sorted(struct list_head *head,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *fail_head)
+@@ -473,13 +496,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	if (!realloc_head || list_empty(realloc_head))
+ 		goto requested_and_reassign;
+ 
+-	/* Save original start, end, flags etc at first */
+-	list_for_each_entry(dev_res, head, list) {
+-		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
+-			free_list(&save_head);
+-			goto requested_and_reassign;
+-		}
+-	}
++	if (!save_resources(head, &save_head))
++		goto requested_and_reassign;
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+@@ -548,12 +566,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		}
  	}
+ 	/* Restore start/end/flags from saved list */
+-	list_for_each_entry(save_res, &save_head, list) {
+-		res = save_res->res;
+-		res->start = save_res->start;
+-		res->end = save_res->end;
+-		res->flags = save_res->flags;
+-	}
++	list_for_each_entry(save_res, &save_head, list)
++		restore_resource(save_res, save_res->res);
++
+ 	free_list(&save_head);
  
- 	num_pbm_ranges = i / sizeof(*pbm_ranges);
-+	memset(&pbm->mem64_space, 0, sizeof(struct resource));
+ requested_and_reassign:
+@@ -1981,9 +1996,7 @@ again:
+ 	list_for_each_entry(fail_res, &fail_head, list) {
+ 		struct resource *res = fail_res->res;
  
- 	for (i = 0; i < num_pbm_ranges; i++) {
- 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
-@@ -451,7 +452,12 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			break;
+-		res->start = fail_res->start;
+-		res->end = fail_res->end;
+-		res->flags = fail_res->flags;
++		restore_resource(fail_res, res);
+ 		if (fail_res->dev->subordinate) {
+ 			res->flags = 0;
+ 			/* last or third times and later */
+@@ -2067,9 +2080,7 @@ again:
+ 	list_for_each_entry(fail_res, &fail_head, list) {
+ 		struct resource *res = fail_res->res;
  
- 		case 3:
--			/* XXX 64-bit MEM handling XXX */
-+			/* 64-bit MEM handling */
-+			pbm->mem64_space.start = a;
-+			pbm->mem64_space.end = a + size - 1UL;
-+			pbm->mem64_space.flags = IORESOURCE_MEM;
-+			saw_mem = 1;
-+			break;
- 
- 		default:
- 			break;
-@@ -465,15 +471,22 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 		prom_halt();
- 	}
- 
--	printk("%s: PCI IO[%llx] MEM[%llx]\n",
-+	printk("%s: PCI IO[%llx] MEM[%llx]",
- 	       pbm->name,
- 	       pbm->io_space.start,
- 	       pbm->mem_space.start);
-+	if (pbm->mem64_space.flags)
-+		printk(" MEM64[%llx]",
-+		       pbm->mem64_space.start);
-+	printk("\n");
- 
- 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
-+	pbm->mem64_space.name = pbm->name;
- 
- 	request_resource(&ioport_resource, &pbm->io_space);
- 	request_resource(&iomem_resource, &pbm->mem_space);
-+	if (pbm->mem64_space.flags)
-+		request_resource(&iomem_resource, &pbm->mem64_space);
- 
- 	pci_register_legacy_regions(&pbm->io_space,
- 				    &pbm->mem_space);
-diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
-index 75803c7..37222ca 100644
---- a/arch/sparc/kernel/pci_impl.h
-+++ b/arch/sparc/kernel/pci_impl.h
-@@ -97,6 +97,7 @@ struct pci_pbm_info {
- 	/* PBM I/O and Memory space resources. */
- 	struct resource			io_space;
- 	struct resource			mem_space;
-+	struct resource			mem64_space;
- 	struct resource			busn;
- 
- 	/* Base of PCI Config space, can be per-PBM or shared. */
+-		res->start = fail_res->start;
+-		res->end = fail_res->end;
+-		res->flags = fail_res->flags;
++		restore_resource(fail_res, res);
+ 		if (fail_res->dev->subordinate) {
+ 			res->flags = 0;
+ 			/* last time */
 -- 
 1.8.4.5
 
