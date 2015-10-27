@@ -1,112 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:38372 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754609AbbJIOpa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Oct 2015 10:45:30 -0400
-Date: Fri, 9 Oct 2015 16:45:28 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: Mikulas Patocka <mpatocka@redhat.com>,
-	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
-	Christoph Hellwig <hch@lst.de>,
-	device-mapper development <dm-devel@redhat.com>,
-	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: [PATCH] iommu/amd: Fix NULL pointer deref on device detach READ
- FPDMA QUEUED errors since Linux 4.0
-Message-ID: <20151009144528.GA27420@8bytes.org>
-References: <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
- <20150929162042.GR3036@8bytes.org>
- <560BF73F.8000008@maya.org>
- <20151006101356.GE12506@8bytes.org>
- <56141507.7040103@maya.org>
- <20151007154005.GH28811@8bytes.org>
- <56155028.7060906@maya.org>
- <20151008173007.GL28811@8bytes.org>
- <5616BCF4.10104@maya.org>
- <5616C850.2000906@maya.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5616C850.2000906@maya.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37374 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965695AbbJ0U5Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 16:57:16 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 54/61] resources: Split out __allocate_resource()
+Date: Tue, 27 Oct 2015 13:55:46 -0700
+Message-Id: <1445979353-1728-55-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Andreas,
+This one is separated from next patch for best fit allocation.
 
-On Thu, Oct 08, 2015 at 09:47:28PM +0200, Andreas Hartmann wrote:
-> This time, the oops was caused by the second PCI card I'm passing
-> through to another VM (the ath9k card worked fine this time - chance?).
-> I added the lspci output to the attached file, too.
+Split out __allocate_resource(), and it will not hold lock, so we could use it
+in other functions that hold the resource lock already.
 
-I digged a little bit around here and found a 32bit PCI card and plugged
-it into the AMD IOMMU box. I could reproduce the problem and here is
-patch which fixes it for me. Can you test it too please? I'd like to
-send a pull-req with this fix included to Linus for rc5.
+-v2: according to Linus, using "bool lock" as parameter
+     aka "conditionally take lock" is *wrong*.
 
-Thanks,
-
-	Joerg
-
->From d07307c04edffaaa045fb83713f8808e55ffa895 Mon Sep 17 00:00:00 2001
-From: Joerg Roedel <jroedel@suse.de>
-Date: Fri, 9 Oct 2015 16:23:33 +0200
-Subject: [PATCH] iommu/amd: Fix NULL pointer deref on device detach
-
-When a device group is detached from its domain, the iommu
-core code calls into the iommu driver to detach each device
-individually.
-
-Before this functionality went into the iommu core code, it
-was implemented in the drivers, also in the AMD IOMMU
-driver as the device alias handling code.
-
-This code is still present, as there might be aliases that
-don't exist as real PCI devices (and are therefore invisible
-to the iommu core code).
-
-Unfortunatly it might happen now, that a device is unbound
-multiple times from its domain, first by the alias handling
-code and then by the iommu core code (or vice verca).
-
-This ends up in the do_detach function which dereferences
-the dev_data->domain pointer. When the device is already
-detached, this pointer is NULL and we get a kernel oops.
-
-Removing the alias code completly is not an option, as that
-would also remove the code which handles invisible aliases.
-The code could be simplified, but this is too big of a
-change outside the merge window.
-
-For now, just check the dev_data->domain pointer in
-do_detach and bail out if it is NULL.
-
-Andreas Hartmann <andihartmann@freenet.de>
-Signed-off-by: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Acked-by: Linus Torvalds <torvalds@linux-foundation.org>
 ---
- drivers/iommu/amd_iommu.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ kernel/resource.c | 70 +++++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 50 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index f82060e7..08d2775 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -2006,6 +2006,15 @@ static void do_detach(struct iommu_dev_data *dev_data)
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 6927298..62321b0 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -654,7 +654,7 @@ static int find_resource(struct resource *root, struct resource *new,
+ }
+ 
+ /**
+- * reallocate_resource - allocate a slot in the resource tree given range & alignment.
++ * __reallocate_resource - allocate a slot in the resource tree given range & alignment.
+  *	The resource will be relocated if the new size cannot be reallocated in the
+  *	current location.
+  *
+@@ -663,7 +663,7 @@ static int find_resource(struct resource *root, struct resource *new,
+  * @newsize: new size of the resource descriptor
+  * @constraint: the size and alignment constraints to be met.
+  */
+-static int reallocate_resource(struct resource *root, struct resource *old,
++static int __reallocate_resource(struct resource *root, struct resource *old,
+ 			resource_size_t newsize,
+ 			struct resource_constraint  *constraint)
  {
- 	struct amd_iommu *iommu;
+@@ -671,8 +671,6 @@ static int reallocate_resource(struct resource *root, struct resource *old,
+ 	struct resource new = *old;
+ 	struct resource *conflict;
  
-+	/*
-+	 * First check if the device is still attached. It might already
-+	 * be detached from its domain because the generic
-+	 * iommu_detach_group code detached it and we try again here in
-+	 * our alias handling.
-+	 */
-+	if (!dev_data->domain)
-+		return;
+-	write_lock(&resource_lock);
+-
+ 	if ((err = __find_resource(root, old, &new, newsize, constraint)))
+ 		goto out;
+ 
+@@ -697,14 +695,13 @@ static int reallocate_resource(struct resource *root, struct resource *old,
+ 		BUG_ON(conflict);
+ 	}
+ out:
+-	write_unlock(&resource_lock);
+ 	return err;
+ }
+ 
+-
+ /**
+- * allocate_resource - allocate empty slot in the resource tree given range & alignment.
+- * 	The resource will be reallocated with a new size if it was already allocated
++ * __allocate_resource - allocate empty slot in the resource tree given range & alignment.
++ *	The resource will be reallocated with a new size if it was already
++ *	allocated
+  * @root: root resource descriptor
+  * @new: resource descriptor desired by caller
+  * @size: requested resource region size
+@@ -713,15 +710,17 @@ out:
+  * @align: alignment requested, in bytes
+  * @alignf: alignment function, optional, called if not NULL
+  * @alignf_data: arbitrary data to pass to the @alignf function
++ *
++ * Caller need to hold resource_lock if needed.
+  */
+-int allocate_resource(struct resource *root, struct resource *new,
+-		      resource_size_t size, resource_size_t min,
+-		      resource_size_t max, resource_size_t align,
+-		      resource_size_t (*alignf)(void *,
+-						const struct resource *,
+-						resource_size_t,
+-						resource_size_t),
+-		      void *alignf_data)
++static int __allocate_resource(struct resource *root, struct resource *new,
++				resource_size_t size, resource_size_t min,
++				resource_size_t max, resource_size_t align,
++				resource_size_t (*alignf)(void *,
++						  const struct resource *,
++						  resource_size_t,
++						  resource_size_t),
++				void *alignf_data)
+ {
+ 	int err;
+ 	struct resource_constraint constraint;
+@@ -735,20 +734,51 @@ int allocate_resource(struct resource *root, struct resource *new,
+ 	constraint.alignf = alignf;
+ 	constraint.alignf_data = alignf_data;
+ 
+-	if ( new->parent ) {
++	if (new->parent) {
+ 		/* resource is already allocated, try reallocating with
+ 		   the new constraints */
+-		return reallocate_resource(root, new, size, &constraint);
++		return __reallocate_resource(root, new, size, &constraint);
+ 	}
+ 
+-	write_lock(&resource_lock);
+ 	err = find_resource(root, new, size, &constraint);
+ 	if (err >= 0 && __request_resource(root, new))
+ 		err = -EBUSY;
+-	write_unlock(&resource_lock);
 +
- 	iommu = amd_iommu_rlookup_table[dev_data->devid];
+ 	return err;
+ }
  
- 	/* decrease reference counters */
++/**
++ * allocate_resource - allocate empty slot in the resource tree given range & alignment.
++ *	The resource will be reallocated with a new size if it was already
++ *	allocated
++ * @root: root resource descriptor
++ * @new: resource descriptor desired by caller
++ * @size: requested resource region size
++ * @min: minimum boundary to allocate
++ * @max: maximum boundary to allocate
++ * @align: alignment requested, in bytes
++ * @alignf: alignment function, optional, called if not NULL
++ * @alignf_data: arbitrary data to pass to the @alignf function
++ */
++int allocate_resource(struct resource *root, struct resource *new,
++		      resource_size_t size, resource_size_t min,
++		      resource_size_t max, resource_size_t align,
++		      resource_size_t (*alignf)(void *,
++						const struct resource *,
++						resource_size_t,
++						resource_size_t),
++		      void *alignf_data)
++{
++	int ret;
++
++	write_lock(&resource_lock);
++	ret = __allocate_resource(root, new, size, min, max, align,
++				   alignf, alignf_data);
++	write_unlock(&resource_lock);
++
++	return ret;
++}
++
+ EXPORT_SYMBOL(allocate_resource);
+ 
+ /**
 -- 
-2.5.1
+1.8.4.5
 
