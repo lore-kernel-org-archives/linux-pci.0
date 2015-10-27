@@ -1,53 +1,99 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 13 Oct 2015 10:32:04 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: Yinghai Lu <yinghai@kernel.org>
-cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
-In-Reply-To: <CAE9FiQVAtPGgzwwMaHjGjyzOD8wKb0TqCd1wynF6-ZmFqZzEaQ@mail.gmail.com>
-Message-ID: <alpine.LRH.2.20.1510131020140.9747@math.ut.ee>
-References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee> <CAE9FiQXM9YxRwcbG577Pcqmj7YbOa0yk6hYELb2FpTtct5u2jg@mail.gmail.com> <alpine.LRH.2.20.1510120808240.3251@math.ut.ee> <CAE9FiQXHsgYaTgF2rsWFJXSYJ=kH3j63ageJ2H8F5wnzbFgxRg@mail.gmail.com>
- <alpine.LRH.2.20.1510130800380.3972@math.ut.ee> <CAE9FiQVAtPGgzwwMaHjGjyzOD8wKb0TqCd1wynF6-ZmFqZzEaQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:50723 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965287AbbJ0VBz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 17:01:55 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
+Subject: [PATCH v8 19/61] PCI: Set resource to FIXED for LSI devices
+Date: Tue, 27 Oct 2015 13:55:11 -0700
+Message-Id: <1445979353-1728-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > Updated on V210 - the others were more recent. Now I get more BAR
-> > warning there too:
-> >
-> > http://kodu.ut.ee/~mroos/dm/dm.v210+patches
-> >
-> 
-> interesting, mem and mem64 is overlapping.
-> 
-> [   38.824625] /pci@1f,700000: TOMATILLO PCI Bus Module ver[4:0]
-> [   38.824654] /pci@1f,700000: PCI IO [io
-> 0x7f601000000-0x7f601ffffff] offset 7f601000000
-> [   38.824680] /pci@1f,700000: PCI MEM [mem
-> 0x7f700000000-0x7f7ffffffff] offset 7f700000000
-> [   38.824704] /pci@1f,700000: PCI MEM64 [mem
-> 0x7f700000000-0x7f7ffffffff] offset 7f700000000
-> [   38.826310] PCI: Scanning PBM /pci@1f,700000
-> [   38.826479] schizo f0069c00: PCI host bridge to bus 0000:00
-> [   38.826506] pci_bus 0000:00: root bus resource [io
-> 0x7f601000000-0x7f601ffffff] (bus address [0x0000-0xffffff])
-> [   38.826536] pci_bus 0000:00: root bus resource [mem
-> 0x7f700000000-0x7f7ffffffff] (bus address [0x00000000-0xffffffff])
-> [   38.826565] pci_bus 0000:00: root bus resource [mem
-> 0x7f700000000-0x7f7ffffffff] (bus address [0x00000000-0xffffffff])
-> 
-> We need to add more sanitary checking.
-> 
-> Can you send boot log after booting with "debug ignore_loglevel ofpci_debug=1" ?
+LSI HBA firmware stop responding pci read from host if pci core ever change
+pci device BAR values.
 
-http://kodu.ut.ee/~mroos/dm/dm.v210+patch+debug
+Set their resources to FIXED, so will allow realloc to skip them.
 
-Applied the fix_mem_mem64_overlapping.patch and retested. The BAR 
-allocation problems are still there:
+Reported-by: Paul Johnson <pjay@nwtrail.com>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/pci.h       |  1 +
+ drivers/pci/quirks.c    | 20 ++++++++++++++++++++
+ drivers/pci/setup-bus.c |  4 ++++
+ 3 files changed, 25 insertions(+)
 
-http://kodu.ut.ee/~mroos/dm/dm.v210+patch+mem64patch+debug
-
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6ad0f05..39d2c50 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -170,6 +170,7 @@ static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u
+ }
+ 
+ void pci_realloc_get_opt(char *);
++bool pci_realloc_user_enabled(void);
+ 
+ static inline int pci_no_d1d2(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 1d85f37..be0bdfb 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -323,6 +323,26 @@ static void quirk_s3_64M(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
+ 
++/*
++ * LSI devices firmware does not like BAR get changed
++ */
++static void quirk_bar_fixed(struct pci_dev *dev)
++{
++	int i;
++
++	if (pci_realloc_user_enabled())
++		return;
++
++	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
++		struct resource *r = &dev->resource[i];
++
++		if (!r->start || !r->flags)
++			continue;
++		r->flags |= IORESOURCE_PCI_FIXED;
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC,	PCI_ANY_ID,	quirk_bar_fixed);
++
+ /* for pci remove and rescan */
+ static void quirk_allocate_fixed(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8cd6c6b..d49c6e5 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1634,6 +1634,10 @@ void __init pci_realloc_get_opt(char *str)
+ 	else if (!strncmp(str, "on", 2))
+ 		pci_realloc_enable = user_enabled;
+ }
++bool pci_realloc_user_enabled(void)
++{
++	return pci_realloc_enable == user_enabled;
++}
+ static bool pci_realloc_enabled(enum enable_type enable)
+ {
+ 	return enable >= user_enabled;
 -- 
-Meelis Roos (mroos@linux.ee)
+1.8.4.5
+
