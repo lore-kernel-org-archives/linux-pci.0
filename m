@@ -1,279 +1,101 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v5 1/4] Docs: dt: Add PCI MSI map bindings
-Date: Thu,  8 Oct 2015 15:10:47 -0700
-Message-Id: <1444342250-6196-2-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1444342250-6196-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1444342250-6196-1-git-send-email-ddaney.cavm@gmail.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 61/61] PCI: Only try to assign io port only for root bus that support it
+Date: Tue, 27 Oct 2015 13:55:53 -0700
+Message-Id: <1445979353-1728-62-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Mark Rutland <mark.rutland@arm.com>
+The PCI subsystem always assumes that I/O is supported on root bus and
+tries to assign an I/O window to each child bus even if that is not the
+case.
 
-Currently msi-parent is used by a few bindings to describe the
-relationship between a PCI root complex and a single MSI controller, but
-this property does not have a generic binding document.
+The use cases is on Intel 8 socket system that have 8 root buses,
+last two root buses would not have io port resources from _CRS.
 
-Additionally, msi-parent is insufficient to describe more complex
-relationships between MSI controllers and devices under a root complex,
-where devices may be able to target multiple MSI controllers, or where
-MSI controllers use (non-probeable) sideband information to distinguish
-devices.
+Check if root bus supports I/O, and later during sizing and
+assigning, check that flags and skip those resources.
 
-This patch adds a generic binding for mapping PCI devices to MSI
-controllers. This document covers msi-parent, and a new msi-map property
-(specific to PCI*) which may be used to map devices (identified by their
-Requester ID) to sideband data for each MSI controller that they may
-target.
-
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-Signed-off-by: Mark Rutland <mark.rutland@arm.com>
-Signed-off-by: David Daney <david.daney@cavium.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- Documentation/devicetree/bindings/pci/pci-msi.txt | 220 ++++++++++++++++++++++
- 1 file changed, 220 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/pci-msi.txt
+ drivers/pci/probe.c     | 6 ++++++
+ drivers/pci/setup-bus.c | 9 +++++++++
+ include/linux/pci.h     | 1 +
+ 3 files changed, 16 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-msi.txt b/Documentation/devicetree/bindings/pci/pci-msi.txt
-new file mode 100644
-index 0000000..9b3cc81
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/pci-msi.txt
-@@ -0,0 +1,220 @@
-+This document describes the generic device tree binding for describing the
-+relationship between PCI devices and MSI controllers.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index f9589d9..d5fca94 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -339,6 +339,9 @@ static void pci_read_bridge_io(struct pci_bus *child)
+ 	struct pci_bus_region region;
+ 	struct resource *res;
+ 
++	if (!pci_find_host_bridge(child)->has_ioport)
++		return;
 +
-+Each PCI device under a root complex is uniquely identified by its Requester ID
-+(AKA RID). A Requester ID is a triplet of a Bus number, Device number, and
-+Function number.
+ 	io_mask = PCI_IO_RANGE_MASK;
+ 	io_granularity = 0x1000;
+ 	if (dev->io_window_1k) {
+@@ -2126,6 +2129,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 			bus_addr[0] = '\0';
+ 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
+ 
++		if (resource_type(res) == IORESOURCE_IO)
++			bridge->has_ioport = 1;
 +
-+For the purpose of this document, when treated as a numeric value, a RID is
-+formatted such that:
+ 		if (resource_type(res) == IORESOURCE_MEM) {
+ 			if ((res->end - offset) > 0xffffffff)
+ 				bridge->has_mem64 = 1;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 22ee1a1..f4918d7 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -226,6 +226,10 @@ static void pdev_assign_resources_prepare(struct pci_dev *dev,
+ 		if (resource_disabled(r) || r->parent)
+ 			continue;
+ 
++		if ((r->flags & IORESOURCE_IO) &&
++		    !pci_find_host_bridge(dev->bus)->has_ioport)
++			continue;
 +
-+* Bits [15:8] are the Bus number.
-+* Bits [7:3] are the Device number.
-+* Bits [2:0] are the Function number.
-+* Any other bits required for padding must be zero.
+ 		r_align = __pci_resource_alignment(dev, r, realloc_head);
+ 		if (!r_align) {
+ 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
+@@ -1189,6 +1193,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		min_size = 0;
+ 	}
+ 
++	if (!pci_find_host_bridge(bus)->has_ioport) {
++		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
++		return;
++	}
 +
-+MSIs may be distinguished in part through the use of sideband data accompanying
-+writes. In the case of PCI devices, this sideband data may be derived from the
-+Requester ID. A mechanism is required to associate a device with both the MSI
-+controllers it can address, and the sideband data that will be associated with
-+its writes to those controllers.
-+
-+For generic MSI bindings, see
-+Documentation/devicetree/bindings/interrupt-controller/msi.txt.
-+
-+
-+PCI root complex
-+================
-+
-+Optional properties
-+-------------------
-+
-+- msi-map: Maps a Requester ID to an MSI controller and associated
-+  msi-specifier data. The property is an arbitrary number of tuples of
-+  (rid-base,msi-controller,msi-base,length), where:
-+
-+  * rid-base is a single cell describing the first RID matched by the entry.
-+
-+  * msi-controller is a single phandle to an MSI controller
-+
-+  * msi-base is an msi-specifier describing the msi-specifier produced for the
-+    first RID matched by the entry.
-+
-+  * length is a single cell describing how many consecutive RIDs are matched
-+    following the rid-base.
-+
-+  Any RID r in the interval [rid-base, rid-base + length) is associated with
-+  the listed msi-controller, with the msi-specifier (r - rid-base + msi-base).
-+
-+- msi-map-mask: A mask to be applied to each Requester ID prior to being mapped
-+  to an msi-specifier per the msi-map property.
-+
-+- msi-parent: Describes the MSI parent of the root complex itself. Where
-+  the root complex and MSI controller do not pass sideband data with MSI
-+  writes, this property may be used to describe the MSI controller(s)
-+  used by PCI devices under the root complex, if defined as such in the
-+  binding for the root complex.
-+
-+
-+Example (1)
-+===========
-+
-+/ {
-+	#address-cells = <1>;
-+	#size-cells = <1>;
-+
-+	msi: msi-controller@a {
-+		reg = <0xa 0x1>;
-+		compatible = "vendor,some-controller";
-+		msi-controller;
-+		#msi-cells = <1>;
-+	};
-+
-+	pci: pci@f {
-+		reg = <0xf 0x1>;
-+		compatible = "vendor,pcie-root-complex";
-+		device_type = "pci";
-+
-+		/*
-+		 * The sideband data provided to the MSI controller is
-+		 * the RID, identity-mapped.
-+		 */
-+		msi-map = <0x0 &msi_a 0x0 0x10000>,
-+	};
-+};
-+
-+
-+Example (2)
-+===========
-+
-+/ {
-+	#address-cells = <1>;
-+	#size-cells = <1>;
-+
-+	msi: msi-controller@a {
-+		reg = <0xa 0x1>;
-+		compatible = "vendor,some-controller";
-+		msi-controller;
-+		#msi-cells = <1>;
-+	};
-+
-+	pci: pci@f {
-+		reg = <0xf 0x1>;
-+		compatible = "vendor,pcie-root-complex";
-+		device_type = "pci";
-+
-+		/*
-+		 * The sideband data provided to the MSI controller is
-+		 * the RID, masked to only the device and function bits.
-+		 */
-+		msi-map = <0x0 &msi_a 0x0 0x100>,
-+		msi-map-mask = <0xff>
-+	};
-+};
-+
-+
-+Example (3)
-+===========
-+
-+/ {
-+	#address-cells = <1>;
-+	#size-cells = <1>;
-+
-+	msi: msi-controller@a {
-+		reg = <0xa 0x1>;
-+		compatible = "vendor,some-controller";
-+		msi-controller;
-+		#msi-cells = <1>;
-+	};
-+
-+	pci: pci@f {
-+		reg = <0xf 0x1>;
-+		compatible = "vendor,pcie-root-complex";
-+		device_type = "pci";
-+
-+		/*
-+		 * The sideband data provided to the MSI controller is
-+		 * the RID, but the high bit of the bus number is
-+		 * ignored.
-+		 */
-+		msi-map = <0x0000 &msi 0x0000 0x8000>,
-+			  <0x8000 &msi 0x0000 0x8000>;
-+	};
-+};
-+
-+
-+Example (4)
-+===========
-+
-+/ {
-+	#address-cells = <1>;
-+	#size-cells = <1>;
-+
-+	msi: msi-controller@a {
-+		reg = <0xa 0x1>;
-+		compatible = "vendor,some-controller";
-+		msi-controller;
-+		#msi-cells = <1>;
-+	};
-+
-+	pci: pci@f {
-+		reg = <0xf 0x1>;
-+		compatible = "vendor,pcie-root-complex";
-+		device_type = "pci";
-+
-+		/*
-+		 * The sideband data provided to the MSI controller is
-+		 * the RID, but the high bit of the bus number is
-+		 * negated.
-+		 */
-+		msi-map = <0x0000 &msi 0x8000 0x8000>,
-+			  <0x8000 &msi 0x0000 0x8000>;
-+	};
-+};
-+
-+
-+Example (5)
-+===========
-+
-+/ {
-+	#address-cells = <1>;
-+	#size-cells = <1>;
-+
-+	msi_a: msi-controller@a {
-+		reg = <0xa 0x1>;
-+		compatible = "vendor,some-controller";
-+		msi-controller;
-+		#msi-cells = <1>;
-+	};
-+
-+	msi_b: msi-controller@b {
-+		reg = <0xb 0x1>;
-+		compatible = "vendor,some-controller";
-+		msi-controller;
-+		#msi-cells = <1>;
-+	};
-+
-+	msi_c: msi-controller@c {
-+		reg = <0xc 0x1>;
-+		compatible = "vendor,some-controller";
-+		msi-controller;
-+		#msi-cells = <1>;
-+	};
-+
-+	pci: pci@c {
-+		reg = <0xf 0x1>;
-+		compatible = "vendor,pcie-root-complex";
-+		device_type = "pci";
-+
-+		/*
-+		 * The sideband data provided to MSI controller a is the
-+		 * RID, but the high bit of the bus number is negated.
-+		 * The sideband data provided to MSI controller b is the
-+		 * RID, identity-mapped.
-+		 * MSI controller c is not addressable.
-+		 */
-+		msi-map = <0x0000 &msi_a 0x8000 0x08000>,
-+			  <0x8000 &msi_a 0x0000 0x08000>,
-+			  <0x0000 &msi_b 0x0000 0x10000>;
-+	};
-+};
+ 	min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6bc56f1..9ffe03c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -414,6 +414,7 @@ struct pci_host_bridge {
+ 	void *release_data;
+ 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
+ 	unsigned int has_mem64:1;
++	unsigned int has_ioport:1;
+ };
+ 
+ #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
 -- 
-1.9.1
+1.8.4.5
 
