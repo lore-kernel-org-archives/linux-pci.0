@@ -1,105 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:51133 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752824AbbJWCCQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 Oct 2015 22:02:16 -0400
-Subject: Re: [PATCH] x86/PCI: Don't alloc pcibios-irq when MSI is enabled
-To: Bjorn Helgaas <helgaas@kernel.org>, Joerg Roedel <joro@8bytes.org>
-References: <1444386214-26319-1-git-send-email-joro@8bytes.org>
- <20151021162329.GB1583@localhost>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Joerg Roedel <jroedel@suse.de>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <56299523.1010201@linux.intel.com>
-Date: Fri, 23 Oct 2015 10:02:11 +0800
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:44982 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750891AbbJ0FJV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 01:09:21 -0400
+Received: from localhost
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
+	Tue, 27 Oct 2015 15:09:18 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 7AF97357805A
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 16:09:16 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9R598pk27852984
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 16:09:16 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9R58hgv007820
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 16:08:44 +1100
+Message-ID: <562F050F.5050405@au1.ibm.com>
+Date: Tue, 27 Oct 2015 16:01:03 +1100
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20151021162329.GB1583@localhost>
-Content-Type: text/plain; charset=windows-1252
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru
+CC: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V10 03/12] powerpc/pci: Cache VF index in pci_dn
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com> <1445829362-2738-4-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1445829362-2738-4-git-send-email-weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/10/22 0:23, Bjorn Helgaas wrote:
-> On Fri, Oct 09, 2015 at 12:23:34PM +0200, Joerg Roedel wrote:
->> From: Joerg Roedel <jroedel@suse.de>
->>
->> The pcibios-irq and MSI both use dev->irq to store the IRQ
->> number. While the MSI code checks for that and frees the
->> pcibios-irq before overwriting dev->irq, the
->> pcibios_alloc_irq function does not.
->>
->> Usually this is not a problem, as the pcibios-irq is
->> allocated before probe time of the device and the MSI irq is
->> allocted from the drivers probe path.
->>
->> But there are PCI devices handled by the core kernel and not
->> by a standard pci driver, like the AMD IOMMU for example.
->> For the AMD IOMMU a normal pci device driver does not make
->> sense, because a driver can be forcibly unbound from its
->> device, which is not a good idea for an IOMMU.
->>
->> Nevertheless the PCI core code tries to match the PCI device
->> implementing the AMD IOMMU against drivers, and
->> allocates/frees a pcibios IRQ every time it tries out a new
->> driver. This overwrites the dev->irq field set by
->> pci_enable_msi() and sets it to 0 in the end (because the
->> probe fails and the pcibios-irq is freed again).
->>
->> On suspend/resume this breaks the kernel, because the irq
->> descriptor for irq 0 is NULL.
->>
->> Fix this by not allocating a pcibios-irq when MSI is
->> already active. This also has the benefit, that a device
->> claimed by the core kernel can not be probed by a pci driver
->> later.
->>
->> Cc: Jiang Liu <jiang.liu@linux.intel.com>
->> Reported-by: Borislav Petkov <bp@alien8.de>
->> Signed-off-by: Joerg Roedel <jroedel@suse.de>
-> 
-> Applied with Thomas' reviewed-by to pci/msi for v4.4, thanks, Joerg!
-Hi Bjorn,
-	There's another patch already merged into mainstream kernel,
-which solves this issue in another way by making use of
-pci_dev->match_driver flag. Please refer to:
-cbbc00be2ce3 ("iommu/amd: Prevent binding other PCI drivers to IOMMU PCI
-devices")
-	So I think this patch is redundant now.
-Thanks,
-Gerry
+On 26/10/15 14:15, Wei Yang wrote:
+> The patch caches the VF index in pci_dn, which can be used to calculate
+> VF's bus, device and function number. Those information helps to locate
+> the VF's PCI device instance when doing hotplug during EEH recovery if
+> necessary.
+>
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-> 
->> ---
->>  arch/x86/pci/common.c | 8 ++++++++
->>  1 file changed, 8 insertions(+)
->>
->> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
->> index dc78a4a..6254c06 100644
->> --- a/arch/x86/pci/common.c
->> +++ b/arch/x86/pci/common.c
->> @@ -675,6 +675,14 @@ int pcibios_add_device(struct pci_dev *dev)
->>  
->>  int pcibios_alloc_irq(struct pci_dev *dev)
->>  {
->> +	/*
->> +	 * If the PCI device was already claimed by core code and has
->> +	 * MSI enabled, probing of the pcibios irq will overwrite
->> +	 * dev->irq.  So bail out if MSI is already enabled.
->> +	 */
->> +	if (pci_dev_msi_enabled(dev))
->> +		return -EBUSY;
->> +
->>  	return pcibios_enable_irq(dev);
->>  }
->>  
->> -- 
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
+Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+
+-- 
+Andrew Donnellan              Software Engineer, OzLabs
+andrew.donnellan@au1.ibm.com  Australia Development Lab, Canberra
++61 2 6201 8874 (work)        IBM Australia Limited
+
