@@ -1,54 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
-	will.deacon@arm.com, hanjun.guo@linaro.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V3 0/4] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
-Date: Mon, 12 Oct 2015 22:27:29 +0200
-Message-ID: <3864683.NagPOmtRbX@vostro.rjw.lan>
-In-Reply-To: <561C0F45.8090107@amd.com>
-References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com> <55F0EF79.3090202@amd.com> <561C0F45.8090107@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:50820 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965665AbbJ0VCF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 17:02:05 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 23/61] PCI: Don't release sibling bridge resources during hotplug
+Date: Tue, 27 Oct 2015 13:55:15 -0700
+Message-Id: <1445979353-1728-24-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, October 12, 2015 02:51:33 PM Suravee Suthikulpanit wrote:
-> Hi Rafael,
-> 
-> On 9/9/15 21:48, Suthikulpanit, Suravee wrote:
-> > Hi Rafael,
-> >
-> > On 9/10/2015 3:38 AM, Rafael J. Wysocki wrote:
-> >> On Wednesday, September 09, 2015 07:16:49 PM Suthikulpanit, Suravee
-> >> wrote:
-> >>> >Hi All,
-> >>> >
-> >>> >Are there any other concerns about this patch series?
-> >> I have none, but then it sort of missed the merge window.
-> >>
-> >> I can easily queue it up for the next one unless it is super-urgent,
-> >> but in that case I need to know why that's the case.
-> >>
-> >
-> > This is not urgent. This mainly needed to enable the ACPI PCI supports
-> > for ARM64 which is still work in progress.
-> >
-> > Thanks,
-> > Suravee
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> Just wondering if you are planning to queue this series up for 4.4 as well?
+On hotplug path, we can not touch sibling bridges that is outside
+of the slot.
 
-You don't seem to have addressed the Bjorn's comments on patch [2/4].
+That could happen when BIOS does not assign some bridge BARs and
+later kernel can not assign resource to them in first try.
 
-They need to be addressed before I can take this series.
+Check if fail dev is the parent bridge, then just use subordinate
+bus instead use parent bus.
 
-Thanks,
-Rafael
+Reported-by: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 278cb6d..10270e4 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1858,10 +1858,16 @@ again:
+ 	 * Try to release leaf bridge's resources that doesn't fit resource of
+ 	 * child device under that bridge
+ 	 */
+-	list_for_each_entry(fail_res, &fail_head, list)
+-		pci_bus_release_bridge_resources(fail_res->dev->bus,
++	list_for_each_entry(fail_res, &fail_head, list) {
++		struct pci_bus *bus = fail_res->dev->bus;
++
++		if (fail_res->dev == bridge)
++			bus = bridge->subordinate;
++
++		pci_bus_release_bridge_resources(bus,
+ 						 fail_res->flags & type_mask,
+ 						 whole_subtree);
++	}
+ 
+ 	/* restore size and flags */
+ 	list_for_each_entry(fail_res, &fail_head, list) {
+-- 
+1.8.4.5
 
