@@ -1,88 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:50710 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276AbbJIPIH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 11:08:07 -0400
-Date: Fri, 9 Oct 2015 16:07:57 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 2/9] pci: mvebu: fix memory leaks and refcount leaks
-Message-ID: <20151009150757.GV32532@n2100.arm.linux.org.uk>
-References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
- <E1ZiRIs-0004Id-AN@rmk-PC.arm.linux.org.uk>
- <20151009165240.3ba17ece@free-electrons.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151009165240.3ba17ece@free-electrons.com>
+Received: from mail-lf0-f46.google.com ([209.85.215.46]:35210 "EHLO
+	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932579AbbJ0QjT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 12:39:19 -0400
+Received: by lfbn126 with SMTP id n126so140176665lfb.2
+        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 09:39:18 -0700 (PDT)
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V1 00/11] MMCONFIG refactoring and ARM64 PCI hostbridge init based on ACPI
+Date: Tue, 27 Oct 2015 17:38:31 +0100
+Message-Id: <1445963922-22711-1-git-send-email-tn@semihalf.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 09, 2015 at 04:52:40PM +0200, Thomas Petazzoni wrote:
-> Russell,
-> 
-> On Sat, 03 Oct 2015 19:13:02 +0100, Russell King wrote:
-> 
-> > +	ret = devm_add_action(dev, mvebu_pcie_port_clk_put, port);
-> 
-> I didn't know about devm_add_action(). Definitely very useful for such
-> situations.
-> 
-> > @@ -1052,10 +1086,12 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
-> >  		struct mvebu_pcie_port *port = &pcie->ports[i];
-> >  
-> >  		ret = mvebu_pcie_parse_port(pcie, port, child);
-> > -		if (ret < 0)
-> > +		if (ret < 0) {
-> > +			of_node_put(child);
-> >  			return ret;
-> > -		else if (ret == 0)
-> > +		} else if (ret == 0) {
-> >  			continue;
-> > +		}
-> 
-> This is not trivial. If I understand correctly,
-> for_each_available_child_of_node() will automatically release the
-> reference on the previous node and take the reference on the new one
-> before entering the loop code.
+>From the functionality point of view this series might be split into two logic parts:
+1. Making MMCONFIG code arch-agnostic which allows all architectures to collect
+   PCI config regions and used when necessary.
+2. Using generic MMCONFIG code and introducing ACPI based PCI hostbridge
+   initialization for ARM64
 
-Yes.
+Patches has been built on top of:
+[Patch v7 0/7] Consolidate ACPI PCI root common code into ACPI core
+https://lkml.org/lkml/2015/10/14/31
+Git branch can be found here:
+https://git.linaro.org/leg/acpi/acpi.git/shortlog/refs/heads/pci-acpi-upstream
 
-> So in the skipping case, we don't need
-> to release the reference as it will be done by the next iteration of
-> the loop, but in the error case, since we are unexpectedly breaking the
-> loop, we need to do it manually.
+This has been tested on Cavium ThunderX 1 socket server.
+Any help in reviewing and testing is very appreciated.
 
-Correct.
+Hanjun Guo (1):
+  XEN / PCI: Remove the dependence on arch x86 when PCI_MMCONFIG=y
 
-> The sort of tricky thing that should be documented near
-> for_each_child_of_node(), since I believe a lot of code gets this
-> wrong.
+Tomasz Nowicki (10):
+  x86, pci: Reorder logic of pci_mmconfig_insert() function
+  x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
+    out of arch/x86/ directory
+  pci, acpi, mcfg: Provide generic implementation of MCFG code
+    initialization.
+  x86, pci: mmconfig_{32,64}.c code refactoring - remove code
+    duplication.
+  x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
+    driver.
+  pci, acpi, mcfg: Provide default RAW ACPI PCI config space accessors.
+  pci, acpi, ecam: Add flag to indicate whether ECAM region was hot
+    added or not.
+  x86, pci: Use previously added ECAM hot_added flag to remove ECAM
+    regions.
+  pci, acpi: Provide generic way to assign bus domain number.
+  arm64, pci, acpi: Support for ACPI based PCI hostbridge init
 
-Yes, lots of code gets it wrong, even the core DT code gets it wrong.
-The problem will be stopping people getting it wrong in the future, now
-that they've learnt the wrong way to do it - I don't think documenting
-the site where for_each_child_of_node() is defined will work anymore -
-how many people know of for_each_child_of_node() and don't need to look
-it up, yet code exactly this bug?
-
-TBH, the fundamental issue here is wrapping this all up in what looks
-to be a harmless for_each_child_of_node() thing.  for_each_child_of_node()
-has side-effects that are completely non-obvious, except to those who
-have been educated about it.
-
-I think the only solution now is to kill for_each_child_of_node() and
-similar, and have people open-code the for() loop so they can _see_
-what's going on, because we can't stop people from breaking out of a
-for() loop.  That's a major change though, outside the scope of this
-series.
-
-I raised the issue last month with DT people, but there isn't any
-interest in fixing the issue; they know about it but (iirc) have no
-plans to fix it.
+ arch/arm64/Kconfig             |   6 +
+ arch/arm64/kernel/pci.c        | 208 ++++++++++++++++++++++++++++++++--
+ arch/x86/Kconfig               |   4 +
+ arch/x86/include/asm/pci_x86.h |  28 +----
+ arch/x86/pci/acpi.c            |  17 +--
+ arch/x86/pci/mmconfig-shared.c | 250 +++++++----------------------------------
+ arch/x86/pci/mmconfig_32.c     |  11 +-
+ arch/x86/pci/mmconfig_64.c     |  67 +----------
+ arch/x86/pci/numachip.c        |   1 +
+ drivers/acpi/Makefile          |   1 +
+ drivers/acpi/mcfg.c            | 104 +++++++++++++++++
+ drivers/acpi/pci_root.c        |   2 +-
+ drivers/pci/Kconfig            |  10 ++
+ drivers/pci/Makefile           |   5 +
+ drivers/pci/ecam.c             | 234 ++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.c              |  30 ++++-
+ drivers/xen/pci.c              |   7 +-
+ include/linux/acpi.h           |   2 +
+ include/linux/ecam.h           |  44 ++++++++
+ 19 files changed, 691 insertions(+), 340 deletions(-)
+ create mode 100644 drivers/acpi/mcfg.c
+ create mode 100644 drivers/pci/ecam.c
+ create mode 100644 include/linux/ecam.h
 
 -- 
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+1.9.1
+
