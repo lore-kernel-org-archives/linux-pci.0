@@ -1,100 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53873 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751957AbbJ0O0s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Oct 2015 10:26:48 -0400
-Date: Tue, 27 Oct 2015 09:26:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lftan.linux@gmail.com,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v12 0/6] Altera PCIe host controller driver with MSI
- support
-Message-ID: <20151027142644.GA8660@localhost>
-References: <1445596035-27733-1-git-send-email-lftan@altera.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
+	will.deacon@arm.com, hanjun.guo@linaro.org,
+	thomas.lendacky@amd.com, herbert@gondor.apana.org.au,
+	davem@davemloft.net, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V4 0/8] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
+Date: Tue, 27 Oct 2015 16:27:26 +0100
+Message-ID: <24127028.eJSjD1i70u@vostro.rjw.lan>
+In-Reply-To: <20151027145249.GE8660@localhost>
+References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com> <20151027145249.GE8660@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445596035-27733-1-git-send-email-lftan@altera.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ley,
+On Tuesday, October 27, 2015 09:52:50 AM Bjorn Helgaas wrote:
+> Hi Suravee,
+> 
+> On Wed, Oct 21, 2015 at 08:52:03AM -0700, Suravee Suthikulpanit wrote:
+> > This patch series adds support to setup DMA coherency for PCI device using
+> > the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
+> > is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
+> > support for ARM64 which is currently in development.  Also, this should
+> > not affect other architectures that does not define 
+> > CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
+> > 
+> > In the process, this series also introduces enum dev_dma_attr and a set
+> > of APIs to query device DMA attribute. These APIs replace the obsolete
+> > device_dma_is_coherent(), and acpi_check_dma().
+> > 
+> > I have also included a patch from Jeremy posted here:
+> >     http://www.spinics.net/lists/linux-usb/msg128582.html
+> > 
+> > This patch series  has been tested on AMD Seattle RevB platform.
+> > The git tree containing tested code and pre-req patches are posted here:
+> > 
+> >     http://github.com/ssuthiku/linux.git pci-cca-v4
+> > 
+> > Changes from V3: (https://lkml.org/lkml/2015/8/26/389)
+> >     * Clean up suggested by Bjorn
+> >     * Introduce enum dev_dma_attr
+> >     * Replace device_dma_is_coherent() and acpi_check_dma() with
+> >       new APIs.
+> > 
+> > Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
+> >     * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
+> >     * Add WARN() when fail to setup DMA for PCI device when booting
+> >       ACPI (per Arnd's suggestion)
+> >     * Added Acked-by from Rob.
+> >     * Minor clean up
+> > 
+> > Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
+> >     * Include patch 1 from Jeremy to enable support for _CCA=0
+> >     * Clean up acpi_check_dma() per Bjorn suggestions
+> >     * Split the original V1 patch into two patches (patch 3 and 4)
+> > 
+> > Jeremy Linton (1):
+> >   Honor ACPI _CCA attribute setting
+> > 
+> > Suravee Suthikulpanit (7):
+> >   device property: Introducing enum dev_dma_attr
+> >   acpi: Adding DMA Attribute APIs for ACPI Device
+> >   device property: Adding DMA Attribute APIs for Generic Devices
+> >   device property: acpi: Make use of the new DMA Attribute APIs
+> >   device property: acpi: Remove unused DMA APIs
+> >   PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
+> >   PCI: ACPI: Add support for PCI device DMA coherency
+> > 
+> >  drivers/acpi/acpi_platform.c              |  7 +++++-
+> >  drivers/acpi/glue.c                       |  8 +++---
+> >  drivers/acpi/scan.c                       | 42 +++++++++++++++++++++++++++++++
+> >  drivers/base/property.c                   | 32 +++++++++++++++++------
+> >  drivers/crypto/ccp/ccp-platform.c         |  9 ++++++-
+> >  drivers/net/ethernet/amd/xgbe/xgbe-main.c |  9 ++++++-
+> >  drivers/of/of_pci.c                       | 20 ---------------
+> >  drivers/pci/probe.c                       | 36 ++++++++++++++++++++++++--
+> >  include/acpi/acpi_bus.h                   | 36 +++-----------------------
+> >  include/linux/acpi.h                      |  7 +++++-
+> >  include/linux/of_pci.h                    |  3 ---
+> >  include/linux/property.h                  | 10 +++++++-
+> >  12 files changed, 145 insertions(+), 74 deletions(-)
+> 
+> I had a couple minor comments.  It's sort of a toss-up, but this feels
+> more ACPI-flavored than PCI, so I assume Rafael will take this whole
+> series unless I hear otherwise.
 
-On Fri, Oct 23, 2015 at 06:27:09PM +0800, Ley Foon Tan wrote:
-> This is the 12th version of patch set to add support for Altera PCIe host
-> controller with MSI feature on Altera FPGA device families. This patchset
-> mainly resovle the comments from Bjorn.
-> 
-> 
-> This patchset is based on v4.3-rc6.
-> 
-> v11->v12 changes:
-> - pcie-altera: use DECLARE_PCI_FIXUP_EARLY for pcie retrain fixup
-> - pcie-altera: move pcie_bus_configure_settings before pci_bus_add_devices
-> - pcie-altera: add %d for irq bit in dev_err()
-> - pcie-altera: prevent enumeration of root complex resources in config accessors
-> - Documentation: add Acked-by from Rob Herring
-> 
-> History:
-> -------
-> [v1]: https://lkml.org/lkml/2015/7/28/395
-> [v2]: https://lkml.org/lkml/2015/7/31/267
-> [v3]: http://www.kernelhub.org/?msg=811940&p=2
-> [v4]: https://lkml.org/lkml/2015/8/17/141
-> [v5]: https://lkml.org/lkml/2015/8/25/238
-> [v6]: https://lkml.org/lkml/2015/9/1/177
-> [v7]: https://lkml.org/lkml/2015/9/20/193
-> [v8]: http://www.kernelhub.org/?msg=853553&p=2
-> [v9]: https://lkml.org/lkml/2015/10/13/998
-> [v10]: https://lkml.org/lkml/2015/10/19/139
-> [v11]: https://lkml.org/lkml/2015/10/22/206
-> 
-> 
-> Ley Foon Tan (6):
->   arm: add msi.h to Kbuild
->   pci: add Altera PCI vendor ID
->   pci:host: Add Altera PCIe host controller driver
->   pci: altera: Add Altera PCIe MSI driver
->   Documentation: dt-bindings: pci: altera pcie device tree binding
->   MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
-> 
->  .../devicetree/bindings/pci/altera-pcie-msi.txt    |  28 +
->  .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
->  MAINTAINERS                                        |  16 +
->  arch/arm/include/asm/Kbuild                        |   1 +
->  drivers/pci/host/Kconfig                           |  16 +
->  drivers/pci/host/Makefile                          |   2 +
->  drivers/pci/host/pcie-altera-msi.c                 | 314 +++++++++++
->  drivers/pci/host/pcie-altera.c                     | 580 +++++++++++++++++++++
->  include/linux/pci_ids.h                            |   2 +
->  9 files changed, 1008 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
->  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
->  create mode 100644 drivers/pci/host/pcie-altera-msi.c
->  create mode 100644 drivers/pci/host/pcie-altera.c
+I'll do that.
 
-I applied these to pci/host-altera for v4.4, thanks!
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-I squashed these into three patches:
+Thanks for the help with reviewing this!
 
-  - add msi.h to Kbuild
-  - add Altera host driver (including DT binding and MAINTAINERS update)
-  - add Altera MSI driver (including DT binding and MAINTAINERS update)
+Rafael
 
-Since the convention is to add PCI ID #defines only when they are used in
-multiple places, I replaced PCI_VENDOR_ID_ALTERA with 0x1172 in the single
-place it is used.
-
-Bjorn
