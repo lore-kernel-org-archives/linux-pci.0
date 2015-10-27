@@ -1,53 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.140]:26507 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754147AbbJINqD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 09:46:03 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH 4/4] arm64: defconfig: Enable PCI generic host bridge by default
-Date: Fri,  9 Oct 2015 14:45:23 +0100
-Message-Id: <1444398323-17354-5-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V1 10/11] pci, acpi: Provide generic way to assign bus domain number.
+Date: Tue, 27 Oct 2015 17:38:41 +0100
+Message-Id: <1445963922-22711-11-git-send-email-tn@semihalf.com>
+In-Reply-To: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that pci-host-generic can be used under arm64, enable it by
-default so that SBSA compliant systems can use it.
+Architectures which support PCI_DOMAINS_GENERIC (like ARM64)
+cannot call pci_bus_assign_domain_nr along ACPI PCI host bridge
+initialization since this function needs valid parent device reference
+to be able to retrieve domain number (aka segment).
 
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+We can omit that blocker and pass down host bridge device via
+pci_create_root_bus parameter and then be able to evaluate _SEG method
+being in pci_bus_assign_domain_nr.
+
+Note that _SEG method is optional, therefore _SEG absence means
+that all PCI buses belong to domain 0.
+
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 ---
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/acpi/pci_root.c |  2 +-
+ drivers/pci/pci.c       | 32 +++++++++++++++++++++++++++-----
+ 2 files changed, 28 insertions(+), 6 deletions(-)
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 34d71dd..7c9455a 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -49,6 +49,7 @@ CONFIG_ARCH_XGENE=y
- CONFIG_ARCH_ZYNQMP=y
- CONFIG_PCI=y
- CONFIG_PCI_MSI=y
-+CONFIG_PCI_HOST_GENERIC=y
- CONFIG_PCI_XGENE=y
- CONFIG_SMP=y
- CONFIG_PREEMPT=y
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 850d7bf..e682dc6 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -839,7 +839,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ 
+ 	pci_acpi_root_add_resources(info);
+ 	pci_add_resource(&info->resources, &root->secondary);
+-	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
++	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
+ 				  sysdata, &info->resources);
+ 	if (!bus)
+ 		goto out_release_info;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6a9a111..17d1857 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -25,6 +25,7 @@
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/pci_hotplug.h>
++#include <linux/acpi.h>
+ #include <asm-generic/pci-bridge.h>
+ #include <asm/setup.h>
+ #include "pci.h"
+@@ -4501,7 +4502,7 @@ int pci_get_new_domain_nr(void)
+ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+-	int domain = of_get_pci_domain_nr(parent->of_node);
++	int domain;
+ 
+ 	/*
+ 	 * Check DT domain and use_dt_domains values.
+@@ -4523,14 +4524,35 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 	 * API and update the use_dt_domains value to keep track of method we
+ 	 * are using to assign domain numbers (use_dt_domains = 0).
+ 	 *
++	 * IF ACPI, we expect non-DT method (use_dt_domains == -1)
++	 * and call _SEG method for corresponding host bridge device.
++	 * If _SEG method does not exist, following ACPI spec (6.5.6)
++	 * all PCI buses belong to domain 0.
++	 *
+ 	 * All other combinations imply we have a platform that is trying
+-	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+-	 * which is a recipe for domain mishandling and it is prevented by
+-	 * invalidating the domain value (domain = -1) and printing a
+-	 * corresponding error.
++	 * to mix domain numbers obtained from DT, ACPI and
++	 * pci_get_new_domain_nr(), which is a recipe for domain mishandling and
++	 * it is prevented by invalidating the domain value (domain = -1) and
++	 * printing a corresponding error.
+ 	 */
++
++	domain = of_get_pci_domain_nr(parent->of_node);
+ 	if (domain >= 0 && use_dt_domains) {
+ 		use_dt_domains = 1;
++#ifdef CONFIG_ACPI
++	} else if (!acpi_disabled && use_dt_domains == -1) {
++		struct acpi_device *acpi_dev = to_acpi_device(parent);
++		unsigned long long segment = 0;
++		acpi_status status;
++
++		status = acpi_evaluate_integer(acpi_dev->handle,
++					       METHOD_NAME__SEG, NULL,
++					       &segment);
++		if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
++			dev_err(&acpi_dev->dev,  "can't evaluate _SEG\n");
++
++		domain = segment;
++#endif
+ 	} else if (domain < 0 && use_dt_domains != 1) {
+ 		use_dt_domains = 0;
+ 		domain = pci_get_new_domain_nr();
 -- 
-2.6.0
+1.9.1
 
