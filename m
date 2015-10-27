@@ -1,84 +1,95 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1444398323-17354-4-git-send-email-Liviu.Dudau@arm.com>
-References: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com> <1444398323-17354-4-git-send-email-Liviu.Dudau@arm.com>
-From: Rob Herring <robh@kernel.org>
-Date: Fri, 9 Oct 2015 08:54:33 -0500
-Message-ID: <CAL_JsqJsb53VXiUfjGBXK37dBEi1r-PXVohg-c-7_x63R04VMA@mail.gmail.com>
-Subject: Re: [PATCH 3/4] arm64: Juno: Add support for the PCIe host bridge on
- Juno R1
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 24/61] PCI: Cleanup res_to_dev_res() printout
+Date: Tue, 27 Oct 2015 13:55:16 -0700
+Message-Id: <1445979353-1728-25-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 9, 2015 at 8:45 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> Juno R1 board sports a functional PCIe host bridge that is
-> compliant with the SBSA standard found here[1]. With the right
-> firmware that initialises the XpressRICH3 controller one can
-> use the generic Host Bridge driver to use the PCIe hardware.
->
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->
-> [1] http://infocenter.arm.com/help/topic/com.arm.doc.den0029a/
-> ---
->  arch/arm64/boot/dts/arm/juno-r1.dts | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
->
-> diff --git a/arch/arm64/boot/dts/arm/juno-r1.dts b/arch/arm64/boot/dts/arm/juno-r1.dts
-> index c627511..a702a6b 100644
-> --- a/arch/arm64/boot/dts/arm/juno-r1.dts
-> +++ b/arch/arm64/boot/dts/arm/juno-r1.dts
-> @@ -109,6 +109,26 @@
->
->         #include "juno-base.dtsi"
->
-> +       pcie-controller@40000000 {
-> +               compatible = "pci-host-ecam-generic";
+Now get_res_add_size() and get_res_add_align() all have same printout
+from res_to_dev_res(), and it is confusing.
 
-I think this is the first case of real h/w using this. We should have
-a specific compatible here additionally. Perhaps the firmware did not
-setup something correctly.
+Move out debug messages printout from res_to_dev_res(),
+so later we will reuse res_to_dev_res() in other functions.
 
-> +               device_type = "pci";
-> +               reg = <0 0x40000000 0 0x10000000>;      /* ECAM config space */
-> +               bus-range = <0 255>;
-> +               linux,pci-domain = <0>;
-> +               #address-cells = <3>;
-> +               #size-cells = <2>;
-> +               dma-coherent;
-> +               ranges = <0x01000000 0x00 0x5f800000 0x00 0x5f800000 0x0 0x00800000
-> +                         0x02000000 0x00 0x50000000 0x00 0x50000000 0x0 0x08000000
-> +                         0x42000000 0x40 0x00000000 0x40 0x00000000 0x1 0x00000000>;
-> +               #interrupt-cells = <1>;
-> +               interrupt-map-mask = <0 0 0 7>;
-> +               interrupt-map = <0 0 0 1 &gic 0 0 0 136 4
-> +                                0 0 0 2 &gic 0 0 0 137 4
-> +                                0 0 0 3 &gic 0 0 0 138 4
-> +                                0 0 0 4 &gic 0 0 0 139 4>;
-> +               msi-parent = <&v2m_0>;
-> +       };
->  };
->
->  &memtimer {
-> --
-> 2.6.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-v2: does not print out when add_size or min_align is 0
+-v3: change to %#llx according to Bjorn.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 34 ++++++++++++++++++++--------------
+ 1 file changed, 20 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 10270e4..f905c81 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -104,19 +104,9 @@ static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
+ {
+ 	struct pci_dev_resource *dev_res;
+ 
+-	list_for_each_entry(dev_res, head, list) {
+-		if (dev_res->res == res) {
+-			int idx = res - &dev_res->dev->resource[0];
+-
+-			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
+-				 idx, dev_res->res,
+-				 (unsigned long long)dev_res->add_size,
+-				 (unsigned long long)dev_res->min_align);
+-
++	list_for_each_entry(dev_res, head, list)
++		if (dev_res->res == res)
+ 			return dev_res;
+-		}
+-	}
+ 
+ 	return NULL;
+ }
+@@ -127,7 +117,15 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 	struct pci_dev_resource *dev_res;
+ 
+ 	dev_res = res_to_dev_res(head, res);
+-	return dev_res ? dev_res->add_size : 0;
++	if (!dev_res || !dev_res->add_size)
++		return 0;
++
++	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
++		   "BAR %d: %pR get_res_add_size add_size   %#llx\n",
++		   (int)(res - &dev_res->dev->resource[0]),
++		   res, (unsigned long long)dev_res->add_size);
++
++	return dev_res->add_size;
+ }
+ 
+ static resource_size_t get_res_add_align(struct list_head *head,
+@@ -136,7 +134,15 @@ static resource_size_t get_res_add_align(struct list_head *head,
+ 	struct pci_dev_resource *dev_res;
+ 
+ 	dev_res = res_to_dev_res(head, res);
+-	return dev_res ? dev_res->min_align : 0;
++	if (!dev_res || !dev_res->min_align)
++		return 0;
++
++	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
++		   "BAR %d: %pR get_res_add_align min_align %#llx\n",
++		   (int)(res - &dev_res->dev->resource[0]),
++		   res, (unsigned long long)dev_res->min_align);
++
++	return dev_res->min_align;
+ }
+ 
+ 
+-- 
+1.8.4.5
+
