@@ -1,64 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:26411 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758045AbbJ2XrB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 19:47:01 -0400
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	jiang.liu@linux.intel.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v4 4/7] PCI: Add fwnode_handle to pci_sysdata
-Date: Thu, 29 Oct 2015 23:46:13 +0000
-Message-Id: <1446162376-43419-5-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
-References: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:38918 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751584AbbJ0Bca (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 21:32:30 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
+	Tue, 27 Oct 2015 11:32:28 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 9DEE02CE8057
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 12:32:26 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9R1W4Jq11403444
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 12:32:12 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9R1VqpZ021000
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 12:31:53 +1100
+Message-ID: <562ED40E.1050007@au1.ibm.com>
+Date: Tue, 27 Oct 2015 12:31:58 +1100
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+MIME-Version: 1.0
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru
+CC: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V10 01/12] PCI/IOV: Rename and export virtfn_add/virtfn_remove
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com> <1445829362-2738-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1445829362-2738-2-git-send-email-weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On 26/10/15 14:15, Wei Yang wrote:
+> During EEH recovery, hotplug is applied to the devices which don't
+> have drivers or their drivers don't support EEH. However, the hotplug,
+> which was implemented based on PCI bus, can't be applied to VF directly.
+>
+> The patch renames virtn_{add,remove}() and exports them so that they
+> can be used in PCI hotplug during EEH recovery.
+>
+> [gwshan: changelog]
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-This patch adds an fwnode_handle to struct pci_sysdata, which is
-used by the next patch in the series when trying to locate an
-IRQ domain associated with a root PCI bus.
+Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- arch/x86/include/asm/pci.h | 11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4625943..10213a1 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -20,6 +20,9 @@ struct pci_sysdata {
- #ifdef CONFIG_X86_64
- 	void		*iommu;		/* IOMMU private data */
- #endif
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+	void		*fwnode;	/* IRQ domain for MSI assignment */
-+#endif
- };
- 
- extern int pci_routeirq;
-@@ -41,6 +44,14 @@ static inline int pci_proc_domain(struct pci_bus *bus)
- }
- #endif
- 
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+static inline void *pci_fwnode(struct pci_bus *bus)
-+{
-+	struct pci_sysdata *sd = bus->sysdata;
-+	return sd->fwnode;
-+}
-+#endif
-+
- /* Can be used to override the logic in pci_scan_bus for skipping
-    already-configured bus numbers - to be used for buggy BIOSes
-    or architectures with incomplete PCI setup by the loader */
 -- 
-1.9.1
+Andrew Donnellan              Software Engineer, OzLabs
+andrew.donnellan@au1.ibm.com  Australia Development Lab, Canberra
++61 2 6201 8874 (work)        IBM Australia Limited
 
