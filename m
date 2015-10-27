@@ -1,92 +1,93 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	michal.simek@xilinx.com, soren.brinkmann@xilinx.com,
-	bhelgaas@google.com, tinamdar@apm.com, treding@nvidia.com,
-	rjui@broadcom.com, Minghuan.Lian@freescale.com,
-	m-karicheri2@ti.com, hauke@hauke-m.de, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH v4] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL PCIe Host Controller
-Date: Sat, 17 Oct 2015 13:49:25 +0200
-Message-ID: <5705956.6YyKSO4LdH@wuerfel>
-In-Reply-To: <1445066538-24638-1-git-send-email-bharatku@xilinx.com>
-References: <1445066538-24638-1-git-send-email-bharatku@xilinx.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 50/61] PCI: Unify calculate_size() for io port and MMIO
+Date: Tue, 27 Oct 2015 13:55:42 -0700
+Message-Id: <1445979353-1728-51-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday 17 October 2015 12:52:18 Bharat Kumar Gogada wrote:
-> +       "msi_1, msi_0": interrupt asserted when msi is recieved
+Now calculate_memsize() and calculate_iosize() is the same.
 
-Better avoid underscores in DT, use "msi0" instead of "msi_0".
+Change them to calculate_size().
 
-> +- interrupt-map-mask and interrupt-map: standard PCI properties to define the
-> +       mapping of the PCI interface to interrupt numbers.
-> +- ranges: ranges for the PCI memory regions (I/O space region is not
-> +       supported by hardware)
-> +       Please refer to the standard PCI bus binding document for a more
-> +       detailed explanation
-> +- msi-controller: indicates that this is MSI controller node
-> +- msi-parent:  MSI parent of the root complex itself
-> +- pcie_intc: Interrupt controller device node for Legacy interrupts
-> +       - interrupt-controller: identifies the node as an interrupt controller
-> +       - #interrupt-cells: should be set to 1
-> +       - #address-cells: specifies the number of cells needed to encode an
-> +               address. The value must be 0.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 25 +++++--------------------
+ 1 file changed, 5 insertions(+), 20 deletions(-)
 
-The name doesn't match: below, the name is "legacy-interrupt-controller",
-not "pcie_intc". I suppose it should really be "interrupt-controller"
-anyway.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index d4e8da1..a6eea60 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1104,22 +1104,7 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
+ 	return NULL;
+ }
+ 
+-static resource_size_t calculate_iosize(resource_size_t size,
+-		resource_size_t min_size,
+-		resource_size_t old_size,
+-		resource_size_t align)
+-{
+-	if (size < min_size)
+-		size = min_size;
+-	if (old_size == 1)
+-		old_size = 0;
+-	size = ALIGN(size, align);
+-	if (size < old_size)
+-		size = old_size;
+-	return size;
+-}
+-
+-static resource_size_t calculate_memsize(resource_size_t size,
++static resource_size_t calculate_size(resource_size_t size,
+ 		resource_size_t min_size,
+ 		resource_size_t old_size,
+ 		resource_size_t align)
+@@ -1245,14 +1230,14 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 	size = size_aligned_for_isa(size);
+ 	size += size1;
+-	size0 = calculate_iosize(size, min_size,
++	size0 = calculate_size(size, min_size,
+ 			resource_size(b_res), min_align);
+ 	sum_add_size = size_aligned_for_isa(sum_add_size);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	size1 = !realloc_head ? size0 :
+-		calculate_iosize(sum_add_size, min_size,
++		calculate_size(sum_add_size, min_size,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+@@ -1580,7 +1565,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (size || min_size) {
+ 		min_align = calculate_mem_align(&align_test_list, max_align,
+ 						size, window_align);
+-		size0 = calculate_memsize(size, min_size,
++		size0 = calculate_size(size, min_size,
+ 				  resource_size(b_res), min_align);
+ 	}
+ 	free_align_test_list(&align_test_list);
+@@ -1605,7 +1590,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+ 					window_align);
+-		size1 = calculate_memsize(sum_add_size, min_size,
++		size1 = calculate_size(sum_add_size, min_size,
+ 				 resource_size(b_res), min_add_align);
+ 	}
+ 	free_align_test_list(&align_test_add_list);
+-- 
+1.8.4.5
 
-> +
-> +Example:
-> +++++++++
-> +
-> +nwl_pcie: pcie@fd0e0000 {
-> +       #address-cells = >;
-> +       #size-cells = <2>;
-> +       compatible = "xlnx,nwl-pcie-2.11";
-> +       #interrupt-cells = <1>;
-> +       msi-controller;
-> +       device_type = "pci";
-> +       interrupt-parent = <&gic>;
-> +       interrupts = < 0 118 4
-> +                      0 116 4
-> +                      0 115 4          // MSI_1 [63...32]
-> +                      0 114 4 >;       // MSI_0 [31...0]
-
-Better write these as tuples:
-
-	interrupts = <0 118 4>, <0 116 4>, <0 115 4>, <0 114 4>;
-
-And maybe reverse the order? It looks that might be what the
-soc integration person had in mind.
-
-Also, what is interrupt <0 117 4>? Is that connected here as well?
-Better list it as well then, even if you don't use it.
-
-> +       interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-> +       interrupt-map = <0x0 0x0 0x0 0x1 &pcie_intc 0x1
-> +                        0x0 0x0 0x0 0x2 &pcie_intc 0x2
-> +                        0x0 0x0 0x0 0x3 &pcie_intc 0x3
-> +                        0x0 0x0 0x0 0x4 &pcie_intc 0x4>;
-
-> +       msi-parent = <&nwl_pcie>;
-> +       reg = <0x0 0xfd0e0000 0x1000
-> +              0x0 0xfd480000 0x1000
-> +              0x0 0xE0000000 0x1000000>;
-
-Same grouping for reg and interrupt-map as above for interrupts.
-
-> +       reg-names = "breg", "pcireg", "cfg";
-> +       ranges = <0x02000000 0x00000000 0xE1000000 0x00000000 0xE1000000 0 0x0F000000>;
-
-No I/O space or prefetcheable memory?
-
-	Arnd
