@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36923 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965533AbbJ0U4u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 16:56:50 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:47672 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965331AbbJ0U4q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 16:56:46 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -12,102 +12,79 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Khalid Aziz <khalid.aziz@oracle.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 02/61] PCI: Add pci_find_root_bus_resource()
-Date: Tue, 27 Oct 2015 13:54:54 -0700
-Message-Id: <1445979353-1728-3-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v8 08/61] PCI: Ignore BAR for ALi M1533 PCI-ISA bridge
+Date: Tue, 27 Oct 2015 13:55:00 -0700
+Message-Id: <1445979353-1728-9-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pci_find_root_bus_resource() to return root bus res
-for resource.
+Meelis reported strange conflicts on sparc v210:
+pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
+pci 0001:00:06.0: can't claim BAR 0 [io 0x7fe01000000-0x7fe0100000f]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
+pci 0001:00:0d.0: can't claim BAR 0 [io 0x7fe01000900-0x7fe01000907]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
+pci 0001:00:0d.0: can't claim BAR 1 [io 0x7fe01000918-0x7fe0100091f]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
+pci 0001:00:0d.0: can't claim BAR 2 [io 0x7fe01000910-0x7fe01000917]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
+pci 0001:00:0d.0: can't claim BAR 3 [io 0x7fe01000908-0x7fe0100090f]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
+pci 0001:00:0d.0: can't claim BAR 4 [io 0x7fe01000920-0x7fe0100092f]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
+PCI: /pci@1e,600000 can't claim Video RAM area [mem 0x7ff000a0000-0x7ff000bffff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
+PCI: /pci@1e,600000 can't claim System ROM [mem 0x7ff000f0000-0x7ff000fffff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
+PCI: /pci@1e,600000 can't claim Video ROM [mem 0x7ff000c0000-0x7ff000c7fff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
 
-For sparc mem64 support, We need that host bridge window res,
-  1. we need direct parent for request_resource_conflict() calling in
-      pci_register_legacy_regions().
-  2. check if return is NULL to decide if region is valid or not.
+we have
+pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
+pci_bus 0001:00: root bus resource [mem 0x7ff00000000-0x7ffffffffff] (bus address [0x00000000-0xffffffff])
 
-Convert old pci_find_parent_resource() to pci_find_bus_resource(),
-and reuse it in pci_find_root_bus_resource().
-So we avoid changing pcibios_bus_to_resource().
+so pci bus address in the bars for 0001:00:07.0 has all 0s.
 
+0001:00:07.0 ISA bridge: ULi Electronics Inc. M1533/M1535/M1543 PCI to ISA Bridge [Aladdin IV/V/V+]
+        Region 0: [virtual] I/O ports at 0000 [size=64K]
+        Region 1: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
+        Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
+00: b9 10 33 15 0f 00 10 02 00 00 01 06 00 00 00 00
+10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+30: 00 00 00 00 a0 00 00 00 00 00 00 00 00 00 00 00
+
+According to http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
+page 28: The indices before 40h are read-only.
+and we have all 0 from 0x10-0x2f, according to lspci.
+So those BAR do not work as regular BAR, just clean flags, and ignore them all
+the way include claim and sizing and alloc etc.
+
+Reported-by: Meelis Roos <mroos@linux.ee>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/pci.c   | 36 +++++++++++++++++++++++++-----------
- include/linux/pci.h |  2 ++
- 2 files changed, 27 insertions(+), 11 deletions(-)
+ drivers/pci/quirks.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6a9a111..613eef1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -414,18 +414,9 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
- }
- EXPORT_SYMBOL_GPL(pci_find_ht_capability);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 55bb661..af75580 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -433,6 +433,21 @@ static void quirk_amd_nl_class(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
+ 		quirk_amd_nl_class);
  
--/**
-- * pci_find_parent_resource - return resource region of parent bus of given region
-- * @dev: PCI device structure contains resources to be searched
-- * @res: child resource record for which parent is sought
-- *
-- *  For given resource region of given device, return the resource
-- *  region of parent bus the given region is contained in.
-- */
--struct resource *pci_find_parent_resource(const struct pci_dev *dev,
--					  struct resource *res)
-+static struct resource *pci_find_bus_resource(const struct pci_bus *bus,
-+					      struct resource *res)
- {
--	const struct pci_bus *bus = dev->bus;
- 	struct resource *r;
- 	int i;
- 
-@@ -455,8 +446,31 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 	}
- 	return NULL;
- }
 +
-+/**
-+ * pci_find_parent_resource - return resource region of parent bus of given region
-+ * @dev: PCI device structure contains resources to be searched
-+ * @res: child resource record for which parent is sought
-+ *
-+ *  For given resource region of given device, return the resource
-+ *  region of parent bus the given region is contained in.
++/*
++ * ALi m1533 pci to isa bridge does not have BAR according to datasheet,
++ * clear the flags, so we will try to claim them or reallocate res.
 + */
-+struct resource *pci_find_parent_resource(const struct pci_dev *dev,
-+					  struct resource *res)
++static void quirk_ali1533(struct pci_dev *dev)
 +{
-+	return pci_find_bus_resource(dev->bus, res);
-+}
- EXPORT_SYMBOL(pci_find_parent_resource);
- 
-+struct resource *pci_find_root_bus_resource(struct pci_bus *bus,
-+					    struct resource *res)
-+{
-+	while (bus->parent)
-+		bus = bus->parent;
++	int i;
 +
-+	return pci_find_bus_resource(bus, res);
++	for (i = 0; i < PCI_ROM_RESOURCE; i++)
++		dev->resource[i].flags = 0;
 +}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M1533,
++			 quirk_ali1533);
 +
- /**
-  * pci_wait_for_pending - wait for @mask bit(s) to clear in status word @pos
-  * @dev: the PCI device to operate on
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e90eb22..05f5eac 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -783,6 +783,8 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- 			     struct resource *res);
- void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			     struct pci_bus_region *region);
-+struct resource *pci_find_root_bus_resource(struct pci_bus *bus,
-+					    struct resource *res);
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
+ static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
+ {
+ 	u32 devres;
 -- 
 1.8.4.5
 
