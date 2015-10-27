@@ -1,54 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 15 Oct 2015 17:51:06 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: WingMan Kwok <w-kwok2@ti.com>
-Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, kishon@ti.com,
-	rogerq@ti.com, m-karicheri2@ti.com, bhelgaas@google.com,
-	ssantosh@kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v1 0/2] Common SerDes driver for TI's Keystone Platforms
-Message-ID: <20151015165105.GE32532@n2100.arm.linux.org.uk>
-References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444919145-30845-1-git-send-email-w-kwok2@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:50932 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965935AbbJ0VCW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 17:02:22 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 51/61] PCI: Allow bridge optional only io port resource required size to be 0
+Date: Tue, 27 Oct 2015 13:55:43 -0700
+Message-Id: <1445979353-1728-52-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 15, 2015 at 10:25:43AM -0400, WingMan Kwok wrote:
-> On TI's Keystone platforms, several peripherals such as the
-> gbe ethernet switch, 10gbe ethether switch and PCIe controller
-> require the use of a SerDes for converting SoC parallel data into
-> serialized data that can be output over a high-speed electrical
-> interface, and also converting high-speed serial input data
-> into parallel data that can be processed by the SoC.  The
-> SerDeses used by those peripherals, though they may be different,
-> are largely similar in functionality and setup.
+When there is no child device under the non hotplug bridge,
+We can use 0 for required size, and do not use old size as required size.
 
-Given that serdes is not specific to TI, should this be specific to
-TI, or should there be an effort to come up with something which
-everyone who has serdes links can make use of?
+That will save some io port range for other bridges, as BIOS could do
+some partial assign, and we want to use those not used io port range.
 
-Serdes comes in multiple different forms: PCIe, 1G SGMII ethernet,
-1000base-X ethernet, 10g ethernet, SATA... I'd hate to see a
-plethora of SoC specific stuff for this.
+When there is child device, size will not be 0.
+when the bridge supports hotplug, min_size will not be 0.
+So they will still honor the old size as required size.
 
-When serdes is combined with SFP cages, the situation becomes much
-more fun, because the serdes link then needs to become hotpluggable
-(SFP modules are designed to be hotplugged) which means you have to
-be able to switch between (at least) 1G SGMII and 1000base-X modes,
-and probably 10G mode as well.  There's even a SFP module that has
-a SATA connector on it, though I believe there's no standard for
-that, and it's more a hardware hack.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-I've been working in this area but from the Ethernet side on an
-Armada 38x based board which has a SFP cage on it, though it's
-slightly simpler there because there is no support (or I believe
-any desire) to reconfigure the serdes lanes between PCI, ethernet
-and SATA - that's all setup and initialised for us by uboot.
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a6eea60..bbc10d8 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1230,8 +1230,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 	size = size_aligned_for_isa(size);
+ 	size += size1;
+-	size0 = calculate_size(size, min_size,
+-			resource_size(b_res), min_align);
++	if (size || min_size)
++		size0 = calculate_size(size, min_size,
++					resource_size(b_res), min_align);
+ 	sum_add_size = size_aligned_for_isa(sum_add_size);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+@@ -1247,7 +1248,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		return;
+ 	}
+ 
+-	b_res->start = min_align;
++	b_res->start = size0 ? min_align : 0;
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
 -- 
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+1.8.4.5
+
