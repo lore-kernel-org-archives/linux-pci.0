@@ -1,102 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45298 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:53873 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755041AbbJHNUO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Oct 2015 09:20:14 -0400
-Date: Thu, 8 Oct 2015 08:20:10 -0500
+	id S1751957AbbJ0O0s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Oct 2015 10:26:48 -0400
+Date: Tue, 27 Oct 2015 09:26:44 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
+To: Ley Foon Tan <lftan@altera.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [Patch v6 4/7] PCI/ACPI: Consolidate common PCI host bridge code
- into ACPI core
-Message-ID: <20151008132010.GI27633@localhost>
-References: <1442218057-4355-1-git-send-email-jiang.liu@linux.intel.com>
- <1442218057-4355-5-git-send-email-jiang.liu@linux.intel.com>
- <20151006174725.GA29420@localhost>
- <5615FFD4.3090202@linux.intel.com>
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lftan.linux@gmail.com,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v12 0/6] Altera PCIe host controller driver with MSI
+ support
+Message-ID: <20151027142644.GA8660@localhost>
+References: <1445596035-27733-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5615FFD4.3090202@linux.intel.com>
+In-Reply-To: <1445596035-27733-1-git-send-email-lftan@altera.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 08, 2015 at 01:32:04PM +0800, Jiang Liu wrote:
-> On 2015/10/7 1:47, Bjorn Helgaas wrote:
-> >> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
-> >> +				     struct acpi_pci_root_ops *ops,
-> >> +				     struct acpi_pci_root_info *info,
-> >> +				     void *sysdata)
-> >> +{
-> >> +	int ret, busnum = root->secondary.start;
-> >> +	struct acpi_device *device = root->device;
-> >> +	int node = acpi_get_node(device->handle);
-> >> +	struct pci_bus *bus;
-> >> +
-> >> +	info->root = root;
-> >> +	info->bridge = device;
-> >> +	info->ops = ops;
-> >> +	INIT_LIST_HEAD(&info->resources);
-> >> +	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
-> >> +		 root->segment, busnum);
-> >> +
-> >> +	if (ops->init_info && ops->init_info(info))
-> >> +		goto out_release_info;
-> >> +	ret = acpi_pci_probe_root_resources(info);
-> >> +	if (ops->prepare_resources)
-> >> +		ret = ops->prepare_resources(info, ret);
-> >> +	if (ret < 0)
-> >> +		goto out_release_info;
-> >> +	else if (ret > 0)
-> >> +		pci_acpi_root_add_resources(info);
-> > 
-> > This is unnecessarily complicated: you set "ret", then overwrite it if
-> > ops->prepare_resources.  By the time you test "ret", it's messy to
-> > figure out what it means.
-> > 
-> > Both ops->prepare_resources() and pci_acpi_root_add_resources()
-> > should be able to deal with empty resource lists, so can you do the
-> > following instead?
-> > 
-> >     ret = acpi_pci_probe_root_resources(info);
-> >     if (ret < 0)
-> >         goto out_release_info;
->
-> 	The original code is used to handle a special case for x86,
-> where acpi_pci_probe_root_resources() fails but ops->prepare_resources()
-> succeeds. For x86, PCI host bridge resources may probed by means
-> other than ACPI when pci_use_crs is true (AMD and Broadcom hostbridges).
-> So we can't return failure when acpi_pci_probe_root_resources() fails.
+Hi Ley,
 
-That's even worse than I thought.  I take back my ack; I think this
-really needs to be restructured so it does the right thing *and* reads
-clearly.  Having convoluted generic code to deal with an arch-specific
-special case is a recipe for breakage in the future.
-
-Maybe you can move the non-ACPI resource probing from
-prepare_resources() into acpi_pci_probe_root_resources() (you could
-rename it to something more generic if that helps).
-
-> +	ret = acpi_pci_probe_root_resources(info);
-> +	if (ops->prepare_resources)
-> +		ret = ops->prepare_resources(info, ret);
-> +	if (ret < 0)
-> +		goto out_release_info;
+On Fri, Oct 23, 2015 at 06:27:09PM +0800, Ley Foon Tan wrote:
+> This is the 12th version of patch set to add support for Altera PCIe host
+> controller with MSI feature on Altera FPGA device families. This patchset
+> mainly resovle the comments from Bjorn.
 > 
-> >     if (ops->prepare_resources) {
-> >         ret = ops->prepare_resources(info, ret);
-> >         if (ret < 0)
-> >             goto out_release_info;
-> >     }
-> >     pci_acpi_root_add_resources(info);
-> I will remove the redundant check of (ret > 0) in:
-> +	else if (ret > 0)
-> +		pci_acpi_root_add_resources(info);
+> 
+> This patchset is based on v4.3-rc6.
+> 
+> v11->v12 changes:
+> - pcie-altera: use DECLARE_PCI_FIXUP_EARLY for pcie retrain fixup
+> - pcie-altera: move pcie_bus_configure_settings before pci_bus_add_devices
+> - pcie-altera: add %d for irq bit in dev_err()
+> - pcie-altera: prevent enumeration of root complex resources in config accessors
+> - Documentation: add Acked-by from Rob Herring
+> 
+> History:
+> -------
+> [v1]: https://lkml.org/lkml/2015/7/28/395
+> [v2]: https://lkml.org/lkml/2015/7/31/267
+> [v3]: http://www.kernelhub.org/?msg=811940&p=2
+> [v4]: https://lkml.org/lkml/2015/8/17/141
+> [v5]: https://lkml.org/lkml/2015/8/25/238
+> [v6]: https://lkml.org/lkml/2015/9/1/177
+> [v7]: https://lkml.org/lkml/2015/9/20/193
+> [v8]: http://www.kernelhub.org/?msg=853553&p=2
+> [v9]: https://lkml.org/lkml/2015/10/13/998
+> [v10]: https://lkml.org/lkml/2015/10/19/139
+> [v11]: https://lkml.org/lkml/2015/10/22/206
+> 
+> 
+> Ley Foon Tan (6):
+>   arm: add msi.h to Kbuild
+>   pci: add Altera PCI vendor ID
+>   pci:host: Add Altera PCIe host controller driver
+>   pci: altera: Add Altera PCIe MSI driver
+>   Documentation: dt-bindings: pci: altera pcie device tree binding
+>   MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+> 
+>  .../devicetree/bindings/pci/altera-pcie-msi.txt    |  28 +
+>  .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
+>  MAINTAINERS                                        |  16 +
+>  arch/arm/include/asm/Kbuild                        |   1 +
+>  drivers/pci/host/Kconfig                           |  16 +
+>  drivers/pci/host/Makefile                          |   2 +
+>  drivers/pci/host/pcie-altera-msi.c                 | 314 +++++++++++
+>  drivers/pci/host/pcie-altera.c                     | 580 +++++++++++++++++++++
+>  include/linux/pci_ids.h                            |   2 +
+>  9 files changed, 1008 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+>  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
+>  create mode 100644 drivers/pci/host/pcie-altera-msi.c
+>  create mode 100644 drivers/pci/host/pcie-altera.c
+
+I applied these to pci/host-altera for v4.4, thanks!
+
+I squashed these into three patches:
+
+  - add msi.h to Kbuild
+  - add Altera host driver (including DT binding and MAINTAINERS update)
+  - add Altera MSI driver (including DT binding and MAINTAINERS update)
+
+Since the convention is to add PCI ID #defines only when they are used in
+multiple places, I replaced PCI_VENDOR_ID_ALTERA with 0x1172 in the single
+place it is used.
+
+Bjorn
