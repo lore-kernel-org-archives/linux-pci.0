@@ -1,52 +1,318 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v10 6/6] MAINTAINERS: Add pcie-hisi maintainer
-Date: Sat, 10 Oct 2015 10:59:17 +0800
-Message-ID: <1444445957-239522-7-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI hostbridge init
+Date: Tue, 27 Oct 2015 17:38:42 +0100
+Message-Id: <1445963922-22711-12-git-send-email-tn@semihalf.com>
+In-Reply-To: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+Because of two patch series:
+1. Jiang Liu's common interface to support PCI host bridge init
+2. Refactoring of MMCONFIG, part of this patch set
+now we can think about PCI buses enumeration for ARM64 and ACPI tables.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 7ba7ab7..944a229 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8047,6 +8047,13 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
- F:	drivers/pci/host/pci-xgene-msi.c
+This patch introduce ACPI based PCI hostbridge init calls which
+use information from MCFG table (PCI config space regions) and
+_CRS (IO/irq resources) to initialize PCI hostbridge.
+
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Catalin Marinas <catalin.marinas@arm.com>
+CC: Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+CC: Will Deacon <will.deacon@arm.com>
+---
+ arch/arm64/Kconfig      |   6 ++
+ arch/arm64/kernel/pci.c | 208 +++++++++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 202 insertions(+), 12 deletions(-)
+
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 07d1811..bbcc6b1 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -89,6 +89,7 @@ config ARM64
+ 	select SPARSE_IRQ
+ 	select SYSCTL_EXCEPTION_TRACE
+ 	select HAVE_CONTEXT_TRACKING
++	select HAVE_PCI_ECAM
+ 	help
+ 	  ARM 64-bit (AArch64) Linux support.
  
-+PCIE DRIVER FOR HISILICON
-+M:	Zhou Wang <wangzhou1@hisilicon.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+F:	drivers/pci/host/pcie-hisi.c
+@@ -202,6 +203,11 @@ source "drivers/pci/Kconfig"
+ source "drivers/pci/pcie/Kconfig"
+ source "drivers/pci/hotplug/Kconfig"
+ 
++config PCI_MMCONFIG
++	def_bool y
++	select PCI_ECAM
++	depends on ACPI
 +
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
+ endmenu
+ 
+ menu "Kernel Features"
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index b3d098b..66cc1ae 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -11,12 +11,15 @@
+  */
+ 
+ #include <linux/acpi.h>
++#include <linux/ecam.h>
+ #include <linux/init.h>
+ #include <linux/io.h>
+ #include <linux/kernel.h>
+ #include <linux/mm.h>
++#include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <linux/of_platform.h>
++#include <linux/pci-acpi.h>
+ #include <linux/slab.h>
+ 
+ #include <asm/pci-bridge.h>
+@@ -52,35 +55,216 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ }
+ 
+ /*
+- * Try to assign the IRQ number from DT when adding a new device
++ * Try to assign the IRQ number from DT/ACPI when adding a new device
+  */
+ int pcibios_add_device(struct pci_dev *dev)
+ {
+-	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++	if (acpi_disabled)
++		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++#ifdef CONFIG_ACPI
++	else
++		acpi_pci_irq_enable(dev);
++#endif
+ 
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ACPI
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct acpi_pci_root *root = bridge->bus->sysdata;
++
++	ACPI_COMPANION_SET(&bridge->dev, root->device);
++	return 0;
++}
++
++void pcibios_add_bus(struct pci_bus *bus)
++{
++	acpi_pci_add_bus(bus);
++}
++
++void pcibios_remove_bus(struct pci_bus *bus)
++{
++	acpi_pci_remove_bus(bus);
++}
++
++static int __init pcibios_assign_resources(void)
++{
++	if (acpi_disabled)
++		return 0;
++
++	pci_assign_unassigned_resources();
++	return 0;
++}
+ /*
+- * raw_pci_read/write - Platform-specific PCI config space access.
++ * rootfs_initcall comes after subsys_initcall and fs_initcall_sync,
++ * so we know acpi scan and PCI_FIXUP_FINAL quirks have both run.
+  */
+-int raw_pci_read(unsigned int domain, unsigned int bus,
+-		  unsigned int devfn, int reg, int len, u32 *val)
++rootfs_initcall(pcibios_assign_resources);
++
++static void __iomem *
++pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
+ {
+-	return -ENXIO;
++	struct pci_mmcfg_region *cfg;
++
++	cfg = pci_mmconfig_lookup(pci_domain_nr(bus), bus->number);
++	if (cfg && cfg->virt)
++		return cfg->virt +
++			(PCI_MMCFG_BUS_OFFSET(bus->number) | (devfn << 12)) +
++			offset;
++	return NULL;
+ }
+ 
+-int raw_pci_write(unsigned int domain, unsigned int bus,
+-		unsigned int devfn, int reg, int len, u32 val)
++struct pci_ops pci_root_ops = {
++	.map_bus = pci_mcfg_dev_base,
++	.read = pci_generic_config_read,
++	.write = pci_generic_config_write,
++};
++
++#ifdef CONFIG_PCI_MMCONFIG
++static int pci_add_mmconfig_region(struct acpi_pci_root_info *ci)
+ {
+-	return -ENXIO;
++	struct pci_mmcfg_region *cfg;
++	struct acpi_pci_root *root;
++	int seg, start, end, err;
++
++	root = ci->root;
++	seg = root->segment;
++	start = root->secondary.start;
++	end = root->secondary.end;
++
++	cfg = pci_mmconfig_lookup(seg, start);
++	if (cfg)
++		return 0;
++
++	cfg = pci_mmconfig_alloc(seg, start, end, root->mcfg_addr);
++	if (!cfg)
++		return -ENOMEM;
++
++	err = pci_mmconfig_inject(cfg);
++	return err;
+ }
+ 
+-#ifdef CONFIG_ACPI
++static void pci_remove_mmconfig_region(struct acpi_pci_root_info *ci)
++{
++	struct acpi_pci_root *root = ci->root;
++	struct pci_mmcfg_region *cfg;
++
++	cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
++	if (cfg)
++		return;
++
++	if (cfg->hot_added)
++		pci_mmconfig_delete(root->segment, root->secondary.start,
++				    root->secondary.end);
++}
++#else
++static int pci_add_mmconfig_region(struct acpi_pci_root_info *ci)
++{
++	return 0;
++}
++
++static void pci_remove_mmconfig_region(struct acpi_pci_root_info *ci) { }
++#endif
++
++static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
++{
++	return pci_add_mmconfig_region(ci);
++}
++
++static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
++{
++	pci_remove_mmconfig_region(ci);
++	kfree(ci);
++}
++
++static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
++{
++	struct resource_entry *entry, *tmp;
++	int ret;
++
++	ret = acpi_pci_probe_root_resources(ci);
++	if (ret < 0)
++		return ret;
++
++	resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
++		struct resource *res = entry->res;
++
++		/*
++		 * Special handling for ARM IO range
++		 * TODO: need to move pci_register_io_range() function out
++		 * of drivers/of/address.c for both used by DT and ACPI
++		 */
++		if (res->flags & IORESOURCE_IO) {
++			unsigned long port;
++			int err;
++			resource_size_t length = res->end - res->start;
++
++			err = pci_register_io_range(res->start, length);
++			if (err) {
++				resource_list_destroy_entry(entry);
++				continue;
++			}
++
++			port = pci_address_to_pio(res->start);
++			if (port == (unsigned long)-1) {
++				resource_list_destroy_entry(entry);
++				continue;
++			}
++
++			res->start = port;
++			res->end = res->start + length - 1;
++
++			if (pci_remap_iospace(res, res->start) < 0)
++				resource_list_destroy_entry(entry);
++		}
++	}
++
++	return 0;
++}
++
++static struct acpi_pci_root_ops acpi_pci_root_ops = {
++	.pci_ops = &pci_root_ops,
++	.init_info = pci_acpi_root_init_info,
++	.release_info = pci_acpi_root_release_info,
++	.prepare_resources = pci_acpi_root_prepare_resources,
++};
++
+ /* Root bridge scanning */
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+-	/* TODO: Should be revisited when implementing PCI on ACPI */
+-	return NULL;
++	int node = acpi_get_node(root->device->handle);
++	int domain = root->segment;
++	int busnum = root->secondary.start;
++	struct acpi_pci_root_info *info;
++	struct pci_bus *bus;
++
++	if (domain && !pci_domains_supported) {
++		pr_warn("PCI %04x:%02x: multiple domains not supported.\n",
++			domain, busnum);
++		return NULL;
++	}
++
++	info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
++	if (!info) {
++		dev_err(&root->device->dev,
++			"pci_bus %04x:%02x: ignored (out of memory)\n",
++			domain, busnum);
++		return NULL;
++	}
++
++	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, info, root);
++
++	/* After the PCI-E bus has been walked and all devices discovered,
++	 * configure any settings of the fabric that might be necessary.
++	 */
++	if (bus) {
++		struct pci_bus *child;
++
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
++	}
++
++	return bus;
+ }
+ #endif
 -- 
 1.9.1
 
