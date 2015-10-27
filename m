@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37374 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:30983 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965695AbbJ0U5Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 16:57:16 -0400
+	with ESMTP id S932329AbbJ0V5E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 17:57:04 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -12,159 +12,76 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Khalid Aziz <khalid.aziz@oracle.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 54/61] resources: Split out __allocate_resource()
-Date: Tue, 27 Oct 2015 13:55:46 -0700
-Message-Id: <1445979353-1728-55-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v8 32/61] PCI: Rename pdev_sort_resources() to pdev_assign_resources_prepare()
+Date: Tue, 27 Oct 2015 13:55:24 -0700
+Message-Id: <1445979353-1728-33-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This one is separated from next patch for best fit allocation.
+pdev_sort_resources() etc was checking devices resources and putting
+resources that need to assign to one list in sorted order.
 
-Split out __allocate_resource(), and it will not hold lock, so we could use it
-in other functions that hold the resource lock already.
-
--v2: according to Linus, using "bool lock" as parameter
-     aka "conditionally take lock" is *wrong*.
+Now we don't do sorting in those functions anymore, so change to
+pdev_assign_resources_prepare() instead.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Acked-by: Linus Torvalds <torvalds@linux-foundation.org>
 ---
- kernel/resource.c | 70 +++++++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 50 insertions(+), 20 deletions(-)
+ drivers/pci/setup-bus.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 6927298..62321b0 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -654,7 +654,7 @@ static int find_resource(struct resource *root, struct resource *new,
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index bcf7cba..74ad4ce 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -205,8 +205,8 @@ static resource_size_t __pci_resource_alignment(
+ 	return r_align;
  }
  
- /**
-- * reallocate_resource - allocate a slot in the resource tree given range & alignment.
-+ * __reallocate_resource - allocate a slot in the resource tree given range & alignment.
-  *	The resource will be relocated if the new size cannot be reallocated in the
-  *	current location.
-  *
-@@ -663,7 +663,7 @@ static int find_resource(struct resource *root, struct resource *new,
-  * @newsize: new size of the resource descriptor
-  * @constraint: the size and alignment constraints to be met.
-  */
--static int reallocate_resource(struct resource *root, struct resource *old,
-+static int __reallocate_resource(struct resource *root, struct resource *old,
- 			resource_size_t newsize,
- 			struct resource_constraint  *constraint)
+-/* Sort resources by alignment */
+-static void pdev_sort_resources(struct pci_dev *dev,
++/* check resources and save to the list */
++static void pdev_assign_resources_prepare(struct pci_dev *dev,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *head)
  {
-@@ -671,8 +671,6 @@ static int reallocate_resource(struct resource *root, struct resource *old,
- 	struct resource new = *old;
- 	struct resource *conflict;
- 
--	write_lock(&resource_lock);
--
- 	if ((err = __find_resource(root, old, &new, newsize, constraint)))
- 		goto out;
- 
-@@ -697,14 +695,13 @@ static int reallocate_resource(struct resource *root, struct resource *old,
- 		BUG_ON(conflict);
+@@ -242,7 +242,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
  	}
- out:
--	write_unlock(&resource_lock);
- 	return err;
  }
  
--
- /**
-- * allocate_resource - allocate empty slot in the resource tree given range & alignment.
-- * 	The resource will be reallocated with a new size if it was already allocated
-+ * __allocate_resource - allocate empty slot in the resource tree given range & alignment.
-+ *	The resource will be reallocated with a new size if it was already
-+ *	allocated
-  * @root: root resource descriptor
-  * @new: resource descriptor desired by caller
-  * @size: requested resource region size
-@@ -713,15 +710,17 @@ out:
-  * @align: alignment requested, in bytes
-  * @alignf: alignment function, optional, called if not NULL
-  * @alignf_data: arbitrary data to pass to the @alignf function
-+ *
-+ * Caller need to hold resource_lock if needed.
-  */
--int allocate_resource(struct resource *root, struct resource *new,
--		      resource_size_t size, resource_size_t min,
--		      resource_size_t max, resource_size_t align,
--		      resource_size_t (*alignf)(void *,
--						const struct resource *,
--						resource_size_t,
--						resource_size_t),
--		      void *alignf_data)
-+static int __allocate_resource(struct resource *root, struct resource *new,
-+				resource_size_t size, resource_size_t min,
-+				resource_size_t max, resource_size_t align,
-+				resource_size_t (*alignf)(void *,
-+						  const struct resource *,
-+						  resource_size_t,
-+						  resource_size_t),
-+				void *alignf_data)
+-static void __dev_sort_resources(struct pci_dev *dev,
++static void __dev_assign_resources_prepare(struct pci_dev *dev,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *head)
  {
- 	int err;
- 	struct resource_constraint constraint;
-@@ -735,20 +734,51 @@ int allocate_resource(struct resource *root, struct resource *new,
- 	constraint.alignf = alignf;
- 	constraint.alignf_data = alignf_data;
- 
--	if ( new->parent ) {
-+	if (new->parent) {
- 		/* resource is already allocated, try reallocating with
- 		   the new constraints */
--		return reallocate_resource(root, new, size, &constraint);
-+		return __reallocate_resource(root, new, size, &constraint);
+@@ -260,7 +260,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ 			return;
  	}
  
--	write_lock(&resource_lock);
- 	err = find_resource(root, new, size, &constraint);
- 	if (err >= 0 && __request_resource(root, new))
- 		err = -EBUSY;
--	write_unlock(&resource_lock);
-+
- 	return err;
+-	pdev_sort_resources(dev, realloc_head, head);
++	pdev_assign_resources_prepare(dev, realloc_head, head);
  }
  
-+/**
-+ * allocate_resource - allocate empty slot in the resource tree given range & alignment.
-+ *	The resource will be reallocated with a new size if it was already
-+ *	allocated
-+ * @root: root resource descriptor
-+ * @new: resource descriptor desired by caller
-+ * @size: requested resource region size
-+ * @min: minimum boundary to allocate
-+ * @max: maximum boundary to allocate
-+ * @align: alignment requested, in bytes
-+ * @alignf: alignment function, optional, called if not NULL
-+ * @alignf_data: arbitrary data to pass to the @alignf function
-+ */
-+int allocate_resource(struct resource *root, struct resource *new,
-+		      resource_size_t size, resource_size_t min,
-+		      resource_size_t max, resource_size_t align,
-+		      resource_size_t (*alignf)(void *,
-+						const struct resource *,
-+						resource_size_t,
-+						resource_size_t),
-+		      void *alignf_data)
-+{
-+	int ret;
-+
-+	write_lock(&resource_lock);
-+	ret = __allocate_resource(root, new, size, min, max, align,
-+				   alignf, alignf_data);
-+	write_unlock(&resource_lock);
-+
-+	return ret;
-+}
-+
- EXPORT_SYMBOL(allocate_resource);
+ static inline void reset_resource(struct resource *res)
+@@ -566,7 +566,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+ {
+ 	LIST_HEAD(head);
  
- /**
+-	__dev_sort_resources(dev, add_head, &head);
++	__dev_assign_resources_prepare(dev, add_head, &head);
+ 	__assign_resources_sorted(&head, add_head, fail_head);
+ 
+ }
+@@ -579,7 +579,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
+ 	LIST_HEAD(head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+-		__dev_sort_resources(dev, realloc_head, &head);
++		__dev_assign_resources_prepare(dev, realloc_head, &head);
+ 
+ 	__assign_resources_sorted(&head, realloc_head, fail_head);
+ }
 -- 
 1.8.4.5
 
