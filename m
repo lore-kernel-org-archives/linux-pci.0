@@ -1,78 +1,139 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kamal Mostafa <kamal@canonical.com>
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	kernel-team@lists.ubuntu.com
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Meelis Roos <mroos@linux.ee>, Helge Deller <deller@gmx.de>,
-	Kamal Mostafa <kamal@canonical.com>
-Subject: [PATCH 3.19.y-ckt 103/156] PCI,parisc: Enable 64-bit bus addresses on PA-RISC
-Date: Tue, 20 Oct 2015 14:37:24 -0700
-Message-Id: <1445377097-9921-104-git-send-email-kamal@canonical.com>
-In-Reply-To: <1445377097-9921-1-git-send-email-kamal@canonical.com>
-References: <1445377097-9921-1-git-send-email-kamal@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:52573 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965116AbbJ0TUE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Oct 2015 15:20:04 -0400
+MIME-Version: 1.0
+In-Reply-To: <1445859350-26375-8-git-send-email-wangzhou1@hisilicon.com>
+References: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com> <1445859350-26375-8-git-send-email-wangzhou1@hisilicon.com>
+From: Rob Herring <robh@kernel.org>
+Date: Tue, 27 Oct 2015 14:19:40 -0500
+Message-ID: <CAL_JsqKamKx8vVVv7qVZ8oyjXLem93B9dnJAxvvoRWd3XEc=7Q@mail.gmail.com>
+Subject: Re: [PATCH v12 7/8] Documentation: DT: Add HiSilicon PCIe host binding
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	James Morse <james.morse@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>, liudongdong3@huawei.com,
+	qiujiang@huawei.com, Wei Xu <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-3.19.8-ckt8 -stable review patch.  If anyone has any objections, please let me know.
+On Mon, Oct 26, 2015 at 6:35 AM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+> This patch adds related DTS binding document for HiSilicon PCIe host driver.
+>
+> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 
-------------------
+Acked-by: Rob Herring <robh@kernel.org>
 
-From: Helge Deller <deller@gmx.de>
+> ---
+>  .../bindings/arm/hisilicon/hisilicon.txt           | 17 +++++++++
+>  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 44 ++++++++++++++++++++++
+>  2 files changed, 61 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>
+> diff --git a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
+> index 3504dca..6ac7c00 100644
+> --- a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
+> +++ b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
+> @@ -171,6 +171,23 @@ Example:
+>         };
+>
+>  -----------------------------------------------------------------------
+> +Hisilicon HiP05 PCIe-SAS system controller
+> +
+> +Required properties:
+> +- compatible : "hisilicon,pcie-sas-subctrl", "syscon";
+> +- reg : Register address and size
+> +
+> +The HiP05 PCIe-SAS system controller is shared by PCIe and SAS controllers in
+> +HiP05 Soc to implement some basic configurations.
+> +
+> +Example:
+> +       /* for HiP05 PCIe-SAS system */
+> +       pcie_sas: system_controller@0xb0000000 {
+> +               compatible = "hisilicon,pcie-sas-subctrl", "syscon";
+> +               reg = <0xb0000000 0x10000>;
+> +       };
+> +
+> +-----------------------------------------------------------------------
+>  Hisilicon CPU controller
+>
+>  Required properties:
+> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> new file mode 100644
+> index 0000000..17c6ed9
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> @@ -0,0 +1,44 @@
+> +HiSilicon PCIe host bridge DT description
+> +
+> +HiSilicon PCIe host controller is based on Designware PCI core.
+> +It shares common functions with PCIe Designware core driver and inherits
+> +common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+> +
+> +Additional properties are described here:
+> +
+> +Required properties:
+> +- compatible: Should contain "hisilicon,hip05-pcie".
+> +- reg: Should contain rc_dbi, config registers location and length.
+> +- reg-names: Must include the following entries:
+> +  "rc_dbi": controller configuration registers;
+> +  "config": PCIe configuration space registers.
+> +- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
+> +- port-id: Should be 0, 1, 2 or 3.
 
-commit e02a653e15d8d32e9e768fd99a3271aafe5c5d77 upstream.
 
-Commit 3a9ad0b ("PCI: Add pci_bus_addr_t") unconditionally introduced usage of
-64-bit PCI bus addresses on all 64-bit platforms which broke PA-RISC.
-
-It turned out that due to enabling the 64-bit addresses, the PCI logic decided
-to use the GMMIO instead of the LMMIO region. This commit simply disables
-registering the GMMIO and thus we fall back to use the LMMIO region as before.
-
-Reverts commit 45ea2a5fed6dacb9bb0558d8b21eacc1c45d5bb4
-("PCI: Don't use 64-bit bus addresses on PA-RISC")
-
-To: linux-parisc@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Meelis Roos <mroos@linux.ee>
-Signed-off-by: Helge Deller <deller@gmx.de>
-Signed-off-by: Kamal Mostafa <kamal@canonical.com>
----
- drivers/parisc/lba_pci.c | 7 +++++--
- drivers/pci/Kconfig      | 2 +-
- 2 files changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index dceb9dd..a32c1f6 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -1556,8 +1556,11 @@ lba_driver_probe(struct parisc_device *dev)
- 	if (lba_dev->hba.lmmio_space.flags)
- 		pci_add_resource_offset(&resources, &lba_dev->hba.lmmio_space,
- 					lba_dev->hba.lmmio_space_offset);
--	if (lba_dev->hba.gmmio_space.flags)
--		pci_add_resource(&resources, &lba_dev->hba.gmmio_space);
-+	if (lba_dev->hba.gmmio_space.flags) {
-+		/* pci_add_resource(&resources, &lba_dev->hba.gmmio_space); */
-+		pr_warn("LBA: Not registering GMMIO space %pR\n",
-+			&lba_dev->hba.gmmio_space);
-+	}
- 
- 	pci_add_resource(&resources, &lba_dev->hba.bus_num);
- 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 944f500..73de4ef 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -2,7 +2,7 @@
- # PCI configuration
- #
- config PCI_BUS_ADDR_T_64BIT
--	def_bool y if (ARCH_DMA_ADDR_T_64BIT || (64BIT && !PARISC))
-+	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
- 	depends on PCI
- 
- config PCI_MSI
--- 
-1.9.1
-
+> +
+> +Optional properties:
+> +- status: Either "ok" or "disabled".
+> +- dma-coherent: Present if DMA operations are coherent.
+> +
+> +Example:
+> +       pcie@0xb0080000 {
+> +               compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
+> +               reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
+> +               reg-names = "rc_dbi", "config";
+> +               bus-range = <0  15>;
+> +               msi-parent = <&its_pcie>;
+> +               #address-cells = <3>;
+> +               #size-cells = <2>;
+> +               device_type = "pci";
+> +               dma-coherent;
+> +               ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
+> +               num-lanes = <8>;
+> +               port-id = <1>;
+> +               #interrupts-cells = <1>;
+> +               interrupts-map-mask = <0xf800 0 0 7>;
+> +               interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
+> +                                 0x0 0 0 2 &mbigen_pcie 2 11
+> +                                 0x0 0 0 3 &mbigen_pcie 3 12
+> +                                 0x0 0 0 4 &mbigen_pcie 4 13>;
+> +               status = "ok";
+> +       };
+> --
+> 1.9.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
