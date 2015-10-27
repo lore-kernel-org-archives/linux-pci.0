@@ -1,69 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <7064179.1W3LTfFPxP@wuerfel>
-References: <1444297394-3122-1-git-send-email-lftan@altera.com>
-	<CAFiDJ58oMa6rgQe_STCiWRpdL+P22BN1=Nin_+QnLXC9RGiSzQ@mail.gmail.com>
-	<20151009231540.GE16112@localhost>
-	<7064179.1W3LTfFPxP@wuerfel>
-Date: Tue, 13 Oct 2015 15:47:41 +0800
-Message-ID: <CAFiDJ59=PaZ_MaHU_AZp756c-DC_BR7x6=oACntqD=jw0s6XBQ@mail.gmail.com>
-Subject: Re: [PATCH v8 3/6] pci:host: Add Altera PCIe host controller driver
-From: Ley Foon Tan <lftan@altera.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bbn0101.outbound.protection.outlook.com ([157.56.111.101]:61056
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965134AbbJ0Rfb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 13:35:31 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	KY Srinivasan <kys@microsoft.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v3 4/7] PCI: Record an fwnode associated with root PCI
+ buses, optionally
+Date: Tue, 27 Oct 2015 17:19:48 +0000
+Message-ID: <DM2PR0301MB12325E39B9C769A6AECDCCB0AB220@DM2PR0301MB1232.namprd03.prod.outlook.com>
+References: <1445901339-11924-1-git-send-email-jakeo@microsoft.com>
+ <1445901339-11924-5-git-send-email-jakeo@microsoft.com>
+ <562F2354.8040802@linux.intel.com>
+In-Reply-To: <562F2354.8040802@linux.intel.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 12, 2015 at 8:03 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->
-> On Friday 09 October 2015 18:15:40 Bjorn Helgaas wrote:
+> -----Original Message-----
+> From: Jiang Liu [mailto:jiang.liu@linux.intel.com]
+> Sent: Tuesday, October 27, 2015 12:10 AM
+> To: Jake Oshins <jakeo@microsoft.com>; gregkh@linuxfoundation.org; KY
+> Srinivasan <kys@microsoft.com>; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
+> vkuznets@redhat.com; tglx@linutronix.de; Haiyang Zhang
+> <haiyangz@microsoft.com>; marc.zyngier@arm.com;
+> bhelgaas@google.com; linux-pci@vger.kernel.org
+> Subject: Re: [PATCH v3 4/7] PCI: Record an fwnode associated with root PCI
+> buses, optionally
+> 
+> On 2015/10/27 7:15, jakeo@microsoft.com wrote:
+> > From: Jake Oshins <jakeo@microsoft.com>
 > >
-> > I don't know if this should be a kernel taint, a simple warning in
-> > dmesg, or what.  I guess the tainting mechanism is probably too
-> > general-purpose for this, and add_taint() doesn't give any dmesg
-> > indication.  We wouldn't see the taint unless the problem actually
-> > caused an oops or panic.  In this case, I think I want a clue in dmesg
-> > so we have a chance of seeing it even if there is no oops.  So
-> > probably something like a dev_warn("non-compliant config accesses")
-> > would work.
+> > This patch allows a PCI front-end implementation to supply an
+> fwnode_handle
+> > associated with a root PCI bus, optionally.  If supplied, the PCI driver
+> > records this.
 > >
-> > You really should double-check with the hardware guys, because it's
-> > pretty obvious that the PCI spec requires 1- and 2-byte config
-> > accesses to work correctly.  For example, if you read/modify/write to
-> > update PCI_COMMAND, you will inadvertently clear the RW1C bits in
-> > PCI_STATUS.
->
-> Would it help to require a DT property here that flags the device
-> as having a broken config space?
->
-> Then we could implement both in the driver, and only use the
-> RMW based implementation if the firmware describes the device
-> as "altera,broken-pci-config-space".
->
+> > This patch supports the next patch in the series, which looks up an IRQ
+> domain
+> > through this handle.
+> Hi JaKeo,
+> 	Instead of changing the pci_create_root_bus() interface,
+> how about packing fwnode into sysdata, then we may
+> either 1) introduce a helper to retrieve fwnode from sysdata
+> or 2) set host_bridge->fwnode = sysdata in function
+> pcibios_root_bridge_prepare.
+> 
+> Thanks,
+> Gerry
+> 
 
-I have checked the PCI/TLP specification, the address needs to be
-4-byte aligned. But, we can use "byte enable" field to update specific
-bytes.
-For example, if byte enable is 0x3 (0011b), that mean it only update
-lower 2 bytes. By doing this, we can resolve the RW1C issue here.
-I will update the driver with this in next revision.
+Thanks for the review.  I'll work up a version that uses this suggestion and resend.  (I'll respond to your feedback on the other patches, too.)
 
-Thanks for reviewing.
+-- Jake Oshins
 
-Regards
-Ley Foon
