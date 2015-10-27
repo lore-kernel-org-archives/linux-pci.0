@@ -1,97 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:33316 "EHLO
-	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbbJGHaa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 03:30:30 -0400
-Received: by iofh134 with SMTP id h134so13210981iof.0
-        for <linux-pci@vger.kernel.org>; Wed, 07 Oct 2015 00:30:30 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jake Oshins <jakeo@microsoft.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	KY Srinivasan <kys@microsoft.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v3 7/7] PCI: hv: New paravirtual PCI front-end for Hyper-V
+ VMs
+Date: Tue, 27 Oct 2015 20:38:44 +0000
+Message-ID: <DM2PR0301MB1232E93FC2DD8C26EEDBB69AAB220@DM2PR0301MB1232.namprd03.prod.outlook.com>
+References: <1445901339-11924-1-git-send-email-jakeo@microsoft.com>
+ <1445901339-11924-8-git-send-email-jakeo@microsoft.com>
+ <562F2389.9050305@linux.intel.com>
+In-Reply-To: <562F2389.9050305@linux.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CAKsTQn=GEJwk-OFypdVLFQcXrYy4Zc8ADgX6V=rX0azfQspjkg@mail.gmail.com>
-References: <1443810216-3215-1-git-send-email-netwerkforens@gmail.com>
-	<20151003143056.GA17684@localhost>
-	<mj+md-20151005.101820.16366.nikam@ucw.cz>
-	<CAKsTQn=GEJwk-OFypdVLFQcXrYy4Zc8ADgX6V=rX0azfQspjkg@mail.gmail.com>
-Date: Wed, 7 Oct 2015 09:30:29 +0200
-Message-ID: <CAKsTQnne+knY2owNTYVG9hL93fDSwKK2TRQ8sp-zgjJD2qZ_ng@mail.gmail.com>
-Subject: Re: [PATCH] Enumerate all undiscovered PCIe busses
-From: Ruud <netwerkforens@gmail.com>
-To: Martin Mares <mj@ucw.cz>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Martin,
+> -----Original Message-----
+> From: Jiang Liu [mailto:jiang.liu@linux.intel.com]
+> Sent: Tuesday, October 27, 2015 12:11 AM
+> To: Jake Oshins <jakeo@microsoft.com>; gregkh@linuxfoundation.org; KY
+> Srinivasan <kys@microsoft.com>; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
+> vkuznets@redhat.com; tglx@linutronix.de; Haiyang Zhang
+> <haiyangz@microsoft.com>; marc.zyngier@arm.com;
+> bhelgaas@google.com; linux-pci@vger.kernel.org
+> Subject: Re: [PATCH v3 7/7] PCI: hv: New paravirtual PCI front-end for Hyper-
+> V VMs
+> 
+> On 2015/10/27 7:15, jakeo@microsoft.com wrote:
+> > From: Jake Oshins <jakeo@microsoft.com>
+> >
+(snip)
+> > +/**
+> > + * hv_pcie_init_irq_domain() - Initialize IRQ domain
+> > + * @hbus:	The root PCI bus
+> > + *
+> > + * Return: '0' on success and error value on failure
+> > + */
+> > +static int hv_pcie_init_irq_domain(struct hv_pcibus_device *hbus)
+> > +{
+> > +	hbus->msi_info.chip = &hv_msi_irq_chip;
+> > +	hbus->msi_info.chip_data = hbus;
+> > +	hbus->msi_info.ops = &hv_msi_ops;
+> > +	hbus->msi_info.flags = (MSI_FLAG_USE_DEF_DOM_OPS |
+> > +		MSI_FLAG_USE_DEF_CHIP_OPS |
+> MSI_FLAG_MULTI_PCI_MSI |
+> > +		MSI_FLAG_PCI_MSIX);
+> When interrupt remapping is not supported, x86 vector allocator
+> can't support multiple MSI because it can't allocate continuous
+> vectors yet. So please confirm whether we could enable
+> MSI_FLAG_MULTI_PCI_MSI for HV.
+> 
 
-I did some more digging
->
-> Does `lspci -M' help?
+We can actually handle the remapping in the hypervisor.  I'll add a comment to that effect.
 
-The -M option shows all busses (but not a tree view), but more
-important setpci doesn't have the option and thus does not allow to do
-settings on the alternative busses.
+> > +	hbus->msi_info.handler = handle_edge_irq;
+> > +	hbus->msi_info.handler_name = "edge";
+> > +	hbus->msi_info.data = hbus;
+> How about using following pattern so we could avoid exporting
+> too many interfaces?
+> 
+> struct irq_domain *parent_domain = NULL;
+> hbus->msi_info.chip = &hv_msi_irq_chip;
+> hbus->msi_info.ops = &hv_msi_ops;
+> // Let arch code to fill in default ops for chip and domain
+> x86_setup_default_msi_irqdomian_info(&hbus->msi_info,
+> &parent_domain);
+> // Override default ops if not applicable
+> hbus->irq_domain = pci_msi_create_irq_domain(hbus->fwnode,
+> 					     &hbus->msi_info,
+> 					     parent_domain);
+> 
 
-With respect to the "incorrectness" of the patch, one could argue that
-scanning all busses is allowed as they should read 0xFF for unassigned
-busses IIRC.
->From that respect it may  make more sense to have a command line
-option that forces a single bus, but scans by default instead of the
-other way around.
+I understand your point here, but I'm having trouble making it play out.  When I look at this, the only functions or structures which are supplied straight from exports (in my proposed patches) are irq_chip_ack_parent(), pci_msi_prepare() and x86_vector_domain.  The other exports either already exist for other reasons or they're needed within functions that I need to supply.  If you feel strongly that adding a new function to avoid exporting these is the right way to go, I'll do it, but I want to confirm that first.
 
-What do you think?
-
-Best regards,
-
-Ruud
-
-2015-10-05 16:23 GMT+02:00 Ruud <netwerkforens@gmail.com>:
-> Hi Martin,
->
-> I can't check the effect of "-M" at the moment so that will have to wait.
-> Some context:
->
-> I got some buggy BIOS and lots of GPU's. The effect is that I need to
-> reenumerate busses and to let linux do that it is suggested to use
-> setpci to clear busnumber etc.
-> To make sure I do not clobber the linux drivers, I prefer to remove
-> the switches at the root level (echo 1>remove) and set the registers
-> using -H1 as hardware access.
->
-> Unfortunately on the multiprocessor intel system, three root complexes
-> exist: one at bus 0x00, One at bux 0x80 (and one at 0x7f IIRC). lspci
-> -H1 will only report bus 0x00.
->
-> It is not a problem for me to use a patched version of pciutils
-> locally, but hoped to share. Perhaps as an idea: make the base
-> bus-number configurable at the command line instead of hard coded?
->
-> Best regards,
->
-> Ruud
->
->
-> 2015-10-05 12:21 GMT+02:00 Martin Mares <mj@ucw.cz>:
->> Hi!
->>
->>> This appears to be a patch for pciutils, so I cc'd Martin, who
->>> maintains that.
->>
->> Thanks, I manage to follow linux-pci only very loosely these days...
->>
->>> On Fri, Oct 02, 2015 at 06:23:36PM +0000, Ruud wrote:
->>> > Multiple root complexes have a different start busnumber.
->>> > Poll all undiscovered busses for a root complex
->>
->> Unfortunately, this is not correct to do. Many systems report
->> junk on unused bus number (for example, they decode bus numbers
->> only partially, so the buses repeat).
->>
->> In which situation do you need this? Is it on Linux? Only lspci,
->> or your own code using libpci?
->>
->> Does `lspci -M' help?
->>
->>                                 Have a nice fortnight
->> --
->> Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
->> Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
->> "Please try to fit your code to 80 columns. That's decimal 80." -- A. Morton
+Thanks,
+Jake Oshins
