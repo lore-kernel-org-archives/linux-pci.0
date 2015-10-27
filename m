@@ -1,67 +1,60 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v1 0/2] Common SerDes driver for TI's Keystone Platforms
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Rob Herring <robh+dt@kernel.org>
-References: <1444919145-30845-1-git-send-email-w-kwok2@ti.com>
- <20151015165105.GE32532@n2100.arm.linux.org.uk>
- <CAL_JsqJTjCT8D-3OryFPEF8nnaPtrai7Mvf-gJRkh60aDixx-g@mail.gmail.com>
- <20151016080222.GH32532@n2100.arm.linux.org.uk>
-CC: WingMan Kwok <w-kwok2@ti.com>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Roger Quadros <rogerq@ti.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Santosh Shilimkar <ssantosh@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <5621063A.2050905@ti.com>
-Date: Fri, 16 Oct 2015 19:44:18 +0530
-MIME-Version: 1.0
-In-Reply-To: <20151016080222.GH32532@n2100.arm.linux.org.uk>
-Content-Type: text/plain; charset="windows-1252"
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 09/61] powerpc/PCI: Keep resource idx order with bridge register number
+Date: Tue, 27 Oct 2015 13:55:01 -0700
+Message-Id: <1445979353-1728-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Same as sparc version.
 
-On Friday 16 October 2015 01:32 PM, Russell King - ARM Linux wrote:
-> On Thu, Oct 15, 2015 at 08:00:41PM -0500, Rob Herring wrote:
->> On Thu, Oct 15, 2015 at 11:51 AM, Russell King - ARM Linux
->> <linux@arm.linux.org.uk> wrote:
->>> On Thu, Oct 15, 2015 at 10:25:43AM -0400, WingMan Kwok wrote:
->>>> On TI's Keystone platforms, several peripherals such as the
->>>> gbe ethernet switch, 10gbe ethether switch and PCIe controller
->>>> require the use of a SerDes for converting SoC parallel data into
->>>> serialized data that can be output over a high-speed electrical
->>>> interface, and also converting high-speed serial input data
->>>> into parallel data that can be processed by the SoC.  The
->>>> SerDeses used by those peripherals, though they may be different,
->>>> are largely similar in functionality and setup.
->>>
->>> Given that serdes is not specific to TI, should this be specific to
->>> TI, or should there be an effort to come up with something which
->>> everyone who has serdes links can make use of?
->>>
->>> Serdes comes in multiple different forms: PCIe, 1G SGMII ethernet,
->>> 1000base-X ethernet, 10g ethernet, SATA... I'd hate to see a
->>> plethora of SoC specific stuff for this.
->>
->> The licensed IP I've seen doesn't provide a standard register
->> interface, but just signals to the IP block. Same with PLL IP. So
->> we'll probably get to see vendors continue to differentiate on PHY
->> register design. :)
-> 
-> So what?  Network drivers differ radically in register design, yet we
-> still have a standardised interface to network drivers.
-> 
-The PHY framework (in drivers/phy/) already provides a standard
-interface to be used by the controller drivers no?
+Make resource with consistent sequence
+like other arch or directly from pci_read_bridge_bases(),
+even non-pref mmio is missing, or out of ordering in firmware reporting.
 
-Thanks
-Kishon
+So hold i = 1 for non pref mmio, and i = 2 for pref mmio.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/powerpc/kernel/pci_of_scan.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 2e710c1..349ed11 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -255,7 +255,7 @@ void of_scan_pci_bridge(struct pci_dev *dev)
+ 		bus->resource[i] = res;
+ 		++res;
+ 	}
+-	i = 1;
++	i = 3;
+ 	for (; len >= 32; len -= 32, ranges += 8) {
+ 		flags = pci_parse_of_flags(of_read_number(ranges, 1), 1);
+ 		size = of_read_number(&ranges[6], 2);
+@@ -268,6 +268,12 @@ void of_scan_pci_bridge(struct pci_dev *dev)
+ 				       " for bridge %s\n", node->full_name);
+ 				continue;
+ 			}
++		} else if ((flags & IORESOURCE_PREFETCH) &&
++			   !bus->resource[2]->flags) {
++			res = bus->resource[2];
++		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
++			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
++			res = bus->resource[1];
+ 		} else {
+ 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
+ 				printk(KERN_ERR "PCI: too many memory ranges"
+-- 
+1.8.4.5
+
