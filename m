@@ -1,116 +1,110 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 7 Oct 2015 14:44:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v4 1/5] PCI: Add pci_bus_fixup_irqs().
-Message-ID: <20151007194426.GF27633@localhost>
-References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com>
- <1443811443-18878-2-git-send-email-ddaney.cavm@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443811443-18878-2-git-send-email-ddaney.cavm@gmail.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 41/61] PCI: Separate required+optional assigning to another function
+Date: Tue, 27 Oct 2015 13:55:33 -0700
+Message-Id: <1445979353-1728-42-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David,
+__assign_resources_sorted() is getting too big if we put alt_size support
+into it.  Split out required+optional assigning code to another function.
 
-On Fri, Oct 02, 2015 at 11:43:59AM -0700, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> pci_bus_fixup_irqs() works like pci_fixup_irqs(), except it only does
-> the fixups for devices on the specified bus.
-> 
-> Follow-on patch will use the new function.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
-> No change from v2.
-> 
->  drivers/pci/setup-irq.c | 30 ++++++++++++++++++++++++++++++
->  include/linux/pci.h     |  4 ++++
->  2 files changed, 34 insertions(+)
-> 
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index 95c225b..189ad17 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -66,3 +66,33 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
->  		pdev_fixup_irq(dev, swizzle, map_irq);
->  }
->  EXPORT_SYMBOL_GPL(pci_fixup_irqs);
-> +
-> +struct pci_bus_fixup_cb_info {
-> +	u8 (*swizzle)(struct pci_dev *, u8 *);
-> +	int (*map_irq)(const struct pci_dev *, u8, u8);
-> +};
-> +
-> +static int pci_bus_fixup_irq_cb(struct pci_dev *dev, void *arg)
-> +{
-> +	struct pci_bus_fixup_cb_info *info = arg;
-> +
-> +	pdev_fixup_irq(dev, info->swizzle, info->map_irq);
-> +	return 0;
-> +}
-> +
-> +/*
-> + * Fixup the irqs only for devices on the given bus using supplied
-> + * swizzle and map_irq function pointers
-> + */
-> +void pci_bus_fixup_irqs(struct pci_bus *bus,
-> +			u8 (*swizzle)(struct pci_dev *, u8 *),
-> +			int (*map_irq)(const struct pci_dev *, u8, u8))
-> +{
-> +	struct pci_bus_fixup_cb_info info;
-> +
-> +	info.swizzle = swizzle;
-> +	info.map_irq = map_irq;
-> +	pci_walk_bus(bus, pci_bus_fixup_irq_cb, &info);
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
+ 1 file changed, 27 insertions(+), 20 deletions(-)
 
-I don't like the existing pci_fixup_irqs(), so by transitivity, I
-don't like pci_bus_fixup_irqs() either.  The problem is that in both
-cases this is a one-time pass over the tree, so we don't handle
-hot-added devices correctly.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 09844d9..c49bfde 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -473,20 +473,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
+ 	res->flags = save_res->flags;
+ }
+ 
+-static void __assign_resources_sorted(struct list_head *head,
+-				 struct list_head *realloc_head,
+-				 struct list_head *fail_head)
++static bool __assign_resources_required_optional_sorted(struct list_head *head,
++				 struct list_head *realloc_head)
+ {
+-	/*
+-	 * Should not assign requested resources at first.
+-	 *   they could be adjacent, so later reassign can not reallocate
+-	 *   them one by one in parent resource window.
+-	 * Try to assign requested + add_size at beginning
+-	 *  if could do that, could get out early.
+-	 *  if could not do that, we still try to assign requested at first,
+-	 *    then try to reassign add_size for some resources.
+-	 */
+-
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+@@ -495,12 +484,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	resource_size_t add_align;
+ 	struct resource *res;
+ 
+-	/* Check if optional add_size is there */
+-	if (!realloc_head || list_empty(realloc_head))
+-		goto requested_and_reassign;
+-
+ 	if (!save_resources(head, &save_head))
+-		goto requested_and_reassign;
++		return false;
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+@@ -539,7 +524,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 			remove_from_list(realloc_head, dev_res->res);
+ 		free_list(&save_head);
+ 		free_list(head);
+-		return;
++
++		return true;
+ 	}
+ 
+ 	/* check failed type */
+@@ -574,7 +560,28 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	free_list(&save_head);
+ 
+-requested_and_reassign:
++	return false;
++}
++
++static void __assign_resources_sorted(struct list_head *head,
++				 struct list_head *realloc_head,
++				 struct list_head *fail_head)
++{
++	/*
++	 * Should not assign required resources at first.
++	 *   they could be adjacent, so later reassign can not reallocate
++	 *   them one by one in parent resource window.
++	 * Try to assign required + optional at beginning
++	 *  if could do that, could get out early.
++	 *  if could not do that, we still try to assign required at first,
++	 *    then try to reassign add_size for some resources.
++	 */
++
++	/* Check required+optional add */
++	if (realloc_head && !list_empty(realloc_head) &&
++	    __assign_resources_required_optional_sorted(head, realloc_head))
++		return;
++
+ 	sort_resources(head);
+ 
+ 	/* Satisfy the must-have resource requests */
+-- 
+1.8.4.5
 
-I think we need to get rid of pci_fixup_irqs() and somehow integrate
-it into the pci_device_add() path, where it would be done once for
-every device we enumerate.  If we did that, I don't think you would
-need to add pci_bus_fixup_irqs(), would you?
-
-Bjorn
-
-> +
-> +}
-> +EXPORT_SYMBOL_GPL(pci_bus_fixup_irqs);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index e90eb22..b505b50 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1120,6 +1120,10 @@ void pdev_enable_device(struct pci_dev *);
->  int pci_enable_resources(struct pci_dev *, int mask);
->  void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
->  		    int (*)(const struct pci_dev *, u8, u8));
-> +void pci_bus_fixup_irqs(struct pci_bus *,
-> +			u8 (*)(struct pci_dev *, u8 *),
-> +			int (*)(const struct pci_dev *, u8, u8));
-> +
->  #define HAVE_PCI_REQ_REGIONS	2
->  int __must_check pci_request_regions(struct pci_dev *, const char *);
->  int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
