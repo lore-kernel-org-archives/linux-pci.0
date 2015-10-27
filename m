@@ -1,119 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:35757 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751454AbbJ0FsW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 01:48:22 -0400
-Subject: Re: [PATCH v2] iov: restore NumVFs register to 0 before return from
- virtfn_max_buses()
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Ethan Zhao <ethan.zhao@oracle.com>
-References: <1442373593-8342-1-git-send-email-ethan.zhao@oracle.com>
- <20151015171600.GB17702@localhost>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <562F1024.70001@gmail.com>
-Date: Mon, 26 Oct 2015 22:48:20 -0700
-MIME-Version: 1.0
-In-Reply-To: <20151015171600.GB17702@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 35/61] PCI: Simplify res reference using in __assign_resources_sorted()
+Date: Tue, 27 Oct 2015 13:55:27 -0700
+Message-Id: <1445979353-1728-36-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/15/2015 10:16 AM, Bjorn Helgaas wrote:
-> Hi Ethan,
->
-> On Wed, Sep 16, 2015 at 12:19:53PM +0900, Ethan Zhao wrote:
->> After commit 4449f079722c ("PCI: Calculate maximum number of buses
->> required for VFs"),the initial value of NumVFs register was left to
->> non-zero after sriov_init() and no VFs was enabled in device driver.
->> this changed the behaviour of kernel exported by lspci and sysfs etc.
->> so this patch restore the NumVFs register to zero after the
->> calculation of max_VF_buses was done and before return from
->> virtfn_max_buses().
->>
->> Tested on stable 4.1 and passed building on stable 4.3-rc1
->>
->> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
->> Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
-> Can you test the patch below?  I'm trying to avoid touching
-> PCI_SRIOV_NUM_VF in more than one place, and I think it's OK to set it
-> and test offset/stride at the end, instead of setting NUM_VF to zero,
-> testing offset/stride, computing max_bus, then setting NUM_VF to zero
-> again.
->
-> Bjorn
->
->
-> commit 8e20e89658f23b8d16b1e21810e9f63c8625129c
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Thu Oct 15 11:31:21 2015 -0500
->
->      PCI: Set SR-IOV NumVFs to zero after enumeration
->      
->      The enumeration path should leave NumVFs set to zero.  But after
->      4449f079722c ("PCI: Calculate maximum number of buses required for VFs"),
->      we call virtfn_max_buses() in the enumeration path, which changes NumVFs.
->      This NumVFs change is visible via lspci and sysfs until a driver enables
->      SR-IOV.
->      
->      Set NumVFs to zero after virtfn_max_buses() computes the maximum number of
->      buses.
->      
->      Fixes: 4449f079722c ("PCI: Calculate maximum number of buses required for VFs")
->      Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
->      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index ee0ebff..0202ab0 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -384,7 +384,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
->   	int rc;
->   	int nres;
->   	u32 pgsz;
-> -	u16 ctrl, total, offset, stride;
-> +	u16 ctrl, total;
->   	struct pci_sriov *iov;
->   	struct resource *res;
->   	struct pci_dev *pdev;
-> @@ -414,11 +414,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
->   
->   found:
->   	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
-> -	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
-> -	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
-> -	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
-> -	if (!offset || (total > 1 && !stride))
-> -		return -EIO;
->   
->   	pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
->   	i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
-> @@ -456,8 +451,6 @@ found:
->   	iov->nres = nres;
->   	iov->ctrl = ctrl;
->   	iov->total_VFs = total;
-> -	iov->offset = offset;
-> -	iov->stride = stride;
->   	iov->pgsz = pgsz;
->   	iov->self = dev;
->   	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
-> @@ -475,6 +468,11 @@ found:
->   	dev->sriov = iov;
->   	dev->is_physfn = 1;
->   	iov->max_VF_buses = virtfn_max_buses(dev);
-> +	pci_iov_set_numvfs(dev, 0);
-> +	if (!iov->offset || (total > 1 && !iov->stride)) {
-> +		rc = -EIO;
-> +		goto failed;
-> +	}
->   
->   	return 0;
->   
+There are couples of dev_res->res reference, to make code more readable
+use res instead of dev_res->res directly.
 
-You might want to reorder this a bit.  The problem is offset and stride 
-can be 0 if numvfs is 0.  So you should probably test offset and stride 
-first, and then reset numvfs to 0.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-- Alex
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c9dfd1c..d575c56 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -458,6 +458,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+ 	resource_size_t add_align;
++	struct resource *res;
+ 
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -473,8 +474,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+-		dev_res->res->end += get_res_add_size(realloc_head,
+-							dev_res->res);
++		res = dev_res->res;
++		res->end += get_res_add_size(realloc_head, res);
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+@@ -483,16 +484,16 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		 * 2. resource with IORESOURCE_SIZEALIGN
+ 		 *    update size above already change alignment.
+ 		 */
+-		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
++		if (!(res->flags & IORESOURCE_STARTALIGN))
+ 			continue;
+ 
+-		add_align = get_res_add_align(realloc_head, dev_res->res);
++		add_align = get_res_add_align(realloc_head, res);
+ 
+ 		if (add_align) {
+-			resource_size_t r_size = resource_size(dev_res->res);
++			resource_size_t r_size = resource_size(res);
+ 
+-			dev_res->res->start = add_align;
+-			dev_res->res->end = add_align + r_size - 1;
++			res->start = add_align;
++			res->end = add_align + r_size - 1;
+                }
+ 	}
+ 
+@@ -514,21 +515,21 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	/* check failed type */
+ 	fail_type = pci_fail_res_type_mask(&local_fail_head);
+ 	/* remove not need to be released assigned res from head list etc */
+-	list_for_each_entry_safe(dev_res, tmp_res, head, list)
+-		if (dev_res->res->parent &&
+-		    !pci_need_to_release(fail_type, dev_res->res)) {
++	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
++		res = dev_res->res;
++		if (res->parent && !pci_need_to_release(fail_type, res)) {
+ 			/* remove it from realloc_head list */
+-			remove_from_list(realloc_head, dev_res->res);
+-			remove_from_list(&save_head, dev_res->res);
++			remove_from_list(realloc_head, res);
++			remove_from_list(&save_head, res);
+ 			list_del(&dev_res->list);
+ 			kfree(dev_res);
+ 		}
++	}
+ 
+ 	free_list(&local_fail_head);
+ 	/* Release assigned resource */
+ 	list_for_each_entry(dev_res, head, list) {
+-		struct resource *res = dev_res->res;
+-
++		res = dev_res->res;
+ 		if (res->parent) {
+ 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+ 				   "BAR %d: released %pR\n",
+@@ -539,8 +540,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	/* Restore start/end/flags from saved list */
+ 	list_for_each_entry(save_res, &save_head, list) {
+-		struct resource *res = save_res->res;
+-
++		res = save_res->res;
+ 		res->start = save_res->start;
+ 		res->end = save_res->end;
+ 		res->flags = save_res->flags;
+-- 
+1.8.4.5
 
