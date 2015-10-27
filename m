@@ -1,88 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:39119 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753767AbbJUM5f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Oct 2015 08:57:35 -0400
-From: WingMan Kwok <w-kwok2@ti.com>
-To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<kishon@ti.com>, <rogerq@ti.com>, <m-karicheri2@ti.com>,
-	<bhelgaas@google.com>, <ssantosh@kernel.org>,
-	<linux@arm.linux.org.uk>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: WingMan Kwok <w-kwok2@ti.com>
-Subject: [PATCH v3 0/2] Common SerDes driver for TI's Keystone Platforms
-Date: Wed, 21 Oct 2015 08:56:39 -0400
-Message-ID: <1445432201-16007-1-git-send-email-w-kwok2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:36288 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965115AbbJ0QjZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 12:39:25 -0400
+Received: by lbcao8 with SMTP id ao8so67905270lbc.3
+        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 09:39:23 -0700 (PDT)
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V1 04/11] x86, pci: mmconfig_{32,64}.c code refactoring - remove code duplication.
+Date: Tue, 27 Oct 2015 17:38:35 +0100
+Message-Id: <1445963922-22711-5-git-send-email-tn@semihalf.com>
+In-Reply-To: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On TI's Keystone platforms, several peripherals such as the
-gbe ethernet switch, 10gbe ethernet switch and PCIe controller
-require the use of a SerDes for converting SoC parallel data into
-serialized data that can be output over a high-speed electrical
-interface, and also converting high-speed serial input data
-into parallel data that can be processed by the SoC.  The
-SerDeses used by those peripherals, though they may be different,
-are largely similar in functionality and setup.
+mmconfig_64.c version is going to be default implementation for low-level
+operation on mmconfig regions. However, now it initializes raw_pci_ext_ops pointer which is specific for
+x86 only. Moreover, mmconfig_32.c is doing the same thing at the same time.
+So lets move it to mmconfig_shared.c so it becomes common for both and
+mmconfig_64.c turns out to be purely arch agnostic.
 
-This patch series provides a SerDes phy driver implementation that can be
-used by the above mentioned peripheral drivers to configure their
-respective SerDeses.
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ arch/x86/include/asm/pci_x86.h |  5 +++++
+ arch/x86/pci/mmconfig-shared.c | 10 ++++++++--
+ arch/x86/pci/mmconfig_32.c     | 10 ++--------
+ arch/x86/pci/mmconfig_64.c     | 11 ++---------
+ 4 files changed, 17 insertions(+), 19 deletions(-)
 
-As an example of the using the SerDes driver, this patch series also
-updates the Keystone PCIe host driver to enable and use its SerDes block.
-
-References:
-[1] KeyStone II Architecture Serializer/Deserializer (SerDes) User's Guide
-    (http://www.ti.com/lit/ug/spruho3a/spruho3a.pdf)
-
-v3:
-	- addresses the following review comments
-		1. https://lkml.org/lkml/2015/10/19/756
-			-- included sizes.h
-		2. https://lkml.org/lkml/2015/10/19/781
-			-- updated base on Fengguang Wu's suggestions.
-		3. https://lkml.org/lkml/2015/10/15/896
-			-- clarified here https://lkml.org/lkml/2015/10/20/512
-			-- nothing to do.
-
-v2:
-	- addresses the following review comments on v1:
-		1. https://lkml.org/lkml/2015/10/15/896
-			-- this does not address the question:
-			   "The current code does not do this when compiled,
-			    which might be a problem for distributors.
-			    Can you clarify the license?"
-			-- the question is still under discussion here:
-			   https://lkml.org/lkml/2015/10/19/471
-		2. https://lkml.org/lkml/2015/10/15/895
-
-v1: 
-	- addresses the following review comments
-		1. https://lkml.org/lkml/2015/10/13/803
-		2. https://lkml.org/lkml/2015/10/14/613
-		3. https://lkml.org/lkml/2015/10/13/818
-
-	- An update to PCIe dts bindings to enable the PCIe SerDes is
-	  submitted in a separate patch.
-
-WingMan Kwok (2):
-  phy: keystone: serdes driver for gbe 10gbe and pcie
-  PCI: keystone: update to use generic keystone serdes driver
-
- Documentation/devicetree/bindings/phy/ti-phy.txt |  239 +++
- drivers/pci/host/pci-keystone.c                  |   24 +-
- drivers/pci/host/pci-keystone.h                  |    1 +
- drivers/phy/Kconfig                              |    8 +
- drivers/phy/Makefile                             |    1 +
- drivers/phy/phy-keystone-serdes.c                | 2366 ++++++++++++++++++++++
- 6 files changed, 2629 insertions(+), 10 deletions(-)
- create mode 100644 drivers/phy/phy-keystone-serdes.c
-
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index 64cb514..039f69e 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -129,6 +129,11 @@ extern void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
+ extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 			       phys_addr_t addr);
+ 
++int pci_mmcfg_read(unsigned int seg, unsigned int bus, unsigned int devfn,
++		   int reg, int len, u32 *value);
++int pci_mmcfg_write(unsigned int seg, unsigned int bus, unsigned int devfn,
++		    int reg, int len, u32 value);
++
+ /*
+  * AMD Fam10h CPUs are buggy, and cannot access MMIO config space
+  * on their northbrige except through the * %eax register. As such, you MUST
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index ce2c2e4..980f304 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -29,6 +29,11 @@
+ static bool pci_mmcfg_running_state;
+ static bool pci_mmcfg_arch_init_failed;
+ 
++const struct pci_raw_ops pci_mmcfg = {
++	.read =		pci_mmcfg_read,
++	.write =	pci_mmcfg_write,
++};
++
+ static const char *__init pci_mmcfg_e7520(void)
+ {
+ 	u32 win;
+@@ -512,9 +517,10 @@ static void __init __pci_mmcfg_init(int early)
+ 		}
+ 	}
+ 
+-	if (pci_mmcfg_arch_init())
++	if (pci_mmcfg_arch_init()) {
++		raw_pci_ext_ops = &pci_mmcfg;
+ 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
+-	else {
++	} else {
+ 		free_all_mmcfg();
+ 		pci_mmcfg_arch_init_failed = true;
+ 	}
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 246f135..2ded56f 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -50,7 +50,7 @@ static void pci_exp_set_dev_base(unsigned int base, int bus, int devfn)
+ 	}
+ }
+ 
+-static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+ 			  unsigned int devfn, int reg, int len, u32 *value)
+ {
+ 	unsigned long flags;
+@@ -89,7 +89,7 @@ err:		*value = -1;
+ 	return 0;
+ }
+ 
+-static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 			   unsigned int devfn, int reg, int len, u32 value)
+ {
+ 	unsigned long flags;
+@@ -126,15 +126,9 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	return 0;
+ }
+ 
+-const struct pci_raw_ops pci_mmcfg = {
+-	.read =		pci_mmcfg_read,
+-	.write =	pci_mmcfg_write,
+-};
+-
+ int __init pci_mmcfg_arch_init(void)
+ {
+ 	printk(KERN_INFO "PCI: Using MMCONFIG for extended config space\n");
+-	raw_pci_ext_ops = &pci_mmcfg;
+ 	return 1;
+ }
+ 
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index b14fcd3..d0c48eb 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -25,7 +25,7 @@ static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned i
+ 	return NULL;
+ }
+ 
+-static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+ 			  unsigned int devfn, int reg, int len, u32 *value)
+ {
+ 	char __iomem *addr;
+@@ -59,7 +59,7 @@ err:		*value = -1;
+ 	return 0;
+ }
+ 
+-static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 			   unsigned int devfn, int reg, int len, u32 value)
+ {
+ 	char __iomem *addr;
+@@ -91,11 +91,6 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	return 0;
+ }
+ 
+-const struct pci_raw_ops pci_mmcfg = {
+-	.read =		pci_mmcfg_read,
+-	.write =	pci_mmcfg_write,
+-};
+-
+ static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
+ {
+ 	void __iomem *addr;
+@@ -121,8 +116,6 @@ int __init pci_mmcfg_arch_init(void)
+ 			return 0;
+ 		}
+ 
+-	raw_pci_ext_ops = &pci_mmcfg;
+-
+ 	return 1;
+ }
+ 
 -- 
-1.7.9.5
+1.9.1
 
