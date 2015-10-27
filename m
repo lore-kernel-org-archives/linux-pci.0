@@ -1,165 +1,108 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Daniel Vetter <daniel.vetter@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [RFC][PATCH v3 3/3] input: i8042: Avoid resetting controller on system suspend/resume
-Date: Wed, 07 Oct 2015 01:31:44 +0200
-Message-ID: <1769930.Ws5UzSBdLV@vostro.rjw.lan>
-In-Reply-To: <20151006224308.GD31850@dtor-ws>
-References: <10641052.oOBhM6BU9G@vostro.rjw.lan> <1927174.T9TA7zgbS1@vostro.rjw.lan> <20151006224308.GD31850@dtor-ws>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: [PATCH v8 20/61] PCI: Separate realloc list checking after allocation
+Date: Tue, 27 Oct 2015 13:55:12 -0700
+Message-Id: <1445979353-1728-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, October 06, 2015 03:43:08 PM Dmitry Torokhov wrote:
-> On Wed, Oct 07, 2015 at 01:08:30AM +0200, Rafael J. Wysocki wrote:
-> > On Tuesday, October 06, 2015 03:34:42 PM Dmitry Torokhov wrote:
-> > > On Wed, Oct 07, 2015 at 12:53:49AM +0200, Rafael J. Wysocki wrote:
-> > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > 
-> > > > If the upcoming system suspend is not going to be handled by the
-> > > > platform firmware, like in the suspend-to-idle case, it is not
-> > > > necessary to reset the controller in i8042_pm_suspend(), so avoid
-> > > > doing that.
-> > > > 
-> > > > Moreover, if the system resume currently in progress has not been
-> > > > started by the platform firmware, like in the suspend-to-idle case,
-> > > > i8042_controller_resume() need not be called by i8042_pm_resume(),
-> > > > so avoid doing that too in that case.
-> > > > 
-> > > > Additionally, try to catch the event that woke up the system by
-> > > > calling the interrupt handler early during system resume if it has
-> > > > not been started by the platform firmware.
-> > > > 
-> > > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > ---
-> > > >  drivers/input/serio/i8042.c |   15 +++++++++++++--
-> > > >  1 file changed, 13 insertions(+), 2 deletions(-)
-> > > > 
-> > > > Index: linux-pm/drivers/input/serio/i8042.c
-> > > > ===================================================================
-> > > > --- linux-pm.orig/drivers/input/serio/i8042.c
-> > > > +++ linux-pm/drivers/input/serio/i8042.c
-> > > > @@ -24,6 +24,7 @@
-> > > >  #include <linux/platform_device.h>
-> > > >  #include <linux/i8042.h>
-> > > >  #include <linux/slab.h>
-> > > > +#include <linux/suspend.h>
-> > > >  
-> > > >  #include <asm/io.h>
-> > > >  
-> > > > @@ -1170,7 +1171,8 @@ static int i8042_pm_suspend(struct devic
-> > > >  {
-> > > >  	int i;
-> > > >  
-> > > > -	i8042_controller_reset(true);
-> > > > +	if (pm_suspend_via_firmware())
-> > > > +		i8042_controller_reset(true);
-> > > >  
-> > > >  	/* Set up serio interrupts for system wakeup. */
-> > > >  	for (i = 0; i < I8042_NUM_PORTS; i++) {
-> > > > @@ -1183,6 +1185,14 @@ static int i8042_pm_suspend(struct devic
-> > > >  	return 0;
-> > > >  }
-> > > >  
-> > > > +static int i8042_pm_resume_noirq(struct device *dev)
-> > > > +{
-> > > > +	if (!pm_resume_via_firmware())
-> > > > +		i8042_interrupt(0, NULL);
-> > > > +
-> > > > +	return 0;
-> > > > +}
-> > > > +
-> > > >  static int i8042_pm_resume(struct device *dev)
-> > > >  {
-> > > >  	int i;
-> > > > @@ -1199,7 +1209,7 @@ static int i8042_pm_resume(struct device
-> > > >  	 * to bring it in a sane state. (In case of S2D we expect
-> > > >  	 * BIOS to reset the controller for us.)
-> > > >  	 */
-> > > > -	return i8042_controller_resume(true);
-> > > > +	return pm_resume_via_firmware() ? i8042_controller_resume(true) : 0;
-> > > 
-> > > What happens if we were going to suspend via firmware so we reset the
-> > > controller but then we got wakeup condition and we actually did not
-> > > suspend. What pm_resume_via_firmware() will return in this case?
-> > 
-> > It will return 'false'.  Do we need to resume the controller then?
-> 
-> Yes.
-> 
-> >  But I guess
-> > 'false' should be passed to i8042_controller_resume() in that case?
-> 
-> Yes, we do not need to reset the controller in this case, just
-> reactivate multiplexing mode, etc.
+We check the realloc list, as list must be empty after allocation.
 
-So something like this I suppose:
+Separate the realloc list checking to another function.
 
+Add checking that is missed in acpiphp driver.
+
+-v2: change to WARN_ON according to Rafael.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
 ---
- drivers/input/serio/i8042.c |   16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c |  1 +
+ drivers/pci/pci.h                  |  1 +
+ drivers/pci/setup-bus.c            | 12 +++++++++---
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
-Index: linux-pm/drivers/input/serio/i8042.c
-===================================================================
---- linux-pm.orig/drivers/input/serio/i8042.c
-+++ linux-pm/drivers/input/serio/i8042.c
-@@ -24,6 +24,7 @@
- #include <linux/platform_device.h>
- #include <linux/i8042.h>
- #include <linux/slab.h>
-+#include <linux/suspend.h>
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index ff53856..ce9fb21 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+ 		}
+ 	}
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
++	pci_bus_check_realloc(&add_list);
  
- #include <asm/io.h>
+ 	acpiphp_sanitize_bus(bus);
+ 	pcie_bus_configure_settings(bus);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 39d2c50..c34c2aa 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -238,6 +238,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
+ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 				struct list_head *realloc_head,
+ 				struct list_head *fail_head);
++void pci_bus_check_realloc(struct list_head *realloc_head);
+ bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
  
-@@ -1170,7 +1171,8 @@ static int i8042_pm_suspend(struct devic
- {
- 	int i;
- 
--	i8042_controller_reset(true);
-+	if (pm_suspend_via_firmware())
-+		i8042_controller_reset(true);
- 
- 	/* Set up serio interrupts for system wakeup. */
- 	for (i = 0; i < I8042_NUM_PORTS; i++) {
-@@ -1183,6 +1185,14 @@ static int i8042_pm_suspend(struct devic
- 	return 0;
+ void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index d49c6e5..53ab81f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -280,6 +280,12 @@ out:
+ 	}
  }
  
-+static int i8042_pm_resume_noirq(struct device *dev)
++void pci_bus_check_realloc(struct list_head *realloc_head)
 +{
-+	if (!pm_resume_via_firmware())
-+		i8042_interrupt(0, NULL);
-+
-+	return 0;
++	if (WARN_ON(!list_empty(realloc_head)))
++		free_list(realloc_head);
 +}
 +
- static int i8042_pm_resume(struct device *dev)
- {
- 	int i;
-@@ -1199,7 +1209,8 @@ static int i8042_pm_resume(struct device
- 	 * to bring it in a sane state. (In case of S2D we expect
- 	 * BIOS to reset the controller for us.)
- 	 */
--	return i8042_controller_resume(true);
-+	return pm_suspend_via_firmware() ?
-+		i8042_controller_resume(pm_resume_via_firmware()) : 0;
+ /**
+  * assign_requested_resources_sorted() - satisfy resource requests
+  *
+@@ -1733,7 +1739,7 @@ again:
+ 	/* Depth last, allocate resources and update the hardware. */
+ 	__pci_bus_assign_resources(bus, add_list, &fail_head);
+ 	if (add_list)
+-		BUG_ON(!list_empty(add_list));
++		pci_bus_check_realloc(add_list);
+ 	tried_times++;
+ 
+ 	/* any device complain? */
+@@ -1808,7 +1814,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ again:
+ 	__pci_bus_size_bridges(parent, &add_list);
+ 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+-	BUG_ON(!list_empty(&add_list));
++	pci_bus_check_realloc(&add_list);
+ 	tried_times++;
+ 
+ 	if (list_empty(&fail_head))
+@@ -1867,6 +1873,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 							 &add_list);
+ 	up_read(&pci_bus_sem);
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+-	BUG_ON(!list_empty(&add_list));
++	pci_bus_check_realloc(&add_list);
  }
- 
- static int i8042_pm_thaw(struct device *dev)
-@@ -1223,6 +1234,7 @@ static int i8042_pm_restore(struct devic
- 
- static const struct dev_pm_ops i8042_pm_ops = {
- 	.suspend	= i8042_pm_suspend,
-+	.resume_noirq	= i8042_pm_resume_noirq,
- 	.resume		= i8042_pm_resume,
- 	.thaw		= i8042_pm_thaw,
- 	.poweroff	= i8042_pm_reset,
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
+-- 
+1.8.4.5
 
