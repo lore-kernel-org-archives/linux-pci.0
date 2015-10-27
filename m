@@ -1,81 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:3031 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750856AbbJORZd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Oct 2015 13:25:33 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-CC: "majun (F)" <majun258@huawei.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH RFC 4/7] genirq/msi: Make the .prepare callback reusable
-Date: Thu, 15 Oct 2015 17:24:35 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1624783E@lhreml503-mbs>
-References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
- <1444923568-17413-5-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1444923568-17413-5-git-send-email-marc.zyngier@arm.com>
-Content-Type: text/plain; charset="gb2312"
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:35757 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751454AbbJ0FsW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 01:48:22 -0400
+Subject: Re: [PATCH v2] iov: restore NumVFs register to 0 before return from
+ virtfn_max_buses()
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Ethan Zhao <ethan.zhao@oracle.com>
+References: <1442373593-8342-1-git-send-email-ethan.zhao@oracle.com>
+ <20151015171600.GB17702@localhost>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <562F1024.70001@gmail.com>
+Date: Mon, 26 Oct 2015 22:48:20 -0700
 MIME-Version: 1.0
+In-Reply-To: <20151015171600.GB17702@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTWFyYw0KDQpJdCBsb29rcyBsaWtlIHRoaXMgcGF0Y2ggZmFpbHMgdG8gYXBwbHkgdG8gNC4z
-LXJjNS4uLi4NCg0KR2FiDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTog
-bGludXgtcGNpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gb3du
-ZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgTWFyYyBaeW5naWVyDQo+IFNlbnQ6IFRo
-dXJzZGF5LCBPY3RvYmVyIDE1LCAyMDE1IDQ6MzkgUE0NCj4gVG86IFRob21hcyBHbGVpeG5lcjsg
-SmlhbmcgTGl1OyBKYXNvbiBDb29wZXINCj4gQ2M6IG1hanVuIChGKTsgbGludXgtYXJtLWtlcm5l
-bEBsaXN0cy5pbmZyYWRlYWQub3JnOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZzsgbGlu
-dXgta2VybmVsQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBbUEFUQ0ggUkZDIDQvN10gZ2Vu
-aXJxL21zaTogTWFrZSB0aGUgLnByZXBhcmUgY2FsbGJhY2sNCj4gcmV1c2FibGUNCj4gDQo+IFRo
-ZSAucHJlcGFyZSBjYWxsYmFja3MgYXJlIHNvIGZhciBvbmx5IGNhbGxlZCBmcm9tDQo+IG1zaV9k
-b21haW5fYWxsb2NfaXJxcy4NCj4gSW4gb3JkZXIgdG8gcmV1c2UgdGhhdCBjb2RlLCBzcGxpdCB0
-aGF0IGNvZGUgYW5kIGNyZWF0ZSBhDQo+IG1zaV9kb21haW5fcHJlcGFyZV9pcnFzIGZ1bmN0aW9u
-IHRoYXQgdGhlIGV4aXN0aW5nIGNvZGUgY2FuIGNhbGwgaW50by4NCj4gDQo+IFNpZ25lZC1vZmYt
-Ynk6IE1hcmMgWnluZ2llciA8bWFyYy56eW5naWVyQGFybS5jb20+DQo+IC0tLQ0KPiAgaW5jbHVk
-ZS9saW51eC9tc2kuaCB8ICA0ICsrKysNCj4gIGtlcm5lbC9pcnEvbXNpLmMgICAgfCAyMCArKysr
-KysrKysrKysrKysrKy0tLQ0KPiAgMiBmaWxlcyBjaGFuZ2VkLCAyMSBpbnNlcnRpb25zKCspLCAz
-IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvbXNpLmggYi9p
-bmNsdWRlL2xpbnV4L21zaS5oDQo+IGluZGV4IDMyYTI0YjkuLjViYjM2YTkgMTAwNjQ0DQo+IC0t
-LSBhL2luY2x1ZGUvbGludXgvbXNpLmgNCj4gKysrIGIvaW5jbHVkZS9saW51eC9tc2kuaA0KPiBA
-QCAtMjc3LDYgKzI3NywxMCBAQCBzdHJ1Y3QgaXJxX2RvbWFpbg0KPiAqcGxhdGZvcm1fbXNpX2Ny
-ZWF0ZV9pcnFfZG9tYWluKHN0cnVjdCBmd25vZGVfaGFuZGxlICpmd25vZGUsDQo+ICBpbnQgcGxh
-dGZvcm1fbXNpX2RvbWFpbl9hbGxvY19pcnFzKHN0cnVjdCBkZXZpY2UgKmRldiwgdW5zaWduZWQg
-aW50DQo+IG52ZWMsDQo+ICAJCQkJICAgaXJxX3dyaXRlX21zaV9tc2dfdCB3cml0ZV9tc2lfbXNn
-KTsNCj4gIHZvaWQgcGxhdGZvcm1fbXNpX2RvbWFpbl9mcmVlX2lycXMoc3RydWN0IGRldmljZSAq
-ZGV2KTsNCj4gKw0KPiArLyogV2hlbiBhbiBNU0kgZG9tYWluIGlzIHVzZWQgYXMgYW4gaW50ZXJt
-ZWRpYXRlIGRvbWFpbiAqLw0KPiAraW50IG1zaV9kb21haW5fcHJlcGFyZV9pcnFzKHN0cnVjdCBp
-cnFfZG9tYWluICpkb21haW4sIHN0cnVjdCBkZXZpY2UNCj4gKmRldiwNCj4gKwkJCSAgICBpbnQg
-bnZlYywgbXNpX2FsbG9jX2luZm9fdCAqYXJncyk7DQo+ICAjZW5kaWYgLyogQ09ORklHX0dFTkVS
-SUNfTVNJX0lSUV9ET01BSU4gKi8NCj4gDQo+ICAjaWZkZWYgQ09ORklHX1BDSV9NU0lfSVJRX0RP
-TUFJTg0KPiBkaWZmIC0tZ2l0IGEva2VybmVsL2lycS9tc2kuYyBiL2tlcm5lbC9pcnEvbXNpLmMN
-Cj4gaW5kZXggOTUzNTRiYi4uOGU2ZTExMiAxMDA2NDQNCj4gLS0tIGEva2VybmVsL2lycS9tc2ku
-Yw0KPiArKysgYi9rZXJuZWwvaXJxL21zaS5jDQo+IEBAIC0yNTYsNiArMjU2LDIyIEBAIHN0cnVj
-dCBpcnFfZG9tYWluICptc2lfY3JlYXRlX2lycV9kb21haW4oc3RydWN0DQo+IGZ3bm9kZV9oYW5k
-bGUgKmZ3bm9kZSwNCj4gIAkJCQkJICAgJm1zaV9kb21haW5fb3BzLCBpbmZvKTsNCj4gIH0NCj4g
-DQo+ICtpbnQgbXNpX2RvbWFpbl9wcmVwYXJlX2lycXMoc3RydWN0IGlycV9kb21haW4gKmRvbWFp
-biwgc3RydWN0IGRldmljZQ0KPiAqZGV2LA0KPiArCQkJICAgIGludCBudmVjLCBtc2lfYWxsb2Nf
-aW5mb190ICphcmcpDQo+ICt7DQo+ICsJc3RydWN0IG1zaV9kb21haW5faW5mbyAqaW5mbyA9IGRv
-bWFpbi0+aG9zdF9kYXRhOw0KPiArCXN0cnVjdCBtc2lfZG9tYWluX29wcyAqb3BzID0gaW5mby0+
-b3BzOw0KPiArCWludCByZXQ7DQo+ICsNCj4gKwlyZXQgPSBvcHMtPm1zaV9jaGVjayhkb21haW4s
-IGluZm8sIGRldik7DQo+ICsJaWYgKHJldCA9PSAwKQ0KPiArCQlyZXQgPSBvcHMtPm1zaV9wcmVw
-YXJlKGRvbWFpbiwgZGV2LCBudmVjLCBhcmcpOw0KPiArCWlmIChyZXQpDQo+ICsJCXJldHVybiBy
-ZXQ7DQo+ICsNCj4gKwlyZXR1cm4gMDsNCj4gK30NCj4gKw0KPiAgLyoqDQo+ICAgKiBtc2lfZG9t
-YWluX2FsbG9jX2lycXMgLSBBbGxvY2F0ZSBpbnRlcnJ1cHRzIGZyb20gYSBNU0kgaW50ZXJydXB0
-DQo+IGRvbWFpbg0KPiAgICogQGRvbWFpbjoJVGhlIGRvbWFpbiB0byBhbGxvY2F0ZSBmcm9tDQo+
-IEBAIC0yNzQsOSArMjkwLDcgQEAgaW50IG1zaV9kb21haW5fYWxsb2NfaXJxcyhzdHJ1Y3QgaXJx
-X2RvbWFpbiAqZG9tYWluLA0KPiBzdHJ1Y3QgZGV2aWNlICpkZXYsDQo+ICAJc3RydWN0IG1zaV9k
-ZXNjICpkZXNjOw0KPiAgCWludCBpLCByZXQsIHZpcnEgPSAtMTsNCj4gDQo+IC0JcmV0ID0gb3Bz
-LT5tc2lfY2hlY2soZG9tYWluLCBpbmZvLCBkZXYpOw0KPiAtCWlmIChyZXQgPT0gMCkNCj4gLQkJ
-cmV0ID0gb3BzLT5tc2lfcHJlcGFyZShkb21haW4sIGRldiwgbnZlYywgJmFyZyk7DQo+ICsJcmV0
-ID0gbXNpX2RvbWFpbl9wcmVwYXJlX2lycXMoZG9tYWluLCBkZXYsIG52ZWMsICZhcmcpOw0KPiAg
-CWlmIChyZXQpDQo+ICAJCXJldHVybiByZXQ7DQo+IA0KPiAtLQ0KPiAyLjEuNA0KPiANCj4gLS0N
-Cj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2Ny
-aWJlIGxpbnV4LXBjaSIgaW4NCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2
-Z2VyLmtlcm5lbC5vcmcNCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2Vy
-bmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
+On 10/15/2015 10:16 AM, Bjorn Helgaas wrote:
+> Hi Ethan,
+>
+> On Wed, Sep 16, 2015 at 12:19:53PM +0900, Ethan Zhao wrote:
+>> After commit 4449f079722c ("PCI: Calculate maximum number of buses
+>> required for VFs"),the initial value of NumVFs register was left to
+>> non-zero after sriov_init() and no VFs was enabled in device driver.
+>> this changed the behaviour of kernel exported by lspci and sysfs etc.
+>> so this patch restore the NumVFs register to zero after the
+>> calculation of max_VF_buses was done and before return from
+>> virtfn_max_buses().
+>>
+>> Tested on stable 4.1 and passed building on stable 4.3-rc1
+>>
+>> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+>> Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
+> Can you test the patch below?  I'm trying to avoid touching
+> PCI_SRIOV_NUM_VF in more than one place, and I think it's OK to set it
+> and test offset/stride at the end, instead of setting NUM_VF to zero,
+> testing offset/stride, computing max_bus, then setting NUM_VF to zero
+> again.
+>
+> Bjorn
+>
+>
+> commit 8e20e89658f23b8d16b1e21810e9f63c8625129c
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Thu Oct 15 11:31:21 2015 -0500
+>
+>      PCI: Set SR-IOV NumVFs to zero after enumeration
+>      
+>      The enumeration path should leave NumVFs set to zero.  But after
+>      4449f079722c ("PCI: Calculate maximum number of buses required for VFs"),
+>      we call virtfn_max_buses() in the enumeration path, which changes NumVFs.
+>      This NumVFs change is visible via lspci and sysfs until a driver enables
+>      SR-IOV.
+>      
+>      Set NumVFs to zero after virtfn_max_buses() computes the maximum number of
+>      buses.
+>      
+>      Fixes: 4449f079722c ("PCI: Calculate maximum number of buses required for VFs")
+>      Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
+>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index ee0ebff..0202ab0 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -384,7 +384,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>   	int rc;
+>   	int nres;
+>   	u32 pgsz;
+> -	u16 ctrl, total, offset, stride;
+> +	u16 ctrl, total;
+>   	struct pci_sriov *iov;
+>   	struct resource *res;
+>   	struct pci_dev *pdev;
+> @@ -414,11 +414,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>   
+>   found:
+>   	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+> -	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
+> -	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
+> -	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
+> -	if (!offset || (total > 1 && !stride))
+> -		return -EIO;
+>   
+>   	pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
+>   	i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
+> @@ -456,8 +451,6 @@ found:
+>   	iov->nres = nres;
+>   	iov->ctrl = ctrl;
+>   	iov->total_VFs = total;
+> -	iov->offset = offset;
+> -	iov->stride = stride;
+>   	iov->pgsz = pgsz;
+>   	iov->self = dev;
+>   	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+> @@ -475,6 +468,11 @@ found:
+>   	dev->sriov = iov;
+>   	dev->is_physfn = 1;
+>   	iov->max_VF_buses = virtfn_max_buses(dev);
+> +	pci_iov_set_numvfs(dev, 0);
+> +	if (!iov->offset || (total > 1 && !iov->stride)) {
+> +		rc = -EIO;
+> +		goto failed;
+> +	}
+>   
+>   	return 0;
+>   
+
+You might want to reorder this a bit.  The problem is offset and stride 
+can be 0 if numvfs is 0.  So you should probably test offset and stride 
+first, and then reset numvfs to 0.
+
+- Alex
+
