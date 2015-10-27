@@ -1,49 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f65.google.com ([209.85.213.65]:35424 "EHLO
-	mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781AbbJWGxH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Oct 2015 02:53:07 -0400
-Received: by vkex70 with SMTP id x70so5101818vke.2
-        for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2015 23:53:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20151022153455.GA16360@localhost>
-References: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<1445504666.3173.20.camel@pengutronix.de>
-	<20151022153455.GA16360@localhost>
-Date: Fri, 23 Oct 2015 12:23:03 +0530
-Message-ID: <CAHM4w1=uMoHs11_ow=o62sp2iHcxjJMusQy9361nxquwM+Su5A@mail.gmail.com>
-Subject: Re: [PATCH v4 0/4] PCI: designware: LTSSM #define cleanup
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Fabio Estevam <festevam@gmail.com>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Murali Karicheri <m-karicheri2@ti.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 21/61] PCI: Treat optional as required in first try for bridge rescan
+Date: Tue, 27 Oct 2015 13:55:13 -0700
+Message-Id: <1445979353-1728-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 22, 2015 at 9:04 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Oct 22, 2015 at 11:04:26AM +0200, Lucas Stach wrote:
->> I'm not sure if I like the removal of all the LTSSM state defines, as
->> not all reference manuals include them and so I liked to have the header
->> as a reference. But if you prefer to not carry unused defines in the
->> kernel I won't object strongly to the removal.
->>
->> Otherwise the series looks fine, which you may take as a Reviewed-by.
->
-> Thanks, Lucas.
->
-> OK, I put the rest of the LTSSM #defines back in
-> drivers/pci/host/pcie-designware.h as a separate patch (below):
->
+For rescan bridge/bus that children are removed before, we should treat
+optional as required just like root bus the boot time in 19aa7ee432ce
+(PCI: make re-allocation try harder by reassigning ranges higher in
+the heirarchy).
 
-Thanks for putting it back. Its useful to debug issues related to link
-training, which one finds many a time with new silicon. And as Lucas
-pointed, its not mentioned in most of the user manual. I remember, I
-had to grep it into RTL code :(.
+The reason: allocate required and expand to optional path do not
+put failed resource to fail list, so will lose required info before
+next try.
 
-For the series
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+So we are using following way:
+1. First and following try before last try:
+   We don't keep realloc list so treat every optional as required.
+   allocate for required+optional and put failed in the fail list.
+   then size info (include must and optonal separatedly) will be kept
+   for next try.
+2. last try:
+   a: try to allocate required+optional to see if all get allocated.
+   b: try to allocate required then expand to optional.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 53ab81f..5505942 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1802,25 +1802,34 @@ void __init pci_assign_unassigned_resources(void)
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ {
+ 	struct pci_bus *parent = bridge->subordinate;
+-	LIST_HEAD(add_list); /* list of resources that
++	LIST_HEAD(realloc_head); /* list of resources that
+ 					want additional resources */
++	struct list_head *add_list = NULL;
+ 	int tried_times = 0;
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+ 	int retval;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
++	int pci_try_num = 2;
+ 
+ again:
+-	__pci_bus_size_bridges(parent, &add_list);
+-	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+-	pci_bus_check_realloc(&add_list);
++	/*
++	 * last try will use add_list, otherwise will try good to have as
++	 * must have, so can realloc parent bridge resource
++	 */
++	if (tried_times + 1 == pci_try_num)
++		add_list = &realloc_head;
++	__pci_bus_size_bridges(parent, add_list);
++	__pci_bridge_assign_resources(bridge, add_list, &fail_head);
++	if (add_list)
++		pci_bus_check_realloc(add_list);
+ 	tried_times++;
+ 
+ 	if (list_empty(&fail_head))
+ 		goto enable_all;
+ 
+-	if (tried_times >= 2) {
++	if (tried_times >= pci_try_num) {
+ 		/* still fail, don't need to try more */
+ 		free_list(&fail_head);
+ 		goto enable_all;
+-- 
+1.8.4.5
+
