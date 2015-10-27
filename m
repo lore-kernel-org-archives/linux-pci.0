@@ -1,59 +1,100 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 27 Oct 2015 09:38:12 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: bhelgaas@google.com, rjw@rjwysocki.net, lenb@kernel.org,
-	catalin.marinas@arm.com, will.deacon@arm.com,
-	hanjun.guo@linaro.org, thomas.lendacky@amd.com,
-	herbert@gondor.apana.org.au, davem@davemloft.net,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Murali Karicheri <m-karicheri2@ti.com>
-Subject: Re: [PATCH V4 7/8] PCI: OF: Move of_pci_dma_configure() to
- pci_dma_configure()
-Message-ID: <20151027143812.GB8660@localhost>
-References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <1445442731-28819-8-git-send-email-Suravee.Suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445442731-28819-8-git-send-email-Suravee.Suthikulpanit@amd.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 13/61] PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
+Date: Tue, 27 Oct 2015 13:55:05 -0700
+Message-Id: <1445979353-1728-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Suravee,
+If any bridge up to root only have 32bit pref mmio, We don't need to
+treat device non-pref mmio64 as as pref mmio64.
 
-On Wed, Oct 21, 2015 at 08:52:10AM -0700, Suravee Suthikulpanit wrote:
-> This patch move of_pci_dma_configure() to a more generic
-> pci_dma_configure(), which can be extended by non-OF code (e.g. ACPI).
+We need to move pci_bridge_check_ranges calling early.
+for parent bridges pref mmio BAR may not allocated by BIOS, res flags
+is still 0, we need to have it correct set before we check them for
+child device resources.
 
-> -void of_pci_dma_configure(struct pci_dev *pci_dev)
-> -{
-> -	struct device *dev = &pci_dev->dev;
-> -	struct device *bridge = pci_get_host_bridge_device(pci_dev);
-> -
-> -	if (!bridge->parent)
-> -		return;
-> -
-> -	of_dma_configure(dev, bridge->parent->of_node);
-> -	pci_put_host_bridge_device(bridge);
-> -}
+-v2: check all bus resources instead of just res[15].
 
-> +static void pci_dma_configure(struct pci_dev *dev)
-> +{
-> +	struct device *bridge = pci_get_host_bridge_device(dev);
-> +
-> +	if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
-> +		if (!bridge->parent)
-> +			return;
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+---
+ drivers/pci/setup-bus.c | 31 +++++++++++++++++++++++++++++--
+ 1 file changed, 29 insertions(+), 2 deletions(-)
 
-Don't we leak a bridge reference here?  This looks like it was a problem in
-the original code, not something you added.  Ideally I guess I would add a
-new patch that only fixes the leak in the original code, followed by this
-patch that moves it from of_pci_dma_configure() to pci_dma_configure().
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 6c43c43..b1e4595 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -739,6 +739,29 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 	return -EINVAL;
+ }
+ 
++static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
++{
++	if (pci_is_root_bus(bus))
++		return true;
++
++	if (bus->self) {
++		int i;
++		bool found = false;
++		struct resource *res;
++
++		pci_bus_for_each_resource(bus, res, i)
++			if (res->flags & IORESOURCE_MEM_64) {
++				found = true;
++				break;
++			}
++
++		if (!found)
++			return false;
++	}
++
++	return pci_up_path_over_pref_mem64(bus->parent);
++}
++
+ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 				 struct resource *res)
+ {
+@@ -747,7 +770,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 
+ 	if ((res->flags & IORESOURCE_MEM) &&
+ 	    (res->flags & IORESOURCE_MEM_64) &&
+-	    dev->on_all_pcie_path)
++	    dev->on_all_pcie_path &&
++	    pci_up_path_over_pref_mem64(dev->bus))
+ 		return res->flags | IORESOURCE_PREFETCH;
+ 
+ 	return res->flags;
+@@ -1239,6 +1263,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	struct resource *b_res;
+ 	int ret;
+ 
++	if (!pci_is_root_bus(bus) &&
++	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
++		pci_bridge_check_ranges(bus);
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		struct pci_bus *b = dev->subordinate;
+ 		if (!b)
+@@ -1266,7 +1294,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		break;
+ 
+ 	case PCI_CLASS_BRIDGE_PCI:
+-		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+ 			additional_io_size  = pci_hotplug_io_size;
+ 			additional_mem_size = pci_hotplug_mem_size;
+-- 
+1.8.4.5
 
-> +
-> +		of_dma_configure(&dev->dev, bridge->parent->of_node);
-> +	}
-> +
-> +	pci_put_host_bridge_device(bridge);
-> +}
