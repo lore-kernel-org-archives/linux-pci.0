@@ -1,98 +1,128 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 42/61] PCI: Skip required+optional if there is no optional
-Date: Tue, 27 Oct 2015 13:55:34 -0700
-Message-Id: <1445979353-1728-43-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:42174 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751970AbbJ0J3A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 05:29:00 -0400
+Message-ID: <562F43C6.7000009@oracle.com>
+Date: Tue, 27 Oct 2015 17:28:38 +0800
+From: ethan zhao <ethan.zhao@oracle.com>
+MIME-Version: 1.0
+To: Alexander Duyck <alexander.duyck@gmail.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] iov: restore NumVFs register to 0 before return from
+ virtfn_max_buses()
+References: <1442373593-8342-1-git-send-email-ethan.zhao@oracle.com> <20151015171600.GB17702@localhost> <562F1024.70001@gmail.com>
+In-Reply-To: <562F1024.70001@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the bridge does not support hotplug and has no child with sriov support,
-We will not have optional resources. We could get out early and
-don't try required+optional allocation.
+Alexander,
+On 2015/10/27 13:48, Alexander Duyck wrote:
+> On 10/15/2015 10:16 AM, Bjorn Helgaas wrote:
+>> Hi Ethan,
+>>
+>> On Wed, Sep 16, 2015 at 12:19:53PM +0900, Ethan Zhao wrote:
+>>> After commit 4449f079722c ("PCI: Calculate maximum number of buses
+>>> required for VFs"),the initial value of NumVFs register was left to
+>>> non-zero after sriov_init() and no VFs was enabled in device driver.
+>>> this changed the behaviour of kernel exported by lspci and sysfs etc.
+>>> so this patch restore the NumVFs register to zero after the
+>>> calculation of max_VF_buses was done and before return from
+>>> virtfn_max_buses().
+>>>
+>>> Tested on stable 4.1 and passed building on stable 4.3-rc1
+>>>
+>>> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+>>> Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
+>> Can you test the patch below?  I'm trying to avoid touching
+>> PCI_SRIOV_NUM_VF in more than one place, and I think it's OK to set it
+>> and test offset/stride at the end, instead of setting NUM_VF to zero,
+>> testing offset/stride, computing max_bus, then setting NUM_VF to zero
+>> again.
+>>
+>> Bjorn
+>>
+>>
+>> commit 8e20e89658f23b8d16b1e21810e9f63c8625129c
+>> Author: Bjorn Helgaas <bhelgaas@google.com>
+>> Date:   Thu Oct 15 11:31:21 2015 -0500
+>>
+>>      PCI: Set SR-IOV NumVFs to zero after enumeration
+>>           The enumeration path should leave NumVFs set to zero. But 
+>> after
+>>      4449f079722c ("PCI: Calculate maximum number of buses required 
+>> for VFs"),
+>>      we call virtfn_max_buses() in the enumeration path, which 
+>> changes NumVFs.
+>>      This NumVFs change is visible via lspci and sysfs until a driver 
+>> enables
+>>      SR-IOV.
+>>           Set NumVFs to zero after virtfn_max_buses() computes the 
+>> maximum number of
+>>      buses.
+>>           Fixes: 4449f079722c ("PCI: Calculate maximum number of 
+>> buses required for VFs")
+>>      Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
+>>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index ee0ebff..0202ab0 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -384,7 +384,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>>       int rc;
+>>       int nres;
+>>       u32 pgsz;
+>> -    u16 ctrl, total, offset, stride;
+>> +    u16 ctrl, total;
+>>       struct pci_sriov *iov;
+>>       struct resource *res;
+>>       struct pci_dev *pdev;
+>> @@ -414,11 +414,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>>     found:
+>>       pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+>> -    pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
+>> -    pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
+>> -    pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
+>> -    if (!offset || (total > 1 && !stride))
+>> -        return -EIO;
+>>         pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
+>>       i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
+>> @@ -456,8 +451,6 @@ found:
+>>       iov->nres = nres;
+>>       iov->ctrl = ctrl;
+>>       iov->total_VFs = total;
+>> -    iov->offset = offset;
+>> -    iov->stride = stride;
+>>       iov->pgsz = pgsz;
+>>       iov->self = dev;
+>>       pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+>> @@ -475,6 +468,11 @@ found:
+>>       dev->sriov = iov;
+>>       dev->is_physfn = 1;
+>>       iov->max_VF_buses = virtfn_max_buses(dev);
+>> +    pci_iov_set_numvfs(dev, 0);
+>> +    if (!iov->offset || (total > 1 && !iov->stride)) {
+>> +        rc = -EIO;
+>> +        goto failed;
+>> +    }
+>>         return 0;
+>
+> You might want to reorder this a bit.  The problem is offset and 
+> stride can be 0 if numvfs is 0.  So you should probably test offset 
+> and stride 
+  Yes, the spec says "Note: First VF Offset is unused if NumVFs is 0. If 
+NumVFs is greater than 0, First VF Offset must
+25 not be zero. "
+> first, and then reset numvfs to 0.
+  Why test it before reset numvfs ?
 
-Also in the loop that update res with optional add info, skip resource
-that add_size is 0.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 32 +++++++++++++++++++++++++++++---
- 1 file changed, 29 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index c49bfde..5143ea2 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -450,6 +450,24 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
- 	return false;	/* should not get here */
- }
- 
-+static bool has_addon(struct list_head *head,
-+			struct list_head *realloc_head)
-+{
-+	int add_count = 0;
-+	struct pci_dev_resource *dev_res, *tmp_res;
-+
-+	/* check if we have add really */
-+	list_for_each_entry(dev_res, head, list) {
-+		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
-+		if (!tmp_res || !tmp_res->add_size)
-+			continue;
-+
-+		add_count++;
-+	}
-+
-+	return add_count != 0;
-+}
-+
- static bool save_resources(struct list_head *head,
- 			   struct list_head *save_head)
- {
-@@ -481,16 +499,24 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
--	resource_size_t add_align;
-+	resource_size_t add_align, add_size;
- 	struct resource *res;
- 
-+	if (!has_addon(head, realloc_head))
-+		return false;
-+
- 	if (!save_resources(head, &save_head))
- 		return false;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
--		res->end += get_res_add_size(realloc_head, res);
-+		add_size = get_res_add_size(realloc_head, res);
-+
-+		if (!add_size)
-+			continue;
-+
-+		res->end += add_size;
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
-@@ -578,7 +604,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 */
- 
- 	/* Check required+optional add */
--	if (realloc_head && !list_empty(realloc_head) &&
-+	if (realloc_head &&
- 	    __assign_resources_required_optional_sorted(head, realloc_head))
- 		return;
- 
--- 
-1.8.4.5
+Thanks,
+Ethan
+>
+> - Alex
+>
 
