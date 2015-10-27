@@ -1,56 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:32865 "EHLO
-	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752010AbbJLM0z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 08:26:55 -0400
-Received: by iodv82 with SMTP id v82so49079445iod.0
-        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2015 05:26:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1444645188.3364.5.camel@pengutronix.de>
-References: <1444355306-21486-1-git-send-email-festevam@gmail.com>
-	<1444645188.3364.5.camel@pengutronix.de>
-Date: Mon, 12 Oct 2015 09:26:54 -0300
-Message-ID: <CAOMZO5CmNEdjmsSmXx2Cv+SP_Dd81r6dxviS-ZVUJjK4+v_hbA@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] PCI: designware: Move LTSSM state definitions to pcie-designware.h
-From: Fabio Estevam <festevam@gmail.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
-	m-karicheri2 <m-karicheri2@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 42/61] PCI: Skip required+optional if there is no optional
+Date: Tue, 27 Oct 2015 13:55:34 -0700
+Message-Id: <1445979353-1728-43-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lucas,
+If the bridge does not support hotplug and has no child with sriov support,
+We will not have optional resources. We could get out early and
+don't try required+optional allocation.
 
-On Mon, Oct 12, 2015 at 7:19 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Am Donnerstag, den 08.10.2015, 22:48 -0300 schrieb Fabio Estevam:
->> From: Fabio Estevam <fabio.estevam@freescale.com>
->>
->> Move LTSSM state definitions to common pcie-designware.h so that other
->> drivers can make use of them.
->>
->> Also, in order to avoid name collision define LTSSM_STATE_MASK_KS, as
->> keystone uses a different LTSSM mask.
->>
-> Why? Is this some kind of difference between the DW PCIe core revisions?
+Also in the loop that update res with optional add info, skip resource
+that add_size is 0.
 
-This patch does not alter the LTSSM masks that are used currently and
-they match the ones stated in the SoC manuals.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 32 +++++++++++++++++++++++++++++---
+ 1 file changed, 29 insertions(+), 3 deletions(-)
 
-For keystone:
-http://www.ti.com/lit/ug/sprugs6d/sprugs6d.pdf
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c49bfde..5143ea2 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -450,6 +450,24 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
+ 	return false;	/* should not get here */
+ }
+ 
++static bool has_addon(struct list_head *head,
++			struct list_head *realloc_head)
++{
++	int add_count = 0;
++	struct pci_dev_resource *dev_res, *tmp_res;
++
++	/* check if we have add really */
++	list_for_each_entry(dev_res, head, list) {
++		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
++		if (!tmp_res || !tmp_res->add_size)
++			continue;
++
++		add_count++;
++	}
++
++	return add_count != 0;
++}
++
+ static bool save_resources(struct list_head *head,
+ 			   struct list_head *save_head)
+ {
+@@ -481,16 +499,24 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 	struct pci_dev_resource *save_res;
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+-	resource_size_t add_align;
++	resource_size_t add_align, add_size;
+ 	struct resource *res;
+ 
++	if (!has_addon(head, realloc_head))
++		return false;
++
+ 	if (!save_resources(head, &save_head))
+ 		return false;
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+ 		res = dev_res->res;
+-		res->end += get_res_add_size(realloc_head, res);
++		add_size = get_res_add_size(realloc_head, res);
++
++		if (!add_size)
++			continue;
++
++		res->end += add_size;
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+@@ -578,7 +604,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 */
+ 
+ 	/* Check required+optional add */
+-	if (realloc_head && !list_empty(realloc_head) &&
++	if (realloc_head &&
+ 	    __assign_resources_required_optional_sorted(head, realloc_head))
+ 		return;
+ 
+-- 
+1.8.4.5
 
-Section "48.9.11 Debug Register 0 (PCIE_PL_DEBUG0)" shows that LTSSM
-current state has 6 bits.
-
-For i.MX6:
-
-Section "3.9.11 Debug 0 Register (DEBUG0)" shows that LTSSM_STATE
-field has 5 bits.
-
-Regards,
-
-Fabio Estevam
