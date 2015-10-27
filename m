@@ -1,41 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.w1.samsung.com ([210.118.77.13]:9903 "EHLO
-	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962AbbJGKtz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Oct 2015 06:49:55 -0400
-From: Pavel Fedin <p.fedin@samsung.com>
-To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Cc: Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Peter Maydell <peter.maydell@linaro.org>
-Subject: [PATCH 0/2] PCI: of: Fix handling 64-bit PCI resources on non-LPAE
- kernels
-Date: Wed, 07 Oct 2015 13:49:19 +0300
-Message-id: <cover.1444214119.git.p.fedin@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 1/5] iov: Update virtfn_max_buses to validate offset and
+ stride
+From: Alexander Duyck <aduyck@mirantis.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 27 Oct 2015 13:52:15 -0700
+Message-ID: <20151027205215.14626.93504.stgit@localhost.localdomain>
+In-Reply-To: <20151027204607.14626.59671.stgit@localhost.localdomain>
+References: <20151027204607.14626.59671.stgit@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The initial aim of this series is to fix long-standing problem with generic
-PCI host controller, triggered by ARM "virt" machine in the recent qemu.
-Since v2.4.50 qemu adds support for the second, large PCI MMIO window,
-which resides in 64-bit address space. This series addresses problems,
-which are triggered on non-LPAE kernels by this configuration.
+This patch pulls the validation of offset and stride into virtfn_max_buses.
+The general idea is to validate offset and stride for each possible value
+of numvfs in addition to still determining the maximum bus value for the
+VFs.
 
-These patches do not depend on each other and can be applied individually.
-The first adds missing recognition of 64-bit resources (which is actually
-a bug). The second one changes the code to ignore unaccessible resources
-instead of completely bailing out. Since it touches generic of_pci code,
-the fix is expected to be applied to all drivers which use
-of_pci_get_host_bridge_resources().
+I also reversed the loop as the most likely maximum will be when numvfs is
+set to total_VFs.  In addition this makes it so that we loop down to a
+value of 0 for numvfs which should be the resting state for the register.
 
-Pavel Fedin (2):
-  PCI: of: Add 64-bit address recognition without LPAE support
-  PCI: of: Ignore resources with failed translation
+Fixes: 8e20e89658f2 ("PCI: Set SR-IOV NumVFs to zero after enumeration")
+Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+---
+ drivers/pci/iov.c |   42 ++++++++++++++++++++++++------------------
+ 1 file changed, 24 insertions(+), 18 deletions(-)
 
- drivers/of/address.c | 6 ++++++
- drivers/of/of_pci.c  | 6 ++++--
- 2 files changed, 10 insertions(+), 2 deletions(-)
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index f8bfc1d39845..099050d78a39 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -54,24 +54,33 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+  * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
+  * determine how many additional bus numbers will be consumed by VFs.
+  *
+- * Iterate over all valid NumVFs and calculate the maximum number of bus
+- * numbers that could ever be required.
++ * Iterate over all valid NumVFs, validate offset and stride, and calculate
++ * the maximum number of bus numbers that could ever be required.
+  */
+-static inline u8 virtfn_max_buses(struct pci_dev *dev)
++static int virtfn_max_buses(struct pci_dev *dev)
+ {
+ 	struct pci_sriov *iov = dev->sriov;
+-	int nr_virtfn;
+-	u8 max = 0;
++	int nr_virtfn = iov->total_VFs;
+ 	int busnr;
+ 
+-	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
+-		pci_iov_set_numvfs(dev, nr_virtfn);
++	pci_iov_set_numvfs(dev, nr_virtfn);
++
++	while (nr_virtfn--) {
++		if (!iov->offset || !iov->stride)
++			goto err;
++
+ 		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+-		if (busnr > max)
+-			max = busnr;
++		if (busnr > iov->max_VF_buses)
++			iov->max_VF_buses = busnr;
++
++		pci_iov_set_numvfs(dev, nr_virtfn);
+ 	}
+ 
+-	return max;
++	return 0;
++err:
++	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
++
++	return -EIO;
+ }
+ 
+ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+@@ -467,22 +476,19 @@ found:
+ 
+ 	dev->sriov = iov;
+ 	dev->is_physfn = 1;
+-	iov->max_VF_buses = virtfn_max_buses(dev);
+-	pci_iov_set_numvfs(dev, 0);
+-	if (!iov->offset || (total > 1 && !iov->stride)) {
+-		rc = -EIO;
+-		goto failed;
+-	}
+ 
+-	return 0;
++	rc = virtfn_max_buses(dev);
++	if (!rc)
++		return 0;
+ 
++	dev->sriov = NULL;
++	dev->is_physfn = 0;
+ failed:
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = &dev->resource[i + PCI_IOV_RESOURCES];
+ 		res->flags = 0;
+ 	}
+ 
+-	dev->sriov = NULL;
+ 	kfree(iov);
+ 	return rc;
+ }
 
--- 
-2.4.4
