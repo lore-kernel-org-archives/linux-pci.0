@@ -1,240 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37344 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965635AbbJ0U5O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 16:57:14 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 28/61] PCI: Optimize bus align/size calculation for optional during sizing
-Date: Tue, 27 Oct 2015 13:55:20 -0700
-Message-Id: <1445979353-1728-29-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:36369 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932425AbbJ0PPd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 11:15:33 -0400
+Subject: Re: [PATCH v2] iov: restore NumVFs register to 0 before return from
+ virtfn_max_buses()
+To: ethan zhao <ethan.zhao@oracle.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+References: <1442373593-8342-1-git-send-email-ethan.zhao@oracle.com>
+ <20151015171600.GB17702@localhost> <562F1024.70001@gmail.com>
+ <562F43C6.7000009@oracle.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <562F9512.3000907@gmail.com>
+Date: Tue, 27 Oct 2015 08:15:30 -0700
+MIME-Version: 1.0
+In-Reply-To: <562F43C6.7000009@oracle.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current add_align always use max align, that make required+optional
-to get allocated more than needed in some cases.
+On 10/27/2015 02:28 AM, ethan zhao wrote:
+> Alexander,
+> On 2015/10/27 13:48, Alexander Duyck wrote:
+>> On 10/15/2015 10:16 AM, Bjorn Helgaas wrote:
+>>> Hi Ethan,
+>>>
+>>> On Wed, Sep 16, 2015 at 12:19:53PM +0900, Ethan Zhao wrote:
+>>>> After commit 4449f079722c ("PCI: Calculate maximum number of buses
+>>>> required for VFs"),the initial value of NumVFs register was left to
+>>>> non-zero after sriov_init() and no VFs was enabled in device driver.
+>>>> this changed the behaviour of kernel exported by lspci and sysfs etc.
+>>>> so this patch restore the NumVFs register to zero after the
+>>>> calculation of max_VF_buses was done and before return from
+>>>> virtfn_max_buses().
+>>>>
+>>>> Tested on stable 4.1 and passed building on stable 4.3-rc1
+>>>>
+>>>> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+>>>> Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
+>>> Can you test the patch below?  I'm trying to avoid touching
+>>> PCI_SRIOV_NUM_VF in more than one place, and I think it's OK to set it
+>>> and test offset/stride at the end, instead of setting NUM_VF to zero,
+>>> testing offset/stride, computing max_bus, then setting NUM_VF to zero
+>>> again.
+>>>
+>>> Bjorn
+>>>
+>>>
+>>> commit 8e20e89658f23b8d16b1e21810e9f63c8625129c
+>>> Author: Bjorn Helgaas <bhelgaas@google.com>
+>>> Date:   Thu Oct 15 11:31:21 2015 -0500
+>>>
+>>>      PCI: Set SR-IOV NumVFs to zero after enumeration
+>>>           The enumeration path should leave NumVFs set to zero. But 
+>>> after
+>>>      4449f079722c ("PCI: Calculate maximum number of buses required 
+>>> for VFs"),
+>>>      we call virtfn_max_buses() in the enumeration path, which 
+>>> changes NumVFs.
+>>>      This NumVFs change is visible via lspci and sysfs until a 
+>>> driver enables
+>>>      SR-IOV.
+>>>           Set NumVFs to zero after virtfn_max_buses() computes the 
+>>> maximum number of
+>>>      buses.
+>>>           Fixes: 4449f079722c ("PCI: Calculate maximum number of 
+>>> buses required for VFs")
+>>>      Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
+>>>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>
+>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>>> index ee0ebff..0202ab0 100644
+>>> --- a/drivers/pci/iov.c
+>>> +++ b/drivers/pci/iov.c
+>>> @@ -384,7 +384,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>>>       int rc;
+>>>       int nres;
+>>>       u32 pgsz;
+>>> -    u16 ctrl, total, offset, stride;
+>>> +    u16 ctrl, total;
+>>>       struct pci_sriov *iov;
+>>>       struct resource *res;
+>>>       struct pci_dev *pdev;
+>>> @@ -414,11 +414,6 @@ static int sriov_init(struct pci_dev *dev, int 
+>>> pos)
+>>>     found:
+>>>       pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+>>> -    pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
+>>> -    pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
+>>> -    pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
+>>> -    if (!offset || (total > 1 && !stride))
+>>> -        return -EIO;
+>>>         pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
+>>>       i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
+>>> @@ -456,8 +451,6 @@ found:
+>>>       iov->nres = nres;
+>>>       iov->ctrl = ctrl;
+>>>       iov->total_VFs = total;
+>>> -    iov->offset = offset;
+>>> -    iov->stride = stride;
+>>>       iov->pgsz = pgsz;
+>>>       iov->self = dev;
+>>>       pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+>>> @@ -475,6 +468,11 @@ found:
+>>>       dev->sriov = iov;
+>>>       dev->is_physfn = 1;
+>>>       iov->max_VF_buses = virtfn_max_buses(dev);
+>>> +    pci_iov_set_numvfs(dev, 0);
+>>> +    if (!iov->offset || (total > 1 && !iov->stride)) {
+>>> +        rc = -EIO;
+>>> +        goto failed;
+>>> +    }
+>>>         return 0;
+>>
+>> You might want to reorder this a bit.  The problem is offset and 
+>> stride can be 0 if numvfs is 0.  So you should probably test offset 
+>> and stride 
+>  Yes, the spec says "Note: First VF Offset is unused if NumVFs is 0. 
+> If NumVFs is greater than 0, First VF Offset must
+> 25 not be zero. "
+>> first, and then reset numvfs to 0.
+>  Why test it before reset numvfs ?
 
-Now we have new calculate_mem_align(), so we could use it for
-add_align calculation.
+Because pci_iov_set_numvfs will end up resetting offset and stride based 
+on the values when it writes the 0 into numvfs.  As such testing it 
+after the reset could give you invalid values since offset and stride 
+can be 0 when numvfs is 0.
 
-Need to create separated list for required+optional align/size info.
+Actually maybe I will go over this and submit a couple patches myself.  
+Looking over things it seems like the code has gotten a bit silly since 
+virtfn_max_busses looks like it is iterating over VFs and that doesn't 
+make much sense when offset and stride are both positive values so it 
+should just be a matter of computing the bus of the last VF.
 
-After that we can get smaller add_align/size, and we have more chance
-to make required+optional to get allocated sucessfully.
-
-The result for bridge that have Intel 4x10g card installed:
-
- pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
-	to [bus 2a-31] calculate_mem for required
- align/size:
-   00800000/00800000, 00800000/00800000, 00800000/00800000,
-   00800000/00800000, 00008000/00008000, 00008000/00008000,
-   00008000/00008000, 00008000/00008000
- original min_align/min_size: 00400000/02400000
- new min_align/min_size: 00400000/02400000
-
- pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
-	to [bus 2a-31] calculate_mem for required+optional
- align/size:
-   00800000/00800000, 00800000/00800000, 00800000/00800000,
-   00800000/00800000, 00010000/00200000, 00010000/00200000,
-   00010000/00200000, 00010000/00200000, 00008000/00008000,
-   00008000/00008000, 00008000/00008000, 00008000/00008000,
-   00004000/00080000, 00004000/00080000, 00004000/00080000,
-   00004000/00080000
- original code min_align/min_size: 00800000/03000000
- new min_align/min_size: 00100000/02b00000
-
-so required align/size: 0x400000/0x2400000, and
-new required+optional align/size: 0x100000/0x2b00000, and it is much better
-than original required+optional align/size: 0x800000/0x3000000
-and even have smaller min_align than required.
-
--v2: remove not used size1 in calculate_memsize
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Reported-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
-
- drivers/pci/setup-bus.c |   82 +++++++++++++++++++++++++++++-------------------
- 1 file changed, 51 insertions(+), 31 deletions(-)
----
- drivers/pci/setup-bus.c | 82 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 51 insertions(+), 31 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 8f0ad46..0c6977c9 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -944,7 +944,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 
- static resource_size_t calculate_memsize(resource_size_t size,
- 		resource_size_t min_size,
--		resource_size_t size1,
- 		resource_size_t old_size,
- 		resource_size_t align)
- {
-@@ -954,7 +953,7 @@ static resource_size_t calculate_memsize(resource_size_t size,
- 		old_size = 0;
- 	if (size < old_size)
- 		size = old_size;
--	size = ALIGN(size + size1, align);
-+	size = ALIGN(size, align);
- 	return size;
- }
- 
-@@ -1217,45 +1216,46 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
--	resource_size_t min_align, align, size, size0, size1;
--	resource_size_t max_align = 0;
-+	resource_size_t min_align = 0, min_add_align = 0;
-+	resource_size_t max_align = 0, max_add_align = 0;
-+	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
- 	struct resource *b_res = find_free_bus_resource(bus,
- 					mask | IORESOURCE_PREFETCH, type);
--	resource_size_t children_add_size = 0;
--	resource_size_t children_add_align = 0;
--	resource_size_t add_align = 0;
- 	LIST_HEAD(align_test_list);
-+	LIST_HEAD(align_test_add_list);
- 
- 	if (!b_res)
- 		return -ENOSPC;
- 
--	size = 0;
--
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
--			resource_size_t r_size;
-+			resource_size_t r_size, align;
- 			int flags = pci_resource_pref_compatible(dev, r);
- 
- 			if (r->parent || ((flags & mask) != type &&
- 					  (flags & mask) != type2 &&
- 					  (flags & mask) != type3))
- 				continue;
-+
- 			r_size = resource_size(r);
-+			align = pci_resource_alignment(dev, r);
- #ifdef CONFIG_PCI_IOV
- 			/* put SRIOV requested res to the optional list */
- 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
- 					i <= PCI_IOV_RESOURCE_END) {
--				add_align = max(pci_resource_alignment(dev, r), add_align);
-+				add_to_align_test_list(&align_test_add_list,
-+							align, r_size);
- 				r->end = r->start - 1;
- 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
--				children_add_size += r_size;
-+				sum_add_size += r_size;
-+				if (align > max_add_align)
-+					max_add_align = align;
- 				continue;
- 			}
- #endif
--			align = pci_resource_alignment(dev, r);
- 			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
- 					i, r, (unsigned long long) align);
-@@ -1263,33 +1263,52 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				continue;
- 			}
- 
--			if (r_size > 1)
-+			if (r_size > 1) {
- 				add_to_align_test_list(&align_test_list,
- 							align, r_size);
--			size += r_size;
--			if (align > max_align)
--				max_align = align;
-+				size += r_size;
-+				if (align > max_align)
-+					max_align = align;
-+			}
- 
- 			if (realloc_head) {
--				children_add_size += get_res_add_size(realloc_head, r);
--				children_add_align = get_res_add_align(realloc_head, r);
--				add_align = max(add_align, children_add_align);
-+				resource_size_t add_r_size, add_align;
-+
-+				add_r_size = get_res_add_size(realloc_head, r);
-+				add_align = get_res_add_align(realloc_head, r);
-+				/* no add on ? */
-+				if (add_align < align)
-+					add_align = align;
-+				add_to_align_test_list(&align_test_add_list,
-+							add_align,
-+							r_size + add_r_size);
-+				sum_add_size += r_size + add_r_size;
-+				if (add_align > max_add_align)
-+					max_add_align = add_align;
- 			}
- 		}
- 	}
- 
- 	max_align = max(max_align, window_alignment(bus, b_res->flags));
--	min_align = calculate_mem_align(&align_test_list, max_align, size,
--					window_alignment(bus, b_res->flags));
--	size0 = calculate_memsize(size, min_size, 0,
-+	if (size || min_size) {
-+		min_align = calculate_mem_align(&align_test_list, max_align,
-+				 size, window_alignment(bus, b_res->flags));
-+		size0 = calculate_memsize(size, min_size,
- 				  resource_size(b_res), min_align);
-+	}
- 	free_align_test_list(&align_test_list);
--	add_align = max(min_align, add_align);
--	if (children_add_size > add_size)
--		add_size = children_add_size;
--	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
--		calculate_memsize(size, min_size, add_size,
--				resource_size(b_res), add_align);
-+
-+	if ((sum_add_size - size) < add_size)
-+		sum_add_size = size + add_size;
-+	if (sum_add_size > size && realloc_head) {
-+		min_add_align = calculate_mem_align(&align_test_add_list,
-+					max_add_align, sum_add_size,
-+					window_alignment(bus, b_res->flags));
-+		size1 = calculate_memsize(sum_add_size, min_size,
-+				 resource_size(b_res), min_add_align);
-+	}
-+	free_align_test_list(&align_test_add_list);
-+
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
-@@ -1301,11 +1320,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
-+		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
-+				min_add_align);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
- 			   b_res, &bus->busn_res,
- 			   (unsigned long long) (size1 - size0),
--			   (unsigned long long) add_align);
-+			   (unsigned long long) min_add_align);
- 	}
- 	return 0;
- }
--- 
-1.8.4.5
-
+- Alex
