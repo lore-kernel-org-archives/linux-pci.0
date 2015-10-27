@@ -1,103 +1,184 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f68.google.com ([209.85.213.68]:35877 "EHLO
-	mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752610AbbJUSQx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Oct 2015 14:16:53 -0400
-MIME-Version: 1.0
-In-Reply-To: <20151021023522.GJ8224@localhost>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-	<1444340359-8011-4-git-send-email-yinghai@kernel.org>
-	<20151020215714.GI8224@localhost>
-	<CAE9FiQVC+r=7NrCvwq9+1XVQD9CGf_3+-4VO9kFPSGqMTR5cBw@mail.gmail.com>
-	<CAE9FiQUdKdyipTw3KSVL0Kr1FFvki5Un3NuUuXpw4TXoWi1Tpg@mail.gmail.com>
-	<20151021023522.GJ8224@localhost>
-Date: Wed, 21 Oct 2015 11:16:53 -0700
-Message-ID: <CAE9FiQXXP8-5hNvKXuh5mu6Xu_9yFufmpZaXv0V95TwBBnxCpA@mail.gmail.com>
-Subject: Re: [PATCH v7 03/60] sparc/PCI: Unify pci_register_region()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-lf0-f42.google.com ([209.85.215.42]:34356 "EHLO
+	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932596AbbJ0QjV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 12:39:21 -0400
+Received: by lfaz124 with SMTP id z124so175669395lfa.1
+        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 09:39:19 -0700 (PDT)
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, Tomasz Nowicki <tn@semihalf.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH V1 01/11] x86, pci: Reorder logic of pci_mmconfig_insert() function
+Date: Tue, 27 Oct 2015 17:38:32 +0100
+Message-Id: <1445963922-22711-2-git-send-email-tn@semihalf.com>
+In-Reply-To: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 20, 2015 at 7:35 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Tue, Oct 20, 2015 at 03:30:44PM -0700, Yinghai Lu wrote:
-> I doubt I would agree with a change like this, but maybe, if you can
-> explain what's unique about the sparc architecture that would require
-> a change like this.
+This patch is the first step for MMCONFIG refactoring process.
 
-Then how about this one ?
+Code that uses pci_mmcfg_lock will be moved to common file and become
+accessible for all architectures. pci_mmconfig_insert() cannot be moved
+so easily since it is mixing generic mmconfig code with x86 specific logic
+inside of mutual exclusive block guarded by pci_mmcfg_lock.
 
-otherwise we need to compare res with pbm->mem_space or pbm->mem64_space
-to get direct parent for request_resource_conflict() calling in
-pci_register_legacy_regions().
+To get rid of that constraint, we reorder actions as follow:
+1. sanity check for mmconfig region presence, if we already have such
+region it doesn't make snese to alloc new mmconfig list entry
+2. mmconfig entry allocation, no need to lock
+3. insertion to iomem_resource has its own lock, no need to wrap it into mutex
+4. insertion to mmconfig list can be done as the final step in separate
+function (candidate for further refactoring) and needs another mmconfig
+lookup to avoid race condition.
 
-also check if if return is NULL to decide if it is valid region.
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 ---
- drivers/pci/host-bridge.c |   10 +++++++++-
- include/linux/pci.h       |    5 +++--
- 2 files changed, 12 insertions(+), 3 deletions(-)
+ arch/x86/pci/mmconfig-shared.c | 101 +++++++++++++++++++++++------------------
+ 1 file changed, 58 insertions(+), 43 deletions(-)
 
-Index: linux-2.6/drivers/pci/host-bridge.c
-===================================================================
---- linux-2.6.orig/drivers/pci/host-bridge.c
-+++ linux-2.6/drivers/pci/host-bridge.c
-@@ -70,12 +70,17 @@ static bool region_contains(struct pci_b
-     return region1->start <= region2->start && region1->end >= region2->end;
- }
-
--void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
-+/*
-+ * return host bridge window resource
-+ */
-+struct resource *pcibios_bus_to_resource(struct pci_bus *bus,
-+                 struct resource *res,
-                  struct pci_bus_region *region)
- {
-     struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
-     struct resource_entry *window;
-     resource_size_t offset = 0;
-+    struct resource *res_ret = NULL;
-
-     resource_list_for_each_entry(window, &bridge->windows) {
-         struct pci_bus_region bus_region;
-@@ -88,11 +93,14 @@ void pcibios_bus_to_resource(struct pci_
-
-         if (region_contains(&bus_region, region)) {
-             offset = window->offset;
-+            res_ret = window->res;
-             break;
-         }
-     }
-
-     res->start = region->start + offset;
-     res->end = region->end + offset;
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index dd30b7e..c8bb9b0 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -720,6 +720,38 @@ static int __init pci_mmcfg_late_insert_resources(void)
+  */
+ late_initcall(pci_mmcfg_late_insert_resources);
+ 
++static int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
++{
++	struct pci_mmcfg_region *cfg_conflict;
++	int err = 0;
 +
-+    return res_ret;
++	mutex_lock(&pci_mmcfg_lock);
++	cfg_conflict = pci_mmconfig_lookup(cfg->segment, cfg->start_bus);
++	if (cfg_conflict) {
++		if (cfg_conflict->end_bus < cfg->end_bus)
++			pr_info(FW_INFO "MMCONFIG for "
++				"domain %04x [bus %02x-%02x] "
++				"only partially covers this bridge\n",
++				cfg_conflict->segment, cfg_conflict->start_bus,
++				cfg_conflict->end_bus);
++		err = -EEXIST;
++		goto out;
++	}
++
++	if (pci_mmcfg_arch_map(cfg)) {
++		pr_warn("fail to map MMCONFIG %pR.\n", &cfg->res);
++		err = -ENOMEM;
++		goto out;
++	} else {
++		list_add_sorted(cfg);
++		pr_info("MMCONFIG at %pR (base %#lx)\n",
++			&cfg->res, (unsigned long)cfg->address);
++	}
++out:
++	mutex_unlock(&pci_mmcfg_lock);
++	return err;
++}
++
+ /* Add MMCFG information for host bridges */
+ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 			phys_addr_t addr)
+@@ -734,63 +766,46 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 	if (start > end)
+ 		return -EINVAL;
+ 
+-	mutex_lock(&pci_mmcfg_lock);
++	rcu_read_lock();
+ 	cfg = pci_mmconfig_lookup(seg, start);
+-	if (cfg) {
+-		if (cfg->end_bus < end)
+-			dev_info(dev, FW_INFO
+-				 "MMCONFIG for "
+-				 "domain %04x [bus %02x-%02x] "
+-				 "only partially covers this bridge\n",
+-				  cfg->segment, cfg->start_bus, cfg->end_bus);
+-		mutex_unlock(&pci_mmcfg_lock);
++	rcu_read_unlock();
++	if (cfg)
+ 		return -EEXIST;
+-	}
+ 
+-	if (!addr) {
+-		mutex_unlock(&pci_mmcfg_lock);
++	if (!addr)
+ 		return -EINVAL;
+-	}
+ 
+-	rc = -EBUSY;
+ 	cfg = pci_mmconfig_alloc(seg, start, end, addr);
+-	if (cfg == NULL) {
++	if (!cfg) {
+ 		dev_warn(dev, "fail to add MMCONFIG (out of memory)\n");
+-		rc = -ENOMEM;
+-	} else if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
++		return -ENOMEM;
++	}
++
++	rc = -EBUSY;
++	if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
+ 		dev_warn(dev, FW_BUG "MMCONFIG %pR isn't reserved\n",
+ 			 &cfg->res);
+-	} else {
+-		/* Insert resource if it's not in boot stage */
+-		if (pci_mmcfg_running_state)
+-			tmp = insert_resource_conflict(&iomem_resource,
+-						       &cfg->res);
+-
+-		if (tmp) {
+-			dev_warn(dev,
+-				 "MMCONFIG %pR conflicts with "
+-				 "%s %pR\n",
+-				 &cfg->res, tmp->name, tmp);
+-		} else if (pci_mmcfg_arch_map(cfg)) {
+-			dev_warn(dev, "fail to map MMCONFIG %pR.\n",
+-				 &cfg->res);
+-		} else {
+-			list_add_sorted(cfg);
+-			dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
+-				 &cfg->res, (unsigned long)addr);
+-			cfg = NULL;
+-			rc = 0;
+-		}
++		goto error;
+ 	}
+ 
+-	if (cfg) {
+-		if (cfg->res.parent)
+-			release_resource(&cfg->res);
+-		kfree(cfg);
++	/* Insert resource if it's not in boot stage */
++	if (pci_mmcfg_running_state)
++		tmp = insert_resource_conflict(&iomem_resource, &cfg->res);
++
++	if (tmp) {
++		dev_warn(dev, "MMCONFIG %pR conflicts with %s %pR\n",
++			 &cfg->res, tmp->name, tmp);
++		goto error;
+ 	}
+ 
+-	mutex_unlock(&pci_mmcfg_lock);
++	rc = pci_mmconfig_inject(cfg);
++	if (!rc)
++		return 0;
+ 
++error:
++	if (cfg->res.parent)
++		release_resource(&cfg->res);
++	kfree(cfg);
+ 	return rc;
  }
- EXPORT_SYMBOL(pcibios_bus_to_resource);
-Index: linux-2.6/include/linux/pci.h
-===================================================================
---- linux-2.6.orig/include/linux/pci.h
-+++ linux-2.6/include/linux/pci.h
-@@ -781,8 +781,9 @@ void pci_fixup_cardbus(struct pci_bus *)
+ 
+-- 
+1.9.1
 
- void pcibios_resource_to_bus(struct pci_bus *bus, struct
-pci_bus_region *region,
-                  struct resource *res);
--void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
--                 struct pci_bus_region *region);
-+struct resource *pcibios_bus_to_resource(struct pci_bus *bus,
-+                     struct resource *res,
-+                     struct pci_bus_region *region);
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
