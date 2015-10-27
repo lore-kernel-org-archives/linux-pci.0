@@ -1,59 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27374 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932316AbbJHVj7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:39:59 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-Subject: [PATCH v7 10/60] OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
-Date: Thu,  8 Oct 2015 14:38:29 -0700
-Message-Id: <1444340359-8011-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56269 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932345AbbJ0OsJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Oct 2015 10:48:09 -0400
+Date: Tue, 27 Oct 2015 09:48:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Cc: bhelgaas@google.com, rjw@rjwysocki.net, lenb@kernel.org,
+	catalin.marinas@arm.com, will.deacon@arm.com,
+	hanjun.guo@linaro.org, thomas.lendacky@amd.com,
+	herbert@gondor.apana.org.au, davem@davemloft.net,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Rob Herring <robh+dt@kernel.org>,
+	Murali Karicheri <m-karicheri2@ti.com>
+Subject: Re: [PATCH V4 8/8] PCI: ACPI: Add support for PCI device DMA
+ coherency
+Message-ID: <20151027144805.GD8660@localhost>
+References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+ <1445442731-28819-9-git-send-email-Suravee.Suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445442731-28819-9-git-send-email-Suravee.Suthikulpanit@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource, so set
-IORESOUCE_MEM_64 for 64bit resource during OF device resource flags
-parsing.
+On Wed, Oct 21, 2015 at 08:52:11AM -0700, Suravee Suthikulpanit wrote:
+> This patch adds support for setting up PCI device DMA coherency from
+> ACPI _CCA object that should normally be specified in the DSDT node
+> of its PCI host bridge.
+> 
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Catalin Marinas <catalin.marinas@arm.com>
+> CC: Rob Herring <robh+dt@kernel.org>
+> CC: Will Deacon <will.deacon@arm.com>
+> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+> CC: Murali Karicheri <m-karicheri2@ti.com>
+> ---
+>  drivers/pci/probe.c | 19 ++++++++++++++-----
+>  1 file changed, 14 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 09264f8..6e9f7e6 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1642,17 +1642,26 @@ static void pci_set_msi_domain(struct pci_dev *dev)
+>   * @dev: ptr to pci_dev struct of the PCI device
+>   *
+>   * Function to update PCI devices's DMA configuration using the same
+> - * info from the OF node of host bridge's parent (if any).
+> + * info from the OF node or ACPI node of host bridge's parent (if any).
+>   */
+>  static void pci_dma_configure(struct pci_dev *dev)
+>  {
+>  	struct device *bridge = pci_get_host_bridge_device(dev);
+>  
+>  	if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
+> -		if (!bridge->parent)
+> -			return;
+> -
+> -		of_dma_configure(&dev->dev, bridge->parent->of_node);
+> +		if (bridge->parent)
+> +			of_dma_configure(&dev->dev,
+> +					 bridge->parent->of_node);
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: devicetree@vger.kernel.org
----
- drivers/of/address.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+This fixes the leak I mentioned earlier, since we now put the bridge
+device before returning.  But I guess I'd still prefer to see the leak
+fix as a patch by itself instead of fixing it incidentally here.
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 384574c..3399602 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -128,9 +128,11 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
- 		flags |= IORESOURCE_IO;
- 		break;
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
- 	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
--- 
-1.8.4.5
+> +	} else if (has_acpi_companion(bridge)) {
+> +		struct acpi_device *adev = to_acpi_node(bridge->fwnode);
+> +		enum dev_dma_attr attr = acpi_get_dma_attr(adev);
+> +
+> +		if (attr != DEV_DMA_NOT_SUPPORTED)
+> +			arch_setup_dma_ops(&dev->dev, 0, 0, NULL,
+> +					   attr == DEV_DMA_COHERENT);
+> +		else
+> +			WARN(1, FW_BUG "PCI device %s fail to setup DMA.\n",
+> +			     pci_name(dev));
 
+This should use dev_warn() so the format is the same as for other
+messages related to "dev".
+
+Personally, I would write this as:
+
+  if (attr == DEV_DMA_NOT_SUPPORTED)
+    dev_warn(&dev->dev, "DMA not supported\n");
+  else
+    arch_setup_dma_ops(...);
+
+to avoid the double negative in the conditional.
+
+>  	}
+>  
+>  	pci_put_host_bridge_device(bridge);
+> -- 
+> 2.1.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
