@@ -1,39 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:37006 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752077AbbJORQF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Oct 2015 13:16:05 -0400
-Received: by igbhv6 with SMTP id hv6so45937632igb.0
-        for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2015 10:16:04 -0700 (PDT)
+Received: from mail.kernel.org ([198.145.29.136]:44044 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752707AbbJ0XL3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Oct 2015 19:11:29 -0400
+Date: Tue, 27 Oct 2015 18:11:13 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V10 00/12] VF EEH on Power8
+Message-ID: <20151027231113.GB5155@localhost>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <561FD30E.20203@ti.com>
-References: <1444042389-8036-1-git-send-email-festevam@gmail.com>
-	<561FD30E.20203@ti.com>
-Date: Thu, 15 Oct 2015 14:16:04 -0300
-Message-ID: <CAOMZO5AfQrdv4zJT9rs=irkASZ_3fdeR_nth4JP6gUo-2TadSA@mail.gmail.com>
-Subject: Re: [RFC v2] PCI: keystone: Fix definition of LTSSM_STATE_MASK
-From: Fabio Estevam <festevam@gmail.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 15, 2015 at 1:23 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
+On Mon, Oct 26, 2015 at 11:15:50AM +0800, Wei Yang wrote:
+> This patchset enables EEH on SRIOV VFs. The general idea is to create proper
+> VF edev and VF PE and handle them properly.
+> ...
 
-> NACK
->
-> The mask should be 0x1f as was originally as per document
->
->
-> 4-0                LTSSM_STATE        LTSSM current state. Please see
-> Appendix
-> A.1 for the names of the LTSSM states corresponding to
-> the encoded values.
->
-> refer the document at http://www.ti.com/lit/ug/sprugs6d/sprugs6d.pdf
+> Gavin Shan (1):
+>   powerpc/eeh: Don't block PCI config on resetting VF PE
+> 
+> Wei Yang (11):
+>   PCI/IOV: Rename and export virtfn_add/virtfn_remove
+>   PCI: Add pcibios_bus_add_device() weak function
+>   powerpc/pci: Cache VF index in pci_dn
+>   powerpc/pci: Remove VFs prior to PF
+>   powerpc/eeh: Cache only BARs, not windows or IOV BARs
+>   powerpc/powernv: EEH device for VF
+>   powerpc/eeh: Create PE for VFs
+>   powerpc/powernv: Support EEH reset for VF PE
+>   powerpc/powernv: Support PCI config restore for VFs
+>   powerpc/eeh: Support error recovery for VF PE
+>   powerpc/eeh: Handle hot removed VF when PF is EEH aware
+> 
+>  arch/powerpc/include/asm/eeh.h               |  10 ++
+>  arch/powerpc/include/asm/pci-bridge.h        |   2 +
+>  arch/powerpc/kernel/eeh.c                    |  17 ++-
+>  arch/powerpc/kernel/eeh_cache.c              |   6 +-
+>  arch/powerpc/kernel/eeh_dev.c                |   1 +
+>  arch/powerpc/kernel/eeh_driver.c             | 130 ++++++++++++----
+>  arch/powerpc/kernel/eeh_pe.c                 |  13 +-
+>  arch/powerpc/kernel/pci-hotplug.c            |   2 +-
+>  arch/powerpc/kernel/pci_dn.c                 |  16 +-
+>  arch/powerpc/platforms/powernv/eeh-powernv.c | 220 ++++++++++++++++++++++++++-
+>  arch/powerpc/platforms/powernv/pci.c         |  18 +++
+>  drivers/pci/bus.c                            |   3 +
+>  drivers/pci/iov.c                            |  10 +-
+>  include/linux/pci.h                          |   8 +
+>  14 files changed, 408 insertions(+), 48 deletions(-)
 
-Yes, in the last version of the patch I use the 0x1f mask for all
-Designware PCI drivers.
+This really only affects powerpc, so I assume this series will go through
+the powerpc tree.  Let me know if you want me to do anything else.
+
+Bjorn
