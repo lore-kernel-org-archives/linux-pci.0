@@ -1,102 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5630D38F.804@linaro.org>
-Date: Wed, 28 Oct 2015 21:54:23 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <helgaas@kernel.org>
-CC: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
-	will.deacon@arm.com, thomas.lendacky@amd.com,
-	herbert@gondor.apana.org.au, davem@davemloft.net,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V4 0/8] PCI: ACPI: Setting up DMA coherency for PCI device
- from _CCA attribute
-References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com> <20151027145249.GE8660@localhost> <24127028.eJSjD1i70u@vostro.rjw.lan>
-In-Reply-To: <24127028.eJSjD1i70u@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:36923 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965533AbbJ0U4u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 16:56:50 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 02/61] PCI: Add pci_find_root_bus_resource()
+Date: Tue, 27 Oct 2015 13:54:54 -0700
+Message-Id: <1445979353-1728-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
+Add pci_find_root_bus_resource() to return root bus res
+for resource.
 
-On 10/27/2015 11:27 PM, Rafael J. Wysocki wrote:
-> On Tuesday, October 27, 2015 09:52:50 AM Bjorn Helgaas wrote:
->> Hi Suravee,
->>
->> On Wed, Oct 21, 2015 at 08:52:03AM -0700, Suravee Suthikulpanit wrote:
->>> This patch series adds support to setup DMA coherency for PCI device using
->>> the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
->>> is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
->>> support for ARM64 which is currently in development.  Also, this should
->>> not affect other architectures that does not define
->>> CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
->>>
->>> In the process, this series also introduces enum dev_dma_attr and a set
->>> of APIs to query device DMA attribute. These APIs replace the obsolete
->>> device_dma_is_coherent(), and acpi_check_dma().
->>>
->>> I have also included a patch from Jeremy posted here:
->>>      http://www.spinics.net/lists/linux-usb/msg128582.html
->>>
->>> This patch series  has been tested on AMD Seattle RevB platform.
->>> The git tree containing tested code and pre-req patches are posted here:
->>>
->>>      http://github.com/ssuthiku/linux.git pci-cca-v4
->>>
->>> Changes from V3: (https://lkml.org/lkml/2015/8/26/389)
->>>      * Clean up suggested by Bjorn
->>>      * Introduce enum dev_dma_attr
->>>      * Replace device_dma_is_coherent() and acpi_check_dma() with
->>>        new APIs.
->>>
->>> Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
->>>      * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
->>>      * Add WARN() when fail to setup DMA for PCI device when booting
->>>        ACPI (per Arnd's suggestion)
->>>      * Added Acked-by from Rob.
->>>      * Minor clean up
->>>
->>> Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
->>>      * Include patch 1 from Jeremy to enable support for _CCA=0
->>>      * Clean up acpi_check_dma() per Bjorn suggestions
->>>      * Split the original V1 patch into two patches (patch 3 and 4)
->>>
->>> Jeremy Linton (1):
->>>    Honor ACPI _CCA attribute setting
->>>
->>> Suravee Suthikulpanit (7):
->>>    device property: Introducing enum dev_dma_attr
->>>    acpi: Adding DMA Attribute APIs for ACPI Device
->>>    device property: Adding DMA Attribute APIs for Generic Devices
->>>    device property: acpi: Make use of the new DMA Attribute APIs
->>>    device property: acpi: Remove unused DMA APIs
->>>    PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
->>>    PCI: ACPI: Add support for PCI device DMA coherency
->>>
->>>   drivers/acpi/acpi_platform.c              |  7 +++++-
->>>   drivers/acpi/glue.c                       |  8 +++---
->>>   drivers/acpi/scan.c                       | 42 +++++++++++++++++++++++++++++++
->>>   drivers/base/property.c                   | 32 +++++++++++++++++------
->>>   drivers/crypto/ccp/ccp-platform.c         |  9 ++++++-
->>>   drivers/net/ethernet/amd/xgbe/xgbe-main.c |  9 ++++++-
->>>   drivers/of/of_pci.c                       | 20 ---------------
->>>   drivers/pci/probe.c                       | 36 ++++++++++++++++++++++++--
->>>   include/acpi/acpi_bus.h                   | 36 +++-----------------------
->>>   include/linux/acpi.h                      |  7 +++++-
->>>   include/linux/of_pci.h                    |  3 ---
->>>   include/linux/property.h                  | 10 +++++++-
->>>   12 files changed, 145 insertions(+), 74 deletions(-)
->>
->> I had a couple minor comments.  It's sort of a toss-up, but this feels
->> more ACPI-flavored than PCI, so I assume Rafael will take this whole
->> series unless I hear otherwise.
->
-> I'll do that.
+For sparc mem64 support, We need that host bridge window res,
+  1. we need direct parent for request_resource_conflict() calling in
+      pci_register_legacy_regions().
+  2. check if return is NULL to decide if region is valid or not.
 
-If Suravee address the comments and send another version,
-an it be merged into 4.4?
+Convert old pci_find_parent_resource() to pci_find_bus_resource(),
+and reuse it in pci_find_root_bus_resource().
+So we avoid changing pcibios_bus_to_resource().
 
-Thanks
-Hanjun
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci.c   | 36 +++++++++++++++++++++++++-----------
+ include/linux/pci.h |  2 ++
+ 2 files changed, 27 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6a9a111..613eef1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -414,18 +414,9 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
+ }
+ EXPORT_SYMBOL_GPL(pci_find_ht_capability);
+ 
+-/**
+- * pci_find_parent_resource - return resource region of parent bus of given region
+- * @dev: PCI device structure contains resources to be searched
+- * @res: child resource record for which parent is sought
+- *
+- *  For given resource region of given device, return the resource
+- *  region of parent bus the given region is contained in.
+- */
+-struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+-					  struct resource *res)
++static struct resource *pci_find_bus_resource(const struct pci_bus *bus,
++					      struct resource *res)
+ {
+-	const struct pci_bus *bus = dev->bus;
+ 	struct resource *r;
+ 	int i;
+ 
+@@ -455,8 +446,31 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 	}
+ 	return NULL;
+ }
++
++/**
++ * pci_find_parent_resource - return resource region of parent bus of given region
++ * @dev: PCI device structure contains resources to be searched
++ * @res: child resource record for which parent is sought
++ *
++ *  For given resource region of given device, return the resource
++ *  region of parent bus the given region is contained in.
++ */
++struct resource *pci_find_parent_resource(const struct pci_dev *dev,
++					  struct resource *res)
++{
++	return pci_find_bus_resource(dev->bus, res);
++}
+ EXPORT_SYMBOL(pci_find_parent_resource);
+ 
++struct resource *pci_find_root_bus_resource(struct pci_bus *bus,
++					    struct resource *res)
++{
++	while (bus->parent)
++		bus = bus->parent;
++
++	return pci_find_bus_resource(bus, res);
++}
++
+ /**
+  * pci_wait_for_pending - wait for @mask bit(s) to clear in status word @pos
+  * @dev: the PCI device to operate on
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e90eb22..05f5eac 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -783,6 +783,8 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+ 			     struct resource *res);
+ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ 			     struct pci_bus_region *region);
++struct resource *pci_find_root_bus_resource(struct pci_bus *bus,
++					    struct resource *res);
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-- 
+1.8.4.5
+
