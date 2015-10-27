@@ -1,89 +1,247 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0081.outbound.protection.outlook.com ([157.56.111.81]:36692
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750758AbbJUPxA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Oct 2015 11:53:00 -0400
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
-	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
-	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V4 0/8] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
-Date: Wed, 21 Oct 2015 08:52:03 -0700
-Message-ID: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 57/61] PCI: Add debug print out for min_align and alt_size
+Date: Tue, 27 Oct 2015 13:55:49 -0700
+Message-Id: <1445979353-1728-58-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds support to setup DMA coherency for PCI device using
-the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
-is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
-support for ARM64 which is currently in development.  Also, this should
-not affect other architectures that does not define 
-CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
+Put all print out for all children align/size and result align/size
+together.
 
-In the process, this series also introduces enum dev_dma_attr and a set
-of APIs to query device DMA attribute. These APIs replace the obsolete
-device_dma_is_coherent(), and acpi_check_dma().
+We can print out device name at same time with min_align/alt_size
+calculation.
 
-I have also included a patch from Jeremy posted here:
-    http://www.spinics.net/lists/linux-usb/msg128582.html
+So we can shut off debug print out from get_res_add_size() and
+get_res_add_align().
 
-This patch series  has been tested on AMD Seattle RevB platform.
-The git tree containing tested code and pre-req patches are posted here:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 76 ++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 56 insertions(+), 20 deletions(-)
 
-    http://github.com/ssuthiku/linux.git pci-cca-v4
-
-Changes from V3: (https://lkml.org/lkml/2015/8/26/389)
-    * Clean up suggested by Bjorn
-    * Introduce enum dev_dma_attr
-    * Replace device_dma_is_coherent() and acpi_check_dma() with
-      new APIs.
-
-Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
-    * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
-    * Add WARN() when fail to setup DMA for PCI device when booting
-      ACPI (per Arnd's suggestion)
-    * Added Acked-by from Rob.
-    * Minor clean up
-
-Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
-    * Include patch 1 from Jeremy to enable support for _CCA=0
-    * Clean up acpi_check_dma() per Bjorn suggestions
-    * Split the original V1 patch into two patches (patch 3 and 4)
-
-Jeremy Linton (1):
-  Honor ACPI _CCA attribute setting
-
-Suravee Suthikulpanit (7):
-  device property: Introducing enum dev_dma_attr
-  acpi: Adding DMA Attribute APIs for ACPI Device
-  device property: Adding DMA Attribute APIs for Generic Devices
-  device property: acpi: Make use of the new DMA Attribute APIs
-  device property: acpi: Remove unused DMA APIs
-  PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
-  PCI: ACPI: Add support for PCI device DMA coherency
-
- drivers/acpi/acpi_platform.c              |  7 +++++-
- drivers/acpi/glue.c                       |  8 +++---
- drivers/acpi/scan.c                       | 42 +++++++++++++++++++++++++++++++
- drivers/base/property.c                   | 32 +++++++++++++++++------
- drivers/crypto/ccp/ccp-platform.c         |  9 ++++++-
- drivers/net/ethernet/amd/xgbe/xgbe-main.c |  9 ++++++-
- drivers/of/of_pci.c                       | 20 ---------------
- drivers/pci/probe.c                       | 36 ++++++++++++++++++++++++--
- include/acpi/acpi_bus.h                   | 36 +++-----------------------
- include/linux/acpi.h                      |  7 +++++-
- include/linux/of_pci.h                    |  3 ---
- include/linux/property.h                  | 10 +++++++-
- 12 files changed, 145 insertions(+), 74 deletions(-)
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1889351..673778c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -159,11 +159,6 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 	if (!dev_res || !dev_res->add_size)
+ 		return 0;
+ 
+-	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-		   "BAR %d: %pR get_res_add_size add_size   %#llx\n",
+-		   (int)(res - &dev_res->dev->resource[0]),
+-		   res, (unsigned long long)dev_res->add_size);
+-
+ 	return dev_res->add_size;
+ }
+ 
+@@ -176,11 +171,6 @@ static resource_size_t get_res_add_align(struct list_head *head,
+ 	if (!dev_res || !dev_res->min_align)
+ 		return 0;
+ 
+-	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-		   "BAR %d: %pR get_res_add_align min_align %#llx\n",
+-		   (int)(res - &dev_res->dev->resource[0]),
+-		   res, (unsigned long long)dev_res->min_align);
+-
+ 	return dev_res->min_align;
+ }
+ 
+@@ -1271,6 +1261,8 @@ struct align_test_res {
+ 	struct resource res;
+ 	resource_size_t size;
+ 	resource_size_t align;
++	struct device *dev;
++	int idx;
+ };
+ 
+ static void free_align_test_list(struct list_head *head)
+@@ -1284,7 +1276,8 @@ static void free_align_test_list(struct list_head *head)
+ }
+ 
+ static int add_to_align_test_list(struct list_head *head,
+-				  resource_size_t align, resource_size_t size)
++				  resource_size_t align, resource_size_t size,
++				  struct device *dev, int idx)
+ {
+ 	struct align_test_res *tmp;
+ 
+@@ -1294,6 +1287,8 @@ static int add_to_align_test_list(struct list_head *head,
+ 
+ 	tmp->align = align;
+ 	tmp->size = size;
++	tmp->dev = dev;
++	tmp->idx = idx;
+ 
+ 	list_add_tail(&tmp->list, head);
+ 
+@@ -1359,6 +1354,19 @@ static resource_size_t calculate_mem_align(struct list_head *head,
+ 	resource_size_t min_align, good_align, aligned_size, start;
+ 	int count = 0;
+ 
++	list_for_each_entry(p, head, list)
++		count++;
++
++	printk(KERN_DEBUG "  ===========BEGIN===calculate_mem_align========\n");
++	if (count) {
++		printk(KERN_DEBUG "  align/size:\n");
++		list_for_each_entry(p, head, list)
++			dev_printk(KERN_DEBUG, p->dev,
++				   "BAR %d:     %08llx/%08llx\n", p->idx,
++				   (unsigned long long)p->align,
++				   (unsigned long long)p->size);
++	}
++
+ 	if (max_align <= align_low) {
+ 		good_align = align_low;
+ 		goto out;
+@@ -1366,9 +1374,6 @@ static resource_size_t calculate_mem_align(struct list_head *head,
+ 
+ 	good_align = max_align;
+ 
+-	list_for_each_entry(p, head, list)
+-		count++;
+-
+ 	if (count <= 1)
+ 		goto out;
+ 
+@@ -1393,6 +1398,11 @@ static resource_size_t calculate_mem_align(struct list_head *head,
+ 	} while (min_align > align_low);
+ 
+ out:
++	printk(KERN_DEBUG "      min_align/aligned_size: %08llx/%08llx\n",
++			(unsigned long long)good_align,
++			(unsigned long long)ALIGN(size, good_align));
++	printk(KERN_DEBUG "  ===========END===calculate_mem_align==========\n");
++
+ 	return good_align;
+ }
+ 
+@@ -1410,6 +1420,16 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
+ 	list_for_each_entry(p, head, list)
+ 		count++;
+ 
++	printk(KERN_DEBUG "  ===========BEGIN===calculate_mem_alt_size=====\n");
++	if (count) {
++		printk(KERN_DEBUG "  align/size:\n");
++		list_for_each_entry(p, head, list)
++			dev_printk(KERN_DEBUG, p->dev,
++				   "BAR %d:     %08llx/%08llx\n", p->idx,
++				   (unsigned long long)p->align,
++				   (unsigned long long)p->size);
++	}
++
+ 	if (count <= 1)
+ 		goto out;
+ 
+@@ -1434,6 +1454,11 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
+ 	}
+ 
+ out:
++	printk(KERN_DEBUG "   alt_align/alt_size: %08llx/%08llx\n",
++			(unsigned long long)max_align,
++			(unsigned long long)good_size);
++	printk(KERN_DEBUG "  ===========END===calculate_mem_alt_size=======\n");
++
+ 	return good_size;
+ }
+ 
+@@ -1515,7 +1540,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			/* put SRIOV/ROM res to realloc list */
+ 			if (realloc_head && is_optional(i)) {
+ 				add_to_align_test_list(&align_test_add_list,
+-							align, r_size);
++						align, r_size, &dev->dev, i);
+ 				r->end = r->start - 1;
+ 				__add_to_list(realloc_head, dev, r,
+ 					      r_size, align, 0, 0);
+@@ -1534,7 +1559,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 			if (r_size > 1) {
+ 				add_to_align_test_list(&align_test_list,
+-							align, r_size);
++						align, r_size, &dev->dev, i);
+ 				size += r_size;
+ 				if (align > max_align)
+ 					max_align = align;
+@@ -1551,7 +1576,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					add_align = align;
+ 				add_to_align_test_list(&align_test_add_list,
+ 							add_align,
+-							r_size + add_r_size);
++							r_size + add_r_size,
++							&dev->dev, i);
+ 				sum_add_size += r_size + add_r_size;
+ 				if (add_align > max_add_align)
+ 					max_add_align = add_align;
+@@ -1561,14 +1587,14 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					add_to_align_test_list(
+ 						&align_test_alt_list,
+ 						dev_res->alt_align,
+-						dev_res->alt_size);
++						dev_res->alt_size, &dev->dev, i);
+ 					alt_size += dev_res->alt_size;
+ 					if (alt_align < dev_res->alt_align)
+ 						alt_align = dev_res->alt_align;
+ 				} else if (r_size > 1) {
+ 					add_to_align_test_list(
+ 						&align_test_alt_list,
+-						align, r_size);
++						align, r_size, &dev->dev, i);
+ 					alt_size += r_size;
+ 					if (alt_align < align)
+ 						alt_align = align;
+@@ -1579,6 +1605,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	max_align = max(max_align, window_align);
+ 	if (size || min_size) {
++		dev_printk(KERN_DEBUG, &bus->self->dev,
++			   "BAR %d: bridge window %pR to %pR calculate_mem for MUST\n",
++			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
+ 		min_align = calculate_mem_align(&align_test_list, max_align,
+ 						size, window_align);
+ 		size0 = calculate_size(size, min_size,
+@@ -1588,6 +1617,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	if (size0 && realloc_head) {
+ 		alt_align = max(alt_align, window_align);
++		dev_printk(KERN_DEBUG, &bus->self->dev,
++			   "BAR %d: bridge window %pR to %pR calculate_mem for ALT\n",
++			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
+ 		/* need to increase size to fit more alt */
+ 		alt_size = calculate_mem_alt_size(&align_test_alt_list,
+ 						  alt_align, alt_size,
+@@ -1603,6 +1635,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	if (sum_add_size > size && realloc_head) {
++		dev_printk(KERN_DEBUG, &bus->self->dev,
++			   "BAR %d: bridge window %pR to %pR calculate_mem for ADD\n",
++			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+ 					window_align);
+@@ -1660,7 +1695,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				      final_add_size, min_add_align,
+ 				      alt_size, alt_align);
+ 			dev_printk(KERN_DEBUG, &bus->self->dev,
+-				   "bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx req_size %llx req_align %llx\n",
++				   "BAR %d: bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx req_size %llx req_align %llx\n",
++				   (int)(b_res - &bus->self->resource[0]),
+ 				   b_res, &bus->busn_res,
+ 				   (unsigned long long)final_add_size,
+ 				   (unsigned long long)min_add_align,
 -- 
-2.1.0
+1.8.4.5
 
