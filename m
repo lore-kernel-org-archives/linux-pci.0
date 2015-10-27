@@ -1,48 +1,68 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v8 2/6] pci: add Altera PCI vendor ID
-Date: Thu, 8 Oct 2015 17:43:10 +0800
-Message-ID: <1444297394-3122-3-git-send-email-lftan@altera.com>
-In-Reply-To: <1444297394-3122-1-git-send-email-lftan@altera.com>
-References: <1444297394-3122-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V1 06/11] pci, acpi, mcfg: Provide default RAW ACPI PCI config space accessors.
+Date: Tue, 27 Oct 2015 17:38:37 +0100
+Message-Id: <1445963922-22711-7-git-send-email-tn@semihalf.com>
+In-Reply-To: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- include/linux/pci_ids.h | 2 ++
- 1 file changed, 2 insertions(+)
+Lets keep RAW ACPI PCI config space accessors empty by default,
+since we are note sure if they are necessary accross all archs.
+Once we sort this out, we can provide generic version or let
+architectures to overwrite, like now x86.
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index d9ba49c..08e4462 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1550,6 +1550,8 @@
- #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
- #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/acpi/mcfg.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
+index 745b83e..3e1e7be 100644
+--- a/drivers/acpi/mcfg.c
++++ b/drivers/acpi/mcfg.c
+@@ -9,9 +9,30 @@
  
-+#define PCI_VENDOR_ID_ALTERA		0x1172
+ #include <linux/acpi.h>
+ #include <linux/ecam.h>
++#include <linux/pci.h>
+ 
+ #define	PREFIX	"MCFG: "
+ 
++/*
++ * raw_pci_read/write - raw ACPI PCI config space accessors.
++ *
++ * By defauly (__weak) these accessors are empty and should be overwritten
++ * by architectures which support operations on ACPI PCI_Config regions,
++ * see osl.c file.
++ */
 +
- #define PCI_VENDOR_ID_SBE		0x1176
- #define PCI_DEVICE_ID_SBE_WANXL100	0x0301
- #define PCI_DEVICE_ID_SBE_WANXL200	0x0302
++int __weak raw_pci_read(unsigned int domain, unsigned int bus,
++			unsigned int devfn, int reg, int len, u32 *val)
++{
++	return PCIBIOS_DEVICE_NOT_FOUND;
++}
++
++int __weak raw_pci_write(unsigned int domain, unsigned int bus,
++			 unsigned int devfn, int reg, int len, u32 val)
++{
++	return PCIBIOS_DEVICE_NOT_FOUND;
++}
++
+ int __init acpi_parse_mcfg(struct acpi_table_header *header)
+ {
+ 	struct acpi_table_mcfg *mcfg;
 -- 
-1.8.2.1
+1.9.1
 
