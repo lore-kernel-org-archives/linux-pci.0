@@ -1,83 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36754 "EHLO foss.arm.com"
+Received: from mga03.intel.com ([134.134.136.65]:17854 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753249AbbJOPjl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Oct 2015 11:39:41 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: Ma Jun <majun258@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH RFC 5/7] genirq/msi: Add msi_domain_populate_irqs
-Date: Thu, 15 Oct 2015 16:39:26 +0100
-Message-Id: <1444923568-17413-6-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
-References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
+	id S965706AbbJ0ReM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Oct 2015 13:34:12 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: [RFC PATCHv3 4/4] pciutils: Allow 32-bit domains
+Date: Tue, 27 Oct 2015 11:34:07 -0600
+Message-Id: <1445967247-24310-5-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1445967247-24310-1-git-send-email-keith.busch@intel.com>
+References: <1445967247-24310-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To be able to allocate interrupts from the MSI layer down,
-add a new msi_domain_populate_irqs entry point.
+PCI-e segments will continue to use the lower 16 bits as required by
+ACPI. Special domains may use the full 32-bits.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- include/linux/msi.h |  2 ++
- kernel/irq/msi.c    | 27 +++++++++++++++++++++++++++
- 2 files changed, 29 insertions(+)
+ lib/filter.c |    2 +-
+ lib/pci.h    |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 5bb36a9..e35558c 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -281,6 +281,8 @@ void platform_msi_domain_free_irqs(struct device *dev);
- /* When an MSI domain is used as an intermediate domain */
- int msi_domain_prepare_irqs(struct irq_domain *domain, struct device *dev,
- 			    int nvec, msi_alloc_info_t *args);
-+int msi_domain_populate_irqs(struct irq_domain *domain, struct device *dev,
-+			     int virq, int nvec, msi_alloc_info_t *args);
- #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
+diff --git a/lib/filter.c b/lib/filter.c
+index d4254a0..075dc2f 100644
+--- a/lib/filter.c
++++ b/lib/filter.c
+@@ -45,7 +45,7 @@ pci_filter_parse_slot_v33(struct pci_filter *f, char *str)
+ 	  if (str[0] && strcmp(str, "*"))
+ 	    {
+ 	      long int x = strtol(str, &e, 16);
+-	      if ((e && *e) || (x < 0 || x > 0xffff))
++	      if ((e && *e) || (x < 0))
+ 		return "Invalid domain number";
+ 	      f->domain = x;
+ 	    }
+diff --git a/lib/pci.h b/lib/pci.h
+index 10ba831..7e42765 100644
+--- a/lib/pci.h
++++ b/lib/pci.h
+@@ -119,7 +119,7 @@ struct pci_param *pci_walk_params(struct pci_access *acc, struct pci_param *prev
  
- #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-index 8e6e112..53118e9 100644
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -272,6 +272,33 @@ int msi_domain_prepare_irqs(struct irq_domain *domain, struct device *dev,
- 	return 0;
- }
+ struct pci_dev {
+   struct pci_dev *next;			/* Next device in the chain */
+-  u16 domain;				/* PCI domain (host bridge) */
++  int32_t domain;			/* PCI domain (host bridge) */
+   u8 bus, dev, func;			/* Bus inside domain, device and function */
  
-+int msi_domain_populate_irqs(struct irq_domain *domain, struct device *dev,
-+			     int virq, int nvec, msi_alloc_info_t *arg)
-+{
-+	struct msi_domain_info *info = domain->host_data;
-+	struct msi_domain_ops *ops = info->ops;
-+	struct msi_desc *desc;
-+
-+	for_each_msi_entry(desc, dev) {
-+		int i, ret;
-+
-+		if (!(desc->irq >= virq && desc->irq < (virq + nvec)))
-+			continue;
-+
-+		ops->set_desc(arg, desc);
-+		/* Assumes the domain mutex is held! */
-+		ret = irq_domain_alloc_irqs_recursive(domain, virq, nvec, arg);
-+		/* FIXME: Error handling */
-+		if (ret)
-+			return ret;
-+
-+		for (i = 0; i < desc->nvec_used; i++)
-+			irq_set_msi_desc_off(virq, i, desc);
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  * msi_domain_alloc_irqs - Allocate interrupts from a MSI interrupt domain
-  * @domain:	The domain to allocate from
+   /* These fields are set by pci_fill_info() */
 -- 
-2.1.4
+1.7.10.4
 
