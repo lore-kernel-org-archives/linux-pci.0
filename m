@@ -1,117 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0053.outbound.protection.outlook.com ([157.56.110.53]:42080
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755657AbbJ1KR3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2015 06:17:29 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"rjui@broadcom.com" <rjui@broadcom.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH v5] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Date: Wed, 28 Oct 2015 10:17:22 +0000
-Message-ID: <8520D5D51A55D047800579B0941471980169316D@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1445871386-2377-1-git-send-email-bharatku@xilinx.com>
- <20151027234032.GA7238@localhost>
-In-Reply-To: <20151027234032.GA7238@localhost>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from userp1040.oracle.com ([156.151.31.81]:50933 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965936AbbJ0VCW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 17:02:22 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 46/61] PCI: Fix size calculation with old_size on rescan path
+Date: Tue, 27 Oct 2015 13:55:38 -0700
+Message-Id: <1445979353-1728-47-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Mon, Oct 26, 2015 at 08:26:26PM +0530, Bharat Kumar Gogada wrote:
-> > Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+On booting path, we don't pass realloc at first, and treat all optional
+just as required, in some case we can have smaller size/align with optional
+than required only.
 
-> > +
-> > +	while ((status = nwl_bridge_readl(pcie, MSGF_MSI_STATUS_LO)) !=
-> 0) {
-> > +		for_each_set_bit(bit, &status, 32) {
-> > +			nwl_bridge_writel(pcie, 1 << bit,
-> MSGF_MSI_STATUS_LO);
-> > +			virq = irq_find_mapping(msi->dev_domain, bit);
-> > +			if (virq)
-> > +				generic_handle_irq(virq);
-> > +		}
-> > +	}
-> > +
-> > +	chained_irq_exit(chip, desc);
-> > +}
-> 
-> These are basically identical.  Can you factor them out somehow to avoid
-> repeating the code?
+  04:00.0 has children bridges: 05:03.0, 05:04.0
+pref layout after booting path like followings:
 
-Is it okay if irq_set_chained_handler_and_data being invoked with two different interrupt numbers, but pointing to 
-same interrupt handler?
+pci 0000:04:00.0: BAR 9: assigned [mem 0x84000000-0x9fffffff 64bit pref]
+pci 0000:05:04.0: BAR 9: assigned [mem 0x88000000-0x9fffffff 64bit pref]
+pci 0000:05:03.0: BAR 9: assigned [mem 0x84000000-0x841fffff 64bit pref]
+pci 0000:05:03.0: PCI bridge to [bus 08-0f]
+pci 0000:05:03.0:   bridge window [mem 0x84000000-0x841fffff 64bit pref]
+pci 0000:05:04.0: PCI bridge to [bus 10]
+pci 0000:05:04.0:   bridge window [mem 0x88000000-0x9fffffff 64bit pref]
+pci 0000:04:00.0: PCI bridge to [bus 05-10]
+pci 0000:04:00.0:   bridge window [mem 0x84000000-0x9fffffff 64bit pref]
 
-> > +
-> > +	pcie->legacy_irq_domain =
-> irq_domain_add_linear(legacy_intc_node, 4,
-> > +
-> 	&legacy_domain_ops,
-> > +							pcie);
-> > +
-> > +	if (!pcie->legacy_irq_domain) {
-> > +		dev_err(pcie->dev, "failed to create IRQ domain\n");
-> > +		return -ENOMEM;
-> > +	}
-> > +
-> > +#ifdef CONFIG_PCI_MSI
-> > +	msi->dev_domain = irq_domain_add_linear(NULL,
-> INT_PCI_MSI_NR,
-> > +					&dev_msi_domain_ops, pcie);
-> > +	if (!msi->dev_domain) {
-> > +		dev_err(pcie->dev, "failed to create dev IRQ domain\n");
-> > +		return -ENOMEM;
-> > +	}
-> > +	msi->msi_chip.domain = pci_msi_create_irq_domain(node,
-> > +
-> 	&nwl_msi_domain_info,
-> > +							msi->dev_domain);
-> > +	if (!msi->msi_chip.domain) {
-> > +		dev_err(pcie->dev, "failed to create msi IRQ domain\n");
-> > +		irq_domain_remove(msi->dev_domain);
-> > +		return -ENOMEM;
-> > +	}
-> > +#endif
-> > +	return 0;
-> > +}
-> > +
-> > +static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus
-> > +*bus) {
-> 
-> It looks strange to have all the "#ifdef CONFIG_PCI_MSI" above, and here
-> we have this long MSI-related function without any ifdefs around it.  Seems
-> like this should be ifdef'ed also?  What about nwl_pcie_msi_handler_high(),
-> nwl_pcie_msi_handler_low(), nwl_compose_msi_msg(),
-> nwl_msi_set_affinity(), etc.?
-> 
-In probe I'm invoking "nwl_pcie_enable_msi" using "if (IS_ENABLED(CONFIG_PCI_MSI)) " check, since this is at run time 
-I haven't kept above mentioned functions under #ifdef CONFIG_PCI_MSI.
-The above MSI domain allocation was under ifdef, since if driver was compiled for legacy some of the MSI hierarchy API's and structures aren't available.
+so the old size in rescan for 04:00.0 would be 0x1c000000, and align is 0x4000000
 
-> > +	struct platform_device *pdev = to_platform_device(pcie->dev);
-> > +	struct nwl_msi *msi = &pcie->msi;
+during remove and rescan:
 
-Regards,
-Bharat
+pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff 64bit pref] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
+pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
+pci 0000:05:04.0: bridge window [mem 0x08000000-0x1fffffff 64bit pref] to [bus 10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 18000000 must_align 8000000
+pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_size add_size   200000
+pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_align min_align 100000
+pci 0000:04:00.0: bridge window [mem 0x08000000-0x27ffffff 64bit pref] to [bus 05-10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 20000000 must_align 8000000
+
+align old size 0x1c000000 to 0x2000000 as size0, 0x1c000000 as size1.
+so for 04:00.0 will have big must and no optional size anymore.
+
+So don't align old size, then we will have same size0 and size1,
+and use smaller add_align as must align.
+
+After the patch, rescan works properly.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 7e7663a..00a39be 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1134,9 +1134,9 @@ static resource_size_t calculate_memsize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
++	size = ALIGN(size, align);
+ 	if (size < old_size)
+ 		size = old_size;
+-	size = ALIGN(size, align);
+ 	return size;
+ }
+ 
+@@ -1595,6 +1595,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		b_res->flags = 0;
+ 		return 0;
+ 	}
++
++	/*
++	 * It happens when boot path is not passing realloc
++	 * and later rescan is passing realloc.
++	 * The old value from boot path is bigger, and calculate_size will
++	 * use old value as size0 and size1, and also have
++	 * chance optional align is smaller than must only align.
++	 */
++	if(size0 == size1 && min_align > min_add_align)
++		min_align = min_add_align;
++
+ 	b_res->start = min_align;
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+-- 
+1.8.4.5
+
