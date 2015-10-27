@@ -1,67 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:36345 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750730AbbJBH4S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Oct 2015 03:56:18 -0400
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:49447 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751056AbbJ0FIG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 01:08:06 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
+	Tue, 27 Oct 2015 15:08:03 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id CD3262CE8052
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 16:07:59 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9R57bfw25952454
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 16:07:46 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9R57Q4g005714
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 16:07:27 +1100
+Message-ID: <562F0696.4030404@au1.ibm.com>
+Date: Tue, 27 Oct 2015 16:07:34 +1100
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <1803658.W77SUJGE4K@wuerfel>
-References: <1442801587-3812-1-git-send-email-lftan@altera.com>
-	<CAFiDJ59PuhRj3F288A_451pLiKnqPUKin9C2t5uuH2iNPnJfAg@mail.gmail.com>
-	<CAL_JsqL9eoTRa2-eeNJgVoO=0LyuaaJ87E4_BS0KocRKBXGdGA@mail.gmail.com>
-	<1803658.W77SUJGE4K@wuerfel>
-Date: Fri, 2 Oct 2015 15:56:16 +0800
-Message-ID: <CAFiDJ5-yMBw6Ff1++F5DTg6u_rAgoivGJeNj1tr9fwo-hdKDkg@mail.gmail.com>
-Subject: Re: [PATCH v7 5/6] Documentation: dt-bindings: pci: altera pcie
- device tree binding
-From: Ley Foon Tan <lftan@altera.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=UTF-8
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru
+CC: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V10 02/12] PCI: Add pcibios_bus_add_device() weak function
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com> <1445829362-2738-3-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1445829362-2738-3-git-send-email-weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 29, 2015 at 3:38 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Monday 28 September 2015 12:31:36 Rob Herring wrote:
->> >> > +
->> >> > +Required properties:
->> >> > +- compatible :       should contain "altr,pcie-root-port-1.0"
->> >> > +- reg:               a list of physical base address and length for TXS and CRA.
->> >> > +- reg-names: must include the following entries:
->> >> > +             "Txs" or "txs": TX slave port region
->> >> > +             "Cra" or "cra": Control register access region
->> >>
->> >> Why both cases? Can we please just have one (or none is better IMO).
->> > The PCIe IP on different device families use different register names.
->> > And our device tree generator will auto generate the register names
->> > based on the hardware description name. Too bad we can't change the
->> > hardware description names now.
->>
->> Okay, your problem to maintain. Hopefully the driver just goes by index then.
->>
->> Strictly speaking, if you have undocumented bindings downstream that
->> is your problem and we don't have to accept them as-is upstream. I'm
->> not going to worry about that here.
+On 26/10/15 14:15, Wei Yang wrote:
+> This patch adds a weak function pcibios_bus_add_device() for arch dependent
+> code could do proper setup. For example, powerpc could setup EEH related
+> resources.
 >
-> Are they always in the same order? If you don't mandate any names for the
-> registers in the binding but just use them by index, we can keep that
-> bit of ugliness out of the binding and the driver and still be compatible
-> with all the devices.
-Too bad the order might change in future devices. We will fix the
-tool, so only have one reg-name case.
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Regards
-Ley Foon
+Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+
+-- 
+Andrew Donnellan              Software Engineer, OzLabs
+andrew.donnellan@au1.ibm.com  Australia Development Lab, Canberra
++61 2 6201 8874 (work)        IBM Australia Limited
+
