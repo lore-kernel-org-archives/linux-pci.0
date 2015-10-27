@@ -1,133 +1,179 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
-	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
-	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V4 6/8] device property: acpi: Remove unused DMA APIs
-Date: Wed, 21 Oct 2015 08:52:09 -0700
-Message-ID: <1445442731-28819-7-git-send-email-Suravee.Suthikulpanit@amd.com>
-In-Reply-To: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v3 4/7] PCI: Record an fwnode associated with root PCI
+ buses, optionally
+To: jakeo@microsoft.com, gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+References: <1445901339-11924-1-git-send-email-jakeo@microsoft.com>
+ <1445901339-11924-5-git-send-email-jakeo@microsoft.com>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <562F2354.8040802@linux.intel.com>
+Date: Tue, 27 Oct 2015 15:10:12 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1445901339-11924-5-git-send-email-jakeo@microsoft.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These DMA APIs are replaced with the newer versions, which return
-the enum dev_dma_attr. So, we can safely remove them.
+On 2015/10/27 7:15, jakeo@microsoft.com wrote:
+> From: Jake Oshins <jakeo@microsoft.com>
+> 
+> This patch allows a PCI front-end implementation to supply an fwnode_handle
+> associated with a root PCI bus, optionally.  If supplied, the PCI driver
+> records this.
+> 
+> This patch supports the next patch in the series, which looks up an IRQ domain
+> through this handle.
+Hi JaKeo,
+	Instead of changing the pci_create_root_bus() interface,
+how about packing fwnode into sysdata, then we may
+either 1) introduce a helper to retrieve fwnode from sysdata
+or 2) set host_bridge->fwnode = sysdata in function
+pcibios_root_bridge_prepare.
 
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-CC: Rafael J. Wysocki <rjw@rjwysocki.net>
----
- drivers/base/property.c  | 13 -------------
- include/acpi/acpi_bus.h  | 34 ----------------------------------
- include/linux/acpi.h     |  5 -----
- include/linux/property.h |  2 --
- 4 files changed, 54 deletions(-)
+Thanks,
+Gerry
 
-diff --git a/drivers/base/property.c b/drivers/base/property.c
-index baac186..c79611e 100644
---- a/drivers/base/property.c
-+++ b/drivers/base/property.c
-@@ -534,19 +534,6 @@ unsigned int device_get_child_node_count(struct device *dev)
- }
- EXPORT_SYMBOL_GPL(device_get_child_node_count);
- 
--bool device_dma_is_coherent(struct device *dev)
--{
--	bool coherent = false;
--
--	if (IS_ENABLED(CONFIG_OF) && dev->of_node)
--		coherent = of_dma_is_coherent(dev->of_node);
--	else
--		acpi_check_dma(ACPI_COMPANION(dev), &coherent);
--
--	return coherent;
--}
--EXPORT_SYMBOL_GPL(device_dma_is_coherent);
--
- bool device_dma_supported(struct device *dev)
- {
- 	/* For DT, this is always supported.
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 13417d0..273b909 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -378,40 +378,6 @@ struct acpi_device {
- 	void (*remove)(struct acpi_device *);
- };
- 
--static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
--{
--	bool ret = false;
--
--	if (!adev)
--		return ret;
--
--	/**
--	 * Currently, we only support _CCA=1 (i.e. coherent_dma=1)
--	 * This should be equivalent to specifyig dma-coherent for
--	 * a device in OF.
--	 *
--	 * For the case when _CCA=0 (i.e. coherent_dma=0 && cca_seen=1),
--	 * There are two cases:
--	 * case 1. Do not support and disable DMA.
--	 * case 2. Support but rely on arch-specific cache maintenance for
--	 *         non-coherence DMA operations.
--	 * Currently, we implement case 2 above.
--	 *
--	 * For the case when _CCA is missing (i.e. cca_seen=0) and
--	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
--	 * and fallback to arch-specific default handling.
--	 *
--	 * See acpi_init_coherency() for more info.
--	 */
--	if (adev->flags.coherent_dma ||
--	    (adev->flags.cca_seen && IS_ENABLED(CONFIG_ARM64))) {
--		ret = true;
--		if (coherent)
--			*coherent = adev->flags.coherent_dma;
--	}
--	return ret;
--}
--
- static inline bool is_acpi_node(struct fwnode_handle *fwnode)
- {
- 	return fwnode && fwnode->type == FWNODE_ACPI;
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index c47892c..08bd395 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -564,11 +564,6 @@ static inline int acpi_device_modalias(struct device *dev,
- 	return -ENODEV;
- }
- 
--static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
--{
--	return false;
--}
--
- static inline bool acpi_dma_supported(struct acpi_device *adev)
- {
- 	return false;
-diff --git a/include/linux/property.h b/include/linux/property.h
-index bde8de3..8b69a88 100644
---- a/include/linux/property.h
-+++ b/include/linux/property.h
-@@ -170,8 +170,6 @@ struct property_set {
- 
- void device_add_property_set(struct device *dev, struct property_set *pset);
- 
--bool device_dma_is_coherent(struct device *dev);
--
- bool device_dma_supported(struct device *dev);
- 
- enum dev_dma_attr device_get_dma_attr(struct device *dev);
--- 
-2.1.0
-
+> 
+> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+> ---
+>  arch/sparc/kernel/pci.c       | 2 +-
+>  drivers/acpi/pci_root.c       | 2 +-
+>  drivers/parisc/lba_pci.c      | 2 +-
+>  drivers/pci/host/pci-xgene.c  | 2 +-
+>  drivers/pci/host/pcie-iproc.c | 3 ++-
+>  drivers/pci/probe.c           | 8 +++++---
+>  include/linux/pci.h           | 4 +++-
+>  7 files changed, 14 insertions(+), 9 deletions(-)
+> 
+> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+> index b91d7f1..3d4e9f9 100644
+> --- a/arch/sparc/kernel/pci.c
+> +++ b/arch/sparc/kernel/pci.c
+> @@ -660,7 +660,7 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+>  	pbm->busn.flags	= IORESOURCE_BUS;
+>  	pci_add_resource(&resources, &pbm->busn);
+>  	bus = pci_create_root_bus(parent, pbm->pci_first_busno, pbm->pci_ops,
+> -				  pbm, &resources);
+> +				  pbm, &resources, NULL);
+>  	if (!bus) {
+>  		printk(KERN_ERR "Failed to create bus for %s\n",
+>  		       node->full_name);
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 850d7bf..eab95bc 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -840,7 +840,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+>  	pci_acpi_root_add_resources(info);
+>  	pci_add_resource(&info->resources, &root->secondary);
+>  	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+> -				  sysdata, &info->resources);
+> +				  sysdata, &info->resources, NULL);
+>  	if (!bus)
+>  		goto out_release_info;
+>  
+> diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
+> index a32c1f6..a7b9d5c 100644
+> --- a/drivers/parisc/lba_pci.c
+> +++ b/drivers/parisc/lba_pci.c
+> @@ -1567,7 +1567,7 @@ lba_driver_probe(struct parisc_device *dev)
+>  	dev->dev.platform_data = lba_dev;
+>  	lba_bus = lba_dev->hba.hba_bus =
+>  		pci_create_root_bus(&dev->dev, lba_dev->hba.bus_num.start,
+> -				    cfg_ops, NULL, &resources);
+> +				    cfg_ops, NULL, &resources, NULL);
+>  	if (!lba_bus) {
+>  		pci_free_resource_list(&resources);
+>  		return 0;
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> index ae00ce2..95c20c8 100644
+> --- a/drivers/pci/host/pci-xgene.c
+> +++ b/drivers/pci/host/pci-xgene.c
+> @@ -545,7 +545,7 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+>  		return ret;
+>  
+>  	bus = pci_create_root_bus(&pdev->dev, 0,
+> -					&xgene_pcie_ops, port, &res);
+> +					&xgene_pcie_ops, port, &res, NULL);
+>  	if (!bus)
+>  		return -ENOMEM;
+>  
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index 9193951..bc999b7 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -357,7 +357,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>  	sysdata = pcie;
+>  #endif
+>  
+> -	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, sysdata, res);
+> +	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, sysdata, res,
+> +				  NULL);
+>  	if (!bus) {
+>  		dev_err(pcie->dev, "unable to create PCI root bus\n");
+>  		ret = -ENOMEM;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index f441d1b..c0f2e44 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2039,7 +2039,8 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+>  }
+>  
+>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> +		struct pci_ops *ops, void *sysdata, struct list_head *resources,
+> +		struct fwnode_handle *fwnode)
+>  {
+>  	int error;
+>  	struct pci_host_bridge *bridge;
+> @@ -2069,6 +2070,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	if (!bridge)
+>  		goto err_out;
+>  
+> +	bridge->fwnode = fwnode;
+>  	bridge->dev.parent = parent;
+>  	bridge->dev.release = pci_release_host_bridge_dev;
+>  	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> @@ -2223,7 +2225,7 @@ struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
+>  			break;
+>  		}
+>  
+> -	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
+> +	b = pci_create_root_bus(parent, bus, ops, sysdata, resources, NULL);
+>  	if (!b)
+>  		return NULL;
+>  
+> @@ -2261,7 +2263,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+>  	pci_add_resource(&resources, &ioport_resource);
+>  	pci_add_resource(&resources, &iomem_resource);
+>  	pci_add_resource(&resources, &busn_resource);
+> -	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
+> +	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources, NULL);
+>  	if (b) {
+>  		pci_scan_child_bus(b);
+>  	} else {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index b54fbf1..86ce5fa 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -409,6 +409,7 @@ struct pci_host_bridge {
+>  	struct device dev;
+>  	struct pci_bus *bus;		/* root bus */
+>  	struct list_head windows;	/* resource_entry */
+> +	struct fwnode_handle *fwnode;
+>  	void (*release_fn)(struct pci_host_bridge *);
+>  	void *release_data;
+>  	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
+> @@ -789,7 +790,8 @@ void pci_bus_add_devices(const struct pci_bus *bus);
+>  struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  				    struct pci_ops *ops, void *sysdata,
+> -				    struct list_head *resources);
+> +				    struct list_head *resources,
+> +				    struct fwnode_handle *fwnode);
+>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+>  int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+>  void pci_bus_release_busn_res(struct pci_bus *b);
+> 
