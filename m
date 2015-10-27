@@ -1,76 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:5169 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750732AbbJTNWC convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Oct 2015 09:22:02 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: RE: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
- instances
-Date: Tue, 20 Oct 2015 13:21:56 +0000
-Message-ID: <SIXPR06MB041582EF048D34F18AFD0E9FF5390@SIXPR06MB0415.apcprd06.prod.outlook.com>
-References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
- <20151019231634.GA13841@localhost> <20151020013650.GA13721@verge.net.au>
- <CAMuHMdWiH4ZUSmKQ01qQYvXcjb_3K4XBFLjVGSe1dUoKi=Jb_Q@mail.gmail.com>
- <SIXPR06MB04158545EDCA19F6C66A6783F5390@SIXPR06MB0415.apcprd06.prod.outlook.com>
- <20151020124933.GA8224@localhost>
-In-Reply-To: <20151020124933.GA8224@localhost>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 06/61] sparc/PCI: Keep resource idx order with bridge register number
+Date: Tue, 27 Oct 2015 13:54:58 -0700
+Message-Id: <1445979353-1728-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On one system found strang "no compatible bridge window" warning
 
-On 20 October 2015 13:50, Bjorn wrote:
-> On Tue, Oct 20, 2015 at 08:00:10AM +0000, Phil Edworthy wrote:
-> > Hi Geert,
-> >
-> > On 20 October 2015 08:37, Geert wrote:
-> > > On Tue, Oct 20, 2015 at 3:36 AM, Simon Horman <horms@verge.net.au>
-> wrote:
-> > > > On Mon, Oct 19, 2015 at 06:16:34PM -0500, Bjorn Helgaas wrote:
-> > > >> [+cc Geert]
-> > > >>
-> > > >> On Fri, Oct 02, 2015 at 11:25:03AM +0100, Phil Edworthy wrote:
-> > > >> > Fixes and changes to get PCIe working on ARM64 with mulitple
-> instances.
-> > > >> >
-> > > >> > I've tested these on ARM (Koelsch board), and it works fine.
-> > > >> > I've also tested on ARM64 (Salvator-X board), but I currently have an
-> issue
-> > > >> > with inbound PCI accesses. I am reasonably sure that this problem is
-> > > hardware
-> > > >> > related.
-> > > >> >
-> > > >> > Phil Edworthy (4):
-> > > >> >   PCI: rcar-pcie: Make PCI aware of the IO resources
-> > > >> >   PCI: rcar-pcie: Remove dependency on ARM-specific struct hw_pci
-> > > >> >   PCI: rcar-pcie: Set root bus nr to that provided in DT
-> > > >> >   PCI: rcar-pcie: Fix IO offset for multiple instances
-> > > >>
-> > > >> I applied these with Simon's ack to pci/host-rcar for v4.4.
-> > > >>
-> > > >> Note that these are on top of Geert's patch to make rcar build only
-> > > >> for ARM, which is probably not necessary after you remove the struct
-> > > >> hw_pci dependency.  I can drop Geert's patch if you want.
-> > > >
-> > > > I'm happy with that if Geert is.
-> > >
-> > > Iff the driver compiles/works on arm64 now, my patch should/must be
-> > > dropped/reverted.
-> > Yes, the driver works on the ARM64 Salvator-X board.
-> 
-> I dropped Geert's patch and redid the merges to my "next" branch, so
-> rcar should build for both ARM and ARM64.
-Thanks for sorting that out.
-Phil
+PCI: Claiming 0000:00:01.0: Resource 14: 0002000100000000..000200010fffffff [10220c]
+PCI: Claiming 0000:01:00.0: Resource 1: 0002000100000000..000200010000ffff [100214]
+pci 0000:01:00.0: can't claim BAR 1 [mem 0x2000100000000-0x200010000ffff 64bit]: no compatible bridge window
+
+and we already had pref_compat support that add extra pref bit for device
+resource.
+
+It turns out that pci_resource_compatible()/pci_up_path_over_pref_mem64()
+just check resource with bridge pref mmio register idx 15, and we have put
+resource to use mmio register idx 14 during of_scan_pci_bridge()
+as the bridge does not mmio resource.
+
+We already fix pci_up_path_over_pref_mem64() to check all bus resources.
+
+And at the same time, this patch will make resource to consistent sequence
+like other arch or directly from pci_read_bridge_bases(),
+even non-pref mmio is missing, or out of ordering in firmware reporting.
+
+So hold i = 1 for non pref mmio, and i = 2 for pref mmio.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+---
+ arch/sparc/kernel/pci.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 0e82584..36a0dfb 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -472,7 +472,7 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
+ 		pci_read_bridge_bases(bus);
+ 		goto after_ranges;
+ 	}
+-	i = 1;
++	i = 3;
+ 	for (; len >= 32; len -= 32, ranges += 8) {
+ 		u64 start;
+ 
+@@ -504,6 +504,12 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
+ 				       " for bridge %s\n", node->full_name);
+ 				continue;
+ 			}
++		} else if ((flags & IORESOURCE_PREFETCH) &&
++			   !bus->resource[2]->flags) {
++			res = bus->resource[2];
++		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
++			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
++			res = bus->resource[1];
+ 		} else {
+ 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
+ 				printk(KERN_ERR "PCI: too many memory ranges"
+-- 
+1.8.4.5
+
