@@ -1,184 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f42.google.com ([209.85.215.42]:34356 "EHLO
-	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932596AbbJ0QjV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 12:39:21 -0400
-Received: by lfaz124 with SMTP id z124so175669395lfa.1
-        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 09:39:19 -0700 (PDT)
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, Tomasz Nowicki <tn@semihalf.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH V1 01/11] x86, pci: Reorder logic of pci_mmconfig_insert() function
-Date: Tue, 27 Oct 2015 17:38:32 +0100
-Message-Id: <1445963922-22711-2-git-send-email-tn@semihalf.com>
-In-Reply-To: <1445963922-22711-1-git-send-email-tn@semihalf.com>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+Received: from mail.kernel.org ([198.145.29.136]:59221 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932412AbbJ0PPr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Oct 2015 11:15:47 -0400
+Date: Tue, 27 Oct 2015 10:15:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fabio Estevam <festevam@gmail.com>,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	linux-pci@vger.kernel.org, pratyush.anand@gmail.com,
+	m-karicheri2@ti.com, l.stach@pengutronix.de,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: Re: [PATCH v4 1/4] PCI: designware: Use common LTSSM_STATE_MASK
+ definition
+Message-ID: <20151027151542.GF8660@localhost>
+References: <20151021183741.28724.71281.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20151021184250.28724.41928.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151021184250.28724.41928.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is the first step for MMCONFIG refactoring process.
+[+cc Minghuan]
 
-Code that uses pci_mmcfg_lock will be moved to common file and become
-accessible for all architectures. pci_mmconfig_insert() cannot be moved
-so easily since it is mixing generic mmconfig code with x86 specific logic
-inside of mutual exclusive block guarded by pci_mmcfg_lock.
+On Wed, Oct 21, 2015 at 01:42:50PM -0500, Bjorn Helgaas wrote:
+> From: Fabio Estevam <fabio.estevam@freescale.com>
+> 
+> Add a common #define for LTSSM_STATE_MASK and use it in all the
+> DesignWare-based drivers.
+> 
+> Note that this changes LTSSM_STATE_MASK from 6 bits (0x3f) to 5 bits (0x1f)
+> for i.MX6 and Layerscape.  We believe this is safe for all DesignWare-based
+> PCIe cores.
 
-To get rid of that constraint, we reorder actions as follow:
-1. sanity check for mmconfig region presence, if we already have such
-region it doesn't make snese to alloc new mmconfig list entry
-2. mmconfig entry allocation, no need to lock
-3. insertion to iomem_resource has its own lock, no need to wrap it into mutex
-4. insertion to mmconfig list can be done as the final step in separate
-function (candidate for further refactoring) and needs another mmconfig
-lookup to avoid race condition.
+OK, DesignWare experts, what's the story on this LTSSM_STATE_MASK?
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
----
- arch/x86/pci/mmconfig-shared.c | 101 +++++++++++++++++++++++------------------
- 1 file changed, 58 insertions(+), 43 deletions(-)
+Minghuan says Layerscape requires a mask of 0x3f and it actually uses
+states 0x20, 0x21, 0x22, and 0x23:
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index dd30b7e..c8bb9b0 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -720,6 +720,38 @@ static int __init pci_mmcfg_late_insert_resources(void)
-  */
- late_initcall(pci_mmcfg_late_insert_resources);
- 
-+static int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
-+{
-+	struct pci_mmcfg_region *cfg_conflict;
-+	int err = 0;
-+
-+	mutex_lock(&pci_mmcfg_lock);
-+	cfg_conflict = pci_mmconfig_lookup(cfg->segment, cfg->start_bus);
-+	if (cfg_conflict) {
-+		if (cfg_conflict->end_bus < cfg->end_bus)
-+			pr_info(FW_INFO "MMCONFIG for "
-+				"domain %04x [bus %02x-%02x] "
-+				"only partially covers this bridge\n",
-+				cfg_conflict->segment, cfg_conflict->start_bus,
-+				cfg_conflict->end_bus);
-+		err = -EEXIST;
-+		goto out;
-+	}
-+
-+	if (pci_mmcfg_arch_map(cfg)) {
-+		pr_warn("fail to map MMCONFIG %pR.\n", &cfg->res);
-+		err = -ENOMEM;
-+		goto out;
-+	} else {
-+		list_add_sorted(cfg);
-+		pr_info("MMCONFIG at %pR (base %#lx)\n",
-+			&cfg->res, (unsigned long)cfg->address);
-+	}
-+out:
-+	mutex_unlock(&pci_mmcfg_lock);
-+	return err;
-+}
-+
- /* Add MMCFG information for host bridges */
- int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 			phys_addr_t addr)
-@@ -734,63 +766,46 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 	if (start > end)
- 		return -EINVAL;
- 
--	mutex_lock(&pci_mmcfg_lock);
-+	rcu_read_lock();
- 	cfg = pci_mmconfig_lookup(seg, start);
--	if (cfg) {
--		if (cfg->end_bus < end)
--			dev_info(dev, FW_INFO
--				 "MMCONFIG for "
--				 "domain %04x [bus %02x-%02x] "
--				 "only partially covers this bridge\n",
--				  cfg->segment, cfg->start_bus, cfg->end_bus);
--		mutex_unlock(&pci_mmcfg_lock);
-+	rcu_read_unlock();
-+	if (cfg)
- 		return -EEXIST;
--	}
- 
--	if (!addr) {
--		mutex_unlock(&pci_mmcfg_lock);
-+	if (!addr)
- 		return -EINVAL;
--	}
- 
--	rc = -EBUSY;
- 	cfg = pci_mmconfig_alloc(seg, start, end, addr);
--	if (cfg == NULL) {
-+	if (!cfg) {
- 		dev_warn(dev, "fail to add MMCONFIG (out of memory)\n");
--		rc = -ENOMEM;
--	} else if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
-+		return -ENOMEM;
-+	}
-+
-+	rc = -EBUSY;
-+	if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
- 		dev_warn(dev, FW_BUG "MMCONFIG %pR isn't reserved\n",
- 			 &cfg->res);
--	} else {
--		/* Insert resource if it's not in boot stage */
--		if (pci_mmcfg_running_state)
--			tmp = insert_resource_conflict(&iomem_resource,
--						       &cfg->res);
--
--		if (tmp) {
--			dev_warn(dev,
--				 "MMCONFIG %pR conflicts with "
--				 "%s %pR\n",
--				 &cfg->res, tmp->name, tmp);
--		} else if (pci_mmcfg_arch_map(cfg)) {
--			dev_warn(dev, "fail to map MMCONFIG %pR.\n",
--				 &cfg->res);
--		} else {
--			list_add_sorted(cfg);
--			dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
--				 &cfg->res, (unsigned long)addr);
--			cfg = NULL;
--			rc = 0;
--		}
-+		goto error;
- 	}
- 
--	if (cfg) {
--		if (cfg->res.parent)
--			release_resource(&cfg->res);
--		kfree(cfg);
-+	/* Insert resource if it's not in boot stage */
-+	if (pci_mmcfg_running_state)
-+		tmp = insert_resource_conflict(&iomem_resource, &cfg->res);
-+
-+	if (tmp) {
-+		dev_warn(dev, "MMCONFIG %pR conflicts with %s %pR\n",
-+			 &cfg->res, tmp->name, tmp);
-+		goto error;
- 	}
- 
--	mutex_unlock(&pci_mmcfg_lock);
-+	rc = pci_mmconfig_inject(cfg);
-+	if (!rc)
-+		return 0;
- 
-+error:
-+	if (cfg->res.parent)
-+		release_resource(&cfg->res);
-+	kfree(cfg);
- 	return rc;
- }
- 
--- 
-1.9.1
+MH> Our LTSSM mask is 0x3f because it includes the following states:
+MH> 0x20 S_RCVRY_EQ0
+MH> 0x21 S_RCVRY_EQ1
+MH> 0x22 S_RCVRY_EQ2
+MH> 0x23 S_RCVRY_EQ3
 
+MH> And I checked DesignWare Cores PCI Express Controller Databook
+MH> v4.21a and found the following descriptor:
+
+MH> [5:0]: smlh_ltssm_state: LTSSM current state. Encoding is defined in workspace/src/include/cxpl_defs.vh
+
+MH> So could we use the mask 0x3f for all SoCs?
+
+I couldn't find the "DesignWare Cores PCI Express Controller Databook
+v4.21a", but I do see the Keystone mask (sec 3.9.11 of
+http://www.ti.com/lit/ug/sprugs6d/sprugs6d.pdf) is definitely only 5
+bits, but that's clearly a TI register, not a generic DesignWare
+register.
+
+So it looks like a mistake to make a common LTSSM_STATE_MASK
+definition.  It looks like this is something with some variation and
+we shouldn't make assumptions about it being common.
+
+Now I'm concerned that the LTSSM state definitions I put in
+drivers/pci/host/pcie-designware.h might not actually apply to
+everything derived from DW.  For example, the Layerscape S_RCVRY
+states appear to be Layerscape-specific.
+
+I don't want to put misleading stuff in
+drivers/pci/host/pcie-designware.h if it's not really generic.  Better
+to have it in the individual drivers, with a prefix that indicates
+that it applies to that driver, e.g., KS_LTSSM_MASK, LS_LTSSM_MASK,
+etc.
+
+Bjorn
+
+> [bhelgaas: changelog, move removal of unused SPEAr13xx #defines to separate
+> patch, add only LTSSM_STATE_MASK and change all users for reviewability]
+> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/host/pci-imx6.c        |    3 +--
+>  drivers/pci/host/pci-keystone-dw.c |    1 -
+>  drivers/pci/host/pci-layerscape.c  |    1 -
+>  drivers/pci/host/pcie-designware.h |    2 ++
+>  4 files changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 6f43086..7b0d120 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -55,7 +55,6 @@ struct imx6_pcie {
+>  #define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
+>  #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
+>  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+> -#define PCIE_PHY_DEBUG_R0_LTSSM_MASK		(0x3f << 0)
+>  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+>  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
+>  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
+> @@ -508,7 +507,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+>  	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
+>  		return 0;
+>  
+> -	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != 0x0d)
+> +	if ((debug_r0 & LTSSM_STATE_MASK) != 0x0d)
+>  		return 0;
+>  
+>  	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
+> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+> index e71da99..95a8b13 100644
+> --- a/drivers/pci/host/pci-keystone-dw.c
+> +++ b/drivers/pci/host/pci-keystone-dw.c
+> @@ -25,7 +25,6 @@
+>  
+>  /* Application register defines */
+>  #define LTSSM_EN_VAL		        1
+> -#define LTSSM_STATE_MASK		0x1f
+>  #define LTSSM_STATE_L0			0x11
+>  #define DBI_CS2_EN_VAL			0x20
+>  #define OB_XLAT_EN_VAL		        2
+> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+> index b2328ea1..f02752e 100644
+> --- a/drivers/pci/host/pci-layerscape.c
+> +++ b/drivers/pci/host/pci-layerscape.c
+> @@ -29,7 +29,6 @@
+>  /* PEX1/2 Misc Ports Status Register */
+>  #define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
+>  #define LTSSM_STATE_SHIFT	20
+> -#define LTSSM_STATE_MASK	0x3f
+>  #define LTSSM_PCIE_L0		0x11 /* L0 state */
+>  
+>  /* Symbol Timer Register and Filter Mask Register 1 */
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index d0bbd27..a1a76ff 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -22,6 +22,8 @@
+>  #define MAX_MSI_IRQS			32
+>  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+>  
+> +#define LTSSM_STATE_MASK		0x1f
+> +
+>  struct pcie_port {
+>  	struct device		*dev;
+>  	u8			root_bus_nr;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
