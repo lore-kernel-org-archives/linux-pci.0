@@ -1,76 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Joerg Roedel <joro@8bytes.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Cc: x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [PATCH] x86/PCI: Don't alloc pcibios-irq when MSI is enabled
-Date: Fri,  9 Oct 2015 12:23:34 +0200
-Message-Id: <1444386214-26319-1-git-send-email-joro@8bytes.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:37455 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755117AbbJ1Rvu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2015 13:51:50 -0400
+Received: from [10.228.68.96] (rrcs-67-52-130-30.west.biz.rr.com [67.52.130.30])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	(Authenticated sender: okaya@smtp.codeaurora.org)
+	by smtp.codeaurora.org (Postfix) with ESMTPSA id 3F716140E9D
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 17:51:49 +0000 (UTC)
+To: linux-pci@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Subject: ECRC and Max Read Request Size
+Message-ID: <56310B34.6000102@codeaurora.org>
+Date: Wed, 28 Oct 2015 13:51:48 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joerg Roedel <jroedel@suse.de>
+I'm seeing two problems with the current PCI framework when it comes to 
+end-to-end CRC (ECRC) and Max Read Request Size.
 
-The pcibios-irq and MSI both use dev->irq to store the IRQ
-number. While the MSI code checks for that and frees the
-pcibios-irq before overwriting dev->irq, the
-pcibios_alloc_irq function does not.
+The problem with ECRC is that it blindly enables ECRC generation on 
+devices without checking if it is supported by the entire bus with 
+ECRC=on option.
 
-Usually this is not a problem, as the pcibios-irq is
-allocated before probe time of the device and the MSI irq is
-allocted from the drivers probe path.
+ECRC check can be enabled on all devices but ECRC generation on the root 
+complex and switches needs to be set only if all devices support ECRC 
+checking.
 
-But there are PCI devices handled by the core kernel and not
-by a standard pci driver, like the AMD IOMMU for example.
-For the AMD IOMMU a normal pci device driver does not make
-sense, because a driver can be forcibly unbound from its
-device, which is not a good idea for an IOMMU.
+I'm thinking of making changes in this area to cover this gap with 
+ECRC=safe option.
 
-Nevertheless the PCI core code tries to match the PCI device
-implementing the AMD IOMMU against drivers, and
-allocates/frees a pcibios IRQ every time it tries out a new
-driver. This overwrites the dev->irq field set by
-pci_enable_msi() and sets it to 0 in the end (because the
-probe fails and the pcibios-irq is freed again).
+The other problem I'm seeing is about the maximum read request size. If 
+I choose the PCI bus performance mode, maximum read request size is 
+being limited to the maximum payload size.
 
-On suspend/resume this breaks the kernel, because the irq
-descriptor for irq 0 is NULL.
+I'd like to add a new mode where I can have bigger read request size 
+than the maximum payload size.
 
-Fix this by not allocating a pcibios-irq when MSI is
-already active. This also has the benefit, that a device
-claimed by the core kernel can not be probed by a pci driver
-later.
+Opinions?
 
-Cc: Jiang Liu <jiang.liu@linux.intel.com>
-Reported-by: Borislav Petkov <bp@alien8.de>
-Signed-off-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/pci/common.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index dc78a4a..6254c06 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -675,6 +675,14 @@ int pcibios_add_device(struct pci_dev *dev)
- 
- int pcibios_alloc_irq(struct pci_dev *dev)
- {
-+	/*
-+	 * If the PCI device was already claimed by core code and has
-+	 * MSI enabled, probing of the pcibios irq will overwrite
-+	 * dev->irq.  So bail out if MSI is already enabled.
-+	 */
-+	if (pci_dev_msi_enabled(dev))
-+		return -EBUSY;
-+
- 	return pcibios_enable_irq(dev);
- }
- 
 -- 
-1.9.1
-
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
