@@ -1,97 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:60380 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752321AbbJAQLU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 12:11:20 -0400
-Date: Thu, 1 Oct 2015 17:11:01 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Rob Herring <robh@kernel.org>, Duc Dang <dhdang@apm.com>,
-	Ray Jui <rjui@broadcom.com>, Tanmay Inamdar <tinamdar@apm.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: pci_generic_config_write32() access size problem
-Message-ID: <20151001161101.GX21513@n2100.arm.linux.org.uk>
-References: <20150928220854.GA16110@localhost>
- <CAL_JsqL_O2qqESs69spQCPuDfKG5g8_GZkhiYFo-+U8ttxnJng@mail.gmail.com>
- <20150928230532.GG21513@n2100.arm.linux.org.uk>
- <CAL_JsqLVxtcgcTK55cY32=s24Nuv378X2aKZhYKHFEKO9wh3mw@mail.gmail.com>
- <CADaLNDndQ6qZ2yuGuff6=cTm565in5e75AjkcX8MJmH2BCwyEw@mail.gmail.com>
- <CAL_JsqJni3nB3OTevG8VSZoJ7ndnxSYHV6Yfpn6TwvghCxhHxg@mail.gmail.com>
- <CADaLNDmjv+SkRxtGDToUTxo4DKFF+yd2LRmte=k4-HRsGOHYVg@mail.gmail.com>
- <CAL_JsqLrkbXQu2uf9RzqRRu17Rp+sVuCoPb-RSk7aVsuVPpibw@mail.gmail.com>
- <20151001074659.GB3070@ulmo>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151001074659.GB3070@ulmo>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAFiDJ5_vCqh=uKkF2E_BQkJUv692r3yr26bBj8boK2DY_Dj+gA@mail.gmail.com>
+References: <1445596035-27733-1-git-send-email-lftan@altera.com>
+ <20151027142644.GA8660@localhost> <CAFiDJ5_vCqh=uKkF2E_BQkJUv692r3yr26bBj8boK2DY_Dj+gA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 27 Oct 2015 20:02:33 -0500
+Message-ID: <CAErSpo5okE86k846hs28s4jvL59hmm+4az-dDsymzNayPCPCzw@mail.gmail.com>
+Subject: Re: [PATCH v12 0/6] Altera PCIe host controller driver with MSI support
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 01, 2015 at 09:46:59AM +0200, Thierry Reding wrote:
-> So it seems like it's failing to properly read the header type. That's
-> retrieved from byte 0xe as an 8 bit access. That said, even with 32-bit
-> accesses I haven't seen any problems, but that might just be because
-> none of the devices I've tested with have R1WC bits in problematic
-> places.
+On Tue, Oct 27, 2015 at 7:56 PM, Ley Foon Tan <lftan@altera.com> wrote:
+> On Tue, Oct 27, 2015 at 10:26 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> Hi Ley,
+>>
+>> On Fri, Oct 23, 2015 at 06:27:09PM +0800, Ley Foon Tan wrote:
+>>> This is the 12th version of patch set to add support for Altera PCIe host
+>>> controller with MSI feature on Altera FPGA device families. This patchset
+>>> mainly resovle the comments from Bjorn.
+>>>
+>>>
+>>> This patchset is based on v4.3-rc6.
+>>>
+>>> v11->v12 changes:
+>>> - pcie-altera: use DECLARE_PCI_FIXUP_EARLY for pcie retrain fixup
+>>> - pcie-altera: move pcie_bus_configure_settings before pci_bus_add_devices
+>>> - pcie-altera: add %d for irq bit in dev_err()
+>>> - pcie-altera: prevent enumeration of root complex resources in config accessors
+>>> - Documentation: add Acked-by from Rob Herring
+>>>
+>>> History:
+>>> -------
+>>> [v1]: https://lkml.org/lkml/2015/7/28/395
+>>> [v2]: https://lkml.org/lkml/2015/7/31/267
+>>> [v3]: http://www.kernelhub.org/?msg=811940&p=2
+>>> [v4]: https://lkml.org/lkml/2015/8/17/141
+>>> [v5]: https://lkml.org/lkml/2015/8/25/238
+>>> [v6]: https://lkml.org/lkml/2015/9/1/177
+>>> [v7]: https://lkml.org/lkml/2015/9/20/193
+>>> [v8]: http://www.kernelhub.org/?msg=853553&p=2
+>>> [v9]: https://lkml.org/lkml/2015/10/13/998
+>>> [v10]: https://lkml.org/lkml/2015/10/19/139
+>>> [v11]: https://lkml.org/lkml/2015/10/22/206
+>>>
+>>>
+>>> Ley Foon Tan (6):
+>>>   arm: add msi.h to Kbuild
+>>>   pci: add Altera PCI vendor ID
+>>>   pci:host: Add Altera PCIe host controller driver
+>>>   pci: altera: Add Altera PCIe MSI driver
+>>>   Documentation: dt-bindings: pci: altera pcie device tree binding
+>>>   MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+>>>
+>>>  .../devicetree/bindings/pci/altera-pcie-msi.txt    |  28 +
+>>>  .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
+>>>  MAINTAINERS                                        |  16 +
+>>>  arch/arm/include/asm/Kbuild                        |   1 +
+>>>  drivers/pci/host/Kconfig                           |  16 +
+>>>  drivers/pci/host/Makefile                          |   2 +
+>>>  drivers/pci/host/pcie-altera-msi.c                 | 314 +++++++++++
+>>>  drivers/pci/host/pcie-altera.c                     | 580 +++++++++++++++++++++
+>>>  include/linux/pci_ids.h                            |   2 +
+>>>  9 files changed, 1008 insertions(+)
+>>>  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+>>>  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
+>>>  create mode 100644 drivers/pci/host/pcie-altera-msi.c
+>>>  create mode 100644 drivers/pci/host/pcie-altera.c
+>>
+>> I applied these to pci/host-altera for v4.4, thanks!
+>>
+>> I squashed these into three patches:
+>>
+>>   - add msi.h to Kbuild
+>>   - add Altera host driver (including DT binding and MAINTAINERS update)
+>>   - add Altera MSI driver (including DT binding and MAINTAINERS update)
+>>
+>> Since the convention is to add PCI ID #defines only when they are used in
+>> multiple places, I replaced PCI_VENDOR_ID_ALTERA with 0x1172 in the single
+>> place it is used.
+> Hi Bjorn
+>
+> Thanks for applied these.
+>
+> By the way, I can't see pci/host-altera branch in your pci.git tree
+> yet. It takes some time to appear there?
 
-As I've explained, the registers which are most likely to be affected
-in PCIe are:
+Sorry, I forgot to push it.  It should be there now!
 
-- PCI status register
-- PCIe device status register
-- PCIe error status(es)
-
-and possibly others.  Some of these registers are accessed by the PCIe
-AER driver.
-
-Here's the problem: how do you know whether the PCIe on your board is
-operating correctly if your PCI host driver goes around writing '1's
-to the RW1C bits in these status registers, thereby clearing the error
-status(es)?  It may appear to be working correctly, but generating a
-number of correctable errors.
-
-Also, as I've pointed out, how do you know whether 8-bit or 16-bit
-registers neighbouring the register you're accessing are safe to be
-written, especially those in the space above 0x40, where vendors are
-allowed to place their own vendor specific registers - this is the
-bigger problem.
-
-Yes, you can get away with saying "the cards I have in front of me
-work today" but as long as the bus doesn't support 8-bit or 16-bit
-accesses, you're at the mercy of these issues, because what you have
-is an implementation which doesn't conform to the PCI specifications.
-
-The point that I initially raised was that (IMHO) generic PCI code
-should not be making it easy to make "mistakes" like always accessing
-config space via 32-bit accesses, at least not without taking some
-counter-measures against it - even at a basic level of detecting a
-write to the PCI command register and zeroing the upper 16-bits of
-the 32-bit quantity it's about to write back.  Maybe also looking
-up the PCI device, and then its capabilities, and doing a similar
-thing for the PCIe status registers containing RW1C bits.
-
-Right now, it's all too easy to just plug the 32-bit accessors in
-without thinking, and without even checking or testing whether the
-PCI conformant accessors should be used.
-
-It seems that the Marvell platforms have suffered from something like
-this: the later hardware definitely can (it's specified to) but it's
-not mentioned whether or not they're supported in older hardware - but
-practical tests have shown that the 8-bit and 16-bit accesses are
-supported there too.  However, the driver opted to just use the 32-bit
-accessors anyway.
-
-I'd hope that having the code more complex behind the 32-bit accessors
-to at least try a little harder to avoid clearing these RW1C bits will
-be enough to make people think twice about using them - especially if
-they have to walk the list of PCI devices on the bus to try and find
-the appropriate PCI device struct corresponding to the requested devfn.
-
-Those who are dealing with non-conformant hardware then get a slight
-performance impact when accessing PCI configuration space, which I think
-is entirely justified given that it _is_ non-conformant hardware.
-
--- 
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+Bjorn
