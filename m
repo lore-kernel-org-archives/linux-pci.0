@@ -1,118 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44457 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752031AbbJORQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Oct 2015 13:16:03 -0400
-Date: Thu, 15 Oct 2015 12:16:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ethan Zhao <ethan.zhao@oracle.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] iov: restore NumVFs register to 0 before return from
- virtfn_max_buses()
-Message-ID: <20151015171600.GB17702@localhost>
-References: <1442373593-8342-1-git-send-email-ethan.zhao@oracle.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
+	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH V5 4/9] device property: Adding DMA Attribute APIs for Generic Devices
+Date: Wed, 28 Oct 2015 15:50:49 -0700
+Message-ID: <1446072654-5608-5-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442373593-8342-1-git-send-email-ethan.zhao@oracle.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ethan,
+The function device_dma_is_coherent() does not sufficiently
+communicate device DMA attributes. Instead, this patch introduces
+device_get_dma_attr(), which returns enum dev_dma_attr.
+It replaces the acpi_check_dma(), which will be removed in
+subsequent patch.
 
-On Wed, Sep 16, 2015 at 12:19:53PM +0900, Ethan Zhao wrote:
-> After commit 4449f079722c ("PCI: Calculate maximum number of buses
-> required for VFs"),the initial value of NumVFs register was left to
-> non-zero after sriov_init() and no VFs was enabled in device driver.
-> this changed the behaviour of kernel exported by lspci and sysfs etc.
-> so this patch restore the NumVFs register to zero after the
-> calculation of max_VF_buses was done and before return from
-> virtfn_max_buses().
-> 
-> Tested on stable 4.1 and passed building on stable 4.3-rc1
-> 
-> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
-> Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
+This also provides a convenient function, device_dma_supported(),
+to check DMA support of the specified device.
 
-Can you test the patch below?  I'm trying to avoid touching
-PCI_SRIOV_NUM_VF in more than one place, and I think it's OK to set it
-and test offset/stride at the end, instead of setting NUM_VF to zero,
-testing offset/stride, computing max_bus, then setting NUM_VF to zero
-again.
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+---
+ drivers/base/property.c  | 29 +++++++++++++++++++++++++++++
+ include/linux/property.h |  4 ++++
+ 2 files changed, 33 insertions(+)
 
-Bjorn
-
-
-commit 8e20e89658f23b8d16b1e21810e9f63c8625129c
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Thu Oct 15 11:31:21 2015 -0500
-
-    PCI: Set SR-IOV NumVFs to zero after enumeration
-    
-    The enumeration path should leave NumVFs set to zero.  But after
-    4449f079722c ("PCI: Calculate maximum number of buses required for VFs"),
-    we call virtfn_max_buses() in the enumeration path, which changes NumVFs.
-    This NumVFs change is visible via lspci and sysfs until a driver enables
-    SR-IOV.
-    
-    Set NumVFs to zero after virtfn_max_buses() computes the maximum number of
-    buses.
-    
-    Fixes: 4449f079722c ("PCI: Calculate maximum number of buses required for VFs")
-    Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..0202ab0 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -384,7 +384,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
- 	int rc;
- 	int nres;
- 	u32 pgsz;
--	u16 ctrl, total, offset, stride;
-+	u16 ctrl, total;
- 	struct pci_sriov *iov;
- 	struct resource *res;
- 	struct pci_dev *pdev;
-@@ -414,11 +414,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
- 
- found:
- 	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
--	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
--	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
--	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
--	if (!offset || (total > 1 && !stride))
--		return -EIO;
- 
- 	pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
- 	i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
-@@ -456,8 +451,6 @@ found:
- 	iov->nres = nres;
- 	iov->ctrl = ctrl;
- 	iov->total_VFs = total;
--	iov->offset = offset;
--	iov->stride = stride;
- 	iov->pgsz = pgsz;
- 	iov->self = dev;
- 	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
-@@ -475,6 +468,11 @@ found:
- 	dev->sriov = iov;
- 	dev->is_physfn = 1;
- 	iov->max_VF_buses = virtfn_max_buses(dev);
-+	pci_iov_set_numvfs(dev, 0);
-+	if (!iov->offset || (total > 1 && !iov->stride)) {
-+		rc = -EIO;
-+		goto failed;
-+	}
- 
- 	return 0;
- 
-@@ -484,6 +482,7 @@ failed:
- 		res->flags = 0;
- 	}
- 
-+	dev->sriov = NULL;
- 	kfree(iov);
- 	return rc;
+diff --git a/drivers/base/property.c b/drivers/base/property.c
+index de40623..05d57a2 100644
+--- a/drivers/base/property.c
++++ b/drivers/base/property.c
+@@ -611,6 +611,35 @@ bool device_dma_is_coherent(struct device *dev)
  }
+ EXPORT_SYMBOL_GPL(device_dma_is_coherent);
+ 
++bool device_dma_supported(struct device *dev)
++{
++	/* For DT, this is always supported.
++	 * For ACPI, this depends on CCA, which
++	 * is determined by the acpi_dma_supported().
++	 */
++	if (IS_ENABLED(CONFIG_OF) && dev->of_node)
++		return true;
++
++	return acpi_dma_supported(ACPI_COMPANION(dev));
++}
++EXPORT_SYMBOL_GPL(device_dma_supported);
++
++enum dev_dma_attr device_get_dma_attr(struct device *dev)
++{
++	enum dev_dma_attr attr = DEV_DMA_NOT_SUPPORTED;
++
++	if (IS_ENABLED(CONFIG_OF) && dev->of_node) {
++		if (of_dma_is_coherent(dev->of_node))
++			attr = DEV_DMA_COHERENT;
++		else
++			attr = DEV_DMA_NON_COHERENT;
++	} else
++		attr = acpi_get_dma_attr(ACPI_COMPANION(dev));
++
++	return attr;
++}
++EXPORT_SYMBOL_GPL(device_get_dma_attr);
++
+ /**
+  * device_get_phy_mode - Get phy mode for given device
+  * @dev:	Pointer to the given device
+diff --git a/include/linux/property.h b/include/linux/property.h
+index 8eecf20..7200490 100644
+--- a/include/linux/property.h
++++ b/include/linux/property.h
+@@ -176,6 +176,10 @@ void device_add_property_set(struct device *dev, struct property_set *pset);
+ 
+ bool device_dma_is_coherent(struct device *dev);
+ 
++bool device_dma_supported(struct device *dev);
++
++enum dev_dma_attr device_get_dma_attr(struct device *dev);
++
+ int device_get_phy_mode(struct device *dev);
+ 
+ void *device_get_mac_address(struct device *dev, char *addr, int alen);
+-- 
+2.1.0
+
