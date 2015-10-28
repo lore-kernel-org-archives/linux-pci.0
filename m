@@ -1,125 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp06.in.ibm.com ([122.248.162.6]:32813 "EHLO
-	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752644AbbJZDRu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Oct 2015 23:17:50 -0400
-Received: from /spool/local
-	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 26 Oct 2015 08:47:47 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 83605E005A
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:47:52 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9Q3HiAV65601650
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:47:44 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9Q3Hh7S022014
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 08:47:43 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V10 01/12] PCI/IOV: Rename and export virtfn_add/virtfn_remove
-Date: Mon, 26 Oct 2015 11:15:51 +0800
-Message-Id: <1445829362-2738-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:54602 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750731AbbJ1Qhu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 Oct 2015 12:37:50 -0400
+Date: Wed, 28 Oct 2015 11:37:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexander Duyck <aduyck@mirantis.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/5] iov: Reset resources to 0 if totalVFs increases
+ after enabling ARI
+Message-ID: <20151028163747.GA29223@localhost>
+References: <20151027204607.14626.59671.stgit@localhost.localdomain>
+ <20151027205221.14626.8940.stgit@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151027205221.14626.8940.stgit@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During EEH recovery, hotplug is applied to the devices which don't
-have drivers or their drivers don't support EEH. However, the hotplug,
-which was implemented based on PCI bus, can't be applied to VF directly.
+Hi Alex,
 
-The patch renames virtn_{add,remove}() and exports them so that they
-can be used in PCI hotplug during EEH recovery.
+On Tue, Oct 27, 2015 at 01:52:21PM -0700, Alexander Duyck wrote:
+> This patch forces us to reallocate VF BARs if the totalVFs value has
+> increased after enabling ARI.  This normally shouldn't occur, however I
+> have seen some non-spec devices that shift between 7 and some value greater
+> than 7 based on the ARI value and we want to avoid triggering any issues
+> with such devices.
 
-[gwshan: changelog]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c   | 10 +++++-----
- include/linux/pci.h |  8 ++++++++
- 2 files changed, 13 insertions(+), 5 deletions(-)
+Can you include specifics about the devices?  The value "7" is pretty
+specific, so if we're going to include that level of detail, we should
+have the actual device info to go with it.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..cc941dd 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -108,7 +108,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
- }
- 
--static int virtfn_add(struct pci_dev *dev, int id, int reset)
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
- {
- 	int i;
- 	int rc = -ENOMEM;
-@@ -183,7 +183,7 @@ failed:
- 	return rc;
- }
- 
--static void virtfn_remove(struct pci_dev *dev, int id, int reset)
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
- {
- 	char buf[VIRTFN_ID_LEN];
- 	struct pci_dev *virtfn;
-@@ -320,7 +320,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	}
- 
- 	for (i = 0; i < initial; i++) {
--		rc = virtfn_add(dev, i, 0);
-+		rc = pci_iov_virtfn_add(dev, i, 0);
- 		if (rc)
- 			goto failed;
- 	}
-@@ -332,7 +332,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 
- failed:
- 	for (j = 0; j < i; j++)
--		virtfn_remove(dev, j, 0);
-+		pci_iov_virtfn_remove(dev, j, 0);
- 
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
-@@ -361,7 +361,7 @@ static void sriov_disable(struct pci_dev *dev)
- 		return;
- 
- 	for (i = 0; i < iov->num_VFs; i++)
--		virtfn_remove(dev, i, 0);
-+		pci_iov_virtfn_remove(dev, i, 0);
- 
- 	pcibios_sriov_disable(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 860c751..b854a5f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1669,6 +1669,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
- 
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset);
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset);
- int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
-@@ -1686,6 +1688,12 @@ static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
-+static inline int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
-+{
-+	return -ENOSYS;
-+}
-+static inline void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
-+{ }
- static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
- static inline int pci_vfs_assigned(struct pci_dev *dev)
- { return 0; }
--- 
-2.5.0
+I guess the problem is:
 
+  - Device supports 7 TotalVFs with ARI disabled, >7 with ARI enabled
+  - Firmware leaves ARI disabled in SRIOV_CTRL
+  - Firmware computes size based on 7 VFs
+  - Firmware allocates space and programs BARs for 7 VFs
+  - Linux enables ARI, reads >7 TotalVFs
+  - Linux computes size based on >7 VFs
+  - Increased size may overlap other resources
+
+Right?
+
+> Fixes: 3aa71da412fe ("PCI: Enable SR-IOV ARI Capable Hierarchy before reading TotalVFs")
+> Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+> ---
+>  drivers/pci/iov.c |   11 ++++++++++-
+>  1 file changed, 10 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 099050d78a39..238950412de0 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -393,7 +393,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>  	int rc;
+>  	int nres;
+>  	u32 pgsz;
+> -	u16 ctrl, total;
+> +	u16 ctrl, total, orig_total;
+>  	struct pci_sriov *iov;
+>  	struct resource *res;
+>  	struct pci_dev *pdev;
+> @@ -402,6 +402,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>  	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
+>  		return -ENODEV;
+>  
+> +	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &orig_total);
+>  	pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl);
+>  	if (ctrl & PCI_SRIOV_CTRL_VFE) {
+>  		pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, 0);
+> @@ -450,6 +451,14 @@ found:
+>  		}
+>  		iov->barsz[i] = resource_size(res);
+>  		res->end = res->start + resource_size(res) * total - 1;
+> +
+> +		/* force reallocation of BARs if total VFs increased */
+> +		if (orig_total < total) {
+> +			res->flags |= IORESOURCE_UNSET;
+> +			res->end -= res->start;
+> +			res->start = 0;
+> +		}
+
+Two thoughts here:
+
+1) Even if the required space increased, it's possible that firmware
+placed the BAR somewhere where the extra space is available.  In that
+case, this forces reallocation unnecessarily.
+
+2) This *feels* like something the PCI core should be doing anyway,
+even without any help here.  Shouldn't we fail in pci_claim_resource()
+and set IORESOURCE_UNSET there?
+
+OK, and a third: re-reading TotalVF is (I think) completely
+unnecessary per spec, so if we're going to do it we should probably
+have a one-line comment about why the code is doing something that
+appears unnecessary, and really should have a concrete example device
+in the changelog.
+
+> +
+>  		dev_info(&dev->dev, "VF(n) BAR%d space: %pR (contains BAR%d for %d VFs)\n",
+>  			 i, res, i, total);
+>  		i += bar64;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
