@@ -1,142 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30030 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965294AbbJHVpd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:45:33 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 57/60] PCI, x86: Add pci=assign_pref_bars to reallocate pref BARs
-Date: Thu,  8 Oct 2015 14:39:16 -0700
-Message-Id: <1444340359-8011-58-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5630D38F.804@linaro.org>
+Date: Wed, 28 Oct 2015 21:54:23 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <helgaas@kernel.org>
+CC: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
+	will.deacon@arm.com, thomas.lendacky@amd.com,
+	herbert@gondor.apana.org.au, davem@davemloft.net,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V4 0/8] PCI: ACPI: Setting up DMA coherency for PCI device
+ from _CCA attribute
+References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com> <20151027145249.GE8660@localhost> <24127028.eJSjD1i70u@vostro.rjw.lan>
+In-Reply-To: <24127028.eJSjD1i70u@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now some BIOS tend to allocate pref MMIO under non-pref MMIO, or allocate
-64bit pref MMIO under 4G.
+Hi Rafael,
 
-Add pci=assign_pref_bars to clear and allocate resource to pref BARS.
-So could reallocate pref mmio64 above 4G and pref under bridges pref BARs.
+On 10/27/2015 11:27 PM, Rafael J. Wysocki wrote:
+> On Tuesday, October 27, 2015 09:52:50 AM Bjorn Helgaas wrote:
+>> Hi Suravee,
+>>
+>> On Wed, Oct 21, 2015 at 08:52:03AM -0700, Suravee Suthikulpanit wrote:
+>>> This patch series adds support to setup DMA coherency for PCI device using
+>>> the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
+>>> is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
+>>> support for ARM64 which is currently in development.  Also, this should
+>>> not affect other architectures that does not define
+>>> CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
+>>>
+>>> In the process, this series also introduces enum dev_dma_attr and a set
+>>> of APIs to query device DMA attribute. These APIs replace the obsolete
+>>> device_dma_is_coherent(), and acpi_check_dma().
+>>>
+>>> I have also included a patch from Jeremy posted here:
+>>>      http://www.spinics.net/lists/linux-usb/msg128582.html
+>>>
+>>> This patch series  has been tested on AMD Seattle RevB platform.
+>>> The git tree containing tested code and pre-req patches are posted here:
+>>>
+>>>      http://github.com/ssuthiku/linux.git pci-cca-v4
+>>>
+>>> Changes from V3: (https://lkml.org/lkml/2015/8/26/389)
+>>>      * Clean up suggested by Bjorn
+>>>      * Introduce enum dev_dma_attr
+>>>      * Replace device_dma_is_coherent() and acpi_check_dma() with
+>>>        new APIs.
+>>>
+>>> Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
+>>>      * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
+>>>      * Add WARN() when fail to setup DMA for PCI device when booting
+>>>        ACPI (per Arnd's suggestion)
+>>>      * Added Acked-by from Rob.
+>>>      * Minor clean up
+>>>
+>>> Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
+>>>      * Include patch 1 from Jeremy to enable support for _CCA=0
+>>>      * Clean up acpi_check_dma() per Bjorn suggestions
+>>>      * Split the original V1 patch into two patches (patch 3 and 4)
+>>>
+>>> Jeremy Linton (1):
+>>>    Honor ACPI _CCA attribute setting
+>>>
+>>> Suravee Suthikulpanit (7):
+>>>    device property: Introducing enum dev_dma_attr
+>>>    acpi: Adding DMA Attribute APIs for ACPI Device
+>>>    device property: Adding DMA Attribute APIs for Generic Devices
+>>>    device property: acpi: Make use of the new DMA Attribute APIs
+>>>    device property: acpi: Remove unused DMA APIs
+>>>    PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
+>>>    PCI: ACPI: Add support for PCI device DMA coherency
+>>>
+>>>   drivers/acpi/acpi_platform.c              |  7 +++++-
+>>>   drivers/acpi/glue.c                       |  8 +++---
+>>>   drivers/acpi/scan.c                       | 42 +++++++++++++++++++++++++++++++
+>>>   drivers/base/property.c                   | 32 +++++++++++++++++------
+>>>   drivers/crypto/ccp/ccp-platform.c         |  9 ++++++-
+>>>   drivers/net/ethernet/amd/xgbe/xgbe-main.c |  9 ++++++-
+>>>   drivers/of/of_pci.c                       | 20 ---------------
+>>>   drivers/pci/probe.c                       | 36 ++++++++++++++++++++++++--
+>>>   include/acpi/acpi_bus.h                   | 36 +++-----------------------
+>>>   include/linux/acpi.h                      |  7 +++++-
+>>>   include/linux/of_pci.h                    |  3 ---
+>>>   include/linux/property.h                  | 10 +++++++-
+>>>   12 files changed, 145 insertions(+), 74 deletions(-)
+>>
+>> I had a couple minor comments.  It's sort of a toss-up, but this feels
+>> more ACPI-flavored than PCI, so I assume Rafael will take this whole
+>> series unless I hear otherwise.
+>
+> I'll do that.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/include/asm/pci_x86.h |  1 +
- arch/x86/pci/common.c          |  3 +++
- arch/x86/pci/i386.c            | 56 ++++++++++++++++++++++++++----------------
- 3 files changed, 39 insertions(+), 21 deletions(-)
+If Suravee address the comments and send another version,
+an it be merged into 4.4?
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 81a7abf..23bc5d6 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -34,6 +34,7 @@ do {						\
- #define PCI_NOASSIGN_ROMS	0x80000
- #define PCI_ROOT_NO_CRS		0x100000
- #define PCI_NOASSIGN_BARS	0x200000
-+#define PCI_ASSIGN_PREF_BARS	0x400000
- 
- extern unsigned int pci_probe;
- extern unsigned long pirq_table_addr;
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 7c018df..7dc28c2 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -606,6 +606,9 @@ char *__init pcibios_setup(char *str)
- 	} else if (!strcmp(str, "assign-busses")) {
- 		pci_probe |= PCI_ASSIGN_ALL_BUSSES;
- 		return NULL;
-+	} else if (!strcmp(str, "assign_pref_bars")) {
-+		pci_probe |= PCI_ASSIGN_PREF_BARS;
-+		return NULL;
- 	} else if (!strcmp(str, "use_crs")) {
- 		pci_probe |= PCI_USE__CRS;
- 		return NULL;
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 21f3e3e..6f27780 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -228,16 +228,25 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
- 			continue;
- 		if (r->parent)	/* Already allocated */
- 			continue;
--		if (!r->start || pci_claim_bridge_resource(dev, idx) < 0) {
--			/*
--			 * Something is wrong with the region.
--			 * Invalidate the resource to prevent
--			 * child resource allocations in this
--			 * range.
--			 */
--			r->start = r->end = 0;
--			r->flags = 0;
--		}
-+
-+		if ((r->flags & IORESOURCE_PREFETCH) &&
-+		    (pci_probe & PCI_ASSIGN_PREF_BARS))
-+			goto clear;
-+
-+		if (!r->start)
-+			goto clear;
-+
-+		if (pci_claim_bridge_resource(dev, idx) == 0)
-+			continue;
-+
-+clear:
-+		/*
-+		 * Something is wrong with the region.
-+		 * Invalidate the resource to prevent
-+		 * child resource allocations in this range.
-+		 */
-+		r->start = r->end = 0;
-+		r->flags = 0;
- 	}
- }
- 
-@@ -283,21 +292,26 @@ static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- 			else
- 				disabled = !(command & PCI_COMMAND_MEMORY);
- 			if (pass == disabled) {
-+				if ((r->flags & IORESOURCE_PREFETCH) &&
-+				    (pci_probe & PCI_ASSIGN_PREF_BARS))
-+					goto clear;
-+
- 				dev_dbg(&dev->dev,
- 					"BAR %d: reserving %pr (d=%d, p=%d)\n",
- 					idx, r, disabled, pass);
--				if (pci_claim_resource(dev, idx) < 0) {
--					if (r->flags & IORESOURCE_PCI_FIXED) {
--						dev_info(&dev->dev, "BAR %d %pR is immovable\n",
--							 idx, r);
--					} else {
--						/* We'll assign a new address later */
--						pcibios_save_fw_addr(dev,
--								idx, r->start);
--						r->end -= r->start;
--						r->start = 0;
--					}
-+				if (pci_claim_resource(dev, idx) == 0)
-+					continue;
-+				if (r->flags & IORESOURCE_PCI_FIXED) {
-+					dev_info(&dev->dev, "BAR %d %pR is immovable\n",
-+						 idx, r);
-+					continue;
- 				}
-+
-+clear:
-+				/* We'll assign a new address later */
-+				pcibios_save_fw_addr(dev, idx, r->start);
-+				r->end -= r->start;
-+				r->start = 0;
- 			}
- 		}
- 	if (!pass) {
--- 
-1.8.4.5
-
+Thanks
+Hanjun
