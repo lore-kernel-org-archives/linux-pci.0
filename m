@@ -1,34 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f51.google.com ([209.85.213.51]:36003 "EHLO
-	mail-vk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751412AbbJDLkd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Oct 2015 07:40:33 -0400
-Received: by vkfp126 with SMTP id p126so82245554vkf.3
-        for <linux-pci@vger.kernel.org>; Sun, 04 Oct 2015 04:40:32 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
+	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH V5 2/9] device property: Introducing enum dev_dma_attr
+Date: Wed, 28 Oct 2015 15:50:47 -0700
+Message-ID: <1446072654-5608-3-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <1443906691-14642-1-git-send-email-festevam@gmail.com>
-References: <1443906691-14642-1-git-send-email-festevam@gmail.com>
-Date: Sun, 4 Oct 2015 17:10:32 +0530
-Message-ID: <CAHM4w1nzT0dnPG4hjNErmCYN-yRzOUz2_GHV9Wn_aqbezOKh4Q@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: spear: Move LTSSM state definitions to pcie-designware.h
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Oct 4, 2015 at 2:41 AM, Fabio Estevam <festevam@gmail.com> wrote:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
->
-> Move LTSSM state definitions to common pcie-designware.h so that other
-> drivers can make use of them.
->
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+A device could have one of the following DMA attributes:
+    * DMA not supported
+    * DMA non-coherent
+    * DMA coherent
 
-Yes, they are designware specific. So can be moved.
+So, this patch introduces enum dev_dma_attribute. This will be used by
+new APIs introduced in later patches.
 
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+---
+ include/linux/property.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/include/linux/property.h b/include/linux/property.h
+index 463de52..8eecf20 100644
+--- a/include/linux/property.h
++++ b/include/linux/property.h
+@@ -27,6 +27,12 @@ enum dev_prop_type {
+ 	DEV_PROP_MAX,
+ };
+ 
++enum dev_dma_attr {
++	DEV_DMA_NOT_SUPPORTED,
++	DEV_DMA_NON_COHERENT,
++	DEV_DMA_COHERENT,
++};
++
+ bool device_property_present(struct device *dev, const char *propname);
+ int device_property_read_u8_array(struct device *dev, const char *propname,
+ 				  u8 *val, size_t nval);
+-- 
+2.1.0
+
