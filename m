@@ -1,124 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:36899 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750932AbbJCSNd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 14:13:33 -0400
-In-Reply-To: <20151003181228.GI21513@n2100.arm.linux.org.uk>
-References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 6/9] pci: mvebu: use gpio_desc to carry around gpio
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:35047 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752498AbbJ1Vqw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2015 17:46:52 -0400
+Subject: Re: [PATCH 1/5] iov: Update virtfn_max_buses to validate offset and
+ stride
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Alexander Duyck <aduyck@mirantis.com>
+References: <20151027204607.14626.59671.stgit@localhost.localdomain>
+ <20151027205215.14626.93504.stgit@localhost.localdomain>
+ <20151028163216.GA2927@localhost> <20151028184324.GA10008@localhost>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <5631424A.7010408@gmail.com>
+Date: Wed, 28 Oct 2015 14:46:50 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1ZiRJC-0004J4-PY@rmk-PC.arm.linux.org.uk>
-Date: Sat, 03 Oct 2015 19:13:22 +0100
+In-Reply-To: <20151028184324.GA10008@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a gpio_desc to carry around the gpio, so we can then make use of the
-GPIOF_ACTIVE_LOW property rather than carrying that around as well.
-This also avoids needing to use gpio_is_valid() to check whether we have
-a GPIO; checking for a non-NULL descriptor is simpler.
+On 10/28/2015 11:43 AM, Bjorn Helgaas wrote:
+> On Wed, Oct 28, 2015 at 11:32:16AM -0500, Bjorn Helgaas wrote:
+>> Hi Alex,
+>>
+>> Thanks a lot for cleaning this up.  I think this is a great
+>> improvement over what I did.
+>>
+>> On Tue, Oct 27, 2015 at 01:52:15PM -0700, Alexander Duyck wrote:
+>>> This patch pulls the validation of offset and stride into virtfn_max_buses.
+>>> The general idea is to validate offset and stride for each possible value
+>>> of numvfs in addition to still determining the maximum bus value for the
+>>> VFs.
+>>>
+>>> I also reversed the loop as the most likely maximum will be when numvfs is
+>>> set to total_VFs.  In addition this makes it so that we loop down to a
+>>> value of 0 for numvfs which should be the resting state for the register.
+>>>
+>>> Fixes: 8e20e89658f2 ("PCI: Set SR-IOV NumVFs to zero after enumeration")
+>>> Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+>>
+>> I'd like to squash this together with my patch instead of having fixes
+>> on top of fixes.  What do you think of the following?  (This applies
+>> on top of 70675e0b6a1a ("PCI: Don't try to restore VF BARs")).
+>>
+>>
+>> commit c20e11b572c5d4e4f01c86580a133122fbd13cfa
+>> Author: Alexander Duyck <aduyck@mirantis.com>
+>> Date:   Wed Oct 28 10:54:32 2015 -0500
+>>
+>>      PCI: Set SR-IOV NumVFs to zero after enumeration
+>>
+>>      The enumeration path should leave NumVFs set to zero.  But after
+>>      4449f079722c ("PCI: Calculate maximum number of buses required for VFs"),
+>>      we call virtfn_max_buses() in the enumeration path, which changes NumVFs.
+>>      This NumVFs change is visible via lspci and sysfs until a driver enables
+>>      SR-IOV.
+>>
+>>      Iterate from TotalVFs down to zero so NumVFs is zero when we're finished
+>>      computing the maximum number of buses.  Validate offset and stride in
+>>      the loop, so we can test it at every possible NumVFs setting.  Rename
+>>      virtfn_max_buses() to compute_max_vf_buses() to hint that it does have a
+>>      side effect of updating iov->max_VF_buses.
+>>
+>>      [bhelgaas: changelog, rename, reverse sense of error path]
+>>      Fixes: 4449f079722c ("PCI: Calculate maximum number of buses required for VFs")
+>>      Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
+>>      Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+>>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index ee0ebff..120cfb3 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -54,24 +54,33 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+>>    * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
+>>    * determine how many additional bus numbers will be consumed by VFs.
+>>    *
+>> - * Iterate over all valid NumVFs and calculate the maximum number of bus
+>> - * numbers that could ever be required.
+>> + * Iterate over all valid NumVFs, validate offset and stride, and calculate
+>> + * the maximum number of bus numbers that could ever be required.
+>>    */
+>> -static inline u8 virtfn_max_buses(struct pci_dev *dev)
+>> +static int compute_max_vf_buses(struct pci_dev *dev)
+>>   {
+>>   	struct pci_sriov *iov = dev->sriov;
+>> -	int nr_virtfn;
+>> -	u8 max = 0;
+>> +	int nr_virtfn = iov->total_VFs;
+>>   	int busnr;
+>>
+>> -	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
+>> -		pci_iov_set_numvfs(dev, nr_virtfn);
+>> +	pci_iov_set_numvfs(dev, nr_virtfn);
+>> +
+>> +	while (nr_virtfn--) {
+>> +		if (!iov->offset || !iov->stride)
+>> +			goto err;
+>
+> I think we have a minor problem here.  In sriov_enable(), we return an
+> error if "nr_virtfn > 1 && !iov->stride", so it's legal for stride to
+> be zero if NumVF is 1.  Here we don't allow that.  Sec 3.3.10 says:
+>
+>    Note: VF Stride is unused if NumVFs is 0 or 1.  If NumVFs is greater
+>    than 1, VF Stride must not be zero."
+>
+> So I think we should allow "stride == 0" here when NumVFs is 1.
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/pci/host/pci-mvebu.c | 39 ++++++++++++++++++++++++---------------
- 1 file changed, 24 insertions(+), 15 deletions(-)
+Right, we shouldn't be testing it if NumVFs is 1 or less.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 7282bb06c7a8..ab619ee0ef49 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -119,8 +119,7 @@ struct mvebu_pcie_port {
- 	unsigned int io_target;
- 	unsigned int io_attr;
- 	struct clk *clk;
--	int reset_gpio;
--	int reset_active_low;
-+	struct gpio_desc *reset_gpio;
- 	char *reset_name;
- 	struct mvebu_sw_pci_bridge bridge;
- 	struct device_node *dn;
-@@ -940,7 +939,7 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
- {
- 	struct device *dev = &pcie->pdev->dev;
- 	enum of_gpio_flags flags;
--	int ret;
-+	int reset_gpio, ret;
- 
- 	port->pcie = pcie;
- 
-@@ -980,15 +979,15 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
- 		port->io_attr = -1;
- 	}
- 
--	port->reset_gpio = of_get_named_gpio_flags(child, "reset-gpios", 0,
--						   &flags);
--	if (port->reset_gpio == -EPROBE_DEFER) {
--		ret = port->reset_gpio;
-+	reset_gpio = of_get_named_gpio_flags(child, "reset-gpios", 0, &flags);
-+	if (reset_gpio == -EPROBE_DEFER) {
-+		ret = reset_gpio;
- 		goto err;
- 	}
- 
--	if (gpio_is_valid(port->reset_gpio)) {
--		port->reset_active_low = flags & OF_GPIO_ACTIVE_LOW;
-+	if (gpio_is_valid(reset_gpio)) {
-+		unsigned long gpio_flags;
-+
- 		port->reset_name = devm_kasprintf(dev, GFP_KERNEL, "%s-reset",
- 						  port->name);
- 		if (!port->reset_name) {
-@@ -996,13 +995,24 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
- 			goto err;
- 		}
- 
--		ret = devm_gpio_request_one(dev, port->reset_gpio,
--					    GPIOF_DIR_OUT, port->reset_name);
-+		if (flags & OF_GPIO_ACTIVE_LOW) {
-+			dev_info(dev, "%s: reset gpio is active low\n",
-+				 of_node_full_name(child));
-+			gpio_flags = GPIOF_ACTIVE_LOW |
-+				     GPIOF_OUT_INIT_LOW;
-+		} else {
-+			gpio_flags = GPIOF_OUT_INIT_HIGH;
-+		}
-+
-+		ret = devm_gpio_request_one(dev, reset_gpio, gpio_flags,
-+					    port->reset_name);
- 		if (ret) {
- 			if (ret == -EPROBE_DEFER)
- 				goto err;
- 			goto skip;
- 		}
-+
-+		port->reset_gpio = gpio_to_desc(reset_gpio);
- 	}
- 
- 	port->clk = of_clk_get_by_name(child, NULL);
-@@ -1104,15 +1114,14 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 		if (!child)
- 			continue;
- 
--		if (gpio_is_valid(port->reset_gpio)) {
-+		if (port->reset_gpio) {
- 			u32 reset_udelay = 20000;
- 
- 			of_property_read_u32(child, "reset-delay-us",
- 					     &reset_udelay);
- 
--			gpio_set_value_cansleep(port->reset_gpio,
--						!!port->reset_active_low);
--			msleep(reset_udelay/1000);
-+			gpiod_set_value_cansleep(port->reset_gpio, 0);
-+			msleep(reset_udelay / 1000);
- 		}
- 
- 		ret = clk_prepare_enable(port->clk);
--- 
-2.1.0
+>> +
+>>   		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+>
+> I think this loop management is slightly wrong: I don't think we ever
+> compute busnr for the highest VF because we always decrement nr_virtfn
+> after calling pci_iov_set_numvfs(), and then we subtract one again.
+> E.g., if Total VFs is 8, the VFs are numbered VF0..VF7, and we have
+> this, which doesn't check VF7:
+>
+>    nr_virtfn = iov->total_VFs                 # nr_virtfn == 8
+>    pci_iov_set_numvfs(..., nr_virtfn)         # passes 8 (correct)
+>    while (nr_virtfn--) {
+>                                               # nr_virtfn == 7 in loop body
+>      pci_iov_virtfn_bus(..., nr_virtfn - 1)   # passes 6 (wrong)
+>
+
+Yeah, that was supposed to just be nr_virtfn.
+
+>> -		if (busnr > max)
+>> -			max = busnr;
+>> +		if (busnr > iov->max_VF_buses)
+>> +			iov->max_VF_buses = busnr;
+>> +
+>> +		pci_iov_set_numvfs(dev, nr_virtfn);
+>>   	}
+>>
+>> -	return max;
+>> +	return 0;
+>> +
+>> +err:
+>> +	pci_iov_set_numvfs(dev, 0);
+>> +	return -EIO;
+>>   }
+>
+> Here's my new proposal:
+>
+>    static int compute_max_vf_buses(struct pci_dev *dev)
+>    {
+>            struct pci_sriov *iov = dev->sriov;
+>            int nr_virtfn, busnr, rc = 0;
+>
+>            for (nr_virtfn = iov->total_VFs; nr_virtfn; nr_virtfn--) {
+>                    pci_iov_set_numvfs(dev, nr_virtfn);
+>                    if (!iov->offset || (nr_virtfn > 1 && !iov->stride)) {
+>                            rc = -EIO;
+>                            goto out;
+>                    }
+>
+>                    busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+>                    if (busnr > iov->max_VF_buses)
+>                            iov->max_VF_buses = busnr;
+>            }
+>
+>    out:
+>            pci_iov_set_numvfs(dev, 0);
+>            return rc;
+>    }
+>
+
+This looks good to me.  In theory you could save yourself a pair of MMIO 
+reads at the end of the loop by just writing numvfs without the offset 
+and stride read, but this should work.
+
+- Alex
 
