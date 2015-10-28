@@ -1,207 +1,116 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 55/61] resources: Make allocate_resource() return best fit resource
-Date: Tue, 27 Oct 2015 13:55:47 -0700
-Message-Id: <1445979353-1728-56-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5okE86k846hs28s4jvL59hmm+4az-dDsymzNayPCPCzw@mail.gmail.com>
+References: <1445596035-27733-1-git-send-email-lftan@altera.com>
+	<20151027142644.GA8660@localhost>
+	<CAFiDJ5_vCqh=uKkF2E_BQkJUv692r3yr26bBj8boK2DY_Dj+gA@mail.gmail.com>
+	<CAErSpo5okE86k846hs28s4jvL59hmm+4az-dDsymzNayPCPCzw@mail.gmail.com>
+Date: Wed, 28 Oct 2015 14:25:11 +0800
+Message-ID: <CAFiDJ59wOUj-Mr3cyqQEz+P=8AkmRoy7XzUCmM33_e03Y2G_ZQ@mail.gmail.com>
+Subject: Re: [PATCH v12 0/6] Altera PCIe host controller driver with MSI support
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code just allocate from first avail window.
+On Wed, Oct 28, 2015 at 9:02 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Oct 27, 2015 at 7:56 PM, Ley Foon Tan <lftan@altera.com> wrote:
+>> On Tue, Oct 27, 2015 at 10:26 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>> Hi Ley,
+>>>
+>>> On Fri, Oct 23, 2015 at 06:27:09PM +0800, Ley Foon Tan wrote:
+>>>> This is the 12th version of patch set to add support for Altera PCIe host
+>>>> controller with MSI feature on Altera FPGA device families. This patchset
+>>>> mainly resovle the comments from Bjorn.
+>>>>
+>>>>
+>>>> This patchset is based on v4.3-rc6.
+>>>>
+>>>> v11->v12 changes:
+>>>> - pcie-altera: use DECLARE_PCI_FIXUP_EARLY for pcie retrain fixup
+>>>> - pcie-altera: move pcie_bus_configure_settings before pci_bus_add_devices
+>>>> - pcie-altera: add %d for irq bit in dev_err()
+>>>> - pcie-altera: prevent enumeration of root complex resources in config accessors
+>>>> - Documentation: add Acked-by from Rob Herring
+>>>>
+>>>> History:
+>>>> -------
+>>>> [v1]: https://lkml.org/lkml/2015/7/28/395
+>>>> [v2]: https://lkml.org/lkml/2015/7/31/267
+>>>> [v3]: http://www.kernelhub.org/?msg=811940&p=2
+>>>> [v4]: https://lkml.org/lkml/2015/8/17/141
+>>>> [v5]: https://lkml.org/lkml/2015/8/25/238
+>>>> [v6]: https://lkml.org/lkml/2015/9/1/177
+>>>> [v7]: https://lkml.org/lkml/2015/9/20/193
+>>>> [v8]: http://www.kernelhub.org/?msg=853553&p=2
+>>>> [v9]: https://lkml.org/lkml/2015/10/13/998
+>>>> [v10]: https://lkml.org/lkml/2015/10/19/139
+>>>> [v11]: https://lkml.org/lkml/2015/10/22/206
+>>>>
+>>>>
+>>>> Ley Foon Tan (6):
+>>>>   arm: add msi.h to Kbuild
+>>>>   pci: add Altera PCI vendor ID
+>>>>   pci:host: Add Altera PCIe host controller driver
+>>>>   pci: altera: Add Altera PCIe MSI driver
+>>>>   Documentation: dt-bindings: pci: altera pcie device tree binding
+>>>>   MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+>>>>
+>>>>  .../devicetree/bindings/pci/altera-pcie-msi.txt    |  28 +
+>>>>  .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
+>>>>  MAINTAINERS                                        |  16 +
+>>>>  arch/arm/include/asm/Kbuild                        |   1 +
+>>>>  drivers/pci/host/Kconfig                           |  16 +
+>>>>  drivers/pci/host/Makefile                          |   2 +
+>>>>  drivers/pci/host/pcie-altera-msi.c                 | 314 +++++++++++
+>>>>  drivers/pci/host/pcie-altera.c                     | 580 +++++++++++++++++++++
+>>>>  include/linux/pci_ids.h                            |   2 +
+>>>>  9 files changed, 1008 insertions(+)
+>>>>  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+>>>>  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
+>>>>  create mode 100644 drivers/pci/host/pcie-altera-msi.c
+>>>>  create mode 100644 drivers/pci/host/pcie-altera.c
+>>>
+>>> I applied these to pci/host-altera for v4.4, thanks!
+>>>
+>>> I squashed these into three patches:
+>>>
+>>>   - add msi.h to Kbuild
+>>>   - add Altera host driver (including DT binding and MAINTAINERS update)
+>>>   - add Altera MSI driver (including DT binding and MAINTAINERS update)
+>>>
+>>> Since the convention is to add PCI ID #defines only when they are used in
+>>> multiple places, I replaced PCI_VENDOR_ID_ALTERA with 0x1172 in the single
+>>> place it is used.
+>> Hi Bjorn
+>>
+>> Thanks for applied these.
+>>
+>> By the way, I can't see pci/host-altera branch in your pci.git tree
+>> yet. It takes some time to appear there?
+>
+> Sorry, I forgot to push it.  It should be there now!
+>
+Yes, saw it now. It will merge to 'next' branch eventually?
 
-We can find all suitable empty slots and pick one with smallest size, so
-we could save the big slot for needed ones later when we have several pci
-bridges under parent bridge and some bridges get assigned from bios and we
-need to assign others in kernel.
+Thanks!
 
-For examples: we have window
-[0xc0000000, 0xd0000000), and [0xe0000000,0xe1000000)
-
-and we try allocate 0x200000 size resource.
-
-in this patch will reserve [0xc0000000, 0xd0000000) and
-[0xe0000000,0xe1000000) at first, then pick [0xe0000000,0xe1000000)
-to allocate 0x200000 size.
-
--v2: updated after __allocate_resource change, and add field in constraint
-	instead of passing it directly.
--v3: Use best fit instead of just fit according to Bjorn.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- kernel/resource.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 68 insertions(+), 13 deletions(-)
-
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 62321b0..c468875 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -48,6 +48,7 @@ struct resource_constraint {
- 	resource_size_t (*alignf)(void *, const struct resource *,
- 			resource_size_t, resource_size_t);
- 	void *alignf_data;
-+	bool fit;
- };
- 
- static DEFINE_RWLOCK(resource_lock);
-@@ -589,12 +590,15 @@ static void resource_clip(struct resource *res, resource_size_t min,
-  * alignment constraints
-  */
- static int __find_resource(struct resource *root, struct resource *old,
--			 struct resource *new,
-+			 struct resource *new, struct resource *avail,
- 			 resource_size_t  size,
- 			 struct resource_constraint *constraint)
- {
- 	struct resource *this = root->child;
--	struct resource tmp = *new, avail, alloc;
-+	struct resource tmp = *new, availx, alloc;
-+
-+	if (!avail || avail == new)
-+		avail = &availx;
- 
- 	tmp.start = root->start;
- 	/*
-@@ -618,15 +622,16 @@ static int __find_resource(struct resource *root, struct resource *old,
- 		arch_remove_reservations(&tmp);
- 
- 		/* Check for overflow after ALIGN() */
--		avail.start = ALIGN(tmp.start, constraint->align);
--		avail.end = tmp.end;
--		avail.flags = new->flags & ~IORESOURCE_UNSET;
--		if (avail.start >= tmp.start) {
--			alloc.flags = avail.flags;
--			alloc.start = constraint->alignf(constraint->alignf_data, &avail,
-+		avail->start = ALIGN(tmp.start, constraint->align);
-+		avail->end = tmp.end;
-+		avail->flags = new->flags & ~IORESOURCE_UNSET;
-+		if (avail->start >= tmp.start) {
-+			alloc.flags = avail->flags;
-+			alloc.start = constraint->alignf(
-+					constraint->alignf_data, avail,
- 					size, constraint->align);
- 			alloc.end = alloc.start + size - 1;
--			if (resource_contains(&avail, &alloc)) {
-+			if (resource_contains(avail, &alloc)) {
- 				new->start = alloc.start;
- 				new->end = alloc.end;
- 				return 0;
-@@ -643,6 +648,11 @@ next:		if (!this || this->end == root->end)
- 	return -EBUSY;
- }
- 
-+struct good_resource {
-+	struct list_head list;
-+	struct resource avail;
-+	struct resource new;
-+};
- /*
-  * Find empty slot in the resource tree given range and alignment.
-  */
-@@ -650,7 +660,49 @@ static int find_resource(struct resource *root, struct resource *new,
- 			resource_size_t size,
- 			struct resource_constraint  *constraint)
- {
--	return  __find_resource(root, NULL, new, size, constraint);
-+	int ret = -1;
-+	LIST_HEAD(head);
-+	struct good_resource *good, *tmp;
-+	resource_size_t avail_size = (resource_size_t)-1ULL;
-+
-+	if (!constraint->fit)
-+		return __find_resource(root, NULL, new, NULL, size,
-+					constraint);
-+
-+	/* find all suitable ones and add to the list */
-+	for (;;) {
-+		good = kzalloc(sizeof(*good), GFP_KERNEL);
-+		if (!good)
-+			break;
-+
-+		good->new.start = new->start;
-+		good->new.end = new->end;
-+		good->new.flags = new->flags;
-+		ret = __find_resource(root, NULL, &good->new, &good->avail,
-+					size, constraint);
-+		if (ret || __request_resource(root, &good->avail)) {
-+			ret = -EBUSY;
-+			kfree(good);
-+			break;
-+		}
-+
-+		list_add(&good->list, &head);
-+	}
-+
-+	/* pick up the smallest one and delete the list */
-+	list_for_each_entry_safe(good, tmp, &head, list) {
-+		if (resource_size(&good->avail) < avail_size) {
-+			avail_size = resource_size(&good->avail);
-+			new->start = good->new.start;
-+			new->end = good->new.end;
-+			ret = 0;
-+		}
-+		list_del(&good->list);
-+		__release_resource(&good->avail);
-+		kfree(good);
-+	}
-+
-+	return ret;
- }
- 
- /**
-@@ -671,7 +723,8 @@ static int __reallocate_resource(struct resource *root, struct resource *old,
- 	struct resource new = *old;
- 	struct resource *conflict;
- 
--	if ((err = __find_resource(root, old, &new, newsize, constraint)))
-+	err = __find_resource(root, old, &new, NULL, newsize, constraint);
-+	if (err)
- 		goto out;
- 
- 	if (resource_contains(&new, old)) {
-@@ -710,6 +763,7 @@ out:
-  * @align: alignment requested, in bytes
-  * @alignf: alignment function, optional, called if not NULL
-  * @alignf_data: arbitrary data to pass to the @alignf function
-+ * @fit: only allocate fit range.
-  *
-  * Caller need to hold resource_lock if needed.
-  */
-@@ -720,7 +774,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
- 						  const struct resource *,
- 						  resource_size_t,
- 						  resource_size_t),
--				void *alignf_data)
-+				void *alignf_data, bool fit)
- {
- 	int err;
- 	struct resource_constraint constraint;
-@@ -733,6 +787,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
- 	constraint.align = align;
- 	constraint.alignf = alignf;
- 	constraint.alignf_data = alignf_data;
-+	constraint.fit = fit;
- 
- 	if (new->parent) {
- 		/* resource is already allocated, try reallocating with
-@@ -773,7 +828,7 @@ int allocate_resource(struct resource *root, struct resource *new,
- 
- 	write_lock(&resource_lock);
- 	ret = __allocate_resource(root, new, size, min, max, align,
--				   alignf, alignf_data);
-+				   alignf, alignf_data, true);
- 	write_unlock(&resource_lock);
- 
- 	return ret;
--- 
-1.8.4.5
-
+Regards
+Ley Foon
