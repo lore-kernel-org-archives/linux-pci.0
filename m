@@ -1,288 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:33479 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752542AbbJZDUM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 Oct 2015 23:20:12 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 26 Oct 2015 13:20:10 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 108DF3578052
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 14:20:09 +1100 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9Q3K2Ws29294722
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 14:20:10 +1100
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9Q3JZkH030202
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2015 14:19:36 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V10 10/12] powerpc/eeh: Support error recovery for VF PE
-Date: Mon, 26 Oct 2015 11:16:00 +0800
-Message-Id: <1445829362-2738-11-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [Linaro-acpi] [PATCH V1 07/11] XEN / PCI: Remove the dependence
+ on arch x86 when PCI_MMCONFIG=y
+To: Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+ <1445963922-22711-8-git-send-email-tn@semihalf.com>
+ <562FAA88.3020609@linaro.org> <562FB3A5.3050500@oracle.com>
+ <alpine.DEB.2.02.1510281047460.15801@kaball.uk.xensource.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, linux-acpi@vger.kernel.org,
+	robert.richter@caviumnetworks.com, wangyijing@huawei.com,
+	tglx@linutronix.de, jiang.liu@linux.intel.com,
+	linux-arm-kernel@lists.infradead.org
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Message-ID: <5630A9D3.1030607@linaro.org>
+Date: Wed, 28 Oct 2015 11:56:19 +0100
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.02.1510281047460.15801@kaball.uk.xensource.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Different from PCI bus dependent PE, PE for VFs doesn't have the
-primary bus, on which the PCI hotplug is implemented. The patch
-supports error recovery, especially the PCI hotplug for VF's PE.
-The hotplug on VF's PE is implemented based on VFs, instead of
-PCI bus any more.
+On 28.10.2015 11:49, Stefano Stabellini wrote:
+> On Tue, 27 Oct 2015, Boris Ostrovsky wrote:
+>> On 10/27/2015 12:47 PM, Tomasz Nowicki wrote:
+>>> + Stefano
+>>>
+>>> On 27.10.2015 17:38, Tomasz Nowicki wrote:
+>>>> From: Hanjun Guo <hanjun.guo@linaro.org>
+>>>>
+>>>> In drivers/xen/pci.c, there are arch x86 dependent codes when
+>>>> CONFIG_PCI_MMCONFIG is enabled, since CONFIG_PCI_MMCONFIG
+>>>> depends on ACPI, so this will prevent XEN PCI running on other
+>>>> architectures using ACPI with PCI_MMCONFIG enabled (such as ARM64).
+>>>>
+>>>> Fortunatly, it can be sloved in a simple way. In drivers/xen/pci.c,
+>>>> the only x86 dependent code is if ((pci_probe & PCI_PROBE_MMCONF) == 0),
+>>>> and it's defined in asm/pci_x86.h, the code means that
+>>>> if the PCI resource is not probed in PCI_PROBE_MMCONF way, just
+>>>> ingnore the xen mcfg init. Actually this is duplicate, because
+>>>> if PCI resource is not probed in PCI_PROBE_MMCONF way, the
+>>>> pci_mmconfig_list will be empty, and the if (list_empty())
+>>>> after it will do the same job.
+>>>>
+>>>> So just remove the arch related code and the head file, this
+>>>> will be no functional change for x86, and also makes xen/pci.c
+>>>> usable for other architectures.
+>>>>
+>>>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+>>>> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+>>>> CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+>>>> ---
+>>>>    drivers/xen/pci.c | 6 ------
+>>>>    1 file changed, 6 deletions(-)
+>>>>
+>>>> diff --git a/drivers/xen/pci.c b/drivers/xen/pci.c
+>>>> index 6785ebb..9a8dbe3 100644
+>>>> --- a/drivers/xen/pci.c
+>>>> +++ b/drivers/xen/pci.c
+>>>> @@ -28,9 +28,6 @@
+>>>>    #include <asm/xen/hypervisor.h>
+>>>>    #include <asm/xen/hypercall.h>
+>>>>    #include "../pci/pci.h"
+>>>> -#ifdef CONFIG_PCI_MMCONFIG
+>>>> -#include <asm/pci_x86.h>
+>>>> -#endif
+>>
+>> Assuming this still compiles on x86 now that this include file is removed
+>>
+>> Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+>
+> I think it does not:
+>
+> drivers/xen/pci.c: In function ‘xen_mcfg_late’:
+> drivers/xen/pci.c:221:18: error: ‘pci_mmcfg_list’ undeclared (first use in this function)
+> drivers/xen/pci.c:221:18: note: each undeclared identifier is reported only once for each f
 
-[gwshan: changelog and code refactoring]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h   |   1 +
- arch/powerpc/kernel/eeh.c        |   8 ++++
- arch/powerpc/kernel/eeh_driver.c | 100 +++++++++++++++++++++++++++++++--------
- arch/powerpc/kernel/eeh_pe.c     |   3 +-
- 4 files changed, 90 insertions(+), 22 deletions(-)
+Right, we need:
++#include <linux/ecam.h>
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 331c856..ea1f13c4 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -142,6 +142,7 @@ struct eeh_dev {
- 	struct pci_controller *phb;	/* Associated PHB		*/
- 	struct pci_dn *pdn;		/* Associated PCI device node	*/
- 	struct pci_dev *pdev;		/* Associated PCI device	*/
-+	int    in_error;		/* Error flag for eeh_dev	*/
- 	struct pci_dev *physfn;		/* Associated PF PORT		*/
- 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
- };
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index af9b597..28e4d73 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -1227,6 +1227,14 @@ void eeh_remove_device(struct pci_dev *dev)
- 	 * from the parent PE during the BAR resotre.
- 	 */
- 	edev->pdev = NULL;
-+
-+	/*
-+	 * The flag "in_error" is used to trace EEH devices for VFs
-+	 * in error state or not. It's set in eeh_report_error(). If
-+	 * it's not set, eeh_report_{reset,resume}() won't be called
-+	 * for the VF EEH device.
-+	 */
-+	edev->in_error = 0;
- 	dev->dev.archdata.edev = NULL;
- 	if (!(edev->pe->state & EEH_PE_KEEP))
- 		eeh_rmv_from_parent_pe(edev);
-diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
-index 89eb4bc..99868e2 100644
---- a/arch/powerpc/kernel/eeh_driver.c
-+++ b/arch/powerpc/kernel/eeh_driver.c
-@@ -211,6 +211,7 @@ static void *eeh_report_error(void *data, void *userdata)
- 	if (rc == PCI_ERS_RESULT_NEED_RESET) *res = rc;
- 	if (*res == PCI_ERS_RESULT_NONE) *res = rc;
- 
-+	edev->in_error = 1;
- 	eeh_pcid_put(dev);
- 	return NULL;
- }
-@@ -282,7 +283,8 @@ static void *eeh_report_reset(void *data, void *userdata)
- 
- 	if (!driver->err_handler ||
- 	    !driver->err_handler->slot_reset ||
--	    (edev->mode & EEH_DEV_NO_HANDLER)) {
-+	    (edev->mode & EEH_DEV_NO_HANDLER) ||
-+	    (!edev->in_error)) {
- 		eeh_pcid_put(dev);
- 		return NULL;
- 	}
-@@ -339,14 +341,16 @@ static void *eeh_report_resume(void *data, void *userdata)
- 
- 	if (!driver->err_handler ||
- 	    !driver->err_handler->resume ||
--	    (edev->mode & EEH_DEV_NO_HANDLER)) {
-+	    (edev->mode & EEH_DEV_NO_HANDLER) ||
-+	    (!edev->in_error)) {
- 		edev->mode &= ~EEH_DEV_NO_HANDLER;
--		eeh_pcid_put(dev);
--		return NULL;
-+		goto out;
- 	}
- 
- 	driver->err_handler->resume(dev);
- 
-+out:
-+	edev->in_error = 0;
- 	eeh_pcid_put(dev);
- 	return NULL;
- }
-@@ -386,12 +390,38 @@ static void *eeh_report_failure(void *data, void *userdata)
- 	return NULL;
- }
- 
-+static void *eeh_add_virt_device(void *data, void *userdata)
-+{
-+	struct pci_driver *driver;
-+	struct eeh_dev *edev = (struct eeh_dev *)data;
-+	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
-+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
-+
-+	if (!(edev->physfn)) {
-+		pr_warn("%s: EEH dev %04x:%02x:%02x.%01x not for VF\n",
-+			__func__, edev->phb->global_number, pdn->busno,
-+			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
-+		return NULL;
-+	}
-+
-+	driver = eeh_pcid_get(dev);
-+	if (driver) {
-+		eeh_pcid_put(dev);
-+		if (driver->err_handler)
-+			return NULL;
-+	}
-+
-+	pci_iov_virtfn_add(edev->physfn, pdn->vf_index, 0);
-+	return NULL;
-+}
-+
- static void *eeh_rmv_device(void *data, void *userdata)
- {
- 	struct pci_driver *driver;
- 	struct eeh_dev *edev = (struct eeh_dev *)data;
- 	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
- 	int *removed = (int *)userdata;
-+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
- 
- 	/*
- 	 * Actually, we should remove the PCI bridges as well.
-@@ -416,7 +446,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
- 	driver = eeh_pcid_get(dev);
- 	if (driver) {
- 		eeh_pcid_put(dev);
--		if (driver->err_handler)
-+		if (removed && driver->err_handler)
- 			return NULL;
- 	}
- 
-@@ -425,11 +455,23 @@ static void *eeh_rmv_device(void *data, void *userdata)
- 		 pci_name(dev));
- 	edev->bus = dev->bus;
- 	edev->mode |= EEH_DEV_DISCONNECTED;
--	(*removed)++;
-+	if (removed)
-+		(*removed)++;
- 
--	pci_lock_rescan_remove();
--	pci_stop_and_remove_bus_device(dev);
--	pci_unlock_rescan_remove();
-+	if (edev->physfn) {
-+		pci_iov_virtfn_remove(edev->physfn, pdn->vf_index, 0);
-+		edev->pdev = NULL;
-+
-+		/*
-+		 * We have to set the VF PE number to invalid one, which is
-+		 * required to plug the VF successfully.
-+		 */
-+		pdn->pe_number = IODA_INVALID_PE;
-+	} else {
-+		pci_lock_rescan_remove();
-+		pci_stop_and_remove_bus_device(dev);
-+		pci_unlock_rescan_remove();
-+	}
- 
- 	return NULL;
- }
-@@ -548,6 +590,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 	struct pci_bus *frozen_bus = eeh_pe_bus_get(pe);
- 	struct timeval tstamp;
- 	int cnt, rc, removed = 0;
-+	struct eeh_dev *edev;
- 
- 	/* pcibios will clear the counter; save the value */
- 	cnt = pe->freeze_count;
-@@ -561,12 +604,15 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 	 */
- 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
- 	if (bus) {
--		pci_lock_rescan_remove();
--		pcibios_remove_pci_devices(bus);
--		pci_unlock_rescan_remove();
--	} else if (frozen_bus) {
-+		if (pe->type & EEH_PE_VF)
-+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
-+		else {
-+			pci_lock_rescan_remove();
-+			pcibios_remove_pci_devices(bus);
-+			pci_unlock_rescan_remove();
-+		}
-+	} else if (frozen_bus)
- 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
--	}
- 
- 	/*
- 	 * Reset the pci controller. (Asserts RST#; resets config space).
-@@ -607,14 +653,22 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 		 * PE. We should disconnect it so the binding can be
- 		 * rebuilt when adding PCI devices.
- 		 */
-+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
- 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
--		pcibios_add_pci_devices(bus);
-+		if (pe->type & EEH_PE_VF)
-+			eeh_add_virt_device(edev, NULL);
-+		else
-+			pcibios_add_pci_devices(bus);
- 	} else if (frozen_bus && removed) {
- 		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
- 		ssleep(5);
- 
-+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
- 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
--		pcibios_add_pci_devices(frozen_bus);
-+		if (pe->type & EEH_PE_VF)
-+			eeh_add_virt_device(edev, NULL);
-+		else
-+			pcibios_add_pci_devices(frozen_bus);
- 	}
- 	eeh_pe_state_clear(pe, EEH_PE_KEEP);
- 
-@@ -792,11 +846,15 @@ perm_error:
- 	 * the their PCI config any more.
- 	 */
- 	if (frozen_bus) {
--		eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
--
--		pci_lock_rescan_remove();
--		pcibios_remove_pci_devices(frozen_bus);
--		pci_unlock_rescan_remove();
-+		if (pe->type & EEH_PE_VF) {
-+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
-+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
-+		} else {
-+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
-+			pci_lock_rescan_remove();
-+			pcibios_remove_pci_devices(frozen_bus);
-+			pci_unlock_rescan_remove();
-+		}
- 	}
- }
- 
-diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
-index 260a701..5cde950 100644
---- a/arch/powerpc/kernel/eeh_pe.c
-+++ b/arch/powerpc/kernel/eeh_pe.c
-@@ -914,7 +914,8 @@ struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe)
- 	if (pe->type & EEH_PE_PHB) {
- 		bus = pe->phb->bus;
- 	} else if (pe->type & EEH_PE_BUS ||
--		   pe->type & EEH_PE_DEVICE) {
-+		   pe->type & EEH_PE_DEVICE ||
-+		   pe->type & EEH_PE_VF) {
- 		if (pe->bus) {
- 			bus = pe->bus;
- 			goto out;
--- 
-2.5.0
+Will fix this in next version, thanks!
 
+Tomasz
+
+>
+>
+>>>>
+>>>>    static bool __read_mostly pci_seg_supported = true;
+>>>>
+>>>> @@ -222,9 +219,6 @@ static int __init xen_mcfg_late(void)
+>>>>        if (!xen_initial_domain())
+>>>>            return 0;
+>>>>
+>>>> -    if ((pci_probe & PCI_PROBE_MMCONF) == 0)
+>>>> -        return 0;
+>>>> -
+>>>>        if (list_empty(&pci_mmcfg_list))
+>>>>            return 0;
+>>>>
+>>>>
