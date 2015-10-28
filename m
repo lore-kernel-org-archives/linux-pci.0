@@ -1,95 +1,99 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Zhou Wang <wangzhou1@hisilicon.com>,
-	"Wangkefeng (Kevin)" <wangkefeng.wang@huawei.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	qiujiang <qiujiang@huawei.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
-Date: Wed, 14 Oct 2015 23:56:33 +0200
-Message-ID: <5572871.GecUyqk59W@wuerfel>
-In-Reply-To: <561E23EB.7050504@hisilicon.com>
-References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com> <30775300.COZ4nEMWXC@wuerfel> <561E23EB.7050504@hisilicon.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0065.outbound.protection.outlook.com ([65.55.169.65]:15232
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751693AbbJ1WvQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 Oct 2015 18:51:16 -0400
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
+	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH V5 0/9] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
+Date: Wed, 28 Oct 2015 15:50:45 -0700
+Message-ID: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 14 October 2015 17:44:11 Zhou Wang wrote:
-> On 2015/10/14 17:06, Arnd Bergmann wrote:
-> > On Wednesday 14 October 2015 16:59:03 Zhou Wang wrote:
-> >>
-> >> Hi Arnd,
-> >>
-> >> In Hip05 PCIe host, it uses GITS_TRANSLATER's address to get TLP package
-> >> which contains MSI address and MSI data, and then combine BDF and MSI data
-> >> to a 32 bit data which will be writen to GITS_TRANSLATER register of ITS.
-> >>
-> >> I think maybe this is a defect of our PCIe controller.
-> > 
-> > I'd consider it a bug in the firmware if this is not set up correctly
-> > before boot.
-> > 
-> >>> I don't think what you do here is safe because the 'reg' property
-> >>> of the MSI controller might point to the address that is used for
-> >>> the message directly.
-> >>
-> >> I see your point, however we must get address of GITS_TRANSLATER and
-> >> set it to PCIe host. How about adding necessary comments here?
-> > 
-> > This seems to just be static setup that should be done before Linux
-> > is even loaded. Any reason you can't do it that way?
-> >
-> 
-> There are some ITSs in Hip05-D02 platform, in fact, we can use any of them
-> as a msi-controller,  which we can configure in dts. I am afraid that
-> hard-setting the value in BIOS would lead to restrictions in terms of flexibility,
-> as with the current implementation the same BIOS-driver can fit different
-> DTS structures.
+This patch series adds support to setup DMA coherency for PCI device using
+the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
+is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
+support for ARM64 which is currently in development.  Also, this should
+not affect other architectures that does not define 
+CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
 
-The dtb generally should be expected to match whatever the firmware sets up,
-so if there is one reasonable setting here, I see no problem with hardcoding
-it that way. In particular on server systems, we usually expect the firmware
-to configure almost everything in advance and just tell us how it is
-configured, while on embedded systems we can't trust the bootload and
-usually set it all up in the kernel from scratch.
+In the process, this series also introduces enum dev_dma_attr and a set
+of APIs to query device DMA attribute. These APIs replace the obsolete
+device_dma_is_coherent(), and acpi_check_dma().
 
-What would be a reason to pick one ITS over another?
+I have also included a patch from Jeremy posted here:
+    http://www.spinics.net/lists/linux-usb/msg128582.html
 
-On a related note, don't you also need to describe in DT how PCI B/D/F
-function numbers get turned into addresses in the ITS? Does that also
-require configuration in the driver? I see this code here:
+This patch series is now rebased from:
+    https://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git linux-next
 
+This patch series has been tested on AMD Seattle RevB platform.
+The git tree containing tested code and pre-req patches is available here:
+    http://github.com/ssuthiku/linux.git pci-cca-v5
 
-+       hisi_pcie_apb_writel(pcie, PCIE_MSI_ASID_ENABLE | PCIE_MSI_ASID_VALUE,
-+                            PCIE_SLV_MSI_ASID);
-+       hisi_pcie_apb_writel(pcie, PCIE_MSI_TRANS_ENABLE, PCIE_MSI_TRANS_REG);
-+       hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
+Changes from V4: (https://lkml.org/lkml/2015/10/21/535)
+    * Clean up from Hanjun, Bjorn, and Thomas review comments
+    * Rebased on top of Rafael's latest linux-next branch
+    * Added patch 7/9 to fix the  pci_get_host_bridge_device leak
+    * Added Acked-by from Bjorn
+    * Added Reviewed-by from Hanjun
 
-plus all of hisi_pcie_config_context(). This looks like it will change
-the way the MSI is interpreted. This also seems like something that
-could be done in the firmware in advance, and just get reported in DT.
+Changes from V3: (https://lkml.org/lkml/2015/8/26/389)
+    * Clean up suggested by Bjorn
+    * Introduce enum dev_dma_attr
+    * Replace device_dma_is_coherent() and acpi_check_dma() with
+      new APIs.
 
-	Arnd
+Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
+    * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
+    * Add WARN() when fail to setup DMA for PCI device when booting
+      ACPI (per Arnd's suggestion)
+    * Added Acked-by from Rob.
+    * Minor clean up
+
+Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
+    * Include patch 1 from Jeremy to enable support for _CCA=0
+    * Clean up acpi_check_dma() per Bjorn suggestions
+    * Split the original V1 patch into two patches (patch 3 and 4)
+
+Jeremy Linton (1):
+  ACPI: Honor ACPI _CCA attribute setting
+
+Suravee Suthikulpanit (8):
+  device property: Introducing enum dev_dma_attr
+  ACPI: Adding DMA Attribute APIs for ACPI Device
+  device property: Adding DMA Attribute APIs for Generic Devices
+  device property: ACPI: Make use of the new DMA Attribute APIs
+  device property: ACPI: Remove unused DMA APIs
+  of/pci: Fix pci_get_host_bridge_device leak
+  PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
+  PCI: ACPI: Add support for PCI device DMA coherency
+
+ drivers/acpi/acpi_platform.c              |  7 +++++-
+ drivers/acpi/glue.c                       |  8 +++---
+ drivers/acpi/scan.c                       | 42 +++++++++++++++++++++++++++++++
+ drivers/base/property.c                   | 32 +++++++++++++++++------
+ drivers/crypto/ccp/ccp-platform.c         | 15 ++++++++---
+ drivers/net/ethernet/amd/xgbe/xgbe-main.c |  8 +++++-
+ drivers/of/of_pci.c                       | 20 ---------------
+ drivers/pci/probe.c                       | 33 ++++++++++++++++++++++--
+ include/acpi/acpi_bus.h                   | 36 +++-----------------------
+ include/linux/acpi.h                      |  7 +++++-
+ include/linux/of_pci.h                    |  3 ---
+ include/linux/property.h                  | 10 +++++++-
+ 12 files changed, 144 insertions(+), 77 deletions(-)
+
+-- 
+2.1.0
+
