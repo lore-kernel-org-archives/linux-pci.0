@@ -1,162 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33871 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755452AbbJUWP3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Oct 2015 18:15:29 -0400
-Date: Wed, 21 Oct 2015 17:15:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, jingoohan1@gmail.com,
-	pratyush.anand@gmail.com, Arnd Bergmann <arnd@arndb.de>,
-	linux@arm.linux.org.uk, thomas.petazzoni@free-electrons.com,
-	gabriele.paoloni@huawei.com, lorenzo.pieralisi@arm.com,
-	james.morse@arm.com, Liviu.Dudau@arm.com, jason@lakedaemon.net,
-	robh@kernel.org, gabriel.fernandez@linaro.org,
-	Minghuan.Lian@freescale.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, zhangjukuo@huawei.com,
-	qiuzhenfa@hisilicon.com, liudongdong3@huawei.com,
-	qiujiang@huawei.com, xuwei5@hisilicon.com, liguozhu@hisilicon.com
-Subject: Re: [PATCH v11 1/6] PCI: designware: move calculation of bus
- addresses to DRA7xx
-Message-ID: <20151021221524.GM1583@localhost>
-References: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com>
- <1444991021-109306-2-git-send-email-wangzhou1@hisilicon.com>
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:32926 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755595AbbJ1MsB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2015 08:48:01 -0400
+Received: by lbbec13 with SMTP id ec13so4853353lbb.0
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 05:47:59 -0700 (PDT)
+Subject: Re: [Linaro-acpi] [PATCH V1 10/11] pci, acpi: Provide generic way to
+ assign bus domain number.
+To: Liviu.Dudau@arm.com, Tomasz Nowicki <tn@semihalf.com>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+ <1445963922-22711-11-git-send-email-tn@semihalf.com>
+ <20151028113837.GK963@e106497-lin.cambridge.arm.com>
+Cc: rjw@rjwysocki.net, linux-kernel@vger.kernel.org, arnd@arndb.de,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	catalin.marinas@arm.com, linaro-acpi@lists.linaro.org,
+	will.deacon@arm.com, ddaney@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, wangyijing@huawei.com,
+	robert.richter@caviumnetworks.com, bhelgaas@google.com,
+	tglx@linutronix.de, jiang.liu@linux.intel.com,
+	linux-arm-kernel@lists.infradead.org
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Message-ID: <5630C3F7.2040104@linaro.org>
+Date: Wed, 28 Oct 2015 13:47:51 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444991021-109306-2-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <20151028113837.GK963@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Zhou & Gabriele,
+Hi Liviu,
 
-On Fri, Oct 16, 2015 at 06:23:36PM +0800, Zhou Wang wrote:
-> From: gabriele paoloni <gabriele.paoloni@huawei.com>
-> 
-> Commit f4c55c5a3f7f ("PCI: designware: Program ATU with untranslated
-> address") added the calculation of PCI BUS addresses in designware,
-> storing them in new fields added in "struct pcie_port". This
-> calculation is done for every designware user even if is only
-> applicable to DRA7xx.
-> This patch moves the calculation of the bus addresses to the DRA7xx
-> driver and is needed to allow the rework of designware to use
-> the new DT parsing API.
-> 
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-> Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
-> ---
->  drivers/pci/host/pci-dra7xx.c      | 13 +++++++++++++
->  drivers/pci/host/pcie-designware.c | 15 ++++-----------
->  2 files changed, 17 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> index 199e29a..ebdffa0 100644
-> --- a/drivers/pci/host/pci-dra7xx.c
-> +++ b/drivers/pci/host/pci-dra7xx.c
-> @@ -62,6 +62,7 @@
->  
->  #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
->  #define	LINK_UP						BIT(16)
-> +#define	CPU_TO_BUS_ADDR					0x0FFFFFFF
+On 28.10.2015 12:38, Liviu.Dudau@arm.com wrote:
+> On Tue, Oct 27, 2015 at 05:38:41PM +0100, Tomasz Nowicki wrote:
+>> Architectures which support PCI_DOMAINS_GENERIC (like ARM64)
+>> cannot call pci_bus_assign_domain_nr along ACPI PCI host bridge
+>> initialization since this function needs valid parent device reference
+>> to be able to retrieve domain number (aka segment).
+>>
+>> We can omit that blocker and pass down host bridge device via
+>> pci_create_root_bus parameter and then be able to evaluate _SEG method
+>> being in pci_bus_assign_domain_nr.
+>>
+>> Note that _SEG method is optional, therefore _SEG absence means
+>> that all PCI buses belong to domain 0.
+>>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> ---
+>>   drivers/acpi/pci_root.c |  2 +-
+>>   drivers/pci/pci.c       | 32 +++++++++++++++++++++++++++-----
+>>   2 files changed, 28 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>> index 850d7bf..e682dc6 100644
+>> --- a/drivers/acpi/pci_root.c
+>> +++ b/drivers/acpi/pci_root.c
+>> @@ -839,7 +839,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+>>
+>>   	pci_acpi_root_add_resources(info);
+>>   	pci_add_resource(&info->resources, &root->secondary);
+>> -	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+>> +	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
+>>   				  sysdata, &info->resources);
+>
+> Not sure this change should be in this patch, I don't see the relation.
+>
+> To put it differently: I think the patch should introduce the retrieval of the
+> domain number from _SEG method and leave the passing of a valid host bridge device
+> to a more appropriate patch.
 
-"CPU_TO_BUS_ADDR" is a very generic name.  Since you do have DRA7XX in
-other #defines and static symbols in this file, maybe it could be DRA7XX to
-make it obvious that it only applies here?
+I wanted to highlight that ACPI kernel using PCI_DOMAINS_GENERIC needs 
+to have both in place:
+1. Obtaining domain from _SEG method
+2. And host bridge device reference for which we can call _SEG.
+But you are right, it will be more clear if I split up patch and 
+describe it in separate changelog.
 
->  
->  struct dra7xx_pcie {
->  	void __iomem		*base;
-> @@ -151,6 +152,18 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
->  static void dra7xx_pcie_host_init(struct pcie_port *pp)
->  {
->  	dw_pcie_setup_rc(pp);
-> +
-> +	if (pp->io_mod_base)
-> +		pp->io_mod_base &= CPU_TO_BUS_ADDR;
+>
+>
+>>   	if (!bus)
+>>   		goto out_release_info;
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 6a9a111..17d1857 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -25,6 +25,7 @@
+>>   #include <linux/device.h>
+>>   #include <linux/pm_runtime.h>
+>>   #include <linux/pci_hotplug.h>
+>> +#include <linux/acpi.h>
+>>   #include <asm-generic/pci-bridge.h>
+>>   #include <asm/setup.h>
+>>   #include "pci.h"
+>> @@ -4501,7 +4502,7 @@ int pci_get_new_domain_nr(void)
+>>   void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>>   {
+>>   	static int use_dt_domains = -1;
+>> -	int domain = of_get_pci_domain_nr(parent->of_node);
+>> +	int domain;
+>>
+>>   	/*
+>>   	 * Check DT domain and use_dt_domains values.
+>> @@ -4523,14 +4524,35 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>>   	 * API and update the use_dt_domains value to keep track of method we
+>>   	 * are using to assign domain numbers (use_dt_domains = 0).
+>>   	 *
+>> +	 * IF ACPI, we expect non-DT method (use_dt_domains == -1)
+>> +	 * and call _SEG method for corresponding host bridge device.
+>> +	 * If _SEG method does not exist, following ACPI spec (6.5.6)
+>> +	 * all PCI buses belong to domain 0.
+>> +	 *
+>>   	 * All other combinations imply we have a platform that is trying
+>> -	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+>> -	 * which is a recipe for domain mishandling and it is prevented by
+>> -	 * invalidating the domain value (domain = -1) and printing a
+>> -	 * corresponding error.
+>> +	 * to mix domain numbers obtained from DT, ACPI and
+>> +	 * pci_get_new_domain_nr(), which is a recipe for domain mishandling and
+>> +	 * it is prevented by invalidating the domain value (domain = -1) and
+>> +	 * printing a corresponding error.
+>>   	 */
+>> +
+>> +	domain = of_get_pci_domain_nr(parent->of_node);
+>
+> Not sure what you've got here by splitting the original line into two other than an increase
+> in the change count.
 
-These are equivalent to
+Yes, it does not make sense to split the original line. I will fix that.
 
-  pp->io_mod_base &= CPU_TO_BUS_ADDR;
+>
+> Otherwise, it looks sensible.
+>
+> Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-(You don't need to test whether they're zero first.)
+Thanks Liviu!
 
-> +
-> +	if (pp->mem_mod_base)
-> +		pp->mem_mod_base &= CPU_TO_BUS_ADDR;
-> +
-> +	if (pp->cfg0_mod_base) {
-> +		pp->cfg0_mod_base &= CPU_TO_BUS_ADDR;
-> +		pp->cfg1_mod_base &= CPU_TO_BUS_ADDR;
-> +	}
-> +
->  	dra7xx_pcie_establish_link(pp);
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
->  		dw_pcie_msi_init(pp);
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 52aa6e3..75338a6 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -365,14 +365,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  	struct of_pci_range range;
->  	struct of_pci_range_parser parser;
->  	struct resource *cfg_res;
-> -	u32 val, na, ns;
-> +	u32 val, ns;
->  	const __be32 *addrp;
->  	int i, index, ret;
->  
-> -	/* Find the address cell size and the number of cells in order to get
-> -	 * the untranslated address.
-> -	 */
-> -	of_property_read_u32(np, "#address-cells", &na);
->  	ns = of_n_size_cells(np);
->  
->  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
-> @@ -415,8 +411,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  			pp->io_base = range.cpu_addr;
->  
->  			/* Find the untranslated IO space address */
-> -			pp->io_mod_base = of_read_number(parser.range -
-> -							 parser.np + na, ns);
-> +			pp->io_mod_base = range.cpu_addr;
-
-So apparently 
-
-  "of_read_number() == range.cpu_addr & CPU_TO_BUS_ADDR" on DRA7xx
-  "of_read_number() == range.cpu_addr" everywhere else?
-
-Is that right?  Is that a valid assumption, i.e., are we assuming
-anything about DTs in the field that we shouldn't?
-
->  		}
->  		if (restype == IORESOURCE_MEM) {
->  			of_pci_range_to_resource(&range, np, &pp->mem);
-> @@ -425,8 +420,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  			pp->mem_bus_addr = range.pci_addr;
->  
->  			/* Find the untranslated MEM space address */
-> -			pp->mem_mod_base = of_read_number(parser.range -
-> -							  parser.np + na, ns);
-> +			pp->mem_mod_base = range.cpu_addr;
->  		}
->  		if (restype == 0) {
->  			of_pci_range_to_resource(&range, np, &pp->cfg);
-> @@ -436,8 +430,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
->  
->  			/* Find the untranslated configuration space address */
-> -			pp->cfg0_mod_base = of_read_number(parser.range -
-> -							   parser.np + na, ns);
-> +			pp->cfg0_mod_base = range.cpu_addr;
->  			pp->cfg1_mod_base = pp->cfg0_mod_base +
->  					    pp->cfg0_size;
->  		}
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Regards,
+Tomasz
