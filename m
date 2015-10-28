@@ -1,105 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56269 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932345AbbJ0OsJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Oct 2015 10:48:09 -0400
-Date: Tue, 27 Oct 2015 09:48:05 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: bhelgaas@google.com, rjw@rjwysocki.net, lenb@kernel.org,
-	catalin.marinas@arm.com, will.deacon@arm.com,
-	hanjun.guo@linaro.org, thomas.lendacky@amd.com,
-	herbert@gondor.apana.org.au, davem@davemloft.net,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Murali Karicheri <m-karicheri2@ti.com>
-Subject: Re: [PATCH V4 8/8] PCI: ACPI: Add support for PCI device DMA
- coherency
-Message-ID: <20151027144805.GD8660@localhost>
-References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <1445442731-28819-9-git-send-email-Suravee.Suthikulpanit@amd.com>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36542 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750916AbbJ1VhT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2015 17:37:19 -0400
+Subject: Re: [PATCH 2/5] iov: Reset resources to 0 if totalVFs increases after
+ enabling ARI
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20151027204607.14626.59671.stgit@localhost.localdomain>
+ <20151027205221.14626.8940.stgit@localhost.localdomain>
+ <20151028163747.GA29223@localhost> <563114AE.7050505@gmail.com>
+ <20151028195259.GA13864@localhost>
+Cc: Alexander Duyck <aduyck@mirantis.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Ben Shelton <benjamin.h.shelton@intel.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <5631400D.30608@gmail.com>
+Date: Wed, 28 Oct 2015 14:37:17 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445442731-28819-9-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <20151028195259.GA13864@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 21, 2015 at 08:52:11AM -0700, Suravee Suthikulpanit wrote:
-> This patch adds support for setting up PCI device DMA coherency from
-> ACPI _CCA object that should normally be specified in the DSDT node
-> of its PCI host bridge.
-> 
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Catalin Marinas <catalin.marinas@arm.com>
-> CC: Rob Herring <robh+dt@kernel.org>
-> CC: Will Deacon <will.deacon@arm.com>
-> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
-> CC: Murali Karicheri <m-karicheri2@ti.com>
-> ---
->  drivers/pci/probe.c | 19 ++++++++++++++-----
->  1 file changed, 14 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 09264f8..6e9f7e6 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1642,17 +1642,26 @@ static void pci_set_msi_domain(struct pci_dev *dev)
->   * @dev: ptr to pci_dev struct of the PCI device
->   *
->   * Function to update PCI devices's DMA configuration using the same
-> - * info from the OF node of host bridge's parent (if any).
-> + * info from the OF node or ACPI node of host bridge's parent (if any).
->   */
->  static void pci_dma_configure(struct pci_dev *dev)
->  {
->  	struct device *bridge = pci_get_host_bridge_device(dev);
->  
->  	if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
-> -		if (!bridge->parent)
-> -			return;
-> -
-> -		of_dma_configure(&dev->dev, bridge->parent->of_node);
-> +		if (bridge->parent)
-> +			of_dma_configure(&dev->dev,
-> +					 bridge->parent->of_node);
+On 10/28/2015 12:52 PM, Bjorn Helgaas wrote:
+> On Wed, Oct 28, 2015 at 11:32:14AM -0700, Alexander Duyck wrote:
+>> On 10/28/2015 09:37 AM, Bjorn Helgaas wrote:
+>>> Hi Alex,
+>>>
+>>> On Tue, Oct 27, 2015 at 01:52:21PM -0700, Alexander Duyck wrote:
+>>>> This patch forces us to reallocate VF BARs if the totalVFs value has
+>>>> increased after enabling ARI.  This normally shouldn't occur, however I
+>>>> have seen some non-spec devices that shift between 7 and some value greater
+>>>> than 7 based on the ARI value and we want to avoid triggering any issues
+>>>> with such devices.
+>>>
+>>> Can you include specifics about the devices?  The value "7" is pretty
+>>> specific, so if we're going to include that level of detail, we should
+>>> have the actual device info to go with it.
+>>
+>> I referenced 7 as that is the largest number of VFs a single
+>> function can support assuming a single function without ARI and
+>> without the ability to handle Type 1 configuration requests.  The
+>> Intel fm10k driver has logic in it that does a check for ARI and if
+>> it is supported it reports via sysfs a totalVFs of 64, otherwise it
+>> limits the totalVFs reported to 7.  However, I don't believe it
+>> exposes the limitation via the configuration space.
+>
+> Ah, OK, that makes sense.
+>
+>>> I guess the problem is:
+>>>
+>>>    - Device supports 7 TotalVFs with ARI disabled, >7 with ARI enabled
+>>>    - Firmware leaves ARI disabled in SRIOV_CTRL
+>>>    - Firmware computes size based on 7 VFs
+>>>    - Firmware allocates space and programs BARs for 7 VFs
+>>>    - Linux enables ARI, reads >7 TotalVFs
+>>>    - Linux computes size based on >7 VFs
+>>>    - Increased size may overlap other resources
+>>>
+>>> Right?
+>>
+>> Right.  More than likely what will happen is that you will see
+>> overlap of the device on itself if it has multiple base address
+>> registers assigned to the VFs.
+>>
+>>>> Fixes: 3aa71da412fe ("PCI: Enable SR-IOV ARI Capable Hierarchy before reading TotalVFs")
+>>>> Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+>>>> ---
+>>>>   drivers/pci/iov.c |   11 ++++++++++-
+>>>>   1 file changed, 10 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>>>> index 099050d78a39..238950412de0 100644
+>>>> --- a/drivers/pci/iov.c
+>>>> +++ b/drivers/pci/iov.c
+>>>> @@ -393,7 +393,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>>>>   	int rc;
+>>>>   	int nres;
+>>>>   	u32 pgsz;
+>>>> -	u16 ctrl, total;
+>>>> +	u16 ctrl, total, orig_total;
+>>>>   	struct pci_sriov *iov;
+>>>>   	struct resource *res;
+>>>>   	struct pci_dev *pdev;
+>>>> @@ -402,6 +402,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>>>>   	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
+>>>>   		return -ENODEV;
+>>>>
+>>>> +	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &orig_total);
+>>>>   	pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl);
+>>>>   	if (ctrl & PCI_SRIOV_CTRL_VFE) {
+>>>>   		pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, 0);
+>>>> @@ -450,6 +451,14 @@ found:
+>>>>   		}
+>>>>   		iov->barsz[i] = resource_size(res);
+>>>>   		res->end = res->start + resource_size(res) * total - 1;
+>>>> +
+>>>> +		/* force reallocation of BARs if total VFs increased */
+>>>> +		if (orig_total < total) {
+>>>> +			res->flags |= IORESOURCE_UNSET;
+>>>> +			res->end -= res->start;
+>>>> +			res->start = 0;
+>>>> +		}
+>>>
+>>> Two thoughts here:
+>>>
+>>> 1) Even if the required space increased, it's possible that firmware
+>>> placed the BAR somewhere where the extra space is available.  In that
+>>> case, this forces reallocation unnecessarily.
+>>
+>> I'd say it is possible, but not likely.  From past experience I have
+>> seen BIOSes do some very dumb things when it comes to SR-IOV,
+>> assuming they even support it.
+>>
+>> In addition many of the VF devices out there support more than one
+>> base address register per function.  The Intel NICs for example have
+>> one for device registers and one for MSI-X registers.  And most
+>> BIOSes usually pack one right after the other from what I have seen.
+>> So while there may be more space there what usually happens is that
+>> the MSI-X region will have to be relocated in order to make room for
+>> expanding the other base address register.
+>>
+>> My last bit on all this is that VFs are meant to be assigned into
+>> guests.  I would argue that for the sake of security we are much
+>> better off invalidating the VF base address registers and forcing a
+>> reallocation if there is even a risk of the VF base address register
+>> space overlapping with some other piece of host memory.  We don't
+>> want to risk possibly exposing any bits of the host that we didn't
+>> intend on.
+>
+> Agreed, not likely for several reasons.
+>
+>>> 2) This *feels* like something the PCI core should be doing anyway,
+>>> even without any help here.  Shouldn't we fail in pci_claim_resource()
+>>> and set IORESOURCE_UNSET there?
+>
+> This is really the core of my question -- what problem does this patch
+> solve?  I'm trying to figure out if delaying the read of TotalVFs
+> until after we set ARI Capable Hierarchy is sufficient, and if it's
+> not sufficient, *why* not?
 
-This fixes the leak I mentioned earlier, since we now put the bridge
-device before returning.  But I guess I'd still prefer to see the leak
-fix as a patch by itself instead of fixing it incidentally here.
+I suppose you have a point.  As long as the PCI core is taking care of 
+any overlaps in pci_claim_resource that is probably good enough.
 
-> +	} else if (has_acpi_companion(bridge)) {
-> +		struct acpi_device *adev = to_acpi_node(bridge->fwnode);
-> +		enum dev_dma_attr attr = acpi_get_dma_attr(adev);
-> +
-> +		if (attr != DEV_DMA_NOT_SUPPORTED)
-> +			arch_setup_dma_ops(&dev->dev, 0, 0, NULL,
-> +					   attr == DEV_DMA_COHERENT);
-> +		else
-> +			WARN(1, FW_BUG "PCI device %s fail to setup DMA.\n",
-> +			     pci_name(dev));
-
-This should use dev_warn() so the format is the same as for other
-messages related to "dev".
-
-Personally, I would write this as:
-
-  if (attr == DEV_DMA_NOT_SUPPORTED)
-    dev_warn(&dev->dev, "DMA not supported\n");
-  else
-    arch_setup_dma_ops(...);
-
-to avoid the double negative in the conditional.
-
->  	}
->  
->  	pci_put_host_bridge_device(bridge);
-> -- 
-> 2.1.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+- Alex
