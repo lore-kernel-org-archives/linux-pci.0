@@ -1,63 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:51737 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195AbbJTOwo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 10:52:44 -0400
-Subject: Re: pcie-designware build fails in ARM64
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>,
-	"jg1.han@samsung.com" <jg1.han@samsung.com>
-References: <56213393.8020606@synopsys.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1624ECFA@lhreml503-mbs>
-CC: Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56265538.40503@synopsys.com>
-Date: Tue, 20 Oct 2015 15:52:40 +0100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
+	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Jeremy Linton <jeremy.linton@arm.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH V5 1/9] ACPI: Honor ACPI _CCA attribute setting
+Date: Wed, 28 Oct 2015 15:50:46 -0700
+Message-ID: <1446072654-5608-2-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1624ECFA@lhreml503-mbs>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gabriele,
+From: Jeremy Linton <jeremy.linton@arm.com>
 
-On 10/19/2015 8:04 AM, Gabriele Paoloni wrote:
-> Hi Joao
-> 
->> -----Original Message-----
->> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
->> On Behalf Of Joao Pinto
->> Sent: 16 October 2015 18:28
->> To: jg1.han@samsung.com
->> Cc: Carlos Palminha; linux-pci@vger.kernel.org
->> Subject: pcie-designware build fails in ARM64
->>
->> Dear Jingoo Han,
->>
->> I am trying to build pcie-designware for ARM64 but with no success. Did you
->> ever
->> tried to build the core driver in this platform?
->>
-> 
-> Please look at "[PATCH v11 3/6] PCI: designware: Add ARM64 support"
-> And respective patchset submitted in the mailing list.
+ACPI configurations can now mark devices as noncoherent,
+support that choice.
 
-Thanks, it worked well!
+NOTE: This is required to support USB on ARM Juno Development Board.
 
-> 
-> Regards
-> 
-> Gab
-> 
->> Thanks you for you attention.
->>
->> Regards,
->> Joao Pinto
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Jeremy Linton <jeremy.linton@arm.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Catalin Marinas <catalin.marinas@arm.com>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Will Deacon <will.deacon@arm.com>
+CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+---
+ include/acpi/acpi_bus.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Regards,
--Joao
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index d11eff8..0f131d2 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -407,7 +407,7 @@ static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+ 	 * case 1. Do not support and disable DMA.
+ 	 * case 2. Support but rely on arch-specific cache maintenance for
+ 	 *         non-coherence DMA operations.
+-	 * Currently, we implement case 1 above.
++	 * Currently, we implement case 2 above.
+ 	 *
+ 	 * For the case when _CCA is missing (i.e. cca_seen=0) and
+ 	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
+@@ -415,7 +415,8 @@ static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+ 	 *
+ 	 * See acpi_init_coherency() for more info.
+ 	 */
+-	if (adev->flags.coherent_dma) {
++	if (adev->flags.coherent_dma ||
++	    (adev->flags.cca_seen && IS_ENABLED(CONFIG_ARM64))) {
+ 		ret = true;
+ 		if (coherent)
+ 			*coherent = adev->flags.coherent_dma;
+-- 
+2.1.0
+
