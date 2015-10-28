@@ -1,164 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:33521 "EHLO
-	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753361AbbJIBsu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 21:48:50 -0400
-Received: by qkas79 with SMTP id s79so27098510qka.0
-        for <linux-pci@vger.kernel.org>; Thu, 08 Oct 2015 18:48:49 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: pratyush.anand@gmail.com, m-karicheri2@ti.com,
-	l.stach@pengutronix.de, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH v2 1/2] PCI: designware: Move LTSSM state definitions to pcie-designware.h
-Date: Thu,  8 Oct 2015 22:48:25 -0300
-Message-Id: <1444355306-21486-1-git-send-email-festevam@gmail.com>
+Received: from foss.arm.com ([217.140.101.70]:33468 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754169AbbJ1Lik (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 Oct 2015 07:38:40 -0400
+Date: Wed, 28 Oct 2015 11:38:37 +0000
+From: Liviu.Dudau@arm.com
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, jiang.liu@linux.intel.com,
+	robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org
+Subject: Re: [PATCH V1 10/11] pci, acpi: Provide generic way to assign bus
+ domain number.
+Message-ID: <20151028113837.GK963@e106497-lin.cambridge.arm.com>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+ <1445963922-22711-11-git-send-email-tn@semihalf.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1445963922-22711-11-git-send-email-tn@semihalf.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+On Tue, Oct 27, 2015 at 05:38:41PM +0100, Tomasz Nowicki wrote:
+> Architectures which support PCI_DOMAINS_GENERIC (like ARM64)
+> cannot call pci_bus_assign_domain_nr along ACPI PCI host bridge
+> initialization since this function needs valid parent device reference
+> to be able to retrieve domain number (aka segment).
+> 
+> We can omit that blocker and pass down host bridge device via
+> pci_create_root_bus parameter and then be able to evaluate _SEG method
+> being in pci_bus_assign_domain_nr.
+> 
+> Note that _SEG method is optional, therefore _SEG absence means
+> that all PCI buses belong to domain 0.
+> 
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> ---
+>  drivers/acpi/pci_root.c |  2 +-
+>  drivers/pci/pci.c       | 32 +++++++++++++++++++++++++++-----
+>  2 files changed, 28 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 850d7bf..e682dc6 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -839,7 +839,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+>  
+>  	pci_acpi_root_add_resources(info);
+>  	pci_add_resource(&info->resources, &root->secondary);
+> -	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+> +	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
+>  				  sysdata, &info->resources);
 
-Move LTSSM state definitions to common pcie-designware.h so that other
-drivers can make use of them.
+Not sure this change should be in this patch, I don't see the relation.
 
-Also, in order to avoid name collision define LTSSM_STATE_MASK_KS, as
-keystone uses a different LTSSM mask.
+To put it differently: I think the patch should introduce the retrieval of the
+domain number from _SEG method and leave the passing of a valid host bridge device
+to a more appropriate patch.
 
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
----
-Changes since v1:
-- Fix build warning noticed by kbuild robot
 
- drivers/pci/host/pci-keystone-dw.c |  4 ++--
- drivers/pci/host/pci-layerscape.c  |  1 -
- drivers/pci/host/pcie-designware.h | 34 ++++++++++++++++++++++++++++++++++
- drivers/pci/host/pcie-spear13xx.c  | 33 ---------------------------------
- 4 files changed, 36 insertions(+), 36 deletions(-)
+>  	if (!bus)
+>  		goto out_release_info;
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 6a9a111..17d1857 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -25,6 +25,7 @@
+>  #include <linux/device.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/pci_hotplug.h>
+> +#include <linux/acpi.h>
+>  #include <asm-generic/pci-bridge.h>
+>  #include <asm/setup.h>
+>  #include "pci.h"
+> @@ -4501,7 +4502,7 @@ int pci_get_new_domain_nr(void)
+>  void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>  {
+>  	static int use_dt_domains = -1;
+> -	int domain = of_get_pci_domain_nr(parent->of_node);
+> +	int domain;
+>  
+>  	/*
+>  	 * Check DT domain and use_dt_domains values.
+> @@ -4523,14 +4524,35 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>  	 * API and update the use_dt_domains value to keep track of method we
+>  	 * are using to assign domain numbers (use_dt_domains = 0).
+>  	 *
+> +	 * IF ACPI, we expect non-DT method (use_dt_domains == -1)
+> +	 * and call _SEG method for corresponding host bridge device.
+> +	 * If _SEG method does not exist, following ACPI spec (6.5.6)
+> +	 * all PCI buses belong to domain 0.
+> +	 *
+>  	 * All other combinations imply we have a platform that is trying
+> -	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+> -	 * which is a recipe for domain mishandling and it is prevented by
+> -	 * invalidating the domain value (domain = -1) and printing a
+> -	 * corresponding error.
+> +	 * to mix domain numbers obtained from DT, ACPI and
+> +	 * pci_get_new_domain_nr(), which is a recipe for domain mishandling and
+> +	 * it is prevented by invalidating the domain value (domain = -1) and
+> +	 * printing a corresponding error.
+>  	 */
+> +
+> +	domain = of_get_pci_domain_nr(parent->of_node);
 
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index 3cf55cd..004b677 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -25,7 +25,7 @@
- 
- /* Application register defines */
- #define LTSSM_EN_VAL		        1
--#define LTSSM_STATE_MASK		0x1f
-+#define LTSSM_STATE_MASK_KS		0x1f
- #define LTSSM_STATE_L0			0x11
- #define DBI_CS2_EN_VAL			0x20
- #define OB_XLAT_EN_VAL		        2
-@@ -445,7 +445,7 @@ int ks_dw_pcie_link_up(struct pcie_port *pp)
- {
- 	u32 val = readl(pp->dbi_base + DEBUG0);
- 
--	return (val & LTSSM_STATE_MASK) == LTSSM_STATE_L0;
-+	return (val & LTSSM_STATE_MASK_KS) == LTSSM_STATE_L0;
- }
- 
- void ks_dw_pcie_initiate_link_train(struct keystone_pcie *ks_pcie)
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index b2328ea1..f02752e 100644
---- a/drivers/pci/host/pci-layerscape.c
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -29,7 +29,6 @@
- /* PEX1/2 Misc Ports Status Register */
- #define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
- #define LTSSM_STATE_SHIFT	20
--#define LTSSM_STATE_MASK	0x3f
- #define LTSSM_PCIE_L0		0x11 /* L0 state */
- 
- /* Symbol Timer Register and Filter Mask Register 1 */
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 35123d9..97d6558 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -22,6 +22,40 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
- 
-+#define LTSSM_STATE_DETECT_QUIET	0x00
-+#define LTSSM_STATE_DETECT_ACT		0x01
-+#define LTSSM_STATE_POLL_ACTIVE		0x02
-+#define LTSSM_STATE_POLL_COMPLIANCE	0x03
-+#define LTSSM_STATE_POLL_CONFIG		0x04
-+#define LTSSM_STATE_PRE_DETECT_QUIET	0x05
-+#define LTSSM_STATE_DETECT_WAIT		0x06
-+#define LTSSM_STATE_CFG_LINKWD_START	0x07
-+#define LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
-+#define LTSSM_STATE_CFG_LANENUM_WAIT	0x09
-+#define LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
-+#define LTSSM_STATE_CFG_COMPLETE	0x0B
-+#define LTSSM_STATE_CFG_IDLE		0x0C
-+#define LTSSM_STATE_RCVRY_LOCK		0x0D
-+#define LTSSM_STATE_RCVRY_SPEED		0x0E
-+#define LTSSM_STATE_RCVRY_RCVRCFG	0x0F
-+#define LTSSM_STATE_RCVRY_IDLE		0x10
-+#define LTSSM_STATE_L0			0x11
-+#define LTSSM_STATE_L0S			0x12
-+#define LTSSM_STATE_L123_SEND_EIDLE	0x13
-+#define LTSSM_STATE_L1_IDLE		0x14
-+#define LTSSM_STATE_L2_IDLE		0x15
-+#define LTSSM_STATE_L2_WAKE		0x16
-+#define LTSSM_STATE_DISABLED_ENTRY	0x17
-+#define LTSSM_STATE_DISABLED_IDLE	0x18
-+#define LTSSM_STATE_DISABLED		0x19
-+#define LTSSM_STATE_LPBK_ENTRY		0x1A
-+#define LTSSM_STATE_LPBK_ACTIVE		0x1B
-+#define LTSSM_STATE_LPBK_EXIT		0x1C
-+#define LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
-+#define LTSSM_STATE_HOT_RESET_ENTRY	0x1E
-+#define LTSSM_STATE_HOT_RESET		0x1F
-+#define LTSSM_STATE_MASK		0x3F
-+
- struct pcie_port {
- 	struct device		*dev;
- 	u8			root_bus_nr;
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 98d2683..920d399 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -84,39 +84,6 @@ struct pcie_app_reg {
- #define APPS_PM_XMT_PME_ID			5
- 
- /* CR3 ID */
--#define XMLH_LTSSM_STATE_DETECT_QUIET		0x00
--#define XMLH_LTSSM_STATE_DETECT_ACT		0x01
--#define XMLH_LTSSM_STATE_POLL_ACTIVE		0x02
--#define XMLH_LTSSM_STATE_POLL_COMPLIANCE	0x03
--#define XMLH_LTSSM_STATE_POLL_CONFIG		0x04
--#define XMLH_LTSSM_STATE_PRE_DETECT_QUIET	0x05
--#define XMLH_LTSSM_STATE_DETECT_WAIT		0x06
--#define XMLH_LTSSM_STATE_CFG_LINKWD_START	0x07
--#define XMLH_LTSSM_STATE_CFG_LINKWD_ACEPT	0x08
--#define XMLH_LTSSM_STATE_CFG_LANENUM_WAIT	0x09
--#define XMLH_LTSSM_STATE_CFG_LANENUM_ACEPT	0x0A
--#define XMLH_LTSSM_STATE_CFG_COMPLETE		0x0B
--#define XMLH_LTSSM_STATE_CFG_IDLE		0x0C
--#define XMLH_LTSSM_STATE_RCVRY_LOCK		0x0D
--#define XMLH_LTSSM_STATE_RCVRY_SPEED		0x0E
--#define XMLH_LTSSM_STATE_RCVRY_RCVRCFG		0x0F
--#define XMLH_LTSSM_STATE_RCVRY_IDLE		0x10
--#define XMLH_LTSSM_STATE_L0			0x11
--#define XMLH_LTSSM_STATE_L0S			0x12
--#define XMLH_LTSSM_STATE_L123_SEND_EIDLE	0x13
--#define XMLH_LTSSM_STATE_L1_IDLE		0x14
--#define XMLH_LTSSM_STATE_L2_IDLE		0x15
--#define XMLH_LTSSM_STATE_L2_WAKE		0x16
--#define XMLH_LTSSM_STATE_DISABLED_ENTRY		0x17
--#define XMLH_LTSSM_STATE_DISABLED_IDLE		0x18
--#define XMLH_LTSSM_STATE_DISABLED		0x19
--#define XMLH_LTSSM_STATE_LPBK_ENTRY		0x1A
--#define XMLH_LTSSM_STATE_LPBK_ACTIVE		0x1B
--#define XMLH_LTSSM_STATE_LPBK_EXIT		0x1C
--#define XMLH_LTSSM_STATE_LPBK_EXIT_TIMEOUT	0x1D
--#define XMLH_LTSSM_STATE_HOT_RESET_ENTRY	0x1E
--#define XMLH_LTSSM_STATE_HOT_RESET		0x1F
--#define XMLH_LTSSM_STATE_MASK			0x3F
- #define XMLH_LINK_UP				(1 << 6)
- 
- /* CR4 ID */
+Not sure what you've got here by splitting the original line into two other than an increase
+in the change count.
+
+Otherwise, it looks sensible.
+
+Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
+
+
+>  	if (domain >= 0 && use_dt_domains) {
+>  		use_dt_domains = 1;
+> +#ifdef CONFIG_ACPI
+> +	} else if (!acpi_disabled && use_dt_domains == -1) {
+> +		struct acpi_device *acpi_dev = to_acpi_device(parent);
+> +		unsigned long long segment = 0;
+> +		acpi_status status;
+> +
+> +		status = acpi_evaluate_integer(acpi_dev->handle,
+> +					       METHOD_NAME__SEG, NULL,
+> +					       &segment);
+> +		if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
+> +			dev_err(&acpi_dev->dev,  "can't evaluate _SEG\n");
+> +
+> +		domain = segment;
+> +#endif
+>  	} else if (domain < 0 && use_dt_domains != 1) {
+>  		use_dt_domains = 0;
+>  		domain = pci_get_new_domain_nr();
+> -- 
+> 1.9.1
+> 
+
 -- 
-1.9.1
-
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
