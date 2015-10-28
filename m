@@ -1,57 +1,133 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bbn0100.outbound.protection.outlook.com ([157.56.111.100]:44704
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752920AbbJSITk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Oct 2015 04:19:40 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <thomas.lendacky@amd.com>,
+	<herbert@gondor.apana.org.au>, <davem@davemloft.net>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v10 1/6] arm: add msi.h to Kbuild
-Date: Mon, 19 Oct 2015 16:19:23 +0800
-Message-ID: <1445242768-4423-2-git-send-email-lftan@altera.com>
-In-Reply-To: <1445242768-4423-1-git-send-email-lftan@altera.com>
-References: <1445242768-4423-1-git-send-email-lftan@altera.com>
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH V5 6/9] device property: ACPI: Remove unused DMA APIs
+Date: Wed, 28 Oct 2015 15:50:51 -0700
+Message-ID: <1446072654-5608-7-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Include asm-generic/msi.h to support CONFIG_GENERIC_MSI_IRQ_DOMAIN.
-This to fix compilation error:
-"include/linux/msi.h:123:21: fatal error: asm/msi.h:
-No such file or directory"
+These DMA APIs are replaced with the newer versions, which return
+the enum dev_dma_attr. So, we can safely remove them.
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+CC: Rafael J. Wysocki <rjw@rjwysocki.net>
 ---
- arch/arm/include/asm/Kbuild | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/base/property.c  | 13 -------------
+ include/acpi/acpi_bus.h  | 34 ----------------------------------
+ include/linux/acpi.h     |  5 -----
+ include/linux/property.h |  2 --
+ 4 files changed, 54 deletions(-)
 
-diff --git a/arch/arm/include/asm/Kbuild b/arch/arm/include/asm/Kbuild
-index be648eb..bd42530 100644
---- a/arch/arm/include/asm/Kbuild
-+++ b/arch/arm/include/asm/Kbuild
-@@ -14,6 +14,7 @@ generic-y += local.h
- generic-y += local64.h
- generic-y += mm-arch-hooks.h
- generic-y += msgbuf.h
-+generic-y += msi.h
- generic-y += param.h
- generic-y += parport.h
- generic-y += poll.h
+diff --git a/drivers/base/property.c b/drivers/base/property.c
+index 05d57a2..1325ff2 100644
+--- a/drivers/base/property.c
++++ b/drivers/base/property.c
+@@ -598,19 +598,6 @@ unsigned int device_get_child_node_count(struct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(device_get_child_node_count);
+ 
+-bool device_dma_is_coherent(struct device *dev)
+-{
+-	bool coherent = false;
+-
+-	if (IS_ENABLED(CONFIG_OF) && dev->of_node)
+-		coherent = of_dma_is_coherent(dev->of_node);
+-	else
+-		acpi_check_dma(ACPI_COMPANION(dev), &coherent);
+-
+-	return coherent;
+-}
+-EXPORT_SYMBOL_GPL(device_dma_is_coherent);
+-
+ bool device_dma_supported(struct device *dev)
+ {
+ 	/* For DT, this is always supported.
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 920b774..ad0a5ff 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -390,40 +390,6 @@ struct acpi_data_node {
+ 	struct completion kobj_done;
+ };
+ 
+-static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+-{
+-	bool ret = false;
+-
+-	if (!adev)
+-		return ret;
+-
+-	/**
+-	 * Currently, we only support _CCA=1 (i.e. coherent_dma=1)
+-	 * This should be equivalent to specifyig dma-coherent for
+-	 * a device in OF.
+-	 *
+-	 * For the case when _CCA=0 (i.e. coherent_dma=0 && cca_seen=1),
+-	 * There are two cases:
+-	 * case 1. Do not support and disable DMA.
+-	 * case 2. Support but rely on arch-specific cache maintenance for
+-	 *         non-coherence DMA operations.
+-	 * Currently, we implement case 2 above.
+-	 *
+-	 * For the case when _CCA is missing (i.e. cca_seen=0) and
+-	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
+-	 * and fallback to arch-specific default handling.
+-	 *
+-	 * See acpi_init_coherency() for more info.
+-	 */
+-	if (adev->flags.coherent_dma ||
+-	    (adev->flags.cca_seen && IS_ENABLED(CONFIG_ARM64))) {
+-		ret = true;
+-		if (coherent)
+-			*coherent = adev->flags.coherent_dma;
+-	}
+-	return ret;
+-}
+-
+ static inline bool is_acpi_node(struct fwnode_handle *fwnode)
+ {
+ 	return fwnode && (fwnode->type == FWNODE_ACPI
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 6527920..fa2bbc0 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -593,11 +593,6 @@ static inline int acpi_device_modalias(struct device *dev,
+ 	return -ENODEV;
+ }
+ 
+-static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+-{
+-	return false;
+-}
+-
+ static inline bool acpi_dma_supported(struct acpi_device *adev)
+ {
+ 	return false;
+diff --git a/include/linux/property.h b/include/linux/property.h
+index 7200490..0a3705a 100644
+--- a/include/linux/property.h
++++ b/include/linux/property.h
+@@ -174,8 +174,6 @@ struct property_set {
+ 
+ void device_add_property_set(struct device *dev, struct property_set *pset);
+ 
+-bool device_dma_is_coherent(struct device *dev);
+-
+ bool device_dma_supported(struct device *dev);
+ 
+ enum dev_dma_attr device_get_dma_attr(struct device *dev);
 -- 
-1.8.2.1
+2.1.0
 
