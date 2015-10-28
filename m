@@ -1,68 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v5 4/4] irqchip/gic-v3-its:  Add handling of PCI requester id.
-Date: Thu,  8 Oct 2015 15:10:50 -0700
-Message-Id: <1444342250-6196-5-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1444342250-6196-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1444342250-6196-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp01.in.ibm.com ([122.248.162.1]:42669 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751593AbbJ1BuU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 21:50:20 -0400
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 28 Oct 2015 07:20:18 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id B4F7F3940057
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 07:20:16 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9S1oGDx7864770
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 07:20:16 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9S1oF1V024143
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 07:20:15 +0530
+Date: Wed, 28 Oct 2015 09:50:14 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V10 00/12] VF EEH on Power8
+Message-ID: <20151028015014.GA17539@Richards-MacBook-Pro.local>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20151027231113.GB5155@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151027231113.GB5155@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On Tue, Oct 27, 2015 at 06:11:13PM -0500, Bjorn Helgaas wrote:
+>On Mon, Oct 26, 2015 at 11:15:50AM +0800, Wei Yang wrote:
+>> This patchset enables EEH on SRIOV VFs. The general idea is to create proper
+>> VF edev and VF PE and handle them properly.
+>> ...
+>
+>> Gavin Shan (1):
+>>   powerpc/eeh: Don't block PCI config on resetting VF PE
+>> 
+>> Wei Yang (11):
+>>   PCI/IOV: Rename and export virtfn_add/virtfn_remove
+>>   PCI: Add pcibios_bus_add_device() weak function
+>>   powerpc/pci: Cache VF index in pci_dn
+>>   powerpc/pci: Remove VFs prior to PF
+>>   powerpc/eeh: Cache only BARs, not windows or IOV BARs
+>>   powerpc/powernv: EEH device for VF
+>>   powerpc/eeh: Create PE for VFs
+>>   powerpc/powernv: Support EEH reset for VF PE
+>>   powerpc/powernv: Support PCI config restore for VFs
+>>   powerpc/eeh: Support error recovery for VF PE
+>>   powerpc/eeh: Handle hot removed VF when PF is EEH aware
+>> 
+>>  arch/powerpc/include/asm/eeh.h               |  10 ++
+>>  arch/powerpc/include/asm/pci-bridge.h        |   2 +
+>>  arch/powerpc/kernel/eeh.c                    |  17 ++-
+>>  arch/powerpc/kernel/eeh_cache.c              |   6 +-
+>>  arch/powerpc/kernel/eeh_dev.c                |   1 +
+>>  arch/powerpc/kernel/eeh_driver.c             | 130 ++++++++++++----
+>>  arch/powerpc/kernel/eeh_pe.c                 |  13 +-
+>>  arch/powerpc/kernel/pci-hotplug.c            |   2 +-
+>>  arch/powerpc/kernel/pci_dn.c                 |  16 +-
+>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 220 ++++++++++++++++++++++++++-
+>>  arch/powerpc/platforms/powernv/pci.c         |  18 +++
+>>  drivers/pci/bus.c                            |   3 +
+>>  drivers/pci/iov.c                            |  10 +-
+>>  include/linux/pci.h                          |   8 +
+>>  14 files changed, 408 insertions(+), 48 deletions(-)
+>
+>This really only affects powerpc, so I assume this series will go through
+>the powerpc tree.  Let me know if you want me to do anything else.
+>
 
-Replace open coded generation PCI/MSI requester id with call to the
-new function pci_msi_domain_get_msi_rid() which applies the "msi-map"
-to the id value.
+Yep, as we talked about it, this will be merged in powerpc tree.
 
-Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/irqchip/irq-gic-v3-its-pci-msi.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Have a good day :-)
 
-diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-index a7c8c9f..96f5f5f 100644
---- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-@@ -42,7 +42,6 @@ static struct irq_chip its_msi_irq_chip = {
- 
- struct its_pci_alias {
- 	struct pci_dev	*pdev;
--	u32		dev_id;
- 	u32		count;
- };
- 
-@@ -60,7 +59,6 @@ static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
- {
- 	struct its_pci_alias *dev_alias = data;
- 
--	dev_alias->dev_id = alias;
- 	if (pdev != dev_alias->pdev)
- 		dev_alias->count += its_pci_msi_vec_count(pdev);
- 
-@@ -86,7 +84,7 @@ static int its_pci_msi_prepare(struct irq_domain *domain, struct device *dev,
- 	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
- 
- 	/* ITS specific DeviceID, as the core ITS ignores dev. */
--	info->scratchpad[0].ul = dev_alias.dev_id;
-+	info->scratchpad[0].ul = pci_msi_domain_get_msi_rid(domain, pdev);
- 
- 	return msi_info->ops->msi_prepare(domain->parent,
- 					  dev, dev_alias.count, info);
+>Bjorn
+
 -- 
-1.9.1
+Richard Yang
+Help you, Help me
 
