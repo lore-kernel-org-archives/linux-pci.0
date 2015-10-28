@@ -1,160 +1,108 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 28 Oct 2015 13:43:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexander Duyck <aduyck@mirantis.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/5] iov: Update virtfn_max_buses to validate offset and
- stride
-Message-ID: <20151028184324.GA10008@localhost>
-References: <20151027204607.14626.59671.stgit@localhost.localdomain>
- <20151027205215.14626.93504.stgit@localhost.localdomain>
- <20151028163216.GA2927@localhost>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
+	will.deacon@arm.com, thomas.lendacky@amd.com,
+	herbert@gondor.apana.org.au, davem@davemloft.net,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V4 0/8] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
+Date: Wed, 28 Oct 2015 17:00:02 +0100
+Message-ID: <1545680.eQNYNjjaSj@vostro.rjw.lan>
+In-Reply-To: <5630D38F.804@linaro.org>
+References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com> <24127028.eJSjD1i70u@vostro.rjw.lan> <5630D38F.804@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151028163216.GA2927@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 28, 2015 at 11:32:16AM -0500, Bjorn Helgaas wrote:
-> Hi Alex,
+On Wednesday, October 28, 2015 09:54:23 PM Hanjun Guo wrote:
+> Hi Rafael,
 > 
-> Thanks a lot for cleaning this up.  I think this is a great
-> improvement over what I did.
+> On 10/27/2015 11:27 PM, Rafael J. Wysocki wrote:
+> > On Tuesday, October 27, 2015 09:52:50 AM Bjorn Helgaas wrote:
+> >> Hi Suravee,
+> >>
+> >> On Wed, Oct 21, 2015 at 08:52:03AM -0700, Suravee Suthikulpanit wrote:
+> >>> This patch series adds support to setup DMA coherency for PCI device using
+> >>> the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
+> >>> is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
+> >>> support for ARM64 which is currently in development.  Also, this should
+> >>> not affect other architectures that does not define
+> >>> CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
+> >>>
+> >>> In the process, this series also introduces enum dev_dma_attr and a set
+> >>> of APIs to query device DMA attribute. These APIs replace the obsolete
+> >>> device_dma_is_coherent(), and acpi_check_dma().
+> >>>
+> >>> I have also included a patch from Jeremy posted here:
+> >>>      http://www.spinics.net/lists/linux-usb/msg128582.html
+> >>>
+> >>> This patch series  has been tested on AMD Seattle RevB platform.
+> >>> The git tree containing tested code and pre-req patches are posted here:
+> >>>
+> >>>      http://github.com/ssuthiku/linux.git pci-cca-v4
+> >>>
+> >>> Changes from V3: (https://lkml.org/lkml/2015/8/26/389)
+> >>>      * Clean up suggested by Bjorn
+> >>>      * Introduce enum dev_dma_attr
+> >>>      * Replace device_dma_is_coherent() and acpi_check_dma() with
+> >>>        new APIs.
+> >>>
+> >>> Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
+> >>>      * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
+> >>>      * Add WARN() when fail to setup DMA for PCI device when booting
+> >>>        ACPI (per Arnd's suggestion)
+> >>>      * Added Acked-by from Rob.
+> >>>      * Minor clean up
+> >>>
+> >>> Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
+> >>>      * Include patch 1 from Jeremy to enable support for _CCA=0
+> >>>      * Clean up acpi_check_dma() per Bjorn suggestions
+> >>>      * Split the original V1 patch into two patches (patch 3 and 4)
+> >>>
+> >>> Jeremy Linton (1):
+> >>>    Honor ACPI _CCA attribute setting
+> >>>
+> >>> Suravee Suthikulpanit (7):
+> >>>    device property: Introducing enum dev_dma_attr
+> >>>    acpi: Adding DMA Attribute APIs for ACPI Device
+> >>>    device property: Adding DMA Attribute APIs for Generic Devices
+> >>>    device property: acpi: Make use of the new DMA Attribute APIs
+> >>>    device property: acpi: Remove unused DMA APIs
+> >>>    PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
+> >>>    PCI: ACPI: Add support for PCI device DMA coherency
+> >>>
+> >>>   drivers/acpi/acpi_platform.c              |  7 +++++-
+> >>>   drivers/acpi/glue.c                       |  8 +++---
+> >>>   drivers/acpi/scan.c                       | 42 +++++++++++++++++++++++++++++++
+> >>>   drivers/base/property.c                   | 32 +++++++++++++++++------
+> >>>   drivers/crypto/ccp/ccp-platform.c         |  9 ++++++-
+> >>>   drivers/net/ethernet/amd/xgbe/xgbe-main.c |  9 ++++++-
+> >>>   drivers/of/of_pci.c                       | 20 ---------------
+> >>>   drivers/pci/probe.c                       | 36 ++++++++++++++++++++++++--
+> >>>   include/acpi/acpi_bus.h                   | 36 +++-----------------------
+> >>>   include/linux/acpi.h                      |  7 +++++-
+> >>>   include/linux/of_pci.h                    |  3 ---
+> >>>   include/linux/property.h                  | 10 +++++++-
+> >>>   12 files changed, 145 insertions(+), 74 deletions(-)
+> >>
+> >> I had a couple minor comments.  It's sort of a toss-up, but this feels
+> >> more ACPI-flavored than PCI, so I assume Rafael will take this whole
+> >> series unless I hear otherwise.
+> >
+> > I'll do that.
 > 
-> On Tue, Oct 27, 2015 at 01:52:15PM -0700, Alexander Duyck wrote:
-> > This patch pulls the validation of offset and stride into virtfn_max_buses.
-> > The general idea is to validate offset and stride for each possible value
-> > of numvfs in addition to still determining the maximum bus value for the
-> > VFs.
-> > 
-> > I also reversed the loop as the most likely maximum will be when numvfs is
-> > set to total_VFs.  In addition this makes it so that we loop down to a
-> > value of 0 for numvfs which should be the resting state for the register.
-> > 
-> > Fixes: 8e20e89658f2 ("PCI: Set SR-IOV NumVFs to zero after enumeration")
-> > Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
-> 
-> I'd like to squash this together with my patch instead of having fixes
-> on top of fixes.  What do you think of the following?  (This applies
-> on top of 70675e0b6a1a ("PCI: Don't try to restore VF BARs")).
-> 
-> 
-> commit c20e11b572c5d4e4f01c86580a133122fbd13cfa
-> Author: Alexander Duyck <aduyck@mirantis.com>
-> Date:   Wed Oct 28 10:54:32 2015 -0500
-> 
->     PCI: Set SR-IOV NumVFs to zero after enumeration
->     
->     The enumeration path should leave NumVFs set to zero.  But after
->     4449f079722c ("PCI: Calculate maximum number of buses required for VFs"),
->     we call virtfn_max_buses() in the enumeration path, which changes NumVFs.
->     This NumVFs change is visible via lspci and sysfs until a driver enables
->     SR-IOV.
->     
->     Iterate from TotalVFs down to zero so NumVFs is zero when we're finished
->     computing the maximum number of buses.  Validate offset and stride in
->     the loop, so we can test it at every possible NumVFs setting.  Rename
->     virtfn_max_buses() to compute_max_vf_buses() to hint that it does have a
->     side effect of updating iov->max_VF_buses.
->     
->     [bhelgaas: changelog, rename, reverse sense of error path]
->     Fixes: 4449f079722c ("PCI: Calculate maximum number of buses required for VFs")
->     Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
->     Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index ee0ebff..120cfb3 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -54,24 +54,33 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
->   * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
->   * determine how many additional bus numbers will be consumed by VFs.
->   *
-> - * Iterate over all valid NumVFs and calculate the maximum number of bus
-> - * numbers that could ever be required.
-> + * Iterate over all valid NumVFs, validate offset and stride, and calculate
-> + * the maximum number of bus numbers that could ever be required.
->   */
-> -static inline u8 virtfn_max_buses(struct pci_dev *dev)
-> +static int compute_max_vf_buses(struct pci_dev *dev)
->  {
->  	struct pci_sriov *iov = dev->sriov;
-> -	int nr_virtfn;
-> -	u8 max = 0;
-> +	int nr_virtfn = iov->total_VFs;
->  	int busnr;
->  
-> -	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
-> -		pci_iov_set_numvfs(dev, nr_virtfn);
-> +	pci_iov_set_numvfs(dev, nr_virtfn);
-> +
-> +	while (nr_virtfn--) {
-> +		if (!iov->offset || !iov->stride)
-> +			goto err;
+> If Suravee address the comments and send another version,
+> an it be merged into 4.4?
 
-I think we have a minor problem here.  In sriov_enable(), we return an
-error if "nr_virtfn > 1 && !iov->stride", so it's legal for stride to
-be zero if NumVF is 1.  Here we don't allow that.  Sec 3.3.10 says:
+Well, it is likely, but not guaranteed.
 
-  Note: VF Stride is unused if NumVFs is 0 or 1.  If NumVFs is greater
-  than 1, VF Stride must not be zero."
+We're only a few days from the beginning of the merge window and I'm still
+in Seoul.
 
-So I think we should allow "stride == 0" here when NumVFs is 1.
-
-> +
->  		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
-
-I think this loop management is slightly wrong: I don't think we ever
-compute busnr for the highest VF because we always decrement nr_virtfn
-after calling pci_iov_set_numvfs(), and then we subtract one again.
-E.g., if Total VFs is 8, the VFs are numbered VF0..VF7, and we have
-this, which doesn't check VF7:
-
-  nr_virtfn = iov->total_VFs                 # nr_virtfn == 8
-  pci_iov_set_numvfs(..., nr_virtfn)         # passes 8 (correct)
-  while (nr_virtfn--) {
-                                             # nr_virtfn == 7 in loop body
-    pci_iov_virtfn_bus(..., nr_virtfn - 1)   # passes 6 (wrong)
-
-> -		if (busnr > max)
-> -			max = busnr;
-> +		if (busnr > iov->max_VF_buses)
-> +			iov->max_VF_buses = busnr;
-> +
-> +		pci_iov_set_numvfs(dev, nr_virtfn);
->  	}
->  
-> -	return max;
-> +	return 0;
-> +
-> +err:
-> +	pci_iov_set_numvfs(dev, 0);
-> +	return -EIO;
->  }
-
-Here's my new proposal:
-
-  static int compute_max_vf_buses(struct pci_dev *dev)
-  {
-          struct pci_sriov *iov = dev->sriov;
-          int nr_virtfn, busnr, rc = 0;
-
-          for (nr_virtfn = iov->total_VFs; nr_virtfn; nr_virtfn--) {
-                  pci_iov_set_numvfs(dev, nr_virtfn);
-                  if (!iov->offset || (nr_virtfn > 1 && !iov->stride)) {
-                          rc = -EIO;
-                          goto out;
-                  }
-
-                  busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
-                  if (busnr > iov->max_VF_buses)
-                          iov->max_VF_buses = busnr;
-          }
-
-  out:
-          pci_iov_set_numvfs(dev, 0);
-          return rc;
-  }
+Thanks,
+Rafael
 
