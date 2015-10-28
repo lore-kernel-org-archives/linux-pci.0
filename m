@@ -1,64 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <56168F4F.7030000@caviumnetworks.com>
-Date: Thu, 8 Oct 2015 08:44:15 -0700
-From: David Daney <ddaney@caviumnetworks.com>
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp09.in.ibm.com ([122.248.162.9]:44425 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753733AbbJ1BWb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 21:22:31 -0400
+Received: from /spool/local
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 28 Oct 2015 06:51:36 +0530
+Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id C20273940049
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 06:51:32 +0530 (IST)
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay05.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9S1LWKH62521580
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 06:51:32 +0530
+Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9S1LV4G005914
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 06:51:32 +0530
+Date: Wed, 28 Oct 2015 09:21:22 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-CC: David Daney <ddaney.cavm@gmail.com>,
-	<linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v4 0/5] PCI: generic: Misc. bug fixes/enhancements
-References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com> <20151008152811.GD3885@localhost>
-In-Reply-To: <20151008152811.GD3885@localhost>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V10 01/12] PCI/IOV: Rename and export
+ virtfn_add/virtfn_remove
+Message-ID: <20151028012122.GA16965@Richards-MacBook-Pro.local>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1445829362-2738-2-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20151027230654.GA5155@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151027230654.GA5155@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/08/2015 08:28 AM, Bjorn Helgaas wrote:
-> On Fri, Oct 02, 2015 at 11:43:58AM -0700, David Daney wrote:
->> From: David Daney <david.daney@cavium.com>
-[...]
->>
->> David Daney (5):
->>    PCI: Add pci_bus_fixup_irqs().
->>    PCI: generic: Only fixup irqs for bus we are creating.
+On Tue, Oct 27, 2015 at 06:06:54PM -0500, Bjorn Helgaas wrote:
+>On Mon, Oct 26, 2015 at 11:15:51AM +0800, Wei Yang wrote:
+>> During EEH recovery, hotplug is applied to the devices which don't
+>> have drivers or their drivers don't support EEH. However, the hotplug,
+>> which was implemented based on PCI bus, can't be applied to VF directly.
+>> 
+>> The patch renames virtn_{add,remove}() and exports them so that they
+>> can be used in PCI hotplug during EEH recovery.
 >
-> I'm hoping we won't need the above if we can resurrect Matthew's
-> patches.
+>Trivial, but write this as an imperative sentence, e.g.,
+>
+>  Rename virtn_{add,remove}() and export them so they
+>  can be used in PCI hotplug during EEH recovery.
+>
+>"The patch" doesn't add any useful information; it's obvious that the
+>changelog applied to this patch.
 
-I will test some things with this today.
-
+Yep, thanks, will change in next version.
 
 >
->>    PCI: generic: Quit clobbering our pci_ops.
+>This comment also applies to at least the next patch.
 >
-> Applied to pci/host-generic for v4.4 with Arnd's Reviewed-by and minor
-> changelog tweaks (as below).
->
->>    PCI: generic: Correct, and avoid overflow, in bus_max calculation.
->
-> Seems not settled yet.
->
->>    PCI: generic: Pass proper starting bus number to pci_scan_root_bus().
->
-> Also applied to pci/host-generic, thanks!
->
+>Bjorn
 
-Many thanks for getting those two in,
-
-
-David Daney
-
-
-
-
+-- 
+Richard Yang
+Help you, Help me
 
