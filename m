@@ -1,247 +1,150 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 56/60] PCI: Add debug print out for min_align and alt_size
-Date: Thu,  8 Oct 2015 14:39:15 -0700
-Message-Id: <1444340359-8011-57-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f46.google.com ([209.85.213.46]:36077 "EHLO
+	mail-vk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757084AbbJ2QyB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 12:54:01 -0400
+Received: by vkex70 with SMTP id x70so30484831vke.3
+        for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2015 09:54:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20151029163209.GA19083@localhost>
+References: <20151027204607.14626.59671.stgit@localhost.localdomain>
+	<20151027205227.14626.13514.stgit@localhost.localdomain>
+	<20151029163209.GA19083@localhost>
+Date: Thu, 29 Oct 2015 09:54:00 -0700
+Message-ID: <CAMt9YRrL+uYz7=TFSmxJngspCDfoORJ5ykaBSZAwM0qfmjYHjQ@mail.gmail.com>
+Subject: Re: [PATCH 3/5] iov: Fix sriov_enable exception handling path
+From: Alex Duyck <aduyck@mirantis.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Put all print out for all children align/size and result align/size
-together.
+On Thu, Oct 29, 2015 at 9:32 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> Hi Alex,
+>
+> Thanks, this definitely clears up some problems.  Two minor questions
+> below.
+>
+> On Tue, Oct 27, 2015 at 01:52:27PM -0700, Alexander Duyck wrote:
+>> >From what I can tell there were several errors in the sriov_enable
+>> exception handling path.  Below is a brief list of what I believe I am
+>> fixing:
+>>
+>> 1.  If pcibios_enable_sriov failed, we returned without disabling SR-IOV on
+>>     the device.
+>> 2.  If virtfn_add failed we didn't call pcibios_disable_sriov to undo
+>>     pcibios_enable_sriov.
+>> 3.  We were resetting numvfs to 0 before a second had passed for the VFs to
+>>     quiesce.
+>> 4.  Minor coding style issues for white space and for assignment in
+>>     conditional check.
+>>
+>> Beyond addressing these 4 issues there were also 2 other minor issues in
+>> that retval was a redundant variable with rc, and j wasn't actually needed
+>> as we could simply reverse the loop we were running when setting up i.  As
+>> such I have updated the code to address those two items.
+>>
+>> Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+>> ---
+>>  drivers/pci/iov.c |   31 +++++++++++++++++--------------
+>>  1 file changed, 17 insertions(+), 14 deletions(-)
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index 238950412de0..cecc242c1af0 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -231,13 +231,18 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+>>
+>>  int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>>  {
+>> -       return 0;
+>> +     return 0;
+>> +}
+>> +
+>> +int __weak pcibios_sriov_disable(struct pci_dev *pdev)
+>> +{
+>> +     return 0;
+>>  }
+>>
+>>  static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>>  {
+>>       int rc;
+>> -     int i, j;
+>> +     int i;
+>>       int nres;
+>>       u16 offset, stride, initial;
+>>       struct resource *res;
+>> @@ -245,7 +250,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>>       struct pci_sriov *iov = dev->sriov;
+>>       int bars = 0;
+>>       int bus;
+>> -     int retval;
+>>
+>>       if (!nr_virtfn)
+>>               return 0;
+>> @@ -322,10 +326,11 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>>       if (nr_virtfn < initial)
+>>               initial = nr_virtfn;
+>>
+>> -     if ((retval = pcibios_sriov_enable(dev, initial))) {
+>> +     rc = pcibios_sriov_enable(dev, initial);
+>> +     if (rc) {
+>>               dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
+>> -                     retval);
+>> -             return retval;
+>> +                     rc);
+>> +             goto err_pcibios;
+>>       }
+>>
+>>       for (i = 0; i < initial; i++) {
+>> @@ -340,25 +345,23 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>>       return 0;
+>>
+>>  failed:
+>> -     for (j = 0; j < i; j++)
+>> -             virtfn_remove(dev, j, 0);
+>> +     while (i--)
+>> +             virtfn_remove(dev, i, 0);
+>>
+>> +     pcibios_sriov_disable(dev);
+>> +err_pcibios:
+>>       iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>>       pci_cfg_access_lock(dev);
+>>       pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>> -     pci_iov_set_numvfs(dev, 0);
+>>       ssleep(1);
+>>       pci_cfg_access_unlock(dev);
+>>
+>>       if (iov->link != dev->devfn)
+>>               sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>>
+>> -     return rc;
+>> -}
+>> +     pci_iov_set_numvfs(dev, 0);
+>
+> Do you have a spec pointer for the 1 sec delay before clearing NumVFs?
 
-We can print out device name at same time with min_align/alt_size
-calculation.
+The text from the SR-IOV spec v1.1 in relation to clearing VF enable reads:
 
-So we can shut off debug print out from get_res_add_size() and
-get_res_add_align().
+If software Clears VF Enable, software must allow 1.0 s second after
+VF Enable is Cleared before
+reading any field in the SR-IOV Extended Capability or the VF
+Migration State Array (see
+Section 3.3.15.1).
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 76 ++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 56 insertions(+), 20 deletions(-)
+I'm assuming the same would apply to writing to the region after VFE
+has been cleared.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 1889351..673778c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -159,11 +159,6 @@ static resource_size_t get_res_add_size(struct list_head *head,
- 	if (!dev_res || !dev_res->add_size)
- 		return 0;
- 
--	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
--		   "BAR %d: %pR get_res_add_size add_size   %#llx\n",
--		   (int)(res - &dev_res->dev->resource[0]),
--		   res, (unsigned long long)dev_res->add_size);
--
- 	return dev_res->add_size;
- }
- 
-@@ -176,11 +171,6 @@ static resource_size_t get_res_add_align(struct list_head *head,
- 	if (!dev_res || !dev_res->min_align)
- 		return 0;
- 
--	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
--		   "BAR %d: %pR get_res_add_align min_align %#llx\n",
--		   (int)(res - &dev_res->dev->resource[0]),
--		   res, (unsigned long long)dev_res->min_align);
--
- 	return dev_res->min_align;
- }
- 
-@@ -1271,6 +1261,8 @@ struct align_test_res {
- 	struct resource res;
- 	resource_size_t size;
- 	resource_size_t align;
-+	struct device *dev;
-+	int idx;
- };
- 
- static void free_align_test_list(struct list_head *head)
-@@ -1284,7 +1276,8 @@ static void free_align_test_list(struct list_head *head)
- }
- 
- static int add_to_align_test_list(struct list_head *head,
--				  resource_size_t align, resource_size_t size)
-+				  resource_size_t align, resource_size_t size,
-+				  struct device *dev, int idx)
- {
- 	struct align_test_res *tmp;
- 
-@@ -1294,6 +1287,8 @@ static int add_to_align_test_list(struct list_head *head,
- 
- 	tmp->align = align;
- 	tmp->size = size;
-+	tmp->dev = dev;
-+	tmp->idx = idx;
- 
- 	list_add_tail(&tmp->list, head);
- 
-@@ -1359,6 +1354,19 @@ static resource_size_t calculate_mem_align(struct list_head *head,
- 	resource_size_t min_align, good_align, aligned_size, start;
- 	int count = 0;
- 
-+	list_for_each_entry(p, head, list)
-+		count++;
-+
-+	printk(KERN_DEBUG "  ===========BEGIN===calculate_mem_align========\n");
-+	if (count) {
-+		printk(KERN_DEBUG "  align/size:\n");
-+		list_for_each_entry(p, head, list)
-+			dev_printk(KERN_DEBUG, p->dev,
-+				   "BAR %d:     %08llx/%08llx\n", p->idx,
-+				   (unsigned long long)p->align,
-+				   (unsigned long long)p->size);
-+	}
-+
- 	if (max_align <= align_low) {
- 		good_align = align_low;
- 		goto out;
-@@ -1366,9 +1374,6 @@ static resource_size_t calculate_mem_align(struct list_head *head,
- 
- 	good_align = max_align;
- 
--	list_for_each_entry(p, head, list)
--		count++;
--
- 	if (count <= 1)
- 		goto out;
- 
-@@ -1393,6 +1398,11 @@ static resource_size_t calculate_mem_align(struct list_head *head,
- 	} while (min_align > align_low);
- 
- out:
-+	printk(KERN_DEBUG "      min_align/aligned_size: %08llx/%08llx\n",
-+			(unsigned long long)good_align,
-+			(unsigned long long)ALIGN(size, good_align));
-+	printk(KERN_DEBUG "  ===========END===calculate_mem_align==========\n");
-+
- 	return good_align;
- }
- 
-@@ -1410,6 +1420,16 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
- 	list_for_each_entry(p, head, list)
- 		count++;
- 
-+	printk(KERN_DEBUG "  ===========BEGIN===calculate_mem_alt_size=====\n");
-+	if (count) {
-+		printk(KERN_DEBUG "  align/size:\n");
-+		list_for_each_entry(p, head, list)
-+			dev_printk(KERN_DEBUG, p->dev,
-+				   "BAR %d:     %08llx/%08llx\n", p->idx,
-+				   (unsigned long long)p->align,
-+				   (unsigned long long)p->size);
-+	}
-+
- 	if (count <= 1)
- 		goto out;
- 
-@@ -1434,6 +1454,11 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
- 	}
- 
- out:
-+	printk(KERN_DEBUG "   alt_align/alt_size: %08llx/%08llx\n",
-+			(unsigned long long)max_align,
-+			(unsigned long long)good_size);
-+	printk(KERN_DEBUG "  ===========END===calculate_mem_alt_size=======\n");
-+
- 	return good_size;
- }
- 
-@@ -1515,7 +1540,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			/* put SRIOV/ROM res to realloc list */
- 			if (realloc_head && is_optional(i)) {
- 				add_to_align_test_list(&align_test_add_list,
--							align, r_size);
-+						align, r_size, &dev->dev, i);
- 				r->end = r->start - 1;
- 				__add_to_list(realloc_head, dev, r,
- 					      r_size, align, 0, 0);
-@@ -1534,7 +1559,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 			if (r_size > 1) {
- 				add_to_align_test_list(&align_test_list,
--							align, r_size);
-+						align, r_size, &dev->dev, i);
- 				size += r_size;
- 				if (align > max_align)
- 					max_align = align;
-@@ -1551,7 +1576,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					add_align = align;
- 				add_to_align_test_list(&align_test_add_list,
- 							add_align,
--							r_size + add_r_size);
-+							r_size + add_r_size,
-+							&dev->dev, i);
- 				sum_add_size += r_size + add_r_size;
- 				if (add_align > max_add_align)
- 					max_add_align = add_align;
-@@ -1561,14 +1587,14 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					add_to_align_test_list(
- 						&align_test_alt_list,
- 						dev_res->alt_align,
--						dev_res->alt_size);
-+						dev_res->alt_size, &dev->dev, i);
- 					alt_size += dev_res->alt_size;
- 					if (alt_align < dev_res->alt_align)
- 						alt_align = dev_res->alt_align;
- 				} else if (r_size > 1) {
- 					add_to_align_test_list(
- 						&align_test_alt_list,
--						align, r_size);
-+						align, r_size, &dev->dev, i);
- 					alt_size += r_size;
- 					if (alt_align < align)
- 						alt_align = align;
-@@ -1579,6 +1605,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 	max_align = max(max_align, window_align);
- 	if (size || min_size) {
-+		dev_printk(KERN_DEBUG, &bus->self->dev,
-+			   "BAR %d: bridge window %pR to %pR calculate_mem for MUST\n",
-+			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
- 		min_align = calculate_mem_align(&align_test_list, max_align,
- 						size, window_align);
- 		size0 = calculate_size(size, min_size,
-@@ -1588,6 +1617,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 	if (size0 && realloc_head) {
- 		alt_align = max(alt_align, window_align);
-+		dev_printk(KERN_DEBUG, &bus->self->dev,
-+			   "BAR %d: bridge window %pR to %pR calculate_mem for ALT\n",
-+			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
- 		/* need to increase size to fit more alt */
- 		alt_size = calculate_mem_alt_size(&align_test_alt_list,
- 						  alt_align, alt_size,
-@@ -1603,6 +1635,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	if (sum_add_size > size && realloc_head) {
-+		dev_printk(KERN_DEBUG, &bus->self->dev,
-+			   "BAR %d: bridge window %pR to %pR calculate_mem for ADD\n",
-+			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
- 					window_align);
-@@ -1660,7 +1695,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				      final_add_size, min_add_align,
- 				      alt_size, alt_align);
- 			dev_printk(KERN_DEBUG, &bus->self->dev,
--				   "bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx req_size %llx req_align %llx\n",
-+				   "BAR %d: bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx req_size %llx req_align %llx\n",
-+				   (int)(b_res - &bus->self->resource[0]),
- 				   b_res, &bus->busn_res,
- 				   (unsigned long long)final_add_size,
- 				   (unsigned long long)min_add_align,
--- 
-1.8.4.5
+> Does we need to clear NumVFs while holding the cfg access lock?
 
+I don't think so.
+
+Earlier in the function pci_iov_set_numvfs was getting set before
+without taking the lock.  I think the lock is being used to enforce
+the required grace period on configuration space access following
+setting or clearing the VFE bit.  The code as it is now matches what
+we have in sriov_disable so I suspect it likely works this way as that
+path has likely seen much more validation than the exception handling
+path for sriov_enable has.
