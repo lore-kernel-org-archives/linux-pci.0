@@ -1,88 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:33235 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932184AbbJ0QrN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 12:47:13 -0400
-Received: by lbbec13 with SMTP id ec13so66479802lbb.0
-        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2015 09:47:12 -0700 (PDT)
-Subject: Re: [Linaro-acpi] [PATCH V1 07/11] XEN / PCI: Remove the dependence
- on arch x86 when PCI_MMCONFIG=y
-To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
- <1445963922-22711-8-git-send-email-tn@semihalf.com>
-Cc: linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	linux-pci@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, wangyijing@huawei.com,
-	tglx@linutronix.de, jiang.liu@linux.intel.com,
-	linux-arm-kernel@lists.infradead.org,
-	Stefano.Stabellini@eu.citrix.com
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Message-ID: <562FAA88.3020609@linaro.org>
-Date: Tue, 27 Oct 2015 17:47:04 +0100
+Received: from userp1040.oracle.com ([156.151.31.81]:39545 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831AbbJ2D3g (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2015 23:29:36 -0400
+Message-ID: <5631928D.4080804@oracle.com>
+Date: Thu, 29 Oct 2015 11:29:17 +0800
+From: ethan zhao <ethan.zhao@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <1445963922-22711-8-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: Alexander Duyck <alexander.duyck@gmail.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] iov: restore NumVFs register to 0 before return from
+ virtfn_max_buses()
+References: <1442373593-8342-1-git-send-email-ethan.zhao@oracle.com> <20151015171600.GB17702@localhost> <562F1024.70001@gmail.com> <562F43C6.7000009@oracle.com> <562F9512.3000907@gmail.com>
+In-Reply-To: <562F9512.3000907@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+ Stefano
+Alex,
+On 2015/10/27 23:15, Alexander Duyck wrote:
+> On 10/27/2015 02:28 AM, ethan zhao wrote:
+>> Alexander,
+>> On 2015/10/27 13:48, Alexander Duyck wrote:
+>>> On 10/15/2015 10:16 AM, Bjorn Helgaas wrote:
+>>>> Hi Ethan,
+>>>>
+>>>> On Wed, Sep 16, 2015 at 12:19:53PM +0900, Ethan Zhao wrote:
+>>>>> After commit 4449f079722c ("PCI: Calculate maximum number of buses
+>>>>> required for VFs"),the initial value of NumVFs register was left to
+>>>>> non-zero after sriov_init() and no VFs was enabled in device driver.
+>>>>> this changed the behaviour of kernel exported by lspci and sysfs etc.
+>>>>> so this patch restore the NumVFs register to zero after the
+>>>>> calculation of max_VF_buses was done and before return from
+>>>>> virtfn_max_buses().
+>>>>>
+>>>>> Tested on stable 4.1 and passed building on stable 4.3-rc1
+>>>>>
+>>>>> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+>>>>> Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
+>>>> Can you test the patch below?  I'm trying to avoid touching
+>>>> PCI_SRIOV_NUM_VF in more than one place, and I think it's OK to set it
+>>>> and test offset/stride at the end, instead of setting NUM_VF to zero,
+>>>> testing offset/stride, computing max_bus, then setting NUM_VF to zero
+>>>> again.
+>>>>
+>>>> Bjorn
+>>>>
+>>>>
+>>>> commit 8e20e89658f23b8d16b1e21810e9f63c8625129c
+>>>> Author: Bjorn Helgaas <bhelgaas@google.com>
+>>>> Date:   Thu Oct 15 11:31:21 2015 -0500
+>>>>
+>>>>      PCI: Set SR-IOV NumVFs to zero after enumeration
+>>>>           The enumeration path should leave NumVFs set to zero. But 
+>>>> after
+>>>>      4449f079722c ("PCI: Calculate maximum number of buses required 
+>>>> for VFs"),
+>>>>      we call virtfn_max_buses() in the enumeration path, which 
+>>>> changes NumVFs.
+>>>>      This NumVFs change is visible via lspci and sysfs until a 
+>>>> driver enables
+>>>>      SR-IOV.
+>>>>           Set NumVFs to zero after virtfn_max_buses() computes the 
+>>>> maximum number of
+>>>>      buses.
+>>>>           Fixes: 4449f079722c ("PCI: Calculate maximum number of 
+>>>> buses required for VFs")
+>>>>      Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
+>>>>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>>
+>>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>>>> index ee0ebff..0202ab0 100644
+>>>> --- a/drivers/pci/iov.c
+>>>> +++ b/drivers/pci/iov.c
+>>>> @@ -384,7 +384,7 @@ static int sriov_init(struct pci_dev *dev, int 
+>>>> pos)
+>>>>       int rc;
+>>>>       int nres;
+>>>>       u32 pgsz;
+>>>> -    u16 ctrl, total, offset, stride;
+>>>> +    u16 ctrl, total;
+>>>>       struct pci_sriov *iov;
+>>>>       struct resource *res;
+>>>>       struct pci_dev *pdev;
+>>>> @@ -414,11 +414,6 @@ static int sriov_init(struct pci_dev *dev, int 
+>>>> pos)
+>>>>     found:
+>>>>       pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+>>>> -    pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
+>>>> -    pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
+>>>> -    pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
+>>>> -    if (!offset || (total > 1 && !stride))
+>>>> -        return -EIO;
+>>>>         pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
+>>>>       i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
+>>>> @@ -456,8 +451,6 @@ found:
+>>>>       iov->nres = nres;
+>>>>       iov->ctrl = ctrl;
+>>>>       iov->total_VFs = total;
+>>>> -    iov->offset = offset;
+>>>> -    iov->stride = stride;
+>>>>       iov->pgsz = pgsz;
+>>>>       iov->self = dev;
+>>>>       pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+>>>> @@ -475,6 +468,11 @@ found:
+>>>>       dev->sriov = iov;
+>>>>       dev->is_physfn = 1;
+>>>>       iov->max_VF_buses = virtfn_max_buses(dev);
+>>>> +    pci_iov_set_numvfs(dev, 0);
+>>>> +    if (!iov->offset || (total > 1 && !iov->stride)) {
+>>>> +        rc = -EIO;
+>>>> +        goto failed;
+>>>> +    }
+>>>>         return 0;
+>>>
+>>> You might want to reorder this a bit.  The problem is offset and 
+>>> stride can be 0 if numvfs is 0.  So you should probably test offset 
+>>> and stride 
+>>  Yes, the spec says "Note: First VF Offset is unused if NumVFs is 0. 
+>> If NumVFs is greater than 0, First VF Offset must
+>> 25 not be zero. "
+>>> first, and then reset numvfs to 0.
+>>  Why test it before reset numvfs ?
+>
+> Because pci_iov_set_numvfs will end up resetting offset and stride 
+> based on the values when it writes the 0 into numvfs.  As such 
 
-On 27.10.2015 17:38, Tomasz Nowicki wrote:
-> From: Hanjun Guo <hanjun.guo@linaro.org>
+  Seems virtfn_max_buses() never call pci_iov_set_numvfs() with 0, so no 
+need to check it before the last resetting to 0 ?
+> testing it after the reset could give you invalid values since offset 
+> and stride can be 0 when numvfs is 0.
 >
-> In drivers/xen/pci.c, there are arch x86 dependent codes when
-> CONFIG_PCI_MMCONFIG is enabled, since CONFIG_PCI_MMCONFIG
-> depends on ACPI, so this will prevent XEN PCI running on other
-> architectures using ACPI with PCI_MMCONFIG enabled (such as ARM64).
+> Actually maybe I will go over this and submit a couple patches 
+> myself.  Looking over things it seems like the code has gotten a bit 
+> silly since virtfn_max_busses looks like it is iterating over VFs and 
+> that doesn't make much sense when offset and stride are both positive 
+   so far it works at least. :>
+
+  Thanks,
+  Ethan
+> values so it should just be a matter of computing the bus of the last VF.
 >
-> Fortunatly, it can be sloved in a simple way. In drivers/xen/pci.c,
-> the only x86 dependent code is if ((pci_probe & PCI_PROBE_MMCONF) == 0),
-> and it's defined in asm/pci_x86.h, the code means that
-> if the PCI resource is not probed in PCI_PROBE_MMCONF way, just
-> ingnore the xen mcfg init. Actually this is duplicate, because
-> if PCI resource is not probed in PCI_PROBE_MMCONF way, the
-> pci_mmconfig_list will be empty, and the if (list_empty())
-> after it will do the same job.
->
-> So just remove the arch related code and the head file, this
-> will be no functional change for x86, and also makes xen/pci.c
-> usable for other architectures.
->
-> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-> ---
->   drivers/xen/pci.c | 6 ------
->   1 file changed, 6 deletions(-)
->
-> diff --git a/drivers/xen/pci.c b/drivers/xen/pci.c
-> index 6785ebb..9a8dbe3 100644
-> --- a/drivers/xen/pci.c
-> +++ b/drivers/xen/pci.c
-> @@ -28,9 +28,6 @@
->   #include <asm/xen/hypervisor.h>
->   #include <asm/xen/hypercall.h>
->   #include "../pci/pci.h"
-> -#ifdef CONFIG_PCI_MMCONFIG
-> -#include <asm/pci_x86.h>
-> -#endif
->
->   static bool __read_mostly pci_seg_supported = true;
->
-> @@ -222,9 +219,6 @@ static int __init xen_mcfg_late(void)
->   	if (!xen_initial_domain())
->   		return 0;
->
-> -	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
-> -		return 0;
-> -
->   	if (list_empty(&pci_mmcfg_list))
->   		return 0;
->
->
+> - Alex
+
