@@ -1,106 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([104.200.29.153]:36227 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751096AbbJWFFx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Oct 2015 01:05:53 -0400
-From: Matthew Minter <matt@masarand.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	lorenzo.pieralisi@arm.com
-Cc: Matthew Minter <matt@masarand.com>
-Subject: [PATCH V4 11/29] powerpc/pci: Defer IRQ assignment to device enable time
-Date: Fri, 23 Oct 2015 06:03:44 +0100
-Message-Id: <1445576642-29624-12-git-send-email-matt@masarand.com>
-In-Reply-To: <1445576642-29624-1-git-send-email-matt@masarand.com>
-References: <1445576642-29624-1-git-send-email-matt@masarand.com>
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:19984 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757445AbbJ2XrB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 19:47:01 -0400
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	jiang.liu@linux.intel.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v4 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
+Date: Thu, 29 Oct 2015 23:46:09 +0000
+Message-Id: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The powerpc PCI init code is currently initialising PCI device IRQ during
-the boot time pcibios phase. This results in devices which are connected
-after boot time not being asigned IRQs which can cause various problems.
+From: Jake Oshins <jakeo@microsoft.com>
 
-This patch as part of its set fixes this be moving the IRQ initialisation
-into the PCI device enable code path so that it is run for boot time and
-hot-plugged devices alike.
+This patch series incorporates feedback from Gerry Liu
+(jiang.liu@linux.intel.com).
 
-Signed-off-by: Matthew Minter <matt@masarand.com>
----
- arch/powerpc/kernel/pci-common.c | 25 ++++++++++++-------------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+First, export functions that allow correlating Hyper-V virtual processors
+and Linux cpus, along with the means for invoking a hypercall that targets
+interrupts at chosen vectors on specfic cpus.
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 7587b2a..4189f50 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -231,7 +231,7 @@ struct pci_controller* pci_find_hose_for_OF_device(struct device_node* node)
-  * If the interrupt is used, then gets the interrupt line from the
-  * openfirmware and sets it in the pci_dev and pci_config line.
-  */
--static int pci_read_irq_line(struct pci_dev *pci_dev)
-+static int pci_read_irq_line(struct pci_dev *pci_dev, u8 pin)
- {
- 	struct of_phandle_args oirq;
- 	unsigned int virq;
-@@ -243,7 +243,7 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
- #endif
- 	/* Try to get a mapping from the device-tree */
- 	if (of_irq_parse_pci(pci_dev, &oirq)) {
--		u8 line, pin;
-+		u8 line;
- 
- 		/* If that fails, lets fallback to what is in the config
- 		 * space and map that through the default controller. We
-@@ -252,10 +252,6 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
- 		 * either provide a proper interrupt tree or don't use this
- 		 * function.
- 		 */
--		if (pci_read_config_byte(pci_dev, PCI_INTERRUPT_PIN, &pin))
--			return -1;
--		if (pin == 0)
--			return -1;
- 		if (pci_read_config_byte(pci_dev, PCI_INTERRUPT_LINE, &line) ||
- 		    line == 0xff || line == 0) {
- 			return -1;
-@@ -280,9 +276,16 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
- 
- 	pr_debug(" Mapped to linux irq %d\n", virq);
- 
--	pci_dev->irq = virq;
-+	return virq;
-+}
- 
--	return 0;
-+static int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
-+{
-+	/* Read default IRQs and fixup if necessary */
-+	dev->irq = pci_read_irq_line(dev, pin);
-+	if (ppc_md.pci_irq_fixup)
-+		ppc_md.pci_irq_fixup(dev);
-+	return dev->irq;
- }
- 
- /*
-@@ -784,6 +787,7 @@ int pci_proc_domain(struct pci_bus *bus)
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- {
-+	bridge->map_irq = pci_map_irq;
- 	if (ppc_md.pcibios_root_bridge_prepare)
- 		return ppc_md.pcibios_root_bridge_prepare(bridge);
- 
-@@ -983,11 +987,6 @@ static void pcibios_setup_device(struct pci_dev *dev)
- 	phb = pci_bus_to_host(dev->bus);
- 	if (phb->controller_ops.dma_dev_setup)
- 		phb->controller_ops.dma_dev_setup(dev);
--
--	/* Read default IRQs and fixup if necessary */
--	pci_read_irq_line(dev);
--	if (ppc_md.pci_irq_fixup)
--		ppc_md.pci_irq_fixup(dev);
- }
- 
- int pcibios_add_device(struct pci_dev *dev)
+Second, mark various parts of IRQ domain related code as exported, so that
+this PCI front-end can implement an IRQ domain as part of a module.  (The
+alternative would be to pull all this into the kernel, which would pull
+in a lot of other Hyper-V related code, as this IRQ domain depends on
+hv_vmbus.ko.)
+
+Third, modify PCI so that new root PCI buses can be marked with an associated
+fwnode_handle, and so that root PCI buses can look up their associated IRQ
+domain by that handle.
+
+Fourth, introduce a new driver, hv_pcifront, which eposes root PCI buses in
+a Hyper-V VM.  These root PCI buses expose real PCIe devices, or PCI Virtual
+Functions.
+
+
+Jake Oshins (7):
+  drivers:hv: Export a function that maps Linux CPU num onto Hyper-V
+    proc num
+  drivers:hv: Export hv_do_hypercall()
+  PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
+  PCI: Add fwnode_handle to pci_sysdata
+  PCI: irqdomain: Look up IRQ domain by fwnode_handle
+  drivers:hv: Define the channel type for Hyper-V PCI Express
+    pass-through
+  PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
+
+ MAINTAINERS                    |    1 +
+ arch/x86/include/asm/msi.h     |    4 +
+ arch/x86/include/asm/pci.h     |   11 +
+ arch/x86/kernel/apic/msi.c     |    5 +-
+ arch/x86/kernel/apic/vector.c  |    2 +
+ drivers/hv/hv.c                |   20 +-
+ drivers/hv/hyperv_vmbus.h      |    2 +-
+ drivers/hv/vmbus_drv.c         |   17 +
+ drivers/pci/Kconfig            |    7 +
+ drivers/pci/host/Makefile      |    1 +
+ drivers/pci/host/hv_pcifront.c | 2267 ++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/msi.c              |    4 +
+ drivers/pci/probe.c            |   13 +
+ include/linux/hyperv.h         |   14 +
+ kernel/irq/chip.c              |    1 +
+ kernel/irq/irqdomain.c         |    2 +
+ 16 files changed, 2358 insertions(+), 13 deletions(-)
+ create mode 100644 drivers/pci/host/hv_pcifront.c
+
 -- 
-2.6.2
+1.9.1
 
