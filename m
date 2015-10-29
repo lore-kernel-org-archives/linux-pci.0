@@ -1,57 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:51708 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751346AbbJLMDX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Oct 2015 08:03:23 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Ley Foon Tan <lftan@altera.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+Received: from mail.kernel.org ([198.145.29.136]:38155 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756820AbbJ2XDU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 29 Oct 2015 19:03:20 -0400
+Date: Thu, 29 Oct 2015 18:03:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Wolfram Sang <wsa@the-dreams.de>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v8 3/6] pci:host: Add Altera PCIe host controller driver
-Date: Mon, 12 Oct 2015 14:03:04 +0200
-Message-ID: <7064179.1W3LTfFPxP@wuerfel>
-In-Reply-To: <20151009231540.GE16112@localhost>
-References: <1444297394-3122-1-git-send-email-lftan@altera.com> <CAFiDJ58oMa6rgQe_STCiWRpdL+P22BN1=Nin_+QnLXC9RGiSzQ@mail.gmail.com> <20151009231540.GE16112@localhost>
+	Simon Horman <horms@verge.net.au>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
+ instances
+Message-ID: <20151029230314.GA11994@localhost>
+References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
+ <20151029123755.GC2351@katana>
+ <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029163930.GC22218@katana>
+ <PS1PR06MB11804B39B09D6FCAA9B3D9DCF5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029184800.GB8992@katana>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151029184800.GB8992@katana>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 09 October 2015 18:15:40 Bjorn Helgaas wrote:
+[-cc Nobuhiro (bouncing)]
+
+On Thu, Oct 29, 2015 at 07:48:00PM +0100, Wolfram Sang wrote:
+> On Thu, Oct 29, 2015 at 04:44:06PM +0000, Phil Edworthy wrote:
+> > Hi Wolfram,
+> > 
+> > On 29 October 2015 16:40, Wolfram wrote:
+> > > > Ouch, my bad. I have been working with our out-of-tree BSP for the Salvator-X
+> > > board on
+> > > > http://git.kernel.org/cgit/linux/kernel/git/horms/renesas-bsp.git,  rcar-3.0.2
+> > > tag along
+> > > > with some patches from colleagues. I hadn't noticed this patch:
+> > > 
+> > > Thanks! Any plans for pushing this upstream? We will have the build error
+> > > otherwise...
+> > After some digging, that patch won't be accepted upstream. I'm looking into how the
+> > driver can be modified so it doesn't need to call this, but I don't expect a small or
+> > imminent fix.
 > 
-> I don't know if this should be a kernel taint, a simple warning in
-> dmesg, or what.  I guess the tainting mechanism is probably too
-> general-purpose for this, and add_taint() doesn't give any dmesg
-> indication.  We wouldn't see the taint unless the problem actually
-> caused an oops or panic.  In this case, I think I want a clue in dmesg
-> so we have a chance of seeing it even if there is no oops.  So
-> probably something like a dev_warn("non-compliant config accesses")
-> would work.
-> 
-> You really should double-check with the hardware guys, because it's
-> pretty obvious that the PCI spec requires 1- and 2-byte config
-> accesses to work correctly.  For example, if you read/modify/write to
-> update PCI_COMMAND, you will inadvertently clear the RW1C bits in
-> PCI_STATUS.
+> Yes, I'd think so, too. However, a fix for 4.4 would be needed to
+> prevent having a final release with a build error.
 
-Would it help to require a DT property here that flags the device
-as having a broken config space?
+I'm thinking I should drop my pci/host-rcar branch until we
+have a fix for this.  It currently contains:
 
-Then we could implement both in the driver, and only use the
-RMW based implementation if the firmware describes the device
-as "altera,broken-pci-config-space".
+  9ac724f20774 PCI: rcar: Fix I/O offset for multiple host bridges
+  7d75b413f5c6 PCI: rcar: Set root bus nr to that provided in DT
+  4c22eab88c68 PCI: rcar: Remove dependency on ARM-specific struct hw_pci
+  ef18d2e55ea0 PCI: rcar: Make PCI aware of the I/O resources
 
-	Arnd
+Is that right?  Last I heard, Linus expects to release v4.3 on Sunday,
+so we really don't have much time to sort this out.
+
+Bjorn
