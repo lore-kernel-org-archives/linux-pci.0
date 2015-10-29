@@ -1,173 +1,70 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Kwok, WingMan" <w-kwok2@ti.com>
-To: Mark Rutland <mark.rutland@arm.com>
-CC: "robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	KISHON VIJAY ABRAHAM <kishon@ti.com>,
-	"Quadros, Roger" <rogerq@ti.com>,
-	"Karicheri, Muralidharan" <m-karicheri2@ti.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"ssantosh@kernel.org" <ssantosh@kernel.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH 1/3] phy: keystone: serdes driver for gbe 10gbe and pcie
-Date: Tue, 13 Oct 2015 19:52:38 +0000
-Message-ID: <230CBA6E4B6B6B418E8730AC28E6FC7E0422898D@DFLE11.ent.ti.com>
-References: <1444759464-32299-1-git-send-email-w-kwok2@ti.com>
- <1444759464-32299-2-git-send-email-w-kwok2@ti.com>
- <20151013183327.GG24353@leverpostej>
-In-Reply-To: <20151013183327.GG24353@leverpostej>
-Content-Type: text/plain; charset="utf-8"
+Subject: [PATCH v2 2/7] PCI: Remove redundant validation of SR-IOV
+ offset/stride registers
+To: Alexander Duyck <aduyck@mirantis.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Ethan Zhao <ethan.zhao@oracle.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linux-kernel@vger.kernel.org
+Date: Thu, 29 Oct 2015 17:23:01 -0500
+Message-ID: <20151029222301.11908.97709.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTWFyayBSdXRsYW5kIFtt
-YWlsdG86bWFyay5ydXRsYW5kQGFybS5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIE9jdG9iZXIgMTMs
-IDIwMTUgMjozMyBQTQ0KPiBUbzogS3dvaywgV2luZ01hbg0KPiBDYzogcm9iaCtkdEBrZXJuZWwu
-b3JnOyBwYXdlbC5tb2xsQGFybS5jb207DQo+IGlqYytkZXZpY2V0cmVlQGhlbGxpb24ub3JnLnVr
-OyBnYWxha0Bjb2RlYXVyb3JhLm9yZzsgS0lTSE9OIFZJSkFZDQo+IEFCUkFIQU07IFF1YWRyb3Ms
-IFJvZ2VyOyBLYXJpY2hlcmksIE11cmFsaWRoYXJhbjsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsNCj4g
-c3NhbnRvc2hAa2VybmVsLm9yZzsgbGludXhAYXJtLmxpbnV4Lm9yZy51azsNCj4gZGV2aWNldHJl
-ZUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0K
-PiBwY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5v
-cmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAxLzNdIHBoeToga2V5c3RvbmU6IHNlcmRlcyBkcml2
-ZXIgZm9yIGdiZSAxMGdiZQ0KPiBhbmQgcGNpZQ0KPiANCj4gT24gVHVlLCBPY3QgMTMsIDIwMTUg
-YXQgMDI6MDQ6MjJQTSAtMDQwMCwgV2luZ01hbiBLd29rIHdyb3RlOg0KPiA+IE9uIFRJJ3MgS2V5
-c3RvbmUgcGxhdGZvcm1zLCBzZXZlcmFsIHBlcmlwaGVyYWxzIHN1Y2ggYXMgdGhlDQo+ID4gZ2Jl
-IGV0aGVybmV0IHN3aXRjaCwgMTBnYmUgZXRoZXJuZXQgc3dpdGNoIGFuZCBQQ0llIGNvbnRyb2xs
-ZXINCj4gPiByZXF1aXJlIHRoZSB1c2Ugb2YgYSBTZXJEZXMgZm9yIGNvbnZlcnRpbmcgU29DIHBh
-cmFsbGVsIGRhdGEgaW50bw0KPiA+IHNlcmlhbGl6ZWQgZGF0YSB0aGF0IGNhbiBiZSBvdXRwdXQg
-b3ZlciBhIGhpZ2gtc3BlZWQgZWxlY3RyaWNhbA0KPiA+IGludGVyZmFjZSwgYW5kIGFsc28gY29u
-dmVydGluZyBoaWdoLXNwZWVkIHNlcmlhbCBpbnB1dCBkYXRhDQo+ID4gaW50byBwYXJhbGxlbCBk
-YXRhIHRoYXQgY2FuIGJlIHByb2Nlc3NlZCBieSB0aGUgU29DLiAgVGhlDQo+ID4gU2VyRGVzZXMg
-dXNlZCBieSB0aG9zZSBwZXJpcGhlcmFscywgdGhvdWdoIHRoZXkgbWF5IGJlIGRpZmZlcmVudCwN
-Cj4gPiBhcmUgbGFyZ2VseSBzaW1pbGFyIGluIGZ1bmN0aW9uYWxpdHkgYW5kIHNldHVwLg0KPiA+
-DQo+ID4gVGhpcyBwYXRjaCBwcm92aWRlcyBhIFNlckRlcyBwaHkgZHJpdmVyIGltcGxlbWVudGF0
-aW9uIHRoYXQgY2FuIGJlDQo+ID4gdXNlZCBieSB0aGUgYWJvdmUgbWVudGlvbmVkIHBlcmlwaGVy
-YWwgZHJpdmVycyB0byBjb25maWd1cmUgdGhlaXINCj4gPiByZXNwZWN0aXZlIFNlckRlc2VzLg0K
-PiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogV2luZ01hbiBLd29rIDx3LWt3b2syQHRpLmNvbT4NCj4g
-PiAtLS0NCj4gPiAgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS90aS1waHku
-dHh0IHwgIDI1NiArKysNCj4gPiAgZHJpdmVycy9waHkvS2NvbmZpZyAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIHwgICAgOCArDQo+ID4gIGRyaXZlcnMvcGh5L01ha2VmaWxlICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICB8ICAgIDEgKw0KPiA+ICBkcml2ZXJzL3BoeS9waHkta2V5c3Rv
-bmUtc2VyZGVzLmMgICAgICAgICAgICAgICAgfCAyNDY1DQo+ICsrKysrKysrKysrKysrKysrKysr
-KysNCj4gPiAgNCBmaWxlcyBjaGFuZ2VkLCAyNzMwIGluc2VydGlvbnMoKykNCj4gPiAgY3JlYXRl
-IG1vZGUgMTAwNjQ0IGRyaXZlcnMvcGh5L3BoeS1rZXlzdG9uZS1zZXJkZXMuYw0KPiA+DQo+ID4g
-ZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9waHkvdGktcGh5
-LnR4dA0KPiBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9waHkvdGktcGh5LnR4
-dA0KPiA+IGluZGV4IDljZjk0NDYuLjIzMTcxNmUgMTAwNjQ0DQo+ID4gLS0tIGEvRG9jdW1lbnRh
-dGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS90aS1waHkudHh0DQo+ID4gKysrIGIvRG9jdW1l
-bnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS90aS1waHkudHh0DQo+ID4gQEAgLTExNSw0
-ICsxMTUsMjYwIEBAIHNhdGFfcGh5OiBwaHlANEEwOTYwMDAgew0KPiA+ICAJY2xvY2stbmFtZXMg
-PSAic3lzY2xrIiwgInJlZmNsayI7DQo+ID4gIAlzeXNjb24tcGxscmVzZXQgPSA8JnNjbV9jb25m
-IDB4M2ZjPjsNCj4gPiAgCSNwaHktY2VsbHMgPSA8MD47DQo+ID4gKw0KPiA+ICtUSSBLZXlzdG9u
-ZSBTZXJEZXMgUEhZDQo+ID4gKz09PT09PT09PT09PT09PT09PT09PT0NCj4gPiArDQo+ID4gK1Jl
-cXVpcmVkIHByb3BlcnRpZXM6DQo+ID4gKyAtIGNvbXBhdGlibGU6IHNob3VsZCBiZSBvbmUgb2YN
-Cj4gPiArCSogInRpLGtleXN0b25lLXNlcmRlcy1nYmUiDQo+ID4gKwkqICJ0aSxrZXlzdG9uZS1z
-ZXJkZXMteGdiZSINCj4gPiArCSogInRpLGtleXN0b25lLXNlcmRlcy1wY2llIg0KPiA+ICsgLSBy
-ZWc6DQo+ID4gKwkqIGJhc2UgYWRkcmVzcyBhbmQgbGVuZ3RoIG9mIHRoZSBTZXJEZXMgcmVnaXN0
-ZXIgc2V0DQo+ID4gKyAtIHJlZy1uYW1lczoNCj4gPiArCSogInJlZ19zZXJkZXMiDQo+ID4gKwkJ
-LSBuYW1lIG9mIHRoZSByZWcgU2VyRGVzIHJlZ2lzdGVyIHNldA0KPiANCj4gSnVzdCBkZXNjcmli
-ZSByZWcgaW4gdGVybXMgb2YgcmVnLW5hbWVzLCBhbmQgZG9uJ3QgYm90aGVyIHdpdGggdGhlDQo+
-ICJyZWdfIiBwcmVmaXgsIHdlIGtub3cgdGhpcyBpcyBhIHJlZyBlbnRyeToNCj4gDQo+IC0gcmVn
-OiBhIGxpc3Qgb2YgYWRkcmVzcyBhbmQgbGVuZ3RoIHBhaXJzLCBjb3JyZXNwb25kaW5nIHRvIGVu
-dGlyZXMgaW4NCj4gICByZWctbmFtZXMNCj4gDQo+IC0gcmVnLW5hbWVzOiBzaG91bGQgY29udGFp
-bjoNCj4gICAqICJzZXJkZXMiDQo+IA0KPiA+ICsgLSAjcGh5LWNlbGxzOg0KPiA+ICsJKiBGcm9t
-IHRoZSBnZW5lcmljIHBoeSBiaW5kaW5ncywgbXVzdCBiZSAwOw0KPiA+ICsgLSBtYXgtbGFuZXM6
-DQo+ID4gKwkqIE51bWJlciBvZiBsYW5lcyBpbiBTZXJEZXMuDQo+IA0KPiBXaHkgaXMgdGhpcyBu
-b3QgIm51bS1sYW5lcyI/IFdoeSBkbyB5b3UgZXZlbiBuZWVkIHRoaXM/DQo+IA0KDQp3aWxsIGNo
-YW5nZSB0byAibnVtLWxhbmVzIi4NCg0Kc2VyZGVzIG9uIGRpZmZlcmVudCBwZXJpcGhlcmFscyBo
-YXZlIGRpZmZlcmVudCBudW1iZXIgb2YNCmxhbmVzIGFuZCBlYWNoIGluZGl2aWR1YWwgbGFuZSBj
-YW4gYmUgZW5hYmxlZCBvciBkaXNhYmxlZC4NCg0KPiA+ICsgLSBwaHktdHlwZTogc2hvdWxkIGJl
-IG9uZSBvZg0KPiA+ICsJKiAic2dtaWkiDQo+ID4gKwkqICJ4Z2UiDQo+ID4gKwkqICJwY2llIg0K
-PiA+ICsNCj4gPiArT3B0aW9uYWwgcHJvcGVydGllczoNCj4gPiArIC0gc3lzY29uLXBlcmlwaGVy
-YWw6DQo+ID4gKwkqIEhhbmRsZSB0byB0aGUgc3Vic3lzdGVtIHJlZ2lzdGVyIHJlZ2lvbiBvZiB0
-aGUgcGVyaXBoZXJhbA0KPiA+ICsJICBpbnNpZGUgd2hpY2ggdGhlIFNlckRlcyBleGlzdHMuDQo+
-ID4gKyAtIHN5c2Nvbi1saW5rOg0KPiA+ICsJKiBIYW5kbGUgdG8gdGhlIExpbmsgcmVnaXN0ZXIg
-cmVnaW9uIG9mIHRoZSBwZXJpcGhlcmFsIGluc2lkZQ0KPiA+ICsJICB3aGljaCB0aGUgU2VyRGVz
-IGV4aXN0cy4gIEV4YW1wbGU6IGl0IGlzIHRoZSBQQ1NSIHJlZ2lzdGVyDQo+ID4gKwkgIHJlZ2lv
-biBpbiB0aGUgY2FzZSBvZiAxMGdiZS4NCj4gPiArIC0gcmVmY2xrLWtoejoNCj4gPiArCSogUmVm
-ZXJlbmNlIGNsb2NrIHJhdGUgb2YgU2VyRGVzIGluIGtIei4NCj4gDQo+IFN1cmVseSB0aGlzIHNo
-b3VsZCBiZSBhbiBhY3R1YWwgY2xvY2s/DQo+IA0KDQpvaywgdGhpcyBpcyBub3QgYWN0dWFsbHkg
-bmVlZGVkIGFuZCB3aWxsIHJlbW92ZQ0KDQo+ID4gKyAtIGxpbmstcmF0ZS1rYnBzOg0KPiA+ICsJ
-KiBTZXJEZXMgbGluayByYXRlIHRvIGJlIGNvbmZpZ3VyZWQsIGluIGticHMuDQo+IA0KPiBXaHkg
-ZG9lcyB0aGlzIG5lZWQgdG8gYmUgaW4gdGhlIGJpbmRpbmc/IEhvdyBkb2VzIG9uZSBkZXJpdmUg
-dGhlDQo+IGNvcnJlY3QNCj4gdmFsdWU/DQo+IA0KDQphIHNlcmRlcyBjYW4gYmUgY29uZmlndXJl
-ZCBhdCBkaWZmZXJlbnQgbGluayByYXRlcy4gIGZvciBleGFtcGxlLA0KdGhlIDEwZ2JlIHNlcmRl
-cyBjYW4gYmUgY29uZmlndXJlZCBhdCAxLjI1RyBsaW5rIHJhdGUgdG8gc3VwcG9ydA0KMWdiZSBv
-biB0aGUgMTBnYmUgc3dpdGNoLg0KDQo+ID4gKyAtIGNvbnRyb2wtcmF0ZToNCj4gPiArCSogTGFu
-ZSBjb250cm9sIHJhdGUNCj4gPiArCQkwOiBmdWxsIHJhdGUNCj4gPiArCQkxOiBoYWxmIHJhdGUN
-Cj4gPiArCQkyOiBxdWFydGVyIHJhdGUNCj4gDQo+IExpa2V3aXNlIG9uIGJvdGggcG9pbnRzLg0K
-DQp0aGUgc2VyZGVzIGlzIGEgZ2VuZXJpYyBoYXJkd2FyZSBibG9jayB0aGF0IG5lZWRzIHRvIGJl
-IGNvbmZpZ3VyZWQNCndpdGggdGhlIHByb3BlciBsaW5rLXJhdGUgYW5kIGxhbmUgY29udHJvbCBy
-YXRlLg0KDQo+IA0KPiA+ICsgLSByeC1zdGFydDoNCj4gPiArCSogSW5pdGlhbCBsYW5lIHJ4IGVx
-dWFsaXplciBhdHRlbnVhdGlvbiBhbmQgYm9vc3QgY29uZmlndXJhdGlvbnMuDQo+ID4gKwkqIE11
-c3QgYmUgYXJyYXkgb2YgMiBpbnRlZ2Vycy4NCj4gPiArIC0gcngtZm9yY2U6DQo+ID4gKwkqIEZv
-cmNlZCBsYW5lIHJ4IGVxdWFsaXplciBhdHRlbnVhdGlvbiBhbmQgYm9vc3QgY29uZmlndXJhdGlv
-bnMuDQo+ID4gKwkqIE11c3QgYmUgYXJyYXkgb2YgMiBpbnRlZ2Vycy4NCj4gPiArIC0gdHgtY29l
-ZmY6DQo+ID4gKwkqIExhbmUgYzEsIGMyLCBjbSwgYXR0ZW51YXRpb24gYW5kIHJlZ3VsYXRvciBv
-dXRwdXN0IHZvbHRhZ2UNCj4gPiArCSAgY29uZmlndXJhdGlvbnMuDQo+ID4gKwkqIE11c3QgYmUg
-YXJyYXkgb2YgNSBpbnRlZ2Vycy4NCj4gDQo+IHMvb3V0cHVzdC9vdXRwdXQvDQo+IA0KDQpvay4N
-Cg0KPiA+ICsgLSBkZWJ1ZzoNCj4gPiArCSogZW5hYmxlIG1vcmUgZGVidWcgbWVzc2FnZXMuDQo+
-IA0KPiBOQUsuDQo+IA0KPiBUaGlzIGlzIGEgZHJpdmVyIG9wdGlvbiwgYW5kIGJlbG9uZ3Mgb24g
-dGhlIGtlcm5lbCBjb21tYW5kIGxpbmUuIEl0DQo+IGRvZXMNCj4gbm90IGRlc2NyaWJlIHRoZSBo
-YXJkd2FyZSwgYW5kIGRvZXMgbm90IGJlbG9uZyBpbiB0aGUgRFQuDQo+IA0KDQp3aWxsIHJlbW92
-ZS4NCg0KPiA+ICtFeGFtcGxlIGZvciBLZXlzdG9uZSBLMkUgR0JFOg0KPiA+ICstLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+ICsNCj4gPiArZ2JlX3NlcmRlczA6IGdiZV9zZXJkZXNA
-MjMyYTAwMCB7DQo+ID4gKwkjcGh5LWNlbGxzCQk9IDwwPjsNCj4gPiArCWNvbXBhdGlibGUJCT0g
-InRpLGtleXN0b25lLXNlcmRlcy1nYmUiOw0KPiA+ICsJcmVnCQkJPSA8MHgwMjMyYTAwMCAweDIw
-MDA+Ow0KPiA+ICsJcmVnLW5hbWVzCQk9ICJyZWdfc2VyZGVzIjsNCj4gPiArCXJlZmNsay1raHoJ
-CT0gPDE1NjI1MD47DQo+ID4gKwlsaW5rLXJhdGUta2JwcwkJPSA8MTI1MDAwMD47DQo+ID4gKwlw
-aHktdHlwZQkJPSAic2dtaWkiOw0KPiA+ICsJbWF4LWxhbmVzCQk9IDw0PjsNCj4gPiArCWxhbmUw
-IHsNCj4gPiArCQljb250cm9sLXJhdGUJPSA8Mj47IC8qIHF1YXJ0ICovDQo+ID4gKwkJcngtc3Rh
-cnQJPSA8NyA1PjsNCj4gPiArCQlyeC1mb3JjZQk9IDwxIDE+Ow0KPiA+ICsJCXR4LWNvZWZmCT0g
-PDAgMCAwIDEyIDQ+Ow0KPiA+ICsJCSAgICAgICAvKiBjMSBjMiBjbSBhdHQgdnJlZyAqLw0KPiA+
-ICsJfTsNCj4gPiArCWxhbmUxIHsNCj4gPiArCQljb250cm9sLXJhdGUJPSA8Mj47IC8qIHF1YXJ0
-ICovDQo+ID4gKwkJcngtc3RhcnQJPSA8NyA1PjsNCj4gPiArCQlyeC1mb3JjZQk9IDwxIDE+Ow0K
-PiA+ICsJCXR4LWNvZWZmCT0gPDAgMCAwIDEyIDQ+Ow0KPiA+ICsJCSAgICAgICAvKiBjMSBjMiBj
-bSBhdHQgdnJlZyAqLw0KPiA+ICsJfTsNCj4gDQo+IFRoZSBiaW5kaW5nIGRpZG4ndCBkZXNjcmli
-ZSB0aGUgc3ViLW5vZGVzLCBhbmQgd2hpY2ggcHJvcGVydGllcyBiZWxvbmcNCj4gdG8gdGhlbS4N
-Cj4gDQoNCndpbGwgYWRkIGRlc2NyaXB0aW9ucyBmb3IgbGFuZSBub2Rlcw0KDQo+IERvbid0IHVz
-ZSBtYWdpYyBuYW1lcy4gRGVmaW5lIGEgbmV3IGFkZHJlc3Mgc3BhY2UsIGFuZCB1c2UgcmVnIHRv
-DQo+IGlkZW50aWZ5IGxhbmVzLg0KPiANCg0Kd2lsbCB1cGRhdGUgdG8gdGhlIGZvbGxvd2luZw0K
-DQpsYW5lcyB7DQoJbGFuZUAwIHsNCgkJcmVnID0gPDA+Ow0KCQkuLi4NCgl9Ow0KDQoJbGFuZUAx
-IHsNCgkJcmVnID0gPDE+Ow0KCQkuLi4JDQoJfTsNCn07DQoNCg0KPiA+ICsJaWYgKG9mX2ZpbmRf
-cHJvcGVydHkobnAsICJkaXNhYmxlIiwgTlVMTCkpDQo+ID4gKwkJbGMtPmVuYWJsZSA9IDA7DQo+
-ID4gKwllbHNlDQo+ID4gKwkJbGMtPmVuYWJsZSA9IDE7DQo+IA0KPiBUaGlzIHdhcyBub3QgZGVz
-Y3JpYmVkIGluIHRoZSBiaW5kaW5nLCBhbmQgdXNlcyB0aGUgd3JvbmcgYWNjZXNzb3IuDQo+IFdo
-YXQNCj4gaXMgdGhpcyBmb3I/DQoNCmFmdGVyIHRoZSBhYm92ZSBtZW50aW9uZWQgdXBkYXRlLCB0
-aGlzIHdpbGwgYmVjb21lOiBzdGF0dXMgPSAiZGlzYWJsZWQvb2siLg0KPiANCj4gPiArCWlmIChv
-Zl9maW5kX3Byb3BlcnR5KG5wLCAibG9vcGJhY2siLCBOVUxMKSkNCj4gPiArCQlsYy0+bG9vcGJh
-Y2sgPSAxOw0KPiA+ICsJZWxzZQ0KPiA+ICsJCWxjLT5sb29wYmFjayA9IDA7DQo+IA0KPiBMaWtl
-d2lzZS4NCg0Kd2lsbCBhZGQgZG9jdW1lbnRhdGlvbg0KDQo+IA0KPiA+ICsJaWYgKG9mX3Byb3Bl
-cnR5X3JlYWRfYm9vbChucCwgInN5c2Nvbi1wZXJpcGhlcmFsIikpIHsNCj4gPiArCQlzYy0+cGVy
-aXBoZXJhbF9yZWdtYXAgPQ0KPiA+ICsJCQlzeXNjb25fcmVnbWFwX2xvb2t1cF9ieV9waGFuZGxl
-KG5wLA0KPiA+ICsJCQkJCQkJInN5c2Nvbi1wZXJpcGhlcmFsIik7DQo+IA0KPiBDYW4ndCB5b3Ug
-YWx3YXlzIGNhbGwgc3lzY29uX3JlZ21hcF9sb29rdXBfYnlfcGhhbmRsZSwgdGhlbiBjaGVjayB0
-aGUNCj4gcmV0dXJuIHZhbHVlIHRvIHNlZSBpZiB0aGUgcHJvcGVydHkgZXhpc3RlZD8NCj4gDQo+
-IFlvdSBjbGVhcmx5IGtub3cgdGhhdCBvZl9wcm9wZXJ0eV9yZWFkX2Jvb2wgZXhpc3RzLCB3aHkg
-ZGlkIHlvdSBub3QNCj4gdXNlDQo+IGl0IHRvIHJlYWQgcHJvcGVydGllcyB3aGljaCBhcmUgYm9v
-bGVhbj8NCj4gDQoNCm9rLg0KDQo+ID4gKwlpZiAob2ZfcHJvcGVydHlfcmVhZF9ib29sKG5wLCAi
-c3lzY29uLWxpbmsiKSkgew0KPiA+ICsJCXNjLT5wY3NyX3JlZ21hcCA9DQo+ID4gKwkJCXN5c2Nv
-bl9yZWdtYXBfbG9va3VwX2J5X3BoYW5kbGUobnAsICJzeXNjb24tbGluayIpOw0KPiANCj4gTGlr
-ZXdpc2UuDQo+IA0KDQpvay4NCg0KPiA+ICsJc2MtPmRlYnVnID0gb2ZfcHJvcGVydHlfcmVhZF9i
-b29sKG5wLCAiZGVidWciKTsNCj4gDQo+IEFzIHN0YXRlZCBhYm92ZSwgTkFLIGZvciB0aGlzIHBy
-b3BlcnR5Lg0KPiANCiANCndpbGwgcmVtb3ZlLg0KDQo+ID4gKw0KPiA+ICsJaWYgKG9mX2ZpbmRf
-cHJvcGVydHkobnAsICJyeC1mb3JjZS1lbmFibGUiLCBOVUxMKSkNCj4gPiArCQlzYy0+cnhfZm9y
-Y2VfZW5hYmxlID0gMTsNCj4gPiArCWVsc2UJDQo+ID4gKwkJc2MtPnJ4X2ZvcmNlX2VuYWJsZSA9
-IDA7DQo+IA0KPiBOb3QgaW4gdGhlIGJpbmRpbmcsIGFuZCB1c2VzIHRoZSB3cm9uZyBhY2Nlc3Nv
-ci4NCj4gDQoNCm9rLiB3aWxsIHVwZGF0ZSB0aGUgYmluZGluZyBhbmQgY2hhbmdlIG9mX2ZpbmRf
-cHJvcGVydHkgdG8NCm9mX3Byb3BlcnR5X3JlYWRfYm9vbC4NCg0KPiA+ICsNCj4gPiArCWZvciAo
-aSA9IDA7IGkgPCBzYy0+bGFuZXM7IGkrKykgew0KPiA+ICsJCXNwcmludGYoJm5hbWVbNF0sICIl
-ZCIsIGkpOw0KPiA+ICsJCWxwID0gb2ZfZmluZF9ub2RlX2J5X25hbWUobnAsIG5hbWUpOw0KPiA+
-ICsJCWlmIChscCkgew0KPiA+ICsJCQlpZiAoa3NlcmRlc19nZXRfbGFuZV9iaW5kaW5ncyhkZXYs
-IGxwLCAmc2MtPmxhbmVbaV0pKQ0KPiA+ICsJCQkJcmV0dXJuIC1FSU5WQUw7DQo+ID4gKwkJfQ0K
-PiA+ICsJfQ0KPiANCj4gQXMgYWJvdmUsIHVzZSByZWcsIG5vdCBtYWdpYyBuYW1lcy4NCg0Kb2su
-DQoNClRoYW5rcywNCldpbmdNYW4NCg==
+From: Alexander Duyck <aduyck@mirantis.com>
+
+Previously, we read, validated, and cached PCI_SRIOV_VF_OFFSET and
+PCI_SRIOV_VF_STRIDE in sriov_enable().  But sriov_init() now does
+that via compute_max_vf_buses(), so we don't need to do it again.
+
+Remove the PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE config reads from
+sriov_enable().  The pci_sriov structure already contains the offset and
+stride corresponding to the current NumVFs.
+
+[bhelgaas: split to separate patch for reviewability]
+Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c |   10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 1b1acc2..ca400a9 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -235,7 +235,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	int rc;
+ 	int i, j;
+ 	int nres;
+-	u16 offset, stride, initial;
++	u16 initial;
+ 	struct resource *res;
+ 	struct pci_dev *pdev;
+ 	struct pci_sriov *iov = dev->sriov;
+@@ -258,11 +258,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	    (!(iov->cap & PCI_SRIOV_CAP_VFM) && (nr_virtfn > initial)))
+ 		return -EINVAL;
+ 
+-	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &offset);
+-	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &stride);
+-	if (!offset || (nr_virtfn > 1 && !stride))
+-		return -EIO;
+-
+ 	nres = 0;
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		bars |= (1 << (i + PCI_IOV_RESOURCES));
+@@ -275,9 +270,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 		return -ENOMEM;
+ 	}
+ 
+-	iov->offset = offset;
+-	iov->stride = stride;
+-
+ 	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+ 	if (bus > dev->bus->busn_res.end) {
+ 		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
+
