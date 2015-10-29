@@ -1,77 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46233 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751178AbbJLI5h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 12 Oct 2015 04:57:37 -0400
-Date: Mon, 12 Oct 2015 09:57:35 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 29 Oct 2015 16:13:25 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: David Daney <ddaney.cavm@gmail.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Jon Medhurst <tixy@linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 2/5] PCI: Add quirk for PLDA's XpressRICH3 host bridge
- class.
-Message-ID: <20151012085735.GJ3394@e106497-lin.cambridge.arm.com>
-References: <1444409849-5685-1-git-send-email-Liviu.Dudau@arm.com>
- <1444409849-5685-3-git-send-email-Liviu.Dudau@arm.com>
- <7335872.olmykfZgj7@wuerfel>
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>, yinghai@kernel.org,
+	rajatxjain@gmail.com, gong.chen@linux.intel.com,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v6 1/5] PCI: Handle IORESOURCE_PCI_FIXED when sizing
+ resources.
+Message-ID: <20151029211325.GB921@localhost>
+References: <1445382282-2396-1-git-send-email-ddaney.cavm@gmail.com>
+ <1445382282-2396-2-git-send-email-ddaney.cavm@gmail.com>
+ <56328826.2020406@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <7335872.olmykfZgj7@wuerfel>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56328826.2020406@caviumnetworks.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 09, 2015 at 08:32:07PM +0200, Arnd Bergmann wrote:
-> On Friday 09 October 2015 17:57:26 Liviu Dudau wrote:
-> > +/*
-> > + * The PLDA's XpressRICH3 doesn't describe itself as a bridge. This is required
-> > + * for correct/normal enumeration.
-> > + */
-> > +static void xr3pci_quirk_class(struct pci_dev *pdev)
-> > +{
-> > +       pdev->class = PCI_CLASS_BRIDGE_PCI << 8;
-> > +}
-> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_PLDA, PCI_DEVICE_ID_XR3PCI, xr3pci_quirk_class);
-> > 
+On Thu, Oct 29, 2015 at 01:57:10PM -0700, David Daney wrote:
+> Bjorn,
 > 
-> Are you sure that this device ID is only used for the host bridge, not
-> for related devices in endpoint mode?
-
-I would hope so. The device ID has been assigned to ARM's implementation by PLDA,
-it would be logical not to be reused for anyone else's.
-
+> A small snafu...
 > 
-> While we don't support PCIe endpoint drivers at the moment, it might
-> happen at some point and then things break when someone tries to
-> plug a machine with this ID into a Linux host.
-
-I'm asking for confirmation inside ARM that the IDs are uniquely allocated to Juno
-and will come back when I'll get confirmation.
-
-Best regards,
-Liviu
-
+> On 10/20/2015 04:04 PM, David Daney wrote:
+> >From: David Daney <david.daney@cavium.com>
+> >
+> >The new Enhanced Allocation (EA) capability support (patches to
+> >follow) creates resources with the IORESOURCE_PCI_FIXED set. Since
+> >these resources cannot be relocated or resized, their alignment is not
+> >really defined, and it is therefore not specified.  This causes a
+> >problem in pbus_size_mem() where resources with unspecified alignment
+> >are disabled.
+> >
+> >So, in pbus_size_mem() skip IORESOURCE_PCI_FIXED resources, instead of
+> >disabling them.
+> >
+> >Acked-by: Sean O. Stalley <sean.stalley@intel.com>
+> >Signed-off-by: David Daney <david.daney@cavium.com>
+> >---
+> >  drivers/pci/setup-bus.c | 7 ++++---
+> >  1 file changed, 4 insertions(+), 3 deletions(-)
+> >
+> >diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> >index 508cc56..4dfef10 100644
+> >--- a/drivers/pci/setup-bus.c
+> >+++ b/drivers/pci/setup-bus.c
+> >@@ -1037,9 +1037,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+> >  			struct resource *r = &dev->resource[i];
+> >  			resource_size_t r_size;
+> >
+> >-			if (r->parent || ((r->flags & mask) != type &&
+> >-					  (r->flags & mask) != type2 &&
+> >-					  (r->flags & mask) != type3))
+> >+			if (r->parent || (r->flags | IORESOURCE_PCI_FIXED) ||
 > 
-> 	Arnd
+> Should be:
 > 
+>   r->flags & IORESOURCE_PCI_FIXED
+> 
+> With the erroneous '|', sizing of bridge resources can break.
+> 
+> Q:  How to fix this.
+> 
+>   A) Replace this patch entirely?
+> 
+>   B) A patch on top of this one?
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+No problem, I fixed it and repushed the pci/enhanced-allocation branch:
+
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/enhanced-allocation
