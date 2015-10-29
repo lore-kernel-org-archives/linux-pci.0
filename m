@@ -1,165 +1,123 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v3 0/2] Common SerDes driver for TI's Keystone Platforms
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>
-References: <1445432201-16007-1-git-send-email-w-kwok2@ti.com>
- <56295B9E.9030201@ti.com>
- <CAPw-ZTk1vJA3YSwLHBNMYP0t5k2tW0HTKse+37rL8izWN33y-w@mail.gmail.com>
- <3702663.07h6YO0UjY@wuerfel> <20151023144631.GZ32532@n2100.arm.linux.org.uk>
-CC: Loc Ho <lho@apm.com>, Murali Karicheri <m-karicheri2@ti.com>,
-	WingMan Kwok <w-kwok2@ti.com>,
-	Rob Herring <robh+dt@kernel.org>, <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>, <rogerq@ti.com>, <bhelgaas@google.com>,
-	<ssantosh@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <562A81F8.1060608@ti.com>
-Date: Sat, 24 Oct 2015 00:22:40 +0530
-MIME-Version: 1.0
-In-Reply-To: <20151023144631.GZ32532@n2100.arm.linux.org.uk>
-Content-Type: text/plain; charset="windows-1252"
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	jiang.liu@linux.intel.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v4 2/7] drivers:hv: Export hv_do_hypercall()
+Date: Thu, 29 Oct 2015 23:46:11 +0000
+Message-Id: <1446162376-43419-3-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
+References: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: Jake Oshins <jakeo@microsoft.com>
 
-On Friday 23 October 2015 08:16 PM, Russell King - ARM Linux wrote:
-> On Fri, Oct 23, 2015 at 11:17:06AM +0200, Arnd Bergmann wrote:
->> On Thursday 22 October 2015 15:27:05 Loc Ho wrote:
->>>>
->>>> phy-xgene.c
->>>> -----------
->>>>
->>>> Looking at other drivers under drivers/phy, I could find phy-xgene.c which
->>>> is close Keystone SerDes driver (. This is called APM X-Gene Multi-Purpose
->>>> PHY driver. It defines following mode per the driver code
->>>>
->>>>         MODE_SATA       = 0,    /* List them for simple reference */
->>>>         MODE_SGMII      = 1,
->>>>         MODE_PCIE       = 2,
->>>>         MODE_USB        = 3,
->>>>         MODE_XFI        = 4,
->>>>
->>>> But seems to support only MODE_SATA. From the code, it appears, this driver
->>>> is expected to be enhanced in the future to support additional modes. I have
->>>> copied the author to this email to participate in this discussion.
->>>
->>> Let me comment on this APM X-Gene driver. This driver is dead and
->>> won't be supported in near or foreseeable future. And someday, it will
->>> be ripped out. Based on experience, this solution (having PHY driver
->>> in Linux) can't be supported across boards and etc as it is just too
->>> much maintenance. And therefore, we followed Arnd B guidance and move
->>> all this into the boot loader. From Linux or OS perspective, it only
->>> cares about the interface in which its interface with. This is just
->>> your reference and may be this will help you as well.
->>
->> This depends a lot on the use case. If the chip is only used on server
->> parts that have a real firmware and you can deliver bug fixes for the
->> firmware if necessary, it's always best to do as much of the setup as
->> possible there, and let Linux see a simplified view of the hardware.
->>
->> However, for embedded systems that tend to ship with a minimal binary
->> bootloader and no way to update that as an end-user, we rely on Linux
->> to know about all the hardware that requires some form of setup, which
->> is why we have all sorts of drivers and frameworks in the kernel that
->> a server can easily ignore.
->>
->> While keystone can show up in servers that won't use this driver, my
->> impression is that its main market is actually in embedded space.
-> 
-> That's an interesting point of view - especially as you can't make the
-> argument that Marvell Armada chips would ever be anything but the
-> embedded space, but we're so far getting away with having the serdes
-> setup in u-boot - and even Marvell's BSP doesn't have it in the kernel.
-> 
-> The real question here is:
-> 
->   Why would we want to statically setup serdes links in the kernel
->   according to the DTB, rather than having the boot loader set them up?
+This patch exposes the function that hv_vmbus.ko uses to make hypercalls. This
+is necessary for retargeting an interrupt when it is given a new affinity and
+vector.
 
-Lot of PHYs have HW configure the parameters with default values so the
-driver really doesn't have to touch them (like programming the equalizer
-and the various digital mode configuration and analog mode
-configuration). Then the SW just has to take care of clock programming
-and powering on/off the PHY.
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/hv.c           | 20 ++++++++++----------
+ drivers/hv/hyperv_vmbus.h |  2 +-
+ include/linux/hyperv.h    |  1 +
+ 3 files changed, 12 insertions(+), 11 deletions(-)
 
-Some platforms require the controller core be in reset before powering
-on the PHY, so we can't have all the configurations done in bootloader
-for all the platforms.
+diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
+index 6341be8..7a06933 100644
+--- a/drivers/hv/hv.c
++++ b/drivers/hv/hv.c
+@@ -89,9 +89,9 @@ static int query_hypervisor_info(void)
+ }
+ 
+ /*
+- * do_hypercall- Invoke the specified hypercall
++ * hv_do_hypercall- Invoke the specified hypercall
+  */
+-static u64 do_hypercall(u64 control, void *input, void *output)
++u64 hv_do_hypercall(u64 control, void *input, void *output)
+ {
+ 	u64 input_address = (input) ? virt_to_phys(input) : 0;
+ 	u64 output_address = (output) ? virt_to_phys(output) : 0;
+@@ -132,6 +132,7 @@ static u64 do_hypercall(u64 control, void *input, void *output)
+ 	return hv_status_lo | ((u64)hv_status_hi << 32);
+ #endif /* !x86_64 */
+ }
++EXPORT_SYMBOL_GPL(hv_do_hypercall);
+ 
+ #ifdef CONFIG_X86_64
+ static cycle_t read_hv_clock_tsc(struct clocksource *arg)
+@@ -315,7 +316,7 @@ int hv_post_message(union hv_connection_id connection_id,
+ {
+ 
+ 	struct hv_input_post_message *aligned_msg;
+-	u16 status;
++	u64 status;
+ 
+ 	if (payload_size > HV_MESSAGE_PAYLOAD_BYTE_COUNT)
+ 		return -EMSGSIZE;
+@@ -329,11 +330,10 @@ int hv_post_message(union hv_connection_id connection_id,
+ 	aligned_msg->payload_size = payload_size;
+ 	memcpy((void *)aligned_msg->payload, payload, payload_size);
+ 
+-	status = do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL)
+-		& 0xFFFF;
++	status = hv_do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL);
+ 
+ 	put_cpu();
+-	return status;
++	return status & 0xFFFF;
+ }
+ 
+ 
+@@ -343,13 +343,13 @@ int hv_post_message(union hv_connection_id connection_id,
+  *
+  * This involves a hypercall.
+  */
+-u16 hv_signal_event(void *con_id)
++int hv_signal_event(void *con_id)
+ {
+-	u16 status;
++	u64 status;
+ 
+-	status = (do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL) & 0xFFFF);
++	status = hv_do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL);
+ 
+-	return status;
++	return status & 0xFFFF;
+ }
+ 
+ static int hv_ce_set_next_event(unsigned long delta,
+diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
+index 3d70e36..18c66fc 100644
+--- a/drivers/hv/hyperv_vmbus.h
++++ b/drivers/hv/hyperv_vmbus.h
+@@ -587,7 +587,7 @@ extern int hv_post_message(union hv_connection_id connection_id,
+ 			 enum hv_message_type message_type,
+ 			 void *payload, size_t payload_size);
+ 
+-extern u16 hv_signal_event(void *con_id);
++extern int hv_signal_event(void *con_id);
+ 
+ extern int hv_synic_alloc(void);
+ 
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index 02393b6..ea0a0e3 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -983,6 +983,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			bool fb_overlap_ok);
+ 
+ int vmbus_cpu_number_to_vp_number(int cpu_number);
++u64 hv_do_hypercall(u64 control, void *input, void *output);
+ 
+ /**
+  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
+-- 
+1.9.1
 
-The problem w.r.t code size starts when the drivers starts to configure
-the analog and digital components inside the PHY (like equalizer,
-attenuation etc..).
-
-While performing all these configurations in bootloader will help reduce
-the code size, as Arnd pointed out, it'll cause problems if the PHY
-loses the contents after a suspend/resume cycle.
-> 
-> For the most part, the choice between the serdes modes is fairly static,
-> depending on the board wiring.  You wouldn't ever want to configure a
-> mini-PCIe socket for gigabit ethernet.
-> 
-> However, there are cases when you would want to change it, and I'm
-> aware of these cases:
-> 
-> * Serdes routed to a mini-PCIe socket, which is compatible with mSATA.
->   There's an argument here to allow the serdes link to be switched at
->   runtime between PCIe and mSATA.  However, the card type can't be
->   detected at run time, so this would have to be a manual configuration
->   change by the user.
-> 
->   Since mini-PCIe is not hot-pluggable, this configuration isn't
->   something that could be changed without powering the system down.
-> 
-> * Serdes routed to a SFP cage, where the serdes link is configured
->   for gigabit (or faster for SFP+) ethernet.  For gigabit only, serdes
->   is configured in either 1000base-X or Cisco SGMII mode (SGMII is a
->   non-802.3 modification to 1000base-X) depending on the type of
->   transceiver plugged in.
-> 
->   Arguably, there's a third option here, which is SATA as well -  I'm
->   aware of one non-standard SFP module on the market which provides a
->   SATA connector, but this is highly non-standard, is not covered by
->   the SFP specifications, so such a switch to this mode would have to
->   be done manually.
-> 
-> The difference between 1000base-X vs SGMII is to do with the generation
-> and interpretation of a 16-bit configuration word passed across the
-> link.  Otherwise, the two are identical - and so far I've seen the
-> configuration word mode is determined by the ethernet block rather than
-> the serdes block.
-> 
-> My argument would be that even in the case of the last paragraph,
-> normal use for serdes reconfiguration would be a power cycle, even in
-> the embedded environment.
-> 
-> Now, that all said, it looks to me like TI's serdes implementation can't
-> be switched between different modes - it's statically configured to
-> whatever the DTB says it should be.
-> 
-> So, this brings up the obvious question: why do we need to support
-> serdes configuration in the kernel rather than statically in the boot
-> loader according to the board setup?
-> 
-> Specifically on this patch series, I think that if we're going to have
-> code doing serdes configuration in the kernel, we need to come up with
-> a common set of DT properties for it, rather than having everyone doing
-> their own thing.  I'd also like to see the code shrink in size - it
-> doesn't do anything beyond configuring the hardware for the settings
-> that DTB tells it to, so why it has to be 2.5k lines I've no idea.
-> 
-> There's some specific comments I have about it using readl/writel, and
-> its wrapping of those, which IMHO it shouldn't be doing, and the horrid
-> for loops (what's wrong with the standard Linux way of defining a
-> for_each_xxx() operator and leaving the body at the callsite?)
-
-+1
-
-Thanks
-Kishon
