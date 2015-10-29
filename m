@@ -1,50 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.w1.samsung.com ([210.118.77.14]:39229 "EHLO
-	mailout4.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753730AbbJHHYf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 03:24:35 -0400
-From: Pavel Fedin <p.fedin@samsung.com>
-To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Cc: Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: [PATCH v2 2/2] PCI: of: Ignore resources with failed translation
-Date: Thu, 08 Oct 2015 10:24:26 +0300
-Message-id: <3604931244806840dd12ff9663671b52d2acd951.1444288748.git.p.fedin@samsung.com>
-In-reply-to: <cover.1444288748.git.p.fedin@samsung.com>
-References: <cover.1444288748.git.p.fedin@samsung.com>
-In-reply-to: <cover.1444288748.git.p.fedin@samsung.com>
-References: <cover.1444288748.git.p.fedin@samsung.com>
+Received: from mail.kernel.org ([198.145.29.136]:42492 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752101AbbJ2Xyt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 29 Oct 2015 19:54:49 -0400
+Date: Thu, 29 Oct 2015 18:54:44 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Sasha Levin <sasha.levin@oracle.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Subject: [GIT PULL] PCI fixes for v4.3
+Message-ID: <20151029235444.GC11994@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch allows PCI host controller to function even if part of resources
-is unusable for some reason. An example is non-LPAE kernel on a machine
-which has some 64-bit resources. Unusable resources will be just skipped
-instead of a complete failure.
+Hi Linus,
 
-Signed-off-by: Pavel Fedin <p.fedin@samsung.com>
----
- drivers/of/of_pci.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Sorry for this last-minute update; it's been in -next for quite a while,
+but I forgot about it until I started getting ready for the merge window.
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 5751dc5..ea7c2b6 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -223,8 +223,10 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
- 		}
- 
- 		err = of_pci_range_to_resource(&range, dev, res);
--		if (err)
--			goto conversion_failed;
-+		if (err) {
-+			kfree(res);
-+			continue;
-+		}
- 
- 		if (resource_type(res) == IORESOURCE_IO) {
- 			if (!io_base) {
--- 
-2.4.4
+It's small and fixes a way a user could cause a panic via sysfs, so I think
+it's worth getting it in v4.3.
 
+Bjorn
+
+
+The following changes since commit de24c18c0faca5ebd618e1cb87f5489745e40475:
+
+  PCI: rcar: Add R8A7794 support (2015-09-24 17:06:32 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.3-fixes-2
+
+for you to fetch changes up to 1266963170f576d4d08e6310b6963e26d3ff9d1e:
+
+  PCI: Prevent out of bounds access in numa_node override (2015-10-07 11:03:28 -0500)
+
+----------------------------------------------------------------
+PCI update for v4.3:
+
+  NUMA
+    - Prevent out of bounds access in sysfs numa_node override (Sasha Levin)
+
+----------------------------------------------------------------
+Sasha Levin (1):
+      PCI: Prevent out of bounds access in numa_node override
+
+ drivers/pci/pci-sysfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
