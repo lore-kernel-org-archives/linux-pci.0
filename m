@@ -1,55 +1,112 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <561FFB4C.1000500@redhat.com>
-Date: Thu, 15 Oct 2015 15:15:24 -0400
-From: Jon Masters <jcm@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:34970 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962AbbJ2D3g (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2015 23:29:36 -0400
+Received: by pasz6 with SMTP id z6so26317710pas.2
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2015 20:29:34 -0700 (PDT)
+From: Daniel Axtens <dja@axtens.net>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: Re: [PATCH V10 05/12] powerpc/eeh: Cache only BARs, not windows or IOV BARs
+In-Reply-To: <1445829362-2738-6-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com> <1445829362-2738-6-git-send-email-weiyang@linux.vnet.ibm.com>
+Date: Thu, 29 Oct 2015 14:29:19 +1100
+Message-ID: <87h9lapd2o.fsf@gamma.ozlabs.ibm.com>
 MIME-Version: 1.0
-To: Hanjun Guo <hanjun.guo@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-kernel@vger.kernel.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	linux-acpi@vger.kernel.org,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Salter <msalter@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 00/11] ARM64 PCI hostbridge init based on ACPI
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
-In-Reply-To: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha512; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Hanjun,
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for your hard work on ARM64 PCI host bridge/root complex so far!
+Wei Yang <weiyang@linux.vnet.ibm.com> writes:
 
-On 05/26/2015 08:49 AM, Hanjun Guo wrote:
-> This patch set is introducing ARM64 PCI hostbridge init based on ACPI,
-> which based on Jiang Liu's patch set "Consolidate ACPI PCI root common
-> code into ACPI core":
-> 
-> https://lkml.org/lkml/2015/5/14/98
+> EEH address cache, which helps to locate the PCI device according to
+> the given (physical) MMIO address, didn't cover PCI bridges. Also, it
+> shouldn't return PF with address in PF's IOV BARs. Instead, the VFs
+> should be returned.
+>
+> Also, by doing so, it removes the type check in
+> eeh_addr_cache_insert_dev(), since bridge's window would not be cached.
+>
+> The patch restricts the address cache to cover first 7 BARs for the
+> above purposes.
+If I've understoond the patch correctly, I think you want to swap the
+last two paragraphs in the commit message:
 
-The latest version (v7) of the ACPI PCI root common code consolidation
-series was posted by Gerry (Jiang Liu) yesterday:
+"Restrict the address cache to cover the first 7 BARs...
 
-https://lkml.kernel.org/g/1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com
+Since the window of a bridge will now not be cached, remove the type
+check..."
 
-This got me wondering what the status is of the ARM64 specific
-hostbridge patch series that has a dependency upon the former. Are you
-planning to wait for that series to be accepted or post a newer rebased
-version for additional review, or something else?
+With regards to the actual patch, I have now got access to the PCI and
+SR-IOV specs, but I'm still getting to grips with it all so let me know
+if something I say doesn't make sense.
 
-Thanks very much in advance! :)
+Here, you restrict the enumeration of resources to the standard and
+extension ROM resources (the first 7), which excludes enumeration of
+VF resources. That much I understand.
 
-Jon.
+I'm having more trouble convincing myself that it's safe or desirable to
+drop the test for bridges. I think I understand that the change to the
+for loop means it _should_ be safe, but is there any motivation for the
+change other than making the code more straightforward?
 
+>  	/* Walk resources on this device, poke them into the tree *
+This comment probably needs to be made more descriptive given the change.
+> -	for (i =3D 0; i < DEVICE_COUNT_RESOURCE; i++) {
+> +	for (i =3D 0; i <=3D PCI_ROM_RESOURCE; i++) {
+>  		resource_size_t start =3D pci_resource_start(dev,i);
+>  		resource_size_t end =3D pci_resource_end(dev,i);
+>  		unsigned long flags =3D pci_resource_flags(dev,i);
+> @@ -222,10 +222,6 @@ void eeh_addr_cache_insert_dev(struct pci_dev *dev)
+>  {
+
+Regards,
+Daniel
+
+>  	unsigned long flags;
+>=20=20
+> -	/* Ignore PCI bridges */
+> -	if ((dev->class >> 16) =3D=3D PCI_BASE_CLASS_BRIDGE)
+> -		return;
+> -
+>  	spin_lock_irqsave(&pci_io_addr_cache_root.piar_lock, flags);
+>  	__eeh_addr_cache_insert_dev(dev);
+>  	spin_unlock_irqrestore(&pci_io_addr_cache_root.piar_lock, flags);
+> --=20
+> 2.5.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: GPGTools - https://gpgtools.org
+
+iQIcBAEBCgAGBQJWMZKPAAoJEPC3R3P2I92F4yUP/2+LVfLEulfsQFlu8wYybzFB
+Ql7EBUTmS0jLABLiEstd5vbQCtMIwZeqDkeKYyJwXC0AqNBK2QjIRGviTS/VdK6l
+9SFMfiefVUPd/kKCHTNCSP3ZCTbPNWZHqxuyfrDIsTO9rRnKWRBrxBWs/jDk3Ids
+BZ4JZuEt3i6sgEwnivnD6sMIO7ZqIghVHG9cutIKWxCi/H8weO2UZwtaalySCQ2h
+98WR91l2/kz/wH0Q49tVxijcaqx0+m8IAzxTFBismTGh00uikW3REm1euIfrqZSs
+KXmpPZSWJPjPj0JjIuZFE73XJnbTlNBIA7x/pUC0a0SaSVRb5irk+EzpHlCTGPvx
+zi98ugS842la+I2mx7x8IxQVNkPMBcnY669XrZOvaJM+fDg2M0n/tbWXuf3m2gJ8
+kRVN7rBiSE59wr9g585KE/YZBQ6S1R7apX2Ha3f9Ze+StvrQ1DkVSHwh+Qq0HBli
+fAzgbbpxu1+wW4l10R9a3RNsDB5nx5mCAZRPPlNSqgj4rY4M10CjGIDZEXdv+HCL
+tYXQr1KZtz3ORB35OlUMDg6fkkWr5cBJ1Oq6Cw9Pjcqesqw0w+FeslXzHbs06jKe
+sPV2z2a/xl0uJ1PgSOx+5UV+UjpvMbOM/hQnH4JUIWkfG1ECKGrpE9kN4K83EZrt
+BVphs8FSiX0s4hLmPI+p
+=y51B
+-----END PGP SIGNATURE-----
+--=-=-=--
