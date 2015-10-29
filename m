@@ -1,50 +1,68 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>
-CC: <linux-kernel@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Ley Foon Tan <lftan@altera.com>,
-	<lftan.linux@gmail.com>
-Subject: [PATCH v2 0/4] Add PCI support on nios2 architecture
-Date: Wed, 14 Oct 2015 14:31:40 +0800
-Message-ID: <1444804304-5213-1-git-send-email-lftan@altera.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 6/7] PCI: Fix sriov_enable() error path for
+ pcibios_enable_sriov() failures
+To: Alexander Duyck <aduyck@mirantis.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Ethan Zhao <ethan.zhao@oracle.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linux-kernel@vger.kernel.org
+Date: Thu, 29 Oct 2015 17:23:29 -0500
+Message-ID: <20151029222329.11908.72848.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is 2nd version of patch to add pci support for nios2 architecture.
-This patchset also update asm-generic/pci.h to include PCI generic define/function
-as suggested by Arnd.
-It requires pci_fixup_irqs() from setup-irq.c.
+From: Alexander Duyck <aduyck@mirantis.com>
 
-v1->v2 changes:
-- nios2: remove PCI_SYSCALL from Kconfig
-- nios2: set IO_SPACE_LIMIT to 0xffff
-- nios2: remove arch/nios2/include/asm/pci.h and use asm-generic pci.h
-- pci: add include <linux/dma-mapping.h> to pci.c
-- asm-generic: add pci generic functions/defines to pci.h
+Disable VFs if pcibios_enable_sriov() fails, just like we do for other
+errors in sriov_enable().  Call pcibios_sriov_disable() if virtfn_add()
+fails.
 
-History
--------
-[v1]: https://lkml.org/lkml/2015/9/22/44
+[bhelgaas: changelog, split to separate patch for reviewability]
+Fixes: 995df527f399 ("PCI: Add pcibios_sriov_enable() and pcibios_sriov_disable()")
+Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-Ley Foon Tan (4):
-  asm-generic: add pci required defines and functions
-  pci: add include <linux/dma-mapping.h>
-  PCI: Build setup-irq.o for nios2
-  nios2: Add architectural support for PCIe
-
- arch/nios2/Kconfig            | 21 +++++++++++++++++++++
- arch/nios2/include/asm/Kbuild |  1 +
- arch/nios2/include/asm/io.h   | 12 ++++++++++--
- arch/nios2/kernel/Makefile    |  1 +
- arch/nios2/kernel/pci.c       | 33 +++++++++++++++++++++++++++++++++
- drivers/pci/Makefile          |  1 +
- drivers/pci/pci.c             |  1 +
- include/asm-generic/pci.h     | 34 ++++++++++++++++++++++++++++++++++
- 8 files changed, 102 insertions(+), 2 deletions(-)
- create mode 100644 arch/nios2/kernel/pci.c
-
--- 
-1.8.2.1
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 24428d5..bd1c4fa 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -246,7 +246,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	struct pci_sriov *iov = dev->sriov;
+ 	int bars = 0;
+ 	int bus;
+-	int retval;
+ 
+ 	if (!nr_virtfn)
+ 		return 0;
+@@ -315,10 +314,10 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	if (nr_virtfn < initial)
+ 		initial = nr_virtfn;
+ 
+-	if ((retval = pcibios_sriov_enable(dev, initial))) {
+-		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
+-			retval);
+-		return retval;
++	rc = pcibios_sriov_enable(dev, initial);
++	if (rc) {
++		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n", rc);
++		goto err_pcibios;
+ 	}
+ 
+ 	for (i = 0; i < initial; i++) {
+@@ -336,6 +335,8 @@ failed:
+ 	while (i--)
+ 		virtfn_remove(dev, i, 0);
+ 
++	pcibios_sriov_disable(dev);
++err_pcibios:
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
 
