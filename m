@@ -1,81 +1,118 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 30 Oct 2015 13:08:25 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
-	Ethan Zhao <ethan.zhao@oracle.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/7] PCI: Remove redundant validation of SR-IOV
- offset/stride registers
-Message-ID: <20151030050825.GA5119@richards-mbp.cn.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151029222301.11908.97709.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Date: Thu, 29 Oct 2015 18:22:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v12 0/6] Altera PCIe host controller driver with MSI
+ support
+Message-ID: <20151029232238.GB11994@localhost>
+References: <1445596035-27733-1-git-send-email-lftan@altera.com>
+ <20151027142644.GA8660@localhost>
+ <CAFiDJ5_vCqh=uKkF2E_BQkJUv692r3yr26bBj8boK2DY_Dj+gA@mail.gmail.com>
+ <CAErSpo5okE86k846hs28s4jvL59hmm+4az-dDsymzNayPCPCzw@mail.gmail.com>
+ <CAFiDJ59wOUj-Mr3cyqQEz+P=8AkmRoy7XzUCmM33_e03Y2G_ZQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151029222301.11908.97709.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <CAFiDJ59wOUj-Mr3cyqQEz+P=8AkmRoy7XzUCmM33_e03Y2G_ZQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 29, 2015 at 05:23:01PM -0500, Bjorn Helgaas wrote:
->From: Alexander Duyck <aduyck@mirantis.com>
->
->Previously, we read, validated, and cached PCI_SRIOV_VF_OFFSET and
->PCI_SRIOV_VF_STRIDE in sriov_enable().  But sriov_init() now does
->that via compute_max_vf_buses(), so we don't need to do it again.
->
->Remove the PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE config reads from
->sriov_enable().  The pci_sriov structure already contains the offset and
->stride corresponding to the current NumVFs.
->
->[bhelgaas: split to separate patch for reviewability]
->Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
->Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Wed, Oct 28, 2015 at 02:25:11PM +0800, Ley Foon Tan wrote:
+> On Wed, Oct 28, 2015 at 9:02 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Tue, Oct 27, 2015 at 7:56 PM, Ley Foon Tan <lftan@altera.com> wrote:
+> >> On Tue, Oct 27, 2015 at 10:26 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >>> Hi Ley,
+> >>>
+> >>> On Fri, Oct 23, 2015 at 06:27:09PM +0800, Ley Foon Tan wrote:
+> >>>> This is the 12th version of patch set to add support for Altera PCIe host
+> >>>> controller with MSI feature on Altera FPGA device families. This patchset
+> >>>> mainly resovle the comments from Bjorn.
+> >>>>
+> >>>>
+> >>>> This patchset is based on v4.3-rc6.
+> >>>>
+> >>>> v11->v12 changes:
+> >>>> - pcie-altera: use DECLARE_PCI_FIXUP_EARLY for pcie retrain fixup
+> >>>> - pcie-altera: move pcie_bus_configure_settings before pci_bus_add_devices
+> >>>> - pcie-altera: add %d for irq bit in dev_err()
+> >>>> - pcie-altera: prevent enumeration of root complex resources in config accessors
+> >>>> - Documentation: add Acked-by from Rob Herring
+> >>>>
+> >>>> History:
+> >>>> -------
+> >>>> [v1]: https://lkml.org/lkml/2015/7/28/395
+> >>>> [v2]: https://lkml.org/lkml/2015/7/31/267
+> >>>> [v3]: http://www.kernelhub.org/?msg=811940&p=2
+> >>>> [v4]: https://lkml.org/lkml/2015/8/17/141
+> >>>> [v5]: https://lkml.org/lkml/2015/8/25/238
+> >>>> [v6]: https://lkml.org/lkml/2015/9/1/177
+> >>>> [v7]: https://lkml.org/lkml/2015/9/20/193
+> >>>> [v8]: http://www.kernelhub.org/?msg=853553&p=2
+> >>>> [v9]: https://lkml.org/lkml/2015/10/13/998
+> >>>> [v10]: https://lkml.org/lkml/2015/10/19/139
+> >>>> [v11]: https://lkml.org/lkml/2015/10/22/206
+> >>>>
+> >>>>
+> >>>> Ley Foon Tan (6):
+> >>>>   arm: add msi.h to Kbuild
+> >>>>   pci: add Altera PCI vendor ID
+> >>>>   pci:host: Add Altera PCIe host controller driver
+> >>>>   pci: altera: Add Altera PCIe MSI driver
+> >>>>   Documentation: dt-bindings: pci: altera pcie device tree binding
+> >>>>   MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+> >>>>
+> >>>>  .../devicetree/bindings/pci/altera-pcie-msi.txt    |  28 +
+> >>>>  .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
+> >>>>  MAINTAINERS                                        |  16 +
+> >>>>  arch/arm/include/asm/Kbuild                        |   1 +
+> >>>>  drivers/pci/host/Kconfig                           |  16 +
+> >>>>  drivers/pci/host/Makefile                          |   2 +
+> >>>>  drivers/pci/host/pcie-altera-msi.c                 | 314 +++++++++++
+> >>>>  drivers/pci/host/pcie-altera.c                     | 580 +++++++++++++++++++++
+> >>>>  include/linux/pci_ids.h                            |   2 +
+> >>>>  9 files changed, 1008 insertions(+)
+> >>>>  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+> >>>>  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
+> >>>>  create mode 100644 drivers/pci/host/pcie-altera-msi.c
+> >>>>  create mode 100644 drivers/pci/host/pcie-altera.c
+> >>>
+> >>> I applied these to pci/host-altera for v4.4, thanks!
+> >>>
+> >>> I squashed these into three patches:
+> >>>
+> >>>   - add msi.h to Kbuild
+> >>>   - add Altera host driver (including DT binding and MAINTAINERS update)
+> >>>   - add Altera MSI driver (including DT binding and MAINTAINERS update)
+> >>>
+> >>> Since the convention is to add PCI ID #defines only when they are used in
+> >>> multiple places, I replaced PCI_VENDOR_ID_ALTERA with 0x1172 in the single
+> >>> place it is used.
+> >> Hi Bjorn
+> >>
+> >> Thanks for applied these.
+> >>
+> >> By the way, I can't see pci/host-altera branch in your pci.git tree
+> >> yet. It takes some time to appear there?
+> >
+> > Sorry, I forgot to push it.  It should be there now!
+> >
+> Yes, saw it now. It will merge to 'next' branch eventually?
 
-Reviewed-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Yep, I just merged it to 'next' and pushed it.
 
->---
-> drivers/pci/iov.c |   10 +---------
-> 1 file changed, 1 insertion(+), 9 deletions(-)
->
->diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->index 1b1acc2..ca400a9 100644
->--- a/drivers/pci/iov.c
->+++ b/drivers/pci/iov.c
->@@ -235,7 +235,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> 	int rc;
-> 	int i, j;
-> 	int nres;
->-	u16 offset, stride, initial;
->+	u16 initial;
-> 	struct resource *res;
-> 	struct pci_dev *pdev;
-> 	struct pci_sriov *iov = dev->sriov;
->@@ -258,11 +258,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> 	    (!(iov->cap & PCI_SRIOV_CAP_VFM) && (nr_virtfn > initial)))
-> 		return -EINVAL;
->
->-	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &offset);
->-	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &stride);
->-	if (!offset || (nr_virtfn > 1 && !stride))
->-		return -EIO;
->-
-> 	nres = 0;
-> 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-> 		bars |= (1 << (i + PCI_IOV_RESOURCES));
->@@ -275,9 +270,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> 		return -ENOMEM;
-> 	}
->
->-	iov->offset = offset;
->-	iov->stride = stride;
->-
-> 	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
-> 	if (bus > dev->bus->busn_res.end) {
-> 		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
-
--- 
-Richard Yang
-Help you, Help me
-
+Bjorn
