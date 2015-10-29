@@ -1,140 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f47.google.com ([209.85.213.47]:36485 "EHLO
-	mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751986AbbJNAng (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Oct 2015 20:43:36 -0400
+Received: from mail.kernel.org ([198.145.29.136]:60913 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751055AbbJ2Vnx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 29 Oct 2015 17:43:53 -0400
+Date: Thu, 29 Oct 2015 16:43:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexander Duyck <aduyck@mirantis.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/5] iov: Variable and loop cleanup for sriov_disable and
+ sriov_enable
+Message-ID: <20151029214349.GC921@localhost>
+References: <20151027204607.14626.59671.stgit@localhost.localdomain>
+ <20151027205233.14626.98836.stgit@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.20.1510132338510.14105@math.ut.ee>
-References: <alpine.LRH.2.20.1510071147520.8345@math.ut.ee>
-	<CAE9FiQXM9YxRwcbG577Pcqmj7YbOa0yk6hYELb2FpTtct5u2jg@mail.gmail.com>
-	<alpine.LRH.2.20.1510120808240.3251@math.ut.ee>
-	<CAE9FiQXHsgYaTgF2rsWFJXSYJ=kH3j63ageJ2H8F5wnzbFgxRg@mail.gmail.com>
-	<alpine.LRH.2.20.1510130800380.3972@math.ut.ee>
-	<CAE9FiQVAtPGgzwwMaHjGjyzOD8wKb0TqCd1wynF6-ZmFqZzEaQ@mail.gmail.com>
-	<alpine.LRH.2.20.1510131020140.9747@math.ut.ee>
-	<CAE9FiQWhE=-FtZjuC5-fTzuTq0tm9Zt1MiD8J0a_Q_jiB5RLNg@mail.gmail.com>
-	<alpine.LRH.2.20.1510132338510.14105@math.ut.ee>
-Date: Tue, 13 Oct 2015 17:43:35 -0700
-Message-ID: <CAE9FiQXDCtL9nqQOVNspNc87=eY98NW=nrSZczbKVNYsPQuVJA@mail.gmail.com>
-Subject: Re: 4.3-rc3 BAR allocation problems on multiple machines
-From: Yinghai Lu <yinghai@kernel.org>
-To: Meelis Roos <mroos@linux.ee>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=001a11438ee83ec831052205da29
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151027205233.14626.98836.stgit@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a11438ee83ec831052205da29
-Content-Type: text/plain; charset=UTF-8
+Hi Alex,
 
-On Tue, Oct 13, 2015 at 1:39 PM, Meelis Roos <mroos@linux.ee> wrote:
->
-> 0001:00:07.0 ISA bridge: ULi Electronics Inc. M1533/M1535/M1543 PCI to ISA Bridge [Aladdin IV/V/V+]
->         Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0
->         Region 0: [virtual] I/O ports at 0000 [size=64K]
->         Region 1: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
->         Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
->         Region 3: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
->         Region 4: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
->         Region 5: [virtual] Memory at fffff80100000000 (32-bit, non-prefetchable)
->         [virtual] Expansion ROM at fffff80100000000 [disabled]
->         Capabilities: [a0] Power Management version 1
->                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
->                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-> 00: b9 10 33 15 0f 00 10 02 00 00 01 06 00 00 00 00
-> 10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 30: 00 00 00 00 a0 00 00 00 00 00 00 00 00 00 00 00
-> 40: 03 13 4b 80 83 09 00 47 00 00 06 00 00 00 eb 31
-> 50: 00 00 00 20 90 02 20 03 66 03 00 00 00 00 00 08
-> 60: 40 00 00 00 00 00 00 00 00 00 00 00 80 20 00 00
-> 70: 00 00 0a 00 47 00 00 db 04 02 00 04 00 80 01 90
-> 80: a5 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> a0: 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
-> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+On Tue, Oct 27, 2015 at 01:52:33PM -0700, Alexander Duyck wrote:
+> This patch is just a minor cleanup to go through and group all of the
+> variables into one declaration instead of a long string of single
+> declarations for each int.  It also changes the direction for a couple
+> loops as we are able to loop with less code this way as testing against 0
+> can be done as a part of the decrement operation.
+> 
+> Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+> ---
+>  drivers/pci/iov.c |   13 ++++---------
+>  1 file changed, 4 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index cecc242c1af0..c0fc88fa7c4d 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -241,15 +241,11 @@ int __weak pcibios_sriov_disable(struct pci_dev *pdev)
+>  
+>  static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  {
+> -	int rc;
+> -	int i;
+> -	int nres;
+>  	u16 offset, stride, initial;
+>  	struct resource *res;
+>  	struct pci_dev *pdev;
+>  	struct pci_sriov *iov = dev->sriov;
+> -	int bars = 0;
+> -	int bus;
+> +	int rc, i, nres, bars, bus;
 
-Please check attached patch.
+I don't have a strong opinion on combining the declarations to one line,
+and I would apply it if you wanted to do the same for the whole file
+at once, in a patch by itself.
 
-Thanks
+>  	if (!nr_virtfn)
+>  		return 0;
+> @@ -271,8 +267,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	if (!offset || (nr_virtfn > 1 && !stride))
+>  		return -EIO;
+>  
+> -	nres = 0;
+> -	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+> +	for (nres = 0, bars = 0, i = PCI_SRIOV_NUM_BARS; i--;) {
 
-Yinghai
+But I don't agree that this is easier to read.  I suppose it could be
+a tiny bit more efficient, but I think the benefit to the reader of
+the usual "for (i = 0; i < limit; i++)" loop is larger.
 
---001a11438ee83ec831052205da29
-Content-Type: text/x-patch; charset=US-ASCII; name="sparc_no_bar_for_uli_1533.patch"
-Content-Disposition: attachment; filename="sparc_no_bar_for_uli_1533.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ifq2qhrq0
+>  		bars |= (1 << (i + PCI_IOV_RESOURCES));
+>  		res = &dev->resource[i + PCI_IOV_RESOURCES];
+>  		if (res->parent)
+> @@ -366,13 +361,13 @@ err_pcibios:
+>  
+>  static void sriov_disable(struct pci_dev *dev)
+>  {
+> -	int i;
+>  	struct pci_sriov *iov = dev->sriov;
+> +	int i = iov->num_VFs;
+>  
+>  	if (!iov->num_VFs)
+>  		return;
+>  
+> -	for (i = 0; i < iov->num_VFs; i++)
+> +	while (i--)
+>  		virtfn_remove(dev, i, 0);
 
-U3ViamVjdDogW1BBVENIXSBQQ0k6IElnbm9yZSBCQVIgZm9yIEFMaSBNMTUzMyBQQ0ktSVNBIGJy
-aWRnZQoKTWVlbGlzIHJlcG9ydGVkIHN0cmFuZ2UgY29uZmxpY3RzIG9uIHNwYXJjIHYyMTA6CnBj
-aSAwMDAxOjAwOjA3LjA6IGNhbid0IGNsYWltIEJBUiAyIFttZW0gMHg3ZmYwMDAwMDAwMC0weDdm
-ZjAwMGZmZmZmXTogYWRkcmVzcyBjb25mbGljdCB3aXRoIDAwMDE6MDA6MDcuMCBbbWVtIDB4N2Zm
-MDAwMDAwMDAtMHg3ZmYwMDBmZmZmZl0KcGNpIDAwMDE6MDA6MDYuMDogY2FuJ3QgY2xhaW0gQkFS
-IDAgW2lvIDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMTAwMDAwZl06IGFkZHJlc3MgY29uZmxpY3Qgd2l0
-aCAwMDAxOjAwOjA3LjAgW2lvIDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMTAwZmZmZl0KcGNpIDAwMDE6
-MDA6MGQuMDogY2FuJ3QgY2xhaW0gQkFSIDAgW2lvIDB4N2ZlMDEwMDA5MDAtMHg3ZmUwMTAwMDkw
-N106IGFkZHJlc3MgY29uZmxpY3Qgd2l0aCAwMDAxOjAwOjA3LjAgW2lvIDB4N2ZlMDEwMDAwMDAt
-MHg3ZmUwMTAwZmZmZl0KcGNpIDAwMDE6MDA6MGQuMDogY2FuJ3QgY2xhaW0gQkFSIDEgW2lvIDB4
-N2ZlMDEwMDA5MTgtMHg3ZmUwMTAwMDkxZl06IGFkZHJlc3MgY29uZmxpY3Qgd2l0aCAwMDAxOjAw
-OjA3LjAgW2lvIDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMTAwZmZmZl0KcGNpIDAwMDE6MDA6MGQuMDog
-Y2FuJ3QgY2xhaW0gQkFSIDIgW2lvIDB4N2ZlMDEwMDA5MTAtMHg3ZmUwMTAwMDkxN106IGFkZHJl
-c3MgY29uZmxpY3Qgd2l0aCAwMDAxOjAwOjA3LjAgW2lvIDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMTAw
-ZmZmZl0KcGNpIDAwMDE6MDA6MGQuMDogY2FuJ3QgY2xhaW0gQkFSIDMgW2lvIDB4N2ZlMDEwMDA5
-MDgtMHg3ZmUwMTAwMDkwZl06IGFkZHJlc3MgY29uZmxpY3Qgd2l0aCAwMDAxOjAwOjA3LjAgW2lv
-IDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMTAwZmZmZl0KcGNpIDAwMDE6MDA6MGQuMDogY2FuJ3QgY2xh
-aW0gQkFSIDQgW2lvIDB4N2ZlMDEwMDA5MjAtMHg3ZmUwMTAwMDkyZl06IGFkZHJlc3MgY29uZmxp
-Y3Qgd2l0aCAwMDAxOjAwOjA3LjAgW2lvIDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMTAwZmZmZl0KUENJ
-OiAvcGNpQDFlLDYwMDAwMCBjYW4ndCBjbGFpbSBWaWRlbyBSQU0gYXJlYSBbbWVtIDB4N2ZmMDAw
-YTAwMDAtMHg3ZmYwMDBiZmZmZl06IGFkZHJlc3MgY29uZmxpY3Qgd2l0aCAwMDAxOjAwOjA3LjAg
-W21lbSAweDdmZjAwMDAwMDAwLTB4N2ZmMDAwZmZmZmZdClBDSTogL3BjaUAxZSw2MDAwMDAgY2Fu
-J3QgY2xhaW0gU3lzdGVtIFJPTSBbbWVtIDB4N2ZmMDAwZjAwMDAtMHg3ZmYwMDBmZmZmZl06IGFk
-ZHJlc3MgY29uZmxpY3Qgd2l0aCAwMDAxOjAwOjA3LjAgW21lbSAweDdmZjAwMDAwMDAwLTB4N2Zm
-MDAwZmZmZmZdClBDSTogL3BjaUAxZSw2MDAwMDAgY2FuJ3QgY2xhaW0gVmlkZW8gUk9NIFttZW0g
-MHg3ZmYwMDBjMDAwMC0weDdmZjAwMGM3ZmZmXTogYWRkcmVzcyBjb25mbGljdCB3aXRoIDAwMDE6
-MDA6MDcuMCBbbWVtIDB4N2ZmMDAwMDAwMDAtMHg3ZmYwMDBmZmZmZl0KCndlIGhhdmUKcGNpX2J1
-cyAwMDAxOjAwOiByb290IGJ1cyByZXNvdXJjZSBbaW8gIDB4N2ZlMDEwMDAwMDAtMHg3ZmUwMWZm
-ZmZmZl0gKGJ1cyBhZGRyZXNzIFsweDAwMDAtMHhmZmZmZmZdKQpwY2lfYnVzIDAwMDE6MDA6IHJv
-b3QgYnVzIHJlc291cmNlIFttZW0gMHg3ZmYwMDAwMDAwMC0weDdmZmZmZmZmZmZmXSAoYnVzIGFk
-ZHJlc3MgWzB4MDAwMDAwMDAtMHhmZmZmZmZmZl0pCgpzbyBwY2kgYnVzIGFkZHJlc3MgaW4gdGhl
-IGJhcnMgZm9yIDAwMDE6MDA6MDcuMCBoYXMgYWxsIDBzLgoKMDAwMTowMDowNy4wIElTQSBicmlk
-Z2U6IFVMaSBFbGVjdHJvbmljcyBJbmMuIE0xNTMzL00xNTM1L00xNTQzIFBDSSB0byBJU0EgQnJp
-ZGdlIFtBbGFkZGluIElWL1YvVitdCiAgICAgICAgUmVnaW9uIDA6IFt2aXJ0dWFsXSBJL08gcG9y
-dHMgYXQgMDAwMCBbc2l6ZT02NEtdCiAgICAgICAgUmVnaW9uIDE6IE1lbW9yeSBhdCA8dW5hc3Np
-Z25lZD4gKDMyLWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9MU1dCiAgICAgICAgUmVnaW9u
-IDI6IE1lbW9yeSBhdCA8dW5hc3NpZ25lZD4gKDMyLWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3Np
-emU9MU1dCjAwOiBiOSAxMCAzMyAxNSAwZiAwMCAxMCAwMiAwMCAwMCAwMSAwNiAwMCAwMCAwMCAw
-MAoxMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKMjA6
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCjMwOiAwMCAw
-MCAwMCAwMCBhMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMAoKQWNjb3JkaW5nIHRv
-IGh0dHA6Ly93d3cudmVyc2Fsb2dpYy5jb20vU3VwcG9ydC9Eb3dubG9hZHMvcGRmL2FsaTE1NDMu
-cGRmCnBhZ2UgMjg6IFRoZSBpbmRpY2VzIGJlZm9yZSA0MGggYXJlIHJlYWQtb25seS4KYW5kIHdl
-IGhhdmUgYWxsIDAgZnJvbSAweDEwLTB4MmYsIGFjY29yZGluZyB0byBsc3BjaS4KClNvIGNsZWFu
-IGZsYWdzLCBhbmQgaWdub3JlIHRoZW0gYWxsIHRoZSB3YXkgaW5jbHVkZQpjbGFpbSBhbmQgc2l6
-aW5nIGFuZCBhbGxvYyBldGMuCgpSZXBvcnRlZC1ieTogTWVlbGlzIFJvb3MgPG1yb29zQGxpbnV4
-LmVlPgpTaWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0K
-IGRyaXZlcnMvcGNpL3F1aXJrcy5jIHwgICAxNSArKysrKysrKysrKysrKysKIDEgZmlsZSBjaGFu
-Z2VkLCAxNSBpbnNlcnRpb25zKCspCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3F1aXJr
-cy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3F1aXJrcy5jCisr
-KyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcXVpcmtzLmMKQEAgLTQ3MCw2ICs0NzAsMjEgQEAgc3Rh
-dGljIHZvaWQgcXVpcmtfYW1kX25sX2NsYXNzKHN0cnVjdCBwYwogREVDTEFSRV9QQ0lfRklYVVBf
-SEVBREVSKFBDSV9WRU5ET1JfSURfQU1ELCBQQ0lfREVWSUNFX0lEX0FNRF9OTF9VU0IsCiAJCXF1
-aXJrX2FtZF9ubF9jbGFzcyk7CiAKKworLyoKKyAqIEFMaSBtMTUzMyBwY2kgdG8gaXNhIGJyaWRn
-ZSBkb2VzIG5vdCBoYXZlIEJBUiBhY2NvcmRpbmcgdG8gZGF0YXNoZWV0LAorICogY2xlYXIgdGhl
-IGZsYWdzLCBzbyB3ZSB3aWxsIHRyeSB0byBjbGFpbSB0aGVtIG9yIHJlYWxsb2NhdGUgcmVzLgor
-ICovCitzdGF0aWMgdm9pZCBxdWlya19hbGkxNTMzKHN0cnVjdCBwY2lfZGV2ICpkZXYpCit7CisJ
-aW50IGk7CisKKwlmb3IgKGkgPSAwOyBpIDwgUENJX1JPTV9SRVNPVVJDRTsgaSsrKQorCQlkZXYt
-PnJlc291cmNlW2ldLmZsYWdzID0gMDsKK30KK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lf
-VkVORE9SX0lEX0FMLCBQQ0lfREVWSUNFX0lEX0FMX00xNTMzLAorCQkJIHF1aXJrX2FsaTE1MzMp
-OworCiBzdGF0aWMgdm9pZCBwaWl4NF9pb19xdWlyayhzdHJ1Y3QgcGNpX2RldiAqZGV2LCBjb25z
-dCBjaGFyICpuYW1lLCB1bnNpZ25lZCBpbnQgcG9ydCwgdW5zaWduZWQgaW50IGVuYWJsZSkKIHsK
-IAl1MzIgZGV2cmVzOwo=
---001a11438ee83ec831052205da29--
+I do like the change to remove devices in the reverse order as we
+added them.  But I'm really partial to the way a "for" loop keeps all
+the loop control in one spot.  So I would apply a patch that made it
+look like this:
+
+  for (i = iov->num_VFs - 1; i >= 0; i--)
+    virtfn_remove(dev, i, 0);
+
+>  	pcibios_sriov_disable(dev);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
