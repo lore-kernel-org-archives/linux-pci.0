@@ -1,38 +1,172 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 9 Oct 2015 17:56:45 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Borislav Petkov <bp@alien8.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Daniel Vetter <daniel@ffwll.ch>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Christian Knig <christian.koenig@amd.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-iommu@vger.kernel.org, linux-acpi@vger.kernel.org,
-	x86@kernel.org
-Subject: Re: [Bugfix v4 1/2] iommu/amd: Prevent binding other PCI drivers to
- IOMMU PCI devices
-Message-ID: <20151009155644.GG27420@8bytes.org>
-References: <1444386214-26319-1-git-send-email-joro@8bytes.org>
- <1444399652-25920-1-git-send-email-jiang.liu@linux.intel.com>
- <1444399652-25920-2-git-send-email-jiang.liu@linux.intel.com>
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<rmk+kernel@arm.linux.org.uk>,
+	<thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v13 0/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+Date: Thu, 29 Oct 2015 17:40:32 +0800
+Message-ID: <1446111638-197070-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444399652-25920-2-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 09, 2015 at 10:07:31PM +0800, Jiang Liu wrote:
-> AMD IOMMU driver makes use of IOMMU PCI devices, so prevent binding other
-> PCI drivers to IOMMU PCI devices.
-> 
-> This fixes a bug reported by Boris that system suspend/resume gets broken
-> on AMD platforms. For more information, please refer to:
-> 	https://lkml.org/lkml/2015/9/26/89
-> 
-> Fixes: 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Cc: Borislav Petkov <bp@alien8.de>
+This patchset adds PCIe host support for HiSilicon SoC Hip05. The PCIe hosts
+use PCIe IP core from Synopsys, So this driver is based on designware PCIe driver.
 
-Applied to iommu/fixes, thanks Jiang.
+Hip05 is an ARMv8 architecture SoC. It should be able to use ARM64 PCIe API in
+designware PCIe driver. So this patch also adds ARM64 support for designware
+pcie.
+
+This patchset is based on v4.3-rc1.
+
+Change from v12:
+- Reorder patchset as suggestion by Bjorn.
+- Add Rob's Acked-by for DT binding.
+- Merge HiSilicon PCIe driver, DT binding document and maintainer update into
+  one patch.
+
+Change from v11:
+- Split 3/6 in v11 to 3/8, 4/8, 5/8 in v12.
+- Add print in pcie-hisi.c to indicate read/write hardware defect.
+- Modify macro in 1/8 pointed by Bjorn.
+
+Change from v10:
+- Remove MSI related setting and VMID/ASID table setting, they will be
+  implemented in BIOS.
+- Use module_platform_driver to init pcie-hisi.c
+- Add necessary comments.
+
+Change from v9:
+- Use syscon to get subctrl base address.
+- 5/6 is based on [PATCH v3 0/2] arm64: Support Hisilicon Hip05-D02 board
+  from Ding Tianhong
+- Add hisi_pcie_cfg_read in pcie-hisi.c to match
+  [PATCH v6 0/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
+  from Gabriele.
+
+Change from v8:
+- Rebase on v4.3-rc1.
+- Add Tested-by from Gabriel and Minghuan.
+- Remove ITS domain parsing in msi_host_init in pcie-hisi.c, no need this as PCI
+  core does related job. Add ITS base address parsing in msi_host_init.
+- Change vmid/asid table configuration, previous configuration was wrong.
+- Add wr_own_conf callback in pcie-hisi.c.
+- Use subsys_initcall to init hisi PCIe.
+
+Change from v7:
+- Remove pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
+  spear13xx. Pass pp->busn->start to pci_create_root_bus as root bus number.
+- Remove bus-range parsing in pcie-hisi.c.
+
+Change from v6:
+- Add Pratyush's Acked-by for 1/6 and 2/6.
+- Add James' Tested-by for 3/6.
+
+Change from v5:
+- Merge 1/6 in this series, discussion about this can be found in [1]
+
+Change from v4:
+- Change the author of 1/5 to Gabriele.
+- Modify problems in 3/5 pointed by Bjorn.
+- Modify spelling problems in 4/5.
+
+Change from v3:
+- Change 1/5 to what Gabriele suggested.
+- Use win->__res.start to get *_mod_base in 2/5, this fix a bug in v3 series.
+
+Change from v2:
+- Move struct pci_dev *dev and struct pci_sys_data *sys in
+  pcibios_align_resource in 1/5.
+- Add Gabriele's codes in 2/5 which delete unnecessary information parse and
+  use of_pci_get_host_bridge_resources for both ARM32 and ARM64.
+- Add maintainer patch 5/5.
+
+Change from RFC v1:
+- Add 1/4 patch by Arnd which removes align_resource callback in ARM
+  pcibios_align_resource.
+- Change head file in pcie-designware from asm/hardirq.h to linux/hardirq.h.
+- Set pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
+  spear13xx.
+- Remove unnecessary parentheses of some macros in pcie-hisi.
+- Use macro to replace some magic values.
+- Merge two loops together and add some comments about it in context_config
+  function in pcie-hisi.
+- Modify some value of items in pcie node example in binding document. 
+
+Change from RFC:
+- delete dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
+  merge related operations into dw_pcie_host_init.
+
+Link of v12:
+- https://lkml.org/lkml/2015/10/26/196
+Link of v11:
+- https://lkml.org/lkml/2015/10/16/228
+Link of v10:
+- http://www.spinics.net/lists/linux-pci/msg45490.html
+Link of v9:
+- http://www.spinics.net/lists/linux-pci/msg44545.html
+Link of v8:
+- http://www.spinics.net/lists/linux-pci/msg44192.html
+Link of v7:
+- http://www.spinics.net/lists/devicetree/msg90690.html
+Link of v6:
+- http://www.spinics.net/lists/linux-pci/msg43669.html
+Link of v5:
+- http://www.spinics.net/lists/devicetree/msg87959.html
+Link of v4:
+- http://www.spinics.net/lists/arm-kernel/msg433050.html
+Link of v3:
+- http://www.spinics.net/lists/linux-pci/msg42539.html
+Link of v2:
+- http://www.spinics.net/lists/linux-pci/msg41844.html
+Link of RFC v1:
+- http://www.spinics.net/lists/linux-pci/msg41305.html
+Link of RFC:
+- http://www.spinics.net/lists/linux-pci/msg40434.html
+
+[1] http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/359741.html
+
+Zhou Wang (4):
+  PCI: designware: Remove *_mod_base
+  PCI: designware: Replace DT PCI ranges parse with
+    of_pci_get_host_bridge_resources
+  PCI: designware: Add ARM64 support
+  PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+
+gabriele paoloni (2):
+  PCI: designware: Move calculation of bus addresses to DRA7xx
+  ARM/PCI: Replace pci_sys_data->align_resource with global function
+    pointer
+
+ .../bindings/arm/hisilicon/hisilicon.txt           |  17 ++
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     |  44 ++++
+ MAINTAINERS                                        |   7 +
+ arch/arm/include/asm/mach/pci.h                    |   6 -
+ arch/arm/kernel/bios32.c                           |  12 +-
+ drivers/pci/host/Kconfig                           |   8 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-dra7xx.c                      |   7 +
+ drivers/pci/host/pci-keystone-dw.c                 |   2 +-
+ drivers/pci/host/pcie-designware.c                 | 249 +++++++--------------
+ drivers/pci/host/pcie-designware.h                 |  14 +-
+ drivers/pci/host/pcie-hisi.c                       | 198 ++++++++++++++++
+ 12 files changed, 378 insertions(+), 187 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-hisi.c
+
+-- 
+1.9.1
 
