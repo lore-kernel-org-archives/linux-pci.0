@@ -1,95 +1,58 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
-Subject: [PATCH v7 18/60] PCI: Set resource to FIXED for LSI devices
-Date: Thu,  8 Oct 2015 14:38:37 -0700
-Message-Id: <1444340359-8011-19-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v2 4/7] PCI: Reorder pcibios_sriov_disable()
+To: Alexander Duyck <aduyck@mirantis.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Ethan Zhao <ethan.zhao@oracle.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linux-kernel@vger.kernel.org
+Date: Thu, 29 Oct 2015 17:23:15 -0500
+Message-ID: <20151029222315.11908.6949.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-LSI HBA firmware stop responding pci read from host if pci core ever change
-pci device BAR values.
+From: Alexander Duyck <aduyck@mirantis.com>
 
-Set their resources to FIXED, so will allow realloc to skip them.
+Move pcibios_sriov_disable() up so it's defined before a future use.
 
-Reported-by: Paul Johnson <pjay@nwtrail.com>
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@vger.kernel.org
+[bhelgaas: split to separate patch for reviewability]
+Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci.h       |  1 +
- drivers/pci/quirks.c    | 20 ++++++++++++++++++++
- drivers/pci/setup-bus.c |  4 ++++
- 3 files changed, 25 insertions(+)
+ drivers/pci/iov.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6ad0f05..39d2c50 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -170,6 +170,7 @@ static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index c86d94c..fada98d 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -227,7 +227,12 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 
+ int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+ {
+-       return 0;
++	return 0;
++}
++
++int __weak pcibios_sriov_disable(struct pci_dev *pdev)
++{
++	return 0;
  }
  
- void pci_realloc_get_opt(char *);
-+bool pci_realloc_user_enabled(void);
- 
- static inline int pci_no_d1d2(struct pci_dev *dev)
- {
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e7e86d3..6fe342c 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -323,6 +323,26 @@ static void quirk_s3_64M(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
- 
-+/*
-+ * LSI devices firmware does not like BAR get changed
-+ */
-+static void quirk_bar_fixed(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	if (pci_realloc_user_enabled())
-+		return;
-+
-+	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
-+		struct resource *r = &dev->resource[i];
-+
-+		if (!r->start || !r->flags)
-+			continue;
-+		r->flags |= IORESOURCE_PCI_FIXED;
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC,	PCI_ANY_ID,	quirk_bar_fixed);
-+
- /* for pci remove and rescan */
- static void quirk_allocate_fixed(struct pci_dev *dev)
- {
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 8cd6c6b..d49c6e5 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1634,6 +1634,10 @@ void __init pci_realloc_get_opt(char *str)
- 	else if (!strncmp(str, "on", 2))
- 		pci_realloc_enable = user_enabled;
+ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+@@ -344,11 +349,6 @@ failed:
+ 	return rc;
  }
-+bool pci_realloc_user_enabled(void)
-+{
-+	return pci_realloc_enable == user_enabled;
-+}
- static bool pci_realloc_enabled(enum enable_type enable)
+ 
+-int __weak pcibios_sriov_disable(struct pci_dev *pdev)
+-{
+-       return 0;
+-}
+-
+ static void sriov_disable(struct pci_dev *dev)
  {
- 	return enable >= user_enabled;
--- 
-1.8.4.5
+ 	int i;
 
