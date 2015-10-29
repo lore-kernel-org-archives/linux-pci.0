@@ -1,400 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:2370 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751039AbbJJCqi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Oct 2015 22:46:38 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Kefeng Wang <wangkefeng.wang@huawei.com>
-Subject: [PATCH v10 4/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
-Date: Sat, 10 Oct 2015 10:59:15 +0800
-Message-ID: <1444445957-239522-5-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1444445957-239522-1-git-send-email-wangzhou1@hisilicon.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5631BE8D.10604@huawei.com>
+Date: Thu, 29 Oct 2015 14:37:01 +0800
+From: Hanjun Guo <guohanjun@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Hanjun Guo <hanjun.guo@linaro.org>
+CC: Bjorn Helgaas <helgaas@kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	<bhelgaas@google.com>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>,
+	<thomas.lendacky@amd.com>, <herbert@gondor.apana.org.au>,
+	<davem@davemloft.net>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH V4 0/8] PCI: ACPI: Setting up DMA coherency for PCI device
+ from _CCA attribute
+References: <1445442731-28819-1-git-send-email-Suravee.Suthikulpanit@amd.com> <24127028.eJSjD1i70u@vostro.rjw.lan> <5630D38F.804@linaro.org> <1545680.eQNYNjjaSj@vostro.rjw.lan>
+In-Reply-To: <1545680.eQNYNjjaSj@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds PCIe host support for HiSilicon SoC Hip05.
+On 2015/10/29 0:00, Rafael J. Wysocki wrote:
+> On Wednesday, October 28, 2015 09:54:23 PM Hanjun Guo wrote:
+>> Hi Rafael,
+>>
+>> On 10/27/2015 11:27 PM, Rafael J. Wysocki wrote:
+>>> On Tuesday, October 27, 2015 09:52:50 AM Bjorn Helgaas wrote:
+>>>> Hi Suravee,
+>>>>
+>>>> On Wed, Oct 21, 2015 at 08:52:03AM -0700, Suravee Suthikulpanit wrote:
+>>>>> This patch series adds support to setup DMA coherency for PCI device using
+>>>>> the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
+>>>>> is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
+>>>>> support for ARM64 which is currently in development.  Also, this should
+>>>>> not affect other architectures that does not define
+>>>>> CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
+>>>>>
+>>>>> In the process, this series also introduces enum dev_dma_attr and a set
+>>>>> of APIs to query device DMA attribute. These APIs replace the obsolete
+>>>>> device_dma_is_coherent(), and acpi_check_dma().
+>>>>>
+>>>>> I have also included a patch from Jeremy posted here:
+>>>>>      http://www.spinics.net/lists/linux-usb/msg128582.html
+>>>>>
+>>>>> This patch series  has been tested on AMD Seattle RevB platform.
+>>>>> The git tree containing tested code and pre-req patches are posted here:
+>>>>>
+>>>>>      http://github.com/ssuthiku/linux.git pci-cca-v4
+>>>>>
+>>>>> Changes from V3: (https://lkml.org/lkml/2015/8/26/389)
+>>>>>      * Clean up suggested by Bjorn
+>>>>>      * Introduce enum dev_dma_attr
+>>>>>      * Replace device_dma_is_coherent() and acpi_check_dma() with
+>>>>>        new APIs.
+>>>>>
+>>>>> Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
+>>>>>      * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
+>>>>>      * Add WARN() when fail to setup DMA for PCI device when booting
+>>>>>        ACPI (per Arnd's suggestion)
+>>>>>      * Added Acked-by from Rob.
+>>>>>      * Minor clean up
+>>>>>
+>>>>> Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
+>>>>>      * Include patch 1 from Jeremy to enable support for _CCA=0
+>>>>>      * Clean up acpi_check_dma() per Bjorn suggestions
+>>>>>      * Split the original V1 patch into two patches (patch 3 and 4)
+>>>>>
+>>>>> Jeremy Linton (1):
+>>>>>    Honor ACPI _CCA attribute setting
+>>>>>
+>>>>> Suravee Suthikulpanit (7):
+>>>>>    device property: Introducing enum dev_dma_attr
+>>>>>    acpi: Adding DMA Attribute APIs for ACPI Device
+>>>>>    device property: Adding DMA Attribute APIs for Generic Devices
+>>>>>    device property: acpi: Make use of the new DMA Attribute APIs
+>>>>>    device property: acpi: Remove unused DMA APIs
+>>>>>    PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
+>>>>>    PCI: ACPI: Add support for PCI device DMA coherency
+>>>>>
+>>>>>   drivers/acpi/acpi_platform.c              |  7 +++++-
+>>>>>   drivers/acpi/glue.c                       |  8 +++---
+>>>>>   drivers/acpi/scan.c                       | 42 +++++++++++++++++++++++++++++++
+>>>>>   drivers/base/property.c                   | 32 +++++++++++++++++------
+>>>>>   drivers/crypto/ccp/ccp-platform.c         |  9 ++++++-
+>>>>>   drivers/net/ethernet/amd/xgbe/xgbe-main.c |  9 ++++++-
+>>>>>   drivers/of/of_pci.c                       | 20 ---------------
+>>>>>   drivers/pci/probe.c                       | 36 ++++++++++++++++++++++++--
+>>>>>   include/acpi/acpi_bus.h                   | 36 +++-----------------------
+>>>>>   include/linux/acpi.h                      |  7 +++++-
+>>>>>   include/linux/of_pci.h                    |  3 ---
+>>>>>   include/linux/property.h                  | 10 +++++++-
+>>>>>   12 files changed, 145 insertions(+), 74 deletions(-)
+>>>> I had a couple minor comments.  It's sort of a toss-up, but this feels
+>>>> more ACPI-flavored than PCI, so I assume Rafael will take this whole
+>>>> series unless I hear otherwise.
+>>> I'll do that.
+>> If Suravee address the comments and send another version,
+>> an it be merged into 4.4?
+> Well, it is likely, but not guaranteed.
+>
+> We're only a few days from the beginning of the merge window and I'm still
+> in Seoul.
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: liudongdong <liudongdong3@huawei.com>
-Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
-Signed-off-by: qiuzhenfa <qiuzhenfa@hisilicon.com>
----
- drivers/pci/host/Kconfig     |   8 ++
- drivers/pci/host/Makefile    |   1 +
- drivers/pci/host/pcie-hisi.c | 320 +++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 329 insertions(+)
- create mode 100644 drivers/pci/host/pcie-hisi.c
+No problem, it's up to you :), thanks for the quick response.
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d5e58ba..ae873be 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -145,4 +145,12 @@ config PCIE_IPROC_BCMA
- 	  Say Y here if you want to use the Broadcom iProc PCIe controller
- 	  through the BCMA bus interface
- 
-+config PCI_HISI
-+	depends on OF && ARM64
-+	bool "HiSilicon SoC HIP05 PCIe controller"
-+	select PCIEPORTBUS
-+	select PCIE_DW
-+	help
-+	  Say Y here if you want PCIe controller support on HiSilicon HIP05 SoC
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 140d66f..ea1dbf2 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -17,3 +17,4 @@ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
- obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
- obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
- obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
-+obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-new file mode 100644
-index 0000000..26aa0d9
---- /dev/null
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -0,0 +1,320 @@
-+/*
-+ * PCIe host controller driver for HiSilicon Hip05 SoC
-+ *
-+ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
-+ *
-+ * Author: Zhou Wang <wangzhou1@hisilicon.com>
-+ *         Dacai Zhu <zhudacai@hisilicon.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#include <linux/interrupt.h>
-+#include <linux/irqdomain.h>
-+#include <linux/module.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/of.h>
-+#include <linux/of_address.h>
-+#include <linux/of_pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/regmap.h>
-+
-+#include "pcie-designware.h"
-+
-+#define PCIE_SUBCTRL_MODE_REG                           0x2800
-+#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
-+#define PCIE_SLV_DBI_MODE                               0x0
-+#define PCIE_SLV_SYSCTRL_MODE                           0x1
-+#define PCIE_SLV_CONTENT_MODE                           0x2
-+#define PCIE_SLV_MSI_ASID                               0x10
-+#define PCIE_LTSSM_LINKUP_STATE                         0x11
-+#define PCIE_LTSSM_STATE_MASK                           0x3F
-+#define PCIE_MSI_ASID_ENABLE                            (0x1 << 12)
-+#define PCIE_MSI_ASID_VALUE                             (0x1 << 16)
-+#define PCIE_MSI_TRANS_ENABLE                           (0x1 << 12)
-+#define PCIE_MSI_TRANS_REG                              0x1c8
-+#define PCIE_MSI_LOW_ADDRESS                            0x1b4
-+#define PCIE_MSI_HIGH_ADDRESS                           0x1c4
-+#define PCIE_GITS_TRANSLATER                            0x10040
-+
-+#define PCIE_SYS_CTRL20_REG                             0x20
-+#define PCIE_RD_TAB_SEL                                 BIT(31)
-+#define PCIE_RD_TAB_EN                                  BIT(30)
-+
-+#define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
-+
-+struct hisi_pcie {
-+	struct regmap *subctrl;
-+	void __iomem *reg_base;
-+	u32 port_id;
-+	struct pcie_port pp;
-+};
-+
-+static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
-+					u32 val, u32 reg)
-+{
-+	writel(val, pcie->reg_base + reg);
-+}
-+
-+static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
-+{
-+	return readl(pcie->reg_base + reg);
-+}
-+
-+/*
-+ * Change mode to indicate the same reg_base to base of PCIe host configure
-+ * registers, base of RC configure space or base of vmid/asid context table
-+ */
-+static void hisi_pcie_change_apb_mode(struct hisi_pcie *pcie, u32 mode)
-+{
-+	u32 val;
-+	u32 bit_mask;
-+	u32 bit_shift;
-+	u32 port_id = pcie->port_id;
-+	u32 reg = PCIE_SUBCTRL_MODE_REG + 0x100 * port_id;
-+
-+	if ((port_id == 1) || (port_id == 2)) {
-+		bit_mask = 0xc;
-+		bit_shift = 0x2;
-+	} else {
-+		bit_mask = 0x6;
-+		bit_shift = 0x1;
-+	}
-+
-+	regmap_update_bits(pcie->subctrl, reg, bit_mask, mode << bit_shift);
-+}
-+
-+/* Configure vmid/asid table in PCIe host */
-+static void hisi_pcie_config_context(struct hisi_pcie *pcie)
-+{
-+	int i;
-+	u32 val;
-+
-+	/* enable to clean vmid and asid tables though apb bus */
-+	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
-+
-+	val = hisi_pcie_apb_readl(pcie, PCIE_SYS_CTRL20_REG);
-+	/* enable ar channel */
-+	val |= PCIE_RD_TAB_SEL | PCIE_RD_TAB_EN;
-+	hisi_pcie_apb_writel(pcie, val, PCIE_SYS_CTRL20_REG);
-+
-+	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
-+
-+	/*
-+	 * init vmid and asid tables for all PCIe devices as 0
-+	 * vmid table: 0 ~ 0x3ff, asid table: 0x400 ~ 0x7ff
-+	 */
-+	for (i = 0; i < 0x800; i++)
-+		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
-+
-+	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
-+
-+	/* enable aw channel */
-+	val &= (~PCIE_RD_TAB_SEL);
-+	val |= PCIE_RD_TAB_EN;
-+	hisi_pcie_apb_writel(pcie, val, PCIE_SYS_CTRL20_REG);
-+
-+	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
-+
-+	for (i = 0; i < 0x800; i++)
-+		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
-+
-+	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
-+
-+	val = hisi_pcie_apb_readl(pcie, PCIE_SYS_CTRL20_REG);
-+	/* disable ar channel */
-+	val |= PCIE_RD_TAB_SEL;
-+	val &= (~PCIE_RD_TAB_EN);
-+	hisi_pcie_apb_writel(pcie, val, PCIE_SYS_CTRL20_REG);
-+	/* disable aw channel */
-+	val &= ((~PCIE_RD_TAB_SEL) & (~PCIE_RD_TAB_EN));
-+	hisi_pcie_apb_writel(pcie, val, PCIE_SYS_CTRL20_REG);
-+
-+	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
-+}
-+
-+static int hisi_pcie_link_up(struct pcie_port *pp)
-+{
-+	u32 val;
-+	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
-+
-+	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
-+		    0x100 * hisi_pcie->port_id, &val);
-+
-+	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
-+}
-+
-+static
-+int hisi_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
-+{
-+	u64 addr;
-+	struct device_node *msi_node;
-+	struct resource res;
-+	struct device_node *np = pp->dev->of_node;
-+	struct hisi_pcie *pcie = to_hisi_pcie(pp);
-+
-+	msi_node = of_parse_phandle(np, "msi-parent", 0);
-+	if (!msi_node) {
-+		dev_err(pp->dev, "failed to find msi-parent\n");
-+		return -EINVAL;
-+	}
-+	of_address_to_resource(msi_node, 0, &res);
-+	addr = res.start + PCIE_GITS_TRANSLATER;
-+
-+	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
-+
-+	hisi_pcie_apb_writel(pcie, addr & 0xffffffff, PCIE_MSI_LOW_ADDRESS);
-+	hisi_pcie_apb_writel(pcie, addr >> 32, PCIE_MSI_HIGH_ADDRESS);
-+	hisi_pcie_apb_writel(pcie, PCIE_MSI_ASID_ENABLE | PCIE_MSI_ASID_VALUE,
-+			     PCIE_SLV_MSI_ASID);
-+	hisi_pcie_apb_writel(pcie, PCIE_MSI_TRANS_ENABLE, PCIE_MSI_TRANS_REG);
-+
-+	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
-+
-+	return 0;
-+}
-+
-+static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int  size,
-+				u32 val)
-+{
-+	u32 reg_val;
-+	u32 reg;
-+	struct hisi_pcie *pcie = to_hisi_pcie(pp);
-+	void *walker = &reg_val;
-+
-+	walker += (where & 0x3);
-+	reg = where & ~0x3;
-+	if (size == 4)
-+		hisi_pcie_apb_writel(pcie, val, reg);
-+	else if (size == 2) {
-+		reg_val = hisi_pcie_apb_readl(pcie, reg);
-+		*(u16 __force *) walker = val;
-+		hisi_pcie_apb_writel(pcie, reg_val, reg);
-+	} else if (size == 1) {
-+		reg_val = hisi_pcie_apb_readl(pcie, reg);
-+		*(u8 __force *) walker = val;
-+		hisi_pcie_apb_writel(pcie, reg_val, reg);
-+	} else
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
-+			      u32 *val)
-+{
-+	u32 reg;
-+	u32 reg_val;
-+	struct hisi_pcie *pcie = to_hisi_pcie(pp);
-+	void *walker = &reg_val;
-+
-+	walker += (where & 0x3);
-+	reg = where & ~0x3;
-+	reg_val = hisi_pcie_apb_readl(pcie, reg);
-+
-+	if (size == 1)
-+		*val = *(u8 __force *) walker;
-+	else if (size == 2)
-+		*val = *(u16 __force *) walker;
-+	else if (size != 4)
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static struct pcie_host_ops hisi_pcie_host_ops = {
-+	.link_up = hisi_pcie_link_up,
-+	.msi_host_init = hisi_pcie_msi_host_init,
-+	.wr_own_conf = hisi_pcie_cfg_write,
-+	.rd_own_conf = hisi_pcie_cfg_read,
-+};
-+
-+static int __init hisi_add_pcie_port(struct pcie_port *pp,
-+				     struct platform_device *pdev)
-+{
-+	int ret;
-+	u32 port_id;
-+	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
-+
-+	if (of_property_read_u32(pdev->dev.of_node, "port-id", &port_id)) {
-+		dev_err(&pdev->dev, "failed to read port-id\n");
-+		return -EINVAL;
-+	}
-+	if (port_id > 3) {
-+		dev_err(&pdev->dev, "Invalid port-id: %d\n", port_id);
-+		return -EINVAL;
-+	}
-+	hisi_pcie->port_id = port_id;
-+
-+	pp->ops = &hisi_pcie_host_ops;
-+
-+	hisi_pcie_config_context(hisi_pcie);
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to initialize host\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int __init hisi_pcie_probe(struct platform_device *pdev)
-+{
-+	struct hisi_pcie *hisi_pcie;
-+	struct pcie_port *pp;
-+	struct resource *reg;
-+	int ret;
-+
-+	hisi_pcie = devm_kzalloc(&pdev->dev, sizeof(*hisi_pcie), GFP_KERNEL);
-+	if (!hisi_pcie)
-+		return -ENOMEM;
-+
-+	pp = &hisi_pcie->pp;
-+	pp->dev = &pdev->dev;
-+
-+	hisi_pcie->subctrl =
-+	syscon_regmap_lookup_by_compatible("hisilicon,pcie-sas-subctrl");
-+	if (IS_ERR(hisi_pcie->subctrl)) {
-+		dev_err(pp->dev, "cannot get subctrl base\n");
-+		return PTR_ERR(hisi_pcie->subctrl);
-+	}
-+
-+	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
-+	hisi_pcie->reg_base = devm_ioremap_resource(&pdev->dev, reg);
-+	if (IS_ERR(hisi_pcie->reg_base)) {
-+		dev_err(pp->dev, "cannot get rc_dbi base\n");
-+		return PTR_ERR(hisi_pcie->reg_base);
-+	}
-+
-+	hisi_pcie->pp.dbi_base = hisi_pcie->reg_base;
-+
-+	ret = hisi_add_pcie_port(pp, pdev);
-+	if (ret)
-+		return ret;
-+
-+	platform_set_drvdata(pdev, hisi_pcie);
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id hisi_pcie_of_match[] = {
-+	{.compatible = "hisilicon,hip05-pcie",},
-+	{},
-+};
-+
-+MODULE_DEVICE_TABLE(of, hisi_pcie_of_match);
-+
-+static struct platform_driver hisi_pcie_driver = {
-+	.driver = {
-+		   .name = "hisi-pcie",
-+		   .of_match_table = hisi_pcie_of_match,
-+	},
-+};
-+
-+static int __init hisi_pcie_init(void)
-+{
-+	return platform_driver_probe(&hisi_pcie_driver, hisi_pcie_probe);
-+}
-+subsys_initcall(hisi_pcie_init);
--- 
-1.9.1
+Hanjun
 
