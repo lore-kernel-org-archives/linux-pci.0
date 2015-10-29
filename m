@@ -1,59 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54075 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751903AbbJIQ1E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Oct 2015 12:27:04 -0400
-Date: Fri, 9 Oct 2015 11:27:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/9] Further mvebu PCIe patches
-Message-ID: <20151009162700.GA16112@localhost>
-References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <56328826.2020406@caviumnetworks.com>
+Date: Thu, 29 Oct 2015 13:57:10 -0700
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151003181228.GI21513@n2100.arm.linux.org.uk>
-Sender: linux-pci-owner@vger.kernel.org
+To: David Daney <ddaney.cavm@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	<linux-api@vger.kernel.org>,
+	"Sean O. Stalley" <sean.stalley@intel.com>, <yinghai@kernel.org>,
+	<rajatxjain@gmail.com>, <gong.chen@linux.intel.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v6 1/5] PCI: Handle IORESOURCE_PCI_FIXED when sizing resources.
+References: <1445382282-2396-1-git-send-email-ddaney.cavm@gmail.com> <1445382282-2396-2-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1445382282-2396-2-git-send-email-ddaney.cavm@gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Oct 03, 2015 at 07:12:28PM +0100, Russell King - ARM Linux wrote:
-> Jason, Thomas,
-> 
-> Here are further PCIe patches which follow on from the previous set of
-> six I sent earlier in September.  This set:
-> 
-> * Separates the DT parsing from the use of this parsed data.
-> * Fixes memory leaks from kasprintf() and refcount leaks of the DT
->   node where we break out from the loop early.
-> * Uses gpio_set_value_cansleep() so that GPIOs on I2C expanders can
->   be used for the PCIe reset functionality.
-> * Switch to using devm_kcalloc() instead of devm_kzalloc(), which
->   eliminates the multiplication, moving it into core code.
-> * Switch to using a gpio descriptor for the reset gpio, which can
->   contain the active level information from DT.  (It would be nice
->   if gpiolib automated some of the resource claiming there.)
-> * Make PERST# vs clock timing to match PCIe specifications.  PCIe
->   specs require the clock to be running for 100us prior to releasing
->   reset.
-> * Add the standard PCIe capability block in root port form to the
->   emulated PCIe configuration block.  This allows the PCI layer to
->   identify the "host bridge" as a PCIe device, and allows us to
->   take advantage of the code in drivers/pci/pcie, particularly
->   aspm for link power management.
-> * As a result of identifying ourselves as a PCIe root port, this
->   eliminates the need to special case accesses to non-slot 0 in
->   the driver; the lack of other "slots" is something which the
->   generic PCI code knows about for PCIe root ports.
-> 
->  drivers/pci/host/pci-mvebu.c | 404 ++++++++++++++++++++++++++++++++-----------
->  1 file changed, 305 insertions(+), 99 deletions(-)
+Bjorn,
 
-Applied to pci/host-mvebu for v4.4 with Tested-by from Willy, Andrew,
-and Thomas, and Reviewed-by from Thomas.  I adjusted subject line
-capitalization to match the history.  Thanks, Russell and reviewers
-and testers!
+A small snafu...
 
-Bjorn
+On 10/20/2015 04:04 PM, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+>
+> The new Enhanced Allocation (EA) capability support (patches to
+> follow) creates resources with the IORESOURCE_PCI_FIXED set. Since
+> these resources cannot be relocated or resized, their alignment is not
+> really defined, and it is therefore not specified.  This causes a
+> problem in pbus_size_mem() where resources with unspecified alignment
+> are disabled.
+>
+> So, in pbus_size_mem() skip IORESOURCE_PCI_FIXED resources, instead of
+> disabling them.
+>
+> Acked-by: Sean O. Stalley <sean.stalley@intel.com>
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+>   drivers/pci/setup-bus.c | 7 ++++---
+>   1 file changed, 4 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 508cc56..4dfef10 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1037,9 +1037,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>   			struct resource *r = &dev->resource[i];
+>   			resource_size_t r_size;
+>
+> -			if (r->parent || ((r->flags & mask) != type &&
+> -					  (r->flags & mask) != type2 &&
+> -					  (r->flags & mask) != type3))
+> +			if (r->parent || (r->flags | IORESOURCE_PCI_FIXED) ||
+
+Should be:
+
+   r->flags & IORESOURCE_PCI_FIXED
+
+With the erroneous '|', sizing of bridge resources can break.
+
+Q:  How to fix this.
+
+   A) Replace this patch entirely?
+
+   B) A patch on top of this one?
+
+
+> +			    ((r->flags & mask) != type &&
+> +			     (r->flags & mask) != type2 &&
+> +			     (r->flags & mask) != type3))
+>   				continue;
+>   			r_size = resource_size(r);
+>   #ifdef CONFIG_PCI_IOV
+>
+
