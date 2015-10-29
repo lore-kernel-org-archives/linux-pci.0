@@ -1,122 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:5395 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755829AbbJUQuD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Oct 2015 12:50:03 -0400
-From: Lan Tianyu <tianyu.lan@intel.com>
-To: bhelgaas@google.com, carolyn.wyborny@intel.com,
-	donald.c.skidmore@intel.com, eddie.dong@intel.com,
-	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
-	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-Cc: Lan Tianyu <tianyu.lan@intel.com>
-Subject: [RFC Patch 06/12] IXGBEVF: Add self emulation layer
-Date: Thu, 22 Oct 2015 00:37:38 +0800
-Message-Id: <1445445464-5056-7-git-send-email-tianyu.lan@intel.com>
-In-Reply-To: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
+ hostbridge init
+To: Sinan Kaya <okaya@codeaurora.org>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+ <1445963922-22711-12-git-send-email-tn@semihalf.com>
+ <5631180D.2000902@codeaurora.org> <563131B0.9060305@codeaurora.org>
+Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <56320538.6000905@semihalf.com>
+Date: Thu, 29 Oct 2015 12:38:32 +0100
+MIME-Version: 1.0
+In-Reply-To: <563131B0.9060305@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to restore VF function after migration, add self emulation layer
-to record regs' values during accessing regs.
+On 28.10.2015 21:36, Sinan Kaya wrote:
+> 1. ACPI code is unable to discover the interrupt numbers when objects
+> are ordered as follows in the ACPI file
+>
+> PNP0A08 object
+> PNP0C0F INTA object
+> PNP0C0F INTB object
+> PNP0C0F INTC object
+> PNP0C0F INTD object
+>
+> This gives me invalid link context error.
+>
+> pci 0000:00:00.0: PCI INT A: no GSI
+> pci 0000:01:00.0: Derived GSI for 0000:01:00.0 INT A from 0000:00:00.0
+> acpi PNP0C0F:00: Invalid link context
+>
+> If I order it like this in the ACPI file,
+>
+> PNP0C0F INTA object
+> PNP0C0F INTB object
+> PNP0C0F INTC object
+> PNP0C0F INTD object
+> PNP0A08 object
+>
+> then, the legacy interrupt numbers can be discovered properly.
 
-Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
----
- drivers/net/ethernet/intel/ixgbevf/Makefile        |  3 ++-
- drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c  |  2 +-
- .../net/ethernet/intel/ixgbevf/self-emulation.c    | 26 ++++++++++++++++++++++
- drivers/net/ethernet/intel/ixgbevf/vf.h            |  5 ++++-
- 4 files changed, 33 insertions(+), 3 deletions(-)
- create mode 100644 drivers/net/ethernet/intel/ixgbevf/self-emulation.c
+Can you show full content of your PNP0C0F and PNP0A08 objects?
 
-diff --git a/drivers/net/ethernet/intel/ixgbevf/Makefile b/drivers/net/ethernet/intel/ixgbevf/Makefile
-index 4ce4c97..841c884 100644
---- a/drivers/net/ethernet/intel/ixgbevf/Makefile
-+++ b/drivers/net/ethernet/intel/ixgbevf/Makefile
-@@ -31,7 +31,8 @@
- 
- obj-$(CONFIG_IXGBEVF) += ixgbevf.o
- 
--ixgbevf-objs := vf.o \
-+ixgbevf-objs := self-emulation.o \
-+		vf.o \
-                 mbx.o \
-                 ethtool.o \
-                 ixgbevf_main.o
-diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-index a16d267..4446916 100644
---- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-+++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-@@ -156,7 +156,7 @@ u32 ixgbevf_read_reg(struct ixgbe_hw *hw, u32 reg)
- 
- 	if (IXGBE_REMOVED(reg_addr))
- 		return IXGBE_FAILED_READ_REG;
--	value = readl(reg_addr + reg);
-+	value = ixgbe_self_emul_readl(reg_addr, reg);
- 	if (unlikely(value == IXGBE_FAILED_READ_REG))
- 		ixgbevf_check_remove(hw, reg);
- 	return value;
-diff --git a/drivers/net/ethernet/intel/ixgbevf/self-emulation.c b/drivers/net/ethernet/intel/ixgbevf/self-emulation.c
-new file mode 100644
-index 0000000..d74b2da
---- /dev/null
-+++ b/drivers/net/ethernet/intel/ixgbevf/self-emulation.c
-@@ -0,0 +1,26 @@
-+#include <linux/netdevice.h>
-+#include <linux/pci.h>
-+#include <linux/delay.h>
-+#include <linux/interrupt.h>
-+#include <net/arp.h>
-+
-+#include "vf.h"
-+#include "ixgbevf.h"
-+
-+static u32 hw_regs[0x4000];
-+
-+u32 ixgbe_self_emul_readl(volatile void __iomem *base, u32 addr)
-+{
-+	u32 tmp;
-+
-+	tmp = readl(base + addr);
-+	hw_regs[(unsigned long)addr] = tmp;
-+
-+	return tmp;
-+}
-+
-+void ixgbe_self_emul_writel(u32 val, volatile void __iomem *base, u32  addr)
-+{
-+	hw_regs[(unsigned long)addr] = val;
-+	writel(val, (volatile void __iomem *)(base + addr));
-+}
-diff --git a/drivers/net/ethernet/intel/ixgbevf/vf.h b/drivers/net/ethernet/intel/ixgbevf/vf.h
-index d40f036..6a3f4eb 100644
---- a/drivers/net/ethernet/intel/ixgbevf/vf.h
-+++ b/drivers/net/ethernet/intel/ixgbevf/vf.h
-@@ -39,6 +39,9 @@
- 
- struct ixgbe_hw;
- 
-+u32 ixgbe_self_emul_readl(volatile void __iomem *base, u32 addr);
-+void ixgbe_self_emul_writel(u32 val, volatile void __iomem *base, u32  addr);
-+
- /* iterator type for walking multicast address lists */
- typedef u8* (*ixgbe_mc_addr_itr) (struct ixgbe_hw *hw, u8 **mc_addr_ptr,
- 				  u32 *vmdq);
-@@ -182,7 +185,7 @@ static inline void ixgbe_write_reg(struct ixgbe_hw *hw, u32 reg, u32 value)
- 
- 	if (IXGBE_REMOVED(reg_addr))
- 		return;
--	writel(value, reg_addr + reg);
-+	ixgbe_self_emul_writel(value, reg_addr, reg);
- }
- 
- #define IXGBE_WRITE_REG(h, r, v) ixgbe_write_reg(h, r, v)
--- 
-1.8.4.rc0.1.g8f6a3e5.dirty
-
+Regards,
+Tomasz
