@@ -1,97 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0067.outbound.protection.outlook.com ([65.55.169.67]:11712
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750879AbbJEQtw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Oct 2015 12:49:52 -0400
-Message-ID: <5612AA26.90607@caviumnetworks.com>
-Date: Mon, 5 Oct 2015 09:49:42 -0700
-From: David Daney <ddaney@caviumnetworks.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:33356 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752268AbbJ2QVD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 12:21:03 -0400
+Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
+ hostbridge init
+To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+ <1445963922-22711-12-git-send-email-tn@semihalf.com>
+ <5631180D.2000902@codeaurora.org> <563131B0.9060305@codeaurora.org>
+ <56320538.6000905@semihalf.com> <563234E6.4050109@codeaurora.org>
+ <563240F6.2060209@semihalf.com>
+Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5632475D.8020900@codeaurora.org>
+Date: Thu, 29 Oct 2015 12:20:45 -0400
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"Sean O. Stalley" <sean.stalley@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	<linux-api@vger.kernel.org>, Rajat Jain <rajatxjain@gmail.com>,
-	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v4 0/5] PCI: Add support for PCI Enhanced Allocation "BARs"
-References: <1443825476-26880-1-git-send-email-ddaney.cavm@gmail.com> <CAE9FiQXT0ux42gQ+DhpVv2K=BR4jC++LmNdCSLiK4Wy0BhL=HQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQXT0ux42gQ+DhpVv2K=BR4jC++LmNdCSLiK4Wy0BhL=HQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <563240F6.2060209@semihalf.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/02/2015 08:16 PM, Yinghai Lu wrote:
-> On Fri, Oct 2, 2015 at 3:37 PM, David Daney <ddaney.cavm@gmail.com> wrote:
->> From: David Daney <david.daney@cavium.com>
+
+
+On 10/29/2015 11:53 AM, Tomasz Nowicki wrote:
+> On 29.10.2015 16:01, Sinan Kaya wrote:
 >>
->> PCI Enhanced Allocation is a new method of allocating MMIO & IO
->> resources for PCI devices & bridges. It can be used instead
->> of the traditional PCI method of using BARs.
 >>
->> EA entries are hardware-initialized to a fixed address.
->> Unlike BARs, regions described by EA are cannot be moved.
->> Because of this, only devices which are permanently connected to
->> the PCI bus can use EA. A removable PCI card must not use EA.
+>> On 10/29/2015 7:38 AM, Tomasz Nowicki wrote:
+>>> On 28.10.2015 21:36, Sinan Kaya wrote:
+>>>> 1. ACPI code is unable to discover the interrupt numbers when objects
+>>>> are ordered as follows in the ACPI file
+>>>>
+>>>> PNP0A08 object
+>>>> PNP0C0F INTA object
+>>>> PNP0C0F INTB object
+>>>> PNP0C0F INTC object
+>>>> PNP0C0F INTD object
+>>>>
+>>>> This gives me invalid link context error.
+>>>>
+>>>> pci 0000:00:00.0: PCI INT A: no GSI
+>>>> pci 0000:01:00.0: Derived GSI for 0000:01:00.0 INT A from 0000:00:00.0
+>>>> acpi PNP0C0F:00: Invalid link context
+>>>>
+>>>> If I order it like this in the ACPI file,
+>>>>
+>>>> PNP0C0F INTA object
+>>>> PNP0C0F INTB object
+>>>> PNP0C0F INTC object
+>>>> PNP0C0F INTD object
+>>>> PNP0A08 object
+>>>>
+>>>> then, the legacy interrupt numbers can be discovered properly.
+>>>
+>>> Can you show full content of your PNP0C0F and PNP0A08 objects?
+>>>
 >>
->> The Enhanced Allocation ECN is publicly available here:
->> https://www.pcisig.com/specifications/conventional/ECN_Enhanced_Allocation_23_Oct_2014_Final.pdf
+>> ACPI table is considered proprietary. I don't think I can get the legal
+>> approval in time. I can give you pieces though.
+>>
+>> Here is the _PRT
+>> Device (PCI0) { // PCIe port 0
+>>      Name(_HID, EISAID("PNP0A08"))    // PCI express
+>>      Name(_CID, EISAID("PNP0A03"))    // Compatible PCI Root Bridge
+>> {
+>>      ....
+>>      Name(_PRT, Package(){
+>>          Package(){0x0FFFF, 0, \_SB.LN0A, 0},  // Slot 0, INTA
+>>          Package(){0x0FFFF, 1, \_SB.LN0B, 0},  // Slot 0, INTB
+>>          Package(){0x0FFFF, 2, \_SB.LN0C, 0},  // Slot 0, INTC
+>>          Package(){0x0FFFF, 3, \_SB.LN0D, 0}   // Slot 0, INTD
+>>      })
+>> }
+>>
+>> Here is the PNP0C0F
+>>
+>> Device(LN0A){
+>>      Name(_HID, EISAID("PNP0C0F")) // PCI interrupt link
+>>      Name(_UID, 1)
+>>      Name(_PRS, ResourceTemplate(){
+>>      Interrupt(ResourceProducer, Level, ActiveHigh, Exclusive, , ,)
+>> {0xE8}
+>>      })
+>>      Method(_DIS) {}
+>>      Method(_CRS) { Return (_PRS) }
+>>      Method(_SRS, 1) {}
+>> }
+>>
 >
-> Looks like the EA will support more than just fixed address later.
+> Can you please apply patch below:
 >
-> "Enhanced Allocation is an optional Conventional PCI Capability that
-> may be implemented by
-> Functions to indicate fixed (non reprogrammable) I/O and memory ranges
-> assigned to the
-> Function, as well as supporting new resource “type” definitions and
-> future extensibility to also
-> support reprogrammable allocations."
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index fec1c91..fe34415 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -48,10 +48,19 @@ resource_size_t pcibios_align_resource(void *data,
+> const struct resource *res,
+>    */
+>   int pcibios_enable_device(struct pci_dev *dev, int mask)
+>   {
+> +       int ret;
+> +
+>          if (pci_has_flag(PCI_PROBE_ONLY))
+>                  return 0;
 >
-> so I would prefer to think more to make frame configurable to leave
-> space for that.
+> -       return pci_enable_resources(dev, mask);
+> +       ret = pci_enable_resources(dev, mask);
+> +       if (ret < 0)
+> +               return ret;
+> +#ifdef CONFIG_ACPI
+> +       if (!dev->msi_enabled)
+> +               return acpi_pci_irq_enable(dev);
+> +#endif
+> +       return 0;
+>   }
+>
+>   /*
+> @@ -61,10 +70,6 @@ int pcibios_add_device(struct pci_dev *dev)
+>   {
+>          if (acpi_disabled)
+>                  dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> -#ifdef CONFIG_ACPI
+> -       else
+> -               acpi_pci_irq_enable(dev);
+> -#endif
+>
+>          return 0;
+>   }
+>
+> and let me know if the order still matter?
+>
+> Regards,
+> Tomasz
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I disagree.  Currently we know of no use case other than devices with 
-fixed address BARs and bridges to buses containing such devices.
+Thanks,
+This seems to have fixed the ACPI table order problem.
 
-Since we have no idea what these future types of EA entries might look 
-like, it is impossible to design a framework to handle them.  Since we 
-cannot design the framework, it seems like insisting on the creation of 
-a framework is the equivalent of refusing to handle EA.
-
-We have today, actual hardware with configuration space that contains 
-the EA entries defined by the specification.  We know how to handle 
-these, it can be done with this patch set.
-
-I have no objection to changing the patches so that they fit better with 
-the core PCI code.  In fact, I fully expect to do so based on feedback I 
-receive.
-
-For the record the general idea is this:  IORESOURCE_PCI_FIXED already 
-does almost exactly what we need for EA, there are only a couple of 
-places where we need to fix things for it to work well with the 
-pci-host-generic driver.  If we fix these few issues with 
-IORESOURCE_PCI_FIXED, then EA is supported.  It also makes doing similar 
-things by setting the IORESOURCE_PCI_FIXED in a "header" fixup.  I don't 
-think it make sense to invent an additional flag for fixed EA resources, 
-as it would just be a duplicate of IORESOURCE_PCI_FIXED.
-
-David Daney
-
->
-> Bjorn,
->
-> I wonder if we need to revive the add-on resource support patchset
-> that i suggested couple years ago,
-> so we can extend it to support EA features.
->
-> URL: https://lkml.org/lkml/2012/3/19/86
->
-> Thanks
->
-> Yinghai
->
-
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
