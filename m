@@ -1,61 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:35250 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752664AbbJOSvX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Oct 2015 14:51:23 -0400
-Received: by lbwr8 with SMTP id r8so80660549lbw.2
-        for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2015 11:51:22 -0700 (PDT)
-Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20150604102253.GA31773@red-moon> <5570447D.3020705@linaro.org>
- <557504A2.3060203@linaro.org> <20150608151443.GA16151@red-moon>
- <55E4340D.6050004@linaro.org> <55ED6010.3020406@linaro.org>
- <20150908150727.GF29293@red-moon> <55F0388B.1090607@linaro.org>
- <20150911112018.GA13033@red-moon> <55F6DFF6.4010807@linaro.org>
- <20151015132200.GA7621@red-moon> <561FB985.8070509@linaro.org>
- <561FD3BB.70501@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+Received: from sauhun.de ([89.238.76.85]:51592 "EHLO pokefinder.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751055AbbJ2Qjj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 29 Oct 2015 12:39:39 -0400
+Date: Thu, 29 Oct 2015 17:39:31 +0100
+From: Wolfram Sang <wsa@the-dreams.de>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <561FF5A5.1040305@semihalf.com>
-Date: Thu, 15 Oct 2015 20:51:17 +0200
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
+ instances
+Message-ID: <20151029163930.GC22218@katana>
+References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
+ <20151029123755.GC2351@katana>
+ <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <561FD3BB.70501@arm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="z4+8/lEcDcG5Ke9S"
+In-Reply-To: <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
+--z4+8/lEcDcG5Ke9S
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 10/15/2015 06:26 PM, Marc Zyngier wrote:
-> On 15/10/15 15:34, Tomasz Nowicki wrote:
->
->> Of course your help in testing is welcomed. Also please have a look at
->> my GICv3/ITS patches, they are important for ACPI PCI.
->
-> Where is the dependency? ACPI/PCI should really be standalone.
->
-There are no dependencies in code. Just wanted to say that ARM64 
-machines with GICv3/ITS and PCI on board need both series to use MSI 
-with ACPI kernel. Sorry for confusion.
 
-Regards,
-Tomasz
+> Ouch, my bad. I have been working with our out-of-tree BSP for the Salvator-X board on
+> http://git.kernel.org/cgit/linux/kernel/git/horms/renesas-bsp.git,  rcar-3.0.2 tag along
+> with some patches from colleagues. I hadn't noticed this patch:
+
+Thanks! Any plans for pushing this upstream? We will have the build error
+otherwise...
+
+> > Any news if this is really HW related?
+> I found out that the PCIe controller HW only supports 32-bit AXI bus addresses, so it
+> works fine if you limit the available memory. The driver will need some work to use
+> the IPMMU at some point.
+
+Ah, okay.
+
+Can you send the dts patches, too? I checked the BSP this time, but to
+no avail...
+
+
+--z4+8/lEcDcG5Ke9S
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJWMkvCAAoJEBQN5MwUoCm2vjUP+QGx8CpUw/4SiJxSa1cahXhk
+O6HBCiUjUYv8FBeVMUpcSfuguE/EvlyGZbaVZqsDx6YfjrkZGFzHVI3KVXKXo4TF
+b7AF+ZkaZQHDt0wuazmP9TKUhy9ST349G0OWF2ckApU8PbnO6XSJ8plbRm6G+VM2
+kFtM9hBhGw1VtPxMXGrxeHniS6xedkVx3MaBkXU3hiYv2txSdBZpx1T/nPcZg0pw
+9e6sc0h2uNEUYp8oyrttEP2cSpl902BIiO5oGCI/Wdd76s5naME/mr7qpZw1RU7k
+4t241GhtaBlzRzuY2f93bOIQH5u+67+Ir4u+nHNPN3Zzy+9+hMj0xw+eSjouSXBg
+MBuQc6wUh9YHS8/bElFQtMVagbe0G4CRD75jaM/XKFtyo4fQDZvFQIqpPA9wBx2b
+u8BU3+Ff15Kdp1U7UJtwFObpWFcfubxSx5uktcBQ6U8I1FFRgPIHEWvPCL3Afq87
+iWIVswlr5AlvQXqEplPBd8IjFpW910KMDId0fh+Qzp/6xTslxKLqMHIQ/ZHD2IKu
+DQR9ciJOGkn09kN54F2U4YyfzNkYSfTyeCRZI84eVDso0MT7n3o24mTOkr0rY04/
+FLVdhy1zJ1meaLqk9GE/UYpgIwOzqTuOQ9xQ2OW8UGoObl2I4yxQfO3ajXJtvJmR
+J6KdjeFqeXe5hMJCVhJL
+=G+mP
+-----END PGP SIGNATURE-----
+
+--z4+8/lEcDcG5Ke9S--
