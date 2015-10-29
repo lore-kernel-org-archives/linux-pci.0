@@ -1,203 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0092.outbound.protection.outlook.com ([207.46.100.92]:13968
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751859AbbJEOni convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Oct 2015 10:43:38 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-CC: "robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"rjui@broadcom.com" <rjui@broadcom.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Wolfram Sang <wsa@the-dreams.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH v2] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Date: Mon, 5 Oct 2015 14:08:52 +0000
-Message-ID: <8520D5D51A55D047800579B0941471980169054D@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1443689961-23909-1-git-send-email-bharatku@xilinx.com>
- <2677327.lnRZhqx5GI@wuerfel>
-In-Reply-To: <2677327.lnRZhqx5GI@wuerfel>
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
+ instances
+Date: Thu, 29 Oct 2015 16:44:06 +0000
+Message-ID: <PS1PR06MB11804B39B09D6FCAA9B3D9DCF5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
+ <20151029123755.GC2351@katana>
+ <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029163930.GC22218@katana>
+In-Reply-To: <20151029163930.GC22218@katana>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 01 October 2015 14:29:21 Bharat Kumar Gogada wrote:
-> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+Hi Wolfram,
+
+On 29 October 2015 16:40, Wolfram wrote:
+> > Ouch, my bad. I have been working with our out-of-tree BSP for the Salvator-X
+> board on
+> > http://git.kernel.org/cgit/linux/kernel/git/horms/renesas-bsp.git,  rcar-3.0.2
+> tag along
+> > with some patches from colleagues. I hadn't noticed this patch:
 > 
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> ---
-> Removed unneccessary comments
-> Modified setup_sspl implementation
-> Added more details in binding Documentation
-> ---
->  .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   49 +
->  drivers/pci/host/Kconfig                           |    9 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pcie-xilinx-nwl.c                 | 1029 ++++++++++++++++++++
->  4 files changed, 1088 insertions(+)
->  create mode 100644 
-> Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
->  create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
+> Thanks! Any plans for pushing this upstream? We will have the build error
+> otherwise...
+After some digging, that patch won't be accepted upstream. I'm looking into how the
+driver can be modified so it doesn't need to call this, but I don't expect a small or
+imminent fix.
+
+> > > Any news if this is really HW related?
+> > I found out that the PCIe controller HW only supports 32-bit AXI bus addresses,
+> so it
+> > works fine if you limit the available memory. The driver will need some work to
+> use
+> > the IPMMU at some point.
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt 
-> b/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
-> new file mode 100644
-> index 0000000..ed87184
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
-> @@ -0,0 +1,49 @@
-> +* Xilinx NWL PCIe Root Port Bridge DT description
-> +
-> +Required properties:
-> +- compatible: Should contain "xlnx,nwl-pcie-2.11"
-> +- #address-cells: Address representation for root ports, set to <3>
-> +- #size-cells: Size representation for root ports, set to <2>
-> +- #interrupt-cells: specifies the number of cells needed to encode an
-> +	interrupt source. The value must be 1.
-> +- reg: Should contain Bridge, PCIe Controller registers location,
-> +	configuration sapce, and length
-> +- reg-names: Must include the following entries:
-> +	"breg": bridge registers
-> +	"pcireg": PCIe controller registers
-> +	"cfg": configuration space region
-> +- device_type: must be "pci"
-> +- interrupts: Should contain NWL PCIe interrupt
-> +- interrupt-names: Must include the following entries:
-> +	"misc": interrupt asserted when miscellaneous is recieved
-> +	"intx": interrupt that is asserted when an legacy interrupt is received
-> +	"msi_1, msi_0": interrupt asserted when msi is recieved
+> Ah, okay.
+> 
+> Can you send the dts patches, too? I checked the BSP this time, but to
+> no avail...
+I will once I sort out the arm64 IO resources problem and the MSI problem.
 
-The msi and intx interrupts don't really belong here: For intx, please use an interrupt-map property as the other host drivers do.
-
-For MSI, the usual answer is that there should be a separate device node for the MSI controller, and an msi-parent property in the PCI host.
-Our current GIC version does not have separate msi controller, so is it necessary to have separate msi node ?
-
-This lets you use the same code for hosts that have a GICv2m or GICv3 that comes with its own MSI controller.
-
-> +/**
-> + * struct nwl_pcie - PCIe port information
-> + *
-> + * @dev: Device pointer
-> + * @breg_base: IO Mapped Bridge Register Base
-> + * @pcireg_base: IO Mapped PCIe controller attributes
-> + * @ecam_base: IO Mapped configuration space
-> + * @phys_breg_base: Physical Bridge Register Base
-> + * @phys_pcie_reg_base: Physical PCIe Controller Attributes
-> + * @phys_ecam_base: Physical Configuration Base
-> + * @breg_size: Bridge Register space
-> + * @pcie_reg_size: PCIe controller attributes space
-> + * @ecam_size: PCIe Configuration space
-> + * @irq_intx: Legacy interrupt number
-> + * @irq_misc: Misc interrupt number
-> + * @ecam_value: ECAM value
-> + * @last_busno: Last Bus number configured
-> + * @link_up: Link status flag
-> + * @enable_msi_fifo: Enable MSI FIFO mode
-> + * @bus: PCI bus
-> + * @msi: MSI interrupt info
-> + */
-> +struct nwl_pcie {
-> +	struct device *dev;
-> +	void __iomem *breg_base;
-> +	void __iomem *pcireg_base;
-> +	void __iomem *ecam_base;
-> +	u32 phys_breg_base;
-> +	u32 phys_pcie_reg_base;
-> +	u32 phys_ecam_base;
-
-These should probably be phys_addr_t.
-
-> + * nwl_setup_sspl - Set Slot Power limit
-> + *
-> + * @pcie: PCIe port information
-> + */
-> +static int nwl_setup_sspl(struct nwl_pcie *pcie) {
-> +	unsigned int status;
-> +	int retval = 0;
-> +
-> +	do {
-> +		status = nwl_bridge_readl(pcie, TX_PCIE_MSG) & MSG_BUSY_BIT;
-> +		if (!status) {
-> +			/*
-> +			 * Generate the TLP message for a single EP
-> +			 * [TODO] Add a multi-endpoint code
-> +			 */
-> +			nwl_bridge_writel(pcie, 0x0,
-> +					  TX_PCIE_MSG + TX_PCIE_MSG_CNTL);
-> +			nwl_bridge_writel(pcie, 0x0,
-> +					  TX_PCIE_MSG + TX_PCIE_MSG_SPEC_LO);
-> +			nwl_bridge_writel(pcie, 0x0,
-> +					  TX_PCIE_MSG + TX_PCIE_MSG_SPEC_HI);
-> +			nwl_bridge_writel(pcie, 0x0,
-> +					  TX_PCIE_MSG + TX_PCIE_MSG_DATA);
-> +			/* Pattern to generate SSLP TLP */
-> +			nwl_bridge_writel(pcie, PATTRN_SSLP_TLP,
-> +					  TX_PCIE_MSG + TX_PCIE_MSG_CNTL);
-> +			nwl_bridge_writel(pcie, RANDOM_DIGIT,
-> +					  TX_PCIE_MSG + TX_PCIE_MSG_DATA);
-> +			nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,
-> +					  TX_PCIE_MSG) | 0x1, TX_PCIE_MSG);
-> +			status = 0;
-> +			mdelay(2);
-
-That is a really long delay. Can you use msleep(2) instead here?
-
-> +
-> +/* PCIe operations */
-> +static struct pci_ops nwl_pcie_ops = {
-> +	.read  = nwl_nwl_readl_config,
-> +	.write = nwl_nwl_writel_config,
-> +};
-	
-If the config space access is using ECAM, you should be able to use the generic implementation for that. I don't know how far we got in splitting that out, but it would be nice to not duplicate that here.
-We need configuration base address for checking condition for nwl_setup_sspl function so we are not using the generic implementation.  
-
-> +
-> +static irqreturn_t nwl_pcie_leg_handler(int irq, void *data) {
-> +	struct nwl_pcie *pcie = (struct nwl_pcie *)data;
-> +	u32 leg_stat;
-> +
-> +	/* Checking for legacy interrupts */
-> +	leg_stat = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
-> +				MSGF_LEG_SR_MASKALL;
-> +	if (!leg_stat)
-> +		return IRQ_NONE;
-> +
-> +	if (leg_stat & MSGF_LEG_SR_INTA)
-> +		dev_dbg(pcie->dev, "legacy interruptA\n");
-> +
-> +	if (leg_stat & MSGF_LEG_SR_INTB)
-> +		dev_dbg(pcie->dev, "legacy interruptB\n");
-> +
-> +	if (leg_stat & MSGF_LEG_SR_INTC)
-> +		dev_dbg(pcie->dev, "legacy interruptC\n");
-> +
-> +	if (leg_stat & MSGF_LEG_SR_INTD)
-> +		dev_dbg(pcie->dev, "legacy interruptD\n");
-> +
-> +	return IRQ_HANDLED;
-> +}
-
-This does not appear to be an appropriate implementation. I suspect what you need to do here is to model this as an irq_chip_generic, which should be able to handle the status/mask/pending registers and provide the irq domain that you will need for your DT irq-map property.
-
-	Arnd
-
-Bharat
+Thanks
+Phil
