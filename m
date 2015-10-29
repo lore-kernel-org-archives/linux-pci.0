@@ -1,204 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59367 "EHLO mail.kernel.org"
+Received: from sauhun.de ([89.238.76.85]:52245 "EHLO pokefinder.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754507AbbJUVgQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Oct 2015 17:36:16 -0400
-Date: Wed, 21 Oct 2015 16:36:12 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Minghuan Lian <Minghuan.Lian@freescale.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Li Yang <leoli@freescale.com>, Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: Re: [PATCH v4 5/6] PCI: layerscape: add PCIe support for LS1043a and
- LS2080a
-Message-ID: <20151021213612.GK1583@localhost>
-References: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
- <1444979960-24100-5-git-send-email-Minghuan.Lian@freescale.com>
+	id S1751055AbbJ2SsJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 29 Oct 2015 14:48:09 -0400
+Date: Thu, 29 Oct 2015 19:48:00 +0100
+From: Wolfram Sang <wsa@the-dreams.de>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
+ instances
+Message-ID: <20151029184800.GB8992@katana>
+References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
+ <20151029123755.GC2351@katana>
+ <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029163930.GC22218@katana>
+ <PS1PR06MB11804B39B09D6FCAA9B3D9DCF5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444979960-24100-5-git-send-email-Minghuan.Lian@freescale.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Y7xTucakfITjPcLV"
+In-Reply-To: <PS1PR06MB11804B39B09D6FCAA9B3D9DCF5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 16, 2015 at 03:19:19PM +0800, Minghuan Lian wrote:
-> Both LS1043a and LS2080a are based on ARMv8 64-bit architecture
-> and have similar PCIe implementation. LUT is added to controller.
-> The patch removes the necessary fields from struct ls_pcie.
-> 
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> ---
-> This patch is based on v4.3-rc4 and [PATCH v10 3/6]
-> PCI: designware: Add ARM64 support.
-> 
-> change log
-> v4: 
-> 1. split to 6 patches.
-> 2. use ARCH_LAYERSCAPE instead of ARM64
-> 
-> v3:
-> 1. Use 8 or 16 bit access function to simplify code
-> 2. Add ls_add_pcie_port in accordance with other DesignWare-based drivers
-> 
-> v2:
-> 1. Rename ls2085a to ls2080a
-> 2. Add ls_pcie_msi_host_init()
-> 
->  drivers/pci/host/Kconfig          |  2 +-
->  drivers/pci/host/pci-layerscape.c | 72 +++++++++++++++++++++++++++++++++++----
->  2 files changed, 67 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index ae873be..8eb09ea 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -105,7 +105,7 @@ config PCI_XGENE_MSI
->  
->  config PCI_LAYERSCAPE
->  	bool "Freescale Layerscape PCIe controller"
-> -	depends on OF && ARM
-> +	depends on OF && (ARM || ARCH_LAYERSCAPE)
->  	select PCIE_DW
->  	select MFD_SYSCON
->  	help
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> index 891e504..c53692a 100644
-> --- a/drivers/pci/host/pci-layerscape.c
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -31,23 +31,26 @@
->  #define LTSSM_STATE_MASK	0x3f
->  #define LTSSM_PCIE_L0		0x11 /* L0 state */
->  
-> -/* Symbol Timer Register and Filter Mask Register 1 */
-> -#define PCIE_STRFMR1 0x71c
-> +/* PEX Internal Configuration Registers */
-> +#define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
-> +#define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
-> +
-> +/* PEX LUT registers */
-> +#define PCIE_LUT_DBG		0x7FC /* PEX LUT Debug Register */
->  
->  struct ls_pcie_drvdata {
-> +	u32 lut_offset;
-> +	u32 ltssm_shift;
->  	struct pcie_host_ops *ops;
->  };
->  
->  struct ls_pcie {
-> -	struct list_head node;
-> -	struct device *dev;
-> -	struct pci_bus *bus;
 
-These fields look unused and unrelated to LS1043a and LS2080a.  I split
-their removal into a separate patch.
+--Y7xTucakfITjPcLV
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->  	void __iomem *dbi;
-> +	void __iomem *lut;
->  	struct regmap *scfg;
->  	struct pcie_port pp;
->  	const struct ls_pcie_drvdata *drvdata;
->  	int index;
-> -	int msi_irq;
->  };
->  
->  #define to_ls_pcie(x)	container_of(x, struct ls_pcie, pp)
-> @@ -62,6 +65,18 @@ static bool ls_pcie_is_bridge(struct ls_pcie *pcie)
->  	return header_type == PCI_HEADER_TYPE_BRIDGE;
->  }
->  
-> +/* Clear multi-function bit */
-> +static void ls_pcie_clear_multifunction(struct ls_pcie *pcie)
-> +{
-> +	iowrite8(PCI_HEADER_TYPE_BRIDGE, pcie->dbi + PCI_HEADER_TYPE);
-> +}
-> +
-> +/* Fix class value */
-> +static void ls_pcie_fix_class(struct ls_pcie *pcie)
-> +{
-> +	iowrite16(PCI_CLASS_BRIDGE_PCI, pcie->dbi + PCI_CLASS_DEVICE);
-> +}
-> +
->  static int ls1021_pcie_link_up(struct pcie_port *pp)
->  {
->  	u32 state;
-> @@ -110,17 +125,61 @@ static void ls1021_pcie_host_init(struct pcie_port *pp)
->  	iowrite32(val, pcie->dbi + PCIE_STRFMR1);
->  }
->  
-> +static int ls_pcie_link_up(struct pcie_port *pp)
-> +{
-> +	struct ls_pcie *pcie = to_ls_pcie(pp);
-> +	u32 state;
-> +
-> +	state = (ioread32(pcie->lut + PCIE_LUT_DBG) >>
-> +		 pcie->drvdata->ltssm_shift) &
-> +		 LTSSM_STATE_MASK;
-> +
-> +	if (state < LTSSM_PCIE_L0)
-> +		return 0;
-> +
-> +	return 1;
-> +}
-> +
-> +static void ls_pcie_host_init(struct pcie_port *pp)
-> +{
-> +	struct ls_pcie *pcie = to_ls_pcie(pp);
-> +
-> +	iowrite32(1, pcie->dbi + PCIE_DBI_RO_WR_EN);
-> +	ls_pcie_fix_class(pcie);
-> +	ls_pcie_clear_multifunction(pcie);
-> +	iowrite32(0, pcie->dbi + PCIE_DBI_RO_WR_EN);
-> +}
-> +
->  static struct pcie_host_ops ls1021_pcie_host_ops = {
->  	.link_up = ls1021_pcie_link_up,
->  	.host_init = ls1021_pcie_host_init,
->  };
->  
-> +static struct pcie_host_ops ls_pcie_host_ops = {
-> +	.link_up = ls_pcie_link_up,
-> +	.host_init = ls_pcie_host_init,
-> +};
-> +
->  static struct ls_pcie_drvdata ls1021_drvdata = {
->  	.ops = &ls1021_pcie_host_ops,
->  };
->  
-> +static struct ls_pcie_drvdata ls1043_drvdata = {
-> +	.lut_offset = 0x10000,
-> +	.ltssm_shift = 24,
-> +	.ops = &ls_pcie_host_ops,
-> +};
-> +
-> +static struct ls_pcie_drvdata ls2080_drvdata = {
-> +	.lut_offset = 0x80000,
-> +	.ltssm_shift = 0,
-> +	.ops = &ls_pcie_host_ops,
-> +};
-> +
->  static const struct of_device_id ls_pcie_of_match[] = {
->  	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata },
-> +	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata },
-> +	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata },
->  	{ },
->  };
->  MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
-> @@ -167,6 +226,7 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
->  	}
->  
->  	pcie->drvdata = match->data;
-> +	pcie->lut = pcie->dbi + pcie->drvdata->lut_offset;
->  
->  	if (!ls_pcie_is_bridge(pcie))
->  		return -ENODEV;
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Thu, Oct 29, 2015 at 04:44:06PM +0000, Phil Edworthy wrote:
+> Hi Wolfram,
+>=20
+> On 29 October 2015 16:40, Wolfram wrote:
+> > > Ouch, my bad. I have been working with our out-of-tree BSP for the Sa=
+lvator-X
+> > board on
+> > > http://git.kernel.org/cgit/linux/kernel/git/horms/renesas-bsp.git,  r=
+car-3.0.2
+> > tag along
+> > > with some patches from colleagues. I hadn't noticed this patch:
+> >=20
+> > Thanks! Any plans for pushing this upstream? We will have the build err=
+or
+> > otherwise...
+> After some digging, that patch won't be accepted upstream. I'm looking in=
+to how the
+> driver can be modified so it doesn't need to call this, but I don't expec=
+t a small or
+> imminent fix.
+
+Yes, I'd think so, too. However, a fix for 4.4 would be needed to
+prevent having a final release with a build error.
+
+> > > > Any news if this is really HW related?
+> > > I found out that the PCIe controller HW only supports 32-bit AXI bus =
+addresses,
+> > so it
+> > > works fine if you limit the available memory. The driver will need so=
+me work to
+> > use
+> > > the IPMMU at some point.
+> >=20
+> > Ah, okay.
+> >=20
+> > Can you send the dts patches, too? I checked the BSP this time, but to
+> > no avail...
+> I will once I sort out the arm64 IO resources problem and the MSI problem.
+
+What MSI problem?
+
+And can't you send the DTS patches as RFC so I can add some testing?
+
+
+--Y7xTucakfITjPcLV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJWMmngAAoJEBQN5MwUoCm2fnwP/j7onLCHJbBstWgrvpnBZWLy
+7ZLMcHPXQHMTW7/htkEF83jJJnlEKVdodIAQUR7PL+EA3zpSEK+VpvA/8nPZdYII
+V/IwcY2uLxK2I/tm3mXyfFK2ONWhpjCAp/vRnz3lf4MJPB2z24P8eXu1Oogbrr7I
+P7NkrzwJs8Hoj/5AX77JGgQw83kh3kLiEHEnFnlkc21Yn7bJ1shnvxS8t2XgExUT
+8hP5w8hxZbtKxxN3sV5MJRAOmBP/ZfMkta7t/zUpIzL9OZUatzgEvXQyPR0LD4MQ
+AaTtKF8F0kjnQPRiUe1Zhw4Q3CTfc3euDuggq79q2Xpw9ZQsAxZa/ojzI+0Lz47C
+2iRACRlDoz2qdCaOb80uq6paIkvz7+xyGY+xx3GCIfaRAbkrQbt6z75l8r/4osMM
+Cv4CNROAWGDIlqTKdXcNvqVkoSaTvYW7nH4LdtxA57hNV2w6Atdt+NigUEc6ZPO0
+CFKsiy1r9i3TCBVZbHyfIyEK10fZM9jBieV40fwosdKmEElIKOHstHoGoLIYK4zA
+rLIJc31zWT8VOa6gAaIJQIC4pOTbL4LULoqTwo+UKWOmCDRzLRswpKR0D3YmeNa4
+9VKKpO7mrJeP1I585yTET4D4rgJMVIs+rc49f+JEWs4L64fSBc/3nAHnpQGoFlQA
+38o/1MxxJtJU6Z9FESVV
+=zLs4
+-----END PGP SIGNATURE-----
+
+--Y7xTucakfITjPcLV--
