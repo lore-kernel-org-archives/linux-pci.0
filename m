@@ -1,85 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 9 Oct 2015 11:26:08 +0100 (IST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Joerg Roedel <joro@8bytes.org>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Joerg Roedel <jroedel@suse.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH] x86/PCI: Don't alloc pcibios-irq when MSI is enabled
-In-Reply-To: <1444386214-26319-1-git-send-email-joro@8bytes.org>
-Message-ID: <alpine.DEB.2.11.1510091125560.6097@nanos>
-References: <1444386214-26319-1-git-send-email-joro@8bytes.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:62321 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751261AbbJ2Iob (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 29 Oct 2015 04:44:31 -0400
+Message-ID: <5631D9C2.2040206@intel.com>
+Date: Thu, 29 Oct 2015 16:33:06 +0800
+From: Lan Tianyu <tianyu.lan@intel.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+To: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	eddie.dong@intel.com, nrupal.jani@intel.com,
+	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
+	pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Subject: Re: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV
+ NIC
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com> <562A7E33.4080800@gmail.com> <562DBBC9.4000104@intel.com> <562E40BB.6040404@gmail.com> <5631B8CA.9040805@intel.com> <5631C3A7.2070900@gmail.com>
+In-Reply-To: <5631C3A7.2070900@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 9 Oct 2015, Joerg Roedel wrote:
-> From: Joerg Roedel <jroedel@suse.de>
+On 2015年10月29日 14:58, Alexander Duyck wrote:
 > 
-> The pcibios-irq and MSI both use dev->irq to store the IRQ
-> number. While the MSI code checks for that and frees the
-> pcibios-irq before overwriting dev->irq, the
-> pcibios_alloc_irq function does not.
-> 
-> Usually this is not a problem, as the pcibios-irq is
-> allocated before probe time of the device and the MSI irq is
-> allocted from the drivers probe path.
-> 
-> But there are PCI devices handled by the core kernel and not
-> by a standard pci driver, like the AMD IOMMU for example.
-> For the AMD IOMMU a normal pci device driver does not make
-> sense, because a driver can be forcibly unbound from its
-> device, which is not a good idea for an IOMMU.
-> 
-> Nevertheless the PCI core code tries to match the PCI device
-> implementing the AMD IOMMU against drivers, and
-> allocates/frees a pcibios IRQ every time it tries out a new
-> driver. This overwrites the dev->irq field set by
-> pci_enable_msi() and sets it to 0 in the end (because the
-> probe fails and the pcibios-irq is freed again).
-> 
-> On suspend/resume this breaks the kernel, because the irq
-> descriptor for irq 0 is NULL.
-> 
-> Fix this by not allocating a pcibios-irq when MSI is
-> already active. This also has the benefit, that a device
-> claimed by the core kernel can not be probed by a pci driver
-> later.
-> 
-> Cc: Jiang Liu <jiang.liu@linux.intel.com>
-> Reported-by: Borislav Petkov <bp@alien8.de>
-> Signed-off-by: Joerg Roedel <jroedel@suse.de>
+> Your code was having to do a bunch of shuffling in order to get things
+> set up so that you could bring the interface back up.  I would argue
+> that it may actually be faster at least on the bring-up to just drop the
+> old rings and start over since it greatly reduced the complexity and the
+> amount of device related data that has to be moved.
 
-Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
+If give up the old ring after migration and keep DMA running before
+stopping VCPU, it seems we don't need to track Tx/Rx descriptor ring and
+just make sure that all Rx buffers delivered to stack has been migrated.
 
-> ---
->  arch/x86/pci/common.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index dc78a4a..6254c06 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -675,6 +675,14 @@ int pcibios_add_device(struct pci_dev *dev)
->  
->  int pcibios_alloc_irq(struct pci_dev *dev)
->  {
-> +	/*
-> +	 * If the PCI device was already claimed by core code and has
-> +	 * MSI enabled, probing of the pcibios irq will overwrite
-> +	 * dev->irq.  So bail out if MSI is already enabled.
-> +	 */
-> +	if (pci_dev_msi_enabled(dev))
-> +		return -EBUSY;
-> +
->  	return pcibios_enable_irq(dev);
->  }
->  
-> -- 
-> 1.9.1
-> 
-> 
+1) Dummy write Rx buffer before checking Rx descriptor to ensure packet
+migrated first.
+
+2) Make a copy of Rx descriptor and then use the copied data to check
+buffer status. Not use the original descriptor because it won't be
+migrated and migration may happen between two access of the Rx descriptor.
+
+-- 
+Best regards
+Tianyu Lan
