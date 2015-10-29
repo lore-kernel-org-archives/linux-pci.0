@@ -1,77 +1,101 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 19 Oct 2015 21:17:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
-	lenb@kernel.org, catalin.marinas@arm.com, will.deacon@arm.com,
-	hanjun.guo@linaro.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Jeremy Linton <Jeremy.Linton@arm.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>
-Subject: Re: [PATCH V3 2/4] ACPI/scan: Clean up acpi_check_dma
-Message-ID: <20151020021735.GA20869@localhost>
-References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <1440597279-11802-3-git-send-email-Suravee.Suthikulpanit@amd.com>
- <20150914163411.GL829@google.com>
- <561D28B5.7030303@amd.com>
- <561D9978.9090406@amd.com>
+Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
+ hostbridge init
+To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+ <1445963922-22711-12-git-send-email-tn@semihalf.com>
+ <5631180D.2000902@codeaurora.org> <563131B0.9060305@codeaurora.org>
+ <56320538.6000905@semihalf.com>
+Cc: jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <563234E6.4050109@codeaurora.org>
+Date: Thu, 29 Oct 2015 11:01:58 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <561D9978.9090406@amd.com>
+In-Reply-To: <56320538.6000905@semihalf.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 13, 2015 at 06:53:28PM -0500, Suravee Suthikulanit wrote:
-> Bjorn / Rafael,
-> 
-> On 10/13/2015 10:52 AM, Suravee Suthikulpanit wrote:
-> >
-> >On 09/14/2015 09:34 AM, Bjorn Helgaas wrote:
-> >>[..]
-> >>I think acpi_check_dma_coherency() is better, but only slightly.  It
-> >>still doesn't give a hint about the *sense* of the return value.  I
-> >>think it'd be easier to read if there were two functions, e.g.,
-> >
-> >I have been going back-and-forth between the current version, and the
-> >two-function-approach in the past. I can definitely go with this route
-> >if you would prefer. Although, if acpi_dma_is_coherent() == 0, it would
-> >be ambiguous whether DMA is not supported or non-coherent DMA is
-> >supported. Then, we would need to call acpi_dma_is_supported() to find
-> >out. So, that's okay with you?
-> 
-> Thinking about this again, I still think having one API (which can
-> tell whether DMA is supported or not, and if so whether it is
-> coherent or non-coherent) would be the least confusing and least
-> error prone.
-> 
-> What if we would just have:
-> 
->     enum dev_dma_type acpi_get_dev_dma_type(struct acpi_device *adev);
-> 
-> where:
->     enum dev_dma_type {
->         DEV_DMA_NOT_SUPPORTED,
->         DEV_DMA_NON_COHERENT,
->         DEV_DMA_COHERENT,
->     };
-> 
-> This would probably mean that we should modify
-> drivers/base/property.c to replace:
->     bool device_dma_is_coherent()
-> to:
->     enum dev_dma_type device_get_dma_type()
-> 
-> We used to discuss the enum approach in the past
-> (https://lkml.org/lkml/2015/8/25/868). But we only considered at the
-> ACPI level at the time. Actually, this should also reflect in the
-> property.c.
-> 
-> At this point, only drivers/crypto/ccp/ccp-platform.c and
-> drivers/net/ethernet/amd/xgbe/xgbe-main.c are calling the
-> device_dma_is_coherent(). So, it should be easy to change this API.
 
-OK, I'm fine with either the enum or Rafael's 0/1/-ENOTSUPP idea.
 
-Bjorn
+On 10/29/2015 7:38 AM, Tomasz Nowicki wrote:
+> On 28.10.2015 21:36, Sinan Kaya wrote:
+>> 1. ACPI code is unable to discover the interrupt numbers when objects
+>> are ordered as follows in the ACPI file
+>>
+>> PNP0A08 object
+>> PNP0C0F INTA object
+>> PNP0C0F INTB object
+>> PNP0C0F INTC object
+>> PNP0C0F INTD object
+>>
+>> This gives me invalid link context error.
+>>
+>> pci 0000:00:00.0: PCI INT A: no GSI
+>> pci 0000:01:00.0: Derived GSI for 0000:01:00.0 INT A from 0000:00:00.0
+>> acpi PNP0C0F:00: Invalid link context
+>>
+>> If I order it like this in the ACPI file,
+>>
+>> PNP0C0F INTA object
+>> PNP0C0F INTB object
+>> PNP0C0F INTC object
+>> PNP0C0F INTD object
+>> PNP0A08 object
+>>
+>> then, the legacy interrupt numbers can be discovered properly.
+>
+> Can you show full content of your PNP0C0F and PNP0A08 objects?
+>
+
+ACPI table is considered proprietary. I don't think I can get the legal 
+approval in time. I can give you pieces though.
+
+Here is the _PRT
+Device (PCI0) { // PCIe port 0
+	Name(_HID, EISAID("PNP0A08"))	// PCI express
+	Name(_CID, EISAID("PNP0A03"))	// Compatible PCI Root Bridge
+{
+	....
+	Name(_PRT, Package(){
+		Package(){0x0FFFF, 0, \_SB.LN0A, 0},  // Slot 0, INTA
+		Package(){0x0FFFF, 1, \_SB.LN0B, 0},  // Slot 0, INTB
+		Package(){0x0FFFF, 2, \_SB.LN0C, 0},  // Slot 0, INTC
+		Package(){0x0FFFF, 3, \_SB.LN0D, 0}   // Slot 0, INTD
+	})
+}
+
+Here is the PNP0C0F
+
+Device(LN0A){
+	Name(_HID, EISAID("PNP0C0F")) // PCI interrupt link
+	Name(_UID, 1)
+	Name(_PRS, ResourceTemplate(){
+	Interrupt(ResourceProducer, Level, ActiveHigh, Exclusive, , ,) {0xE8}
+	})
+	Method(_DIS) {}
+	Method(_CRS) { Return (_PRS) }
+	Method(_SRS, 1) {}
+}
+
+
+
+> Regards,
+> Tomasz
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
