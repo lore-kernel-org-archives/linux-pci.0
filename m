@@ -1,114 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:36904 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750932AbbJCSNi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Oct 2015 14:13:38 -0400
-In-Reply-To: <20151003181228.GI21513@n2100.arm.linux.org.uk>
-References: <20151003181228.GI21513@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 7/9] pci: mvebu: better implementation of clock/reset handling
+Received: from mail.kernel.org ([198.145.29.136]:54446 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755656AbbJ2TuN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 29 Oct 2015 15:50:13 -0400
+Date: Thu, 29 Oct 2015 14:50:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Alexander Duyck <aduyck@mirantis.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/5] iov: Update virtfn_max_buses to validate offset and
+ stride
+Message-ID: <20151029195010.GB19083@localhost>
+References: <20151027204607.14626.59671.stgit@localhost.localdomain>
+ <20151027205215.14626.93504.stgit@localhost.localdomain>
+ <20151028163216.GA2927@localhost>
+ <20151028184324.GA10008@localhost>
+ <5631424A.7010408@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1ZiRJH-0004JA-UC@rmk-PC.arm.linux.org.uk>
-Date: Sat, 03 Oct 2015 19:13:27 +0100
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5631424A.7010408@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add an implementation to handle clock and reset handling that is
-compliant with the PCIe specification.  The clock should be running
-and stable for 100us prior to reset being released, and we should
-re-assert reset prior to stopping the clock.
+On Wed, Oct 28, 2015 at 02:46:50PM -0700, Alexander Duyck wrote:
+> On 10/28/2015 11:43 AM, Bjorn Helgaas wrote:
+> >On Wed, Oct 28, 2015 at 11:32:16AM -0500, Bjorn Helgaas wrote:
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/pci/host/pci-mvebu.c | 56 ++++++++++++++++++++++++++++++++++----------
- 1 file changed, 43 insertions(+), 13 deletions(-)
+> >Here's my new proposal:
+> >
+> >   static int compute_max_vf_buses(struct pci_dev *dev)
+> >   {
+> >           struct pci_sriov *iov = dev->sriov;
+> >           int nr_virtfn, busnr, rc = 0;
+> >
+> >           for (nr_virtfn = iov->total_VFs; nr_virtfn; nr_virtfn--) {
+> >                   pci_iov_set_numvfs(dev, nr_virtfn);
+> >                   if (!iov->offset || (nr_virtfn > 1 && !iov->stride)) {
+> >                           rc = -EIO;
+> >                           goto out;
+> >                   }
+> >
+> >                   busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+> >                   if (busnr > iov->max_VF_buses)
+> >                           iov->max_VF_buses = busnr;
+> >           }
+> >
+> >   out:
+> >           pci_iov_set_numvfs(dev, 0);
+> >           return rc;
+> >   }
+> >
+> 
+> This looks good to me.  In theory you could save yourself a pair of
+> MMIO reads at the end of the loop by just writing numvfs without the
+> offset and stride read, but this should work.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index ab619ee0ef49..97208233d901 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -1042,6 +1042,46 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
- 	return ret;
- }
- 
-+/*
-+ * Power up a PCIe port.  PCIe requires the refclk to be stable for 100µs
-+ * prior to releasing PERST.  See table 2-4 in section 2.6.2 AC Specifications
-+ * of the PCI Express Card Electromechanical Specification, 1.1.
-+ */
-+static int mvebu_pcie_powerup(struct mvebu_pcie_port *port)
-+{
-+	int ret;
-+
-+	ret = clk_prepare_enable(port->clk);
-+	if (ret < 0)
-+		return ret;
-+
-+	if (port->reset_gpio) {
-+		u32 reset_udelay = 20000;
-+
-+		of_property_read_u32(port->dn, "reset-delay-us",
-+				     &reset_udelay);
-+
-+		udelay(100);
-+
-+		gpiod_set_value_cansleep(port->reset_gpio, 0);
-+		msleep(reset_udelay / 1000);
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Power down a PCIe port.  Strictly, PCIe requires us to place the card
-+ * in D3hot state before asserting PERST#.
-+ */
-+static void mvebu_pcie_powerdown(struct mvebu_pcie_port *port)
-+{
-+	if (port->reset_gpio)
-+		gpiod_set_value_cansleep(port->reset_gpio, 1);
-+
-+	clk_disable_unprepare(port->clk);
-+}
-+
- static int mvebu_pcie_probe(struct platform_device *pdev)
- {
- 	struct mvebu_pcie *pcie;
-@@ -1114,18 +1154,8 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 		if (!child)
- 			continue;
- 
--		if (port->reset_gpio) {
--			u32 reset_udelay = 20000;
--
--			of_property_read_u32(child, "reset-delay-us",
--					     &reset_udelay);
--
--			gpiod_set_value_cansleep(port->reset_gpio, 0);
--			msleep(reset_udelay / 1000);
--		}
--
--		ret = clk_prepare_enable(port->clk);
--		if (ret)
-+		ret = mvebu_pcie_powerup(port);
-+		if (ret < 0)
- 			continue;
- 
- 		port->base = mvebu_pcie_map_registers(pdev, child, port);
-@@ -1133,7 +1163,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 			dev_err(&pdev->dev, "%s: cannot map registers\n",
- 				port->name);
- 			port->base = NULL;
--			clk_disable_unprepare(port->clk);
-+			mvebu_pcie_powerdown(port);
- 			continue;
- 		}
- 
--- 
-2.1.0
+True.  It's called once per device at boot-time, so it's not a hot path,
+and I think it's worth two unnecessary MMIO reads to make it easier to
+analyze: there's exactly one place that updates PCI_SRIOV_NUM_VF, and that
+place always updates our caches of PCI_SRIOV_VF_OFFSET and
+PCI_SRIOV_VF_STRIDE.
 
+Bjorn
