@@ -1,126 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout3.freenet.de ([195.4.92.93]:39029 "EHLO mout3.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753812AbbJIRrr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Oct 2015 13:47:47 -0400
-Subject: Re: [PATCH] iommu/amd: Fix NULL pointer deref on device detach READ
- FPDMA QUEUED errors since Linux 4.0
-To: Joerg Roedel <joro@8bytes.org>
-References: <alpine.LRH.2.02.1509291143170.24174@file01.intranet.prod.int.rdu2.redhat.com>
- <20150929162042.GR3036@8bytes.org> <560BF73F.8000008@maya.org>
- <20151006101356.GE12506@8bytes.org> <56141507.7040103@maya.org>
- <20151007154005.GH28811@8bytes.org> <56155028.7060906@maya.org>
- <20151008173007.GL28811@8bytes.org> <5616BCF4.10104@maya.org>
- <5616C850.2000906@maya.org> <20151009144528.GA27420@8bytes.org>
-Cc: Mikulas Patocka <mpatocka@redhat.com>,
-	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>,
-	Christoph Hellwig <hch@lst.de>,
-	device-mapper development <dm-devel@redhat.com>,
-	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-From: Andreas Hartmann <andihartmann@freenet.de>
-Message-ID: <5617FC71.1090301@maya.org>
-Date: Fri, 9 Oct 2015 19:42:09 +0200
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:33822 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752050AbbJ2G6t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 02:58:49 -0400
+Subject: Re: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV NIC
+To: Lan Tianyu <tianyu.lan@intel.com>, bhelgaas@google.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	eddie.dong@intel.com, nrupal.jani@intel.com,
+	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
+	pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
+ <562A7E33.4080800@gmail.com> <562DBBC9.4000104@intel.com>
+ <562E40BB.6040404@gmail.com> <5631B8CA.9040805@intel.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <5631C3A7.2070900@gmail.com>
+Date: Wed, 28 Oct 2015 23:58:47 -0700
 MIME-Version: 1.0
-In-Reply-To: <20151009144528.GA27420@8bytes.org>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <5631B8CA.9040805@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello J�rg,
+On 10/28/2015 11:12 PM, Lan Tianyu wrote:
+> On 2015年10月26日 23:03, Alexander Duyck wrote:
+>> No.  I think you are missing the fact that there are 256 descriptors per
+>> page.  As such if you dirty just 1 you will be pulling in 255 more, of
+>> which you may or may not have pulled in the receive buffer for.
+>>
+>> So for example if you have the descriptor ring size set to 256 then that
+>> means you are going to get whatever the descriptor ring has since you
+>> will be marking the entire ring dirty with every packet processed,
+>> however you cannot guarantee that you are going to get all of the
+>> receive buffers unless you go through and flush the entire ring prior to
+>> migrating.
+>
+> Yes, that will be a problem. How about adding tag for each Rx buffer and
+> check the tag when deliver the Rx buffer to stack? If tag has been
+> overwritten, this means the packet data has been migrated.
 
-On 10/09/2015 at 04:45 PM, Joerg Roedel wrote:
-> Hi Andreas,
-> 
-> On Thu, Oct 08, 2015 at 09:47:28PM +0200, Andreas Hartmann wrote:
->> This time, the oops was caused by the second PCI card I'm passing
->> through to another VM (the ath9k card worked fine this time - chance?).
->> I added the lspci output to the attached file, too.
-> 
-> I digged a little bit around here and found a 32bit PCI card and plugged
-> it into the AMD IOMMU box. I could reproduce the problem and here is
-> patch which fixes it for me. Can you test it too please?
+Then you have to come up with a pattern that you can guarantee is the 
+tag and not part of the packet data.  That isn't going to be something 
+that is easy to do.  It would also have a serious performance impact on 
+the VF.
 
-Works fine here. Thanks.
+>> This is why I have said you will need to do something to force the rings
+>> to be flushed such as initiating a PM suspend prior to migrating.  You
+>> need to do something to stop the DMA and flush the remaining Rx buffers
+>> if you want to have any hope of being able to migrate the Rx in a
+>> consistent state.  Beyond that the only other thing you have to worry
+>> about are the Rx buffers that have already been handed off to the
+>> stack.  However those should be handled if you do a suspend and somehow
+>> flag pages as dirty when they are unmapped from the DMA.
+>>
+>> - Alex
+> This will be simple and maybe our first version to enable migration. But
+> we still hope to find a way not to disable DMA before stopping VCPU to
+> decrease service down time.
 
+You have to stop the Rx DMA at some point anyway.  It is the only means 
+to guarantee that the device stops updating buffers and descriptors so 
+that you will have a consistent state.
 
-But now, I can see the next big problem of v4.3-rc4: My VMs are
-connected on the host via tun/tap devices. They themselves are connected
-to a bridge device. If there is data sent between the VMs, the (system)
-load is more as double (!) of the load seen with 4.1.x e.g. . Having an
-allover throughput of about low 35 MBit/s seen by the host over all
-tun/tap devices / bridge creates a load of 3 (!!) with 3 VMs being
-involved. That's about half of the load produced by kernel compiling
-(make -j8).
-
-
-
-> I'd like to
-> send a pull-req with this fix included to Linus for rc5.
-> 
-> Thanks,
-> 
-> 	Joerg
-> 
-> From d07307c04edffaaa045fb83713f8808e55ffa895 Mon Sep 17 00:00:00 2001
-> From: Joerg Roedel <jroedel@suse.de>
-> Date: Fri, 9 Oct 2015 16:23:33 +0200
-> Subject: [PATCH] iommu/amd: Fix NULL pointer deref on device detach
-> 
-> When a device group is detached from its domain, the iommu
-> core code calls into the iommu driver to detach each device
-> individually.
-> 
-> Before this functionality went into the iommu core code, it
-> was implemented in the drivers, also in the AMD IOMMU
-> driver as the device alias handling code.
-> 
-> This code is still present, as there might be aliases that
-> don't exist as real PCI devices (and are therefore invisible
-> to the iommu core code).
-> 
-> Unfortunatly it might happen now, that a device is unbound
-> multiple times from its domain, first by the alias handling
-> code and then by the iommu core code (or vice verca).
-> 
-> This ends up in the do_detach function which dereferences
-> the dev_data->domain pointer. When the device is already
-> detached, this pointer is NULL and we get a kernel oops.
-> 
-> Removing the alias code completly is not an option, as that
-> would also remove the code which handles invisible aliases.
-> The code could be simplified, but this is too big of a
-> change outside the merge window.
-> 
-> For now, just check the dev_data->domain pointer in
-> do_detach and bail out if it is NULL.
-> 
-> Andreas Hartmann <andihartmann@freenet.de>
-> Signed-off-by: Joerg Roedel <jroedel@suse.de>
-> ---
->  drivers/iommu/amd_iommu.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
-> 
-> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-> index f82060e7..08d2775 100644
-> --- a/drivers/iommu/amd_iommu.c
-> +++ b/drivers/iommu/amd_iommu.c
-> @@ -2006,6 +2006,15 @@ static void do_detach(struct iommu_dev_data *dev_data)
->  {
->  	struct amd_iommu *iommu;
->  
-> +	/*
-> +	 * First check if the device is still attached. It might already
-> +	 * be detached from its domain because the generic
-> +	 * iommu_detach_group code detached it and we try again here in
-> +	 * our alias handling.
-> +	 */
-> +	if (!dev_data->domain)
-> +		return;
-> +
->  	iommu = amd_iommu_rlookup_table[dev_data->devid];
->  
->  	/* decrease reference counters */
-> 
+Your code was having to do a bunch of shuffling in order to get things 
+set up so that you could bring the interface back up.  I would argue 
+that it may actually be faster at least on the bring-up to just drop the 
+old rings and start over since it greatly reduced the complexity and the 
+amount of device related data that has to be moved.
 
