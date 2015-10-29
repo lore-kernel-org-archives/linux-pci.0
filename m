@@ -1,58 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60361 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932540AbbJISJN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Oct 2015 14:09:13 -0400
-Date: Fri, 9 Oct 2015 13:09:10 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Martin Mares <mj@ucw.cz>
-Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device driver
-Message-ID: <20151009180910.GB16112@localhost>
-References: <1443721454-25467-1-git-send-email-keith.busch@intel.com>
- <20151006231412.GF29420@localhost>
- <alpine.LNX.2.00.1510062331220.23840@localhost.lm.intel.com>
- <20151008134702.GK27633@localhost>
- <alpine.LNX.2.00.1510082115120.27742@localhost.lm.intel.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:30969 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237AbbJ2C1k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2015 22:27:40 -0400
+Message-ID: <563183F9.1010809@hisilicon.com>
+Date: Thu, 29 Oct 2015 10:27:05 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LNX.2.00.1510082115120.27742@localhost.lm.intel.com>
+To: Rob Herring <robh@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	James Morse <james.morse@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"Jason Cooper" <jason@lakedaemon.net>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, Wei Xu <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v12 7/8] Documentation: DT: Add HiSilicon PCIe host binding
+References: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com> <1445859350-26375-8-git-send-email-wangzhou1@hisilicon.com> <CAL_JsqKamKx8vVVv7qVZ8oyjXLem93B9dnJAxvvoRWd3XEc=7Q@mail.gmail.com>
+In-Reply-To: <CAL_JsqKamKx8vVVv7qVZ8oyjXLem93B9dnJAxvvoRWd3XEc=7Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Martin]
-
-On Thu, Oct 08, 2015 at 09:33:10PM +0000, Keith Busch wrote:
-> On Thu, 8 Oct 2015, Bjorn Helgaas wrote:
-> >On Wed, Oct 07, 2015 at 12:21:02AM +0000, Keith Busch wrote:
-> >>Thank you for bringing this up as I hadn't thought much about it and may
-> >>have misunderstood the meaning of _SEG. AIUI, it is used to identify a
-> >>logical grouping. The OS does not need to use the same identifier for
-> >>the domain, so we there's no need to collide if we can assign the domain
-> >>of a a new _SEG to the next available domain_nr.
-> >
-> >Yes, I guess it would be possible to decouple _SEG and Linux PCI
-> >domain numbers.  It's *convenient* to have them the same, so dmesg and
-> >lspci output matches _SEG directly, but I guess you could argue that's
-> >not essential.
-> >
-> >I think we'd have to maintain a mapping from domain back to _SEG to
-> >deal with firmware interfaces that expect _SEG, e.g., ia64 PAL calls.
+On 2015/10/28 3:19, Rob Herring wrote:
+> On Mon, Oct 26, 2015 at 6:35 AM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+>> This patch adds related DTS binding document for HiSilicon PCIe host driver.
+>>
+>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 > 
-> It looks like there are lots of assumptions in the kernel that segment
-> and domain are the same thing. I don't have the necessary h/w to test
-> any changes here to verify the mappings are handled correctly, so I'm
-> apprehensive to start changing this much code that I can't test.
+> Acked-by: Rob Herring <robh@kernel.org>
+>
 
-Yes, this could be a real can of worms.
+Thanks for your review.
+Zhou
 
-> Given that domain_nr is a 32-bit integer, APCI's _SEG is only 16 bits,
-> and the pci domain is purely a software construct, do you see any problem
-> if we start these 'special' domains at 0x10000? I've tested this in
-> the driver and lspci + setpci with the single line update in pciutils'
-> lib/pci.h, and it all seems to work just fine.
+>> ---
+>>  .../bindings/arm/hisilicon/hisilicon.txt           | 17 +++++++++
+>>  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 44 ++++++++++++++++++++++
+>>  2 files changed, 61 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
+>> index 3504dca..6ac7c00 100644
+>> --- a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
+>> +++ b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
+>> @@ -171,6 +171,23 @@ Example:
+>>         };
+>>
+>>  -----------------------------------------------------------------------
+>> +Hisilicon HiP05 PCIe-SAS system controller
+>> +
+>> +Required properties:
+>> +- compatible : "hisilicon,pcie-sas-subctrl", "syscon";
+>> +- reg : Register address and size
+>> +
+>> +The HiP05 PCIe-SAS system controller is shared by PCIe and SAS controllers in
+>> +HiP05 Soc to implement some basic configurations.
+>> +
+>> +Example:
+>> +       /* for HiP05 PCIe-SAS system */
+>> +       pcie_sas: system_controller@0xb0000000 {
+>> +               compatible = "hisilicon,pcie-sas-subctrl", "syscon";
+>> +               reg = <0xb0000000 0x10000>;
+>> +       };
+>> +
+>> +-----------------------------------------------------------------------
+>>  Hisilicon CPU controller
+>>
+>>  Required properties:
+>> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>> new file mode 100644
+>> index 0000000..17c6ed9
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>> @@ -0,0 +1,44 @@
+>> +HiSilicon PCIe host bridge DT description
+>> +
+>> +HiSilicon PCIe host controller is based on Designware PCI core.
+>> +It shares common functions with PCIe Designware core driver and inherits
+>> +common properties defined in
+>> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+>> +
+>> +Additional properties are described here:
+>> +
+>> +Required properties:
+>> +- compatible: Should contain "hisilicon,hip05-pcie".
+>> +- reg: Should contain rc_dbi, config registers location and length.
+>> +- reg-names: Must include the following entries:
+>> +  "rc_dbi": controller configuration registers;
+>> +  "config": PCIe configuration space registers.
+>> +- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
+>> +- port-id: Should be 0, 1, 2 or 3.
+> 
+> 
+>> +
+>> +Optional properties:
+>> +- status: Either "ok" or "disabled".
+>> +- dma-coherent: Present if DMA operations are coherent.
+>> +
+>> +Example:
+>> +       pcie@0xb0080000 {
+>> +               compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
+>> +               reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
+>> +               reg-names = "rc_dbi", "config";
+>> +               bus-range = <0  15>;
+>> +               msi-parent = <&its_pcie>;
+>> +               #address-cells = <3>;
+>> +               #size-cells = <2>;
+>> +               device_type = "pci";
+>> +               dma-coherent;
+>> +               ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
+>> +               num-lanes = <8>;
+>> +               port-id = <1>;
+>> +               #interrupts-cells = <1>;
+>> +               interrupts-map-mask = <0xf800 0 0 7>;
+>> +               interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
+>> +                                 0x0 0 0 2 &mbigen_pcie 2 11
+>> +                                 0x0 0 0 3 &mbigen_pcie 3 12
+>> +                                 0x0 0 0 4 &mbigen_pcie 4 13>;
+>> +               status = "ok";
+>> +       };
+>> --
+>> 1.9.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
-If you make the kernel start using domain numbers that don't fit in 16
-bits, what happens if you run the old lspci on a new kernel?
 
-Bjorn
