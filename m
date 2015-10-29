@@ -1,64 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.w1.samsung.com ([210.118.77.13]:46477 "EHLO
-	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753726AbbJHHYf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 03:24:35 -0400
-From: Pavel Fedin <p.fedin@samsung.com>
-To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Cc: Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: [PATCH v2 1/2] PCI: of: Add 64-bit address recognition without LPAE
- support
-Date: Thu, 08 Oct 2015 10:24:25 +0300
-Message-id: <858110a5c4fb0b2094417cc8429560bdaae81c66.1444288748.git.p.fedin@samsung.com>
-In-reply-to: <cover.1444288748.git.p.fedin@samsung.com>
-References: <cover.1444288748.git.p.fedin@samsung.com>
-In-reply-to: <cover.1444288748.git.p.fedin@samsung.com>
-References: <cover.1444288748.git.p.fedin@samsung.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:10156 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756169AbbJ2JZe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 05:25:34 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<rmk+kernel@arm.linux.org.uk>,
+	<thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v13 4/6] ARM/PCI: Replace pci_sys_data->align_resource with global function pointer
+Date: Thu, 29 Oct 2015 17:40:36 +0800
+Message-ID: <1446111638-197070-5-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1446111638-197070-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1446111638-197070-1-git-send-email-wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If non-LPAE kernel is booted up on a machine with 64-bit PCI resources,
-PCI controller probe fails with:
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-PCI host bridge /pcie@10000000 ranges:
-   IO 0x3eff0000..0x3effffff -> 0x00000000
-  MEM 0x10000000..0x3efeffff -> 0x10000000
-  MEM 0x8000000000..0xffffffffff -> 0x8000000000
-pci-host-generic 3f000000.pcie: resource collision: [mem 0x00000000-0xffffffff] conflicts with /pl011@9000000 [mem 0x09000000-0x09000fff]
-pci-host-generic: probe of 3f000000.pcie failed with error -16
+dw_pcie_host_init() creates the PCI host bridge with pci_common_init_dev(),
+an ARM-specific function that supplies the ARM-specific pci_sys_data
+structure as the PCI "sysdata".  To use dw_pcie_host_init() on other
+architectures, we will copy the internals of pci_common_init_dev() into
+pcie-designware.c instead of calling it, and dw_pcie_host_init() will
+supply the DesignWare pcie_port structure as "sysdata".
 
-This happens because res->start assignment in of_pci_range_to_resource()
-truncates the upper part of the address, because res->start is of
-phys_addr_t type, which is 32-bit on non-LPAE kernels.
+Most ARM "sysdata" users are specific to non-DesignWare host bridges;
+they'll be unaffected because those bridges will continue to have the ARM
+pci_sys_data.  Most of the rest are ARM-generic functions called by
+pci_common_init_dev(); these will be unaffected because dw_pcie_host_init()
+will no longer call pci_common_init().
 
-This patch adds explicit recognition of 64-bit resources, preventing from
-potential problems when e. g. 0x8000001234 would be converted to
-0x00001234.
+But the ARM pcibios_align_resource() can be called by the PCI core for any
+bridge, so it can't depend on sysdata since it may be either pci_sys_data
+or pcie_port.
 
-Signed-off-by: Pavel Fedin <p.fedin@samsung.com>
+Remove the pcibios_align_resource() dependency on sysdata by replacing the
+pci_sys_data->align_resource pointer with a global function pointer.
+
+This is less general (we can no longer have per-host bridge
+align_resource() methods), but the pci_sys_data->align_resource pointer was
+used only by Marvell (see mvebu_pcie_enable()), so this would only be a
+problem if we had a system with a combination of Marvell and other host
+bridges
+
+[bhelgaas: changelog]
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
 ---
- drivers/of/address.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ arch/arm/include/asm/mach/pci.h |  6 ------
+ arch/arm/kernel/bios32.c        | 12 ++++++++----
+ 2 files changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 384574c..cd53fe4 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -330,6 +330,12 @@ int of_pci_range_to_resource(struct of_pci_range *range,
- 		}
- 		res->start = port;
- 	} else {
-+		if ((sizeof(resource_size_t) < 8) &&
-+		    upper_32_bits(range->cpu_addr)) {
-+			err = -EINVAL;
-+			goto invalid_range;
-+		}
-+
- 		res->start = range->cpu_addr;
- 	}
- 	res->end = res->start + range->size - 1;
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index 8857d28..0070e85 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -52,12 +52,6 @@ struct pci_sys_data {
+ 	u8		(*swizzle)(struct pci_dev *, u8 *);
+ 					/* IRQ mapping				*/
+ 	int		(*map_irq)(const struct pci_dev *, u8, u8);
+-					/* Resource alignement requirements	*/
+-	resource_size_t (*align_resource)(struct pci_dev *dev,
+-					  const struct resource *res,
+-					  resource_size_t start,
+-					  resource_size_t size,
+-					  resource_size_t align);
+ 	void		*private_data;	/* platform controller private data	*/
+ };
+ 
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 874e182..6551d28 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -17,6 +17,11 @@
+ #include <asm/mach/pci.h>
+ 
+ static int debug_pci;
++static resource_size_t (*align_resource)(struct pci_dev *dev,
++		  const struct resource *res,
++		  resource_size_t start,
++		  resource_size_t size,
++		  resource_size_t align) = NULL;
+ 
+ /*
+  * We can't use pci_get_device() here since we are
+@@ -456,7 +461,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 		sys->busnr   = busnr;
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
+-		sys->align_resource = hw->align_resource;
++		align_resource = hw->align_resource;
+ 		INIT_LIST_HEAD(&sys->resources);
+ 
+ 		if (hw->private_data)
+@@ -572,7 +577,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 				resource_size_t size, resource_size_t align)
+ {
+ 	struct pci_dev *dev = data;
+-	struct pci_sys_data *sys = dev->sysdata;
+ 	resource_size_t start = res->start;
+ 
+ 	if (res->flags & IORESOURCE_IO && start & 0x300)
+@@ -580,8 +584,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 
+ 	start = (start + align - 1) & ~(align - 1);
+ 
+-	if (sys->align_resource)
+-		return sys->align_resource(dev, res, start, size, align);
++	if (align_resource)
++		return align_resource(dev, res, start, size, align);
+ 
+ 	return start;
+ }
 -- 
-2.4.4
+1.9.1
 
