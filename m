@@ -1,260 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18583 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751654AbbJTUIM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Oct 2015 16:08:12 -0400
-Subject: Re: [PATCH v7 02/60] sparc/PCI: Use correct bus address to resource
- offset
-To: Bjorn Helgaas <helgaas@kernel.org>, Yinghai Lu <yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
- <1444340359-8011-3-git-send-email-yinghai@kernel.org>
- <20151020195413.GH8224@localhost>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 1/7] PCI: Set SR-IOV NumVFs to zero after enumeration
+To: Alexander Duyck <aduyck@mirantis.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Ethan Zhao <ethan.zhao@oracle.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
 	linux-kernel@vger.kernel.org
-From: Khalid Aziz <khalid.aziz@oracle.com>
-Message-ID: <56269F0F.7000309@oracle.com>
-Date: Tue, 20 Oct 2015 14:07:43 -0600
+Date: Thu, 29 Oct 2015 17:22:54 -0500
+Message-ID: <20151029222254.11908.78884.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20151020195413.GH8224@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/20/2015 01:54 PM, Bjorn Helgaas wrote:
-> On Thu, Oct 08, 2015 at 02:38:21PM -0700, Yinghai Lu wrote:
->> After we add 64bit mmio parsing, we got some "no compatible bridge window"
->> warning on anther new model that support 64bit resource.
->>
->> It turns out that we can not use mem_space.start as 64bit mem space
->> offset, aka mem_space.start != offset.
->>
->> Use child_phys_addr to calculate exact offset and recorder offset in
->> pbm.  Still assume all mem have same offset, otherwise panic early.
->>
->> After patch we get correct offset.
->>
->> /pci@305: PCI IO [io  0x2007e00000000-0x2007e0fffffff] offset 2007e00000000
->> /pci@305: PCI MEM [mem 0x2000000100000-0x200007effffff] offset 2000000000000
->> /pci@305: PCI MEM64 [mem 0x2000100000000-0x2000dffffffff] offset 2000000000000
->> ...
->> pci_sun4v f02ae7f8: PCI host bridge to bus 0000:00
->> pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
->> pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
->> pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
->
-> I think this changelog is incorrect.  It suggests that this fixes a
-> problem with 64-bit apertures, but in this example, *both* mem
-> apertures are different from what they would have been before this
-> patch.
->
-> Before this patch, we used the mem32 aperture base (0x2000000100000)
-> as the translation offset for both the mem32 and mem64 apertures, so I
-> think we would have had this:
->
->    pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00000000-0x7eefffff])
->    pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0xfff00000-0xdffefffff])
->
-> After this patch, you compute the real mem32 offset (0x2000000000000)
-> and use it for both mem32 and mem64:
->
->    pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
->    pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
->
->> -v2: to make is simple, do not add mem64_offset, and assume
->>       mem64_offset == mem_offset, otherwise would make
->>       pci_mmap_resource() path too complicated.
->
-> I missed this comment before, and I suppose it has something to do
-> with why you decided to panic if the mem64 offset is different from
-> the mem32 offset.  But I don't understand the reasoning.  Other
-> architectures handle pci_mmap_resource() just fine, ...  oh, I see,
-> this is related to the pci_resource_to_user() messiness.
->
-> I don't want to argue about pci_resource_to_user() right now, so I
-> guess you can just panic if the mem64 offset is different from the
-> mem32 offset.  But you should at least add a comment about why you're
-> doing that.  Otherwise it looks like you were just lazy.
+From: Alexander Duyck <aduyck@mirantis.com>
 
-I just hit this condition on a sparc platform where mem32 offset != 
-mem64 offset. We need to handle this case, and not just call panic. I 
-had not seen this on 5 platforms and another 3 ldoms I had tested this 
-on when I tested this code earlier. I have sent panic log to Yinghai 
-separately.
+The enumeration path should leave NumVFs set to zero.  But after
+4449f079722c ("PCI: Calculate maximum number of buses required for VFs"),
+we call virtfn_max_buses() in the enumeration path, which changes NumVFs.
+This NumVFs change is visible via lspci and sysfs until a driver enables
+SR-IOV.
 
---
-Khalid
+Iterate from TotalVFs down to zero so NumVFs is zero when we're finished
+computing the maximum number of buses.  Validate offset and stride in
+the loop, so we can test it at every possible NumVFs setting.  Rename
+virtfn_max_buses() to compute_max_vf_buses() to hint that it does have a
+side effect of updating iov->max_VF_buses.
 
->
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> ---
->>   arch/sparc/kernel/pci.c        | 14 +++++++-------
->>   arch/sparc/kernel/pci_common.c | 36 +++++++++++++++++++++++++++---------
->>   arch/sparc/kernel/pci_impl.h   |  3 +++
->>   3 files changed, 37 insertions(+), 16 deletions(-)
->>
->> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
->> index badf095..451792e 100644
->> --- a/arch/sparc/kernel/pci.c
->> +++ b/arch/sparc/kernel/pci.c
->> @@ -654,12 +654,12 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
->>   	printk("PCI: Scanning PBM %s\n", node->full_name);
->>
->>   	pci_add_resource_offset(&resources, &pbm->io_space,
->> -				pbm->io_space.start);
->> +				pbm->io_offset);
->>   	pci_add_resource_offset(&resources, &pbm->mem_space,
->> -				pbm->mem_space.start);
->> +				pbm->mem_offset);
->>   	if (pbm->mem64_space.flags)
->>   		pci_add_resource_offset(&resources, &pbm->mem64_space,
->> -					pbm->mem_space.start);
->> +					pbm->mem_offset);
->>   	pbm->busn.start = pbm->pci_first_busno;
->>   	pbm->busn.end	= pbm->pci_last_busno;
->>   	pbm->busn.flags	= IORESOURCE_BUS;
->> @@ -751,10 +751,10 @@ static int __pci_mmap_make_offset_bus(struct pci_dev *pdev, struct vm_area_struc
->>   		return -EINVAL;
->>
->>   	if (mmap_state == pci_mmap_io) {
->> -		vma->vm_pgoff = (pbm->io_space.start +
->> +		vma->vm_pgoff = (pbm->io_offset +
->>   				 user_offset) >> PAGE_SHIFT;
->>   	} else {
->> -		vma->vm_pgoff = (pbm->mem_space.start +
->> +		vma->vm_pgoff = (pbm->mem_offset +
->>   				 user_offset) >> PAGE_SHIFT;
->>   	}
->>
->> @@ -981,9 +981,9 @@ void pci_resource_to_user(const struct pci_dev *pdev, int bar,
->>   	unsigned long offset;
->>
->>   	if (rp->flags & IORESOURCE_IO)
->> -		offset = pbm->io_space.start;
->> +		offset = pbm->io_offset;
->>   	else
->> -		offset = pbm->mem_space.start;
->> +		offset = pbm->mem_offset;
->>
->>   	*start = rp->start - offset;
->>   	*end = rp->end - offset;
->> diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
->> index 33524c1..28e976a 100644
->> --- a/arch/sparc/kernel/pci_common.c
->> +++ b/arch/sparc/kernel/pci_common.c
->> @@ -393,6 +393,7 @@ static void pci_register_iommu_region(struct pci_pbm_info *pbm)
->>   void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->>   {
->>   	const struct linux_prom_pci_ranges *pbm_ranges;
->> +	resource_size_t mem64_offset = 0;
->>   	int i, saw_mem, saw_io;
->>   	int num_pbm_ranges;
->>
->> @@ -410,13 +411,16 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->>
->>   	for (i = 0; i < num_pbm_ranges; i++) {
->>   		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
->> -		unsigned long a, size;
->> +		unsigned long a, size, region_a;
->>   		u32 parent_phys_hi, parent_phys_lo;
->> +		u32 child_phys_mid, child_phys_lo;
->>   		u32 size_hi, size_lo;
->>   		int type;
->>
->>   		parent_phys_hi = pr->parent_phys_hi;
->>   		parent_phys_lo = pr->parent_phys_lo;
->> +		child_phys_mid = pr->child_phys_mid;
->> +		child_phys_lo = pr->child_phys_lo;
->>   		if (tlb_type == hypervisor)
->>   			parent_phys_hi &= 0x0fffffff;
->>
->> @@ -426,6 +430,8 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->>   		type = (pr->child_phys_hi >> 24) & 0x3;
->>   		a = (((unsigned long)parent_phys_hi << 32UL) |
->>   		     ((unsigned long)parent_phys_lo  <<  0UL));
->> +		region_a = (((unsigned long)child_phys_mid << 32UL) |
->> +		     ((unsigned long)child_phys_lo  <<  0UL));
->>   		size = (((unsigned long)size_hi << 32UL) |
->>   			((unsigned long)size_lo  <<  0UL));
->>
->> @@ -440,6 +446,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->>   			pbm->io_space.start = a;
->>   			pbm->io_space.end = a + size - 1UL;
->>   			pbm->io_space.flags = IORESOURCE_IO;
->> +			pbm->io_offset = a - region_a;
->>   			saw_io = 1;
->>   			break;
->>
->> @@ -448,6 +455,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->>   			pbm->mem_space.start = a;
->>   			pbm->mem_space.end = a + size - 1UL;
->>   			pbm->mem_space.flags = IORESOURCE_MEM;
->> +			pbm->mem_offset = a - region_a;
->>   			saw_mem = 1;
->>   			break;
->>
->> @@ -456,6 +464,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->>   			pbm->mem64_space.start = a;
->>   			pbm->mem64_space.end = a + size - 1UL;
->>   			pbm->mem64_space.flags = IORESOURCE_MEM;
->> +			mem64_offset = a - region_a;
->>   			saw_mem = 1;
->>   			break;
->>
->> @@ -471,14 +480,23 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->>   		prom_halt();
->>   	}
->>
->> -	printk("%s: PCI IO[%llx] MEM[%llx]",
->> -	       pbm->name,
->> -	       pbm->io_space.start,
->> -	       pbm->mem_space.start);
->> -	if (pbm->mem64_space.flags)
->> -		printk(" MEM64[%llx]",
->> -		       pbm->mem64_space.start);
->> -	printk("\n");
->> +	if (pbm->io_space.flags)
->> +		printk("%s: PCI IO %pR offset %llx\n",
->> +		       pbm->name, &pbm->io_space, pbm->io_offset);
->> +	if (pbm->mem_space.flags)
->> +		printk("%s: PCI MEM %pR offset %llx\n",
->> +		       pbm->name, &pbm->mem_space, pbm->mem_offset);
->> +	if (pbm->mem64_space.flags) {
->> +		if (pbm->mem_space.flags) {
->> +			if (mem64_offset != pbm->mem_offset)
->> +				panic("mem offset %llx != mem64 offset %llx\n",
->> +					pbm->mem_offset, mem64_offset);
->> +		} else
->> +			pbm->mem_offset = mem64_offset;
->> +
->> +		printk("%s: PCI MEM64 %pR offset %llx\n",
->> +		       pbm->name, &pbm->mem64_space, pbm->mem_offset);
->> +	}
->>
->>   	pbm->io_space.name = pbm->mem_space.name = pbm->name;
->>   	pbm->mem64_space.name = pbm->name;
->> diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
->> index 37222ca..08b74af 100644
->> --- a/arch/sparc/kernel/pci_impl.h
->> +++ b/arch/sparc/kernel/pci_impl.h
->> @@ -99,6 +99,9 @@ struct pci_pbm_info {
->>   	struct resource			mem_space;
->>   	struct resource			mem64_space;
->>   	struct resource			busn;
->> +	/* offset */
->> +	resource_size_t			io_offset;
->> +	resource_size_t			mem_offset;
->>
->>   	/* Base of PCI Config space, can be per-PBM or shared. */
->>   	unsigned long			config_space;
->> --
->> 1.8.4.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[bhelgaas: changelog, rename, allow numVF==1 && stride==0, rework loop,
+reverse sense of error path]
+Fixes: 4449f079722c ("PCI: Calculate maximum number of buses required for VFs")
+Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
+Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c |   41 ++++++++++++++++++++++-------------------
+ 1 file changed, 22 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 0cdb2d1..1b1acc2 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -54,24 +54,29 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+  * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
+  * determine how many additional bus numbers will be consumed by VFs.
+  *
+- * Iterate over all valid NumVFs and calculate the maximum number of bus
+- * numbers that could ever be required.
++ * Iterate over all valid NumVFs, validate offset and stride, and calculate
++ * the maximum number of bus numbers that could ever be required.
+  */
+-static inline u8 virtfn_max_buses(struct pci_dev *dev)
++static int compute_max_vf_buses(struct pci_dev *dev)
+ {
+ 	struct pci_sriov *iov = dev->sriov;
+-	int nr_virtfn;
+-	u8 max = 0;
+-	int busnr;
++	int nr_virtfn, busnr, rc = 0;
+ 
+-	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
++	for (nr_virtfn = iov->total_VFs; nr_virtfn; nr_virtfn--) {
+ 		pci_iov_set_numvfs(dev, nr_virtfn);
++		if (!iov->offset || (nr_virtfn > 1 && !iov->stride)) {
++			rc = -EIO;
++			goto out;
++		}
++
+ 		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+-		if (busnr > max)
+-			max = busnr;
++		if (busnr > iov->max_VF_buses)
++			iov->max_VF_buses = busnr;
+ 	}
+ 
+-	return max;
++out:
++	pci_iov_set_numvfs(dev, 0);
++	return rc;
+ }
+ 
+ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+@@ -384,7 +389,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 	int rc;
+ 	int nres;
+ 	u32 pgsz;
+-	u16 ctrl, total, offset, stride;
++	u16 ctrl, total;
+ 	struct pci_sriov *iov;
+ 	struct resource *res;
+ 	struct pci_dev *pdev;
+@@ -410,11 +415,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 
+ found:
+ 	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+-	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
+-	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
+-	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
+-	if (!offset || (total > 1 && !stride))
+-		return -EIO;
+ 
+ 	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
+ 	if (!total)
+@@ -456,8 +456,6 @@ found:
+ 	iov->nres = nres;
+ 	iov->ctrl = ctrl;
+ 	iov->total_VFs = total;
+-	iov->offset = offset;
+-	iov->stride = stride;
+ 	iov->pgsz = pgsz;
+ 	iov->self = dev;
+ 	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+@@ -474,10 +472,15 @@ found:
+ 
+ 	dev->sriov = iov;
+ 	dev->is_physfn = 1;
+-	iov->max_VF_buses = virtfn_max_buses(dev);
++	rc = compute_max_vf_buses(dev);
++	if (rc)
++		goto fail_max_buses;
+ 
+ 	return 0;
+ 
++fail_max_buses:
++	dev->sriov = NULL;
++	dev->is_physfn = 0;
+ failed:
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = &dev->resource[i + PCI_IOV_RESOURCES];
 
