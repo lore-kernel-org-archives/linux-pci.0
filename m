@@ -1,72 +1,128 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 37/61] PCI: Cache window alignment value during bus sizing
-Date: Tue, 27 Oct 2015 13:55:29 -0700
-Message-Id: <1445979353-1728-38-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:10160 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755981AbbJ2JZe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 05:25:34 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<rmk+kernel@arm.linux.org.uk>,
+	<thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v13 1/6] PCI: designware: Move calculation of bus addresses to DRA7xx
+Date: Thu, 29 Oct 2015 17:40:33 +0800
+Message-ID: <1446111638-197070-2-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1446111638-197070-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1446111638-197070-1-git-send-email-wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are several calling to window_alignment(), and we will have more
-for alt_size support, cache the value instead of keeping on getting it.
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Commit f4c55c5a3f7f ("PCI: designware: Program ATU with untranslated
+address") added the calculation of PCI BUS addresses in designware,
+storing them in new fields added in "struct pcie_port". This
+calculation is done for every designware user even if is only
+applicable to DRA7xx.
+This patch moves the calculation of the bus addresses to the DRA7xx
+driver and is needed to allow the rework of designware to use
+the new DT parsing API.
+
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
 ---
- drivers/pci/setup-bus.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/pci/host/pci-dra7xx.c      |  7 +++++++
+ drivers/pci/host/pcie-designware.c | 15 ++++-----------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b86417d..deed016 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1241,6 +1241,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					mask | IORESOURCE_PREFETCH, type);
- 	LIST_HEAD(align_test_list);
- 	LIST_HEAD(align_test_add_list);
-+	resource_size_t window_align;
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 199e29a..0b4847a 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -62,6 +62,7 @@
  
- 	if (!b_res)
- 		return -ENOSPC;
-@@ -1250,6 +1251,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		min_size = 0;
- 	}
+ #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
+ #define	LINK_UP						BIT(16)
++#define	DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
  
-+	window_align = window_alignment(bus, b_res->flags);
+ struct dra7xx_pcie {
+ 	void __iomem		*base;
+@@ -151,6 +152,12 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
+ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+ {
+ 	dw_pcie_setup_rc(pp);
 +
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
++	pp->io_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
++	pp->mem_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
++	pp->cfg0_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
++	pp->cfg1_mod_base &= DRA7XX_CPU_TO_BUS_ADDR;
++
+ 	dra7xx_pcie_establish_link(pp);
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		dw_pcie_msi_init(pp);
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 52aa6e3..75338a6 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -365,14 +365,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	struct of_pci_range range;
+ 	struct of_pci_range_parser parser;
+ 	struct resource *cfg_res;
+-	u32 val, na, ns;
++	u32 val, ns;
+ 	const __be32 *addrp;
+ 	int i, index, ret;
  
-@@ -1311,10 +1314,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+-	/* Find the address cell size and the number of cells in order to get
+-	 * the untranslated address.
+-	 */
+-	of_property_read_u32(np, "#address-cells", &na);
+ 	ns = of_n_size_cells(np);
+ 
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+@@ -415,8 +411,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->io_base = range.cpu_addr;
+ 
+ 			/* Find the untranslated IO space address */
+-			pp->io_mod_base = of_read_number(parser.range -
+-							 parser.np + na, ns);
++			pp->io_mod_base = range.cpu_addr;
  		}
- 	}
+ 		if (restype == IORESOURCE_MEM) {
+ 			of_pci_range_to_resource(&range, np, &pp->mem);
+@@ -425,8 +420,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->mem_bus_addr = range.pci_addr;
  
--	max_align = max(max_align, window_alignment(bus, b_res->flags));
-+	max_align = max(max_align, window_align);
- 	if (size || min_size) {
- 		min_align = calculate_mem_align(&align_test_list, max_align,
--				 size, window_alignment(bus, b_res->flags));
-+						size, window_align);
- 		size0 = calculate_memsize(size, min_size,
- 				  resource_size(b_res), min_align);
- 	}
-@@ -1325,7 +1328,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (sum_add_size > size && realloc_head) {
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
--					window_alignment(bus, b_res->flags));
-+					window_align);
- 		size1 = calculate_memsize(sum_add_size, min_size,
- 				 resource_size(b_res), min_add_align);
- 	}
+ 			/* Find the untranslated MEM space address */
+-			pp->mem_mod_base = of_read_number(parser.range -
+-							  parser.np + na, ns);
++			pp->mem_mod_base = range.cpu_addr;
+ 		}
+ 		if (restype == 0) {
+ 			of_pci_range_to_resource(&range, np, &pp->cfg);
+@@ -436,8 +430,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
+ 
+ 			/* Find the untranslated configuration space address */
+-			pp->cfg0_mod_base = of_read_number(parser.range -
+-							   parser.np + na, ns);
++			pp->cfg0_mod_base = range.cpu_addr;
+ 			pp->cfg1_mod_base = pp->cfg0_mod_base +
+ 					    pp->cfg0_size;
+ 		}
 -- 
-1.8.4.5
+1.9.1
 
