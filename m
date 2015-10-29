@@ -1,102 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27605 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933428AbbJHVkQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:40:16 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 41/60] PCI: Skip required+optional if there is no optional
-Date: Thu,  8 Oct 2015 14:39:00 -0700
-Message-Id: <1444340359-8011-42-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:43302 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751691AbbJ2I6y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 04:58:54 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 29 Oct 2015 18:58:51 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 596482BB003F
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2015 19:58:46 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9T8wdaS23462092
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2015 19:58:47 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9T8wCJ7008375
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2015 19:58:14 +1100
+Date: Thu, 29 Oct 2015 16:57:47 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Daniel Axtens <dja@axtens.net>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V10 05/12] powerpc/eeh: Cache only BARs, not windows or
+ IOV BARs
+Message-ID: <20151029085747.GA1400@richards-mbp.cn.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1445829362-2738-6-git-send-email-weiyang@linux.vnet.ibm.com>
+ <87h9lapd2o.fsf@gamma.ozlabs.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87h9lapd2o.fsf@gamma.ozlabs.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the bridge does not support hotplug and has no child with sriov support,
-We will not have optional resources. We could get out early and
-don't try required+optional allocation.
+On Thu, Oct 29, 2015 at 02:29:19PM +1100, Daniel Axtens wrote:
+>Wei Yang <weiyang@linux.vnet.ibm.com> writes:
+>
+>> EEH address cache, which helps to locate the PCI device according to
+>> the given (physical) MMIO address, didn't cover PCI bridges. Also, it
+>> shouldn't return PF with address in PF's IOV BARs. Instead, the VFs
+>> should be returned.
+>>
+>> Also, by doing so, it removes the type check in
+>> eeh_addr_cache_insert_dev(), since bridge's window would not be cached.
+>>
+>> The patch restricts the address cache to cover first 7 BARs for the
+>> above purposes.
+>If I've understoond the patch correctly, I think you want to swap the
+>last two paragraphs in the commit message:
+>
+>"Restrict the address cache to cover the first 7 BARs...
+>
+>Since the window of a bridge will now not be cached, remove the type
+>check..."
+>
 
-Also in the loop that update res with optional add info, skip resource
-that add_size is 0.
+Hmm... my purpose in the last paragraphs is to state what the patch does and
+the 2nd one is to mention another change in the log.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 32 +++++++++++++++++++++++++++++---
- 1 file changed, 29 insertions(+), 3 deletions(-)
+The order is both fine to me.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index c49bfde..5143ea2 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -450,6 +450,24 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
- 	return false;	/* should not get here */
- }
- 
-+static bool has_addon(struct list_head *head,
-+			struct list_head *realloc_head)
-+{
-+	int add_count = 0;
-+	struct pci_dev_resource *dev_res, *tmp_res;
-+
-+	/* check if we have add really */
-+	list_for_each_entry(dev_res, head, list) {
-+		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
-+		if (!tmp_res || !tmp_res->add_size)
-+			continue;
-+
-+		add_count++;
-+	}
-+
-+	return add_count != 0;
-+}
-+
- static bool save_resources(struct list_head *head,
- 			   struct list_head *save_head)
- {
-@@ -481,16 +499,24 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
--	resource_size_t add_align;
-+	resource_size_t add_align, add_size;
- 	struct resource *res;
- 
-+	if (!has_addon(head, realloc_head))
-+		return false;
-+
- 	if (!save_resources(head, &save_head))
- 		return false;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
--		res->end += get_res_add_size(realloc_head, res);
-+		add_size = get_res_add_size(realloc_head, res);
-+
-+		if (!add_size)
-+			continue;
-+
-+		res->end += add_size;
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
-@@ -578,7 +604,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 */
- 
- 	/* Check required+optional add */
--	if (realloc_head && !list_empty(realloc_head) &&
-+	if (realloc_head &&
- 	    __assign_resources_required_optional_sorted(head, realloc_head))
- 		return;
- 
+>With regards to the actual patch, I have now got access to the PCI and
+>SR-IOV specs, but I'm still getting to grips with it all so let me know
+>if something I say doesn't make sense.
+>
+>Here, you restrict the enumeration of resources to the standard and
+>extension ROM resources (the first 7), which excludes enumeration of
+>VF resources. That much I understand.
+>
+>I'm having more trouble convincing myself that it's safe or desirable to
+>drop the test for bridges. I think I understand that the change to the
+>for loop means it _should_ be safe, but is there any motivation for the
+>change other than making the code more straightforward?
+>
+
+The motivation is just make the code more straightforward.
+
+For a bridge device, the first 7 resources are not used and the last several
+are not cached, This is the reason why I remove it in the patch.
+
+>>  	/* Walk resources on this device, poke them into the tree *
+>This comment probably needs to be made more descriptive given the change.
+
+Right, will change it.
+
+>> -	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+>> +	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+>>  		resource_size_t start = pci_resource_start(dev,i);
+>>  		resource_size_t end = pci_resource_end(dev,i);
+>>  		unsigned long flags = pci_resource_flags(dev,i);
+>> @@ -222,10 +222,6 @@ void eeh_addr_cache_insert_dev(struct pci_dev *dev)
+>>  {
+>
+>Regards,
+>Daniel
+>
+>>  	unsigned long flags;
+>>  
+>> -	/* Ignore PCI bridges */
+>> -	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
+>> -		return;
+>> -
+>>  	spin_lock_irqsave(&pci_io_addr_cache_root.piar_lock, flags);
+>>  	__eeh_addr_cache_insert_dev(dev);
+>>  	spin_unlock_irqrestore(&pci_io_addr_cache_root.piar_lock, flags);
+>> -- 
+>> 2.5.0
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.8.4.5
+Richard Yang
+Help you, Help me
 
