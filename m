@@ -1,130 +1,55 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v10 5/6] Documentation: dt-bindings: pci: altera pcie device tree binding
-Date: Mon, 19 Oct 2015 16:19:27 +0800
-Message-ID: <1445242768-4423-6-git-send-email-lftan@altera.com>
-In-Reply-To: <1445242768-4423-1-git-send-email-lftan@altera.com>
-References: <1445242768-4423-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <BY2PR0301MB16543334659C86300E12DD5AA02F0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+References: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
+	<1446162376-43419-7-git-send-email-jakeo@microsoft.com>
+	<CAHp75VfcLVsESDT-KdjobcKVwSWUT=f1i_1PrET47tJ=rB91jA@mail.gmail.com>
+	<DM2PR0301MB123280EE1F7E37B57E27E6EAAB2F0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+	<CAHp75VdTFWMtxT3ftfT4-EgvMaQD=rXVcZf2K2adJM_zyT5Rdg@mail.gmail.com>
+	<BY2PR0301MB16543334659C86300E12DD5AA02F0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+Date: Fri, 30 Oct 2015 18:58:43 +0200
+Message-ID: <CAHp75Ve5kbzUN341Q85dSQsQDkj0NDPMzmD7_8c=RS5ae2ULyA@mail.gmail.com>
+Subject: Re: [PATCH v4 6/7] drivers:hv: Define the channel type for Hyper-V
+ PCI Express pass-through
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: KY Srinivasan <kys@microsoft.com>
+Cc: Jake Oshins <jakeo@microsoft.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	"tglx@redhat.com" <tglx@redhat.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the bindings for Altera PCIe host controller driver and
-Altera PCIe MSI driver.
+On Fri, Oct 30, 2015 at 6:56 PM, KY Srinivasan <kys@microsoft.com> wrote:
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- .../devicetree/bindings/pci/altera-pcie-msi.txt    | 28 +++++++++++++
- .../devicetree/bindings/pci/altera-pcie.txt        | 49 ++++++++++++++++++++++
- 2 files changed, 77 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
+>> >> What about
+>> >> #include <linux/uuid.h>
+>> >>
+>> >> UUID_LE(...)
+>> >>
+>> >> And you may use uuid_le type instead of custom raw buffer.
+>> >>
+>> >
+>> > Thanks.  I was just following the form of all the others in this file.  I think
+>> that this was done to match up with the representation that's coming across
+>> the VM boundary from Windows.
+>>
+>> Perhaps a separate patch to move to uuid.h then?
+>
+> Yes; I am about to send out a patch to use the UUID_LE macro for all of the Hyper-V guids.
 
-diff --git a/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-new file mode 100644
-index 0000000..09cd3bc
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-@@ -0,0 +1,28 @@
-+* Altera PCIe MSI controller
-+
-+Required properties:
-+- compatible:	should contain "altr,msi-1.0"
-+- reg:		specifies the physical base address of the controller and
-+		the length of the memory mapped region.
-+- reg-names:	must include the following entries:
-+		"csr": CSR registers
-+		"vector_slave": vectors slave port region
-+- interrupt-parent:	interrupt source phandle.
-+- interrupts:	specifies the interrupt source of the parent interrupt
-+		controller. The format of the interrupt specifier depends on the
-+		parent interrupt controller.
-+- num-vectors:	number of vectors, range 1 to 32.
-+- msi-controller:	indicates that this is MSI controller node
-+
-+
-+Example
-+msi0: msi@0xFF200000 {
-+	compatible = "altr,msi-1.0";
-+	reg = <0xFF200000 0x00000010
-+		0xFF200010 0x00000080>;
-+	reg-names = "csr", "vector_slave";
-+	interrupt-parent = <&hps_0_arm_gic_0>;
-+	interrupts = <0 42 4>;
-+	msi-controller;
-+	num-vectors = <32>;
-+};
-diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-new file mode 100644
-index 0000000..2951a6a
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-@@ -0,0 +1,49 @@
-+* Altera PCIe controller
-+
-+Required properties:
-+- compatible :	should contain "altr,pcie-root-port-1.0"
-+- reg:		a list of physical base address and length for TXS and CRA.
-+- reg-names:	must include the following entries:
-+		"Txs": TX slave port region
-+		"Cra": Control register access region
-+- interrupt-parent:	interrupt source phandle.
-+- interrupts:	specifies the interrupt source of the parent interrupt controller.
-+		The format of the interrupt specifier depends on the parent interrupt
-+		controller.
-+- device_type:	must be "pci"
-+- #address-cells:	set to <3>
-+- #size-cells:	set to <2>
-+- #interrupt-cells:	set to <1>
-+- ranges:		describes the translation of addresses for root ports and standard
-+		PCI regions.
-+- interrupt-map-mask and interrupt-map: standard PCI properties to define the
-+		mapping of the PCIe interface to interrupt numbers.
-+
-+Optional properties:
-+- msi-parent:	Link to the hardware entity that serves as the MSI controller for this PCIe
-+		controller.
-+- bus-range:	PCI bus numbers covered
-+
-+Example
-+	pcie_0: pcie@0xc00000000 {
-+		compatible = "altr,pcie-root-port-1.0";
-+		reg = <0xc0000000 0x20000000>,
-+			<0xff220000 0x00004000>;
-+		reg-names = "Txs", "Cra";
-+		interrupt-parent = <&hps_0_arm_gic_0>;
-+		interrupts = <0 40 4>;
-+		interrupt-controller;
-+		#interrupt-cells = <1>;
-+		bus-range = <0x0 0xFF>;
-+		device_type = "pci";
-+		msi-parent = <&msi_to_gic_gen_0>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_0 1>,
-+			            <0 0 0 2 &pcie_0 2>,
-+			            <0 0 0 3 &pcie_0 3>,
-+			            <0 0 0 4 &pcie_0 4>;
-+		ranges = <0x82000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x10000000
-+			    0x82000000 0x00000000 0x10000000 0xd0000000 0x00000000 0x10000000>;
-+	};
+And switching to struct uuid_le ?
+
 -- 
-1.8.2.1
-
+With Best Regards,
+Andy Shevchenko
