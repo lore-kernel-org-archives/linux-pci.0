@@ -1,84 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:8426 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753374AbbJZIZJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Oct 2015 04:25:09 -0400
-Message-ID: <562DE342.2000104@hisilicon.com>
-Date: Mon, 26 Oct 2015 16:24:34 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:40785 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758448AbbJ3Gcm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 02:32:42 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 30 Oct 2015 16:32:39 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 3F19A3578047
+	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 17:32:33 +1100 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9U6WPCS58196064
+	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 17:32:33 +1100
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9U6W0eW030780
+	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 17:32:01 +1100
+Date: Fri, 30 Oct 2015 14:31:34 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V10 04/12] powerpc/pci: Remove VFs prior to PF
+Message-ID: <20151030063134.GA5940@richards-mbp.cn.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1445829362-2738-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <5632DE2C.4050306@ozlabs.ru>
 MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v11 4/6] PCI: hisi: Add PCIe host support for HiSilicon
- SoC Hip05
-References: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com> <1444991021-109306-5-git-send-email-wangzhou1@hisilicon.com> <20151022184622.GD21237@localhost>
-In-Reply-To: <20151022184622.GD21237@localhost>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5632DE2C.4050306@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/10/23 2:46, Bjorn Helgaas wrote:
-> Hi Zhou,
-> 
-> This looks pretty good to me; just a mask question and add a printk.
-> 
-> On Fri, Oct 16, 2015 at 06:23:39PM +0800, Zhou Wang wrote:
->> This patch adds PCIe host support for HiSilicon SoC Hip05.
->> ...
-> 
->> +#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
->> +#define PCIE_LTSSM_LINKUP_STATE                         0x11
->> +#define PCIE_LTSSM_STATE_MASK                           0x3F
-> 
-> Fabio unified some of this; see
->   https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-designware&id=4788fe6ebf4594c9a95b620cbff05147c8504823
->   https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-designware&id=b09464f77dd252a782da1f4e9925c1dbce4540ac
-> 
-> So the question is, why do you use a 6-bit (0x3f) LTSSM_STATE_MASK?
-> We think we can use a 5-bit mask (0x1f) for all the other
-> DesignWare-based systems.
-
-Hi Bjorn,
-
-LTSSM_STATE_MASK indicates the status of LTSSM, it should be 6-bit
-in Hip05 PCIe host. I checked Designware hardware manual, its
-LTSSM current state is 6-bit too(smlh_ltssm_state).
-
-> 
->> +/* Hip05 PCIe host only supports 32-bit config access */
-> 
-> Thanks for the comment asserting that Hip05 only supports 32-bit
-> config access.  I assume you confirmed that with the hardware
-> designers.  As far as I can tell, this *is* a hardware defect, and at
-> the minimum, I want a printk at driver probe-time so a dmesg log will
-> have a clue that read/modify/write on config space might do the wrong
-> thing.
+On Fri, Oct 30, 2015 at 02:04:12PM +1100, Alexey Kardashevskiy wrote:
+>On 10/26/2015 02:15 PM, Wei Yang wrote:
+>>As commit ac205b7bb72f ("PCI: make sriov work with hotplug remove") indicates,
+>>VFs, which might be hooked to same PCI bus as their PF should be removed
+>
+>A comma is missing before "should be" (or you did not need a comma after
+>"VFs" may be :) ).
 >
 
-Yes, I had checked this with hardware guys. Will add a print during probe-time.
+I think you are right.
 
-Many thanks,
-Zhou
+>
+>>before the PF. Otherwise, the PCI hot unplugging on the PCI bus would
+>
+>s/on/of/? "Unplugging on" does not make much sense to me in this context at
+>least.
+>
 
->> +static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
->> +			      u32 *val)
->> ...
-> 
-> Bjorn
-> 
-> .
-> 
+Sounds I need to improve my English :-)
 
+"on" here means those PCI devices are attached to the PCI bus. So "of" is the
+correct word?
+
+Change "unplugging" to "removing" would be better?
+
+>
+>>cause kernel crash.
+>>
+>>The patch applies the above pattern to PowerPC PCI hotplug path.
+>>
+>>[gwshan: changelog]
+>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/kernel/pci-hotplug.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>>diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+>>index 7f9ed0c..59c4361 100644
+>>--- a/arch/powerpc/kernel/pci-hotplug.c
+>>+++ b/arch/powerpc/kernel/pci-hotplug.c
+>>@@ -55,7 +55,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
+>>
+>>  	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+>>  		 pci_domain_nr(bus),  bus->number);
+>>-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
+>>+	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+>>  		pr_debug("   Removing %s...\n", pci_name(dev));
+>>  		pci_stop_and_remove_bus_device(dev);
+>>  	}
+>>
+>
+>
+>-- 
+>Alexey
+
+-- 
+Richard Yang
+Help you, Help me
 
