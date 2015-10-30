@@ -1,64 +1,59 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
+From: KY Srinivasan <kys@microsoft.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+CC: Jake Oshins <jakeo@microsoft.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	"tglx@redhat.com" <tglx@redhat.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	" David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, m-karicheri2@ti.com,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH v5 3/3] PCI: st: Provide support for the sti PCIe controller
-Date: Tue, 06 Oct 2015 23:01:11 +0200
-Message-ID: <5139149.TmJY1YjqAU@wuerfel>
-In-Reply-To: <1444118168-13086-4-git-send-email-gabriel.fernandez@linaro.org>
-References: <1444118168-13086-1-git-send-email-gabriel.fernandez@linaro.org> <1444118168-13086-4-git-send-email-gabriel.fernandez@linaro.org>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v4 6/7] drivers:hv: Define the channel type for Hyper-V
+ PCI Express pass-through
+Date: Fri, 30 Oct 2015 17:30:23 +0000
+Message-ID: <BY2PR0301MB16545FF0E85390EBF3B6BF1FA02F0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+References: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
+	<1446162376-43419-7-git-send-email-jakeo@microsoft.com>
+	<CAHp75VfcLVsESDT-KdjobcKVwSWUT=f1i_1PrET47tJ=rB91jA@mail.gmail.com>
+	<DM2PR0301MB123280EE1F7E37B57E27E6EAAB2F0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+	<CAHp75VdTFWMtxT3ftfT4-EgvMaQD=rXVcZf2K2adJM_zyT5Rdg@mail.gmail.com>
+	<BY2PR0301MB16543334659C86300E12DD5AA02F0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+ <CAHp75Ve5kbzUN341Q85dSQsQDkj0NDPMzmD7_8c=RS5ae2ULyA@mail.gmail.com>
+In-Reply-To: <CAHp75Ve5kbzUN341Q85dSQsQDkj0NDPMzmD7_8c=RS5ae2ULyA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 06 October 2015 09:56:08 Gabriel Fernandez wrote:
-> +
-> +/*
-> + * On ARM platforms, we actually get a bus error returned when the PCIe IP
-> + * returns a UR or CRS instead of an OK.
-> + */
-> +static int st_pcie_abort_handler(unsigned long addr, unsigned int fsr,
-> +                                struct pt_regs *regs)
-> +{
-> +       return 0;
-> +}
-> 
-
-I'm not sure if we discussed this already for this driver. Usually
-you should have a register in the PCI host that you can check to see
-what caused the abort.
-
-Try to make this as narrow as possible so you return nonzero for
-any abort except the one you actually try to prevent.
-
-	Arnd
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQW5keSBTaGV2Y2hlbmtv
+IFttYWlsdG86YW5keS5zaGV2Y2hlbmtvQGdtYWlsLmNvbV0NCj4gU2VudDogRnJpZGF5LCBPY3Rv
+YmVyIDMwLCAyMDE1IDk6NTkgQU0NCj4gVG86IEtZIFNyaW5pdmFzYW4gPGt5c0BtaWNyb3NvZnQu
+Y29tPg0KPiBDYzogSmFrZSBPc2hpbnMgPGpha2VvQG1pY3Jvc29mdC5jb20+OyBHcmVnIEtyb2Fo
+LUhhcnRtYW4NCj4gPGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnPjsgbGludXgta2VybmVsQHZn
+ZXIua2VybmVsLm9yZzsNCj4gZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgb2xhZkBhZXBm
+bGUuZGU7IGFwd0BjYW5vbmljYWwuY29tOyBWaXRhbHkNCj4gS3V6bmV0c292IDx2a3V6bmV0c0By
+ZWRoYXQuY29tPjsgdGdseEByZWRoYXQuY29tOyBIYWl5YW5nIFpoYW5nDQo+IDxoYWl5YW5nekBt
+aWNyb3NvZnQuY29tPjsgbWFyYy56eW5naWVyQGFybS5jb207IEppYW5nIExpdQ0KPiA8amlhbmcu
+bGl1QGxpbnV4LmludGVsLmNvbT47IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+
+OyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHY0
+IDYvN10gZHJpdmVyczpodjogRGVmaW5lIHRoZSBjaGFubmVsIHR5cGUgZm9yIEh5cGVyLVYNCj4g
+UENJIEV4cHJlc3MgcGFzcy10aHJvdWdoDQo+IA0KPiBPbiBGcmksIE9jdCAzMCwgMjAxNSBhdCA2
+OjU2IFBNLCBLWSBTcmluaXZhc2FuIDxreXNAbWljcm9zb2Z0LmNvbT4gd3JvdGU6DQo+IA0KPiA+
+PiA+PiBXaGF0IGFib3V0DQo+ID4+ID4+ICNpbmNsdWRlIDxsaW51eC91dWlkLmg+DQo+ID4+ID4+
+DQo+ID4+ID4+IFVVSURfTEUoLi4uKQ0KPiA+PiA+Pg0KPiA+PiA+PiBBbmQgeW91IG1heSB1c2Ug
+dXVpZF9sZSB0eXBlIGluc3RlYWQgb2YgY3VzdG9tIHJhdyBidWZmZXIuDQo+ID4+ID4+DQo+ID4+
+ID4NCj4gPj4gPiBUaGFua3MuICBJIHdhcyBqdXN0IGZvbGxvd2luZyB0aGUgZm9ybSBvZiBhbGwg
+dGhlIG90aGVycyBpbiB0aGlzIGZpbGUuICBJIHRoaW5rDQo+ID4+IHRoYXQgdGhpcyB3YXMgZG9u
+ZSB0byBtYXRjaCB1cCB3aXRoIHRoZSByZXByZXNlbnRhdGlvbiB0aGF0J3MgY29taW5nDQo+IGFj
+cm9zcw0KPiA+PiB0aGUgVk0gYm91bmRhcnkgZnJvbSBXaW5kb3dzLg0KPiA+Pg0KPiA+PiBQZXJo
+YXBzIGEgc2VwYXJhdGUgcGF0Y2ggdG8gbW92ZSB0byB1dWlkLmggdGhlbj8NCj4gPg0KPiA+IFll
+czsgSSBhbSBhYm91dCB0byBzZW5kIG91dCBhIHBhdGNoIHRvIHVzZSB0aGUgVVVJRF9MRSBtYWNy
+byBmb3IgYWxsIG9mIHRoZQ0KPiBIeXBlci1WIGd1aWRzLg0KPiANCj4gQW5kIHN3aXRjaGluZyB0
+byBzdHJ1Y3QgdXVpZF9sZSA/DQoNClllcy4NCg0KSy4gWQ0KPiANCj4gLS0NCj4gV2l0aCBCZXN0
+IFJlZ2FyZHMsDQo+IEFuZHkgU2hldmNoZW5rbw0K
