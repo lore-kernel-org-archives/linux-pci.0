@@ -1,136 +1,166 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:44145 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753685AbbJNQUR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 Oct 2015 12:20:17 -0400
-Date: Wed, 14 Oct 2015 09:17:31 -0700
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: David Daney <ddaney.cavm@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Rafal Milecki <zajec5@gmail.com>,
-	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"rajatxjain@gmail.com" <rajatxjain@gmail.com>,
-	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>
-Cc: David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v5 0/4] PCI: Add support for PCI Enhanced Allocation
- "BARs"
-Message-ID: <20151014161731.GA3029@sean.stalley.intel.com>
-References: <1444175438-7443-1-git-send-email-ddaney.cavm@gmail.com>
- <5FE5E296BC647B42A2509AB982F88C1321D86B95@ORSMSX108.amr.corp.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 1/7] PCI: Set SR-IOV NumVFs to zero after enumeration
+To: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20151029222254.11908.78884.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20151030034821.GB3551@richards-mbp.cn.ibm.com>
+Cc: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
+	Ethan Zhao <ethan.zhao@oracle.com>,
+	linux-kernel@vger.kernel.org
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <56338F84.8070300@gmail.com>
+Date: Fri, 30 Oct 2015 08:40:52 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <5FE5E296BC647B42A2509AB982F88C1321D86B95@ORSMSX108.amr.corp.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20151030034821.GB3551@richards-mbp.cn.ibm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+On 10/29/2015 08:48 PM, Wei Yang wrote:
+> On Thu, Oct 29, 2015 at 05:22:54PM -0500, Bjorn Helgaas wrote:
+>> ines: 115
+>>
+>> From: Alexander Duyck <aduyck@mirantis.com>
+>>
+>> The enumeration path should leave NumVFs set to zero.  But after
+>> 4449f079722c ("PCI: Calculate maximum number of buses required for VFs"),
+>> we call virtfn_max_buses() in the enumeration path, which changes NumVFs.
+>> This NumVFs change is visible via lspci and sysfs until a driver enables
+>> SR-IOV.
+>>
+>> Iterate from TotalVFs down to zero so NumVFs is zero when we're finished
+>> computing the maximum number of buses.  Validate offset and stride in
+>> the loop, so we can test it at every possible NumVFs setting.  Rename
+>> virtfn_max_buses() to compute_max_vf_buses() to hint that it does have a
+>> side effect of updating iov->max_VF_buses.
+>>
+>> [bhelgaas: changelog, rename, allow numVF==1 && stride==0, rework loop,
+>> reverse sense of error path]
+>> Fixes: 4449f079722c ("PCI: Calculate maximum number of buses required for VFs")
+>> Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
+>> Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>> drivers/pci/iov.c |   41 ++++++++++++++++++++++-------------------
+>> 1 file changed, 22 insertions(+), 19 deletions(-)
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index 0cdb2d1..1b1acc2 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -54,24 +54,29 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+>>   * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
+>>   * determine how many additional bus numbers will be consumed by VFs.
+>>   *
+>> - * Iterate over all valid NumVFs and calculate the maximum number of bus
+>> - * numbers that could ever be required.
+>> + * Iterate over all valid NumVFs, validate offset and stride, and calculate
+>> + * the maximum number of bus numbers that could ever be required.
+>>   */
+>> -static inline u8 virtfn_max_buses(struct pci_dev *dev)
+>> +static int compute_max_vf_buses(struct pci_dev *dev)
+>> {
+>> 	struct pci_sriov *iov = dev->sriov;
+>> -	int nr_virtfn;
+>> -	u8 max = 0;
+>> -	int busnr;
+>> +	int nr_virtfn, busnr, rc = 0;
+>>
+>> -	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
+>> +	for (nr_virtfn = iov->total_VFs; nr_virtfn; nr_virtfn--) {
+> Hmm... I agree to iterate the nr_virtfn from total_VFs to 0, which keep the
+> original logic, before my patch.
+>
+>
+>> 		pci_iov_set_numvfs(dev, nr_virtfn);
+>> +		if (!iov->offset || (nr_virtfn > 1 && !iov->stride)) {
+>                                       ^^^
+>
+> Should be this?
+>                  if (!iov->offset || (iov->total_VFs > 1 && !iov->stride))
 
-I tested it out with the QEMU EA Patches here:
-	[https://lists.nongnu.org/archive/html/qemu-devel/2015-07/msg00348.html]
+The problem is the spec says stride and offset can change depending on 
+the value of NumVFs.  We end up testing all values from TotalVFs to 1.  
+The spec states that stride is unused if NumVFs is 1, not TotalVFs.
 
-Also, I found 1 trivial typo in the commit message of PATCH 1/4:
-	"Signed-off-by: Signed-off-by: David Daney <david.daney@cavium.com>"
+>
+>> +			rc = -EIO;
+>> +			goto out;
+>> +		}
+>> +
+>> 		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+>> -		if (busnr > max)
+>> -			max = busnr;
+>> +		if (busnr > iov->max_VF_buses)
+>> +			iov->max_VF_buses = busnr;
+>> 	}
+>>
+>> -	return max;
+>> +out:
+>> +	pci_iov_set_numvfs(dev, 0);
+>> +	return rc;
+>> }
+>>
+>> static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+>> @@ -384,7 +389,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>> 	int rc;
+>> 	int nres;
+>> 	u32 pgsz;
+>> -	u16 ctrl, total, offset, stride;
+>> +	u16 ctrl, total;
+>> 	struct pci_sriov *iov;
+>> 	struct resource *res;
+>> 	struct pci_dev *pdev;
+>> @@ -410,11 +415,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>>
+>> found:
+>> 	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+>> -	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
+>> -	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
+>> -	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
+>> -	if (!offset || (total > 1 && !stride))
+>> -		return -EIO;
+>>
+> Original code will return when it found this condition, so that we don't need
+> to bother to do those initialization and then fall back.
+>
+> So I suggest to keep it here.
 
--Sean
+The problem is this code isn't valid as per the spec.  The offset and 
+stride are considered unused when numvfs is 0.  That is why this has to 
+be dropped.
 
-On Wed, Oct 07, 2015 at 06:44:52AM -0700, Stalley, Sean wrote:
-> [PATCH 3/4 & 4/4] Acked-by: Sean O. Stalley <sean.stalley@intel.com>
-> 
-> I won't be able to test it out until next week, but I like how it looks :)
-> 
-> Thanks Again,
-> Sean
-> 
-> > -----Original Message-----
-> > From: David Daney [mailto:ddaney.cavm@gmail.com]
-> > Sent: Tuesday, October 06, 2015 4:51 PM
-> > To: linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org; Bjorn Helgaas;
-> > Michael S. Tsirkin; Rafał Miłecki; linux-api@vger.kernel.org; Stalley, Sean;
-> > yinghai@kernel.org; rajatxjain@gmail.com; gong.chen@linux.intel.com
-> > Cc: David Daney
-> > Subject: [PATCH v5 0/4] PCI: Add support for PCI Enhanced Allocation
-> > "BARs"
-> > 
-> > From: David Daney <david.daney@cavium.com>
-> > 
-> > The original patches are from Sean O. Stalley. I made a few tweaks, but feel
-> > that it is substancially Sean's work, so I am keeping the patch set version
-> > numbering scheme going.
-> > 
-> > Tested on Cavium ThunderX system with 4 Root Complexes containing 50
-> > devices/bridges provisioned with EA.
-> > 
-> > Here is Sean's description of the patches:
-> > 
-> > PCI Enhanced Allocation is a new method of allocating MMIO & IO
-> > resources for PCI devices & bridges. It can be used instead of the traditional
-> > PCI method of using BARs.
-> > 
-> > EA entries are hardware-initialized to a fixed address.
-> > Unlike BARs, regions described by EA are cannot be moved.
-> > Because of this, only devices which are permanently connected to the PCI
-> > bus can use EA. A removable PCI card must not use EA.
-> > 
-> > This patchset adds support for using EA entries instead of BARs on Root
-> > Complex Integrated Endpoints.
-> > 
-> > The Enhanced Allocation ECN is publicly available here:
-> > https://www.pcisig.com/specifications/conventional/ECN_Enhanced_Alloca
-> > tion_23_Oct_2014_Final.pdf
-> > 
-> > 
-> > Changes from V1:
-> > 	- Use generic PCI resource claim functions (instead of EA-specific
-> > functions)
-> > 	- Only add support for RCiEPs (instead of all devices).
-> > 	- Removed some debugging messages leftover from early testing.
-> > 
-> > Changes from V2 (By David Daney):
-> > 	- Add ea_cap to struct pci_device, to aid in finding the EA capability.
-> > 	- Factored EA entity decoding into a separate function.
-> > 	- Add functions to find EA entities by BEI or Property.
-> > 	- Add handling of EA provisioned bridges.
-> > 	- Add handling of EA SRIOV BARs.
-> > 	- Try to assign proper resource parent so that SRIOV device creation
-> > can occur.
-> > 
-> > Changes from V3 (By David Daney):
-> > 	- Discarded V3 changes and started over fresh based on Sean's V2.
-> > 	- Add more support/checking for Entry Properties.
-> > 	- Allow EA behind bridges.
-> > 	- Rewrite some error messages.
-> > 	- Add patch 3/5 to prevent resizing, and better handle
-> >           assigning, of fixed EA resources.
-> > 	- Add patch 4/5 to handle EA provisioned SRIOV devices.
-> > 	- Add patch 5/5 to handle EA provisioned bridges.
-> > 
-> > Changes from V4 (By David Daney):
-> > 	- Drop patch 5/5 to handle EA provisioned bridges.
-> > 	- Drop cases for bridge resources in 2/5.
-> > 	- Drop unnecessary fallback resource parent handling in 3/5
-> > 	- Small code formatting improvements.
-> > 
-> > David Daney (2):
-> >   PCI: Handle IORESOURCE_PCI_FIXED when sizing and assigning resources.
-> >   PCI: Handle Enhanced Allocation (EA) capability for SRIOV devices.
-> > 
-> > Sean O. Stalley (2):
-> >   PCI: Add Enhanced Allocation register entries
-> >   PCI: Add support for Enhanced Allocation devices
-> > 
-> >  drivers/pci/iov.c             |  11 ++-
-> >  drivers/pci/pci.c             | 189
-> > ++++++++++++++++++++++++++++++++++++++++++
-> >  drivers/pci/pci.h             |   1 +
-> >  drivers/pci/probe.c           |   3 +
-> >  drivers/pci/setup-bus.c       |  50 ++++++++++-
-> >  include/uapi/linux/pci_regs.h |  44 +++++++++-
-> >  6 files changed, 292 insertions(+), 6 deletions(-)
-> > 
-> > --
-> > 1.9.1
-> 
+>> 	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
+>> 	if (!total)
+>> @@ -456,8 +456,6 @@ found:
+>> 	iov->nres = nres;
+>> 	iov->ctrl = ctrl;
+>> 	iov->total_VFs = total;
+>> -	iov->offset = offset;
+>> -	iov->stride = stride;
+>> 	iov->pgsz = pgsz;
+>> 	iov->self = dev;
+>> 	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+>> @@ -474,10 +472,15 @@ found:
+>>
+>> 	dev->sriov = iov;
+>> 	dev->is_physfn = 1;
+>> -	iov->max_VF_buses = virtfn_max_buses(dev);
+>> +	rc = compute_max_vf_buses(dev);
+>> +	if (rc)
+>> +		goto fail_max_buses;
+>>
+>> 	return 0;
+>>
+>> +fail_max_buses:
+>> +	dev->sriov = NULL;
+> The dev->sriov is allocated with kzalloc(), seems we forget to release it?
+
+No, if you check at the end of the function we release it via a kfree(iov).
+
+>> +	dev->is_physfn = 0;
+>> failed:
+>> 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>> 		res = &dev->resource[i + PCI_IOV_R
+
