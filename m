@@ -1,81 +1,79 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <560EA099.2060907@arm.com>
-Date: Fri, 02 Oct 2015 16:19:53 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
+Date: Fri, 30 Oct 2015 13:18:37 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
+	Ethan Zhao <ethan.zhao@oracle.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 6/7] PCI: Fix sriov_enable() error path for
+ pcibios_enable_sriov() failures
+Message-ID: <20151030051837.GE5119@richards-mbp.cn.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20151029222329.11908.72848.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-To: David Daney <ddaney.cavm@gmail.com>, linux-kernel@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Grant Likely <grant.likely@linaro.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-CC: David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v4 4/4] irqchip/gic-v3-its:  Add handling of PCI requester
- id.
-References: <1443747025-9918-1-git-send-email-ddaney.cavm@gmail.com> <1443747025-9918-5-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1443747025-9918-5-git-send-email-ddaney.cavm@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151029222329.11908.72848.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/10/15 01:50, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> Replace open coded generation PCI/MSI requester id with call to the
-> new function pci_msi_domain_get_msi_rid() which applies the "msi-map"
-> to the id value.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  drivers/irqchip/irq-gic-v3-its-pci-msi.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-> index cf351c6..7bbf64a 100644
-> --- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-> +++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-> @@ -42,7 +42,6 @@ static struct irq_chip its_msi_irq_chip = {
->  
->  struct its_pci_alias {
->  	struct pci_dev	*pdev;
-> -	u32		dev_id;
->  	u32		count;
->  };
->  
-> @@ -60,7 +59,6 @@ static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
->  {
->  	struct its_pci_alias *dev_alias = data;
->  
-> -	dev_alias->dev_id = alias;
->  	if (pdev != dev_alias->pdev)
->  		dev_alias->count += its_pci_msi_vec_count(dev_alias->pdev);
+On Thu, Oct 29, 2015 at 05:23:29PM -0500, Bjorn Helgaas wrote:
+>From: Alexander Duyck <aduyck@mirantis.com>
+>
+>Disable VFs if pcibios_enable_sriov() fails, just like we do for other
+>errors in sriov_enable().  Call pcibios_sriov_disable() if virtfn_add()
+>fails.
+>
+>[bhelgaas: changelog, split to separate patch for reviewability]
+>Fixes: 995df527f399 ("PCI: Add pcibios_sriov_enable() and pcibios_sriov_disable()")
+>Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Damn it. You've just shown me a bug. Unrelated to what you're doing, but
-still. I'll post a patch shortly.
+Reviewed-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 
->  
-> @@ -86,7 +84,7 @@ static int its_pci_msi_prepare(struct irq_domain *domain, struct device *dev,
->  	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
->  
->  	/* ITS specific DeviceID, as the core ITS ignores dev. */
-> -	info->scratchpad[0].ul = dev_alias.dev_id;
-> +	info->scratchpad[0].ul = pci_msi_domain_get_msi_rid(domain, pdev);
->  
->  	return msi_info->ops->msi_prepare(domain->parent,
->  					  dev, dev_alias.count, info);
-> 
+>---
+> drivers/pci/iov.c |   11 ++++++-----
+> 1 file changed, 6 insertions(+), 5 deletions(-)
+>
+>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>index 24428d5..bd1c4fa 100644
+>--- a/drivers/pci/iov.c
+>+++ b/drivers/pci/iov.c
+>@@ -246,7 +246,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+> 	struct pci_sriov *iov = dev->sriov;
+> 	int bars = 0;
+> 	int bus;
+>-	int retval;
+>
+> 	if (!nr_virtfn)
+> 		return 0;
+>@@ -315,10 +314,10 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+> 	if (nr_virtfn < initial)
+> 		initial = nr_virtfn;
+>
+>-	if ((retval = pcibios_sriov_enable(dev, initial))) {
+>-		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
+>-			retval);
+>-		return retval;
+>+	rc = pcibios_sriov_enable(dev, initial);
+>+	if (rc) {
+>+		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n", rc);
+>+		goto err_pcibios;
+> 	}
+>
+> 	for (i = 0; i < initial; i++) {
+>@@ -336,6 +335,8 @@ failed:
+> 	while (i--)
+> 		virtfn_remove(dev, i, 0);
+>
+>+	pcibios_sriov_disable(dev);
+>+err_pcibios:
+> 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+> 	pci_cfg_access_lock(dev);
+> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
 
-Looks good to me.
-
-Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
-
-	M.
 -- 
-Jazz is not dead. It just smells funny...
+Richard Yang
+Help you, Help me
+
