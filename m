@@ -1,54 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:19468 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752378AbbJPG04 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Oct 2015 02:26:56 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v2 ] PCI: Designware: make num-lanes an optional DT
- property
-Date: Fri, 16 Oct 2015 06:26:42 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162483B8@lhreml503-mbs>
-References: <1443456190-225875-1-git-send-email-gabriele.paoloni@huawei.com>
- <20151015200058.GA10442@localhost>
-In-Reply-To: <20151015200058.GA10442@localhost>
-Content-Type: text/plain; charset="Windows-1252"
+Received: from aserp1040.oracle.com ([141.146.126.69]:39628 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751219AbbJ3GA1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 02:00:27 -0400
+Message-ID: <56330771.90509@oracle.com>
+Date: Fri, 30 Oct 2015 14:00:17 +0800
+From: ethan zhao <ethan.zhao@oracle.com>
 MIME-Version: 1.0
+To: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 5/7] PCI: Wait 1 second between disabling VFs and clearing
+ NumVFs
+References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20151029222322.11908.13738.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20151030051458.GD5119@richards-mbp.cn.ibm.com>
+In-Reply-To: <20151030051458.GD5119@richards-mbp.cn.ibm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> 
-> Applied to pci/host-designware for v4.4 with changelog as follows,
-> thanks, Gabriele!
+Wei,
 
-Great, Thanks Bjorn
+On 2015/10/30 13:14, Wei Yang wrote:
+> On Thu, Oct 29, 2015 at 05:23:22PM -0500, Bjorn Helgaas wrote:
+>> From: Alexander Duyck <aduyck@mirantis.com>
+>>
+>> Per sec 3.3.3.1 of the SR-IOV spec, r1.1, we must allow 1.0s after clearing
+>> VF Enable before reading any field in the SR-IOV Extended Capability.
+>>
+>> Wait 1 second before calling pci_iov_set_numvfs(), which reads
+>> PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE after it sets PCI_SRIOV_NUM_VF.
+>>
+>> [bhelgaas: split to separate patch for reviewability, add spec reference]
+>> Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>> drivers/pci/iov.c |    2 +-
+>> 1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index fada98d..24428d5 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -339,13 +339,13 @@ failed:
+>> 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>> 	pci_cfg_access_lock(dev);
+>> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>> -	pci_iov_set_numvfs(dev, 0);
+>> 	ssleep(1);
+>> 	pci_cfg_access_unlock(dev);
+>>
+>> 	if (iov->link != dev->devfn)
+>> 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>>
+>> +	pci_iov_set_numvfs(dev, 0);
+> One small question, any specific reason put it here instead of just after
+> sleep()?
+  Agree,  pci_iov_set_numvfs(dev, 0) should be put before 
+pci_cfg_access_unlock(dev) to avoid race,  because "NumVFs may only be 
+written while VF Enable is Clear"
 
-> 
-> commit efe52075227729aa2a1ed55e34dd599b3bb0dbf1
-> Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> Date:   Tue Sep 29 00:03:10 2015 +0800
-> 
->     PCI: designware: Make num-lanes an optional DT property
-> 
->     Currently "num-lanes" is read in dw_pcie_host_init(), but it is only used
->     if we call dw_pcie_setup_rc() while bringing up the link.  If the link has
->     already been brought up by firmware, we need not call dw_pcie_setup_rc(),
->     and "num-lanes" is unnecessary.
-> 
->     Only complain about "num-lanes" if we actually need it and we didn't find
-> a
->     valid value.
-> 
->     [bhelgaas: changelog]
->     Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+  Thanks,
+  Ethan
+>> 	return rc;
+>> }
+>>
+
