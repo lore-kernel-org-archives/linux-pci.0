@@ -1,153 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:30969 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237AbbJ2C1k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Oct 2015 22:27:40 -0400
-Message-ID: <563183F9.1010809@hisilicon.com>
-Date: Thu, 29 Oct 2015 10:27:05 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:44737 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756561AbbJ3Cs2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 22:48:28 -0400
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 30 Oct 2015 08:18:26 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 9FBD61258019
+	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 08:18:19 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay02.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9U2mDoE26935418
+	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 08:18:13 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9U2mC97014634
+	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 08:18:12 +0530
+Date: Fri, 30 Oct 2015 10:48:08 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V10 03/12] powerpc/pci: Cache VF index in pci_dn
+Message-ID: <20151030024808.GA3551@richards-mbp.cn.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1445829362-2738-4-git-send-email-weiyang@linux.vnet.ibm.com>
+ <5632D077.40304@ozlabs.ru>
 MIME-Version: 1.0
-To: Rob Herring <robh@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	James Morse <james.morse@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"Jason Cooper" <jason@lakedaemon.net>,
-	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, Wei Xu <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v12 7/8] Documentation: DT: Add HiSilicon PCIe host binding
-References: <1445859350-26375-1-git-send-email-wangzhou1@hisilicon.com> <1445859350-26375-8-git-send-email-wangzhou1@hisilicon.com> <CAL_JsqKamKx8vVVv7qVZ8oyjXLem93B9dnJAxvvoRWd3XEc=7Q@mail.gmail.com>
-In-Reply-To: <CAL_JsqKamKx8vVVv7qVZ8oyjXLem93B9dnJAxvvoRWd3XEc=7Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5632D077.40304@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/10/28 3:19, Rob Herring wrote:
-> On Mon, Oct 26, 2015 at 6:35 AM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
->> This patch adds related DTS binding document for HiSilicon PCIe host driver.
->>
->> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-> 
-> Acked-by: Rob Herring <robh@kernel.org>
+On Fri, Oct 30, 2015 at 01:05:43PM +1100, Alexey Kardashevskiy wrote:
+>On 10/26/2015 02:15 PM, Wei Yang wrote:
+>>The patch caches the VF index in pci_dn, which can be used to calculate
+>>VF's bus, device and function number. Those information helps to locate
+>>the VF's PCI device instance when doing hotplug during EEH recovery if
+>>necessary.
+>
+>
+>The patch itself does not make much sense and quite small, I'd merge it into
+>the one which makes use of this new vf_index.
 >
 
-Thanks for your review.
-Zhou
+Well, reasonable, will merge it.
 
->> ---
->>  .../bindings/arm/hisilicon/hisilicon.txt           | 17 +++++++++
->>  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 44 ++++++++++++++++++++++
->>  2 files changed, 61 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
 >>
->> diff --git a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
->> index 3504dca..6ac7c00 100644
->> --- a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
->> +++ b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
->> @@ -171,6 +171,23 @@ Example:
->>         };
+>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/include/asm/pci-bridge.h | 1 +
+>>  arch/powerpc/kernel/pci_dn.c          | 4 +++-
+>>  2 files changed, 4 insertions(+), 1 deletion(-)
 >>
->>  -----------------------------------------------------------------------
->> +Hisilicon HiP05 PCIe-SAS system controller
->> +
->> +Required properties:
->> +- compatible : "hisilicon,pcie-sas-subctrl", "syscon";
->> +- reg : Register address and size
->> +
->> +The HiP05 PCIe-SAS system controller is shared by PCIe and SAS controllers in
->> +HiP05 Soc to implement some basic configurations.
->> +
->> +Example:
->> +       /* for HiP05 PCIe-SAS system */
->> +       pcie_sas: system_controller@0xb0000000 {
->> +               compatible = "hisilicon,pcie-sas-subctrl", "syscon";
->> +               reg = <0xb0000000 0x10000>;
->> +       };
->> +
->> +-----------------------------------------------------------------------
->>  Hisilicon CPU controller
+>>diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>>index b3a226b..3d7e537 100644
+>>--- a/arch/powerpc/include/asm/pci-bridge.h
+>>+++ b/arch/powerpc/include/asm/pci-bridge.h
+>>@@ -210,6 +210,7 @@ struct pci_dn {
+>>  #define IODA_INVALID_PE		(-1)
+>>  #ifdef CONFIG_PPC_POWERNV
+>>  	int	pe_number;
+>>+	int     vf_index;		/* VF index in the PF */
+>>  #ifdef CONFIG_PCI_IOV
+>>  	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
+>>  	u16     num_vfs;		/* number of VFs enabled*/
+>>diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+>>index b3b4df9..f771130 100644
+>>--- a/arch/powerpc/kernel/pci_dn.c
+>>+++ b/arch/powerpc/kernel/pci_dn.c
+>>@@ -139,6 +139,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
+>>  #ifdef CONFIG_PCI_IOV
+>>  static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+>>  					   struct pci_dev *pdev,
+>>+					   int vf_index,
+>>  					   int busno, int devfn)
+>>  {
+>>  	struct pci_dn *pdn;
+>>@@ -157,6 +158,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+>>  	pdn->parent = parent;
+>>  	pdn->busno = busno;
+>>  	pdn->devfn = devfn;
+>>+	pdn->vf_index = vf_index;
+>>  #ifdef CONFIG_PPC_POWERNV
+>>  	pdn->pe_number = IODA_INVALID_PE;
+>>  #endif
+>>@@ -196,7 +198,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+>>  		return NULL;
 >>
->>  Required properties:
->> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->> new file mode 100644
->> index 0000000..17c6ed9
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->> @@ -0,0 +1,44 @@
->> +HiSilicon PCIe host bridge DT description
->> +
->> +HiSilicon PCIe host controller is based on Designware PCI core.
->> +It shares common functions with PCIe Designware core driver and inherits
->> +common properties defined in
->> +Documentation/devicetree/bindings/pci/designware-pci.txt.
->> +
->> +Additional properties are described here:
->> +
->> +Required properties:
->> +- compatible: Should contain "hisilicon,hip05-pcie".
->> +- reg: Should contain rc_dbi, config registers location and length.
->> +- reg-names: Must include the following entries:
->> +  "rc_dbi": controller configuration registers;
->> +  "config": PCIe configuration space registers.
->> +- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
->> +- port-id: Should be 0, 1, 2 or 3.
-> 
-> 
->> +
->> +Optional properties:
->> +- status: Either "ok" or "disabled".
->> +- dma-coherent: Present if DMA operations are coherent.
->> +
->> +Example:
->> +       pcie@0xb0080000 {
->> +               compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
->> +               reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
->> +               reg-names = "rc_dbi", "config";
->> +               bus-range = <0  15>;
->> +               msi-parent = <&its_pcie>;
->> +               #address-cells = <3>;
->> +               #size-cells = <2>;
->> +               device_type = "pci";
->> +               dma-coherent;
->> +               ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
->> +               num-lanes = <8>;
->> +               port-id = <1>;
->> +               #interrupts-cells = <1>;
->> +               interrupts-map-mask = <0xf800 0 0 7>;
->> +               interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
->> +                                 0x0 0 0 2 &mbigen_pcie 2 11
->> +                                 0x0 0 0 3 &mbigen_pcie 3 12
->> +                                 0x0 0 0 4 &mbigen_pcie 4 13>;
->> +               status = "ok";
->> +       };
->> --
->> 1.9.1
+>>  	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
+>>-		pdn = add_one_dev_pci_data(parent, NULL,
+>>+		pdn = add_one_dev_pci_data(parent, NULL, i,
+>>  					   pci_iov_virtfn_bus(pdev, i),
+>>  					   pci_iov_virtfn_devfn(pdev, i));
+>>  		if (!pdn) {
 >>
->> --
->> To unsubscribe from this list: send the line "unsubscribe devicetree" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
+>
+>
+>-- 
+>Alexey
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+-- 
+Richard Yang
+Help you, Help me
 
