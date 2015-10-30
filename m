@@ -1,269 +1,172 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v11 4/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
-Date: Fri, 16 Oct 2015 18:23:39 +0800
-Message-ID: <1444991021-109306-5-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1444991021-109306-1-git-send-email-wangzhou1@hisilicon.com>
+Date: Fri, 30 Oct 2015 13:25:08 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Alexander Duyck <aduyck@mirantis.com>,
+	linux-pci@vger.kernel.org, Ethan Zhao <ethan.zhao@oracle.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/7] PCI: Set SR-IOV NumVFs to zero after enumeration
+Message-ID: <20151030052508.GA5269@richards-mbp.cn.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20151029222254.11908.78884.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20151030034821.GB3551@richards-mbp.cn.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151030034821.GB3551@richards-mbp.cn.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds PCIe host support for HiSilicon SoC Hip05.
+On Fri, Oct 30, 2015 at 11:48:21AM +0800, Wei Yang wrote:
+>On Thu, Oct 29, 2015 at 05:22:54PM -0500, Bjorn Helgaas wrote:
+>>ines: 115
+>>
+>>From: Alexander Duyck <aduyck@mirantis.com>
+>>
+>>The enumeration path should leave NumVFs set to zero.  But after
+>>4449f079722c ("PCI: Calculate maximum number of buses required for VFs"),
+>>we call virtfn_max_buses() in the enumeration path, which changes NumVFs.
+>>This NumVFs change is visible via lspci and sysfs until a driver enables
+>>SR-IOV.
+>>
+>>Iterate from TotalVFs down to zero so NumVFs is zero when we're finished
+>>computing the maximum number of buses.  Validate offset and stride in
+>>the loop, so we can test it at every possible NumVFs setting.  Rename
+>>virtfn_max_buses() to compute_max_vf_buses() to hint that it does have a
+>>side effect of updating iov->max_VF_buses.
+>>
+>>[bhelgaas: changelog, rename, allow numVF==1 && stride==0, rework loop,
+>>reverse sense of error path]
+>>Fixes: 4449f079722c ("PCI: Calculate maximum number of buses required for VFs")
+>>Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
+>>Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>---
+>> drivers/pci/iov.c |   41 ++++++++++++++++++++++-------------------
+>> 1 file changed, 22 insertions(+), 19 deletions(-)
+>>
+>>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>>index 0cdb2d1..1b1acc2 100644
+>>--- a/drivers/pci/iov.c
+>>+++ b/drivers/pci/iov.c
+>>@@ -54,24 +54,29 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+>>  * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
+>>  * determine how many additional bus numbers will be consumed by VFs.
+>>  *
+>>- * Iterate over all valid NumVFs and calculate the maximum number of bus
+>>- * numbers that could ever be required.
+>>+ * Iterate over all valid NumVFs, validate offset and stride, and calculate
+>>+ * the maximum number of bus numbers that could ever be required.
+>>  */
+>>-static inline u8 virtfn_max_buses(struct pci_dev *dev)
+>>+static int compute_max_vf_buses(struct pci_dev *dev)
+>> {
+>> 	struct pci_sriov *iov = dev->sriov;
+>>-	int nr_virtfn;
+>>-	u8 max = 0;
+>>-	int busnr;
+>>+	int nr_virtfn, busnr, rc = 0;
+>>
+>>-	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
+>>+	for (nr_virtfn = iov->total_VFs; nr_virtfn; nr_virtfn--) {
+>
+>Hmm... I agree to iterate the nr_virtfn from total_VFs to 0, which keep the
+>original logic, before my patch.
+>
+>
+>> 		pci_iov_set_numvfs(dev, nr_virtfn);
+>>+		if (!iov->offset || (nr_virtfn > 1 && !iov->stride)) {
+>                                     ^^^
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: liudongdong <liudongdong3@huawei.com>
----
- drivers/pci/host/Kconfig     |   8 ++
- drivers/pci/host/Makefile    |   1 +
- drivers/pci/host/pcie-hisi.c | 196 +++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 205 insertions(+)
- create mode 100644 drivers/pci/host/pcie-hisi.c
+After reading the SPEC, I think this code is correct. The original one removed
+below may not comply with the SPEC.
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d5e58ba..ae873be 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -145,4 +145,12 @@ config PCIE_IPROC_BCMA
- 	  Say Y here if you want to use the Broadcom iProc PCIe controller
- 	  through the BCMA bus interface
- 
-+config PCI_HISI
-+	depends on OF && ARM64
-+	bool "HiSilicon SoC HIP05 PCIe controller"
-+	select PCIEPORTBUS
-+	select PCIE_DW
-+	help
-+	  Say Y here if you want PCIe controller support on HiSilicon HIP05 SoC
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 140d66f..ea1dbf2 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -17,3 +17,4 @@ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
- obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
- obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
- obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
-+obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-new file mode 100644
-index 0000000..a342a48
---- /dev/null
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -0,0 +1,196 @@
-+/*
-+ * PCIe host controller driver for HiSilicon Hip05 SoC
-+ *
-+ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
-+ *
-+ * Author: Zhou Wang <wangzhou1@hisilicon.com>
-+ *         Dacai Zhu <zhudacai@hisilicon.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#include <linux/interrupt.h>
-+#include <linux/module.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/of_address.h>
-+#include <linux/of_pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/regmap.h>
-+
-+#include "pcie-designware.h"
-+
-+#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
-+#define PCIE_LTSSM_LINKUP_STATE                         0x11
-+#define PCIE_LTSSM_STATE_MASK                           0x3F
-+
-+#define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
-+
-+struct hisi_pcie {
-+	struct regmap *subctrl;
-+	void __iomem *reg_base;
-+	u32 port_id;
-+	struct pcie_port pp;
-+};
-+
-+static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
-+					u32 val, u32 reg)
-+{
-+	writel(val, pcie->reg_base + reg);
-+}
-+
-+static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
-+{
-+	return readl(pcie->reg_base + reg);
-+}
-+
-+/* Hip05 PCIe host only supports 32-bit config access */
-+static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
-+			      u32 *val)
-+{
-+	u32 reg;
-+	u32 reg_val;
-+	struct hisi_pcie *pcie = to_hisi_pcie(pp);
-+	void *walker = &reg_val;
-+
-+	walker += (where & 0x3);
-+	reg = where & ~0x3;
-+	reg_val = hisi_pcie_apb_readl(pcie, reg);
-+
-+	if (size == 1)
-+		*val = *(u8 __force *) walker;
-+	else if (size == 2)
-+		*val = *(u16 __force *) walker;
-+	else if (size != 4)
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+/* Hip05 PCIe host only supports 32-bit config access */
-+static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int  size,
-+				u32 val)
-+{
-+	u32 reg_val;
-+	u32 reg;
-+	struct hisi_pcie *pcie = to_hisi_pcie(pp);
-+	void *walker = &reg_val;
-+
-+	walker += (where & 0x3);
-+	reg = where & ~0x3;
-+	if (size == 4)
-+		hisi_pcie_apb_writel(pcie, val, reg);
-+	else if (size == 2) {
-+		reg_val = hisi_pcie_apb_readl(pcie, reg);
-+		*(u16 __force *) walker = val;
-+		hisi_pcie_apb_writel(pcie, reg_val, reg);
-+	} else if (size == 1) {
-+		reg_val = hisi_pcie_apb_readl(pcie, reg);
-+		*(u8 __force *) walker = val;
-+		hisi_pcie_apb_writel(pcie, reg_val, reg);
-+	} else
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int hisi_pcie_link_up(struct pcie_port *pp)
-+{
-+	u32 val;
-+	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
-+
-+	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
-+		    0x100 * hisi_pcie->port_id, &val);
-+
-+	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
-+}
-+
-+static struct pcie_host_ops hisi_pcie_host_ops = {
-+	.rd_own_conf = hisi_pcie_cfg_read,
-+	.wr_own_conf = hisi_pcie_cfg_write,
-+	.link_up = hisi_pcie_link_up,
-+};
-+
-+static int __init hisi_add_pcie_port(struct pcie_port *pp,
-+				     struct platform_device *pdev)
-+{
-+	int ret;
-+	u32 port_id;
-+	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
-+
-+	if (of_property_read_u32(pdev->dev.of_node, "port-id", &port_id)) {
-+		dev_err(&pdev->dev, "failed to read port-id\n");
-+		return -EINVAL;
-+	}
-+	if (port_id > 3) {
-+		dev_err(&pdev->dev, "Invalid port-id: %d\n", port_id);
-+		return -EINVAL;
-+	}
-+	hisi_pcie->port_id = port_id;
-+
-+	pp->ops = &hisi_pcie_host_ops;
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to initialize host\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int __init hisi_pcie_probe(struct platform_device *pdev)
-+{
-+	struct hisi_pcie *hisi_pcie;
-+	struct pcie_port *pp;
-+	struct resource *reg;
-+	int ret;
-+
-+	hisi_pcie = devm_kzalloc(&pdev->dev, sizeof(*hisi_pcie), GFP_KERNEL);
-+	if (!hisi_pcie)
-+		return -ENOMEM;
-+
-+	pp = &hisi_pcie->pp;
-+	pp->dev = &pdev->dev;
-+
-+	hisi_pcie->subctrl =
-+	syscon_regmap_lookup_by_compatible("hisilicon,pcie-sas-subctrl");
-+	if (IS_ERR(hisi_pcie->subctrl)) {
-+		dev_err(pp->dev, "cannot get subctrl base\n");
-+		return PTR_ERR(hisi_pcie->subctrl);
-+	}
-+
-+	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
-+	hisi_pcie->reg_base = devm_ioremap_resource(&pdev->dev, reg);
-+	if (IS_ERR(hisi_pcie->reg_base)) {
-+		dev_err(pp->dev, "cannot get rc_dbi base\n");
-+		return PTR_ERR(hisi_pcie->reg_base);
-+	}
-+
-+	hisi_pcie->pp.dbi_base = hisi_pcie->reg_base;
-+
-+	ret = hisi_add_pcie_port(pp, pdev);
-+	if (ret)
-+		return ret;
-+
-+	platform_set_drvdata(pdev, hisi_pcie);
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id hisi_pcie_of_match[] = {
-+	{.compatible = "hisilicon,hip05-pcie",},
-+	{},
-+};
-+
-+MODULE_DEVICE_TABLE(of, hisi_pcie_of_match);
-+
-+static struct platform_driver hisi_pcie_driver = {
-+	.probe  = hisi_pcie_probe,
-+	.driver = {
-+		   .name = "hisi-pcie",
-+		   .of_match_table = hisi_pcie_of_match,
-+	},
-+};
-+
-+module_platform_driver(hisi_pcie_driver);
+>
+>Should be this?
+>                if (!iov->offset || (iov->total_VFs > 1 && !iov->stride))
+>
+>
+>>+			rc = -EIO;
+>>+			goto out;
+>>+		}
+>>+
+>> 		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+>>-		if (busnr > max)
+>>-			max = busnr;
+>>+		if (busnr > iov->max_VF_buses)
+>>+			iov->max_VF_buses = busnr;
+>> 	}
+>>
+>>-	return max;
+>>+out:
+>>+	pci_iov_set_numvfs(dev, 0);
+>>+	return rc;
+>> }
+>>
+>> static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+>>@@ -384,7 +389,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>> 	int rc;
+>> 	int nres;
+>> 	u32 pgsz;
+>>-	u16 ctrl, total, offset, stride;
+>>+	u16 ctrl, total;
+>> 	struct pci_sriov *iov;
+>> 	struct resource *res;
+>> 	struct pci_dev *pdev;
+>>@@ -410,11 +415,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>>
+>> found:
+>> 	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+>>-	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
+>>-	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
+>>-	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
+>>-	if (!offset || (total > 1 && !stride))
+>>-		return -EIO;
+>>
+>
+>Original code will return when it found this condition, so that we don't need
+>to bother to do those initialization and then fall back.
+>
+>So I suggest to keep it here.
+>
+>> 	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
+>> 	if (!total)
+>>@@ -456,8 +456,6 @@ found:
+>> 	iov->nres = nres;
+>> 	iov->ctrl = ctrl;
+>> 	iov->total_VFs = total;
+>>-	iov->offset = offset;
+>>-	iov->stride = stride;
+>> 	iov->pgsz = pgsz;
+>> 	iov->self = dev;
+>> 	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+>>@@ -474,10 +472,15 @@ found:
+>>
+>> 	dev->sriov = iov;
+>> 	dev->is_physfn = 1;
+>>-	iov->max_VF_buses = virtfn_max_buses(dev);
+>>+	rc = compute_max_vf_buses(dev);
+>>+	if (rc)
+>>+		goto fail_max_buses;
+>>
+>> 	return 0;
+>>
+>>+fail_max_buses:
+>>+	dev->sriov = NULL;
+>
+>The dev->sriov is allocated with kzalloc(), seems we forget to release it?
+>
+>>+	dev->is_physfn = 0;
+>> failed:
+>> 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>> 		res = &dev->resource[i + PCI_IOV_R
+>
+>-- 
+>Richard Yang
+>Help you, Help me
+
 -- 
-1.9.1
+Richard Yang
+Help you, Help me
 
