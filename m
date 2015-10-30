@@ -1,129 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59863 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752352AbbJGXIv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Oct 2015 19:08:51 -0400
-Date: Wed, 7 Oct 2015 18:08:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: David Daney <ddaney.cavm@gmail.com>, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>,
-	Matthew Minter <matt@masarand.com>
-Subject: Re: [PATCH v4 1/5] PCI: Add pci_bus_fixup_irqs().
-Message-ID: <20151007230847.GG27633@localhost>
-References: <1443811443-18878-1-git-send-email-ddaney.cavm@gmail.com>
- <1443811443-18878-2-git-send-email-ddaney.cavm@gmail.com>
- <20151007194426.GF27633@localhost>
- <56157BC8.3070406@caviumnetworks.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: KY Srinivasan <kys@microsoft.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>,
+	Jake Oshins <jakeo@microsoft.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	"tglx@redhat.com" <tglx@redhat.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v4 6/7] drivers:hv: Define the channel type for Hyper-V
+ PCI Express pass-through
+Date: Fri, 30 Oct 2015 16:56:11 +0000
+Message-ID: <BY2PR0301MB16543334659C86300E12DD5AA02F0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+References: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
+	<1446162376-43419-7-git-send-email-jakeo@microsoft.com>
+	<CAHp75VfcLVsESDT-KdjobcKVwSWUT=f1i_1PrET47tJ=rB91jA@mail.gmail.com>
+	<DM2PR0301MB123280EE1F7E37B57E27E6EAAB2F0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+ <CAHp75VdTFWMtxT3ftfT4-EgvMaQD=rXVcZf2K2adJM_zyT5Rdg@mail.gmail.com>
+In-Reply-To: <CAHp75VdTFWMtxT3ftfT4-EgvMaQD=rXVcZf2K2adJM_zyT5Rdg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56157BC8.3070406@caviumnetworks.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Matthew]
-
-On Wed, Oct 07, 2015 at 01:08:40PM -0700, David Daney wrote:
-> On 10/07/2015 12:44 PM, Bjorn Helgaas wrote:
-> >Hi David,
-> >
-> >On Fri, Oct 02, 2015 at 11:43:59AM -0700, David Daney wrote:
-> >>From: David Daney <david.daney@cavium.com>
-> >>
-> >>pci_bus_fixup_irqs() works like pci_fixup_irqs(), except it only does
-> >>the fixups for devices on the specified bus.
-> >>
-> >>Follow-on patch will use the new function.
-> >>
-> >>Signed-off-by: David Daney <david.daney@cavium.com>
-> >>---
-> >>No change from v2.
-> >>
-> >>  drivers/pci/setup-irq.c | 30 ++++++++++++++++++++++++++++++
-> >>  include/linux/pci.h     |  4 ++++
-> >>  2 files changed, 34 insertions(+)
-> >>
-> >>diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> >>index 95c225b..189ad17 100644
-> >>--- a/drivers/pci/setup-irq.c
-> >>+++ b/drivers/pci/setup-irq.c
-> >>@@ -66,3 +66,33 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
-> >>  		pdev_fixup_irq(dev, swizzle, map_irq);
-> >>  }
-> >>  EXPORT_SYMBOL_GPL(pci_fixup_irqs);
-> >>+
-> >>+struct pci_bus_fixup_cb_info {
-> >>+	u8 (*swizzle)(struct pci_dev *, u8 *);
-> >>+	int (*map_irq)(const struct pci_dev *, u8, u8);
-> >>+};
-> >>+
-> >>+static int pci_bus_fixup_irq_cb(struct pci_dev *dev, void *arg)
-> >>+{
-> >>+	struct pci_bus_fixup_cb_info *info = arg;
-> >>+
-> >>+	pdev_fixup_irq(dev, info->swizzle, info->map_irq);
-> >>+	return 0;
-> >>+}
-> >>+
-> >>+/*
-> >>+ * Fixup the irqs only for devices on the given bus using supplied
-> >>+ * swizzle and map_irq function pointers
-> >>+ */
-> >>+void pci_bus_fixup_irqs(struct pci_bus *bus,
-> >>+			u8 (*swizzle)(struct pci_dev *, u8 *),
-> >>+			int (*map_irq)(const struct pci_dev *, u8, u8))
-> >>+{
-> >>+	struct pci_bus_fixup_cb_info info;
-> >>+
-> >>+	info.swizzle = swizzle;
-> >>+	info.map_irq = map_irq;
-> >>+	pci_walk_bus(bus, pci_bus_fixup_irq_cb, &info);
-> >
-> >I don't like the existing pci_fixup_irqs(), so by transitivity, I
-> >don't like pci_bus_fixup_irqs() either.
-> 
-> We are in agreement with respect to this point.
-> 
-> > The problem is that in both
-> >cases this is a one-time pass over the tree, so we don't handle
-> >hot-added devices correctly.
-> >
-> >I think we need to get rid of pci_fixup_irqs() and somehow integrate
-> >it into the pci_device_add() path, where it would be done once for
-> >every device we enumerate.
-> 
-> I also agree with this point.
-> 
-> > If we did that, I don't think you would
-> >need to add pci_bus_fixup_irqs(), would you?
-> 
-> Nope.
-> 
-> However, such a change is essentially untestable by me.  So, I
-> didn't attempt it.   pci_fixup_irqs() is used by alpha, arm, m68k,
-> mips, sh, sparc, tile, unicore32 and other things as well.  If the
-> core pci_device_add() code were to suddenly start doing the fixup,
-> there would be the potential to break all these things I cannot
-> test.
-
-Yep, that's certainly a risk.  I can't test all those arches either,
-but I think it's a risk worth taking because the end result is more
-maintainable.
-
-Matthew Minter did some really nice work on this last year, but it got
-stalled somehow.  I wonder if we can resurrect it?  It seems like it
-was pretty close to being ready.  Here's a pointer to the last posting
-I saw:
-
-http://lkml.kernel.org/r/1412222866-21068-1-git-send-email-matt@masarand.com
-
-Bjorn
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQW5keSBTaGV2Y2hlbmtv
+IFttYWlsdG86YW5keS5zaGV2Y2hlbmtvQGdtYWlsLmNvbV0NCj4gU2VudDogRnJpZGF5LCBPY3Rv
+YmVyIDMwLCAyMDE1IDk6NTIgQU0NCj4gVG86IEpha2UgT3NoaW5zIDxqYWtlb0BtaWNyb3NvZnQu
+Y29tPg0KPiBDYzogR3JlZyBLcm9haC1IYXJ0bWFuIDxncmVna2hAbGludXhmb3VuZGF0aW9uLm9y
+Zz47IEtZIFNyaW5pdmFzYW4NCj4gPGt5c0BtaWNyb3NvZnQuY29tPjsgbGludXgta2VybmVsQHZn
+ZXIua2VybmVsLm9yZzsNCj4gZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgb2xhZkBhZXBm
+bGUuZGU7IGFwd0BjYW5vbmljYWwuY29tOyBWaXRhbHkNCj4gS3V6bmV0c292IDx2a3V6bmV0c0By
+ZWRoYXQuY29tPjsgdGdseEByZWRoYXQuY29tOyBIYWl5YW5nIFpoYW5nDQo+IDxoYWl5YW5nekBt
+aWNyb3NvZnQuY29tPjsgbWFyYy56eW5naWVyQGFybS5jb207IEppYW5nIExpdQ0KPiA8amlhbmcu
+bGl1QGxpbnV4LmludGVsLmNvbT47IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+
+OyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHY0
+IDYvN10gZHJpdmVyczpodjogRGVmaW5lIHRoZSBjaGFubmVsIHR5cGUgZm9yIEh5cGVyLVYNCj4g
+UENJIEV4cHJlc3MgcGFzcy10aHJvdWdoDQo+IA0KPiBPbiBGcmksIE9jdCAzMCwgMjAxNSBhdCA1
+OjU3IFBNLCBKYWtlIE9zaGlucyA8amFrZW9AbWljcm9zb2Z0LmNvbT4gd3JvdGU6DQo+IA0KPiA+
+PiA+ICsgKiBQQ0kgRXhwcmVzcyBQYXNzIFRocm91Z2gNCj4gPj4gPiArICogezQ0QzRGNjFELTQ0
+NDQtNDQwMC05RDUyLTgwMkUyN0VERTE5Rn0NCj4gPj4gPiArICovDQo+ID4+ID4gKw0KPiA+PiA+
+ICsjZGVmaW5lIEhWX1BDSUVfR1VJRCBcDQo+ID4+ID4gKyAgICAgICAuZ3VpZCA9IHsgXA0KPiA+
+PiA+ICsgICAgICAgICAgICAgICAgICAgICAgIDB4MUQsIDB4RjYsIDB4QzQsIDB4NDQsIDB4NDQs
+IDB4NDQsIDB4MDAsIDB4NDQsIFwNCj4gPj4gPiArICAgICAgICAgICAgICAgICAgICAgICAweDlE
+LCAweDUyLCAweDgwLCAweDJFLCAweDI3LCAweEVELCAweEUxLCAweDlGIFwNCj4gPj4gPiArICAg
+ICAgICAgICAgICAgfQ0KPiA+Pg0KPiA+PiBXaGF0IGFib3V0DQo+ID4+ICNpbmNsdWRlIDxsaW51
+eC91dWlkLmg+DQo+ID4+DQo+ID4+IFVVSURfTEUoLi4uKQ0KPiA+Pg0KPiA+PiBBbmQgeW91IG1h
+eSB1c2UgdXVpZF9sZSB0eXBlIGluc3RlYWQgb2YgY3VzdG9tIHJhdyBidWZmZXIuDQo+ID4+DQo+
+ID4NCj4gPiBUaGFua3MuICBJIHdhcyBqdXN0IGZvbGxvd2luZyB0aGUgZm9ybSBvZiBhbGwgdGhl
+IG90aGVycyBpbiB0aGlzIGZpbGUuICBJIHRoaW5rDQo+IHRoYXQgdGhpcyB3YXMgZG9uZSB0byBt
+YXRjaCB1cCB3aXRoIHRoZSByZXByZXNlbnRhdGlvbiB0aGF0J3MgY29taW5nIGFjcm9zcw0KPiB0
+aGUgVk0gYm91bmRhcnkgZnJvbSBXaW5kb3dzLg0KPiANCj4gUGVyaGFwcyBhIHNlcGFyYXRlIHBh
+dGNoIHRvIG1vdmUgdG8gdXVpZC5oIHRoZW4/DQoNClllczsgSSBhbSBhYm91dCB0byBzZW5kIG91
+dCBhIHBhdGNoIHRvIHVzZSB0aGUgVVVJRF9MRSBtYWNybyBmb3IgYWxsIG9mIHRoZSBIeXBlci1W
+IGd1aWRzLg0KDQpSZWdhcmRzLA0KDQpLLiBZDQo+IA0KPiAtLQ0KPiBXaXRoIEJlc3QgUmVnYXJk
+cywNCj4gQW5keSBTaGV2Y2hlbmtvDQo=
