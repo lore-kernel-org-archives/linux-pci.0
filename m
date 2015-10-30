@@ -1,79 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47662 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965462AbbJ0U4q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 16:56:46 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH v8 05/61] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-Date: Tue, 27 Oct 2015 13:54:57 -0700
-Message-Id: <1445979353-1728-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Josef Bacik <jbacik@fb.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>, <bhelgaas@google.com>, <shli@fb.com>,
+	<kernel-team@fb.com>
+Subject: [RFC][PATCH] pci: completely disable aspm if it's unsupported
+Date: Fri, 30 Oct 2015 11:47:41 -0400
+Message-ID: <1446220061-28570-1-git-send-email-jbacik@fb.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource, so set
-IORESOUCE_MEM_64 for 64bit resource during of device resource flags
-parsing.
+We have some hardware that takes about 30 seconds to setup common clocks for
+ASPM, but our bios'es don't actually allow ASPM.  It seems we had this thing in
+place where we would disable ASPM after the pci bus probe so that we would make
+sure that pre pcie 1.1 devices would be properly skipped during initialization.
+This is because the mechanism to disable ASPM doesn't actually disable the
+setting up of the link state stuff, it just keeps us from changing the link
+state after the fact.  So instead make it so that when we call pcie_no_aspm()
+that we disable ASPM completley, that is we skip setting up the link state and
+everything.  This way we avoid the costly setup for a feature we cannot support
+in the first place and we also make sure we are safe from future tampering with
+the ASPM link state.  Thanks,
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+Signed-off-by: Josef Bacik <jbacik@fb.com>
 ---
- arch/sparc/kernel/of_device_32.c | 5 +++--
- arch/sparc/kernel/of_device_64.c | 5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/acpi/pci_root.c | 22 +++++-----------------
+ drivers/pci/pcie/aspm.c |  1 +
+ 2 files changed, 6 insertions(+), 17 deletions(-)
 
-diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
-index 185aa96..3e9f273 100644
---- a/arch/sparc/kernel/of_device_32.c
-+++ b/arch/sparc/kernel/of_device_32.c
-@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
--
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 393706a..00e164a 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -419,7 +419,7 @@ out:
+ }
+ EXPORT_SYMBOL(acpi_pci_osc_control_set);
+ 
+-static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
++static void negotiate_os_control(struct acpi_pci_root *root)
+ {
+ 	u32 support, control, requested;
+ 	acpi_status status;
+@@ -456,7 +456,7 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+ 	if (ACPI_FAILURE(status)) {
+ 		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
+ 			 acpi_format_exception(status));
+-		*no_aspm = 1;
++		pcie_no_aspm();
+ 		return;
  	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
-diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
-index 7bbdc26..defee61 100644
---- a/arch/sparc/kernel/of_device_64.c
-+++ b/arch/sparc/kernel/of_device_64.c
-@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
+ 
+@@ -495,22 +495,14 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+ 			 * intact and prevent the OS from touching it.
+ 			 */
+ 			dev_info(&device->dev, "FADT indicates ASPM is unsupported, using BIOS configuration\n");
+-			*no_aspm = 1;
++			pcie_no_aspm();
+ 		}
+ 	} else {
+ 		decode_osc_control(root, "OS requested", requested);
+ 		decode_osc_control(root, "platform willing to grant", control);
+ 		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
+ 			acpi_format_exception(status));
 -
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
+-		/*
+-		 * We want to disable ASPM here, but aspm_disabled
+-		 * needs to remain in its state from boot so that we
+-		 * properly handle PCIe 1.1 devices.  So we set this
+-		 * flag here, to defer the action until after the ACPI
+-		 * root scan.
+-		 */
+-		*no_aspm = 1;
++		pcie_no_aspm();
  	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
+ }
+ 
+@@ -522,7 +514,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	int result;
+ 	struct acpi_pci_root *root;
+ 	acpi_handle handle = device->handle;
+-	int no_aspm = 0;
+ 	bool hotadd = system_state != SYSTEM_BOOTING;
+ 
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+@@ -581,7 +572,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 
+ 	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
+ 
+-	negotiate_os_control(root, &no_aspm);
++	negotiate_os_control(root);
+ 
+ 	/*
+ 	 * TBD: Need PCI interface for enumeration/configuration of roots.
+@@ -604,9 +595,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 		goto remove_dmar;
+ 	}
+ 
+-	if (no_aspm)
+-		pcie_no_aspm();
+-
+ 	pci_acpi_add_bus_pm_notifier(device);
+ 	if (device->wakeup.flags.run_wake)
+ 		device_set_run_wake(root->bus->bridge, true);
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 317e355..5f84af2 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -954,6 +954,7 @@ void pcie_no_aspm(void)
+ 	if (!aspm_force) {
+ 		aspm_policy = POLICY_DEFAULT;
+ 		aspm_disabled = 1;
++		aspm_support_enabled = false;
+ 	}
+ }
+ 
 -- 
-1.8.4.5
+2.1.0
 
