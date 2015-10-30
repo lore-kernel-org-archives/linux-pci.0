@@ -1,50 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:62321 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751261AbbJ2Iob (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 29 Oct 2015 04:44:31 -0400
-Message-ID: <5631D9C2.2040206@intel.com>
-Date: Thu, 29 Oct 2015 16:33:06 +0800
-From: Lan Tianyu <tianyu.lan@intel.com>
-MIME-Version: 1.0
-To: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	eddie.dong@intel.com, nrupal.jani@intel.com,
-	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
-	pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-Subject: Re: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV
- NIC
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com> <562A7E33.4080800@gmail.com> <562DBBC9.4000104@intel.com> <562E40BB.6040404@gmail.com> <5631B8CA.9040805@intel.com> <5631C3A7.2070900@gmail.com>
-In-Reply-To: <5631C3A7.2070900@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v5 2/7] drivers:hv: Export hv_do_hypercall()
+Date: Fri, 30 Oct 2015 21:11:10 +0000
+Message-Id: <1446239475-49480-3-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
+References: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015年10月29日 14:58, Alexander Duyck wrote:
-> 
-> Your code was having to do a bunch of shuffling in order to get things
-> set up so that you could bring the interface back up.  I would argue
-> that it may actually be faster at least on the bring-up to just drop the
-> old rings and start over since it greatly reduced the complexity and the
-> amount of device related data that has to be moved.
+From: Jake Oshins <jakeo@microsoft.com>
 
-If give up the old ring after migration and keep DMA running before
-stopping VCPU, it seems we don't need to track Tx/Rx descriptor ring and
-just make sure that all Rx buffers delivered to stack has been migrated.
+This patch exposes the function that hv_vmbus.ko uses to make hypercalls. This
+is necessary for retargeting an interrupt when it is given a new affinity and
+vector.
 
-1) Dummy write Rx buffer before checking Rx descriptor to ensure packet
-migrated first.
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/hv.c           | 20 ++++++++++----------
+ drivers/hv/hyperv_vmbus.h |  2 +-
+ include/linux/hyperv.h    |  1 +
+ 3 files changed, 12 insertions(+), 11 deletions(-)
 
-2) Make a copy of Rx descriptor and then use the copied data to check
-buffer status. Not use the original descriptor because it won't be
-migrated and migration may happen between two access of the Rx descriptor.
-
+diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
+index 6341be8..7a06933 100644
+--- a/drivers/hv/hv.c
++++ b/drivers/hv/hv.c
+@@ -89,9 +89,9 @@ static int query_hypervisor_info(void)
+ }
+ 
+ /*
+- * do_hypercall- Invoke the specified hypercall
++ * hv_do_hypercall- Invoke the specified hypercall
+  */
+-static u64 do_hypercall(u64 control, void *input, void *output)
++u64 hv_do_hypercall(u64 control, void *input, void *output)
+ {
+ 	u64 input_address = (input) ? virt_to_phys(input) : 0;
+ 	u64 output_address = (output) ? virt_to_phys(output) : 0;
+@@ -132,6 +132,7 @@ static u64 do_hypercall(u64 control, void *input, void *output)
+ 	return hv_status_lo | ((u64)hv_status_hi << 32);
+ #endif /* !x86_64 */
+ }
++EXPORT_SYMBOL_GPL(hv_do_hypercall);
+ 
+ #ifdef CONFIG_X86_64
+ static cycle_t read_hv_clock_tsc(struct clocksource *arg)
+@@ -315,7 +316,7 @@ int hv_post_message(union hv_connection_id connection_id,
+ {
+ 
+ 	struct hv_input_post_message *aligned_msg;
+-	u16 status;
++	u64 status;
+ 
+ 	if (payload_size > HV_MESSAGE_PAYLOAD_BYTE_COUNT)
+ 		return -EMSGSIZE;
+@@ -329,11 +330,10 @@ int hv_post_message(union hv_connection_id connection_id,
+ 	aligned_msg->payload_size = payload_size;
+ 	memcpy((void *)aligned_msg->payload, payload, payload_size);
+ 
+-	status = do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL)
+-		& 0xFFFF;
++	status = hv_do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL);
+ 
+ 	put_cpu();
+-	return status;
++	return status & 0xFFFF;
+ }
+ 
+ 
+@@ -343,13 +343,13 @@ int hv_post_message(union hv_connection_id connection_id,
+  *
+  * This involves a hypercall.
+  */
+-u16 hv_signal_event(void *con_id)
++int hv_signal_event(void *con_id)
+ {
+-	u16 status;
++	u64 status;
+ 
+-	status = (do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL) & 0xFFFF);
++	status = hv_do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL);
+ 
+-	return status;
++	return status & 0xFFFF;
+ }
+ 
+ static int hv_ce_set_next_event(unsigned long delta,
+diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
+index 3d70e36..18c66fc 100644
+--- a/drivers/hv/hyperv_vmbus.h
++++ b/drivers/hv/hyperv_vmbus.h
+@@ -587,7 +587,7 @@ extern int hv_post_message(union hv_connection_id connection_id,
+ 			 enum hv_message_type message_type,
+ 			 void *payload, size_t payload_size);
+ 
+-extern u16 hv_signal_event(void *con_id);
++extern int hv_signal_event(void *con_id);
+ 
+ extern int hv_synic_alloc(void);
+ 
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index 02393b6..ea0a0e3 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -983,6 +983,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			bool fb_overlap_ok);
+ 
+ int vmbus_cpu_number_to_vp_number(int cpu_number);
++u64 hv_do_hypercall(u64 control, void *input, void *output);
+ 
+ /**
+  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
 -- 
-Best regards
-Tianyu Lan
+1.9.1
+
