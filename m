@@ -1,70 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH 3/4] arm64: Juno: Add support for the PCIe host bridge on Juno R1
-Date: Fri,  9 Oct 2015 14:45:22 +0100
-Message-Id: <1444398323-17354-4-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp09.in.ibm.com ([122.248.162.9]:45608 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752320AbbJ3FPK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 01:15:10 -0400
+Received: from /spool/local
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 30 Oct 2015 10:45:07 +0530
+Date: Fri, 30 Oct 2015 13:14:58 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
+	Ethan Zhao <ethan.zhao@oracle.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 5/7] PCI: Wait 1 second between disabling VFs and
+ clearing NumVFs
+Message-ID: <20151030051458.GD5119@richards-mbp.cn.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20151029222322.11908.13738.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151029222322.11908.13738.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Juno R1 board sports a functional PCIe host bridge that is
-compliant with the SBSA standard found here[1]. With the right
-firmware that initialises the XpressRICH3 controller one can
-use the generic Host Bridge driver to use the PCIe hardware.
+On Thu, Oct 29, 2015 at 05:23:22PM -0500, Bjorn Helgaas wrote:
+>From: Alexander Duyck <aduyck@mirantis.com>
+>
+>Per sec 3.3.3.1 of the SR-IOV spec, r1.1, we must allow 1.0s after clearing
+>VF Enable before reading any field in the SR-IOV Extended Capability.
+>
+>Wait 1 second before calling pci_iov_set_numvfs(), which reads
+>PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE after it sets PCI_SRIOV_NUM_VF.
+>
+>[bhelgaas: split to separate patch for reviewability, add spec reference]
+>Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>---
+> drivers/pci/iov.c |    2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+>
+>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>index fada98d..24428d5 100644
+>--- a/drivers/pci/iov.c
+>+++ b/drivers/pci/iov.c
+>@@ -339,13 +339,13 @@ failed:
+> 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+> 	pci_cfg_access_lock(dev);
+> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>-	pci_iov_set_numvfs(dev, 0);
+> 	ssleep(1);
+> 	pci_cfg_access_unlock(dev);
+>
+> 	if (iov->link != dev->devfn)
+> 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>
+>+	pci_iov_set_numvfs(dev, 0);
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+One small question, any specific reason put it here instead of just after
+sleep()?
 
-[1] http://infocenter.arm.com/help/topic/com.arm.doc.den0029a/
----
- arch/arm64/boot/dts/arm/juno-r1.dts | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+> 	return rc;
+> }
+>
 
-diff --git a/arch/arm64/boot/dts/arm/juno-r1.dts b/arch/arm64/boot/dts/arm/juno-r1.dts
-index c627511..a702a6b 100644
---- a/arch/arm64/boot/dts/arm/juno-r1.dts
-+++ b/arch/arm64/boot/dts/arm/juno-r1.dts
-@@ -109,6 +109,26 @@
- 
- 	#include "juno-base.dtsi"
- 
-+	pcie-controller@40000000 {
-+		compatible = "pci-host-ecam-generic";
-+		device_type = "pci";
-+		reg = <0 0x40000000 0 0x10000000>;	/* ECAM config space */
-+		bus-range = <0 255>;
-+		linux,pci-domain = <0>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		dma-coherent;
-+		ranges = <0x01000000 0x00 0x5f800000 0x00 0x5f800000 0x0 0x00800000
-+			  0x02000000 0x00 0x50000000 0x00 0x50000000 0x0 0x08000000
-+			  0x42000000 0x40 0x00000000 0x40 0x00000000 0x1 0x00000000>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &gic 0 0 0 136 4
-+				 0 0 0 2 &gic 0 0 0 137 4
-+				 0 0 0 3 &gic 0 0 0 138 4
-+				 0 0 0 4 &gic 0 0 0 139 4>;
-+		msi-parent = <&v2m_0>;
-+	};
- };
- 
- &memtimer {
 -- 
-2.6.0
+Richard Yang
+Help you, Help me
 
