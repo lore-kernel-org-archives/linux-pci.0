@@ -1,92 +1,99 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 15 Oct 2015 14:22:00 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-Message-ID: <20151015132200.GA7621@red-moon>
-References: <20150604102253.GA31773@red-moon>
- <5570447D.3020705@linaro.org>
- <557504A2.3060203@linaro.org>
- <20150608151443.GA16151@red-moon>
- <55E4340D.6050004@linaro.org>
- <55ED6010.3020406@linaro.org>
- <20150908150727.GF29293@red-moon>
- <55F0388B.1090607@linaro.org>
- <20150911112018.GA13033@red-moon>
- <55F6DFF6.4010807@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:36065 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752320AbbJ3QD4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 12:03:56 -0400
+Subject: Re: [PATCH v2 7/7] PCI: Set NumVFs before computing how many buses
+ VFs require
+To: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20151029222336.11908.66193.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20151030052249.GF5119@richards-mbp.cn.ibm.com>
+Cc: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
+	Ethan Zhao <ethan.zhao@oracle.com>,
+	linux-kernel@vger.kernel.org
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <563394EA.7050603@gmail.com>
+Date: Fri, 30 Oct 2015 09:03:54 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55F6DFF6.4010807@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20151030052249.GF5119@richards-mbp.cn.ibm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 14, 2015 at 03:55:50PM +0100, Tomasz Nowicki wrote:
+On 10/29/2015 10:22 PM, Wei Yang wrote:
+> On Thu, Oct 29, 2015 at 05:23:36PM -0500, Bjorn Helgaas wrote:
+>> From: Alexander Duyck <aduyck@mirantis.com>
+>>
+>> VF bus numbers depend on the First VF Offset and VF Stride, and per
+>> sections 3.3.9 and 3.3.10 of the SR-IOV spec r1.1, these depend on the
+>> NumVF value.
+>>
+>> Wait until after we set NumVFs to compute and validate the bus number of
+>> the last VF.
+>>
+>> [bhelgaas: changelog, add spec reference, split to separate patch for
+>> reviewability]
+>> Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>> drivers/pci/iov.c |   18 ++++++++++--------
+>> 1 file changed, 10 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index bd1c4fa..9d29712 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -274,13 +274,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>> 		return -ENOMEM;
+>> 	}
+>>
+>> -	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+>> -	if (bus > dev->bus->busn_res.end) {
+>> -		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
+>> -			nr_virtfn, bus, &dev->bus->busn_res);
+>> -		return -ENOMEM;
+>> -	}
+>> -
+>> 	if (pci_enable_resources(dev, bars)) {
+>> 		dev_err(&dev->dev, "SR-IOV: IOV BARS not allocated\n");
+>> 		return -ENOMEM;
+>> @@ -304,6 +297,15 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>> 	}
+>>
+>> 	pci_iov_set_numvfs(dev, nr_virtfn);
+> How about move it up?
 
-[...]
+The idea with moving the write down is to keep the pollution of the 
+SR-IOV capability to a minimum.  Basically we have addressed all of the 
+possible software issues at this point so all that remains is possible 
+hardware complications.  In addition by moving this code down we only 
+have to modify this code instead of adding "rc=X; goto foo;" in places 
+where "return X;" was used.
 
-> > Well, I still have not figured out whether on arm64 the raw accessors
-> > required by ACPICA make sense.
-> >
-> > So either arm64 relies on the generic MCFG based raw read and writes
-> > or we define the global raw read and writes as empty (ie x86 overrides
-> > them anyway).
-> >
-> 
-> My concerns/ideas related to raw accessors for ARM64, please correct me 
-> at any point.
-> 
-> ACPI spec - chapter: 19.5.96 OperationRegion (Declare Operation Region)
-> defines PCI_Config as one of region types. Every time ASL opcode 
-> operates on corresponding PCI config space region, ASL interpreter is 
-> dispatching address space to our raw accessors, please see 
-> acpi_ex_pci_config_space_handler, acpi_ev_pci_config_region_setup calls. 
-> What is more important, such operations may happen after (yes after) bus 
-> enumeration, but always raw accessors are called at the end with the 
-> {segment, bus, dev, fn} tuple.
-> 
-> Giving above, here are some ideas:
-> 1. We force somehow vendors to avoid operations on PCI config regions in 
-> ASL code. PCI config region definitions still fall into Hardware Reduced 
-> profile, so new ACPICA special subset for ARM64 is need. Then raw ACPI 
-> accessors can be empty (and overridden by x86).
+Also this is an exception case.  There really isn't much point in 
+optimizing for something that should never really happen.
 
-I am coming back to this, I am not sure that PCI config based OperationRegions
-fall into Hardware Reduced profile, I will finally start a thread on ASWG
-to check that.
+>> +
+>> +	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+>> +	if (bus > dev->bus->busn_res.end) {
+>> +		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
+>> +			nr_virtfn, bus, &dev->bus->busn_res);
+>> +		rc = -ENOMEM;
+>> +		goto err_bus;
+>> +	}
+>> +
+>> 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+>> 	pci_cfg_access_lock(dev);
+>> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>> @@ -342,7 +344,7 @@ err_pcibios:
+>> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>> 	ssleep(1);
+>> 	pci_cfg_access_unlock(dev);
+>> -
+>> +err_bus:
+>> 	if (iov->link != dev->devfn)
+>> 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>>
 
-Other than that, are you posting an updated version of this series soon ?
-Let me know if you need help refactoring/testing the patches.
-
-Thanks,
-Lorenzo
-
-> 2. We provide raw accessors which translate {segment, bus, dev, fn} 
-> tuple to Linux generic accessors (this can be considered only if PCI 
-> config accesses happened after bus enumeration for HR profile, thus 
-> tuple to bus structure map is possible).
-> 4. We rely on the generic MCFG based raw read and writes.
-> 
-> Let me know your opinion.
-> 
-> Thanks,
-> Tomasz
-> 
