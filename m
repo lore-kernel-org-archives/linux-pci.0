@@ -1,162 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36877 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754832AbbJ1TxE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 Oct 2015 15:53:04 -0400
-Date: Wed, 28 Oct 2015 14:52:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Alexander Duyck <aduyck@mirantis.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Ben Shelton <benjamin.h.shelton@intel.com>
-Subject: Re: [PATCH 2/5] iov: Reset resources to 0 if totalVFs increases
- after enabling ARI
-Message-ID: <20151028195259.GA13864@localhost>
-References: <20151027204607.14626.59671.stgit@localhost.localdomain>
- <20151027205221.14626.8940.stgit@localhost.localdomain>
- <20151028163747.GA29223@localhost>
- <563114AE.7050505@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5632D8C8.3010101@intel.com>
+Date: Fri, 30 Oct 2015 10:41:12 +0800
+From: Lan Tianyu <tianyu.lan@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <563114AE.7050505@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
+	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
+	eddie.dong@intel.com, nrupal.jani@intel.com,
+	yang.z.zhang@intel.com, agraf@suse.de, kvm@vger.kernel.org,
+	pbonzini@redhat.com, qemu-devel@nongnu.org,
+	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, matthew.vick@intel.com,
+	mitch.a.williams@intel.com, netdev@vger.kernel.org,
+	shannon.nelson@intel.com
+Subject: Re: [RFC Patch 00/12] IXGBE: Add live migration support for SRIOV
+ NIC
+References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com> <562A7E33.4080800@gmail.com> <562DBBC9.4000104@intel.com> <562E40BB.6040404@gmail.com> <5631B8CA.9040805@intel.com> <5631C3A7.2070900@gmail.com> <5631D9C2.2040206@intel.com> <56324682.5060507@gmail.com>
+In-Reply-To: <56324682.5060507@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 28, 2015 at 11:32:14AM -0700, Alexander Duyck wrote:
-> On 10/28/2015 09:37 AM, Bjorn Helgaas wrote:
-> >Hi Alex,
-> >
-> >On Tue, Oct 27, 2015 at 01:52:21PM -0700, Alexander Duyck wrote:
-> >>This patch forces us to reallocate VF BARs if the totalVFs value has
-> >>increased after enabling ARI.  This normally shouldn't occur, however I
-> >>have seen some non-spec devices that shift between 7 and some value greater
-> >>than 7 based on the ARI value and we want to avoid triggering any issues
-> >>with such devices.
-> >
-> >Can you include specifics about the devices?  The value "7" is pretty
-> >specific, so if we're going to include that level of detail, we should
-> >have the actual device info to go with it.
+On 2015年10月30日 00:17, Alexander Duyck wrote:
+> On 10/29/2015 01:33 AM, Lan Tianyu wrote:
+>> On 2015年10月29日 14:58, Alexander Duyck wrote:
+>>> Your code was having to do a bunch of shuffling in order to get things
+>>> set up so that you could bring the interface back up.  I would argue
+>>> that it may actually be faster at least on the bring-up to just drop the
+>>> old rings and start over since it greatly reduced the complexity and the
+>>> amount of device related data that has to be moved.
+>> If give up the old ring after migration and keep DMA running before
+>> stopping VCPU, it seems we don't need to track Tx/Rx descriptor ring and
+>> just make sure that all Rx buffers delivered to stack has been migrated.
+>>
+>> 1) Dummy write Rx buffer before checking Rx descriptor to ensure packet
+>> migrated first.
 > 
-> I referenced 7 as that is the largest number of VFs a single
-> function can support assuming a single function without ARI and
-> without the ability to handle Type 1 configuration requests.  The
-> Intel fm10k driver has logic in it that does a check for ARI and if
-> it is supported it reports via sysfs a totalVFs of 64, otherwise it
-> limits the totalVFs reported to 7.  However, I don't believe it
-> exposes the limitation via the configuration space.
+> Don't dummy write the Rx descriptor.  You should only really need to
+> dummy write the Rx buffer and you would do so after checking the
+> descriptor, not before.  Otherwise you risk corrupting the Rx buffer
+> because it is possible for you to read the Rx buffer, DMA occurs, and
+> then you write back the Rx buffer and now you have corrupted the memory.
+> 
+>> 2) Make a copy of Rx descriptor and then use the copied data to check
+>> buffer status. Not use the original descriptor because it won't be
+>> migrated and migration may happen between two access of the Rx
+>> descriptor.
+> 
+> Do not just blindly copy the Rx descriptor ring.  That is a recipe for
+> disaster.  The problem is DMA has to happen in a very specific order for
+> things to function correctly.  The Rx buffer has to be written and then
+> the Rx descriptor.  The problem is you will end up getting a read-ahead
+> on the Rx descriptor ring regardless of which order you dirty things in.
 
-Ah, OK, that makes sense.
 
-> >I guess the problem is:
-> >
-> >   - Device supports 7 TotalVFs with ARI disabled, >7 with ARI enabled
-> >   - Firmware leaves ARI disabled in SRIOV_CTRL
-> >   - Firmware computes size based on 7 VFs
-> >   - Firmware allocates space and programs BARs for 7 VFs
-> >   - Linux enables ARI, reads >7 TotalVFs
-> >   - Linux computes size based on >7 VFs
-> >   - Increased size may overlap other resources
-> >
-> >Right?
-> 
-> Right.  More than likely what will happen is that you will see
-> overlap of the device on itself if it has multiple base address
-> registers assigned to the VFs.
-> 
-> >>Fixes: 3aa71da412fe ("PCI: Enable SR-IOV ARI Capable Hierarchy before reading TotalVFs")
-> >>Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
-> >>---
-> >>  drivers/pci/iov.c |   11 ++++++++++-
-> >>  1 file changed, 10 insertions(+), 1 deletion(-)
-> >>
-> >>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> >>index 099050d78a39..238950412de0 100644
-> >>--- a/drivers/pci/iov.c
-> >>+++ b/drivers/pci/iov.c
-> >>@@ -393,7 +393,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
-> >>  	int rc;
-> >>  	int nres;
-> >>  	u32 pgsz;
-> >>-	u16 ctrl, total;
-> >>+	u16 ctrl, total, orig_total;
-> >>  	struct pci_sriov *iov;
-> >>  	struct resource *res;
-> >>  	struct pci_dev *pdev;
-> >>@@ -402,6 +402,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
-> >>  	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
-> >>  		return -ENODEV;
-> >>
-> >>+	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &orig_total);
-> >>  	pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl);
-> >>  	if (ctrl & PCI_SRIOV_CTRL_VFE) {
-> >>  		pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, 0);
-> >>@@ -450,6 +451,14 @@ found:
-> >>  		}
-> >>  		iov->barsz[i] = resource_size(res);
-> >>  		res->end = res->start + resource_size(res) * total - 1;
-> >>+
-> >>+		/* force reallocation of BARs if total VFs increased */
-> >>+		if (orig_total < total) {
-> >>+			res->flags |= IORESOURCE_UNSET;
-> >>+			res->end -= res->start;
-> >>+			res->start = 0;
-> >>+		}
-> >
-> >Two thoughts here:
-> >
-> >1) Even if the required space increased, it's possible that firmware
-> >placed the BAR somewhere where the extra space is available.  In that
-> >case, this forces reallocation unnecessarily.
-> 
-> I'd say it is possible, but not likely.  From past experience I have
-> seen BIOSes do some very dumb things when it comes to SR-IOV,
-> assuming they even support it.
-> 
-> In addition many of the VF devices out there support more than one
-> base address register per function.  The Intel NICs for example have
-> one for device registers and one for MSI-X registers.  And most
-> BIOSes usually pack one right after the other from what I have seen.
-> So while there may be more space there what usually happens is that
-> the MSI-X region will have to be relocated in order to make room for
-> expanding the other base address register.
-> 
-> My last bit on all this is that VFs are meant to be assigned into
-> guests.  I would argue that for the sake of security we are much
-> better off invalidating the VF base address registers and forcing a
-> reallocation if there is even a risk of the VF base address register
-> space overlapping with some other piece of host memory.  We don't
-> want to risk possibly exposing any bits of the host that we didn't
-> intend on.
+Sorry, I didn't say clearly.
+I meant to copy one Rx descriptor when receive rx irq and handle Rx ring.
 
-Agreed, not likely for several reasons.
+Current code in the ixgbevf_clean_rx_irq() checks status of the Rx
+descriptor whether its Rx buffer has been populated data and then read
+the packet length from Rx descriptor to handle the Rx buffer.
 
-> >2) This *feels* like something the PCI core should be doing anyway,
-> >even without any help here.  Shouldn't we fail in pci_claim_resource()
-> >and set IORESOURCE_UNSET there?
+My idea is to do the following three steps when receive Rx buffer in the
+ixgbevf_clean_rx_irq().
 
-This is really the core of my question -- what problem does this patch
-solve?  I'm trying to figure out if delaying the read of TotalVFs
-until after we set ARI Capable Hierarchy is sufficient, and if it's
-not sufficient, *why* not?
+(1) dummy write the Rx buffer first,
+(2) make a copy of its Rx descriptor
+(3) Check the buffer status and get length from the copy.
 
-> >OK, and a third: re-reading TotalVF is (I think) completely
-> >unnecessary per spec, so if we're going to do it we should probably
-> >have a one-line comment about why the code is doing something that
-> >appears unnecessary, and really should have a concrete example device
-> >in the changelog.
-> 
-> I'm perfectly fine with us adding a comment about this being needed
-> for out-of-spec devices on BIOSes that may not fully support SR-IOV.
-> However, I wasn't the one that had the device that needed the
-> workaround for totalVFs and so I cannot provide a concrete example
-> myself.
-> 
-> I've added Ben to the Cc as he was the author for the original patch
-> that introduced this possible issue.  Perhaps he can provide us with
-> more details on the hardware that needs this.
-> 
-> - Alex
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Migration may happen every time.
+Happen between (1) and (2). If the Rx buffer has been populated data, VF
+driver will not know that on the new machine because the Rx descriptor
+isn't migrated. But it's still safe.
+
+Happen between (2) and (3). The copy will be migrated to new machine
+and Rx buffer is migrated firstly. If there is data in the Rx buffer,
+VF driver still can handle the buffer without migrating Rx descriptor.
+
+The next buffers will be ignored since we don't migrate Rx descriptor
+for them. Their status will be not completed on the new machine.
+
+-- 
+Best regards
+Tianyu Lan
