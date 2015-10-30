@@ -1,93 +1,87 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 50/61] PCI: Unify calculate_size() for io port and MMIO
-Date: Tue, 27 Oct 2015 13:55:42 -0700
-Message-Id: <1445979353-1728-51-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Wolfram Sang <wsa@the-dreams.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
+ instances
+Date: Fri, 30 Oct 2015 09:00:20 +0000
+Message-ID: <PS1PR06MB11807765B8231D1DD01B05ADF52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
+ <20151029123755.GC2351@katana>
+ <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029163930.GC22218@katana>
+ <PS1PR06MB11804B39B09D6FCAA9B3D9DCF5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029184800.GB8992@katana> <20151029230314.GA11994@localhost>
+ <PS1PR06MB1180BAA32BDBEE6BFD8229C3F52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now calculate_memsize() and calculate_iosize() is the same.
+Hi Bjorn,
 
-Change them to calculate_size().
+On 30 October 2015 07:24, Phil wrote:
+> On 30 October 2015 07:19, Phil wrote
+> > On 29 October 2015 23:03, Bjorn wrote:
+> > > On Thu, Oct 29, 2015 at 07:48:00PM +0100, Wolfram Sang wrote:
+> > > > On Thu, Oct 29, 2015 at 04:44:06PM +0000, Phil Edworthy wrote:
+> > > > > Hi Wolfram,
+> > > > >
+> > > > > On 29 October 2015 16:40, Wolfram wrote:
+> > > > > > > Ouch, my bad. I have been working with our out-of-tree BSP for the
+> > > Salvator-X
+> > > > > > board on
+> > > > > > > http://git.kernel.org/cgit/linux/kernel/git/horms/renesas-bsp.git,
+> rcar-
+> > > 3.0.2
+> > > > > > tag along
+> > > > > > > with some patches from colleagues. I hadn't noticed this patch:
+> > > > > >
+> > > > > > Thanks! Any plans for pushing this upstream? We will have the build
+> error
+> > > > > > otherwise...
+> > > > > After some digging, that patch won't be accepted upstream. I'm looking
+> into
+> > > how the
+> > > > > driver can be modified so it doesn't need to call this, but I don't expect a
+> > small
+> > > or
+> > > > > imminent fix.
+> > > >
+> > > > Yes, I'd think so, too. However, a fix for 4.4 would be needed to
+> > > > prevent having a final release with a build error.
+> > >
+> > > I'm thinking I should drop my pci/host-rcar branch until we
+> > > have a fix for this.  It currently contains:
+> > >
+> > >   9ac724f20774 PCI: rcar: Fix I/O offset for multiple host bridges
+> > >   7d75b413f5c6 PCI: rcar: Set root bus nr to that provided in DT
+> > >   4c22eab88c68 PCI: rcar: Remove dependency on ARM-specific struct hw_pci
+> > >   ef18d2e55ea0 PCI: rcar: Make PCI aware of the I/O resources
+> > >
+> > > Is that right?  Last I heard, Linus expects to release v4.3 on Sunday,
+> > > so we really don't have much time to sort this out.
+> > The simple thing is to re-add Geert's patch to stop this driver being built for
+> > arm64.
+> Btw, it's this one: https://patchwork.ozlabs.org/patch/512040/
+It's worth mentioning that Geert's patch stops both the rcar-pcie driver and the
+rcar-pci-gen2 driver from being built on arm64 due to build failures for both of
+them. The rcar-pci-gen2 driver is not for R-Car Gen3 devices, and so should not
+be built for arm64. The rcar-pcie driver will be used on R-Car Gen3 devices.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 25 +++++--------------------
- 1 file changed, 5 insertions(+), 20 deletions(-)
+So if we don't use Geert's patch, I need to fix the rcar-pcie driver so it doesn't
+use pci_ioremap_io(), _and_ fix Kconfig so that the rcar-pci-gen2 driver doesn't
+get built on arm64. 
+Let's just use Geert's patch for now.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index d4e8da1..a6eea60 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1104,22 +1104,7 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
- 	return NULL;
- }
- 
--static resource_size_t calculate_iosize(resource_size_t size,
--		resource_size_t min_size,
--		resource_size_t old_size,
--		resource_size_t align)
--{
--	if (size < min_size)
--		size = min_size;
--	if (old_size == 1)
--		old_size = 0;
--	size = ALIGN(size, align);
--	if (size < old_size)
--		size = old_size;
--	return size;
--}
--
--static resource_size_t calculate_memsize(resource_size_t size,
-+static resource_size_t calculate_size(resource_size_t size,
- 		resource_size_t min_size,
- 		resource_size_t old_size,
- 		resource_size_t align)
-@@ -1245,14 +1230,14 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 	size = size_aligned_for_isa(size);
- 	size += size1;
--	size0 = calculate_iosize(size, min_size,
-+	size0 = calculate_size(size, min_size,
- 			resource_size(b_res), min_align);
- 	sum_add_size = size_aligned_for_isa(sum_add_size);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	size1 = !realloc_head ? size0 :
--		calculate_iosize(sum_add_size, min_size,
-+		calculate_size(sum_add_size, min_size,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
-@@ -1580,7 +1565,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (size || min_size) {
- 		min_align = calculate_mem_align(&align_test_list, max_align,
- 						size, window_align);
--		size0 = calculate_memsize(size, min_size,
-+		size0 = calculate_size(size, min_size,
- 				  resource_size(b_res), min_align);
- 	}
- 	free_align_test_list(&align_test_list);
-@@ -1605,7 +1590,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
- 					window_align);
--		size1 = calculate_memsize(sum_add_size, min_size,
-+		size1 = calculate_size(sum_add_size, min_size,
- 				 resource_size(b_res), min_add_align);
- 	}
- 	free_align_test_list(&align_test_add_list);
--- 
-1.8.4.5
+Btw, I saw no build breakages on next as SHMOBILE is currently not included in
+arm64.
 
+Thanks
+Phil
