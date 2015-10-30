@@ -1,200 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36294 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751860AbbJPVeF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 16 Oct 2015 17:34:05 -0400
-Date: Fri, 16 Oct 2015 16:34:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/4] PCI: rcar-pcie: Remove dependency on ARM-specific
- struct hw_pci
-Message-ID: <20151016213400.GC21346@localhost>
-References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
- <1443781507-5011-3-git-send-email-phil.edworthy@renesas.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1443781507-5011-3-git-send-email-phil.edworthy@renesas.com>
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:11681 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932949AbbJ3VMD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 17:12:03 -0400
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v5 3/7] PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
+Date: Fri, 30 Oct 2015 21:11:11 +0000
+Message-Id: <1446239475-49480-4-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
+References: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 02, 2015 at 11:25:05AM +0100, Phil Edworthy wrote:
-> The R-Car PCIe host controller driver uses pci_common_init_dev(),
-> which is ARM-specific and requires the ARM struct hw_pci. The part of
-> pci_common_init_dev() that is needed is limited and can be done here
-> without using hw_pci.
-> 
-> Note that the ARM pcibios functions expect the PCI sysdata to be a pointer
-> to a struct pci_sys_data. Add a struct pci_sys_data as the first element
-> in struct gen_pci so that when we use a gen_pci pointer as sysdata, it is
-> also a pointer to a struct pci_sys_data.
-> 
-> Create and scan the root bus directly without using the ARM
-> pci_common_init_dev() interface.
-> 
-> This change is based on commit <499733e0cc1a00523c5056a690f65dea7b9da140>
-> "PCI: generic: Remove dependency on ARM-specific struct hw_pci".
-> 
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> ---
->  drivers/pci/host/pcie-rcar.c | 76 ++++++++++++++++++++++++++++----------------
->  1 file changed, 48 insertions(+), 28 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 27e2c20..6057e31 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -124,7 +124,16 @@ static inline struct rcar_msi *to_rcar_msi(struct msi_controller *chip)
->  }
->  
->  /* Structure representing the PCIe interface */
-> +/*
-> + * ARM pcibios functions expect the ARM struct pci_sys_data as the PCI
-> + * sysdata.  Add pci_sys_data as the first element in struct gen_pci so
-> + * that when we use a gen_pci pointer as sysdata, it is also a pointer to
-> + * a struct pci_sys_data.
-> + */
->  struct rcar_pcie {
-> +#ifdef CONFIG_ARM
-> +	struct pci_sys_data	sys;
-> +#endif
->  	struct device		*dev;
->  	void __iomem		*base;
->  	struct resource		res[RCAR_PCI_MAX_RESOURCES];
-> @@ -135,11 +144,6 @@ struct rcar_pcie {
->  	struct			rcar_msi msi;
->  };
->  
-> -static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
-> -{
-> -	return sys->private_data;
-> -}
-> -
->  static void rcar_pci_write_reg(struct rcar_pcie *pcie, unsigned long val,
->  			       unsigned long reg)
->  {
-> @@ -258,7 +262,7 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
->  static int rcar_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
->  			       int where, int size, u32 *val)
->  {
-> -	struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
-> +	struct rcar_pcie *pcie = bus->sysdata;
->  	int ret;
->  
->  	ret = rcar_pcie_config_access(pcie, RCAR_PCI_ACCESS_READ,
-> @@ -283,7 +287,7 @@ static int rcar_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
->  static int rcar_pcie_write_conf(struct pci_bus *bus, unsigned int devfn,
->  				int where, int size, u32 val)
->  {
-> -	struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
-> +	struct rcar_pcie *pcie = bus->sysdata;
->  	int shift, ret;
->  	u32 data;
->  
-> @@ -353,9 +357,8 @@ static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie)
->  	rcar_pci_write_reg(pcie, mask, PCIEPTCTLR(win));
->  }
->  
-> -static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
-> +static int rcar_pcie_setup(int nr, struct list_head *resource, struct rcar_pcie *pcie)
->  {
-> -	struct rcar_pcie *pcie = sys_to_pcie(sys);
->  	struct resource *res;
->  	int i;
->  
-> @@ -375,30 +378,49 @@ static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
->  			pci_ioremap_io(nr * SZ_64K, io_start);
->  		}
->  
-> -		pci_add_resource(&sys->resources, res);
-> +		pci_add_resource(resource, res);
->  	}
-> -	pci_add_resource(&sys->resources, &pcie->busn);
-> +	pci_add_resource(resource, &pcie->busn);
->  
->  	return 1;
->  }
->  
-> -static struct hw_pci rcar_pci = {
-> -	.setup          = rcar_pcie_setup,
-> -	.map_irq        = of_irq_parse_and_map_pci,
-> -	.ops            = &rcar_pcie_ops,
-> -};
-> -
-> -static void rcar_pcie_enable(struct rcar_pcie *pcie)
-> +static int rcar_pcie_enable(struct rcar_pcie *pcie)
->  {
-> -	struct platform_device *pdev = to_platform_device(pcie->dev);
-> +	struct pci_bus *bus, *child;
-> +	LIST_HEAD(res);
->  
-> -	rcar_pci.nr_controllers = 1;
-> -	rcar_pci.private_data = (void **)&pcie;
-> -#ifdef CONFIG_PCI_MSI
-> -	rcar_pci.msi_ctrl = &pcie->msi.chip;
-> -#endif
-> +	rcar_pcie_setup(1, &res, pcie);
-> +
-> +	/* Do not reassign resources if probe only */
-> +	if (!pci_has_flag(PCI_PROBE_ONLY))
-> +		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
-> +
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		bus = pci_scan_root_bus_msi(pcie->dev, pcie->root_bus_nr,
-> +				&rcar_pcie_ops, pcie, &res, &pcie->msi.chip);
-> +	else
-> +		bus = pci_scan_root_bus(pcie->dev, pcie->root_bus_nr,
-> +				&rcar_pcie_ops, pcie, &res);
-> +
-> +	if (!bus) {
-> +		dev_err(pcie->dev, "Scanning rootbus failed");
-> +		return -ENODEV;
-> +	}
-> +
-> +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> +
-> +	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-> +		pci_bus_size_bridges(bus);
-> +		pci_bus_assign_resources(bus);
->  
-> -	pci_common_init_dev(&pdev->dev, &rcar_pci);
-> +		list_for_each_entry(child, &bus->children, node)
-> +			pcie_bus_configure_settings(child);
+From: Jake Oshins <jakeo@microsoft.com>
 
-I see this is exactly the same in 499733e0cc1a ("PCI: generic: Remove
-dependency on ARM-specific struct hw_pci").  But it seems like we should do
-pcie_bus_configure_settings() (MPS configuration) *always*, even if
-PCI_PROBE_ONLY.  I expected PCI_PROBE_ONLY to mean "don't change any BARs"
-but I don't think it means we have to preserve *everything*.
+The Linux kernel already has the concpet of IRQ domain, whereing a component
+can expose a set of IRQs which are managed by a particular interrupt controller
+chip or other subsystem. The PCI driver exposes the notion of an IRQ domain
+for Message-Signaled Interrupts (MSI) from PCI Express devices. This patch
+exposes the functions which are necessary for making an MSI IRQ domain within
+a module.
 
-> +	}
-> +
-> +	pci_bus_add_devices(bus);
-> +
-> +	return 0;
->  }
->  
->  static int phy_wait_for_ack(struct rcar_pcie *pcie)
-> @@ -971,9 +993,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	data = rcar_pci_read_reg(pcie, MACSR);
->  	dev_info(&pdev->dev, "PCIe x%d: link up\n", (data >> 20) & 0x3f);
->  
-> -	rcar_pcie_enable(pcie);
-> -
-> -	return 0;
-> +	return rcar_pcie_enable(pcie);
->  }
->  
->  static struct platform_driver rcar_pcie_driver = {
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ arch/x86/include/asm/msi.h    | 4 ++++
+ arch/x86/kernel/apic/msi.c    | 5 +++--
+ arch/x86/kernel/apic/vector.c | 2 ++
+ drivers/pci/msi.c             | 4 ++++
+ kernel/irq/chip.c             | 1 +
+ kernel/irq/irqdomain.c        | 2 ++
+ 6 files changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/include/asm/msi.h b/arch/x86/include/asm/msi.h
+index 93724cc..e8b7924 100644
+--- a/arch/x86/include/asm/msi.h
++++ b/arch/x86/include/asm/msi.h
+@@ -1,7 +1,11 @@
+ #ifndef _ASM_X86_MSI_H
+ #define _ASM_X86_MSI_H
+ #include <asm/hw_irq.h>
++#include <asm/irqdomain.h>
+ 
+ typedef struct irq_alloc_info msi_alloc_info_t;
+ 
++int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
++		    msi_alloc_info_t *arg);
++
+ #endif /* _ASM_X86_MSI_H */
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 5f1feb6..bdb28fc 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -96,8 +96,8 @@ static irq_hw_number_t pci_msi_get_hwirq(struct msi_domain_info *info,
+ 	return arg->msi_hwirq;
+ }
+ 
+-static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
+-			   int nvec, msi_alloc_info_t *arg)
++int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
++		    msi_alloc_info_t *arg)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct msi_desc *desc = first_pci_msi_entry(pdev);
+@@ -113,6 +113,7 @@ static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pci_msi_prepare);
+ 
+ static void pci_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
+ {
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 836d11b..f3ac5e1 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -29,6 +29,7 @@ struct apic_chip_data {
+ };
+ 
+ struct irq_domain *x86_vector_domain;
++EXPORT_SYMBOL_GPL(x86_vector_domain);
+ static DEFINE_RAW_SPINLOCK(vector_lock);
+ static cpumask_var_t vector_cpumask;
+ static struct irq_chip lapic_controller;
+@@ -66,6 +67,7 @@ struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
+ 
+ 	return data ? &data->cfg : NULL;
+ }
++EXPORT_SYMBOL_GPL(irqd_cfg);
+ 
+ struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 53e4632..3915a99 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -257,6 +257,7 @@ void pci_msi_mask_irq(struct irq_data *data)
+ {
+ 	msi_set_mask_bit(data, 1);
+ }
++EXPORT_SYMBOL_GPL(pci_msi_mask_irq);
+ 
+ /**
+  * pci_msi_unmask_irq - Generic irq chip callback to unmask PCI/MSI interrupts
+@@ -266,6 +267,7 @@ void pci_msi_unmask_irq(struct irq_data *data)
+ {
+ 	msi_set_mask_bit(data, 0);
+ }
++EXPORT_SYMBOL_GPL(pci_msi_unmask_irq);
+ 
+ void default_restore_msi_irqs(struct pci_dev *dev)
+ {
+@@ -1126,6 +1128,7 @@ struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
+ {
+ 	return to_pci_dev(desc->dev);
+ }
++EXPORT_SYMBOL(msi_desc_to_pci_dev);
+ 
+ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
+ {
+@@ -1285,6 +1288,7 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
+ 	domain->bus_token = DOMAIN_BUS_PCI_MSI;
+ 	return domain;
+ }
++EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
+ 
+ /**
+  * pci_msi_domain_alloc_irqs - Allocate interrupts for @dev in @domain
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index 1520645..2414775 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -950,6 +950,7 @@ void irq_chip_ack_parent(struct irq_data *data)
+ 	data = data->parent_data;
+ 	data->chip->irq_ack(data);
+ }
++EXPORT_SYMBOL_GPL(irq_chip_ack_parent);
+ 
+ /**
+  * irq_chip_mask_parent - Mask the parent interrupt
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 22aa961..174d7e0 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -60,6 +60,7 @@ struct fwnode_handle *irq_domain_alloc_fwnode(void *data)
+ 	fwid->fwnode.type = FWNODE_IRQCHIP;
+ 	return &fwid->fwnode;
+ }
++EXPORT_SYMBOL_GPL(irq_domain_alloc_fwnode);
+ 
+ /**
+  * irq_domain_free_fwnode - Free a non-OF-backed fwnode_handle
+@@ -77,6 +78,7 @@ void irq_domain_free_fwnode(struct fwnode_handle *fwnode)
+ 	kfree(fwid->name);
+ 	kfree(fwid);
+ }
++EXPORT_SYMBOL_GPL(irq_domain_free_fwnode);
+ 
+ /**
+  * __irq_domain_add() - Allocate a new irq_domain data structure
+-- 
+1.9.1
+
