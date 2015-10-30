@@ -1,75 +1,65 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 9 Oct 2015 18:04:20 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Robin Murphy <robin.murphy@arm.com>,
+MIME-Version: 1.0
+In-Reply-To: <20151029232238.GB11994@localhost>
+References: <1445596035-27733-1-git-send-email-lftan@altera.com>
+	<20151027142644.GA8660@localhost>
+	<CAFiDJ5_vCqh=uKkF2E_BQkJUv692r3yr26bBj8boK2DY_Dj+gA@mail.gmail.com>
+	<CAErSpo5okE86k846hs28s4jvL59hmm+4az-dDsymzNayPCPCzw@mail.gmail.com>
+	<CAFiDJ59wOUj-Mr3cyqQEz+P=8AkmRoy7XzUCmM33_e03Y2G_ZQ@mail.gmail.com>
+	<20151029232238.GB11994@localhost>
+Date: Fri, 30 Oct 2015 13:51:27 +0800
+Message-ID: <CAFiDJ59QNqK6Np8Pp7JDV7Xr2mn3TEXpO2GPH12VYO4QOhtK+g@mail.gmail.com>
+Subject: Re: [PATCH v12 0/6] Altera PCIe host controller driver with MSI support
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
 	Ian Campbell <ijc+devicetree@hellion.org.uk>,
 	Kumar Gala <galak@codeaurora.org>,
-	Arnd Bergmann <arnd@arndb.de>, Jon Medhurst <tixy@linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 3/5] of: Add vendor prefix for PLDA.
-Message-ID: <20151009170420.GH3394@e106497-lin.cambridge.arm.com>
-References: <1444409849-5685-1-git-send-email-Liviu.Dudau@arm.com>
- <1444409849-5685-4-git-send-email-Liviu.Dudau@arm.com>
- <20151009165929.GF21629@leverpostej>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20151009165929.GF21629@leverpostej>
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 09, 2015 at 05:59:29PM +0100, Mark Rutland wrote:
-> On Fri, Oct 09, 2015 at 05:57:27PM +0100, Liviu Dudau wrote:
-> > Use "plda" as vendor prefix for PLDA.
-> > 
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> 
-> Having looked on PLDA's website it seems "PLDA" is their preferred name,
-> and I can't find any suffix used, so this looks fine to me:
-> 
-> Acked-by: Mark Rutland <mark.rutland@arm.com>
+On Fri, Oct 30, 2015 at 7:22 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-Thanks,
-Liviu
+>> >>>
+>> >>> I applied these to pci/host-altera for v4.4, thanks!
+>> >>>
+>> >>> I squashed these into three patches:
+>> >>>
+>> >>>   - add msi.h to Kbuild
+>> >>>   - add Altera host driver (including DT binding and MAINTAINERS update)
+>> >>>   - add Altera MSI driver (including DT binding and MAINTAINERS update)
+>> >>>
+>> >>> Since the convention is to add PCI ID #defines only when they are used in
+>> >>> multiple places, I replaced PCI_VENDOR_ID_ALTERA with 0x1172 in the single
+>> >>> place it is used.
+>> >> Hi Bjorn
+>> >>
+>> >> Thanks for applied these.
+>> >>
+>> >> By the way, I can't see pci/host-altera branch in your pci.git tree
+>> >> yet. It takes some time to appear there?
+>> >
+>> > Sorry, I forgot to push it.  It should be there now!
+>> >
+>> Yes, saw it now. It will merge to 'next' branch eventually?
+>
+> Yep, I just merged it to 'next' and pushed it.
 
-> 
-> Mark.
-> 
-> > ---
-> >  Documentation/devicetree/bindings/vendor-prefixes.txt | 1 +
-> >  1 file changed, 1 insertion(+)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/vendor-prefixes.txt b/Documentation/devicetree/bindings/vendor-prefixes.txt
-> > index 82d2ac9..57653eb 100644
-> > --- a/Documentation/devicetree/bindings/vendor-prefixes.txt
-> > +++ b/Documentation/devicetree/bindings/vendor-prefixes.txt
-> > @@ -168,6 +168,7 @@ pericom	Pericom Technology Inc.
-> >  phytec	PHYTEC Messtechnik GmbH
-> >  picochip	Picochip Ltd
-> >  plathome	Plat'Home Co., Ltd.
-> > +plda	PLDA
-> >  pixcir  PIXCIR MICROELECTRONICS Co., Ltd
-> >  powervr	PowerVR (deprecated, use img)
-> >  qca	Qualcomm Atheros, Inc.
-> > -- 
-> > 2.6.0
-> > 
-> 
+Saw it. Thanks!
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Regards
+Ley Foon
