@@ -1,272 +1,263 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:10141 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756284AbbJ2JZf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Oct 2015 05:25:35 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<rmk+kernel@arm.linux.org.uk>,
-	<thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liudongdong3@huawei.com>, <qiujiang@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v13 5/6] PCI: designware: Add ARM64 support
-Date: Thu, 29 Oct 2015 17:40:37 +0800
-Message-ID: <1446111638-197070-6-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1446111638-197070-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1446111638-197070-1-git-send-email-wangzhou1@hisilicon.com>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:34624 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750729AbbJ3EL0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 00:11:26 -0400
+Received: by padhk11 with SMTP id hk11so61075434pad.1
+        for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2015 21:11:26 -0700 (PDT)
+Subject: Re: [PATCH V10 08/12] powerpc/powernv: Support EEH reset for VF PE
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1445829362-2738-9-git-send-email-weiyang@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <5632EDE8.2010601@ozlabs.ru>
+Date: Fri, 30 Oct 2015 15:11:20 +1100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1445829362-2738-9-git-send-email-weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch tries to unify ARM32 and ARM64 PCIe in designware driver. Delete
-function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
-move related operations to dw_pcie_host_init.
+On 10/26/2015 02:15 PM, Wei Yang wrote:
+> PEs for VFs don't have primary bus. So they have to have their own reset
+> backend, which is used during EEH recovery. The patch implements the reset
+> backend for VF's PE by issuing FLR or AF FLR to the VFs, which are contained
+> in the PE.
+>
+> [gwshan: changelog and code refactoring]
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/include/asm/eeh.h               |   1 +
+>   arch/powerpc/platforms/powernv/eeh-powernv.c | 134 ++++++++++++++++++++++++++-
+>   2 files changed, 134 insertions(+), 1 deletion(-)
+>
+> diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+> index ec21f8f..331c856 100644
+> --- a/arch/powerpc/include/asm/eeh.h
+> +++ b/arch/powerpc/include/asm/eeh.h
+> @@ -136,6 +136,7 @@ struct eeh_dev {
+>   	int pcix_cap;			/* Saved PCIx capability	*/
+>   	int pcie_cap;			/* Saved PCIe capability	*/
+>   	int aer_cap;			/* Saved AER capability		*/
+> +	int af_cap;			/* Saved AF capability		*/
+>   	struct eeh_pe *pe;		/* Associated PE		*/
+>   	struct list_head list;		/* Form link list in the PE	*/
+>   	struct pci_controller *phb;	/* Associated PHB		*/
+> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> index cfd55dd..017cd72 100644
+> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> @@ -404,6 +404,7 @@ static void *pnv_eeh_probe(struct pci_dn *pdn, void *data)
+>   	edev->pcix_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_PCIX);
+>   	edev->pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
+>   	edev->aer_cap  = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
+> +	edev->af_cap   = pnv_eeh_find_cap(pdn, PCI_CAP_ID_AF);
+>   	if ((edev->class_code >> 8) == PCI_CLASS_BRIDGE_PCI) {
+>   		edev->mode |= EEH_DEV_BRIDGE;
+>   		if (edev->pcie_cap) {
+> @@ -893,6 +894,127 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>   	return 0;
+>   }
+>
+> +static void pnv_eeh_wait_for_pending(struct pci_dn *pdn, int pos,
+> +				     u16 mask, bool af_flr_rst)
+> +{
+> +	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+> +	int status, i;
+> +
+> +	/* Wait for Transaction Pending bit to be cleared */
+> +	for (i = 0; i < 4; i++) {
+> +		eeh_ops->read_config(pdn, pos, 2, &status);
 
-As dw_pcie_setup is removed, we also remove io_base_tmp which was introduced
-in "PCI: designware: Remove *_mod_base".
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Tested-by: James Morse <james.morse@arm.com>
-Tested-by: Gabriel Fernandez <gabriel.fernandez@st.com>
-Tested-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
----
- drivers/pci/host/pcie-designware.c | 128 +++++++++++--------------------------
- drivers/pci/host/pcie-designware.h |   1 -
- 2 files changed, 38 insertions(+), 91 deletions(-)
+gcc should have complained on using uninitialized @status here.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 089b6cf..1a6d3e1 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -69,16 +69,7 @@
- #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
- #define PCIE_ATU_UPPER_TARGET		0x91C
- 
--static struct hw_pci dw_pci;
--
--static unsigned long global_io_offset;
--
--static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
--{
--	BUG_ON(!sys->private_data);
--
--	return sys->private_data;
--}
-+static struct pci_ops dw_pcie_ops;
- 
- int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
- {
-@@ -255,7 +246,7 @@ static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
- static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
- {
- 	int irq, pos0, i;
--	struct pcie_port *pp = sys_to_pcie(msi_desc_to_pci_sysdata(desc));
-+	struct pcie_port *pp = (struct pcie_port *) msi_desc_to_pci_sysdata(desc);
- 
- 	pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
- 				       order_base_2(no_irqs));
-@@ -298,7 +289,7 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
- {
- 	int irq, pos;
- 	struct msi_msg msg;
--	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-+	struct pcie_port *pp = pdev->bus->sysdata;
- 
- 	if (desc->msi_attrib.is_msix)
- 		return -EINVAL;
-@@ -327,7 +318,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
- {
- 	struct irq_data *data = irq_get_irq_data(irq);
- 	struct msi_desc *msi = irq_data_get_msi_desc(data);
--	struct pcie_port *pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
-+	struct pcie_port *pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
- 
- 	clear_irq_range(pp, irq, 1, data->hwirq);
- }
-@@ -362,6 +353,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- {
- 	struct device_node *np = pp->dev->of_node;
- 	struct platform_device *pdev = to_platform_device(pp->dev);
-+	struct pci_bus *bus, *child;
- 	struct resource *cfg_res;
- 	u32 val;
- 	int i, ret;
-@@ -390,14 +382,13 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->io->name = "I/O";
- 			pp->io_size = resource_size(pp->io);
- 			pp->io_bus_addr = pp->io->start - win->offset;
--			pp->io->start = max_t(resource_size_t, PCIBIOS_MIN_IO,
--					      pp->io_bus_addr +
--					      global_io_offset);
--			pp->io->end = min_t(resource_size_t, IO_SPACE_LIMIT,
--					    pp->io_bus_addr + pp->io_size +
--					    global_io_offset - 1);
-+			ret = pci_remap_iospace(pp->io, pp->io_base);
-+			if (ret) {
-+				dev_warn(pp->dev, "error %d: failed to map resource %pR\n",
-+					 ret, pp->io);
-+				continue;
-+			}
- 			pp->io_base = pp->io->start;
--			pp->io_base_tmp = pp->io->start;
- 			break;
- 		case IORESOURCE_MEM:
- 			pp->mem = win->res;
-@@ -490,15 +481,35 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	val |= PORT_LOGIC_SPEED_CHANGE;
- 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
- 
--#ifdef CONFIG_PCI_MSI
--	dw_pcie_msi_chip.dev = pp->dev;
-+	pp->root_bus_nr = pp->busn->start;
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
-+					    &dw_pcie_ops, pp, &res,
-+					    &dw_pcie_msi_chip);
-+		dw_pcie_msi_chip.dev = pp->dev;
-+	} else
-+		bus = pci_scan_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
-+					pp, &res);
-+	if (!bus)
-+		return -ENOMEM;
-+
-+	if (pp->ops->scan_bus)
-+		pp->ops->scan_bus(pp);
-+
-+#ifdef CONFIG_ARM
-+	/* support old dtbs that incorrectly describe IRQs */
-+	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
- #endif
- 
--	dw_pci.nr_controllers = 1;
--	dw_pci.private_data = (void **)&pp;
-+	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-+		pci_bus_size_bridges(bus);
-+		pci_bus_assign_resources(bus);
- 
--	pci_common_init_dev(pp->dev, &dw_pci);
-+		list_for_each_entry(child, &bus->children, node)
-+			pcie_bus_configure_settings(child);
-+	}
- 
-+	pci_bus_add_devices(bus);
- 	return 0;
- }
- 
-@@ -598,7 +609,7 @@ static int dw_pcie_valid_config(struct pcie_port *pp,
- static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 			int size, u32 *val)
- {
--	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
-+	struct pcie_port *pp = bus->sysdata;
- 	int ret;
- 
- 	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
-@@ -622,7 +633,7 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 			int where, int size, u32 val)
- {
--	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
-+	struct pcie_port *pp = bus->sysdata;
- 	int ret;
- 
- 	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
-@@ -646,69 +657,6 @@ static struct pci_ops dw_pcie_ops = {
- 	.write = dw_pcie_wr_conf,
- };
- 
--static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
--{
--	struct pcie_port *pp;
--
--	pp = sys_to_pcie(sys);
--
--	if (global_io_offset < SZ_1M && pp->io_size > 0) {
--		sys->io_offset = global_io_offset - pp->io_bus_addr;
--		pci_ioremap_io(global_io_offset, pp->io_base_tmp);
--		global_io_offset += SZ_64K;
--		pci_add_resource_offset(&sys->resources, pp->io,
--					sys->io_offset);
--	}
--
--	sys->mem_offset = pp->mem->start - pp->mem_bus_addr;
--	pci_add_resource_offset(&sys->resources, pp->mem, sys->mem_offset);
--	pci_add_resource(&sys->resources, pp->busn);
--
--	return 1;
--}
--
--static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
--{
--	struct pci_bus *bus;
--	struct pcie_port *pp = sys_to_pcie(sys);
--
--	pp->root_bus_nr = sys->busnr;
--
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		bus = pci_scan_root_bus_msi(pp->dev, sys->busnr, &dw_pcie_ops,
--					    sys, &sys->resources,
--					    &dw_pcie_msi_chip);
--	else
--		bus = pci_scan_root_bus(pp->dev, sys->busnr, &dw_pcie_ops,
--					sys, &sys->resources);
--
--	if (!bus)
--		return NULL;
--
--	if (bus && pp->ops->scan_bus)
--		pp->ops->scan_bus(pp);
--
--	return bus;
--}
--
--static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
--{
--	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
--	int irq;
--
--	irq = of_irq_parse_and_map_pci(dev, slot, pin);
--	if (!irq)
--		irq = pp->irq;
--
--	return irq;
--}
--
--static struct hw_pci dw_pci = {
--	.setup		= dw_pcie_setup,
--	.scan		= dw_pcie_scan_bus,
--	.map_irq	= dw_pcie_map_irq,
--};
--
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
- 	u32 val;
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 91a36f6..264c969 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -33,7 +33,6 @@ struct pcie_port {
- 	void __iomem		*va_cfg1_base;
- 	u32			cfg1_size;
- 	resource_size_t		io_base;
--	resource_size_t		io_base_tmp;
- 	phys_addr_t		io_bus_addr;
- 	u32			io_size;
- 	u64			mem_base;
+
+> +		if (!(status & mask))
+> +			return;
+> +
+> +		msleep((1 << i) * 100);
+> +	}
+> +
+> +	pr_warn("%s: Pending transaction while issuing %s FLR to "
+> +		"%04x:%02x:%02x.%01x\n",
+
+Do not wrap user-visible strings.
+
+
+> +		__func__, af_flr_rst ? "AF" : "",
+> +		edev->phb->global_number, pdn->busno,
+> +		PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
+> +}
+> +
+> +static int pnv_eeh_do_flr(struct pci_dn *pdn, int option)
+> +{
+> +	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+> +	u32 reg;
+> +
+> +	if (!edev->pcie_cap)
+> +		return -ENOTTY;
+
+
+Can pnv_eeh_do_flr() be really called on a non PCIe device, can we get that 
+far? WARN_ON_ONCE() may be?
+
+
+> +
+> +	eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP, 4, &reg);
+
+
+... and here about uninitialized @reg.
+
+
+> +	if (!(reg & PCI_EXP_DEVCAP_FLR))
+> +		return -ENOTTY;
+> +
+> +	switch (option) {
+> +	case EEH_RESET_HOT:
+> +	case EEH_RESET_FUNDAMENTAL:
+> +		pnv_eeh_wait_for_pending(pdn, edev->pcie_cap + PCI_EXP_DEVSTA,
+> +					 PCI_EXP_DEVSTA_TRPND, false);
+> +		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+> +				     4, &reg);
+> +		reg |= PCI_EXP_DEVCTL_BCR_FLR;
+> +		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+> +				      4, reg);
+> +		msleep(EEH_PE_RST_HOLD_TIME);
+> +		break;
+> +	case EEH_RESET_DEACTIVATE:
+> +		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+> +				     4, &reg);
+> +		reg &= ~PCI_EXP_DEVCTL_BCR_FLR;
+> +		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+> +				      4, reg);
+> +		msleep(EEH_PE_RST_SETTLE_TIME);
+> +		break;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int pnv_eeh_do_af_flr(struct pci_dn *pdn, int option)
+> +{
+> +	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+> +	u32 cap;
+> +
+> +	if (!edev->af_cap)
+> +		return -ENOTTY;
+> +
+> +	eeh_ops->read_config(pdn, edev->af_cap + PCI_AF_CAP, 1, &cap);
+
+
+... and here about @cap.
+
+> +	if (!(cap & PCI_AF_CAP_TP) || !(cap & PCI_AF_CAP_FLR))
+> +		return -ENOTTY;
+> +
+> +	switch (option) {
+> +	case EEH_RESET_HOT:
+> +	case EEH_RESET_FUNDAMENTAL:
+> +		/*
+> +		 * Wait for Transaction Pending bit to clear. A word-aligned
+> +		 * test is used, so we use the conrol offset rather than status
+> +		 * and shift the test bit to match.
+
+
+Why word-aligned (not byte or double word)?
+
+> +		 */
+> +		pnv_eeh_wait_for_pending(pdn, edev->af_cap + PCI_AF_CTRL,
+> +					 PCI_AF_STATUS_TP << 8, true);
+> +		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL,
+> +				      1, PCI_AF_CTRL_FLR);
+> +		msleep(EEH_PE_RST_HOLD_TIME);
+> +		break;
+> +	case EEH_RESET_DEACTIVATE:
+> +		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL, 1, 0);
+> +		msleep(EEH_PE_RST_SETTLE_TIME);
+
+
+btw there is an unrelated issue with EEH_PE_RST_SETTLE_TIME which is 
+defined as 1800 which is A LOT (+250ms from EEH_PE_RST_HOLD_TIME and for 
+some reason this is actually doubled so there is another reset somewhere).
+
+Booting a guest with 63 VFs takes 6 minutes or so, is there a good reason 
+for such a huge timeout?
+
+
+> +		break;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int pnv_eeh_reset_vf(struct pci_dn *pdn, int option)
+> +{
+> +	int ret;
+> +
+> +	ret = pnv_eeh_do_flr(pdn, option);
+> +	if (ret != -ENOTTY)
+> +		return ret;
+> +
+> +	return pnv_eeh_do_af_flr(pdn, option);
+> +}
+> +
+> +static int pnv_eeh_vf_pe_reset(struct eeh_pe *pe, int option)
+> +{
+> +	struct eeh_dev *edev, *tmp;
+> +	struct pci_dn *pdn;
+> +	int ret;
+> +
+> +	eeh_pe_for_each_dev(pe, edev, tmp) {
+> +		pdn = eeh_dev_to_pdn(edev);
+> +		ret = pnv_eeh_reset_vf(pdn, option);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>   void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+>   {
+>   	struct pci_controller *hose;
+> @@ -968,7 +1090,9 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
+>   		}
+>
+>   		bus = eeh_pe_bus_get(pe);
+> -		if (pci_is_root_bus(bus) ||
+> +		if (pe->type & EEH_PE_VF)
+> +			ret = pnv_eeh_vf_pe_reset(pe, option);
+> +		else if (pci_is_root_bus(bus) ||
+>   			pci_is_root_bus(bus->parent))
+>   			ret = pnv_eeh_root_reset(hose, option);
+>   		else
+> @@ -1108,6 +1232,14 @@ static inline bool pnv_eeh_cfg_blocked(struct pci_dn *pdn)
+>   	if (!edev || !edev->pe)
+>   		return false;
+>
+> +	/*
+> +	 * We will issue FLR or AF FLR to all VFs, which are contained
+> +	 * in VF PE. It relies on the EEH PCI config accessors. So we
+> +	 * can't block them during the window.
+> +	 */
+> +	if ((edev->physfn) && (edev->pe->state & EEH_PE_RESET))
+
+
+Extra braces around edev->physfn.
+
+
+
+> +		return false;
+> +
+>   	if (edev->pe->state & EEH_PE_CFG_BLOCKED)
+>   		return true;
+>
+>
+
+
 -- 
-1.9.1
-
+Alexey
