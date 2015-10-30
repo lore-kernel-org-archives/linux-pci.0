@@ -1,40 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:59265 "EHLO
-	nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752073AbbJMJ56 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Oct 2015 05:57:58 -0400
-Date: Tue, 13 Oct 2015 11:57:55 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCHv2] x86/pci: Initial commit for new VMD device driver
-Message-ID: <mj+md-20151013.095510.53052.nikam@ucw.cz>
-References: <1443721454-25467-1-git-send-email-keith.busch@intel.com>
- <20151006231412.GF29420@localhost>
- <alpine.LNX.2.00.1510062331220.23840@localhost.lm.intel.com>
- <20151008134702.GK27633@localhost>
- <alpine.LNX.2.00.1510082115120.27742@localhost.lm.intel.com>
- <20151009180910.GB16112@localhost>
- <alpine.LNX.2.00.1510091855080.27742@localhost.lm.intel.com>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:34414 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbbJ3HgH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 03:36:07 -0400
+Received: by padhk11 with SMTP id hk11so66604198pad.1
+        for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 00:36:06 -0700 (PDT)
+Subject: Re: [PATCH V10 06/12] powerpc/powernv: EEH device for VF
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1445829362-2738-7-git-send-email-weiyang@linux.vnet.ibm.com>
+ <5632E51D.30805@ozlabs.ru> <20151030065246.GC5940@richards-mbp.cn.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <56331DE1.1090500@ozlabs.ru>
+Date: Fri, 30 Oct 2015 18:36:01 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LNX.2.00.1510091855080.27742@localhost.lm.intel.com>
+In-Reply-To: <20151030065246.GC5940@richards-mbp.cn.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
+On 10/30/2015 05:52 PM, Wei Yang wrote:
+> On Fri, Oct 30, 2015 at 02:33:49PM +1100, Alexey Kardashevskiy wrote:
+>> On 10/26/2015 02:15 PM, Wei Yang wrote:
+>>> VFs and their corresponding pci_dn instances are created and released
+>>> dynamically as their PF's SRIOV capability is enabled and disabled.
+>>> The patch creates and releases EEH devices for VFs when creating and
+>>> releasing their pci_dn instances, which means EEH devices and pci_dn
+>>> instances have same life cycle. Also, VF's EEH device is identified
+>>> by (struct eeh_dev::physfn).
+>>
+>>
+>> The add_dev_pci_data() helper (the one you hack) does not create pci_dn
+>> instances. The add_one_dev_pci_data() helper does.
+>>
+>
+> Yes, you are right. The patch here create edev after the pci_dn is created.
+>
+> So which part in the log you think is not accurate?
 
-> Assuming we can change pciutils to use 'int' for domain, and have a
-> driver for this new device merged in the near future, I'm not too worried
-> about users and distros with older utils. I don't think this a device
-> someone could turn on by accident, so their shouldn't be any fallout if
-> I properly communicate the dependencies to those who do want to enable it.
 
-I would prefer using an explicit 32-bit type instead of an int,
-but otherwise I am fine with the change.
+The commit log is ok, I just thought loud that eeh_dev_init() could go to 
+add_one_dev_pci_data() to make things more clear.
 
-We probably should keep the same naming convention of sysfs entries
-on buses whose domain number fits in 16 bits and use 8-digit domain
-number only in cases where it is really needed.
 
-				Martin
+
+>>
+>>>
+>>> [gwshan: changelog and removed CONFIG_PCI_IOV]
+>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>> ---
+>>>   arch/powerpc/include/asm/eeh.h |  1 +
+>>>   arch/powerpc/kernel/pci_dn.c   | 12 ++++++++++++
+>>>   2 files changed, 13 insertions(+)
+>>>
+>>> diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>>> index c5eb86f..6c383ad 100644
+>>> --- a/arch/powerpc/include/asm/eeh.h
+>>> +++ b/arch/powerpc/include/asm/eeh.h
+>>> @@ -140,6 +140,7 @@ struct eeh_dev {
+>>>   	struct pci_controller *phb;	/* Associated PHB		*/
+>>>   	struct pci_dn *pdn;		/* Associated PCI device node	*/
+>>>   	struct pci_dev *pdev;		/* Associated PCI device	*/
+>>> +	struct pci_dev *physfn;		/* Associated PF PORT		*/
+>>>   	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
+>>>   };
+>>>
+>>> diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+>>> index f771130..f0ddde7 100644
+>>> --- a/arch/powerpc/kernel/pci_dn.c
+>>> +++ b/arch/powerpc/kernel/pci_dn.c
+>>> @@ -180,7 +180,9 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+>>>   struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+>>>   {
+>>>   #ifdef CONFIG_PCI_IOV
+>>> +	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+>>>   	struct pci_dn *parent, *pdn;
+>>> +	struct eeh_dev *edev;
+>>>   	int i;
+>>>
+>>>   	/* Only support IOV for now */
+>>> @@ -206,6 +208,9 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+>>>   				 __func__, i);
+>>>   			return NULL;
+>>>   		}
+>>> +		eeh_dev_init(pdn, hose);
+>>> +		edev = pdn_to_eeh_dev(pdn);
+>>
+>>
+>> In theory, pdn_to_eeh_dev() can return NULL. In this patch, it is not clear
+>> if pdn->edev gets initialized before or after add_dev_pci_data().
+>>
+>
+> Yep, the return value should be checked.
+
+May be BUG_ON will be enough, up to you.
+
+
+>
+> pdn->edev is initialized in eeh_dev_init() which is called in
+> add_dev_pci_data(). The order is not clear?
+>
+>>
+>>
+>>> +		edev->physfn = pdev;
+>>>   	}
+>>>   #endif /* CONFIG_PCI_IOV */
+>>>
+>>> @@ -254,10 +259,17 @@ void remove_dev_pci_data(struct pci_dev *pdev)
+>>>   	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
+>>>   		list_for_each_entry_safe(pdn, tmp,
+>>>   			&parent->child_list, list) {
+>>> +			struct eeh_dev *edev;
+>>>   			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
+>>>   			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
+>>>   				continue;
+>>>
+>>> +			edev = pdn_to_eeh_dev(pdn);
+>>> +			if (edev) {
+>>> +				pdn->edev = NULL;
+>>> +				kfree(edev);
+>>> +			}
+>>> +
+>>>   			if (!list_empty(&pdn->list))
+>>>   				list_del(&pdn->list);
+>>>
+>>>
+>>
+
+
+-- 
+Alexey
