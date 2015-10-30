@@ -1,110 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 6 Oct 2015 15:43:08 -0700
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Daniel Vetter <daniel.vetter@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [RFC][PATCH v3 3/3] input: i8042: Avoid resetting controller on
- system suspend/resume
-Message-ID: <20151006224308.GD31850@dtor-ws>
-References: <10641052.oOBhM6BU9G@vostro.rjw.lan>
- <3385784.1Q539YNd1G@vostro.rjw.lan>
- <20151006223442.GA31850@dtor-ws>
- <1927174.T9TA7zgbS1@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1927174.T9TA7zgbS1@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v5 5/7] PCI: irqdomain: Look up IRQ domain by fwnode_handle
+Date: Fri, 30 Oct 2015 21:11:13 +0000
+Message-Id: <1446239475-49480-6-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
+References: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 07, 2015 at 01:08:30AM +0200, Rafael J. Wysocki wrote:
-> On Tuesday, October 06, 2015 03:34:42 PM Dmitry Torokhov wrote:
-> > On Wed, Oct 07, 2015 at 12:53:49AM +0200, Rafael J. Wysocki wrote:
-> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > 
-> > > If the upcoming system suspend is not going to be handled by the
-> > > platform firmware, like in the suspend-to-idle case, it is not
-> > > necessary to reset the controller in i8042_pm_suspend(), so avoid
-> > > doing that.
-> > > 
-> > > Moreover, if the system resume currently in progress has not been
-> > > started by the platform firmware, like in the suspend-to-idle case,
-> > > i8042_controller_resume() need not be called by i8042_pm_resume(),
-> > > so avoid doing that too in that case.
-> > > 
-> > > Additionally, try to catch the event that woke up the system by
-> > > calling the interrupt handler early during system resume if it has
-> > > not been started by the platform firmware.
-> > > 
-> > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > ---
-> > >  drivers/input/serio/i8042.c |   15 +++++++++++++--
-> > >  1 file changed, 13 insertions(+), 2 deletions(-)
-> > > 
-> > > Index: linux-pm/drivers/input/serio/i8042.c
-> > > ===================================================================
-> > > --- linux-pm.orig/drivers/input/serio/i8042.c
-> > > +++ linux-pm/drivers/input/serio/i8042.c
-> > > @@ -24,6 +24,7 @@
-> > >  #include <linux/platform_device.h>
-> > >  #include <linux/i8042.h>
-> > >  #include <linux/slab.h>
-> > > +#include <linux/suspend.h>
-> > >  
-> > >  #include <asm/io.h>
-> > >  
-> > > @@ -1170,7 +1171,8 @@ static int i8042_pm_suspend(struct devic
-> > >  {
-> > >  	int i;
-> > >  
-> > > -	i8042_controller_reset(true);
-> > > +	if (pm_suspend_via_firmware())
-> > > +		i8042_controller_reset(true);
-> > >  
-> > >  	/* Set up serio interrupts for system wakeup. */
-> > >  	for (i = 0; i < I8042_NUM_PORTS; i++) {
-> > > @@ -1183,6 +1185,14 @@ static int i8042_pm_suspend(struct devic
-> > >  	return 0;
-> > >  }
-> > >  
-> > > +static int i8042_pm_resume_noirq(struct device *dev)
-> > > +{
-> > > +	if (!pm_resume_via_firmware())
-> > > +		i8042_interrupt(0, NULL);
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +
-> > >  static int i8042_pm_resume(struct device *dev)
-> > >  {
-> > >  	int i;
-> > > @@ -1199,7 +1209,7 @@ static int i8042_pm_resume(struct device
-> > >  	 * to bring it in a sane state. (In case of S2D we expect
-> > >  	 * BIOS to reset the controller for us.)
-> > >  	 */
-> > > -	return i8042_controller_resume(true);
-> > > +	return pm_resume_via_firmware() ? i8042_controller_resume(true) : 0;
-> > 
-> > What happens if we were going to suspend via firmware so we reset the
-> > controller but then we got wakeup condition and we actually did not
-> > suspend. What pm_resume_via_firmware() will return in this case?
-> 
-> It will return 'false'.  Do we need to resume the controller then?
+From: Jake Oshins <jakeo@microsoft.com>
 
-Yes.
+This patch adds a second way of finding an IRQ domain associated with
+a root PCI bus.  After looking to see if one can be found through
+the OF tree, it attempts to look up the IRQ domain through an
+fwnode_handle stored in the pci_sysdata struct.
 
->  But I guess
-> 'false' should be passed to i8042_controller_resume() in that case?
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ arch/x86/include/asm/pci.h |  4 +++-
+ drivers/pci/probe.c        | 11 +++++++++++
+ include/asm-generic/pci.h  |  4 ++++
+ 3 files changed, 18 insertions(+), 1 deletion(-)
 
-Yes, we do not need to reset the controller in this case, just
-reactivate multiplexing mode, etc.
-
-Thanks.
-
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 10213a1..fb74453 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -45,11 +45,13 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ #endif
+ 
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+-static inline void *pci_fwnode(struct pci_bus *bus)
++static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
+ {
+ 	struct pci_sysdata *sd = bus->sysdata;
+ 	return sd->fwnode;
+ }
++
++#define pci_root_bus_fwnode	_pci_root_bus_fwnode
+ #endif
+ 
+ /* Can be used to override the logic in pci_scan_bus for skipping
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index f441d1b..60e50a8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -671,6 +671,17 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
+ 	 */
+ 	d = pci_host_bridge_of_msi_domain(bus);
+ 
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	/*
++	 * If no IRQ domain was found via the OF tree, try looking it up
++	 * directly through the fwnode_handle.
++	 */
++	if (!d && pci_root_bus_fwnode(bus)) {
++		d = irq_find_matching_fwnode(pci_root_bus_fwnode(bus),
++					     DOMAIN_BUS_PCI_MSI);
++	}
++#endif
++
+ 	return d;
+ }
+ 
+diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
+index f24bc51..3fde985 100644
+--- a/include/asm-generic/pci.h
++++ b/include/asm-generic/pci.h
+@@ -21,4 +21,8 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ #define PCI_DMA_BUS_IS_PHYS	(1)
+ #endif
+ 
++#ifndef pci_root_bus_fwnode
++#define pci_root_bus_fwnode(bus)	((void)(bus),NULL)
++#endif
++
+ #endif /* _ASM_GENERIC_PCI_H */
 -- 
-Dmitry
+1.9.1
+
