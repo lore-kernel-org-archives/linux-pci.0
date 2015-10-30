@@ -1,60 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 09/61] powerpc/PCI: Keep resource idx order with bridge register number
-Date: Tue, 27 Oct 2015 13:55:01 -0700
-Message-Id: <1445979353-1728-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yk0-f196.google.com ([209.85.160.196]:33082 "EHLO
+	mail-yk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759396AbbJ3Qw0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 12:52:26 -0400
+MIME-Version: 1.0
+In-Reply-To: <DM2PR0301MB123280EE1F7E37B57E27E6EAAB2F0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+References: <1446162376-43419-1-git-send-email-jakeo@microsoft.com>
+	<1446162376-43419-7-git-send-email-jakeo@microsoft.com>
+	<CAHp75VfcLVsESDT-KdjobcKVwSWUT=f1i_1PrET47tJ=rB91jA@mail.gmail.com>
+	<DM2PR0301MB123280EE1F7E37B57E27E6EAAB2F0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+Date: Fri, 30 Oct 2015 18:52:25 +0200
+Message-ID: <CAHp75VdTFWMtxT3ftfT4-EgvMaQD=rXVcZf2K2adJM_zyT5Rdg@mail.gmail.com>
+Subject: Re: [PATCH v4 6/7] drivers:hv: Define the channel type for Hyper-V
+ PCI Express pass-through
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Jake Oshins <jakeo@microsoft.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	KY Srinivasan <kys@microsoft.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	"tglx@redhat.com" <tglx@redhat.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Same as sparc version.
+On Fri, Oct 30, 2015 at 5:57 PM, Jake Oshins <jakeo@microsoft.com> wrote:
 
-Make resource with consistent sequence
-like other arch or directly from pci_read_bridge_bases(),
-even non-pref mmio is missing, or out of ordering in firmware reporting.
+>> > + * PCI Express Pass Through
+>> > + * {44C4F61D-4444-4400-9D52-802E27EDE19F}
+>> > + */
+>> > +
+>> > +#define HV_PCIE_GUID \
+>> > +       .guid = { \
+>> > +                       0x1D, 0xF6, 0xC4, 0x44, 0x44, 0x44, 0x00, 0x44, \
+>> > +                       0x9D, 0x52, 0x80, 0x2E, 0x27, 0xED, 0xE1, 0x9F \
+>> > +               }
+>>
+>> What about
+>> #include <linux/uuid.h>
+>>
+>> UUID_LE(...)
+>>
+>> And you may use uuid_le type instead of custom raw buffer.
+>>
+>
+> Thanks.  I was just following the form of all the others in this file.  I think that this was done to match up with the representation that's coming across the VM boundary from Windows.
 
-So hold i = 1 for non pref mmio, and i = 2 for pref mmio.
+Perhaps a separate patch to move to uuid.h then?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/powerpc/kernel/pci_of_scan.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 2e710c1..349ed11 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -255,7 +255,7 @@ void of_scan_pci_bridge(struct pci_dev *dev)
- 		bus->resource[i] = res;
- 		++res;
- 	}
--	i = 1;
-+	i = 3;
- 	for (; len >= 32; len -= 32, ranges += 8) {
- 		flags = pci_parse_of_flags(of_read_number(ranges, 1), 1);
- 		size = of_read_number(&ranges[6], 2);
-@@ -268,6 +268,12 @@ void of_scan_pci_bridge(struct pci_dev *dev)
- 				       " for bridge %s\n", node->full_name);
- 				continue;
- 			}
-+		} else if ((flags & IORESOURCE_PREFETCH) &&
-+			   !bus->resource[2]->flags) {
-+			res = bus->resource[2];
-+		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
-+			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
-+			res = bus->resource[1];
- 		} else {
- 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
- 				printk(KERN_ERR "PCI: too many memory ranges"
 -- 
-1.8.4.5
-
+With Best Regards,
+Andy Shevchenko
