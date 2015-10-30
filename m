@@ -1,70 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39560 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752300AbbJIOSS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Oct 2015 10:18:18 -0400
-Date: Fri, 9 Oct 2015 15:18:14 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Rob Herring <robh@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
-	Jon Medhurst <tixy@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	device-tree <devicetree@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 3/4] arm64: Juno: Add support for the PCIe host bridge on
- Juno R1
-Message-ID: <20151009141814.GR26278@arm.com>
-References: <1444398323-17354-1-git-send-email-Liviu.Dudau@arm.com>
- <1444398323-17354-4-git-send-email-Liviu.Dudau@arm.com>
- <CAL_JsqJsb53VXiUfjGBXK37dBEi1r-PXVohg-c-7_x63R04VMA@mail.gmail.com>
- <20151009141107.GD3394@e106497-lin.cambridge.arm.com>
+Received: from e28smtp06.in.ibm.com ([122.248.162.6]:37955 "EHLO
+	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752283AbbJ3FW4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 01:22:56 -0400
+Received: from /spool/local
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 30 Oct 2015 10:52:54 +0530
+Date: Fri, 30 Oct 2015 13:22:49 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
+	Ethan Zhao <ethan.zhao@oracle.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 7/7] PCI: Set NumVFs before computing how many buses
+ VFs require
+Message-ID: <20151030052249.GF5119@richards-mbp.cn.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20151029222336.11908.66193.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151009141107.GD3394@e106497-lin.cambridge.arm.com>
+In-Reply-To: <20151029222336.11908.66193.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 09, 2015 at 03:11:07PM +0100, Liviu Dudau wrote:
-> On Fri, Oct 09, 2015 at 08:54:33AM -0500, Rob Herring wrote:
-> > On Fri, Oct 9, 2015 at 8:45 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > > Juno R1 board sports a functional PCIe host bridge that is
-> > > compliant with the SBSA standard found here[1]. With the right
-> > > firmware that initialises the XpressRICH3 controller one can
-> > > use the generic Host Bridge driver to use the PCIe hardware.
-> > >
-> > > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > >
-> > > [1] http://infocenter.arm.com/help/topic/com.arm.doc.den0029a/
-> > > ---
-> > >  arch/arm64/boot/dts/arm/juno-r1.dts | 20 ++++++++++++++++++++
-> > >  1 file changed, 20 insertions(+)
-> > >
-> > > diff --git a/arch/arm64/boot/dts/arm/juno-r1.dts b/arch/arm64/boot/dts/arm/juno-r1.dts
-> > > index c627511..a702a6b 100644
-> > > --- a/arch/arm64/boot/dts/arm/juno-r1.dts
-> > > +++ b/arch/arm64/boot/dts/arm/juno-r1.dts
-> > > @@ -109,6 +109,26 @@
-> > >
-> > >         #include "juno-base.dtsi"
-> > >
-> > > +       pcie-controller@40000000 {
-> > > +               compatible = "pci-host-ecam-generic";
-> > 
-> > I think this is the first case of real h/w using this. We should have
-> > a specific compatible here additionally.
-> 
-> Or maybe I can claim the use of the string on account on being the first
-> on arm64 ;)
+On Thu, Oct 29, 2015 at 05:23:36PM -0500, Bjorn Helgaas wrote:
+>From: Alexander Duyck <aduyck@mirantis.com>
+>
+>VF bus numbers depend on the First VF Offset and VF Stride, and per
+>sections 3.3.9 and 3.3.10 of the SR-IOV spec r1.1, these depend on the
+>NumVF value.
+>
+>Wait until after we set NumVFs to compute and validate the bus number of
+>the last VF.
+>
+>[bhelgaas: changelog, add spec reference, split to separate patch for
+>reviewability]
+>Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>---
+> drivers/pci/iov.c |   18 ++++++++++--------
+> 1 file changed, 10 insertions(+), 8 deletions(-)
+>
+>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>index bd1c4fa..9d29712 100644
+>--- a/drivers/pci/iov.c
+>+++ b/drivers/pci/iov.c
+>@@ -274,13 +274,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+> 		return -ENOMEM;
+> 	}
+>
+>-	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+>-	if (bus > dev->bus->busn_res.end) {
+>-		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
+>-			nr_virtfn, bus, &dev->bus->busn_res);
+>-		return -ENOMEM;
+>-	}
+>-
+> 	if (pci_enable_resources(dev, bars)) {
+> 		dev_err(&dev->dev, "SR-IOV: IOV BARS not allocated\n");
+> 		return -ENOMEM;
+>@@ -304,6 +297,15 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+> 	}
+>
+> 	pci_iov_set_numvfs(dev, nr_virtfn);
 
-This is already being used on arm64 with kvmtool, qemu, the ARM fastmodel
-and AMD Seattle.
+How about move it up?
 
-Will
+>+
+>+	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+>+	if (bus > dev->bus->busn_res.end) {
+>+		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
+>+			nr_virtfn, bus, &dev->bus->busn_res);
+>+		rc = -ENOMEM;
+>+		goto err_bus;
+>+	}
+>+
+> 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+> 	pci_cfg_access_lock(dev);
+> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>@@ -342,7 +344,7 @@ err_pcibios:
+> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+> 	ssleep(1);
+> 	pci_cfg_access_unlock(dev);
+>-
+>+err_bus:
+> 	if (iov->link != dev->devfn)
+> 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>
+
+-- 
+Richard Yang
+Help you, Help me
+
