@@ -1,138 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:36369 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932425AbbJ0PPd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Oct 2015 11:15:33 -0400
-Subject: Re: [PATCH v2] iov: restore NumVFs register to 0 before return from
- virtfn_max_buses()
-To: ethan zhao <ethan.zhao@oracle.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-References: <1442373593-8342-1-git-send-email-ethan.zhao@oracle.com>
- <20151015171600.GB17702@localhost> <562F1024.70001@gmail.com>
- <562F43C6.7000009@oracle.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <562F9512.3000907@gmail.com>
-Date: Tue, 27 Oct 2015 08:15:30 -0700
+Received: from relmlor3.renesas.com ([210.160.252.173]:15327 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1030749AbbJ3Lvw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 30 Oct 2015 07:51:52 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Wolfram Sang <wsa@the-dreams.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
+ instances
+Date: Fri, 30 Oct 2015 11:51:47 +0000
+Message-ID: <PS1PR06MB11805309BF760C14F4894EAEF52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
+ <20151029123755.GC2351@katana>
+ <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029163930.GC22218@katana>
+ <PS1PR06MB11804B39B09D6FCAA9B3D9DCF5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029184800.GB8992@katana>
+In-Reply-To: <20151029184800.GB8992@katana>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <562F43C6.7000009@oracle.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/27/2015 02:28 AM, ethan zhao wrote:
-> Alexander,
-> On 2015/10/27 13:48, Alexander Duyck wrote:
->> On 10/15/2015 10:16 AM, Bjorn Helgaas wrote:
->>> Hi Ethan,
->>>
->>> On Wed, Sep 16, 2015 at 12:19:53PM +0900, Ethan Zhao wrote:
->>>> After commit 4449f079722c ("PCI: Calculate maximum number of buses
->>>> required for VFs"),the initial value of NumVFs register was left to
->>>> non-zero after sriov_init() and no VFs was enabled in device driver.
->>>> this changed the behaviour of kernel exported by lspci and sysfs etc.
->>>> so this patch restore the NumVFs register to zero after the
->>>> calculation of max_VF_buses was done and before return from
->>>> virtfn_max_buses().
->>>>
->>>> Tested on stable 4.1 and passed building on stable 4.3-rc1
->>>>
->>>> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
->>>> Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
->>> Can you test the patch below?  I'm trying to avoid touching
->>> PCI_SRIOV_NUM_VF in more than one place, and I think it's OK to set it
->>> and test offset/stride at the end, instead of setting NUM_VF to zero,
->>> testing offset/stride, computing max_bus, then setting NUM_VF to zero
->>> again.
->>>
->>> Bjorn
->>>
->>>
->>> commit 8e20e89658f23b8d16b1e21810e9f63c8625129c
->>> Author: Bjorn Helgaas <bhelgaas@google.com>
->>> Date:   Thu Oct 15 11:31:21 2015 -0500
->>>
->>>      PCI: Set SR-IOV NumVFs to zero after enumeration
->>>           The enumeration path should leave NumVFs set to zero. But 
->>> after
->>>      4449f079722c ("PCI: Calculate maximum number of buses required 
->>> for VFs"),
->>>      we call virtfn_max_buses() in the enumeration path, which 
->>> changes NumVFs.
->>>      This NumVFs change is visible via lspci and sysfs until a 
->>> driver enables
->>>      SR-IOV.
->>>           Set NumVFs to zero after virtfn_max_buses() computes the 
->>> maximum number of
->>>      buses.
->>>           Fixes: 4449f079722c ("PCI: Calculate maximum number of 
->>> buses required for VFs")
->>>      Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
->>>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>
->>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>> index ee0ebff..0202ab0 100644
->>> --- a/drivers/pci/iov.c
->>> +++ b/drivers/pci/iov.c
->>> @@ -384,7 +384,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
->>>       int rc;
->>>       int nres;
->>>       u32 pgsz;
->>> -    u16 ctrl, total, offset, stride;
->>> +    u16 ctrl, total;
->>>       struct pci_sriov *iov;
->>>       struct resource *res;
->>>       struct pci_dev *pdev;
->>> @@ -414,11 +414,6 @@ static int sriov_init(struct pci_dev *dev, int 
->>> pos)
->>>     found:
->>>       pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
->>> -    pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
->>> -    pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
->>> -    pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
->>> -    if (!offset || (total > 1 && !stride))
->>> -        return -EIO;
->>>         pci_read_config_dword(dev, pos + PCI_SRIOV_SUP_PGSIZE, &pgsz);
->>>       i = PAGE_SHIFT > 12 ? PAGE_SHIFT - 12 : 0;
->>> @@ -456,8 +451,6 @@ found:
->>>       iov->nres = nres;
->>>       iov->ctrl = ctrl;
->>>       iov->total_VFs = total;
->>> -    iov->offset = offset;
->>> -    iov->stride = stride;
->>>       iov->pgsz = pgsz;
->>>       iov->self = dev;
->>>       pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
->>> @@ -475,6 +468,11 @@ found:
->>>       dev->sriov = iov;
->>>       dev->is_physfn = 1;
->>>       iov->max_VF_buses = virtfn_max_buses(dev);
->>> +    pci_iov_set_numvfs(dev, 0);
->>> +    if (!iov->offset || (total > 1 && !iov->stride)) {
->>> +        rc = -EIO;
->>> +        goto failed;
->>> +    }
->>>         return 0;
->>
->> You might want to reorder this a bit.  The problem is offset and 
->> stride can be 0 if numvfs is 0.  So you should probably test offset 
->> and stride 
->  Yes, the spec says "Note: First VF Offset is unused if NumVFs is 0. 
-> If NumVFs is greater than 0, First VF Offset must
-> 25 not be zero. "
->> first, and then reset numvfs to 0.
->  Why test it before reset numvfs ?
+Hi Wolfram,
 
-Because pci_iov_set_numvfs will end up resetting offset and stride based 
-on the values when it writes the 0 into numvfs.  As such testing it 
-after the reset could give you invalid values since offset and stride 
-can be 0 when numvfs is 0.
+On 29 October 2015 18:48, Wolfram wrote:
+> On Thu, Oct 29, 2015 at 04:44:06PM +0000, Phil Edworthy wrote:
+> > Hi Wolfram,
+> >
+> > On 29 October 2015 16:40, Wolfram wrote:
+> > > > Ouch, my bad. I have been working with our out-of-tree BSP for the
+> Salvator-X
+> > > board on
+> > > > http://git.kernel.org/cgit/linux/kernel/git/horms/renesas-bsp.git,  rcar-
+> 3.0.2
+> > > tag along
+> > > > with some patches from colleagues. I hadn't noticed this patch:
+> > >
+> > > Thanks! Any plans for pushing this upstream? We will have the build error
+> > > otherwise...
+> > After some digging, that patch won't be accepted upstream. I'm looking into
+> how the
+> > driver can be modified so it doesn't need to call this, but I don't expect a small
+> or
+> > imminent fix.
+> 
+> Yes, I'd think so, too. However, a fix for 4.4 would be needed to
+> prevent having a final release with a build error.
+Hopefully, Geert's patch will be applied to avoid build errors in both the
+rcar-pcie and rcar-pci-gen2 (internal USB bridge) drivers. Meanwhile I'll fix
+the rcar-pcie driver properly for arm64.
 
-Actually maybe I will go over this and submit a couple patches myself.  
-Looking over things it seems like the code has gotten a bit silly since 
-virtfn_max_busses looks like it is iterating over VFs and that doesn't 
-make much sense when offset and stride are both positive values so it 
-should just be a matter of computing the bus of the last VF.
 
-- Alex
+> > > > > Any news if this is really HW related?
+> > > > I found out that the PCIe controller HW only supports 32-bit AXI bus
+> addresses,
+> > > so it
+> > > > works fine if you limit the available memory. The driver will need some work
+> to
+> > > use
+> > > > the IPMMU at some point.
+> > >
+> > > Ah, okay.
+> > >
+> > > Can you send the dts patches, too? I checked the BSP this time, but to
+> > > no avail...
+> > I will once I sort out the arm64 IO resources problem and the MSI problem.
+> 
+> What MSI problem?
+I was told that rcar pcie on v4.3-rc5 had an issue with MSI. I've since checked
+That both v4.3-rc7 and next work ok out of the box on the Koelsch board.
+There are some problems with next (mstp related), but it doesn't stop the
+board booting and being able to test pcie. Since shmobile arm64 is not in
+next yet, I have not checked this.
+ 
+> And can't you send the DTS patches as RFC so I can add some testing?
+Sure, though what tree? As I mentioned above, next doesn't have
+shmobile arm64 yet.
+
+Thanks
+Phil
