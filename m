@@ -1,47 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:40766 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751368AbbJBPLR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 2 Oct 2015 11:11:17 -0400
-Message-ID: <560E9E90.6000709@arm.com>
-Date: Fri, 02 Oct 2015 16:11:12 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:46112 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751255AbbJ3Gxt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Oct 2015 02:53:49 -0400
+Received: from localhost
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 30 Oct 2015 16:53:46 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id B61692CE8055
+	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 17:53:44 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9U6rM0O31588438
+	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 17:53:30 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9U6rBoF012741
+	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2015 17:53:12 +1100
+Date: Fri, 30 Oct 2015 14:52:46 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V10 06/12] powerpc/powernv: EEH device for VF
+Message-ID: <20151030065246.GC5940@richards-mbp.cn.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1445829362-2738-7-git-send-email-weiyang@linux.vnet.ibm.com>
+ <5632E51D.30805@ozlabs.ru>
 MIME-Version: 1.0
-To: David Daney <ddaney.cavm@gmail.com>, linux-kernel@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Grant Likely <grant.likely@linaro.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-CC: David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v4 3/4] PCI/MSI:  Add helper function pci_msi_domain_get_msi_rid().
-References: <1443747025-9918-1-git-send-email-ddaney.cavm@gmail.com> <1443747025-9918-4-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1443747025-9918-4-git-send-email-ddaney.cavm@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5632E51D.30805@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/10/15 01:50, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> Add pci_msi_domain_get_msi_rid() to return the MSI requester id (RID).
-> Initially needed by gic-v3 based systems. It will be used by follow on
-> patch to drivers/irqchip/irq-gic-v3-its-pci-msi.c
-> 
-> Initially supports mapping the RID via OF device tree.  In the future,
-> this could be extended to use ACPI _IORT tables as well.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
+On Fri, Oct 30, 2015 at 02:33:49PM +1100, Alexey Kardashevskiy wrote:
+>On 10/26/2015 02:15 PM, Wei Yang wrote:
+>>VFs and their corresponding pci_dn instances are created and released
+>>dynamically as their PF's SRIOV capability is enabled and disabled.
+>>The patch creates and releases EEH devices for VFs when creating and
+>>releasing their pci_dn instances, which means EEH devices and pci_dn
+>>instances have same life cycle. Also, VF's EEH device is identified
+>>by (struct eeh_dev::physfn).
+>
+>
+>The add_dev_pci_data() helper (the one you hack) does not create pci_dn
+>instances. The add_one_dev_pci_data() helper does.
+>
 
-Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+Yes, you are right. The patch here create edev after the pci_dn is created.
 
-	M.
+So which part in the log you think is not accurate?
+
+>
+>>
+>>[gwshan: changelog and removed CONFIG_PCI_IOV]
+>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/include/asm/eeh.h |  1 +
+>>  arch/powerpc/kernel/pci_dn.c   | 12 ++++++++++++
+>>  2 files changed, 13 insertions(+)
+>>
+>>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>>index c5eb86f..6c383ad 100644
+>>--- a/arch/powerpc/include/asm/eeh.h
+>>+++ b/arch/powerpc/include/asm/eeh.h
+>>@@ -140,6 +140,7 @@ struct eeh_dev {
+>>  	struct pci_controller *phb;	/* Associated PHB		*/
+>>  	struct pci_dn *pdn;		/* Associated PCI device node	*/
+>>  	struct pci_dev *pdev;		/* Associated PCI device	*/
+>>+	struct pci_dev *physfn;		/* Associated PF PORT		*/
+>>  	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
+>>  };
+>>
+>>diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+>>index f771130..f0ddde7 100644
+>>--- a/arch/powerpc/kernel/pci_dn.c
+>>+++ b/arch/powerpc/kernel/pci_dn.c
+>>@@ -180,7 +180,9 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+>>  struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+>>  {
+>>  #ifdef CONFIG_PCI_IOV
+>>+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+>>  	struct pci_dn *parent, *pdn;
+>>+	struct eeh_dev *edev;
+>>  	int i;
+>>
+>>  	/* Only support IOV for now */
+>>@@ -206,6 +208,9 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+>>  				 __func__, i);
+>>  			return NULL;
+>>  		}
+>>+		eeh_dev_init(pdn, hose);
+>>+		edev = pdn_to_eeh_dev(pdn);
+>
+>
+>In theory, pdn_to_eeh_dev() can return NULL. In this patch, it is not clear
+>if pdn->edev gets initialized before or after add_dev_pci_data().
+>
+
+Yep, the return value should be checked.
+
+pdn->edev is initialized in eeh_dev_init() which is called in
+add_dev_pci_data(). The order is not clear?
+
+>
+>
+>>+		edev->physfn = pdev;
+>>  	}
+>>  #endif /* CONFIG_PCI_IOV */
+>>
+>>@@ -254,10 +259,17 @@ void remove_dev_pci_data(struct pci_dev *pdev)
+>>  	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
+>>  		list_for_each_entry_safe(pdn, tmp,
+>>  			&parent->child_list, list) {
+>>+			struct eeh_dev *edev;
+>>  			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
+>>  			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
+>>  				continue;
+>>
+>>+			edev = pdn_to_eeh_dev(pdn);
+>>+			if (edev) {
+>>+				pdn->edev = NULL;
+>>+				kfree(edev);
+>>+			}
+>>+
+>>  			if (!list_empty(&pdn->list))
+>>  				list_del(&pdn->list);
+>>
+>>
+>
+>
+>-- 
+>Alexey
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-Jazz is not dead. It just smells funny...
+Richard Yang
+Help you, Help me
+
