@@ -1,73 +1,67 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v5 1/7] drivers:hv: Export a function that maps Linux CPU num onto Hyper-V proc num
-Date: Fri, 30 Oct 2015 21:11:09 +0000
-Message-Id: <1446239475-49480-2-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
-References: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Wolfram Sang <wsa@the-dreams.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
+ instances
+Date: Fri, 30 Oct 2015 07:19:17 +0000
+Message-ID: <PS1PR06MB1180BAA32BDBEE6BFD8229C3F52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
+ <20151029123755.GC2351@katana>
+ <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029163930.GC22218@katana>
+ <PS1PR06MB11804B39B09D6FCAA9B3D9DCF5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029184800.GB8992@katana> <20151029230314.GA11994@localhost>
+In-Reply-To: <20151029230314.GA11994@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+Hi Bjorn,
 
-This patch exposes the mapping between Linux CPU number and Hyper-V virtual
-processor number. This is necessary because the hypervisor needs to know which
-virtual processor to target when making a mapping in the Interrupt Redirection
-Table in the I/O MMU.
+On 29 October 2015 23:03, Bjorn wrote:
+> On Thu, Oct 29, 2015 at 07:48:00PM +0100, Wolfram Sang wrote:
+> > On Thu, Oct 29, 2015 at 04:44:06PM +0000, Phil Edworthy wrote:
+> > > Hi Wolfram,
+> > >
+> > > On 29 October 2015 16:40, Wolfram wrote:
+> > > > > Ouch, my bad. I have been working with our out-of-tree BSP for the
+> Salvator-X
+> > > > board on
+> > > > > http://git.kernel.org/cgit/linux/kernel/git/horms/renesas-bsp.git,  rcar-
+> 3.0.2
+> > > > tag along
+> > > > > with some patches from colleagues. I hadn't noticed this patch:
+> > > >
+> > > > Thanks! Any plans for pushing this upstream? We will have the build error
+> > > > otherwise...
+> > > After some digging, that patch won't be accepted upstream. I'm looking into
+> how the
+> > > driver can be modified so it doesn't need to call this, but I don't expect a small
+> or
+> > > imminent fix.
+> >
+> > Yes, I'd think so, too. However, a fix for 4.4 would be needed to
+> > prevent having a final release with a build error.
+> 
+> I'm thinking I should drop my pci/host-rcar branch until we
+> have a fix for this.  It currently contains:
+> 
+>   9ac724f20774 PCI: rcar: Fix I/O offset for multiple host bridges
+>   7d75b413f5c6 PCI: rcar: Set root bus nr to that provided in DT
+>   4c22eab88c68 PCI: rcar: Remove dependency on ARM-specific struct hw_pci
+>   ef18d2e55ea0 PCI: rcar: Make PCI aware of the I/O resources
+> 
+> Is that right?  Last I heard, Linus expects to release v4.3 on Sunday,
+> so we really don't have much time to sort this out.
+The simple thing is to re-add Geert's patch to stop this driver being built for arm64.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/hv/vmbus_drv.c | 17 +++++++++++++++++
- include/linux/hyperv.h |  2 ++
- 2 files changed, 19 insertions(+)
-
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index f19b6f7..c89d0e5 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -1191,6 +1191,23 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- }
- EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
- 
-+/**
-+ * vmbus_cpu_number_to_vp_number() - Map CPU to VP.
-+ * @cpu_number: CPU number in Linux terms
-+ *
-+ * This function returns the mapping between the Linux processor
-+ * number and the hypervisor's virtual processor number, useful
-+ * in making hypercalls and such that talk about specific
-+ * processors.
-+ *
-+ * Return: Virtual processor number in Hyper-V terms
-+ */
-+int vmbus_cpu_number_to_vp_number(int cpu_number)
-+{
-+	return hv_context.vp_index[cpu_number];
-+}
-+EXPORT_SYMBOL_GPL(vmbus_cpu_number_to_vp_number);
-+
- static int vmbus_acpi_add(struct acpi_device *device)
- {
- 	acpi_status result;
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 54733d5..02393b6 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -982,6 +982,8 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			resource_size_t size, resource_size_t align,
- 			bool fb_overlap_ok);
- 
-+int vmbus_cpu_number_to_vp_number(int cpu_number);
-+
- /**
-  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
-  *
--- 
-1.9.1
-
+Thanks
+Phil
