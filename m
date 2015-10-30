@@ -1,73 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 6 Oct 2015 20:01:21 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	" David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, m-karicheri2@ti.com,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH v5 1/3] ARM: STi: Kconfig update for PCIe support
-Message-ID: <20151006190121.GV21513@n2100.arm.linux.org.uk>
-References: <1444118168-13086-1-git-send-email-gabriel.fernandez@linaro.org>
- <1444118168-13086-2-git-send-email-gabriel.fernandez@linaro.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V1 00/11] MMCONFIG refactoring and ARM64 PCI hostbridge
+ init based on ACPI
+To: Tomasz Nowicki <tn@semihalf.com>, <bhelgaas@google.com>,
+	<arnd@arndb.de>, <will.deacon@arm.com>, <catalin.marinas@arm.com>,
+	<rjw@rjwysocki.net>, <hanjun.guo@linaro.org>,
+	<Lorenzo.Pieralisi@arm.com>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+CC: <jiang.liu@linux.intel.com>, <robert.richter@caviumnetworks.com>,
+	<Narinder.Dhillon@caviumnetworks.com>, <ddaney@caviumnetworks.com>,
+	<Liviu.Dudau@arm.com>, <tglx@linutronix.de>,
+	<wangyijing@huawei.com>, <msalter@redhat.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linaro-acpi@lists.linaro.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Message-ID: <56339D1E.20605@amd.com>
+Date: Fri, 30 Oct 2015 11:38:54 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444118168-13086-2-git-send-email-gabriel.fernandez@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 06, 2015 at 09:56:06AM +0200, Gabriel Fernandez wrote:
-> Update Kconfig:
-> - MIGHT_HAVE_PCI
-> - PCI_DOMAINS
-> 
-> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
-> ---
->  arch/arm/mach-sti/Kconfig | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/arch/arm/mach-sti/Kconfig b/arch/arm/mach-sti/Kconfig
-> index 125865d..5f99e93 100644
-> --- a/arch/arm/mach-sti/Kconfig
-> +++ b/arch/arm/mach-sti/Kconfig
-> @@ -9,6 +9,8 @@ menuconfig ARCH_STI
->  	select ARCH_HAS_RESET_CONTROLLER
->  	select HAVE_ARM_SCU if SMP
->  	select ARCH_REQUIRE_GPIOLIB
-> +	select PCI_DOMAINS if PCI
-> +	select MIGHT_HAVE_PCI
->  	select ARM_ERRATA_754322
->  	select ARM_ERRATA_764369 if SMP
->  	select ARM_ERRATA_775420
+Tested on AMD Seattle platform (Overdrive revB) w/ both MSI and legacy 
+interrupt.
 
-Please, alphabetical ordering for select statements.
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
--- 
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+Thanks,
+Suravee
+
+On 10/27/15 11:38, Tomasz Nowicki wrote:
+>  From the functionality point of view this series might be split into two logic parts:
+> 1. Making MMCONFIG code arch-agnostic which allows all architectures to collect
+>     PCI config regions and used when necessary.
+> 2. Using generic MMCONFIG code and introducing ACPI based PCI hostbridge
+>     initialization for ARM64
+>
+> Patches has been built on top of:
+> [Patch v7 0/7] Consolidate ACPI PCI root common code into ACPI core
+> https://lkml.org/lkml/2015/10/14/31
+> Git branch can be found here:
+> https://git.linaro.org/leg/acpi/acpi.git/shortlog/refs/heads/pci-acpi-upstream
+>
+> This has been tested on Cavium ThunderX 1 socket server.
+> Any help in reviewing and testing is very appreciated.
+>
+> Hanjun Guo (1):
+>    XEN / PCI: Remove the dependence on arch x86 when PCI_MMCONFIG=y
+>
+> Tomasz Nowicki (10):
+>    x86, pci: Reorder logic of pci_mmconfig_insert() function
+>    x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
+>      out of arch/x86/ directory
+>    pci, acpi, mcfg: Provide generic implementation of MCFG code
+>      initialization.
+>    x86, pci: mmconfig_{32,64}.c code refactoring - remove code
+>      duplication.
+>    x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
+>      driver.
+>    pci, acpi, mcfg: Provide default RAW ACPI PCI config space accessors.
+>    pci, acpi, ecam: Add flag to indicate whether ECAM region was hot
+>      added or not.
+>    x86, pci: Use previously added ECAM hot_added flag to remove ECAM
+>      regions.
+>    pci, acpi: Provide generic way to assign bus domain number.
+>    arm64, pci, acpi: Support for ACPI based PCI hostbridge init
+>
+>   arch/arm64/Kconfig             |   6 +
+>   arch/arm64/kernel/pci.c        | 208 ++++++++++++++++++++++++++++++++--
+>   arch/x86/Kconfig               |   4 +
+>   arch/x86/include/asm/pci_x86.h |  28 +----
+>   arch/x86/pci/acpi.c            |  17 +--
+>   arch/x86/pci/mmconfig-shared.c | 250 +++++++----------------------------------
+>   arch/x86/pci/mmconfig_32.c     |  11 +-
+>   arch/x86/pci/mmconfig_64.c     |  67 +----------
+>   arch/x86/pci/numachip.c        |   1 +
+>   drivers/acpi/Makefile          |   1 +
+>   drivers/acpi/mcfg.c            | 104 +++++++++++++++++
+>   drivers/acpi/pci_root.c        |   2 +-
+>   drivers/pci/Kconfig            |  10 ++
+>   drivers/pci/Makefile           |   5 +
+>   drivers/pci/ecam.c             | 234 ++++++++++++++++++++++++++++++++++++++
+>   drivers/pci/pci.c              |  30 ++++-
+>   drivers/xen/pci.c              |   7 +-
+>   include/linux/acpi.h           |   2 +
+>   include/linux/ecam.h           |  44 ++++++++
+>   19 files changed, 691 insertions(+), 340 deletions(-)
+>   create mode 100644 drivers/acpi/mcfg.c
+>   create mode 100644 drivers/pci/ecam.c
+>   create mode 100644 include/linux/ecam.h
+>
