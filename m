@@ -1,50 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29922 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965251AbbJHVpQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:45:16 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 37/60] PCI: Check if resource is allocated before trying to assign one
-Date: Thu,  8 Oct 2015 14:38:56 -0700
-Message-Id: <1444340359-8011-38-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v5 4/7] PCI: Add fwnode_handle to pci_sysdata
+Date: Fri, 30 Oct 2015 21:11:12 +0000
+Message-Id: <1446239475-49480-5-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
+References: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In following alt_size support, we will call pci_assign_resource() several
-times on one resource list, and some resources could have been assigned
-already.
+From: Jake Oshins <jakeo@microsoft.com>
 
-Skip allocated resource in the list, as pci_assign_resource()
-only can handle not assigned resource.
+This patch adds an fwnode_handle to struct pci_sysdata, which is
+used by the next patch in the series when trying to locate an
+IRQ domain associated with a root PCI bus.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- drivers/pci/setup-bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/x86/include/asm/pci.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index deed016..ca34346 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -386,7 +386,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
- 		idx = res - &dev_res->dev->resource[0];
--		if (resource_size(res) &&
-+		if (!res->parent && resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
- 				add_to_list(fail_head, dev_res->dev, res);
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4625943..10213a1 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -20,6 +20,9 @@ struct pci_sysdata {
+ #ifdef CONFIG_X86_64
+ 	void		*iommu;		/* IOMMU private data */
+ #endif
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	void		*fwnode;	/* IRQ domain for MSI assignment */
++#endif
+ };
+ 
+ extern int pci_routeirq;
+@@ -41,6 +44,14 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ }
+ #endif
+ 
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++static inline void *pci_fwnode(struct pci_bus *bus)
++{
++	struct pci_sysdata *sd = bus->sysdata;
++	return sd->fwnode;
++}
++#endif
++
+ /* Can be used to override the logic in pci_scan_bus for skipping
+    already-configured bus numbers - to be used for buggy BIOSes
+    or architectures with incomplete PCI setup by the loader */
 -- 
-1.8.4.5
+1.9.1
 
