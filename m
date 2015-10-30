@@ -1,136 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 22 Oct 2015 15:30:46 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Lan Tianyu <tianyu.lan@intel.com>
-Cc: bhelgaas@google.com, carolyn.wyborny@intel.com,
-	donald.c.skidmore@intel.com, eddie.dong@intel.com,
-	nrupal.jani@intel.com, yang.z.zhang@intel.com, agraf@suse.de,
-	kvm@vger.kernel.org, pbonzini@redhat.com, qemu-devel@nongnu.org,
-	emil.s.tantilov@intel.com, intel-wired-lan@lists.osuosl.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, matthew.vick@intel.com,
-	mitch.a.williams@intel.com, netdev@vger.kernel.org,
-	shannon.nelson@intel.com
-Subject: Re: [RFC Patch 12/12] IXGBEVF: Track dma dirty pages
-Message-ID: <20151022150137-mutt-send-email-mst@redhat.com>
-References: <1445445464-5056-1-git-send-email-tianyu.lan@intel.com>
- <1445445464-5056-13-git-send-email-tianyu.lan@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from sauhun.de ([89.238.76.85]:58081 "EHLO pokefinder.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030973AbbJ3MET (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 30 Oct 2015 08:04:19 -0400
+Date: Fri, 30 Oct 2015 13:04:08 +0100
+From: Wolfram Sang <wsa@the-dreams.de>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
+ instances
+Message-ID: <20151030120408.GE25117@katana>
+References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
+ <20151029123755.GC2351@katana>
+ <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029163930.GC22218@katana>
+ <PS1PR06MB11804B39B09D6FCAA9B3D9DCF5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029184800.GB8992@katana>
+ <PS1PR06MB11805309BF760C14F4894EAEF52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445445464-5056-13-git-send-email-tianyu.lan@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="a+b56+3nqLzpiR9O"
+In-Reply-To: <PS1PR06MB11805309BF760C14F4894EAEF52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 22, 2015 at 12:37:44AM +0800, Lan Tianyu wrote:
-> Migration relies on tracking dirty page to migrate memory.
-> Hardware can't automatically mark a page as dirty after DMA
-> memory access. VF descriptor rings and data buffers are modified
-> by hardware when receive and transmit data. To track such dirty memory
-> manually, do dummy writes(read a byte and write it back) during receive
-> and transmit data.
-> 
-> Signed-off-by: Lan Tianyu <tianyu.lan@intel.com>
-> ---
->  drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c | 14 +++++++++++---
->  1 file changed, 11 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> index d22160f..ce7bd7a 100644
-> --- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> +++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-> @@ -414,6 +414,9 @@ static bool ixgbevf_clean_tx_irq(struct ixgbevf_q_vector *q_vector,
->  		if (!(eop_desc->wb.status & cpu_to_le32(IXGBE_TXD_STAT_DD)))
->  			break;
->  
-> +		/* write back status to mark page dirty */
 
-Which page? the descriptor ring?  What does marking it dirty accomplish
-though, given that we might migrate right before this happens?
-
-It might be a good idea to just specify addresses of rings
-to hypervisor, and have it send the ring pages after VM
-and the VF are stopped.
+--a+b56+3nqLzpiR9O
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
 
-> +		eop_desc->wb.status = eop_desc->wb.status;
-> +
-Compiler is likely to optimize this out.
-You also probably need a wmb here ...
+> Hopefully, Geert's patch will be applied to avoid build errors in both the
+> rcar-pcie and rcar-pci-gen2 (internal USB bridge) drivers. Meanwhile I'll fix
+> the rcar-pcie driver properly for arm64.
 
->  		/* clear next_to_watch to prevent false hangs */
->  		tx_buffer->next_to_watch = NULL;
->  		tx_buffer->desc_num = 0;
-> @@ -946,15 +949,17 @@ static struct sk_buff *ixgbevf_fetch_rx_buffer(struct ixgbevf_ring *rx_ring,
->  {
->  	struct ixgbevf_rx_buffer *rx_buffer;
->  	struct page *page;
-> +	u8 *page_addr;
->  
->  	rx_buffer = &rx_ring->rx_buffer_info[rx_ring->next_to_clean];
->  	page = rx_buffer->page;
->  	prefetchw(page);
->  
-> -	if (likely(!skb)) {
-> -		void *page_addr = page_address(page) +
-> -				  rx_buffer->page_offset;
-> +	/* Mark page dirty */
+Thanks for taking care.
 
-Looks like there's a race condition here: VM could
-migrate at this point. RX ring will indicate
-packet has been received, but page data would be stale.
+> > What MSI problem?
+> I was told that rcar pcie on v4.3-rc5 had an issue with MSI.
+
+Okay, we'll see. I only have remote access to a Koelsch board, but my
+own Salvator. And a USB3 PCIE card. That would be my primary test setup.
+
+> > And can't you send the DTS patches as RFC so I can add some testing?
+> Sure, though what tree? As I mentioned above, next doesn't have
+> shmobile arm64 yet.
+
+I use renesas-drivers:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-drivers.git renesas-drivers-2015-10-27-v4.3-rc7
+
+Thanks,
+
+   Wolfram
 
 
-One solution I see is explicitly testing for this
-condition and discarding the packet.
-For example, hypervisor could increment some counter
-in RAM during migration.
+--a+b56+3nqLzpiR9O
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-Then:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-	x = read counter
+iQIcBAEBAgAGBQJWM1y4AAoJEBQN5MwUoCm2g4YP+gNg09/8VHAE4OpROqXRm5fw
+Ni0FuaeMdaUH57LHy/pGWaFXzoROgqqiPC2Nou6zdNY1kD2Wkklj8mF9x5HbIi9b
+VXR5BTZZ04y6mmlgIFrXi2bpN1XGnfUhwvqD9SILM9n1BFRS2IAH1XkG3qJ6XjUZ
+0E7see8ffbUW6oHKLuTvJo3PcN74XOd+/3DKcPqONOa1BzhllCyCMQ+RbMSA9gNn
+58ISZwFgGkM29yqfNS5tzIcWqNARR+SNZBDC1iWZ+OufKPvj4fZFAZjMBQad0Gfm
+OyCMRmBP8+g8u1lXBqRaH9LFDy4xLEnnHO0UrPECL/tkENqMCkT2upew3ClEsD2M
+eB7aOkUPMtjhGiMor5NqofnuifUPVFGBp3tYXN18Yz12FyytFKVrxiCBZ5EXAf6I
+S7E7KS//JaCO6cZ5ousw5POQSiPFgtH4mkz8FFSoNpm+Fsde7mfhBEhr26E1wJwx
+JBhoAFEU6oE+FRHnWorwv5lTWsTFp82eF/rbrr1Bz2zugo+RXnOtOcEQA5h2bhwf
+eJPWDVT8U9QJppkxv3mc/nMWerPHOOE/xmZ2DYo4CRwLW0IT/GuGDG5rntlYl4Xs
+4ZD0XLpDvRm54Qjq1mi+PCyd/vKFpZYVDvYlCxiBDWtNpu59Ee/Xqas+nyuH4VRY
+FlBD6AfmqI0enGAs7//v
+=j/UL
+-----END PGP SIGNATURE-----
 
-	get packet from rx ring
-	mark page dirty
-
-	y = read counter
-
-	if (x != y)
-		discard packet
-
-
-> +	page_addr = page_address(page) + rx_buffer->page_offset;
-> +	*page_addr = *page_addr;
-
-Compiler is likely to optimize this out.
-You also probably need a wmb here ...
-
-
->  
-> +	if (likely(!skb)) {
->  		/* prefetch first cache line of first page */
->  		prefetch(page_addr);
-
-prefetch makes no sense if you read it right here.
-
->  #if L1_CACHE_BYTES < 128
-> @@ -1032,6 +1037,9 @@ static int ixgbevf_clean_rx_irq(struct ixgbevf_q_vector *q_vector,
->  		if (!ixgbevf_test_staterr(rx_desc, IXGBE_RXD_STAT_DD))
->  			break;
->  
-> +		/* Write back status to mark page dirty */
-> +		rx_desc->wb.upper.status_error = rx_desc->wb.upper.status_error;
-> +
-
-same question as for tx.
-
->  		/* This memory barrier is needed to keep us from reading
->  		 * any other fields out of the rx_desc until we know the
->  		 * RXD_STAT_DD bit is set
-> -- 
-> 1.8.4.rc0.1.g8f6a3e5.dirty
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe kvm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--a+b56+3nqLzpiR9O--
