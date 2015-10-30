@@ -1,39 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:33433 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751658AbbJLVWu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 12 Oct 2015 17:22:50 -0400
-Date: Tue, 13 Oct 2015 05:21:23 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: kbuild-all@01.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>
-Subject: [RFC PATCH] PCI: pciehp: pciehp_queue_power_work() can be static
-Message-ID: <20151012212123.GA19544@athens>
-References: <201510130546.Iddntrqh%fengguang.wu@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Jisheng Zhang <jszhang@marvell.com>, Ray Jui <rjui@broadcom.com>,
+	gnurou@gmail.com, linux@arm.linux.org.uk, sbranden@broadcom.com,
+	swarren@wwwdotorg.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
+	thierry.reding@gmail.com, bcm-kernel-feedback-list@broadcom.com,
+	tinamdar@apm.com, bhelgaas@google.com
+Subject: Re: [RFC PATCH 1/3] PCI: iproc: generate proper configuration access cycles
+Date: Sat, 31 Oct 2015 00:21:08 +0100
+Message-ID: <4140206.u40gNKhatz@wuerfel>
+In-Reply-To: <20151027101820.2d2a1368@xhacker>
+References: <1445857334-6936-1-git-send-email-jszhang@marvell.com> <562E6056.3040203@broadcom.com> <20151027101820.2d2a1368@xhacker>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444677013-3836-1-git-send-email-linux@roeck-us.net>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tuesday 27 October 2015 10:18:20 Jisheng Zhang wrote:
+> On Mon, 26 Oct 2015 10:18:14 -0700 Ray Jui <rjui@broadcom.com> wrote:
+> 
+> > Hi Jisheng,
+> > 
+> > On 10/26/2015 4:02 AM, Jisheng Zhang wrote:
+> > > Inspired by Russell King's patch[1], I found current iproc also has the
+> > > same issue of "reading 32-bits from the command register, modifying the
+> > > command register, and then writing it back has the effect of clearing
+> > > any status bits that were indicating at that time" as pointed out by
+> > > Russell. This patch fix this issue by using the pci_generic_config_write.
+> > >
+> > > [1]http://www.spinics.net/lists/linux-pci/msg44869.html
+> > >
+> > > Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+> > > ---
+> > >   drivers/pci/host/pcie-iproc.c | 2 +-
+> > >   1 file changed, 1 insertion(+), 1 deletion(-)
+> > >
+> > > diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> > > index fe2efb1..0c423f2 100644
+> > > --- a/drivers/pci/host/pcie-iproc.c
+> > > +++ b/drivers/pci/host/pcie-iproc.c
+> > > @@ -111,7 +111,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+> > >   static struct pci_ops iproc_pcie_ops = {
+> > >     .map_bus = iproc_pcie_map_cfg_bus,
+> > >     .read = pci_generic_config_read32,
+> > > -   .write = pci_generic_config_write32,
+> > > +   .write = pci_generic_config_write,
+> > >   };
+> > >
+> > >   static void iproc_pcie_reset(struct iproc_pcie *pcie)
+> > >  
+> > 
+> > I have already confirmed with the ASIC team that the current iProc PCIe 
+> > controller requires 32-bit aligned access into the configuration space 
+> > due to the way how it was integrated into various iProc SoCs including 
+> > NSP, Cygnus, and NS2.
+> > 
+> > This change will prevent the driver from working properly.
+> > 
+> > I've informed our ASIC team about this issue and all future iProc based 
+> > SoCs should be able to support 8-bit, 16-bit access and therefore 
+> > pci_generic_config_write/read can be used for those SoCs.
+>
+> Thanks for the information,
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
----
- pciehp_ctrl.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+We discussed the same issue when the X-gene PCI host driver was first
+reviewed, and someone from APM then clarified that it had the same bug.
 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index ef96a1d..e27a9e2 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -204,7 +204,7 @@ static void pciehp_power_thread(struct work_struct *work)
- 	kfree(info);
- }
- 
--void pciehp_queue_power_work(struct slot *p_slot, int req)
-+static void pciehp_queue_power_work(struct slot *p_slot, int req)
- {
- 	struct power_work_info *info;
- 
+However, I don't know the details about the Tegra implementation, or
+whether the X-Gene bug has been fixed in a newer version of the parts,
+so we need to get confirmation from the respective developers before
+applying any of the patches. If X-gene has been fixed in the meantime,
+we need to make sure we match on the exact product numbers in the
+compatible property so we only do it for the newer ones.
+
+	Arnd
+
