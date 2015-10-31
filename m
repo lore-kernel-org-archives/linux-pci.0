@@ -1,71 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27564 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932606AbbJHVkM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Oct 2015 17:40:12 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v7 17/60] PCI: Claim fixed resource during remove/rescan path
-Date: Thu,  8 Oct 2015 14:38:36 -0700
-Message-Id: <1444340359-8011-18-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-References: <1444340359-8011-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jake Oshins <jakeo@microsoft.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	KY Srinivasan <kys@microsoft.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>, Robo Bot <apw@canonical.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	"tglx@redhat.com" <tglx@redhat.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v5 5/7] PCI: irqdomain: Look up IRQ domain by
+ fwnode_handle
+Date: Sat, 31 Oct 2015 21:59:44 +0000
+Message-ID: <DM2PR0301MB1232168A13870D8B448C88A6AB2E0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+References: <1446239475-49480-1-git-send-email-jakeo@microsoft.com>
+	<1446239475-49480-6-git-send-email-jakeo@microsoft.com>
+ <CAHp75VdSXLRAtgd-HLUhvPDJT6Wx=r2tPQHSFX69Exg9XFJKTQ@mail.gmail.com>
+In-Reply-To: <CAHp75VdSXLRAtgd-HLUhvPDJT6Wx=r2tPQHSFX69Exg9XFJKTQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During driver loading kernel will check if resources get reserved.
-so we need to make sure resources get reserved before pci_bus_add().
-
-On remove/rescan path, we will leave those fixed resource
-not reserved. In that path, We don't call pcibios_resource_survery()
-before pci_assign_unassigned_bus_resources(), and that is intentional
-for us to get new resources for rescan. We do need to use rescan to make
-device get resource allocated while ignoring BIOS allocate resource.
-
-But fixed resources are not allocated via
-pci_assign_unassigned_bus_resources(), so we need to reserve them
-explicitly.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/quirks.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 55bb661..e7e86d3 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -323,6 +323,23 @@ static void quirk_s3_64M(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
- 
-+/* for pci remove and rescan */
-+static void quirk_allocate_fixed(struct pci_dev *dev)
-+{
-+	int i;
-+	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+		struct resource *r = &dev->resource[i];
-+
-+		if (r->parent ||
-+		    !(r->flags & IORESOURCE_PCI_FIXED) ||
-+		    !(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
-+			continue;
-+
-+		pci_claim_resource(dev, i);
-+	}
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID,	PCI_ANY_ID,	quirk_allocate_fixed);
-+
- static void quirk_io(struct pci_dev *dev, int pos, unsigned size,
- 		     const char *name)
- {
--- 
-1.8.4.5
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbmR5IFNoZXZjaGVua28gW21h
+aWx0bzphbmR5LnNoZXZjaGVua29AZ21haWwuY29tXQ0KPiBTZW50OiBGcmlkYXksIE9jdG9iZXIg
+MzAsIDIwMTUgMjo0NCBQTQ0KPiBUbzogSmFrZSBPc2hpbnMgPGpha2VvQG1pY3Jvc29mdC5jb20+
+DQo+IENjOiBHcmVnIEtyb2FoLUhhcnRtYW4gPGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnPjsg
+S1kgU3Jpbml2YXNhbg0KPiA8a3lzQG1pY3Jvc29mdC5jb20+OyBsaW51eC1rZXJuZWxAdmdlci5r
+ZXJuZWwub3JnOw0KPiBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBvbGFmQGFlcGZsZS5k
+ZTsgUm9ibyBCb3QNCj4gPGFwd0BjYW5vbmljYWwuY29tPjsgVml0YWx5IEt1em5ldHNvdiA8dmt1
+em5ldHNAcmVkaGF0LmNvbT47DQo+IHRnbHhAcmVkaGF0LmNvbTsgSGFpeWFuZyBaaGFuZyA8aGFp
+eWFuZ3pAbWljcm9zb2Z0LmNvbT47DQo+IG1hcmMuenluZ2llckBhcm0uY29tOyBCam9ybiBIZWxn
+YWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPjsgbGludXgtDQo+IHBjaUB2Z2VyLmtlcm5lbC5vcmcN
+Cj4gU3ViamVjdDogUmU6IFtQQVRDSCB2NSA1LzddIFBDSTogaXJxZG9tYWluOiBMb29rIHVwIElS
+USBkb21haW4gYnkNCj4gZndub2RlX2hhbmRsZQ0KPiANCj4gT24gRnJpLCBPY3QgMzAsIDIwMTUg
+YXQgMTE6MTEgUE0sICA8amFrZW9AbWljcm9zb2Z0LmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogSmFr
+ZSBPc2hpbnMgPGpha2VvQG1pY3Jvc29mdC5jb20+DQo+ID4NCj4gPiBUaGlzIHBhdGNoIGFkZHMg
+YSBzZWNvbmQgd2F5IG9mIGZpbmRpbmcgYW4gSVJRIGRvbWFpbiBhc3NvY2lhdGVkIHdpdGgNCj4g
+PiBhIHJvb3QgUENJIGJ1cy4gIEFmdGVyIGxvb2tpbmcgdG8gc2VlIGlmIG9uZSBjYW4gYmUgZm91
+bmQgdGhyb3VnaA0KPiA+IHRoZSBPRiB0cmVlLCBpdCBhdHRlbXB0cyB0byBsb29rIHVwIHRoZSBJ
+UlEgZG9tYWluIHRocm91Z2ggYW4NCj4gPiBmd25vZGVfaGFuZGxlIHN0b3JlZCBpbiB0aGUgcGNp
+X3N5c2RhdGEgc3RydWN0Lg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogSmFrZSBPc2hpbnMgPGph
+a2VvQG1pY3Jvc29mdC5jb20+DQo+ID4gLS0tDQo+ID4gIGFyY2gveDg2L2luY2x1ZGUvYXNtL3Bj
+aS5oIHwgIDQgKysrLQ0KPiA+ICBkcml2ZXJzL3BjaS9wcm9iZS5jICAgICAgICB8IDExICsrKysr
+KysrKysrDQo+ID4gIGluY2x1ZGUvYXNtLWdlbmVyaWMvcGNpLmggIHwgIDQgKysrKw0KPiA+ICAz
+IGZpbGVzIGNoYW5nZWQsIDE4IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCj4gPg0KPiA+
+IGRpZmYgLS1naXQgYS9hcmNoL3g4Ni9pbmNsdWRlL2FzbS9wY2kuaCBiL2FyY2gveDg2L2luY2x1
+ZGUvYXNtL3BjaS5oDQo+ID4gaW5kZXggMTAyMTNhMS4uZmI3NDQ1MyAxMDA2NDQNCj4gPiAtLS0g
+YS9hcmNoL3g4Ni9pbmNsdWRlL2FzbS9wY2kuaA0KPiA+ICsrKyBiL2FyY2gveDg2L2luY2x1ZGUv
+YXNtL3BjaS5oDQo+ID4gQEAgLTQ1LDExICs0NSwxMyBAQCBzdGF0aWMgaW5saW5lIGludCBwY2lf
+cHJvY19kb21haW4oc3RydWN0IHBjaV9idXMNCj4gKmJ1cykNCj4gPiAgI2VuZGlmDQo+ID4NCj4g
+PiAgI2lmZGVmIENPTkZJR19QQ0lfTVNJX0lSUV9ET01BSU4NCj4gPiAtc3RhdGljIGlubGluZSB2
+b2lkICpwY2lfZndub2RlKHN0cnVjdCBwY2lfYnVzICpidXMpDQo+ID4gK3N0YXRpYyBpbmxpbmUg
+dm9pZCAqX3BjaV9yb290X2J1c19md25vZGUoc3RydWN0IHBjaV9idXMgKmJ1cykNCj4gDQo+IEkn
+bSBzb3JyeSB3aGF0IGlzIHRoZSBwb2ludCB0byByZW5hbWU/DQo+IA0KDQpJIHJlbmFtZWQgaXQg
+b25seSBiZWNhdXNlIEdlcnJ5IGFza2VkIG1lIHRvIHJlbmFtZSBpdC4gIEFuZCB0aGVuIEkgcmVn
+ZW5lcmF0ZWQgdGhlIHBhdGNoIHNlcmllcyB3aXRoIHRoYXQgcmVuYW1lIHN0aWxsIGluIHRoZSBx
+dWV1ZSwgd2hpY2ggd2FzIGEgbWlzdGFrZS4gIFRoZSB3aG9sZSB0aGluZyBpcyBpbnRyb2R1Y2Vk
+IGluIHRoZSBwcmV2aW91cyBwYXRjaC4gIHBjaV9md25vZGUoKSBkb2Vzbid0IGV4aXN0IHdpdGhv
+dXQgdGhpcyBwYXRjaCBzZXJpZXMuICBJJ2xsIHN0cmFpZ2h0ZW4gdGhhdCBvdXQuDQoNCg0KPiA+
+ICB7DQo+ID4gICAgICAgICBzdHJ1Y3QgcGNpX3N5c2RhdGEgKnNkID0gYnVzLT5zeXNkYXRhOw0K
+PiA+ICAgICAgICAgcmV0dXJuIHNkLT5md25vZGU7DQo+ID4gIH0NCj4gPiArDQo+ID4gKyNkZWZp
+bmUgcGNpX3Jvb3RfYnVzX2Z3bm9kZSAgICBfcGNpX3Jvb3RfYnVzX2Z3bm9kZQ0KPiA+ICAjZW5k
+aWYNCj4gPg0KPiA+ICAvKiBDYW4gYmUgdXNlZCB0byBvdmVycmlkZSB0aGUgbG9naWMgaW4gcGNp
+X3NjYW5fYnVzIGZvciBza2lwcGluZw0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wcm9i
+ZS5jIGIvZHJpdmVycy9wY2kvcHJvYmUuYw0KPiA+IGluZGV4IGY0NDFkMWIuLjYwZTUwYTggMTAw
+NjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvcHJvYmUuYw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNp
+L3Byb2JlLmMNCj4gPiBAQCAtNjcxLDYgKzY3MSwxNyBAQCBzdGF0aWMgc3RydWN0IGlycV9kb21h
+aW4NCj4gKnBjaV9ob3N0X2JyaWRnZV9tc2lfZG9tYWluKHN0cnVjdCBwY2lfYnVzICpidXMpDQo+
+ID4gICAgICAgICAgKi8NCj4gPiAgICAgICAgIGQgPSBwY2lfaG9zdF9icmlkZ2Vfb2ZfbXNpX2Rv
+bWFpbihidXMpOw0KPiA+DQo+ID4gKyNpZmRlZiBDT05GSUdfUENJX01TSV9JUlFfRE9NQUlODQo+
+ID4gKyAgICAgICAvKg0KPiA+ICsgICAgICAgICogSWYgbm8gSVJRIGRvbWFpbiB3YXMgZm91bmQg
+dmlhIHRoZSBPRiB0cmVlLCB0cnkgbG9va2luZyBpdCB1cA0KPiA+ICsgICAgICAgICogZGlyZWN0
+bHkgdGhyb3VnaCB0aGUgZndub2RlX2hhbmRsZS4NCj4gPiArICAgICAgICAqLw0KPiA+ICsgICAg
+ICAgaWYgKCFkICYmIHBjaV9yb290X2J1c19md25vZGUoYnVzKSkgew0KPiA+ICsgICAgICAgICAg
+ICAgICBkID0gaXJxX2ZpbmRfbWF0Y2hpbmdfZndub2RlKHBjaV9yb290X2J1c19md25vZGUoYnVz
+KSwNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBET01B
+SU5fQlVTX1BDSV9NU0kpOw0KPiANCj4gR2F2ZSBhIHNlY29uZCBnbGFuY2UgYW5kIG5vdyBub3Rp
+Y2VkIHRoYXQgeW91IGNhbGwNCj4gcGNpX3Jvb3RfYnVzX2Z3bm9kZSgpIHR3aWNlLiBTbywgaXQg
+YWN0dWFsbHkgbWlnaHQgYmUgbW9yZSByZWFkYWJsZQ0KPiBsaWtlIHlvdXIgZmlyc3QgYnV0IG1v
+ZGlmaWVkIHZhcmlhbnQ6DQo+IA0KPiBpZiAoIWQpIHsNCj4gICB2b2lkICpmd25vZGUgPSBwY2lf
+Zndub2RlKGJ1cyk7DQo+IA0KPiAgIGlmIChmd25vZGUpDQo+ICAgICBkID0gaXJxX2ZpbmRfbWF0
+Y2hpbmdfZndub2RlKGZ3bm9kZSwgRE9NQUlOX0JVU19QQ0lfTVNJKTsNCj4gfQ0KPiANCj4gPiAr
+ICAgICAgIH0NCj4gPiArI2VuZGlmDQo+ID4gKw0KPiA+ICAgICAgICAgcmV0dXJuIGQ7DQo+ID4g
+IH0NCj4gDQo+IA0KPiBXaXRoIEJlc3QgUmVnYXJkcywNCj4gQW5keSBTaGV2Y2hlbmtvDQoNClN1
+cmUuICBObyBwcm9ibGVtLiAgSSdsbCByZXNlbmQuDQoNCi0tIEpha2UNCg==
