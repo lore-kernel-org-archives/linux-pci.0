@@ -1,172 +1,386 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 04/61] sparc/PCI: Reserve legacy mmio after PCI mmio
-Date: Tue, 27 Oct 2015 13:54:56 -0700
-Message-Id: <1445979353-1728-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:34841 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751060AbbKAByE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 Oct 2015 21:54:04 -0400
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Sun, 1 Nov 2015 07:24:01 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 468893940019
+	for <linux-pci@vger.kernel.org>; Sun,  1 Nov 2015 07:23:58 +0530 (IST)
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay02.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA11ru0s5046632
+	for <linux-pci@vger.kernel.org>; Sun, 1 Nov 2015 07:23:57 +0530
+Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA11rtka014379
+	for <linux-pci@vger.kernel.org>; Sun, 1 Nov 2015 07:23:56 +0530
+Date: Sun, 1 Nov 2015 09:53:51 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V10 10/12] powerpc/eeh: Support error recovery for VF PE
+Message-ID: <20151101015351.GA947@Richards-MBP.lan>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1445829362-2738-11-git-send-email-weiyang@linux.vnet.ibm.com>
+ <5632FE30.8040003@ozlabs.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5632FE30.8040003@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On one system found bunch of claim resource fail from pci device.
-pci_sun4v f02b894c: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
-pci_bus 0000:00: root bus resource [mem 0x2000000000000-0x200007effffff] (bus address [0x00000000-0x7effffff])
-pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x20007ffffffff] (bus address [0x100000000-0x7ffffffff])
-...
-PCI: Claiming 0000:00:02.0: Resource 14: 0002000000000000..00020000004fffff [200]
-pci 0000:00:02.0: can't claim BAR 14 [mem 0x2000000000000-0x20000004fffff]: address conflict with Video RAM area [??? 0x20000000a0000-0x20000000bffff flags 0x80000000]
-pci 0000:02:00.0: can't claim BAR 0 [mem 0x2000000000000-0x20000000fffff]: no compatible bridge window
-PCI: Claiming 0000:02:00.0: Resource 3: 0002000000100000..0002000000103fff [200]
-pci 0000:02:00.0: can't claim BAR 3 [mem 0x2000000100000-0x2000000103fff]: no compatible bridge window
-PCI: Claiming 0000:02:00.1: Resource 0: 0002000000200000..00020000002fffff [200]
-pci 0000:02:00.1: can't claim BAR 0 [mem 0x2000000200000-0x20000002fffff]: no compatible bridge window
-PCI: Claiming 0000:02:00.1: Resource 3: 0002000000104000..0002000000107fff [200]
-pci 0000:02:00.1: can't claim BAR 3 [mem 0x2000000104000-0x2000000107fff]: no compatible bridge window
-PCI: Claiming 0000:02:00.2: Resource 0: 0002000000300000..00020000003fffff [200]
-pci 0000:02:00.2: can't claim BAR 0 [mem 0x2000000300000-0x20000003fffff]: no compatible bridge window
-PCI: Claiming 0000:02:00.2: Resource 3: 0002000000108000..000200000010bfff [200]
-pci 0000:02:00.2: can't claim BAR 3 [mem 0x2000000108000-0x200000010bfff]: no compatible bridge window
-PCI: Claiming 0000:02:00.3: Resource 0: 0002000000400000..00020000004fffff [200]
-pci 0000:02:00.3: can't claim BAR 0 [mem 0x2000000400000-0x20000004fffff]: no compatible bridge window
-PCI: Claiming 0000:02:00.3: Resource 3: 000200000010c000..000200000010ffff [200]
-pci 0000:02:00.3: can't claim BAR 3 [mem 0x200000010c000-0x200000010ffff]: no compatible bridge window
+On Fri, Oct 30, 2015 at 04:20:48PM +1100, Alexey Kardashevskiy wrote:
+>On 10/26/2015 02:16 PM, Wei Yang wrote:
+>>Different from PCI bus dependent PE, PE for VFs doesn't have the
+>
+>s/Different from/Unlike/
+>
 
-The bridge 00:02.0 resource does not get reserved as Video RAM take the position early,
-and following children all failed.
+Will change in next version.
 
-Move down Video RAM area reservation after pci mmio get reserved,
-so we leave pci driver to use those regions.
+>
+>>primary bus, on which the PCI hotplug is implemented. The patch
+>>supports error recovery, especially the PCI hotplug for VF's PE.
+>
+>The patch adds support for error recovery of what exactly?
+>What is "especially" about?
+>
 
--v5: merge simplify one and use pcibios_bus_to_resource()
-     and pci_find_root_bus_resource()
+PFs are enumerated on PCI bus, while VFs are created by PF's driver.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- arch/sparc/kernel/pci.c        |  1 +
- arch/sparc/kernel/pci_common.c | 59 ++++++++++++++++++++++--------------------
- arch/sparc/kernel/pci_impl.h   |  1 +
- 3 files changed, 33 insertions(+), 28 deletions(-)
+In EEH recovery, it has two cases.
+1. Device and driver is EEH aware, error handlers are called.
+2. Device and driver is not EEH aware, un-plug the device and plug it again by
+   enumerating it.
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 269630a..0e82584 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -677,6 +677,7 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	pci_bus_register_of_sysfs(bus);
- 
- 	pci_claim_bus_resources(bus);
-+	pci_register_legacy_regions(bus);
- 	pci_bus_add_devices(bus);
- 	return bus;
- }
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 76998f8..09380a5 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -328,41 +328,46 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm)
- 	}
- }
- 
--static void pci_register_legacy_regions(struct resource *io_res,
--					struct resource *mem_res)
-+static void pci_register_region(struct pci_bus *bus, const char *name,
-+				resource_size_t rstart, resource_size_t size)
- {
--	struct resource *p;
-+	struct resource *res, *conflict, *root_bus_res;
-+	struct pci_bus_region region;
- 
--	/* VGA Video RAM. */
--	p = kzalloc(sizeof(*p), GFP_KERNEL);
--	if (!p)
-+	res = kzalloc(sizeof(*res), GFP_KERNEL);
-+	if (!res)
- 		return;
- 
--	p->name = "Video RAM area";
--	p->start = mem_res->start + 0xa0000UL;
--	p->end = p->start + 0x1ffffUL;
--	p->flags = IORESOURCE_BUSY;
--	request_resource(mem_res, p);
-+	res->flags = IORESOURCE_MEM;
- 
--	p = kzalloc(sizeof(*p), GFP_KERNEL);
--	if (!p)
-+	region.start = rstart;
-+	region.end = rstart + size - 1UL;
-+	pcibios_bus_to_resource(bus, res, &region);
-+	root_bus_res = pci_find_root_bus_resource(bus, res);
-+	if (!root_bus_res) {
-+		kfree(res);
- 		return;
-+	}
-+
-+	res->name = name;
-+	res->flags |= IORESOURCE_BUSY;
-+	conflict = request_resource_conflict(root_bus_res, res);
-+	if (conflict) {
-+		dev_printk(KERN_DEBUG, &bus->dev,
-+			" can't claim %s %pR: address conflict with %s %pR\n",
-+			res->name, res, conflict->name, conflict);
-+		kfree(res);
-+	}
-+}
- 
--	p->name = "System ROM";
--	p->start = mem_res->start + 0xf0000UL;
--	p->end = p->start + 0xffffUL;
--	p->flags = IORESOURCE_BUSY;
--	request_resource(mem_res, p);
-+void pci_register_legacy_regions(struct pci_bus *bus)
-+{
-+	/* VGA Video RAM. */
-+	pci_register_region(bus, "Video RAM area", 0xa0000UL, 0x20000UL);
- 
--	p = kzalloc(sizeof(*p), GFP_KERNEL);
--	if (!p)
--		return;
-+	pci_register_region(bus, "System ROM",     0xf0000UL, 0x10000UL);
- 
--	p->name = "Video ROM";
--	p->start = mem_res->start + 0xc0000UL;
--	p->end = p->start + 0x7fffUL;
--	p->flags = IORESOURCE_BUSY;
--	request_resource(mem_res, p);
-+	pci_register_region(bus, "Video ROM",      0xc0000UL,  0x8000UL);
- }
- 
- static void pci_register_iommu_region(struct pci_pbm_info *pbm)
-@@ -504,8 +509,6 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 	if (pbm->mem64_space.flags)
- 		request_resource(&iomem_resource, &pbm->mem64_space);
- 
--	pci_register_legacy_regions(&pbm->io_space,
--				    &pbm->mem_space);
- 	pci_register_iommu_region(pbm);
- }
- 
-diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
-index 2853af7..ff8f5e1 100644
---- a/arch/sparc/kernel/pci_impl.h
-+++ b/arch/sparc/kernel/pci_impl.h
-@@ -167,6 +167,7 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm);
- struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 				 struct device *parent);
- void pci_determine_mem_io_space(struct pci_pbm_info *pbm);
-+void pci_register_legacy_regions(struct pci_bus *bus);
- 
- /* Error reporting support. */
- void pci_scan_for_target_abort(struct pci_pbm_info *, struct pci_bus *);
+The special thing happens on the second case. For a PF, we could use the
+original pci core to enumerate the bus, while for VF, we need to record the VF
+which are un-plugged then plug it again.
+
+>
+>>The hotplug on VF's PE is implemented based on VFs, instead of
+>>PCI bus any more.
+>
+>Needs rephrase.
+>
+>Is this patch about EEH error recovery, i.e. unplug VF, re-plug VF? Why does
+>the commit log talk about PE hotplug? I thought we do VF (i.e. PCI device)
+>hotplug, not PE.
+>
+
+Hmm... unlike the Bus PE for PFs, VF PE is dynamically created and released
+when VFs are created and released.
+
+>
+>>
+>>[gwshan: changelog and code refactoring]
+>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/include/asm/eeh.h   |   1 +
+>>  arch/powerpc/kernel/eeh.c        |   8 ++++
+>>  arch/powerpc/kernel/eeh_driver.c | 100 +++++++++++++++++++++++++++++++--------
+>>  arch/powerpc/kernel/eeh_pe.c     |   3 +-
+>>  4 files changed, 90 insertions(+), 22 deletions(-)
+>>
+>>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>>index 331c856..ea1f13c4 100644
+>>--- a/arch/powerpc/include/asm/eeh.h
+>>+++ b/arch/powerpc/include/asm/eeh.h
+>>@@ -142,6 +142,7 @@ struct eeh_dev {
+>>  	struct pci_controller *phb;	/* Associated PHB		*/
+>>  	struct pci_dn *pdn;		/* Associated PCI device node	*/
+>>  	struct pci_dev *pdev;		/* Associated PCI device	*/
+>>+	int    in_error;		/* Error flag for eeh_dev	*/
+>
+>Make it "bool".
+>
+
+Will change it in next version.
+
+>
+>>  	struct pci_dev *physfn;		/* Associated PF PORT		*/
+>>  	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
+>>  };
+>>diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+>>index af9b597..28e4d73 100644
+>>--- a/arch/powerpc/kernel/eeh.c
+>>+++ b/arch/powerpc/kernel/eeh.c
+>>@@ -1227,6 +1227,14 @@ void eeh_remove_device(struct pci_dev *dev)
+>>  	 * from the parent PE during the BAR resotre.
+>>  	 */
+>>  	edev->pdev = NULL;
+>>+
+>>+	/*
+>>+	 * The flag "in_error" is used to trace EEH devices for VFs
+>>+	 * in error state or not. It's set in eeh_report_error(). If
+>>+	 * it's not set, eeh_report_{reset,resume}() won't be called
+>>+	 * for the VF EEH device.
+>>+	 */
+>>+	edev->in_error = 0;
+>>  	dev->dev.archdata.edev = NULL;
+>>  	if (!(edev->pe->state & EEH_PE_KEEP))
+>>  		eeh_rmv_from_parent_pe(edev);
+>>diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+>>index 89eb4bc..99868e2 100644
+>>--- a/arch/powerpc/kernel/eeh_driver.c
+>>+++ b/arch/powerpc/kernel/eeh_driver.c
+>>@@ -211,6 +211,7 @@ static void *eeh_report_error(void *data, void *userdata)
+>>  	if (rc == PCI_ERS_RESULT_NEED_RESET) *res = rc;
+>>  	if (*res == PCI_ERS_RESULT_NONE) *res = rc;
+>>
+>>+	edev->in_error = 1;
+>>  	eeh_pcid_put(dev);
+>>  	return NULL;
+>>  }
+>>@@ -282,7 +283,8 @@ static void *eeh_report_reset(void *data, void *userdata)
+>>
+>>  	if (!driver->err_handler ||
+>>  	    !driver->err_handler->slot_reset ||
+>>-	    (edev->mode & EEH_DEV_NO_HANDLER)) {
+>>+	    (edev->mode & EEH_DEV_NO_HANDLER) ||
+>>+	    (!edev->in_error)) {
+>>  		eeh_pcid_put(dev);
+>>  		return NULL;
+>>  	}
+>>@@ -339,14 +341,16 @@ static void *eeh_report_resume(void *data, void *userdata)
+>>
+>
+>bood was_in_error = edev->in_error;
+>edev->in_error = false;
+>
+>then use was_in_error below and there is no need to replace return with goto,
+>etc -> slightly simpler code.
+>
+
+Will change it in next version.
+
+>
+>>  	if (!driver->err_handler ||
+>>  	    !driver->err_handler->resume ||
+>>-	    (edev->mode & EEH_DEV_NO_HANDLER)) {
+>>+	    (edev->mode & EEH_DEV_NO_HANDLER) ||
+>>+	    (!edev->in_error)) {
+>>  		edev->mode &= ~EEH_DEV_NO_HANDLER;
+>>-		eeh_pcid_put(dev);
+>>-		return NULL;
+>>+		goto out;
+>>  	}
+>>
+>>  	driver->err_handler->resume(dev);
+>>
+>>+out:
+>>+	edev->in_error = 0;
+>>  	eeh_pcid_put(dev);
+>>  	return NULL;
+>>  }
+>>@@ -386,12 +390,38 @@ static void *eeh_report_failure(void *data, void *userdata)
+>>  	return NULL;
+>>  }
+>>
+>>+static void *eeh_add_virt_device(void *data, void *userdata)
+>>+{
+>>+	struct pci_driver *driver;
+>>+	struct eeh_dev *edev = (struct eeh_dev *)data;
+>>+	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
+>>+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
+>>+
+>>+	if (!(edev->physfn)) {
+>>+		pr_warn("%s: EEH dev %04x:%02x:%02x.%01x not for VF\n",
+>>+			__func__, edev->phb->global_number, pdn->busno,
+>>+			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
+>>+		return NULL;
+>>+	}
+>>+
+>>+	driver = eeh_pcid_get(dev);
+>>+	if (driver) {
+>>+		eeh_pcid_put(dev);
+>>+		if (driver->err_handler)
+>>+			return NULL;
+>>+	}
+>>+
+>>+	pci_iov_virtfn_add(edev->physfn, pdn->vf_index, 0);
+>>+	return NULL;
+>>+}
+>>+
+>>  static void *eeh_rmv_device(void *data, void *userdata)
+>>  {
+>>  	struct pci_driver *driver;
+>>  	struct eeh_dev *edev = (struct eeh_dev *)data;
+>>  	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
+>>  	int *removed = (int *)userdata;
+>>+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
+>>
+>>  	/*
+>>  	 * Actually, we should remove the PCI bridges as well.
+>>@@ -416,7 +446,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
+>>  	driver = eeh_pcid_get(dev);
+>>  	if (driver) {
+>>  		eeh_pcid_put(dev);
+>>-		if (driver->err_handler)
+>>+		if (removed && driver->err_handler)
+>>  			return NULL;
+>>  	}
+>>
+>>@@ -425,11 +455,23 @@ static void *eeh_rmv_device(void *data, void *userdata)
+>>  		 pci_name(dev));
+>>  	edev->bus = dev->bus;
+>>  	edev->mode |= EEH_DEV_DISCONNECTED;
+>>-	(*removed)++;
+>>+	if (removed)
+>>+		(*removed)++;
+>>
+>>-	pci_lock_rescan_remove();
+>>-	pci_stop_and_remove_bus_device(dev);
+>>-	pci_unlock_rescan_remove();
+>>+	if (edev->physfn) {
+>>+		pci_iov_virtfn_remove(edev->physfn, pdn->vf_index, 0);
+>>+		edev->pdev = NULL;
+>>+
+>>+		/*
+>>+		 * We have to set the VF PE number to invalid one, which is
+>>+		 * required to plug the VF successfully.
+>>+		 */
+>>+		pdn->pe_number = IODA_INVALID_PE;
+>>+	} else {
+>>+		pci_lock_rescan_remove();
+>>+		pci_stop_and_remove_bus_device(dev);
+>>+		pci_unlock_rescan_remove();
+>>+	}
+>>
+>>  	return NULL;
+>>  }
+>>@@ -548,6 +590,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+>>  	struct pci_bus *frozen_bus = eeh_pe_bus_get(pe);
+>>  	struct timeval tstamp;
+>>  	int cnt, rc, removed = 0;
+>>+	struct eeh_dev *edev;
+>>
+>>  	/* pcibios will clear the counter; save the value */
+>>  	cnt = pe->freeze_count;
+>>@@ -561,12 +604,15 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+>>  	 */
+>>  	eeh_pe_state_mark(pe, EEH_PE_KEEP);
+>>  	if (bus) {
+>>-		pci_lock_rescan_remove();
+>>-		pcibios_remove_pci_devices(bus);
+>>-		pci_unlock_rescan_remove();
+>>-	} else if (frozen_bus) {
+>>+		if (pe->type & EEH_PE_VF)
+>>+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
+>
+>
+>I believe the rule is that if one branch of "if" uses curly braces, then the
+>other should have them too.
+>
+
+Thanks for reminding, will fix it in next version.
+
+>
+>>+		else {
+>>+			pci_lock_rescan_remove();
+>>+			pcibios_remove_pci_devices(bus);
+>>+			pci_unlock_rescan_remove();
+>>+		}
+>>+	} else if (frozen_bus)
+>>  		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
+>>-	}
+>>
+>>  	/*
+>>  	 * Reset the pci controller. (Asserts RST#; resets config space).
+>>@@ -607,14 +653,22 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+>>  		 * PE. We should disconnect it so the binding can be
+>>  		 * rebuilt when adding PCI devices.
+>>  		 */
+>>+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
+>>  		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
+>>-		pcibios_add_pci_devices(bus);
+>>+		if (pe->type & EEH_PE_VF)
+>
+>Move "edev = list_first_entry(&pe->edevs, struct eeh_dev, list)" here. You
+>could actually do:
+>
+>eeh_add_virt_device(list_first_entry(&pe->edevs, struct eeh_dev, list), NULL);
+>
+>and drop local variable @edev. Or move it to this scope. Dunno.
+>
+
+Hmm... as I know, in eeh_pe_detach_dev() will remove the edev from pe's edevs
+list. 
+
+>
+>>+			eeh_add_virt_device(edev, NULL);
+>>+		else
+>>+			pcibios_add_pci_devices(bus);
+>>  	} else if (frozen_bus && removed) {
+>>  		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
+>>  		ssleep(5);
+>>
+>>+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
+>>  		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
+>>-		pcibios_add_pci_devices(frozen_bus);
+>>+		if (pe->type & EEH_PE_VF)
+>
+>
+>The same comment as above.
+>
+>>+			eeh_add_virt_device(edev, NULL);
+>>+		else
+>>+			pcibios_add_pci_devices(frozen_bus);
+>>  	}
+>>  	eeh_pe_state_clear(pe, EEH_PE_KEEP);
+>>
+>>@@ -792,11 +846,15 @@ perm_error:
+>>  	 * the their PCI config any more.
+>>  	 */
+>>  	if (frozen_bus) {
+>>-		eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
+>>-
+>>-		pci_lock_rescan_remove();
+>>-		pcibios_remove_pci_devices(frozen_bus);
+>>-		pci_unlock_rescan_remove();
+>>+		if (pe->type & EEH_PE_VF) {
+>>+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
+>>+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
+>>+		} else {
+>>+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
+>>+			pci_lock_rescan_remove();
+>>+			pcibios_remove_pci_devices(frozen_bus);
+>>+			pci_unlock_rescan_remove();
+>>+		}
+>>  	}
+>>  }
+>>
+>>diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+>>index 260a701..5cde950 100644
+>>--- a/arch/powerpc/kernel/eeh_pe.c
+>>+++ b/arch/powerpc/kernel/eeh_pe.c
+>>@@ -914,7 +914,8 @@ struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe)
+>>  	if (pe->type & EEH_PE_PHB) {
+>>  		bus = pe->phb->bus;
+>>  	} else if (pe->type & EEH_PE_BUS ||
+>>-		   pe->type & EEH_PE_DEVICE) {
+>>+		   pe->type & EEH_PE_DEVICE ||
+>>+		   pe->type & EEH_PE_VF) {
+>>  		if (pe->bus) {
+>>  			bus = pe->bus;
+>>  			goto out;
+>>
+>
+>
+>-- 
+>Alexey
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-1.8.4.5
+Richard Yang
+Help you, Help me
 
