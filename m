@@ -1,69 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:9386 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754332AbbKLM2y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 07:28:54 -0500
-Date: Thu, 12 Nov 2015 20:24:28 +0800
-From: Jisheng Zhang <jszhang@marvell.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-arm-kernel@lists.infradead.org>, <wangzhou1@hisilicon.com>,
-	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: hisi: Fix Section mismatch compilation warning for
- probe()
-Message-ID: <20151112202428.3c1cefc8@xhacker>
-In-Reply-To: <4599031.EERjkvxHAA@wuerfel>
-References: <1447329728-1589-1-git-send-email-jszhang@marvell.com>
-	<4599031.EERjkvxHAA@wuerfel>
+Received: from mail-bn1bon0073.outbound.protection.outlook.com ([157.56.111.73]:6272
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751914AbbKBPwF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 2 Nov 2015 10:52:05 -0500
+Subject: Re: [PATCH V5 1/9] ACPI: Honor ACPI _CCA attribute setting
+To: Hanjun Guo <hanjun.guo@linaro.org>,
+	Dennis Chen <dennis.chen@arm.com>, <bhelgaas@google.com>,
+	<rjw@rjwysocki.net>, <lenb@kernel.org>, <catalin.marinas@arm.com>,
+	<will.deacon@arm.com>
+References: <20151102040224.GA16979@arm.org> <56374FF7.6050008@linaro.org>
+CC: <thomas.lendacky@amd.com>, <herbert@gondor.apana.org.au>,
+	<davem@davemloft.net>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <jeremy.linton@arm.com>,
+	<robh+dt@kernel.org>
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Message-ID: <56378692.9060208@amd.com>
+Date: Mon, 2 Nov 2015 09:51:46 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <56374FF7.6050008@linaro.org>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 12 Nov 2015 13:21:02 +0100
-Arnd Bergmann <arnd@arndb.de> wrote:
+Hi Dennis / Hanjun,
 
-> On Thursday 12 November 2015 20:02:08 Jisheng Zhang wrote:
-> > Following compilation warning occurs when compiled with:
-> > CONFIG_DEBUG_SECTION_MISMATCH=y
-> > 
-> >  WARNING: drivers/pci/host/built-in.o(.data+0x308): Section mismatch in
-> >  reference from the variable hisi_pcie_driver to the function
-> >  .init.text:hisi_pcie_probe()
-> > 
-> > Fix it by dropping __init from hisi_pcie_probe().  
-> 
-> The patch description should ideally say what the impact is here, not
-> only what the warning says.
-> 
-> > Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
-> > Fixes: 500a1d9a43e0 ("PCI: hisi: Add HiSilicon SoC Hip05 PCIe driver")
-> > ---
-> >  drivers/pci/host/pcie-hisi.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-> > index 35457ec..1cc0a21 100644
-> > --- a/drivers/pci/host/pcie-hisi.c
-> > +++ b/drivers/pci/host/pcie-hisi.c
-> > @@ -139,7 +139,7 @@ static int __init hisi_add_pcie_port(struct pcie_port *pp,
-> >         return 0;
-> >  }
-> >  
-> > -static int __init hisi_pcie_probe(struct platform_device *pdev)
-> > +static int hisi_pcie_probe(struct platform_device *pdev)
-> >  {
-> >         struct hisi_pcie *hisi_pcie;
-> >         struct pcie_port *pp;  
-> 
-> This seems incomplete, you now get a new warning about hisi_add_pcie_port().
+On 11/2/2015 5:58 AM, Hanjun Guo wrote:
+> Hi Dennis,
+>
+> On 11/02/2015 12:02 PM, Dennis Chen wrote:
+>> On Thu, Oct 29, 2015 at 6:50 AM, Suravee Suthikulpanit
+>> <Suravee.Suthikulpanit@amd.com> wrote:
+>>> From: Jeremy Linton <jeremy.linton@arm.com>
+>>>
+>>> ACPI configurations can now mark devices as noncoherent,
+>>> support that choice.
+>>>
+>>> NOTE: This is required to support USB on ARM Juno Development Board.
+>>>
+>>> Signed-off-by: Jeremy Linton <jeremy.linton@arm.com>
+>>> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>>> CC: Catalin Marinas <catalin.marinas@arm.com>
+>>> CC: Rob Herring <robh+dt@kernel.org>
+>>> CC: Will Deacon <will.deacon@arm.com>
+>>> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+>>> ---
+>>>   include/acpi/acpi_bus.h | 5 +++--
+>>>   1 file changed, 3 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+>>> index d11eff8..0f131d2 100644
+>>> --- a/include/acpi/acpi_bus.h
+>>> +++ b/include/acpi/acpi_bus.h
+>>> @@ -407,7 +407,7 @@ static inline bool acpi_check_dma(struct
+>>> acpi_device *adev, bool *coherent)
+>>>        * case 1. Do not support and disable DMA.
+>>>        * case 2. Support but rely on arch-specific cache maintenance for
+>>>        *         non-coherence DMA operations.
+>>> -     * Currently, we implement case 1 above.
+>>> +     * Currently, we implement case 2 above.
+>>>        *
+>>>        * For the case when _CCA is missing (i.e. cca_seen=0) and
+>>>        * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
+>>> @@ -415,7 +415,8 @@ static inline bool acpi_check_dma(struct
+>>> acpi_device *adev, bool *coherent)
+>>>        *
+>>>        * See acpi_init_coherency() for more info.
+>>>        */
+>>> -    if (adev->flags.coherent_dma) {
+>>> +    if (adev->flags.coherent_dma ||
+>>> +        (adev->flags.cca_seen && IS_ENABLED(CONFIG_ARM64))) {
+>>>           ret = true;
+>>>           if (coherent)
+>>>               *coherent = adev->flags.coherent_dma;
+>>
+>> Hi Suravee,
+>>
+>> The acpi_check_dma function has been removed in patch 6 of this patch
+>> set, why it is still be used
+>> here, am I missing something? If the acpi_check_dma will be used in
+>> the future, personally I'd like
+>
+> I think this patch just to let people know that there is
+> case that arch-specific cache maintenance is still needed
+> for ACPI (such as Juno board), and in the later patches will
+> cover this case.
+>
+> acpi_check_dma() will be replaced by acpi_get_dma_attr(),
+> and in acpi_get_dma_attr() will cover that case and will
+> be easily understood. (Suravee, correct me if I'm wrong :) )
 
-oops, yes. Thanks.
+Thanks Hanjun for filling in the info.
 
-> 
-> I did a similar patch yesterday, will follow up with my version.
+Yes, this is mainly to document the logic changes required by Juno, 
+which would be more clear than just merging this change in the later patch.
 
-Your version is completed.
+>> to use IS_ENABLED(CONFIG_ACPI_CCA_REQUIRED) while not CONFIG_ARM64
+>> macro here,
+
+We could have used CONFIG_ACPI_CCA_REQUIRED here, but this will be 
+replaced by logic in patch 5, and removed in patch 6 anyways. So, I 
+think it is okay. Eventually, the rest of the logic will be using 
+CONFIG_ACPI_CCA_REQUIRED.
+
+or since _CCA attribute
+>> is arch-specific, it's reasonable to leave the _CCA handling policy to
+>> the arch-specific code. For example,
+>> with a link weak function like acpi_arch_check_dma() as a default
+>> handling if no arch-specific code
+>> provided, the actual _CCA handling will be implemented in the ARM,
+>> Intel or other Arch if required.
+>
+> Actually Intel platform don't need _CCA and it's coherent
+> in default, since _CCA is in ACPI spec, I would like it's
+> handled in ACPI core.
+>
+> Thanks
+> Hanjun
+
+I also agree with Hanjun that the CCA parsing should be handled by the 
+ACPI core driver. Since we are using the CONFIG_ACPI_CCA_REQUIRED, we 
+should not need to have arch-specific code. If the ACPI spec gets more 
+complicate in the future, we can revisit this. :)
 
 Thanks,
-Jisheng
+Suravee
+
