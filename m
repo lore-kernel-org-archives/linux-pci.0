@@ -1,125 +1,187 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:18295 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751760AbbKJPwn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Nov 2015 10:52:43 -0500
-Date: Tue, 10 Nov 2015 16:52:33 +0100
-From: Thierry Reding <treding@nvidia.com>
-To: Phil Edworthy <phil.edworthy@renesas.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
-Message-ID: <20151110155232.GA25368@ulmo.nvidia.com>
-References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>
- <PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151109161115.GA13870@ulmo.nvidia.com>
- <PS1PR06MB1180111D6423287273B64B0FF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+Received: from e28smtp09.in.ibm.com ([122.248.162.9]:55174 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751903AbbKBHon (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2015 02:44:43 -0500
+Received: from /spool/local
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 2 Nov 2015 13:14:39 +0530
+Date: Mon, 2 Nov 2015 15:28:16 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alexander Duyck <aduyck@mirantis.com>,
+	linux-pci@vger.kernel.org, Ethan Zhao <ethan.zhao@oracle.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/7] PCI: Set SR-IOV NumVFs to zero after enumeration
+Message-ID: <20151102072816.GA1120@richards-mbp.cn.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20151029222254.11908.78884.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20151030034821.GB3551@richards-mbp.cn.ibm.com>
+ <56338F84.8070300@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <PS1PR06MB1180111D6423287273B64B0FF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="r5Pyd7+fXNt84Ff3"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56338F84.8070300@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---r5Pyd7+fXNt84Ff3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Fri, Oct 30, 2015 at 08:40:52AM -0700, Alexander Duyck wrote:
+>On 10/29/2015 08:48 PM, Wei Yang wrote:
+>>On Thu, Oct 29, 2015 at 05:22:54PM -0500, Bjorn Helgaas wrote:
+>>>ines: 115
+>>>
+>>>From: Alexander Duyck <aduyck@mirantis.com>
+>>>
+>>>The enumeration path should leave NumVFs set to zero.  But after
+>>>4449f079722c ("PCI: Calculate maximum number of buses required for VFs"),
+>>>we call virtfn_max_buses() in the enumeration path, which changes NumVFs.
+>>>This NumVFs change is visible via lspci and sysfs until a driver enables
+>>>SR-IOV.
+>>>
+>>>Iterate from TotalVFs down to zero so NumVFs is zero when we're finished
+>>>computing the maximum number of buses.  Validate offset and stride in
+>>>the loop, so we can test it at every possible NumVFs setting.  Rename
+>>>virtfn_max_buses() to compute_max_vf_buses() to hint that it does have a
+>>>side effect of updating iov->max_VF_buses.
+>>>
+>>>[bhelgaas: changelog, rename, allow numVF==1 && stride==0, rework loop,
+>>>reverse sense of error path]
+>>>Fixes: 4449f079722c ("PCI: Calculate maximum number of buses required for VFs")
+>>>Based-on-patch-by: Ethan Zhao <ethan.zhao@oracle.com>
+>>>Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+>>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>---
+>>>drivers/pci/iov.c |   41 ++++++++++++++++++++++-------------------
+>>>1 file changed, 22 insertions(+), 19 deletions(-)
+>>>
+>>>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>>>index 0cdb2d1..1b1acc2 100644
+>>>--- a/drivers/pci/iov.c
+>>>+++ b/drivers/pci/iov.c
+>>>@@ -54,24 +54,29 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+>>>  * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
+>>>  * determine how many additional bus numbers will be consumed by VFs.
+>>>  *
+>>>- * Iterate over all valid NumVFs and calculate the maximum number of bus
+>>>- * numbers that could ever be required.
+>>>+ * Iterate over all valid NumVFs, validate offset and stride, and calculate
+>>>+ * the maximum number of bus numbers that could ever be required.
+>>>  */
+>>>-static inline u8 virtfn_max_buses(struct pci_dev *dev)
+>>>+static int compute_max_vf_buses(struct pci_dev *dev)
+>>>{
+>>>	struct pci_sriov *iov = dev->sriov;
+>>>-	int nr_virtfn;
+>>>-	u8 max = 0;
+>>>-	int busnr;
+>>>+	int nr_virtfn, busnr, rc = 0;
+>>>
+>>>-	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
+>>>+	for (nr_virtfn = iov->total_VFs; nr_virtfn; nr_virtfn--) {
+>>Hmm... I agree to iterate the nr_virtfn from total_VFs to 0, which keep the
+>>original logic, before my patch.
+>>
+>>
+>>>		pci_iov_set_numvfs(dev, nr_virtfn);
+>>>+		if (!iov->offset || (nr_virtfn > 1 && !iov->stride)) {
+>>                                      ^^^
+>>
+>>Should be this?
+>>                 if (!iov->offset || (iov->total_VFs > 1 && !iov->stride))
+>
+>The problem is the spec says stride and offset can change depending on the
+>value of NumVFs.  We end up testing all values from TotalVFs to 1.  The spec
+>states that stride is unused if NumVFs is 1, not TotalVFs.
+>
 
-On Mon, Nov 09, 2015 at 06:01:49PM +0000, Phil Edworthy wrote:
-> Hi Thierry,
->=20
-> On 09 November 2015 17:24, Phil wrote:
-> > On 09 November 2015 16:11, Thierry wrote:
-> > > On Mon, Nov 09, 2015 at 03:20:24PM +0000, Phil Edworthy wrote:
-> > > > cc'ing others (Tegra, Altera, Designware) who may have the same bug
-> > > >
-> > > > On 03 November 2015 09:28, Phil Edworthy wrote:
-> > > > > The OF node passed to irq_domain_add_linear() should be a
-> > > > > pointer to interrupt controller's device tree node, or NULL,
-> > > > > but not the PCI controller's node.
-> > > > >
-> > > > > This fixes an oops in msi_domain_alloc_irqs() when it tries
-> > > > > to call msi_check().
-> > > > >
-> > > > > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > > > > ---
-> > > > >  drivers/pci/host/pcie-rcar.c | 2 +-
-> > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > >
-> > > > > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie=
--rcar.c
-> > > > > index 2377bf0..c6fa562 100644
-> > > > > --- a/drivers/pci/host/pcie-rcar.c
-> > > > > +++ b/drivers/pci/host/pcie-rcar.c
-> > > > > @@ -709,7 +709,7 @@ static int rcar_pcie_enable_msi(struct rcar_p=
-cie
-> > *pcie)
-> > > > >  	msi->chip.setup_irq =3D rcar_msi_setup_irq;
-> > > > >  	msi->chip.teardown_irq =3D rcar_msi_teardown_irq;
-> > > > >
-> > > > > -	msi->domain =3D irq_domain_add_linear(pcie->dev->of_node,
-> > > > > INT_PCI_MSI_NR,
-> > > > > +	msi->domain =3D irq_domain_add_linear(NULL, INT_PCI_MSI_NR,
-> > > > >  					    &msi_domain_ops, &msi->chip);
-> > > > >  	if (!msi->domain) {
-> > > > >  		dev_err(&pdev->dev, "failed to create IRQ domain\n");
-> > >
-> > > On Tegra the PCI controller is in fact the interrupt controller for
-> > > MSIs. And looking at the code here it seems like the same would apply=
- to
-> > > RCAR.
-> > Yes you are correct here.
-> >=20
-> > > I'm also slightly confused as to why this would cause ->msi_check() to
-> > > fail. The default implementation (msi_domain_ops_check()) doesn't do
-> > > anything.
-> > >
-> > > Also, how is passing in NULL instead of a valid struct device_node *
-> > > going to prevent an oops? Perhaps this is one of those reference count
-> > > imbalance bugs that have recently been showing up?
-> > On arm64 (previously I didn't realise this just affects arm64, not arm),
-> > the changes in commit f075915ac0b11 ("PCI/MSI: Drop domain field from
-> > msi_controller") and d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use
-> > struct device::msi_domain") return an uninitialized msi domain that lea=
-ds
-> > to the oops. It appears that these changes assume that msi interrupt
-> > controller is separate from the PCI controller.
-> More accurately, when CONFIG_GENERIC_MSI_IRQ_DOMAIN is enabled,
-> pci_msi_get_domain() calls dev_get_msi_domain() and at this point
-> dev->msi_domain is uninitialized.
+Yes, I checked the SPEC again, and found this change is correct.
 
-Marc, any idea what's going on here?
+>>
+>>>+			rc = -EIO;
+>>>+			goto out;
+>>>+		}
+>>>+
+>>>		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+>>>-		if (busnr > max)
+>>>-			max = busnr;
+>>>+		if (busnr > iov->max_VF_buses)
+>>>+			iov->max_VF_buses = busnr;
+>>>	}
+>>>
+>>>-	return max;
+>>>+out:
+>>>+	pci_iov_set_numvfs(dev, 0);
+>>>+	return rc;
+>>>}
+>>>
+>>>static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+>>>@@ -384,7 +389,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>>>	int rc;
+>>>	int nres;
+>>>	u32 pgsz;
+>>>-	u16 ctrl, total, offset, stride;
+>>>+	u16 ctrl, total;
+>>>	struct pci_sriov *iov;
+>>>	struct resource *res;
+>>>	struct pci_dev *pdev;
+>>>@@ -410,11 +415,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>>>
+>>>found:
+>>>	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+>>>-	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
+>>>-	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
+>>>-	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
+>>>-	if (!offset || (total > 1 && !stride))
+>>>-		return -EIO;
+>>>
+>>Original code will return when it found this condition, so that we don't need
+>>to bother to do those initialization and then fall back.
+>>
+>>So I suggest to keep it here.
+>
+>The problem is this code isn't valid as per the spec.  The offset and stride
+>are considered unused when numvfs is 0.  That is why this has to be dropped.
+>
+>>>	pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
+>>>	if (!total)
+>>>@@ -456,8 +456,6 @@ found:
+>>>	iov->nres = nres;
+>>>	iov->ctrl = ctrl;
+>>>	iov->total_VFs = total;
+>>>-	iov->offset = offset;
+>>>-	iov->stride = stride;
+>>>	iov->pgsz = pgsz;
+>>>	iov->self = dev;
+>>>	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+>>>@@ -474,10 +472,15 @@ found:
+>>>
+>>>	dev->sriov = iov;
+>>>	dev->is_physfn = 1;
+>>>-	iov->max_VF_buses = virtfn_max_buses(dev);
+>>>+	rc = compute_max_vf_buses(dev);
+>>>+	if (rc)
+>>>+		goto fail_max_buses;
+>>>
+>>>	return 0;
+>>>
+>>>+fail_max_buses:
+>>>+	dev->sriov = NULL;
+>>The dev->sriov is allocated with kzalloc(), seems we forget to release it?
+>
+>No, if you check at the end of the function we release it via a kfree(iov).
+>
 
-Thierry
+Right.
 
---r5Pyd7+fXNt84Ff3
-Content-Type: application/pgp-signature; name="signature.asc"
+>>>+	dev->is_physfn = 0;
+>>>failed:
+>>>	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>>>		res = &dev->resource[i + PCI_IOV_R
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+-- 
+Richard Yang
+Help you, Help me
 
-iQIcBAABCAAGBQJWQhK9AAoJEN0jrNd/PrOhsn0P/Ao6ATgKz8HwakJZIF9fNTo3
-yc+zFz8D6aIxc0IpnWpfe6072KNrKxBBW4filUUqYj50vPIS4KJlXfxOUtRLAuN5
-JbMaIeLdxhas8BApZvmFjKhu/FoOxunr/4v8q5o7bZgE1ctGX0i1uumc3Db8MHVk
-Go9vJLO+4h047BhfapxzwmhfD/GM2NdcB8WCGxPvIFAVbxBmSZNDblXx4P/osonA
-u3AAf+BZntKIoKOwqVjyK2yfob+b491rNnJ2oSNQf1GPqEAD2kJeDz+NbcZimF/a
-vwJjDGJekxDmBRgh4XI0x1skgx5NALXPmZ7S2tcBUg+ffLbDex5Yy5aFpvB4un5G
-HxFLa/DksUcXwDL5IyVHezuLJ9xGTpwlvKHLOrfcMaGHrlko6358vjl08kI1J6EC
-8Hn8vgYU+HWlAkyPKAn0uo8My9veVK5TUhEBBqQOcD/+HWbyOH6kFyAzgPW4pLUs
-CfatDQdx7ubJuN7Qvk2xVqcLVMgwY05zoWbvccaVQCFXxha9Mtcl8fxae/2OlTNq
-tKvTh0VnWtSFGeV40R/PuZ0sHa+oqyR/+f0ZHoRJFRHXYSgCS+uQX8qNq+mUpBuA
-+o93g5dVu4CbRcx66aC+OsbPbPmc3G7YNgSU/LOl1XcOyftXNWdu9RioQAbFnvyo
-7RIvi7qmEk5yqx+HvoQf
-=u1ij
------END PGP SIGNATURE-----
-
---r5Pyd7+fXNt84Ff3--
