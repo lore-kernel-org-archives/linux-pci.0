@@ -1,265 +1,362 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:33366 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032921AbbKFKTI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Nov 2015 05:19:08 -0500
-Received: by lbbkw15 with SMTP id kw15so48538717lbb.0
-        for <linux-pci@vger.kernel.org>; Fri, 06 Nov 2015 02:19:06 -0800 (PST)
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
- <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
- <563B65EE.7000406@semihalf.com> <20151105181959.GA352@red-moon>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <563C7E90.5080403@semihalf.com>
-Date: Fri, 6 Nov 2015 11:18:56 +0100
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:50064 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751275AbbKBWqX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2015 17:46:23 -0500
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 3 Nov 2015 08:46:21 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 3B8D72CE8052
+	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2015 09:46:16 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA2Mk18O20971640
+	for <linux-pci@vger.kernel.org>; Tue, 3 Nov 2015 09:46:10 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA2MjgU0023009
+	for <linux-pci@vger.kernel.org>; Tue, 3 Nov 2015 09:45:43 +1100
+Date: Tue, 3 Nov 2015 06:45:01 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V10 08/12] powerpc/powernv: Support EEH reset for VF PE
+Message-ID: <20151102224501.GA1425@Richards-MBP.lan>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1445829362-2738-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1445829362-2738-9-git-send-email-weiyang@linux.vnet.ibm.com>
+ <5632EDE8.2010601@ozlabs.ru>
+ <20151030071806.GE5940@richards-mbp.cn.ibm.com>
+ <563324B1.7040009@ozlabs.ru>
 MIME-Version: 1.0
-In-Reply-To: <20151105181959.GA352@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <563324B1.7040009@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05.11.2015 19:19, Lorenzo Pieralisi wrote:
-> On Thu, Nov 05, 2015 at 03:21:34PM +0100, Tomasz Nowicki wrote:
->> On 14.10.2015 08:29, Jiang Liu wrote:
+On Fri, Oct 30, 2015 at 07:05:05PM +1100, Alexey Kardashevskiy wrote:
+>On 10/30/2015 06:18 PM, Wei Yang wrote:
+>>On Fri, Oct 30, 2015 at 03:11:20PM +1100, Alexey Kardashevskiy wrote:
+>>>On 10/26/2015 02:15 PM, Wei Yang wrote:
+>>>>PEs for VFs don't have primary bus. So they have to have their own reset
+>>>>backend, which is used during EEH recovery. The patch implements the reset
+>>>>backend for VF's PE by issuing FLR or AF FLR to the VFs, which are contained
+>>>>in the PE.
+>>>>
+>>>>[gwshan: changelog and code refactoring]
+>>>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>>>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>>>---
+>>>>  arch/powerpc/include/asm/eeh.h               |   1 +
+>>>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 134 ++++++++++++++++++++++++++-
+>>>>  2 files changed, 134 insertions(+), 1 deletion(-)
+>>>>
+>>>>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>>>>index ec21f8f..331c856 100644
+>>>>--- a/arch/powerpc/include/asm/eeh.h
+>>>>+++ b/arch/powerpc/include/asm/eeh.h
+>>>>@@ -136,6 +136,7 @@ struct eeh_dev {
+>>>>  	int pcix_cap;			/* Saved PCIx capability	*/
+>>>>  	int pcie_cap;			/* Saved PCIe capability	*/
+>>>>  	int aer_cap;			/* Saved AER capability		*/
+>>>>+	int af_cap;			/* Saved AF capability		*/
+>>>>  	struct eeh_pe *pe;		/* Associated PE		*/
+>>>>  	struct list_head list;		/* Form link list in the PE	*/
+>>>>  	struct pci_controller *phb;	/* Associated PHB		*/
+>>>>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>>>index cfd55dd..017cd72 100644
+>>>>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>>>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>>>@@ -404,6 +404,7 @@ static void *pnv_eeh_probe(struct pci_dn *pdn, void *data)
+>>>>  	edev->pcix_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_PCIX);
+>>>>  	edev->pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
+>>>>  	edev->aer_cap  = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
+>>>>+	edev->af_cap   = pnv_eeh_find_cap(pdn, PCI_CAP_ID_AF);
+>>>>  	if ((edev->class_code >> 8) == PCI_CLASS_BRIDGE_PCI) {
+>>>>  		edev->mode |= EEH_DEV_BRIDGE;
+>>>>  		if (edev->pcie_cap) {
+>>>>@@ -893,6 +894,127 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>>>  	return 0;
+>>>>  }
+>>>>
+>>>>+static void pnv_eeh_wait_for_pending(struct pci_dn *pdn, int pos,
+>>>>+				     u16 mask, bool af_flr_rst)
 >
-> [...]
+>Missed this - @af_flr_rst is only used for warnings so better do:
+>s/bool af_flr_rst/const char *reset_type/
+>to make it explicit.
 >
->>> +static void acpi_pci_root_validate_resources(struct device *dev,
->>> +					     struct list_head *resources,
->>> +					     unsigned long type)
->>> +{
->>> +	LIST_HEAD(list);
->>> +	struct resource *res1, *res2, *root = NULL;
->>> +	struct resource_entry *tmp, *entry, *entry2;
->>> +
->>> +	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
->>> +	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
->>> +
->>> +	list_splice_init(resources, &list);
->>> +	resource_list_for_each_entry_safe(entry, tmp, &list) {
->>> +		bool free = false;
->>> +		resource_size_t end;
->>> +
->>> +		res1 = entry->res;
->>> +		if (!(res1->flags & type))
->>> +			goto next;
->>> +
->>> +		/* Exclude non-addressable range or non-addressable portion */
->>> +		end = min(res1->end, root->end);
->>> +		if (end <= res1->start) {
->>> +			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
->>> +				 res1);
->>> +			free = true;
->>> +			goto next;
->>> +		} else if (res1->end != end) {
->>> +			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
->>> +				 res1, (unsigned long long)end + 1,
->>> +				 (unsigned long long)res1->end);
->>> +			res1->end = end;
->>> +		}
->>> +
->>> +		resource_list_for_each_entry(entry2, resources) {
->>> +			res2 = entry2->res;
->>> +			if (!(res2->flags & type))
->>> +				continue;
->>> +
->>> +			/*
->>> +			 * I don't like throwing away windows because then
->>> +			 * our resources no longer match the ACPI _CRS, but
->>> +			 * the kernel resource tree doesn't allow overlaps.
->>> +			 */
->>> +			if (resource_overlaps(res1, res2)) {
->>> +				res2->start = min(res1->start, res2->start);
->>> +				res2->end = max(res1->end, res2->end);
->>> +				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
->>> +					 res2, res1);
->>> +				free = true;
->>> +				goto next;
->>> +			}
->>> +		}
->>> +
->>> +next:
->>> +		resource_list_del(entry);
->>> +		if (free)
->>> +			resource_list_free_entry(entry);
->>> +		else
->>> +			resource_list_add_tail(entry, resources);
->>> +	}
->>> +}
->>> +
->>> +int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
->>> +{
->>> +	int ret;
->>> +	struct list_head *list = &info->resources;
->>> +	struct acpi_device *device = info->bridge;
->>> +	struct resource_entry *entry, *tmp;
->>> +	unsigned long flags;
->>> +
->>> +	flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT;
->>> +	ret = acpi_dev_get_resources(device, list,
->>> +				     acpi_dev_filter_resource_type_cb,
->>> +				     (void *)flags);
->>> +	if (ret < 0)
->>> +		dev_warn(&device->dev,
->>> +			 "failed to parse _CRS method, error code %d\n", ret);
->>> +	else if (ret == 0)
->>> +		dev_dbg(&device->dev,
->>> +			"no IO and memory resources present in _CRS\n");
->>> +	else {
->>> +		resource_list_for_each_entry_safe(entry, tmp, list) {
->>> +			if (entry->res->flags & IORESOURCE_DISABLED)
->>> +				resource_list_destroy_entry(entry);
->>> +			else
->>> +				entry->res->name = info->name;
->>> +		}
->>> +		acpi_pci_root_validate_resources(&device->dev, list,
->>> +						 IORESOURCE_MEM);
->>> +		acpi_pci_root_validate_resources(&device->dev, list,
->>> +						 IORESOURCE_IO);
+
+Looks good, will change in next version.
+
+>
+>>>>+{
+>>>>+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+>>>>+	int status, i;
+>>>>+
+>>>>+	/* Wait for Transaction Pending bit to be cleared */
+>>>>+	for (i = 0; i < 4; i++) {
+>>>>+		eeh_ops->read_config(pdn, pos, 2, &status);
+>>>
+>>>
+>>>gcc should have complained on using uninitialized @status here.
+>>>
 >>
->> It is not clear to me why we need these two calls above ^^^. We are
->> using pci_acpi_root_add_resources(info) later. Is it not enough?
+>>I remove the obj file and re-compile the file, not the warning.
+>
+>Hm. Does not warn me either.
+>
+>>And took a look at other places where read_config() is called. The laster
+>>parameter is not initialized before called.
+>
+>So? It does not make it right.
+>
+>>You see the error during build?
+>
+>Why does it matter? We have an undefined behavior here which we should not.
+>You could test the return values from read_config() but you do not so at
+>least initialize local variables.
+>
+
+I believe your concern is reasonable.
+
+I suggest to have a separate patch to fix the read_config() by initialize the
+last parameter.
+
+>
 >>
->> Also, I cannot use acpi_pci_probe_root_resources() in my ARM64 PCI
->> driver. It is because acpi_dev_get_resources is adding
->> translation_offset to IO ranges start address and then:
->> acpi_pci_root_validate_resources(&device->dev, list,
->> 				 IORESOURCE_IO);
->> rejects that IO regions as it is out of my 0x0-SZ_16M window.
+>>>
+>>>>+		if (!(status & mask))
+>>>>+			return;
+>>>>+
+>>>>+		msleep((1 << i) * 100);
+>>>>+	}
+>>>>+
+>>>>+	pr_warn("%s: Pending transaction while issuing %s FLR to "
+>>>>+		"%04x:%02x:%02x.%01x\n",
+>>>
+>>>Do not wrap user-visible strings.
+>>>
 >>
->> Does acpi_pci_probe_root_resources meant to be x86 specific and I
->> should avoid using it?
+>>Will change this.
+>>
+>>>
+>>>>+		__func__, af_flr_rst ? "AF" : "",
+>>>>+		edev->phb->global_number, pdn->busno,
+>>>>+		PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
+>>>>+}
+>>>>+
+>>>>+static int pnv_eeh_do_flr(struct pci_dn *pdn, int option)
+>>>>+{
+>>>>+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+>>>>+	u32 reg;
+>>>>+
+>>>>+	if (!edev->pcie_cap)
+>>>>+		return -ENOTTY;
+>>>
+>>>
+>>>Can pnv_eeh_do_flr() be really called on a non PCIe device, can we get that
+>>>far? WARN_ON_ONCE() may be?
+>>>
+>>
+>>So you suggest to add a WARN_ON_ONCE() in this condition, right?
 >
-> IIUC, you _have_ to have the proper translation_offset to map the bridge
-> window into the IO address space:
->
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-June/348708.html
->
-> Then, using the offset, you should do something ia64 does, namely,
-> retrieve the CPU address corresponding to IO space (see arch/ia64/pci/pci.c
-> - add_io_space()) and map it in the physical address space by using
-> pci_remap_iospace(), it is similar to what we have to do with DT.
->
-> It is extremely confusing and I am not sure I got it right myself,
-> I am still grokking ia64 code to understand what it really does.
->
-> So basically, the IO bridge window coming from acpi_dev_get_resource()
-> should represent the IO space in 0 - 16M, IIUC.
-
-Yes, you are right IMO.
-
->
-> By using the offset (that was initialized using translation_offset) and
-> the resource->start, you can retrieve the cpu address that you need to
-> actually map the IO space, since that's what we do on ARM (ie the
-> IO resource is an offset into the virtual address space set aside
-> for IO).
+>I am asking a question here whether it makes sense or not to add a
+>WARN_ON_ONCE or replace "if" with WARN_ON_ONCE or not having pcie_cap
+>initialized is possible in this code - which one is it?
 >
 
-Right, that is clear to me, below my current implementation example 
-which works for ARM64 now:
+I think the check here is reasonable. In the body of this function, pcie_cap
+is used to access the config space. If we remove this, it would be a chance to
+access a not correct area.
 
-static struct acpi_pci_root_ops acpi_pci_root_ops = {
-[...]
-	.prepare_resources = pci_acpi_root_prepare_resources,
-};
+>
+>>
+>>>
+>>>>+
+>>>>+	eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP, 4, &reg);
+>>>
+>>>
+>>>... and here about uninitialized @reg.
+>>>
+>>>
+>>>>+	if (!(reg & PCI_EXP_DEVCAP_FLR))
+>>>>+		return -ENOTTY;
+>>>>+
+>>>>+	switch (option) {
+>>>>+	case EEH_RESET_HOT:
+>>>>+	case EEH_RESET_FUNDAMENTAL:
+>>>>+		pnv_eeh_wait_for_pending(pdn, edev->pcie_cap + PCI_EXP_DEVSTA,
+>>>>+					 PCI_EXP_DEVSTA_TRPND, false);
+>>>>+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+>>>>+				     4, &reg);
+>>>>+		reg |= PCI_EXP_DEVCTL_BCR_FLR;
+>>>>+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+>>>>+				      4, reg);
+>>>>+		msleep(EEH_PE_RST_HOLD_TIME);
+>>>>+		break;
+>>>>+	case EEH_RESET_DEACTIVATE:
+>>>>+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+>>>>+				     4, &reg);
+>>>>+		reg &= ~PCI_EXP_DEVCTL_BCR_FLR;
+>>>>+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+>>>>+				      4, reg);
+>>>>+		msleep(EEH_PE_RST_SETTLE_TIME);
+>>>>+		break;
+>>>>+	}
+>>>>+
+>>>>+	return 0;
+>>>>+}
+>>>>+
+>>>>+static int pnv_eeh_do_af_flr(struct pci_dn *pdn, int option)
+>>>>+{
+>>>>+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+>>>>+	u32 cap;
+>>>>+
+>>>>+	if (!edev->af_cap)
+>>>>+		return -ENOTTY;
+>>>>+
+>>>>+	eeh_ops->read_config(pdn, edev->af_cap + PCI_AF_CAP, 1, &cap);
+>>>
+>>>
+>>>... and here about @cap.
+>>>
+>>>>+	if (!(cap & PCI_AF_CAP_TP) || !(cap & PCI_AF_CAP_FLR))
+>>>>+		return -ENOTTY;
+>>>>+
+>>>>+	switch (option) {
+>>>>+	case EEH_RESET_HOT:
+>>>>+	case EEH_RESET_FUNDAMENTAL:
+>>>>+		/*
+>>>>+		 * Wait for Transaction Pending bit to clear. A word-aligned
+>>>>+		 * test is used, so we use the conrol offset rather than status
+>>>>+		 * and shift the test bit to match.
+>>>
+>>>
+>>>Why word-aligned (not byte or double word)?
+>>>
+>>
+>>I copied this words from pci_af_flr(). Actually, I don't tried to understand
+>>this reason.
+>
+>Ok. I looked at pci_af_flr().
+>
+>In this patch, the comment before pnv_eeh_wait_for_pending() is missing,
+>something like "pnv_eeh_wait_for_pending() uses a word-size accessor so @pos
+>must be work-aligned".
+>
+>
+>>
+>>>>+		 */
+>>>>+		pnv_eeh_wait_for_pending(pdn, edev->af_cap + PCI_AF_CTRL,
+>>>>+					 PCI_AF_STATUS_TP << 8, true);
+>>>>+		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL,
+>>>>+				      1, PCI_AF_CTRL_FLR);
+>>>>+		msleep(EEH_PE_RST_HOLD_TIME);
+>>>>+		break;
+>>>>+	case EEH_RESET_DEACTIVATE:
+>>>>+		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL, 1, 0);
+>>>>+		msleep(EEH_PE_RST_SETTLE_TIME);
+>>>
+>>>
+>>>btw there is an unrelated issue with EEH_PE_RST_SETTLE_TIME which is defined
+>>>as 1800 which is A LOT (+250ms from EEH_PE_RST_HOLD_TIME and for some reason
+>>>this is actually doubled so there is another reset somewhere).
+>>>
+>>
+>>I don't know the reason for this value. This code keeps aligned with other
+>>reset functions, like pnv_eeh_bridge_reset().
+>
+>
+>Are they all in POWERNV/EEH or generic PCI uses same values on, for example,
+>x86?
+>
+>
+>
+>>>Booting a guest with 63 VFs takes 6 minutes or so, is there a good reason for
+>>>such a huge timeout?
+>>>
+>>>
+>>>>+		break;
+>>>>+	}
+>>>>+
+>>>>+	return 0;
+>>>>+}
+>>>>+
+>>>>+static int pnv_eeh_reset_vf(struct pci_dn *pdn, int option)
+>>>>+{
+>>>>+	int ret;
+>>>>+
+>>>>+	ret = pnv_eeh_do_flr(pdn, option);
+>>>>+	if (ret != -ENOTTY)
+>>>>+		return ret;
+>>>>+
+>>>>+	return pnv_eeh_do_af_flr(pdn, option);
+>>>>+}
+>>>>+
+>>>>+static int pnv_eeh_vf_pe_reset(struct eeh_pe *pe, int option)
+>>>>+{
+>>>>+	struct eeh_dev *edev, *tmp;
+>>>>+	struct pci_dn *pdn;
+>>>>+	int ret;
+>>>>+
+>>>>+	eeh_pe_for_each_dev(pe, edev, tmp) {
+>>>>+		pdn = eeh_dev_to_pdn(edev);
+>>>>+		ret = pnv_eeh_reset_vf(pdn, option);
+>>>>+		if (ret)
+>>>>+			return ret;
+>>>>+	}
+>>>>+
+>>>>+	return 0;
+>>>>+}
+>>>>+
+>>>>  void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+>>>>  {
+>>>>  	struct pci_controller *hose;
+>>>>@@ -968,7 +1090,9 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
+>>>>  		}
+>>>>
+>>>>  		bus = eeh_pe_bus_get(pe);
+>>>>-		if (pci_is_root_bus(bus) ||
+>>>>+		if (pe->type & EEH_PE_VF)
+>>>>+			ret = pnv_eeh_vf_pe_reset(pe, option);
+>>>>+		else if (pci_is_root_bus(bus) ||
+>>>>  			pci_is_root_bus(bus->parent))
+>>>>  			ret = pnv_eeh_root_reset(hose, option);
+>>>>  		else
+>>>>@@ -1108,6 +1232,14 @@ static inline bool pnv_eeh_cfg_blocked(struct pci_dn *pdn)
+>>>>  	if (!edev || !edev->pe)
+>>>>  		return false;
+>>>>
+>>>>+	/*
+>>>>+	 * We will issue FLR or AF FLR to all VFs, which are contained
+>>>>+	 * in VF PE. It relies on the EEH PCI config accessors. So we
+>>>>+	 * can't block them during the window.
+>>>>+	 */
+>>>>+	if ((edev->physfn) && (edev->pe->state & EEH_PE_RESET))
+>>>
+>>>
+>>>Extra braces around edev->physfn.
+>>>
+>>
+>>Will remove it.
+>>
+>>>
+>>>
+>>>>+		return false;
+>>>>+
+>>>>  	if (edev->pe->state & EEH_PE_CFG_BLOCKED)
+>>>>  		return true;
+>>>>
+>>>>
+>
+>
+>-- 
+>Alexey
 
-static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
-{
-	struct list_head *list = &ci->resources;
-	struct acpi_device *device = ci->bridge;
-	struct resource_entry *entry, *tmp;
-	unsigned long flags;
-	int ret;
-
-	flags = IORESOURCE_IO | IORESOURCE_MEM;
-	ret = acpi_dev_get_resources(device, list,
-				     acpi_dev_filter_resource_type_cb,
-				     (void *)flags);
-	if (ret < 0) {
-		dev_warn(&device->dev,
-			 "failed to parse _CRS method, error code %d\n", ret);
-		return ret;
-	} else if (ret == 0)
-		dev_dbg(&device->dev,
-			"no IO and memory resources present in _CRS\n");
-
-	resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
-		struct resource *res = entry->res;
-
-		if (entry->res->flags & IORESOURCE_DISABLED)
-			resource_list_destroy_entry(entry);
-		else
-			res->name = ci->name;
-
-		/*
-		 * TODO: need to move pci_register_io_range() function out
-		 * of drivers/of/address.c for both used by DT and ACPI
-		 */
-		if (res->flags & IORESOURCE_IO) {
-			unsigned long port;
-			int err;
-			resource_size_t length = res->end - res->start;
-			resource_size_t start = res->start;
-
-			err = pci_register_io_range(res->start, length);
-			if (err) {
-				resource_list_destroy_entry(entry);
-				continue;
-			}
-
-			port = pci_address_to_pio(res->start);
-			if (port == (unsigned long)-1) {
-				resource_list_destroy_entry(entry);
-				continue;
-			}
-
-			res->start = port;
-			res->end = res->start + length;
-			entry->offset = port - (start - entry->offset);
-
-			if (pci_remap_iospace(res, start) < 0)
-				resource_list_destroy_entry(entry);
-		}
-	}
-	return ret;
-}
-
-As you see acpi_dev_get_resources returns:
-res->start = acpi_des->start + acpi_des->translation_offset (CPU address)
-which then must be adjusted as you described to get io port and call 
-pci_remap_iospace.
-
-This is also why I can not use acpi_pci_probe_root_resources here. Lets 
-assume we have IO range like that DSDT table form QEMU:
-DWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
-          0x00000000,         // Granularity
-          0x00000000,         // Range Minimum
-          0x0000FFFF,         // Range Maximum
-          0x3EFF0000,         // Translation Offset
-          0x00010000,         // Length
-          ,, , TypeStatic)
-so see acpi_dev_get_resources returns res->start = acpi_des->start (0x0) 
-+ acpi_des->translation_offset(0x3EFF0000) = 0x3EFF0000. This will be 
-rejected in acpi_pci_root_validate_resources() as 0x3EFF0000 does not 
-fit within 0-16M.
-
-My question is if acpi_pci_probe_root_resources is handling 
-translation_offset properly and if we have some silent assumption 
-specific for e.g. ia64 here.
-
-Thanks for help in looking at it.
-
-Tomasz
-
-
+-- 
+Richard Yang
+Help you, Help me
 
