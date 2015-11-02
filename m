@@ -1,96 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ibawizard.net ([82.208.49.253]:50658 "EHLO
-	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbbK0K4m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Nov 2015 05:56:42 -0500
-From: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
-To: linux-arm-kernel@lists.infradead.org
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	=?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
-Subject: [PATCH v3] PCI: imx6: Fix reset-gpio to work with active low GPIO
-Date: Fri, 27 Nov 2015 11:56:34 +0100
-Message-Id: <1448621794-19916-1-git-send-email-ynezz@true.cz>
-In-Reply-To: <1448620464.3689.94.camel@pengutronix.de>
-References: <1448620464.3689.94.camel@pengutronix.de>
+Received: from mail.kernel.org ([198.145.29.136]:34618 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754069AbbKBVgM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 2 Nov 2015 16:36:12 -0500
+Date: Mon, 2 Nov 2015 15:36:08 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Li Yang <leoli@freescale.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	Jingoo Han <jg1.han@samsung.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v4 5/6] PCI: layerscape: add PCIe support for LS1043a and
+ LS2080a
+Message-ID: <20151102213608.GA28371@localhost>
+References: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1444979960-24100-5-git-send-email-Minghuan.Lian@freescale.com>
+ <20151021213612.GK1583@localhost>
+ <CADRPPNSPP1m_7zNF6wEfw9+Bpe=Z_gUA81cSaV4SENVpR34YWQ@mail.gmail.com>
+ <20151022180813.GA25693@localhost>
+ <CADRPPNRQCrSukyjnS1yBck-jaNTWFOFJy3tomeD0HnXwc8WOBQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CADRPPNRQCrSukyjnS1yBck-jaNTWFOFJy3tomeD0HnXwc8WOBQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It's currently not possible to use reset-gpio on board where the GPIO is
-active low as the code incorrectly assumes, that reset-gpio will be
-always active high.
+On Mon, Nov 02, 2015 at 03:08:04PM -0600, Li Yang wrote:
+> On Thu, Oct 22, 2015 at 1:08 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > Hi Leo,
+> >
+> > On Thu, Oct 22, 2015 at 12:38:48PM -0500, Li Yang wrote:
+> >> On Wed, Oct 21, 2015 at 4:36 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >> > On Fri, Oct 16, 2015 at 03:19:19PM +0800, Minghuan Lian wrote:
+> >> >> Both LS1043a and LS2080a are based on ARMv8 64-bit architecture
+> >> >> and have similar PCIe implementation. LUT is added to controller.
+> >> >> The patch removes the necessary fields from struct ls_pcie.
+> >> >>
+> >> >> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> >> >> ---
+> >> >> This patch is based on v4.3-rc4 and [PATCH v10 3/6]
+> >> >> PCI: designware: Add ARM64 support.
+> >>
+> >> Hi Bjorn,
+> >>
+> >> Are you also applying this patch
+> >> https://patchwork.ozlabs.org/patch/531184/ in this merge windows?
+> >> Because the new hardware can only work with the generic ARM64 support
+> >> added in the designware pcie driver.
+> >
+> > I'm reviewing that patch right now, and I do hope to apply it for
+> > v4.4.
+> >
+> > There was no cover letter for this series (Minghuan's Layerscape v4
+> > series), and I didn't see any mention of dependencies, so I applied it
+> > on top of v4.3-rc1.  Is that the wrong thing to do?  If it depends on
+> > the Zhou's v11 series, I can hold the Layerscape branch until after
+> > that.
+> 
+> I noticed that you have merged Zhou's latest patch.  Probably you can
+> also merge the Layerscape branch now.
 
-In my case the broken behavior was observed on Toradex Apalis SoM with
-Ixora base board.
+That's my intention.
 
-Signed-off-by: Petr Štetiar <ynezz@true.cz>
----
-
-Changes since v1:                                                                                                                                                        
- * reworked to use descriptor based GPIO interface
-
-Changes since v2:
- * rebased on pci/host-imx6 which now uses gpio_set_value_cansleep()
-
- drivers/pci/host/pci-imx6.c |   20 ++++++--------------
- 1 file changed, 6 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 3c3b37f..8e9afa5 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -32,7 +32,7 @@
- #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
- 
- struct imx6_pcie {
--	int			reset_gpio;
-+	struct gpio_desc	*reset_gpio;
- 	struct clk		*pcie_bus;
- 	struct clk		*pcie_phy;
- 	struct clk		*pcie;
-@@ -287,10 +287,10 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 	usleep_range(200, 500);
- 
- 	/* Some boards don't have PCIe reset GPIO. */
--	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
--		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
-+	if (imx6_pcie->reset_gpio) {
-+		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 0);
- 		msleep(100);
--		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
-+		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
- 	}
- 	return 0;
- 
-@@ -560,7 +560,6 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- {
- 	struct imx6_pcie *imx6_pcie;
- 	struct pcie_port *pp;
--	struct device_node *np = pdev->dev.of_node;
- 	struct resource *dbi_base;
- 	int ret;
- 
-@@ -581,15 +580,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(pp->dbi_base);
- 
- 	/* Fetch GPIOs */
--	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
--	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
--		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
--					    GPIOF_OUT_INIT_LOW, "PCIe reset");
--		if (ret) {
--			dev_err(&pdev->dev, "unable to get reset gpio\n");
--			return ret;
--		}
--	}
-+	imx6_pcie->reset_gpio = devm_gpiod_get_optional(&pdev->dev, "reset",
-+							GPIOD_OUT_LOW);
- 
- 	/* Fetch clocks */
- 	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
--- 
-1.7.9.5
-
+Bjorn
