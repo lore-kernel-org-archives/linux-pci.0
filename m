@@ -1,71 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V5 8/9] PCI: OF: Move of_pci_dma_configure() to
- pci_dma_configure()
-To: Arnd Bergmann <arnd@arndb.de>, Robin Murphy <robin.murphy@arm.com>
-References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <564B4111.6010805@arm.com> <564C6860.4000002@arm.com>
- <3822315.uJPjk3L2zB@wuerfel>
-CC: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>,
-	<thomas.lendacky@amd.com>, <herbert@gondor.apana.org.au>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>, <hanjun.guo@linaro.org>,
-	<davem@davemloft.net>, <linux-arm-kernel@lists.infradead.org>
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Message-ID: <564CAD63.3020306@amd.com>
-Date: Wed, 18 Nov 2015 10:54:59 -0600
-MIME-Version: 1.0
-In-Reply-To: <3822315.uJPjk3L2zB@wuerfel>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v6 4/7] PCI: Add fwnode_handle to pci_sysdata
+Date: Mon,  2 Nov 2015 21:33:13 +0000
+Message-Id: <1446499996-1350-5-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1446499996-1350-1-git-send-email-jakeo@microsoft.com>
+References: <1446499996-1350-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+From: Jake Oshins <jakeo@microsoft.com>
 
-On 11/18/2015 6:41 AM, Arnd Bergmann wrote:
-> On Wednesday 18 November 2015 12:00:32 Robin Murphy wrote:
->> On 17/11/15 15:00, Robin Murphy wrote:
->>> On 28/10/15 22:50, Suravee Suthikulpanit wrote:
->>>> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>>> Acked-by: Rob Herring <robh+dt@kernel.org>
->>>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->>>> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
->>>> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
->> [...]
->>>> +/**
->>>> + * pci_dma_configure - Setup DMA configuration
->>>> + * @dev: ptr to pci_dev struct of the PCI device
->>>> + *
->>>> + * Function to update PCI devices's DMA configuration using the same
->>>> + * info from the OF node of host bridge's parent (if any).
->>>> + */
->>>> +static void pci_dma_configure(struct pci_dev *dev)
->>>> +{
->>>> +    struct device *bridge = pci_get_host_bridge_device(dev);
->>>> +
->>>> +    if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
->>>
->>> Previously I was seeing of_dma_configure, and thus of_iommu_configure,
->>> called for every PCI device on Juno. The check above now prevents this
->>> happening, since the PCI devices are probed directly from the bus and
->>> don't have OF nodes of their own. They now get left in some
->>> half-configured state where arch_setup_dma_ops isn't called either.
->>
->> Just to follow up on that, Arnd's patch to tidy up dma_get_ops (now
->> queued[1]) makes this even worse, since preventing arch_setup_dma_ops
->> being called means the PCI devices now get the dummy DMA ops which leave
->> the drivers failing to probe at all, IOMMU hacks or not
->
-> Ok, glad we found that with my patch then. We really have to
-> configure the DMA (offset/size/coherency/iommu) for all devices that might
-> be masters, otherwise things can randomly go wrong.
->
-> 	ARnd
+This patch adds an fwnode_handle to struct pci_sysdata, which is
+used by the next patch in the series when trying to locate an
+IRQ domain associated with a root PCI bus.
 
-Robin is correct. Thanks for catching the bug. Rafael, do you want me to 
-submit just the fixed-up patch on top of what we had earlier. Or do you 
-want a new revision (V6)?
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ arch/x86/include/asm/pci.h | 13 +++++++++++++
+ include/asm-generic/pci.h  |  4 ++++
+ 2 files changed, 17 insertions(+)
 
-Thanks,
-Suravee
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4625943..fb74453 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -20,6 +20,9 @@ struct pci_sysdata {
+ #ifdef CONFIG_X86_64
+ 	void		*iommu;		/* IOMMU private data */
+ #endif
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	void		*fwnode;	/* IRQ domain for MSI assignment */
++#endif
+ };
+ 
+ extern int pci_routeirq;
+@@ -41,6 +44,16 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ }
+ #endif
+ 
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
++{
++	struct pci_sysdata *sd = bus->sysdata;
++	return sd->fwnode;
++}
++
++#define pci_root_bus_fwnode	_pci_root_bus_fwnode
++#endif
++
+ /* Can be used to override the logic in pci_scan_bus for skipping
+    already-configured bus numbers - to be used for buggy BIOSes
+    or architectures with incomplete PCI setup by the loader */
+diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
+index f24bc51..3fde985 100644
+--- a/include/asm-generic/pci.h
++++ b/include/asm-generic/pci.h
+@@ -21,4 +21,8 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ #define PCI_DMA_BUS_IS_PHYS	(1)
+ #endif
+ 
++#ifndef pci_root_bus_fwnode
++#define pci_root_bus_fwnode(bus)	((void)(bus),NULL)
++#endif
++
+ #endif /* _ASM_GENERIC_PCI_H */
+-- 
+1.9.1
 
