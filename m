@@ -1,87 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:9078 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752001AbbKISB5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Nov 2015 13:01:57 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Thierry Reding <treding@nvidia.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: RE: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
-Date: Mon, 9 Nov 2015 18:01:49 +0000
-Message-ID: <PS1PR06MB1180111D6423287273B64B0FF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
-References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>
- <PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151109161115.GA13870@ulmo.nvidia.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:13166 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754361AbbKBVde (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2015 16:33:34 -0500
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v6 2/7] drivers:hv: Export hv_do_hypercall()
+Date: Mon,  2 Nov 2015 21:33:11 +0000
+Message-Id: <1446499996-1350-3-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1446499996-1350-1-git-send-email-jakeo@microsoft.com>
+References: <1446499996-1350-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thierry,
+From: Jake Oshins <jakeo@microsoft.com>
 
-On 09 November 2015 17:24, Phil wrote:
-> On 09 November 2015 16:11, Thierry wrote:
-> > On Mon, Nov 09, 2015 at 03:20:24PM +0000, Phil Edworthy wrote:
-> > > cc'ing others (Tegra, Altera, Designware) who may have the same bug
-> > >
-> > > On 03 November 2015 09:28, Phil Edworthy wrote:
-> > > > The OF node passed to irq_domain_add_linear() should be a
-> > > > pointer to interrupt controller's device tree node, or NULL,
-> > > > but not the PCI controller's node.
-> > > >
-> > > > This fixes an oops in msi_domain_alloc_irqs() when it tries
-> > > > to call msi_check().
-> > > >
-> > > > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > > > ---
-> > > >  drivers/pci/host/pcie-rcar.c | 2 +-
-> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > >
-> > > > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> > > > index 2377bf0..c6fa562 100644
-> > > > --- a/drivers/pci/host/pcie-rcar.c
-> > > > +++ b/drivers/pci/host/pcie-rcar.c
-> > > > @@ -709,7 +709,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie
-> *pcie)
-> > > >  	msi->chip.setup_irq = rcar_msi_setup_irq;
-> > > >  	msi->chip.teardown_irq = rcar_msi_teardown_irq;
-> > > >
-> > > > -	msi->domain = irq_domain_add_linear(pcie->dev->of_node,
-> > > > INT_PCI_MSI_NR,
-> > > > +	msi->domain = irq_domain_add_linear(NULL, INT_PCI_MSI_NR,
-> > > >  					    &msi_domain_ops, &msi->chip);
-> > > >  	if (!msi->domain) {
-> > > >  		dev_err(&pdev->dev, "failed to create IRQ domain\n");
-> >
-> > On Tegra the PCI controller is in fact the interrupt controller for
-> > MSIs. And looking at the code here it seems like the same would apply to
-> > RCAR.
-> Yes you are correct here.
-> 
-> > I'm also slightly confused as to why this would cause ->msi_check() to
-> > fail. The default implementation (msi_domain_ops_check()) doesn't do
-> > anything.
-> >
-> > Also, how is passing in NULL instead of a valid struct device_node *
-> > going to prevent an oops? Perhaps this is one of those reference count
-> > imbalance bugs that have recently been showing up?
-> On arm64 (previously I didn't realise this just affects arm64, not arm),
-> the changes in commit f075915ac0b11 ("PCI/MSI: Drop domain field from
-> msi_controller") and d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use
-> struct device::msi_domain") return an uninitialized msi domain that leads
-> to the oops. It appears that these changes assume that msi interrupt
-> controller is separate from the PCI controller.
-More accurately, when CONFIG_GENERIC_MSI_IRQ_DOMAIN is enabled,
-pci_msi_get_domain() calls dev_get_msi_domain() and at this point
-dev->msi_domain is uninitialized.
+This patch exposes the function that hv_vmbus.ko uses to make hypercalls. This
+is necessary for retargeting an interrupt when it is given a new affinity and
+vector.
 
-Phil
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/hv.c           | 20 ++++++++++----------
+ drivers/hv/hyperv_vmbus.h |  2 +-
+ include/linux/hyperv.h    |  1 +
+ 3 files changed, 12 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
+index 6341be8..7a06933 100644
+--- a/drivers/hv/hv.c
++++ b/drivers/hv/hv.c
+@@ -89,9 +89,9 @@ static int query_hypervisor_info(void)
+ }
+ 
+ /*
+- * do_hypercall- Invoke the specified hypercall
++ * hv_do_hypercall- Invoke the specified hypercall
+  */
+-static u64 do_hypercall(u64 control, void *input, void *output)
++u64 hv_do_hypercall(u64 control, void *input, void *output)
+ {
+ 	u64 input_address = (input) ? virt_to_phys(input) : 0;
+ 	u64 output_address = (output) ? virt_to_phys(output) : 0;
+@@ -132,6 +132,7 @@ static u64 do_hypercall(u64 control, void *input, void *output)
+ 	return hv_status_lo | ((u64)hv_status_hi << 32);
+ #endif /* !x86_64 */
+ }
++EXPORT_SYMBOL_GPL(hv_do_hypercall);
+ 
+ #ifdef CONFIG_X86_64
+ static cycle_t read_hv_clock_tsc(struct clocksource *arg)
+@@ -315,7 +316,7 @@ int hv_post_message(union hv_connection_id connection_id,
+ {
+ 
+ 	struct hv_input_post_message *aligned_msg;
+-	u16 status;
++	u64 status;
+ 
+ 	if (payload_size > HV_MESSAGE_PAYLOAD_BYTE_COUNT)
+ 		return -EMSGSIZE;
+@@ -329,11 +330,10 @@ int hv_post_message(union hv_connection_id connection_id,
+ 	aligned_msg->payload_size = payload_size;
+ 	memcpy((void *)aligned_msg->payload, payload, payload_size);
+ 
+-	status = do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL)
+-		& 0xFFFF;
++	status = hv_do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL);
+ 
+ 	put_cpu();
+-	return status;
++	return status & 0xFFFF;
+ }
+ 
+ 
+@@ -343,13 +343,13 @@ int hv_post_message(union hv_connection_id connection_id,
+  *
+  * This involves a hypercall.
+  */
+-u16 hv_signal_event(void *con_id)
++int hv_signal_event(void *con_id)
+ {
+-	u16 status;
++	u64 status;
+ 
+-	status = (do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL) & 0xFFFF);
++	status = hv_do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL);
+ 
+-	return status;
++	return status & 0xFFFF;
+ }
+ 
+ static int hv_ce_set_next_event(unsigned long delta,
+diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
+index 3d70e36..18c66fc 100644
+--- a/drivers/hv/hyperv_vmbus.h
++++ b/drivers/hv/hyperv_vmbus.h
+@@ -587,7 +587,7 @@ extern int hv_post_message(union hv_connection_id connection_id,
+ 			 enum hv_message_type message_type,
+ 			 void *payload, size_t payload_size);
+ 
+-extern u16 hv_signal_event(void *con_id);
++extern int hv_signal_event(void *con_id);
+ 
+ extern int hv_synic_alloc(void);
+ 
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index 02393b6..ea0a0e3 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -983,6 +983,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			bool fb_overlap_ok);
+ 
+ int vmbus_cpu_number_to_vp_number(int cpu_number);
++u64 hv_do_hypercall(u64 control, void *input, void *output);
+ 
+ /**
+  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
+-- 
+1.9.1
+
