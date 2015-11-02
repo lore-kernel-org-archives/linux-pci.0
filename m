@@ -1,86 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:4956 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161473AbbKEOvn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Nov 2015 09:51:43 -0500
-Date: Thu, 5 Nov 2015 14:51:41 +0000
-From: Keith Busch <keith.busch@intel.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Wolfram Sang <wsa@the-dreams.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [RFC PATCHv3 3/4] x86/pci: Initial commit for new VMD device
- driver
-Message-ID: <20151105145141.GA11787@localhost.localdomain>
-References: <1445967247-24310-1-git-send-email-keith.busch@intel.com>
- <1445967247-24310-4-git-send-email-keith.busch@intel.com>
- <alpine.DEB.2.11.1511021426020.4032@nanos>
- <20151103001552.GE13904@localhost.localdomain>
- <alpine.DEB.2.11.1511031001130.4032@nanos>
- <20151104144905.GI13904@localhost.localdomain>
- <alpine.DEB.2.11.1511041614070.4032@nanos>
- <563AF8B3.8030907@linux.intel.com>
+	Simon Horman <horms@verge.net.au>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
+ instances
+Date: Mon, 2 Nov 2015 10:56:39 +0000
+Message-ID: <PS1PR06MB11807DB6AC86EC5218436CC0F52C0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
+ <20151029123755.GC2351@katana>
+ <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029163930.GC22218@katana>
+ <PS1PR06MB11804B39B09D6FCAA9B3D9DCF5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151029184800.GB8992@katana> <20151029230314.GA11994@localhost>
+ <PS1PR06MB1180BAA32BDBEE6BFD8229C3F52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <PS1PR06MB11807765B8231D1DD01B05ADF52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151030133150.GA17889@localhost>
+In-Reply-To: <20151030133150.GA17889@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <563AF8B3.8030907@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 05, 2015 at 02:35:31PM +0800, Jiang Liu wrote:
-> Hi Keith,
-> 	Could you please try the attached patch?
-> Thanks!
-> Gerry
+Hi Bjorn,
 
-Thanks! I anticipated this and tested the same thing yesterday, and it
-is successful.
-
-I'll apply to the series and send a new revision hopefully today. Not
-requiring a parent simplifies the driver since we don't define
-irq_domain_ops now, and the functionality they provided moves to the
-irq_chip.
-
-
-
-> From: Liu Jiang <jiang.liu@linux.intel.com>
-> Date: Thu, 5 Nov 2015 11:25:07 +0800
-> Subject: [PATCH] msi: Relax msi_domain_alloc() to support parentless MSI
->  irqdomains
+On 30 October 2015 13:32, Bjorn wrote:
+> On Fri, Oct 30, 2015 at 09:00:20AM +0000, Phil Edworthy wrote:
+> > Hi Bjorn,
+> >
+> > On 30 October 2015 07:24, Phil wrote:
+> > > On 30 October 2015 07:19, Phil wrote
+> > > > On 29 October 2015 23:03, Bjorn wrote:
+> > > > > On Thu, Oct 29, 2015 at 07:48:00PM +0100, Wolfram Sang wrote:
+> > > > > > On Thu, Oct 29, 2015 at 04:44:06PM +0000, Phil Edworthy wrote:
+> > > > > > > Hi Wolfram,
+> > > > > > >
+> > > > > > > On 29 October 2015 16:40, Wolfram wrote:
+> > > > > > > > > Ouch, my bad. I have been working with our out-of-tree BSP for
+> the
+> > > > > Salvator-X
+> > > > > > > > board on
+> > > > > > > > > http://git.kernel.org/cgit/linux/kernel/git/horms/renesas-bsp.git,
+> > > rcar-
+> > > > > 3.0.2
+> > > > > > > > tag along
+> > > > > > > > > with some patches from colleagues. I hadn't noticed this patch:
+> > > > > > > >
+> > > > > > > > Thanks! Any plans for pushing this upstream? We will have the build
+> > > error
+> > > > > > > > otherwise...
+> > > > > > > After some digging, that patch won't be accepted upstream. I'm
+> looking
+> > > into
+> > > > > how the
+> > > > > > > driver can be modified so it doesn't need to call this, but I don't expect
+> a
+> > > > small
+> > > > > or
+> > > > > > > imminent fix.
+> > > > > >
+> > > > > > Yes, I'd think so, too. However, a fix for 4.4 would be needed to
+> > > > > > prevent having a final release with a build error.
+> > > > >
+> > > > > I'm thinking I should drop my pci/host-rcar branch until we
+> > > > > have a fix for this.  It currently contains:
+> > > > >
+> > > > >   9ac724f20774 PCI: rcar: Fix I/O offset for multiple host bridges
+> > > > >   7d75b413f5c6 PCI: rcar: Set root bus nr to that provided in DT
+> > > > >   4c22eab88c68 PCI: rcar: Remove dependency on ARM-specific struct
+> hw_pci
+> > > > >   ef18d2e55ea0 PCI: rcar: Make PCI aware of the I/O resources
+> > > > >
+> > > > > Is that right?  Last I heard, Linus expects to release v4.3 on Sunday,
+> > > > > so we really don't have much time to sort this out.
+> > > > The simple thing is to re-add Geert's patch to stop this driver being built for
+> > > > arm64.
+> > > Btw, it's this one: https://patchwork.ozlabs.org/patch/512040/
+> > It's worth mentioning that Geert's patch stops both the rcar-pcie driver and the
+> > rcar-pci-gen2 driver from being built on arm64 due to build failures for both of
+> > them. The rcar-pci-gen2 driver is not for R-Car Gen3 devices, and so should not
+> > be built for arm64. The rcar-pcie driver will be used on R-Car Gen3 devices.
+> >
+> > So if we don't use Geert's patch, I need to fix the rcar-pcie driver so it doesn't
+> > use pci_ioremap_io(), _and_ fix Kconfig so that the rcar-pci-gen2 driver doesn't
+> > get built on arm64.
+> > Let's just use Geert's patch for now.
 > 
-> Previously msi_domain_alloc() assumes MSI irqdomains always have parent
-> irqdomains, but that's not true for the new Intel VMD devices. So relax
-> msi_domain_alloc() to support parentless MSI irqdomains.
+> OK, I re-added Geert's patch.  I split it into two, one for
+> rcar-pci-gen2 and another for rcar-pcie, to help me keep things
+> straight.  If I understand correctly,
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
-> ---
->  kernel/irq/msi.c |    8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-> index 7e6512b9dc1f..e4d3d707efff 100644
-> --- a/kernel/irq/msi.c
-> +++ b/kernel/irq/msi.c
-> @@ -109,9 +109,11 @@ static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
->  	if (irq_find_mapping(domain, hwirq) > 0)
->  		return -EEXIST;
->  
-> -	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-> -	if (ret < 0)
-> -		return ret;
-> +	if (domain->parent) {
-> +		ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-> +		if (ret < 0)
-> +			return ret;
-> +	}
->  
->  	for (i = 0; i < nr_irqs; i++) {
->  		ret = ops->msi_init(domain, info, virq + i, hwirq + i, arg);
-> -- 
-> 1.7.10.4
+>   - rcar-pci-gen2 depends on the ARM-specific pci_sys_data, and I
+>     don't have anything queued to address that.
+Correct, but you don't need anything other than Geert's patch to
+ensure it's not built for arm64.
+
+>   - rcar-pcie depended on the ARM-specific pci_sys_data and
+>     pci_ioremap_io().  Your patches remove the pci_sys_data
+>     dependency, and it sounds like future changes will remove the
+>     pci_ioremap_io() dependency.
+That's correct, hopefully I'll have a patch shortly.
+Thanks for taking care of this.
+
+ 
+> The result is in my pci/host-rcar branch:
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-rcar
+I haven't tested this yet, but I have looked them over and they look ok.
+
+Thanks
+Phil
