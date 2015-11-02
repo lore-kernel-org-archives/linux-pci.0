@@ -1,39 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:38351 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751242AbbKOMhw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Nov 2015 07:37:52 -0500
-From: Bogicevic Sasa <brutallesale@gmail.com>
-To: bhelgaas@google.com
-Cc: wangyijing@huawei.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Bogicevic Sasa <brutallesale@gmail.com>
-Subject: [PATCH] drivers:pci:hotplug Fix space prohibited after function name
-Date: Sun, 15 Nov 2015 13:37:36 +0100
-Message-Id: <1447591056-3733-1-git-send-email-brutallesale@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>, <linux-pci@vger.kernel.org>,
+	<linux-sh@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+Subject: [PATCH 0/3] Fix rcar-pcie for arm64
+Date: Mon,  2 Nov 2015 16:36:12 +0000
+Message-Id: <1446482175-26507-1-git-send-email-phil.edworthy@renesas.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This fixes warning that a space is prohibited after function name
+The first patches fixes the build problem, and the second patch reverts the
+patch that removed the driver from arm64 builds. The final patch add a compat
+string for the r8a7795 (arm64) device.
 
-Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
----
- drivers/pci/hotplug/pci_hotplug_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Tested on arm Koelsch board, all ok.
 
-diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
-index 2bac1b9..d379d49 100644
---- a/drivers/pci/hotplug/pci_hotplug_core.c
-+++ b/drivers/pci/hotplug/pci_hotplug_core.c
-@@ -226,7 +226,7 @@ static ssize_t test_write_file(struct pci_slot *pci_slot, const char *buf,
- 	u32 test;
- 	int retval = 0;
- 
--	ltest = simple_strtoul (buf, NULL, 10);
-+	ltest = simple_strtoul(buf, NULL, 10);
- 	test = (u32)(ltest & 0xffffffff);
- 	dbg("test = %d\n", test);
- 
+Tested on arm64 Salvator-X board using renesas-drivers-2015-10-27-v4.3-rc7 from
+git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-drivers.git with PCI
+next merged. 
+Apart from patches to add the PCIe clock and DT nodes, I had to revert these
+patches to get it to work on arm64:
+ f075915ac0b1 ("PCI/MSI: Drop domain field from msi_controller")
+ d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use struct device::msi_domain")
+I'll look into this, but it doesn't stop us from applying these patches.
+
+Harunobu Kurokawa (1):
+  PCI: pcie-rcar: Add support for R-Car H3.
+
+Phil Edworthy (2):
+  PCI: pcie-rcar: Convert to DT resource parsing API
+  Revert "PCI: rcar: Build pcie-rcar.c only on ARM"
+
+ Documentation/devicetree/bindings/pci/rcar-pci.txt |   3 +-
+ drivers/pci/host/Kconfig                           |   3 +-
+ drivers/pci/host/pcie-rcar.c                       | 118 +++++++++++++--------
+ 3 files changed, 78 insertions(+), 46 deletions(-)
+
 -- 
-2.1.4
+1.9.1
 
