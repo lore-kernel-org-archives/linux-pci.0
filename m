@@ -1,89 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:52922 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753589AbbKZWhF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Nov 2015 17:37:05 -0500
-From: Ray Jui <rjui@broadcom.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Phil Edworthy <phil.edworthy@renesas.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v3 3/5] PCI: iproc: Add iProc PCIe MSI device tree binding
-Date: Thu, 26 Nov 2015 14:37:08 -0800
-Message-ID: <1448577430-16428-4-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1448577430-16428-1-git-send-email-rjui@broadcom.com>
-References: <1448577430-16428-1-git-send-email-rjui@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Cc: Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>, <linux-pci@vger.kernel.org>,
+	<linux-sh@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+Subject: [PATCH 2/3] Revert "PCI: rcar: Build pcie-rcar.c only on ARM"
+Date: Mon,  2 Nov 2015 16:36:14 +0000
+Message-Id: <1446482175-26507-3-git-send-email-phil.edworthy@renesas.com>
+In-Reply-To: <1446482175-26507-1-git-send-email-phil.edworthy@renesas.com>
+References: <1446482175-26507-1-git-send-email-phil.edworthy@renesas.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch updates the iProc PCIe device tree bindings with added
-binding information for MSI
+Now that we can build on arm64, revert commit 7c537c67d2e4
+("PCI: rcar: Build pcie-rcar.c only on ARM").
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Anup Patel <anup.patel@broadcom.com>
-Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 ---
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    | 35 ++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
+ drivers/pci/host/Kconfig | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-index 06eae0f..acbdbad 100644
---- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-@@ -35,6 +35,28 @@ Optional:
- - brcm,pcie-ob-oarr-size: Some iProc SoCs need the OARR size bit to be set to
- increase the outbound window size
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 2af0571..ad27664 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -48,8 +48,7 @@ config PCI_RCAR_GEN2
  
-+MSI support (optional):
-+
-+For older platforms without MSI integrated in the GIC, iProc PCIe core provides
-+an event queue based MSI support. The iProc MSI uses host memories to store
-+MSI posted writes in the event queues
-+
-+- msi-parent: Link to the device node of the MSI controller. On newer iProc
-+platforms, the MSI controller may be gicv2m or gicv3-its. On older iProc
-+platforms without MSI support in its interrupt controller, one may use the
-+event queue based MSI support integrated within the iProc PCIe core
-+
-+When the iProc event queue based MSI is used, one needs to define the
-+following properties in the MSI device node:
-+- compatible: Must be "brcm,iproc-msi"
-+- msi-controller: claims itself as an MSI controller
-+- interrupt-parent: Link to its parent interrupt device
-+- interrupts: List of interrupt IDs from its parent interrupt device
-+
-+Optional properties:
-+- brcm,pcie-msi-inten: Needs to be present for some older iProc platforms that
-+require the interrupt enable registers to be set explicitly to enable MSI
-+
- Example:
- 	pcie0: pcie@18012000 {
- 		compatible = "brcm,iproc-pcie";
-@@ -61,6 +83,19 @@ Example:
- 		brcm,pcie-ob-oarr-size;
- 		brcm,pcie-ob-axi-offset = <0x00000000>;
- 		brcm,pcie-ob-window-size = <256>;
-+
-+		msi-parent = <&msi0>;
-+
-+		/* iProc event queue based MSI */
-+		msi0: msi@18012000 {
-+			compatible = "brcm,iproc-msi";
-+			msi-controller;
-+			interrupt-parent = <&gic>;
-+			interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
-+				     <GIC_SPI 97 IRQ_TYPE_NONE>,
-+				     <GIC_SPI 98 IRQ_TYPE_NONE>,
-+				     <GIC_SPI 99 IRQ_TYPE_NONE>,
-+		};
- 	};
+ config PCI_RCAR_GEN2_PCIE
+ 	bool "Renesas R-Car PCIe controller"
+-	depends on ARM
+-	depends on ARCH_SHMOBILE || COMPILE_TEST
++	depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
+ 	help
+ 	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
  
- 	pcie1: pcie@18013000 {
 -- 
 1.9.1
 
