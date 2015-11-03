@@ -1,199 +1,192 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:33478 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236AbbKQA2l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 19:28:41 -0500
-Received: by pabfh17 with SMTP id fh17so194329853pab.0
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 16:28:41 -0800 (PST)
-From: Daniel Axtens <dja@axtens.net>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: Re: [PATCH v7 19/50] powerpc/powernv: Track DMA32 segment consumption
-In-Reply-To: <1446642770-4681-20-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1446642770-4681-20-git-send-email-gwshan@linux.vnet.ibm.com>
-Date: Tue, 17 Nov 2015 11:28:20 +1100
-Message-ID: <87ziydbhaz.fsf@gamma.ozlabs.ibm.com>
+Received: from www.linutronix.de ([62.245.132.108]:43607 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751098AbbKCLmv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2015 06:42:51 -0500
+Date: Tue, 3 Nov 2015 12:42:02 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Keith Busch <keith.busch@intel.com>
+cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>,
+	Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [RFC PATCHv3 3/4] x86/pci: Initial commit for new VMD device
+ driver
+In-Reply-To: <20151103001552.GE13904@localhost.localdomain>
+Message-ID: <alpine.DEB.2.11.1511031001130.4032@nanos>
+References: <1445967247-24310-1-git-send-email-keith.busch@intel.com> <1445967247-24310-4-git-send-email-keith.busch@intel.com> <alpine.DEB.2.11.1511021426020.4032@nanos> <20151103001552.GE13904@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Keith,
 
-Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+On Tue, 3 Nov 2015, Keith Busch wrote:
+> On Mon, Nov 02, 2015 at 07:35:15PM +0100, Thomas Gleixner wrote:
+> > On Tue, 27 Oct 2015, Keith Busch wrote:
 
-> Similar to the mechanism tracking consumed IO/M32/M64 segments,
-> this introduces an array for each PHB to track the consumed DMA32
-> segments, which are going to be released on PCI unplugging time.
-> The index of the array is the DMA32 segment number while the value
-> stored in the element is the assigned PE number.
->
+> > > +config HAVE_VMDDEV
+> > > +	bool
+> > 
+> > Why do you need a seperate config symbol here?
+> 
+> This is to split the kernel vs. module parts. "vmd_create_irq_domain"
+> needs to be in-kernel, but VMD may be compiled as a module, so can't use
+> "CONFIG_VMD_DEV".
 
+#ifdef IS_ENABLED(CONFIG_VMD_DEV)
 
-> +	/* Setup TCE32 segment mapping */
-Do you mean DMA32 rather than TCE32?
-> +	for (i =3D base; i < base + segs; i++)
-> +		phb->ioda.dma32_segmap[i] =3D pe->pe_number;
-> +
-I'm pretty sure this is right, but can you just confirm that you
-intended to index into the array starting at base and going to base + segs,
-and not going from 0 to segs? (i.e. not dma32_segmap[i - base]).
+is true for both "m" and "y"
+ 
+> Alternatively we could export pci_msi_domain_ops, and no additional
+> in-kernel dependencies are required.
 
-Otherwise looks good.
+That might be not the worst choice.
+ 
+> > > +	int count = 0;
+> > > +	struct msi_desc *msi_desc;
+> > > +	struct irq_domain *vmd_irqdomain, *msi_irqdomain;
+> > > +
+> > > +	if (!dev->msix_enabled)
+> > > +		return NULL;
+> > > +
+> > > +	for_each_pci_msi_entry(msi_desc, dev)
+> > > +		count += msi_desc->nvec_used;
+> > 
+> > Is this the number of vectors which are available for the VMD device
+> > itself?
+> 
+> Correct, this is counting the number of the VMD vectors itself. This is
+> not the number of vectors that may be allocated in this domain, though
+> they will all need to multiplex into one of these.
 
-Regards,
-Daniel
+But you actually limit the number of vectors in that domain:
 
->  	/* Setup linux iommu table */
->  	pnv_pci_setup_iommu_table(tbl, addr, tce32_segsz * segs,
->  				  base * PNV_IODA1_DMA32_SEGSIZE,
-> @@ -2378,13 +2382,13 @@ static void pnv_pci_ioda1_setup_dma(struct pnv_ph=
-b *phb)
->  	 * then we assign at least one segment per PE, plus more based
->  	 * on the amount of devices under that PE
->  	 */
-> -	if (dma_pe_count > phb->ioda.tce32_count)
-> +	if (dma_pe_count > phb->ioda.dma32_count)
->  		residual =3D 0;
->  	else
-> -		residual =3D phb->ioda.tce32_count - dma_pe_count;
-> +		residual =3D phb->ioda.dma32_count - dma_pe_count;
->=20=20
->  	pr_info("PCI: Domain %04x has %ld available 32-bit DMA segments\n",
-> -		hose->global_number, phb->ioda.tce32_count);
-> +		hose->global_number, phb->ioda.dma32_count);
->  	pr_info("PCI: %d PE# for a total weight of %d\n",
->  		dma_pe_count, total_weight);
->=20=20
-> @@ -2394,7 +2398,7 @@ static void pnv_pci_ioda1_setup_dma(struct pnv_phb =
-*phb)
->  	 * out one base segment plus any residual segments based on
->  	 * weight
->  	 */
-> -	remaining =3D phb->ioda.tce32_count;
-> +	remaining =3D phb->ioda.dma32_count;
->  	base =3D 0;
->  	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
->  		weight =3D pnv_pci_ioda_pe_dma_weight(pe);
-> @@ -3094,7 +3098,8 @@ static void __init pnv_pci_init_ioda_phb(struct dev=
-ice_node *np,
->  {
->  	struct pci_controller *hose;
->  	struct pnv_phb *phb;
-> -	unsigned long size, m64map_off, m32map_off, pemap_off, iomap_off =3D 0;
-> +	unsigned long size, m64map_off, m32map_off, pemap_off;
-> +	unsigned long iomap_off =3D 0, dma32map_off =3D 0;
->  	const __be64 *prop64;
->  	const __be32 *prop32;
->  	int i, len;
-> @@ -3177,6 +3182,10 @@ static void __init pnv_pci_init_ioda_phb(struct de=
-vice_node *np,
->  	phb->ioda.io_segsize =3D phb->ioda.io_size / phb->ioda.total_pe_num;
->  	phb->ioda.io_pci_base =3D 0; /* XXX calculate this ? */
->=20=20
-> +	/* Calculate how many 32-bit TCE segments we have */
-> +	phb->ioda.dma32_count =3D phb->ioda.m32_pci_base /
-> +				PNV_IODA1_DMA32_SEGSIZE;
-> +
->  	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
->  	size =3D _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
->  	m64map_off =3D size;
-> @@ -3186,6 +3195,9 @@ static void __init pnv_pci_init_ioda_phb(struct dev=
-ice_node *np,
->  	if (phb->type =3D=3D PNV_PHB_IODA1) {
->  		iomap_off =3D size;
->  		size +=3D phb->ioda.total_pe_num * sizeof(phb->ioda.io_segmap[0]);
-> +		dma32map_off =3D size;
-> +		size +=3D phb->ioda.dma32_count *
-> +			sizeof(phb->ioda.dma32_segmap[0]);
->  	}
->  	pemap_off =3D size;
->  	size +=3D phb->ioda.total_pe_num * sizeof(struct pnv_ioda_pe);
-> @@ -3201,6 +3213,10 @@ static void __init pnv_pci_init_ioda_phb(struct de=
-vice_node *np,
->  		phb->ioda.io_segmap =3D aux + iomap_off;
->  		for (i =3D 0; i < phb->ioda.total_pe_num; i++)
->  			phb->ioda.io_segmap[i] =3D IODA_INVALID_PE;
-> +
-> +		phb->ioda.dma32_segmap =3D aux + dma32map_off;
-> +		for (i =3D 0; i < phb->ioda.dma32_count; i++)
-> +			phb->ioda.dma32_segmap[i] =3D IODA_INVALID_PE;
->  	}
->  	phb->ioda.pe_array =3D aux + pemap_off;
->  	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
-> @@ -3208,10 +3224,6 @@ static void __init pnv_pci_init_ioda_phb(struct de=
-vice_node *np,
->  	INIT_LIST_HEAD(&phb->ioda.pe_list);
->  	mutex_init(&phb->ioda.pe_list_mutex);
->=20=20
-> -	/* Calculate how many 32-bit TCE segments we have */
-> -	phb->ioda.tce32_count =3D phb->ioda.m32_pci_base /
-> -				PNV_IODA1_DMA32_SEGSIZE;
-> -
->  #if 0 /* We should really do that ... */
->  	rc =3D opal_pci_set_phb_mem_window(opal->phb_id,
->  					 window_type,
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platform=
-s/powernv/pci.h
-> index 2038ef2..0802fcd 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -148,6 +148,10 @@ struct pnv_phb {
->  			int			*m32_segmap;
->  			int			*io_segmap;
->=20=20
-> +			/* DMA32 segment maps - IODA1 only */
-> +			unsigned long		dma32_count;
-> +			int			*dma32_segmap;
-> +
->  			/* IRQ chip */
->  			int			irq_chip_init;
->  			struct irq_chip		irq_chip;
-> @@ -164,9 +168,6 @@ struct pnv_phb {
->  			 */
->  			unsigned char		pe_rmap[0x10000];
->=20=20
-> -			/* 32-bit TCE tables allocation */
-> -			unsigned long		tce32_count;
-> -
->  			/* TCE cache invalidate registers (physical and
->  			 * remapped)
->  			 */
-> --=20
-> 2.1.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > +	for_each_pci_msi_entry(msi_desc, dev)
+> > > +		count += msi_desc->nvec_used;
+> > > +	vmd_irqdomain = irq_domain_add_linear(NULL, count,
+> > > +						  domain_ops, dev);
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+So vmd_irqdomain can only hand out "count" vectors. 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: GPGTools - https://gpgtools.org
+The vmd_irqdomain is the parent of the msi_irqdomain:
 
-iQIcBAEBCgAGBQJWSnSkAAoJEPC3R3P2I92FQbAQAKyQDAQYAA88PgO5qHX+0nUH
-BQLJCH8uXSaLflsgCOpnWy9lv5jMzl5MpF1phbadTYTiVO6W/aZEUq+HhQ4ZBMgP
-fdhae3yUCQXAxsdeaSCvsFMDnVRacuh0Lqg4eznwrt0OEaCvtrROjpSl2A2kpgNv
-ZkMBblBcuQp3FXdqi6WPK2FS87jLgGPS1SxQQTnhNXrfxkGKXiQqhI1FRYRU18fz
-fP5tCik9BXdLU63qXTS8zbzvdE2jpqXoZjsDCrlfUp7NZ0Jy1pfD8KOXN5zBmHmu
-kYy03HAfvQO56foy5NEjTTgTFJwnmK9p9m+Rfc9nKmqm4QYN/0dAvKIcKRbfewVb
-Y/hd/DYpje/VwJ0dZk170f4uhuRcS8tqTsFqjYriNG/uyVisQQAs3a1S4/vaxc7L
-pOXH8iXPgD55zZWVyvqHQec1/Tu+FjVaEMiDBeqv37apbDViPonoy85BSTcUG9Bl
-AJ/Lkz/uFlDaEkFQBSFCuMHi5kSDpvm57T2lLbN83pGt35fW9OFq/o+yWYa/SRbO
-jL7Ppqko06sbr17h3/2oHTkpMINx124GKlBp1m+ih2hz0P3cKSoWk+kEzzClTLvY
-BQLN/RVQiGKye5aTcoiebAHuQrXlcwU18Y9fkcHmMg5PbNCHzFUASBnvmj8A5t5k
-RMQktBepybjKYACRwG69
-=RUYs
------END PGP SIGNATURE-----
---=-=-=--
+> > > +	msi_irqdomain = pci_msi_create_irq_domain(NULL, &pci_chained_msi_domain_info,
+> > > +						  vmd_irqdomain);
+
+But that parent limitation does not matter simply because your
+msi_irqdomain does not follow down the hierarchy in the allocation
+path.
+
+So we can avoid the vmd_irqdomain creation completely. It's just
+wasting memory and has no value at all. Creating the msi domain with a
+NULL parent is possible.
+
+> > > +	vmdirq->irq = &vmd->irqs[virq % vmd->msix_count];
+> > 
+> > So that points to the underlying VMD device irq, right? And you spread
+> > the device interrupts across the available VMD irqs. So in the worst
+> > case you might end up with empty and crowded VMD irqs, right?
+> > Shouldn't you try to fill that space in a more intelligent way?
+> 
+> The domain is enabled and enumerated by pci, so I thought devices will
+> be bound to their drivers serially, creating a more-or-less incrementing
+> virtual irq that should wrap in evenly.
+> 
+> But yes, we can be smarter about this, and the above is probably flawed
+> rationale, especially if considering hot-plug.
+
+Not only hotplug. It also depends on the init ordering and the
+population of the interrupt descriptor space.
+ 
+> > > +static void vmd_flow_handler(struct irq_desc *desc)
+> > > +{
+> > > +	struct irq_chip *chip = irq_desc_get_chip(desc);
+> > > +	struct vmd_irq_list *irqs = irq_desc_get_handler_data(desc);
+> > > +	struct vmd_irq *vmdirq;
+> > > +
+> > > +	chained_irq_enter(chip, desc);
+> > > +	rcu_read_lock();
+> > > +	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
+> > > +		generic_handle_irq(vmdirq->virq);
+> > > +	rcu_read_unlock();
+> > 
+> > I'm not entirely sure that the rcu protection here covers the whole
+> > virq thing when an interrupt is torn down. Can you please explain the
+> > whole protection scheme in detail?
+> 
+> This protects against device drivers manipulating the list through
+> vmd_msi_activate/deactivate. We can't spinlock the flow handler access
+> due to desc->lock taken through generic_handle_irq. The same lock is
+> held prior to vmd's msi activate/deactivate, so the lock order would be
+> opposite in those two paths.
+> 
+> I don't believe we're in danger of missing a necessary event or triggering
+> an unexpected event here. Is the concern that we need to synchronize rcu
+> instead of directly freeing the "vmdirq"? I think I see that possibility.
+
+synchronize rcu does not help. You surely need to kfree_rcu()
+"vmdirq", but that alone is not sufficient. You also need to think
+about the underlying irq descriptor, which is not freed via rcu. Lets
+look at it:
+
+CPU0					CPU1
+
+driver_exit()
+ free_irq(D)
+  lock(irqdesc(D))
+  irq_shutdown(D)
+    irq_domain_deactivate_irq(D)	vmd_flow_handler()
+      vmd_msi_deactivate()		  rcu_read_lock()
+        lock()				  vmdirq = list_entry(...)
+        list_del_rcu()			---> NMI  
+	unlock()
+  unlock(irqdesc(D))
+  synchronize_irq(D)			    
+ pci_misx_disable(device)
+  irq_domain_free_irqs()
+    vmd_msi_free_irqs()			  
+      kfree_rcu(vmdirq)			<--- NMI done  
+					  D = vmdirq->virq; <- Protected by RCU
+					  generic_handle_irq(D)
+					    desc = irqdesc(D)
+    irq_free_descs()
+     kfree(irqdesc(D))
+					    desc->handle_irq(desc) <-- KABOOOOM!
+
+Subtle, isn't it? It's extremly unlikely, but when it happens you have
+no chance to ever debug that.
+
+The good news for you is that this is a general issue and you can
+ignore it for now. The bad news for me is, that I have another urgent
+issue on my ever growing todo list.
+
+> > > +static void vmd_remove(struct pci_dev *dev)
+> > > +{
+> > > +	struct vmd_dev *vmd = pci_get_drvdata(dev);
+> > > +
+> > > +	pci_set_drvdata(dev, NULL);
+> > > +	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
+> > > +	pci_stop_root_bus(vmd->bus);
+> > > +	pci_remove_root_bus(vmd->bus);
+> > > +	vmd_teardown_dma_ops(vmd);
+> > > +	irq_domain_remove(vmd->irq_domain);
+> > 
+> > What tears down the chained handlers and the MSIx entries?
+> 
+> Thanks, I will fix the chained handler in both cases mentioned.
+> 
+> The entries themselves should be freed through devres_release after this
+> exits, and after MSI-x is disabled via pcim_release.
+ 
+Ok.
+
+Thanks,
+
+	tglx
