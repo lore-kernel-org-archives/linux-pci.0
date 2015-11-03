@@ -1,47 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:46712 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752337AbbKYPav (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Nov 2015 10:30:51 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>, <linux-pci@vger.kernel.org>,
-	<linux-sh@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Subject: [Resend: PATCH v2 0/3] Fix rcar-pcie for arm64
-Date: Wed, 25 Nov 2015 15:30:36 +0000
-Message-Id: <1448465439-2132-1-git-send-email-phil.edworthy@renesas.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
+ hostbridge init
+To: Arnd Bergmann <arnd@arndb.de>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+ <5802577.H74A3Lg5B3@wuerfel> <5638E1CE.9000805@codeaurora.org>
+ <3736182.0iiYWufyXZ@wuerfel>
+Cc: Tomasz Nowicki <tn@semihalf.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	bhelgaas@google.com, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5638F243.2050907@codeaurora.org>
+Date: Tue, 3 Nov 2015 12:43:31 -0500
+MIME-Version: 1.0
+In-Reply-To: <3736182.0iiYWufyXZ@wuerfel>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The first patches fixes the build problem, and the second patch reverts the
-patch that removed the driver from arm64 builds. The final patch add a compat
-string for the r8a7795 (arm64) device.
 
-Tested on arm Koelsch board, all ok.
 
-Tested on arm64 Salvator-X board using renesas-drivers-2015-10-27-v4.3-rc7 from
-git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-drivers.git with PCI
-next merged. 
-Apart from patches to add the PCIe clock and DT nodes, it also needs this fix:
-("PCI: MSI: Only use the generic MSI layer when domain is hierarchical")
+On 11/3/2015 11:55 AM, Arnd Bergmann wrote:
+> On Tuesday 03 November 2015 11:33:18 Sinan Kaya wrote:
+>>
+>> On 11/3/2015 10:59 AM, Arnd Bergmann wrote:
+>>> On Tuesday 03 November 2015 10:10:21 Sinan Kaya wrote:
+>>>>
+>>>> I don't see anywhere in the SBSA spec addendum that the PCI
+>>>> configuration space section that unaligned accesses *MUST* be supported.
+>>>>
+>>>> If this is required, please have this info added to the spec. I can work
+>>>> with the designers for the next chip.
+>>>>
+>>>> Unaligned access on the current hardware returns incomplete values or
+>>>> can cause bus faults. The behavior is undefined.
+>>>
+>>> Unaligned accesses are not allowed, but any PCI compliant device must
+>>> support aligned 1, 2 or 4 byte accesses on its configuration space,
+>>> though the byte-enable mechanism. In an ECAM host bridge, those are
+>>> mapped to load/store accesses from the CPU with the respective width
+>>> and natural alignment.
+>>
+>> As far as I see, the endpoints do not have any problems with unaligned
+>> accesses. It is the host bridge itself (stuff that doesn't get on the
+>> PCIe bus and uses traditional AXI kind bus internally) has problems with
+>> alignment.
+>>
+>> If Linux is expecting all HW vendors to implement alignment support,
+>> this needs to be put in the SBSA spec as a hard requirement.
+>
+> As I said, it's not unaligned accesses at all, just 1-byte and aligned
+> 2-byte accesses, and it's not Linux mandating this but the PCI
+> spec. Please read Russell's email again, it is not possible for PCI
+> to work according to the specification unless the host bridge allows
+> sub-32-bit accesses.
 
-Resent with whole series marked as v2 and acks, etc added.
+I'll check back with the hardware designers. Seeing readb/readw/readl 
+made me nervous that we are trying unaligned access from any boundaries.
 
-Harunobu Kurokawa (1):
-  PCI: pcie-rcar: Add support for R-Car H3.
+In any case, the hardware document says 32 bit configuration space 
+access to the host bridge only. I'll get more clarification.
 
-Phil Edworthy (2):
-  PCI: rcar: Convert to DT resource parsing API
-  Revert "PCI: rcar: Build pcie-rcar.c only on ARM"
+>
+> You can probably work around this by using the legacy I/O port method
+> rather than ECAM, if the PCI host bridge itself is functional and just
+> the host bus it is connected to is buggy.
 
- Documentation/devicetree/bindings/pci/rcar-pci.txt |   3 +-
- drivers/pci/host/Kconfig                           |   3 +-
- drivers/pci/host/pcie-rcar.c                       | 117 +++++++++++++--------
- 3 files changed, 77 insertions(+), 46 deletions(-)
+ From the sounds of it, we'll need a quirk for config space. We support 
+legacy I/O only to make the endpoints happy. Some endpoints do not get 
+initialized if they don't have a BAR address assigned to all the BAR 
+resources.
+
+I just saw David Daney's email. I like his idea. I think this chip will 
+fit into the same category.
+
+>
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
 -- 
-2.5.0
-
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
