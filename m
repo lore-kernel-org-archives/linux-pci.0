@@ -1,95 +1,117 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Keith Busch <keith.busch@intel.com>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	Hans de Bruin <jmdebruin@xmsnet.nl>
-Subject: Re: [PATCH] x86/PCI: Fix regression caused by commit 4d6b4e69a245
-Date: Fri, 27 Nov 2015 17:06:01 +0100
-Message-ID: <8206751.4eTpiUuo7l@vostro.rjw.lan>
-In-Reply-To: <1448593953-12364-1-git-send-email-jiang.liu@linux.intel.com>
-References: <5655B392.7070701@intel.com> <1448593953-12364-1-git-send-email-jiang.liu@linux.intel.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: David Daney <ddaney@caviumnetworks.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"robert.richter@caviumnetworks.com"
+	<robert.richter@caviumnetworks.com>,
+	"Narinder.Dhillon@caviumnetworks.com"
+	<Narinder.Dhillon@caviumnetworks.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Wangyijing <wangyijing@huawei.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>
+Subject: RE: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
+ hostbridge init
+Date: Tue, 3 Nov 2015 18:00:10 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1629984F@lhreml503-mbs>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+ <1445963922-22711-12-git-send-email-tn@semihalf.com>
+ <5631180D.2000902@codeaurora.org> <20151103141512.GC3574@red-moon>
+ <5638D07B.2030001@linaro.org> <5638F13D.3080406@caviumnetworks.com>
+In-Reply-To: <5638F13D.3080406@caviumnetworks.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, November 27, 2015 11:12:33 AM Jiang Liu wrote:
-> From: Liu Jiang <jiang.liu@linux.intel.com>
-> 
-> Commit 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support
-> PCI host bridge") converted x86 to use the common interface
-> acpi_pci_root_create, but the conversion missed on code piece in
-> arch/x86/pci/bus_numa.c, which causes regression on some legacy
-> AMD platforms as reported by Arthur Marsh <arthur.marsh@internode.on.net>.
-> The root causes is that acpi_pci_root_create() fails to insert
-> host bridge resources into iomem_resource/ioport_resource because
-> x86_pci_root_bus_resources() has already inserted those resources.
-> So change x86_pci_root_bus_resources() to not insert resources into
-> iomem_resource/ioport_resource.
-> 
-> Fixes: 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support PCI host bridge")
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Reported-and-tested-by: Arthur Marsh <arthur.marsh@internode.on.net>
-> Cc: Keith Busch <keith.busch@intel.com>
-> Cc: Arthur Marsh <arthur.marsh@internode.on.net>
-> Cc: Hans de Bruin <jmdebruin@xmsnet.nl>
+Hi David
 
-What exactly has changed between this version and the previous one?
-
-
-> ---
->  arch/x86/pci/bus_numa.c |   13 ++-----------
->  drivers/acpi/pci_root.c |    7 +++++++
->  2 files changed, 9 insertions(+), 11 deletions(-)
+> -----Original Message-----
+> From: David Daney [mailto:ddaney@caviumnetworks.com]
+> Sent: 03 November 2015 17:39
+> To: Hanjun Guo
+> Cc: Lorenzo Pieralisi; Sinan Kaya; Tomasz Nowicki; bhelgaas@google.com;
+> arnd@arndb.de; will.deacon@arm.com; catalin.marinas@arm.com; rjw@rjwysocki.net;
+> jiang.liu@linux.intel.com; robert.richter@caviumnetworks.com;
+> Narinder.Dhillon@caviumnetworks.com; Liviu.Dudau@arm.com; tglx@linutronix.de;
+> Wangyijing; Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
+> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; Gabriele Paoloni; Wangzhou
+> (B); liudongdong (C)
+> Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
+> hostbridge init
 > 
-> diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-> index 7bcf06a7cd12..6eb3c8af96e2 100644
-> --- a/arch/x86/pci/bus_numa.c
-> +++ b/arch/x86/pci/bus_numa.c
-> @@ -50,18 +50,9 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
->  	if (!found)
->  		pci_add_resource(resources, &info->busn);
->  
-> -	list_for_each_entry(root_res, &info->resources, list) {
-> -		struct resource *res;
-> -		struct resource *root;
-> +	list_for_each_entry(root_res, &info->resources, list)
-> +		pci_add_resource(resources, &root_res->res);
->  
-> -		res = &root_res->res;
-> -		pci_add_resource(resources, res);
-> -		if (res->flags & IORESOURCE_IO)
-> -			root = &ioport_resource;
-> -		else
-> -			root = &iomem_resource;
-> -		insert_resource(root, res);
-> -	}
->  	return;
->  
->  default_resources:
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 850d7bf0c873..ae3fe4e64203 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -768,6 +768,13 @@ static void pci_acpi_root_add_resources(struct acpi_pci_root_info *info)
->  		else
->  			continue;
->  
-> +		/*
-> +		 * Some legacy x86 host bridge drivers use iomem_resource and
-> +		 * ioport_resource as default resource pool, skip it.
-> +		 */
-> +		if (res == root)
-> +			continue;
-> +
->  		conflict = insert_resource_conflict(root, res);
->  		if (conflict) {
->  			dev_info(&info->bridge->dev,
+> On 11/03/2015 07:19 AM, Hanjun Guo wrote:
+> > On 11/03/2015 10:15 PM, Lorenzo Pieralisi wrote:
+> >> On Wed, Oct 28, 2015 at 02:46:37PM -0400, Sinan Kaya wrote:
+> >>
+> >> [...]
+> >>
+> >>>> -int raw_pci_write(unsigned int domain, unsigned int bus,
+> >>>> -        unsigned int devfn, int reg, int len, u32 val)
+> >>>> +struct pci_ops pci_root_ops = {
+> >>>> +    .map_bus = pci_mcfg_dev_base,
+> >>>> +    .read = pci_generic_config_read,
+> >>>> +    .write = pci_generic_config_write,
+> >>>
+> >>>
+> >>> Can you change these with pci_generic_config_read32 and
+> >>> pci_generic_config_write32? We have some targets that can only do 32
+> >>> bits PCI config space access.
+> >>
+> >> No.
+> >>
+> >> http://www.spinics.net/lists/linux-pci/msg44869.html
+> >>
+> >> Can you be a bit more specific please ?
+> >>
+> >> Sigh. Looks like we have to start adding platform specific quirks even
+> >> before we merged the generic ACPI PCIe host controller implementation.
+> >
+> > Cc Gab, Zhou, and Dondong who upstream the hip05 (designware) PCIe host
+> > support.
+> >
+> > I think so, some platform may not support ECAM for root complex,
+> > which needs special handling of access config space, we may need
+> > to consider those cases.
+> >
 > 
+> Yes, it is indeed true.  For example, some Cavium ThunderX processors
+> fall into this category.
+> 
+> Some options I thought of are:
+> 
+>   o Use DECLARE_ACPI_MCFG_FIXUP() in the kernel to supply the needed
+> config space accessors.
+> 
+>   o Define additional root_device_ids that imply the needed config space
+> accessors.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Yes I like this
+
+it would fit designware too
+
+Gab
+
+> 
+> 
+> > Thanks
+> > Hanjun
+
