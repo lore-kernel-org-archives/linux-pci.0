@@ -1,104 +1,187 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db3on0129.outbound.protection.outlook.com ([157.55.234.129]:2075
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752960AbbKXQRh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Nov 2015 11:17:37 -0500
-From: Ramon Fried <ramon.fried@tandemg.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: PCIe endpoint generic driver
-Date: Tue, 24 Nov 2015 16:17:34 +0000
-Message-ID: <AM2PR02MB06891687E1478297A1685694E8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
-References: <AM2PR02MB06895C98FE39F8BB6D958389E8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E162C98EA@lhreml503-mbs>
- <AM2PR02MB06897BD3549D017DCF17FE36E8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E162C9A21@lhreml503-mbs>
- <AM2PR02MB0689D08FDBB116A8EDE4669AE8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E162C9AE8@lhreml503-mbs>
- <56548D46.8000201@tandemg.com>
-In-Reply-To: <56548D46.8000201@tandemg.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from relmlor3.renesas.com ([210.160.252.173]:62682 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755220AbbKCQVg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2015 11:21:36 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-sh@vger.kernel.org>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+Subject: [PATCH] PCI: rcar (usb): DT can override default window settings
+Date: Tue,  3 Nov 2015 16:19:26 +0000
+Message-Id: <1446567566-10952-1-git-send-email-phil.edworthy@renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+If the dtb specifies dma-ranges, we use those values. Otherwise, we
+default to the values that were previously hardcoded into the driver.
 
-On 24/11/2015 17:57, Gabriele Paoloni wrote:
->> -----Original Message-----
->> From: Ramon Fried [mailto:ramon.fried@tandemg.com]
->> Sent: Tuesday, November 24, 2015 3:33 PM
->> To: Gabriele Paoloni
->> Cc: linux-pci@vger.kernel.org
->> Subject: RE: PCIe endpoint generic driver
->>
->>
->>>> -----Original Message-----
->>>> From: linux-pci-owner@vger.kernel.org 
->>>> [mailto:linux-pci-owner@vger.kernel.org]
->>>> On Behalf Of Ramon Fried
->>>> Sent: 24 November 2015 15:02
->>>> To: linux-pci@vger.kernel.org
->>>> Subject: RE: PCIe endpoint generic driver
->>>>
->>>>>> Hi.
->>>>>> Sorry for the noob question :)
->>>>>> I'm currently developing a PCIe endpoint driver for a board that 
->>>>>> runs Linux.
->>>>>> The board will be used as an expansion PCIe card for x86 PC's.
->>>>>> Is there any guidelines, documentation related to PCI endpoint 
->>>>>> drivers for Linux kernel ?
->>>>> Hi Ramon
->>>>>
->>>>> Have you looked at
->>>>> http://lxr.free-electrons.com/source/Documentation/PCI/pci.txt
->>>>> ?
->>>>>
->>>>> Regards
->>>>>
->>>>> Gab
->>>> Hi Gab, you misunderstood my driver type.
->>>> This is not a host driver, that I'm writing, but the actual 
->>>> endpoint
->> driver.
->>>> Then Linux is on the PCIe board.
->>> Hi Ramon, I understood your driver type.
->>> I think you misunderstood the Documentation.
->>> Host Bridges are under drivers/pci/host and none of them use
->> pci_register_driver() API.
->>> pci_register_driver() is actually for endpoints. Please read the 
->>> link
->> above again.
->>
->> Hi Gab.
->> Host bridges AFAIK are supposed to connect between the host CPU, main 
->> memory and the PCI itself.
->> This is not what I need as I'm not at the host side.
->> pci_register_driver() is a host driver for pci endpoints.
-> pci_register_driver() is an API to register an endpoint PCI driver 
-> (try to grep for it in the linux source tree).
->
->> On the device side, pci_register_driver() doesn't make any sense.
->> There's no root complex, no enumeration, etc.
-> Ah, so how comes that all EP drivers at the end call it?
-It's not the device side. it's the host side.
->
->> I need for instance a method to send a MSI/MSIx interrupt to the host.
-> That depends on your HW and on your driver type AFAIK
-I'm writing the HW software, that's the driver I'm writing.
->
-> One of many examples you can find in the Kernel source tree can be
-> http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/
-> ixgbe_main.c#L9284
->
-> You can see how the driver is structured...
-This is on the host side. I can assure you there's a FPGA / ROM code on the device(Intel 10Gb)  that configures that PCI end point.
->
->> I need to develop a function that does it.
->>
->> My original question was if there's a framework/guidelines for 
->> achieving that.
->>
->> Thanks.
->> Ramon
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ .../devicetree/bindings/pci/pci-rcar-gen2.txt      |  6 ++
+ drivers/pci/host/pci-rcar-gen2.c                   | 76 +++++++++++++++++++++-
+ 2 files changed, 79 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+index 7fab84b..891463c 100644
+--- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
++++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+@@ -24,6 +24,11 @@ Required properties:
+ - interrupt-map-mask: standard property that helps to define the interrupt
+   mapping.
+ 
++Optional properties:
++- dma-ranges: a single range for the inbound memory region. If not supplied,
++  defaults to 1GiB at 0x40000000. Note there are hardware restrictions on the
++  allowed combinations of address and size.
++
+ Example SoC configuration:
+ 
+ 	pci0: pci@ee090000  {
+@@ -38,6 +43,7 @@ Example SoC configuration:
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+ 		#interrupt-cells = <1>;
++		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x40000000>;
+ 		interrupt-map-mask = <0xff00 0 0 0x7>;
+ 		interrupt-map = <0x0000 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
+ 				 0x0800 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index c4f64bf..6295116 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -15,6 +15,7 @@
+ #include <linux/io.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+@@ -102,6 +103,8 @@ struct rcar_pci_priv {
+ 	unsigned busnr;
+ 	int irq;
+ 	unsigned long window_size;
++	unsigned long window_addr;
++	unsigned long window_pci;
+ };
+ 
+ /* PCI configuration space operations */
+@@ -239,8 +242,8 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
+ 	       RCAR_PCI_ARBITER_PCIBP_MODE;
+ 	iowrite32(val, reg + RCAR_PCI_ARBITER_CTR_REG);
+ 
+-	/* PCI-AHB mapping: 0x40000000 base */
+-	iowrite32(0x40000000 | RCAR_PCIAHB_PREFETCH16,
++	/* PCI-AHB mapping */
++	iowrite32(priv->window_addr | RCAR_PCIAHB_PREFETCH16,
+ 		  reg + RCAR_PCIAHB_WIN1_CTR_REG);
+ 
+ 	/* AHB-PCI mapping: OHCI/EHCI registers */
+@@ -251,7 +254,7 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
+ 	iowrite32(RCAR_AHBPCI_WIN1_HOST | RCAR_AHBPCI_WIN_CTR_CFG,
+ 		  reg + RCAR_AHBPCI_WIN1_CTR_REG);
+ 	/* Set PCI-AHB Window1 address */
+-	iowrite32(0x40000000 | PCI_BASE_ADDRESS_MEM_PREFETCH,
++	iowrite32(priv->window_pci | PCI_BASE_ADDRESS_MEM_PREFETCH,
+ 		  reg + PCI_BASE_ADDRESS_1);
+ 	/* Set AHB-PCI bridge PCI communication area address */
+ 	val = priv->cfg_res->start + RCAR_AHBPCI_PCICOM_OFFSET;
+@@ -284,6 +287,64 @@ static struct pci_ops rcar_pci_ops = {
+ 	.write	= pci_generic_config_write,
+ };
+ 
++static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
++				     struct device_node *node)
++{
++	const int na = 3, ns = 2;
++	int rlen;
++
++	parser->node = node;
++	parser->pna = of_n_addr_cells(node);
++	parser->np = parser->pna + na + ns;
++
++	parser->range = of_get_property(node, "dma-ranges", &rlen);
++	if (!parser->range)
++		return -ENOENT;
++
++	parser->end = parser->range + rlen / sizeof(__be32);
++	return 0;
++}
++
++static int rcar_pci_parse_map_dma_ranges(struct rcar_pci_priv *pci,
++					 struct device_node *np)
++{
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
++	int index = 0;
++
++	/* Failure to parse is ok as we fall back to defaults */
++	if (pci_dma_range_parser_init(&parser, np))
++		return 0;
++
++	/* Get the dma-ranges from DT */
++	for_each_of_pci_range(&parser, &range) {
++		/* Hardware only allows one inbound 32-bit range */
++		if (index)
++			return -EINVAL;
++
++		pci->window_addr = (unsigned long)range.cpu_addr;
++		pci->window_pci = (unsigned long)range.pci_addr;
++		pci->window_size = (unsigned long)range.size;
++
++		/* Catch HW limitations */
++		if (!(range.flags & IORESOURCE_PREFETCH)) {
++			dev_err(pci->dev, "window must be prefetchable\n");
++			return -EINVAL;
++		}
++		if (pci->window_addr) {
++			u32 lowaddr = 1 << (ffs(pci->window_addr) - 1);
++
++			if (lowaddr < pci->window_size) {
++				dev_err(pci->dev, "invalid window size/addr\n");
++				return -EINVAL;
++			}
++		}
++		index++;
++	}
++
++	return 0;
++}
++
+ static int rcar_pci_probe(struct platform_device *pdev)
+ {
+ 	struct resource *cfg_res, *mem_res;
+@@ -329,6 +390,9 @@ static int rcar_pci_probe(struct platform_device *pdev)
+ 		return priv->irq;
+ 	}
+ 
++	/* default window addr and size if not specified in DT */
++	priv->window_addr = 0x40000000;
++	priv->window_pci = 0x40000000;
+ 	priv->window_size = SZ_1G;
+ 
+ 	if (pdev->dev.of_node) {
+@@ -344,6 +408,12 @@ static int rcar_pci_probe(struct platform_device *pdev)
+ 		priv->busnr = busnr.start;
+ 		if (busnr.end != busnr.start)
+ 			dev_warn(&pdev->dev, "only one bus number supported\n");
++
++		ret = rcar_pci_parse_map_dma_ranges(priv, pdev->dev.of_node);
++		if (ret < 0) {
++			dev_err(&pdev->dev, "failed to parse dma-range\n");
++			return ret;
++		}
+ 	} else {
+ 		priv->busnr = pdev->id;
+ 	}
+-- 
+1.9.1
 
