@@ -1,204 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:52007 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754095AbbKDO2N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 09:28:13 -0500
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 19:58:10 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 20/50] powerpc/powernv: Improve DMA32 segment calculation
-Date: Thu,  5 Nov 2015 00:12:20 +1100
-Message-Id: <1446642770-4681-21-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from relmlor2.renesas.com ([210.160.252.172]:63041 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752029AbbKCJAr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 3 Nov 2015 04:00:47 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Wolfram Sang <wsa@the-dreams.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/3] Fix rcar-pcie for arm64
+Date: Tue, 3 Nov 2015 09:00:42 +0000
+Message-ID: <PS1PR06MB118027E43C76740EC5F9F18CF52B0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <1446482175-26507-1-git-send-email-phil.edworthy@renesas.com>
+ <20151102213305.GA1158@tetsubishi>
+In-Reply-To: <20151102213305.GA1158@tetsubishi>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In current implementation, the DMA32 segments required by one specific
-PE isn't calculated with the information hold in the PE independently.
-It conflicts with the PCI hotplug design: PE centralized, meaning the
-PE's DMA32 segments should be calculated from the information hold in
-the PE independently.
+Hi Wolfram,
 
-This moves the logic calculating PE's consumed DMA32 segments from
-pnv_pci_ioda1_setup_dma() to pnv_pci_ioda1_setup_dma_pe() so that PE's
-DMA32 segments are calculated/allocated from the information hold in
-the PE (DMA32 weight). Also the logic is improved: we try to allocate
-as much DMA32 segments as we can. It's acceptable that number of DMA32
-segments less than the expected number are allocated.
+On 02 November 2015 21:33, Wolfram wrote:
+> > The first patches fixes the build problem, and the second patch reverts the
+> > patch that removed the driver from arm64 builds. The final patch add a compat
+> > string for the r8a7795 (arm64) device.
+> 
+> Thanks. I will test them next week when I have access to my board again.
+It's worth mentioning that I had some troubles on my Salvator-X board
+with some cards not being able to link up. Since my board has a socketed chip
+and the board was designed for it not to be via a socket, and this is such a low
+level functionality, I think this is HW related. My Intel Gigabit CT Desktop card
+always works.
+Also note that this PCIe controller only supports a 32-bit AXI address range,
+so you need to limit memory to within the 4GiB address space. As far as I am
+aware, there is no way to limit the dma mask that card drivers use via the
+controller. The plan is to add support this via IOMMU.
+ 
+> > Apart from patches to add the PCIe clock and DT nodes, I had to revert these
+> > patches to get it to work on arm64:
+> >  f075915ac0b1 ("PCI/MSI: Drop domain field from msi_controller")
+> >  d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use struct
+> device::msi_domain")
+> 
+> Does that solve the MSI problems you mentioned?
+It avoids the problem, but I have a proper fix in the pipeline which just needs
+more testing.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 119 ++++++++++++++----------------
- 1 file changed, 57 insertions(+), 62 deletions(-)
-
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index fdbc012..0e66c4d 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1830,15 +1830,23 @@ static unsigned int pnv_pci_ioda_pe_dma_weight(struct pnv_ioda_pe *pe)
- 	return weight;
- }
- 
-+static unsigned int pnv_pci_ioda_total_dma_weight(struct pnv_phb *phb)
-+{
-+	unsigned int weight = 0;
-+
-+	pci_walk_bus(phb->hose->bus, pnv_pci_ioda_dev_dma_weight, &weight);
-+	return weight;
-+}
-+
- static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
--				       struct pnv_ioda_pe *pe,
--				       unsigned int base,
--				       unsigned int segs)
-+				       struct pnv_ioda_pe *pe)
- {
- 
- 	struct page *tce_mem = NULL;
- 	struct iommu_table *tbl;
--	unsigned int tce32_segsz, i;
-+	unsigned int weight, total_weight;
-+	unsigned int tce32_segsz, base, segs, i;
-+	bool found;
- 	int64_t rc;
- 	void *addr;
- 
-@@ -1846,12 +1854,55 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
- 	/* XXX FIXME: Provide 64-bit DMA facilities & non-4K TCE tables etc.. */
- 	/* XXX FIXME: Allocate multi-level tables on PHB3 */
- 
-+	total_weight = pnv_pci_ioda_total_dma_weight(phb);
-+	weight = pnv_pci_ioda_pe_dma_weight(pe);
-+	if (!total_weight || !weight)
-+		return;
-+
-+	segs = (weight * phb->ioda.dma32_count) / total_weight;
-+	if (!segs)
-+		segs = 1;
-+
-+	/*
-+	 * Allocate continuous DMA32 segments. We begin with the expected
-+	 * number of segments. With one more attempt, the number of DMA32
-+	 * segments to be allocated is decreased by one until one segment
-+	 * is allocated successfully.
-+	 */
-+	while (segs) {
-+		found = false;
-+		for (base = 0; base <= phb->ioda.dma32_count - segs; base++) {
-+			for (i = base; i < base + segs; i++) {
-+				if (phb->ioda.dma32_segmap[i] !=
-+				    IODA_INVALID_PE)
-+					break;
-+			}
-+
-+			if (i >= base + segs) {
-+				found = true;
-+				break;
-+			}
-+		}
-+
-+		if (found)
-+			break;
-+
-+		segs--;
-+	}
-+
-+	if (!segs) {
-+		pe_warn(pe, "No available DMA32 resource\n");
-+		return;
-+	}
-+
- 	tbl = pnv_pci_table_alloc(phb->hose->node);
- 	iommu_register_group(&pe->table_group, phb->hose->global_number,
- 			pe->pe_number);
- 	pnv_pci_link_table_and_group(phb->hose->node, 0, tbl, &pe->table_group);
- 
- 	/* Grab a 32-bit TCE table */
-+	pe_info(pe, "DMA weight %d (%d), assigned %d DMA32 segments\n",
-+		weight, total_weight, segs);
- 	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
- 		base * PNV_IODA1_DMA32_SEGSIZE,
- 		(base + segs) * PNV_IODA1_DMA32_SEGSIZE - 1);
-@@ -2362,68 +2413,12 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
- 
- static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
- {
--	struct pci_controller *hose = phb->hose;
--	unsigned int weight, total_weight, dma_pe_count;
--	unsigned int residual, remaining, segs, base;
- 	struct pnv_ioda_pe *pe;
- 
--	total_weight = 0;
--	dma_pe_count = 0;
--	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
--		weight = pnv_pci_ioda_pe_dma_weight(pe);
--		if (weight > 0)
--			dma_pe_count++;
--
--		total_weight += weight;
--	}
--
--	/* If we have more PE# than segments available, hand out one
--	 * per PE until we run out and let the rest fail. If not,
--	 * then we assign at least one segment per PE, plus more based
--	 * on the amount of devices under that PE
--	 */
--	if (dma_pe_count > phb->ioda.dma32_count)
--		residual = 0;
--	else
--		residual = phb->ioda.dma32_count - dma_pe_count;
--
--	pr_info("PCI: Domain %04x has %ld available 32-bit DMA segments\n",
--		hose->global_number, phb->ioda.dma32_count);
--	pr_info("PCI: %d PE# for a total weight of %d\n",
--		dma_pe_count, total_weight);
--
- 	pnv_pci_ioda_setup_opal_tce_kill(phb);
- 
--	/* Walk our PE list and configure their DMA segments, hand them
--	 * out one base segment plus any residual segments based on
--	 * weight
--	 */
--	remaining = phb->ioda.dma32_count;
--	base = 0;
--	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
--		weight = pnv_pci_ioda_pe_dma_weight(pe);
--		if (!weight)
--			continue;
--
--		if (!remaining) {
--			pe_warn(pe, "No DMA32 resources available\n");
--			continue;
--		}
--		segs = 1;
--		if (residual) {
--			segs += ((weight * residual)  + (total_weight / 2)) /
--				total_weight;
--			if (segs > remaining)
--				segs = remaining;
--		}
--
--		pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
--			weight, segs);
--		pnv_pci_ioda1_setup_dma_pe(phb, pe, base, segs);
--
--		remaining -= segs;
--		base += segs;
--	}
-+	list_for_each_entry(pe, &phb->ioda.pe_list, list)
-+		pnv_pci_ioda1_setup_dma_pe(phb, pe);
- }
- 
- static void pnv_pci_ioda2_setup_dma(struct pnv_phb *phb)
--- 
-2.1.0
+Thanks
+Phil
 
