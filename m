@@ -1,79 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:33618 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756349AbbKEW22 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2015 17:28:28 -0500
-Received: by pabfh17 with SMTP id fh17so99887366pab.0
-        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2015 14:28:27 -0800 (PST)
-From: Daniel Axtens <dja@axtens.net>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-Cc: devicetree@vger.kernel.org, aik@ozlabs.ru,
-	linux-pci@vger.kernel.org, panto@antoniou-consulting.com,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	bhelgaas@google.com, frowand.list@gmail.com
-Subject: Re: [PATCH v7 04/50] powerpc/powernv: Cleanup on pnv_pci_ioda_controller_ops
-In-Reply-To: <1446642770-4681-5-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1446642770-4681-5-git-send-email-gwshan@linux.vnet.ibm.com>
-Date: Fri, 06 Nov 2015 09:28:20 +1100
-Message-ID: <87vb9ghyij.fsf@gamma.ozlabs.ibm.com>
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:36996 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752594AbbKCCE4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2015 21:04:56 -0500
+Received: from /spool/local
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 3 Nov 2015 07:34:54 +0530
+Date: Tue, 3 Nov 2015 10:04:48 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
+	Ethan Zhao <ethan.zhao@oracle.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 5/7] PCI: Wait 1 second between disabling VFs and
+ clearing NumVFs
+Message-ID: <20151103020448.GB1763@richards-mbp.cn.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20151029222322.11908.13738.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151029222322.11908.13738.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
-
-> This cleans up on pnv_pci_ioda_controller_ops struct to use tab
-> instead of space indent of statement to avoid complains from
-> scripts/checkpatch.pl. No logical changes introduced.
-
-Oh, that was my code :/ Sorry I missed that, thanks for cleaning it up!
-
-Reviewed-by: Daniel Axtens <dja@axtens.net>
-
+On Thu, Oct 29, 2015 at 05:23:22PM -0500, Bjorn Helgaas wrote:
+>From: Alexander Duyck <aduyck@mirantis.com>
 >
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  arch/powerpc/platforms/powernv/pci-ioda.c | 18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
+>Per sec 3.3.3.1 of the SR-IOV spec, r1.1, we must allow 1.0s after clearing
+>VF Enable before reading any field in the SR-IOV Extended Capability.
 >
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 2e2bedb..aa3645c 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -3064,17 +3064,17 @@ static void pnv_pci_ioda_shutdown(struct pci_controller *hose)
->  }
->  
->  static const struct pci_controller_ops pnv_pci_ioda_controller_ops = {
-> -       .dma_dev_setup = pnv_pci_dma_dev_setup,
-> +	.dma_dev_setup		= pnv_pci_dma_dev_setup,
->  #ifdef CONFIG_PCI_MSI
-> -       .setup_msi_irqs = pnv_setup_msi_irqs,
-> -       .teardown_msi_irqs = pnv_teardown_msi_irqs,
-> +	.setup_msi_irqs		= pnv_setup_msi_irqs,
-> +	.teardown_msi_irqs	= pnv_teardown_msi_irqs,
->  #endif
-> -       .enable_device_hook = pnv_pci_enable_device_hook,
-> -       .window_alignment = pnv_pci_window_alignment,
-> -       .reset_secondary_bus = pnv_pci_reset_secondary_bus,
-> -       .dma_set_mask = pnv_pci_ioda_dma_set_mask,
-> -       .dma_get_required_mask = pnv_pci_ioda_dma_get_required_mask,
-> -       .shutdown = pnv_pci_ioda_shutdown,
-> +	.enable_device_hook	= pnv_pci_enable_device_hook,
-> +	.window_alignment	= pnv_pci_window_alignment,
-> +	.reset_secondary_bus	= pnv_pci_reset_secondary_bus,
-> +	.dma_set_mask		= pnv_pci_ioda_dma_set_mask,
-> +	.dma_get_required_mask	= pnv_pci_ioda_dma_get_required_mask,
-> +	.shutdown		= pnv_pci_ioda_shutdown,
->  };
->  
->  static void __init pnv_pci_init_ioda_phb(struct device_node *np,
-> -- 
-> 2.1.0
+>Wait 1 second before calling pci_iov_set_numvfs(), which reads
+>PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE after it sets PCI_SRIOV_NUM_VF.
 >
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
+>[bhelgaas: split to separate patch for reviewability, add spec reference]
+>Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
+>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Reviewed-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+
+>---
+> drivers/pci/iov.c |    2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+>
+>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>index fada98d..24428d5 100644
+>--- a/drivers/pci/iov.c
+>+++ b/drivers/pci/iov.c
+>@@ -339,13 +339,13 @@ failed:
+> 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+> 	pci_cfg_access_lock(dev);
+> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>-	pci_iov_set_numvfs(dev, 0);
+> 	ssleep(1);
+> 	pci_cfg_access_unlock(dev);
+>
+> 	if (iov->link != dev->devfn)
+> 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>
+>+	pci_iov_set_numvfs(dev, 0);
+> 	return rc;
+> }
+>
+
+-- 
+Richard Yang
+Help you, Help me
+
