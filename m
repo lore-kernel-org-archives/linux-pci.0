@@ -1,120 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:59257 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708AbbKQBjP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 20:39:15 -0500
-Received: from localhost
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Nov 2015 11:39:13 +1000
-Date: Tue, 17 Nov 2015 12:38:13 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-Subject: Re: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
-Message-ID: <20151117013813.GB31584@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
- <56498D7B.7000307@ozlabs.ru>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50731 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754674AbbKCPK1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2015 10:10:27 -0500
+Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
+ hostbridge init
+To: Tomasz Nowicki <tn@semihalf.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+ <1445963922-22711-12-git-send-email-tn@semihalf.com>
+ <5631180D.2000902@codeaurora.org> <20151103141512.GC3574@red-moon>
+ <5638C728.2020503@semihalf.com>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5638CE5D.4030703@codeaurora.org>
+Date: Tue, 3 Nov 2015 10:10:21 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56498D7B.7000307@ozlabs.ru>
+In-Reply-To: <5638C728.2020503@semihalf.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 16, 2015 at 07:02:03PM +1100, Alexey Kardashevskiy wrote:
->On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>This enables M64 window on P7IOC, which has been enabled on PHB3.
->>Different from PHB3 where 16 M64 BARs are supported and each of
->>them can be owned by one particular PE# exclusively or divided
->>evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
->>of them are divided to 8 segments. So every P7IOC PHB supports
->>128 M64 segments in total. P7IOC has M64DT, which helps mapping
->>one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
->>M64DT, indicating that one M64 segment can only be pinned to the
->>fixed PE#. In order to have same code to support M64 on P7IOC and
->>PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
->>of them is pinned to the fixed PE# by bypassing the function of
->>M64DT. In turn, we just need different phb->init_m64() for P7IOC
->>and PHB3 to support M64.
+
+
+On 11/3/2015 9:39 AM, Tomasz Nowicki wrote:
+>>>> +struct pci_ops pci_root_ops = {
+>>>> +    .map_bus = pci_mcfg_dev_base,
+>>>> +    .read = pci_generic_config_read,
+>>>> +    .write = pci_generic_config_write,
+>>>
+>>>
+>>> Can you change these with pci_generic_config_read32 and
+>>> pci_generic_config_write32? We have some targets that can only do 32
+>>> bits PCI config space access.
 >>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/platforms/powernv/pci-ioda.c | 86 +++++++++++++++++++++++++++++--
->>  arch/powerpc/platforms/powernv/pci.h      |  3 ++
->>  2 files changed, 86 insertions(+), 3 deletions(-)
+>> No.
 >>
->>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>index 1f7d985..bfe69f1 100644
->>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>@@ -256,6 +256,64 @@ static void pnv_ioda_reserve_dev_m64_pe(struct pci_dev *pdev,
->>  	}
->>  }
+>> http://www.spinics.net/lists/linux-pci/msg44869.html
 >>
->>+static int pnv_ioda1_init_m64(struct pnv_phb *phb)
->>+{
->>+	struct resource *r;
->>+	int index;
->>+
->>+	/*
->>+	 * There are 16 M64 BARs, each of which has 8 segments. So
->>+	 * there are as many M64 segments as the maximum number of
->>+	 * PEs, which is 128.
->>+	 */
->>+	for (index = 0; index < PNV_IODA1_M64_NUM; index++) {
->>+		unsigned long base, segsz = phb->ioda.m64_segsize;
->>+		int64_t rc;
->>+
->>+		base = phb->ioda.m64_base +
->>+		       index * PNV_IODA1_M64_SEGS * segsz;
->>+		rc = opal_pci_set_phb_mem_window(phb->opal_id,
->>+				OPAL_M64_WINDOW_TYPE, index, base, 0,
->>+				PNV_IODA1_M64_SEGS * segsz);
->>+		if (rc != OPAL_SUCCESS) {
->>+			pr_warn("  Error %lld setting M64 PHB#%d-BAR#%d\n",
->>+				rc, phb->hose->global_number, index);
->>+			goto fail;
->>+		}
->>+
->>+		rc = opal_pci_phb_mmio_enable(phb->opal_id,
->>+				OPAL_M64_WINDOW_TYPE, index,
->>+				OPAL_ENABLE_M64_SPLIT);
->>+		if (rc != OPAL_SUCCESS) {
->>+			pr_warn("  Error %lld enabling M64 PHB#%d-BAR#%d\n",
->>+				rc, phb->hose->global_number, index);
->>+			goto fail;
->>+		}
->>+	}
->>+
->>+	/*
->>+	 * Exclude the segment used by the reserved PE, which
->>+	 * is expected to be 0 or last supported PE#.
->>+	 */
->>+	r = &phb->hose->mem_resources[1];
+>> Can you be a bit more specific please ?
+>>
+>> Sigh. Looks like we have to start adding platform specific quirks even
+>> before we merged the generic ACPI PCIe host controller implementation.
+>>
 >
->
->What does "1" mean here? A bridge's 64bit prefetchable window?
->
+> The sad reality... But my next version will be still generic. Once that
+> one appear to be in good shape then we can add quirks.
 
-It's PHB's M64 window.
+Thanks.
 
->
->>+	if (phb->ioda.reserved_pe_idx == 0)
->>+		r->start += phb->ioda.m64_segsize;
->>+	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
->>+		r->end -= phb->ioda.m64_segsize;
->>+	else
->>+		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
->>+			phb->ioda.reserved_pe_idx);
->>+
+I don't see anywhere in the SBSA spec addendum that the PCI 
+configuration space section that unaligned accesses *MUST* be supported.
 
-Thanks,
-Gavin
+If this is required, please have this info added to the spec. I can work 
+with the designers for the next chip.
 
+Unaligned access on the current hardware returns incomplete values or 
+can cause bus faults. The behavior is undefined.
+
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
