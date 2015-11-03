@@ -1,67 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:36801 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754907AbbKRAfg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 19:35:36 -0500
-Message-ID: <564BC79D.9010705@gmail.com>
-Date: Tue, 17 Nov 2015 16:34:37 -0800
-From: Florian Fainelli <f.fainelli@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	bhelgaas@google.com, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org
+Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI hostbridge init
+Date: Tue, 03 Nov 2015 16:59:28 +0100
+Message-ID: <5802577.H74A3Lg5B3@wuerfel>
+In-Reply-To: <5638CE5D.4030703@codeaurora.org>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com> <5638C728.2020503@semihalf.com> <5638CE5D.4030703@codeaurora.org>
 MIME-Version: 1.0
-To: Ray Jui <rjui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/5] PCI: iproc: Add PAXC interface support
-References: <1447806715-30043-1-git-send-email-rjui@broadcom.com> <1447806715-30043-3-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1447806715-30043-3-git-send-email-rjui@broadcom.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17/11/15 16:31, Ray Jui wrote:
-> Traditionally, all iProc PCIe root complexes use PAXB based wrapper,
-> with an integrated on-chip Serdes to support external endpoint devices.
-> On newer iProc platforms, a PAXC based wrapper is introduced, for
-> connection with internally emulated PCIe endpoint devices in the ASIC
+On Tuesday 03 November 2015 10:10:21 Sinan Kaya wrote:
 > 
-> This patch adds support for PAXC based iProc PCIe root complex in the
-> iProc PCIe core driver. This change fators out common logic between
-> PAXB and PAXC, and use tables to store register offsets that are
-> different between PAXB and PAXC. This allows the driver to be scaled to
-> support subsequent PAXC revisions in the future
+> I don't see anywhere in the SBSA spec addendum that the PCI 
+> configuration space section that unaligned accesses *MUST* be supported.
 > 
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
-> Reviewed-by: Scott Branden <sbranden@broadcom.com>
-> ---
->  drivers/pci/host/pcie-iproc-platform.c |   8 ++
->  drivers/pci/host/pcie-iproc.c          | 202 +++++++++++++++++++++++++++------
->  drivers/pci/host/pcie-iproc.h          |  19 ++++
->  3 files changed, 195 insertions(+), 34 deletions(-)
+> If this is required, please have this info added to the spec. I can work 
+> with the designers for the next chip.
 > 
-> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-> index c9550dc..716b56b 100644
-> --- a/drivers/pci/host/pcie-iproc-platform.c
-> +++ b/drivers/pci/host/pcie-iproc-platform.c
-> @@ -42,6 +42,13 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
->  	pcie->dev = &pdev->dev;
->  	platform_set_drvdata(pdev, pcie);
->  
-> +	if (of_device_is_compatible(np, "brcm,iproc-pcie"))
-> +		pcie->type = IPROC_PCIE_PAXB;
-> +	else if (of_device_is_compatible(np, "brcm,iproc-pcie-paxc"))
-> +		pcie->type = IPROC_PCIE_PAXC;
-> +	else
-> +		return -ENODEV;
+> Unaligned access on the current hardware returns incomplete values or 
+> can cause bus faults. The behavior is undefined.
 
-Sorry for not noticing earlier, but typically, to avoid repeating the
-same compatible string twice (once if of_device_id, and somewhere else),
-you would put the type in the .data member of the of_device_id lookup
-table and you could fetch this directly here. So something like this:
+Unaligned accesses are not allowed, but any PCI compliant device must
+support aligned 1, 2 or 4 byte accesses on its configuration space,
+though the byte-enable mechanism. In an ECAM host bridge, those are
+mapped to load/store accesses from the CPU with the respective width
+and natural alignment.
 
- static const struct of_device_id iproc_pcie_of_match_table[] = {
- 	{ .compatible = "brcm,iproc-pcie", .data = (int *)IPROC_PCIE_PAXB },
-+	{ .compatible = "brcm,iproc-pcie-paxc", .data = (int *)IPROC_PCIE_PAXC },
- 	{ /* sentinel */ }
--- 
-Florian
+	Arnd
