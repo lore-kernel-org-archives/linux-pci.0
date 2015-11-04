@@ -1,50 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:42229 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbbKZPlf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Nov 2015 10:41:35 -0500
-Subject: Re: [PATCH 2/2] PCI support added to ARC
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Vineet Gupta <Vineet.Gupta1@synopsys.com>
-References: <cover.1448375184.git.jpinto@synopsys.com>
- <9b80d6c1db4d7e2b5ee5dc0056a3d8284e7c2b9b.1448375184.git.jpinto@synopsys.com>
- <C2D7FE5348E1B147BCA15975FBA23075F44D3B42@IN01WEMBXA.internal.synopsys.com>
- <20151125164636.GB1380@localhost>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
-	Alexey Brodkin <Alexey.Brodkin@synopsys.com>,
-	arcml <linux-snps-arc@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56572829.4090102@synopsys.com>
-Date: Thu, 26 Nov 2015 15:41:29 +0000
-MIME-Version: 1.0
-In-Reply-To: <20151125164636.GB1380@localhost>
-Content-Type: text/plain; charset="windows-1252"
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:46479 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965396AbbKDNNr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:47 -0500
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 18:43:45 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 48/50] drivers/of: Return allocated memory from of_fdt_unflatten_tree()
+Date: Thu,  5 Nov 2015 00:12:48 +1100
+Message-Id: <1446642770-4681-49-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+This returns the allocate memory chunk, storing the unflattened device
+tree, from of_fdt_unflatten_tree() so that memory chunk can be released
+on demand in PowerNV PCI hotplug driver.
 
-On 11/25/2015 4:46 PM, Bjorn Helgaas wrote:
-> On Wed, Nov 25, 2015 at 05:25:37AM +0000, Vineet Gupta wrote:
->> On Tuesday 24 November 2015 08:02 PM, Joao Pinto wrote:
-> 
->>> +			pr_err("PCI: Device %s not available because"/
->>> +			       " of resource collisions\n", pci_name(dev));
->>
->> Better not to break strings - even if they sometime exceed line sz limit of 80.
->> You could anyways reduce the string content herer.
-> 
-> Also use dev_err() instead of pr_err().
-> 
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ drivers/of/fdt.c       | 25 ++++++++++++++++---------
+ include/linux/of_fdt.h |  6 +++---
+ 2 files changed, 19 insertions(+), 12 deletions(-)
 
-Thanks for the review. Could you please check PATCH 1/2 regarding the new
-platform driver? This way I would produce a v2 of the patch set.
-
-Thanks,
-Joao
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index 8c8228e..b0a5708 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -447,11 +447,14 @@ static void *unflatten_dt_nodes(const void *blob,
+  * @mynodes: The device_node tree created by the call
+  * @dt_alloc: An allocator that provides a virtual address to memory
+  * for the resulting tree
++ *
++ * Returns NULL on failure or the memory chunk containing the unflattened
++ * device tree on success.
+  */
+-static void __unflatten_device_tree(const void *blob,
+-			     struct device_node *dad,
+-			     struct device_node **mynodes,
+-			     void * (*dt_alloc)(u64 size, u64 align))
++static void *__unflatten_device_tree(const void *blob,
++				     struct device_node *dad,
++				     struct device_node **mynodes,
++				     void *(*dt_alloc)(u64 size, u64 align))
+ {
+ 	unsigned long size;
+ 	void *mem;
+@@ -460,7 +463,7 @@ static void __unflatten_device_tree(const void *blob,
+ 
+ 	if (!blob) {
+ 		pr_debug("No device tree pointer\n");
+-		return;
++		return NULL;
+ 	}
+ 
+ 	pr_debug("Unflattening device tree:\n");
+@@ -470,7 +473,7 @@ static void __unflatten_device_tree(const void *blob,
+ 
+ 	if (fdt_check_header(blob)) {
+ 		pr_err("Invalid device tree blob header\n");
+-		return;
++		return NULL;
+ 	}
+ 
+ 	/* First pass, scan for size */
+@@ -494,6 +497,7 @@ static void __unflatten_device_tree(const void *blob,
+ 			   be32_to_cpup(mem + size));
+ 
+ 	pr_debug(" <- unflatten_device_tree()\n");
++	return mem;
+ }
+ 
+ static void *kernel_tree_alloc(u64 size, u64 align)
+@@ -511,10 +515,13 @@ static void *kernel_tree_alloc(u64 size, u64 align)
+  * tree of struct device_node. It also fills the "name" and "type"
+  * pointers of the nodes so the normal device-tree walking functions
+  * can be used.
++ *
++ * Returns NULL on failure or the memory chunk containing the unflattened
++ * device tree on success.
+  */
+-void of_fdt_unflatten_tree(const unsigned long *blob,
+-			struct device_node *dad,
+-			struct device_node **mynodes)
++void *of_fdt_unflatten_tree(const unsigned long *blob,
++			    struct device_node *dad,
++			    struct device_node **mynodes)
+ {
+ 	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
+ }
+diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+index 3644960..b87b26a7 100644
+--- a/include/linux/of_fdt.h
++++ b/include/linux/of_fdt.h
+@@ -37,9 +37,9 @@ extern bool of_fdt_is_big_endian(const void *blob,
+ 				 unsigned long node);
+ extern int of_fdt_match(const void *blob, unsigned long node,
+ 			const char *const *compat);
+-extern void of_fdt_unflatten_tree(const unsigned long *blob,
+-			       struct device_node *dad,
+-			       struct device_node **mynodes);
++extern void *of_fdt_unflatten_tree(const unsigned long *blob,
++				   struct device_node *dad,
++				   struct device_node **mynodes);
+ 
+ /* TBD: Temporary export of fdt globals - remove when code fully merged */
+ extern int __initdata dt_root_addr_cells;
+-- 
+2.1.0
 
