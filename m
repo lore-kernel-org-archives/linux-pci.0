@@ -1,62 +1,216 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Magnus <magnus.damm@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: PCIe host controller behind IOMMU on ARM
-Date: Thu, 12 Nov 2015 17:16:41 +0100
-Message-ID: <4169020.aC5VXkILQm@wuerfel>
-In-Reply-To: <PS1PR06MB11802B4278C95E3808EEBDD5F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
-References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com> <6255198.JqytBn7T9E@wuerfel> <PS1PR06MB11802B4278C95E3808EEBDD5F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:51837 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965451AbbKDNOI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:14:08 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 23:14:06 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 28/50] powerpc/pci: Rename pcibios_{add,remove}_pci_devices()
+Date: Thu,  5 Nov 2015 00:12:28 +1100
+Message-Id: <1446642770-4681-29-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 12 November 2015 15:33:41 Phil Edworthy wrote:
-> On 12 November 2015 09:49, Arnd Bergmann wrote:
-> > On Thursday 12 November 2015 09:26:33 Phil Edworthy wrote:
-> > > On 11 November 2015 18:25, LIviu wrote:
-> > > > On Mon, Nov 09, 2015 at 12:32:13PM +0000, Phil Edworthy wrote:
-> > 
-> > of_dma_configure calls of_dma_get_range to do all this for the PCIe host,
-> > and then calls arch_setup_dma_ops() so the architecture specific code can
-> > enforce the limits in dma_set_mask and pick an appropriate set of dma
-> > operations. The missing part is in the implementation of arch_setup_dma_ops,
-> > which currently happily ignores the base and limit.
-> I don't think it's as simple as that, though I could be wrong!
-> 
-> First off, of_dma_configure() sets a default coherent_dma_mask to 4GiB.
-> This default is set for the 'platform soc' device. For my own testing I increased
-> this to DMA_BIT_MASK(63). Note that setting it to DMA_BIT_MASK(64) causes
-> boot failure that I haven't looked into.
+This renames pcibios_{add,remove}_pci_devices() to avoid conflicts
+with names of the weak functions in PCI subsystem, which have the
+prefix "pcibios". No logical changes introduced.
 
-Most platform devices actually need the 32-bit mask, so we intentionally
-followed what PCI does here and default to that and require platform drivers
-to explicitly ask for a larger mask if they need it.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h |  4 ++--
+ arch/powerpc/kernel/eeh_driver.c      | 12 ++++++------
+ arch/powerpc/kernel/pci-hotplug.c     | 15 +++++++--------
+ drivers/pci/hotplug/rpadlpar_core.c   |  2 +-
+ drivers/pci/hotplug/rpaphp_core.c     |  4 ++--
+ drivers/pci/hotplug/rpaphp_pci.c      |  2 +-
+ 6 files changed, 19 insertions(+), 20 deletions(-)
 
-> Then pci_device_add() sets the devices coherent_dma_mask to 4GiB before
-> calling of_pci_dma_configure(). I assume it does this on the basis that this is a
-> good default for PCI drivers that don't call dma_set_mask().
-> So if arch_setup_dma_ops() walks up the parents to limit the mask, you'll hit
-> this mask.
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 0f2ff3a..c2360c8 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -260,10 +260,10 @@ static inline struct eeh_dev *pdn_to_eeh_dev(struct pci_dn *pdn)
+ extern struct pci_bus *pcibios_find_pci_bus(struct device_node *dn);
+ 
+ /** Remove all of the PCI devices under this bus */
+-extern void pcibios_remove_pci_devices(struct pci_bus *bus);
++extern void pci_remove_pci_devices(struct pci_bus *bus);
+ 
+ /** Discover new pci devices under this bus, and add them */
+-extern void pcibios_add_pci_devices(struct pci_bus *bus);
++extern void pci_add_pci_devices(struct pci_bus *bus);
+ 
+ 
+ extern void isa_bridge_find_early(struct pci_controller *hose);
+diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+index 80dfe89..f884aa7 100644
+--- a/arch/powerpc/kernel/eeh_driver.c
++++ b/arch/powerpc/kernel/eeh_driver.c
+@@ -560,12 +560,12 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 	 * We don't remove the corresponding PE instances because
+ 	 * we need the information afterwords. The attached EEH
+ 	 * devices are expected to be attached soon when calling
+-	 * into pcibios_add_pci_devices().
++	 * into pci_add_pci_devices().
+ 	 */
+ 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
+ 	if (bus) {
+ 		pci_lock_rescan_remove();
+-		pcibios_remove_pci_devices(bus);
++		pci_remove_pci_devices(bus);
+ 		pci_unlock_rescan_remove();
+ 	} else if (frozen_bus) {
+ 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
+@@ -617,13 +617,13 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 		 * rebuilt when adding PCI devices.
+ 		 */
+ 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
+-		pcibios_add_pci_devices(bus);
++		pci_add_pci_devices(bus);
+ 	} else if (frozen_bus && removed) {
+ 		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
+ 		ssleep(5);
+ 
+ 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
+-		pcibios_add_pci_devices(frozen_bus);
++		pci_add_pci_devices(frozen_bus);
+ 	}
+ 	eeh_pe_state_clear(pe, EEH_PE_KEEP);
+ 
+@@ -812,7 +812,7 @@ perm_error:
+ 		eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
+ 
+ 		pci_lock_rescan_remove();
+-		pcibios_remove_pci_devices(frozen_bus);
++		pci_remove_pci_devices(frozen_bus);
+ 		pci_unlock_rescan_remove();
+ 	}
+ }
+@@ -895,7 +895,7 @@ static void eeh_handle_special_event(void)
+ 				bus = eeh_pe_bus_get(phb_pe);
+ 				eeh_pe_dev_traverse(pe,
+ 					eeh_report_failure, NULL);
+-				pcibios_remove_pci_devices(bus);
++				pci_remove_pci_devices(bus);
+ 			}
+ 			pci_unlock_rescan_remove();
+ 		}
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 7f9ed0c..3f62821 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -38,20 +38,20 @@ void pcibios_release_device(struct pci_dev *dev)
+ }
+ 
+ /**
+- * pcibios_remove_pci_devices - remove all devices under this bus
++ * pci_remove_pci_devices - remove all devices under this bus
+  * @bus: the indicated PCI bus
+  *
+  * Remove all of the PCI devices under this bus both from the
+  * linux pci device tree, and from the powerpc EEH address cache.
+  */
+-void pcibios_remove_pci_devices(struct pci_bus *bus)
++void pci_remove_pci_devices(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev, *tmp;
+ 	struct pci_bus *child_bus;
+ 
+ 	/* First go down child busses */
+ 	list_for_each_entry(child_bus, &bus->children, node)
+-		pcibios_remove_pci_devices(child_bus);
++		pci_remove_pci_devices(child_bus);
+ 
+ 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+ 		 pci_domain_nr(bus),  bus->number);
+@@ -60,11 +60,10 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
+ 		pci_stop_and_remove_bus_device(dev);
+ 	}
+ }
+-
+-EXPORT_SYMBOL_GPL(pcibios_remove_pci_devices);
++EXPORT_SYMBOL_GPL(pci_remove_pci_devices);
+ 
+ /**
+- * pcibios_add_pci_devices - adds new pci devices to bus
++ * pci_add_pci_devices - adds new pci devices to bus
+  * @bus: the indicated PCI bus
+  *
+  * This routine will find and fixup new pci devices under
+@@ -74,7 +73,7 @@ EXPORT_SYMBOL_GPL(pcibios_remove_pci_devices);
+  * is how this routine differs from other, similar pcibios
+  * routines.)
+  */
+-void pcibios_add_pci_devices(struct pci_bus * bus)
++void pci_add_pci_devices(struct pci_bus *bus)
+ {
+ 	int slotno, mode, pass, max;
+ 	struct pci_dev *dev;
+@@ -114,4 +113,4 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
+ 	}
+ 	pcibios_finish_adding_to_bus(bus);
+ }
+-EXPORT_SYMBOL_GPL(pcibios_add_pci_devices);
++EXPORT_SYMBOL_GPL(pci_add_pci_devices);
+diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
+index e12bafd..ebd283b 100644
+--- a/drivers/pci/hotplug/rpadlpar_core.c
++++ b/drivers/pci/hotplug/rpadlpar_core.c
+@@ -381,7 +381,7 @@ int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
+ 	}
+ 
+ 	/* Remove all devices below slot */
+-	pcibios_remove_pci_devices(bus);
++	pci_remove_pci_devices(bus);
+ 
+ 	/* Unmap PCI IO space */
+ 	if (pcibios_unmap_io_space(bus)) {
+diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
+index f2945fa..3034693 100644
+--- a/drivers/pci/hotplug/rpaphp_core.c
++++ b/drivers/pci/hotplug/rpaphp_core.c
+@@ -405,7 +405,7 @@ static int enable_slot(struct hotplug_slot *hotplug_slot)
+ 
+ 	if (state == PRESENT) {
+ 		pci_lock_rescan_remove();
+-		pcibios_add_pci_devices(slot->bus);
++		pci_add_pci_devices(slot->bus);
+ 		pci_unlock_rescan_remove();
+ 		slot->state = CONFIGURED;
+ 	} else if (state == EMPTY) {
+@@ -427,7 +427,7 @@ static int disable_slot(struct hotplug_slot *hotplug_slot)
+ 		return -EINVAL;
+ 
+ 	pci_lock_rescan_remove();
+-	pcibios_remove_pci_devices(slot->bus);
++	pci_remove_pci_devices(slot->bus);
+ 	pci_unlock_rescan_remove();
+ 	vm_unmap_aliases();
+ 
+diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
+index 9243f3e7..256066c 100644
+--- a/drivers/pci/hotplug/rpaphp_pci.c
++++ b/drivers/pci/hotplug/rpaphp_pci.c
+@@ -116,7 +116,7 @@ int rpaphp_enable_slot(struct slot *slot)
+ 		}
+ 
+ 		if (list_empty(&bus->devices))
+-			pcibios_add_pci_devices(bus);
++			pci_add_pci_devices(bus);
+ 
+ 		if (!list_empty(&bus->devices)) {
+ 			info->adapter_status = CONFIGURED;
+-- 
+2.1.0
 
-arch_setup_dma_ops() does not walk up the hierarchy, of_dma_configure()
-does this before calling arch_setup_dma_ops(). The PCI devices start out
-with the 32-bit mask, but the limit should be whatever PCI host uses.
-
-> Finally, dma_set_mask_and_coherent() is called from the PCI card driver
-> but it doesn't check the parents dma masks either.
-
-The way I think this should work is that arch_setup_dma_ops() stores the
-allowed mask in the struct device, and that dma_set_mask compares the
-mask against that.
-
-	Arnd
