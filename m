@@ -1,170 +1,98 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 11 Nov 2015 18:12:07 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-Message-ID: <20151111181207.GU963@e106497-lin.cambridge.arm.com>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
- <5640A8AA.4000806@semihalf.com>
- <20151109171042.GA11909@red-moon>
- <6488357.xJV65iBRHq@wuerfel>
- <564185B6.8040006@linux.intel.com>
- <20151111174647.GA30051@red-moon>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20151111174647.GA30051@red-moon>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:50404 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965414AbbKDNNz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:55 -0500
+Received: from localhost
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 23:13:52 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 41/50] powerpc/powernv: Use firmware PCI slot reset infrastructure
+Date: Thu,  5 Nov 2015 00:12:41 +1100
+Message-Id: <1446642770-4681-42-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 11, 2015 at 05:46:47PM +0000, Lorenzo Pieralisi wrote:
-> On Tue, Nov 10, 2015 at 01:50:46PM +0800, Jiang Liu wrote:
-> 
-> [...]
-> 
-> > >> In particular, I would like to understand, for an eg DWordIO descriptor,
-> > >> what Range Minimum, Range Maximum and Translation Offset represent,
-> > >> they can't mean different things depending on the SW parsing them,
-> > >> this totally defeats the purpose.
-> > > 
-> > > I have no clue about what those mean in ACPI though.
-> > > 
-> > > Generally speaking, each PCI domain is expected to have a (normally 64KB)
-> > > range of CPU addresses that gets translated into PCI I/O space the same
-> > > way that config space and memory space are handled.
-> > > This is true for almost every architecture except for x86, which uses
-> > > different CPU instructions for I/O space compared to the other spaces.
-> > > 
-> > >> By the way, ia64 ioremaps the translation_offset (ie new_space()), so
-> > >> basically that's the CPU physical address at which the PCI host bridge
-> > >> map the IO space transactions), I do not think ia64 is any different from
-> > >> arm64 in this respect, if it is please provide an HW description here from
-> > >> the PCI bus perspective here (also an example of ia64 ACPI PCI host bridge
-> > >> tables would help).
-> > > 
-> > > The main difference between ia64 and a lot of the other architectures (e.g.
-> > > sparc is different again) is that ia64 defines a logical address range
-> > > in terms of having a small number for each I/O space followed by the
-> > > offset within that space as a 'port number' and uses a mapping function
-> > > that is defined as
-> > > 
-> > > static inline void *__ia64_mk_io_addr (unsigned long port)
-> > > {
-> > >         struct io_space *space = &io_space[IO_SPACE_NR(port)];
-> > >         return (space->mmio_base | IO_SPACE_PORT(port););
-> > > }
-> > > static inline unsigned int inl(unsigned long port)
-> > > {
-> > >         return *__ia64_mk_io_addr(port);
-> > > }
-> > > 
-> > > Most architectures allow only one I/O port range and put it at a fixed
-> > > virtual address so that inl() simply becomes 
-> > > 
-> > > static inline u32 inl(unsigned long addr)
-> > > {
-> > >         return readl(PCI_IOBASE + addr);
-> > > }
-> > > 
-> > > which noticeably reduces code size.
-> > > 
-> > > On some architectures (powerpc, arm, arm64), we then get the same simplified
-> > > definition with a fixed virtual address, and use pci_ioremap_io() or
-> > > something like that to to map a physical address range into this virtual
-> > > address window at the correct io_offset;
-> > Hi all,
-> > 	Thanks for explanation, I found a way to make the ACPI resource
-> > parsing interface arch neutral, it should help to address Lorenzo's
-> > concern. Please refer to the attached patch. (It's still RFC, not tested
-> > yet).
-> 
-> If we go with this approach though, you are not adding the offset to
-> the resource when parsing the memory spaces in acpi_decode_space(), are we
-> sure that's what we really want ?
-> 
-> In DT, a host bridge range has a:
-> 
-> - CPU physical address
-> - PCI bus address
-> 
-> We use that to compute the offset between primary bus (ie CPU physical
-> address) and secondary bus (ie PCI bus address).
-> 
-> The value ending up in the PCI resource struct (for memory space) is
-> the CPU physical address, if you do not add the offset in acpi_decode_space
-> that does not hold true on platforms where CPU<->PCI offset != 0 on ACPI,
-> am I wrong ?
-> 
-> Overall I think the point is related to ioport_resource and its check
-> in acpi_pci_root_validate_resources() which basically that's the
-> problem that started this thread.
-> 
-> On arm64, IO_SPACE_LIMIT is 16M, which, AFAIK is a kernel limit, not
-> a HW one. 
+The skiboot firmware might provide the PCI slot reset capability
+which is identified by property "ibm,reset-by-firmware" on the
+PCI slot associated device node.
 
-You're right, it is a kernel limit. There is no HW limit for IO on arm64.
+This checks the property. If it exists, the reset request is routed
+to firmware. Otherwise, the reset is done by kernel as before.
 
-> Comparing the resources parsed from the PCI bridge _CRS against
-> the range 0..IO_SPACE_LIMIT is not necessarily meaningful (or at least
-> not meaningful in its current form), on ia64 it works because IO_SPACE_LIMIT
-> is bumped up to 4G, that's the reason why adding the offset to the ACPI IO
-> resources work on ia64 as far as I understand.
-> 
-> And that's why I pulled Arnd in this discussion since he knows better
-> than me: what does ioport_resource _really_ represent on ARM64 ? It seems
-> to me that it is a range of IO ports values (ie a window that defines
-> the allowed offset in the virtual address space allocated to PCI IO) that
-> has _nothing_ to do with the CPU physical address at which the IO space is
-> actually mapped.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 41 +++++++++++++++++++++++++++-
+ 1 file changed, 40 insertions(+), 1 deletion(-)
 
-Correct. The idea is that you can have any number of host bridges and what
-you get back for an ioport_resource is a window inside the host bridge IO
-space. That space is also offset-ed inside the kernel's IO port space
-(0..IO_SPACE_LIMIT) by the amount of space already taken by preceeding
-host bridges, so that two ioport_resources comming from two different
-host bridges don't overlap in the CPU address space.
-
-Best regards,
-Liviu
-
-
-> 
-> To sum it up for a, say, DWordIo/Memory descriptor:
-> 
-> - AddressMinimum, AddressMaximum represent the PCI bus addresses defining
->   the resource start..end
-> - AddressTranslation is the offset that has to be added to AddressMinimum
->   and AddressMaximum to get the window in CPU physical address space
-> 
-> So:
-> 
-> - Either we go with the patch attached (but please check my comment on
->   the memory spaces)
-> - Or we patch acpi_pci_root_validate_resources() to amend the way
->   IORESOURCE_IO is currently checked against ioport_resource, it can't
->   work on arm64 at present, I described why above
-> 
-> Thoughts appreciated it is time we got this sorted and thanks for
-> the patch.
-> 
-> Thanks,
-> Lorenzo
-> 
-
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index e533535..086d153 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -801,7 +801,7 @@ static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
+ 	return ret;
+ }
+ 
+-static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
++static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+ {
+ 	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+@@ -852,6 +852,45 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+ 	return 0;
+ }
+ 
++static int pnv_eeh_bridge_reset(struct pci_dev *pdev, int option)
++{
++	struct pci_controller *hose;
++	struct pnv_phb *phb;
++	struct device_node *dn = pdev ? pci_device_to_OF_node(pdev) : NULL;
++	uint64_t id = (0x1ul << 60);
++	uint8_t scope;
++	int64_t rc;
++
++	/*
++	 * If the firmware can't handle it, we will issue hot reset
++	 * on the secondary bus despite the requested reset type.
++	 */
++	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
++		return __pnv_eeh_bridge_reset(pdev, option);
++
++	/* The firmware can handle the request */
++	switch (option) {
++	case EEH_RESET_HOT:
++		scope = OPAL_RESET_PCI_HOT;
++		break;
++	case EEH_RESET_FUNDAMENTAL:
++		scope = OPAL_RESET_PCI_FUNDAMENTAL;
++		break;
++	case EEH_RESET_DEACTIVATE:
++		return 0;
++	default:
++		dev_warn(&pdev->dev, "%s: Unsupported reset %d\n",
++			 __func__, option);
++		return -EINVAL;
++	}
++
++	hose = pci_bus_to_host(pdev->bus);
++	phb = hose->private_data;
++	id |= (pdev->bus->number << 24) | (pdev->devfn << 16) | phb->opal_id;
++	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
++	return pnv_pci_poll(id, rc, NULL);
++}
++
+ static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+ {
+ 	int *freset = data;
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+2.1.0
+
