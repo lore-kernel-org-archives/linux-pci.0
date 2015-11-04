@@ -1,53 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39951 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932428AbbKDVUY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Nov 2015 16:20:24 -0500
-From: ville.syrjala@linux.intel.com
-To: intel-gfx@lists.freedesktop.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 01/29] pci: Decouple quirks.c from i915_reg.h
-Date: Wed,  4 Nov 2015 23:19:49 +0200
-Message-Id: <1446672017-24497-2-git-send-email-ville.syrjala@linux.intel.com>
-In-Reply-To: <1446672017-24497-1-git-send-email-ville.syrjala@linux.intel.com>
-References: <1446672017-24497-1-git-send-email-ville.syrjala@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from e28smtp05.in.ibm.com ([122.248.162.5]:58641 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965409AbbKDNOg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:14:36 -0500
+Received: from /spool/local
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 18:44:34 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 45/50] drivers/of: Avoid recursively calling unflatten_dt_node()
+Date: Thu,  5 Nov 2015 00:12:45 +1100
+Message-Id: <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ville Syrjälä <ville.syrjala@linux.intel.com>
+In current implementation, unflatten_dt_node() is called recursively
+to unflatten device nodes in FDT blob. It's stress to limited stack
+capacity.
 
-i915 register defines are going to become type safe, so going forward
-the register defines can't be used as straight numbers. Since quirks.c
-needs just a few extra register defines from i915_reg.h, decouple the
-two by defining the required registers locally in quirks.c. This was
-already done for a few other igpu related registers.
+This avoids calling the function recursively, meaning the device
+nodes are unflattened in one call on unflatten_dt_node(): two arrays
+are introduced to track the parent path size and the device node of
+current level of depth, which will be used by the device node on next
+level of depth to be unflattened. Also, the parameter "poffset" and
+"fpsize" are unused and dropped.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/quirks.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/of/fdt.c | 94 +++++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 56 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b03373f..78a70fb 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3404,7 +3404,9 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
- 	return 0;
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index 173b036..f4793d0 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -355,61 +355,82 @@ static unsigned long populate_node(const void *blob,
+ 	return fpsize;
  }
  
--#include "../gpu/drm/i915/i915_reg.h"
-+#define SOUTH_CHICKEN2		0xc2004
-+#define PCH_PP_STATUS		0xc7200
-+#define PCH_PP_CONTROL		0xc7204
- #define MSG_CTL			0x45010
- #define NSDE_PWR_STATE		0xd0100
- #define IGD_OPERATION_TIMEOUT	10000     /* set timeout 10 seconds */
++static void reverse_nodes(struct device_node *parent)
++{
++	struct device_node *child, *next;
++
++	/* In-depth first */
++	child = parent->child;
++	while (child) {
++		reverse_nodes(child);
++
++		child = child->sibling;
++	}
++
++	/* Reverse the nodes in the child list */
++	child = parent->child;
++	parent->child = NULL;
++	while (child) {
++		next = child->sibling;
++
++		child->sibling = parent->child;
++		parent->child = child;
++		child = next;
++	}
++}
++
+ /**
+  * unflatten_dt_node - Alloc and populate a device_node from the flat tree
+  * @blob: The parent device tree blob
+  * @mem: Memory chunk to use for allocating device nodes and properties
+- * @poffset: pointer to node in flat tree
+  * @dad: Parent struct device_node
+  * @nodepp: The device_node tree created by the call
+- * @fpsize: Size of the node path up at the current depth.
+  * @dryrun: If true, do not allocate device nodes but still calculate needed
+  * memory size
+  */
+ static void *unflatten_dt_node(const void *blob,
+ 			       void *mem,
+-			       int *poffset,
+ 			       struct device_node *dad,
+ 			       struct device_node **nodepp,
+-			       unsigned long fpsize,
+ 			       bool dryrun)
+ {
+-	struct device_node *np;
+-	static int depth;
+-	int old_depth;
+-
+-	fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
+-	if (!fpsize)
+-		return mem;
++	struct device_node *root;
++	int offset = 0, depth = 0;
++	unsigned long fpsizes[64];
++	struct device_node *nps[64];
+ 
+-	old_depth = depth;
+-	*poffset = fdt_next_node(blob, *poffset, &depth);
+-	if (depth < 0)
+-		depth = 0;
+-	while (*poffset > 0 && depth > old_depth)
+-		mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
+-					fpsize, dryrun);
++	if (nodepp)
++		*nodepp = NULL;
++
++	root = dad;
++	fpsizes[depth] = dad ? strlen(of_node_full_name(dad)) : 0;
++	nps[depth++] = dad;
++	while (offset >= 0 && depth < 64) {
++		fpsizes[depth] = populate_node(blob, offset, &mem,
++					       nps[depth - 1],
++					       fpsizes[depth - 1],
++					       &nps[depth], dryrun);
++		if (!fpsizes[depth])
++			return mem;
++
++		if (!dryrun && nodepp && !*nodepp)
++			*nodepp = nps[depth];
++		if (!dryrun && !root)
++			root = nps[depth];
++
++		offset = fdt_next_node(blob, offset, &depth);
++	}
+ 
+-	if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
+-		pr_err("unflatten: error %d processing FDT\n", *poffset);
++	if (offset < 0 && offset != -FDT_ERR_NOTFOUND)
++		pr_err("%s: Error %d processing FDT\n",
++		       __func__, offset);
+ 
+ 	/*
+ 	 * Reverse the child list. Some drivers assumes node order matches .dts
+ 	 * node order
+ 	 */
+-	if (!dryrun && np->child) {
+-		struct device_node *child = np->child;
+-		np->child = NULL;
+-		while (child) {
+-			struct device_node *next = child->sibling;
+-			child->sibling = np->child;
+-			np->child = child;
+-			child = next;
+-		}
+-	}
+-
+-	if (nodepp)
+-		*nodepp = np;
++	if (!dryrun)
++		reverse_nodes(root);
+ 
+ 	return mem;
+ }
+@@ -431,7 +452,6 @@ static void __unflatten_device_tree(const void *blob,
+ 			     void * (*dt_alloc)(u64 size, u64 align))
+ {
+ 	unsigned long size;
+-	int start;
+ 	void *mem;
+ 
+ 	pr_debug(" -> unflatten_device_tree()\n");
+@@ -452,8 +472,7 @@ static void __unflatten_device_tree(const void *blob,
+ 	}
+ 
+ 	/* First pass, scan for size */
+-	start = 0;
+-	size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
++	size = (unsigned long)unflatten_dt_node(blob, NULL, NULL, NULL, true);
+ 	size = ALIGN(size, 4);
+ 
+ 	pr_debug("  size is %lx, allocating...\n", size);
+@@ -467,8 +486,7 @@ static void __unflatten_device_tree(const void *blob,
+ 	pr_debug("  unflattening %p...\n", mem);
+ 
+ 	/* Second pass, do actual unflattening */
+-	start = 0;
+-	unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
++	unflatten_dt_node(blob, mem, NULL, mynodes, false);
+ 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
+ 		pr_warning("End of tree marker overwritten: %08x\n",
+ 			   be32_to_cpup(mem + size));
 -- 
-2.4.10
+2.1.0
 
