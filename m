@@ -1,130 +1,47 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 23 Nov 2015 10:13:29 -0800
-From: Bjorn Andersson <bjorn.andersson@sonymobile.com>
-To: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-CC: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+MIME-Version: 1.0
+In-Reply-To: <8520D5D51A55D047800579B09414719801693C20@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1446564227-4704-1-git-send-email-bharatku@xilinx.com>
+	<5638DE62.6050605@arm.com>
+	<8520D5D51A55D047800579B09414719801693C20@XAP-PVEXMBX01.xlnx.xilinx.com>
+Date: Wed, 4 Nov 2015 13:14:29 +0530
+Message-ID: <CABHD4K_BWU7-c1NM0y5ZwFkfpG0+c9_9DpwyNXNcTvavmy8rJw@mail.gmail.com>
+Subject: Re: [PATCH v7] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+From: Amit Tomer <amittomer25@gmail.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"rjui@broadcom.com" <rjui@broadcom.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"dhdang@apm.com" <dhdang@apm.com>,
+	"sbranden@broadcom.com" <sbranden@broadcom.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>
-Subject: Re: [PATCH v3 3/6] DT: PCI: qcom: Document PCIe devicetree bindings
-Message-ID: <20151123181329.GN30882@usrtlx11787.corpusers.net>
-References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
- <8fd3e7d1662f37abe549127d179c315dff3210d8.1448270813.git.stanimir.varbanov@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <8fd3e7d1662f37abe549127d179c315dff3210d8.1448270813.git.stanimir.varbanov@linaro.org>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon 23 Nov 01:29 PST 2015, Stanimir Varbanov wrote:
+> Without #ifdefs if we compile driver for legacy, MSI structures will not be available and we get compile time error.
 
-> From: Stanimir Varbanov <svarbanov@mm-sol.com>
-> 
-> Document Qualcomm PCIe driver devicetree bindings.
-> 
-> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-> Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-> ---
->  .../devicetree/bindings/pci/qcom,pcie.txt          |  231 ++++++++++++++++++++
->  1 file changed, 231 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> new file mode 100644
-> index 000000000000..d7640d45fa31
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> @@ -0,0 +1,231 @@
-> +* Qualcomm PCI express root complex
-> +
-> +- compatible:
-> +	Usage: required
-> +	Value type: <stringlist>
-> +	Definition: Value shall include
-> +		    - "qcom,pcie-v0" for apq/ipq8064
-> +		    - "qcom,pcie-v1" for apq8084
+Sorry for nitpicking but at least can we use elegant version of
+#ifdefs .i.e. #if IS_ENABLED() here ?
 
-Do you know if we have the same v1 of this block in 8994?
-
-[..]
-> +- clock-names:
-> +	Usage: required
-> +	Value type: <stringlist>
-> +	Definition: Should contain the following entries
-> +		    * should be populated for v0 and v1
-> +		    	- "iface"      Configuration AHB clock
-> +
-> +		    * should be populated for v0
-> +		    	- "core"       Clocks the pcie hw block
-> +		    	- "phy"        Clocks the pcie PHY block
-> +
-> +		    * should be populated for v1
-> +			- "aux"        Auxiliary (AUX) clock
-> +		    	- "bus_master" Master AXI clock
-> +		    	- "bus_slave"  Slave AXI clock
-
-You have white spaces among your tabs here.
-
-[..]
-> +- <name>-supply:
-> +	Usage: required
-> +	Value type: <phandle>
-> +	Definition: List of phandles to the power supply regulator(s)
-> +		    * should be populated for v0 and v1
-> +			- "vdda"        core analog power supply
-> +
-> +		    * should be populated for v0
-> +			- "vdda_phy"    analog power supply for PHY
-> +			- "vdda_refclk" analog power supply for IC which generate
-> +					reference clock
-
-Exploding these into 3 different property descriptions would make it
-easier to read, and you can say "required for v0" for the latter
-two and simply "required" on the vdda.
-
-[..]
-> +- <name>-gpio:
-> +	Usage: optional
-> +	Value type: <prop-encoded-array>
-> +	Definition: List of phandle and gpio specifier pairs. Should contain
-> +		    - "perst"  PCIe endpoint reset signal line
-> +		    - "pewake" PCIe endpoint wake signal line
-
-This property should be pluralized, i.e. it's <name>-gpios.
-
-Are these identifiers coming from some data sheet? Or could we simply
-name them "reset" and "wakeup"?
-
-> +
-> +- pinctrl-0:
-> +	Usage: required
-> +	Value type: <phandle>
-> +	Definition: List of phandles pointing at a pin(s) configuration
-
-This is not required and as it's a property applicable to all devices we
-normally don't mention them.
-
-> +
-> +- pinctrl-names
-> +	Usage: required
-> +	Value type: <stringlist>
-> +	Definition: List of names of pinctrl-0 state
-> +
-
-dito
-
-Regards,
-Bjorn
+Thanks,
+Amit.
