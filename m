@@ -1,149 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arthur Marsh <arthur.marsh@internode.on.net>
-Subject: Re: [Bugfix] x86/PCI: Fix regression caused by commit 4d6b4e69a245
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1447648057-13644-1-git-send-email-jiang.liu@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, x86@kernel.org,
-	Keith Busch <keith.busch@intel.com>
-Message-ID: <56498076.7040001@internode.on.net>
-Date: Mon, 16 Nov 2015 17:36:30 +1030
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Magnus <magnus.damm@gmail.com>
+Subject: RE: PCIe host controller behind IOMMU on ARM
+Date: Wed, 4 Nov 2015 15:19:13 +0000
+Message-ID: <PS1PR06MB11804C3D0155E3EFB5C43C47F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151104142412.GS963@e106497-lin.cambridge.arm.com>
+ <PS1PR06MB11804263DD55C54C5987654EF52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151104150147.GT963@e106497-lin.cambridge.arm.com>
+In-Reply-To: <20151104150147.GT963@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1447648057-13644-1-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-Jiang Liu wrote on 16/11/15 14:57:
-> From: Liu Jiang <jiang.liu@linux.intel.com>
->
-> Commit 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support
-> PCI host bridge") converted x86 to use the common interface
-> acpi_pci_root_create, but the conversion missed on code piece in
-> arch/x86/pci/bus_numa.c, which causes regression on some legacy
-> AMD platforms as reported by Arthur Marsh <arthur.marsh@internode.on.net>.
-> The root causes is that acpi_pci_root_create() fails to insert
-> host bridge resources into iomem_resource/ioport_resource because
-> x86_pci_root_bus_resources() has already inserted those resources.
-> So change x86_pci_root_bus_resources() to not insert resources into
-> iomem_resource/ioport_resource.
->
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Reported-and-tested-by: Arthur Marsh <arthur.marsh@internode.on.net>
-> Cc: Keith Busch <keith.busch@intel.com>
-> Cc: Arthur Marsh <arthur.marsh@internode.on.net>
-> ---
->   arch/x86/pci/bus_numa.c |   16 +++-------------
->   drivers/acpi/pci_root.c |    7 +++++++
->   2 files changed, 10 insertions(+), 13 deletions(-)
->
-> diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-> index 7bcf06a7cd12..ce53b5b64f51 100644
-> --- a/arch/x86/pci/bus_numa.c
-> +++ b/arch/x86/pci/bus_numa.c
-> @@ -41,27 +41,17 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
->   	       bus);
->
->   	/* already added by acpi ? */
-> -	resource_list_for_each_entry(window, resources)
-> +	resource_list_for_each_entry(window, &info->resources)
->   		if (window->res->flags & IORESOURCE_BUS) {
->   			found = true;
->   			break;
->   		}
-> -
->   	if (!found)
->   		pci_add_resource(resources, &info->busn);
->
-> -	list_for_each_entry(root_res, &info->resources, list) {
-> -		struct resource *res;
-> -		struct resource *root;
-> +	list_for_each_entry(root_res, &info->resources, list)
-> +		pci_add_resource(resources, &root_res->res);
->
-> -		res = &root_res->res;
-> -		pci_add_resource(resources, res);
-> -		if (res->flags & IORESOURCE_IO)
-> -			root = &ioport_resource;
-> -		else
-> -			root = &iomem_resource;
-> -		insert_resource(root, res);
-> -	}
->   	return;
->
->   default_resources:
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 850d7bf0c873..ae3fe4e64203 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -768,6 +768,13 @@ static void pci_acpi_root_add_resources(struct acpi_pci_root_info *info)
->   		else
->   			continue;
->
-> +		/*
-> +		 * Some legacy x86 host bridge drivers use iomem_resource and
-> +		 * ioport_resource as default resource pool, skip it.
-> +		 */
-> +		if (res == root)
-> +			continue;
-> +
->   		conflict = insert_resource_conflict(root, res);
->   		if (conflict) {
->   			dev_info(&info->bridge->dev,
->
-
-I have not previously seen the patch above and have not been able to 
-successfully boot with it applied against the current Linus' git head.
-
-I had booted successfully with a kernel built with the patch below from 
-9 November 2015, then removed the patch below and applied the patch 
-above from 16 November 2015, and when I booted the resulting kernel, 
-received a lock-up:
-
-http://www.users.on.net/~arthur.marsh/20151116611.jpg
-
-I'd be happy to test further patches.
-
-Arthur.
-
- From 02818ba34bfa76d93f2a29c85660da0323b0b457 Mon Sep 17 00:00:00 2001
-From: Liu Jiang <jiang.liu@linux.intel.com>
-Date: Mon, 9 Nov 2015 13:36:48 +0800
-Subject: [PATCH]
-
-
-Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
----
-  arch/x86/pci/bus_numa.c |    3 +++
-  1 file changed, 3 insertions(+)
-
-diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-index 7bcf06a7cd12..022d83158cdb 100644
---- a/arch/x86/pci/bus_numa.c
-+++ b/arch/x86/pci/bus_numa.c
-@@ -51,6 +51,8 @@ void x86_pci_root_bus_resources(int bus, struct 
-list_head *resources)
-  		pci_add_resource(resources, &info->busn);
-
-  	list_for_each_entry(root_res, &info->resources, list) {
-+		pci_add_resource(resources, &root_res->res);
-+#if 0
-  		struct resource *res;
-  		struct resource *root;
-
-@@ -61,6 +63,7 @@ void x86_pci_root_bus_resources(int bus, struct 
-list_head *resources)
-  		else
-  			root = &iomem_resource;
-  		insert_resource(root, res);
-+#endif
-  	}
-  	return;
-
--- 
-1.7.10.4
-
+SGkgTGl2aXUsDQoNCk9uIDA0IE5vdmVtYmVyIDIwMTUgMTU6MDIsIExpdml1IHdyb3RlOg0KPiBP
+biBXZWQsIE5vdiAwNCwgMjAxNSBhdCAwMjo0ODozOFBNICswMDAwLCBQaGlsIEVkd29ydGh5IHdy
+b3RlOg0KPiA+IEhpIExpdml1LA0KPiA+DQo+ID4gT24gMDQgTm92ZW1iZXIgMjAxNSAxNDoyNCwg
+TGl2aXUgd3JvdGU6DQo+ID4gPiBPbiBXZWQsIE5vdiAwNCwgMjAxNSBhdCAwMTo1Nzo0OFBNICsw
+MDAwLCBQaGlsIEVkd29ydGh5IHdyb3RlOg0KPiA+ID4gPiBIaSwNCj4gPiA+ID4NCj4gPiA+ID4g
+SSBhbSB0cnlpbmcgdG8gaG9vayB1cCBhIFBDSWUgaG9zdCBjb250cm9sbGVyIHRoYXQgc2l0cyBi
+ZWhpbmQgYW4gSU9NTVUsDQo+ID4gPiA+IGJ1dCBoYXZpbmcgc29tZSBwcm9ibGVtcy4NCj4gPiA+
+ID4NCj4gPiA+ID4gSSdtIHVzaW5nIHRoZSBwY2llLXJjYXIgUENJZSBob3N0IGNvbnRyb2xsZXIg
+YW5kIGl0IHdvcmtzIGZpbmUgd2l0aG91dA0KPiA+ID4gPiB0aGUgSU9NTVUsIGFuZCBJIGNhbiBh
+dHRhY2ggdGhlIElPTU1VIHRvIHRoZSBjb250cm9sbGVyIHN1Y2ggdGhhdCBhbnkNCj4gY2FsbHMN
+Cj4gPiA+ID4gdG8gZG1hX2FsbG9jX2NvaGVyZW50IG1hZGUgYnkgdGhlIGNvbnRyb2xsZXIgZHJp
+dmVyIHVzZXMgdGhlIGlvbW11X29wcw0KPiA+ID4gPiB2ZXJzaW9uIG9mIGRtYV9vcHMuDQo+ID4g
+PiA+DQo+ID4gPiA+IEhvd2V2ZXIsIEkgY2FuJ3Qgc2VlIGhvdyB0byBtYWtlIHRoZSBlbmRwb2lu
+dHMgdG8gdXRpbGlzZSB0aGUgZG1hX29wcyB0aGF0DQo+ID4gPiA+IHRoZSBjb250cm9sbGVyIHVz
+ZXMuIFNob3VsZG4ndCB0aGUgZW5kcG9pbnRzIGluaGVyaXQgdGhlIGRtYV9vcHMgZnJvbSB0aGUN
+Cj4gPiA+ID4gY29udHJvbGxlcj8NCj4gPiA+DQo+ID4gPiBObywgbm90IGRpcmVjdGx5Lg0KPiA+
+ID4NCj4gPiA+ID4gQW55IHBvaW50ZXJzIGZvciB0aGlzPw0KPiA+ID4NCj4gPiA+IFlvdSBuZWVk
+IHRvIHVuZGVyc3RhbmQgdGhlIHByb2Nlc3MgdGhyb3VnaCB3aGljaCBhIGRyaXZlciBmb3IgZW5k
+cG9pbnQgZ2V0DQo+ID4gPiBhbiBhZGRyZXNzIHRvIGJlIHBhc3NlZCBkb3duIHRvIHRoZSBkZXZp
+Y2UuIEhhdmUgYSBsb29rIGF0DQo+ID4gPiBEb2N1bWVudGF0aW9uL0RNQS1BUEktSE9XVE8udHh0
+LCB0aGVyZSBpcyBhIG5pY2UgZXhwbGFuYXRpb24gdGhlcmUuDQo+ID4gPiAoSGludDogRVAgZHJp
+dmVyIG5lZWRzIHRvIGNhbGwgZG1hX21hcF9zaW5nbGUpLg0KPiA+ID4NCj4gPiA+IEFsc28sIHlv
+dSBuZWVkIHRvIG1ha2Ugc3VyZSB0aGF0IHRoZSBidXMgYWRkcmVzcyB0aGF0IGVuZHMgdXAgYmVp
+bmcgc2V0IGludG8NCj4gPiA+IHRoZSBlbmRwb2ludCBnZXRzIHRyYW5zbGF0ZWQgY29ycmVjdGx5
+IGJ5IHRoZSBob3N0IGNvbnRyb2xsZXIgaW50byBhbiBhZGRyZXNzDQo+ID4gPiB0aGF0IHRoZSBJ
+T01NVSBjYW4gdGhlbiB0cmFuc2xhdGUgaW50byBwaHlzaWNhbCBhZGRyZXNzLg0KPiA+IFN1cmUs
+IHRob3VnaCBzaW5jZSB0aGlzIGlzIGJvZyBzdGFuZGFyZCBJbnRlbCBQQ0llIGV0aGVybmV0IGNh
+cmQgd2hpY2ggd29ya3MNCj4gPiBmaW5lIHdoZW4gdGhlIElPTU1VIGlzIGVmZmVjdGl2ZWx5IHVu
+dXNlZCwgSSBkb27igJl0IHRoaW5rIHRoZXJlIGlzIGEgcHJvYmxlbQ0KPiA+IHdpdGggdGhhdC4N
+Cj4gPg0KPiA+IFRoZSBkcml2ZXIgZm9yIHRoZSBQQ0llIGNvbnRyb2xsZXIgc2V0cyB1cCB0aGUg
+SU9NTVUgbWFwcGluZyBvayB3aGVuIEkNCj4gPiBkbyBhIHRlc3QgY2FsbCB0byBkbWFfYWxsb2Nf
+Y29oZXJlbnQoKSBpbiB0aGUgY29udHJvbGxlcidzIGRyaXZlci4gaS5lLiB3aGVuIEkNCj4gPiBk
+byB0aGlzLCBpdCBlbmRzIHVwIGluIGFybV9pb21tdV9hbGxvY19hdHRycygpLCB3aGljaCBjYWxs
+cw0KPiA+IF9faW9tbXVfYWxsb2NfYnVmZmVyKCkgYW5kIF9fYWxsb2NfaW92YSgpLg0KPiA+DQo+
+ID4gV2hlbiBhbiBlbmRwb2ludCBkcml2ZXIgYWxsb2NhdGVzIGFuZCBtYXBzIGEgZG1hIGNvaGVy
+ZW50IGJ1ZmZlciBpdA0KPiA+IGFsc28gbmVlZHMgdG8gZW5kIHVwIGluIGFybV9pb21tdV9hbGxv
+Y19hdHRycygpLCBidXQgaXQgZG9lc24ndC4NCj4gDQo+IFdoeSBkbyB5b3UgdGhpbmsgdGhhdD8g
+UmVtZW1iZXIgdGhhdCB0aGUgb25seSB0aGluZyBhdHRhY2hlZCB0byB0aGUgSU9NTVUgaXMNCj4g
+dGhlDQo+IGhvc3QgY29udHJvbGxlci4gVGhlIGVuZHBvaW50IGlzIG9uIHRoZSBQQ0llIGJ1cywg
+d2hpY2ggZ2V0cyBhIGRpZmZlcmVudA0KPiB0cmFuc2xhdGlvbg0KPiB0aGF0IHRoZSBJT01NVSBr
+bm93cyBub3RoaW5nIGFib3V0LiBJZiBpdCBoZWxwcyB5b3UgdG8gdmlzdWFsaXNlIGl0IGJldHRl
+ciwgdGhpbmsNCj4gb2YgdGhlIGhvc3QgY29udHJvbGxlciBhcyBhbm90aGVyIElPTU1VIGRldmlj
+ZS4gSXQncyB0aGUgb3BzIG9mIHRoZSBob3N0DQo+IGNvbnRyb2xsZXINCj4gdGhhdCBzaG91bGQg
+YmUgaW52b2tlZCwgbm90IHRoZSBJT01NVSdzLg0KT2ssIHRoYXQgbWFrZXMgc2Vuc2UuIEknbGwg
+aGF2ZSBhIHRoaW5rIGFuZCBwb2tlIGl0IGEgYml0IG1vcmUuLi4NCg0KVGhhbmtzIGZvciB5b3Vy
+IGNvbW1lbnRzDQpQaGlsDQo=
