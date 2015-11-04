@@ -1,33 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 25 Nov 2015 10:46:36 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vineet Gupta <Vineet.Gupta1@synopsys.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
-	Alexey Brodkin <Alexey.Brodkin@synopsys.com>,
-	arcml <linux-snps-arc@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 2/2] PCI support added to ARC
-Message-ID: <20151125164636.GB1380@localhost>
-References: <cover.1448375184.git.jpinto@synopsys.com>
- <9b80d6c1db4d7e2b5ee5dc0056a3d8284e7c2b9b.1448375184.git.jpinto@synopsys.com>
- <C2D7FE5348E1B147BCA15975FBA23075F44D3B42@IN01WEMBXA.internal.synopsys.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <C2D7FE5348E1B147BCA15975FBA23075F44D3B42@IN01WEMBXA.internal.synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:35529 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965390AbbKDNNr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:47 -0500
+Received: from localhost
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 23:13:45 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 03/50] powerpc/pci: Cleanup on struct pci_controller_ops
+Date: Thu,  5 Nov 2015 00:12:03 +1100
+Message-Id: <1446642770-4681-4-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 25, 2015 at 05:25:37AM +0000, Vineet Gupta wrote:
-> On Tuesday 24 November 2015 08:02 PM, Joao Pinto wrote:
+Each PHB has one instance of "struct pci_controller_ops", which
+includes various callbacks called by PCI subsystem. In the definition
+of this struct, some callbacks have explicit names for its arguments,
+but the left don't have.
 
-> > +			pr_err("PCI: Device %s not available because"/
-> > +			       " of resource collisions\n", pci_name(dev));
-> 
-> Better not to break strings - even if they sometime exceed line sz limit of 80.
-> You could anyways reduce the string content herer.
+This adds all explicit names of the arguments to the callbacks in
+"struct pci_controller_ops" so that the code looks consistent.
 
-Also use dev_err() instead of pr_err().
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 6076116..0f2ff3a 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -21,18 +21,19 @@ struct pci_controller_ops {
+ 	void		(*dma_dev_setup)(struct pci_dev *dev);
+ 	void		(*dma_bus_setup)(struct pci_bus *bus);
+ 
+-	int		(*probe_mode)(struct pci_bus *);
++	int		(*probe_mode)(struct pci_bus *bus);
+ 
+ 	/* Called when pci_enable_device() is called. Returns true to
+ 	 * allow assignment/enabling of the device. */
+-	bool		(*enable_device_hook)(struct pci_dev *);
++	bool		(*enable_device_hook)(struct pci_dev *dev);
+ 
+-	void		(*disable_device)(struct pci_dev *);
++	void		(*disable_device)(struct pci_dev *dev);
+ 
+-	void		(*release_device)(struct pci_dev *);
++	void		(*release_device)(struct pci_dev *dev);
+ 
+ 	/* Called during PCI resource reassignment */
+-	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
++	resource_size_t (*window_alignment)(struct pci_bus *bus,
++					    unsigned long type);
+ 	void		(*setup_bridge)(struct pci_bus *bus,
+ 					unsigned long type);
+ 	void		(*reset_secondary_bus)(struct pci_dev *dev);
+@@ -46,7 +47,7 @@ struct pci_controller_ops {
+ 	int             (*dma_set_mask)(struct pci_dev *dev, u64 dma_mask);
+ 	u64		(*dma_get_required_mask)(struct pci_dev *dev);
+ 
+-	void		(*shutdown)(struct pci_controller *);
++	void		(*shutdown)(struct pci_controller *hose);
+ };
+ 
+ /*
+-- 
+2.1.0
+
