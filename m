@@ -1,117 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:51616 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965393AbbKDNNv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:51 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 23:13:49 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 05/50] powerpc/powernv: Drop pnv_ioda_setup_dev_PE()
-Date: Thu,  5 Nov 2015 00:12:05 +1100
-Message-Id: <1446642770-4681-6-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mga03.intel.com ([134.134.136.65]:31058 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932356AbbKDOtH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Nov 2015 09:49:07 -0500
+Date: Wed, 4 Nov 2015 14:49:05 +0000
+From: Keith Busch <keith.busch@intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>,
+	Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [RFC PATCHv3 3/4] x86/pci: Initial commit for new VMD device
+ driver
+Message-ID: <20151104144905.GI13904@localhost.localdomain>
+References: <1445967247-24310-1-git-send-email-keith.busch@intel.com>
+ <1445967247-24310-4-git-send-email-keith.busch@intel.com>
+ <alpine.DEB.2.11.1511021426020.4032@nanos>
+ <20151103001552.GE13904@localhost.localdomain>
+ <alpine.DEB.2.11.1511031001130.4032@nanos>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.11.1511031001130.4032@nanos>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Nobody uses this function and this just drops it.
+On Tue, Nov 03, 2015 at 12:42:02PM +0100, Thomas Gleixner wrote:
+> On Tue, 3 Nov 2015, Keith Busch wrote:
+> > > > +	msi_irqdomain = pci_msi_create_irq_domain(NULL, &pci_chained_msi_domain_info,
+> > > > +						  vmd_irqdomain);
+> 
+> But that parent limitation does not matter simply because your
+> msi_irqdomain does not follow down the hierarchy in the allocation
+> path.
+> 
+> So we can avoid the vmd_irqdomain creation completely. It's just
+> wasting memory and has no value at all. Creating the msi domain with a
+> NULL parent is possible.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 71 -------------------------------
- 1 file changed, 71 deletions(-)
+I'm having trouble following the hierarchy and didn't understand the
+connection between the parent and msi comain. It's still new to me,
+but I don't think a NULL parent is allowable with msi domains:
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index aa3645c..74288ab 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -918,77 +918,6 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
- }
- #endif /* CONFIG_PCI_IOV */
- 
--#if 0
--static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
--{
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--	struct pnv_phb *phb = hose->private_data;
--	struct pci_dn *pdn = pci_get_pdn(dev);
--	struct pnv_ioda_pe *pe;
--	int pe_num;
--
--	if (!pdn) {
--		pr_err("%s: Device tree node not associated properly\n",
--			   pci_name(dev));
--		return NULL;
--	}
--	if (pdn->pe_number != IODA_INVALID_PE)
--		return NULL;
--
--	/* PE#0 has been pre-set */
--	if (dev->bus->number == 0)
--		pe_num = 0;
--	else
--		pe_num = pnv_ioda_alloc_pe(phb);
--	if (pe_num == IODA_INVALID_PE) {
--		pr_warning("%s: Not enough PE# available, disabling device\n",
--			   pci_name(dev));
--		return NULL;
--	}
--
--	/* NOTE: We get only one ref to the pci_dev for the pdn, not for the
--	 * pointer in the PE data structure, both should be destroyed at the
--	 * same time. However, this needs to be looked at more closely again
--	 * once we actually start removing things (Hotplug, SR-IOV, ...)
--	 *
--	 * At some point we want to remove the PDN completely anyways
--	 */
--	pe = &phb->ioda.pe_array[pe_num];
--	pci_dev_get(dev);
--	pdn->pcidev = dev;
--	pdn->pe_number = pe_num;
--	pe->pdev = dev;
--	pe->pbus = NULL;
--	pe->tce32_seg = -1;
--	pe->mve_number = -1;
--	pe->rid = dev->bus->number << 8 | pdn->devfn;
--
--	pe_info(pe, "Associated device to PE\n");
--
--	if (pnv_ioda_configure_pe(phb, pe)) {
--		/* XXX What do we do here ? */
--		if (pe_num)
--			pnv_ioda_free_pe(phb, pe_num);
--		pdn->pe_number = IODA_INVALID_PE;
--		pe->pdev = NULL;
--		pci_dev_put(dev);
--		return NULL;
--	}
--
--	/* Assign a DMA weight to the device */
--	pe->dma_weight = pnv_ioda_dma_weight(dev);
--	if (pe->dma_weight != 0) {
--		phb->ioda.dma_weight += pe->dma_weight;
--		phb->ioda.dma_pe_count++;
--	}
--
--	/* Link the PE */
--	pnv_ioda_link_pe_by_weight(phb, pe);
--
--	return pe;
--}
--#endif /* Useful for SRIOV case */
--
- static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
- {
- 	struct pci_dev *dev;
--- 
-2.1.0
+ pci_msi_setup_msi_irqs()
+  pci_msi_domain_alloc_irqs()
+   msi_domain_alloc_irqs()
+    __irq_domain_alloc_irqs()
+     irq_domain_alloc_irqs_recursive()
+      msi_domain_alloc()
+       irq_domain_alloc_irqs_parent()
 
+The last call returns -ENOSYS since there parent is NULL. Was the
+intension to allow no parent, or do I still need to allocate one to
+achieve the desired chaining?
