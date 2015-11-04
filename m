@@ -1,59 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-To: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Subject: [PATCH v3 2/6] PCI: designware: add memory barrier after enabling region
-Date: Mon, 23 Nov 2015 11:28:59 +0200
-Message-Id: <d38a9c1a87c4e40ad6d17fcbe0fd41b33d7d2912.1448270813.git.stanimir.varbanov@linaro.org>
-In-Reply-To: <cover.1448270813.git.stanimir.varbanov@linaro.org>
-References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
-In-Reply-To: <cover.1448270813.git.stanimir.varbanov@linaro.org>
-References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:34235 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932352AbbKDNjR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:39:17 -0500
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 19:09:14 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 13/50] powerpc/powernv: Rename M64 related functions
+Date: Thu,  5 Nov 2015 00:12:13 +1100
+Message-Id: <1446642770-4681-14-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add 'write memory' barrier after enable region in PCIE_ATU_CR2
-register. The barrier is needed to ensure that the region enable
-request has been reached it's destination at time when we
-read/write to PCI configuration space.
+This renames those functions picking PE number based on consumed
+M64 segments, mapping M64 segments to PEs as those functions are
+going to be shared by IODA1/IODA2 in next patch. No logical changes
+introduced.
 
-Without this barrier PCI device enumeration during kernel boot
-is not reliable, and reading configuration space for particular
-PCI device on the bus returns zero aka no device.
-
-Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/host/pcie-designware.c |    5 +++++
- 1 file changed, 5 insertions(+)
+ arch/powerpc/platforms/powernv/pci-ioda.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 02a7452bdf23..e15a2ae1583f 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -164,6 +164,11 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
- 	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
- 	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-+	/*
-+	 * ensure that the ATU enable has been happaned before accessing
-+	 * pci configuration/io spaces through dw_pcie_cfg_[read|write].
-+	 */
-+	smp_wmb();
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 76ce694..1f7d985 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -229,7 +229,7 @@ fail:
+ 	return -EIO;
  }
  
- static struct irq_chip dw_msi_irq_chip = {
+-static void pnv_ioda2_reserve_dev_m64_pe(struct pci_dev *pdev,
++static void pnv_ioda_reserve_dev_m64_pe(struct pci_dev *pdev,
+ 					 unsigned long *pe_bitmap)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+@@ -256,22 +256,22 @@ static void pnv_ioda2_reserve_dev_m64_pe(struct pci_dev *pdev,
+ 	}
+ }
+ 
+-static void pnv_ioda2_reserve_m64_pe(struct pci_bus *bus,
+-				     unsigned long *pe_bitmap,
+-				     bool all)
++static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
++				    unsigned long *pe_bitmap,
++				    bool all)
+ {
+ 	struct pci_dev *pdev;
+ 
+ 	list_for_each_entry(pdev, &bus->devices, bus_list) {
+-		pnv_ioda2_reserve_dev_m64_pe(pdev, pe_bitmap);
++		pnv_ioda_reserve_dev_m64_pe(pdev, pe_bitmap);
+ 
+ 		if (all && pdev->subordinate)
+-			pnv_ioda2_reserve_m64_pe(pdev->subordinate,
+-						 pe_bitmap, all);
++			pnv_ioda_reserve_m64_pe(pdev->subordinate,
++						pe_bitmap, all);
+ 	}
+ }
+ 
+-static int pnv_ioda2_pick_m64_pe(struct pci_bus *bus, bool all)
++static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(bus);
+ 	struct pnv_phb *phb = hose->private_data;
+@@ -293,7 +293,7 @@ static int pnv_ioda2_pick_m64_pe(struct pci_bus *bus, bool all)
+ 	}
+ 
+ 	/* Figure out reserved PE numbers by the PE */
+-	pnv_ioda2_reserve_m64_pe(bus, pe_alloc, all);
++	pnv_ioda_reserve_m64_pe(bus, pe_alloc, all);
+ 
+ 	/*
+ 	 * the current bus might not own M64 window and that's all
+@@ -374,8 +374,8 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+ 	/* Use last M64 BAR to cover M64 window */
+ 	phb->ioda.m64_bar_idx = 15;
+ 	phb->init_m64 = pnv_ioda2_init_m64;
+-	phb->reserve_m64_pe = pnv_ioda2_reserve_m64_pe;
+-	phb->pick_m64_pe = pnv_ioda2_pick_m64_pe;
++	phb->reserve_m64_pe = pnv_ioda_reserve_m64_pe;
++	phb->pick_m64_pe = pnv_ioda_pick_m64_pe;
+ }
+ 
+ static void pnv_ioda_freeze_pe(struct pnv_phb *phb, int pe_no)
 -- 
-1.7.9.5
+2.1.0
 
