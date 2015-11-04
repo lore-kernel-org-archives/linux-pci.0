@@ -1,77 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:36229 "EHLO
-	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752146AbbKWJ3O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 04:29:14 -0500
-Received: by wmww144 with SMTP id w144so87696126wmw.1
-        for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2015 01:29:13 -0800 (PST)
-From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-To: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Subject: [PATCH v3 0/6] Qualcomm PCIe driver and designware fixes
-Date: Mon, 23 Nov 2015 11:28:57 +0200
-Message-Id: <cover.1448270813.git.stanimir.varbanov@linaro.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:51616 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965393AbbKDNNv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:51 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 23:13:49 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 05/50] powerpc/powernv: Drop pnv_ioda_setup_dev_PE()
+Date: Thu,  5 Nov 2015 00:12:05 +1100
+Message-Id: <1446642770-4681-6-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set is continuation of previous v2 at [1]. This time I
-decided to drop the PHY driver needed by pcie driver for apq8084
-and send it separately soon (when sort out the need of separate phy
-driver).
+Nobody uses this function and this just drops it.
 
-First two patches in the set are fixes in pcie designware driver
-found during testing the qcom pcie driver. The second patch can
-be treated as an RFC.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 71 -------------------------------
+ 1 file changed, 71 deletions(-)
 
-Next two patches adds DT binding document and the driver itself.
-
-The last two patches just adds relevant dt node for apq8064 and
-enable pcie usage on ifc6410 development board. The testing has been
-made on ifc6410 development board.
-
-Comments are welcome!
-
-Here is edited description:
-
-This patchset introduces a Qualcomm PCIe root complex driver for
-Snapdragon 805 (APQ8084) and Snapdragon 600 (APQ8064). The PCIe
-hardware use Designware IP core plus Qualcomm application
-specific hw wrappers.
-
-[1] https://lkml.org/lkml/2015/5/4/267
-
-Stanimir Varbanov (6):
-  PCI: designware: remove wrong io_base assignment
-  PCI: designware: add memory barrier after enabling region
-  DT: PCI: qcom: Document PCIe devicetree bindings
-  PCI: qcom: Add Qualcomm PCIe controller driver
-  ARM: dts: apq8064: add pcie devicetree node
-  ARM: dts: ifc6410: enable pcie dt node for this board
-
- .../devicetree/bindings/pci/qcom,pcie.txt          |  231 ++++++++
- MAINTAINERS                                        |    7 +
- arch/arm/boot/dts/qcom-apq8064-ifc6410.dts         |   26 +
- arch/arm/boot/dts/qcom-apq8064.dtsi                |   36 ++
- drivers/pci/host/Kconfig                           |   10 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pcie-designware.c                 |    6 +-
- drivers/pci/host/pcie-qcom.c                       |  623 ++++++++++++++++++++
- 8 files changed, 939 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
- create mode 100644 drivers/pci/host/pcie-qcom.c
-
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index aa3645c..74288ab 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -918,77 +918,6 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+ }
+ #endif /* CONFIG_PCI_IOV */
+ 
+-#if 0
+-static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-	struct pnv_phb *phb = hose->private_data;
+-	struct pci_dn *pdn = pci_get_pdn(dev);
+-	struct pnv_ioda_pe *pe;
+-	int pe_num;
+-
+-	if (!pdn) {
+-		pr_err("%s: Device tree node not associated properly\n",
+-			   pci_name(dev));
+-		return NULL;
+-	}
+-	if (pdn->pe_number != IODA_INVALID_PE)
+-		return NULL;
+-
+-	/* PE#0 has been pre-set */
+-	if (dev->bus->number == 0)
+-		pe_num = 0;
+-	else
+-		pe_num = pnv_ioda_alloc_pe(phb);
+-	if (pe_num == IODA_INVALID_PE) {
+-		pr_warning("%s: Not enough PE# available, disabling device\n",
+-			   pci_name(dev));
+-		return NULL;
+-	}
+-
+-	/* NOTE: We get only one ref to the pci_dev for the pdn, not for the
+-	 * pointer in the PE data structure, both should be destroyed at the
+-	 * same time. However, this needs to be looked at more closely again
+-	 * once we actually start removing things (Hotplug, SR-IOV, ...)
+-	 *
+-	 * At some point we want to remove the PDN completely anyways
+-	 */
+-	pe = &phb->ioda.pe_array[pe_num];
+-	pci_dev_get(dev);
+-	pdn->pcidev = dev;
+-	pdn->pe_number = pe_num;
+-	pe->pdev = dev;
+-	pe->pbus = NULL;
+-	pe->tce32_seg = -1;
+-	pe->mve_number = -1;
+-	pe->rid = dev->bus->number << 8 | pdn->devfn;
+-
+-	pe_info(pe, "Associated device to PE\n");
+-
+-	if (pnv_ioda_configure_pe(phb, pe)) {
+-		/* XXX What do we do here ? */
+-		if (pe_num)
+-			pnv_ioda_free_pe(phb, pe_num);
+-		pdn->pe_number = IODA_INVALID_PE;
+-		pe->pdev = NULL;
+-		pci_dev_put(dev);
+-		return NULL;
+-	}
+-
+-	/* Assign a DMA weight to the device */
+-	pe->dma_weight = pnv_ioda_dma_weight(dev);
+-	if (pe->dma_weight != 0) {
+-		phb->ioda.dma_weight += pe->dma_weight;
+-		phb->ioda.dma_pe_count++;
+-	}
+-
+-	/* Link the PE */
+-	pnv_ioda_link_pe_by_weight(phb, pe);
+-
+-	return pe;
+-}
+-#endif /* Useful for SRIOV case */
+-
+ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+ {
+ 	struct pci_dev *dev;
 -- 
-1.7.9.5
+2.1.0
 
