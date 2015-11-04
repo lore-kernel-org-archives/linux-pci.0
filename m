@@ -1,71 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp07.in.ibm.com ([122.248.162.7]:36996 "EHLO
-	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752594AbbKCCE4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2015 21:04:56 -0500
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:60217 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965374AbbKDNNy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:54 -0500
 Received: from /spool/local
-	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 3 Nov 2015 07:34:54 +0530
-Date: Tue, 3 Nov 2015 10:04:48 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <aduyck@mirantis.com>, linux-pci@vger.kernel.org,
-	Ethan Zhao <ethan.zhao@oracle.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 5/7] PCI: Wait 1 second between disabling VFs and
- clearing NumVFs
-Message-ID: <20151103020448.GB1763@richards-mbp.cn.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151029222322.11908.13738.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151029222322.11908.13738.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 23:13:51 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 07/50] powerpc/powernv: Reorder fields in struct pnv_phb
+Date: Thu,  5 Nov 2015 00:12:07 +1100
+Message-Id: <1446642770-4681-8-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 29, 2015 at 05:23:22PM -0500, Bjorn Helgaas wrote:
->From: Alexander Duyck <aduyck@mirantis.com>
->
->Per sec 3.3.3.1 of the SR-IOV spec, r1.1, we must allow 1.0s after clearing
->VF Enable before reading any field in the SR-IOV Extended Capability.
->
->Wait 1 second before calling pci_iov_set_numvfs(), which reads
->PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE after it sets PCI_SRIOV_NUM_VF.
->
->[bhelgaas: split to separate patch for reviewability, add spec reference]
->Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
->Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+This moves those fields in struct pnv_phb that are related to PE
+allocation around. No logical change.
 
-Reviewed-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci.h | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
->---
-> drivers/pci/iov.c |    2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->
->diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->index fada98d..24428d5 100644
->--- a/drivers/pci/iov.c
->+++ b/drivers/pci/iov.c
->@@ -339,13 +339,13 @@ failed:
-> 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
-> 	pci_cfg_access_lock(dev);
-> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->-	pci_iov_set_numvfs(dev, 0);
-> 	ssleep(1);
-> 	pci_cfg_access_unlock(dev);
->
-> 	if (iov->link != dev->devfn)
-> 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
->
->+	pci_iov_set_numvfs(dev, 0);
-> 	return rc;
-> }
->
-
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 49e3baf..d655769 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -142,15 +142,14 @@ struct pnv_phb {
+ 			unsigned int		io_segsize;
+ 			unsigned int		io_pci_base;
+ 
+-			/* PE allocation bitmap */
+-			unsigned long		*pe_alloc;
+-			/* PE allocation mutex */
++			/* PE allocation */
+ 			struct mutex		pe_alloc_mutex;
++			unsigned long		*pe_alloc;
++			struct pnv_ioda_pe	*pe_array;
+ 
+ 			/* M32 & IO segment maps */
+ 			unsigned int		*m32_segmap;
+ 			unsigned int		*io_segmap;
+-			struct pnv_ioda_pe	*pe_array;
+ 
+ 			/* IRQ chip */
+ 			int			irq_chip_init;
 -- 
-Richard Yang
-Help you, Help me
+2.1.0
 
