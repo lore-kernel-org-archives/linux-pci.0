@@ -1,68 +1,158 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Wolfram Sang" <wsa@the-dreams.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: [PATCH] PCI: MSI: Only use the generic MSI layer when domain is
- hierarchical
-Date: Mon, 30 Nov 2015 10:25:34 +0000
-Message-ID: <PS1PR06MB11808365B312F6C3DAE2DB35F5000@PS1PR06MB1180.apcprd06.prod.outlook.com>
-References: <1448288826-19058-1-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1448288826-19058-1-git-send-email-marc.zyngier@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:57703 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751522AbbKDNOE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:14:04 -0500
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 23:14:02 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 19/50] powerpc/powernv: Track DMA32 segment consumption
+Date: Thu,  5 Nov 2015 00:12:19 +1100
+Message-Id: <1446642770-4681-20-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Cc'd linux-pci ml
+Similar to the mechanism tracking consumed IO/M32/M64 segments,
+this introduces an array for each PHB to track the consumed DMA32
+segments, which are going to be released on PCI unplugging time.
+The index of the array is the DMA32 segment number while the value
+stored in the element is the assigned PE number.
 
-On 23 November 2015 14:27, Marc Zyngier wrote:
-
-Since d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use struct
-device::msi_domain"), we use the MSI domain associated to the PCI device.
-
-But finding a MSI domain doesn't mean that the domain is implemented
-using the generic MSI domain API, and a number of MSI controllers
-are still using the arch_setup_msi_irq/arch_teardown_msi_irqs.
-
-In order to avoid a firework on these systems, check that the domain
-we just obtained is hierarchical. If not, don't use the generic MSI
-stuff and stick with the old one. Not pretty, but reliable.
-
-Another insentive to rework those drivers and phase out this API.
-
-Reported-by: Phil Edworthy <phil.edworthy@renesas.com>
-Tested-by: Phil Edworthy <phil.edworthy@renesas.com>
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/msi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ arch/powerpc/platforms/powernv/pci-ioda.c | 30 +++++++++++++++++++++---------
+ arch/powerpc/platforms/powernv/pci.h      |  7 ++++---
+ 2 files changed, 25 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 53e4632..7eaa4c8 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -54,7 +54,7 @@ static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 	struct irq_domain *domain;
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 20ebe6e..fdbc012 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1885,6 +1885,10 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+ 		}
+ 	}
  
- 	domain = pci_msi_get_domain(dev);
--	if (domain)
-+	if (domain && irq_domain_is_hierarchy(domain))
- 		return pci_msi_domain_alloc_irqs(domain, dev, nvec, type);
- 
- 	return arch_setup_msi_irqs(dev, nvec, type);
-@@ -65,7 +65,7 @@ static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
- 	struct irq_domain *domain;
- 
- 	domain = pci_msi_get_domain(dev);
--	if (domain)
-+	if (domain && irq_domain_is_hierarchy(domain))
- 		pci_msi_domain_free_irqs(domain, dev);
++	/* Setup TCE32 segment mapping */
++	for (i = base; i < base + segs; i++)
++		phb->ioda.dma32_segmap[i] = pe->pe_number;
++
+ 	/* Setup linux iommu table */
+ 	pnv_pci_setup_iommu_table(tbl, addr, tce32_segsz * segs,
+ 				  base * PNV_IODA1_DMA32_SEGSIZE,
+@@ -2378,13 +2382,13 @@ static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
+ 	 * then we assign at least one segment per PE, plus more based
+ 	 * on the amount of devices under that PE
+ 	 */
+-	if (dma_pe_count > phb->ioda.tce32_count)
++	if (dma_pe_count > phb->ioda.dma32_count)
+ 		residual = 0;
  	else
- 		arch_teardown_msi_irqs(dev);
+-		residual = phb->ioda.tce32_count - dma_pe_count;
++		residual = phb->ioda.dma32_count - dma_pe_count;
+ 
+ 	pr_info("PCI: Domain %04x has %ld available 32-bit DMA segments\n",
+-		hose->global_number, phb->ioda.tce32_count);
++		hose->global_number, phb->ioda.dma32_count);
+ 	pr_info("PCI: %d PE# for a total weight of %d\n",
+ 		dma_pe_count, total_weight);
+ 
+@@ -2394,7 +2398,7 @@ static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
+ 	 * out one base segment plus any residual segments based on
+ 	 * weight
+ 	 */
+-	remaining = phb->ioda.tce32_count;
++	remaining = phb->ioda.dma32_count;
+ 	base = 0;
+ 	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+ 		weight = pnv_pci_ioda_pe_dma_weight(pe);
+@@ -3094,7 +3098,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ {
+ 	struct pci_controller *hose;
+ 	struct pnv_phb *phb;
+-	unsigned long size, m64map_off, m32map_off, pemap_off, iomap_off = 0;
++	unsigned long size, m64map_off, m32map_off, pemap_off;
++	unsigned long iomap_off = 0, dma32map_off = 0;
+ 	const __be64 *prop64;
+ 	const __be32 *prop32;
+ 	int i, len;
+@@ -3177,6 +3182,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	phb->ioda.io_segsize = phb->ioda.io_size / phb->ioda.total_pe_num;
+ 	phb->ioda.io_pci_base = 0; /* XXX calculate this ? */
+ 
++	/* Calculate how many 32-bit TCE segments we have */
++	phb->ioda.dma32_count = phb->ioda.m32_pci_base /
++				PNV_IODA1_DMA32_SEGSIZE;
++
+ 	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
+ 	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
+ 	m64map_off = size;
+@@ -3186,6 +3195,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	if (phb->type == PNV_PHB_IODA1) {
+ 		iomap_off = size;
+ 		size += phb->ioda.total_pe_num * sizeof(phb->ioda.io_segmap[0]);
++		dma32map_off = size;
++		size += phb->ioda.dma32_count *
++			sizeof(phb->ioda.dma32_segmap[0]);
+ 	}
+ 	pemap_off = size;
+ 	size += phb->ioda.total_pe_num * sizeof(struct pnv_ioda_pe);
+@@ -3201,6 +3213,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 		phb->ioda.io_segmap = aux + iomap_off;
+ 		for (i = 0; i < phb->ioda.total_pe_num; i++)
+ 			phb->ioda.io_segmap[i] = IODA_INVALID_PE;
++
++		phb->ioda.dma32_segmap = aux + dma32map_off;
++		for (i = 0; i < phb->ioda.dma32_count; i++)
++			phb->ioda.dma32_segmap[i] = IODA_INVALID_PE;
+ 	}
+ 	phb->ioda.pe_array = aux + pemap_off;
+ 	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
+@@ -3208,10 +3224,6 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	INIT_LIST_HEAD(&phb->ioda.pe_list);
+ 	mutex_init(&phb->ioda.pe_list_mutex);
+ 
+-	/* Calculate how many 32-bit TCE segments we have */
+-	phb->ioda.tce32_count = phb->ioda.m32_pci_base /
+-				PNV_IODA1_DMA32_SEGSIZE;
+-
+ #if 0 /* We should really do that ... */
+ 	rc = opal_pci_set_phb_mem_window(opal->phb_id,
+ 					 window_type,
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 2038ef2..0802fcd 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -148,6 +148,10 @@ struct pnv_phb {
+ 			int			*m32_segmap;
+ 			int			*io_segmap;
+ 
++			/* DMA32 segment maps - IODA1 only */
++			unsigned long		dma32_count;
++			int			*dma32_segmap;
++
+ 			/* IRQ chip */
+ 			int			irq_chip_init;
+ 			struct irq_chip		irq_chip;
+@@ -164,9 +168,6 @@ struct pnv_phb {
+ 			 */
+ 			unsigned char		pe_rmap[0x10000];
+ 
+-			/* 32-bit TCE tables allocation */
+-			unsigned long		tce32_count;
+-
+ 			/* TCE cache invalidate registers (physical and
+ 			 * remapped)
+ 			 */
 -- 
-2.1.4
+2.1.0
 
