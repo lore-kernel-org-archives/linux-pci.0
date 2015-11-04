@@ -1,44 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>, <linux-pci@vger.kernel.org>,
-	<linux-sh@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Subject: [PATCH 0/3] Fix rcar-pcie for arm64
-Date: Mon,  2 Nov 2015 16:36:12 +0000
-Message-Id: <1446482175-26507-1-git-send-email-phil.edworthy@renesas.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e24smtp01.br.ibm.com ([32.104.18.85]:33204 "EHLO
+	e24smtp01.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030206AbbKDMA1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 07:00:27 -0500
+Received: from /spool/local
+	by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 10:00:25 -0200
+Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
+	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 397A43520079
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2015 06:59:08 -0500 (EST)
+Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
+	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA4C0mOT3760142
+	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 10:00:49 -0200
+Received: from d24av01.br.ibm.com (localhost [127.0.0.1])
+	by d24av01.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA4C0GZ0010913
+	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 10:00:18 -0200
+Subject: Re: [PATCH] Enable MSI/MSI-X caps and disable MSI interrupts at PCI
+ probe time - code move
+To: bhelgaas@google.com
+References: <1445437055-7017-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	mpe@ellerman.id.au, paulus@samba.org, benh@kernel.crashing.org,
+	mst@redhat.com, shangw@linux.vnet.ibm.com
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Message-ID: <5639F34F.5020402@linux.vnet.ibm.com>
+Date: Wed, 4 Nov 2015 10:00:15 -0200
+MIME-Version: 1.0
+In-Reply-To: <1445437055-7017-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The first patches fixes the build problem, and the second patch reverts the
-patch that removed the driver from arm64 builds. The final patch add a compat
-string for the r8a7795 (arm64) device.
-
-Tested on arm Koelsch board, all ok.
-
-Tested on arm64 Salvator-X board using renesas-drivers-2015-10-27-v4.3-rc7 from
-git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-drivers.git with PCI
-next merged. 
-Apart from patches to add the PCIe clock and DT nodes, I had to revert these
-patches to get it to work on arm64:
- f075915ac0b1 ("PCI/MSI: Drop domain field from msi_controller")
- d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use struct device::msi_domain")
-I'll look into this, but it doesn't stop us from applying these patches.
-
-Harunobu Kurokawa (1):
-  PCI: pcie-rcar: Add support for R-Car H3.
-
-Phil Edworthy (2):
-  PCI: pcie-rcar: Convert to DT resource parsing API
-  Revert "PCI: rcar: Build pcie-rcar.c only on ARM"
-
- Documentation/devicetree/bindings/pci/rcar-pci.txt |   3 +-
- drivers/pci/host/Kconfig                           |   3 +-
- drivers/pci/host/pcie-rcar.c                       | 118 +++++++++++++--------
- 3 files changed, 78 insertions(+), 46 deletions(-)
-
--- 
-1.9.1
+Bjorn, ping?
 
