@@ -1,75 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Bugfix] x86/PCI: Fix regression caused by commit 4d6b4e69a245
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>
-References: <1447648057-13644-1-git-send-email-jiang.liu@linux.intel.com>
- <20151124164907.GA24819@localhost>
- <CAJZ5v0irOUq6C9eSfCfmzyOiY1n1rUSxyUeUbvS9Nj0jNT2JrQ@mail.gmail.com>
- <56556D89.6020801@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	x86@kernel.org, Keith Busch <keith.busch@intel.com>,
-	Arthur Marsh <arthur.marsh@internode.on.net>
-From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Message-ID: <5655B392.7070701@intel.com>
-Date: Wed, 25 Nov 2015 14:11:46 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 4 Nov 2015 14:34:34 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Marc Zyngier <marc.zyngier@arm.com>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Ma Jun <majun258@huawei.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RFC 0/7] Adding core support for wire-MSI bridges
+In-Reply-To: <5620B9D6.1010708@arm.com>
+Message-ID: <alpine.DEB.2.11.1511041348060.4032@nanos>
+References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com> <56205917.7090001@linux.intel.com> <5620B9D6.1010708@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <56556D89.6020801@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/25/2015 9:12 AM, Jiang Liu wrote:
-> On 2015/11/25 6:19, Rafael J. Wysocki wrote:
->> On Tue, Nov 24, 2015 at 5:49 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>> On Mon, Nov 16, 2015 at 12:27:37PM +0800, Jiang Liu wrote:
->>>> From: Liu Jiang <jiang.liu@linux.intel.com>
->>>>
->>>> Commit 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support
->>>> PCI host bridge") converted x86 to use the common interface
->>>> acpi_pci_root_create, but the conversion missed on code piece in
->>>> arch/x86/pci/bus_numa.c, which causes regression on some legacy
->>>> AMD platforms as reported by Arthur Marsh <arthur.marsh@internode.on.net>.
->>>> The root causes is that acpi_pci_root_create() fails to insert
->>>> host bridge resources into iomem_resource/ioport_resource because
->>>> x86_pci_root_bus_resources() has already inserted those resources.
->>>> So change x86_pci_root_bus_resources() to not insert resources into
->>>> iomem_resource/ioport_resource.
->>> Fixes: 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support PCI host bridge")
->>>
->>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>>> Reported-and-tested-by: Arthur Marsh <arthur.marsh@internode.on.net>
->>> What's the status of this?  It looks like a regression we need to fix
->>> for v4.4.
->>>
->>> AFAICT, Arthur did *not* test this patch (rather, his response says he
->>> did test it and the test failed).
->>>
->>> 4d6b4e69a245 was merged by Rafael, and I assume he'll merge the fix
->>> unless I hear otherwise.
->> Quite frankly, I'm more likely to revert the offending commit at this
->> point as that's not the only regression reported against it and the
->> fix only helps in one case (out of three known to me).
-> Hi Rafael,
-> 	I got regression report from Hans de Bruin<jmdebruin@xmsnet.nl>,
-> Keith Busch <keith.busch@intel.com>, and Arthur Marsh
-> <arthur.marsh@internode.on.net>. Hans and Keith also reports
-> the patch fixes the regression. For Arthur's case, the debug
-> patch works for him, but the formal patch based on the debug
-> patch fails, so I need to do more investigation about this.
-> Is there any other report related to commit 4d6b4e69a245 so
-> I could help to investigate?
+Marc,
 
-OK, so the proposed bug fix works for everybody, right?
+On Fri, 16 Oct 2015, Marc Zyngier wrote:
+> On 16/10/15 02:55, Jiang Liu wrote:
+> > 	There's a working to enable Intel VMD storage device, which
+> > has the similar requirement. Basically a PCIe hierarchy is hidden
+> > behind a parent PCIe device, so we need to use the PCIe irqs on parent
+> > to de-multiple PCIe IRQs from hidden PCIe devices. Seems a chance for
+> > consolidation here.
+> 
+> Do you know if there is a 1-1 mapping between the interrupts seen by the
+> parent device and those seen by the hidden devices? Or is it a case of
+> having to demultiplex the MSIs? Looks like the former, but I'd like to
+> be sure.
 
-In that case there's no reason not to apply it.
+Yes, it's a demultiplexer. No 1:1 mapping.
 
-If there's anyone who can reproduce the problem and for whom that patch 
-doesn't work, please let me know.
+> Sure, will do when I repost this (probably in a few weeks), and assuming
+> this fits the bill for Thomas and the MBIGEN folks.
+
+It doesn't look that bad and the resulting mbigen stuff is way less
+horrible than it was before. So I agree this is a possible solution to
+the problem.
 
 Thanks,
-Rafael
+
+	tglx
 
