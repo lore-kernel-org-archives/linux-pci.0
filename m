@@ -1,80 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:34254 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751940AbbKWQFg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 11:05:36 -0500
-Received: by wmvv187 with SMTP id v187so168166790wmv.1
-        for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2015 08:05:35 -0800 (PST)
-Subject: Re: [PATCH v3 2/6] PCI: designware: add memory barrier after enabling
- region
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Stanimir Varbanov <stanimir.varbanov@linaro.org>
-References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
- <d38a9c1a87c4e40ad6d17fcbe0fd41b33d7d2912.1448270813.git.stanimir.varbanov@linaro.org>
- <20151123112744.GL8644@n2100.arm.linux.org.uk>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>, Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Message-ID: <56533947.4040206@linaro.org>
-Date: Mon, 23 Nov 2015 18:05:27 +0200
+Received: from mail-bn1on0058.outbound.protection.outlook.com ([157.56.110.58]:30809
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755368AbbKDGix convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 01:38:53 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"rjui@broadcom.com" <rjui@broadcom.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"dhdang@apm.com" <dhdang@apm.com>,
+	"sbranden@broadcom.com" <sbranden@broadcom.com>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH v7] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+Date: Wed, 4 Nov 2015 06:38:45 +0000
+Message-ID: <8520D5D51A55D047800579B09414719801693C20@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1446564227-4704-1-git-send-email-bharatku@xilinx.com>
+ <5638DE62.6050605@arm.com>
+In-Reply-To: <5638DE62.6050605@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20151123112744.GL8644@n2100.arm.linux.org.uk>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/23/2015 01:27 PM, Russell King - ARM Linux wrote:
-> On Mon, Nov 23, 2015 at 11:28:59AM +0200, Stanimir Varbanov wrote:
->> Add 'write memory' barrier after enable region in PCIE_ATU_CR2
->> register. The barrier is needed to ensure that the region enable
->> request has been reached it's destination at time when we
->> read/write to PCI configuration space.
->>
->> Without this barrier PCI device enumeration during kernel boot
->> is not reliable, and reading configuration space for particular
->> PCI device on the bus returns zero aka no device.
->>
->> Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
->> ---
->>  drivers/pci/host/pcie-designware.c |    5 +++++
->>  1 file changed, 5 insertions(+)
->>
->> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->> index 02a7452bdf23..e15a2ae1583f 100644
->> --- a/drivers/pci/host/pcie-designware.c
->> +++ b/drivers/pci/host/pcie-designware.c
->> @@ -164,6 +164,11 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
->>  	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
->>  	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
->>  	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
->> +	/*
->> +	 * ensure that the ATU enable has been happaned before accessing
->> +	 * pci configuration/io spaces through dw_pcie_cfg_[read|write].
->> +	 */
->> +	smp_wmb();
+> > +static struct msi_domain_info nwl_msi_domain_info = {
+> > +	.flags = (MSI_FLAG_USE_DEF_DOM_OPS |
+> MSI_FLAG_USE_DEF_CHIP_OPS |
+> > +		  MSI_FLAG_MULTI_PCI_MSI),
 > 
-> So, why is this a SMP barrier?
+> If you're supporting multi-MSI, how do you ensure that all hwirqs are
+> contiguous as required by the spec? Clearly, your allocator doesn't provide
+> this guarantee.
 > 
+Oh ok, then how can we know if one EP is requesting for multiple irq's, because in pci_enable_msi_range,
+ it does do while loop according to msi_capability_init return value 
+which in turn requests for multiple irq's. Is there any way to find out when single EP requesting for multiple MSI?
 
-I wrongly assumed that smp_wmb will come down to wmb(), I have no excuse.
+> Also, you still lack support for MSI-X (which would come for free...).
 
-But despite my ignorant, as I noted in cover letter I want this patch to
-be treated as an RFC (maybe I had to add it in the subject).
+We don't support MSI-X in root port mode.
+> 
+> > +	.chip = &nwl_msi_irq_chip,
+> > +};
+> > +#endif
+> > +
+> > +	irq_domain_remove(pcie->legacy_irq_domain);
+> > +
+> > +#ifdef CONFIG_PCI_MSI
+> > +	irq_set_chained_handler_and_data(msi->irq_msi0, NULL, NULL);
+> > +	irq_set_chained_handler_and_data(msi->irq_msi1, NULL, NULL);
+> > +
+> > +	irq_domain_remove(msi->msi_domain);
+> > +	irq_domain_remove(msi->dev_domain);
+> > +#endif
+> > +
+> > +}
+> 
+> Remove these #ifdefs. You can test the validity of these fields before calling
+> the various functions. You can also move this to a separate function.
 
-Do we really need a memory barrier after enabling ATU in PCI_ATU_CR2
-register and before first access to pci configuration space using
-read[lwb] (see dw_pcie_rd_other_conf)? Or I have made totally wrong
-assumption.
+Without #ifdefs if we compile driver for legacy, MSI structures will not be available and we get compile time error.
+> 
+> > +
+> > +	/* setup AFI/FPCI range */
+> > +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> > +	base = virt_to_phys((void *)msi->pages);
+> > +	nwl_bridge_writel(pcie, lower_32_bits(base), I_MSII_BASE_LO);
+> > +	nwl_bridge_writel(pcie, upper_32_bits(base), I_MSII_BASE_HI);
+> 
+> I just read this, and I'm puzzled. Actually, puzzled is an understatement. Why
+> on Earth do you need to give RAM to your MSI HW?
+> This should be a device, not RAM. By the look of it, this could be absolutely
+> anything. Are you sure you have to supply RAM here?
+> 
+This is required in our hardware, so that bridge identifies incoming MWr as MSI.
+> > +
+> > +	/* Disable high range msi interrupts */
+> > +	nwl_bridge_writel(pcie, (u32)~MSGF_MSI_SR_HI_MASK,
+> > +MSGF_MSI_MASK_HI);
+> > +
+> > +
 
--- 
-regards,
-Stan
+Bharat
