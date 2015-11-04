@@ -1,141 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-CC: Ray Jui <rjui@broadcom.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	"dhdang@apm.com" <dhdang@apm.com>,
-	"sbranden@broadcom.com" <sbranden@broadcom.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH v8] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Date: Tue, 17 Nov 2015 13:27:39 +0000
-Message-ID: <8520D5D51A55D047800579B0941471982585CD78@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>
-	<5649F2D9.7070902@arm.com>	<564A5255.3020603@broadcom.com>
-	<8520D5D51A55D047800579B0941471982585CBDA@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20151117092100.76babf7f@arm.com>
-In-Reply-To: <20151117092100.76babf7f@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp06.in.ibm.com ([122.248.162.6]:45804 "EHLO
+	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965422AbbKDNOZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:14:25 -0500
+Received: from /spool/local
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 18:44:22 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 06/50] powerpc/powernv: Drop phb->bdfn_to_pe()
+Date: Thu,  5 Nov 2015 00:12:06 +1100
+Message-Id: <1446642770-4681-7-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> 
-> On Tue, 17 Nov 2015 04:59:39 +0000
-> Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
-> 
-> > > On 11/16/2015 7:14 AM, Marc Zyngier wrote:
-> > > > On 11/11/15 06:33, Bharat Kumar Gogada wrote:
-> > > >> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
-> > > >>
-> > > >> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> > > >> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> > > >> ---
-> > > >> Added logic to allocate contiguous hwirq in nwl_irq_domain_alloc
-> > > function.
-> > > >> Moved MSI functionality to separate functions.
-> > > >> Changed error return values.
-> > > >> ---
-> > > >>   .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
-> > > >>   drivers/pci/host/Kconfig                           |   16 +-
-> > > >>   drivers/pci/host/Makefile                          |    1 +
-> > > >>   drivers/pci/host/pcie-xilinx-nwl.c                 | 1062
-> > > ++++++++++++++++++++
-> > > >>   4 files changed, 1144 insertions(+), 3 deletions(-)
-> > > >>   create mode 100644
-> > > >> Documentation/devicetree/bindings/pci/xilinx-nwl-
-> > > pcie.txt
-> > > >>   create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
-> > > >>
-> > > >
-> > > > [...]
-> > > >
-> > > >> +static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct
-> > > >> +pci_bus
-> > > >> +*bus) {
-> > > >> +	struct platform_device *pdev = to_platform_device(pcie-
-> >dev);
-> > > >> +	struct nwl_msi *msi = &pcie->msi;
-> > > >> +	unsigned long base;
-> > > >> +	int ret;
-> > > >> +
-> > > >> +	mutex_init(&msi->lock);
-> > > >> +
-> > > >> +	/* Check for msii_present bit */
-> > > >> +	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) &
-> MSII_PRESENT;
-> > > >> +	if (!ret) {
-> > > >> +		dev_err(pcie->dev, "MSI not present\n");
-> > > >> +		ret = -EIO;
-> > > >> +		goto err;
-> > > >> +	}
-> > > >> +
-> > > >> +	/* Enable MSII */
-> > > >> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,
-> I_MSII_CONTROL) |
-> > > >> +			  MSII_ENABLE, I_MSII_CONTROL);
-> > > >> +
-> > > >> +	/* Enable MSII status */
-> > > >> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,
-> I_MSII_CONTROL) |
-> > > >> +			  MSII_STATUS_ENABLE, I_MSII_CONTROL);
-> > > >> +
-> > > >> +	/* setup AFI/FPCI range */
-> > > >> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-> > > >> +	base = virt_to_phys((void *)msi->pages);
-> > > >> +	nwl_bridge_writel(pcie, lower_32_bits(base),
-> I_MSII_BASE_LO);
-> > > >> +	nwl_bridge_writel(pcie, upper_32_bits(base),
-> I_MSII_BASE_HI);
-> > > >
-> > > > BTW, you still haven't answered my question as to why you need to
-> > > > waste a page of memory here, and why putting a device address
-> > > > doesn't
-> > > work.
-> > > >
-> > > > As this is (to the best of my knowledge) the only driver doing so,
-> > > > I'd really like you to explain the rational behind this.
-> > >
-> > > Might not be the only driver doing so after I start sending out
-> > > patches for the iProc MSI support (soon), :)
-> > >
-> > > I'm not sure how it works for the Xilinx NWL controller, which
-> > > Bharat should be able to help to explain. But for the iProc MSI
-> > > controller, there's no device I/O memory reserved for MSI posted writes
-> in the ASIC.
-> > > Therefore one needs to reserve host memory for these writes.
-> > > >
-> >
-> > Our SoC doesn't reserve any memory for MSI, hence we need to assign a
-> > memory space for it out of RAM.
-> 
-> Question to both of you: Does the write make it to memory? Or is it sampled
-> by the bridge and dropped?
-> 
-No, write will not do any modification in memory, it is consumed by bridge.
+This drops struct pnv_phb::bdfn_to_pe() as nobody uses it.
 
-> What happens if you replace the page in RAM with a dummy address?
-What do you mean by dummy address ?
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 9 ---------
+ arch/powerpc/platforms/powernv/pci.h      | 1 -
+ 2 files changed, 10 deletions(-)
 
-Regards,
-Bharat
-
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 74288ab..968da91 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -2978,12 +2978,6 @@ static bool pnv_pci_enable_device_hook(struct pci_dev *dev)
+ 	return true;
+ }
+ 
+-static u32 pnv_ioda_bdfn_to_pe(struct pnv_phb *phb, struct pci_bus *bus,
+-			       u32 devfn)
+-{
+-	return phb->ioda.pe_rmap[(bus->number << 8) | devfn];
+-}
+-
+ static void pnv_pci_ioda_shutdown(struct pci_controller *hose)
+ {
+ 	struct pnv_phb *phb = hose->private_data;
+@@ -3144,9 +3138,6 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	phb->freeze_pe = pnv_ioda_freeze_pe;
+ 	phb->unfreeze_pe = pnv_ioda_unfreeze_pe;
+ 
+-	/* Setup RID -> PE mapping function */
+-	phb->bdfn_to_pe = pnv_ioda_bdfn_to_pe;
+-
+ 	/* Setup TCEs */
+ 	phb->dma_dev_setup = pnv_pci_ioda_dma_dev_setup;
+ 
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index c8ff50e..49e3baf 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -106,7 +106,6 @@ struct pnv_phb {
+ 			 unsigned int is_64, struct msi_msg *msg);
+ 	void (*dma_dev_setup)(struct pnv_phb *phb, struct pci_dev *pdev);
+ 	void (*fixup_phb)(struct pci_controller *hose);
+-	u32 (*bdfn_to_pe)(struct pnv_phb *phb, struct pci_bus *bus, u32 devfn);
+ 	int (*init_m64)(struct pnv_phb *phb);
+ 	void (*reserve_m64_pe)(struct pci_bus *bus,
+ 			       unsigned long *pe_bitmap, bool all);
+-- 
+2.1.0
 
