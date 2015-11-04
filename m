@@ -1,120 +1,244 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:44989 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965447AbbKDNOE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:14:04 -0500
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:51244 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727AbbKDXYs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 18:24:48 -0500
 Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 18:44:01 +0530
+	Thu, 5 Nov 2015 09:24:45 +1000
+Date: Thu, 5 Nov 2015 10:23:45 +1100
 From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 33/50] powerpc/pci: Export pci_traverse_device_nodes()
-Date: Thu,  5 Nov 2015 00:12:33 +1100
-Message-Id: <1446642770-4681-34-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>, aik@ozlabs.ru,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH v7 49/50] drivers/of: Export OF changeset functions
+Message-ID: <20151104232345.GA16870@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
 References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-50-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_JsqK0upkO9WcMcSJ8QOxFzAtrYn2QV3xy4fnhLGZm30VjzQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL_JsqK0upkO9WcMcSJ8QOxFzAtrYn2QV3xy4fnhLGZm30VjzQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This renames traverse_pci_devices() to pci_traverse_device_nodes().
-The function traverses all subordinate device nodes of the specified
-one. Also, below cleanup applied to the function. No logical changes
-introduced.
+On Wed, Nov 04, 2015 at 10:12:00AM -0600, Rob Herring wrote:
+>On Wed, Nov 4, 2015 at 7:12 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>> The PowerNV PCI hotplug driver is going to use the OF changeset
+>> to manage the changed device sub-tree. This exports those OF
+>> changeset functions for that.
+>>
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>
+>Acked-by: Rob Herring <robh@kernel.org>
+>
 
-   * Rename "pre" to "fn".
-   * Avoid assignment in if condition reported from checkpatch.pl.
+Rob, thank you for the quick response :-)
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/ppc-pci.h   |  6 +++---
- arch/powerpc/kernel/pci_dn.c         | 14 +++++++++-----
- arch/powerpc/platforms/pseries/msi.c |  4 ++--
- 3 files changed, 14 insertions(+), 10 deletions(-)
+Thanks,
+Gavin
 
-diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
-index ca0c5bf..8753e4e 100644
---- a/arch/powerpc/include/asm/ppc-pci.h
-+++ b/arch/powerpc/include/asm/ppc-pci.h
-@@ -33,9 +33,9 @@ extern struct pci_dev *isa_bridge_pcidev;	/* may be NULL if no ISA bus */
- struct device_node;
- struct pci_dn;
- 
--typedef void *(*traverse_func)(struct device_node *me, void *data);
--void *traverse_pci_devices(struct device_node *start, traverse_func pre,
--		void *data);
-+void *pci_traverse_device_nodes(struct device_node *start,
-+				void *(*fn)(struct device_node *, void *),
-+				void *data);
- void *traverse_pci_dn(struct pci_dn *root,
- 		      void *(*fn)(struct pci_dn *, void *),
- 		      void *data);
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index 7f877a4..aa4110f 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -355,8 +355,9 @@ EXPORT_SYMBOL_GPL(pci_remove_device_node_info);
-  * one of these nodes we also assume its siblings are non-pci for
-  * performance.
-  */
--void *traverse_pci_devices(struct device_node *start, traverse_func pre,
--		void *data)
-+void *pci_traverse_device_nodes(struct device_node *start,
-+				void *(*fn)(struct device_node *, void *),
-+				void *data)
- {
- 	struct device_node *dn, *nextdn;
- 	void *ret;
-@@ -371,8 +372,11 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
- 		if (classp)
- 			class = of_read_number(classp, 1);
- 
--		if (pre && ((ret = pre(dn, data)) != NULL))
--			return ret;
-+		if (fn) {
-+			ret = fn(dn, data);
-+			if (ret)
-+				return ret;
-+		}
- 
- 		/* If we are a PCI bridge, go down */
- 		if (dn->child && ((class >> 8) == PCI_CLASS_BRIDGE_PCI ||
-@@ -470,7 +474,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
- 	}
- 
- 	/* Update dn->phb ptrs for new phb and children devices */
--	traverse_pci_devices(dn, add_pdn, phb);
-+	pci_traverse_device_nodes(dn, add_pdn, phb);
- }
- 
- /** 
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index 272e9ec..543a638 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -305,7 +305,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
- 	memset(&counts, 0, sizeof(struct msi_counts));
- 
- 	/* Work out how many devices we have below this PE */
--	traverse_pci_devices(pe_dn, count_non_bridge_devices, &counts);
-+	pci_traverse_device_nodes(pe_dn, count_non_bridge_devices, &counts);
- 
- 	if (counts.num_devices == 0) {
- 		pr_err("rtas_msi: found 0 devices under PE for %s\n",
-@@ -320,7 +320,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
- 	/* else, we have some more calculating to do */
- 	counts.requestor = pci_device_to_OF_node(dev);
- 	counts.request = request;
--	traverse_pci_devices(pe_dn, count_spare_msis, &counts);
-+	pci_traverse_device_nodes(pe_dn, count_spare_msis, &counts);
- 
- 	/* If the quota isn't an integer multiple of the total, we can
- 	 * use the remainder as spare MSIs for anyone that wants them. */
--- 
-2.1.0
+>> ---
+>>  drivers/of/dynamic.c    | 65 ++++++++++++++++++++++++++++++++++---------------
+>>  drivers/of/of_private.h |  2 ++
+>>  drivers/of/overlay.c    |  8 +++---
+>>  drivers/of/unittest.c   |  4 ---
+>>  4 files changed, 52 insertions(+), 27 deletions(-)
+>>
+>> diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
+>> index 53826b8..c647bd1 100644
+>> --- a/drivers/of/dynamic.c
+>> +++ b/drivers/of/dynamic.c
+>> @@ -646,6 +646,7 @@ void of_changeset_init(struct of_changeset *ocs)
+>>         memset(ocs, 0, sizeof(*ocs));
+>>         INIT_LIST_HEAD(&ocs->entries);
+>>  }
+>> +EXPORT_SYMBOL_GPL(of_changeset_init);
+>>
+>>  /**
+>>   * of_changeset_destroy - Destroy a changeset
+>> @@ -662,20 +663,9 @@ void of_changeset_destroy(struct of_changeset *ocs)
+>>         list_for_each_entry_safe_reverse(ce, cen, &ocs->entries, node)
+>>                 __of_changeset_entry_destroy(ce);
+>>  }
+>> +EXPORT_SYMBOL_GPL(of_changeset_destroy);
+>>
+>> -/**
+>> - * of_changeset_apply - Applies a changeset
+>> - *
+>> - * @ocs:       changeset pointer
+>> - *
+>> - * Applies a changeset to the live tree.
+>> - * Any side-effects of live tree state changes are applied here on
+>> - * sucess, like creation/destruction of devices and side-effects
+>> - * like creation of sysfs properties and directories.
+>> - * Returns 0 on success, a negative error value in case of an error.
+>> - * On error the partially applied effects are reverted.
+>> - */
+>> -int of_changeset_apply(struct of_changeset *ocs)
+>> +int __of_changeset_apply(struct of_changeset *ocs)
+>>  {
+>>         struct of_changeset_entry *ce;
+>>         int ret;
+>> @@ -704,17 +694,30 @@ int of_changeset_apply(struct of_changeset *ocs)
+>>  }
+>>
+>>  /**
+>> - * of_changeset_revert - Reverts an applied changeset
+>> + * of_changeset_apply - Applies a changeset
+>>   *
+>>   * @ocs:       changeset pointer
+>>   *
+>> - * Reverts a changeset returning the state of the tree to what it
+>> - * was before the application.
+>> - * Any side-effects like creation/destruction of devices and
+>> - * removal of sysfs properties and directories are applied.
+>> + * Applies a changeset to the live tree.
+>> + * Any side-effects of live tree state changes are applied here on
+>> + * success, like creation/destruction of devices and side-effects
+>> + * like creation of sysfs properties and directories.
+>>   * Returns 0 on success, a negative error value in case of an error.
+>> + * On error the partially applied effects are reverted.
+>>   */
+>> -int of_changeset_revert(struct of_changeset *ocs)
+>> +int of_changeset_apply(struct of_changeset *ocs)
+>> +{
+>> +       int ret;
+>> +
+>> +       mutex_lock(&of_mutex);
+>> +       ret = __of_changeset_apply(ocs);
+>> +       mutex_unlock(&of_mutex);
+>> +
+>> +       return ret;
+>> +}
+>> +EXPORT_SYMBOL_GPL(of_changeset_apply);
+>> +
+>> +int __of_changeset_revert(struct of_changeset *ocs)
+>>  {
+>>         struct of_changeset_entry *ce;
+>>         int ret;
+>> @@ -742,6 +745,29 @@ int of_changeset_revert(struct of_changeset *ocs)
+>>  }
+>>
+>>  /**
+>> + * of_changeset_revert - Reverts an applied changeset
+>> + *
+>> + * @ocs:       changeset pointer
+>> + *
+>> + * Reverts a changeset returning the state of the tree to what it
+>> + * was before the application.
+>> + * Any side-effects like creation/destruction of devices and
+>> + * removal of sysfs properties and directories are applied.
+>> + * Returns 0 on success, a negative error value in case of an error.
+>> + */
+>> +int of_changeset_revert(struct of_changeset *ocs)
+>> +{
+>> +       int ret;
+>> +
+>> +       mutex_lock(&of_mutex);
+>> +       ret = __of_changeset_revert(ocs);
+>> +       mutex_unlock(&of_mutex);
+>> +
+>> +       return ret;
+>> +}
+>> +EXPORT_SYMBOL_GPL(of_changeset_revert);
+>> +
+>> +/**
+>>   * of_changeset_action - Perform a changeset action
+>>   *
+>>   * @ocs:       changeset pointer
+>> @@ -779,3 +805,4 @@ int of_changeset_action(struct of_changeset *ocs, unsigned long action,
+>>         list_add_tail(&ce->node, &ocs->entries);
+>>         return 0;
+>>  }
+>> +EXPORT_SYMBOL_GPL(of_changeset_action);
+>> diff --git a/drivers/of/of_private.h b/drivers/of/of_private.h
+>> index 8e882e7..829469f 100644
+>> --- a/drivers/of/of_private.h
+>> +++ b/drivers/of/of_private.h
+>> @@ -45,6 +45,8 @@ static inline struct device_node *kobj_to_device_node(struct kobject *kobj)
+>>  extern int of_property_notify(int action, struct device_node *np,
+>>                               struct property *prop, struct property *old_prop);
+>>  extern void of_node_release(struct kobject *kobj);
+>> +extern int __of_changeset_apply(struct of_changeset *ocs);
+>> +extern int __of_changeset_revert(struct of_changeset *ocs);
+>>  #else /* CONFIG_OF_DYNAMIC */
+>>  static inline int of_property_notify(int action, struct device_node *np,
+>>                                      struct property *prop, struct property *old_prop)
+>> diff --git a/drivers/of/overlay.c b/drivers/of/overlay.c
+>> index 24e025f..804ea33 100644
+>> --- a/drivers/of/overlay.c
+>> +++ b/drivers/of/overlay.c
+>> @@ -378,9 +378,9 @@ int of_overlay_create(struct device_node *tree)
+>>         }
+>>
+>>         /* apply the changeset */
+>> -       err = of_changeset_apply(&ov->cset);
+>> +       err = __of_changeset_apply(&ov->cset);
+>>         if (err) {
+>> -               pr_err("%s: of_changeset_apply() failed for tree@%s\n",
+>> +               pr_err("%s: __of_changeset_apply() failed for tree@%s\n",
+>>                                 __func__, tree->full_name);
+>>                 goto err_revert_overlay;
+>>         }
+>> @@ -508,7 +508,7 @@ int of_overlay_destroy(int id)
+>>
+>>
+>>         list_del(&ov->node);
+>> -       of_changeset_revert(&ov->cset);
+>> +       __of_changeset_revert(&ov->cset);
+>>         of_free_overlay_info(ov);
+>>         idr_remove(&ov_idr, id);
+>>         of_changeset_destroy(&ov->cset);
+>> @@ -539,7 +539,7 @@ int of_overlay_destroy_all(void)
+>>         /* the tail of list is guaranteed to be safe to remove */
+>>         list_for_each_entry_safe_reverse(ov, ovn, &ov_list, node) {
+>>                 list_del(&ov->node);
+>> -               of_changeset_revert(&ov->cset);
+>> +               __of_changeset_revert(&ov->cset);
+>>                 of_free_overlay_info(ov);
+>>                 idr_remove(&ov_idr, ov->id);
+>>                 kfree(ov);
+>> diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
+>> index bafcf66..dad3fd2 100644
+>> --- a/drivers/of/unittest.c
+>> +++ b/drivers/of/unittest.c
+>> @@ -526,18 +526,14 @@ static void __init of_unittest_changeset(void)
+>>         unittest(!of_changeset_add_property(&chgset, parent, ppadd), "fail add prop\n");
+>>         unittest(!of_changeset_update_property(&chgset, parent, ppupdate), "fail update prop\n");
+>>         unittest(!of_changeset_remove_property(&chgset, parent, ppremove), "fail remove prop\n");
+>> -       mutex_lock(&of_mutex);
+>>         unittest(!of_changeset_apply(&chgset), "apply failed\n");
+>> -       mutex_unlock(&of_mutex);
+>>
+>>         /* Make sure node names are constructed correctly */
+>>         unittest((np = of_find_node_by_path("/testcase-data/changeset/n2/n21")),
+>>                  "'%s' not added\n", n21->full_name);
+>>         of_node_put(np);
+>>
+>> -       mutex_lock(&of_mutex);
+>>         unittest(!of_changeset_revert(&chgset), "revert failed\n");
+>> -       mutex_unlock(&of_mutex);
+>>
+>>         of_changeset_destroy(&chgset);
+>>  #endif
+>> --
+>> 2.1.0
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>_______________________________________________
+>Linuxppc-dev mailing list
+>Linuxppc-dev@lists.ozlabs.org
+>https://lists.ozlabs.org/listinfo/linuxppc-dev
 
