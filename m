@@ -1,41 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:42978 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755339AbbLAHZG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 02:25:06 -0500
-From: Simon Horman <horms+renesas@verge.net.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, devicetree@vger.kernel.org,
-	Simon Horman <horms+renesas@verge.net.au>
-Subject: [PATCH 2/4] PCI: rcar-gen2: Add device tree support for r8a7793
-Date: Tue,  1 Dec 2015 16:24:30 +0900
-Message-Id: <1448954672-27236-3-git-send-email-horms+renesas@verge.net.au>
-In-Reply-To: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
-References: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:51749 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965425AbbKDNN7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:59 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 23:13:57 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 43/50] powerpc/powernv: Select OF_DYNAMIC
+Date: Thu,  5 Nov 2015 00:12:43 +1100
+Message-Id: <1446642770-4681-44-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simply document new compat strings.
-There appears to be no need for a driver updates.
+The device tree will change dynamically in PowerNV PCI hotplug
+driver. This enables CONFIG_OF_DYNAMIC to support that.
 
-Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 1 +
+ arch/powerpc/platforms/powernv/Kconfig | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-index b19be08a8113..7c231b3e5872 100644
---- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-@@ -8,6 +8,7 @@ OHCI and EHCI controllers.
- Required properties:
- - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
- 	      "renesas,pci-r8a7791" for the R8A7791 SoC;
-+	      "renesas,pci-r8a7793" for the R8A7793 SoC;
- 	      "renesas,pci-r8a7794" for the R8A7794 SoC;
- 	      "renesas,pci-gen2" for a generic R-Car Gen2 compatible device.
+diff --git a/arch/powerpc/platforms/powernv/Kconfig b/arch/powerpc/platforms/powernv/Kconfig
+index 604190c..e7b1ad7 100644
+--- a/arch/powerpc/platforms/powernv/Kconfig
++++ b/arch/powerpc/platforms/powernv/Kconfig
+@@ -18,6 +18,7 @@ config PPC_POWERNV
+ 	select CPU_FREQ_GOV_ONDEMAND
+ 	select CPU_FREQ_GOV_CONSERVATIVE
+ 	select PPC_DOORBELL
++	select OF_DYNAMIC
+ 	default y
  
+ config OPAL_PRD
 -- 
-2.1.4
+2.1.0
 
