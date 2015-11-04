@@ -1,57 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33590 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751441AbbKHXxY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Nov 2015 18:53:24 -0500
-Received: by pabfh17 with SMTP id fh17so179135152pab.0
-        for <linux-pci@vger.kernel.org>; Sun, 08 Nov 2015 15:53:23 -0800 (PST)
-Subject: Re: [PATCH V13 0/9] VF EEH on Power8
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com, mpe@ellerman.id.au
-References: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <563FE06D.4080801@ozlabs.ru>
-Date: Mon, 9 Nov 2015 10:53:17 +1100
-MIME-Version: 1.0
-In-Reply-To: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:60082 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965454AbbKDNOI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:14:08 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 23:14:06 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 30/50] powerpc/pci: Move pci_find_bus_by_node() around
+Date: Thu,  5 Nov 2015 00:12:30 +1100
+Message-Id: <1446642770-4681-31-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/08/2015 10:30 AM, Wei Yang wrote:
-> This patchset enables EEH on SRIOV VFs. The general idea is to create proper
-> VF edev and VF PE and handle them properly.
->
-> Different from the Bus PE, VF PE just contain one VF. This introduces the
-> difference of EEH error handling on a VF PE. Generally, it has several
-> differences.
->
-> First, the VF's removal and re-enumerate rely on its PF. VF has a tight
-> relationship between its PF. This is not proper to enumerate a VF by usual
-> scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
-> set.
->
-> Second, the reset/restore of a VF is done in kernel space. FW is not aware of
-> the VF, this means the usual reset function done in FW will not work. One of
-> the patch will imitate the reset/restore function in kernel space.
->
-> Third, the VF may be removed during the PF's error_detected function. In this
-> case, the original error_detected->slot_reset->resume sequence is not proper
-> to those removed VFs, since they are re-created by PF in a fresh state. A flag
-> in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
-> track whether this device needs to be reset or not.
->
-> This has been tested both on host and in guest on Power8 with latest kernel
-> version.
+This moves pci_find_bus_by_node() from arch/powerpc/platforms/
+pseries/pci_dlpar.c to arch/powerpc/kernel/pci-hotplug.c so that
+the function can be used by pSeries and PowerNV platform at the
+same time. Also, below cleanup applied. No functional changes
+introduced.
 
+   * Remove variable "busdn" in find_bus_among_children()
+   * Use PCI_DN() to convert device node to pci_dn
 
-This does not apply on top of neither Linus master tree 
-(git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git sha1 
-ce5c2d2) nor Michael's PPC next tree 
-(git://git.kernel.org/pub/scm/linux/kernel/git/powerpc/linux.git sha1 
-8bdf2023). What did you base your work on?
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+---
+ arch/powerpc/kernel/pci-hotplug.c          | 29 ++++++++++++++++++++++++++++
+ arch/powerpc/platforms/pseries/pci_dlpar.c | 31 ------------------------------
+ 2 files changed, 29 insertions(+), 31 deletions(-)
 
-
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 3f62821..96e2cc3 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -21,6 +21,35 @@
+ #include <asm/firmware.h>
+ #include <asm/eeh.h>
+ 
++static struct pci_bus *find_bus_among_children(struct pci_bus *bus,
++					       struct device_node *dn)
++{
++	struct pci_bus *child = NULL;
++	struct pci_bus *tmp;
++
++	if (pci_bus_to_OF_node(bus) == dn)
++		return bus;
++
++	list_for_each_entry(tmp, &bus->children, node) {
++		child = find_bus_among_children(tmp, dn);
++		if (child)
++			break;
++	}
++
++	return child;
++}
++
++struct pci_bus *pci_find_bus_by_node(struct device_node *dn)
++{
++	struct pci_dn *pdn = PCI_DN(dn);
++
++	if (!pdn  || !pdn->phb || !pdn->phb->bus)
++		return NULL;
++
++	return find_bus_among_children(pdn->phb->bus, dn);
++}
++EXPORT_SYMBOL_GPL(pci_find_bus_by_node);
++
+ /**
+  * pcibios_release_device - release PCI device
+  * @dev: PCI device
+diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
+index aee22b4..906dbaa 100644
+--- a/arch/powerpc/platforms/pseries/pci_dlpar.c
++++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
+@@ -34,37 +34,6 @@
+ 
+ #include "pseries.h"
+ 
+-static struct pci_bus *
+-find_bus_among_children(struct pci_bus *bus,
+-                        struct device_node *dn)
+-{
+-	struct pci_bus *child = NULL;
+-	struct pci_bus *tmp;
+-	struct device_node *busdn;
+-
+-	busdn = pci_bus_to_OF_node(bus);
+-	if (busdn == dn)
+-		return bus;
+-
+-	list_for_each_entry(tmp, &bus->children, node) {
+-		child = find_bus_among_children(tmp, dn);
+-		if (child)
+-			break;
+-	};
+-	return child;
+-}
+-
+-struct pci_bus *pci_find_bus_by_node(struct device_node *dn)
+-{
+-	struct pci_dn *pdn = dn->data;
+-
+-	if (!pdn  || !pdn->phb || !pdn->phb->bus)
+-		return NULL;
+-
+-	return find_bus_among_children(pdn->phb->bus, dn);
+-}
+-EXPORT_SYMBOL_GPL(pci_find_bus_by_node);
+-
+ struct pci_controller *init_phb_dynamic(struct device_node *dn)
+ {
+ 	struct pci_controller *phb;
 -- 
-Alexey
+2.1.0
+
