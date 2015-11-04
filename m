@@ -1,403 +1,257 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:51128 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753056AbbKMMHD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Nov 2015 07:07:03 -0500
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: bhelgaas@google.com
-Cc: CARLOS.PALMINHA@synopsys.com, linux-pci@vger.kernel.org,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCHv3] add new platform driver for PCI RC
-Date: Fri, 13 Nov 2015 12:06:42 +0000
-Message-Id: <56c2031ee4b5d6d9d5452ac6cca724a15942cbf7.1447411031.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1447411031.git.jpinto@synopsys.com>
-References: <cover.1447411031.git.jpinto@synopsys.com>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:56718 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727AbbKDXYU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 18:24:20 -0500
+Received: from localhost
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 5 Nov 2015 09:24:16 +1000
+Date: Thu, 5 Nov 2015 10:23:15 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Frank Rowand <frowand.list@gmail.com>
+Subject: Re: [PATCH v7 45/50] drivers/of: Avoid recursively calling
+ unflatten_dt_node()
+Message-ID: <20151104232315.GB9287@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_JsqJGpV-+JYyA1g0dw_nEduhmrMEouTH03kHtuCkGSOP57Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL_JsqJGpV-+JYyA1g0dw_nEduhmrMEouTH03kHtuCkGSOP57Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch goal is to add a new platform driver called pcie-snpsdev for PCI RC 
-using Synopsys' PCI RC DesignWare Core.
+On Wed, Nov 04, 2015 at 10:07:50AM -0600, Rob Herring wrote:
+>On Wed, Nov 4, 2015 at 7:12 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>> In current implementation, unflatten_dt_node() is called recursively
+>> to unflatten device nodes in FDT blob. It's stress to limited stack
+>> capacity.
+>
+>Did you actually hit a problem?
+>
+>Now we have a max depth of 64. Seems like that should be plenty... Any
+>idea how this compares to when we run out of stack space?
+>
 
-This driver will be used extensively because it is going to be the official 
-platform driver of the DesignWare PCI RC IP Prototyping Kit which provides a 
-FPGA containing a DW PCI RC controller and a software development environment.
+When I rebased last revision (v6), particular below patch, to 4.3.rc6,
+the kernel won't boot in P7 and P8 boxes. On P7 boxes, the stack overruns
+according to the printed kernel messages. On P8 boxes, the /bin/init in
+initramfs image can't be loaded/executed properly and it's potentially
+caused by memory corruption. That's why I reworked it to avoid recursive
+calling to unflatten_dt_node().
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
----
+The max depth "64" wasn't selected based on the stack usage. I was thinking
+the device tree is converted to friendly *.dts format and it's using TAB
+as the prefix for each line. If the device tree has 64 depth, Each line
+in *.dts for leaf nodes have to be wrapped and spanning multiple lines.
+That's why I choosed 64, maybe 32 is enough. Did you see a device-tree
+that has more than 16 depth in field? :-)
 
-Changes v1->v2 (kbuild test robot <lkp@intel.com>):
-- owner from the driver structure
-Changes v2->v3 (kbuild test robot <lkp@intel.com>):
-- removed dw_pcie_link_retrain() that does not exist in pcie-designware
+>> This avoids calling the function recursively, meaning the device
+>> nodes are unflattened in one call on unflatten_dt_node(): two arrays
+>> are introduced to track the parent path size and the device node of
+>> current level of depth, which will be used by the device node on next
+>> level of depth to be unflattened. Also, the parameter "poffset" and
+>> "fpsize" are unused and dropped.
+>
+>Yay. I'm happy to see parameters removed instead of added to this function.
+>
+>>
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>>  drivers/of/fdt.c | 94 +++++++++++++++++++++++++++++++++-----------------------
+>>  1 file changed, 56 insertions(+), 38 deletions(-)
+>>
+>> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+>> index 173b036..f4793d0 100644
+>> --- a/drivers/of/fdt.c
+>> +++ b/drivers/of/fdt.c
+>> @@ -355,61 +355,82 @@ static unsigned long populate_node(const void *blob,
+>>         return fpsize;
+>>  }
+>>
+>> +static void reverse_nodes(struct device_node *parent)
+>> +{
+>> +       struct device_node *child, *next;
+>> +
+>> +       /* In-depth first */
+>> +       child = parent->child;
+>> +       while (child) {
+>> +               reverse_nodes(child);
+>> +
+>> +               child = child->sibling;
+>> +       }
+>> +
+>> +       /* Reverse the nodes in the child list */
+>> +       child = parent->child;
+>> +       parent->child = NULL;
+>> +       while (child) {
+>> +               next = child->sibling;
+>> +
+>> +               child->sibling = parent->child;
+>> +               parent->child = child;
+>> +               child = next;
+>> +       }
+>> +}
+>> +
+>>  /**
+>>   * unflatten_dt_node - Alloc and populate a device_node from the flat tree
+>>   * @blob: The parent device tree blob
+>>   * @mem: Memory chunk to use for allocating device nodes and properties
+>> - * @poffset: pointer to node in flat tree
+>>   * @dad: Parent struct device_node
+>>   * @nodepp: The device_node tree created by the call
+>> - * @fpsize: Size of the node path up at the current depth.
+>>   * @dryrun: If true, do not allocate device nodes but still calculate needed
+>>   * memory size
+>>   */
+>>  static void *unflatten_dt_node(const void *blob,
+>>                                void *mem,
+>> -                              int *poffset,
+>>                                struct device_node *dad,
+>>                                struct device_node **nodepp,
+>> -                              unsigned long fpsize,
+>>                                bool dryrun)
+>
+>We can probably further simplify things by returning an int with
+>negative being errors and positive being the size. Also, dryrun can be
+>dropped and implied by mem and/or nodepp being NULL.
+>
 
- drivers/pci/host/Kconfig        |   5 +
- drivers/pci/host/Makefile       |   1 +
- drivers/pci/host/pcie-snpsdev.c | 337 ++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 343 insertions(+)
- create mode 100644 drivers/pci/host/pcie-snpsdev.c
+Yeah, I think it's reasonable to return "size" from this function. "dryrun"
+can be dropped and implied by NULL @mem. @nodepp can't be NULL. I perhaps
+have separate patch to address it in next revision.
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d5e58ba..b9d59f6 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -145,4 +145,9 @@ config PCIE_IPROC_BCMA
- 	  Say Y here if you want to use the Broadcom iProc PCIe controller
- 	  through the BCMA bus interface
- 
-+config PCIE_SNPSDEV 
-+	bool "Platform Driver for Synopsys Device" 
-+	select PCIEPORTBUS 
-+	select PCIE_DW 
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 140d66f..c35c42a 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -17,3 +17,4 @@ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
- obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
- obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
- obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
-+obj-$(CONFIG_PCIE_SNPSDEV) += pcie-snpsdev.o
-diff --git a/drivers/pci/host/pcie-snpsdev.c b/drivers/pci/host/pcie-snpsdev.c
-new file mode 100644
-index 0000000..7389097
---- /dev/null
-+++ b/drivers/pci/host/pcie-snpsdev.c
-@@ -0,0 +1,333 @@
-+/*
-+ * PCIe RC driver for Synopsys Designware Core
-+ *
-+ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
-+ *
-+ * Authors: Manjunath Bettegowda <manjumb@synopsys.com>,
-+ *	    Jie Deng <jiedeng@synopsys.com>
-+ *	    Joao Pinto <jpinto@synopsys.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/gpio.h>
-+#include <linux/interrupt.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_gpio.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/resource.h>
-+#include <linux/signal.h>
-+#include <linux/types.h>
-+
-+#include "pcie-designware.h"
-+
-+#define to_snpsdev_pcie(x)	container_of(x, struct snpsdev_pcie, pp)
-+
-+struct snpsdev_pcie {
-+	void __iomem		*mem_base; /* Memory Base to access Core's [RC] Config Space Layout */
-+	struct pcie_port	pp;        /* RC Root Port specific structrue - DWC_PCIE_RC stuff */
-+};
-+
-+#define SIZE_1GB 0x40000000
-+#define PCI_EQUAL_CONTROL_PHY 0x00000707
-+
-+/* PCIe Port Logic registers (memory-mapped) */
-+#define PLR_OFFSET 0x700
-+#define PCIE_PHY_DEBUG_R0 (PLR_OFFSET + 0x28) /* 0x728 */
-+#define PCIE_PHY_DEBUG_R1 (PLR_OFFSET + 0x2c) /* 0x72c */
-+
-+/* PCIE PHY CONTROL REGISTER: Useful for cfg_phy_control GPIO outputs */
-+#define PCIE_PHY_CTRL (PLR_OFFSET + 0x114)    /* 0x814 */
-+/* PCIE PHY STATUS REGISTER: Useful for phy_cfg_status GPIO inputs */
-+#define PCIE_PHY_STAT (PLR_OFFSET + 0x110)    /* 0x810 */
-+
-+static void snpsdev_pcie_fixup_bridge(struct pci_dev *dev)
-+{
-+	u32 slot_cap;
-+	u16 caps_reg = pcie_caps_reg(dev) | PCI_EXP_FLAGS_SLOT;
-+	pcie_capability_write_word(dev, PCI_EXP_FLAGS, caps_reg);
-+	dev->pcie_flags_reg = caps_reg;
-+
-+	pcie_capability_read_dword(dev, PCI_EXP_SLTCAP, &slot_cap);
-+	slot_cap = slot_cap & (~PCI_EXP_SLTCAP_SPLV);
-+	slot_cap = slot_cap | (0x30 << 7);
-+	pcie_capability_write_dword(dev, PCI_EXP_SLTCAP, slot_cap);
-+
-+	if (pcibios_enable_device(dev, ~0) < 0) {
-+		pr_err("PCI: synopsys device enable failed\n");
-+		return;
-+	}
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, snpsdev_pcie_fixup_bridge);
-+
-+static void snpsdev_pcie_fixup_res(struct pci_dev *dev)
-+{
-+	struct resource *res;
-+	resource_size_t size;
-+	int bar;
-+
-+	for (bar = 0; bar < 6; bar++) {
-+		res = dev->resource + bar;
-+		size = resource_size(res);
-+
-+		if (size == SIZE_1GB)
-+		{
-+			res->start = 0;
-+			res->end   = 0;
-+			res->flags = 0;
-+		}
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, snpsdev_pcie_fixup_res);
-+
-+/* This handler was created for future work */
-+static irqreturn_t snpsdev_pcie_irq_handler(int irq, void *arg)
-+{
-+	return IRQ_NONE;
-+}
-+
-+static irqreturn_t snpsdev_pcie_msi_irq_handler(int irq, void *arg)
-+{
-+	struct pcie_port *pp = arg;
-+
-+	dw_handle_msi_irq(pp);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static void snpsdev_pcie_init_phy(struct pcie_port *pp)
-+{
-+	/* write Lane 0 Equalization Control fields register */
-+	writel(PCI_EQUAL_CONTROL_PHY,pp->dbi_base + 0x154);
-+}
-+
-+static int snpsdev_pcie_deassert_core_reset(struct pcie_port *pp)
-+{
-+	return 0;
-+}
-+
-+/*
-+ * snpsdev_pcie_host_init()
-+ * Platform specific host/RC initialization 
-+ * 	a. Assert the core reset
-+ * 	b. Assert and deassert phy reset and initialize the phy
-+ * 	c. De-Assert the core reset
-+ * 	d. Initializet the Root Port (BARs/Memory Or IO/ Interrupt/ Commnad Reg)
-+ * 	e. Initiate Link startup procedure
-+ *
-+ */ 
-+static void snpsdev_pcie_host_init(struct pcie_port *pp)
-+{
-+	int count = 0;
-+
-+	/* Initialize Phy (Reset/poweron/control-inputs ) */
-+	snpsdev_pcie_init_phy(pp);
-+
-+	/* de-assert core reset */
-+	snpsdev_pcie_deassert_core_reset(pp);
-+ 
-+	/*We expect the PCIE Link to be up by this time*/
-+	dw_pcie_setup_rc(pp);
-+	
-+	/* Check for Link up indication */
-+	while (!dw_pcie_link_up(pp)) {
-+		usleep_range(1000,1100);
-+		count++;
-+		if (count == 20) {
-+			dev_err(pp->dev, "phy link never came up\n");
-+			dev_dbg(pp->dev,
-+				"PL_DEBUG0: 0x%08x, DEBUG_R1: 0x%08x\n",
-+				readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
-+				readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
-+			break;
-+		}
-+	}
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		dw_pcie_msi_init(pp);
-+
-+	return;
-+}
-+/**
-+ *
-+ * Let all outof band signalling be handled by cfg_phy_control[31:0]
-+ * which is selected through optional config attribute PHY_CONTROL_REG
-+ *
-+ * Monitor cxpl_debug_info as required to take necessary action
-+ * This is available in the register PCIE_PHY_DEBUG_R0 & PCIE_PHY_DEBUG_R1
-+ *
-+ */ 
-+static int snpsdev_pcie_link_up(struct pcie_port *pp)
-+{
-+	u32 status;
-+
-+	/* Bit number 36: reports LTSSM PHY Link UP; Available in bit 3 of
-+         *  PCIE_PHY_DEBUG_R1 */
-+	status = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1) & (0x1 << 4);
-+	if(status != 0)
-+		return 1;
-+
-+	/* TODO: Now Link is in L0; Initiate GEN2/GEN3 migration if RC Supports */
-+	return 0;
-+}
-+
-+
-+/**
-+ * This is RC operation structure
-+ * snpsdev_pcie_link_up: the function which initiates the phy link up procedure
-+ * snpsdev_pcie_host_init: the function whihc does the host/RC Root port initialization
-+ */ 
-+static struct pcie_host_ops snpsdev_pcie_host_ops = {
-+	.link_up = snpsdev_pcie_link_up,
-+	.host_init = snpsdev_pcie_host_init,
-+};
-+
-+/**
-+ * snpsdev_add_pcie_port
-+ * This function 
-+ * a. installs the interrupt handler
-+ * b. registers host operations int he pcie_port structure
-+ */ 
-+static int snpsdev_add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
-+{
-+	int ret;
-+
-+	pp->irq = platform_get_irq(pdev, 1);
-+
-+	if (pp->irq < 0) {
-+		if (pp->irq != -EPROBE_DEFER)
-+			dev_err(&pdev->dev, "cannot get irq\n");
-+		return pp->irq;
-+	}
-+
-+	ret = devm_request_irq(&pdev->dev, pp->irq, snpsdev_pcie_irq_handler,
-+				IRQF_SHARED, "snpsdev-pcie", pp);
-+
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to request irq\n");
-+		return ret;
-+	}
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		pp->msi_irq = platform_get_irq(pdev, 0);
-+
-+		if (pp->msi_irq < 0) {
-+			if (pp->msi_irq != -EPROBE_DEFER)
-+				dev_err(&pdev->dev, "cannot get msi irq\n");
-+			return pp->msi_irq;
-+		}
-+
-+		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
-+					snpsdev_pcie_msi_irq_handler,
-+					IRQF_SHARED, "snpsdev-pcie-msi", pp);
-+		if (ret) {
-+			dev_err(&pdev->dev, "failed to request msi irq\n");
-+			return ret;
-+		}
-+	}
-+
-+	pp->root_bus_nr = -1;
-+	pp->ops = &snpsdev_pcie_host_ops;
-+
-+	/* Below function: 
-+ 	 * Checks for range property from DT
-+ 	 * Gets the IO and MEMORY and CONFIG-Space ranges from DT
-+ 	 * Does IOREMAPS on the physical addresses 
-+ 	 * Gets the num-lanes from DT
-+ 	 * Gets MSI capability from DT
-+ 	 * Calls the platform specific host initialization
-+ 	 * Program the correct class, BAR0, Link width,  in Config space
-+ 	 * Then it calls pci common init routine
-+ 	 * Then it calls funtion to assign "unassigend reources"
-+         */
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to initialize host\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * snpsdev_pcie_rc_probe()
-+ * This function gets called as part of pcie registration. if the id matches
-+ * the platform driver framework will call this function.
-+ *
-+ * @pdev: Pointer to the platform_device structure
-+ *
-+ * Returns zero on success; Negative errorno on failure
-+ */
-+static int __init snpsdev_pcie_rc_probe(struct platform_device *pdev)
-+{
-+	struct snpsdev_pcie *snpsdev_pcie;
-+	struct pcie_port *pp;
-+	struct resource *dwc_pcie_rc_res;  /* Resource from DT */
-+	int ret;
-+
-+	snpsdev_pcie = devm_kzalloc(&pdev->dev, sizeof(*snpsdev_pcie), GFP_KERNEL);
-+	if (!snpsdev_pcie) {
-+		dev_err(&pdev->dev, "no memory for snpsdev pcie\n");
-+		return -ENOMEM;
-+	}
-+
-+	pp = &snpsdev_pcie->pp;
-+	pp->dev = &pdev->dev;
-+
-+	dwc_pcie_rc_res= platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!dwc_pcie_rc_res) {
-+		dev_err(&pdev->dev, "dwc_pcie_rc_res resource not found\n");
-+		return -ENODEV;
-+	}
-+
-+	snpsdev_pcie->mem_base = devm_ioremap_resource(&pdev->dev, dwc_pcie_rc_res);
-+	if (IS_ERR(snpsdev_pcie->mem_base)) {
-+		ret = PTR_ERR(snpsdev_pcie->mem_base);
-+		return ret;
-+	}
-+	pp->dbi_base = snpsdev_pcie->mem_base;	
-+
-+	ret = snpsdev_add_pcie_port(pp, pdev);
-+	if (ret < 0)
-+		return ret;
-+
-+	platform_set_drvdata(pdev, snpsdev_pcie);
-+
-+	return 0;
-+}
-+
-+static int __exit snpsdev_pcie_rc_remove(struct platform_device *pdev)
-+{
-+	return 0;
-+}
-+
-+static const struct of_device_id snpsdev_pcie_rc_of_match[] = {
-+	{ .compatible = "snps,pcie-snpsdev", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, snpsdev_pcie_rc_of_match);
-+
-+static struct platform_driver snpsdev_pcie_rc_driver = {
-+	.remove		= __exit_p(snpsdev_pcie_rc_remove),
-+	.driver = {
-+		.name	= "pcie-snpsdev",
-+		.of_match_table = snpsdev_pcie_rc_of_match,
-+	},
-+};
-+
-+static int __init snpsdev_pcie_init(void)
-+{
-+	return platform_driver_probe(&snpsdev_pcie_rc_driver, snpsdev_pcie_rc_probe);
-+}
-+subsys_initcall(snpsdev_pcie_init);
-+
-+MODULE_AUTHOR("Manjunath Bettegowda <manjumb@synopsys.com>");
-+MODULE_DESCRIPTION("Platform Driver for Synopsys Device");
-+MODULE_LICENSE("GPL v2");
-+
--- 
-1.8.1.5
+>>  {
+>> -       struct device_node *np;
+>> -       static int depth;
+>> -       int old_depth;
+>> -
+>> -       fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
+>> -       if (!fpsize)
+>> -               return mem;
+>> +       struct device_node *root;
+>> +       int offset = 0, depth = 0;
+>> +       unsigned long fpsizes[64];
+>> +       struct device_node *nps[64];
+>
+>Use a define here.
+>
+
+Fair enough, will do in next revision. I'm not good at naming. Would
+"FDT_MAX_DEPTH" is a good one?
+
+>>
+>> -       old_depth = depth;
+>> -       *poffset = fdt_next_node(blob, *poffset, &depth);
+>> -       if (depth < 0)
+>> -               depth = 0;
+>> -       while (*poffset > 0 && depth > old_depth)
+>> -               mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
+>> -                                       fpsize, dryrun);
+>> +       if (nodepp)
+>> +               *nodepp = NULL;
+>> +
+>> +       root = dad;
+>> +       fpsizes[depth] = dad ? strlen(of_node_full_name(dad)) : 0;
+>> +       nps[depth++] = dad;
+>> +       while (offset >= 0 && depth < 64) {
+>> +               fpsizes[depth] = populate_node(blob, offset, &mem,
+>> +                                              nps[depth - 1],
+>> +                                              fpsizes[depth - 1],
+>> +                                              &nps[depth], dryrun);
+>> +               if (!fpsizes[depth])
+>> +                       return mem;
+>> +
+>> +               if (!dryrun && nodepp && !*nodepp)
+>> +                       *nodepp = nps[depth];
+>> +               if (!dryrun && !root)
+>> +                       root = nps[depth];
+>> +
+>> +               offset = fdt_next_node(blob, offset, &depth);
+>> +       }
+>>
+>> -       if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
+>> -               pr_err("unflatten: error %d processing FDT\n", *poffset);
+>> +       if (offset < 0 && offset != -FDT_ERR_NOTFOUND)
+>> +               pr_err("%s: Error %d processing FDT\n",
+>> +                      __func__, offset);
+>
+>What about depth == 64 case? I think the behavior should be a WARN and
+>ignore those nodes so we at least can continue to boot and see the
+>error. Of course, if there is a phandle pointing to ignored nodes, we
+>have to handle that too.
+>
+
+Yeah, I'll have a WARN_ON(depth >= 64) in next revision. Sorry, I didn't
+get the 2nd part of your comments: When depth > 64, the system won't work.
+It might boot up. Why the phandle pointing to the ignored node has to be
+dropped? 
+
+>>
+>>         /*
+>>          * Reverse the child list. Some drivers assumes node order matches .dts
+>>          * node order
+>>          */
+>> -       if (!dryrun && np->child) {
+>> -               struct device_node *child = np->child;
+>> -               np->child = NULL;
+>> -               while (child) {
+>> -                       struct device_node *next = child->sibling;
+>> -                       child->sibling = np->child;
+>> -                       np->child = child;
+>> -                       child = next;
+>> -               }
+>> -       }
+>> -
+>> -       if (nodepp)
+>> -               *nodepp = np;
+>> +       if (!dryrun)
+>> +               reverse_nodes(root);
+>>
+>>         return mem;
+>>  }
+>> @@ -431,7 +452,6 @@ static void __unflatten_device_tree(const void *blob,
+>>                              void * (*dt_alloc)(u64 size, u64 align))
+>>  {
+>>         unsigned long size;
+>> -       int start;
+>>         void *mem;
+>>
+>>         pr_debug(" -> unflatten_device_tree()\n");
+>> @@ -452,8 +472,7 @@ static void __unflatten_device_tree(const void *blob,
+>>         }
+>>
+>>         /* First pass, scan for size */
+>> -       start = 0;
+>> -       size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
+>> +       size = (unsigned long)unflatten_dt_node(blob, NULL, NULL, NULL, true);
+>>         size = ALIGN(size, 4);
+>>
+>>         pr_debug("  size is %lx, allocating...\n", size);
+>> @@ -467,8 +486,7 @@ static void __unflatten_device_tree(const void *blob,
+>>         pr_debug("  unflattening %p...\n", mem);
+>>
+>>         /* Second pass, do actual unflattening */
+>> -       start = 0;
+>> -       unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
+>> +       unflatten_dt_node(blob, mem, NULL, mynodes, false);
+>>         if (be32_to_cpup(mem + size) != 0xdeadbeef)
+>>                 pr_warning("End of tree marker overwritten: %08x\n",
+>>                            be32_to_cpup(mem + size));
+
+Thanks,
+Gavin
 
