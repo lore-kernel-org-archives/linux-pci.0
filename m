@@ -1,51 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: bhelgaas@google.com, CARLOS.PALMINHA@synopsys.com,
-	Vineet.Gupta1@synopsys.com, Alexey.Brodkin@synopsys.com,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH 0/2] adding PCI support to AXS10x
-Date: Tue, 24 Nov 2015 14:32:04 +0000
-Message-Id: <cover.1448375184.git.jpinto@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from www.linutronix.de ([62.245.132.108]:50173 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932365AbbKDPPh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 10:15:37 -0500
+Date: Wed, 4 Nov 2015 16:14:50 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Keith Busch <keith.busch@intel.com>
+cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>,
+	Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [RFC PATCHv3 3/4] x86/pci: Initial commit for new VMD device
+ driver
+In-Reply-To: <20151104144905.GI13904@localhost.localdomain>
+Message-ID: <alpine.DEB.2.11.1511041614070.4032@nanos>
+References: <1445967247-24310-1-git-send-email-keith.busch@intel.com> <1445967247-24310-4-git-send-email-keith.busch@intel.com> <alpine.DEB.2.11.1511021426020.4032@nanos> <20151103001552.GE13904@localhost.localdomain> <alpine.DEB.2.11.1511031001130.4032@nanos>
+ <20151104144905.GI13904@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
-AXS10x. It includes the necessary tweaks to the ARC architecture, necessary
-tweaks to the PCI subsystem and a new driver (pcie-snpsdev).
-This new driver will be used extensively in the PCIe RC Prototyping Kit.
+On Wed, 4 Nov 2015, Keith Busch wrote:
 
-The patches were produced against the 'next' branch of Bjorn Helgaas'
-repository. It was properly tested in an IP Prototyping Kit.
+> On Tue, Nov 03, 2015 at 12:42:02PM +0100, Thomas Gleixner wrote:
+> > On Tue, 3 Nov 2015, Keith Busch wrote:
+> > > > > +	msi_irqdomain = pci_msi_create_irq_domain(NULL, &pci_chained_msi_domain_info,
+> > > > > +						  vmd_irqdomain);
+> > 
+> > But that parent limitation does not matter simply because your
+> > msi_irqdomain does not follow down the hierarchy in the allocation
+> > path.
+> > 
+> > So we can avoid the vmd_irqdomain creation completely. It's just
+> > wasting memory and has no value at all. Creating the msi domain with a
+> > NULL parent is possible.
+> 
+> I'm having trouble following the hierarchy and didn't understand the
+> connection between the parent and msi comain. It's still new to me,
+> but I don't think a NULL parent is allowable with msi domains:
+> 
+>  pci_msi_setup_msi_irqs()
+>   pci_msi_domain_alloc_irqs()
+>    msi_domain_alloc_irqs()
+>     __irq_domain_alloc_irqs()
+>      irq_domain_alloc_irqs_recursive()
+>       msi_domain_alloc()
+>        irq_domain_alloc_irqs_parent()
+> 
+> The last call returns -ENOSYS since there parent is NULL. Was the
+> intension to allow no parent, or do I still need to allocate one to
+> achieve the desired chaining?
 
-Joao Pinto (2):
-  add new platform driver for PCI RC
-  PCI support added to ARC
+Hmm, seems I missed that part. But that's a fixable problem. Jiang?
 
- .../devicetree/bindings/pci/pcie-snpsdev.txt       |  28 ++
- MAINTAINERS                                        |   7 +
- arch/arc/Kconfig                                   |  22 ++
- arch/arc/include/asm/dma.h                         |   5 +
- arch/arc/include/asm/io.h                          |   2 +
- arch/arc/include/asm/mach/pci.h                    |  97 ++++++
- arch/arc/include/asm/pci.h                         |  34 ++
- arch/arc/kernel/Makefile                           |   1 +
- arch/arc/kernel/pcibios.c                          | 360 +++++++++++++++++++++
- arch/arc/mm/ioremap.c                              |  29 +-
- arch/arc/plat-axs10x/Kconfig                       |   1 +
- drivers/pci/Makefile                               |   1 +
- drivers/pci/host/Kconfig                           |   5 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pcie-designware.c                 |  15 +
- drivers/pci/host/pcie-designware.h                 |   1 +
- drivers/pci/host/pcie-snpsdev.c                    | 342 ++++++++++++++++++++
- 17 files changed, 950 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
- create mode 100644 arch/arc/include/asm/mach/pci.h
- create mode 100644 arch/arc/include/asm/pci.h
- create mode 100644 arch/arc/kernel/pcibios.c
- create mode 100644 drivers/pci/host/pcie-snpsdev.c
+Thanks,
 
--- 
-1.8.1.5
-
+	tglx
+ 
