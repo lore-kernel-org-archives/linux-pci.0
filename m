@@ -1,76 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:34677 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751916AbbKYXqr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Nov 2015 18:46:47 -0500
-Received: by wmvv187 with SMTP id v187so8269951wmv.1
-        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2015 15:46:46 -0800 (PST)
-Date: Thu, 26 Nov 2015 00:46:22 +0100
-From: Bogicevic Sasa <brutallesale@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, wangyijing@huawei.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] drivers:pci:hotplug Fix all "space prohibited before
- that ..."
-Message-ID: <20151125234622.GA2288@gmail.com>
-References: <1447590327-3496-1-git-send-email-brutallesale@gmail.com>
- <20151125204424.GG8869@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <20151125204424.GG8869@localhost>
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:48264 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753468AbbKDDab (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2015 22:30:31 -0500
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 09:00:28 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 15F141258059
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2015 09:00:25 +0530 (IST)
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay01.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA43UOdB37683378
+	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 09:00:24 +0530
+Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA43UM6p000914
+	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 09:00:23 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V12 3/9] powerpc/pci: Remove VFs prior to PF
+Date: Wed,  4 Nov 2015 11:28:46 +0800
+Message-Id: <1446607732-4166-4-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1446607732-4166-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1446607732-4166-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sure thing, I am sending the new patch with all corrected 
+As commit ac205b7bb72f ("PCI: make sriov work with hotplug remove")
+indicates, VFs which is on the same PCI bus as their PF, should be removed
+before the PF. Otherwise, the PCI hot unplugging of PCI devices on the PCI
+bus would cause kernel crash.
 
-Thanks, Sasa
+The patch applies the above pattern to PowerPC PCI hotplug path.
 
-On 11/25, Bjorn Helgaas wrote:
->Hi Bogicevic,
->
->On Sun, Nov 15, 2015 at 01:25:27PM +0100, Bogicevic Sasa wrote:
->> This fixes all errors "space prohibited before that..." from
->> checkpatch.pl
->
->I'd take this, but I'd prefer to fix everything under drivers/pci in a
->single patch, and I see several other instances of this.  I just did this
->to find them:
->
->  $ grep -r " ," drivers/pci/
->
->Can you expand this patch to fix them all?
->
->Thanks,
->  Bjorn
->
->> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
->> ---
->>  drivers/pci/hotplug/pci_hotplug_core.c | 8 ++++----
->>  1 file changed, 4 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
->> index d1fab97..2bac1b9 100644
->> --- a/drivers/pci/hotplug/pci_hotplug_core.c
->> +++ b/drivers/pci/hotplug/pci_hotplug_core.c
->> @@ -45,10 +45,10 @@
->>
->>  #define MY_NAME	"pci_hotplug"
->>
->> -#define dbg(fmt, arg...) do { if (debug) printk(KERN_DEBUG "%s: %s: " fmt , MY_NAME , __func__ , ## arg); } while (0)
->> -#define err(format, arg...) printk(KERN_ERR "%s: " format , MY_NAME , ## arg)
->> -#define info(format, arg...) printk(KERN_INFO "%s: " format , MY_NAME , ## arg)
->> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format , MY_NAME , ## arg)
->> +#define dbg(fmt, arg...) do { if (debug) printk(KERN_DEBUG "%s: %s: " fmt, MY_NAME, __func__, ## arg); } while (0)
->> +#define err(format, arg...) printk(KERN_ERR "%s: " format, MY_NAME, ## arg)
->> +#define info(format, arg...) printk(KERN_INFO "%s: " format, MY_NAME, ## arg)
->> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format, MY_NAME, ## arg)
->>
->>
->>  /* local variables */
->> --
->> 2.1.4
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/pci-hotplug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 7f9ed0c..59c4361 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -55,7 +55,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
+ 
+ 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+ 		 pci_domain_nr(bus),  bus->number);
+-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
++	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+ 		pr_debug("   Removing %s...\n", pci_name(dev));
+ 		pci_stop_and_remove_bus_device(dev);
+ 	}
+-- 
+2.5.0
+
