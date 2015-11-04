@@ -1,92 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:25856 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030939AbbKEI06 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2015 03:26:58 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	"majun (F)" <majun258@huawei.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH RFC 7/7] irqchip: [Example] dummy wired interrupt/MSI
- bridge driver
-Date: Thu, 5 Nov 2015 08:25:50 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1629D8DD@lhreml503-mbs>
-References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
- <1444923568-17413-8-git-send-email-marc.zyngier@arm.com>
- <5639BB10.1090108@huawei.com> <5639C9F9.2010704@arm.com>
-In-Reply-To: <5639C9F9.2010704@arm.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:45898 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965408AbbKDNOo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:14:44 -0500
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 18:44:42 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 36/50] powerpc/pci: Update bridge windows on PCI plug
+Date: Thu,  5 Nov 2015 00:12:36 +1100
+Message-Id: <1446642770-4681-37-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTWFyYw0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXBj
-aS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1wY2ktb3duZXJAdmdlci5rZXJu
-ZWwub3JnXQ0KPiBPbiBCZWhhbGYgT2YgTWFyYyBaeW5naWVyDQo+IFNlbnQ6IDA0IE5vdmVtYmVy
-IDIwMTUgMDk6MDQNCj4gVG86IG1hanVuIChGKTsgVGhvbWFzIEdsZWl4bmVyOyBKaWFuZyBMaXU7
-IEphc29uIENvb3Blcg0KPiBDYzogbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3Jn
-OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVs
-Lm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIFJGQyA3LzddIGlycWNoaXA6IFtFeGFtcGxlXSBk
-dW1teSB3aXJlZCBpbnRlcnJ1cHQvTVNJDQo+IGJyaWRnZSBkcml2ZXINCj4gDQo+IE9uIDA0LzEx
-LzE1IDA4OjAwLCBtYWp1biAoRikgd3JvdGU6DQo+ID4gSGkgTWFyYzoNCj4gPg0KPiA+INTaIDIw
-MTUvMTAvMTUgMjM6MzksIE1hcmMgWnluZ2llciDQtLXAOg0KPiA+PiBJbiBvcmRlciB0byBkZW1v
-bnN0cmF0ZSBob3cgdG8gcHV0IHRvZ2V0aGVyIGEgd2lyZS9NU0kgYnJpZGdlLA0KPiA+PiBhZGQg
-YSBkdW1teSBkcml2ZXIgdGhhdCBkb2Vzbid0IGRvIGFueXRoaW5nIGF0IGFsbCwgZXhjZXB0DQo+
-ID4+IGZvciBhbGxvY2F0aW5nIGludGVycnVwdHMuDQo+ID4+DQo+ID4+IEl0IGNvbWVzIHRvZ2V0
-aGVyIHdpdGggYW4gZXZlbiBtb3JlIHN0dXBpZCBjbGllbnQgZHJpdmVyIHRoYXQNCj4gPj4gYWxs
-b2NhdGVzIGFuIGludGVycnVwdCBhbmQgZHVtcCB0aGUgaGllcmFyY2h5IG9mIHRoYXQgaW50ZXJy
-dXB0Lg0KPiA+Pg0KPiA+PiBTaWduZWQtb2ZmLWJ5OiBNYXJjIFp5bmdpZXIgPG1hcmMuenluZ2ll
-ckBhcm0uY29tPg0KPiA+PiAtLS0NCj4gPiBbLi4uXQ0KPiA+PiArDQo+ID4+ICtzdGF0aWMgaW50
-IG1zaWNoaXBfZG9tYWluX2FsbG9jKHN0cnVjdCBpcnFfZG9tYWluICpkb21haW4sIHVuc2lnbmVk
-IGludA0KPiB2aXJxLA0KPiA+PiArCQkJCSAgIHVuc2lnbmVkIGludCBucl9pcnFzLCB2b2lkICph
-cmcpDQo+ID4+ICt7DQo+ID4+ICsJaW50IGksIGVycjsNCj4gPj4gKwlpcnFfaHdfbnVtYmVyX3Qg
-aHdpcnE7DQo+ID4+ICsJdW5zaWduZWQgaW50IHR5cGU7DQo+ID4+ICsJc3RydWN0IGlycV9md3Nw
-ZWMgKmZ3c3BlYyA9IGFyZzsNCj4gPj4gKwl2b2lkICpkYXRhOw0KPiA+PiArDQo+ID4+ICsJZXJy
-ID0gbXNpY2hpcF9kb21haW5fdHJhbnNsYXRlKGRvbWFpbiwgZndzcGVjLCAmaHdpcnEsICZ0eXBl
-KTsNCj4gPj4gKwlpZiAoZXJyKQ0KPiA+PiArCQlyZXR1cm4gZXJyOw0KPiA+PiArDQo+ID4NCj4g
-PiAudHJhbnNsYXRlIGZ1bmN0aW9uIGFscmVhZHkgY2FsbGVkIG9uY2UgaW4gIGlycV9kb21haW5f
-dHJhbnNsYXRlKCksDQo+ID4gSSB0aGluayB3ZSBkb24ndCBuZWVkIGNhbGwgdGhpcyBmdWNudGlv
-biBvbmUgbW9yZSB0aW1lIGhlcmUuDQo+IA0KPiBpZiB5b3UgZG9uJ3QgdHJhbnNsYXRlIGl0IGhl
-cmUsIGhvdyBkbyB5b3Ugb2J0YWluIHRoZSBod2lycSB0aGF0IHlvdQ0KPiBoYXZlIHRvIHBhc3Mg
-dG8gaXJxX2RvbWFpbl9zZXRfaHdpcnFfYW5kX2NoaXAganVzdCBiZWxvdz8NCj4gDQo+ID4+ICsJ
-ZXJyID0gcGxhdGZvcm1fbXNpX2RvbWFpbl9hbGxvYyhkb21haW4sIHZpcnEsIG5yX2lycXMpOw0K
-PiA+PiArCWlmIChlcnIpDQo+ID4+ICsJCXJldHVybiBlcnI7DQo+ID4+ICsNCj4gPj4gKwlkYXRh
-ID0gcGxhdGZvcm1fbXNpX2dldF9ob3N0X2RhdGEoZG9tYWluKTsNCj4gPj4gKwlmb3IgKGkgPSAw
-OyBpIDwgbnJfaXJxczsgaSsrKQ0KPiA+PiArCQlpcnFfZG9tYWluX3NldF9od2lycV9hbmRfY2hp
-cChkb21haW4sIHZpcnEgKyBpLCBod2lycSArIGksDQo+ID4+ICsJCQkJCSAgICAgICZtc2ljaGlw
-X2NoaXAsIGRhdGEpOw0KPiA+PiArDQo+ID4+ICsJcmV0dXJuIDA7DQo+ID4+ICt9DQo+ID4+ICsN
-Cj4gPiBbLi4uXQ0KPiA+PiArDQo+ID4+ICtzdGF0aWMgc3RydWN0IHBsYXRmb3JtX2RyaXZlciBt
-c2ljaGlwX2RyaXZlciA9IHsNCj4gPj4gKwkuZHJpdmVyID0gew0KPiA+PiArCQkubmFtZQkJPSAi
-bXNpY2hpcCIsDQo+ID4+ICsJCS5vZl9tYXRjaF90YWJsZQk9IG1zaWNoaXBfb2ZfbWF0Y2gsDQo+
-ID4+ICsJfSwNCj4gPj4gKwkucHJvYmUJCQk9IG1zaWNoaXBfcHJvYmUsDQo+ID4+ICt9Ow0KPiA+
-PiArLyogRG8gbm90IGRlZmluZSB0aGlzIGFzIGFuIGlycWNoaXAgKi8NCj4gPj4gK21vZHVsZV9w
-bGF0Zm9ybV9kcml2ZXIobXNpY2hpcF9kcml2ZXIpOw0KPiA+PiArDQo+ID4+ICsNCj4gPg0KPiA+
-IEkgdGhpbmssZm9yIGEgaW50ZXJydXB0IGNvbnRyb2xsZXIsIG1zaWNoaXAgZHJpdmVyIGluaXRp
-YWxpemF0aW9uIG1heWJlIGlzDQo+IHRvbyBsYXRlDQo+ID4gZm9yIHNvbWUgZGV2aWNlcyB3aGlj
-aCBjb25uZWN0IHRvIHRoaXMgaXJxY2hpcCBpZiB3ZSB1c2UNCj4gbW9kdWxlX3BsYXRmb3JtX2Ry
-aXZlci4NCj4gDQo+IFRoYXQncyBhIGNvbnNlcXVlbmNlIG9mIHRoaXMgZGVzaWduLiBUaGlzIGlz
-IHdoeSBJIGluc2lzdGVkIG9uIHRoZSBmYWN0DQo+IHRoYXQgdGhpcyBpcyBjdXJyZW50bHkgYXZv
-aWRlZCBieSB1c2luZyBkZWZlcnJlZCBwcm9iZSBpbiBkcml2ZXJzLCBhbmQNCg0KTW1tIHVzaW5n
-IHRlIGRlZmVycmVkIHByb2JlIHdvdWxkIG1lYW4gdG8gcmV3b3JrIGFsbCB0aGUgZHJpdmVycyBv
-ZiB0aGUNCnBvdGVudGlhbCBkZXZpY2VzIGNvbm5lY3RlZCB0byBtYmktZ2VuLi4ud291bGQgdGhh
-dCBiZSBzdXN0YWluYWJsZS9hY2NlcHRhYmxlPw0KDQo+IHRoYXQgaXQgc2hvdWxkIGJlIHNvbHZl
-ZCBieSBoYXZpbmcgYSBwcm9iZSBvcmRlci4gRWl0aGVyIHdheSwgdGhpcyBpcw0KPiBub3Qgc29t
-ZXRoaW5nIHRoYXQgd2UgY2FuIHNvbHZlIGF0IHRoYXQgbGV2ZWwgKHNlZSB0aGUgbXVsdGlwbGUg
-cHJvcG9zYWwNCj4gZm9yIHRoaXMgb24gdGhlIHZhcmlvdXMgbGlzdHMpLg0KDQpDb3VsZCB5b3Ug
-cG9pbnQgbWUgdG8gdGhlIHJlbGV2YW50IGRpc2N1c3Npb25zIGZvciB0aGlzLi4uPw0KDQpUaGFu
-a3MNCg0KR2FiDQoNCj4gDQo+ID4gU28sIGhvdyBhYm91dCB1c2UgdGhlIGFyY2hfaW5pdGNhbGwg
-dG8gcmVnaXN0ZXIgdGhlIG1zaWNoaXAgZHJpdmVyPw0KPiANCj4gWW91J3JlIG9ubHkgcHVzaGlu
-ZyB0aGUgcHJvYmxlbSBvbmUgbGV2ZWwgdXAuIEFuZCB5b3UnbGwgcmVhbGl6ZSB0aGF0DQo+IHRo
-aXMgaXMgbm90IGVub3VnaCBmb3Igc29tZSByYW5kb20gZHJpdmVyLiBUaGlzIGlzIG5vdCBzdXN0
-YWluYWJsZSwgYW5kDQo+IG11c3QgYmUgYWRkcmVzc2VkIHByb3Blcmx5Lg0KPiANCj4gVGhhbmtz
-LA0KPiANCj4gCU0uDQo+IC0tDQo+IEphenogaXMgbm90IGRlYWQuIEl0IGp1c3Qgc21lbGxzIGZ1
-bm55Li4uDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBs
-aW5lICJ1bnN1YnNjcmliZSBsaW51eC1wY2kiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0
-byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0
-dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+On the PCI plugging event, PCI slot's subordinate devices are
+scanned and their (IO and MMIO) resources are assigned. Platform
+dependent resources (PE#, IO/MMIO/DMA windows) are allocated or
+created on updating windows of the slot's upstream bridge.
+
+This updates the windows of the hot plugged slot's upstream bridge
+in pcibios_finish_adding_to_bus() so that the platform resources
+(PE#, IO/MMIO/DMA segments) are allocated or created accordingly.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/pci-common.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 40df3a5..be9e515 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1444,8 +1444,12 @@ void pcibios_finish_adding_to_bus(struct pci_bus *bus)
+ 	/* Allocate bus and devices resources */
+ 	pcibios_allocate_bus_resources(bus);
+ 	pcibios_claim_one_bus(bus);
+-	if (!pci_has_flag(PCI_PROBE_ONLY))
+-		pci_assign_unassigned_bus_resources(bus);
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++		if (bus->self)
++			pci_assign_unassigned_bridge_resources(bus->self);
++		else
++			pci_assign_unassigned_bus_resources(bus);
++	}
+ 
+ 	/* Fixup EEH */
+ 	eeh_add_device_tree_late(bus);
+-- 
+2.1.0
+
