@@ -1,104 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:46381 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913AbbKQB5i (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 20:57:38 -0500
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:36387 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751973AbbKDNlJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:41:09 -0500
 Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Nov 2015 11:57:36 +1000
-Date: Tue, 17 Nov 2015 12:56:34 +1100
+	Wed, 4 Nov 2015 19:11:06 +0530
 From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Daniel Axtens <dja@axtens.net>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, aik@ozlabs.ru, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, frowand.list@gmail.com
-Subject: Re: [PATCH v7 21/50] powerpc/powernv: Increase PE# capacity
-Message-ID: <20151117015634.GB1452@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 31/50] powerpc/pci: Export pci_add_device_node_info()
+Date: Thu,  5 Nov 2015 00:12:31 +1100
+Message-Id: <1446642770-4681-32-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-22-git-send-email-gwshan@linux.vnet.ibm.com>
- <87y4dxbh95.fsf@gamma.ozlabs.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87y4dxbh95.fsf@gamma.ozlabs.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 17, 2015 at 11:29:26AM +1100, Daniel Axtens wrote:
->Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
->
->> Each PHB maintains an array helping to translate 2-bytes Request
->> ID (RID) to PE# with the assumption that PE# takes one byte, meaning
->> that we can't have more than 256 PEs. However, pci_dn->pe_number
->> already had 4-bytes for the PE#.
->>
->> This extends the PE# capacity so that each of them will be 4-bytes
->> long. Then we can reuse IODA_INVALID_PE to check the PE# stored in
->> phb->pe_rmap[] is valid or not.
->
->Just for clarity, could you make it clear in the commit message that
->you're increasing the PE# capacity _in the PHB_? I just found it a bit
->confusing the first time I read it.
->
->With that clarified I'll be happy to add my reviewed-by tag.
->
+This renames update_dn_pci_info() to pci_add_device_node_info()
+with corresponding adjustment on the parameter type and exports it.
+The function is used to create pdn (struct pci_dn) for the indicated
+device node. Another function add_pdn(), almost wrapper of
+pci_add_device_node_info(), to be used in traverse_pci_devices(). No
+logical changes introduced.
 
-Sure, will add it and thanks for your happiness :-)
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h  |  3 ++-
+ arch/powerpc/kernel/pci_dn.c           | 30 +++++++++++++++++++-----------
+ arch/powerpc/platforms/pseries/setup.c |  2 +-
+ 3 files changed, 22 insertions(+), 13 deletions(-)
 
->>
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> ---
->>  arch/powerpc/platforms/powernv/pci-ioda.c | 6 +++++-
->>  arch/powerpc/platforms/powernv/pci.h      | 7 ++-----
->>  2 files changed, 7 insertions(+), 6 deletions(-)
->>
->> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->> index 0e66c4d..ef93a01 100644
->> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->> @@ -766,7 +766,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
->>  
->>  	/* Clear the reverse map */
->>  	for (rid = pe->rid; rid < rid_end; rid++)
->> -		phb->ioda.pe_rmap[rid] = 0;
->> +		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
->>  
->>  	/* Release from all parents PELT-V */
->>  	while (parent) {
->> @@ -3164,6 +3164,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>  	if (prop32)
->>  		phb->ioda.reserved_pe_idx = be32_to_cpup(prop32);
->>  
->> +	/* Invalidate RID to PE# mapping */
->> +	for (i = 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
->> +		phb->ioda.pe_rmap[i] = IODA_INVALID_PE;
->> +
->>  	/* Parse 64-bit MMIO range */
->>  	pnv_ioda_parse_m64_window(phb);
->>  
->> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
->> index 0802fcd..5df945f 100644
->> --- a/arch/powerpc/platforms/powernv/pci.h
->> +++ b/arch/powerpc/platforms/powernv/pci.h
->> @@ -162,11 +162,8 @@ struct pnv_phb {
->>  			struct list_head	pe_list;
->>  			struct mutex            pe_list_mutex;
->>  
->> -			/* Reverse map of PEs, will have to extend if
->> -			 * we are to support more than 256 PEs, indexed
->> -			 * bus { bus, devfn }
->> -			 */
->> -			unsigned char		pe_rmap[0x10000];
->> +			/* Reverse map of PEs, indexed by {bus, devfn} */
->> +			int			pe_rmap[0x10000];
->>  
->>  			/* TCE cache invalidate registers (physical and
->>  			 * remapped)
-
-Thanks,
-Gavin
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 28385cb..7e0c67d 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -235,7 +235,8 @@ extern struct pci_dn *pci_get_pdn_by_devfn(struct pci_bus *bus,
+ extern struct pci_dn *pci_get_pdn(struct pci_dev *pdev);
+ extern struct pci_dn *add_dev_pci_data(struct pci_dev *pdev);
+ extern void remove_dev_pci_data(struct pci_dev *pdev);
+-extern void *update_dn_pci_info(struct device_node *dn, void *data);
++extern struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
++					       struct device_node *dn);
+ 
+ static inline int pci_device_from_OF_node(struct device_node *np,
+ 					  u8 *bus, u8 *devfn)
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index b3b4df9..36ae515 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -265,13 +265,9 @@ void remove_dev_pci_data(struct pci_dev *pdev)
+ #endif /* CONFIG_PCI_IOV */
+ }
+ 
+-/*
+- * Traverse_func that inits the PCI fields of the device node.
+- * NOTE: this *must* be done before read/write config to the device.
+- */
+-void *update_dn_pci_info(struct device_node *dn, void *data)
++struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
++					struct device_node *dn)
+ {
+-	struct pci_controller *phb = data;
+ 	const __be32 *type = of_get_property(dn, "ibm,pci-config-space-type", NULL);
+ 	const __be32 *regs;
+ 	struct device_node *parent;
+@@ -282,7 +278,7 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
+ 		return NULL;
+ 	dn->data = pdn;
+ 	pdn->node = dn;
+-	pdn->phb = phb;
++	pdn->phb = hose;
+ #ifdef CONFIG_PPC_POWERNV
+ 	pdn->pe_number = IODA_INVALID_PE;
+ #endif
+@@ -314,8 +310,9 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
+ 	if (pdn->parent)
+ 		list_add_tail(&pdn->list, &pdn->parent->child_list);
+ 
+-	return NULL;
++	return pdn;
+ }
++EXPORT_SYMBOL_GPL(pci_add_device_node_info);
+ 
+ /*
+  * Traverse a device tree stopping each PCI device in the tree.
+@@ -415,6 +412,18 @@ void *traverse_pci_dn(struct pci_dn *root,
+ 	return NULL;
+ }
+ 
++static void *add_pdn(struct device_node *dn, void *data)
++{
++	struct pci_controller *hose = data;
++	struct pci_dn *pdn;
++
++	pdn = pci_add_device_node_info(hose, dn);
++	if (!pdn)
++		return ERR_PTR(-ENOMEM);
++
++	return NULL;
++}
++
+ /** 
+  * pci_devs_phb_init_dynamic - setup pci devices under this PHB
+  * phb: pci-to-host bridge (top-level bridge connecting to cpu)
+@@ -429,8 +438,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+ 	struct pci_dn *pdn;
+ 
+ 	/* PHB nodes themselves must not match */
+-	update_dn_pci_info(dn, phb);
+-	pdn = dn->data;
++	pdn = pci_add_device_node_info(phb, dn);
+ 	if (pdn) {
+ 		pdn->devfn = pdn->busno = -1;
+ 		pdn->vendor_id = pdn->device_id = pdn->class_code = 0;
+@@ -439,7 +447,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+ 	}
+ 
+ 	/* Update dn->phb ptrs for new phb and children devices */
+-	traverse_pci_devices(dn, update_dn_pci_info, phb);
++	traverse_pci_devices(dn, add_pdn, phb);
+ }
+ 
+ /** 
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index 9e524c2..6c274cb 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -264,7 +264,7 @@ static int pci_dn_reconfig_notifier(struct notifier_block *nb, unsigned long act
+ 		pdn = parent ? PCI_DN(parent) : NULL;
+ 		if (pdn) {
+ 			/* Create pdn and EEH device */
+-			update_dn_pci_info(np, pdn->phb);
++			pci_add_device_node_info(pdn->phb, np);
+ 			eeh_dev_init(PCI_DN(np), pdn->phb);
+ 		}
+ 
+-- 
+2.1.0
 
