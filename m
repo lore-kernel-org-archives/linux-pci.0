@@ -1,52 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 30 Nov 2015 17:39:42 +0000
-From: Keith Busch <keith.busch@intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hans de Bruin <jmdebruin@xmsnet.nl>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Arthur Marsh <arthur.marsh@internode.on.net>
-Subject: Re: [PATCH] x86/PCI: Fix regression caused by commit 4d6b4e69a245
-Message-ID: <20151130173941.GA25958@localhost.localdomain>
-References: <5655B392.7070701@intel.com>
- <8206751.4eTpiUuo7l@vostro.rjw.lan>
- <565BA446.7080003@linux.intel.com>
- <2099144.E7yRfeyfk4@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:24761 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398AbbKDNjx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:39:53 -0500
+Date: Wed, 4 Nov 2015 16:39:36 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, rfi@lists.rocketboards.org,
+	linux-pci@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] PCI: altera: fix loop in tlp_read_packet()
+Message-ID: <20151104133936.GI20966@mwanda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2099144.E7yRfeyfk4@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 30, 2015 at 03:11:14AM +0100, Rafael J. Wysocki wrote:
-> On Monday, November 30, 2015 09:20:06 AM Jiang Liu wrote:
-> > Hi Rafael,
-> > 	I have removed following changes against the original patch
-> > posted at Nov 16.
-> >  	       bus);
-> > 
-> >  	/* already added by acpi ? */
-> > -	resource_list_for_each_entry(window, resources)
-> > +	resource_list_for_each_entry(window, &info->resources)
-> >  		if (window->res->flags & IORESOURCE_BUS) {
-> >  			found = true;
-> >  			break;
-> >  		}
-> > -
-> >  	if (!found)
-> >  		pci_add_resource(resources, &info->busn);
-> > 
-> > And I only refined the commit message based on the test patch
-> > I sent to Authur as an attachment at Nov 25.
-> 
-> OK, thanks.
-> 
-> Keith, Hans, can you test this version too please?
+The problem is that TLP_LOOP is 500 and the "loop" variable was a u8 so
+"loop < TLP_LOOP" is always true.  We only need this condition to work
+if there is a problem so it would have been easy to miss this in
+testing.  Anyway, lets just make it a normal for loop with "int i"
+instead of over thinking things and making it complicated.
 
-Thanks, works for me!
+Fixes: 6bb4dd154ae8 ('PCI: altera: Add Altera PCIe host controller driver')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Tested-by: Keith Busch <keith.busch@intel.com>
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index e5dda38..b05de63 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -166,16 +166,16 @@ static bool altera_pcie_valid_config(struct altera_pcie *pcie,
  
-> Bjorn, any more comments from you on this one?
+ static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
+ {
+-	u8 loop;
+ 	bool sop = 0;
+ 	u32 ctrl;
+ 	u32 reg0, reg1;
++	int i;
+ 
+ 	/*
+ 	 * Minimum 2 loops to read TLP headers and 1 loop to read data
+ 	 * payload.
+ 	 */
+-	for (loop = 0; loop < TLP_LOOP; loop++) {
++	for (i = 0; i < TLP_LOOP; i++) {
+ 		ctrl = cra_readl(pcie, RP_RXCPL_STATUS);
+ 		if ((ctrl & RP_RXCPL_SOP) || (ctrl & RP_RXCPL_EOP) || sop) {
+ 			reg0 = cra_readl(pcie, RP_RXCPL_REG0);
