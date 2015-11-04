@@ -1,80 +1,119 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-CC: Thierry Reding <treding@nvidia.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: RE: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
-Date: Wed, 18 Nov 2015 18:01:39 +0000
-Message-ID: <PS1PR06MB11804FF05BBF30F2CA2083FCF51C0@PS1PR06MB1180.apcprd06.prod.outlook.com>
-References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>
-	<PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
-	<20151109161115.GA13870@ulmo.nvidia.com>
-	<PS1PR06MB1180111D6423287273B64B0FF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
-	<20151110155232.GA25368@ulmo.nvidia.com>	<20151111163802.3a96080c@arm.com>
-	<PS1PR06MB11806B2B906CABB553B94442F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151112203100.2e91da2a@arm.com>
- <PS1PR06MB11800B547C8957B226077B83F5110@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <564A2101.90600@arm.com>
-In-Reply-To: <564A2101.90600@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:56257 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965355AbbKDNN2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:28 -0500
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 18:43:26 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 25/50] powerpc/powernv: Reserve PE for root bus
+Date: Thu,  5 Nov 2015 00:12:25 +1100
+Message-Id: <1446642770-4681-26-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marc,
+We're going to reserve/assign PEs when pcibios_setup_bridge() is
+called. The function won't be called for root bus as it doesn't
+have parent bridge. However, the root bus still needs a PE to be
+covered.
 
-On 16 November 2015 18:31, Marc Zyngier wrote:
-> On 13/11/15 09:36, Phil Edworthy wrote:
-<snip>
-> > Since the stack trace doesn't help that much I added some tracing:
-> > pci_msi_setup_msi_irqs()
-> >   calls pci_msi_get_domain()
-> >     calls dev_get_msi_domain(), gets a non-NULL domain.
-> > pci_msi_setup_msi_irqs()
-> >   calls pci_msi_domain_alloc_irqs()
-> >     calls msi_domain_alloc_irqs()
-> > msi_domain_alloc_irqs:273: ops=ffffffc03193a810
-> > msi_domain_alloc_irqs:274: ops->msi_check=ffffffc031161418
-> > systemd-udevd[1311]: undefined instruction: pc=ffffffc03116141c
-> > That looks to me as though msi_check is off pointing to the weeds.
-> 
-> So the next step is to find out who initializes msi_check. Assuming
-> someone does...
-Nothing initializes msi_check... 
+This reserves PE numbers that are adjacent to the reserved one
+for root buses.
 
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 33 ++++++++++++++++++++++---------
+ arch/powerpc/platforms/powernv/pci.h      |  1 +
+ 2 files changed, 25 insertions(+), 9 deletions(-)
+
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index eea1c96..5e6745f 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -207,14 +207,14 @@ static int pnv_ioda2_init_m64(struct pnv_phb *phb)
+ 	set_bit(phb->ioda.m64_bar_idx, &phb->ioda.m64_bar_alloc);
  
-> > By passing a NULL domain into irq_domain_add_linear() you get:
-> > pci_msi_setup_msi_irqs()
-> >   calls pci_msi_get_domain()
-> >     calls dev_get_msi_domain(), gets a NULL domain.
-> >     calls arch_setup_msi_irq()
-> > All ok then.
-> 
-> Yes, because you're sidestepping the issue. Any chance you could dig a
-> bit deeper? I'd really like to nail this one down (before we convert
-> your PCI driver to the right API... ;-).
-The problem appears to be that when the pci host driver enables msi
-it calls the following:
-	msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
-					    &msi_domain_ops, &msi->chip);
-The last arg is documented as:
-* @host_data: Controller private data pointer 
-In _irq_domain_add() this ptr is stored in struct irq_domain's host_data.
-
-However, msi_domain_alloc_irqs() expects host_data to be a ptr to a
-struct msi_domain_info.
-
-It seems that a number of other pci host drivers do the same, so I am
-surprised that no one else has seen this.
-
-Thanks for your help,
-Phil
+ 	/*
+-	 * Strip off the segment used by the reserved PE, which is
+-	 * expected to be 0 or last one of PE capabicity.
++	 * Exclude the segments for reserved and root bus PE, which
++	 * are first or last two PEs.
+ 	 */
+ 	r = &phb->hose->mem_resources[1];
+ 	if (phb->ioda.reserved_pe_idx == 0)
+-		r->start += phb->ioda.m64_segsize;
++		r->start += (2 * phb->ioda.m64_segsize);
+ 	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
+-		r->end -= phb->ioda.m64_segsize;
++		r->end -= (2 * phb->ioda.m64_segsize);
+ 	else
+ 		pr_warn("  Cannot strip M64 segment for reserved PE#%d\n",
+ 			phb->ioda.reserved_pe_idx);
+@@ -294,14 +294,14 @@ static int pnv_ioda1_init_m64(struct pnv_phb *phb)
+ 	}
+ 
+ 	/*
+-	 * Exclude the segment used by the reserved PE, which
+-	 * is expected to be 0 or last supported PE#.
++	 * Exclude the segments for reserved and root bus PE, which
++	 * are first or last two PEs.
+ 	 */
+ 	r = &phb->hose->mem_resources[1];
+ 	if (phb->ioda.reserved_pe_idx == 0)
+-		r->start += phb->ioda.m64_segsize;
++		r->start += (2 * phb->ioda.m64_segsize);
+ 	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
+-		r->end -= phb->ioda.m64_segsize;
++		r->end -= (2 * phb->ioda.m64_segsize);
+ 	else
+ 		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
+ 			phb->ioda.reserved_pe_idx);
+@@ -3231,7 +3231,22 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 			phb->ioda.dma32_segmap[i] = IODA_INVALID_PE;
+ 	}
+ 	phb->ioda.pe_array = aux + pemap_off;
+-	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
++
++	/*
++	 * Choose PE number for root bus, which shouldn't have
++	 * M64 resources consumed by its child devices. To pick
++	 * the PE number adjacent to the reserved one if possible.
++	 */
++	pnv_ioda_reserve_pe(phb, phb->ioda.reserved_pe_idx);
++	if (phb->ioda.reserved_pe_idx == 0) {
++		phb->ioda.root_pe_idx = 1;
++		pnv_ioda_reserve_pe(phb, phb->ioda.root_pe_idx);
++	} else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1)) {
++		phb->ioda.root_pe_idx = phb->ioda.reserved_pe_idx - 1;
++		pnv_ioda_reserve_pe(phb, phb->ioda.root_pe_idx);
++	} else {
++		phb->ioda.root_pe_idx = IODA_INVALID_PE;
++	}
+ 
+ 	INIT_LIST_HEAD(&phb->ioda.pe_list);
+ 	mutex_init(&phb->ioda.pe_list_mutex);
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index e55ab0e..a8ba97f 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -120,6 +120,7 @@ struct pnv_phb {
+ 			/* Global bridge info */
+ 			unsigned int		total_pe_num;
+ 			unsigned int		reserved_pe_idx;
++			unsigned int		root_pe_idx;
+ 
+ 			/* 32-bit MMIO window */
+ 			unsigned int		m32_size;
+-- 
+2.1.0
 
