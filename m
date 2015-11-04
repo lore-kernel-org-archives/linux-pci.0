@@ -1,201 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:53001 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752149AbbKQBiR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 20:38:17 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Nov 2015 11:38:15 +1000
-Date: Tue, 17 Nov 2015 12:37:14 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-Subject: Re: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
-Message-ID: <20151117013713.GA31584@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
- <56498D6A.7010905@ozlabs.ru>
+Received: from mail-by2on0085.outbound.protection.outlook.com ([207.46.100.85]:25568
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754030AbbKDHyL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Nov 2015 02:54:11 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Amit Tomer <amittomer25@gmail.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"rjui@broadcom.com" <rjui@broadcom.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"dhdang@apm.com" <dhdang@apm.com>,
+	"sbranden@broadcom.com" <sbranden@broadcom.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v7] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+Date: Wed, 4 Nov 2015 07:54:01 +0000
+Message-ID: <8520D5D51A55D047800579B09414719801693C5C@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1446564227-4704-1-git-send-email-bharatku@xilinx.com>
+	<5638DE62.6050605@arm.com>
+	<8520D5D51A55D047800579B09414719801693C20@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <CABHD4K_BWU7-c1NM0y5ZwFkfpG0+c9_9DpwyNXNcTvavmy8rJw@mail.gmail.com>
+In-Reply-To: <CABHD4K_BWU7-c1NM0y5ZwFkfpG0+c9_9DpwyNXNcTvavmy8rJw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56498D6A.7010905@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 16, 2015 at 07:01:46PM +1100, Alexey Kardashevskiy wrote:
->On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>This enables M64 window on P7IOC, which has been enabled on PHB3.
->>Different from PHB3 where 16 M64 BARs are supported and each of
->>them can be owned by one particular PE# exclusively or divided
->>evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
->>of them are divided to 8 segments. So every P7IOC PHB supports
->>128 M64 segments in total. P7IOC has M64DT, which helps mapping
->>one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
->>M64DT, indicating that one M64 segment can only be pinned to the
->>fixed PE#. In order to have same code to support M64 on P7IOC and
->>PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
->>of them is pinned to the fixed PE# by bypassing the function of
->>M64DT. In turn, we just need different phb->init_m64() for P7IOC
->>and PHB3 to support M64.
->>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/platforms/powernv/pci-ioda.c | 86 +++++++++++++++++++++++++++++--
->>  arch/powerpc/platforms/powernv/pci.h      |  3 ++
->>  2 files changed, 86 insertions(+), 3 deletions(-)
->>
->>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>index 1f7d985..bfe69f1 100644
->>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>@@ -256,6 +256,64 @@ static void pnv_ioda_reserve_dev_m64_pe(struct pci_dev *pdev,
->>  	}
->>  }
->>
->>+static int pnv_ioda1_init_m64(struct pnv_phb *phb)
->>+{
->>+	struct resource *r;
->>+	int index;
->>+
->>+	/*
->>+	 * There are 16 M64 BARs, each of which has 8 segments. So
->>+	 * there are as many M64 segments as the maximum number of
->>+	 * PEs, which is 128.
->>+	 */
->>+	for (index = 0; index < PNV_IODA1_M64_NUM; index++) {
->>+		unsigned long base, segsz = phb->ioda.m64_segsize;
->>+		int64_t rc;
->>+
->>+		base = phb->ioda.m64_base +
->>+		       index * PNV_IODA1_M64_SEGS * segsz;
->>+		rc = opal_pci_set_phb_mem_window(phb->opal_id,
->>+				OPAL_M64_WINDOW_TYPE, index, base, 0,
->>+				PNV_IODA1_M64_SEGS * segsz);
->>+		if (rc != OPAL_SUCCESS) {
->>+			pr_warn("  Error %lld setting M64 PHB#%d-BAR#%d\n",
->>+				rc, phb->hose->global_number, index);
->>+			goto fail;
->>+		}
->>+
->>+		rc = opal_pci_phb_mmio_enable(phb->opal_id,
->>+				OPAL_M64_WINDOW_TYPE, index,
->>+				OPAL_ENABLE_M64_SPLIT);
->>+		if (rc != OPAL_SUCCESS) {
->>+			pr_warn("  Error %lld enabling M64 PHB#%d-BAR#%d\n",
->>+				rc, phb->hose->global_number, index);
->>+			goto fail;
->>+		}
->>+	}
->>+
->>+	/*
->>+	 * Exclude the segment used by the reserved PE, which
->>+	 * is expected to be 0 or last supported PE#.
->>+	 */
->>+	r = &phb->hose->mem_resources[1];
->>+	if (phb->ioda.reserved_pe_idx == 0)
->>+		r->start += phb->ioda.m64_segsize;
->>+	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
->>+		r->end -= phb->ioda.m64_segsize;
->>+	else
->>+		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
->>+			phb->ioda.reserved_pe_idx);
->>+
->>+	return 0;
->>+
->>+fail:
->>+	for ( ; index >= 0; index--)
->>+		opal_pci_phb_mmio_enable(phb->opal_id,
->>+			OPAL_M64_WINDOW_TYPE, index, OPAL_DISABLE_M64);
->>+
->>+	return -EIO;
->>+}
->>+
->>  static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
->>  				    unsigned long *pe_bitmap,
->>  				    bool all)
->>@@ -325,6 +383,26 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
->>  			pe->master = master_pe;
->>  			list_add_tail(&pe->list, &master_pe->slaves);
->>  		}
->>+
->>+		/*
->>+		 * P7IOC supports M64DT, which helps mapping M64 segment
->>+		 * to one particular PE#. However, PHB3 has fixed mapping
->>+		 * between M64 segment and PE#. In order to have same logic
->>+		 * for P7IOC and PHB3, we enforce fixed mapping between M64
->>+		 * segment and PE# on P7IOC.
->>+		 */
->>+		if (phb->type == PNV_PHB_IODA1) {
->>+			int64_t rc;
->>+
->>+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
->>+					pe->pe_number, OPAL_M64_WINDOW_TYPE,
->>+					pe->pe_number / PNV_IODA1_M64_SEGS,
->>+					pe->pe_number % PNV_IODA1_M64_SEGS);
->>+			if (rc != OPAL_SUCCESS)
->>+				pr_warn("%s: Error %lld mapping M64 for PHB#%d-PE#%d\n",
->>+					__func__, rc, phb->hose->global_number,
->>+					pe->pe_number);
->>+		}
->>  	}
->>
->>  	kfree(pe_alloc);
->>@@ -339,8 +417,7 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
->>  	const u32 *r;
->>  	u64 pci_addr;
->>
->>-	/* FIXME: Support M64 for P7IOC */
->>-	if (phb->type != PNV_PHB_IODA2) {
->>+	if (phb->type != PNV_PHB_IODA1 && phb->type != PNV_PHB_IODA2) {
->>  		pr_info("  Not support M64 window\n");
->>  		return;
->>  	}
->>@@ -373,7 +450,10 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
->>
->>  	/* Use last M64 BAR to cover M64 window */
->>  	phb->ioda.m64_bar_idx = 15;
->>-	phb->init_m64 = pnv_ioda2_init_m64;
->>+	if (phb->type == PNV_PHB_IODA1)
->>+		phb->init_m64 = pnv_ioda1_init_m64;
->>+	else
->>+		phb->init_m64 = pnv_ioda2_init_m64;
->>  	phb->reserve_m64_pe = pnv_ioda_reserve_m64_pe;
->>  	phb->pick_m64_pe = pnv_ioda_pick_m64_pe;
->
->
->Nit: the callbacks initialization does not seem to relate to parsing any
->window :) They could all go to where pnv_ioda_parse_m64_window() is called,
->no separate patch is needed.
->
-
-Well, what's the benifit for that? I personally prefer the way I had: initialize
-all callbacks in one place, not in separate places. However, if you have good
-reason to support your suggestion, I'll change accordingly for sure.
-
->
->>  }
->>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
->>index 671fd13..c4019ac 100644
->>--- a/arch/powerpc/platforms/powernv/pci.h
->>+++ b/arch/powerpc/platforms/powernv/pci.h
->>@@ -78,6 +78,9 @@ struct pnv_ioda_pe {
->>  	struct list_head	list;
->>  };
->>
->>+#define PNV_IODA1_M64_NUM	16	/* Number of M64 BARs   */
->>+#define PNV_IODA1_M64_SEGS	8	/* Segments per M64 BAR */
->>+
->>  #define PNV_PHB_FLAG_EEH	(1 << 0)
->>
->>  struct pnv_phb {
->>
-
-Thanks,
-Gavin
-
+PiA+IFdpdGhvdXQgI2lmZGVmcyBpZiB3ZSBjb21waWxlIGRyaXZlciBmb3IgbGVnYWN5LCBNU0kg
+c3RydWN0dXJlcyB3aWxsIG5vdCBiZQ0KPiBhdmFpbGFibGUgYW5kIHdlIGdldCBjb21waWxlIHRp
+bWUgZXJyb3IuDQo+IA0KPiBTb3JyeSBmb3Igbml0cGlja2luZyBidXQgYXQgbGVhc3QgY2FuIHdl
+IHVzZSBlbGVnYW50IHZlcnNpb24gb2YgI2lmZGVmcyAuaS5lLiAjaWYNCj4gSVNfRU5BQkxFRCgp
+IGhlcmUgPw0KPiANClNpbmNlIElTX0VOQUJMRUQoKSBpcyBjaGVja2VkIGF0IHJ1bnRpbWUsIGNv
+bXBpbGUgdGltZSBlcnJvciB3b3VsZCBjb21lIGZvciBsZWdhY3kuDQoNClRoYW5rcw0KQmhhcmF0
+DQo=
