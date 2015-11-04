@@ -1,267 +1,354 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39562 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752088AbbKYUBK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Nov 2015 15:01:10 -0500
-Date: Wed, 25 Nov 2015 14:01:03 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jisheng Zhang <jszhang@marvell.com>
-Cc: kishon@ti.com, bhelgaas@google.com, jingoohan1@gmail.com,
-	kgene@kernel.org, k.kozlowski@samsung.com,
-	Richard.Zhu@freescale.com, l.stach@pengutronix.de,
-	m-karicheri2@ti.com, minghuan.Lian@freescale.com,
-	mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-	pratyush.anand@gmail.com, linux-omap@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH] PCI: designware: bail out if host_init failed
-Message-ID: <20151125200103.GF8869@localhost>
-References: <1447336125-5010-1-git-send-email-jszhang@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1447336125-5010-1-git-send-email-jszhang@marvell.com>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:60224 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965410AbbKDNNy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:54 -0500
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 23:13:52 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 34/50] powerpc/pci: Delay populating pdn
+Date: Thu,  5 Nov 2015 00:12:34 +1100
+Message-Id: <1446642770-4681-35-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jisheng,
+The pdn (struct pci_dn) instances are allocated from memblock or
+bootmem when creating PCI controller (hoses) in setup_arch(). PCI
+hotplug, which will be supported by proceeding patches, release
+PCI device nodes and their corresponding pdn on unplugging event.
+The memory chunks for pdn instances allocated from memblock or
+bootmem are hard to reused after being released.
 
-On Thu, Nov 12, 2015 at 09:48:45PM +0800, Jisheng Zhang wrote:
-> There's no reason to continue the initialization such as configure
-> register, scan root bus etc. if customized host_init() failed. This
-> patch tries to check the host_init result, bail out if failed.
+This delays creating pdn in core_initcall_sync(eeh_dev_phb_init) so
+that they are allocated from slab. In turn, the memory chunks for
+them can be reused after being released without problem. Since the
+pdn and eeh_dev has same life cycle, the eeh_dev is created when
+pdn is populated. We needn't create eeh_dev with another initcall.
+The time to create PHB PEs is delayed a bit from core_initcall() to
+core_initcall_sync().
 
-This patch changes the (*host_init) return type and adds "return 0" to
-the host_init() implementations of ten different drivers, all to
-support a possible error in one driver.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/eeh.h         |  2 +-
+ arch/powerpc/include/asm/ppc-pci.h     |  2 --
+ arch/powerpc/kernel/eeh_dev.c          | 19 ++++-------------
+ arch/powerpc/kernel/pci_dn.c           | 20 ++++++++++++++++--
+ arch/powerpc/platforms/maple/pci.c     | 34 ++++++++++++++++++------------
+ arch/powerpc/platforms/pasemi/pci.c    |  3 ---
+ arch/powerpc/platforms/powermac/pci.c  | 38 +++++++++++++++++++++-------------
+ arch/powerpc/platforms/powernv/pci.c   |  3 ---
+ arch/powerpc/platforms/pseries/setup.c |  6 +-----
+ 9 files changed, 69 insertions(+), 58 deletions(-)
 
-Is there any way to detect and handle the error in
-ls1021_pcie_host_init() earlier, maybe by doing the syscon_regmap
-lookup in ls_pcie_probe() instead of in the host_init() function?
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index c5eb86f..27352f4 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -268,7 +268,7 @@ void eeh_pe_restore_bars(struct eeh_pe *pe);
+ const char *eeh_pe_loc_get(struct eeh_pe *pe);
+ struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe);
+ 
+-void *eeh_dev_init(struct pci_dn *pdn, void *data);
++struct eeh_dev *eeh_dev_init(struct pci_dn *pdn);
+ void eeh_dev_phb_init_dynamic(struct pci_controller *phb);
+ int eeh_init(void);
+ int __init eeh_ops_register(struct eeh_ops *ops);
+diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
+index 8753e4e..0f73de0 100644
+--- a/arch/powerpc/include/asm/ppc-pci.h
++++ b/arch/powerpc/include/asm/ppc-pci.h
+@@ -39,8 +39,6 @@ void *pci_traverse_device_nodes(struct device_node *start,
+ void *traverse_pci_dn(struct pci_dn *root,
+ 		      void *(*fn)(struct pci_dn *, void *),
+ 		      void *data);
+-
+-extern void pci_devs_phb_init(void);
+ extern void pci_devs_phb_init_dynamic(struct pci_controller *phb);
+ 
+ /* From rtas_pci.h */
+diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
+index aabba94..1c4bc35 100644
+--- a/arch/powerpc/kernel/eeh_dev.c
++++ b/arch/powerpc/kernel/eeh_dev.c
+@@ -44,14 +44,13 @@
+ /**
+  * eeh_dev_init - Create EEH device according to OF node
+  * @pdn: PCI device node
+- * @data: PHB
+  *
+  * It will create EEH device according to the given OF node. The function
+  * might be called by PCI emunation, DR, PHB hotplug.
+  */
+-void *eeh_dev_init(struct pci_dn *pdn, void *data)
++struct eeh_dev *eeh_dev_init(struct pci_dn *pdn)
+ {
+-	struct pci_controller *phb = data;
++	struct pci_controller *phb = pdn->phb;
+ 	struct eeh_dev *edev;
+ 
+ 	/* Allocate EEH device */
+@@ -68,7 +67,7 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
+ 	edev->phb = phb;
+ 	INIT_LIST_HEAD(&edev->list);
+ 
+-	return NULL;
++	return edev;
+ }
+ 
+ /**
+@@ -80,16 +79,8 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
+  */
+ void eeh_dev_phb_init_dynamic(struct pci_controller *phb)
+ {
+-	struct pci_dn *root = phb->pci_data;
+-
+ 	/* EEH PE for PHB */
+ 	eeh_phb_pe_create(phb);
+-
+-	/* EEH device for PHB */
+-	eeh_dev_init(root, phb);
+-
+-	/* EEH devices for children OF nodes */
+-	traverse_pci_dn(root, eeh_dev_init, phb);
+ }
+ 
+ /**
+@@ -105,9 +96,7 @@ static int __init eeh_dev_phb_init(void)
+ 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
+ 		eeh_dev_phb_init_dynamic(phb);
+ 
+-	pr_info("EEH: devices created\n");
+-
+ 	return 0;
+ }
+ 
+-core_initcall(eeh_dev_phb_init);
++core_initcall_sync(eeh_dev_phb_init);
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index aa4110f..581612c 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -272,8 +272,11 @@ struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
+ 	const __be32 *regs;
+ 	struct device_node *parent;
+ 	struct pci_dn *pdn;
++#ifdef CONFIG_EEH
++	struct eeh_dev *edev;
++#endif
+ 
+-	pdn = zalloc_maybe_bootmem(sizeof(*pdn), GFP_KERNEL);
++	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
+ 	if (pdn == NULL)
+ 		return NULL;
+ 	dn->data = pdn;
+@@ -302,6 +305,15 @@ struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
+ 	/* Extended config space */
+ 	pdn->pci_ext_config_space = (type && of_read_number(type, 1) == 1);
+ 
++	/* Create EEH device */
++#ifdef CONFIG_EEH
++	edev = eeh_dev_init(pdn);
++	if (!edev) {
++		kfree(pdn);
++		return NULL;
++	}
++#endif
++
+ 	/* Attach to parent node */
+ 	INIT_LIST_HEAD(&pdn->child_list);
+ 	INIT_LIST_HEAD(&pdn->list);
+@@ -486,15 +498,19 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+  * pci device found underneath.  This routine runs once,
+  * early in the boot sequence.
+  */
+-void __init pci_devs_phb_init(void)
++static int __init pci_devs_phb_init(void)
+ {
+ 	struct pci_controller *phb, *tmp;
+ 
+ 	/* This must be done first so the device nodes have valid pci info! */
+ 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
+ 		pci_devs_phb_init_dynamic(phb);
++
++	return 0;
+ }
+ 
++core_initcall(pci_devs_phb_init);
++
+ static void pci_dev_pdn_setup(struct pci_dev *pdev)
+ {
+ 	struct pci_dn *pdn;
+diff --git a/arch/powerpc/platforms/maple/pci.c b/arch/powerpc/platforms/maple/pci.c
+index a923230..a2f89e6 100644
+--- a/arch/powerpc/platforms/maple/pci.c
++++ b/arch/powerpc/platforms/maple/pci.c
+@@ -568,6 +568,26 @@ void maple_pci_irq_fixup(struct pci_dev *dev)
+ 	DBG(" <- maple_pci_irq_fixup\n");
+ }
+ 
++static int maple_pci_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
++	struct device_node *np, *child;
++
++	if (hose != u3_agp)
++		return 0;
++
++	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
++	 * assume there is no P2P bridge on the AGP bus, which should be a
++	 * safe assumptions hopefully.
++	 */
++	np = hose->dn;
++	PCI_DN(np)->busno = 0xf0;
++	for_each_child_of_node(np, child)
++		PCI_DN(child)->busno = 0xf0;
++
++	return 0;
++}
++
+ void __init maple_pci_init(void)
+ {
+ 	struct device_node *np, *root;
+@@ -605,19 +625,7 @@ void __init maple_pci_init(void)
+ 	if (ht && maple_add_bridge(ht) != 0)
+ 		of_node_put(ht);
+ 
+-	/* Setup the linkage between OF nodes and PHBs */ 
+-	pci_devs_phb_init();
+-
+-	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
+-	 * assume there is no P2P bridge on the AGP bus, which should be a
+-	 * safe assumptions hopefully.
+-	 */
+-	if (u3_agp) {
+-		struct device_node *np = u3_agp->dn;
+-		PCI_DN(np)->busno = 0xf0;
+-		for (np = np->child; np; np = np->sibling)
+-			PCI_DN(np)->busno = 0xf0;
+-	}
++	ppc_md.pcibios_root_bridge_prepare = maple_pci_root_bridge_prepare;
+ 
+ 	/* Tell pci.c to not change any resource allocations.  */
+ 	pci_add_flags(PCI_PROBE_ONLY);
+diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
+index f3a68a0..10c4e8f 100644
+--- a/arch/powerpc/platforms/pasemi/pci.c
++++ b/arch/powerpc/platforms/pasemi/pci.c
+@@ -229,9 +229,6 @@ void __init pas_pci_init(void)
+ 			of_node_get(np);
+ 
+ 	of_node_put(root);
+-
+-	/* Setup the linkage between OF nodes and PHBs */
+-	pci_devs_phb_init();
+ }
+ 
+ void __iomem *pasemi_pci_getcfgaddr(struct pci_dev *dev, int offset)
+diff --git a/arch/powerpc/platforms/powermac/pci.c b/arch/powerpc/platforms/powermac/pci.c
+index 59ab16f..6e06c3b 100644
+--- a/arch/powerpc/platforms/powermac/pci.c
++++ b/arch/powerpc/platforms/powermac/pci.c
+@@ -878,6 +878,29 @@ void pmac_pci_irq_fixup(struct pci_dev *dev)
+ #endif /* CONFIG_PPC32 */
+ }
+ 
++#ifdef CONFIG_PPC64
++static int pmac_pci_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
++	struct device_node *np, *child;
++
++	if (hose != u3_agp)
++		return 0;
++
++	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
++	 * assume there is no P2P bridge on the AGP bus, which should be a
++	 * safe assumptions for now. We should do something better in the
++	 * future though
++	 */
++	np = hose->dn;
++	PCI_DN(np)->busno = 0xf0;
++	for_each_child_of_node(np, child)
++		PCI_DN(child)->busno = 0xf0;
++
++	return 0;
++}
++#endif /* CONFIG_PPC64 */
++
+ void __init pmac_pci_init(void)
+ {
+ 	struct device_node *np, *root;
+@@ -914,20 +937,7 @@ void __init pmac_pci_init(void)
+ 	if (ht && pmac_add_bridge(ht) != 0)
+ 		of_node_put(ht);
+ 
+-	/* Setup the linkage between OF nodes and PHBs */
+-	pci_devs_phb_init();
+-
+-	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
+-	 * assume there is no P2P bridge on the AGP bus, which should be a
+-	 * safe assumptions for now. We should do something better in the
+-	 * future though
+-	 */
+-	if (u3_agp) {
+-		struct device_node *np = u3_agp->dn;
+-		PCI_DN(np)->busno = 0xf0;
+-		for (np = np->child; np; np = np->sibling)
+-			PCI_DN(np)->busno = 0xf0;
+-	}
++	ppc_md.pcibios_root_bridge_prepare = pmac_pci_root_bridge_prepare;
+ 	/* pmac_check_ht_link(); */
+ 
+ #else /* CONFIG_PPC64 */
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index fa99daf..d8832ea 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -807,9 +807,6 @@ void __init pnv_pci_init(void)
+ 	for_each_compatible_node(np, NULL, "ibm,ioda2-phb")
+ 		pnv_pci_init_ioda2_phb(np);
+ 
+-	/* Setup the linkage between OF nodes and PHBs */
+-	pci_devs_phb_init();
+-
+ 	/* Configure IOMMU DMA hooks */
+ 	set_pci_dma_ops(&dma_iommu_ops);
+ }
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index 6c274cb..bdf93a1 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -262,11 +262,8 @@ static int pci_dn_reconfig_notifier(struct notifier_block *nb, unsigned long act
+ 	case OF_RECONFIG_ATTACH_NODE:
+ 		parent = of_get_parent(np);
+ 		pdn = parent ? PCI_DN(parent) : NULL;
+-		if (pdn) {
+-			/* Create pdn and EEH device */
++		if (pdn)
+ 			pci_add_device_node_info(pdn->phb, np);
+-			eeh_dev_init(PCI_DN(np), pdn->phb);
+-		}
+ 
+ 		of_node_put(parent);
+ 		break;
+@@ -489,7 +486,6 @@ static void __init find_and_init_phbs(void)
+ 	}
+ 
+ 	of_node_put(root);
+-	pci_devs_phb_init();
+ 
+ 	/*
+ 	 * PCI_PROBE_ONLY and PCI_REASSIGN_ALL_BUS can be set via properties
+-- 
+2.1.0
 
-That would be even better because you wouldn't have to touch any of
-the other drivers, and you'd detect the error even earlier, before
-we've done any of the designware setup.
-
-Bjorn
-
-> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
-> ---
->  drivers/pci/host/pci-dra7xx.c      |  4 +++-
->  drivers/pci/host/pci-exynos.c      |  4 +++-
->  drivers/pci/host/pci-imx6.c        |  4 +++-
->  drivers/pci/host/pci-keystone.c    |  4 +++-
->  drivers/pci/host/pci-layerscape.c  | 25 ++++++++++++++++---------
->  drivers/pci/host/pcie-designware.c |  7 +++++--
->  drivers/pci/host/pcie-designware.h |  2 +-
->  drivers/pci/host/pcie-spear13xx.c  |  4 +++-
->  8 files changed, 37 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> index 8c36880..b3160a1 100644
-> --- a/drivers/pci/host/pci-dra7xx.c
-> +++ b/drivers/pci/host/pci-dra7xx.c
-> @@ -149,7 +149,7 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
->  				   LEG_EP_INTERRUPTS);
->  }
->  
-> -static void dra7xx_pcie_host_init(struct pcie_port *pp)
-> +static int dra7xx_pcie_host_init(struct pcie_port *pp)
->  {
->  	dw_pcie_setup_rc(pp);
->  
-> @@ -162,6 +162,8 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
->  		dw_pcie_msi_init(pp);
->  	dra7xx_pcie_enable_interrupts(pp);
-> +
-> +	return 0;
->  }
->  
->  static struct pcie_host_ops dra7xx_pcie_host_ops = {
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> index 01095e1..57f370b 100644
-> --- a/drivers/pci/host/pci-exynos.c
-> +++ b/drivers/pci/host/pci-exynos.c
-> @@ -481,10 +481,12 @@ static int exynos_pcie_link_up(struct pcie_port *pp)
->  	return 0;
->  }
->  
-> -static void exynos_pcie_host_init(struct pcie_port *pp)
-> +static int exynos_pcie_host_init(struct pcie_port *pp)
->  {
->  	exynos_pcie_establish_link(pp);
->  	exynos_pcie_enable_interrupts(pp);
-> +
-> +	return 0;
->  }
->  
->  static struct pcie_host_ops exynos_pcie_host_ops = {
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 22e8224..9a46680 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -425,7 +425,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
->  	return 0;
->  }
->  
-> -static void imx6_pcie_host_init(struct pcie_port *pp)
-> +static int imx6_pcie_host_init(struct pcie_port *pp)
->  {
->  	imx6_pcie_assert_core_reset(pp);
->  
-> @@ -439,6 +439,8 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
->  
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
->  		dw_pcie_msi_init(pp);
-> +
-> +	return 0;
->  }
->  
->  static void imx6_pcie_reset_phy(struct pcie_port *pp)
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> index 0aa81bd..2604571 100644
-> --- a/drivers/pci/host/pci-keystone.c
-> +++ b/drivers/pci/host/pci-keystone.c
-> @@ -250,7 +250,7 @@ static int keystone_pcie_fault(unsigned long addr, unsigned int fsr,
->  	return 0;
->  }
->  
-> -static void __init ks_pcie_host_init(struct pcie_port *pp)
-> +static int __init ks_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
->  	u32 val;
-> @@ -277,6 +277,8 @@ static void __init ks_pcie_host_init(struct pcie_port *pp)
->  	 */
->  	hook_fault_code(17, keystone_pcie_fault, SIGBUS, 0,
->  			"Asynchronous external abort");
-> +
-> +	return 0;
->  }
->  
->  static struct pcie_host_ops keystone_pcie_host_ops = {
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> index 3923bed..a6e9070 100644
-> --- a/drivers/pci/host/pci-layerscape.c
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -94,8 +94,9 @@ static int ls1021_pcie_link_up(struct pcie_port *pp)
->  	return 1;
->  }
->  
-> -static void ls1021_pcie_host_init(struct pcie_port *pp)
-> +static int ls1021_pcie_host_init(struct pcie_port *pp)
->  {
-> +	int ret;
->  	struct ls_pcie *pcie = to_ls_pcie(pp);
->  	u32 val, index[2];
->  
-> @@ -103,15 +104,14 @@ static void ls1021_pcie_host_init(struct pcie_port *pp)
->  						     "fsl,pcie-scfg");
->  	if (IS_ERR(pcie->scfg)) {
->  		dev_err(pp->dev, "No syscfg phandle specified\n");
-> -		pcie->scfg = NULL;
-> -		return;
-> +		ret = PTR_ERR(pcie->scfg);
-> +		goto err;
->  	}
->  
-> -	if (of_property_read_u32_array(pp->dev->of_node,
-> -				       "fsl,pcie-scfg", index, 2)) {
-> -		pcie->scfg = NULL;
-> -		return;
-> -	}
-> +	ret = of_property_read_u32_array(pp->dev->of_node,
-> +					 "fsl,pcie-scfg", index, 2);
-> +	if (ret)
-> +		goto err;
->  	pcie->index = index[1];
->  
->  	dw_pcie_setup_rc(pp);
-> @@ -123,6 +123,11 @@ static void ls1021_pcie_host_init(struct pcie_port *pp)
->  	val = ioread32(pcie->dbi + PCIE_STRFMR1);
->  	val &= 0xffff;
->  	iowrite32(val, pcie->dbi + PCIE_STRFMR1);
-> +
-> +	return 0;
-> +err:
-> +	pcie->scfg = NULL;
-> +	return ret;
->  }
->  
->  static int ls_pcie_link_up(struct pcie_port *pp)
-> @@ -140,7 +145,7 @@ static int ls_pcie_link_up(struct pcie_port *pp)
->  	return 1;
->  }
->  
-> -static void ls_pcie_host_init(struct pcie_port *pp)
-> +static int ls_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct ls_pcie *pcie = to_ls_pcie(pp);
->  
-> @@ -148,6 +153,8 @@ static void ls_pcie_host_init(struct pcie_port *pp)
->  	ls_pcie_fix_class(pcie);
->  	ls_pcie_clear_multifunction(pcie);
->  	iowrite32(0, pcie->dbi + PCIE_DBI_RO_WR_EN);
-> +
-> +	return 0;
->  }
->  
->  static int ls_pcie_msi_host_init(struct pcie_port *pp,
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 540f077..a80a9ba 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -515,8 +515,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  		}
->  	}
->  
-> -	if (pp->ops->host_init)
-> -		pp->ops->host_init(pp);
-> +	if (pp->ops->host_init) {
-> +		ret = pp->ops->host_init(pp);
-> +		if (ret)
-> +			return ret;
-> +	}
->  
->  	if (!pp->ops->rd_other_conf)
->  		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index 2356d29..7b5317f 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -63,7 +63,7 @@ struct pcie_host_ops {
->  	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
->  			unsigned int devfn, int where, int size, u32 val);
->  	int (*link_up)(struct pcie_port *pp);
-> -	void (*host_init)(struct pcie_port *pp);
-> +	int (*host_init)(struct pcie_port *pp);
->  	void (*msi_set_irq)(struct pcie_port *pp, int irq);
->  	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
->  	phys_addr_t (*get_msi_addr)(struct pcie_port *pp);
-> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-> index b95b756..50b3b31 100644
-> --- a/drivers/pci/host/pcie-spear13xx.c
-> +++ b/drivers/pci/host/pcie-spear13xx.c
-> @@ -256,10 +256,12 @@ static int spear13xx_pcie_link_up(struct pcie_port *pp)
->  	return 0;
->  }
->  
-> -static void spear13xx_pcie_host_init(struct pcie_port *pp)
-> +static int spear13xx_pcie_host_init(struct pcie_port *pp)
->  {
->  	spear13xx_pcie_establish_link(pp);
->  	spear13xx_pcie_enable_interrupts(pp);
-> +
-> +	return 0;
->  }
->  
->  static struct pcie_host_ops spear13xx_pcie_host_ops = {
-> -- 
-> 2.6.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
