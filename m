@@ -1,120 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:50416 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965393AbbKDNNz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:55 -0500
-Received: from localhost
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 23:13:53 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 37/50] powerpc/powernv: Simplify pnv_eeh_reset()
-Date: Thu,  5 Nov 2015 00:12:37 +1100
-Message-Id: <1446642770-4681-38-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from relmlor4.renesas.com ([210.160.252.174]:24264 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754388AbbKDN5x convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Nov 2015 08:57:53 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	Magnus <magnus.damm@gmail.com>
+Subject: PCIe host controller behind IOMMU on ARM
+Date: Wed, 4 Nov 2015 13:57:48 +0000
+Message-ID: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This drops unnecessary nested if statements in pnv_eeh_reset() to
-improve the code readability. After the changes, the unused local
-variable "ret" is dropped as well. No logical changes introduced.
+Hi,
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/eeh-powernv.c | 61 ++++++++++++----------------
- 1 file changed, 27 insertions(+), 34 deletions(-)
+I am trying to hook up a PCIe host controller that sits behind an IOMMU,
+but having some problems.
 
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 861a7d2..a7d84a4 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -907,8 +907,9 @@ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
- static int pnv_eeh_reset(struct eeh_pe *pe, int option)
- {
- 	struct pci_controller *hose = pe->phb;
-+	struct pnv_phb *phb;
- 	struct pci_bus *bus;
--	int ret;
-+	int64_t rc;
- 
- 	/*
- 	 * For PHB reset, we always have complete reset. For those PEs whose
-@@ -924,43 +925,35 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
- 	 * reset. The side effect is that EEH core has to clear the frozen
- 	 * state explicitly after BAR restore.
- 	 */
--	if (pe->type & EEH_PE_PHB) {
--		ret = pnv_eeh_phb_reset(hose, option);
--	} else {
--		struct pnv_phb *phb;
--		s64 rc;
-+	if (pe->type & EEH_PE_PHB)
-+		return pnv_eeh_phb_reset(hose, option);
- 
--		/*
--		 * The frozen PE might be caused by PAPR error injection
--		 * registers, which are expected to be cleared after hitting
--		 * frozen PE as stated in the hardware spec. Unfortunately,
--		 * that's not true on P7IOC. So we have to clear it manually
--		 * to avoid recursive EEH errors during recovery.
--		 */
--		phb = hose->private_data;
--		if (phb->model == PNV_PHB_MODEL_P7IOC &&
--		    (option == EEH_RESET_HOT ||
--		    option == EEH_RESET_FUNDAMENTAL)) {
--			rc = opal_pci_reset(phb->opal_id,
--					    OPAL_RESET_PHB_ERROR,
--					    OPAL_ASSERT_RESET);
--			if (rc != OPAL_SUCCESS) {
--				pr_warn("%s: Failure %lld clearing "
--					"error injection registers\n",
--					__func__, rc);
--				return -EIO;
--			}
-+	/*
-+	 * The frozen PE might be caused by PAPR error injection
-+	 * registers, which are expected to be cleared after hitting
-+	 * frozen PE as stated in the hardware spec. Unfortunately,
-+	 * that's not true on P7IOC. So we have to clear it manually
-+	 * to avoid recursive EEH errors during recovery.
-+	 */
-+	phb = hose->private_data;
-+	if (phb->model == PNV_PHB_MODEL_P7IOC &&
-+	    (option == EEH_RESET_HOT || option == EEH_RESET_FUNDAMENTAL)) {
-+		rc = opal_pci_reset(phb->opal_id,
-+				    OPAL_RESET_PHB_ERROR,
-+				    OPAL_ASSERT_RESET);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_warn("%s: Error %lld clearing error injection\n",
-+				__func__, rc);
-+			return -EIO;
- 		}
--
--		bus = eeh_pe_bus_get(pe);
--		if (pci_is_root_bus(bus) ||
--			pci_is_root_bus(bus->parent))
--			ret = pnv_eeh_root_reset(hose, option);
--		else
--			ret = pnv_eeh_bridge_reset(bus->self, option);
- 	}
- 
--	return ret;
-+	bus = eeh_pe_bus_get(pe);
-+	if (pci_is_root_bus(bus) ||
-+	    pci_is_root_bus(bus->parent))
-+		return pnv_eeh_root_reset(hose, option);
-+
-+	return pnv_eeh_bridge_reset(bus->self, option);
- }
- 
- /**
--- 
-2.1.0
+I'm using the pcie-rcar PCIe host controller and it works fine without
+the IOMMU, and I can attach the IOMMU to the controller such that any calls
+to dma_alloc_coherent made by the controller driver uses the iommu_ops
+version of dma_ops.
+
+However, I can't see how to make the endpoints to utilise the dma_ops that
+the controller uses. Shouldn't the endpoints inherit the dma_ops from the
+controller? Any pointers for this?
+
+Thanks
+Phil
 
