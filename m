@@ -1,101 +1,264 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <564EECA9.9070400@arm.com>
-Date: Fri, 20 Nov 2015 09:49:29 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Phil Edworthy <phil.edworthy@renesas.com>
-CC: Thierry Reding <treding@nvidia.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:56896 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756228AbbKDX1K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 18:27:10 -0500
+Received: from localhost
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 5 Nov 2015 09:27:07 +1000
+Date: Thu, 5 Nov 2015 10:26:03 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Rob Herring <robherring2@gmail.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
-References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>	<PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>	<20151109161115.GA13870@ulmo.nvidia.com>	<PS1PR06MB1180111D6423287273B64B0FF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>	<20151110155232.GA25368@ulmo.nvidia.com>	<20151111163802.3a96080c@arm.com>	<PS1PR06MB11806B2B906CABB553B94442F5120@PS1PR06MB1180.apcprd06.prod.outlook.com> <20151112203100.2e91da2a@arm.com> <PS1PR06MB11800B547C8957B226077B83F5110@PS1PR06MB1180.apcprd06.prod.outlook.com> <564A2101.90600@arm.com> <PS1PR06MB11804FF05BBF30F2CA2083FCF51C0@PS1PR06MB1180.apcprd06.prod.outlook.com>
-In-Reply-To: <PS1PR06MB11804FF05BBF30F2CA2083FCF51C0@PS1PR06MB1180.apcprd06.prod.outlook.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Frank Rowand <frowand.list@gmail.com>
+Subject: Re: [PATCH v7 45/50] drivers/of: Avoid recursively calling
+ unflatten_dt_node()
+Message-ID: <20151104232603.GA16994@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_JsqJGpV-+JYyA1g0dw_nEduhmrMEouTH03kHtuCkGSOP57Q@mail.gmail.com>
+ <20151104232315.GB9287@gwshan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151104232315.GB9287@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 18/11/15 18:01, Phil Edworthy wrote:
-> Hi Marc,
-> 
-> On 16 November 2015 18:31, Marc Zyngier wrote:
->> On 13/11/15 09:36, Phil Edworthy wrote:
-> <snip>
->>> Since the stack trace doesn't help that much I added some tracing:
->>> pci_msi_setup_msi_irqs()
->>>   calls pci_msi_get_domain()
->>>     calls dev_get_msi_domain(), gets a non-NULL domain.
->>> pci_msi_setup_msi_irqs()
->>>   calls pci_msi_domain_alloc_irqs()
->>>     calls msi_domain_alloc_irqs()
->>> msi_domain_alloc_irqs:273: ops=ffffffc03193a810
->>> msi_domain_alloc_irqs:274: ops->msi_check=ffffffc031161418
->>> systemd-udevd[1311]: undefined instruction: pc=ffffffc03116141c
->>> That looks to me as though msi_check is off pointing to the weeds.
+On Thu, Nov 05, 2015 at 10:23:15AM +1100, Gavin Shan wrote:
+>On Wed, Nov 04, 2015 at 10:07:50AM -0600, Rob Herring wrote:
+>>On Wed, Nov 4, 2015 at 7:12 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>>> In current implementation, unflatten_dt_node() is called recursively
+>>> to unflatten device nodes in FDT blob. It's stress to limited stack
+>>> capacity.
 >>
->> So the next step is to find out who initializes msi_check. Assuming
->> someone does...
-> Nothing initializes msi_check... 
-> 
->  
->>> By passing a NULL domain into irq_domain_add_linear() you get:
->>> pci_msi_setup_msi_irqs()
->>>   calls pci_msi_get_domain()
->>>     calls dev_get_msi_domain(), gets a NULL domain.
->>>     calls arch_setup_msi_irq()
->>> All ok then.
+>>Did you actually hit a problem?
 >>
->> Yes, because you're sidestepping the issue. Any chance you could dig a
->> bit deeper? I'd really like to nail this one down (before we convert
->> your PCI driver to the right API... ;-).
-> The problem appears to be that when the pci host driver enables msi
-> it calls the following:
-> 	msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
-> 					    &msi_domain_ops, &msi->chip);
-> The last arg is documented as:
-> * @host_data: Controller private data pointer 
-> In _irq_domain_add() this ptr is stored in struct irq_domain's host_data.
-> 
-> However, msi_domain_alloc_irqs() expects host_data to be a ptr to a
-> struct msi_domain_info.
-> 
-> It seems that a number of other pci host drivers do the same, so I am
-> surprised that no one else has seen this.
+>>Now we have a max depth of 64. Seems like that should be plenty... Any
+>>idea how this compares to when we run out of stack space?
+>>
+>
+>When I rebased last revision (v6), particular below patch, to 4.3.rc6,
+>the kernel won't boot in P7 and P8 boxes. On P7 boxes, the stack overruns
+>according to the printed kernel messages. On P8 boxes, the /bin/init in
+>initramfs image can't be loaded/executed properly and it's potentially
+>caused by memory corruption. That's why I reworked it to avoid recursive
+>calling to unflatten_dt_node().
+>
 
-Can you please give this hack a go and let me know if that helps?
+Missed the link to the patch here:
 
-Thanks,
+https://patchwork.ozlabs.org/patch/504512/
 
-	M.
+>The max depth "64" wasn't selected based on the stack usage. I was thinking
+>the device tree is converted to friendly *.dts format and it's using TAB
+>as the prefix for each line. If the device tree has 64 depth, Each line
+>in *.dts for leaf nodes have to be wrapped and spanning multiple lines.
+>That's why I choosed 64, maybe 32 is enough. Did you see a device-tree
+>that has more than 16 depth in field? :-)
+>
+>>> This avoids calling the function recursively, meaning the device
+>>> nodes are unflattened in one call on unflatten_dt_node(): two arrays
+>>> are introduced to track the parent path size and the device node of
+>>> current level of depth, which will be used by the device node on next
+>>> level of depth to be unflattened. Also, the parameter "poffset" and
+>>> "fpsize" are unused and dropped.
+>>
+>>Yay. I'm happy to see parameters removed instead of added to this function.
+>>
+>>>
+>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>> ---
+>>>  drivers/of/fdt.c | 94 +++++++++++++++++++++++++++++++++-----------------------
+>>>  1 file changed, 56 insertions(+), 38 deletions(-)
+>>>
+>>> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+>>> index 173b036..f4793d0 100644
+>>> --- a/drivers/of/fdt.c
+>>> +++ b/drivers/of/fdt.c
+>>> @@ -355,61 +355,82 @@ static unsigned long populate_node(const void *blob,
+>>>         return fpsize;
+>>>  }
+>>>
+>>> +static void reverse_nodes(struct device_node *parent)
+>>> +{
+>>> +       struct device_node *child, *next;
+>>> +
+>>> +       /* In-depth first */
+>>> +       child = parent->child;
+>>> +       while (child) {
+>>> +               reverse_nodes(child);
+>>> +
+>>> +               child = child->sibling;
+>>> +       }
+>>> +
+>>> +       /* Reverse the nodes in the child list */
+>>> +       child = parent->child;
+>>> +       parent->child = NULL;
+>>> +       while (child) {
+>>> +               next = child->sibling;
+>>> +
+>>> +               child->sibling = parent->child;
+>>> +               parent->child = child;
+>>> +               child = next;
+>>> +       }
+>>> +}
+>>> +
+>>>  /**
+>>>   * unflatten_dt_node - Alloc and populate a device_node from the flat tree
+>>>   * @blob: The parent device tree blob
+>>>   * @mem: Memory chunk to use for allocating device nodes and properties
+>>> - * @poffset: pointer to node in flat tree
+>>>   * @dad: Parent struct device_node
+>>>   * @nodepp: The device_node tree created by the call
+>>> - * @fpsize: Size of the node path up at the current depth.
+>>>   * @dryrun: If true, do not allocate device nodes but still calculate needed
+>>>   * memory size
+>>>   */
+>>>  static void *unflatten_dt_node(const void *blob,
+>>>                                void *mem,
+>>> -                              int *poffset,
+>>>                                struct device_node *dad,
+>>>                                struct device_node **nodepp,
+>>> -                              unsigned long fpsize,
+>>>                                bool dryrun)
+>>
+>>We can probably further simplify things by returning an int with
+>>negative being errors and positive being the size. Also, dryrun can be
+>>dropped and implied by mem and/or nodepp being NULL.
+>>
+>
+>Yeah, I think it's reasonable to return "size" from this function. "dryrun"
+>can be dropped and implied by NULL @mem. @nodepp can't be NULL. I perhaps
+>have separate patch to address it in next revision.
+>
+>>>  {
+>>> -       struct device_node *np;
+>>> -       static int depth;
+>>> -       int old_depth;
+>>> -
+>>> -       fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
+>>> -       if (!fpsize)
+>>> -               return mem;
+>>> +       struct device_node *root;
+>>> +       int offset = 0, depth = 0;
+>>> +       unsigned long fpsizes[64];
+>>> +       struct device_node *nps[64];
+>>
+>>Use a define here.
+>>
+>
+>Fair enough, will do in next revision. I'm not good at naming. Would
+>"FDT_MAX_DEPTH" is a good one?
+>
+>>>
+>>> -       old_depth = depth;
+>>> -       *poffset = fdt_next_node(blob, *poffset, &depth);
+>>> -       if (depth < 0)
+>>> -               depth = 0;
+>>> -       while (*poffset > 0 && depth > old_depth)
+>>> -               mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
+>>> -                                       fpsize, dryrun);
+>>> +       if (nodepp)
+>>> +               *nodepp = NULL;
+>>> +
+>>> +       root = dad;
+>>> +       fpsizes[depth] = dad ? strlen(of_node_full_name(dad)) : 0;
+>>> +       nps[depth++] = dad;
+>>> +       while (offset >= 0 && depth < 64) {
+>>> +               fpsizes[depth] = populate_node(blob, offset, &mem,
+>>> +                                              nps[depth - 1],
+>>> +                                              fpsizes[depth - 1],
+>>> +                                              &nps[depth], dryrun);
+>>> +               if (!fpsizes[depth])
+>>> +                       return mem;
+>>> +
+>>> +               if (!dryrun && nodepp && !*nodepp)
+>>> +                       *nodepp = nps[depth];
+>>> +               if (!dryrun && !root)
+>>> +                       root = nps[depth];
+>>> +
+>>> +               offset = fdt_next_node(blob, offset, &depth);
+>>> +       }
+>>>
+>>> -       if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
+>>> -               pr_err("unflatten: error %d processing FDT\n", *poffset);
+>>> +       if (offset < 0 && offset != -FDT_ERR_NOTFOUND)
+>>> +               pr_err("%s: Error %d processing FDT\n",
+>>> +                      __func__, offset);
+>>
+>>What about depth == 64 case? I think the behavior should be a WARN and
+>>ignore those nodes so we at least can continue to boot and see the
+>>error. Of course, if there is a phandle pointing to ignored nodes, we
+>>have to handle that too.
+>>
+>
+>Yeah, I'll have a WARN_ON(depth >= 64) in next revision. Sorry, I didn't
+>get the 2nd part of your comments: When depth > 64, the system won't work.
+>It might boot up. Why the phandle pointing to the ignored node has to be
+>dropped? 
+>
+>>>
+>>>         /*
+>>>          * Reverse the child list. Some drivers assumes node order matches .dts
+>>>          * node order
+>>>          */
+>>> -       if (!dryrun && np->child) {
+>>> -               struct device_node *child = np->child;
+>>> -               np->child = NULL;
+>>> -               while (child) {
+>>> -                       struct device_node *next = child->sibling;
+>>> -                       child->sibling = np->child;
+>>> -                       np->child = child;
+>>> -                       child = next;
+>>> -               }
+>>> -       }
+>>> -
+>>> -       if (nodepp)
+>>> -               *nodepp = np;
+>>> +       if (!dryrun)
+>>> +               reverse_nodes(root);
+>>>
+>>>         return mem;
+>>>  }
+>>> @@ -431,7 +452,6 @@ static void __unflatten_device_tree(const void *blob,
+>>>                              void * (*dt_alloc)(u64 size, u64 align))
+>>>  {
+>>>         unsigned long size;
+>>> -       int start;
+>>>         void *mem;
+>>>
+>>>         pr_debug(" -> unflatten_device_tree()\n");
+>>> @@ -452,8 +472,7 @@ static void __unflatten_device_tree(const void *blob,
+>>>         }
+>>>
+>>>         /* First pass, scan for size */
+>>> -       start = 0;
+>>> -       size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
+>>> +       size = (unsigned long)unflatten_dt_node(blob, NULL, NULL, NULL, true);
+>>>         size = ALIGN(size, 4);
+>>>
+>>>         pr_debug("  size is %lx, allocating...\n", size);
+>>> @@ -467,8 +486,7 @@ static void __unflatten_device_tree(const void *blob,
+>>>         pr_debug("  unflattening %p...\n", mem);
+>>>
+>>>         /* Second pass, do actual unflattening */
+>>> -       start = 0;
+>>> -       unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
+>>> +       unflatten_dt_node(blob, mem, NULL, mynodes, false);
+>>>         if (be32_to_cpup(mem + size) != 0xdeadbeef)
+>>>                 pr_warning("End of tree marker overwritten: %08x\n",
+>>>                            be32_to_cpup(mem + size));
+>
+>Thanks,
+>Gavin
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 53e4632..7eaa4c8 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -54,7 +54,7 @@ static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 	struct irq_domain *domain;
- 
- 	domain = pci_msi_get_domain(dev);
--	if (domain)
-+	if (domain && irq_domain_is_hierarchy(domain))
- 		return pci_msi_domain_alloc_irqs(domain, dev, nvec, type);
- 
- 	return arch_setup_msi_irqs(dev, nvec, type);
-@@ -65,7 +65,7 @@ static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
- 	struct irq_domain *domain;
- 
- 	domain = pci_msi_get_domain(dev);
--	if (domain)
-+	if (domain && irq_domain_is_hierarchy(domain))
- 		pci_msi_domain_free_irqs(domain, dev);
- 	else
- 		arch_teardown_msi_irqs(dev);
-
--- 
-Jazz is not dead. It just smells funny...
