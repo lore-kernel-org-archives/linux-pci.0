@@ -1,63 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:64520 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932933AbbKMRRr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 13 Nov 2015 12:17:47 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv5 6/6] pciutils: Allow 32-bit domains
-Date: Fri, 13 Nov 2015 10:17:37 -0700
-Message-Id: <1447435057-5212-7-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1447435057-5212-1-git-send-email-keith.busch@intel.com>
-References: <1447435057-5212-1-git-send-email-keith.busch@intel.com>
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:44989 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965447AbbKDNOE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:14:04 -0500
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 18:44:01 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 33/50] powerpc/pci: Export pci_traverse_device_nodes()
+Date: Thu,  5 Nov 2015 00:12:33 +1100
+Message-Id: <1446642770-4681-34-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI-e segments will continue to use the lower 16 bits as required by
-ACPI. Special domains may use the full 32-bits.
+This renames traverse_pci_devices() to pci_traverse_device_nodes().
+The function traverses all subordinate device nodes of the specified
+one. Also, below cleanup applied to the function. No logical changes
+introduced.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+   * Rename "pre" to "fn".
+   * Avoid assignment in if condition reported from checkpatch.pl.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- lib/filter.c |    2 +-
- lib/pci.h    |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ arch/powerpc/include/asm/ppc-pci.h   |  6 +++---
+ arch/powerpc/kernel/pci_dn.c         | 14 +++++++++-----
+ arch/powerpc/platforms/pseries/msi.c |  4 ++--
+ 3 files changed, 14 insertions(+), 10 deletions(-)
 
-diff --git a/lib/filter.c b/lib/filter.c
-index d4254a0..075dc2f 100644
---- a/lib/filter.c
-+++ b/lib/filter.c
-@@ -45,7 +45,7 @@ pci_filter_parse_slot_v33(struct pci_filter *f, char *str)
- 	  if (str[0] && strcmp(str, "*"))
- 	    {
- 	      long int x = strtol(str, &e, 16);
--	      if ((e && *e) || (x < 0 || x > 0xffff))
-+	      if ((e && *e) || (x < 0))
- 		return "Invalid domain number";
- 	      f->domain = x;
- 	    }
-diff --git a/lib/pci.h b/lib/pci.h
-index 10ba831..7e42765 100644
---- a/lib/pci.h
-+++ b/lib/pci.h
-@@ -119,7 +119,7 @@ struct pci_param *pci_walk_params(struct pci_access *acc, struct pci_param *prev
+diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
+index ca0c5bf..8753e4e 100644
+--- a/arch/powerpc/include/asm/ppc-pci.h
++++ b/arch/powerpc/include/asm/ppc-pci.h
+@@ -33,9 +33,9 @@ extern struct pci_dev *isa_bridge_pcidev;	/* may be NULL if no ISA bus */
+ struct device_node;
+ struct pci_dn;
  
- struct pci_dev {
-   struct pci_dev *next;			/* Next device in the chain */
--  u16 domain;				/* PCI domain (host bridge) */
-+  int32_t domain;			/* PCI domain (host bridge) */
-   u8 bus, dev, func;			/* Bus inside domain, device and function */
+-typedef void *(*traverse_func)(struct device_node *me, void *data);
+-void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+-		void *data);
++void *pci_traverse_device_nodes(struct device_node *start,
++				void *(*fn)(struct device_node *, void *),
++				void *data);
+ void *traverse_pci_dn(struct pci_dn *root,
+ 		      void *(*fn)(struct pci_dn *, void *),
+ 		      void *data);
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index 7f877a4..aa4110f 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -355,8 +355,9 @@ EXPORT_SYMBOL_GPL(pci_remove_device_node_info);
+  * one of these nodes we also assume its siblings are non-pci for
+  * performance.
+  */
+-void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+-		void *data)
++void *pci_traverse_device_nodes(struct device_node *start,
++				void *(*fn)(struct device_node *, void *),
++				void *data)
+ {
+ 	struct device_node *dn, *nextdn;
+ 	void *ret;
+@@ -371,8 +372,11 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+ 		if (classp)
+ 			class = of_read_number(classp, 1);
  
-   /* These fields are set by pci_fill_info() */
+-		if (pre && ((ret = pre(dn, data)) != NULL))
+-			return ret;
++		if (fn) {
++			ret = fn(dn, data);
++			if (ret)
++				return ret;
++		}
+ 
+ 		/* If we are a PCI bridge, go down */
+ 		if (dn->child && ((class >> 8) == PCI_CLASS_BRIDGE_PCI ||
+@@ -470,7 +474,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+ 	}
+ 
+ 	/* Update dn->phb ptrs for new phb and children devices */
+-	traverse_pci_devices(dn, add_pdn, phb);
++	pci_traverse_device_nodes(dn, add_pdn, phb);
+ }
+ 
+ /** 
+diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+index 272e9ec..543a638 100644
+--- a/arch/powerpc/platforms/pseries/msi.c
++++ b/arch/powerpc/platforms/pseries/msi.c
+@@ -305,7 +305,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
+ 	memset(&counts, 0, sizeof(struct msi_counts));
+ 
+ 	/* Work out how many devices we have below this PE */
+-	traverse_pci_devices(pe_dn, count_non_bridge_devices, &counts);
++	pci_traverse_device_nodes(pe_dn, count_non_bridge_devices, &counts);
+ 
+ 	if (counts.num_devices == 0) {
+ 		pr_err("rtas_msi: found 0 devices under PE for %s\n",
+@@ -320,7 +320,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
+ 	/* else, we have some more calculating to do */
+ 	counts.requestor = pci_device_to_OF_node(dev);
+ 	counts.request = request;
+-	traverse_pci_devices(pe_dn, count_spare_msis, &counts);
++	pci_traverse_device_nodes(pe_dn, count_spare_msis, &counts);
+ 
+ 	/* If the quota isn't an integer multiple of the total, we can
+ 	 * use the remainder as spare MSIs for anyone that wants them. */
 -- 
-1.7.10.4
+2.1.0
 
