@@ -1,95 +1,204 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25847 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752274AbbKKPzP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2015 10:55:15 -0500
-From: Babu Moger <babu.moger@oracle.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] pci: Limit VPD length for megaraid_sas adapter
-Date: Wed, 11 Nov 2015 10:54:57 -0500
-Message-Id: <1447257297-198460-1-git-send-email-babu.moger@oracle.com>
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:52007 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754095AbbKDO2N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 09:28:13 -0500
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 19:58:10 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 20/50] powerpc/powernv: Improve DMA32 segment calculation
+Date: Thu,  5 Nov 2015 00:12:20 +1100
+Message-Id: <1446642770-4681-21-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes since v1 -> v2
-Removed the changes in pci_id.h. Kept all the vendor
-ids in quirks.c
+In current implementation, the DMA32 segments required by one specific
+PE isn't calculated with the information hold in the PE independently.
+It conflicts with the PCI hotplug design: PE centralized, meaning the
+PE's DMA32 segments should be calculated from the information hold in
+the PE independently.
 
-Reading or Writing of PCI VPD data causes system panic.
-We saw this problem by running "lspci -vvv" in the beginning.
-However this can be easily reproduced by running
- cat /sys/bus/devices/XX../vpd
+This moves the logic calculating PE's consumed DMA32 segments from
+pnv_pci_ioda1_setup_dma() to pnv_pci_ioda1_setup_dma_pe() so that PE's
+DMA32 segments are calculated/allocated from the information hold in
+the PE (DMA32 weight). Also the logic is improved: we try to allocate
+as much DMA32 segments as we can. It's acceptable that number of DMA32
+segments less than the expected number are allocated.
 
-VPD length has been set as 32768 by default. Accessing vpd
-will trigger read/write of 32k. This causes problem as we
-could read data beyond the VPD end tag. Behaviour is un-
-predictable when this happens. I see some other adapter doing
-similar quirks(commit id bffadffd43d438c3143b8d172a463de89345b836)
-
-I see there is an attempt to fix this right way.
-https://patchwork.ozlabs.org/patch/534843/ or
-https://lkml.org/lkml/2015/10/23/97
-
-Tried to fix it this way, but problem is I dont see the proper
-start/end TAGs(at least for this adapter) at all. The data is
-mostly junk or zeros. This patch fixes the issue by setting the
-vpd length to 0.
-
-Signed-off-by: Babu Moger <babu.moger@oracle.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/quirks.c |   38 ++++++++++++++++++++++++++++++++++++++
- 1 files changed, 38 insertions(+), 0 deletions(-)
+ arch/powerpc/platforms/powernv/pci-ioda.c | 119 ++++++++++++++----------------
+ 1 file changed, 57 insertions(+), 62 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b03373f..f739e47 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2123,6 +2123,44 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index fdbc012..0e66c4d 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1830,15 +1830,23 @@ static unsigned int pnv_pci_ioda_pe_dma_weight(struct pnv_ioda_pe *pe)
+ 	return weight;
+ }
  
- /*
-+ * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
-+ * will dump 32k of data. The default length is set as 32768.
-+ * Reading a full 32k will cause an access beyond the VPD end tag.
-+ * The system behaviour at that point is mostly unpredictable.
-+ * Also I dont believe vendors have implemented this VPD headers properly.
-+ * Atleast I dont see it in following megaraid sas controller.
-+ * That is why adding the quirk here.
-+ */
-+static void quirk_megaraid_sas_limit_vpd(struct pci_dev *dev)
++static unsigned int pnv_pci_ioda_total_dma_weight(struct pnv_phb *phb)
 +{
-+	if (dev->vpd)
-+		dev->vpd->len = 0;
++	unsigned int weight = 0;
++
++	pci_walk_bus(phb->hose->bus, pnv_pci_ioda_dev_dma_weight, &weight);
++	return weight;
 +}
 +
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
-+		quirk_megaraid_sas_limit_vpd);
+ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+-				       struct pnv_ioda_pe *pe,
+-				       unsigned int base,
+-				       unsigned int segs)
++				       struct pnv_ioda_pe *pe)
+ {
+ 
+ 	struct page *tce_mem = NULL;
+ 	struct iommu_table *tbl;
+-	unsigned int tce32_segsz, i;
++	unsigned int weight, total_weight;
++	unsigned int tce32_segsz, base, segs, i;
++	bool found;
+ 	int64_t rc;
+ 	void *addr;
+ 
+@@ -1846,12 +1854,55 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+ 	/* XXX FIXME: Provide 64-bit DMA facilities & non-4K TCE tables etc.. */
+ 	/* XXX FIXME: Allocate multi-level tables on PHB3 */
+ 
++	total_weight = pnv_pci_ioda_total_dma_weight(phb);
++	weight = pnv_pci_ioda_pe_dma_weight(pe);
++	if (!total_weight || !weight)
++		return;
 +
-+/*
-  * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
-  * VPD end tag will hang the device.  This problem was initially
-  * observed when a vpd entry was created in sysfs
++	segs = (weight * phb->ioda.dma32_count) / total_weight;
++	if (!segs)
++		segs = 1;
++
++	/*
++	 * Allocate continuous DMA32 segments. We begin with the expected
++	 * number of segments. With one more attempt, the number of DMA32
++	 * segments to be allocated is decreased by one until one segment
++	 * is allocated successfully.
++	 */
++	while (segs) {
++		found = false;
++		for (base = 0; base <= phb->ioda.dma32_count - segs; base++) {
++			for (i = base; i < base + segs; i++) {
++				if (phb->ioda.dma32_segmap[i] !=
++				    IODA_INVALID_PE)
++					break;
++			}
++
++			if (i >= base + segs) {
++				found = true;
++				break;
++			}
++		}
++
++		if (found)
++			break;
++
++		segs--;
++	}
++
++	if (!segs) {
++		pe_warn(pe, "No available DMA32 resource\n");
++		return;
++	}
++
+ 	tbl = pnv_pci_table_alloc(phb->hose->node);
+ 	iommu_register_group(&pe->table_group, phb->hose->global_number,
+ 			pe->pe_number);
+ 	pnv_pci_link_table_and_group(phb->hose->node, 0, tbl, &pe->table_group);
+ 
+ 	/* Grab a 32-bit TCE table */
++	pe_info(pe, "DMA weight %d (%d), assigned %d DMA32 segments\n",
++		weight, total_weight, segs);
+ 	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
+ 		base * PNV_IODA1_DMA32_SEGSIZE,
+ 		(base + segs) * PNV_IODA1_DMA32_SEGSIZE - 1);
+@@ -2362,68 +2413,12 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+ 
+ static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
+ {
+-	struct pci_controller *hose = phb->hose;
+-	unsigned int weight, total_weight, dma_pe_count;
+-	unsigned int residual, remaining, segs, base;
+ 	struct pnv_ioda_pe *pe;
+ 
+-	total_weight = 0;
+-	dma_pe_count = 0;
+-	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+-		weight = pnv_pci_ioda_pe_dma_weight(pe);
+-		if (weight > 0)
+-			dma_pe_count++;
+-
+-		total_weight += weight;
+-	}
+-
+-	/* If we have more PE# than segments available, hand out one
+-	 * per PE until we run out and let the rest fail. If not,
+-	 * then we assign at least one segment per PE, plus more based
+-	 * on the amount of devices under that PE
+-	 */
+-	if (dma_pe_count > phb->ioda.dma32_count)
+-		residual = 0;
+-	else
+-		residual = phb->ioda.dma32_count - dma_pe_count;
+-
+-	pr_info("PCI: Domain %04x has %ld available 32-bit DMA segments\n",
+-		hose->global_number, phb->ioda.dma32_count);
+-	pr_info("PCI: %d PE# for a total weight of %d\n",
+-		dma_pe_count, total_weight);
+-
+ 	pnv_pci_ioda_setup_opal_tce_kill(phb);
+ 
+-	/* Walk our PE list and configure their DMA segments, hand them
+-	 * out one base segment plus any residual segments based on
+-	 * weight
+-	 */
+-	remaining = phb->ioda.dma32_count;
+-	base = 0;
+-	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+-		weight = pnv_pci_ioda_pe_dma_weight(pe);
+-		if (!weight)
+-			continue;
+-
+-		if (!remaining) {
+-			pe_warn(pe, "No DMA32 resources available\n");
+-			continue;
+-		}
+-		segs = 1;
+-		if (residual) {
+-			segs += ((weight * residual)  + (total_weight / 2)) /
+-				total_weight;
+-			if (segs > remaining)
+-				segs = remaining;
+-		}
+-
+-		pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
+-			weight, segs);
+-		pnv_pci_ioda1_setup_dma_pe(phb, pe, base, segs);
+-
+-		remaining -= segs;
+-		base += segs;
+-	}
++	list_for_each_entry(pe, &phb->ioda.pe_list, list)
++		pnv_pci_ioda1_setup_dma_pe(phb, pe);
+ }
+ 
+ static void pnv_pci_ioda2_setup_dma(struct pnv_phb *phb)
 -- 
-1.7.1
+2.1.0
 
