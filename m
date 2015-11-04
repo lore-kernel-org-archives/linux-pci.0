@@ -1,85 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36565 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754054AbbKXUuc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Nov 2015 15:50:32 -0500
-Date: Tue, 24 Nov 2015 14:50:26 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] PCI: designware: remove wrong io_base assignment
-Message-ID: <20151124205026.GB17377@localhost>
-References: <1448357812-23906-1-git-send-email-stanimir.varbanov@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1448357812-23906-1-git-send-email-stanimir.varbanov@linaro.org>
+Received: from e28smtp06.in.ibm.com ([122.248.162.6]:44494 "EHLO
+	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755578AbbKDNNU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:20 -0500
+Received: from /spool/local
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 18:43:18 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 02/50] powerpc/pci: Override pcibios_setup_bridge()
+Date: Thu,  5 Nov 2015 00:12:02 +1100
+Message-Id: <1446642770-4681-3-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 24, 2015 at 11:36:52AM +0200, Stanimir Varbanov wrote:
-> The io_base is used to keep the cpu physical address parsed
-> from ranges dt property. After issue pci_remap_iospace the
-> io_base has been assigned with io->start, which is not correct
-> cause io->start is a PCI bus address.
-> 
-> Fixes: 0021d22b73d6 ("PCI: designware: Use of_pci_get_host_bridge_resources() to parse DT")
-> Reviewed-by: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-> ---
->  drivers/pci/host/pcie-designware.c |    1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 540f077c37ea..02a7452bdf23 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -440,7 +440,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  					 ret, pp->io);
->  				continue;
->  			}
-> -			pp->io_base = pp->io->start;
->  			break;
->  		case IORESOURCE_MEM:
->  			pp->mem = win->res;
+This overrides pcibios_setup_bridge() that is called to update PCI
+bridge windows when PCI resource assignment is completed, to assign
+PE and setup various (resource) mapping for the PE in subsequent
+patches.
 
-Applied to for-linus for v4.4 with changelog as follows, thanks!
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h | 2 ++
+ arch/powerpc/kernel/pci-common.c      | 8 ++++++++
+ 2 files changed, 10 insertions(+)
 
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 843dd3a2..6076116 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -33,6 +33,8 @@ struct pci_controller_ops {
+ 
+ 	/* Called during PCI resource reassignment */
+ 	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
++	void		(*setup_bridge)(struct pci_bus *bus,
++					unsigned long type);
+ 	void		(*reset_secondary_bus)(struct pci_dev *dev);
+ 
+ #ifdef CONFIG_PCI_MSI
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0f7a60f..40df3a5 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -124,6 +124,14 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+ 	return 1;
+ }
+ 
++void pcibios_setup_bridge(struct pci_bus *bus, unsigned long type)
++{
++	struct pci_controller *hose = pci_bus_to_host(bus);
++
++	if (hose->controller_ops.setup_bridge)
++		hose->controller_ops.setup_bridge(bus, type);
++}
++
+ void pcibios_reset_secondary_bus(struct pci_dev *dev)
+ {
+ 	struct pci_controller *phb = pci_bus_to_host(dev->bus);
+-- 
+2.1.0
 
-commit 5228e39e3f709c82e6c4643402fc25de54391e32
-Author: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Date:   Tue Nov 24 11:36:52 2015 +0200
-
-    PCI: designware: Remove incorrect io_base assignment
-    
-    "pp->io" is an I/O resource, e.g., "[io 0x0000-0xffff]"; "pp->io_base" is
-    the CPU physical address of a region where the host bridge converts CPU
-    memory accesses into PCI I/O transactions.
-    
-    Corrupting pp->io_base by assigning pp->io->start to it breaks access to
-    the PCI I/O space, as reported by Kishon.
-    
-    Remove the invalid assignment.
-    
-    [bhelgaas: changelog]
-    Fixes: 0021d22b73d6 ("PCI: designware: Use of_pci_get_host_bridge_resources() to parse DT")
-    Reported-and-tested-by: Kishon Vijay Abraham I <kishon@ti.com>
-    Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Reviewed-by: Arnd Bergmann <arnd@arndb.de>
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 540f077..02a7452 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -440,7 +440,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 					 ret, pp->io);
- 				continue;
- 			}
--			pp->io_base = pp->io->start;
- 			break;
- 		case IORESOURCE_MEM:
- 			pp->mem = win->res;
