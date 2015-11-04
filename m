@@ -1,93 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	Will Deacon <will.deacon@arm.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Magnus <magnus.damm@gmail.com>
-Subject: RE: PCIe host controller behind IOMMU on ARM
-Date: Mon, 9 Nov 2015 12:32:13 +0000
-Message-ID: <PS1PR06MB11806B65D3408BDFBEAD9D3AF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
-References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151104142412.GS963@e106497-lin.cambridge.arm.com>
- <PS1PR06MB11804263DD55C54C5987654EF52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151104150147.GT963@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp06.in.ibm.com ([122.248.162.6]:44747 "EHLO
+	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965369AbbKDNNc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:32 -0500
+Received: from /spool/local
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 18:43:30 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 39/50] powerpc/powernv: Fundamental reset in pnv_pci_reset_secondary_bus()
+Date: Thu,  5 Nov 2015 00:12:39 +1100
+Message-Id: <1446642770-4681-40-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTGl2aXUsIFdpbGwsDQoNCk9uIDA0IE5vdmVtYmVyIDIwMTUgMTU6MTksIFBoaWwgd3JvdGU6
-DQo+IE9uIDA0IE5vdmVtYmVyIDIwMTUgMTU6MDIsIExpdml1IHdyb3RlOg0KPiA+IE9uIFdlZCwg
-Tm92IDA0LCAyMDE1IGF0IDAyOjQ4OjM4UE0gKzAwMDAsIFBoaWwgRWR3b3J0aHkgd3JvdGU6DQo+
-ID4gPiBIaSBMaXZpdSwNCj4gPiA+DQo+ID4gPiBPbiAwNCBOb3ZlbWJlciAyMDE1IDE0OjI0LCBM
-aXZpdSB3cm90ZToNCj4gPiA+ID4gT24gV2VkLCBOb3YgMDQsIDIwMTUgYXQgMDE6NTc6NDhQTSAr
-MDAwMCwgUGhpbCBFZHdvcnRoeSB3cm90ZToNCj4gPiA+ID4gPiBIaSwNCj4gPiA+ID4gPg0KPiA+
-ID4gPiA+IEkgYW0gdHJ5aW5nIHRvIGhvb2sgdXAgYSBQQ0llIGhvc3QgY29udHJvbGxlciB0aGF0
-IHNpdHMgYmVoaW5kIGFuIElPTU1VLA0KPiA+ID4gPiA+IGJ1dCBoYXZpbmcgc29tZSBwcm9ibGVt
-cy4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IEknbSB1c2luZyB0aGUgcGNpZS1yY2FyIFBDSWUgaG9z
-dCBjb250cm9sbGVyIGFuZCBpdCB3b3JrcyBmaW5lIHdpdGhvdXQNCj4gPiA+ID4gPiB0aGUgSU9N
-TVUsIGFuZCBJIGNhbiBhdHRhY2ggdGhlIElPTU1VIHRvIHRoZSBjb250cm9sbGVyIHN1Y2ggdGhh
-dCBhbnkNCj4gPiBjYWxscw0KPiA+ID4gPiA+IHRvIGRtYV9hbGxvY19jb2hlcmVudCBtYWRlIGJ5
-IHRoZSBjb250cm9sbGVyIGRyaXZlciB1c2VzIHRoZQ0KPiBpb21tdV9vcHMNCj4gPiA+ID4gPiB2
-ZXJzaW9uIG9mIGRtYV9vcHMuDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBIb3dldmVyLCBJIGNhbid0
-IHNlZSBob3cgdG8gbWFrZSB0aGUgZW5kcG9pbnRzIHRvIHV0aWxpc2UgdGhlIGRtYV9vcHMNCj4g
-dGhhdA0KPiA+ID4gPiA+IHRoZSBjb250cm9sbGVyIHVzZXMuIFNob3VsZG4ndCB0aGUgZW5kcG9p
-bnRzIGluaGVyaXQgdGhlIGRtYV9vcHMgZnJvbSB0aGUNCj4gPiA+ID4gPiBjb250cm9sbGVyPw0K
-PiA+ID4gPg0KPiA+ID4gPiBObywgbm90IGRpcmVjdGx5Lg0KPiA+ID4gPg0KPiA+ID4gPiA+IEFu
-eSBwb2ludGVycyBmb3IgdGhpcz8NCj4gPiA+ID4NCj4gPiA+ID4gWW91IG5lZWQgdG8gdW5kZXJz
-dGFuZCB0aGUgcHJvY2VzcyB0aHJvdWdoIHdoaWNoIGEgZHJpdmVyIGZvciBlbmRwb2ludA0KPiBn
-ZXQNCj4gPiA+ID4gYW4gYWRkcmVzcyB0byBiZSBwYXNzZWQgZG93biB0byB0aGUgZGV2aWNlLiBI
-YXZlIGEgbG9vayBhdA0KPiA+ID4gPiBEb2N1bWVudGF0aW9uL0RNQS1BUEktSE9XVE8udHh0LCB0
-aGVyZSBpcyBhIG5pY2UgZXhwbGFuYXRpb24gdGhlcmUuDQo+ID4gPiA+IChIaW50OiBFUCBkcml2
-ZXIgbmVlZHMgdG8gY2FsbCBkbWFfbWFwX3NpbmdsZSkuDQo+ID4gPiA+DQo+ID4gPiA+IEFsc28s
-IHlvdSBuZWVkIHRvIG1ha2Ugc3VyZSB0aGF0IHRoZSBidXMgYWRkcmVzcyB0aGF0IGVuZHMgdXAg
-YmVpbmcgc2V0DQo+IGludG8NCj4gPiA+ID4gdGhlIGVuZHBvaW50IGdldHMgdHJhbnNsYXRlZCBj
-b3JyZWN0bHkgYnkgdGhlIGhvc3QgY29udHJvbGxlciBpbnRvIGFuIGFkZHJlc3MNCj4gPiA+ID4g
-dGhhdCB0aGUgSU9NTVUgY2FuIHRoZW4gdHJhbnNsYXRlIGludG8gcGh5c2ljYWwgYWRkcmVzcy4N
-Cj4gPiA+IFN1cmUsIHRob3VnaCBzaW5jZSB0aGlzIGlzIGJvZyBzdGFuZGFyZCBJbnRlbCBQQ0ll
-IGV0aGVybmV0IGNhcmQgd2hpY2ggd29ya3MNCj4gPiA+IGZpbmUgd2hlbiB0aGUgSU9NTVUgaXMg
-ZWZmZWN0aXZlbHkgdW51c2VkLCBJIGRvbuKAmXQgdGhpbmsgdGhlcmUgaXMgYSBwcm9ibGVtDQo+
-ID4gPiB3aXRoIHRoYXQuDQo+ID4gPg0KPiA+ID4gVGhlIGRyaXZlciBmb3IgdGhlIFBDSWUgY29u
-dHJvbGxlciBzZXRzIHVwIHRoZSBJT01NVSBtYXBwaW5nIG9rIHdoZW4gSQ0KPiA+ID4gZG8gYSB0
-ZXN0IGNhbGwgdG8gZG1hX2FsbG9jX2NvaGVyZW50KCkgaW4gdGhlIGNvbnRyb2xsZXIncyBkcml2
-ZXIuIGkuZS4gd2hlbiBJDQo+ID4gPiBkbyB0aGlzLCBpdCBlbmRzIHVwIGluIGFybV9pb21tdV9h
-bGxvY19hdHRycygpLCB3aGljaCBjYWxscw0KPiA+ID4gX19pb21tdV9hbGxvY19idWZmZXIoKSBh
-bmQgX19hbGxvY19pb3ZhKCkuDQo+ID4gPg0KPiA+ID4gV2hlbiBhbiBlbmRwb2ludCBkcml2ZXIg
-YWxsb2NhdGVzIGFuZCBtYXBzIGEgZG1hIGNvaGVyZW50IGJ1ZmZlciBpdA0KPiA+ID4gYWxzbyBu
-ZWVkcyB0byBlbmQgdXAgaW4gYXJtX2lvbW11X2FsbG9jX2F0dHJzKCksIGJ1dCBpdCBkb2Vzbid0
-Lg0KPiA+DQo+ID4gV2h5IGRvIHlvdSB0aGluayB0aGF0PyBSZW1lbWJlciB0aGF0IHRoZSBvbmx5
-IHRoaW5nIGF0dGFjaGVkIHRvIHRoZSBJT01NVQ0KPiBpcw0KPiA+IHRoZQ0KPiA+IGhvc3QgY29u
-dHJvbGxlci4gVGhlIGVuZHBvaW50IGlzIG9uIHRoZSBQQ0llIGJ1cywgd2hpY2ggZ2V0cyBhIGRp
-ZmZlcmVudA0KPiA+IHRyYW5zbGF0aW9uDQo+ID4gdGhhdCB0aGUgSU9NTVUga25vd3Mgbm90aGlu
-ZyBhYm91dC4gSWYgaXQgaGVscHMgeW91IHRvIHZpc3VhbGlzZSBpdCBiZXR0ZXIsIHRoaW5rDQo+
-ID4gb2YgdGhlIGhvc3QgY29udHJvbGxlciBhcyBhbm90aGVyIElPTU1VIGRldmljZS4gSXQncyB0
-aGUgb3BzIG9mIHRoZSBob3N0DQo+ID4gY29udHJvbGxlcg0KPiA+IHRoYXQgc2hvdWxkIGJlIGlu
-dm9rZWQsIG5vdCB0aGUgSU9NTVUncy4NCj4gT2ssIHRoYXQgbWFrZXMgc2Vuc2UuIEknbGwgaGF2
-ZSBhIHRoaW5rIGFuZCBwb2tlIGl0IGEgYml0IG1vcmUuLi4NClNvbWV3aGF0IHJlbGF0ZWQgdG8g
-dGhpcywgc2luY2Ugb3VyIFBDSWUgY29udHJvbGxlciBIVyBpcyBsaW1pdGVkIHRvDQozMi1iaXQg
-QVhJIGFkZHJlc3MgcmFuZ2UsIGJlZm9yZSB0cnlpbmcgdG8gaG9vayB1cCB0aGUgSU9NTVUgSSBo
-YXZlDQp0cmllZCB0byBsaW1pdCB0aGUgZG1hX21hc2sgZm9yIFBDSSBjYXJkcyB0byBETUFfQklU
-X01BU0soMzIpLiBUaGUNCnJlYXNvbiBiZWluZyB0aGF0IExpbnV4IHVzZXMgYSAxIHRvIDEgbWFw
-cGluZyBiZXR3ZWVuIFBDSSBhZGRyZXNzZXMNCmFuZCBjcHUgKHBoeXMpIGFkZHJlc3NlcyB3aGVu
-IHRoZXJlIGlzbid0IGFuIElPTU1VIGludm9sdmVkLCBzbyBJDQp0aGluayB0aGF0IHdlIG5lZWQg
-dG8gbGltaXQgdGhlIFBDSSBhZGRyZXNzIHNwYWNlIHVzZWQuDQoNClNpbmNlIHBjaV9zZXR1cF9k
-ZXZpY2UoKSBzZXRzIHVwIGRtYV9tYXNrLCBJIGFkZGVkIGEgYnVzIG5vdGlmaWVyIGluIHRoZQ0K
-UENJZSBjb250cm9sbGVyIGRyaXZlciBzbyBJIGNhbiBjaGFuZ2UgdGhlIG1hc2ssIGlmIG5lZWRl
-ZCwgb24gdGhlDQpCVVNfTk9USUZZX0JPVU5EX0RSSVZFUiBhY3Rpb24uDQpIb3dldmVyLCBJIHRo
-aW5rIHRoZXJlIGlzIHRoZSBwb3RlbnRpYWwgZm9yIGNhcmQgZHJpdmVycyB0byBhbGxvY2F0ZSBh
-bmQNCm1hcCBidWZmZXJzIGJlZm9yZSB0aGUgYnVzIG5vdGlmaWVyIGdldCBjYWxsZWQuIEFkZGl0
-aW9uYWxseSwgSSd2ZSBzZWVuDQpkcml2ZXJzIGNoYW5nZSB0aGVpciBiZWhhdmlvdXIgYmFzZWQg
-b24gdGhlIHN1Y2Nlc3Mgb3IgZmFpbHVyZSBvZg0KZG1hX3NldF9tYXNrX2FuZF9jb2hlcmVudChk
-ZXYsIERNQV9CSVRfTUFTSyg2NCkpLCBzbyB0aGUNCmRyaXZlciBjb3VsZCwgdGhlb3JldGljYWxs
-eSBhdCBsZWFzdCwgb3BlcmF0ZSBpbiBhIHdheSB0aGF0IGlzIG5vdA0KY29tcGF0aWJsZSB3aXRo
-IGEgbW9yZSByZXN0cmljdGVkIGRtYV9tYXNrICh0aG91Z2ggSSBjYW4ndCB0aGluaw0Kb2YgYW55
-IHdheSB0aGlzIHdvdWxkIG5vdCB3b3JrIHdpdGggaGFyZHdhcmUgSSd2ZSBzZWVuKS4NCg0KU28s
-IEkgdGhpbmsgdGhhdCB1c2luZyBhIGJ1cyBub3RpZmllciBpcyB0aGUgd3Jvbmcgd2F5IHRvIGdv
-LCBidXQgSSBkb27igJl0DQprbm93IHdoYXQgb3RoZXIgb3B0aW9ucyBJIGhhdmUuIEFueSBzdWdn
-ZXN0aW9ucz8NCg0KVGhhbmtzIGZvciB5b3VyIGhlbHANClBoaWwNCg==
+In pnv_pci_reset_secondary_bus(), we should issue fundamental
+reset if any one subordinate device of the specified is requesting
+that. Otherwise, the device might not come up after the reset.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index c69b6a1..ab8b93e 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -878,9 +878,28 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+ 	return 0;
+ }
+ 
++static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
++{
++	int *freset = data;
++
++	/*
++	 * Stop the iteration immediately if there has any one
++	 * PCI device requesting fundamental reset.
++	 */
++	*freset |= pdev->needs_freset;
++	return *freset;
++}
++
+ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+ {
+-	pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
++	int option, freset = 0;
++
++	if (dev->subordinate)
++		pci_walk_bus(dev->subordinate,
++			     pnv_pci_dev_reset_type, &freset);
++
++	option = freset ? EEH_RESET_FUNDAMENTAL : EEH_RESET_HOT;
++	pnv_eeh_bridge_reset(dev, option);
+ 	pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
+ }
+ 
+-- 
+2.1.0
+
