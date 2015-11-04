@@ -1,1230 +1,179 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0051.outbound.protection.outlook.com ([104.47.37.51]:49408
-	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754721AbbK0PCV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 27 Nov 2015 10:02:21 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<michals@xilinx.com>, <sorenb@xilinx.com>, <bhelgaas@google.com>,
-	<arnd@arndb.de>, <tinamdar@apm.com>, <treding@nvidia.com>,
-	<rjui@broadcom.com>, <Minghuan.Lian@freescale.com>,
-	<m-karicheri2@ti.com>, <hauke@hauke-m.de>, <marc.zyngier@arm.com>,
-	<dhdang@apm.com>, <sbranden@broadcom.com>
-CC: <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: [PATCH v10] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL PCIe Host Controller
-Date: Fri, 27 Nov 2015 20:32:03 +0530
-Message-ID: <1448636523-20503-1-git-send-email-bharatku@xilinx.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:56030 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755502AbbKDNNT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:19 -0500
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 18:43:17 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
+Date: Thu,  5 Nov 2015 00:12:14 +1100
+Message-Id: <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+This enables M64 window on P7IOC, which has been enabled on PHB3.
+Different from PHB3 where 16 M64 BARs are supported and each of
+them can be owned by one particular PE# exclusively or divided
+evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
+of them are divided to 8 segments. So every P7IOC PHB supports
+128 M64 segments in total. P7IOC has M64DT, which helps mapping
+one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
+M64DT, indicating that one M64 segment can only be pinned to the
+fixed PE#. In order to have same code to support M64 on P7IOC and
+PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
+of them is pinned to the fixed PE# by bypassing the function of
+M64DT. In turn, we just need different phb->init_m64() for P7IOC
+and PHB3 to support M64.
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
-Changes for v10:
--> Changed MSI address to PCIe controller base.
--> Removed nwl_check_hwirq function, instead using bitmap_find_next_zero_area
-   API to do the same.
----
- .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
- drivers/pci/host/Kconfig                           |   10 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pcie-xilinx-nwl.c                 | 1068 ++++++++++++++++++++
- 4 files changed, 1147 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
- create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
+ arch/powerpc/platforms/powernv/pci-ioda.c | 86 +++++++++++++++++++++++++++++--
+ arch/powerpc/platforms/powernv/pci.h      |  3 ++
+ 2 files changed, 86 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
-new file mode 100644
-index 0000000..3b2a9ad
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
-@@ -0,0 +1,68 @@
-+* Xilinx NWL PCIe Root Port Bridge DT description
-+
-+Required properties:
-+- compatible: Should contain "xlnx,nwl-pcie-2.11"
-+- #address-cells: Address representation for root ports, set to <3>
-+- #size-cells: Size representation for root ports, set to <2>
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+- reg: Should contain Bridge, PCIe Controller registers location,
-+	configuration sapce, and length
-+- reg-names: Must include the following entries:
-+	"breg": bridge registers
-+	"pcireg": PCIe controller registers
-+	"cfg": configuration space region
-+- device_type: must be "pci"
-+- interrupts: Should contain NWL PCIe interrupt
-+- interrupt-names: Must include the following entries:
-+	"msi1, msi0": interrupt asserted when msi is received
-+	"intx": interrupt that is asserted when an legacy interrupt is received
-+	"misc": interrupt asserted when miscellaneous is received
-+- interrupt-map-mask and interrupt-map: standard PCI properties to define the
-+	mapping of the PCI interface to interrupt numbers.
-+- ranges: ranges for the PCI memory regions (I/O space region is not
-+	supported by hardware)
-+	Please refer to the standard PCI bus binding document for a more
-+	detailed explanation
-+- msi-controller: indicates that this is MSI controller node
-+- msi-parent:  MSI parent of the root complex itself
-+- legacy-interrupt-controller: Interrupt controller device node for Legacy interrupts
-+	- interrupt-controller: identifies the node as an interrupt controller
-+	- #interrupt-cells: should be set to 1
-+	- #address-cells: specifies the number of cells needed to encode an
-+		address. The value must be 0.
-+
-+
-+Example:
-+++++++++
-+
-+nwl_pcie: pcie@fd0e0000 {
-+	#address-cells = <3>;
-+	#size-cells = <2>;
-+	compatible = "xlnx,nwl-pcie-2.11";
-+	#interrupt-cells = <1>;
-+	msi-controller;
-+	device_type = "pci";
-+	interrupt-parent = <&gic>;
-+	interrupts = <0 114 4>, <0 115 4>, <0 116 4>, <0 117 4>, <0 118 4>;
-+	interrupt-names = "msi0", "msi1", "intx", "dummy", "misc";
-+	interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+	interrupt-map = <0x0 0x0 0x0 0x1 &pcie_intc 0x1>,
-+			<0x0 0x0 0x0 0x2 &pcie_intc 0x2>,
-+			<0x0 0x0 0x0 0x3 &pcie_intc 0x3>,
-+			<0x0 0x0 0x0 0x4 &pcie_intc 0x4>;
-+
-+	msi-parent = <&nwl_pcie>;
-+	reg = <0x0 0xfd0e0000 0x1000>,
-+	      <0x0 0xfd480000 0x1000>,
-+	      <0x0 0xe0000000 0x1000000>;
-+	reg-names = "breg", "pcireg", "cfg";
-+	ranges = <0x02000000 0x00000000 0xe1000000 0x00000000 0xe1000000 0 0x0f000000>;
-+
-+	pcie_intc: legacy-interrupt-controller {
-+		interrupt-controller;
-+		#address-cells = <0>;
-+		#interrupt-cells = <1>;
-+	};
-+
-+};
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d5e58ba..24cbcba 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -15,6 +15,16 @@ config PCI_MVEBU
- 	depends on ARCH_MVEBU || ARCH_DOVE
- 	depends on OF
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 1f7d985..bfe69f1 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -256,6 +256,64 @@ static void pnv_ioda_reserve_dev_m64_pe(struct pci_dev *pdev,
+ 	}
+ }
  
-+config PCIE_XILINX_NWL
-+	bool "NWL PCIe Core"
-+	depends on ARCH_ZYNQMP
-+	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
-+	help
-+	 Say 'Y' here if you want kernel to support for Xilinx
-+	 NWL PCIe controller. The controller can act as Root Port
-+	 or End Point. The current option selection will only
-+	 support root port enabling.
-+
- config PCIE_DW
- 	bool
- 
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 140d66f..6a56df7 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -10,6 +10,7 @@ obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
- obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
- obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
- obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
-+obj-$(CONFIG_PCIE_XILINX_NWL) += pcie-xilinx-nwl.o
- obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
- obj-$(CONFIG_PCI_XGENE_MSI) += pci-xgene-msi.o
- obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-new file mode 100644
-index 0000000..d070344
---- /dev/null
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -0,0 +1,1068 @@
-+/*
-+ * PCIe host controller driver for NWL PCIe Bridge
-+ * Based on pcie-xilinx.c, pci-tegra.c
-+ *
-+ * (C) Copyright 2014 - 2015, Xilinx, Inc.
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation, either version 2 of the License, or
-+ * (at your option) any later version.
-+ */
-+
-+#include <linux/delay.h>
-+#include <linux/interrupt.h>
-+#include <linux/irq.h>
-+#include <linux/irqdomain.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/msi.h>
-+#include <linux/of_address.h>
-+#include <linux/of_pci.h>
-+#include <linux/of_platform.h>
-+#include <linux/of_irq.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/irqchip/chained_irq.h>
-+
-+/* Bridge core config registers */
-+#define BRCFG_PCIE_RX0			0x00000000
-+#define BRCFG_PCIE_RX1			0x00000004
-+#define BRCFG_AXI_MASTER		0x00000008
-+#define BRCFG_PCIE_TX			0x0000000C
-+#define BRCFG_INTERRUPT			0x00000010
-+#define BRCFG_RAM_DISABLE0		0x00000014
-+#define BRCFG_RAM_DISABLE1		0x00000018
-+#define BRCFG_PCIE_RELAXED_ORDER	0x0000001C
-+#define BRCFG_PCIE_RX_MSG_FILTER	0x00000020
-+
-+/* Attribute registers */
-+#define NWL_ATTRIB_100			0x00000190
-+
-+/* Egress - Bridge translation registers */
-+#define E_BREG_CAPABILITIES		0x00000200
-+#define E_BREG_STATUS			0x00000204
-+#define E_BREG_CONTROL			0x00000208
-+#define E_BREG_BASE_LO			0x00000210
-+#define E_BREG_BASE_HI			0x00000214
-+#define E_ECAM_CAPABILITIES		0x00000220
-+#define E_ECAM_STATUS			0x00000224
-+#define E_ECAM_CONTROL			0x00000228
-+#define E_ECAM_BASE_LO			0x00000230
-+#define E_ECAM_BASE_HI			0x00000234
-+
-+/* Ingress - address translations */
-+#define I_MSII_CAPABILITIES		0x00000300
-+#define I_MSII_CONTROL			0x00000308
-+#define I_MSII_BASE_LO			0x00000310
-+#define I_MSII_BASE_HI			0x00000314
-+
-+#define I_ISUB_CONTROL			0x000003E8
-+#define SET_ISUB_CONTROL		BIT(0)
-+/* Rxed msg fifo  - Interrupt status registers */
-+#define MSGF_MISC_STATUS		0x00000400
-+#define MSGF_MISC_MASK			0x00000404
-+#define MSGF_LEG_STATUS			0x00000420
-+#define MSGF_LEG_MASK			0x00000424
-+#define MSGF_MSI_STATUS_LO		0x00000440
-+#define MSGF_MSI_STATUS_HI		0x00000444
-+#define MSGF_MSI_MASK_LO		0x00000448
-+#define MSGF_MSI_MASK_HI		0x0000044C
-+#define MSGF_RX_FIFO_POP		0x00000484
-+#define MSGF_RX_FIFO_TYPE		0x00000488
-+#define MSGF_RX_FIFO_ADDRLO		0x00000490
-+#define MSGF_RX_FIFO_ADDRHI		0x00000494
-+#define MSGF_RX_FIFO_DATA		0x00000498
-+
-+/* Msg filter mask bits */
-+#define CFG_ENABLE_PM_MSG_FWD		BIT(1)
-+#define CFG_ENABLE_INT_MSG_FWD		BIT(2)
-+#define CFG_ENABLE_ERR_MSG_FWD		BIT(3)
-+#define CFG_ENABLE_SLT_MSG_FWD		BIT(5)
-+#define CFG_ENABLE_VEN_MSG_FWD		BIT(7)
-+#define CFG_ENABLE_OTH_MSG_FWD		BIT(13)
-+#define CFG_ENABLE_VEN_MSG_EN		BIT(14)
-+#define CFG_ENABLE_VEN_MSG_VEN_INV	BIT(15)
-+#define CFG_ENABLE_VEN_MSG_VEN_ID	GENMASK(31, 16)
-+#define CFG_ENABLE_MSG_FILTER_MASK	(CFG_ENABLE_PM_MSG_FWD | \
-+					CFG_ENABLE_INT_MSG_FWD | \
-+					CFG_ENABLE_ERR_MSG_FWD | \
-+					CFG_ENABLE_SLT_MSG_FWD | \
-+					CFG_ENABLE_VEN_MSG_FWD | \
-+					CFG_ENABLE_OTH_MSG_FWD | \
-+					CFG_ENABLE_VEN_MSG_EN | \
-+					CFG_ENABLE_VEN_MSG_VEN_INV | \
-+					CFG_ENABLE_VEN_MSG_VEN_ID)
-+
-+/* Misc interrupt status mask bits */
-+#define MSGF_MISC_SR_RXMSG_AVAIL	BIT(0)
-+#define MSGF_MISC_SR_RXMSG_OVER		BIT(1)
-+#define MSGF_MISC_SR_SLAVE_ERR		BIT(4)
-+#define MSGF_MISC_SR_MASTER_ERR		BIT(5)
-+#define MSGF_MISC_SR_I_ADDR_ERR		BIT(6)
-+#define MSGF_MISC_SR_E_ADDR_ERR		BIT(7)
-+#define MSGF_MISC_SR_UR_DETECT          BIT(20)
-+
-+#define MSGF_MISC_SR_PCIE_CORE		GENMASK(18, 16)
-+#define MSGF_MISC_SR_PCIE_CORE_ERR	GENMASK(31, 22)
-+
-+#define MSGF_MISC_SR_MASKALL		(MSGF_MISC_SR_RXMSG_AVAIL | \
-+					MSGF_MISC_SR_RXMSG_OVER | \
-+					MSGF_MISC_SR_SLAVE_ERR | \
-+					MSGF_MISC_SR_MASTER_ERR | \
-+					MSGF_MISC_SR_I_ADDR_ERR | \
-+					MSGF_MISC_SR_E_ADDR_ERR | \
-+					MSGF_MISC_SR_UR_DETECT | \
-+					MSGF_MISC_SR_PCIE_CORE | \
-+					MSGF_MISC_SR_PCIE_CORE_ERR)
-+
-+/* Message rx fifo type mask bits */
-+#define MSGF_RX_FIFO_TYPE_MSI	(1)
-+#define MSGF_RX_FIFO_TYPE_TYPE	GENMASK(1, 0)
-+
-+/* Legacy interrupt status mask bits */
-+#define MSGF_LEG_SR_INTA		BIT(0)
-+#define MSGF_LEG_SR_INTB		BIT(1)
-+#define MSGF_LEG_SR_INTC		BIT(2)
-+#define MSGF_LEG_SR_INTD		BIT(3)
-+#define MSGF_LEG_SR_MASKALL		(MSGF_LEG_SR_INTA | MSGF_LEG_SR_INTB | \
-+					MSGF_LEG_SR_INTC | MSGF_LEG_SR_INTD)
-+
-+/* MSI interrupt status mask bits */
-+#define MSGF_MSI_SR_LO_MASK		BIT(0)
-+#define MSGF_MSI_SR_HI_MASK		BIT(0)
-+
-+#define MSII_PRESENT			BIT(0)
-+#define MSII_ENABLE			BIT(0)
-+#define MSII_STATUS_ENABLE		BIT(15)
-+
-+/* Bridge config interrupt mask */
-+#define BRCFG_INTERRUPT_MASK		BIT(0)
-+#define BREG_PRESENT			BIT(0)
-+#define BREG_ENABLE			BIT(0)
-+#define BREG_ENABLE_FORCE		BIT(1)
-+
-+/* E_ECAM status mask bits */
-+#define E_ECAM_PRESENT			BIT(0)
-+#define E_ECAM_SR_WR_PEND		BIT(16)
-+#define E_ECAM_SR_RD_PEND		BIT(0)
-+#define E_ECAM_SR_MASKALL		(E_ECAM_SR_WR_PEND | E_ECAM_SR_RD_PEND)
-+#define E_ECAM_CR_ENABLE		BIT(0)
-+#define E_ECAM_SIZE_LOC			GENMASK(20, 16)
-+#define E_ECAM_SIZE_SHIFT		16
-+#define ECAM_BUS_LOC_SHIFT		20
-+#define ECAM_DEV_LOC_SHIFT		12
-+#define NWL_ECAM_VALUE_DEFAULT		12
-+#define NWL_ECAM_SIZE_MIN		4096
-+
-+#define ATTR_UPSTREAM_FACING		BIT(6)
-+#define CFG_DMA_REG_BAR			GENMASK(2, 0)
-+
-+/* msgf_rx_fifo_pop bits */
-+#define MSGF_RX_FIFO_POP_POP	BIT(0)
-+
-+#define INT_PCI_MSI_NR			(2 * 32)
-+
-+/* Readin the PS_LINKUP */
-+#define PS_LINKUP_OFFSET			0x00000238
-+#define PCIE_PHY_LINKUP_BIT			BIT(0)
-+#define PHY_RDY_LINKUP_BIT			BIT(1)
-+#define PCIE_USER_LINKUP			0
-+#define PHY_RDY_LINKUP				1
-+#define LINKUP_ITER_CHECK			5
-+
-+/* PCIE Message Request */
-+#define TX_PCIE_MSG				0x00000620
-+#define TX_PCIE_MSG_CNTL			0x00000004
-+#define TX_PCIE_MSG_SPEC_LO			0x00000008
-+#define TX_PCIE_MSG_SPEC_HI			0x0000000C
-+#define TX_PCIE_MSG_DATA			0x00000010
-+
-+#define MSG_BUSY_BIT				BIT(8)
-+#define MSG_EXECUTE_BIT				BIT(0)
-+#define MSG_DONE_BIT				BIT(16)
-+#define MSG_DONE_STATUS_BIT			(BIT(25) | BIT(24))
-+#define RANDOM_DIGIT				0x11223344
-+#define PATTRN_SSLP_TLP				0x01005074
-+
-+#define EXP_CAP_BASE				0x60
-+
-+/* SSPL ERROR */
-+#define SLVERR					0x02
-+#define DECERR					0x03
-+
-+#define MSI_ADDRESS				0xFD480000
-+
-+struct nwl_msi {			/* MSI information */
-+	struct irq_domain *msi_domain;
-+	unsigned long *bitmap;
-+	struct irq_domain *dev_domain;
-+	struct mutex lock;		/* protect bitmap variable */
-+	int irq_msi0;
-+	int irq_msi1;
-+};
-+
-+struct nwl_pcie {
-+	struct device *dev;
-+	void __iomem *breg_base;
-+	void __iomem *pcireg_base;
-+	void __iomem *ecam_base;
-+	u32 phys_breg_base;		/* Physical Bridge Register Base */
-+	u32 phys_pcie_reg_base;		/* Physical PCIe Controller Base */
-+	u32 phys_ecam_base;		/* Physical Configuration Base */
-+	u32 breg_size;
-+	u32 pcie_reg_size;
-+	u32 ecam_size;
-+	int irq_intx;
-+	int irq_misc;
-+	u32 ecam_value;
-+	u8 last_busno;
-+	u8 root_busno;
-+	u8 link_up;
-+	struct nwl_msi msi;
-+	struct irq_domain *legacy_irq_domain;
-+};
-+
-+static inline u32 nwl_bridge_readl(struct nwl_pcie *pcie, u32 off)
++static int pnv_ioda1_init_m64(struct pnv_phb *phb)
 +{
-+	return readl(pcie->breg_base + off);
-+}
-+
-+static inline void nwl_bridge_writel(struct nwl_pcie *pcie, u32 val, u32 off)
-+{
-+	writel(val, pcie->breg_base + off);
-+}
-+
-+static inline bool nwl_pcie_link_up(struct nwl_pcie *pcie, u32 check_link_up)
-+{
-+	unsigned int status = -EINVAL;
-+
-+	if (check_link_up == PCIE_USER_LINKUP)
-+		status = (readl(pcie->pcireg_base + PS_LINKUP_OFFSET) &
-+			  PCIE_PHY_LINKUP_BIT) ? 1 : 0;
-+	else if (check_link_up == PHY_RDY_LINKUP)
-+		status = (readl(pcie->pcireg_base + PS_LINKUP_OFFSET) &
-+			  PHY_RDY_LINKUP_BIT) ? 1 : 0;
-+	return status;
-+}
-+
-+static bool nwl_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
-+{
-+	struct nwl_pcie *pcie = bus->sysdata;
-+
-+	/* Check link,before accessing downstream ports */
-+	if (bus->number != pcie->root_busno) {
-+		if (!nwl_pcie_link_up(pcie, PCIE_USER_LINKUP))
-+			return false;
-+	}
-+
-+	/* Only one device down on each root port */
-+	if (bus->number == pcie->root_busno && devfn > 0)
-+		return false;
++	struct resource *r;
++	int index;
 +
 +	/*
-+	 * Do not read more than one device on the bus directly attached
-+	 * to root port.
++	 * There are 16 M64 BARs, each of which has 8 segments. So
++	 * there are as many M64 segments as the maximum number of
++	 * PEs, which is 128.
 +	 */
-+	if (bus->primary == pcie->root_busno && devfn > 0)
-+		return false;
++	for (index = 0; index < PNV_IODA1_M64_NUM; index++) {
++		unsigned long base, segsz = phb->ioda.m64_segsize;
++		int64_t rc;
 +
-+	return true;
-+}
-+
-+/**
-+ * nwl_pcie_get_config_base - Get configuration base
-+ *
-+ * @bus: Bus structure of current bus
-+ * @devfn: Device/function
-+ * @where: Offset from base
-+ *
-+ * Return: Base address of the configuration space needed to be
-+ *	   accessed.
-+ */
-+static void __iomem *nwl_pcie_get_config_base(struct pci_bus *bus,
-+						 unsigned int devfn,
-+						 int where)
-+{
-+	struct nwl_pcie *pcie = bus->sysdata;
-+	int relbus;
-+
-+	if (!nwl_pcie_valid_device(bus, devfn))
-+		return NULL;
-+
-+	relbus = (bus->number << ECAM_BUS_LOC_SHIFT) |
-+			(devfn << ECAM_DEV_LOC_SHIFT);
-+
-+	return pcie->ecam_base + relbus + where;
-+}
-+
-+/**
-+ * nwl_setup_sspl - Set Slot Power limit
-+ *
-+ * @pcie: PCIe port information
-+ */
-+static int nwl_setup_sspl(struct nwl_pcie *pcie)
-+{
-+	unsigned int status;
-+	int retval = 0;
-+
-+	do {
-+		status = nwl_bridge_readl(pcie, TX_PCIE_MSG) & MSG_BUSY_BIT;
-+		if (!status) {
-+			/*
-+			 * Generate the TLP message for a single EP
-+			 */
-+			nwl_bridge_writel(pcie, 0x0,
-+					  TX_PCIE_MSG + TX_PCIE_MSG_CNTL);
-+			nwl_bridge_writel(pcie, 0x0,
-+					  TX_PCIE_MSG + TX_PCIE_MSG_SPEC_LO);
-+			nwl_bridge_writel(pcie, 0x0,
-+					  TX_PCIE_MSG + TX_PCIE_MSG_SPEC_HI);
-+			nwl_bridge_writel(pcie, 0x0,
-+					  TX_PCIE_MSG + TX_PCIE_MSG_DATA);
-+			/* Pattern to generate SSLP TLP */
-+			nwl_bridge_writel(pcie, PATTRN_SSLP_TLP,
-+					  TX_PCIE_MSG + TX_PCIE_MSG_CNTL);
-+			nwl_bridge_writel(pcie, RANDOM_DIGIT,
-+					  TX_PCIE_MSG + TX_PCIE_MSG_DATA);
-+			nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,
-+					  TX_PCIE_MSG) | 0x1, TX_PCIE_MSG);
-+			mdelay(2);
-+			status = nwl_bridge_readl(pcie, TX_PCIE_MSG)
-+						  & MSG_DONE_BIT;
-+			if (status) {
-+				status = nwl_bridge_readl(pcie, TX_PCIE_MSG)
-+						  & MSG_DONE_STATUS_BIT;
-+				if (status == SLVERR) {
-+					dev_err(pcie->dev, "AXI slave error");
-+					retval = SLVERR;
-+				} else if (status == DECERR) {
-+					dev_err(pcie->dev, "AXI Decode error");
-+					retval = DECERR;
-+				}
-+			} else {
-+				retval = 1;
-+			}
++		base = phb->ioda.m64_base +
++		       index * PNV_IODA1_M64_SEGS * segsz;
++		rc = opal_pci_set_phb_mem_window(phb->opal_id,
++				OPAL_M64_WINDOW_TYPE, index, base, 0,
++				PNV_IODA1_M64_SEGS * segsz);
++		if (rc != OPAL_SUCCESS) {
++			pr_warn("  Error %lld setting M64 PHB#%d-BAR#%d\n",
++				rc, phb->hose->global_number, index);
++			goto fail;
 +		}
-+	} while (status);
 +
-+	return retval;
-+}
-+
-+/**
-+ * nwl_nwl_readl_config - Read configuration space
-+ *
-+ * @bus: Bus structure of current bus
-+ * @devfn: Device/function
-+ * @where: Offset from base
-+ * @size: Byte/word/dword
-+ * @val: Value to be read
-+ *
-+ * Return: PCIBIOS_SUCCESSFUL on success
-+ *	   PCIBIOS_DEVICE_NOT_FOUND on failure.
-+ */
-+static int nwl_nwl_readl_config(struct pci_bus *bus,
-+				unsigned int devfn,
-+				int where,
-+				int size,
-+				u32 *val)
-+{
-+	void __iomem *addr;
-+
-+	addr = nwl_pcie_get_config_base(bus, devfn, where);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	switch (size) {
-+	case 1:
-+		*val = readb(addr);
-+		break;
-+	case 2:
-+		*val = readw(addr);
-+		break;
-+	default:
-+		*val = readl(addr);
-+		break;
-+	}
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+/**
-+ * nwl_nwl_writel_config - Write configuration space
-+ *
-+ * @bus: Bus structure of current bus
-+ * @devfn: Device/function
-+ * @where: Offset from base
-+ * @size: Byte/word/dword
-+ * @val: Value to be written to device
-+ *
-+ * Return: PCIBIOS_SUCCESSFUL on success,
-+ *	   PCIBIOS_DEVICE_NOT_FOUND on failure.
-+ */
-+static int nwl_nwl_writel_config(struct pci_bus *bus,
-+				unsigned int devfn,
-+				int where,
-+				int size,
-+				u32 val)
-+{
-+	void __iomem *addr;
-+	int retval;
-+	struct nwl_pcie *pcie = bus->sysdata;
-+
-+	addr = nwl_pcie_get_config_base(bus, devfn, where);
-+	if (!addr)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	switch (size) {
-+	case 1:
-+		writeb(val, addr);
-+		break;
-+	case 2:
-+		writew(val, addr);
-+		break;
-+	default:
-+		writel(val, addr);
-+		break;
-+	}
-+	if (addr == (pcie->ecam_base + EXP_CAP_BASE + PCI_EXP_SLTCAP)) {
-+		retval = nwl_setup_sspl(pcie);
-+		if (retval)
-+			return PCIBIOS_SET_FAILED;
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+/* PCIe operations */
-+static struct pci_ops nwl_pcie_ops = {
-+	.read  = nwl_nwl_readl_config,
-+	.write = nwl_nwl_writel_config,
-+};
-+
-+static irqreturn_t nwl_pcie_misc_handler(int irq, void *data)
-+{
-+	struct nwl_pcie *pcie = data;
-+	u32 misc_stat;
-+
-+	/* Checking for misc interrupts */
-+	misc_stat = nwl_bridge_readl(pcie, MSGF_MISC_STATUS) &
-+				     MSGF_MISC_SR_MASKALL;
-+	if (!misc_stat)
-+		return IRQ_NONE;
-+
-+	if (misc_stat & MSGF_MISC_SR_RXMSG_OVER)
-+		dev_err(pcie->dev, "Received Message FIFO Overflow\n");
-+
-+	if (misc_stat & MSGF_MISC_SR_SLAVE_ERR)
-+		dev_err(pcie->dev, "Slave error\n");
-+
-+	if (misc_stat & MSGF_MISC_SR_MASTER_ERR)
-+		dev_err(pcie->dev, "Master error\n");
-+
-+	if (misc_stat & MSGF_MISC_SR_I_ADDR_ERR)
-+		dev_err(pcie->dev,
-+			"In Misc Ingress address translation error\n");
-+
-+	if (misc_stat & MSGF_MISC_SR_E_ADDR_ERR)
-+		dev_err(pcie->dev,
-+			"In Misc Egress address translation error\n");
-+
-+	if (misc_stat & MSGF_MISC_SR_PCIE_CORE_ERR)
-+		dev_err(pcie->dev, "PCIe Core error\n");
-+
-+	/* Clear misc interrupt status */
-+	nwl_bridge_writel(pcie, misc_stat, MSGF_MISC_STATUS);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static void nwl_pcie_leg_handler(struct irq_desc *desc)
-+{
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	struct nwl_pcie *pcie;
-+	unsigned long status;
-+	u32 bit;
-+	u32 virq;
-+
-+	chained_irq_enter(chip, desc);
-+	pcie = irq_desc_get_handler_data(desc);
-+
-+	while ((status = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
-+				MSGF_LEG_SR_MASKALL) != 0) {
-+		for_each_set_bit(bit, &status, 4) {
-+
-+			virq = irq_find_mapping(pcie->legacy_irq_domain,
-+						bit + 1);
-+			if (virq)
-+				generic_handle_irq(virq);
++		rc = opal_pci_phb_mmio_enable(phb->opal_id,
++				OPAL_M64_WINDOW_TYPE, index,
++				OPAL_ENABLE_M64_SPLIT);
++		if (rc != OPAL_SUCCESS) {
++			pr_warn("  Error %lld enabling M64 PHB#%d-BAR#%d\n",
++				rc, phb->hose->global_number, index);
++			goto fail;
 +		}
 +	}
 +
-+	chained_irq_exit(chip, desc);
-+}
-+
-+static void nwl_pcie_handle_msi_irq(struct nwl_pcie *pcie, u32 status_reg)
-+{
-+	struct nwl_msi *msi;
-+	unsigned long status;
-+	u32 bit;
-+	u32 virq;
-+
-+	msi = &pcie->msi;
-+
-+	while ((status = nwl_bridge_readl(pcie, status_reg)) != 0) {
-+		for_each_set_bit(bit, &status, 32) {
-+			nwl_bridge_writel(pcie, 1 << bit, status_reg);
-+			virq = irq_find_mapping(msi->dev_domain, bit);
-+			if (virq)
-+				generic_handle_irq(virq);
-+		}
-+	}
-+}
-+
-+static void nwl_pcie_msi_handler_high(struct irq_desc *desc)
-+{
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	struct nwl_pcie *pcie;
-+
-+	chained_irq_enter(chip, desc);
-+	pcie = irq_desc_get_handler_data(desc);
-+	nwl_pcie_handle_msi_irq(pcie, MSGF_MSI_STATUS_HI);
-+
-+	chained_irq_exit(chip, desc);
-+}
-+
-+static void nwl_pcie_msi_handler_low(struct irq_desc *desc)
-+{
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	struct nwl_pcie *pcie;
-+
-+	chained_irq_enter(chip, desc);
-+	pcie = irq_desc_get_handler_data(desc);
-+	nwl_pcie_handle_msi_irq(pcie, MSGF_MSI_STATUS_LO);
-+
-+	chained_irq_exit(chip, desc);
-+}
-+
-+static int nwl_legacy_map(struct irq_domain *domain, unsigned int irq,
-+				irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops legacy_domain_ops = {
-+	.map = nwl_legacy_map,
-+};
-+
-+#ifdef CONFIG_PCI_MSI
-+static struct irq_chip nwl_msi_irq_chip = {
-+	.name = "nwl_pcie:msi",
-+	.irq_enable = unmask_msi_irq,
-+	.irq_disable = mask_msi_irq,
-+	.irq_mask = mask_msi_irq,
-+	.irq_unmask = unmask_msi_irq,
-+
-+};
-+
-+static struct msi_domain_info nwl_msi_domain_info = {
-+	.flags = (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-+		  MSI_FLAG_MULTI_PCI_MSI),
-+	.chip = &nwl_msi_irq_chip,
-+};
-+#endif
-+
-+static void nwl_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-+{
-+	phys_addr_t msi_addr = MSI_ADDRESS;
-+
-+	msg->address_lo = lower_32_bits(msi_addr);
-+	msg->address_hi = upper_32_bits(msi_addr);
-+	msg->data = data->hwirq;
-+}
-+
-+static int nwl_msi_set_affinity(struct irq_data *irq_data,
-+				const struct cpumask *mask, bool force)
-+{
-+	return -EINVAL;
-+}
-+
-+static struct irq_chip nwl_irq_chip = {
-+	.name = "Xilinx MSI",
-+	.irq_compose_msi_msg = nwl_compose_msi_msg,
-+	.irq_set_affinity = nwl_msi_set_affinity,
-+};
-+
-+static int nwl_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+				unsigned int nr_irqs, void *args)
-+{
-+	struct nwl_pcie *pcie = domain->host_data;
-+	struct nwl_msi *msi = &pcie->msi;
-+	int bit;
-+	int i;
-+
-+	mutex_lock(&msi->lock);
-+	bit = bitmap_find_next_zero_area(msi->bitmap, INT_PCI_MSI_NR, 0,
-+					 nr_irqs, 0);
-+
-+	if (bit < INT_PCI_MSI_NR)
-+		bitmap_set(msi->bitmap, bit, nr_irqs);
++	/*
++	 * Exclude the segment used by the reserved PE, which
++	 * is expected to be 0 or last supported PE#.
++	 */
++	r = &phb->hose->mem_resources[1];
++	if (phb->ioda.reserved_pe_idx == 0)
++		r->start += phb->ioda.m64_segsize;
++	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
++		r->end -= phb->ioda.m64_segsize;
 +	else
-+		bit = -ENOSPC;
-+
-+	if (bit < 0) {
-+		mutex_unlock(&msi->lock);
-+		return bit;
-+	}
-+	for (i = 0; i < nr_irqs; i++) {
-+		irq_domain_set_info(domain, virq + i, bit + i, &nwl_irq_chip,
-+				domain->host_data, handle_simple_irq,
-+				NULL, NULL);
-+	}
-+	mutex_unlock(&msi->lock);
++		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
++			phb->ioda.reserved_pe_idx);
 +
 +	return 0;
++
++fail:
++	for ( ; index >= 0; index--)
++		opal_pci_phb_mmio_enable(phb->opal_id,
++			OPAL_M64_WINDOW_TYPE, index, OPAL_DISABLE_M64);
++
++	return -EIO;
 +}
 +
-+static void nwl_irq_domain_free(struct irq_domain *domain, unsigned int virq,
-+					unsigned int nr_irqs)
-+{
-+	struct irq_data *data = irq_domain_get_irq_data(domain, virq);
-+	struct nwl_pcie *pcie = irq_data_get_irq_chip_data(data);
-+	struct nwl_msi *msi = &pcie->msi;
+ static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
+ 				    unsigned long *pe_bitmap,
+ 				    bool all)
+@@ -325,6 +383,26 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+ 			pe->master = master_pe;
+ 			list_add_tail(&pe->list, &master_pe->slaves);
+ 		}
 +
-+	mutex_lock(&msi->lock);
++		/*
++		 * P7IOC supports M64DT, which helps mapping M64 segment
++		 * to one particular PE#. However, PHB3 has fixed mapping
++		 * between M64 segment and PE#. In order to have same logic
++		 * for P7IOC and PHB3, we enforce fixed mapping between M64
++		 * segment and PE# on P7IOC.
++		 */
++		if (phb->type == PNV_PHB_IODA1) {
++			int64_t rc;
 +
-+	bitmap_clear(msi->bitmap, data->hwirq, nr_irqs);
-+
-+	mutex_unlock(&msi->lock);
-+}
-+
-+static const struct irq_domain_ops dev_msi_domain_ops = {
-+	.alloc  = nwl_irq_domain_alloc,
-+	.free   = nwl_irq_domain_free,
-+};
-+
-+static void nwl_msi_free_irq_domain(struct nwl_pcie *pcie)
-+{
-+	struct nwl_msi *msi = &pcie->msi;
-+
-+	if (msi->irq_msi0)
-+		irq_set_chained_handler_and_data(msi->irq_msi0, NULL, NULL);
-+	if (msi->irq_msi1)
-+		irq_set_chained_handler_and_data(msi->irq_msi1, NULL, NULL);
-+
-+	if (msi->msi_domain)
-+		irq_domain_remove(msi->msi_domain);
-+	if (msi->dev_domain)
-+		irq_domain_remove(msi->dev_domain);
-+
-+	kfree(msi->bitmap);
-+	msi->bitmap = NULL;
-+}
-+
-+static void nwl_pcie_free_irq_domain(struct nwl_pcie *pcie)
-+{
-+	int i;
-+	u32 irq;
-+
-+
-+	for (i = 0; i < 4; i++) {
-+		irq = irq_find_mapping(pcie->legacy_irq_domain, i + 1);
-+		if (irq > 0)
-+			irq_dispose_mapping(irq);
-+	}
-+	if (pcie->legacy_irq_domain)
-+		irq_domain_remove(pcie->legacy_irq_domain);
-+
-+	nwl_msi_free_irq_domain(pcie);
-+}
-+
-+static int nwl_pcie_init_msi_irq_domain(struct nwl_pcie *pcie)
-+{
-+#ifdef CONFIG_PCI_MSI
-+	struct device_node *node = pcie->dev->of_node;
-+	struct nwl_msi *msi = &pcie->msi;
-+
-+	msi->dev_domain = irq_domain_add_linear(NULL, INT_PCI_MSI_NR,
-+					&dev_msi_domain_ops, pcie);
-+	if (!msi->dev_domain) {
-+		dev_err(pcie->dev, "failed to create dev IRQ domain\n");
-+		return -ENOMEM;
-+	}
-+	msi->msi_domain = pci_msi_create_irq_domain(node,
-+							&nwl_msi_domain_info,
-+							msi->dev_domain);
-+	if (!msi->msi_domain) {
-+		dev_err(pcie->dev, "failed to create msi IRQ domain\n");
-+		irq_domain_remove(msi->dev_domain);
-+		return -ENOMEM;
-+	}
-+#endif
-+	return 0;
-+}
-+
-+static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
-+{
-+	struct device_node *node = pcie->dev->of_node;
-+	struct device_node *legacy_intc_node;
-+
-+	legacy_intc_node = of_get_next_child(node, NULL);
-+	if (!legacy_intc_node) {
-+		dev_err(pcie->dev, "No legacy intc node found\n");
-+		return PTR_ERR(legacy_intc_node);
-+	}
-+
-+	pcie->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node, 4,
-+							&legacy_domain_ops,
-+							pcie);
-+
-+	if (!pcie->legacy_irq_domain) {
-+		dev_err(pcie->dev, "failed to create IRQ domain\n");
-+		return -ENOMEM;
-+	}
-+
-+	nwl_pcie_init_msi_irq_domain(pcie);
-+
-+	return 0;
-+}
-+
-+static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus *bus)
-+{
-+	struct platform_device *pdev = to_platform_device(pcie->dev);
-+	struct nwl_msi *msi = &pcie->msi;
-+	unsigned long base;
-+	int ret;
-+	int size = BITS_TO_LONGS(INT_PCI_MSI_NR) * sizeof(long);
-+
-+	mutex_init(&msi->lock);
-+
-+	msi->bitmap = kzalloc(size, GFP_KERNEL);
-+	if (!msi->bitmap)
-+		return -ENOMEM;
-+
-+	/* Check for msii_present bit */
-+	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) & MSII_PRESENT;
-+	if (!ret) {
-+		dev_err(pcie->dev, "MSI not present\n");
-+		ret = -EIO;
-+		goto err;
-+	}
-+
-+	/* Enable MSII */
-+	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
-+			  MSII_ENABLE, I_MSII_CONTROL);
-+
-+	/* Enable MSII status */
-+	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
-+			  MSII_STATUS_ENABLE, I_MSII_CONTROL);
-+
-+	/* setup AFI/FPCI range */
-+	base = MSI_ADDRESS;
-+	nwl_bridge_writel(pcie, lower_32_bits(base), I_MSII_BASE_LO);
-+	nwl_bridge_writel(pcie, upper_32_bits(base), I_MSII_BASE_HI);
-+
-+	/* Disable high range msi interrupts */
-+	nwl_bridge_writel(pcie, (u32)~MSGF_MSI_SR_HI_MASK, MSGF_MSI_MASK_HI);
-+
-+	/* Clear pending high range msi interrupts */
-+	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,  MSGF_MSI_STATUS_HI) &
-+			  MSGF_MSI_SR_HI_MASK, MSGF_MSI_STATUS_HI);
-+	/* Get msi_1 IRQ number */
-+	msi->irq_msi1 = platform_get_irq_byname(pdev, "msi1");
-+	if (msi->irq_msi1 < 0) {
-+		dev_err(&pdev->dev, "failed to get IRQ#%d\n", msi->irq_msi1);
-+		goto err;
-+	}
-+	/* Register msi handler */
-+	irq_set_chained_handler_and_data(msi->irq_msi1,
-+					 nwl_pcie_msi_handler_high, pcie);
-+
-+	/* Enable all high range msi interrupts */
-+	nwl_bridge_writel(pcie, MSGF_MSI_SR_HI_MASK, MSGF_MSI_MASK_HI);
-+
-+	/* Disable low range msi interrupts */
-+	nwl_bridge_writel(pcie, (u32)~MSGF_MSI_SR_LO_MASK, MSGF_MSI_MASK_LO);
-+
-+	/* Clear pending low range msi interrupts */
-+	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, MSGF_MSI_STATUS_LO) &
-+			  MSGF_MSI_SR_LO_MASK, MSGF_MSI_STATUS_LO);
-+	/* Get msi_0 IRQ number */
-+	msi->irq_msi0 = platform_get_irq_byname(pdev, "msi0");
-+	if (msi->irq_msi0 < 0) {
-+		dev_err(&pdev->dev, "failed to get IRQ#%d\n", msi->irq_msi0);
-+		goto err;
-+	}
-+
-+	/* Register msi handler */
-+	irq_set_chained_handler_and_data(msi->irq_msi0,
-+					 nwl_pcie_msi_handler_low, pcie);
-+
-+	/* Enable all low range msi interrupts */
-+	nwl_bridge_writel(pcie, MSGF_MSI_SR_LO_MASK, MSGF_MSI_MASK_LO);
-+
-+	return 0;
-+err:
-+	return ret;
-+}
-+
-+static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
-+{
-+	struct platform_device *pdev = to_platform_device(pcie->dev);
-+	u32 breg_val, ecam_val, first_busno = 0;
-+	int err;
-+	int check_link_up = 0;
-+
-+	/* Check for BREG present bit */
-+	breg_val = nwl_bridge_readl(pcie, E_BREG_CAPABILITIES) & BREG_PRESENT;
-+	if (!breg_val) {
-+		dev_err(pcie->dev, "BREG is not present\n");
-+		return breg_val;
-+	}
-+	/* Write bridge_off to breg base */
-+	nwl_bridge_writel(pcie, (u32)(pcie->phys_breg_base),
-+			  E_BREG_BASE_LO);
-+
-+	/* Enable BREG */
-+	nwl_bridge_writel(pcie, ~BREG_ENABLE_FORCE & BREG_ENABLE,
-+			  E_BREG_CONTROL);
-+
-+	/* Disable DMA channel registers */
-+	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, BRCFG_PCIE_RX0) |
-+			  CFG_DMA_REG_BAR, BRCFG_PCIE_RX0);
-+
-+	/* Enable the bridge config interrupt */
-+	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, BRCFG_INTERRUPT) |
-+			  BRCFG_INTERRUPT_MASK, BRCFG_INTERRUPT);
-+	/* Enable Ingress subtractive decode translation */
-+	nwl_bridge_writel(pcie, SET_ISUB_CONTROL, I_ISUB_CONTROL);
-+
-+	/* Enable msg filtering details */
-+	nwl_bridge_writel(pcie, CFG_ENABLE_MSG_FILTER_MASK,
-+			  BRCFG_PCIE_RX_MSG_FILTER);
-+	do {
-+		err = nwl_pcie_link_up(pcie, PHY_RDY_LINKUP);
-+		if (err != 1) {
-+			check_link_up++;
-+			if (check_link_up > LINKUP_ITER_CHECK)
-+				return -ENODEV;
-+			mdelay(1000);
++			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
++					pe->pe_number, OPAL_M64_WINDOW_TYPE,
++					pe->pe_number / PNV_IODA1_M64_SEGS,
++					pe->pe_number % PNV_IODA1_M64_SEGS);
++			if (rc != OPAL_SUCCESS)
++				pr_warn("%s: Error %lld mapping M64 for PHB#%d-PE#%d\n",
++					__func__, rc, phb->hose->global_number,
++					pe->pe_number);
 +		}
-+	} while (!err);
-+
-+	/* Check for ECAM present bit */
-+	ecam_val = nwl_bridge_readl(pcie, E_ECAM_CAPABILITIES) & E_ECAM_PRESENT;
-+	if (!ecam_val) {
-+		dev_err(pcie->dev, "ECAM is not present\n");
-+		return ecam_val;
-+	}
-+
-+	/* Enable ECAM */
-+	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, E_ECAM_CONTROL) |
-+			  E_ECAM_CR_ENABLE, E_ECAM_CONTROL);
-+	/* Write ecam_value on ecam_control */
-+	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, E_ECAM_CONTROL) |
-+			  (pcie->ecam_value << E_ECAM_SIZE_SHIFT),
-+			  E_ECAM_CONTROL);
-+	/* Write phy_reg_base to ecam base */
-+	nwl_bridge_writel(pcie, (u32)pcie->phys_ecam_base, E_ECAM_BASE_LO);
-+
-+	/* Get bus range */
-+	ecam_val = nwl_bridge_readl(pcie, E_ECAM_CONTROL);
-+	pcie->last_busno = (ecam_val & E_ECAM_SIZE_LOC) >> E_ECAM_SIZE_SHIFT;
-+	/* Write primary, secondary and subordinate bus numbers */
-+	ecam_val = first_busno;
-+	ecam_val |= (first_busno + 1) << 8;
-+	ecam_val |= (pcie->last_busno << E_ECAM_SIZE_SHIFT);
-+	writel(ecam_val, (pcie->ecam_base + PCI_PRIMARY_BUS));
-+
-+	/* Check if PCIe link is up? */
-+	pcie->link_up = nwl_pcie_link_up(pcie, PCIE_USER_LINKUP);
-+	if (!pcie->link_up)
-+		dev_info(pcie->dev, "Link is DOWN\n");
+ 	}
+ 
+ 	kfree(pe_alloc);
+@@ -339,8 +417,7 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+ 	const u32 *r;
+ 	u64 pci_addr;
+ 
+-	/* FIXME: Support M64 for P7IOC */
+-	if (phb->type != PNV_PHB_IODA2) {
++	if (phb->type != PNV_PHB_IODA1 && phb->type != PNV_PHB_IODA2) {
+ 		pr_info("  Not support M64 window\n");
+ 		return;
+ 	}
+@@ -373,7 +450,10 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+ 
+ 	/* Use last M64 BAR to cover M64 window */
+ 	phb->ioda.m64_bar_idx = 15;
+-	phb->init_m64 = pnv_ioda2_init_m64;
++	if (phb->type == PNV_PHB_IODA1)
++		phb->init_m64 = pnv_ioda1_init_m64;
 +	else
-+		dev_info(pcie->dev, "Link is UP\n");
++		phb->init_m64 = pnv_ioda2_init_m64;
+ 	phb->reserve_m64_pe = pnv_ioda_reserve_m64_pe;
+ 	phb->pick_m64_pe = pnv_ioda_pick_m64_pe;
+ }
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 671fd13..c4019ac 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -78,6 +78,9 @@ struct pnv_ioda_pe {
+ 	struct list_head	list;
+ };
+ 
++#define PNV_IODA1_M64_NUM	16	/* Number of M64 BARs   */
++#define PNV_IODA1_M64_SEGS	8	/* Segments per M64 BAR */
 +
-+	/* Disable all misc interrupts */
-+	nwl_bridge_writel(pcie, (u32)~MSGF_MISC_SR_MASKALL, MSGF_MISC_MASK);
-+
-+	/* Clear pending misc interrupts */
-+	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, MSGF_MISC_STATUS) &
-+			  MSGF_MISC_SR_MASKALL, MSGF_MISC_STATUS);
-+
-+	/* Get misc IRQ number */
-+	pcie->irq_misc = platform_get_irq_byname(pdev, "misc");
-+	if (pcie->irq_misc < 0) {
-+		dev_err(&pdev->dev, "failed to get misc IRQ %d\n",
-+			pcie->irq_misc);
-+		return -EINVAL;
-+	}
-+	/* Register misc handler */
-+	err = devm_request_irq(pcie->dev, pcie->irq_misc,
-+			       nwl_pcie_misc_handler, IRQF_SHARED,
-+			       "nwl_pcie:misc", pcie);
-+	if (err) {
-+		dev_err(pcie->dev, "fail to register misc IRQ#%d\n",
-+			pcie->irq_misc);
-+		return err;
-+	}
-+	/* Enable all misc interrupts */
-+	nwl_bridge_writel(pcie, MSGF_MISC_SR_MASKALL, MSGF_MISC_MASK);
-+
-+	/* Disable all legacy interrupts */
-+	nwl_bridge_writel(pcie, (u32)~MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
-+
-+	/* Clear pending legacy interrupts */
-+	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
-+			  MSGF_LEG_SR_MASKALL, MSGF_LEG_STATUS);
-+
-+	/* Enable all legacy interrupts */
-+	nwl_bridge_writel(pcie, MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
-+
-+	return 0;
-+}
-+
-+static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
-+					struct platform_device *pdev)
-+{
-+	struct device_node *node = pcie->dev->of_node;
-+	struct resource *res;
-+	const char *type;
-+
-+	/* Check for device type */
-+	type = of_get_property(node, "device_type", NULL);
-+	if (!type || strcmp(type, "pci")) {
-+		dev_err(pcie->dev, "invalid \"device_type\" %s\n", type);
-+		return -EINVAL;
-+	}
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "breg");
-+	pcie->breg_base = devm_ioremap_resource(pcie->dev, res);
-+	if (IS_ERR(pcie->breg_base))
-+		return PTR_ERR(pcie->breg_base);
-+	pcie->phys_breg_base = res->start;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pcireg");
-+	pcie->pcireg_base = devm_ioremap_resource(pcie->dev, res);
-+	if (IS_ERR(pcie->pcireg_base))
-+		return PTR_ERR(pcie->pcireg_base);
-+	pcie->phys_pcie_reg_base = res->start;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cfg");
-+	pcie->ecam_base = devm_ioremap_resource(pcie->dev, res);
-+	if (IS_ERR(pcie->ecam_base))
-+		return PTR_ERR(pcie->ecam_base);
-+	pcie->phys_ecam_base = res->start;
-+
-+	/* Get intx IRQ number */
-+	pcie->irq_intx = platform_get_irq_byname(pdev, "intx");
-+	if (pcie->irq_intx < 0) {
-+		dev_err(&pdev->dev, "failed to get intx IRQ %d\n",
-+			pcie->irq_intx);
-+		return -EINVAL;
-+	}
-+
-+	/* Register intx handler */
-+	irq_set_chained_handler_and_data(pcie->irq_intx,
-+					 nwl_pcie_leg_handler, pcie);
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id nwl_pcie_of_match[] = {
-+	{ .compatible = "xlnx,nwl-pcie-2.11", },
-+	{}
-+};
-+
-+static int nwl_pcie_probe(struct platform_device *pdev)
-+{
-+	struct device_node *node = pdev->dev.of_node;
-+	struct nwl_pcie *pcie;
-+	struct pci_bus *bus;
-+	int err;
-+
-+	resource_size_t iobase = 0;
-+	LIST_HEAD(res);
-+
-+	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	pcie->ecam_value = NWL_ECAM_VALUE_DEFAULT;
-+
-+	pcie->dev = &pdev->dev;
-+
-+	err = nwl_pcie_parse_dt(pcie, pdev);
-+	if (err) {
-+		dev_err(pcie->dev, "Parsing DT failed\n");
-+		return err;
-+	}
-+	/* Bridge initialization */
-+	err = nwl_pcie_bridge_init(pcie);
-+	if (err) {
-+		dev_err(pcie->dev, "HW Initalization failed\n");
-+		return err;
-+	}
-+
-+	err = of_pci_get_host_bridge_resources(node, 0, 0xff, &res, &iobase);
-+	if (err) {
-+		pr_err("Getting bridge resources failed\n");
-+		return err;
-+	}
-+
-+	err = nwl_pcie_init_irq_domain(pcie);
-+	if (err) {
-+		dev_err(pcie->dev, "Failed creating IRQ Domain\n");
-+		return err;
-+	}
-+
-+	bus = pci_create_root_bus(&pdev->dev, pcie->root_busno,
-+				  &nwl_pcie_ops, pcie, &res);
-+	if (!bus)
-+		return -ENOMEM;
-+
-+	/* Enable MSI */
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		err = nwl_pcie_enable_msi(pcie, bus);
-+		if (err < 0) {
-+			dev_err(&pdev->dev,
-+				"failed to enable MSI support: %d\n", err);
-+			return err;
-+		}
-+	}
-+	pci_scan_child_bus(bus);
-+	pci_assign_unassigned_bus_resources(bus);
-+	pcie_bus_configure_settings(bus);
-+	pci_bus_add_devices(bus);
-+	platform_set_drvdata(pdev, pcie);
-+
-+	return 0;
-+}
-+
-+static int nwl_pcie_remove(struct platform_device *pdev)
-+{
-+	struct nwl_pcie *pcie = platform_get_drvdata(pdev);
-+
-+	nwl_pcie_free_irq_domain(pcie);
-+	platform_set_drvdata(pdev, NULL);
-+
-+	return 0;
-+}
-+
-+static struct platform_driver nwl_pcie_driver = {
-+	.driver = {
-+		.name = "nwl-pcie",
-+		.of_match_table = nwl_pcie_of_match,
-+	},
-+	.probe = nwl_pcie_probe,
-+	.remove = nwl_pcie_remove,
-+};
-+module_platform_driver(nwl_pcie_driver);
-+
-+MODULE_AUTHOR("Xilinx, Inc");
-+MODULE_DESCRIPTION("NWL PCIe driver");
-+MODULE_LICENSE("GPL");
+ #define PNV_PHB_FLAG_EEH	(1 << 0)
+ 
+ struct pnv_phb {
 -- 
-2.1.1
+2.1.0
 
