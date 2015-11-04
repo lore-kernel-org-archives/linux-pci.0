@@ -1,64 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:49592 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751340AbbKWL2I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 06:28:08 -0500
-Date: Mon, 23 Nov 2015 11:27:44 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>, Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Subject: Re: [PATCH v3 2/6] PCI: designware: add memory barrier after
- enabling region
-Message-ID: <20151123112744.GL8644@n2100.arm.linux.org.uk>
-References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
- <d38a9c1a87c4e40ad6d17fcbe0fd41b33d7d2912.1448270813.git.stanimir.varbanov@linaro.org>
+Received: from mga11.intel.com ([192.55.52.93]:39951 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932428AbbKDVUY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Nov 2015 16:20:24 -0500
+From: ville.syrjala@linux.intel.com
+To: intel-gfx@lists.freedesktop.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 01/29] pci: Decouple quirks.c from i915_reg.h
+Date: Wed,  4 Nov 2015 23:19:49 +0200
+Message-Id: <1446672017-24497-2-git-send-email-ville.syrjala@linux.intel.com>
+In-Reply-To: <1446672017-24497-1-git-send-email-ville.syrjala@linux.intel.com>
+References: <1446672017-24497-1-git-send-email-ville.syrjala@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d38a9c1a87c4e40ad6d17fcbe0fd41b33d7d2912.1448270813.git.stanimir.varbanov@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 23, 2015 at 11:28:59AM +0200, Stanimir Varbanov wrote:
-> Add 'write memory' barrier after enable region in PCIE_ATU_CR2
-> register. The barrier is needed to ensure that the region enable
-> request has been reached it's destination at time when we
-> read/write to PCI configuration space.
-> 
-> Without this barrier PCI device enumeration during kernel boot
-> is not reliable, and reading configuration space for particular
-> PCI device on the bus returns zero aka no device.
-> 
-> Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-> ---
->  drivers/pci/host/pcie-designware.c |    5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 02a7452bdf23..e15a2ae1583f 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -164,6 +164,11 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
->  	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
->  	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
->  	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-> +	/*
-> +	 * ensure that the ATU enable has been happaned before accessing
-> +	 * pci configuration/io spaces through dw_pcie_cfg_[read|write].
-> +	 */
-> +	smp_wmb();
+From: Ville Syrjälä <ville.syrjala@linux.intel.com>
 
-So, why is this a SMP barrier?
+i915 register defines are going to become type safe, so going forward
+the register defines can't be used as straight numbers. Since quirks.c
+needs just a few extra register defines from i915_reg.h, decouple the
+two by defining the required registers locally in quirks.c. This was
+already done for a few other igpu related registers.
 
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+---
+ drivers/pci/quirks.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b03373f..78a70fb 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3404,7 +3404,9 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
+ 
+-#include "../gpu/drm/i915/i915_reg.h"
++#define SOUTH_CHICKEN2		0xc2004
++#define PCH_PP_STATUS		0xc7200
++#define PCH_PP_CONTROL		0xc7204
+ #define MSG_CTL			0x45010
+ #define NSDE_PWR_STATE		0xd0100
+ #define IGD_OPERATION_TIMEOUT	10000     /* set timeout 10 seconds */
 -- 
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+2.4.10
+
