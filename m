@@ -1,191 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp05.in.ibm.com ([122.248.162.5]:58641 "EHLO
-	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965409AbbKDNOg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:14:36 -0500
-Received: from /spool/local
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 18:44:34 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 45/50] drivers/of: Avoid recursively calling unflatten_dt_node()
-Date: Thu,  5 Nov 2015 00:12:45 +1100
-Message-Id: <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mout.kundenserver.de ([212.227.17.13]:62211 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965135AbbKDMjz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 07:39:55 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: marc.zyngier@arm.com, linux-kernel@vger.kernel.org,
+	tglx@linutronix.de, Ley Foon Tan <lftan@altera.com>
+Subject: [PATCH] PCI: altera: use fwnode API for pci_msi_create_irq_domain
+Date: Wed, 04 Nov 2015 13:39:42 +0100
+Message-ID: <4309044.Hy8Vx01ZVW@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In current implementation, unflatten_dt_node() is called recursively
-to unflatten device nodes in FDT blob. It's stress to limited stack
-capacity.
+There is a new conflict between Thomas Gleixner's IRQ tree that contains
+a patch from Marc Zyngier to change the prototype for
+pci_msi_create_irq_domain, and Bjorn Helgaas' PCI tree that contains
+a new driver for the Altera PCI MSI host, with the old interface,
+as gcc now warns in linux-next:
 
-This avoids calling the function recursively, meaning the device
-nodes are unflattened in one call on unflatten_dt_node(): two arrays
-are introduced to track the parent path size and the device node of
-current level of depth, which will be used by the device node on next
-level of depth to be unflattened. Also, the parameter "poffset" and
-"fpsize" are unused and dropped.
+drivers/pci/host/pcie-altera-msi.c: In function 'altera_allocate_domains':
+drivers/pci/host/pcie-altera-msi.c:191:46: warning: passing argument 1 of 'pci_msi_create_irq_domain' from incompatible pointer type [-Wincompatible-pointer-types]
+  msi->msi_domain = pci_msi_create_irq_domain(msi->pdev->dev.of_node,
+include/linux/msi.h:286:20: note: expected 'struct fwnode_handle *' but argument is of type 'struct device_node *'
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+This changes the new driver use the modified API.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: af1169b48b17 ("PCI: altera: Add Altera PCIe MSI driver")
+Fixes: be5436c83ac8 ("irqdomain/msi: Use fwnode instead of of_node")
 ---
- drivers/of/fdt.c | 94 +++++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 56 insertions(+), 38 deletions(-)
+This conflict seems to be new in linux-next today. Any idea how to resolve it?
 
-diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-index 173b036..f4793d0 100644
---- a/drivers/of/fdt.c
-+++ b/drivers/of/fdt.c
-@@ -355,61 +355,82 @@ static unsigned long populate_node(const void *blob,
- 	return fpsize;
- }
+I think either Bjorn merges the msi-map-4.4 of git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms and uses this
+as the resolution, or whichever pull request comes second should let Linus
+know about the conflict so he can do it when merging both.
+
+diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/host/pcie-altera-msi.c
+index 2c37e8620c37..99177f4ccde2 100644
+--- a/drivers/pci/host/pcie-altera-msi.c
++++ b/drivers/pci/host/pcie-altera-msi.c
+@@ -181,6 +181,8 @@ static const struct irq_domain_ops msi_domain_ops = {
  
-+static void reverse_nodes(struct device_node *parent)
-+{
-+	struct device_node *child, *next;
-+
-+	/* In-depth first */
-+	child = parent->child;
-+	while (child) {
-+		reverse_nodes(child);
-+
-+		child = child->sibling;
-+	}
-+
-+	/* Reverse the nodes in the child list */
-+	child = parent->child;
-+	parent->child = NULL;
-+	while (child) {
-+		next = child->sibling;
-+
-+		child->sibling = parent->child;
-+		parent->child = child;
-+		child = next;
-+	}
-+}
-+
- /**
-  * unflatten_dt_node - Alloc and populate a device_node from the flat tree
-  * @blob: The parent device tree blob
-  * @mem: Memory chunk to use for allocating device nodes and properties
-- * @poffset: pointer to node in flat tree
-  * @dad: Parent struct device_node
-  * @nodepp: The device_node tree created by the call
-- * @fpsize: Size of the node path up at the current depth.
-  * @dryrun: If true, do not allocate device nodes but still calculate needed
-  * memory size
-  */
- static void *unflatten_dt_node(const void *blob,
- 			       void *mem,
--			       int *poffset,
- 			       struct device_node *dad,
- 			       struct device_node **nodepp,
--			       unsigned long fpsize,
- 			       bool dryrun)
+ static int altera_allocate_domains(struct altera_msi *msi)
  {
--	struct device_node *np;
--	static int depth;
--	int old_depth;
--
--	fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
--	if (!fpsize)
--		return mem;
-+	struct device_node *root;
-+	int offset = 0, depth = 0;
-+	unsigned long fpsizes[64];
-+	struct device_node *nps[64];
- 
--	old_depth = depth;
--	*poffset = fdt_next_node(blob, *poffset, &depth);
--	if (depth < 0)
--		depth = 0;
--	while (*poffset > 0 && depth > old_depth)
--		mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
--					fpsize, dryrun);
-+	if (nodepp)
-+		*nodepp = NULL;
++	struct fwnode_handle *fwnode = of_node_to_fwnode(msi->pdev->dev.of_node);
 +
-+	root = dad;
-+	fpsizes[depth] = dad ? strlen(of_node_full_name(dad)) : 0;
-+	nps[depth++] = dad;
-+	while (offset >= 0 && depth < 64) {
-+		fpsizes[depth] = populate_node(blob, offset, &mem,
-+					       nps[depth - 1],
-+					       fpsizes[depth - 1],
-+					       &nps[depth], dryrun);
-+		if (!fpsizes[depth])
-+			return mem;
-+
-+		if (!dryrun && nodepp && !*nodepp)
-+			*nodepp = nps[depth];
-+		if (!dryrun && !root)
-+			root = nps[depth];
-+
-+		offset = fdt_next_node(blob, offset, &depth);
-+	}
- 
--	if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
--		pr_err("unflatten: error %d processing FDT\n", *poffset);
-+	if (offset < 0 && offset != -FDT_ERR_NOTFOUND)
-+		pr_err("%s: Error %d processing FDT\n",
-+		       __func__, offset);
- 
- 	/*
- 	 * Reverse the child list. Some drivers assumes node order matches .dts
- 	 * node order
- 	 */
--	if (!dryrun && np->child) {
--		struct device_node *child = np->child;
--		np->child = NULL;
--		while (child) {
--			struct device_node *next = child->sibling;
--			child->sibling = np->child;
--			np->child = child;
--			child = next;
--		}
--	}
--
--	if (nodepp)
--		*nodepp = np;
-+	if (!dryrun)
-+		reverse_nodes(root);
- 
- 	return mem;
- }
-@@ -431,7 +452,6 @@ static void __unflatten_device_tree(const void *blob,
- 			     void * (*dt_alloc)(u64 size, u64 align))
- {
- 	unsigned long size;
--	int start;
- 	void *mem;
- 
- 	pr_debug(" -> unflatten_device_tree()\n");
-@@ -452,8 +472,7 @@ static void __unflatten_device_tree(const void *blob,
+ 	msi->inner_domain = irq_domain_add_linear(NULL, msi->num_of_vectors,
+ 					     &msi_domain_ops, msi);
+ 	if (!msi->inner_domain) {
+@@ -188,7 +190,7 @@ static int altera_allocate_domains(struct altera_msi *msi)
+ 		return -ENOMEM;
  	}
  
- 	/* First pass, scan for size */
--	start = 0;
--	size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
-+	size = (unsigned long)unflatten_dt_node(blob, NULL, NULL, NULL, true);
- 	size = ALIGN(size, 4);
- 
- 	pr_debug("  size is %lx, allocating...\n", size);
-@@ -467,8 +486,7 @@ static void __unflatten_device_tree(const void *blob,
- 	pr_debug("  unflattening %p...\n", mem);
- 
- 	/* Second pass, do actual unflattening */
--	start = 0;
--	unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
-+	unflatten_dt_node(blob, mem, NULL, mynodes, false);
- 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
- 		pr_warning("End of tree marker overwritten: %08x\n",
- 			   be32_to_cpup(mem + size));
--- 
-2.1.0
+-	msi->msi_domain = pci_msi_create_irq_domain(msi->pdev->dev.of_node,
++	msi->msi_domain = pci_msi_create_irq_domain(fwnode,
+ 				&altera_msi_domain_info, msi->inner_domain);
+ 	if (!msi->msi_domain) {
+ 		dev_err(&msi->pdev->dev, "failed to create MSI domain\n");
 
