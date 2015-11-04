@@ -1,68 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:58296 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751881AbbKQBnG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 20:43:06 -0500
-Received: from localhost
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Nov 2015 11:43:03 +1000
-Date: Tue, 17 Nov 2015 12:42:03 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-Subject: Re: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
-Message-ID: <20151117014203.GC31584@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
- <56498D8A.2050505@ozlabs.ru>
+Received: from mout.kundenserver.de ([212.227.17.24]:61984 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965355AbbKDNgJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:36:09 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	marc.zyngier@arm.com, linux-kernel@vger.kernel.org,
+	Ley Foon Tan <lftan@altera.com>
+Subject: Re: [PATCH] PCI: altera: use fwnode API for pci_msi_create_irq_domain
+Date: Wed, 04 Nov 2015 14:35:56 +0100
+Message-ID: <5938100.cg9CTxQKZA@wuerfel>
+In-Reply-To: <alpine.DEB.2.11.1511041344370.4032@nanos>
+References: <4309044.Hy8Vx01ZVW@wuerfel> <alpine.DEB.2.11.1511041344370.4032@nanos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56498D8A.2050505@ozlabs.ru>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 16, 2015 at 07:02:18PM +1100, Alexey Kardashevskiy wrote:
->On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>This enables M64 window on P7IOC, which has been enabled on PHB3.
->>Different from PHB3 where 16 M64 BARs are supported and each of
->>them can be owned by one particular PE# exclusively or divided
->>evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
->>of them are divided to 8 segments. So every P7IOC PHB supports
->>128 M64 segments in total. P7IOC has M64DT, which helps mapping
->>one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
->>M64DT, indicating that one M64 segment can only be pinned to the
->>fixed PE#. In order to have same code to support M64 on P7IOC and
->>PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
->>of them is pinned to the fixed PE# by bypassing the function of
->>M64DT. In turn, we just need different phb->init_m64() for P7IOC
->>and PHB3 to support M64.
->
->I thought we decided (Ben suggested?) not to push P7IOC code now (or ever) as
->there is no user for it, has this changed?
->
+On Wednesday 04 November 2015 13:45:23 Thomas Gleixner wrote:
+> On Wed, 4 Nov 2015, Arnd Bergmann wrote:
+> > There is a new conflict between Thomas Gleixner's IRQ tree that contains
+> > a patch from Marc Zyngier to change the prototype for
+> > pci_msi_create_irq_domain, and Bjorn Helgaas' PCI tree that contains
+> > a new driver for the Altera PCI MSI host, with the old interface,
+> > as gcc now warns in linux-next:
+> > 
+> > drivers/pci/host/pcie-altera-msi.c: In function 'altera_allocate_domains':
+> > drivers/pci/host/pcie-altera-msi.c:191:46: warning: passing argument 1 of 'pci_msi_create_irq_domain' from incompatible pointer type [-Wincompatible-pointer-types]
+> >   msi->msi_domain = pci_msi_create_irq_domain(msi->pdev->dev.of_node,
+> > include/linux/msi.h:286:20: note: expected 'struct fwnode_handle *' but argument is of type 'struct device_node *'
+> > 
+> > This changes the new driver use the modified API.
+> > 
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> > Fixes: af1169b48b17 ("PCI: altera: Add Altera PCIe MSI driver")
+> > Fixes: be5436c83ac8 ("irqdomain/msi: Use fwnode instead of of_node")
+> > ---
+> > This conflict seems to be new in linux-next today. Any idea how to resolve it?
+> > 
+> > I think either Bjorn merges the msi-map-4.4 of git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms and uses this
+> > as the resolution, or whichever pull request comes second should let Linus
+> > know about the conflict so he can do it when merging both.
+> 
+> The irq/core stuff which contains Marcs msi map stuff has hit Linus
+> tree already.
+> 
 
-Remember that the code is mixed for P7IOC/PHB3. It's not harmful to support
-M64 window on P7IOC, which is much larger than M32.
-
->btw please put ioda1/ioda2/p7ioc/etc to the subject line to make it easier to
->see how much work is there about particular PHB type. You rename quite many
->functions and I generally want to ask you to group all renaming patches first
->but it would also make sense to keep them close to (for example)
->p7ioc-related patches so having more descriptive subject lines may help.
->Thanks.
->
-
-As the code is mixed for P7IOC/PHB3, I'm not following the line (IODA1/IODA2/p7ioc/phb3)
-in this patchset. Instead, the sequence of patchset is order related to: cod refactoring,
-IO/M32/M64, DMA, PE allocation/releaseing.
+Ah, I see. Maybe that's why it showed up now, when Stephen had a fixup
+for it in linux-next and that got dropped after the merge. I guess
+Bjorn can pick either approach then, to get the correct merge done.
 
 Thanks,
-Gavin
 
+	Arnd
