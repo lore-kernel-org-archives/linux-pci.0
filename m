@@ -1,65 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38150 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752133AbbKXV3h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Nov 2015 16:29:37 -0500
-Date: Tue, 24 Nov 2015 15:29:34 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Ray Jui <rjui@broadcom.com.com>,
-	zajec5@gmail.com
-Subject: Re: [PATCH] PCI: iproc: hide CONFIG_PCIE_IPROC
-Message-ID: <20151124212934.GD17377@localhost>
-References: <11420214.lrdhuUq0ZO@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <11420214.lrdhuUq0ZO@wuerfel>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:50416 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965393AbbKDNNz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:55 -0500
+Received: from localhost
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 4 Nov 2015 23:13:53 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v7 37/50] powerpc/powernv: Simplify pnv_eeh_reset()
+Date: Thu,  5 Nov 2015 00:12:37 +1100
+Message-Id: <1446642770-4681-38-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 17, 2015 at 05:08:33PM +0100, Arnd Bergmann wrote:
-> PCIE_IPROC_BCMA does not require CONFIG_OF in Kconfig, but
-> CONFIG_PCIE_IPROC does, so we can get a warning when building
-> for an ARM platform without DT support:
-> 
-> warning: (PCIE_IPROC_PLATFORM && PCIE_IPROC_BCMA) selects PCIE_IPROC which has unmet direct dependencies (PCI && OF && (ARM || ARM64))
-> 
-> It turns out that CONFIG_PCIE_IPROC never needs to be enabled
-> by a user anyway, we can simply rely on it being selected
-> implictly through either PCIE_IPROC_PLATFORM or PCIE_IPROC_BCMA.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 4785ffbdc9b5 ("PCI: iproc: Add BCMA PCIe driver")
+This drops unnecessary nested if statements in pnv_eeh_reset() to
+improve the code readability. After the changes, the unused local
+variable "ret" is dropped as well. No logical changes introduced.
 
-Applied with Hauke's ack to pci/host-iproc for v4.5, thanks!
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 61 ++++++++++++----------------
+ 1 file changed, 27 insertions(+), 34 deletions(-)
 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index f131ba947dc6..767605a5c659 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -118,13 +118,11 @@ config PCI_VERSATILE
->  	depends on ARCH_VERSATILE
->  
->  config PCIE_IPROC
-> -	tristate "Broadcom iProc PCIe controller"
-> -	depends on OF && (ARM || ARM64)
-> -	default n
-> +	tristate
->  	help
->  	  This enables the iProc PCIe core controller support for Broadcom's
-> -	  iProc family of SoCs. An appropriate bus interface driver also needs
-> -	  to be enabled
-> +	  iProc family of SoCs. An appropriate bus interface driver needs
-> +	  to be enabled to select this.
->  
->  config PCIE_IPROC_PLATFORM
->  	tristate "Broadcom iProc PCIe platform bus driver"
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 861a7d2..a7d84a4 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -907,8 +907,9 @@ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
+ {
+ 	struct pci_controller *hose = pe->phb;
++	struct pnv_phb *phb;
+ 	struct pci_bus *bus;
+-	int ret;
++	int64_t rc;
+ 
+ 	/*
+ 	 * For PHB reset, we always have complete reset. For those PEs whose
+@@ -924,43 +925,35 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
+ 	 * reset. The side effect is that EEH core has to clear the frozen
+ 	 * state explicitly after BAR restore.
+ 	 */
+-	if (pe->type & EEH_PE_PHB) {
+-		ret = pnv_eeh_phb_reset(hose, option);
+-	} else {
+-		struct pnv_phb *phb;
+-		s64 rc;
++	if (pe->type & EEH_PE_PHB)
++		return pnv_eeh_phb_reset(hose, option);
+ 
+-		/*
+-		 * The frozen PE might be caused by PAPR error injection
+-		 * registers, which are expected to be cleared after hitting
+-		 * frozen PE as stated in the hardware spec. Unfortunately,
+-		 * that's not true on P7IOC. So we have to clear it manually
+-		 * to avoid recursive EEH errors during recovery.
+-		 */
+-		phb = hose->private_data;
+-		if (phb->model == PNV_PHB_MODEL_P7IOC &&
+-		    (option == EEH_RESET_HOT ||
+-		    option == EEH_RESET_FUNDAMENTAL)) {
+-			rc = opal_pci_reset(phb->opal_id,
+-					    OPAL_RESET_PHB_ERROR,
+-					    OPAL_ASSERT_RESET);
+-			if (rc != OPAL_SUCCESS) {
+-				pr_warn("%s: Failure %lld clearing "
+-					"error injection registers\n",
+-					__func__, rc);
+-				return -EIO;
+-			}
++	/*
++	 * The frozen PE might be caused by PAPR error injection
++	 * registers, which are expected to be cleared after hitting
++	 * frozen PE as stated in the hardware spec. Unfortunately,
++	 * that's not true on P7IOC. So we have to clear it manually
++	 * to avoid recursive EEH errors during recovery.
++	 */
++	phb = hose->private_data;
++	if (phb->model == PNV_PHB_MODEL_P7IOC &&
++	    (option == EEH_RESET_HOT || option == EEH_RESET_FUNDAMENTAL)) {
++		rc = opal_pci_reset(phb->opal_id,
++				    OPAL_RESET_PHB_ERROR,
++				    OPAL_ASSERT_RESET);
++		if (rc != OPAL_SUCCESS) {
++			pr_warn("%s: Error %lld clearing error injection\n",
++				__func__, rc);
++			return -EIO;
+ 		}
+-
+-		bus = eeh_pe_bus_get(pe);
+-		if (pci_is_root_bus(bus) ||
+-			pci_is_root_bus(bus->parent))
+-			ret = pnv_eeh_root_reset(hose, option);
+-		else
+-			ret = pnv_eeh_bridge_reset(bus->self, option);
+ 	}
+ 
+-	return ret;
++	bus = eeh_pe_bus_get(pe);
++	if (pci_is_root_bus(bus) ||
++	    pci_is_root_bus(bus->parent))
++		return pnv_eeh_root_reset(hose, option);
++
++	return pnv_eeh_bridge_reset(bus->self, option);
+ }
+ 
+ /**
+-- 
+2.1.0
+
