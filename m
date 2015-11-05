@@ -1,129 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16773 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751838AbbKJVTr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Nov 2015 16:19:47 -0500
-From: Babu Moger <babu.moger@oracle.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] pci: Limit VPD length for megaraid_sas adapter
-Date: Tue, 10 Nov 2015 16:19:32 -0500
-Message-Id: <1447190372-149109-1-git-send-email-babu.moger@oracle.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:25856 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030939AbbKEI06 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2015 03:26:58 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	"majun (F)" <majun258@huawei.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH RFC 7/7] irqchip: [Example] dummy wired interrupt/MSI
+ bridge driver
+Date: Thu, 5 Nov 2015 08:25:50 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1629D8DD@lhreml503-mbs>
+References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
+ <1444923568-17413-8-git-send-email-marc.zyngier@arm.com>
+ <5639BB10.1090108@huawei.com> <5639C9F9.2010704@arm.com>
+In-Reply-To: <5639C9F9.2010704@arm.com>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Resending again. Sorry if it is duplicate. My email client 
-seems to have some issues.
-
-Reading or Writing of PCI VPD data causes system panic.
-We saw this problem by running "lspci -vvv" in the beginning.
-However this can be easily reproduced by running
- cat /sys/bus/devices/XX../vpd
-
-VPD length has been set as 32768 by default. Accessing vpd
-will trigger read/write of 32k. This causes problem as we
-could read data beyond the VPD end tag. Behaviour is un-
-predictable when this happens. I see some other adapter doing
-similar quirks(commit id bffadffd43d438c3143b8d172a463de89345b836)
-
-I see there is an attempt to fix this right way.
-https://patchwork.ozlabs.org/patch/534843/ or
-https://lkml.org/lkml/2015/10/23/97
-
-Tried to fix it this way, but problem is I dont see the proper
-start/end TAGs(at least for this adapter) at all. The data is
-mostly junk or zeros. This patch fixes the issue by setting the
-vpd length to 0.
-
-Signed-off-by: Babu Moger <babu.moger@oracle.com>
----
- drivers/pci/quirks.c    |   49 +++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci_ids.h |   12 +++++++++++
- 2 files changed, 61 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b03373f..c32cd07 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2123,6 +2123,55 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
- 
- /*
-+ * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
-+ * will dump 32k of data. The default length is set as 32768.
-+ * Reading a full 32k will cause an access beyond the VPD end tag.
-+ * The system behaviour at that point is mostly unpredictable.
-+ * Also I dont believe vendors have implemented this VPD headers properly.
-+ * Atleast I dont see it in following megaraid sas controller.
-+ * That is why adding the quirk here.
-+ */
-+static void quirk_megaraid_sas_limit_vpd(struct pci_dev *dev)
-+{
-+	if (dev->vpd)
-+		dev->vpd->len = 0;
-+}
-+
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC,
-+		PCI_DEVICE_ID_LSI_SAS1078R,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC,
-+		PCI_DEVICE_ID_LSI_SAS1078DE,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC,
-+		PCI_DEVICE_ID_LSI_VERDE_ZCR,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC,
-+		PCI_DEVICE_ID_LSI_SAS1078GEN2,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC,
-+		PCI_DEVICE_ID_LSI_SAS0079GEN2,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC,
-+		PCI_DEVICE_ID_LSI_SAS0073SKINNY,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC,
-+		PCI_DEVICE_ID_LSI_SAS0071SKINNY,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC,
-+		PCI_DEVICE_ID_LSI_FUSION,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC,
-+		PCI_DEVICE_ID_LSI_PLASMA,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC,
-+		PCI_DEVICE_ID_LSI_INVADER,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC,
-+		PCI_DEVICE_ID_LSI_FURY,
-+		quirk_megaraid_sas_limit_vpd);
-+
-+/*
-  * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
-  * VPD end tag will hang the device.  This problem was initially
-  * observed when a vpd entry was created in sysfs
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index d9ba49c..20c5103 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -213,6 +213,18 @@
- #define PCI_DEVICE_ID_LSI_SAS1068E	0x0058
- #define PCI_DEVICE_ID_LSI_SAS1078	0x0060
- 
-+#define PCI_DEVICE_ID_LSI_SAS1078R              0x0060
-+#define PCI_DEVICE_ID_LSI_SAS1078DE             0x007C
-+#define PCI_DEVICE_ID_LSI_VERDE_ZCR             0x0413
-+#define PCI_DEVICE_ID_LSI_SAS1078GEN2           0x0078
-+#define PCI_DEVICE_ID_LSI_SAS0079GEN2           0x0079
-+#define PCI_DEVICE_ID_LSI_SAS0073SKINNY         0x0073
-+#define PCI_DEVICE_ID_LSI_SAS0071SKINNY         0x0071
-+#define PCI_DEVICE_ID_LSI_FUSION                0x005b
-+#define PCI_DEVICE_ID_LSI_PLASMA                0x002f
-+#define PCI_DEVICE_ID_LSI_INVADER               0x005d
-+#define PCI_DEVICE_ID_LSI_FURY                  0x005f
-+
- #define PCI_VENDOR_ID_ATI		0x1002
- /* Mach64 */
- #define PCI_DEVICE_ID_ATI_68800		0x4158
--- 
-1.7.1
-
+SGkgTWFyYw0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXBj
+aS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1wY2ktb3duZXJAdmdlci5rZXJu
+ZWwub3JnXQ0KPiBPbiBCZWhhbGYgT2YgTWFyYyBaeW5naWVyDQo+IFNlbnQ6IDA0IE5vdmVtYmVy
+IDIwMTUgMDk6MDQNCj4gVG86IG1hanVuIChGKTsgVGhvbWFzIEdsZWl4bmVyOyBKaWFuZyBMaXU7
+IEphc29uIENvb3Blcg0KPiBDYzogbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3Jn
+OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVs
+Lm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIFJGQyA3LzddIGlycWNoaXA6IFtFeGFtcGxlXSBk
+dW1teSB3aXJlZCBpbnRlcnJ1cHQvTVNJDQo+IGJyaWRnZSBkcml2ZXINCj4gDQo+IE9uIDA0LzEx
+LzE1IDA4OjAwLCBtYWp1biAoRikgd3JvdGU6DQo+ID4gSGkgTWFyYzoNCj4gPg0KPiA+INTaIDIw
+MTUvMTAvMTUgMjM6MzksIE1hcmMgWnluZ2llciDQtLXAOg0KPiA+PiBJbiBvcmRlciB0byBkZW1v
+bnN0cmF0ZSBob3cgdG8gcHV0IHRvZ2V0aGVyIGEgd2lyZS9NU0kgYnJpZGdlLA0KPiA+PiBhZGQg
+YSBkdW1teSBkcml2ZXIgdGhhdCBkb2Vzbid0IGRvIGFueXRoaW5nIGF0IGFsbCwgZXhjZXB0DQo+
+ID4+IGZvciBhbGxvY2F0aW5nIGludGVycnVwdHMuDQo+ID4+DQo+ID4+IEl0IGNvbWVzIHRvZ2V0
+aGVyIHdpdGggYW4gZXZlbiBtb3JlIHN0dXBpZCBjbGllbnQgZHJpdmVyIHRoYXQNCj4gPj4gYWxs
+b2NhdGVzIGFuIGludGVycnVwdCBhbmQgZHVtcCB0aGUgaGllcmFyY2h5IG9mIHRoYXQgaW50ZXJy
+dXB0Lg0KPiA+Pg0KPiA+PiBTaWduZWQtb2ZmLWJ5OiBNYXJjIFp5bmdpZXIgPG1hcmMuenluZ2ll
+ckBhcm0uY29tPg0KPiA+PiAtLS0NCj4gPiBbLi4uXQ0KPiA+PiArDQo+ID4+ICtzdGF0aWMgaW50
+IG1zaWNoaXBfZG9tYWluX2FsbG9jKHN0cnVjdCBpcnFfZG9tYWluICpkb21haW4sIHVuc2lnbmVk
+IGludA0KPiB2aXJxLA0KPiA+PiArCQkJCSAgIHVuc2lnbmVkIGludCBucl9pcnFzLCB2b2lkICph
+cmcpDQo+ID4+ICt7DQo+ID4+ICsJaW50IGksIGVycjsNCj4gPj4gKwlpcnFfaHdfbnVtYmVyX3Qg
+aHdpcnE7DQo+ID4+ICsJdW5zaWduZWQgaW50IHR5cGU7DQo+ID4+ICsJc3RydWN0IGlycV9md3Nw
+ZWMgKmZ3c3BlYyA9IGFyZzsNCj4gPj4gKwl2b2lkICpkYXRhOw0KPiA+PiArDQo+ID4+ICsJZXJy
+ID0gbXNpY2hpcF9kb21haW5fdHJhbnNsYXRlKGRvbWFpbiwgZndzcGVjLCAmaHdpcnEsICZ0eXBl
+KTsNCj4gPj4gKwlpZiAoZXJyKQ0KPiA+PiArCQlyZXR1cm4gZXJyOw0KPiA+PiArDQo+ID4NCj4g
+PiAudHJhbnNsYXRlIGZ1bmN0aW9uIGFscmVhZHkgY2FsbGVkIG9uY2UgaW4gIGlycV9kb21haW5f
+dHJhbnNsYXRlKCksDQo+ID4gSSB0aGluayB3ZSBkb24ndCBuZWVkIGNhbGwgdGhpcyBmdWNudGlv
+biBvbmUgbW9yZSB0aW1lIGhlcmUuDQo+IA0KPiBpZiB5b3UgZG9uJ3QgdHJhbnNsYXRlIGl0IGhl
+cmUsIGhvdyBkbyB5b3Ugb2J0YWluIHRoZSBod2lycSB0aGF0IHlvdQ0KPiBoYXZlIHRvIHBhc3Mg
+dG8gaXJxX2RvbWFpbl9zZXRfaHdpcnFfYW5kX2NoaXAganVzdCBiZWxvdz8NCj4gDQo+ID4+ICsJ
+ZXJyID0gcGxhdGZvcm1fbXNpX2RvbWFpbl9hbGxvYyhkb21haW4sIHZpcnEsIG5yX2lycXMpOw0K
+PiA+PiArCWlmIChlcnIpDQo+ID4+ICsJCXJldHVybiBlcnI7DQo+ID4+ICsNCj4gPj4gKwlkYXRh
+ID0gcGxhdGZvcm1fbXNpX2dldF9ob3N0X2RhdGEoZG9tYWluKTsNCj4gPj4gKwlmb3IgKGkgPSAw
+OyBpIDwgbnJfaXJxczsgaSsrKQ0KPiA+PiArCQlpcnFfZG9tYWluX3NldF9od2lycV9hbmRfY2hp
+cChkb21haW4sIHZpcnEgKyBpLCBod2lycSArIGksDQo+ID4+ICsJCQkJCSAgICAgICZtc2ljaGlw
+X2NoaXAsIGRhdGEpOw0KPiA+PiArDQo+ID4+ICsJcmV0dXJuIDA7DQo+ID4+ICt9DQo+ID4+ICsN
+Cj4gPiBbLi4uXQ0KPiA+PiArDQo+ID4+ICtzdGF0aWMgc3RydWN0IHBsYXRmb3JtX2RyaXZlciBt
+c2ljaGlwX2RyaXZlciA9IHsNCj4gPj4gKwkuZHJpdmVyID0gew0KPiA+PiArCQkubmFtZQkJPSAi
+bXNpY2hpcCIsDQo+ID4+ICsJCS5vZl9tYXRjaF90YWJsZQk9IG1zaWNoaXBfb2ZfbWF0Y2gsDQo+
+ID4+ICsJfSwNCj4gPj4gKwkucHJvYmUJCQk9IG1zaWNoaXBfcHJvYmUsDQo+ID4+ICt9Ow0KPiA+
+PiArLyogRG8gbm90IGRlZmluZSB0aGlzIGFzIGFuIGlycWNoaXAgKi8NCj4gPj4gK21vZHVsZV9w
+bGF0Zm9ybV9kcml2ZXIobXNpY2hpcF9kcml2ZXIpOw0KPiA+PiArDQo+ID4+ICsNCj4gPg0KPiA+
+IEkgdGhpbmssZm9yIGEgaW50ZXJydXB0IGNvbnRyb2xsZXIsIG1zaWNoaXAgZHJpdmVyIGluaXRp
+YWxpemF0aW9uIG1heWJlIGlzDQo+IHRvbyBsYXRlDQo+ID4gZm9yIHNvbWUgZGV2aWNlcyB3aGlj
+aCBjb25uZWN0IHRvIHRoaXMgaXJxY2hpcCBpZiB3ZSB1c2UNCj4gbW9kdWxlX3BsYXRmb3JtX2Ry
+aXZlci4NCj4gDQo+IFRoYXQncyBhIGNvbnNlcXVlbmNlIG9mIHRoaXMgZGVzaWduLiBUaGlzIGlz
+IHdoeSBJIGluc2lzdGVkIG9uIHRoZSBmYWN0DQo+IHRoYXQgdGhpcyBpcyBjdXJyZW50bHkgYXZv
+aWRlZCBieSB1c2luZyBkZWZlcnJlZCBwcm9iZSBpbiBkcml2ZXJzLCBhbmQNCg0KTW1tIHVzaW5n
+IHRlIGRlZmVycmVkIHByb2JlIHdvdWxkIG1lYW4gdG8gcmV3b3JrIGFsbCB0aGUgZHJpdmVycyBv
+ZiB0aGUNCnBvdGVudGlhbCBkZXZpY2VzIGNvbm5lY3RlZCB0byBtYmktZ2VuLi4ud291bGQgdGhh
+dCBiZSBzdXN0YWluYWJsZS9hY2NlcHRhYmxlPw0KDQo+IHRoYXQgaXQgc2hvdWxkIGJlIHNvbHZl
+ZCBieSBoYXZpbmcgYSBwcm9iZSBvcmRlci4gRWl0aGVyIHdheSwgdGhpcyBpcw0KPiBub3Qgc29t
+ZXRoaW5nIHRoYXQgd2UgY2FuIHNvbHZlIGF0IHRoYXQgbGV2ZWwgKHNlZSB0aGUgbXVsdGlwbGUg
+cHJvcG9zYWwNCj4gZm9yIHRoaXMgb24gdGhlIHZhcmlvdXMgbGlzdHMpLg0KDQpDb3VsZCB5b3Ug
+cG9pbnQgbWUgdG8gdGhlIHJlbGV2YW50IGRpc2N1c3Npb25zIGZvciB0aGlzLi4uPw0KDQpUaGFu
+a3MNCg0KR2FiDQoNCj4gDQo+ID4gU28sIGhvdyBhYm91dCB1c2UgdGhlIGFyY2hfaW5pdGNhbGwg
+dG8gcmVnaXN0ZXIgdGhlIG1zaWNoaXAgZHJpdmVyPw0KPiANCj4gWW91J3JlIG9ubHkgcHVzaGlu
+ZyB0aGUgcHJvYmxlbSBvbmUgbGV2ZWwgdXAuIEFuZCB5b3UnbGwgcmVhbGl6ZSB0aGF0DQo+IHRo
+aXMgaXMgbm90IGVub3VnaCBmb3Igc29tZSByYW5kb20gZHJpdmVyLiBUaGlzIGlzIG5vdCBzdXN0
+YWluYWJsZSwgYW5kDQo+IG11c3QgYmUgYWRkcmVzc2VkIHByb3Blcmx5Lg0KPiANCj4gVGhhbmtz
+LA0KPiANCj4gCU0uDQo+IC0tDQo+IEphenogaXMgbm90IGRlYWQuIEl0IGp1c3Qgc21lbGxzIGZ1
+bm55Li4uDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBs
+aW5lICJ1bnN1YnNjcmliZSBsaW51eC1wY2kiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0
+byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0
+dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
