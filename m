@@ -1,93 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55711 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750735AbbKYRSA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Nov 2015 12:18:00 -0500
-Date: Wed, 25 Nov 2015 11:17:56 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: Update VPD size with correct length
-Message-ID: <20151125171756.GD1380@localhost>
-References: <1445591396-95395-1-git-send-email-hare@suse.de>
- <562AD631.3040603@gmail.com>
- <562C4DCA.6070502@suse.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [Bugfix v4] PCI, ACPI: Fix regressions caused by resource_size_t
+ overflow with 32-bit kernel
+To: Jiang Liu <jiang.liu@linux.intel.com>
+References: <559107F2.3080701@pr.hu>
+ <1436340399-19695-1-git-send-email-jiang.liu@linux.intel.com>
+ <563780FC.5070503@linaro.org>
+Cc: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@kernel.org>,
+	Boszormenyi Zoltan <zboszor@pr.hu>,
+	Len Brown <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <563B5161.1060105@semihalf.com>
+Date: Thu, 5 Nov 2015 13:53:53 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <562C4DCA.6070502@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <563780FC.5070503@linaro.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Hannes,
+On 02.11.2015 16:27, Tomasz Nowicki wrote:
+> On 08.07.2015 09:26, Jiang Liu wrote:
+>> Zoltan Boszormenyi reported this regression:
+>>    "There's a Realtek RTL8111/8168/8411 (PCI ID 10ec:8168, Subsystem ID
+>>     1565:230e) network chip on the mainboard. After the r8169 driver
+>> loaded
+>>     the IRQs in the machine went berserk. Keyboard keypressed arrived
+>> with
+>>     considerable latency and duplicated, so no real work was possible.
+>>     The machine responded to the power button but didn't actually power
+>>     down. It just stuck at the powering down message. I had to press the
+>>     power button for 4 seconds to power it down.
+>>
+>>     The computer is a POS machine with a big battery inside. Because
+>> of this,
+>>     either ACPI or the Realtek chip kept the bad state and after
+>> rebooting,
+>>     the network chip didn't even show up in lspci. Not even the PXE ROM
+>>     announced itself during boot. I had to disconnect the battery to beat
+>>     some sense back to the computer.
+>>
+>>     The regression happens with 4.0.5, 4.1.0-rc8 and 4.1.0-final.
+>> 3.18.16 was
+>>     good."
+>>
+>> The regression is caused by commit 593669c2ac0f ("x86/PCI/ACPI: Use
+>> common
+>> ACPI resource interfaces to simplify implementation"). Since commit
+>> 593669c2ac0f, x86 PCI ACPI host bridge driver validates ACPI resources by
+>> first converting an ACPI resource to a 'struct resource' structure and
+>> then applying checks against the converted resource structure. The
+>> 'start'
+>> and 'end' fields in 'struct resource' are defined to be type of
+>> resource_size_t, which may be 32 bits or 64 bits depending on
+>> CONFIG_PHYS_ADDR_T_64BIT.
+>>
+>> This may cause incorrect resource validation results with 32-bit kernels
+>> because 64-bit ACPI resource descriptors may get truncated when
+>> converting
+>> to 32-bit 'start' and 'end' fields in 'struct resource'. It eventually
+>> affects PCI resource allocation subsystem and makes some PCI devices and
+>> the system behave abnormally due to incorrect resource assignment.
+>>
+>> So enhance the ACPI resource parsing interfaces to ignore ACPI resource
+>> descriptors with address/offset above 4G when running in 32-bit mode.
+>>
+>> With the fix applied, the behavior of the machine was restored to how
+>> 3.18.16 worked, i.e. the memory range that is over 4GB is ignored again,
+>> and lspci -vvxxx shows that everything is at the same memory window as
+>> they were with 3.18.16.
+>>
+>> Reported-and-Tested-by: Boszormenyi Zoltan <zboszor@pr.hu>
+>> Fixes: 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
+>> interfaces to simplify implementation")
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> Cc: stable@vger.kernel.org # 4.0
+>> ---
+>>   drivers/acpi/resource.c |   24 +++++++++++++++---------
+>>   1 file changed, 15 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+>> index 10561ce16ed1..e8d281739cbc 100644
+>> --- a/drivers/acpi/resource.c
+>> +++ b/drivers/acpi/resource.c
+>> @@ -194,6 +194,7 @@ static bool acpi_decode_space(struct resource_win
+>> *win,
+>>       u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 :
+>> ACPI_DECODE_16;
+>>       bool wp = addr->info.mem.write_protect;
+>>       u64 len = attr->address_length;
+>> +    u64 start, end, offset = 0;
+>>       struct resource *res = &win->res;
+>>
+>>       /*
+>> @@ -205,9 +206,6 @@ static bool acpi_decode_space(struct resource_win
+>> *win,
+>>           pr_debug("ACPI: Invalid address space min_addr_fix %d,
+>> max_addr_fix %d, len %llx\n",
+>>                addr->min_address_fixed, addr->max_address_fixed, len);
+>>
+>> -    res->start = attr->minimum;
+>> -    res->end = attr->maximum;
+>> -
+>>       /*
+>>        * For bridges that translate addresses across the bridge,
+>>        * translation_offset is the offset that must be added to the
+>> @@ -215,12 +213,22 @@ static bool acpi_decode_space(struct
+>> resource_win *win,
+>>        * primary side. Non-bridge devices must list 0 for all Address
+>>        * Translation offset bits.
+>>        */
+>> -    if (addr->producer_consumer == ACPI_PRODUCER) {
+>> -        res->start += attr->translation_offset;
+>> -        res->end += attr->translation_offset;
+>> -    } else if (attr->translation_offset) {
+>> +    if (addr->producer_consumer == ACPI_PRODUCER)
+>> +        offset = attr->translation_offset;
+>> +    else if (attr->translation_offset)
+>>           pr_debug("ACPI: translation_offset(%lld) is invalid for
+>> non-bridge device.\n",
+>>                attr->translation_offset);
+>> +    start = attr->minimum + offset;
+>> +    end = attr->maximum + offset;
+>
+> I still see the issue for this area, I mean ACPI_IO_RANGE. You are
+> adding translation offset to attr->minimum, build resource structure
+> which is then passed to acpi_dev_ioresource_flags and compared against
+> 0x10003. It causes some IO ranges to be ignored.
+>
 
-On Sun, Oct 25, 2015 at 04:34:34AM +0100, Hannes Reinecke wrote:
-> On 10/24/2015 02:52 AM, Alexander Duyck wrote:
-> > On 10/23/2015 02:09 AM, Hannes Reinecke wrote:
-> >> PCI-2.2 VPD entries have a maximum size of 32k, but might actually
-> >> be smaller than that. To figure out the actual size one has to read
-> >> the VPD area until the 'end marker' is reached.
-> >> Trying to read VPD data beyond that marker results in 'interesting'
-> >> effects, from simple read errors to crashing the card.
-> >> This path modifies the attribute size to the avialable VPD size.
-> >>
-> >> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> >> ---
-> >>   drivers/pci/access.c | 29 +++++++++++++++++++++++++++++
-> >>   1 file changed, 29 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> >> index 6bc9b12..4f8208e 100644
-> >> --- a/drivers/pci/access.c
-> >> +++ b/drivers/pci/access.c
-> >> @@ -409,6 +409,34 @@ static int pci_vpd_f0_dev_check(struct pci_dev *dev)
-> >>       return ret;
-> >>   }
-> >>
-> >> +/**
-> >> + * pci_vpd_size - determine actual size of Vital Product Data
-> >> + * @dev:    pci device struct
-> >> + * @old_size:    current assumed size, also maximum allowed size
-> >> + *
-> >> + */
-> >> +size_t
-> >> +pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
-> >> +{
-> >> +    loff_t off = 0;
-> >> +    unsigned char header[1+2];    /* 1 byte tag, 2 bytes length */
-> >> +
-> >> +    while (off < old_size && pci_read_vpd(dev, off, 1, header)) {
-> >> +        if (header[0] == 0x78)    /* End tag descriptor */
-> >> +            return off + 1;
-> >> +        if (header[0] & 0x80) {
-> >> +            /* Large Resource Data Type Tag */
-> >> +            if (pci_read_vpd(dev, off+1, 2, &header[1]) != 2)
-> >> +                return off + 1;
-> >> +            off += 3 + ((header[2] << 8) | header[1]);
-> >> +        } else {
-> >> +            /* Short Resource Data Type Tag */
-> >> +            off += 1 + (header[0] & 0x07);
-> >> +        }
-> >> +    }
-> >> +    return old_size;
-> >> +}
-> >> +
-> > 
-> > My understanding is that the end tag can have some data associated with
-> > it such as a checksum.  What you may want to look at doing is process
-> > long tag and short tag bits first.  Then you could do a mask and compare
-> > after and if ((header[0] & ~0x7) == 0x78) then you return off + 1.
-> > 
-> Ah. Oh. Hmm. Wasn't aware of that one.
-> Bjorn?
+Kindly reminder, any comments?
 
-I don't know.  I took a very quick glance at the PCI 3.0 spec and I
-didn't see the description of data associated with an End Tag.  It'd
-be nice to have a spec reference for whatever we implement here.
-
-It sounds like this fixes some real problems, and it'd also be nice to
-have more specifics about them, e.g., what devices, how to reproduce,
-etc.
-
-Bjorn
+Tomasz
