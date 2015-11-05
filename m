@@ -1,37 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:42969 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755257AbbLAHZD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 02:25:03 -0500
-From: Simon Horman <horms+renesas@verge.net.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, devicetree@vger.kernel.org,
-	Simon Horman <horms+renesas@verge.net.au>
-Subject: [PATCH 0/4] PCI: rcar, rcar-gen2: More Gen2 compat strings
-Date: Tue,  1 Dec 2015 16:24:28 +0900
-Message-Id: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
+Received: from www.linutronix.de ([62.245.132.108]:54830 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030793AbbKEM0n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2015 07:26:43 -0500
+Date: Thu, 5 Nov 2015 13:25:52 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Marc Zyngier <marc.zyngier@arm.com>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Ma Jun <majun258@huawei.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RFC 0/7] Adding core support for wire-MSI bridges
+In-Reply-To: <563B49F0.7040000@arm.com>
+Message-ID: <alpine.DEB.2.11.1511051324380.4032@nanos>
+References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com> <56205917.7090001@linux.intel.com> <5620B9D6.1010708@arm.com> <alpine.DEB.2.11.1511041348060.4032@nanos> <563B49F0.7040000@arm.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Thu, 5 Nov 2015, Marc Zyngier wrote:
+> On 04/11/15 13:34, Thomas Gleixner wrote:
+> > Marc,
+> > 
+> > On Fri, 16 Oct 2015, Marc Zyngier wrote:
+> >> On 16/10/15 02:55, Jiang Liu wrote:
+> >>> 	There's a working to enable Intel VMD storage device, which
+> >>> has the similar requirement. Basically a PCIe hierarchy is hidden
+> >>> behind a parent PCIe device, so we need to use the PCIe irqs on parent
+> >>> to de-multiple PCIe IRQs from hidden PCIe devices. Seems a chance for
+> >>> consolidation here.
+> >>
+> >> Do you know if there is a 1-1 mapping between the interrupts seen by the
+> >> parent device and those seen by the hidden devices? Or is it a case of
+> >> having to demultiplex the MSIs? Looks like the former, but I'd like to
+> >> be sure.
+> > 
+> > Yes, it's a demultiplexer. No 1:1 mapping.
+> 
+> Right. This doesn't exactly fit the scheme I have so far (there is a 1:1
+> mapping between the wired interrupt and the MSI), but once we are able
+> to expose an MSI domain, it could be possible to construct the MSI
+> demultiplexer on top. That's a lot of layers! ;-)
 
-this short series adds generic gen2 and soc-specific r8a7793 compat strings
-to the rcar PCI and rcar-gen2 PCIE drivers. The intention is to provide
-a complete set of compat strings for known Gen2 SoCs.
+Well for the demux case it doesn't make a lot of sense. It's not easy
+to describe in a hierarchy. Having that parentless MSI domain for that
+VMD case is simple enough.
 
-Simon Horman (4):
-  PCI: rcar-gen2: Add generic compatibility string
-  PCI: rcar-gen2: Add device tree support for r8a7793
-  PCI: rcar: Add Gen2 fallback compatibility string
-  PCI: rcar: Add device tree support for r8a7793
+Thanks,
 
- Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 12 ++++++++++--
- Documentation/devicetree/bindings/pci/rcar-pci.txt      | 14 +++++++++++---
- drivers/pci/host/pci-rcar-gen2.c                        |  1 +
- drivers/pci/host/pcie-rcar.c                            |  1 +
- 4 files changed, 23 insertions(+), 5 deletions(-)
-
--- 
-2.1.4
-
+	tglx
