@@ -1,107 +1,159 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v3 1/6] PCI: designware: remove wrong io_base assignment
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Arnd Bergmann <arnd@arndb.de>
-References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
- <44d133d5ebd4f7b9e8b817aa8bae12f690e70000.1448270813.git.stanimir.varbanov@linaro.org>
- <6048361.Am0T3g77Bd@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E162C6F70@lhreml503-mbs>
-Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 5 Nov 2015 18:19:59 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Message-ID: <56533D93.5000604@linaro.org>
-Date: Mon, 23 Nov 2015 18:23:47 +0200
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+Message-ID: <20151105181959.GA352@red-moon>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
+ <563B65EE.7000406@semihalf.com>
 MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E162C6F70@lhreml503-mbs>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <563B65EE.7000406@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/23/2015 12:27 PM, Gabriele Paoloni wrote:
-> Hi Stanimir, Many Thanks for this fix
-> 
->> -----Original Message-----
->> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
->> owner@vger.kernel.org] On Behalf Of Arnd Bergmann
->> Sent: 23 November 2015 10:00
->> To: Stanimir Varbanov
->> Cc: linux-arm-msm@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
->> kernel@lists.infradead.org; devicetree@vger.kernel.org; linux-
->> pci@vger.kernel.org; Bjorn Helgaas; Srinivas Kandagatla; Rob Herring; Rob
->> Herring; Mark Rutland; Pawel Moll; Ian Campbell; Jingoo Han; Pratyush Anand;
->> Bjorn Andersson
->> Subject: Re: [PATCH v3 1/6] PCI: designware: remove wrong io_base assignment
->>
->> On Monday 23 November 2015 11:28:58 Stanimir Varbanov wrote:
->>> The io_base is used to keep the cpu physical address parsed
->>> from ranges dt property. After issue pci_remap_iospace the
->>> io_base has been assigned with io->start, which is not correct
->>> cause io->start is a PCI bus address.
->>>
->>> Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
->>> ---
->>>  drivers/pci/host/pcie-designware.c |    1 -
->>>  1 file changed, 1 deletion(-)
->>>
->>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-
->> designware.c
->>> index 540f077c37ea..02a7452bdf23 100644
->>> --- a/drivers/pci/host/pcie-designware.c
->>> +++ b/drivers/pci/host/pcie-designware.c
->>> @@ -440,7 +440,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
->>>  					 ret, pp->io);
->>>  				continue;
->>>  			}
->>> -			pp->io_base = pp->io->start;
->>>  			break;
->>>  		case IORESOURCE_MEM:
->>>  			pp->mem = win->res;
->>
->> I was surprised to see such an obvious bug here, as we had spent a lot of
->> time trying to get it right. However, it broke only recently and it's
->> worth mentioning what commit did it, so
-> 
-> Looking at 
-> "[PATCH v12 0/8] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05":
-> 
-> actually the bug came in as patch 3/6 of v11 patchset split
-> 
-> [...]
-> 
-> Change from v11:
-> - Split 3/6 in v11 to 3/8, 4/8, 5/8 in v12.
-> 
-> [...]
-> 
-> This was not present in v11...sorry about this.
-> 
-> Gab
-> 
->>
->> Fixes: 0021d22b73d6 ("PCI: designware: Use of_pci_get_host_bridge_resources()
->> to parse DT")
->> Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+On Thu, Nov 05, 2015 at 03:21:34PM +0100, Tomasz Nowicki wrote:
+> On 14.10.2015 08:29, Jiang Liu wrote:
 
-I think the bug is introduced in:
+[...]
 
-cbce7900598c ("PCI: designware: Make driver arch-agnostic")
+> >+static void acpi_pci_root_validate_resources(struct device *dev,
+> >+					     struct list_head *resources,
+> >+					     unsigned long type)
+> >+{
+> >+	LIST_HEAD(list);
+> >+	struct resource *res1, *res2, *root = NULL;
+> >+	struct resource_entry *tmp, *entry, *entry2;
+> >+
+> >+	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
+> >+	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
+> >+
+> >+	list_splice_init(resources, &list);
+> >+	resource_list_for_each_entry_safe(entry, tmp, &list) {
+> >+		bool free = false;
+> >+		resource_size_t end;
+> >+
+> >+		res1 = entry->res;
+> >+		if (!(res1->flags & type))
+> >+			goto next;
+> >+
+> >+		/* Exclude non-addressable range or non-addressable portion */
+> >+		end = min(res1->end, root->end);
+> >+		if (end <= res1->start) {
+> >+			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
+> >+				 res1);
+> >+			free = true;
+> >+			goto next;
+> >+		} else if (res1->end != end) {
+> >+			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
+> >+				 res1, (unsigned long long)end + 1,
+> >+				 (unsigned long long)res1->end);
+> >+			res1->end = end;
+> >+		}
+> >+
+> >+		resource_list_for_each_entry(entry2, resources) {
+> >+			res2 = entry2->res;
+> >+			if (!(res2->flags & type))
+> >+				continue;
+> >+
+> >+			/*
+> >+			 * I don't like throwing away windows because then
+> >+			 * our resources no longer match the ACPI _CRS, but
+> >+			 * the kernel resource tree doesn't allow overlaps.
+> >+			 */
+> >+			if (resource_overlaps(res1, res2)) {
+> >+				res2->start = min(res1->start, res2->start);
+> >+				res2->end = max(res1->end, res2->end);
+> >+				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
+> >+					 res2, res1);
+> >+				free = true;
+> >+				goto next;
+> >+			}
+> >+		}
+> >+
+> >+next:
+> >+		resource_list_del(entry);
+> >+		if (free)
+> >+			resource_list_free_entry(entry);
+> >+		else
+> >+			resource_list_add_tail(entry, resources);
+> >+	}
+> >+}
+> >+
+> >+int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+> >+{
+> >+	int ret;
+> >+	struct list_head *list = &info->resources;
+> >+	struct acpi_device *device = info->bridge;
+> >+	struct resource_entry *entry, *tmp;
+> >+	unsigned long flags;
+> >+
+> >+	flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT;
+> >+	ret = acpi_dev_get_resources(device, list,
+> >+				     acpi_dev_filter_resource_type_cb,
+> >+				     (void *)flags);
+> >+	if (ret < 0)
+> >+		dev_warn(&device->dev,
+> >+			 "failed to parse _CRS method, error code %d\n", ret);
+> >+	else if (ret == 0)
+> >+		dev_dbg(&device->dev,
+> >+			"no IO and memory resources present in _CRS\n");
+> >+	else {
+> >+		resource_list_for_each_entry_safe(entry, tmp, list) {
+> >+			if (entry->res->flags & IORESOURCE_DISABLED)
+> >+				resource_list_destroy_entry(entry);
+> >+			else
+> >+				entry->res->name = info->name;
+> >+		}
+> >+		acpi_pci_root_validate_resources(&device->dev, list,
+> >+						 IORESOURCE_MEM);
+> >+		acpi_pci_root_validate_resources(&device->dev, list,
+> >+						 IORESOURCE_IO);
+> 
+> It is not clear to me why we need these two calls above ^^^. We are
+> using pci_acpi_root_add_resources(info) later. Is it not enough?
+> 
+> Also, I cannot use acpi_pci_probe_root_resources() in my ARM64 PCI
+> driver. It is because acpi_dev_get_resources is adding
+> translation_offset to IO ranges start address and then:
+> acpi_pci_root_validate_resources(&device->dev, list,
+> 				 IORESOURCE_IO);
+> rejects that IO regions as it is out of my 0x0-SZ_16M window.
+> 
+> Does acpi_pci_probe_root_resources meant to be x86 specific and I
+> should avoid using it?
 
-cause the io_base is correctly calculated in 0021d22b73d6, do you agree?
+IIUC, you _have_ to have the proper translation_offset to map the bridge
+window into the IO address space:
 
--- 
-regards,
-Stan
+http://lists.infradead.org/pipermail/linux-arm-kernel/2015-June/348708.html
+
+Then, using the offset, you should do something ia64 does, namely,
+retrieve the CPU address corresponding to IO space (see arch/ia64/pci/pci.c
+- add_io_space()) and map it in the physical address space by using
+pci_remap_iospace(), it is similar to what we have to do with DT.
+
+It is extremely confusing and I am not sure I got it right myself,
+I am still grokking ia64 code to understand what it really does.
+
+So basically, the IO bridge window coming from acpi_dev_get_resource()
+should represent the IO space in 0 - 16M, IIUC.
+
+By using the offset (that was initialized using translation_offset) and
+the resource->start, you can retrieve the cpu address that you need to
+actually map the IO space, since that's what we do on ARM (ie the
+IO resource is an offset into the virtual address space set aside
+for IO).
+
+Confusing, to say the least. Jiang, did I get it right ?
+
+Lorenzo
