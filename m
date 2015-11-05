@@ -1,74 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60904 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752009AbbKITrf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Nov 2015 14:47:35 -0500
-Date: Mon, 9 Nov 2015 13:47:32 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: ECRC and Max Read Request Size
-Message-ID: <20151109194732.GB4789@localhost>
-References: <56310B34.6000102@codeaurora.org>
- <20151106172205.GA1002@localhost>
- <563CE93F.5060209@codeaurora.org>
- <20151107001143.GA17842@localhost>
- <563D7287.1050500@codeaurora.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:54881 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932744AbbKEXxX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2015 18:53:23 -0500
+Received: from localhost
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 6 Nov 2015 09:53:20 +1000
+Date: Fri, 6 Nov 2015 10:52:18 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Daniel Axtens <dja@axtens.net>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, aik@ozlabs.ru, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+Subject: Re: [PATCH v7 10/50] powerpc/powernv: Simplify
+ pnv_ioda_setup_pe_seg()
+Message-ID: <20151105235218.GC30465@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-11-git-send-email-gwshan@linux.vnet.ibm.com>
+ <87r3k4hx89.fsf@gamma.ozlabs.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <563D7287.1050500@codeaurora.org>
+In-Reply-To: <87r3k4hx89.fsf@gamma.ozlabs.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 06, 2015 at 10:39:51PM -0500, Sinan Kaya wrote:
-> On 11/6/2015 7:11 PM, Bjorn Helgaas wrote:
-> >That should definitely be fixed.  Do we enable ECRC unconditionally,
-> >or only when we boot with "pci=ecrc=on"?  The doc
-> >(Documentation/kernel-parameters.txt) suggests the latter.
-> >
-> >It would be ideal if we could try to turn on ECRC all the time by
-> >default for paths that support it.  I suppose there's some risk that
-> >we'd trip over broken hardware.  If that's an issue, we could consider
-> >turning it on all the time on machines newer than X (that's easy on
-> >x86, where we have a DMI BIOS date, but maybe not so easy on other
-> >arches).
-> 
-> ecrc=on kernel option works like "force on" rather than just a simple on.
+On Fri, Nov 06, 2015 at 09:56:06AM +1100, Daniel Axtens wrote:
+>Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+>
+>> The original implementation of pnv_ioda_setup_pe_seg() configures
+>> IO and M32 segments by separate logics, which can be merged by
+>> by caching @segmap, @seg_size, @win in advance. This shouldn't
+>> cause any behavioural changes.
+>>
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c | 62 ++++++++++++++-----------------
+>>  1 file changed, 28 insertions(+), 34 deletions(-)
+>>
+>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> index 7ee7cfe..553d3f3 100644
+>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> @@ -2752,8 +2752,10 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>>  	struct pnv_phb *phb = hose->private_data;
+>>  	struct pci_bus_region region;
+>>  	struct resource *res;
+>> -	int i, index;
+>> -	int rc;
+>> +	unsigned int segsize;
+>> +	int *segmap, index, i;
+>> +	uint16_t win;
+>> +	int64_t rc;
+>
+>Good catch! Opal return codes are 64 bit and that should be explicit
+>in the type. However, I seem to remember that we preferred a different
+>type for 64 bit ints in the kernel. I think it's s64, and there are some
+>other uses of that in pci_ioda.c for return codes.
+>
 
-What do you mean by "force on" as opposed to "simple on"?
+Both int64_t and s64 are fine. I used s64 for the OPAL return value, but
+Alexey likes "int64_t", which is ok to me as well. I won't change it back
+to s64 :-)
 
-> I agree we should enable it by default.
+>(I'm actually surprised that's not picked up as a compiler
+>warning. Maybe that's something to look at in future.)
+>
 
-Part of the consideration is that enabling ECRC generation does
-increase the size of every TLP by 4 bytes, which reduces the link
-throughput slightly, so I'm not sure we want to blindly enable it.
+Indeed, I didn't see a warning from gcc.
 
-If I understand the current Linux code correctly, by default (booting
-with no parameter at all, or with "pci=ecrc=bios"), we don't touch
-ECRC at all -- we don't even look to see whether it's supported, and
-we don't enable or disable anything.
+>The rest of the patch looks good on casual inspection - to be sure I'll
+>test the entire series on a machine. (hopefully, time permitting!)
+>
 
-With "pci=ecrc=on", we turn on ECRC generation (if supported) and ECRC
-checking (if supported) for every device, including those hot-added
-after boot.
+I run scripts/checkpatch.pl on the patchset. Only one warning came from
+[PATCH 44/50], but I won't bother to change that as the warning was
+brought by original code. If you want to test this patchset, you need
+run it on Tuleta where the hotpluggable PCI slots are supported.
 
-I do like the idea of letting platform firmware decide whether ECRC
-should be enabled by default, because then we don't have to decide on
-a policy in Linux.  Following the lead of the firmware lets OEMs
-decide whether ECRC is a feature they want to market and support.
+Thanks,
+Gavin
 
-I think the current strategy could be improved for hot-added devices.
-In the default ("pci=ecrc=bios") case, we leave them alone, which
-means they won't check ECRC because the enable bits will be zero after
-power-up.  If the platform firmware enabled ECRC generation in the
-upstream Root Port, we're paying the cost of lower throughput without
-getting any benefit for it.
+>>  
+>>  	/*
+>>  	 * NOTE: We only care PCI bus based PE for now. For PCI
+>> @@ -2770,23 +2772,9 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>>  		if (res->flags & IORESOURCE_IO) {
+>>  			region.start = res->start - phb->ioda.io_pci_base;
+>>  			region.end   = res->end - phb->ioda.io_pci_base;
+>> -			index = region.start / phb->ioda.io_segsize;
+>> -
+>> -			while (index < phb->ioda.total_pe_num &&
+>> -			       region.start <= region.end) {
+>> -				phb->ioda.io_segmap[index] = pe->pe_number;
+>> -				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>> -					pe->pe_number, OPAL_IO_WINDOW_TYPE, 0, index);
+>> -				if (rc != OPAL_SUCCESS) {
+>> -					pr_err("%s: OPAL error %d when mapping IO "
+>> -					       "segment #%d to PE#%d\n",
+>> -					       __func__, rc, index, pe->pe_number);
+>> -					break;
+>> -				}
+>> -
+>> -				region.start += phb->ioda.io_segsize;
+>> -				index++;
+>> -			}
+>> +			segsize      = phb->ioda.io_segsize;
+>> +			segmap       = phb->ioda.io_segmap;
+>> +			win          = OPAL_IO_WINDOW_TYPE;
+>>  		} else if ((res->flags & IORESOURCE_MEM) &&
+>>  			   !pnv_pci_is_mem_pref_64(res->flags)) {
+>>  			region.start = res->start -
+>> @@ -2795,23 +2783,29 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>>  			region.end   = res->end -
+>>  				       hose->mem_offset[0] -
+>>  				       phb->ioda.m32_pci_base;
+>> -			index = region.start / phb->ioda.m32_segsize;
+>> -
+>> -			while (index < phb->ioda.total_pe_num &&
+>> -			       region.start <= region.end) {
+>> -				phb->ioda.m32_segmap[index] = pe->pe_number;
+>> -				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>> -					pe->pe_number, OPAL_M32_WINDOW_TYPE, 0, index);
+>> -				if (rc != OPAL_SUCCESS) {
+>> -					pr_err("%s: OPAL error %d when mapping M32 "
+>> -					       "segment#%d to PE#%d",
+>> -					       __func__, rc, index, pe->pe_number);
+>> -					break;
+>> -				}
+>> +			segsize      = phb->ioda.m32_segsize;
+>> +			segmap       = phb->ioda.m32_segmap;
+>> +			win          = OPAL_M32_WINDOW_TYPE;
+>> +		} else {
+>> +			continue;
+>> +		}
+>>  
+>> -				region.start += phb->ioda.m32_segsize;
+>> -				index++;
+>> +		index = region.start / segsize;
+>> +		while (index < phb->ioda.total_pe_num &&
+>> +		       region.start <= region.end) {
+>> +			segmap[index] = pe->pe_number;
+>> +			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>> +					pe->pe_number, win, 0, index);
+>> +			if (rc != OPAL_SUCCESS) {
+>> +				pr_warn("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
+>> +					__func__, rc, win, index,
+>> +					pe->phb->hose->global_number,
+>> +					pe->pe_number);
+>> +				break;
+>>  			}
+>> +
+>> +			region.start += segsize;
+>> +			index++;
+>>  		}
+>>  	}
+>>  }
+>> -- 
+>> 2.1.0
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-It doesn't look like ECRC has any dependencies or ordering
-requirements, so we could also consider adding sysfs knobs to
-enable/disable ECRC at run-time.  I can imagine systems where we want
-ECRC on some paths, e.g., to a disk or network, but not on others,
-e.g., to a display.  Sysfs would be a way to allow that, although it
-*is* an administrative burden.
 
-Bjorn
