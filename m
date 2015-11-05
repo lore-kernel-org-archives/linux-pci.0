@@ -1,97 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:36429 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751723AbbKBL6z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2015 06:58:55 -0500
-Received: by pacfv9 with SMTP id fv9so153620463pac.3
-        for <linux-pci@vger.kernel.org>; Mon, 02 Nov 2015 03:58:54 -0800 (PST)
-Message-ID: <56374FF7.6050008@linaro.org>
-Date: Mon, 02 Nov 2015 19:58:47 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
+Received: from mga03.intel.com ([134.134.136.65]:4956 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161473AbbKEOvn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Nov 2015 09:51:43 -0500
+Date: Thu, 5 Nov 2015 14:51:41 +0000
+From: Keith Busch <keith.busch@intel.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>,
+	Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [RFC PATCHv3 3/4] x86/pci: Initial commit for new VMD device
+ driver
+Message-ID: <20151105145141.GA11787@localhost.localdomain>
+References: <1445967247-24310-1-git-send-email-keith.busch@intel.com>
+ <1445967247-24310-4-git-send-email-keith.busch@intel.com>
+ <alpine.DEB.2.11.1511021426020.4032@nanos>
+ <20151103001552.GE13904@localhost.localdomain>
+ <alpine.DEB.2.11.1511031001130.4032@nanos>
+ <20151104144905.GI13904@localhost.localdomain>
+ <alpine.DEB.2.11.1511041614070.4032@nanos>
+ <563AF8B3.8030907@linux.intel.com>
 MIME-Version: 1.0
-To: Dennis Chen <dennis.chen@arm.com>, bhelgaas@google.com,
-	rjw@rjwysocki.net, lenb@kernel.org, catalin.marinas@arm.com,
-	will.deacon@arm.com
-CC: thomas.lendacky@amd.com, herbert@gondor.apana.org.au,
-	davem@davemloft.net, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, jeremy.linton@arm.com,
-	Suravee.Suthikulpanit@amd.com, robh+dt@kernel.org
-Subject: Re: [PATCH V5 1/9] ACPI: Honor ACPI _CCA attribute setting
-References: <20151102040224.GA16979@arm.org>
-In-Reply-To: <20151102040224.GA16979@arm.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <563AF8B3.8030907@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Dennis,
+On Thu, Nov 05, 2015 at 02:35:31PM +0800, Jiang Liu wrote:
+> Hi Keith,
+> 	Could you please try the attached patch?
+> Thanks!
+> Gerry
 
-On 11/02/2015 12:02 PM, Dennis Chen wrote:
-> On Thu, Oct 29, 2015 at 6:50 AM, Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com> wrote:
->> From: Jeremy Linton <jeremy.linton@arm.com>
->>
->> ACPI configurations can now mark devices as noncoherent,
->> support that choice.
->>
->> NOTE: This is required to support USB on ARM Juno Development Board.
->>
->> Signed-off-by: Jeremy Linton <jeremy.linton@arm.com>
->> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> CC: Bjorn Helgaas <bhelgaas@google.com>
->> CC: Catalin Marinas <catalin.marinas@arm.com>
->> CC: Rob Herring <robh+dt@kernel.org>
->> CC: Will Deacon <will.deacon@arm.com>
->> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
->> ---
->>   include/acpi/acpi_bus.h | 5 +++--
->>   1 file changed, 3 insertions(+), 2 deletions(-)
->>
->> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
->> index d11eff8..0f131d2 100644
->> --- a/include/acpi/acpi_bus.h
->> +++ b/include/acpi/acpi_bus.h
->> @@ -407,7 +407,7 @@ static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
->>   	 * case 1. Do not support and disable DMA.
->>   	 * case 2. Support but rely on arch-specific cache maintenance for
->>   	 *         non-coherence DMA operations.
->> -	 * Currently, we implement case 1 above.
->> +	 * Currently, we implement case 2 above.
->>   	 *
->>   	 * For the case when _CCA is missing (i.e. cca_seen=0) and
->>   	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
->> @@ -415,7 +415,8 @@ static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
->>   	 *
->>   	 * See acpi_init_coherency() for more info.
->>   	 */
->> -	if (adev->flags.coherent_dma) {
->> +	if (adev->flags.coherent_dma ||
->> +	    (adev->flags.cca_seen && IS_ENABLED(CONFIG_ARM64))) {
->>   		ret = true;
->>   		if (coherent)
->>   			*coherent = adev->flags.coherent_dma;
->
-> Hi Suravee,
->
-> The acpi_check_dma function has been removed in patch 6 of this patch set, why it is still be used
-> here, am I missing something? If the acpi_check_dma will be used in the future, personally I'd like
+Thanks! I anticipated this and tested the same thing yesterday, and it
+is successful.
 
-I think this patch just to let people know that there is
-case that arch-specific cache maintenance is still needed
-for ACPI (such as Juno board), and in the later patches will
-cover this case.
+I'll apply to the series and send a new revision hopefully today. Not
+requiring a parent simplifies the driver since we don't define
+irq_domain_ops now, and the functionality they provided moves to the
+irq_chip.
 
-acpi_check_dma() will be replaced by acpi_get_dma_attr(),
-and in acpi_get_dma_attr() will cover that case and will
-be easily understood. (Suravee, correct me if I'm wrong :) )
 
-> to use IS_ENABLED(CONFIG_ACPI_CCA_REQUIRED) while not CONFIG_ARM64 macro here, or since _CCA attribute
-> is arch-specific, it's reasonable to leave the _CCA handling policy to the arch-specific code. For example,
-> with a link weak function like acpi_arch_check_dma() as a default handling if no arch-specific code
-> provided, the actual _CCA handling will be implemented in the ARM, Intel or other Arch if required.
 
-Actually Intel platform don't need _CCA and it's coherent
-in default, since _CCA is in ACPI spec, I would like it's
-handled in ACPI core.
-
-Thanks
-Hanjun
+> From: Liu Jiang <jiang.liu@linux.intel.com>
+> Date: Thu, 5 Nov 2015 11:25:07 +0800
+> Subject: [PATCH] msi: Relax msi_domain_alloc() to support parentless MSI
+>  irqdomains
+> 
+> Previously msi_domain_alloc() assumes MSI irqdomains always have parent
+> irqdomains, but that's not true for the new Intel VMD devices. So relax
+> msi_domain_alloc() to support parentless MSI irqdomains.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
+> ---
+>  kernel/irq/msi.c |    8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+> index 7e6512b9dc1f..e4d3d707efff 100644
+> --- a/kernel/irq/msi.c
+> +++ b/kernel/irq/msi.c
+> @@ -109,9 +109,11 @@ static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
+>  	if (irq_find_mapping(domain, hwirq) > 0)
+>  		return -EEXIST;
+>  
+> -	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
+> -	if (ret < 0)
+> -		return ret;
+> +	if (domain->parent) {
+> +		ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
+> +		if (ret < 0)
+> +			return ret;
+> +	}
+>  
+>  	for (i = 0; i < nr_irqs; i++) {
+>  		ret = ops->msi_init(domain, info, virq + i, hwirq + i, arg);
+> -- 
+> 1.7.10.4
