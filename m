@@ -1,371 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp09.in.ibm.com ([122.248.162.9]:37820 "EHLO
-	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965374AbbKDNNr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:47 -0500
-Received: from /spool/local
-	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 18:43:45 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 27/50] powerpc/powernv: Dynamically release PEs
-Date: Thu,  5 Nov 2015 00:12:27 +1100
-Message-Id: <1446642770-4681-28-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC PATCHv3 3/4] x86/pci: Initial commit for new VMD device
+ driver
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Keith Busch <keith.busch@intel.com>
+References: <1445967247-24310-1-git-send-email-keith.busch@intel.com>
+ <1445967247-24310-4-git-send-email-keith.busch@intel.com>
+ <alpine.DEB.2.11.1511021426020.4032@nanos>
+ <20151103001552.GE13904@localhost.localdomain>
+ <alpine.DEB.2.11.1511031001130.4032@nanos>
+ <20151104144905.GI13904@localhost.localdomain>
+ <alpine.DEB.2.11.1511041614070.4032@nanos>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>,
+	Peter Zijlstra <peterz@infradead.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <563AF8B3.8030907@linux.intel.com>
+Date: Thu, 5 Nov 2015 14:35:31 +0800
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.11.1511041614070.4032@nanos>
+Content-Type: multipart/mixed;
+ boundary="------------090905010006000707020204"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds a reference count of PE, representing the number of PCI
-devices associated with the PE. The reference count is increased
-or decreased when PCI devices join or leave the PE. Once it becomes
-zero, the PE together with its used resources (IO, MMIO, DMA, PELTM,
-PELTV) are released to support PCI hot unplug.
+This is a multi-part message in MIME format.
+--------------090905010006000707020204
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+
+
+On 2015/11/4 23:14, Thomas Gleixner wrote:
+> On Wed, 4 Nov 2015, Keith Busch wrote:
+> 
+>> On Tue, Nov 03, 2015 at 12:42:02PM +0100, Thomas Gleixner wrote:
+>>> On Tue, 3 Nov 2015, Keith Busch wrote:
+>>>>>> +	msi_irqdomain = pci_msi_create_irq_domain(NULL, &pci_chained_msi_domain_info,
+>>>>>> +						  vmd_irqdomain);
+>>>
+>>> But that parent limitation does not matter simply because your
+>>> msi_irqdomain does not follow down the hierarchy in the allocation
+>>> path.
+>>>
+>>> So we can avoid the vmd_irqdomain creation completely. It's just
+>>> wasting memory and has no value at all. Creating the msi domain with a
+>>> NULL parent is possible.
+>>
+>> I'm having trouble following the hierarchy and didn't understand the
+>> connection between the parent and msi comain. It's still new to me,
+>> but I don't think a NULL parent is allowable with msi domains:
+>>
+>>  pci_msi_setup_msi_irqs()
+>>   pci_msi_domain_alloc_irqs()
+>>    msi_domain_alloc_irqs()
+>>     __irq_domain_alloc_irqs()
+>>      irq_domain_alloc_irqs_recursive()
+>>       msi_domain_alloc()
+>>        irq_domain_alloc_irqs_parent()
+>>
+>> The last call returns -ENOSYS since there parent is NULL. Was the
+>> intension to allow no parent, or do I still need to allocate one to
+>> achieve the desired chaining?
+> 
+> Hmm, seems I missed that part. But that's a fixable problem. Jiang?
+Hi Keith,
+	Could you please try the attached patch?
+Thanks!
+Gerry
+
+> 
+> Thanks,
+> 
+> 	tglx
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+
+--------------090905010006000707020204
+Content-Type: text/x-patch;
+ name="0001-msi-Relax-msi_domain_alloc-to-support-parentless-MSI.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-msi-Relax-msi_domain_alloc-to-support-parentless-MSI.pa";
+ filename*1="tch"
+
+>From 6db1568564f8edee626d1c168b22ed5502abc6eb Mon Sep 17 00:00:00 2001
+From: Liu Jiang <jiang.liu@linux.intel.com>
+Date: Thu, 5 Nov 2015 11:25:07 +0800
+Subject: [PATCH] msi: Relax msi_domain_alloc() to support parentless MSI
+ irqdomains
+
+Previously msi_domain_alloc() assumes MSI irqdomains always have parent
+irqdomains, but that's not true for the new Intel VMD devices. So relax
+msi_domain_alloc() to support parentless MSI irqdomains.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 245 ++++++++++++++++++++++++++----
- arch/powerpc/platforms/powernv/pci.h      |   1 +
- 2 files changed, 218 insertions(+), 28 deletions(-)
+ kernel/irq/msi.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 0bb0056..dcffce5 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -129,6 +129,215 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
- 		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
- }
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index 7e6512b9dc1f..e4d3d707efff 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -109,9 +109,11 @@ static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ 	if (irq_find_mapping(domain, hwirq) > 0)
+ 		return -EEXIST;
  
-+static void pnv_pci_ioda1_release_dma_pe(struct pnv_ioda_pe *pe)
-+{
-+	struct pnv_phb *phb = pe->phb;
-+	struct iommu_table *tbl;
-+	int start, count, i;
-+	int64_t rc;
-+
-+	/* Search for the used DMA32 segments */
-+	start = -1;
-+	count = 0;
-+	for (i = 0; i < phb->ioda.dma32_count; i++) {
-+		if (phb->ioda.dma32_segmap[i] != pe->pe_number)
-+			continue;
-+
-+		count++;
-+		if (start < 0)
-+			start = i;
+-	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
+-	if (ret < 0)
+-		return ret;
++	if (domain->parent) {
++		ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
++		if (ret < 0)
++			return ret;
 +	}
-+
-+	if (!count)
-+		return;
-+
-+	/* Unlink IOMMU table from group */
-+	tbl = pe->table_group.tables[0];
-+	pnv_pci_unlink_table_and_group(tbl, &pe->table_group);
-+	if (pe->table_group.group) {
-+		iommu_group_put(pe->table_group.group);
-+		WARN_ON(pe->table_group.group);
-+	}
-+
-+	/* Release IOMMU table */
-+	pnv_pci_ioda2_table_free_pages(tbl);
-+	iommu_free_table(tbl, of_node_full_name(pci_bus_to_OF_node(pe->pbus)));
-+
-+	/* Disable TVE */
-+	for (i = start; i < start + count; i++) {
-+		rc = opal_pci_map_pe_dma_window(phb->opal_id, pe->pe_number,
-+						i, 0, 0ul, 0ul, 0ul);
-+		if (rc)
-+			pe_warn(pe, "Error %ld unmapping DMA32 seg#%d\n",
-+				rc, i);
-+
-+		phb->ioda.dma32_segmap[i] = IODA_INVALID_PE;
-+	}
-+}
-+
-+static unsigned int pnv_pci_ioda_pe_dma_weight(struct pnv_ioda_pe *pe);
-+static long pnv_pci_ioda2_unset_window(struct iommu_table_group *table_group,
-+		int num);
-+static void pnv_pci_ioda2_set_bypass(struct pnv_ioda_pe *pe, bool enable);
-+
-+static void pnv_pci_ioda2_release_dma_pe(struct pnv_ioda_pe *pe)
-+{
-+	struct iommu_table *tbl;
-+	unsigned int weight = pnv_pci_ioda_pe_dma_weight(pe);
-+	int64_t rc;
-+
-+	if (!weight)
-+		return;
-+
-+	tbl = pe->table_group.tables[0];
-+	rc = pnv_pci_ioda2_unset_window(&pe->table_group, 0);
-+	if (rc)
-+		pe_warn(pe, "OPAL error %ld release DMA window\n", rc);
-+
-+	pnv_pci_ioda2_set_bypass(pe, false);
-+	if (pe->table_group.group) {
-+		iommu_group_put(pe->table_group.group);
-+		WARN_ON(pe->table_group.group);
-+	}
-+
-+	pnv_pci_ioda2_table_free_pages(tbl);
-+	iommu_free_table(tbl, "pnv");
-+}
-+
-+static void pnv_ioda_release_dma_pe(struct pnv_ioda_pe *pe)
-+{
-+	struct pnv_phb *phb = pe->phb;
-+
-+	switch (phb->type) {
-+	case PNV_PHB_IODA1:
-+		pnv_pci_ioda1_release_dma_pe(pe);
-+		break;
-+	case PNV_PHB_IODA2:
-+		pnv_pci_ioda2_release_dma_pe(pe);
-+		break;
-+	default:
-+		WARN_ON(1);
-+	}
-+}
-+
-+static void pnv_ioda_release_window(struct pnv_ioda_pe *pe, int win)
-+{
-+	struct pnv_phb *phb = pe->phb;
-+	int index, *segmap = NULL;
-+	int64_t rc;
-+
-+	switch (win) {
-+	case OPAL_IO_WINDOW_TYPE:
-+		segmap = phb->ioda.io_segmap;
-+		break;
-+	case OPAL_M32_WINDOW_TYPE:
-+		segmap = phb->ioda.m32_segmap;
-+		break;
-+	case OPAL_M64_WINDOW_TYPE:
-+		if (phb->type != PNV_PHB_IODA1)
-+			return;
-+		segmap = phb->ioda.m64_segmap;
-+		break;
-+	default:
-+		return;
-+	}
-+
-+	for (index = 0; index < phb->ioda.total_pe_num; index++) {
-+		if (segmap[index] != pe->pe_number)
-+			continue;
-+
-+		if (win == OPAL_M64_WINDOW_TYPE)
-+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+					phb->ioda.reserved_pe_idx, win,
-+					index / PNV_IODA1_M64_SEGS,
-+					index % PNV_IODA1_M64_SEGS);
-+		else
-+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+					phb->ioda.reserved_pe_idx, win,
-+					0, index);
-+
-+		if (rc != OPAL_SUCCESS)
-+			pe_warn(pe, "Error %ld unmapping (%d) segment#%d\n",
-+				rc, win, index);
-+
-+		segmap[index] = IODA_INVALID_PE;
-+	}
-+}
-+
-+static void pnv_ioda_release_pe_seg(struct pnv_ioda_pe *pe)
-+{
-+	struct pnv_phb *phb = pe->phb;
-+	int win;
-+
-+	for (win = OPAL_M32_WINDOW_TYPE; win <= OPAL_IO_WINDOW_TYPE; win++) {
-+		if (phb->type == PNV_PHB_IODA2 && win == OPAL_IO_WINDOW_TYPE)
-+			continue;
-+
-+		pnv_ioda_release_window(pe, win);
-+	}
-+}
-+
-+static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb,
-+				   struct pnv_ioda_pe *pe);
-+static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe);
-+static void pnv_ioda_release_pe(struct pnv_ioda_pe *pe)
-+{
-+	struct pnv_ioda_pe *tmp, *slave;
-+
-+	/* Release slave PEs in compound PE */
-+	if (pe->flags & PNV_IODA_PE_MASTER) {
-+		list_for_each_entry_safe(slave, tmp, &pe->slaves, list)
-+			pnv_ioda_release_pe(slave);
-+	}
-+
-+	/* Remove the PE from the list */
-+	list_del(&pe->list);
-+
-+	/* Release resources */
-+	pnv_ioda_release_dma_pe(pe);
-+	pnv_ioda_release_pe_seg(pe);
-+	pnv_ioda_deconfigure_pe(pe->phb, pe);
-+
-+	pnv_ioda_free_pe(pe);
-+}
-+
-+static inline struct pnv_ioda_pe *pnv_ioda_pe_get(struct pnv_ioda_pe *pe)
-+{
-+	if (!pe)
-+		return NULL;
-+
-+	pe->device_count++;
-+	return pe;
-+}
-+
-+static inline void pnv_ioda_pe_put(struct pnv_ioda_pe *pe)
-+{
-+	if (!pe)
-+		return;
-+
-+	pe->device_count--;
-+	WARN_ON(pe->device_count < 0);
-+	if (pe->device_count == 0)
-+		pnv_ioda_release_pe(pe);
-+}
-+
-+static void pnv_pci_release_device(struct pci_dev *pdev)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
-+	struct pnv_phb *phb = hose->private_data;
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	struct pnv_ioda_pe *pe;
-+
-+	if (pdev->is_virtfn)
-+		return;
-+
-+	if (!pdn || pdn->pe_number == IODA_INVALID_PE)
-+		return;
-+
-+	pe = &phb->ioda.pe_array[pdn->pe_number];
-+	pnv_ioda_pe_put(pe);
-+}
-+
- static struct pnv_ioda_pe *pnv_ioda_init_pe(struct pnv_phb *phb, int pe_no)
- {
- 	phb->ioda.pe_array[pe_no].phb = phb;
-@@ -724,7 +933,6 @@ static int pnv_ioda_set_peltv(struct pnv_phb *phb,
- 	return 0;
- }
  
--#ifdef CONFIG_PCI_IOV
- static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
- {
- 	struct pci_dev *parent;
-@@ -759,9 +967,11 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
- 		}
- 		rid_end = pe->rid + (count << 8);
- 	} else {
-+#ifdef CONFIG_PCI_IOV
- 		if (pe->flags & PNV_IODA_PE_VF)
- 			parent = pe->parent_dev;
- 		else
-+#endif
- 			parent = pe->pdev->bus->self;
- 		bcomp = OpalPciBusAll;
- 		dcomp = OPAL_COMPARE_RID_DEVICE_NUMBER;
-@@ -799,11 +1009,12 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
- 
- 	pe->pbus = NULL;
- 	pe->pdev = NULL;
-+#ifdef CONFIG_PCI_IOV
- 	pe->parent_dev = NULL;
-+#endif
- 
- 	return 0;
- }
--#endif /* CONFIG_PCI_IOV */
- 
- static int pnv_ioda_configure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
- {
-@@ -985,6 +1196,7 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
- 			continue;
- 
- 		pdn->pe_number = pe->pe_number;
-+		pnv_ioda_pe_get(pe);
- 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
- 			pnv_ioda_setup_same_PE(dev->subordinate, pe);
- 	}
-@@ -1047,9 +1259,8 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- 			bus->busn_res.start, pe->pe_number);
- 
- 	if (pnv_ioda_configure_pe(phb, pe)) {
--		/* XXX What do we do here ? */
--		pnv_ioda_free_pe(pe);
- 		pe->pbus = NULL;
-+		pnv_ioda_release_pe(pe);
- 		return NULL;
- 	}
- 
-@@ -1199,29 +1410,6 @@ m64_failed:
- 	return -EBUSY;
- }
- 
--static long pnv_pci_ioda2_unset_window(struct iommu_table_group *table_group,
--		int num);
--static void pnv_pci_ioda2_set_bypass(struct pnv_ioda_pe *pe, bool enable);
--
--static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev, struct pnv_ioda_pe *pe)
--{
--	struct iommu_table    *tbl;
--	int64_t               rc;
--
--	tbl = pe->table_group.tables[0];
--	rc = pnv_pci_ioda2_unset_window(&pe->table_group, 0);
--	if (rc)
--		pe_warn(pe, "OPAL error %ld release DMA window\n", rc);
--
--	pnv_pci_ioda2_set_bypass(pe, false);
--	if (pe->table_group.group) {
--		iommu_group_put(pe->table_group.group);
--		BUG_ON(pe->table_group.group);
--	}
--	pnv_pci_ioda2_table_free_pages(tbl);
--	iommu_free_table(tbl, of_node_full_name(dev->dev.of_node));
--}
--
- static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
- {
- 	struct pci_bus        *bus;
-@@ -1242,7 +1430,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
- 		if (pe->parent_dev != pdev)
- 			continue;
- 
--		pnv_pci_ioda2_release_dma_pe(pdev, pe);
-+		pnv_pci_ioda2_release_dma_pe(pe);
- 
- 		/* Remove from list */
- 		mutex_lock(&phb->ioda.pe_list_mutex);
-@@ -3124,6 +3312,7 @@ static const struct pci_controller_ops pnv_pci_ioda_controller_ops = {
- 	.teardown_msi_irqs	= pnv_teardown_msi_irqs,
- #endif
- 	.enable_device_hook	= pnv_pci_enable_device_hook,
-+	.release_device		= pnv_pci_release_device,
- 	.window_alignment	= pnv_pci_window_alignment,
- 	.setup_bridge		= pnv_pci_setup_bridge,
- 	.reset_secondary_bus	= pnv_pci_reset_secondary_bus,
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index ef5271a..3bb10de 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -30,6 +30,7 @@ struct pnv_phb;
- struct pnv_ioda_pe {
- 	unsigned long		flags;
- 	struct pnv_phb		*phb;
-+	int			device_count;
- 
- 	/* A PE can be associated with a single device or an
- 	 * entire bus (& children). In the former case, pdev
+ 	for (i = 0; i < nr_irqs; i++) {
+ 		ret = ops->msi_init(domain, info, virq + i, hwirq + i, arg);
 -- 
-2.1.0
+1.7.10.4
 
+
+--------------090905010006000707020204--
