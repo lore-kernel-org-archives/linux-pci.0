@@ -1,154 +1,195 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Bugfix v4] PCI, ACPI: Fix regressions caused by resource_size_t
- overflow with 32-bit kernel
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-References: <559107F2.3080701@pr.hu>
- <1436340399-19695-1-git-send-email-jiang.liu@linux.intel.com>
- <563780FC.5070503@linaro.org> <563B5161.1060105@semihalf.com>
- <563B588C.1010507@linux.intel.com>
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60607 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1032457AbbKENtx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Nov 2015 08:49:53 -0500
+Date: Thu, 5 Nov 2015 07:49:47 -0600
+From: Rob Herring <robh@kernel.org>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms@verge.net.au>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@kernel.org>,
-	Boszormenyi Zoltan <zboszor@pr.hu>,
-	Len Brown <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Message-ID: <563B5F62.7040102@linaro.org>
-Date: Thu, 5 Nov 2015 14:53:38 +0100
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: Re: [PATCH] PCI: rcar (usb): DT can override default window settings
+Message-ID: <20151105134947.GA26919@rob-hp-laptop>
+References: <1446567566-10952-1-git-send-email-phil.edworthy@renesas.com>
 MIME-Version: 1.0
-In-Reply-To: <563B588C.1010507@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1446567566-10952-1-git-send-email-phil.edworthy@renesas.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05.11.2015 14:24, Jiang Liu wrote:
-> On 2015/11/5 20:53, Tomasz Nowicki wrote:
->> On 02.11.2015 16:27, Tomasz Nowicki wrote:
->>> On 08.07.2015 09:26, Jiang Liu wrote:
->>>> Zoltan Boszormenyi reported this regression:
->>>>     "There's a Realtek RTL8111/8168/8411 (PCI ID 10ec:8168, Subsystem ID
->>>>      1565:230e) network chip on the mainboard. After the r8169 driver
->>>> loaded
->>>>      the IRQs in the machine went berserk. Keyboard keypressed arrived
->>>> with
->>>>      considerable latency and duplicated, so no real work was possible.
->>>>      The machine responded to the power button but didn't actually power
->>>>      down. It just stuck at the powering down message. I had to press the
->>>>      power button for 4 seconds to power it down.
->>>>
->>>>      The computer is a POS machine with a big battery inside. Because
->>>> of this,
->>>>      either ACPI or the Realtek chip kept the bad state and after
->>>> rebooting,
->>>>      the network chip didn't even show up in lspci. Not even the PXE ROM
->>>>      announced itself during boot. I had to disconnect the battery to
->>>> beat
->>>>      some sense back to the computer.
->>>>
->>>>      The regression happens with 4.0.5, 4.1.0-rc8 and 4.1.0-final.
->>>> 3.18.16 was
->>>>      good."
->>>>
->>>> The regression is caused by commit 593669c2ac0f ("x86/PCI/ACPI: Use
->>>> common
->>>> ACPI resource interfaces to simplify implementation"). Since commit
->>>> 593669c2ac0f, x86 PCI ACPI host bridge driver validates ACPI
->>>> resources by
->>>> first converting an ACPI resource to a 'struct resource' structure and
->>>> then applying checks against the converted resource structure. The
->>>> 'start'
->>>> and 'end' fields in 'struct resource' are defined to be type of
->>>> resource_size_t, which may be 32 bits or 64 bits depending on
->>>> CONFIG_PHYS_ADDR_T_64BIT.
->>>>
->>>> This may cause incorrect resource validation results with 32-bit kernels
->>>> because 64-bit ACPI resource descriptors may get truncated when
->>>> converting
->>>> to 32-bit 'start' and 'end' fields in 'struct resource'. It eventually
->>>> affects PCI resource allocation subsystem and makes some PCI devices and
->>>> the system behave abnormally due to incorrect resource assignment.
->>>>
->>>> So enhance the ACPI resource parsing interfaces to ignore ACPI resource
->>>> descriptors with address/offset above 4G when running in 32-bit mode.
->>>>
->>>> With the fix applied, the behavior of the machine was restored to how
->>>> 3.18.16 worked, i.e. the memory range that is over 4GB is ignored again,
->>>> and lspci -vvxxx shows that everything is at the same memory window as
->>>> they were with 3.18.16.
->>>>
->>>> Reported-and-Tested-by: Boszormenyi Zoltan <zboszor@pr.hu>
->>>> Fixes: 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
->>>> interfaces to simplify implementation")
->>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>>> Cc: stable@vger.kernel.org # 4.0
->>>> ---
->>>>    drivers/acpi/resource.c |   24 +++++++++++++++---------
->>>>    1 file changed, 15 insertions(+), 9 deletions(-)
->>>>
->>>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->>>> index 10561ce16ed1..e8d281739cbc 100644
->>>> --- a/drivers/acpi/resource.c
->>>> +++ b/drivers/acpi/resource.c
->>>> @@ -194,6 +194,7 @@ static bool acpi_decode_space(struct resource_win
->>>> *win,
->>>>        u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 :
->>>> ACPI_DECODE_16;
->>>>        bool wp = addr->info.mem.write_protect;
->>>>        u64 len = attr->address_length;
->>>> +    u64 start, end, offset = 0;
->>>>        struct resource *res = &win->res;
->>>>
->>>>        /*
->>>> @@ -205,9 +206,6 @@ static bool acpi_decode_space(struct resource_win
->>>> *win,
->>>>            pr_debug("ACPI: Invalid address space min_addr_fix %d,
->>>> max_addr_fix %d, len %llx\n",
->>>>                 addr->min_address_fixed, addr->max_address_fixed, len);
->>>>
->>>> -    res->start = attr->minimum;
->>>> -    res->end = attr->maximum;
->>>> -
->>>>        /*
->>>>         * For bridges that translate addresses across the bridge,
->>>>         * translation_offset is the offset that must be added to the
->>>> @@ -215,12 +213,22 @@ static bool acpi_decode_space(struct
->>>> resource_win *win,
->>>>         * primary side. Non-bridge devices must list 0 for all Address
->>>>         * Translation offset bits.
->>>>         */
->>>> -    if (addr->producer_consumer == ACPI_PRODUCER) {
->>>> -        res->start += attr->translation_offset;
->>>> -        res->end += attr->translation_offset;
->>>> -    } else if (attr->translation_offset) {
->>>> +    if (addr->producer_consumer == ACPI_PRODUCER)
->>>> +        offset = attr->translation_offset;
->>>> +    else if (attr->translation_offset)
->>>>            pr_debug("ACPI: translation_offset(%lld) is invalid for
->>>> non-bridge device.\n",
->>>>                 attr->translation_offset);
->>>> +    start = attr->minimum + offset;
->>>> +    end = attr->maximum + offset;
->>>
->>> I still see the issue for this area, I mean ACPI_IO_RANGE. You are
->>> adding translation offset to attr->minimum, build resource structure
->>> which is then passed to acpi_dev_ioresource_flags and compared against
->>> 0x10003. It causes some IO ranges to be ignored.
->>>
->>
->> Kindly reminder, any comments?
->>
->> Tomasz
-> Hi Tomasz,
-> 	Thanks for reporting this issue! Could you please help to
-> test the attached patch?
+On Tue, Nov 03, 2015 at 04:19:26PM +0000, Phil Edworthy wrote:
+> If the dtb specifies dma-ranges, we use those values. Otherwise, we
+> default to the values that were previously hardcoded into the driver.
+> 
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> ---
+>  .../devicetree/bindings/pci/pci-rcar-gen2.txt      |  6 ++
 
-I was not able to apply your patch directly but that part:
--	if (res->end >= 0x10003)
-+	if (res->end - offset >= 0x10003)
-  		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+Acked-by: Rob Herring <robh@kernel.org>
 
-definitely helps. Thanks!
-
-Tomasz
+>  drivers/pci/host/pci-rcar-gen2.c                   | 76 +++++++++++++++++++++-
+>  2 files changed, 79 insertions(+), 3 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> index 7fab84b..891463c 100644
+> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> @@ -24,6 +24,11 @@ Required properties:
+>  - interrupt-map-mask: standard property that helps to define the interrupt
+>    mapping.
+>  
+> +Optional properties:
+> +- dma-ranges: a single range for the inbound memory region. If not supplied,
+> +  defaults to 1GiB at 0x40000000. Note there are hardware restrictions on the
+> +  allowed combinations of address and size.
+> +
+>  Example SoC configuration:
+>  
+>  	pci0: pci@ee090000  {
+> @@ -38,6 +43,7 @@ Example SoC configuration:
+>  		#address-cells = <3>;
+>  		#size-cells = <2>;
+>  		#interrupt-cells = <1>;
+> +		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x40000000>;
+>  		interrupt-map-mask = <0xff00 0 0 0x7>;
+>  		interrupt-map = <0x0000 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
+>  				 0x0800 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
+> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+> index c4f64bf..6295116 100644
+> --- a/drivers/pci/host/pci-rcar-gen2.c
+> +++ b/drivers/pci/host/pci-rcar-gen2.c
+> @@ -15,6 +15,7 @@
+>  #include <linux/io.h>
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+> +#include <linux/of_address.h>
+>  #include <linux/of_pci.h>
+>  #include <linux/pci.h>
+>  #include <linux/platform_device.h>
+> @@ -102,6 +103,8 @@ struct rcar_pci_priv {
+>  	unsigned busnr;
+>  	int irq;
+>  	unsigned long window_size;
+> +	unsigned long window_addr;
+> +	unsigned long window_pci;
+>  };
+>  
+>  /* PCI configuration space operations */
+> @@ -239,8 +242,8 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
+>  	       RCAR_PCI_ARBITER_PCIBP_MODE;
+>  	iowrite32(val, reg + RCAR_PCI_ARBITER_CTR_REG);
+>  
+> -	/* PCI-AHB mapping: 0x40000000 base */
+> -	iowrite32(0x40000000 | RCAR_PCIAHB_PREFETCH16,
+> +	/* PCI-AHB mapping */
+> +	iowrite32(priv->window_addr | RCAR_PCIAHB_PREFETCH16,
+>  		  reg + RCAR_PCIAHB_WIN1_CTR_REG);
+>  
+>  	/* AHB-PCI mapping: OHCI/EHCI registers */
+> @@ -251,7 +254,7 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
+>  	iowrite32(RCAR_AHBPCI_WIN1_HOST | RCAR_AHBPCI_WIN_CTR_CFG,
+>  		  reg + RCAR_AHBPCI_WIN1_CTR_REG);
+>  	/* Set PCI-AHB Window1 address */
+> -	iowrite32(0x40000000 | PCI_BASE_ADDRESS_MEM_PREFETCH,
+> +	iowrite32(priv->window_pci | PCI_BASE_ADDRESS_MEM_PREFETCH,
+>  		  reg + PCI_BASE_ADDRESS_1);
+>  	/* Set AHB-PCI bridge PCI communication area address */
+>  	val = priv->cfg_res->start + RCAR_AHBPCI_PCICOM_OFFSET;
+> @@ -284,6 +287,64 @@ static struct pci_ops rcar_pci_ops = {
+>  	.write	= pci_generic_config_write,
+>  };
+>  
+> +static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
+> +				     struct device_node *node)
+> +{
+> +	const int na = 3, ns = 2;
+> +	int rlen;
+> +
+> +	parser->node = node;
+> +	parser->pna = of_n_addr_cells(node);
+> +	parser->np = parser->pna + na + ns;
+> +
+> +	parser->range = of_get_property(node, "dma-ranges", &rlen);
+> +	if (!parser->range)
+> +		return -ENOENT;
+> +
+> +	parser->end = parser->range + rlen / sizeof(__be32);
+> +	return 0;
+> +}
+> +
+> +static int rcar_pci_parse_map_dma_ranges(struct rcar_pci_priv *pci,
+> +					 struct device_node *np)
+> +{
+> +	struct of_pci_range range;
+> +	struct of_pci_range_parser parser;
+> +	int index = 0;
+> +
+> +	/* Failure to parse is ok as we fall back to defaults */
+> +	if (pci_dma_range_parser_init(&parser, np))
+> +		return 0;
+> +
+> +	/* Get the dma-ranges from DT */
+> +	for_each_of_pci_range(&parser, &range) {
+> +		/* Hardware only allows one inbound 32-bit range */
+> +		if (index)
+> +			return -EINVAL;
+> +
+> +		pci->window_addr = (unsigned long)range.cpu_addr;
+> +		pci->window_pci = (unsigned long)range.pci_addr;
+> +		pci->window_size = (unsigned long)range.size;
+> +
+> +		/* Catch HW limitations */
+> +		if (!(range.flags & IORESOURCE_PREFETCH)) {
+> +			dev_err(pci->dev, "window must be prefetchable\n");
+> +			return -EINVAL;
+> +		}
+> +		if (pci->window_addr) {
+> +			u32 lowaddr = 1 << (ffs(pci->window_addr) - 1);
+> +
+> +			if (lowaddr < pci->window_size) {
+> +				dev_err(pci->dev, "invalid window size/addr\n");
+> +				return -EINVAL;
+> +			}
+> +		}
+> +		index++;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static int rcar_pci_probe(struct platform_device *pdev)
+>  {
+>  	struct resource *cfg_res, *mem_res;
+> @@ -329,6 +390,9 @@ static int rcar_pci_probe(struct platform_device *pdev)
+>  		return priv->irq;
+>  	}
+>  
+> +	/* default window addr and size if not specified in DT */
+> +	priv->window_addr = 0x40000000;
+> +	priv->window_pci = 0x40000000;
+>  	priv->window_size = SZ_1G;
+>  
+>  	if (pdev->dev.of_node) {
+> @@ -344,6 +408,12 @@ static int rcar_pci_probe(struct platform_device *pdev)
+>  		priv->busnr = busnr.start;
+>  		if (busnr.end != busnr.start)
+>  			dev_warn(&pdev->dev, "only one bus number supported\n");
+> +
+> +		ret = rcar_pci_parse_map_dma_ranges(priv, pdev->dev.of_node);
+> +		if (ret < 0) {
+> +			dev_err(&pdev->dev, "failed to parse dma-range\n");
+> +			return ret;
+> +		}
+>  	} else {
+>  		priv->busnr = pdev->id;
+>  	}
+> -- 
+> 1.9.1
+> 
