@@ -1,131 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:56802 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbbKQCpZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 21:45:25 -0500
-Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:44597 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965307AbbKEXps (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2015 18:45:48 -0500
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Nov 2015 12:45:23 +1000
-Date: Tue, 17 Nov 2015 13:44:22 +1100
+	Fri, 6 Nov 2015 09:45:45 +1000
+Date: Fri, 6 Nov 2015 10:44:14 +1100
 From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
+To: Daniel Axtens <dja@axtens.net>
 Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
 	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
 	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-Subject: Re: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
-Message-ID: <20151117024422.GA9229@gwshan>
+	mpe@ellerman.id.au, aik@ozlabs.ru, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+Subject: Re: [PATCH v7 02/50] powerpc/pci: Override pcibios_setup_bridge()
+Message-ID: <20151105234414.GA30465@gwshan>
 Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
 References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
- <56498D7B.7000307@ozlabs.ru>
- <20151117013813.GB31584@gwshan>
- <564A8CEC.4050906@ozlabs.ru>
+ <1446642770-4681-3-git-send-email-gwshan@linux.vnet.ibm.com>
+ <87wptwhyjl.fsf@gamma.ozlabs.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <564A8CEC.4050906@ozlabs.ru>
+In-Reply-To: <87wptwhyjl.fsf@gamma.ozlabs.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 17, 2015 at 01:11:56PM +1100, Alexey Kardashevskiy wrote:
->On 11/17/2015 12:38 PM, Gavin Shan wrote:
->>On Mon, Nov 16, 2015 at 07:02:03PM +1100, Alexey Kardashevskiy wrote:
->>>On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>>>This enables M64 window on P7IOC, which has been enabled on PHB3.
->>>>Different from PHB3 where 16 M64 BARs are supported and each of
->>>>them can be owned by one particular PE# exclusively or divided
->>>>evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
->>>>of them are divided to 8 segments. So every P7IOC PHB supports
->>>>128 M64 segments in total. P7IOC has M64DT, which helps mapping
->>>>one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
->>>>M64DT, indicating that one M64 segment can only be pinned to the
->>>>fixed PE#. In order to have same code to support M64 on P7IOC and
->>>>PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
->>>>of them is pinned to the fixed PE# by bypassing the function of
->>>>M64DT. In turn, we just need different phb->init_m64() for P7IOC
->>>>and PHB3 to support M64.
->>>>
->>>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>>>---
->>>>  arch/powerpc/platforms/powernv/pci-ioda.c | 86 +++++++++++++++++++++++++++++--
->>>>  arch/powerpc/platforms/powernv/pci.h      |  3 ++
->>>>  2 files changed, 86 insertions(+), 3 deletions(-)
->>>>
->>>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>>>index 1f7d985..bfe69f1 100644
->>>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>>>@@ -256,6 +256,64 @@ static void pnv_ioda_reserve_dev_m64_pe(struct pci_dev *pdev,
->>>>  	}
->>>>  }
->>>>
->>>>+static int pnv_ioda1_init_m64(struct pnv_phb *phb)
->>>>+{
->>>>+	struct resource *r;
->>>>+	int index;
->>>>+
->>>>+	/*
->>>>+	 * There are 16 M64 BARs, each of which has 8 segments. So
->>>>+	 * there are as many M64 segments as the maximum number of
->>>>+	 * PEs, which is 128.
->>>>+	 */
->>>>+	for (index = 0; index < PNV_IODA1_M64_NUM; index++) {
->>>>+		unsigned long base, segsz = phb->ioda.m64_segsize;
->>>>+		int64_t rc;
->>>>+
->>>>+		base = phb->ioda.m64_base +
->>>>+		       index * PNV_IODA1_M64_SEGS * segsz;
->>>>+		rc = opal_pci_set_phb_mem_window(phb->opal_id,
->>>>+				OPAL_M64_WINDOW_TYPE, index, base, 0,
->>>>+				PNV_IODA1_M64_SEGS * segsz);
->>>>+		if (rc != OPAL_SUCCESS) {
->>>>+			pr_warn("  Error %lld setting M64 PHB#%d-BAR#%d\n",
->>>>+				rc, phb->hose->global_number, index);
->>>>+			goto fail;
->>>>+		}
->>>>+
->>>>+		rc = opal_pci_phb_mmio_enable(phb->opal_id,
->>>>+				OPAL_M64_WINDOW_TYPE, index,
->>>>+				OPAL_ENABLE_M64_SPLIT);
->>>>+		if (rc != OPAL_SUCCESS) {
->>>>+			pr_warn("  Error %lld enabling M64 PHB#%d-BAR#%d\n",
->>>>+				rc, phb->hose->global_number, index);
->>>>+			goto fail;
->>>>+		}
->>>>+	}
->>>>+
->>>>+	/*
->>>>+	 * Exclude the segment used by the reserved PE, which
->>>>+	 * is expected to be 0 or last supported PE#.
->>>>+	 */
->>>>+	r = &phb->hose->mem_resources[1];
->>>
->>>
->>>What does "1" mean here? A bridge's 64bit prefetchable window?
->>>
->>
->>It's PHB's M64 window.
+On Fri, Nov 06, 2015 at 09:27:42AM +1100, Daniel Axtens wrote:
+>Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
 >
->mem_resources[] of a hose are not windows of the root PCI bridge?
+>>  
+>> +void pcibios_setup_bridge(struct pci_bus *bus, unsigned long type)
+>> +{
+>> +	struct pci_controller *hose = pci_bus_to_host(bus);
+>Very much a nit-pick, but I thought we were trying to move towards using
+>phb instead of hose in new code?
 >
 
-No. They're windows for root bus, but not for root PCI bridge.
+Take PowerNV platform as an example, "hose" means "struct pci_controller",
+but "phb" means "struct pnv_phb". We don't have the movement to use "phb"
+to represent "struct pci_controller".
 
->>
->>>
->>>>+	if (phb->ioda.reserved_pe_idx == 0)
->>>>+		r->start += phb->ioda.m64_segsize;
->>>>+	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
->>>>+		r->end -= phb->ioda.m64_segsize;
->>>>+	else
->>>>+		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
->>>>+			phb->ioda.reserved_pe_idx);
->>>>+
->>
+>Apart from that this looks good. I would probably have merged it with
+>the previous patch, but I know Alexey has been suggesting a lot of
+>splitting and merging previously, so whatever he prefers here is OK.
+>
 
-Thanks,
-Gavin
+I'd like to keep them separate as they're for different subsystem:
+PCI generic subsystem and PowerPC subsystem. Separate maintainers
+for them can pick them as they will.
+
+>> +
+>> +	if (hose->controller_ops.setup_bridge)
+>> +		hose->controller_ops.setup_bridge(bus, type);
+>> +}
+>> +
+>>  void pcibios_reset_secondary_bus(struct pci_dev *dev)
+>>  {
+>>  	struct pci_controller *phb = pci_bus_to_host(dev->bus);
+>> -- 
+>> 2.1.0
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
