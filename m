@@ -1,56 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37154 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751378AbbKYTcF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Nov 2015 14:32:05 -0500
-Date: Wed, 25 Nov 2015 13:32:01 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	lorenzo.pieralisi@arm.com, arnd@arndb.de, bhelgaas@google.com,
-	robh@kernel.org, linux@arm.linux.org.uk, wangzhou1@hisilicon.com,
-	liguozhu@hisilicon.com, xuwei5@hisilicon.com
-Subject: Re: [PATCH] ARM/PCI: move align_resource function pointer into
- pci_host_bridge structure
-Message-ID: <20151125193201.GE8869@localhost>
-References: <1447204345-143793-1-git-send-email-gabriele.paoloni@huawei.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:49594 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030886AbbKEJoJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2015 04:44:09 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	"majun (F)" <majun258@huawei.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH RFC 7/7] irqchip: [Example] dummy wired interrupt/MSI
+ bridge driver
+Date: Thu, 5 Nov 2015 09:43:12 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1629EF42@lhreml503-mbs>
+References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
+ <1444923568-17413-8-git-send-email-marc.zyngier@arm.com>
+ <5639BB10.1090108@huawei.com> <5639C9F9.2010704@arm.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1629D8DD@lhreml503-mbs>
+ <563B22F1.901@arm.com>
+In-Reply-To: <563B22F1.901@arm.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1447204345-143793-1-git-send-email-gabriele.paoloni@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 11, 2015 at 09:12:25AM +0800, Gabriele Paoloni wrote:
-> From: gabpao01 <gabriele.paoloni@huawei.com>
-> 
-> commit b3a72384fe29 ("ARM/PCI: Replace
-> pci_sys_data->align_resource with global function pointer") has
-> introduced a global function pointer that makes the ARM specific
-> code not portable and broken in case any platform have a two
-> different HW IPs for the PCIe host bridge controller.
-> This patch moves align_resource function pointer into
-> pci_host_bridge structure so that the code is now suitable to be
-> reworked as we want to get rid of hw_pci structure (the host bridge
-> drivers can just set the align function pointer in the
-> pci_host_bridge structure) and there is no more broken code for a
-> SoC with two HW IPs.
-> 
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-
-This looks good to me.  I merged b3a72384fe29 so maybe it would make
-sense for me to merge this follow-up as well.  I put it on my
-for-linus branch for v4.4.
-
-If you'd rather merge it via an ARM tree, here's my ack:
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-If you want me to merge it, an ARM ack would be nice.  If you want to
-merge it, let me know and I'll drop it from my tree.
-
-> +	/* Resource alignement requirements     */
-
-s/alignement/alignment/
-
-> +	resource_size_t (*align_resource)(struct pci_dev *dev,
-> ...
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBNYXJjIFp5bmdpZXIgW21haWx0
+bzptYXJjLnp5bmdpZXJAYXJtLmNvbV0NCj4gU2VudDogVGh1cnNkYXksIE5vdmVtYmVyIDA1LCAy
+MDE1IDk6MzYgQU0NCj4gVG86IEdhYnJpZWxlIFBhb2xvbmk7IG1hanVuIChGKTsgVGhvbWFzIEds
+ZWl4bmVyOyBKaWFuZyBMaXU7IEphc29uDQo+IENvb3Blcg0KPiBDYzogbGludXgtYXJtLWtlcm5l
+bEBsaXN0cy5pbmZyYWRlYWQub3JnOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOw0KPiBsaW51
+eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggUkZDIDcvN10g
+aXJxY2hpcDogW0V4YW1wbGVdIGR1bW15IHdpcmVkDQo+IGludGVycnVwdC9NU0kgYnJpZGdlIGRy
+aXZlcg0KPiANCj4gT24gMDUvMTEvMTUgMDg6MjUsIEdhYnJpZWxlIFBhb2xvbmkgd3JvdGU6DQo+
+ID4gSGkgTWFyYw0KPiA+DQo+ID4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+IEZy
+b206IGxpbnV4LXBjaS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1wY2ktDQo+
+IG93bmVyQHZnZXIua2VybmVsLm9yZ10NCj4gPj4gT24gQmVoYWxmIE9mIE1hcmMgWnluZ2llcg0K
+PiA+PiBTZW50OiAwNCBOb3ZlbWJlciAyMDE1IDA5OjA0DQo+ID4+IFRvOiBtYWp1biAoRik7IFRo
+b21hcyBHbGVpeG5lcjsgSmlhbmcgTGl1OyBKYXNvbiBDb29wZXINCj4gPj4gQ2M6IGxpbnV4LWFy
+bS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsN
+Cj4gbGludXgtDQo+ID4+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4gPj4gU3ViamVjdDogUmU6
+IFtQQVRDSCBSRkMgNy83XSBpcnFjaGlwOiBbRXhhbXBsZV0gZHVtbXkgd2lyZWQNCj4gaW50ZXJy
+dXB0L01TSQ0KPiA+PiBicmlkZ2UgZHJpdmVyDQo+ID4+DQo+ID4+IE9uIDA0LzExLzE1IDA4OjAw
+LCBtYWp1biAoRikgd3JvdGU6DQo+IA0KPiBbLi4uXQ0KPiANCj4gPj4+IEkgdGhpbmssZm9yIGEg
+aW50ZXJydXB0IGNvbnRyb2xsZXIsIG1zaWNoaXAgZHJpdmVyIGluaXRpYWxpemF0aW9uDQo+IG1h
+eWJlIGlzDQo+ID4+IHRvbyBsYXRlDQo+ID4+PiBmb3Igc29tZSBkZXZpY2VzIHdoaWNoIGNvbm5l
+Y3QgdG8gdGhpcyBpcnFjaGlwIGlmIHdlIHVzZQ0KPiA+PiBtb2R1bGVfcGxhdGZvcm1fZHJpdmVy
+Lg0KPiA+Pg0KPiA+PiBUaGF0J3MgYSBjb25zZXF1ZW5jZSBvZiB0aGlzIGRlc2lnbi4gVGhpcyBp
+cyB3aHkgSSBpbnNpc3RlZCBvbiB0aGUNCj4gZmFjdA0KPiA+PiB0aGF0IHRoaXMgaXMgY3VycmVu
+dGx5IGF2b2lkZWQgYnkgdXNpbmcgZGVmZXJyZWQgcHJvYmUgaW4gZHJpdmVycywNCj4gYW5kDQo+
+ID4NCj4gPiBNbW0gdXNpbmcgdGUgZGVmZXJyZWQgcHJvYmUgd291bGQgbWVhbiB0byByZXdvcmsg
+YWxsIHRoZSBkcml2ZXJzIG9mDQo+IHRoZQ0KPiA+IHBvdGVudGlhbCBkZXZpY2VzIGNvbm5lY3Rl
+ZCB0byBtYmktZ2VuLi4ud291bGQgdGhhdCBiZQ0KPiBzdXN0YWluYWJsZS9hY2NlcHRhYmxlPw0K
+PiANCj4gSSdtIHRlbXB0ZWQgdG8gcmVwbHkgIk5vdCBteSBwcm9ibGVtIi4gT3IgcmF0aGVyLCBu
+b3QgYSBwcm9ibGVtIEknbQ0KPiB0cnlpbmcgdG8gc29sdmUgcmlnaHQgbm93IChvciBhbnkgdGlt
+ZSBzb29uKS4NCj4gDQo+IEknbSBwcmV0dHkgc3VyZSB0aGF0IHNwcmlua2xpbmcgLUVQUk9CRV9E
+RUZFUiBvbiBhbGwgcG9zc2libGUgZHJpdmVycw0KPiB3aWxsIHJlc3VsdCBpbiBhIHJlc291bmRp
+bmcgTkFLLCB3aGljaCBpcyBpcyB3aHkgSSBzdWdnZXN0ZWQgdGhhdA0KPiBzb21lb25lIHdpdGgg
+YSB2ZXN0ZWQgaW50ZXJlc3QgZGVkaWNhdGVzIHNvbWUgcXVhbGl0eSB0aW1lIGhlbHBpbmcNCj4g
+dGhvc2UNCj4gd2hvIGFyZSB0cnlpbmcgdG8gc29sdmUgdGhpcyBpc3N1ZSBmb3IgZ29vZC4NCg0K
+WWVzIHlvdSdyZSByaWdodCwgbWFrZXMgcGVyZmVjdCBzZW5zZQ0KDQo+IA0KPiA+PiB0aGF0IGl0
+IHNob3VsZCBiZSBzb2x2ZWQgYnkgaGF2aW5nIGEgcHJvYmUgb3JkZXIuIEVpdGhlciB3YXksIHRo
+aXMNCj4gaXMNCj4gPj4gbm90IHNvbWV0aGluZyB0aGF0IHdlIGNhbiBzb2x2ZSBhdCB0aGF0IGxl
+dmVsIChzZWUgdGhlIG11bHRpcGxlDQo+IHByb3Bvc2FsDQo+ID4+IGZvciB0aGlzIG9uIHRoZSB2
+YXJpb3VzIGxpc3RzKS4NCj4gPg0KPiA+IENvdWxkIHlvdSBwb2ludCBtZSB0byB0aGUgcmVsZXZh
+bnQgZGlzY3Vzc2lvbnMgZm9yIHRoaXMuLi4/DQo+IA0KPiBHb29nbGUgaXMsIGFzIGFsd2F5cywg
+eW91ciBkZWFyZXN0IGZyaWVuZC4gQnV0IGhlcmUgeW91IGdvOg0KPiANCj4gLSBMV04gaGFzIHNv
+bWUgcXVhbGl0eSBjb3ZlcmFnZSBvZiB0aGUgS1MgZGlzY3Vzc2lvbnMgKGFzc3VtaW5nIHlvdSdy
+ZQ0KPiBhDQo+IHN1YnNjcmliZXIsIG90aGVyd2lzZSB5b3UnbGwgaGF2ZSB0byB3YWl0IGZvciBh
+bm90aGVyIHdlZWspOg0KPiBodHRwOi8vbHduLm5ldC9BcnRpY2xlcy82NjI4MjAvDQo+IA0KPiAt
+IFRoZXJlIGlzIGFsc28gVG9tZXUgVml6b3NvJ3Mgc2VyaWVzLCB3aGljaCBpdHNlbGYgYnVpbGRz
+IHVwb24gb3RoZXINCj4gcHJldmlvdXMgYXR0ZW1wdHMgYXQgc29sdmluZyB0aGlzOiBodHRwczov
+L2x3bi5uZXQvQXJ0aWNsZXMvNjU4NjkwLw0KPiANCg0KR3JlYXQsIG1hbnkgdGhhbmtzIGZvciBw
+b2ludGluZyB0aGVtIG91dC4NCg0KSSdsbCBsb29rIGludG8gdGhlc2UuDQoNClRoYW5rcyBhZ2Fp
+bg0KDQpHYWINCg0KPiBUaGFua3MsDQo+IA0KPiAJTS4NCj4gLS0NCj4gSmF6eiBpcyBub3QgZGVh
+ZC4gSXQganVzdCBzbWVsbHMgZnVubnkuLi4NCg==
