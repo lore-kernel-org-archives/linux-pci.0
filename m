@@ -1,73 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:18436 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750791AbbKZFOi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Nov 2015 00:14:38 -0500
-Subject: Re: [PATCH v2 4/5] PCI: iproc: Add iProc PCIe MSI support
-To: Marc Zyngier <marc.zyngier@arm.com>
-References: <1448406294-732-1-git-send-email-rjui@broadcom.com>
- <1448406294-732-5-git-send-email-rjui@broadcom.com>
- <20151125173627.41b1a526@arm.com> <565665E8.1080702@broadcom.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-Message-ID: <5656953C.7050602@broadcom.com>
-Date: Wed, 25 Nov 2015 21:14:36 -0800
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:35196 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1032020AbbKFT7I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Nov 2015 14:59:08 -0500
+Received: by obctp1 with SMTP id tp1so100791238obc.2
+        for <linux-pci@vger.kernel.org>; Fri, 06 Nov 2015 11:59:08 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <565665E8.1080702@broadcom.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+In-Reply-To: <1446802576.3126.5.camel@pengutronix.de>
+References: <1446735481-27326-1-git-send-email-tharvey@gateworks.com>
+	<1446802576.3126.5.camel@pengutronix.de>
+Date: Fri, 6 Nov 2015 11:59:08 -0800
+Message-ID: <CAJ+vNU1ME+LgHohZv1oy9MbZ-Y+U44ihVasjEnvw2AAcr40RHg@mail.gmail.com>
+Subject: Re: [PATCH RFC] PCI: imx6: add dt prop for link gen, default to gen1
+From: Tim Harvey <tharvey@gateworks.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marc,
-
-On 11/25/2015 5:52 PM, Ray Jui wrote:
-> Hi Marc,
->
-[...]
->>> +    /* reserve memory for MSI posted writes */
->>> +    msi->msi_cpu = dma_alloc_coherent(pcie->dev,
->>> +                      msi->nr_msi_region * MSI_MEM_REGION_SIZE,
->>> +                      &msi->msi_dma, GFP_KERNEL);
+On Fri, Nov 6, 2015 at 1:36 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> Am Donnerstag, den 05.11.2015, 06:58 -0800 schrieb Tim Harvey:
+>> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
+>> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
+>> external clock source is present and supplied back to the IMX6 PCIe core
+>> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
 >>
->> Same here. Also, what is the exact purpose of that memory? You have a
->> coherent mapping with the CPU, but you never read from it. So what's
->> the point?
+>> Add a dt property to specify gen1 vs gen2 and check this before allowing
+>> a Gen2 link.
 >>
->
-> Yeah I guess I can change this back to kmalloc since coherent memory is
-> a scarce resource, and the CPU does not need to access the memory, so
-> there's no cache issue.
->
-> I know I have not answered the first part of your question. Let me do
-> some experiments first and I'll get back to you on that, :)
->
+> I think I already said this in the last round: there is nothing vendor
+> specific in a max-link-speed property. I would really like to have this
+> as a common DW PCIe property right from the beginning, so that we don't
+> burden us with keeping backward compatibility with vendor specific
+> properties when this moves to common code eventually.
 
-I did some experiment with the msi_dma here. It looks like it can be any 
-address as long as it's 4K aligned (i.e., can be from the device address 
-range instead of the RAM address range). The MSI message data actually 
-goes to the memory allocated for the event queue (makes sense...), and 
-never made it to the MSI page memory allocated here. Our arch doc is 
-just confusing....:(
+Hi Lucas,
 
-I saw your comment on the other email thread with Xilinx MSI. I'll set 
-the address to the base address of the iProc PCIe controller (which is 
-always 4K aligned).
+I did discuss this patch with you off-list but I think I misunderstood
+your meaning then.
 
-[...]
->>
->> Thanks,
->>
->>     M.
->>
->
-> Thanks, Marc!
->
-> Ray
+So you are asking me to simply rename the properly
+'fsl,max-link-speed' to 'max-link-speed' and the rest of the patch is
+good with you?
 
-Thanks again!
+Regards,
 
-Ray
+Tim
