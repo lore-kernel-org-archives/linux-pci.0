@@ -1,58 +1,145 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	bhelgaas@google.com, rjw@rjwysocki.net, lenb@kernel.org,
-	catalin.marinas@arm.com, will.deacon@arm.com,
-	thomas.lendacky@amd.com, herbert@gondor.apana.org.au,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:59671 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1033190AbbKFNWw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 6 Nov 2015 08:22:52 -0500
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+To: Tomasz Nowicki <tn@semihalf.com>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
+ <563B65EE.7000406@semihalf.com> <20151105181959.GA352@red-moon>
+ <563C6A5F.5030500@linux.intel.com> <563C82FA.7050707@semihalf.com>
+ <563C930F.4060206@linux.intel.com> <563C9FBE.2090303@semihalf.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, hanjun.guo@linaro.org,
-	davem@davemloft.net, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V5 8/9] PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
-Date: Wed, 18 Nov 2015 13:41:39 +0100
-Message-ID: <3822315.uJPjk3L2zB@wuerfel>
-In-Reply-To: <564C6860.4000002@arm.com>
-References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com> <564B4111.6010805@arm.com> <564C6860.4000002@arm.com>
+	x86@kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <563CA9A6.7050309@linux.intel.com>
+Date: Fri, 6 Nov 2015 21:22:46 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <563C9FBE.2090303@semihalf.com>
+Content-Type: multipart/mixed;
+ boundary="------------070805030300030602060601"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 18 November 2015 12:00:32 Robin Murphy wrote:
-> On 17/11/15 15:00, Robin Murphy wrote:
-> > On 28/10/15 22:50, Suravee Suthikulpanit wrote:
-> >> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> >> Acked-by: Rob Herring <robh+dt@kernel.org>
-> >> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> >> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-> >> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
-> [...]
-> >> +/**
-> >> + * pci_dma_configure - Setup DMA configuration
-> >> + * @dev: ptr to pci_dev struct of the PCI device
-> >> + *
-> >> + * Function to update PCI devices's DMA configuration using the same
-> >> + * info from the OF node of host bridge's parent (if any).
-> >> + */
-> >> +static void pci_dma_configure(struct pci_dev *dev)
-> >> +{
-> >> +    struct device *bridge = pci_get_host_bridge_device(dev);
-> >> +
-> >> +    if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
-> >
-> > Previously I was seeing of_dma_configure, and thus of_iommu_configure,
-> > called for every PCI device on Juno. The check above now prevents this
-> > happening, since the PCI devices are probed directly from the bus and
-> > don't have OF nodes of their own. They now get left in some
-> > half-configured state where arch_setup_dma_ops isn't called either.
+This is a multi-part message in MIME format.
+--------------070805030300030602060601
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+
+On 2015/11/6 20:40, Tomasz Nowicki wrote:
+> On 06.11.2015 12:46, Jiang Liu wrote:
+>> On 2015/11/6 18:37, Tomasz Nowicki wrote:
+>>> On 06.11.2015 09:52, Jiang Liu wrote:
+>>> Sure, ARM64 (0-16M IO space) QEMU example:
+>>> DWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
+>>>           0x00000000,         // Granularity
+>>>           0x00000000,         // Range Minimum
+>>>           0x0000FFFF,         // Range Maximum
+>>>           0x3EFF0000,         // Translation Offset
+>>>           0x00010000,         // Length
+>>>           ,, , TypeStatic)
+>> The above DWordIO resource descriptor doesn't confirm to the ACPI spec.
+>> According to my understanding, ARM/ARM64 has no concept of IO port
+>> address space, so the PCI host bridge will map IO port on PCI side
+>> onto MMIO on host side. In other words, PCI host bridge on ARM64
+>> implement a IO Port->MMIO translation instead of a IO Port->IO Port
+>> translation. If that's true, it should use 'TypeTranslation' instead
+>> of 'TypeStatic'. And kernel ACPI resource parsing interface doesn't
+>> support 'TypeTranslation' yet, so we need to find a solution for it.
 > 
-> Just to follow up on that, Arnd's patch to tidy up dma_get_ops (now 
-> queued[1]) makes this even worse, since preventing arch_setup_dma_ops 
-> being called means the PCI devices now get the dummy DMA ops which leave 
-> the drivers failing to probe at all, IOMMU hacks or not 
+> I think you are right, we need TypeTranslation flag for ARM64 DWordIO
+> descriptors and an extra kernel patch to support it.
+How about the attached to patch to support TypeTranslation?
+It only passes compilation:)
 
-Ok, glad we found that with my patch then. We really have to
-configure the DMA (offset/size/coherency/iommu) for all devices that might
-be masters, otherwise things can randomly go wrong.
+> 
+> Thanks,
+> Tomasz
 
-	ARnd
+--------------070805030300030602060601
+Content-Type: text/x-patch;
+ name="0001-.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0001-.patch"
+
+>From 51f5cddd8c4301b731805074ebc3e3a6c7dbaf59 Mon Sep 17 00:00:00 2001
+From: Liu Jiang <jiang.liu@linux.intel.com>
+Date: Fri, 6 Nov 2015 20:01:59 +0800
+Subject: [PATCH]
+
+
+Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c      |   25 +++++++++++++++++++++++--
+ include/linux/resource_ext.h |    7 +++++++
+ 2 files changed, 30 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index cdc5c2599beb..1bd3e21f56fe 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -215,8 +215,29 @@ static bool acpi_decode_space(struct resource_win *win,
+ 	else if (attr->translation_offset)
+ 		pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
+ 			 attr->translation_offset);
+-	start = attr->minimum + offset;
+-	end = attr->maximum + offset;
++	start = attr->minimum;
++	end = attr->maximum;
++
++	/*
++	 * Convert bus local address into system global address if it's an
++	 * IO Port->IO Port or MMIO->MMIO translation.
++	 */
++	switch (addr->resource_type) {
++	case ACPI_MEMORY_RANGE:
++		if (addr->info.mem.translation)
++			win->translation_type = RESOURCE_TRANS_MMIO_TO_IOPORT;
++		else
++			start += offset;
++		break;
++	case ACPI_IO_RANGE:
++		if (addr->info.io.translation)
++			win->translation_type = RESOURCE_TRANS_IOPORT_TO_MMIO;
++		else
++			start += offset;
++		break;
++	default:
++		break;
++	}
+ 
+ 	win->offset = offset;
+ 	res->start = start;
+diff --git a/include/linux/resource_ext.h b/include/linux/resource_ext.h
+index e2bf63d881d4..f06d358c1f22 100644
+--- a/include/linux/resource_ext.h
++++ b/include/linux/resource_ext.h
+@@ -22,8 +22,15 @@
+ struct resource_win {
+ 	struct resource res;		/* In master (CPU) address space */
+ 	resource_size_t offset;		/* Translation offset for bridge */
++	int translation_type;		/* Translation type for bridge */
+ };
+ 
++#define RESOURCE_TRANS_SAME		0x0
++/* Translate from IO port on slave into MMIO on master */
++#define RESOURCE_TRANS_IOPORT_TO_MMIO	0x1
++/* Translate from MMIO on slave into IO port on master */
++#define RESOURCE_TRANS_MMIO_TO_IOPORT	0x2
++
+ /*
+  * Common resource list management data structure and interfaces to support
+  * ACPI, PNP and PCI host bridge etc.
+-- 
+1.7.10.4
+
+
+--------------070805030300030602060601--
