@@ -1,89 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:36561 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756992AbbKEWdP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2015 17:33:15 -0500
-Received: by pacdm15 with SMTP id dm15so75783759pac.3
-        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2015 14:33:14 -0800 (PST)
-From: Daniel Axtens <dja@axtens.net>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: Re: [PATCH v7 03/50] powerpc/pci: Cleanup on struct pci_controller_ops
-In-Reply-To: <1446642770-4681-4-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1446642770-4681-4-git-send-email-gwshan@linux.vnet.ibm.com>
-Date: Fri, 06 Nov 2015 09:32:57 +1100
-Message-ID: <87si4khyau.fsf@gamma.ozlabs.ibm.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Keith Busch <keith.busch@intel.com>
+To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv4 0/6] Driver for new VMD device
+Date: Fri,  6 Nov 2015 15:35:40 -0700
+Message-Id: <1446849346-8242-1-git-send-email-keith.busch@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Version 4 after re-working the irq domain hierarchies.
 
-Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+v3 -> v4:
 
-> Each PHB has one instance of "struct pci_controller_ops", which
-> includes various callbacks called by PCI subsystem. In the definition
-> of this struct, some callbacks have explicit names for its arguments,
-> but the left don't have.
->
-> This adds all explicit names of the arguments to the callbacks in
-> "struct pci_controller_ops" so that the code looks consistent.
+  Patch from Jiang to allow parent-less msi irq domain.
 
-Thank you very much for doing this - I should have done it the first
-time I created pci_controller_ops.
+  Separated kernel API dependency exports into their own patch.
 
-They all look good, with one nit-pick:
+  Removed the vmd irq domain hierarchy, and instead use a msi irq
+  domain. This pushed all the irq initialization and teardown handling
+  into the irq_chip implementation and reduced kernel dependencies.
 
-> -	void		(*shutdown)(struct pci_controller *);
-> +	void		(*shutdown)(struct pci_controller *hose);
+  Using devm_request_irq instead of an irq flow handler. This moves the
+  irq life management to the devres API which simplifies teardown.
 
-I think we're trying to move from hose to phb in new code.
+  Implemented a smarter method of selecting the VMD vector to share.
 
-Once that is fixed:
-  Reviewed-by: Daniel Axtens <dja@axtens.net>
+  Lots style fixes/updates and additional code comments.
 
-Regards,
-Daniel
+The one review comment I have not fixed is the affinity hint. We are
+still developing a way to better handle this, so have left it as a error
+returning stub. It's less than optimal, but isn't more harmful than that.
 
->  };
->=20=20
->  /*
-> --=20
-> 2.1.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Keith Busch (5):
+  pci: skip child bus with conflicting resources
+  Export msi and irq functions for module use
+  x86-pci: allow pci domain specific dma ops
+  x86/pci: Initial commit for new VMD device driver
+  pciutils: Allow 32-bit domains
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+Liu Jiang (1):
+  msi: Relax msi_domain_alloc() to support parentless MSI irqdomains
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: GPGTools - https://gpgtools.org
+ arch/x86/Kconfig              |  13 +
+ arch/x86/include/asm/device.h |  10 +
+ arch/x86/include/asm/hw_irq.h |   5 +
+ arch/x86/pci/Makefile         |   2 +
+ arch/x86/pci/common.c         |  38 +++
+ arch/x86/pci/vmd.c            | 646 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/msi.c             |   2 +
+ drivers/pci/probe.c           |  10 +-
+ kernel/irq/irqdomain.c        |   1 +
+ kernel/irq/msi.c              |   8 +-
+ 10 files changed, 730 insertions(+), 5 deletions(-)
+ create mode 100644 arch/x86/pci/vmd.c
 
-iQIcBAEBCgAGBQJWO9kZAAoJEPC3R3P2I92FE6cQAMmbZixxqSvwPMi5kqQ6m1hi
-vtKZ2bmTagEPRlchN7TH2iNGQ1LhuA2mU1Jo1QZ1W2XpFU2l4I+rG94q7Va38YXW
-3l8z2kl3jK/QU40vVx586i2+Yhad6t5z0hjooVT3JMVInDG6MZrP00jJfxKRpApI
-/hr4pLtYlvh7JHrfAvtmucNRmjpV55MngXeivMnvhzx1fa8DGHzUrNdaVbq90w+M
-10Q5W1VWNaAyK11qmkOE3TDJ1xEvz9nlRKPxhyuYdxmEu2eqhmHxPfrRFJRr+Yoj
-3k6W6pE2JhtcRIfNsF6DWZuU4fQ8MwAGLPlZAmNQTx3a9y4IluL270JJNqD6afbd
-FBMbA5fPHMH57D9aYSYHSTPgT0Be/1tImbOQ25AbVMEL2qJpg3mGsMP0ybROaUSK
-dc7z5eFWfLnbsOORCZMixv+k71kyxCnT5sAI/Rs3Jce+MdYKVx1JqQkDCffRs6KB
-yE2DiKDJZRBPjHE6889S51jz6d84HD7o9vDvoaFdWWx3IWZUbbzSx6XWuXoIPHtV
-DVHaySvNIEhxdNjGhyzVPb6c+H2gi/raNjT2K7v8ZgkU6wUWPfuhBg1yTaI81IPK
-QpzyUXbgTJ3JTlkrFy88fUnYr3l7UYIjonaidZ2xu6DfIzRT9PP4xnKbY00teG7z
-fwRXCgfmXVXGyD5ZLd5T
-=Pd7o
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+2.6.2.307.g37023ba
+
