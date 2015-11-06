@@ -1,78 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:35529 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965390AbbKDNNr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:47 -0500
-Received: from localhost
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 23:13:45 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 03/50] powerpc/pci: Cleanup on struct pci_controller_ops
-Date: Thu,  5 Nov 2015 00:12:03 +1100
-Message-Id: <1446642770-4681-4-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:49988 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933023AbbKFRyK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Nov 2015 12:54:10 -0500
+Subject: Re: ECRC and Max Read Request Size
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <56310B34.6000102@codeaurora.org>
+ <20151106172205.GA1002@localhost>
+Cc: linux-pci@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <563CE93F.5060209@codeaurora.org>
+Date: Fri, 6 Nov 2015 12:54:07 -0500
+MIME-Version: 1.0
+In-Reply-To: <20151106172205.GA1002@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each PHB has one instance of "struct pci_controller_ops", which
-includes various callbacks called by PCI subsystem. In the definition
-of this struct, some callbacks have explicit names for its arguments,
-but the left don't have.
 
-This adds all explicit names of the arguments to the callbacks in
-"struct pci_controller_ops" so that the code looks consistent.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+On 11/6/2015 12:22 PM, Bjorn Helgaas wrote:
+> Hi Sinan,
+>
+> On Wed, Oct 28, 2015 at 01:51:48PM -0400, Sinan Kaya wrote:
+>> I'm seeing two problems with the current PCI framework when it comes
+>> to end-to-end CRC (ECRC) and Max Read Request Size.
+>>
+>> The problem with ECRC is that it blindly enables ECRC generation on
+>> devices without checking if it is supported by the entire bus with
+>> ECRC=on option.
+>>
+>> ECRC check can be enabled on all devices but ECRC generation on the
+>> root complex and switches needs to be set only if all devices
+>> support ECRC checking.
+>>
+>> I'm thinking of making changes in this area to cover this gap with
+>> ECRC=safe option.
+>
+> Sometimes they can't be avoided, but I'm generally not in favor of
+> adding command line parameters because they require too much of our
+> users and they introduce code paths that are rarely exercised.
+>
+> What specific ECRC problem are you seeing?  Do you have devices that
+> don't operate correctly with the current code?  Or do you want to add
+> some new functionality, e.g., to enable ECRC in cases where we don't
+> enable it today?
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 6076116..0f2ff3a 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -21,18 +21,19 @@ struct pci_controller_ops {
- 	void		(*dma_dev_setup)(struct pci_dev *dev);
- 	void		(*dma_bus_setup)(struct pci_bus *bus);
- 
--	int		(*probe_mode)(struct pci_bus *);
-+	int		(*probe_mode)(struct pci_bus *bus);
- 
- 	/* Called when pci_enable_device() is called. Returns true to
- 	 * allow assignment/enabling of the device. */
--	bool		(*enable_device_hook)(struct pci_dev *);
-+	bool		(*enable_device_hook)(struct pci_dev *dev);
- 
--	void		(*disable_device)(struct pci_dev *);
-+	void		(*disable_device)(struct pci_dev *dev);
- 
--	void		(*release_device)(struct pci_dev *);
-+	void		(*release_device)(struct pci_dev *dev);
- 
- 	/* Called during PCI resource reassignment */
--	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
-+	resource_size_t (*window_alignment)(struct pci_bus *bus,
-+					    unsigned long type);
- 	void		(*setup_bridge)(struct pci_bus *bus,
- 					unsigned long type);
- 	void		(*reset_secondary_bus)(struct pci_dev *dev);
-@@ -46,7 +47,7 @@ struct pci_controller_ops {
- 	int             (*dma_set_mask)(struct pci_dev *dev, u64 dma_mask);
- 	u64		(*dma_get_required_mask)(struct pci_dev *dev);
- 
--	void		(*shutdown)(struct pci_controller *);
-+	void		(*shutdown)(struct pci_controller *hose);
- };
- 
- /*
+ECRC is an optional PCIe feature. Even ECRC support has some flavors
+
+- A card can support ECRC checking.
+- A card can support ECRC checking and generation.
+
+Right now, the code is enabling both without checking if they are 
+supported at all.
+
+I have some legacy PCIe cards that don't support ECRC completely even 
+though the host bridge supports it. If ECRC checking and generation is 
+enabled under this situation, I have problems communicating to the endpoint.
+
+I would like to be able to turn on this feature all the time and not 
+think about if things will break or not.
+
+Maybe, I can fix the code and enable it only when the entire bus 
+supports it instead of adding a new feature if nobody objects.
+
+
+>
+>> The other problem I'm seeing is about the maximum read request size.
+>> If I choose the PCI bus performance mode, maximum read request size
+>> is being limited to the maximum payload size.
+>>
+>> I'd like to add a new mode where I can have bigger read request size
+>> than the maximum payload size.
+>
+> I've never been thrilled about the way Linux ties MRRS and MPS
+> together.  I don't think the spec envisioned MRRS being used to
+> control segment size on the link.  My impression is that the purpose
+> of MRRS is to limit the amount of time one device can dominate a link.
+>
+> I am sympathetic to the idea of having MRRS larger than MPS.  The
+> question is how to accomplish that.  I'm not really happy with the
+> current set of "pcie_bus_tune_*" parameters, so I'd hesitate to add
+> yet another one.  They feel like they're basically workarounds for the
+> fact that Linux can't optimize MPS directly itself.
+>
+> Can you give any more specifics of your MRRS/MPS situation?  I guess
+> you hope to improve bandwidth to some device by reducing the number of
+> read requests?  Do you have any quantitative estimate of what you can
+> gain?
+
+I talked to our performance team. They are saying that max read request 
+does not gain you much compared to max payload size single direction but 
+it helps tremendously if you are moving data forth and back between the 
+card. I don't have real numbers though.
+
+They asked me to work on adding this feature. Most of the endpoints I 
+have seen seem to support something around 4k for max read request size.
+
+I have one directly connected card to my system. I'd like to give the 
+maximum bandwidth to the card including maximum payload size and maximum 
+read request size which is much bigger than the payload size.
+
+Another opinion is let the firmware do its magic before the OS starts 
+but there is no way to apply the same settings after a hot-plug insertion.
+
+>
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
 -- 
-2.1.0
-
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
