@@ -1,70 +1,186 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Linaro-acpi] [PATCH V1 10/11] pci, acpi: Provide generic way to
- assign bus domain number.
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
 To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	Tomasz Nowicki <tn@semihalf.com>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
- <1445963922-22711-11-git-send-email-tn@semihalf.com>
- <20151103161059.GE3574@red-moon>
-Cc: rjw@rjwysocki.net, linux-kernel@vger.kernel.org, arnd@arndb.de,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	catalin.marinas@arm.com, linaro-acpi@lists.linaro.org,
-	will.deacon@arm.com, ddaney@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, wangyijing@huawei.com,
-	robert.richter@caviumnetworks.com, tglx@linutronix.de,
-	bhelgaas@google.com, Liviu.Dudau@arm.com,
-	jiang.liu@linux.intel.com, linux-arm-kernel@lists.infradead.org
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Message-ID: <5639D84A.1020809@linaro.org>
-Date: Wed, 4 Nov 2015 11:04:58 +0100
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
+ <563B65EE.7000406@semihalf.com> <20151105181959.GA352@red-moon>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <563C6A5F.5030500@linux.intel.com>
+Date: Fri, 6 Nov 2015 16:52:47 +0800
 MIME-Version: 1.0
-In-Reply-To: <20151103161059.GE3574@red-moon>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20151105181959.GA352@red-moon>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03.11.2015 17:10, Lorenzo Pieralisi wrote:
-> On Tue, Oct 27, 2015 at 05:38:41PM +0100, Tomasz Nowicki wrote:
->> Architectures which support PCI_DOMAINS_GENERIC (like ARM64)
->> cannot call pci_bus_assign_domain_nr along ACPI PCI host bridge
->> initialization since this function needs valid parent device reference
->> to be able to retrieve domain number (aka segment).
+On 2015/11/6 2:19, Lorenzo Pieralisi wrote:
+> On Thu, Nov 05, 2015 at 03:21:34PM +0100, Tomasz Nowicki wrote:
+>> On 14.10.2015 08:29, Jiang Liu wrote:
+> 
+> [...]
+> 
+>>> +static void acpi_pci_root_validate_resources(struct device *dev,
+>>> +					     struct list_head *resources,
+>>> +					     unsigned long type)
+>>> +{
+>>> +	LIST_HEAD(list);
+>>> +	struct resource *res1, *res2, *root = NULL;
+>>> +	struct resource_entry *tmp, *entry, *entry2;
+>>> +
+>>> +	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
+>>> +	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
+>>> +
+>>> +	list_splice_init(resources, &list);
+>>> +	resource_list_for_each_entry_safe(entry, tmp, &list) {
+>>> +		bool free = false;
+>>> +		resource_size_t end;
+>>> +
+>>> +		res1 = entry->res;
+>>> +		if (!(res1->flags & type))
+>>> +			goto next;
+>>> +
+>>> +		/* Exclude non-addressable range or non-addressable portion */
+>>> +		end = min(res1->end, root->end);
+>>> +		if (end <= res1->start) {
+>>> +			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
+>>> +				 res1);
+>>> +			free = true;
+>>> +			goto next;
+>>> +		} else if (res1->end != end) {
+>>> +			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
+>>> +				 res1, (unsigned long long)end + 1,
+>>> +				 (unsigned long long)res1->end);
+>>> +			res1->end = end;
+>>> +		}
+>>> +
+>>> +		resource_list_for_each_entry(entry2, resources) {
+>>> +			res2 = entry2->res;
+>>> +			if (!(res2->flags & type))
+>>> +				continue;
+>>> +
+>>> +			/*
+>>> +			 * I don't like throwing away windows because then
+>>> +			 * our resources no longer match the ACPI _CRS, but
+>>> +			 * the kernel resource tree doesn't allow overlaps.
+>>> +			 */
+>>> +			if (resource_overlaps(res1, res2)) {
+>>> +				res2->start = min(res1->start, res2->start);
+>>> +				res2->end = max(res1->end, res2->end);
+>>> +				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
+>>> +					 res2, res1);
+>>> +				free = true;
+>>> +				goto next;
+>>> +			}
+>>> +		}
+>>> +
+>>> +next:
+>>> +		resource_list_del(entry);
+>>> +		if (free)
+>>> +			resource_list_free_entry(entry);
+>>> +		else
+>>> +			resource_list_add_tail(entry, resources);
+>>> +	}
+>>> +}
+>>> +
+>>> +int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+>>> +{
+>>> +	int ret;
+>>> +	struct list_head *list = &info->resources;
+>>> +	struct acpi_device *device = info->bridge;
+>>> +	struct resource_entry *entry, *tmp;
+>>> +	unsigned long flags;
+>>> +
+>>> +	flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT;
+>>> +	ret = acpi_dev_get_resources(device, list,
+>>> +				     acpi_dev_filter_resource_type_cb,
+>>> +				     (void *)flags);
+>>> +	if (ret < 0)
+>>> +		dev_warn(&device->dev,
+>>> +			 "failed to parse _CRS method, error code %d\n", ret);
+>>> +	else if (ret == 0)
+>>> +		dev_dbg(&device->dev,
+>>> +			"no IO and memory resources present in _CRS\n");
+>>> +	else {
+>>> +		resource_list_for_each_entry_safe(entry, tmp, list) {
+>>> +			if (entry->res->flags & IORESOURCE_DISABLED)
+>>> +				resource_list_destroy_entry(entry);
+>>> +			else
+>>> +				entry->res->name = info->name;
+>>> +		}
+>>> +		acpi_pci_root_validate_resources(&device->dev, list,
+>>> +						 IORESOURCE_MEM);
+>>> +		acpi_pci_root_validate_resources(&device->dev, list,
+>>> +						 IORESOURCE_IO);
 >>
->> We can omit that blocker and pass down host bridge device via
->> pci_create_root_bus parameter and then be able to evaluate _SEG method
->> being in pci_bus_assign_domain_nr.
+>> It is not clear to me why we need these two calls above ^^^. We are
+>> using pci_acpi_root_add_resources(info) later. Is it not enough?
 >>
->> Note that _SEG method is optional, therefore _SEG absence means
->> that all PCI buses belong to domain 0.
+>> Also, I cannot use acpi_pci_probe_root_resources() in my ARM64 PCI
+>> driver. It is because acpi_dev_get_resources is adding
+>> translation_offset to IO ranges start address and then:
+>> acpi_pci_root_validate_resources(&device->dev, list,
+>> 				 IORESOURCE_IO);
+>> rejects that IO regions as it is out of my 0x0-SZ_16M window.
 >>
->> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> ---
->>   drivers/acpi/pci_root.c |  2 +-
->>   drivers/pci/pci.c       | 32 +++++++++++++++++++++++++++-----
->>   2 files changed, 28 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->> index 850d7bf..e682dc6 100644
->> --- a/drivers/acpi/pci_root.c
->> +++ b/drivers/acpi/pci_root.c
->> @@ -839,7 +839,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
->>
->>   	pci_acpi_root_add_resources(info);
->>   	pci_add_resource(&info->resources, &root->secondary);
->> -	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
->> +	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
->>   				  sysdata, &info->resources);
->
-> If I read x86 code correctly, they rely on the first argument to be
-> NULL, I think you would break x86 by doing that, see:
->
-> arch/x86/pci/acpi.c (pcibios_root_bridge_prepare())
->
-> By the way, can't we move the code setting up the ACPI_COMPANION
-> to core PCI code and stop relying on sysdata for that ?
->
+>> Does acpi_pci_probe_root_resources meant to be x86 specific and I
+>> should avoid using it?
+> 
+> IIUC, you _have_ to have the proper translation_offset to map the bridge
+> window into the IO address space:
+> 
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-June/348708.html
+> 
+> Then, using the offset, you should do something ia64 does, namely,
+> retrieve the CPU address corresponding to IO space (see arch/ia64/pci/pci.c
+> - add_io_space()) and map it in the physical address space by using
+> pci_remap_iospace(), it is similar to what we have to do with DT.
+> 
+> It is extremely confusing and I am not sure I got it right myself,
+> I am still grokking ia64 code to understand what it really does.
+> 
+> So basically, the IO bridge window coming from acpi_dev_get_resource()
+> should represent the IO space in 0 - 16M, IIUC.
+> 
+> By using the offset (that was initialized using translation_offset) and
+> the resource->start, you can retrieve the cpu address that you need to
+> actually map the IO space, since that's what we do on ARM (ie the
+> IO resource is an offset into the virtual address space set aside
+> for IO).
+> 
+> Confusing, to say the least. Jiang, did I get it right ?
+Hi Lorenzo and Tomasz,
+	With a cup of coffee, I got myself awake eventually:)
+Now we are going to talk about IO port on IA64, really a little
+complex:( Actually there are two types of translation.
+1) A PCI domain has a 24-bit IO port address space, there may
+be multiple IO port address spaces in systems with multiple PCI
+domains. So the first type of translation is to translate domain
+specific IO port address into system global IO port address
+(iomem_resource) by
+  res->start = acpi_des->start + acpi_des->translation_offset
 
-Yes, that will break x86&ia64 but as you said it may be overcome with 
-consolidation of ACPI_COMPANION into the core code.
+2) IA64 needs to map IO port address spaces into MMIO address
+space because it has no instructions to access IO ports directly.
+So IA64 has reserved a MMIO range to map IO port address spaces.
+This type of translation relies on architecture specific information
+instead of ACPI descriptors.
 
-Tomasz
+On the other hand, ACPI specification has defined  "I/O to Memory
+Translation" flag and "Memory to I/O Translation" flag in
+ACPI Extended Address Space Descriptor, but current implementation
+doesn't really support such a use case. So we need to find a way
+out here. Could you please help to provide more information about
+PCI host bridge resource descriptor implementation details on
+ARM64?
+
+> 
+> Lorenzo
+> 
