@@ -1,55 +1,162 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
+ <563B65EE.7000406@semihalf.com> <20151105181959.GA352@red-moon>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <563C5CEC.4070507@linux.intel.com>
+Date: Fri, 6 Nov 2015 15:55:24 +0800
 MIME-Version: 1.0
-In-Reply-To: <20151125075018.68e97010@arm.com>
-References: <1447911323-12567-1-git-send-email-bharatku@xilinx.com>
-	<20151124173556.18aff6b5@arm.com>
-	<8520D5D51A55D047800579B0941471982586607F@XAP-PVEXMBX01.xlnx.xilinx.com>
-	<20151125075018.68e97010@arm.com>
-Date: Wed, 25 Nov 2015 14:23:29 +0530
-Message-ID: <CABHD4K9PH-1tpwmxmPSBK3dW04G3XMfNtPFqtWFb7gnThe=uNQ@mail.gmail.com>
-Subject: Re: [PATCH v9] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-From: Amit Tomer <amittomer25@gmail.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	Michal Simek <michals@xilinx.com>,
-	"rjui@broadcom.com" <rjui@broadcom.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"sbranden@broadcom.com" <sbranden@broadcom.com>,
-	"dhdang@apm.com" <dhdang@apm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"galak@codeaurora.org" <galak@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20151105181959.GA352@red-moon>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry to intervene but just trying to learn from your comments.
-
- > You have plenty, and that's the whole of your device space. *All of it*. So
->   just take the base address of your PCIe controller, and be done with
->   it.
-
-but isn't few of PCIe controller's registers itself are mapped
-here(base address). So, how can we use this address for MSI?
-
-Or you said from base address of PCIe controller, find an offset that
-can be used as MSI address?
-
-Thanks
-Amit.
+On 2015/11/6 2:19, Lorenzo Pieralisi wrote:
+> On Thu, Nov 05, 2015 at 03:21:34PM +0100, Tomasz Nowicki wrote:
+>> On 14.10.2015 08:29, Jiang Liu wrote:
+> 
+> [...]
+> 
+>>> +static void acpi_pci_root_validate_resources(struct device *dev,
+>>> +					     struct list_head *resources,
+>>> +					     unsigned long type)
+>>> +{
+>>> +	LIST_HEAD(list);
+>>> +	struct resource *res1, *res2, *root = NULL;
+>>> +	struct resource_entry *tmp, *entry, *entry2;
+>>> +
+>>> +	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
+>>> +	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
+>>> +
+>>> +	list_splice_init(resources, &list);
+>>> +	resource_list_for_each_entry_safe(entry, tmp, &list) {
+>>> +		bool free = false;
+>>> +		resource_size_t end;
+>>> +
+>>> +		res1 = entry->res;
+>>> +		if (!(res1->flags & type))
+>>> +			goto next;
+>>> +
+>>> +		/* Exclude non-addressable range or non-addressable portion */
+>>> +		end = min(res1->end, root->end);
+>>> +		if (end <= res1->start) {
+>>> +			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
+>>> +				 res1);
+>>> +			free = true;
+>>> +			goto next;
+>>> +		} else if (res1->end != end) {
+>>> +			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
+>>> +				 res1, (unsigned long long)end + 1,
+>>> +				 (unsigned long long)res1->end);
+>>> +			res1->end = end;
+>>> +		}
+>>> +
+>>> +		resource_list_for_each_entry(entry2, resources) {
+>>> +			res2 = entry2->res;
+>>> +			if (!(res2->flags & type))
+>>> +				continue;
+>>> +
+>>> +			/*
+>>> +			 * I don't like throwing away windows because then
+>>> +			 * our resources no longer match the ACPI _CRS, but
+>>> +			 * the kernel resource tree doesn't allow overlaps.
+>>> +			 */
+>>> +			if (resource_overlaps(res1, res2)) {
+>>> +				res2->start = min(res1->start, res2->start);
+>>> +				res2->end = max(res1->end, res2->end);
+>>> +				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
+>>> +					 res2, res1);
+>>> +				free = true;
+>>> +				goto next;
+>>> +			}
+>>> +		}
+>>> +
+>>> +next:
+>>> +		resource_list_del(entry);
+>>> +		if (free)
+>>> +			resource_list_free_entry(entry);
+>>> +		else
+>>> +			resource_list_add_tail(entry, resources);
+>>> +	}
+>>> +}
+>>> +
+>>> +int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+>>> +{
+>>> +	int ret;
+>>> +	struct list_head *list = &info->resources;
+>>> +	struct acpi_device *device = info->bridge;
+>>> +	struct resource_entry *entry, *tmp;
+>>> +	unsigned long flags;
+>>> +
+>>> +	flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT;
+>>> +	ret = acpi_dev_get_resources(device, list,
+>>> +				     acpi_dev_filter_resource_type_cb,
+>>> +				     (void *)flags);
+>>> +	if (ret < 0)
+>>> +		dev_warn(&device->dev,
+>>> +			 "failed to parse _CRS method, error code %d\n", ret);
+>>> +	else if (ret == 0)
+>>> +		dev_dbg(&device->dev,
+>>> +			"no IO and memory resources present in _CRS\n");
+>>> +	else {
+>>> +		resource_list_for_each_entry_safe(entry, tmp, list) {
+>>> +			if (entry->res->flags & IORESOURCE_DISABLED)
+>>> +				resource_list_destroy_entry(entry);
+>>> +			else
+>>> +				entry->res->name = info->name;
+>>> +		}
+>>> +		acpi_pci_root_validate_resources(&device->dev, list,
+>>> +						 IORESOURCE_MEM);
+>>> +		acpi_pci_root_validate_resources(&device->dev, list,
+>>> +						 IORESOURCE_IO);
+>>
+>> It is not clear to me why we need these two calls above ^^^. We are
+>> using pci_acpi_root_add_resources(info) later. Is it not enough?
+>>
+>> Also, I cannot use acpi_pci_probe_root_resources() in my ARM64 PCI
+>> driver. It is because acpi_dev_get_resources is adding
+>> translation_offset to IO ranges start address and then:
+>> acpi_pci_root_validate_resources(&device->dev, list,
+>> 				 IORESOURCE_IO);
+>> rejects that IO regions as it is out of my 0x0-SZ_16M window.
+>>
+>> Does acpi_pci_probe_root_resources meant to be x86 specific and I
+>> should avoid using it?
+> 
+> IIUC, you _have_ to have the proper translation_offset to map the bridge
+> window into the IO address space:
+> 
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-June/348708.html
+> 
+> Then, using the offset, you should do something ia64 does, namely,
+> retrieve the CPU address corresponding to IO space (see arch/ia64/pci/pci.c
+> - add_io_space()) and map it in the physical address space by using
+> pci_remap_iospace(), it is similar to what we have to do with DT.
+> 
+> It is extremely confusing and I am not sure I got it right myself,
+> I am still grokking ia64 code to understand what it really does.
+> 
+> So basically, the IO bridge window coming from acpi_dev_get_resource()
+> should represent the IO space in 0 - 16M, IIUC.
+> 
+> By using the offset (that was initialized using translation_offset) and
+> the resource->start, you can retrieve the cpu address that you need to
+> actually map the IO space, since that's what we do on ARM (ie the
+> IO resource is an offset into the virtual address space set aside
+> for IO).
+> 
+> Confusing, to say the least. Jiang, did I get it right ?
+Yes, you are right, but seems I have done something wrong here.
+Currently res->start = acpi_des->start + acpi_des->translation_offset,
+which seems wrong. I will try to check IA64 side again and find
+a fix for this.
