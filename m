@@ -1,138 +1,265 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34915 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754591AbbKRDPI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 22:15:08 -0500
-Received: by pacej9 with SMTP id ej9so29286767pac.2
-        for <linux-pci@vger.kernel.org>; Tue, 17 Nov 2015 19:15:08 -0800 (PST)
-Subject: Re: [PATCH v7 33/50] powerpc/pci: Export pci_traverse_device_nodes()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-34-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, frowand.list@gmail.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <564BED33.6040903@ozlabs.ru>
-Date: Wed, 18 Nov 2015 14:14:59 +1100
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:33366 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1032921AbbKFKTI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Nov 2015 05:19:08 -0500
+Received: by lbbkw15 with SMTP id kw15so48538717lbb.0
+        for <linux-pci@vger.kernel.org>; Fri, 06 Nov 2015 02:19:06 -0800 (PST)
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
+ <563B65EE.7000406@semihalf.com> <20151105181959.GA352@red-moon>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <563C7E90.5080403@semihalf.com>
+Date: Fri, 6 Nov 2015 11:18:56 +0100
 MIME-Version: 1.0
-In-Reply-To: <1446642770-4681-34-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+In-Reply-To: <20151105181959.GA352@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/05/2015 12:12 AM, Gavin Shan wrote:
-> This renames traverse_pci_devices() to pci_traverse_device_nodes().
+On 05.11.2015 19:19, Lorenzo Pieralisi wrote:
+> On Thu, Nov 05, 2015 at 03:21:34PM +0100, Tomasz Nowicki wrote:
+>> On 14.10.2015 08:29, Jiang Liu wrote:
+>
+> [...]
+>
+>>> +static void acpi_pci_root_validate_resources(struct device *dev,
+>>> +					     struct list_head *resources,
+>>> +					     unsigned long type)
+>>> +{
+>>> +	LIST_HEAD(list);
+>>> +	struct resource *res1, *res2, *root = NULL;
+>>> +	struct resource_entry *tmp, *entry, *entry2;
+>>> +
+>>> +	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
+>>> +	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
+>>> +
+>>> +	list_splice_init(resources, &list);
+>>> +	resource_list_for_each_entry_safe(entry, tmp, &list) {
+>>> +		bool free = false;
+>>> +		resource_size_t end;
+>>> +
+>>> +		res1 = entry->res;
+>>> +		if (!(res1->flags & type))
+>>> +			goto next;
+>>> +
+>>> +		/* Exclude non-addressable range or non-addressable portion */
+>>> +		end = min(res1->end, root->end);
+>>> +		if (end <= res1->start) {
+>>> +			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
+>>> +				 res1);
+>>> +			free = true;
+>>> +			goto next;
+>>> +		} else if (res1->end != end) {
+>>> +			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
+>>> +				 res1, (unsigned long long)end + 1,
+>>> +				 (unsigned long long)res1->end);
+>>> +			res1->end = end;
+>>> +		}
+>>> +
+>>> +		resource_list_for_each_entry(entry2, resources) {
+>>> +			res2 = entry2->res;
+>>> +			if (!(res2->flags & type))
+>>> +				continue;
+>>> +
+>>> +			/*
+>>> +			 * I don't like throwing away windows because then
+>>> +			 * our resources no longer match the ACPI _CRS, but
+>>> +			 * the kernel resource tree doesn't allow overlaps.
+>>> +			 */
+>>> +			if (resource_overlaps(res1, res2)) {
+>>> +				res2->start = min(res1->start, res2->start);
+>>> +				res2->end = max(res1->end, res2->end);
+>>> +				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
+>>> +					 res2, res1);
+>>> +				free = true;
+>>> +				goto next;
+>>> +			}
+>>> +		}
+>>> +
+>>> +next:
+>>> +		resource_list_del(entry);
+>>> +		if (free)
+>>> +			resource_list_free_entry(entry);
+>>> +		else
+>>> +			resource_list_add_tail(entry, resources);
+>>> +	}
+>>> +}
+>>> +
+>>> +int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+>>> +{
+>>> +	int ret;
+>>> +	struct list_head *list = &info->resources;
+>>> +	struct acpi_device *device = info->bridge;
+>>> +	struct resource_entry *entry, *tmp;
+>>> +	unsigned long flags;
+>>> +
+>>> +	flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT;
+>>> +	ret = acpi_dev_get_resources(device, list,
+>>> +				     acpi_dev_filter_resource_type_cb,
+>>> +				     (void *)flags);
+>>> +	if (ret < 0)
+>>> +		dev_warn(&device->dev,
+>>> +			 "failed to parse _CRS method, error code %d\n", ret);
+>>> +	else if (ret == 0)
+>>> +		dev_dbg(&device->dev,
+>>> +			"no IO and memory resources present in _CRS\n");
+>>> +	else {
+>>> +		resource_list_for_each_entry_safe(entry, tmp, list) {
+>>> +			if (entry->res->flags & IORESOURCE_DISABLED)
+>>> +				resource_list_destroy_entry(entry);
+>>> +			else
+>>> +				entry->res->name = info->name;
+>>> +		}
+>>> +		acpi_pci_root_validate_resources(&device->dev, list,
+>>> +						 IORESOURCE_MEM);
+>>> +		acpi_pci_root_validate_resources(&device->dev, list,
+>>> +						 IORESOURCE_IO);
+>>
+>> It is not clear to me why we need these two calls above ^^^. We are
+>> using pci_acpi_root_add_resources(info) later. Is it not enough?
+>>
+>> Also, I cannot use acpi_pci_probe_root_resources() in my ARM64 PCI
+>> driver. It is because acpi_dev_get_resources is adding
+>> translation_offset to IO ranges start address and then:
+>> acpi_pci_root_validate_resources(&device->dev, list,
+>> 				 IORESOURCE_IO);
+>> rejects that IO regions as it is out of my 0x0-SZ_16M window.
+>>
+>> Does acpi_pci_probe_root_resources meant to be x86 specific and I
+>> should avoid using it?
+>
+> IIUC, you _have_ to have the proper translation_offset to map the bridge
+> window into the IO address space:
+>
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-June/348708.html
+>
+> Then, using the offset, you should do something ia64 does, namely,
+> retrieve the CPU address corresponding to IO space (see arch/ia64/pci/pci.c
+> - add_io_space()) and map it in the physical address space by using
+> pci_remap_iospace(), it is similar to what we have to do with DT.
+>
+> It is extremely confusing and I am not sure I got it right myself,
+> I am still grokking ia64 code to understand what it really does.
+>
+> So basically, the IO bridge window coming from acpi_dev_get_resource()
+> should represent the IO space in 0 - 16M, IIUC.
 
-Why? pci_traverse_device_nodes() is not moved to some more generic header 
-where is would be required to have a standard prefix. And the ppc-pci.h 
-header does not use any standard prefix so the point of renaming is unclear.
+Yes, you are right IMO.
 
-traverse_pci_dn() is still there and it has "traverse", "pci" and "device 
-node" (abbreviated as "dn") in it so pci_traverse_device_nodes is more 
-confusing name than traverse_pci_devices. Cannot we just get rid of one of 
-them?
-
-Also the subject line says "Export" but nothing gets exported in this patch 
-- the visibility of pci_traverse_device_nodes() remains unchanged.
-
-
-> The function traverses all subordinate device nodes of the specified
-> one. Also, below cleanup applied to the function. No logical changes
-> introduced.
 >
->     * Rename "pre" to "fn".
->     * Avoid assignment in if condition reported from checkpatch.pl.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/include/asm/ppc-pci.h   |  6 +++---
->   arch/powerpc/kernel/pci_dn.c         | 14 +++++++++-----
->   arch/powerpc/platforms/pseries/msi.c |  4 ++--
->   3 files changed, 14 insertions(+), 10 deletions(-)
->
-> diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
-> index ca0c5bf..8753e4e 100644
-> --- a/arch/powerpc/include/asm/ppc-pci.h
-> +++ b/arch/powerpc/include/asm/ppc-pci.h
-> @@ -33,9 +33,9 @@ extern struct pci_dev *isa_bridge_pcidev;	/* may be NULL if no ISA bus */
->   struct device_node;
->   struct pci_dn;
->
-> -typedef void *(*traverse_func)(struct device_node *me, void *data);
-> -void *traverse_pci_devices(struct device_node *start, traverse_func pre,
-> -		void *data);
-> +void *pci_traverse_device_nodes(struct device_node *start,
-> +				void *(*fn)(struct device_node *, void *),
-> +				void *data);
->   void *traverse_pci_dn(struct pci_dn *root,
->   		      void *(*fn)(struct pci_dn *, void *),
->   		      void *data);
-> diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-> index 7f877a4..aa4110f 100644
-> --- a/arch/powerpc/kernel/pci_dn.c
-> +++ b/arch/powerpc/kernel/pci_dn.c
-> @@ -355,8 +355,9 @@ EXPORT_SYMBOL_GPL(pci_remove_device_node_info);
->    * one of these nodes we also assume its siblings are non-pci for
->    * performance.
->    */
-> -void *traverse_pci_devices(struct device_node *start, traverse_func pre,
-> -		void *data)
-> +void *pci_traverse_device_nodes(struct device_node *start,
-> +				void *(*fn)(struct device_node *, void *),
-> +				void *data)
->   {
->   	struct device_node *dn, *nextdn;
->   	void *ret;
-> @@ -371,8 +372,11 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
->   		if (classp)
->   			class = of_read_number(classp, 1);
->
-> -		if (pre && ((ret = pre(dn, data)) != NULL))
-> -			return ret;
-> +		if (fn) {
-> +			ret = fn(dn, data);
-> +			if (ret)
-> +				return ret;
-> +		}
->
->   		/* If we are a PCI bridge, go down */
->   		if (dn->child && ((class >> 8) == PCI_CLASS_BRIDGE_PCI ||
-> @@ -470,7 +474,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
->   	}
->
->   	/* Update dn->phb ptrs for new phb and children devices */
-> -	traverse_pci_devices(dn, add_pdn, phb);
-> +	pci_traverse_device_nodes(dn, add_pdn, phb);
->   }
->
->   /**
-> diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-> index 272e9ec..543a638 100644
-> --- a/arch/powerpc/platforms/pseries/msi.c
-> +++ b/arch/powerpc/platforms/pseries/msi.c
-> @@ -305,7 +305,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
->   	memset(&counts, 0, sizeof(struct msi_counts));
->
->   	/* Work out how many devices we have below this PE */
-> -	traverse_pci_devices(pe_dn, count_non_bridge_devices, &counts);
-> +	pci_traverse_device_nodes(pe_dn, count_non_bridge_devices, &counts);
->
->   	if (counts.num_devices == 0) {
->   		pr_err("rtas_msi: found 0 devices under PE for %s\n",
-> @@ -320,7 +320,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
->   	/* else, we have some more calculating to do */
->   	counts.requestor = pci_device_to_OF_node(dev);
->   	counts.request = request;
-> -	traverse_pci_devices(pe_dn, count_spare_msis, &counts);
-> +	pci_traverse_device_nodes(pe_dn, count_spare_msis, &counts);
->
->   	/* If the quota isn't an integer multiple of the total, we can
->   	 * use the remainder as spare MSIs for anyone that wants them. */
+> By using the offset (that was initialized using translation_offset) and
+> the resource->start, you can retrieve the cpu address that you need to
+> actually map the IO space, since that's what we do on ARM (ie the
+> IO resource is an offset into the virtual address space set aside
+> for IO).
 >
 
+Right, that is clear to me, below my current implementation example 
+which works for ARM64 now:
 
--- 
-Alexey
+static struct acpi_pci_root_ops acpi_pci_root_ops = {
+[...]
+	.prepare_resources = pci_acpi_root_prepare_resources,
+};
+
+static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
+{
+	struct list_head *list = &ci->resources;
+	struct acpi_device *device = ci->bridge;
+	struct resource_entry *entry, *tmp;
+	unsigned long flags;
+	int ret;
+
+	flags = IORESOURCE_IO | IORESOURCE_MEM;
+	ret = acpi_dev_get_resources(device, list,
+				     acpi_dev_filter_resource_type_cb,
+				     (void *)flags);
+	if (ret < 0) {
+		dev_warn(&device->dev,
+			 "failed to parse _CRS method, error code %d\n", ret);
+		return ret;
+	} else if (ret == 0)
+		dev_dbg(&device->dev,
+			"no IO and memory resources present in _CRS\n");
+
+	resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
+		struct resource *res = entry->res;
+
+		if (entry->res->flags & IORESOURCE_DISABLED)
+			resource_list_destroy_entry(entry);
+		else
+			res->name = ci->name;
+
+		/*
+		 * TODO: need to move pci_register_io_range() function out
+		 * of drivers/of/address.c for both used by DT and ACPI
+		 */
+		if (res->flags & IORESOURCE_IO) {
+			unsigned long port;
+			int err;
+			resource_size_t length = res->end - res->start;
+			resource_size_t start = res->start;
+
+			err = pci_register_io_range(res->start, length);
+			if (err) {
+				resource_list_destroy_entry(entry);
+				continue;
+			}
+
+			port = pci_address_to_pio(res->start);
+			if (port == (unsigned long)-1) {
+				resource_list_destroy_entry(entry);
+				continue;
+			}
+
+			res->start = port;
+			res->end = res->start + length;
+			entry->offset = port - (start - entry->offset);
+
+			if (pci_remap_iospace(res, start) < 0)
+				resource_list_destroy_entry(entry);
+		}
+	}
+	return ret;
+}
+
+As you see acpi_dev_get_resources returns:
+res->start = acpi_des->start + acpi_des->translation_offset (CPU address)
+which then must be adjusted as you described to get io port and call 
+pci_remap_iospace.
+
+This is also why I can not use acpi_pci_probe_root_resources here. Lets 
+assume we have IO range like that DSDT table form QEMU:
+DWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
+          0x00000000,         // Granularity
+          0x00000000,         // Range Minimum
+          0x0000FFFF,         // Range Maximum
+          0x3EFF0000,         // Translation Offset
+          0x00010000,         // Length
+          ,, , TypeStatic)
+so see acpi_dev_get_resources returns res->start = acpi_des->start (0x0) 
++ acpi_des->translation_offset(0x3EFF0000) = 0x3EFF0000. This will be 
+rejected in acpi_pci_root_validate_resources() as 0x3EFF0000 does not 
+fit within 0-16M.
+
+My question is if acpi_pci_probe_root_resources is handling 
+translation_offset properly and if we have some silent assumption 
+specific for e.g. ia64 here.
+
+Thanks for help in looking at it.
+
+Tomasz
+
+
+
