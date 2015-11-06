@@ -1,133 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:33263 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754133AbbKLW7t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 17:59:49 -0500
-Received: by pabfh17 with SMTP id fh17so78777792pab.0
-        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2015 14:59:49 -0800 (PST)
-From: Daniel Axtens <dja@axtens.net>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: Re: [PATCH v7 38/50] powerpc/powernv: Exclude root bus in pnv_pci_reset_secondary_bus()
-In-Reply-To: <1446642770-4681-39-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1446642770-4681-39-git-send-email-gwshan@linux.vnet.ibm.com>
-Date: Fri, 13 Nov 2015 09:59:27 +1100
-Message-ID: <87lha2zuwg.fsf@gamma.ozlabs.ibm.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Keith Busch <keith.busch@intel.com>
+To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv4 6/6] pciutils: Allow 32-bit domains
+Date: Fri,  6 Nov 2015 15:35:46 -0700
+Message-Id: <1446849346-8242-7-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1446849346-8242-1-git-send-email-keith.busch@intel.com>
+References: <1446849346-8242-1-git-send-email-keith.busch@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+PCI-e segments will continue to use the lower 16 bits as required by
+ACPI. Special domains may use the full 32-bits.
 
-Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ lib/filter.c |    2 +-
+ lib/pci.h    |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> When pnv_pci_reset_secondary_bus() is called to issue reset on
-> the indicated secondary bus, the bus can't be root bus. So we
-> needn't consider root bus in the function.
+diff --git a/lib/filter.c b/lib/filter.c
+index d4254a0..075dc2f 100644
+--- a/lib/filter.c
++++ b/lib/filter.c
+@@ -45,7 +45,7 @@ pci_filter_parse_slot_v33(struct pci_filter *f, char *str)
+ 	  if (str[0] && strcmp(str, "*"))
+ 	    {
+ 	      long int x = strtol(str, &e, 16);
+-	      if ((e && *e) || (x < 0 || x > 0xffff))
++	      if ((e && *e) || (x < 0))
+ 		return "Invalid domain number";
+ 	      f->domain = x;
+ 	    }
+diff --git a/lib/pci.h b/lib/pci.h
+index 10ba831..7e42765 100644
+--- a/lib/pci.h
++++ b/lib/pci.h
+@@ -119,7 +119,7 @@ struct pci_param *pci_walk_params(struct pci_access *acc, struct pci_param *prev
+ 
+ struct pci_dev {
+   struct pci_dev *next;			/* Next device in the chain */
+-  u16 domain;				/* PCI domain (host bridge) */
++  int32_t domain;			/* PCI domain (host bridge) */
+   u8 bus, dev, func;			/* Bus inside domain, device and function */
+ 
+   /* These fields are set by pci_fill_info() */
+-- 
+1.7.10.4
 
-It took me a while to convince myself that this is correct. For the
-record, this is why it's correct:
-
-pnv_pci_reset_secondary_bus fills the reset_secondary_bus callback in
-the pci_controller_ops structure, and isn't used elsewhere.
-
-In arch/powerpc/kernel/pci.c, that callback is called (if it exists) in=20
-pcibios_reset_secondary_bus(). It's not called anywhere else.
-
-The PPC pcibios_reset_secondary_bus overrides the weak version in
-drivers/pci/pci.c. It's called from the same file by
-pci_reset_bridge_secondary_device() (and nowhere else).
-
-pci_reset_bridge_secondary_device() is nicely documented:
-
-/**
- * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
- * @dev: Bridge device
- *
- * Use the bridge control register to assert reset on the secondary bus.
- * Devices on the secondary bus are left in power-on state.
- */
-
-Therefore, by the definiton of pci_reset_bridge_secondary_bus,
-pnv_pci_reset_secondary_bus() can only be called with a bridge
-device. As such, a bridge reset only is appropriate. If this breaks
-anything, the caller is broken.
-
-It might be worth including a condensed version of this in the commit
-message.
-
-Reviewed-by: Daniel Axtens <dja@axtens.net>
-
-Regards,
-Daniel Axtens
-
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  arch/powerpc/platforms/powernv/eeh-powernv.c | 12 ++----------
->  1 file changed, 2 insertions(+), 10 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/=
-platforms/powernv/eeh-powernv.c
-> index a7d84a4..c69b6a1 100644
-> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> @@ -880,16 +880,8 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev,=
- int option)
->=20=20
->  void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
->  {
-> -	struct pci_controller *hose;
-> -
-> -	if (pci_is_root_bus(dev->bus)) {
-> -		hose =3D pci_bus_to_host(dev->bus);
-> -		pnv_eeh_root_reset(hose, EEH_RESET_HOT);
-> -		pnv_eeh_root_reset(hose, EEH_RESET_DEACTIVATE);
-> -	} else {
-> -		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
-> -		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
-> -	}
-> +	pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
-> +	pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
->  }
->=20=20
->  /**
-> --=20
-> 2.1.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: GPGTools - https://gpgtools.org
-
-iQIcBAEBCgAGBQJWRRnPAAoJEPC3R3P2I92F/boP/iIQ9pke3BKGqtBsAAZ8dDJG
-mHTNFOeC9/s1Ykh2Mru/Kp/7b/rVKxIuah5S8ODhUcu44Xf6e1tVU2O6+wAHF2nh
-h+McoeF1hxD6ZWq+0eJX/h1wmUC4H6CBQrSwoaOj1Zg3m/yiStXeG/06DEwDCGtM
-NJmieCPmNzIobt/I/RBkptx9vRajinZ2/kEtsSjZqwz6F65uQe3JAMsI2Vm9BNXx
-YpIYCSCTrnxuEKt+3D/nve2qeBdffUw0fLYOz76EqnJ3SsI/rgPbGnMFOGRrD9SE
-Bmpvhq7D9utw1BgjXvWbQAH0dLqqnL9lU12f0ouCGpaE/WCTohjF5pmvLDZvwVC8
-UKRdl9TVRNJjsXyVrygLKQNqHp4Nit8NHSHUxZOjDBnkb92N/Rk2W8loxk3YbO00
-kNkqBl3lVlND7ZIBOkbl0A3veVqxOai3GXwHqkgHOOxsr43fN7xlpSjBcd7U0CtC
-LJuy+O+xe76U7QGjpM9zHRIn44fDyTLGtw6NWWAUvTmw8NBvHssTvrub96eojHRL
-aspVRz7dyqJueX8GflbZ2cVZab1FwZP8vbMRIYFH4pcSfWEEBU6f0Lvn49tWMnwm
-HYiwSBPn2dnYSKVoVg4TbmvWaQxqHqxSRF7LSZrXTd3VEMwaR3Cg9GT5P8VdJqDK
-u3bhKVw2Zw4wJFJyxhd7
-=5Is4
------END PGP SIGNATURE-----
---=-=-=--
