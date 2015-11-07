@@ -1,76 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 25 Nov 2015 10:40:33 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [Resend: PATCH v2 0/3] Fix rcar-pcie for arm64
-Message-ID: <20151125164033.GA1380@localhost>
-References: <1448465439-2132-1-git-send-email-phil.edworthy@renesas.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1448465439-2132-1-git-send-email-phil.edworthy@renesas.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:34841 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495AbbKGXbi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Nov 2015 18:31:38 -0500
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Sun, 8 Nov 2015 05:01:35 +0530
+Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id F08551258019
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2015 05:01:36 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay05.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA7NVYEY2752878
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 05:01:34 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA7NVXUd029278
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 05:01:33 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 2/9] PCI: Add pcibios_bus_add_device() weak function
+Date: Sun,  8 Nov 2015 07:30:28 +0800
+Message-Id: <1446939035-2617-3-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Phil,
+Add a weak function pcibios_bus_add_device() for arch dependent code could
+do proper setup. For example, powerpc could setup EEH related resources.
 
-On Wed, Nov 25, 2015 at 03:30:36PM +0000, Phil Edworthy wrote:
-> The first patches fixes the build problem
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/bus.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-I'm trying to figure out if v4.4 has a build problem we need to fix.
-If I understand correctly, "PCI: rcar: Convert to DT resource parsing
-API" doesn't fix a build problem in the current tree; rather, it
-removes a dependency on ARM so that we can build it on ARM64.  
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index d3346d2..2b8b756 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -269,6 +269,7 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
+ 
+ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
+ 
++void __weak pcibios_bus_add_device(struct pci_dev *dev) { }
+ /**
+  * pci_bus_add_device - start driver for a single device
+  * @dev: device to add
+@@ -279,6 +280,8 @@ void pci_bus_add_device(struct pci_dev *dev)
+ {
+ 	int retval;
+ 
++	pcibios_bus_add_device(dev);
++
+ 	/*
+ 	 * Can not put in pci_device_add yet because resources
+ 	 * are not assigned yet for some devices.
+-- 
+2.5.0
 
-> , and the second patch reverts the
-> patch that removed the driver from arm64 builds. The final patch add a compat
-> string for the r8a7795 (arm64) device.
-> 
-> Tested on arm Koelsch board, all ok.
-> 
-> Tested on arm64 Salvator-X board using renesas-drivers-2015-10-27-v4.3-rc7 from
-> git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-drivers.git with PCI
-> next merged. 
-> Apart from patches to add the PCIe clock and DT nodes, it also needs this fix:
-> ("PCI: MSI: Only use the generic MSI layer when domain is hierarchical")
-
-I assume you mean this one from Marc: https://lkml.org/lkml/2015/11/23/388
-(Was that posted to linux-pci?  I don't see it in patchwork or my
-linux-pci archives, so I hadn't seen it yet.)
-
-How exactly is that related to this series?  If I merge these before
-Marc's change, do we have a tree that builds for arm64 but doesn't
-work?
-
-What about the PCIe clock and DT changes you mention?  Is there a
-reason to keep them separate?  Would it be feasible to include the DT
-changes in the same patch as the driver change that uses those
-changes?
-
-Bjorn
-
-> Resent with whole series marked as v2 and acks, etc added.
-> 
-> Harunobu Kurokawa (1):
->   PCI: pcie-rcar: Add support for R-Car H3.
-> 
-> Phil Edworthy (2):
->   PCI: rcar: Convert to DT resource parsing API
->   Revert "PCI: rcar: Build pcie-rcar.c only on ARM"
-> 
->  Documentation/devicetree/bindings/pci/rcar-pci.txt |   3 +-
->  drivers/pci/host/Kconfig                           |   3 +-
->  drivers/pci/host/pcie-rcar.c                       | 117 +++++++++++++--------
->  3 files changed, 77 insertions(+), 46 deletions(-)
-> 
-> -- 
-> 2.5.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
