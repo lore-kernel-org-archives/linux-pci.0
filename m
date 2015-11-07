@@ -1,151 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:57012 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.136]:56027 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751803AbbKQNzN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Nov 2015 08:55:13 -0500
-Message-ID: <564B31BB.3010404@arm.com>
-Date: Tue, 17 Nov 2015 13:55:07 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+	id S1753331AbbKGALu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 6 Nov 2015 19:11:50 -0500
+Date: Fri, 6 Nov 2015 18:11:43 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: ECRC and Max Read Request Size
+Message-ID: <20151107001143.GA17842@localhost>
+References: <56310B34.6000102@codeaurora.org>
+ <20151106172205.GA1002@localhost>
+ <563CE93F.5060209@codeaurora.org>
 MIME-Version: 1.0
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-CC: Ray Jui <rjui@broadcom.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	"dhdang@apm.com" <dhdang@apm.com>,
-	"sbranden@broadcom.com" <sbranden@broadcom.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	Robin Murphy <Robin.Murphy@arm.com>
-Subject: Re: [PATCH v8] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-References: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>	<5649F2D9.7070902@arm.com>	<564A5255.3020603@broadcom.com>	<8520D5D51A55D047800579B0941471982585CBDA@XAP-PVEXMBX01.xlnx.xilinx.com> <20151117092100.76babf7f@arm.com> <8520D5D51A55D047800579B0941471982585CD78@XAP-PVEXMBX01.xlnx.xilinx.com>
-In-Reply-To: <8520D5D51A55D047800579B0941471982585CD78@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <563CE93F.5060209@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17/11/15 13:27, Bharat Kumar Gogada wrote:
->>
->> On Tue, 17 Nov 2015 04:59:39 +0000
->> Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
->>
->>>> On 11/16/2015 7:14 AM, Marc Zyngier wrote:
->>>>> On 11/11/15 06:33, Bharat Kumar Gogada wrote:
->>>>>> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
->>>>>>
->>>>>> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
->>>>>> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
->>>>>> ---
->>>>>> Added logic to allocate contiguous hwirq in nwl_irq_domain_alloc
->>>> function.
->>>>>> Moved MSI functionality to separate functions.
->>>>>> Changed error return values.
->>>>>> ---
->>>>>>   .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
->>>>>>   drivers/pci/host/Kconfig                           |   16 +-
->>>>>>   drivers/pci/host/Makefile                          |    1 +
->>>>>>   drivers/pci/host/pcie-xilinx-nwl.c                 | 1062
->>>> ++++++++++++++++++++
->>>>>>   4 files changed, 1144 insertions(+), 3 deletions(-)
->>>>>>   create mode 100644
->>>>>> Documentation/devicetree/bindings/pci/xilinx-nwl-
->>>> pcie.txt
->>>>>>   create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
->>>>>>
->>>>>
->>>>> [...]
->>>>>
->>>>>> +static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct
->>>>>> +pci_bus
->>>>>> +*bus) {
->>>>>> +	struct platform_device *pdev = to_platform_device(pcie-
->>> dev);
->>>>>> +	struct nwl_msi *msi = &pcie->msi;
->>>>>> +	unsigned long base;
->>>>>> +	int ret;
->>>>>> +
->>>>>> +	mutex_init(&msi->lock);
->>>>>> +
->>>>>> +	/* Check for msii_present bit */
->>>>>> +	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) &
->> MSII_PRESENT;
->>>>>> +	if (!ret) {
->>>>>> +		dev_err(pcie->dev, "MSI not present\n");
->>>>>> +		ret = -EIO;
->>>>>> +		goto err;
->>>>>> +	}
->>>>>> +
->>>>>> +	/* Enable MSII */
->>>>>> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,
->> I_MSII_CONTROL) |
->>>>>> +			  MSII_ENABLE, I_MSII_CONTROL);
->>>>>> +
->>>>>> +	/* Enable MSII status */
->>>>>> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,
->> I_MSII_CONTROL) |
->>>>>> +			  MSII_STATUS_ENABLE, I_MSII_CONTROL);
->>>>>> +
->>>>>> +	/* setup AFI/FPCI range */
->>>>>> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
->>>>>> +	base = virt_to_phys((void *)msi->pages);
->>>>>> +	nwl_bridge_writel(pcie, lower_32_bits(base),
->> I_MSII_BASE_LO);
->>>>>> +	nwl_bridge_writel(pcie, upper_32_bits(base),
->> I_MSII_BASE_HI);
->>>>>
->>>>> BTW, you still haven't answered my question as to why you need to
->>>>> waste a page of memory here, and why putting a device address
->>>>> doesn't
->>>> work.
->>>>>
->>>>> As this is (to the best of my knowledge) the only driver doing so,
->>>>> I'd really like you to explain the rational behind this.
->>>>
->>>> Might not be the only driver doing so after I start sending out
->>>> patches for the iProc MSI support (soon), :)
->>>>
->>>> I'm not sure how it works for the Xilinx NWL controller, which
->>>> Bharat should be able to help to explain. But for the iProc MSI
->>>> controller, there's no device I/O memory reserved for MSI posted writes
->> in the ASIC.
->>>> Therefore one needs to reserve host memory for these writes.
->>>>>
->>>
->>> Our SoC doesn't reserve any memory for MSI, hence we need to assign a
->>> memory space for it out of RAM.
->>
->> Question to both of you: Does the write make it to memory? Or is it sampled
->> by the bridge and dropped?
->>
-> No, write will not do any modification in memory, it is consumed by bridge.
-
-Then you do not need to allocate memory at all. Use whatever memory you
-already have. CC-ing Robin, as this may have interaction with the SMMU.
-
+On Fri, Nov 06, 2015 at 12:54:07PM -0500, Sinan Kaya wrote:
+> On 11/6/2015 12:22 PM, Bjorn Helgaas wrote:
+> >On Wed, Oct 28, 2015 at 01:51:48PM -0400, Sinan Kaya wrote:
+> >>I'm seeing two problems with the current PCI framework when it comes
+> >>to end-to-end CRC (ECRC) and Max Read Request Size.
+> >>
+> >>The problem with ECRC is that it blindly enables ECRC generation on
+> >>devices without checking if it is supported by the entire bus with
+> >>ECRC=on option.
+> >>
+> >>ECRC check can be enabled on all devices but ECRC generation on the
+> >>root complex and switches needs to be set only if all devices
+> >>support ECRC checking.
+> >>
+> >>I'm thinking of making changes in this area to cover this gap with
+> >>ECRC=safe option.
+> >
+> >Sometimes they can't be avoided, but I'm generally not in favor of
+> >adding command line parameters because they require too much of our
+> >users and they introduce code paths that are rarely exercised.
+> >
+> >What specific ECRC problem are you seeing?  Do you have devices that
+> >don't operate correctly with the current code?  Or do you want to add
+> >some new functionality, e.g., to enable ECRC in cases where we don't
+> >enable it today?
 > 
->> What happens if you replace the page in RAM with a dummy address?
-> What do you mean by dummy address ?
+> ECRC is an optional PCIe feature. Even ECRC support has some flavors
+> 
+> - A card can support ECRC checking.
+> - A card can support ECRC checking and generation.
+> 
+> Right now, the code is enabling both without checking if they are
+> supported at all.
+> 
+> I have some legacy PCIe cards that don't support ECRC completely
+> even though the host bridge supports it. If ECRC checking and
+> generation is enabled under this situation, I have problems
+> communicating to the endpoint.
 
-Any random (and suitably aligned) address. 0x00000deadbeef000 for example.
+That should definitely be fixed.  Do we enable ECRC unconditionally,
+or only when we boot with "pci=ecrc=on"?  The doc
+(Documentation/kernel-parameters.txt) suggests the latter.
 
-Thanks,
+It would be ideal if we could try to turn on ECRC all the time by
+default for paths that support it.  I suppose there's some risk that
+we'd trip over broken hardware.  If that's an issue, we could consider
+turning it on all the time on machines newer than X (that's easy on
+x86, where we have a DMI BIOS date, but maybe not so easy on other
+arches).
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+> Another opinion is let the firmware do its magic before the OS
+> starts but there is no way to apply the same settings after a
+> hot-plug insertion.
+
+The ACPI _HPX method does allow the BIOS to specify Device Control
+register values, so it's conceivable that MPS and MRRS could be
+configured that way for hot-added devices.  But we currently
+explicitly ignore those _HPX fields (see 302328c00341) because I don't
+think it's safe to use them blindly, at least for MPS.  If the Linux
+MPS configuration stopped making assumptions about MRRS settings, I
+think it probably would be safe to use _HPX MRRS values.
+
+Bjorn
