@@ -1,84 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:56348 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965372AbbKDNNc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:32 -0500
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 18:43:30 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 21/50] powerpc/powernv: Increase PE# capacity
-Date: Thu,  5 Nov 2015 00:12:21 +1100
-Message-Id: <1446642770-4681-22-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:55226 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754459AbbKGXdD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Nov 2015 18:33:03 -0500
+Received: from localhost
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Sun, 8 Nov 2015 09:33:01 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 2838E2BB0051
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2015 10:33:00 +1100 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA7NWbh335258534
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 10:32:45 +1100
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA7NWRGh011131
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 10:32:27 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 6/9] powerpc/eeh: Create PE for VFs
+Date: Sun,  8 Nov 2015 07:30:32 +0800
+Message-Id: <1446939035-2617-7-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each PHB maintains an array helping to translate 2-bytes Request
-ID (RID) to PE# with the assumption that PE# takes one byte, meaning
-that we can't have more than 256 PEs. However, pci_dn->pe_number
-already had 4-bytes for the PE#.
+The patch creates PEs for VFs in the weak function
+pcibios_bus_add_device(). Those PEs for VFs are identified with newly
+introduced flag EEH_PE_VF so that we handle them differently during EEH
+recovery.
 
-This extends the PE# capacity so that each of them will be 4-bytes
-long. Then we can reuse IODA_INVALID_PE to check the PE# stored in
-phb->pe_rmap[] is valid or not.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 6 +++++-
- arch/powerpc/platforms/powernv/pci.h      | 7 ++-----
- 2 files changed, 7 insertions(+), 6 deletions(-)
+ arch/powerpc/include/asm/eeh.h               |  1 +
+ arch/powerpc/kernel/eeh_pe.c                 | 10 ++++++++--
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 16 ++++++++++++++++
+ 3 files changed, 25 insertions(+), 2 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 0e66c4d..ef93a01 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -766,7 +766,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 6c383ad..ec21f8f 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -72,6 +72,7 @@ struct pci_dn;
+ #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+ #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+ #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
++#define EEH_PE_VF	(1 << 4)	/* VF PE     */
  
- 	/* Clear the reverse map */
- 	for (rid = pe->rid; rid < rid_end; rid++)
--		phb->ioda.pe_rmap[rid] = 0;
-+		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
+ #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+ #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+index 8654cb1..29240ad 100644
+--- a/arch/powerpc/kernel/eeh_pe.c
++++ b/arch/powerpc/kernel/eeh_pe.c
+@@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+ 	 * EEH device already having associated PE, but
+ 	 * the direct parent EEH device doesn't have yet.
+ 	 */
+-	pdn = pdn ? pdn->parent : NULL;
++	if (edev->physfn)
++		pdn = pci_get_pdn(edev->physfn);
++	else
++		pdn = pdn ? pdn->parent : NULL;
+ 	while (pdn) {
+ 		/* We're poking out of PCI territory */
+ 		parent = pdn_to_eeh_dev(pdn);
+@@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
+ 	}
  
- 	/* Release from all parents PELT-V */
- 	while (parent) {
-@@ -3164,6 +3164,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	if (prop32)
- 		phb->ioda.reserved_pe_idx = be32_to_cpup(prop32);
+ 	/* Create a new EEH PE */
+-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
++	if (edev->physfn)
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
++	else
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+ 	if (!pe) {
+ 		pr_err("%s: out of memory!\n", __func__);
+ 		return -ENOMEM;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 3bb6acb..131c7d0 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1532,6 +1532,22 @@ static struct eeh_ops pnv_eeh_ops = {
+ 	.restore_config		= pnv_eeh_restore_config
+ };
  
-+	/* Invalidate RID to PE# mapping */
-+	for (i = 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
-+		phb->ioda.pe_rmap[i] = IODA_INVALID_PE;
++void pcibios_bus_add_device(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
 +
- 	/* Parse 64-bit MMIO range */
- 	pnv_ioda_parse_m64_window(phb);
- 
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 0802fcd..5df945f 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -162,11 +162,8 @@ struct pnv_phb {
- 			struct list_head	pe_list;
- 			struct mutex            pe_list_mutex;
- 
--			/* Reverse map of PEs, will have to extend if
--			 * we are to support more than 256 PEs, indexed
--			 * bus { bus, devfn }
--			 */
--			unsigned char		pe_rmap[0x10000];
-+			/* Reverse map of PEs, indexed by {bus, devfn} */
-+			int			pe_rmap[0x10000];
- 
- 			/* TCE cache invalidate registers (physical and
- 			 * remapped)
++	if (!pdev->is_virtfn)
++		return;
++
++	/*
++	 * The following operations will fail if VF's sysfs files
++	 * aren't created or its resources aren't finalized.
++	 */
++	eeh_add_device_early(pdn);
++	eeh_add_device_late(pdev);
++	eeh_sysfs_add_device(pdev);
++}
++
+ /**
+  * eeh_powernv_init - Register platform dependent EEH operations
+  *
 -- 
-2.1.0
+2.5.0
 
