@@ -1,105 +1,65 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 11 Nov 2015 16:38:02 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Thierry Reding <treding@nvidia.com>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Wolfram Sang <wsa@the-dreams.de>,
+Date: Sat, 7 Nov 2015 14:29:55 +0100
+From: Wolfram Sang <wsa@the-dreams.de>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
-Message-ID: <20151111163802.3a96080c@arm.com>
-In-Reply-To: <20151110155232.GA25368@ulmo.nvidia.com>
-References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>
-	<PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
-	<20151109161115.GA13870@ulmo.nvidia.com>
-	<PS1PR06MB1180111D6423287273B64B0FF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
-	<20151110155232.GA25368@ulmo.nvidia.com>
+	Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org
+Subject: Re: [PATCH 3/3] PCI: pcie-rcar: Add support for R-Car H3.
+Message-ID: <20151107132955.GB21726@katana>
+References: <1446482175-26507-1-git-send-email-phil.edworthy@renesas.com>
+ <1446482175-26507-4-git-send-email-phil.edworthy@renesas.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="O5XBE6gyVG5Rl6Rj"
+In-Reply-To: <1446482175-26507-4-git-send-email-phil.edworthy@renesas.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 10 Nov 2015 16:52:33 +0100
-Thierry Reding <treding@nvidia.com> wrote:
 
-> On Mon, Nov 09, 2015 at 06:01:49PM +0000, Phil Edworthy wrote:
-> > Hi Thierry,
-> > 
-> > On 09 November 2015 17:24, Phil wrote:
-> > > On 09 November 2015 16:11, Thierry wrote:
-> > > > On Mon, Nov 09, 2015 at 03:20:24PM +0000, Phil Edworthy wrote:
-> > > > > cc'ing others (Tegra, Altera, Designware) who may have the same bug
-> > > > >
-> > > > > On 03 November 2015 09:28, Phil Edworthy wrote:
-> > > > > > The OF node passed to irq_domain_add_linear() should be a
-> > > > > > pointer to interrupt controller's device tree node, or NULL,
-> > > > > > but not the PCI controller's node.
-> > > > > >
-> > > > > > This fixes an oops in msi_domain_alloc_irqs() when it tries
-> > > > > > to call msi_check().
-> > > > > >
-> > > > > > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > > > > > ---
-> > > > > >  drivers/pci/host/pcie-rcar.c | 2 +-
-> > > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > > >
-> > > > > > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> > > > > > index 2377bf0..c6fa562 100644
-> > > > > > --- a/drivers/pci/host/pcie-rcar.c
-> > > > > > +++ b/drivers/pci/host/pcie-rcar.c
-> > > > > > @@ -709,7 +709,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie
-> > > *pcie)
-> > > > > >  	msi->chip.setup_irq = rcar_msi_setup_irq;
-> > > > > >  	msi->chip.teardown_irq = rcar_msi_teardown_irq;
-> > > > > >
-> > > > > > -	msi->domain = irq_domain_add_linear(pcie->dev->of_node,
-> > > > > > INT_PCI_MSI_NR,
-> > > > > > +	msi->domain = irq_domain_add_linear(NULL, INT_PCI_MSI_NR,
-> > > > > >  					    &msi_domain_ops, &msi->chip);
-> > > > > >  	if (!msi->domain) {
-> > > > > >  		dev_err(&pdev->dev, "failed to create IRQ domain\n");
-> > > >
-> > > > On Tegra the PCI controller is in fact the interrupt controller for
-> > > > MSIs. And looking at the code here it seems like the same would apply to
-> > > > RCAR.
-> > > Yes you are correct here.
-> > > 
-> > > > I'm also slightly confused as to why this would cause ->msi_check() to
-> > > > fail. The default implementation (msi_domain_ops_check()) doesn't do
-> > > > anything.
-> > > >
-> > > > Also, how is passing in NULL instead of a valid struct device_node *
-> > > > going to prevent an oops? Perhaps this is one of those reference count
-> > > > imbalance bugs that have recently been showing up?
-> > > On arm64 (previously I didn't realise this just affects arm64, not arm),
-> > > the changes in commit f075915ac0b11 ("PCI/MSI: Drop domain field from
-> > > msi_controller") and d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use
-> > > struct device::msi_domain") return an uninitialized msi domain that leads
-> > > to the oops. It appears that these changes assume that msi interrupt
-> > > controller is separate from the PCI controller.
-> > More accurately, when CONFIG_GENERIC_MSI_IRQ_DOMAIN is enabled,
-> > pci_msi_get_domain() calls dev_get_msi_domain() and at this point
-> > dev->msi_domain is uninitialized.
-> 
-> Marc, any idea what's going on here?
+--O5XBE6gyVG5Rl6Rj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for putting me in the loop.
+On Mon, Nov 02, 2015 at 04:36:15PM +0000, Phil Edworthy wrote:
+> From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+>=20
+> R-Car H3 device is r8a7795
+>=20
+> Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
 
-No precise idea yet, but the proposed fix definitely looks like the
-wrong one. Actually, not passing a node identifier to any domain
-constructor is pretty much always a mistake when using DT.
+Acked-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
 
-Can someone post a stack trace for this issue so that I can have a
-look? I'm currently traveling, so expect a slightly delayed reply...
 
-Thanks,
+--O5XBE6gyVG5Rl6Rj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-	M.
--- 
-Jazz is not dead. It just smells funny.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJWPfzSAAoJEBQN5MwUoCm2+KcQAIBiwBnJFAwCjWPDggwNyvUQ
+ME02Do0BZKdxBBZwkYyoK/U51Rb9quRWX0ceNkYJ+wYKh0gkHg6/AZzEmDrs0nUA
+xWMCodnB2669smGmLr5aEwy+fmFSlC9HR6m7s8gHoxGJVHedT9scycHzGm3pz3d3
+OoyrGW5KPNHdCHMJOy3I887k/YfCY514AoHy0zhDFvbgDedhg3zIcw53aP1/Ycbg
+Qy0gmrRugecdRz1s8Q+NjmjfKRg3bKH3H+ffTM7T51XBy+2pslCEwrKx77yikexA
+VocmfMNJtitZNYFQAKxfltaUpfPgwDeHNaVYhpl2gtzwUTTxjAImbbyv/vo7zKG5
+1vNZfQ6rW/8ozbZYe7YsF8cWBVB2adHXu3tOwSmheuobVl7WkYnZNCl5D8Nfl9Jj
+Yo7ANPC6mjZUsljtmxv84n8XJhnx4XZ23Zl274LrFOdGADB097irmLAnz+CHZ3pP
+UmPcPVgZFcU/oN6a1LL0f4/zBaHGw8LhlNMBYhJUsGhQGtHR1CKrRVj63AUuoceH
+d2tUO7iDpE72K99m/ZwQCqGrVv5GMBytXlVwqn886NML+TuX92fqo9s/BXlx+YZO
+2IOLIiL9riSyXbAT8KQAwCe89O+MUlbzwG3IkdcYMQ1SUfa4c9bdihX0JQxV9mLT
+1X/JNwTeEvsqFT/NS4v7
+=Kzlj
+-----END PGP SIGNATURE-----
+
+--O5XBE6gyVG5Rl6Rj--
