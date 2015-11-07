@@ -1,54 +1,166 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCHv5 1/6] msi: Relax msi_domain_alloc() to support parentless MSI irqdomains
-Date: Fri, 13 Nov 2015 10:17:32 -0700
-Message-Id: <1447435057-5212-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1447435057-5212-1-git-send-email-keith.busch@intel.com>
-References: <1447435057-5212-1-git-send-email-keith.busch@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:54866 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933129AbbKGXcF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Nov 2015 18:32:05 -0500
+Received: from localhost
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Sun, 8 Nov 2015 09:32:02 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 9C7732CE8052
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2015 10:31:56 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA7NVnEO22675466
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 10:31:58 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA7NVNPD015995
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 10:31:23 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 0/9] VF EEH on Power8
+Date: Sun,  8 Nov 2015 07:30:26 +0800
+Message-Id: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Liu Jiang <jiang.liu@linux.intel.com>
+This patchset enables EEH on SRIOV VFs. The general idea is to create proper
+VF edev and VF PE and handle them properly.
 
-Previously msi_domain_alloc() assumes MSI irqdomains always have parent
-irqdomains, but that's not true for the new Intel VMD devices. So relax
-msi_domain_alloc() to support parentless MSI irqdomains.
+Different from the Bus PE, VF PE just contain one VF. This introduces the
+difference of EEH error handling on a VF PE. Generally, it has several
+differences.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Keith Busch <keith.busch@intel.com>
----
- kernel/irq/msi.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+First, the VF's removal and re-enumerate rely on its PF. VF has a tight
+relationship between its PF. This is not proper to enumerate a VF by usual
+scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
+set.
 
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-index 6b0c0b7..5e15cb4 100644
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -109,9 +109,11 @@ static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
- 	if (irq_find_mapping(domain, hwirq) > 0)
- 		return -EEXIST;
- 
--	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
--	if (ret < 0)
--		return ret;
-+	if (domain->parent) {
-+		ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-+		if (ret < 0)
-+			return ret;
-+	}
- 
- 	for (i = 0; i < nr_irqs; i++) {
- 		ret = ops->msi_init(domain, info, virq + i, hwirq + i, arg);
+Second, the reset/restore of a VF is done in kernel space. FW is not aware of
+the VF, this means the usual reset function done in FW will not work. One of
+the patch will imitate the reset/restore function in kernel space.
+
+Third, the VF may be removed during the PF's error_detected function. In this
+case, the original error_detected->slot_reset->resume sequence is not proper
+to those removed VFs, since they are re-created by PF in a fresh state. A flag
+in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
+track whether this device needs to be reset or not.
+
+This has been tested both on host and in guest on Power8 with latest kernel
+version.
+
+v13:
+   * move eeh_rmv_data{} to eeh_driver.c
+v12:
+   * Rephrase some commit log to make it more clear and specific
+   * move vf_index assignment in CONFIG_PPC_POWERNV
+   * merge "Cache VF index in pci_dn" with "Support error recovery for VF PE"
+   * check the return value after eeh_dev_init() for VF
+   * initialize the parameter before pass to read_config()
+   * make pnv_pci_fixup_vf_mps() a dedicated patch, which fixup and store mps
+     value in pci_dn
+v11:
+   * move vf_index assignment in marco CONFIG_PPC_POWERNV
+   * merge Patch "Cache VF index in pci_dn" into Patch "Support error recovery
+     for VF PE" 
+v10:
+   * rebased on v4.2
+   * delete the last patch "powerpc/powernv: compound PE for VFs" since after
+     redesign of SRIOV, there is no compound PE for VFs now.
+   * add two patches which fix problems found during tests
+     powerpc/eeh: Support error recovery for VF PE                                 
+     powerpc/eeh: Handle hot removed VF when PF is EEH aware
+v9:
+   * split pcibios_bus_add_device() into a separate patch
+   * Bjorn acked the PCI part and agreed this patch set to be merged from ppc
+     tree
+   * rebased on mpe/linux.git next branch
+v8:
+   * fix on checking the return value of pnv_eeh_do_flr()
+   * introduced a weak function pcibios_bus_add_device() to create PE for VFs
+v7:
+   * fix compile error when PCI_IOV is not set
+v6:
+   * code / commit log refactor by Gavin
+v5:
+   * remove the compound field, iterate on Master VF PE instead
+   * some code refine on PCI config restore and reset on VF
+     the wait time for assert and deassert
+     PCI device address format
+     check on edev->pcie_cap and edev->aer_cap before access them
+v4:
+   * refine the change logs, comment and code style
+   * change pnv_pci_fixup_vf_eeh() to pnv_eeh_vf_final_fixup() and remove the
+     CONFIG_PCI_IOV macro
+   * reorder patch 5/6 to make the logic more reasonable
+   * remove remove_dev_pci_data()
+   * remove the EEH_DEV_VF flag, use edev->physfn to identify a VF EEH DEV and
+     remove related CONFIG_PCI_IOV macro
+   * add the option for VF reset
+   * fix the pnv_eeh_cfg_blocked() logic
+   * replace pnv_pci_cfg_{read,write} with eeh_ops->{read,write}_config in
+     pnv_eeh_vf_restore_config()
+   * rename pnv_eeh_vf_restore_config() to pnv_eeh_restore_vf_config()
+   * rename pnv_pci_fixup_vf_caps() to pnv_pci_vf_header_fixup() and move it
+     to arch/powerpc/platforms/powernv/pci.c
+   * add a field compound in pnv_ioda_pe to link compound PEs
+   * handle compound PE for VF PEs
+v3:
+   * add back vf_index in pci_dn to track the VF's index
+   * rename ppdev in eeh_dev to physfn for consistency
+   * move edev->physfn assignment before dev->dev.archdata.edev is set
+   * move pnv_pci_fixup_vf_eeh() and pnv_pci_fixup_vf_caps() to eeh-powernv.c
+   * more clear and detail in commit log and comment in code
+   * merge eeh_rmv_virt_device() with eeh_rmv_device()
+   * move the cfg_blocked check logic from pnv_eeh_read/write_config() to
+     pnv_eeh_cfg_blocked()
+   * move the vf reset/restore logic into its own patch, two patches are
+     created.
+     powerpc/powernv: Support PCI config restore for VFs
+     powerpc/powernv: Support EEH reset for VFs
+   * simplify the vf reset logic
+v2:
+   * add prefix pci_iov_ to virtfn_add/virtfn_remove
+   * use EEH_DEV_VF as a flag for a VF's eeh_dev
+   * use eeh_dev instead of edev in change log
+   * remove vf_index in eeh_dev, calculate it from pdn->busno and devfn
+   * do eeh_add_device_late() and eeh_sysfs_add_device() both after pci_dev is
+     well initialized
+   * do FLR to reset a VF PE
+   * imitate the restore function in FW for VF
+   * remove the reverse order patch, since it is still under discussion
+
+
+Wei Yang (9):
+  PCI/IOV: Rename and export virtfn_add/virtfn_remove
+  PCI: Add pcibios_bus_add_device() weak function
+  powerpc/pci: Remove VFs prior to PF
+  powerpc/eeh: Cache only BARs, not windows or IOV BARs
+  powerpc/powernv: EEH device for VF
+  powerpc/eeh: Create PE for VFs
+  powerpc/powernv: Support EEH reset for VF PE
+  powerpc/powernv: Support PCI config restore for VFs
+  powerpc/eeh: Support error recovery for VF PE
+
+ arch/powerpc/include/asm/eeh.h               |   5 +
+ arch/powerpc/include/asm/pci-bridge.h        |   2 +
+ arch/powerpc/kernel/eeh.c                    |  17 ++-
+ arch/powerpc/kernel/eeh_cache.c              |  11 +-
+ arch/powerpc/kernel/eeh_dev.c                |   1 +
+ arch/powerpc/kernel/eeh_driver.c             | 132 ++++++++++++----
+ arch/powerpc/kernel/eeh_pe.c                 |  13 +-
+ arch/powerpc/kernel/pci-hotplug.c            |   2 +-
+ arch/powerpc/kernel/pci_dn.c                 |  17 ++-
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 219 ++++++++++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci.c         |  18 +++
+ drivers/pci/bus.c                            |   3 +
+ drivers/pci/iov.c                            |  10 +-
+ include/linux/pci.h                          |   8 +
+ 14 files changed, 411 insertions(+), 47 deletions(-)
+
 -- 
-2.6.2.307.g37023ba
+2.5.0
 
