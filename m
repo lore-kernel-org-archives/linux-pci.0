@@ -1,75 +1,123 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v6 4/7] PCI: Add fwnode_handle to pci_sysdata
-Date: Mon,  2 Nov 2015 21:33:13 +0000
-Message-Id: <1446499996-1350-5-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1446499996-1350-1-git-send-email-jakeo@microsoft.com>
-References: <1446499996-1350-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:48534 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753135AbbKGXbh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Nov 2015 18:31:37 -0500
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Sun, 8 Nov 2015 05:01:34 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id C2D6F1258019
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2015 05:01:32 +0530 (IST)
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay01.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA7NVTtd4260130
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 05:01:30 +0530
+Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA7NVSwo023092
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 05:01:29 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 1/9] PCI/IOV: Rename and export virtfn_add/virtfn_remove
+Date: Sun,  8 Nov 2015 07:30:27 +0800
+Message-Id: <1446939035-2617-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+During EEH recovery, hotplug is applied to the devices which don't
+have drivers or their drivers don't support EEH. However, the hotplug,
+which was implemented based on PCI bus, can't be applied to VF directly.
 
-This patch adds an fwnode_handle to struct pci_sysdata, which is
-used by the next patch in the series when trying to locate an
-IRQ domain associated with a root PCI bus.
+Rename virtn_{add,remove}() and export them so they can be used in PCI
+hotplug during EEH recovery.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/include/asm/pci.h | 13 +++++++++++++
- include/asm-generic/pci.h  |  4 ++++
- 2 files changed, 17 insertions(+)
+ drivers/pci/iov.c   | 10 +++++-----
+ include/linux/pci.h |  8 ++++++++
+ 2 files changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4625943..fb74453 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -20,6 +20,9 @@ struct pci_sysdata {
- #ifdef CONFIG_X86_64
- 	void		*iommu;		/* IOMMU private data */
- #endif
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+	void		*fwnode;	/* IRQ domain for MSI assignment */
-+#endif
- };
- 
- extern int pci_routeirq;
-@@ -41,6 +44,16 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee0ebff..cc941dd 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -108,7 +108,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
  }
- #endif
  
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
+-static int virtfn_add(struct pci_dev *dev, int id, int reset)
++int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
+ {
+ 	int i;
+ 	int rc = -ENOMEM;
+@@ -183,7 +183,7 @@ failed:
+ 	return rc;
+ }
+ 
+-static void virtfn_remove(struct pci_dev *dev, int id, int reset)
++void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
+ {
+ 	char buf[VIRTFN_ID_LEN];
+ 	struct pci_dev *virtfn;
+@@ -320,7 +320,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	}
+ 
+ 	for (i = 0; i < initial; i++) {
+-		rc = virtfn_add(dev, i, 0);
++		rc = pci_iov_virtfn_add(dev, i, 0);
+ 		if (rc)
+ 			goto failed;
+ 	}
+@@ -332,7 +332,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 
+ failed:
+ 	for (j = 0; j < i; j++)
+-		virtfn_remove(dev, j, 0);
++		pci_iov_virtfn_remove(dev, j, 0);
+ 
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+@@ -361,7 +361,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 		return;
+ 
+ 	for (i = 0; i < iov->num_VFs; i++)
+-		virtfn_remove(dev, i, 0);
++		pci_iov_virtfn_remove(dev, i, 0);
+ 
+ 	pcibios_sriov_disable(dev);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e90eb22..3628a09 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1719,6 +1719,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
+ 
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
++int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset);
++void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset);
+ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+@@ -1736,6 +1738,12 @@ static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+ static inline void pci_disable_sriov(struct pci_dev *dev) { }
++static inline int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
 +{
-+	struct pci_sysdata *sd = bus->sysdata;
-+	return sd->fwnode;
++	return -ENOSYS;
 +}
-+
-+#define pci_root_bus_fwnode	_pci_root_bus_fwnode
-+#endif
-+
- /* Can be used to override the logic in pci_scan_bus for skipping
-    already-configured bus numbers - to be used for buggy BIOSes
-    or architectures with incomplete PCI setup by the loader */
-diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
-index f24bc51..3fde985 100644
---- a/include/asm-generic/pci.h
-+++ b/include/asm-generic/pci.h
-@@ -21,4 +21,8 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- #define PCI_DMA_BUS_IS_PHYS	(1)
- #endif
- 
-+#ifndef pci_root_bus_fwnode
-+#define pci_root_bus_fwnode(bus)	((void)(bus),NULL)
-+#endif
-+
- #endif /* _ASM_GENERIC_PCI_H */
++static inline void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
++{ }
+ static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
+ static inline int pci_vfs_assigned(struct pci_dev *dev)
+ { return 0; }
 -- 
-1.9.1
+2.5.0
 
