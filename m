@@ -1,94 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 2/5] PCI: iproc: Add PAXC interface support
-To: Florian Fainelli <f.fainelli@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1447806715-30043-1-git-send-email-rjui@broadcom.com>
- <1447806715-30043-3-git-send-email-rjui@broadcom.com>
- <564BC79D.9010705@gmail.com> <564BCA4C.6030809@broadcom.com>
- <564BCA33.9020801@gmail.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-Message-ID: <564BCAB0.9060800@broadcom.com>
-Date: Tue, 17 Nov 2015 16:47:44 -0800
-MIME-Version: 1.0
-In-Reply-To: <564BCA33.9020801@gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:34908 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495AbbKGXbm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Nov 2015 18:31:42 -0500
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Sun, 8 Nov 2015 05:01:39 +0530
+Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 1B8D3E0054
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2015 05:01:58 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay05.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA7NVbjt38076430
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 05:01:37 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA7NVbQs014995
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 05:01:37 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 3/9] powerpc/pci: Remove VFs prior to PF
+Date: Sun,  8 Nov 2015 07:30:29 +0800
+Message-Id: <1446939035-2617-4-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+As commit ac205b7bb72f ("PCI: make sriov work with hotplug remove")
+indicates, VFs which is on the same PCI bus as their PF, should be removed
+before the PF. Otherwise, the PCI hot unplugging of PCI devices on the PCI
+bus would cause kernel crash.
 
+The patch applies the above pattern to PowerPC PCI hotplug path.
 
-On 11/17/2015 4:45 PM, Florian Fainelli wrote:
-> On 17/11/15 16:46, Ray Jui wrote:
->>
->>
->> On 11/17/2015 4:34 PM, Florian Fainelli wrote:
->>> On 17/11/15 16:31, Ray Jui wrote:
->>>> Traditionally, all iProc PCIe root complexes use PAXB based wrapper,
->>>> with an integrated on-chip Serdes to support external endpoint devices.
->>>> On newer iProc platforms, a PAXC based wrapper is introduced, for
->>>> connection with internally emulated PCIe endpoint devices in the ASIC
->>>>
->>>> This patch adds support for PAXC based iProc PCIe root complex in the
->>>> iProc PCIe core driver. This change fators out common logic between
->>>> PAXB and PAXC, and use tables to store register offsets that are
->>>> different between PAXB and PAXC. This allows the driver to be scaled to
->>>> support subsequent PAXC revisions in the future
->>>>
->>>> Signed-off-by: Ray Jui <rjui@broadcom.com>
->>>> Reviewed-by: Scott Branden <sbranden@broadcom.com>
->>>> ---
->>>>    drivers/pci/host/pcie-iproc-platform.c |   8 ++
->>>>    drivers/pci/host/pcie-iproc.c          | 202
->>>> +++++++++++++++++++++++++++------
->>>>    drivers/pci/host/pcie-iproc.h          |  19 ++++
->>>>    3 files changed, 195 insertions(+), 34 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/host/pcie-iproc-platform.c
->>>> b/drivers/pci/host/pcie-iproc-platform.c
->>>> index c9550dc..716b56b 100644
->>>> --- a/drivers/pci/host/pcie-iproc-platform.c
->>>> +++ b/drivers/pci/host/pcie-iproc-platform.c
->>>> @@ -42,6 +42,13 @@ static int iproc_pcie_pltfm_probe(struct
->>>> platform_device *pdev)
->>>>        pcie->dev = &pdev->dev;
->>>>        platform_set_drvdata(pdev, pcie);
->>>>
->>>> +    if (of_device_is_compatible(np, "brcm,iproc-pcie"))
->>>> +        pcie->type = IPROC_PCIE_PAXB;
->>>> +    else if (of_device_is_compatible(np, "brcm,iproc-pcie-paxc"))
->>>> +        pcie->type = IPROC_PCIE_PAXC;
->>>> +    else
->>>> +        return -ENODEV;
->>>
->>> Sorry for not noticing earlier, but typically, to avoid repeating the
->>> same compatible string twice (once if of_device_id, and somewhere else),
->>> you would put the type in the .data member of the of_device_id lookup
->>> table and you could fetch this directly here. So something like this:
->>>
->>>    static const struct of_device_id iproc_pcie_of_match_table[] = {
->>>        { .compatible = "brcm,iproc-pcie", .data = (int
->>> *)IPROC_PCIE_PAXB },
->>> +    { .compatible = "brcm,iproc-pcie-paxc", .data = (int
->>> *)IPROC_PCIE_PAXC },
->>>        { /* sentinel */ }
->>>
->>
->> Just to confirm, if I do this, then the above code to check
->> of_device_is_compatible becomes the following?
->>
->> pcie->type = (enum iproc_pcie_type)of_id->data;
->
-> That is correct yes.
->
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/pci-hotplug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Okay thanks. Will wait for more comments and include this in the next 
-iteration!
-
-Ray
-
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 7f9ed0c..59c4361 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -55,7 +55,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
+ 
+ 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+ 		 pci_domain_nr(bus),  bus->number);
+-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
++	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+ 		pr_debug("   Removing %s...\n", pci_name(dev));
+ 		pci_stop_and_remove_bus_device(dev);
+ 	}
+-- 
+2.5.0
 
