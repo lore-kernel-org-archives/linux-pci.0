@@ -1,64 +1,197 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:37155 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756097AbbKDSC0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 13:02:26 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Will Deacon <will.deacon@arm.com>
-CC: "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Magnus <magnus.damm@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: PCIe host controller behind IOMMU on ARM
-Date: Wed, 4 Nov 2015 18:02:18 +0000
-Message-ID: <PS1PR06MB11800B04737ED137294907B6F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
-References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151104142412.GS963@e106497-lin.cambridge.arm.com>
- <PS1PR06MB11804263DD55C54C5987654EF52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151104150147.GT963@e106497-lin.cambridge.arm.com>
- <PS1PR06MB11804C3D0155E3EFB5C43C47F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151104153028.GR5405@arm.com>
-In-Reply-To: <20151104153028.GR5405@arm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:41229 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752799AbbKGXe3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Nov 2015 18:34:29 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Sun, 8 Nov 2015 09:34:27 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id BB13D3578054
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2015 10:34:25 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA7NYBm237748748
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 10:34:19 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA7NXqou029956
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 10:33:53 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 8/9] powerpc/powernv: Support PCI config restore for VFs
+Date: Sun,  8 Nov 2015 07:30:34 +0800
+Message-Id: <1446939035-2617-9-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgV2lsbCwNCg0KT24gMDQgTm92ZW1iZXIgMjAxNSAxNTozMCwgV2lsbCB3cm90ZToNCj4gT24g
-V2VkLCBOb3YgMDQsIDIwMTUgYXQgMDM6MTk6MTNQTSArMDAwMCwgUGhpbCBFZHdvcnRoeSB3cm90
-ZToNCj4gPiBPbiAwNCBOb3ZlbWJlciAyMDE1IDE1OjAyLCBMaXZpdSB3cm90ZToNCj4gPiA+IE9u
-IFdlZCwgTm92IDA0LCAyMDE1IGF0IDAyOjQ4OjM4UE0gKzAwMDAsIFBoaWwgRWR3b3J0aHkgd3Jv
-dGU6DQo+ID4gPiA+IFN1cmUsIHRob3VnaCBzaW5jZSB0aGlzIGlzIGJvZyBzdGFuZGFyZCBJbnRl
-bCBQQ0llIGV0aGVybmV0IGNhcmQgd2hpY2ggd29ya3MNCj4gPiA+ID4gZmluZSB3aGVuIHRoZSBJ
-T01NVSBpcyBlZmZlY3RpdmVseSB1bnVzZWQsIEkgZG9u4oCZdCB0aGluayB0aGVyZSBpcyBhIHBy
-b2JsZW0NCj4gPiA+ID4gd2l0aCB0aGF0Lg0KPiA+ID4gPg0KPiA+ID4gPiBUaGUgZHJpdmVyIGZv
-ciB0aGUgUENJZSBjb250cm9sbGVyIHNldHMgdXAgdGhlIElPTU1VIG1hcHBpbmcgb2sgd2hlbiBJ
-DQo+ID4gPiA+IGRvIGEgdGVzdCBjYWxsIHRvIGRtYV9hbGxvY19jb2hlcmVudCgpIGluIHRoZSBj
-b250cm9sbGVyJ3MgZHJpdmVyLiBpLmUuIHdoZW4gSQ0KPiA+ID4gPiBkbyB0aGlzLCBpdCBlbmRz
-IHVwIGluIGFybV9pb21tdV9hbGxvY19hdHRycygpLCB3aGljaCBjYWxscw0KPiA+ID4gPiBfX2lv
-bW11X2FsbG9jX2J1ZmZlcigpIGFuZCBfX2FsbG9jX2lvdmEoKS4NCj4gPiA+ID4NCj4gPiA+ID4g
-V2hlbiBhbiBlbmRwb2ludCBkcml2ZXIgYWxsb2NhdGVzIGFuZCBtYXBzIGEgZG1hIGNvaGVyZW50
-IGJ1ZmZlciBpdA0KPiA+ID4gPiBhbHNvIG5lZWRzIHRvIGVuZCB1cCBpbiBhcm1faW9tbXVfYWxs
-b2NfYXR0cnMoKSwgYnV0IGl0IGRvZXNuJ3QuDQo+ID4gPg0KPiA+ID4gV2h5IGRvIHlvdSB0aGlu
-ayB0aGF0PyBSZW1lbWJlciB0aGF0IHRoZSBvbmx5IHRoaW5nIGF0dGFjaGVkIHRvIHRoZQ0KPiBJ
-T01NVSBpcw0KPiA+ID4gdGhlDQo+ID4gPiBob3N0IGNvbnRyb2xsZXIuIFRoZSBlbmRwb2ludCBp
-cyBvbiB0aGUgUENJZSBidXMsIHdoaWNoIGdldHMgYSBkaWZmZXJlbnQNCj4gPiA+IHRyYW5zbGF0
-aW9uDQo+ID4gPiB0aGF0IHRoZSBJT01NVSBrbm93cyBub3RoaW5nIGFib3V0LiBJZiBpdCBoZWxw
-cyB5b3UgdG8gdmlzdWFsaXNlIGl0IGJldHRlciwNCj4gdGhpbmsNCj4gPiA+IG9mIHRoZSBob3N0
-IGNvbnRyb2xsZXIgYXMgYW5vdGhlciBJT01NVSBkZXZpY2UuIEl0J3MgdGhlIG9wcyBvZiB0aGUg
-aG9zdA0KPiA+ID4gY29udHJvbGxlcg0KPiA+ID4gdGhhdCBzaG91bGQgYmUgaW52b2tlZCwgbm90
-IHRoZSBJT01NVSdzLg0KPiA+IE9rLCB0aGF0IG1ha2VzIHNlbnNlLiBJJ2xsIGhhdmUgYSB0aGlu
-ayBhbmQgcG9rZSBpdCBhIGJpdCBtb3JlLi4uDQo+IA0KPiBUYWtlIGEgbG9vayBhdCBvZl9pb21t
-dV9jb25maWd1cmUsIHdoaWNoIGlzIGN1cnJlbnRseSBsYWNraW5nIHN1cHBvcnQNCj4gZm9yIFBD
-SSBkZXZpY2VzLiBJdCBzaG91bGQgYmUgdXNpbmcgYSB2YXJpYW50IG9uIHRoZSBkZXZpY2UtdHJl
-ZSBiaW5kaW5ncw0KPiBhbHJlYWR5IGluIHVzZSBmb3IgZGVzY3JpYmluZyBNU0kgZGV2aWNlIElE
-cywgc28gdGhhdCB3ZSBjYW4gdHJhbnNsYXRlDQo+IHRoZSBSZXF1ZXN0ZXJJRCBvZiB0aGUgZW5k
-cG9pbnQgaW50byBhbiBJRCB0aGF0IHRoZSBJT01NVSBjYW4gdW5kZXJzdGFuZC4NCldoaWxzdCB3
-ZSB3YW50IHRvIGludHJvZHVjZSBpc29sYXRpb24gYXQgc29tZSBwb2ludCwgcmlnaHQgbm93IHdl
-IHdvdWxkIGxpa2UNCnRvIHVzZSB0aGUgSU9NTVUgYXMgdGhpcyBQQ0llIGNvbnRyb2xsZXIgb25s
-eSB1c2VzIGEgMzItYml0IEFYSSBhZGRyZXNzLg0KDQpUaGFua3MNClBoaWwNCg==
+After PE reset, OPAL API opal_pci_reinit() is called on all devices
+contained in the PE to reinitialize them. While skiboot is not aware of
+VFs, we have to implement the function in kernel to reinitialize VFs after
+reset on PE for VFs.
+
+In this patch, two functions pnv_pci_fixup_vf_mps() and
+pnv_eeh_restore_vf_config() both manipulate the MPS of the VF, since for a
+VF it has three cases.
+
+1. Normal creation for a VF
+   In this case, pnv_pci_fixup_vf_mps() is called to make the MPS a proper
+   value compared with its parent.
+2. EEH recovery without VF removed
+   In this case, MPS is stored in pci_dn and pnv_eeh_restore_vf_config() is
+   called to restore it and reinitialize other part.
+3. EEH recovery with VF removed
+   In this case, VF will be removed then re-created. Both functions are
+   called. First pnv_pci_fixup_vf_mps() is called to store the proper MPS
+   to pci_dn and then pnv_eeh_restore_vf_config() is called to do proper
+   thing.
+
+This patch introduces two functions:
+   pnv_pci_fixup_vf_mps() to fixup the PCI device's MPS to make sure it is
+   smaller than parent's and store this value in pci_dn for future use.
+   pnv_eeh_restore_vf_config() to re-initialize on VF by restore MPS,
+   disable completion timeout, enable SERR, etc.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h        |  1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 70 +++++++++++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci.c         | 18 +++++++
+ 3 files changed, 88 insertions(+), 1 deletion(-)
+
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 843dd3a2..9b365d6 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -219,6 +219,7 @@ struct pci_dn {
+ #define IODA_INVALID_M64        (-1)
+ 	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
+ #endif /* CONFIG_PCI_IOV */
++	int     mps;			/* Maximum Payload Size */
+ #endif
+ 	struct list_head child_list;
+ 	struct list_head list;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 4de247a..9019458 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1623,6 +1623,67 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+ 	return ret;
+ }
+ 
++static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	u32 devctl, cmd, cap2, aer_capctl;
++	int old_mps;
++
++	/* Restore MPS */
++	if (edev->pcie_cap) {
++		old_mps = (ffs(pdn->mps) - 8) << 5;
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
++		devctl |= old_mps;
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      2, devctl);
++	}
++
++	/* Disable Completion Timeout */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
++				     4, &cap2);
++		if (cap2 & 0x10) {
++			eeh_ops->read_config(pdn,
++					edev->pcie_cap + PCI_EXP_DEVCTL2,
++					4, &cap2);
++			cap2 |= 0x10;
++			eeh_ops->write_config(pdn,
++					edev->pcie_cap + PCI_EXP_DEVCTL2,
++					4, cap2);
++		}
++	}
++
++	/* Enable SERR and parity checking */
++	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
++	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
++	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
++
++	/* Enable report various errors */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_CERE;
++		devctl |= (PCI_EXP_DEVCTL_NFERE |
++			   PCI_EXP_DEVCTL_FERE |
++			   PCI_EXP_DEVCTL_URRE);
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, devctl);
++	}
++
++	/* Enable ECRC generation and check */
++	if (edev->pcie_cap && edev->aer_cap) {
++		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				4, &aer_capctl);
++		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
++		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				4, aer_capctl);
++	}
++
++	return 0;
++}
++
+ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ {
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+@@ -1633,7 +1694,14 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ 		return -EEXIST;
+ 
+ 	phb = edev->phb->private_data;
+-	ret = opal_pci_reinit(phb->opal_id,
++	/*
++	 * We have to restore the PCI config space after reset since the
++	 * firmware can't see SRIOV VFs.
++	 */
++	if (edev->physfn)
++		ret = pnv_eeh_restore_vf_config(pdn);
++	else
++		ret = opal_pci_reinit(phb->opal_id,
+ 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
+ 	if (ret) {
+ 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index f2dd772..50794d7 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -778,6 +778,24 @@ static void pnv_p7ioc_rc_quirk(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IBM, 0x3b9, pnv_p7ioc_rc_quirk);
+ 
++#ifdef CONFIG_PCI_IOV
++static void pnv_pci_fixup_vf_mps(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++	int parent_mps;
++
++	if (!pdev->is_virtfn)
++		return;
++
++	/* Synchronize MPS for VF and PF */
++	parent_mps = pcie_get_mps(pdev->physfn);
++	if ((128 << pdev->pcie_mpss) >= parent_mps)
++		pcie_set_mps(pdev, parent_mps);
++	pdn->mps = pcie_get_mps(pdev);
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_mps);
++#endif /* CONFIG_PCI_IOV */
++
+ void __init pnv_pci_init(void)
+ {
+ 	struct device_node *np;
+-- 
+2.5.0
+
