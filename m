@@ -1,216 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f171.google.com ([209.85.160.171]:36119 "EHLO
-	mail-yk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965550AbbKDQIL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 11:08:11 -0500
-MIME-Version: 1.0
-In-Reply-To: <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Wed, 4 Nov 2015 10:07:50 -0600
-Message-ID: <CAL_JsqJGpV-+JYyA1g0dw_nEduhmrMEouTH03kHtuCkGSOP57Q@mail.gmail.com>
-Subject: Re: [PATCH v7 45/50] drivers/of: Avoid recursively calling unflatten_dt_node()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Pantelis Antoniou <panto@antoniou-consulting.com>,
-	Frank Rowand <frowand.list@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:60242 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933129AbbKGXbr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Nov 2015 18:31:47 -0500
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Sun, 8 Nov 2015 05:01:45 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 1CCEDE004C
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2015 05:02:02 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA7NVfQP6095218
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 05:01:41 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA7NVfPJ010468
+	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 05:01:41 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 4/9] powerpc/eeh: Cache only BARs, not windows or IOV BARs
+Date: Sun,  8 Nov 2015 07:30:30 +0800
+Message-Id: <1446939035-2617-5-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 4, 2015 at 7:12 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
-> In current implementation, unflatten_dt_node() is called recursively
-> to unflatten device nodes in FDT blob. It's stress to limited stack
-> capacity.
+This restricts the EEH address cache to use only the first 7 BARs. This
+makes __eeh_addr_cache_insert_dev() ignore PCI bridge window and IOV BARs.
+As the result of this change, eeh_addr_cache_get_dev() will return VFs from
+VF's resource addresses instead of parent PFs.
 
-Did you actually hit a problem?
+This removes extra check for a PCI bridge as we limit
+__eeh_addr_cache_insert_dev() to 7 BARs and this effectively excludes PCI
+bridges from being cached.
 
-Now we have a max depth of 64. Seems like that should be plenty... Any
-idea how this compares to when we run out of stack space?
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/eeh_cache.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-> This avoids calling the function recursively, meaning the device
-> nodes are unflattened in one call on unflatten_dt_node(): two arrays
-> are introduced to track the parent path size and the device node of
-> current level of depth, which will be used by the device node on next
-> level of depth to be unflattened. Also, the parameter "poffset" and
-> "fpsize" are unused and dropped.
+diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
+index a1e86e1..ddbcfab 100644
+--- a/arch/powerpc/kernel/eeh_cache.c
++++ b/arch/powerpc/kernel/eeh_cache.c
+@@ -195,8 +195,11 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
+ 		return;
+ 	}
+ 
+-	/* Walk resources on this device, poke them into the tree */
+-	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
++	/*
++	 * Walk resources on this device, poke the first 7 (6 normal BAR and 1
++	 * ROM BAR) into the tree.
++	 */
++	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+ 		resource_size_t start = pci_resource_start(dev,i);
+ 		resource_size_t end = pci_resource_end(dev,i);
+ 		unsigned long flags = pci_resource_flags(dev,i);
+@@ -222,10 +225,6 @@ void eeh_addr_cache_insert_dev(struct pci_dev *dev)
+ {
+ 	unsigned long flags;
+ 
+-	/* Ignore PCI bridges */
+-	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
+-		return;
+-
+ 	spin_lock_irqsave(&pci_io_addr_cache_root.piar_lock, flags);
+ 	__eeh_addr_cache_insert_dev(dev);
+ 	spin_unlock_irqrestore(&pci_io_addr_cache_root.piar_lock, flags);
+-- 
+2.5.0
 
-Yay. I'm happy to see parameters removed instead of added to this function.
-
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  drivers/of/fdt.c | 94 +++++++++++++++++++++++++++++++++-----------------------
->  1 file changed, 56 insertions(+), 38 deletions(-)
->
-> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-> index 173b036..f4793d0 100644
-> --- a/drivers/of/fdt.c
-> +++ b/drivers/of/fdt.c
-> @@ -355,61 +355,82 @@ static unsigned long populate_node(const void *blob,
->         return fpsize;
->  }
->
-> +static void reverse_nodes(struct device_node *parent)
-> +{
-> +       struct device_node *child, *next;
-> +
-> +       /* In-depth first */
-> +       child = parent->child;
-> +       while (child) {
-> +               reverse_nodes(child);
-> +
-> +               child = child->sibling;
-> +       }
-> +
-> +       /* Reverse the nodes in the child list */
-> +       child = parent->child;
-> +       parent->child = NULL;
-> +       while (child) {
-> +               next = child->sibling;
-> +
-> +               child->sibling = parent->child;
-> +               parent->child = child;
-> +               child = next;
-> +       }
-> +}
-> +
->  /**
->   * unflatten_dt_node - Alloc and populate a device_node from the flat tree
->   * @blob: The parent device tree blob
->   * @mem: Memory chunk to use for allocating device nodes and properties
-> - * @poffset: pointer to node in flat tree
->   * @dad: Parent struct device_node
->   * @nodepp: The device_node tree created by the call
-> - * @fpsize: Size of the node path up at the current depth.
->   * @dryrun: If true, do not allocate device nodes but still calculate needed
->   * memory size
->   */
->  static void *unflatten_dt_node(const void *blob,
->                                void *mem,
-> -                              int *poffset,
->                                struct device_node *dad,
->                                struct device_node **nodepp,
-> -                              unsigned long fpsize,
->                                bool dryrun)
-
-We can probably further simplify things by returning an int with
-negative being errors and positive being the size. Also, dryrun can be
-dropped and implied by mem and/or nodepp being NULL.
-
->  {
-> -       struct device_node *np;
-> -       static int depth;
-> -       int old_depth;
-> -
-> -       fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
-> -       if (!fpsize)
-> -               return mem;
-> +       struct device_node *root;
-> +       int offset = 0, depth = 0;
-> +       unsigned long fpsizes[64];
-> +       struct device_node *nps[64];
-
-Use a define here.
-
->
-> -       old_depth = depth;
-> -       *poffset = fdt_next_node(blob, *poffset, &depth);
-> -       if (depth < 0)
-> -               depth = 0;
-> -       while (*poffset > 0 && depth > old_depth)
-> -               mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
-> -                                       fpsize, dryrun);
-> +       if (nodepp)
-> +               *nodepp = NULL;
-> +
-> +       root = dad;
-> +       fpsizes[depth] = dad ? strlen(of_node_full_name(dad)) : 0;
-> +       nps[depth++] = dad;
-> +       while (offset >= 0 && depth < 64) {
-> +               fpsizes[depth] = populate_node(blob, offset, &mem,
-> +                                              nps[depth - 1],
-> +                                              fpsizes[depth - 1],
-> +                                              &nps[depth], dryrun);
-> +               if (!fpsizes[depth])
-> +                       return mem;
-> +
-> +               if (!dryrun && nodepp && !*nodepp)
-> +                       *nodepp = nps[depth];
-> +               if (!dryrun && !root)
-> +                       root = nps[depth];
-> +
-> +               offset = fdt_next_node(blob, offset, &depth);
-> +       }
->
-> -       if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
-> -               pr_err("unflatten: error %d processing FDT\n", *poffset);
-> +       if (offset < 0 && offset != -FDT_ERR_NOTFOUND)
-> +               pr_err("%s: Error %d processing FDT\n",
-> +                      __func__, offset);
-
-What about depth == 64 case? I think the behavior should be a WARN and
-ignore those nodes so we at least can continue to boot and see the
-error. Of course, if there is a phandle pointing to ignored nodes, we
-have to handle that too.
-
->
->         /*
->          * Reverse the child list. Some drivers assumes node order matches .dts
->          * node order
->          */
-> -       if (!dryrun && np->child) {
-> -               struct device_node *child = np->child;
-> -               np->child = NULL;
-> -               while (child) {
-> -                       struct device_node *next = child->sibling;
-> -                       child->sibling = np->child;
-> -                       np->child = child;
-> -                       child = next;
-> -               }
-> -       }
-> -
-> -       if (nodepp)
-> -               *nodepp = np;
-> +       if (!dryrun)
-> +               reverse_nodes(root);
->
->         return mem;
->  }
-> @@ -431,7 +452,6 @@ static void __unflatten_device_tree(const void *blob,
->                              void * (*dt_alloc)(u64 size, u64 align))
->  {
->         unsigned long size;
-> -       int start;
->         void *mem;
->
->         pr_debug(" -> unflatten_device_tree()\n");
-> @@ -452,8 +472,7 @@ static void __unflatten_device_tree(const void *blob,
->         }
->
->         /* First pass, scan for size */
-> -       start = 0;
-> -       size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
-> +       size = (unsigned long)unflatten_dt_node(blob, NULL, NULL, NULL, true);
->         size = ALIGN(size, 4);
->
->         pr_debug("  size is %lx, allocating...\n", size);
-> @@ -467,8 +486,7 @@ static void __unflatten_device_tree(const void *blob,
->         pr_debug("  unflattening %p...\n", mem);
->
->         /* Second pass, do actual unflattening */
-> -       start = 0;
-> -       unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
-> +       unflatten_dt_node(blob, mem, NULL, mynodes, false);
->         if (be32_to_cpup(mem + size) != 0xdeadbeef)
->                 pr_warning("End of tree marker overwritten: %08x\n",
->                            be32_to_cpup(mem + size));
-> --
-> 2.1.0
->
