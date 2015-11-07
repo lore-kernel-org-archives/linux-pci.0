@@ -1,95 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:32792 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753857AbbKWQs6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 Nov 2015 11:48:58 -0500
-Subject: Re: [PATCH] PCI: keystone: fix crash with deferred probe
-To: Jisheng Zhang <jszhang@marvell.com>
-References: <866b2f1544f9d55fa932aa9f9cb5e7d523a23d05.1448017883.git.nsekhar@ti.com>
- <20151123192209.38e2c101@xhacker> <20151123192717.4d4ddf06@xhacker>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
+Received: from www.linutronix.de ([62.245.132.108]:35176 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751274AbbKGL4k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Nov 2015 06:56:40 -0500
+Date: Sat, 7 Nov 2015 12:55:54 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Keith Busch <keith.busch@intel.com>
+cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-From: Sekhar Nori <nsekhar@ti.com>
-Message-ID: <5653435A.2040400@ti.com>
-Date: Mon, 23 Nov 2015 22:18:26 +0530
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv4 5/6] x86/pci: Initial commit for new VMD device
+ driver
+In-Reply-To: <1446849346-8242-6-git-send-email-keith.busch@intel.com>
+Message-ID: <alpine.DEB.2.11.1511071243530.4032@nanos>
+References: <1446849346-8242-1-git-send-email-keith.busch@intel.com> <1446849346-8242-6-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20151123192717.4d4ddf06@xhacker>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 23 November 2015 04:57 PM, Jisheng Zhang wrote:
-> On Mon, 23 Nov 2015 19:22:09 +0800
-> Jisheng Zhang <jszhang@marvell.com> wrote:
-> 
->> Dear Sekhar,
->>
->> On Fri, 20 Nov 2015 16:47:02 +0530
->> Sekhar Nori wrote:
->>
->>> Drop __init annotations for functions called during
->>> probe of keystone PCIe host.
->>>
->>> This fixes kernel crashes seen because of init data
->>> reclamation if the driver defer probes because of
->>> phy unavailability.
->>>
->>> While at it, drop the useless __refdata annotation
->>> to driver structure. If its really needed, it should
->>> be added back with a comment explaining why.
->>>
->>> Signed-off-by: Sekhar Nori <nsekhar@ti.com>
->>> ---
->>>  drivers/pci/host/pci-keystone-dw.c | 2 +-
->>>  drivers/pci/host/pci-keystone.c    | 6 +++---
->>>  2 files changed, 4 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
->>> index ed34c9520a02..47ddbcce53ca 100644
->>> --- a/drivers/pci/host/pci-keystone-dw.c
->>> +++ b/drivers/pci/host/pci-keystone-dw.c
->>> @@ -469,7 +469,7 @@ void ks_dw_pcie_initiate_link_train(struct keystone_pcie *ks_pcie)
->>>   * and call dw_pcie_v3_65_host_init() API to initialize the Keystone
->>>   * PCI host controller.
->>>   */
->>> -int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
->>> +int ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
->>>  				struct device_node *msi_intc_np)  
->>
->> when trying to add berlin pcie support and came up one patch
->>
->> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-November/384575.html
->>
->> when build testing, I also realized this issue, but keystone relies on
-> 
-> I mean ks_dw_pcie_host_init() calls hook_fault_code()
+Keith,
 
-Okay, at least in v4.4-rc2, it does not call it. ks_pcie_host_init()
-calls it. But your comment is valid. The driver needs more changes to
-support probe deferral.
+On Fri, 6 Nov 2015, Keith Busch wrote:
+> +
+> +static DEFINE_SPINLOCK(list_lock);
 
-> 
->> hook_fault_code() which is will be freed after boot, so your patch isn't
->> completed.
-> 
-> And will introduce section mismatch warnings
+Can you please make that DEFINE_RAW_SPINLOCK as it nests into the irq
+descriptor lock.
 
-because the annotation on ks_pcie_host_init() is intact, I did not see
-any warnings.
+> +
+> +struct vmd_irq {
+> +	struct list_head	node;
+> +	struct rcu_head		rcu;	/* rcu callback list */
+> +	struct vmd_irq_list	*irq;	/* back pointer */
 
-> 
->>
->> And from the keystone driver implementation, it seems assume the driver won't
->> be defer probed.
+Please use KernelDoc style documentation if you want to document your
+data structures.
 
-The reason I worked on this patch is because I am using an out-of-tree
-phy driver and that can be built as module and I did see ks_pcie_probe
-get deferred. But as you said, this driver is not ready for deferred
-probing even with this patch and so this patch should be discarded.
+> +/**
+> + * XXX: Stubbed until a good way to not create conflicts with other devices
+> + * sharing the same vector is developed.
+> + */
+> +static int vmd_irq_set_affinity(struct irq_data *data, const struct cpumask *dest,
+> +								bool force)
+> +{
+> +	return -EINVAL;
+> +}
 
-Thanks for your review.
+Well, this is a hard problem for shared vectors. The question is
+whether we really want to expose that at the per device level or
+rather at the demultiplexing level.
 
-Regards,
-Sekhar
+> +static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd)
+> +{
+> +	int i, best = 0;
+> +
+> +	spin_lock(&list_lock);
+> +	for (i = 1; i < vmd->msix_count; i++)
+> +		if (vmd->irqs[i].count < vmd->irqs[best].count)
+> +			best = i;
+> +	vmd->irqs[best].count++;
+> +	spin_unlock(&list_lock);
+> +
+> +	return &vmd->irqs[best];
+
+That looks smarter. Though we might need some more complex way to do
+that when interrupt affinity comes into play.
+
+> +static irqreturn_t vmd_irq(int irq, void *data)
+> +{
+> +	struct vmd_irq_list *irqs = data;
+> +	struct vmd_irq *vmdirq;
+> +
+> +	rcu_read_lock();
+> +	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
+> +		generic_handle_irq(vmdirq->virq);
+> +	rcu_read_unlock();
+> +
+> +	return IRQ_HANDLED;
+
+Please remind me, that I still need to fix that life time problem in
+the core.
+
+> +	for (i = 0; i < vmd->msix_count; i++) {
+> +		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
+> +		vmd->irqs[i].vmd_vector = vmd->msix_entries[i].vector;
+> +		vmd->irqs[i].index = i;
+> +
+> +		err = devm_request_irq(&dev->dev, vmd->irqs[i].vmd_vector,
+> +				vmd_irq, IRQF_SHARED, "vmd", &vmd->irqs[i]);
+
+This is a MSI interrupt which is never shared.
+
+Aside of the few nitpicks above I'm really happy with the interrupt
+side of that driver. Thanks for following up on all the comments!
+
+Thanks,
+
+	tglx
+
+
