@@ -1,63 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55799 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752716AbbKILNT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Nov 2015 06:13:19 -0500
-Message-ID: <56407FCE.3070201@redhat.com>
-Date: Mon, 09 Nov 2015 06:13:18 -0500
-From: Prarit Bhargava <prarit@redhat.com>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33590 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751441AbbKHXxY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Nov 2015 18:53:24 -0500
+Received: by pabfh17 with SMTP id fh17so179135152pab.0
+        for <linux-pci@vger.kernel.org>; Sun, 08 Nov 2015 15:53:23 -0800 (PST)
+Subject: Re: [PATCH V13 0/9] VF EEH on Power8
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au
+References: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <563FE06D.4080801@ozlabs.ru>
+Date: Mon, 9 Nov 2015 10:53:17 +1100
 MIME-Version: 1.0
-To: Mathias Krause <minipli@googlemail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Sasha Levin <sasha.levin@oracle.com>
-Subject: Re: [PATCH] PCI: Prevent out of bounds access in numa_node override
- - part 2
-References: <1447003444-27108-1-git-send-email-minipli@googlemail.com>	<563FDAA6.1010305@redhat.com> <CA+rthh_7u7B5ftoqwaTKRXxt8vio+BRwCoyJ1mJqW5vBRmhiiA@mail.gmail.com>
-In-Reply-To: <CA+rthh_7u7B5ftoqwaTKRXxt8vio+BRwCoyJ1mJqW5vBRmhiiA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 11/08/2015 10:30 AM, Wei Yang wrote:
+> This patchset enables EEH on SRIOV VFs. The general idea is to create proper
+> VF edev and VF PE and handle them properly.
+>
+> Different from the Bus PE, VF PE just contain one VF. This introduces the
+> difference of EEH error handling on a VF PE. Generally, it has several
+> differences.
+>
+> First, the VF's removal and re-enumerate rely on its PF. VF has a tight
+> relationship between its PF. This is not proper to enumerate a VF by usual
+> scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
+> set.
+>
+> Second, the reset/restore of a VF is done in kernel space. FW is not aware of
+> the VF, this means the usual reset function done in FW will not work. One of
+> the patch will imitate the reset/restore function in kernel space.
+>
+> Third, the VF may be removed during the PF's error_detected function. In this
+> case, the original error_detected->slot_reset->resume sequence is not proper
+> to those removed VFs, since they are re-created by PF in a fresh state. A flag
+> in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
+> track whether this device needs to be reset or not.
+>
+> This has been tested both on host and in guest on Power8 with latest kernel
+> version.
 
 
-On 11/09/2015 01:56 AM, Mathias Krause wrote:
+This does not apply on top of neither Linus master tree 
+(git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git sha1 
+ce5c2d2) nor Michael's PPC next tree 
+(git://git.kernel.org/pub/scm/linux/kernel/git/powerpc/linux.git sha1 
+8bdf2023). What did you base your work on?
 
-> 
->> Can you point to the code that does node_states[pci_dev->numa_node] without
->> doing a bounds check?  IMO that's the code that is broken.
-> 
-> It's the node_state() inline for MAX_NUMNODES > 1.
 
-In drivers/pci/pci-sysfs.c: numa_node_store()
-
-	if (node >= MAX_NUMNODES || !node_online(node))
-
-needs to be broken out into a range and separate online check.
-
-	/* range check */
-	if (node < NUMA_NO_NODE || node >= MAX_NUMNODES)
-		return -EINVAL;
-
-	/* Is the specific node online? */
-	if (node != NUMA_NO_NODE && !node_online(node))
-		return -EINVAL; /* perhaps -ENODEV ? */
-
-which will fix the problem.
-
-P.
-
-> 
->>
->> FWIW: I think the idea of your patch is still correct.  Checking for -1 to
->> MAX_NUMNODES is not a bad idea.
-> 
-> It is. As it prevents userland from triggering the out of bounds read. ;)
-> 
-> 
-> Thanks,
-> Mathias
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+-- 
+Alexey
