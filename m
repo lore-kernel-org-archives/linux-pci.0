@@ -1,284 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:37632 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753808AbbKWJ3m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 04:29:42 -0500
-Received: by wmww144 with SMTP id w144so95967920wmw.0
-        for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2015 01:29:40 -0800 (PST)
-From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-To: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Subject: [PATCH v3 3/6] DT: PCI: qcom: Document PCIe devicetree bindings
-Date: Mon, 23 Nov 2015 11:29:00 +0200
-Message-Id: <8fd3e7d1662f37abe549127d179c315dff3210d8.1448270813.git.stanimir.varbanov@linaro.org>
-In-Reply-To: <cover.1448270813.git.stanimir.varbanov@linaro.org>
-References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
-In-Reply-To: <cover.1448270813.git.stanimir.varbanov@linaro.org>
-References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:36193 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677AbbKHRYh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Nov 2015 12:24:37 -0500
+Received: by wmww144 with SMTP id w144so59756155wmw.1
+        for <linux-pci@vger.kernel.org>; Sun, 08 Nov 2015 09:24:36 -0800 (PST)
+From: Mathias Krause <minipli@googlemail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Mathias Krause <minipli@googlemail.com>,
+	Sasha Levin <sasha.levin@oracle.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Subject: [PATCH] PCI: Prevent out of bounds access in numa_node override - part 2
+Date: Sun,  8 Nov 2015 18:24:04 +0100
+Message-Id: <1447003444-27108-1-git-send-email-minipli@googlemail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Commit 1266963170f5 ("PCI: Prevent out of bounds access in numa_node
+override") missed that the user provided node could also be negative.
+Handle this case as well to really avoid out-of-bounds accesses to
+the node_states[] array.
 
-Document Qualcomm PCIe driver devicetree bindings.
-
-Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Fixes: 1266963170f5 ("PCI: Prevent out of bounds access in numa_node...")
+Signed-off-by: Mathias Krause <minipli@googlemail.com>
+Cc: Sasha Levin <sasha.levin@oracle.com>
+Cc: Prarit Bhargava <prarit@redhat.com>
+CC: stable@vger.kernel.org	# v3.19+
 ---
- .../devicetree/bindings/pci/qcom,pcie.txt          |  231 ++++++++++++++++++++
- 1 file changed, 231 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
+ drivers/pci/pci-sysfs.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-new file mode 100644
-index 000000000000..d7640d45fa31
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-@@ -0,0 +1,231 @@
-+* Qualcomm PCI express root complex
-+
-+- compatible:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Value shall include
-+		    - "qcom,pcie-v0" for apq/ipq8064
-+		    - "qcom,pcie-v1" for apq8084
-+
-+- reg:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: Register ranges as listed in the reg-names property
-+
-+- reg-names:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Must include the following entries
-+		    - "parf"   Qualcomm specific registers
-+		    - "dbi"    Designware PCIe registers
-+		    - "elbi"   External local bus interface registers
-+		    - "config" PCIe configuration space
-+
-+- device_type:
-+	Usage: required
-+	Value type: <string>
-+	Definition: Should be "pci". As specified in designware-pcie.txt
-+
-+- #address-cells:
-+	Usage: required
-+	Value type: <u32>
-+	Definition: Should be set to 3. As specified in designware-pcie.txt
-+
-+- #size-cells:
-+	Usage: required
-+	Value type: <u32>
-+	Definition: Should be set 2. As specified in designware-pcie.txt
-+
-+- ranges:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: As specified in designware-pcie.txt
-+
-+- interrupts:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: MSI interrupt
-+
-+- interrupt-names:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Should contain "msi"
-+
-+- #interrupt-cells:
-+	Usage: required
-+	Value type: <u32>
-+	Definition: Should be 1. As specified in designware-pcie.txt
-+
-+- interrupt-map-mask:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: As specified in designware-pcie.txt
-+
-+- interrupt-map:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: As specified in designware-pcie.txt
-+
-+- clocks:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: List of phandle and clock specifier pairs as listed
-+		    in clock-names property
-+
-+- clock-names:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Should contain the following entries
-+		    * should be populated for v0 and v1
-+		    	- "iface"      Configuration AHB clock
-+
-+		    * should be populated for v0
-+		    	- "core"       Clocks the pcie hw block
-+		    	- "phy"        Clocks the pcie PHY block
-+
-+		    * should be populated for v1
-+			- "aux"        Auxiliary (AUX) clock
-+		    	- "bus_master" Master AXI clock
-+		    	- "bus_slave"  Slave AXI clock
-+
-+- resets:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: List of phandle and reset specifier pairs as listed
-+		    in reset-names property
-+
-+- reset-names:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Should contain the following entries
-+		    * should be populated for v0
-+			- "axi"  AXI reset
-+			- "ahb"  AHB reset
-+			- "por"  POR reset
-+			- "pci"  PCI reset
-+			- "phy"  PHY reset
-+
-+		    * should be populated for v1
-+			- "core" Core reset
-+
-+- power-domains:
-+	Usage: required (for v1 only)
-+	Value type: <prop-encoded-array>
-+	Definition: A phandle and power domain specifier pair to the
-+		    power domain which is responsible for collapsing
-+		    and restoring power to the peripheral
-+
-+- <name>-supply:
-+	Usage: required
-+	Value type: <phandle>
-+	Definition: List of phandles to the power supply regulator(s)
-+		    * should be populated for v0 and v1
-+			- "vdda"        core analog power supply
-+
-+		    * should be populated for v0
-+			- "vdda_phy"    analog power supply for PHY
-+			- "vdda_refclk" analog power supply for IC which generate
-+					reference clock
-+
-+- phys:
-+	Usage: required (for v1 only)
-+	Value type: <phandle>
-+	Definition: List of phandle(s) as listed in phy-names property
-+
-+- phy-names:
-+	Usage: required (for v1 only)
-+	Value type: <stringlist>
-+	Definition: Should contain "pciephy"
-+
-+- <name>-gpio:
-+	Usage: optional
-+	Value type: <prop-encoded-array>
-+	Definition: List of phandle and gpio specifier pairs. Should contain
-+		    - "perst"  PCIe endpoint reset signal line
-+		    - "pewake" PCIe endpoint wake signal line
-+
-+- pinctrl-0:
-+	Usage: required
-+	Value type: <phandle>
-+	Definition: List of phandles pointing at a pin(s) configuration
-+
-+- pinctrl-names
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: List of names of pinctrl-0 state
-+
-+* Example for v0
-+	pcie0: pci@1b500000 {
-+		compatible = "qcom,pcie-v0", "snps,dw-pcie";
-+		reg = <0x1b500000 0x1000
-+		       0x1b502000 0x80
-+		       0x1b600000 0x100
-+		       0x0ff00000 0x100000>;
-+		reg-names = "dbi", "elbi", "parf", "config";
-+		device_type = "pci";
-+		linux,pci-domain = <0>;
-+		bus-range = <0x00 0xff>;
-+		num-lanes = <1>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges = <0x81000000 0 0	  0x0fe00000 0 0x00100000   /* I/O */
-+			  0x82000000 0 0x00000000 0x08000000 0 0x07e00000>; /* memory */
-+		interrupts = <GIC_SPI 238 IRQ_TYPE_NONE>;
-+		interrupt-names = "msi";
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0x7>;
-+		interrupt-map = <0 0 0 1 &intc 0 36 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-+				<0 0 0 2 &intc 0 37 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-+				<0 0 0 3 &intc 0 38 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-+				<0 0 0 4 &intc 0 39 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-+		clocks = <&gcc PCIE_A_CLK>,
-+			 <&gcc PCIE_H_CLK>,
-+			 <&gcc PCIE_PHY_CLK>;
-+		clock-names = "core", "iface", "phy";
-+		resets = <&gcc PCIE_ACLK_RESET>,
-+			 <&gcc PCIE_HCLK_RESET>,
-+			 <&gcc PCIE_POR_RESET>,
-+			 <&gcc PCIE_PCI_RESET>,
-+			 <&gcc PCIE_PHY_RESET>;
-+		reset-names = "axi", "ahb", "por", "pci", "phy";
-+	};
-+
-+* Example for v1
-+	pcie0@fc520000 {
-+		compatible = "qcom,pcie-v1", "snps,dw-pcie";
-+		reg = <0xfc520000 0x2000>,
-+		      <0xff000000 0x1000>,
-+		      <0xff001000 0x1000>,
-+		      <0xff002000 0x2000>;
-+		reg-names = "parf", "dbi", "elbi", "config";
-+		device_type = "pci";
-+		linux,pci-domain = <0>;
-+		bus-range = <0x00 0xff>;
-+		num-lanes = <1>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges = <0x81000000 0 0          0xff200000 0 0x00100000   /* I/O */
-+			  0x82000000 0 0x00300000 0xff300000 0 0x00d00000>; /* memory */
-+		interrupts = <GIC_SPI 243 IRQ_TYPE_NONE>;
-+		interrupt-names = "msi";
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0x7>;
-+		interrupt-map = <0 0 0 1 &intc 0 244 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-+				<0 0 0 2 &intc 0 245 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-+				<0 0 0 3 &intc 0 247 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-+				<0 0 0 4 &intc 0 248 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-+		clocks = <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+			 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
-+			 <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
-+			 <&gcc GCC_PCIE_0_AUX_CLK>;
-+		clock-names = "iface", "master_bus", "slave_bus", "aux";
-+		resets = <&gcc GCC_PCIE_0_BCR>;
-+		reset-names = "core";
-+		power-domains = <&gcc PCIE0_GDSC>;
-+		vdda-supply = <&pma8084_l3>;
-+		phys = <&pciephy0>;
-+		phy-names = "pciephy";
-+		perst-gpio = <&tlmm 70 GPIO_ACTIVE_LOW>;
-+		pinctrl-0 = <&pcie0_pins_default>;
-+		pinctrl-names = "default";
-+	};
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 92618686604c..87835d50b927 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -216,7 +216,7 @@ static ssize_t numa_node_store(struct device *dev,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (node >= MAX_NUMNODES || !node_online(node))
++	if (node < 0 || node >= MAX_NUMNODES || !node_online(node))
+ 		return -EINVAL;
+ 
+ 	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
 -- 
-1.7.9.5
+1.7.10.4
 
