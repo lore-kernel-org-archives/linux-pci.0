@@ -1,98 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:48503 "EHLO ozlabs.org"
+Received: from foss.arm.com ([217.140.101.70]:51857 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757222AbbKSLqk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 19 Nov 2015 06:46:40 -0500
-In-Reply-To: <1446939035-2617-10-git-send-email-weiyang@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com, aik@ozlabs.ru
-From: Michael Ellerman <mpe@ellerman.id.au>
-Cc: linux-pci@vger.kernel.org, Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [V13,9/9] powerpc/eeh: Support error recovery for VF PE
-Message-Id: <20151119114639.40721141498@ozlabs.org>
-Date: Thu, 19 Nov 2015 22:46:39 +1100 (AEDT)
+	id S1751716AbbKIRJx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Nov 2015 12:09:53 -0500
+Date: Mon, 9 Nov 2015 17:10:43 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, arnd@arndb.de
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+Message-ID: <20151109171042.GA11909@red-moon>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
+ <563B65EE.7000406@semihalf.com>
+ <20151105181959.GA352@red-moon>
+ <563C6A5F.5030500@linux.intel.com>
+ <563C82FA.7050707@semihalf.com>
+ <563C930F.4060206@linux.intel.com>
+ <563C9FBE.2090303@semihalf.com>
+ <563CA9A6.7050309@linux.intel.com>
+ <5640A8AA.4000806@semihalf.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5640A8AA.4000806@semihalf.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2015-07-11 at 23:30:35 UTC, Wei Yang wrote:
-> PFs are enumerated on PCI bus, while VFs are created by PF's driver.
+[CC'ing Arnd]
+
+On Mon, Nov 09, 2015 at 03:07:38PM +0100, Tomasz Nowicki wrote:
+> On 06.11.2015 14:22, Jiang Liu wrote:
+> >On 2015/11/6 20:40, Tomasz Nowicki wrote:
+> >>On 06.11.2015 12:46, Jiang Liu wrote:
+> >>>On 2015/11/6 18:37, Tomasz Nowicki wrote:
+> >>>>On 06.11.2015 09:52, Jiang Liu wrote:
+> >>>>Sure, ARM64 (0-16M IO space) QEMU example:
+> >>>>DWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
+> >>>>           0x00000000,         // Granularity
+> >>>>           0x00000000,         // Range Minimum
+> >>>>           0x0000FFFF,         // Range Maximum
+> >>>>           0x3EFF0000,         // Translation Offset
+> >>>>           0x00010000,         // Length
+> >>>>           ,, , TypeStatic)
+> >>>The above DWordIO resource descriptor doesn't confirm to the ACPI spec.
+> >>>According to my understanding, ARM/ARM64 has no concept of IO port
+> >>>address space, so the PCI host bridge will map IO port on PCI side
+> >>>onto MMIO on host side. In other words, PCI host bridge on ARM64
+> >>>implement a IO Port->MMIO translation instead of a IO Port->IO Port
+> >>>translation. If that's true, it should use 'TypeTranslation' instead
+> >>>of 'TypeStatic'. And kernel ACPI resource parsing interface doesn't
+> >>>support 'TypeTranslation' yet, so we need to find a solution for it.
+> >>
+> >>I think you are right, we need TypeTranslation flag for ARM64 DWordIO
+> >>descriptors and an extra kernel patch to support it.
+> >How about the attached to patch to support TypeTranslation?
+> >It only passes compilation:)
 > 
-> In EEH recovery, it has two cases:
-> 1. Device and driver is EEH aware, error handlers are called.
-> 2. Device and driver is not EEH aware, un-plug the device and plug it again
-> by enumerating it.
-> 
-> The special thing happens on the second case. For a PF, we could use the
-> original pci core to enumerate the bus, while for VF we need to record the
-> VFs which aer un-plugged then plug it again.
-> 
-> Also The patch caches the VF index in pci_dn, which can be used to
-> calculate VF's bus, device and function number. Those information helps to
-> locate the VF's PCI device instance when doing hotplug during EEH recovery
-> if necessary.
+> Based on the further discussion, your draft patch looks good to me.
+> Lorenzo, do you agree?
 
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index 9b365d6..533e6e9 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -211,6 +211,7 @@ struct pci_dn {
->  #define IODA_INVALID_PE		(-1)
->  #ifdef CONFIG_PPC_POWERNV
->  	int	pe_number;
-> +	int     vf_index;		/* VF index in the PF */
+No, because I still do not understand the difference between ia64 and
+arm64 (they both drive IO ports cycles through MMIO so the resource
+descriptors content must be the same or better they must mean the same
+thing). On top of that, this is something that was heavily debated for DT:
 
+http://www.spinics.net/lists/arm-kernel/msg345633.html
 
-> diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
-> index 89eb4bc..f25428a 100644
-> --- a/arch/powerpc/kernel/eeh_driver.c
-> +++ b/arch/powerpc/kernel/eeh_driver.c
-> @@ -386,12 +396,39 @@ static void *eeh_report_failure(void *data, void *userdata)
->  	return NULL;
->  }
->  
-> +static void *eeh_add_virt_device(void *data, void *userdata)
-> +{
-> +	struct pci_driver *driver;
-> +	struct eeh_dev *edev = (struct eeh_dev *)data;
-> +	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
-> +	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
-> +
-> +	if (!(edev->physfn)) {
-> +		pr_warn("%s: EEH dev %04x:%02x:%02x.%01x not for VF\n",
-> +			__func__, edev->phb->global_number, pdn->busno,
-> +			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
-> +		return NULL;
-> +	}
-> +
-> +	driver = eeh_pcid_get(dev);
-> +	if (driver) {
-> +		eeh_pcid_put(dev);
-> +		if (driver->err_handler)
-> +			return NULL;
-> +	}
-> +
-> +	pci_iov_virtfn_add(edev->physfn, pdn->vf_index, 0);
-                                              ^
+and I would like to get Arnd and Bjorn opinion on this because we
+should not "interpret" ACPI specifications, we should understand
+what they are supposed to describe and write kernel code accordingly.
 
-This is giving me:
+In particular, I would like to understand, for an eg DWordIO descriptor,
+what Range Minimum, Range Maximum and Translation Offset represent,
+they can't mean different things depending on the SW parsing them,
+this totally defeats the purpose.
 
-  arch/powerpc/kernel/eeh_driver.c:420:38: error: 'struct pci_dn' has no member named 'vf_index'
+By the way, ia64 ioremaps the translation_offset (ie new_space()), so
+basically that's the CPU physical address at which the PCI host bridge
+map the IO space transactions), I do not think ia64 is any different from
+arm64 in this respect, if it is please provide an HW description here from
+the PCI bus perspective here (also an example of ia64 ACPI PCI host bridge
+tables would help).
 
-And similarly:
-
-  arch/powerpc/kernel/eeh_driver.c:472:42: error: 'struct pci_dn' has no member named 'vf_index'
-  arch/powerpc/kernel/eeh_driver.c:479:6: error: 'struct pci_dn' has no member named 'pe_number'
-
-
-For pseries_defconfig with POWERNV=n.
-
-The reason is that those fields are #ifdef POWERNV, but eeh_driver.c is still
-built for PSERIES.
-
-More here:
-
-  http://kisskb.ellerman.id.au/kisskb/buildresult/12550871/
-
-
-cheers
+Thanks,
+Lorenzo
