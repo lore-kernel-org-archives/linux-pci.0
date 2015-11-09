@@ -1,115 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Ray Jui <rjui@broadcom.com>, Marc Zyngier <marc.zyngier@arm.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	"dhdang@apm.com" <dhdang@apm.com>,
-	"sbranden@broadcom.com" <sbranden@broadcom.com>
-CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH v8] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Date: Tue, 17 Nov 2015 04:59:39 +0000
-Message-ID: <8520D5D51A55D047800579B0941471982585CBDA@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>
- <5649F2D9.7070902@arm.com> <564A5255.3020603@broadcom.com>
-In-Reply-To: <564A5255.3020603@broadcom.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yk0-f177.google.com ([209.85.160.177]:33342 "EHLO
+	mail-yk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751091AbbKIG4c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Nov 2015 01:56:32 -0500
+Received: by ykdv3 with SMTP id v3so160482547ykd.0
+        for <linux-pci@vger.kernel.org>; Sun, 08 Nov 2015 22:56:32 -0800 (PST)
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <563FDAA6.1010305@redhat.com>
+References: <1447003444-27108-1-git-send-email-minipli@googlemail.com>
+	<563FDAA6.1010305@redhat.com>
+Date: Mon, 9 Nov 2015 07:56:31 +0100
+Message-ID: <CA+rthh_7u7B5ftoqwaTKRXxt8vio+BRwCoyJ1mJqW5vBRmhiiA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Prevent out of bounds access in numa_node override -
+ part 2
+From: Mathias Krause <minipli@googlemail.com>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Sasha Levin <sasha.levin@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 11/16/2015 7:14 AM, Marc Zyngier wrote:
-> > On 11/11/15 06:33, Bharat Kumar Gogada wrote:
-> >> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
-> >>
-> >> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> >> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> >> ---
-> >> Added logic to allocate contiguous hwirq in nwl_irq_domain_alloc
-> function.
-> >> Moved MSI functionality to separate functions.
-> >> Changed error return values.
-> >> ---
-> >>   .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
-> >>   drivers/pci/host/Kconfig                           |   16 +-
-> >>   drivers/pci/host/Makefile                          |    1 +
-> >>   drivers/pci/host/pcie-xilinx-nwl.c                 | 1062
-> ++++++++++++++++++++
-> >>   4 files changed, 1144 insertions(+), 3 deletions(-)
-> >>   create mode 100644 Documentation/devicetree/bindings/pci/xilinx-nwl-
-> pcie.txt
-> >>   create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
-> >>
-> >
-> > [...]
-> >
-> >> +static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus
-> >> +*bus) {
-> >> +	struct platform_device *pdev = to_platform_device(pcie->dev);
-> >> +	struct nwl_msi *msi = &pcie->msi;
-> >> +	unsigned long base;
-> >> +	int ret;
-> >> +
-> >> +	mutex_init(&msi->lock);
-> >> +
-> >> +	/* Check for msii_present bit */
-> >> +	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) & MSII_PRESENT;
-> >> +	if (!ret) {
-> >> +		dev_err(pcie->dev, "MSI not present\n");
-> >> +		ret = -EIO;
-> >> +		goto err;
-> >> +	}
-> >> +
-> >> +	/* Enable MSII */
-> >> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
-> >> +			  MSII_ENABLE, I_MSII_CONTROL);
-> >> +
-> >> +	/* Enable MSII status */
-> >> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
-> >> +			  MSII_STATUS_ENABLE, I_MSII_CONTROL);
-> >> +
-> >> +	/* setup AFI/FPCI range */
-> >> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-> >> +	base = virt_to_phys((void *)msi->pages);
-> >> +	nwl_bridge_writel(pcie, lower_32_bits(base), I_MSII_BASE_LO);
-> >> +	nwl_bridge_writel(pcie, upper_32_bits(base), I_MSII_BASE_HI);
-> >
-> > BTW, you still haven't answered my question as to why you need to
-> > waste a page of memory here, and why putting a device address doesn't
-> work.
-> >
-> > As this is (to the best of my knowledge) the only driver doing so, I'd
-> > really like you to explain the rational behind this.
-> 
-> Might not be the only driver doing so after I start sending out patches for the
-> iProc MSI support (soon), :)
-> 
-> I'm not sure how it works for the Xilinx NWL controller, which Bharat should
-> be able to help to explain. But for the iProc MSI controller, there's no device
-> I/O memory reserved for MSI posted writes in the ASIC.
-> Therefore one needs to reserve host memory for these writes.
-> >
+On 9 November 2015 at 00:28, Prarit Bhargava <prarit@redhat.com> wrote:
+> On 11/08/2015 12:24 PM, Mathias Krause wrote:
+>> Commit 1266963170f5 ("PCI: Prevent out of bounds access in numa_node
+>> override") missed that the user provided node could also be negative.
+>> Handle this case as well to really avoid out-of-bounds accesses to
+>> the node_states[] array.
+>
+> No, this is incorrect.  More often than not, numa_node is -1 for NUMA_NO_NODE
+> which is often interpreted in the kernel as "any numa node".
+>
+> [root@intel-brickland-04 pci0000:ff]# find ./ -name *numa_node* | xargs egrep ^
+> | egrep "\-1" | wc -l
+> 92
 
-Our SoC doesn't reserve any memory for MSI, hence we need to assign a memory space for it out of RAM.
+While this is correct, the patch does not hinder this. It just
+prevents *changing* the value to a negative one using the sysfs
+interface.
 
-Regards,
-Bharat
+Looking at the initial patch, introducing that interface in commit
+63692df103e9 ("PCI: Allow numa_node override via sysfs"), I suspect
+it's meant to "fix" broken BIOSes by providing the correct NUMA
+topology by hand by writing NUMA node numbers to the corresponding
+numa_node sysfs files. Reverting back to 'no specific node' might be a
+valid use case. I'll change the patch to allow -1, i.e. NUMA_NO_NODE,
+too.
+
+> Can you point to the code that does node_states[pci_dev->numa_node] without
+> doing a bounds check?  IMO that's the code that is broken.
+
+It's the node_state() inline for MAX_NUMNODES > 1.
+
+>
+> FWIW: I think the idea of your patch is still correct.  Checking for -1 to
+> MAX_NUMNODES is not a bad idea.
+
+It is. As it prevents userland from triggering the out of bounds read. ;)
 
 
+Thanks,
+Mathias
