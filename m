@@ -1,76 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:60463 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.136]:60904 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750727AbbKDOYP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Nov 2015 09:24:15 -0500
-Date: Wed, 4 Nov 2015 14:24:13 +0000
-From: "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Magnus <magnus.damm@gmail.com>
-Subject: Re: PCIe host controller behind IOMMU on ARM
-Message-ID: <20151104142412.GS963@e106497-lin.cambridge.arm.com>
-References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	id S1752009AbbKITrf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Nov 2015 14:47:35 -0500
+Date: Mon, 9 Nov 2015 13:47:32 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: ECRC and Max Read Request Size
+Message-ID: <20151109194732.GB4789@localhost>
+References: <56310B34.6000102@codeaurora.org>
+ <20151106172205.GA1002@localhost>
+ <563CE93F.5060209@codeaurora.org>
+ <20151107001143.GA17842@localhost>
+ <563D7287.1050500@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <563D7287.1050500@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 04, 2015 at 01:57:48PM +0000, Phil Edworthy wrote:
-> Hi,
+On Fri, Nov 06, 2015 at 10:39:51PM -0500, Sinan Kaya wrote:
+> On 11/6/2015 7:11 PM, Bjorn Helgaas wrote:
+> >That should definitely be fixed.  Do we enable ECRC unconditionally,
+> >or only when we boot with "pci=ecrc=on"?  The doc
+> >(Documentation/kernel-parameters.txt) suggests the latter.
+> >
+> >It would be ideal if we could try to turn on ECRC all the time by
+> >default for paths that support it.  I suppose there's some risk that
+> >we'd trip over broken hardware.  If that's an issue, we could consider
+> >turning it on all the time on machines newer than X (that's easy on
+> >x86, where we have a DMI BIOS date, but maybe not so easy on other
+> >arches).
 > 
-> I am trying to hook up a PCIe host controller that sits behind an IOMMU,
-> but having some problems.
-> 
-> I'm using the pcie-rcar PCIe host controller and it works fine without
-> the IOMMU, and I can attach the IOMMU to the controller such that any calls
-> to dma_alloc_coherent made by the controller driver uses the iommu_ops
-> version of dma_ops.
-> 
-> However, I can't see how to make the endpoints to utilise the dma_ops that
-> the controller uses. Shouldn't the endpoints inherit the dma_ops from the
-> controller? 
+> ecrc=on kernel option works like "force on" rather than just a simple on.
 
-No, not directly.
+What do you mean by "force on" as opposed to "simple on"?
 
-> Any pointers for this?
+> I agree we should enable it by default.
 
-You need to understand the process through which a driver for endpoint get
-an address to be passed down to the device. Have a look at
-Documentation/DMA-API-HOWTO.txt, there is a nice explanation there.
-(Hint: EP driver needs to call dma_map_single).
+Part of the consideration is that enabling ECRC generation does
+increase the size of every TLP by 4 bytes, which reduces the link
+throughput slightly, so I'm not sure we want to blindly enable it.
 
-Also, you need to make sure that the bus address that ends up being set into
-the endpoint gets translated correctly by the host controller into an address
-that the IOMMU can then translate into physical address.
+If I understand the current Linux code correctly, by default (booting
+with no parameter at all, or with "pci=ecrc=bios"), we don't touch
+ECRC at all -- we don't even look to see whether it's supported, and
+we don't enable or disable anything.
 
-Best regards,
-Liviu
+With "pci=ecrc=on", we turn on ECRC generation (if supported) and ECRC
+checking (if supported) for every device, including those hot-added
+after boot.
 
+I do like the idea of letting platform firmware decide whether ECRC
+should be enabled by default, because then we don't have to decide on
+a policy in Linux.  Following the lead of the firmware lets OEMs
+decide whether ECRC is a feature they want to market and support.
 
-> 
-> Thanks
-> Phil
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+I think the current strategy could be improved for hot-added devices.
+In the default ("pci=ecrc=bios") case, we leave them alone, which
+means they won't check ECRC because the enable bits will be zero after
+power-up.  If the platform firmware enabled ECRC generation in the
+upstream Root Port, we're paying the cost of lower throughput without
+getting any benefit for it.
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+It doesn't look like ECRC has any dependencies or ordering
+requirements, so we could also consider adding sysfs knobs to
+enable/disable ECRC at run-time.  I can imagine systems where we want
+ECRC on some paths, e.g., to a disk or network, but not on others,
+e.g., to a display.  Sysfs would be a way to allow that, although it
+*is* an administrative burden.
+
+Bjorn
