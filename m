@@ -1,170 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:33256 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965023AbbKCXRU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2015 18:17:20 -0500
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 09:17:17 +1000
-Date: Wed, 4 Nov 2015 10:16:13 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com, aik@ozlabs.ru
-Subject: Re: [PATCH v6 38/42] drivers/of: Unflatten subordinate nodes after
- specified level
-Message-ID: <20151103231613.GA7126@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-39-git-send-email-gwshan@linux.vnet.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	Will Deacon <will.deacon@arm.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Magnus <magnus.damm@gmail.com>
+Subject: RE: PCIe host controller behind IOMMU on ARM
+Date: Mon, 9 Nov 2015 12:32:13 +0000
+Message-ID: <PS1PR06MB11806B65D3408BDFBEAD9D3AF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151104142412.GS963@e106497-lin.cambridge.arm.com>
+ <PS1PR06MB11804263DD55C54C5987654EF52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151104150147.GT963@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438834307-26960-39-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 06, 2015 at 02:11:43PM +1000, Gavin Shan wrote:
->unflatten_dt_node() is called recursively to unflatten FDT nodes
->with the assumption that FDT blob has only one root node, which
->isn't true when the FDT blob represents device sub-tree. This
->improves the function to supporting device sub-tree that have
->multiple nodes in the first level:
->
->   * Rename original unflatten_dt_node() to __unflatten_dt_node().
->   * Wrapper unflatten_dt_node() calls __unflatten_dt_node() with
->     adjusted current node depth to 1 to avoid underflow.
->
->Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->---
-> drivers/of/fdt.c | 53 ++++++++++++++++++++++++++++++++++++++++-------------
-> 1 file changed, 40 insertions(+), 13 deletions(-)
->
->diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
->index 0749656..a18a2ce 100644
->--- a/drivers/of/fdt.c
->+++ b/drivers/of/fdt.c
->@@ -161,7 +161,7 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
-> }
->
-> /**
->- * unflatten_dt_node - Alloc and populate a device_node from the flat tree
->+ * __unflatten_dt_node - Alloc and populate a device_node from the flat tree
->  * @blob: The parent device tree blob
->  * @mem: Memory chunk to use for allocating device nodes and properties
->  * @poffset: pointer to node in flat tree
->@@ -171,20 +171,20 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
->  * @dryrun: If true, do not allocate device nodes but still calculate needed
->  * memory size
->  */
->-static void * unflatten_dt_node(const void *blob,
->+static void *__unflatten_dt_node(const void *blob,
-> 				void *mem,
-> 				int *poffset,
-> 				struct device_node *dad,
-> 				struct device_node **nodepp,
-> 				unsigned long fpsize,
->-				bool dryrun)
->+				bool dryrun,
->+				int *depth)
-> {
-> 	const __be32 *p;
-> 	struct device_node *np;
-> 	struct property *pp, **prev_pp = NULL;
-> 	const char *pathp;
-> 	unsigned int l, allocl;
->-	static int depth = 0;
-> 	int old_depth;
-> 	int offset;
-> 	int has_name = 0;
->@@ -337,13 +337,25 @@ static void * unflatten_dt_node(const void *blob,
-> 			np->type = "<NULL>";
-> 	}
->
->-	old_depth = depth;
->-	*poffset = fdt_next_node(blob, *poffset, &depth);
->-	if (depth < 0)
->-		depth = 0;
->-	while (*poffset > 0 && depth > old_depth)
->-		mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
->-					fpsize, dryrun);
->+	/* Multiple nodes might be in the first depth level if
->+	 * the device tree is sub-tree. All nodes in current
->+	 * or deeper depth are unflattened after it returns.
->+	 */
->+	old_depth = *depth;
->+	*poffset = fdt_next_node(blob, *poffset, depth);
->+	while (*poffset > 0) {
->+		if (*depth < old_depth)
->+			break;
->+
->+		if (*depth == old_depth)
->+			mem = __unflatten_dt_node(blob, mem, poffset,
->+						  dad, NULL, fpsize,
->+						  dryrun, depth);
->+		else if (*depth > old_depth)
->+			mem = __unflatten_dt_node(blob, mem, poffset,
->+						  np, NULL, fpsize,
->+						  dryrun, depth);
->+	}
->
-
-Sorry for the delay. I'm afraid this one has to be reworked. With current
-code and changes, the nodes in the FDT blob are scanned in recursive fasion.
-That would cause exhausted stack when this function is called at early stage
-of system boot to unflatten the device tree that have too much levels and nodes.
-In next revision, I'll rework it to avoid recursive calls on this function.
-
-So there're more time needed to post next revision. This issue was observed in
-recent testing with 4.3.rc6 and the patchset. On P7 box, the bad stack is reported
-directly. On P8 box, the /bin/init in the initram image can't be started properly.
-I run "git bisect" and this patch is located in both case.
-
-> 	if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
-> 		pr_err("unflatten: error %d processing FDT\n", *poffset);
->@@ -369,6 +381,20 @@ static void * unflatten_dt_node(const void *blob,
-> 	return mem;
-> }
->
->+static void *unflatten_dt_node(const void *blob,
->+			       void *mem,
->+			       int *poffset,
->+			       struct device_node *dad,
->+			       struct device_node **nodepp,
->+			       bool dryrun)
->+{
->+	int depth = 1;
->+
->+	return __unflatten_dt_node(blob, mem, poffset,
->+				   dad, nodepp, 0,
->+				   dryrun, &depth);
->+}
->+
-> /**
->  * __unflatten_device_tree - create tree of device_nodes from flat blob
->  *
->@@ -408,7 +434,8 @@ static void __unflatten_device_tree(const void *blob,
->
-> 	/* First pass, scan for size */
-> 	start = 0;
->-	size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
->+	size = (unsigned long)unflatten_dt_node(blob, NULL, &start,
->+						NULL, NULL, true);
-> 	size = ALIGN(size, 4);
->
-> 	pr_debug("  size is %lx, allocating...\n", size);
->@@ -423,7 +450,7 @@ static void __unflatten_device_tree(const void *blob,
->
-> 	/* Second pass, do actual unflattening */
-> 	start = 0;
->-	unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
->+	unflatten_dt_node(blob, mem, &start, NULL, mynodes, false);
-> 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
-> 		pr_warning("End of tree marker overwritten: %08x\n",
-> 			   be32_to_cpup(mem + size));
->-- 
->2.1.0
->
-
+SGkgTGl2aXUsIFdpbGwsDQoNCk9uIDA0IE5vdmVtYmVyIDIwMTUgMTU6MTksIFBoaWwgd3JvdGU6
+DQo+IE9uIDA0IE5vdmVtYmVyIDIwMTUgMTU6MDIsIExpdml1IHdyb3RlOg0KPiA+IE9uIFdlZCwg
+Tm92IDA0LCAyMDE1IGF0IDAyOjQ4OjM4UE0gKzAwMDAsIFBoaWwgRWR3b3J0aHkgd3JvdGU6DQo+
+ID4gPiBIaSBMaXZpdSwNCj4gPiA+DQo+ID4gPiBPbiAwNCBOb3ZlbWJlciAyMDE1IDE0OjI0LCBM
+aXZpdSB3cm90ZToNCj4gPiA+ID4gT24gV2VkLCBOb3YgMDQsIDIwMTUgYXQgMDE6NTc6NDhQTSAr
+MDAwMCwgUGhpbCBFZHdvcnRoeSB3cm90ZToNCj4gPiA+ID4gPiBIaSwNCj4gPiA+ID4gPg0KPiA+
+ID4gPiA+IEkgYW0gdHJ5aW5nIHRvIGhvb2sgdXAgYSBQQ0llIGhvc3QgY29udHJvbGxlciB0aGF0
+IHNpdHMgYmVoaW5kIGFuIElPTU1VLA0KPiA+ID4gPiA+IGJ1dCBoYXZpbmcgc29tZSBwcm9ibGVt
+cy4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IEknbSB1c2luZyB0aGUgcGNpZS1yY2FyIFBDSWUgaG9z
+dCBjb250cm9sbGVyIGFuZCBpdCB3b3JrcyBmaW5lIHdpdGhvdXQNCj4gPiA+ID4gPiB0aGUgSU9N
+TVUsIGFuZCBJIGNhbiBhdHRhY2ggdGhlIElPTU1VIHRvIHRoZSBjb250cm9sbGVyIHN1Y2ggdGhh
+dCBhbnkNCj4gPiBjYWxscw0KPiA+ID4gPiA+IHRvIGRtYV9hbGxvY19jb2hlcmVudCBtYWRlIGJ5
+IHRoZSBjb250cm9sbGVyIGRyaXZlciB1c2VzIHRoZQ0KPiBpb21tdV9vcHMNCj4gPiA+ID4gPiB2
+ZXJzaW9uIG9mIGRtYV9vcHMuDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBIb3dldmVyLCBJIGNhbid0
+IHNlZSBob3cgdG8gbWFrZSB0aGUgZW5kcG9pbnRzIHRvIHV0aWxpc2UgdGhlIGRtYV9vcHMNCj4g
+dGhhdA0KPiA+ID4gPiA+IHRoZSBjb250cm9sbGVyIHVzZXMuIFNob3VsZG4ndCB0aGUgZW5kcG9p
+bnRzIGluaGVyaXQgdGhlIGRtYV9vcHMgZnJvbSB0aGUNCj4gPiA+ID4gPiBjb250cm9sbGVyPw0K
+PiA+ID4gPg0KPiA+ID4gPiBObywgbm90IGRpcmVjdGx5Lg0KPiA+ID4gPg0KPiA+ID4gPiA+IEFu
+eSBwb2ludGVycyBmb3IgdGhpcz8NCj4gPiA+ID4NCj4gPiA+ID4gWW91IG5lZWQgdG8gdW5kZXJz
+dGFuZCB0aGUgcHJvY2VzcyB0aHJvdWdoIHdoaWNoIGEgZHJpdmVyIGZvciBlbmRwb2ludA0KPiBn
+ZXQNCj4gPiA+ID4gYW4gYWRkcmVzcyB0byBiZSBwYXNzZWQgZG93biB0byB0aGUgZGV2aWNlLiBI
+YXZlIGEgbG9vayBhdA0KPiA+ID4gPiBEb2N1bWVudGF0aW9uL0RNQS1BUEktSE9XVE8udHh0LCB0
+aGVyZSBpcyBhIG5pY2UgZXhwbGFuYXRpb24gdGhlcmUuDQo+ID4gPiA+IChIaW50OiBFUCBkcml2
+ZXIgbmVlZHMgdG8gY2FsbCBkbWFfbWFwX3NpbmdsZSkuDQo+ID4gPiA+DQo+ID4gPiA+IEFsc28s
+IHlvdSBuZWVkIHRvIG1ha2Ugc3VyZSB0aGF0IHRoZSBidXMgYWRkcmVzcyB0aGF0IGVuZHMgdXAg
+YmVpbmcgc2V0DQo+IGludG8NCj4gPiA+ID4gdGhlIGVuZHBvaW50IGdldHMgdHJhbnNsYXRlZCBj
+b3JyZWN0bHkgYnkgdGhlIGhvc3QgY29udHJvbGxlciBpbnRvIGFuIGFkZHJlc3MNCj4gPiA+ID4g
+dGhhdCB0aGUgSU9NTVUgY2FuIHRoZW4gdHJhbnNsYXRlIGludG8gcGh5c2ljYWwgYWRkcmVzcy4N
+Cj4gPiA+IFN1cmUsIHRob3VnaCBzaW5jZSB0aGlzIGlzIGJvZyBzdGFuZGFyZCBJbnRlbCBQQ0ll
+IGV0aGVybmV0IGNhcmQgd2hpY2ggd29ya3MNCj4gPiA+IGZpbmUgd2hlbiB0aGUgSU9NTVUgaXMg
+ZWZmZWN0aXZlbHkgdW51c2VkLCBJIGRvbuKAmXQgdGhpbmsgdGhlcmUgaXMgYSBwcm9ibGVtDQo+
+ID4gPiB3aXRoIHRoYXQuDQo+ID4gPg0KPiA+ID4gVGhlIGRyaXZlciBmb3IgdGhlIFBDSWUgY29u
+dHJvbGxlciBzZXRzIHVwIHRoZSBJT01NVSBtYXBwaW5nIG9rIHdoZW4gSQ0KPiA+ID4gZG8gYSB0
+ZXN0IGNhbGwgdG8gZG1hX2FsbG9jX2NvaGVyZW50KCkgaW4gdGhlIGNvbnRyb2xsZXIncyBkcml2
+ZXIuIGkuZS4gd2hlbiBJDQo+ID4gPiBkbyB0aGlzLCBpdCBlbmRzIHVwIGluIGFybV9pb21tdV9h
+bGxvY19hdHRycygpLCB3aGljaCBjYWxscw0KPiA+ID4gX19pb21tdV9hbGxvY19idWZmZXIoKSBh
+bmQgX19hbGxvY19pb3ZhKCkuDQo+ID4gPg0KPiA+ID4gV2hlbiBhbiBlbmRwb2ludCBkcml2ZXIg
+YWxsb2NhdGVzIGFuZCBtYXBzIGEgZG1hIGNvaGVyZW50IGJ1ZmZlciBpdA0KPiA+ID4gYWxzbyBu
+ZWVkcyB0byBlbmQgdXAgaW4gYXJtX2lvbW11X2FsbG9jX2F0dHJzKCksIGJ1dCBpdCBkb2Vzbid0
+Lg0KPiA+DQo+ID4gV2h5IGRvIHlvdSB0aGluayB0aGF0PyBSZW1lbWJlciB0aGF0IHRoZSBvbmx5
+IHRoaW5nIGF0dGFjaGVkIHRvIHRoZSBJT01NVQ0KPiBpcw0KPiA+IHRoZQ0KPiA+IGhvc3QgY29u
+dHJvbGxlci4gVGhlIGVuZHBvaW50IGlzIG9uIHRoZSBQQ0llIGJ1cywgd2hpY2ggZ2V0cyBhIGRp
+ZmZlcmVudA0KPiA+IHRyYW5zbGF0aW9uDQo+ID4gdGhhdCB0aGUgSU9NTVUga25vd3Mgbm90aGlu
+ZyBhYm91dC4gSWYgaXQgaGVscHMgeW91IHRvIHZpc3VhbGlzZSBpdCBiZXR0ZXIsIHRoaW5rDQo+
+ID4gb2YgdGhlIGhvc3QgY29udHJvbGxlciBhcyBhbm90aGVyIElPTU1VIGRldmljZS4gSXQncyB0
+aGUgb3BzIG9mIHRoZSBob3N0DQo+ID4gY29udHJvbGxlcg0KPiA+IHRoYXQgc2hvdWxkIGJlIGlu
+dm9rZWQsIG5vdCB0aGUgSU9NTVUncy4NCj4gT2ssIHRoYXQgbWFrZXMgc2Vuc2UuIEknbGwgaGF2
+ZSBhIHRoaW5rIGFuZCBwb2tlIGl0IGEgYml0IG1vcmUuLi4NClNvbWV3aGF0IHJlbGF0ZWQgdG8g
+dGhpcywgc2luY2Ugb3VyIFBDSWUgY29udHJvbGxlciBIVyBpcyBsaW1pdGVkIHRvDQozMi1iaXQg
+QVhJIGFkZHJlc3MgcmFuZ2UsIGJlZm9yZSB0cnlpbmcgdG8gaG9vayB1cCB0aGUgSU9NTVUgSSBo
+YXZlDQp0cmllZCB0byBsaW1pdCB0aGUgZG1hX21hc2sgZm9yIFBDSSBjYXJkcyB0byBETUFfQklU
+X01BU0soMzIpLiBUaGUNCnJlYXNvbiBiZWluZyB0aGF0IExpbnV4IHVzZXMgYSAxIHRvIDEgbWFw
+cGluZyBiZXR3ZWVuIFBDSSBhZGRyZXNzZXMNCmFuZCBjcHUgKHBoeXMpIGFkZHJlc3NlcyB3aGVu
+IHRoZXJlIGlzbid0IGFuIElPTU1VIGludm9sdmVkLCBzbyBJDQp0aGluayB0aGF0IHdlIG5lZWQg
+dG8gbGltaXQgdGhlIFBDSSBhZGRyZXNzIHNwYWNlIHVzZWQuDQoNClNpbmNlIHBjaV9zZXR1cF9k
+ZXZpY2UoKSBzZXRzIHVwIGRtYV9tYXNrLCBJIGFkZGVkIGEgYnVzIG5vdGlmaWVyIGluIHRoZQ0K
+UENJZSBjb250cm9sbGVyIGRyaXZlciBzbyBJIGNhbiBjaGFuZ2UgdGhlIG1hc2ssIGlmIG5lZWRl
+ZCwgb24gdGhlDQpCVVNfTk9USUZZX0JPVU5EX0RSSVZFUiBhY3Rpb24uDQpIb3dldmVyLCBJIHRo
+aW5rIHRoZXJlIGlzIHRoZSBwb3RlbnRpYWwgZm9yIGNhcmQgZHJpdmVycyB0byBhbGxvY2F0ZSBh
+bmQNCm1hcCBidWZmZXJzIGJlZm9yZSB0aGUgYnVzIG5vdGlmaWVyIGdldCBjYWxsZWQuIEFkZGl0
+aW9uYWxseSwgSSd2ZSBzZWVuDQpkcml2ZXJzIGNoYW5nZSB0aGVpciBiZWhhdmlvdXIgYmFzZWQg
+b24gdGhlIHN1Y2Nlc3Mgb3IgZmFpbHVyZSBvZg0KZG1hX3NldF9tYXNrX2FuZF9jb2hlcmVudChk
+ZXYsIERNQV9CSVRfTUFTSyg2NCkpLCBzbyB0aGUNCmRyaXZlciBjb3VsZCwgdGhlb3JldGljYWxs
+eSBhdCBsZWFzdCwgb3BlcmF0ZSBpbiBhIHdheSB0aGF0IGlzIG5vdA0KY29tcGF0aWJsZSB3aXRo
+IGEgbW9yZSByZXN0cmljdGVkIGRtYV9tYXNrICh0aG91Z2ggSSBjYW4ndCB0aGluaw0Kb2YgYW55
+IHdheSB0aGlzIHdvdWxkIG5vdCB3b3JrIHdpdGggaGFyZHdhcmUgSSd2ZSBzZWVuKS4NCg0KU28s
+IEkgdGhpbmsgdGhhdCB1c2luZyBhIGJ1cyBub3RpZmllciBpcyB0aGUgd3Jvbmcgd2F5IHRvIGdv
+LCBidXQgSSBkb27igJl0DQprbm93IHdoYXQgb3RoZXIgb3B0aW9ucyBJIGhhdmUuIEFueSBzdWdn
+ZXN0aW9ucz8NCg0KVGhhbmtzIGZvciB5b3VyIGhlbHANClBoaWwNCg==
