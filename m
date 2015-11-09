@@ -1,46 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 4 Nov 2015 14:34:34 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Marc Zyngier <marc.zyngier@arm.com>
-cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Ma Jun <majun258@huawei.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RFC 0/7] Adding core support for wire-MSI bridges
-In-Reply-To: <5620B9D6.1010708@arm.com>
-Message-ID: <alpine.DEB.2.11.1511041348060.4032@nanos>
-References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com> <56205917.7090001@linux.intel.com> <5620B9D6.1010708@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor2.renesas.com ([210.160.252.172]:22124 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751213AbbKIPUc convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Nov 2015 10:20:32 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Ley Foon Tan <lftan@altera.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: RE: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
+Date: Mon, 9 Nov 2015 15:20:24 +0000
+Message-ID: <PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>
+In-Reply-To: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Marc,
+cc'ing others (Tegra, Altera, Designware) who may have the same bug
 
-On Fri, 16 Oct 2015, Marc Zyngier wrote:
-> On 16/10/15 02:55, Jiang Liu wrote:
-> > 	There's a working to enable Intel VMD storage device, which
-> > has the similar requirement. Basically a PCIe hierarchy is hidden
-> > behind a parent PCIe device, so we need to use the PCIe irqs on parent
-> > to de-multiple PCIe IRQs from hidden PCIe devices. Seems a chance for
-> > consolidation here.
+On 03 November 2015 09:28, Phil Edworthy wrote:
+> The OF node passed to irq_domain_add_linear() should be a
+> pointer to interrupt controller's device tree node, or NULL,
+> but not the PCI controller's node.
 > 
-> Do you know if there is a 1-1 mapping between the interrupts seen by the
-> parent device and those seen by the hidden devices? Or is it a case of
-> having to demultiplex the MSIs? Looks like the former, but I'd like to
-> be sure.
-
-Yes, it's a demultiplexer. No 1:1 mapping.
-
-> Sure, will do when I repost this (probably in a few weeks), and assuming
-> this fits the bill for Thomas and the MBIGEN folks.
-
-It doesn't look that bad and the resulting mbigen stuff is way less
-horrible than it was before. So I agree this is a possible solution to
-the problem.
-
-Thanks,
-
-	tglx
+> This fixes an oops in msi_domain_alloc_irqs() when it tries
+> to call msi_check().
+> 
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> ---
+>  drivers/pci/host/pcie-rcar.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 2377bf0..c6fa562 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -709,7 +709,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+>  	msi->chip.setup_irq = rcar_msi_setup_irq;
+>  	msi->chip.teardown_irq = rcar_msi_teardown_irq;
+> 
+> -	msi->domain = irq_domain_add_linear(pcie->dev->of_node,
+> INT_PCI_MSI_NR,
+> +	msi->domain = irq_domain_add_linear(NULL, INT_PCI_MSI_NR,
+>  					    &msi_domain_ops, &msi->chip);
+>  	if (!msi->domain) {
+>  		dev_err(&pdev->dev, "failed to create IRQ domain\n");
+> --
+> 1.9.1
 
