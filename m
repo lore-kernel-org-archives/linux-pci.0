@@ -1,73 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:53660 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751549AbbKYUJ6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Nov 2015 15:09:58 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	David Daney <ddaney.cavm@gmail.com>,
-	David Daney <david.daney@cavium.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
+Received: from foss.arm.com ([217.140.101.70]:52427 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751972AbbKIS4r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Nov 2015 13:56:47 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Will Deacon <will.deacon@arm.com>,
-	linux-kernel@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC PATCH] PCI/pci-host-generic: Add support for Cavium Thunder fixed BARs.
-Date: Wed, 25 Nov 2015 21:09:15 +0100
-Message-ID: <2971730.8fz1SdakMA@wuerfel>
-In-Reply-To: <5656149D.50704@caviumnetworks.com>
-References: <1443488184-12633-1-git-send-email-ddaney.cavm@gmail.com> <2789794.TBZL2yW2b6@wuerfel> <5656149D.50704@caviumnetworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>
+Subject: [PATCH] drivers: pci: remove unused pci_sys_data structures
+Date: Mon,  9 Nov 2015 18:57:39 +0000
+Message-Id: <1447095459-21777-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 25 November 2015 12:05:49 David Daney wrote:
-> 
-> Somebody should make a decision about this point.
-> 
-> Here is what happens:
-> 
->   1) A driver for non-generic PCI host bridge is submitted.
-> 
->   2) Comments are received stating that it is just another PCI host 
-> bridge and please use pci-host-generic instead.
-> 
->   3) Patches to pci-host-generic are submitted.
-> 
->   4) Comments are received stating that pci-host-generic is for generic 
-> things only, and please create a device specific driver.
-> 
->   5) goto 1
+Commit b3a72384fe29 ("ARM/PCI: Replace pci_sys_data->align_resource
+with global function pointer") removed the struct pci_sys_data
+dependency from the ARM pcibios functions that are part of the
+common ARM PCI arch back-end (eg pcibios_align_resource()), so that
+struct pci_sys_data has now become data that is only used internally
+by the ARM bios32 layer (ie pci_common_init_dev()) and by host
+controllers drivers callbacks (eg pci_sys_data.setup) that rely on the
+ARM bios32 API to probe.
 
-I'm pretty sure the comments were along the lines of 
+PCI host controller drivers that do not rely on ARM bios32 calls to
+probe do not need to have the pci_bus.sysdata pointer field pointing
+at a struct pci_sys_data anymore, therefore it can be removed from the
+respective drivers data structures.
 
-1) a driver was submitted stating that it was for an SBSA-compliant
-   platform
+This patch removes the pci_sys_data structures from the host
+controller drivers that do not rely on ARM bios32 interface to
+scan the PCI bus, completing the pci_sys_data clean-up and removing
+the related dependency on arch/arm specific data.
 
-2) The reply was that you don't need a driver for that and just use
-   the generic driver, as that is the point of SBSA
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>
+---
+Rob,
 
-3) it turns out the hardware is nonstandard after all and so it needs
-   its own driver.
+I could not test it on versatile, only compile tested, so
+please have an additional look.
 
-> > It's easy enough to split out the common parts if we want to reuse
-> > some of this, or to move them into drivers/pci/*.c for others to
-> > reuse too.
-> >
-> 
-> If we do that, do you want "pci-host-cam-generic" and 
-> "pci-host-ecam-generic" split out too?
-> 
-> They are two completely different things crammed into the single 
-> pci-host-generic driver source file.  Or is there some set of config 
-> access methods that are sufficiently generic that they can stay?
+Tested the PCI host generic on 32-bit and 64-bit guests,
+through kvmtool.
 
-Those two are part of the PCI standard, they are obviously generic
-because any mmconfig compliant host bridge will work with one or the
-other.
+Thanks,
+Lorenzo
 
-	Arnd
+ drivers/pci/host/pci-host-generic.c | 9 ---------
+ drivers/pci/host/pci-versatile.c    | 5 +----
+ 2 files changed, 1 insertion(+), 13 deletions(-)
+
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 5434c90..1652bc7 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -38,16 +38,7 @@ struct gen_pci_cfg_windows {
+ 	struct gen_pci_cfg_bus_ops		*ops;
+ };
+ 
+-/*
+- * ARM pcibios functions expect the ARM struct pci_sys_data as the PCI
+- * sysdata.  Add pci_sys_data as the first element in struct gen_pci so
+- * that when we use a gen_pci pointer as sysdata, it is also a pointer to
+- * a struct pci_sys_data.
+- */
+ struct gen_pci {
+-#ifdef CONFIG_ARM
+-	struct pci_sys_data			sys;
+-#endif
+ 	struct pci_host_bridge			host;
+ 	struct gen_pci_cfg_windows		cfg;
+ 	struct list_head			resources;
+diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
+index 0863d9c..f843a72 100644
+--- a/drivers/pci/host/pci-versatile.c
++++ b/drivers/pci/host/pci-versatile.c
+@@ -125,9 +125,6 @@ out_release_res:
+ 	return err;
+ }
+ 
+-/* Unused, temporary to satisfy ARM arch code */
+-struct pci_sys_data sys;
+-
+ static int versatile_pci_probe(struct platform_device *pdev)
+ {
+ 	struct resource *res;
+@@ -208,7 +205,7 @@ static int versatile_pci_probe(struct platform_device *pdev)
+ 	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
+ 	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
+ 
+-	bus = pci_scan_root_bus(&pdev->dev, 0, &pci_versatile_ops, &sys, &pci_res);
++	bus = pci_scan_root_bus(&pdev->dev, 0, &pci_versatile_ops, NULL, &pci_res);
+ 	if (!bus)
+ 		return -ENOMEM;
+ 
+-- 
+2.5.1
+
