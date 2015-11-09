@@ -1,87 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Liu Jiang <jiang.liu@linux.intel.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	Hans de Bruin <jmdebruin@xmsnet.nl>
-Subject: [PATCH] x86/PCI: Fix regression caused by commit 4d6b4e69a245
-Date: Fri, 27 Nov 2015 11:12:33 +0800
-Message-Id: <1448593953-12364-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <5655B392.7070701@intel.com>
-References: <5655B392.7070701@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor4.renesas.com ([210.160.252.174]:63382 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752252AbbKIJAf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Nov 2015 04:00:35 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Wolfram Sang <wsa@the-dreams.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
+Date: Mon, 9 Nov 2015 09:00:29 +0000
+Message-ID: <PS1PR06MB11807448DF30AA68AC10B58BF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>
+ <20151107135951.GD21726@katana>
+In-Reply-To: <20151107135951.GD21726@katana>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Liu Jiang <jiang.liu@linux.intel.com>
+Hi Wolfram,
 
-Commit 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support
-PCI host bridge") converted x86 to use the common interface
-acpi_pci_root_create, but the conversion missed on code piece in
-arch/x86/pci/bus_numa.c, which causes regression on some legacy
-AMD platforms as reported by Arthur Marsh <arthur.marsh@internode.on.net>.
-The root causes is that acpi_pci_root_create() fails to insert
-host bridge resources into iomem_resource/ioport_resource because
-x86_pci_root_bus_resources() has already inserted those resources.
-So change x86_pci_root_bus_resources() to not insert resources into
-iomem_resource/ioport_resource.
+On 07 November 2015 14:00, Wolfram wrote:
+> On Tue, Nov 03, 2015 at 09:28:19AM +0000, Phil Edworthy wrote:
+> > The OF node passed to irq_domain_add_linear() should be a
+> > pointer to interrupt controller's device tree node, or NULL,
+> > but not the PCI controller's node.
+> >
+> > This fixes an oops in msi_domain_alloc_irqs() when it tries
+> > to call msi_check().
+> >
+> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> 
+> Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+> Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+> 
+> Was this the MSI problem you were talking about?
+Yes, that was the one.
 
-Fixes: 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support PCI host bridge")
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reported-and-tested-by: Arthur Marsh <arthur.marsh@internode.on.net>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Arthur Marsh <arthur.marsh@internode.on.net>
-Cc: Hans de Bruin <jmdebruin@xmsnet.nl>
----
- arch/x86/pci/bus_numa.c |   13 ++-----------
- drivers/acpi/pci_root.c |    7 +++++++
- 2 files changed, 9 insertions(+), 11 deletions(-)
-
-diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-index 7bcf06a7cd12..6eb3c8af96e2 100644
---- a/arch/x86/pci/bus_numa.c
-+++ b/arch/x86/pci/bus_numa.c
-@@ -50,18 +50,9 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
- 	if (!found)
- 		pci_add_resource(resources, &info->busn);
- 
--	list_for_each_entry(root_res, &info->resources, list) {
--		struct resource *res;
--		struct resource *root;
-+	list_for_each_entry(root_res, &info->resources, list)
-+		pci_add_resource(resources, &root_res->res);
- 
--		res = &root_res->res;
--		pci_add_resource(resources, res);
--		if (res->flags & IORESOURCE_IO)
--			root = &ioport_resource;
--		else
--			root = &iomem_resource;
--		insert_resource(root, res);
--	}
- 	return;
- 
- default_resources:
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 850d7bf0c873..ae3fe4e64203 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -768,6 +768,13 @@ static void pci_acpi_root_add_resources(struct acpi_pci_root_info *info)
- 		else
- 			continue;
- 
-+		/*
-+		 * Some legacy x86 host bridge drivers use iomem_resource and
-+		 * ioport_resource as default resource pool, skip it.
-+		 */
-+		if (res == root)
-+			continue;
-+
- 		conflict = insert_resource_conflict(root, res);
- 		if (conflict) {
- 			dev_info(&info->bridge->dev,
--- 
-1.7.10.4
-
+Thanks for the review & test.
+Phil
