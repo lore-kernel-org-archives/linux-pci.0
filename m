@@ -1,121 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:33790 "EHLO
-	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752842AbbK3QXn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Nov 2015 11:23:43 -0500
-From: Paul Burton <paul.burton@imgtec.com>
-To: <linux-mips@linux-mips.org>
-CC: Paul Burton <paul.burton@imgtec.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	"Jiang Liu" <jiang.liu@linux.intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Russell Joyce <russell.joyce@york.ac.uk>,
-	Arnd Bergmann <arnd@arndb.de>, <linux-kernel@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Jingoo Han" <jingoohan1@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH 06/28] PCI: xilinx: unify INTx & MSI interrupt FIFO decode
-Date: Mon, 30 Nov 2015 16:21:31 +0000
-Message-ID: <1448900513-20856-7-git-send-email-paul.burton@imgtec.com>
-In-Reply-To: <1448900513-20856-1-git-send-email-paul.burton@imgtec.com>
-References: <1448900513-20856-1-git-send-email-paul.burton@imgtec.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:34910 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751628AbbKITAn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Nov 2015 14:00:43 -0500
+Received: by wmdw130 with SMTP id w130so42294690wmd.0
+        for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2015 11:00:42 -0800 (PST)
+From: Mathias Krause <minipli@googlemail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Mathias Krause <minipli@googlemail.com>,
+	Sasha Levin <sasha.levin@oracle.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Subject: [PATCH v2] PCI: Prevent out of bounds access in numa_node override - part 2
+Date: Mon,  9 Nov 2015 20:00:27 +0100
+Message-Id: <1447095627-12798-1-git-send-email-minipli@googlemail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When decoding either an INTx or MSI interrupt, the driver has no way to
-know which it will pull out of the interrupt FIFO. If both were pending
-then this would lead to either the interrupt being handled incorrectly
-(MSI interrupt treated as INTx) or not at all (INTx interrupt dropped by
-MSI path). Unify the reading of the interrupt FIFO & act according to
-the type of interrupt actually read.
+Commit 1266963170f5 ("PCI: Prevent out of bounds access in numa_node
+override") missed that the user provided node could also be negative.
+Handle this case as well to avoid out-of-bounds accesses to the
+node_states[] array.  However, allow the special value -1, i.e.
+NUMA_NO_NODE, to be able to set the 'no specific node' configuration.
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+Fixes: 1266963170f5 ("PCI: Prevent out of bounds access in numa_node...")
+Signed-off-by: Mathias Krause <minipli@googlemail.com>
+Cc: Sasha Levin <sasha.levin@oracle.com>
+Cc: Prarit Bhargava <prarit@redhat.com>
+Cc: stable@vger.kernel.org	# v3.19+
 ---
+v2: allow NUMA_NO_NODE
 
- drivers/pci/host/pcie-xilinx.c | 45 +++++++++++-------------------------------
- 1 file changed, 12 insertions(+), 33 deletions(-)
+ drivers/pci/pci-sysfs.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index c412a37..c6fe273 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -397,7 +397,7 @@ static const struct irq_domain_ops intx_domain_ops = {
- static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- {
- 	struct xilinx_pcie_port *port = (struct xilinx_pcie_port *)data;
--	u32 val, mask, status, msi_data;
-+	u32 val, mask, status;
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 92618686604c..6e9818227b19 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -216,7 +216,10 @@ static ssize_t numa_node_store(struct device *dev,
+ 	if (ret)
+ 		return ret;
  
- 	/* Read interrupt decode and mask registers */
- 	val = pcie_read(port, XILINX_PCIE_REG_IDR);
-@@ -437,8 +437,8 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 		xilinx_pcie_clear_err_interrupts(port);
- 	}
+-	if (node >= MAX_NUMNODES || !node_online(node))
++	if (node < NUMA_NO_NODE || node >= MAX_NUMNODES)
++		return -EINVAL;
++
++	if (node != NUMA_NO_NODE && !node_online(node))
+ 		return -EINVAL;
  
--	if (status & XILINX_PCIE_INTR_INTX) {
--		/* INTx interrupt received */
-+	if (status & (XILINX_PCIE_INTR_INTX | XILINX_PCIE_INTR_MSI)) {
-+		/* Interrupt received */
- 		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
- 
- 		/* Check whether interrupt valid */
-@@ -447,41 +447,20 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 			return IRQ_HANDLED;
- 		}
- 
--		if (!(val & XILINX_PCIE_RPIFR1_MSI_INTR)) {
--			/* Clear interrupt FIFO register 1 */
--			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
--				   XILINX_PCIE_REG_RPIFR1);
--
--			/* Handle INTx Interrupt */
-+		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
-+			irq = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
-+				XILINX_PCIE_RPIFR2_MSG_DATA;
-+		} else {
- 			val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
- 				XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
--			generic_handle_irq(irq_find_mapping(port->irq_domain,
--							    val));
-+			irq = irq_find_mapping(port->irq_domain, val);
- 		}
--	}
- 
--	if (status & XILINX_PCIE_INTR_MSI) {
--		/* MSI Interrupt */
--		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
-+		/* Clear interrupt FIFO register 1 */
-+		pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
-+			   XILINX_PCIE_REG_RPIFR1);
- 
--		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
--			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
--			return IRQ_HANDLED;
--		}
--
--		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
--			msi_data = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
--				   XILINX_PCIE_RPIFR2_MSG_DATA;
--
--			/* Clear interrupt FIFO register 1 */
--			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
--				   XILINX_PCIE_REG_RPIFR1);
--
--			if (IS_ENABLED(CONFIG_PCI_MSI)) {
--				/* Handle MSI Interrupt */
--				generic_handle_irq(msi_data);
--			}
--		}
-+		generic_handle_irq(irq);
- 	}
- 
- 	if (status & XILINX_PCIE_INTR_SLV_UNSUPP)
+ 	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
 -- 
-2.6.2
+1.7.10.4
 
