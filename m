@@ -1,181 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:34153 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754095AbbKEW4V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2015 17:56:21 -0500
-Received: by padhx2 with SMTP id hx2so92427354pad.1
-        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2015 14:56:20 -0800 (PST)
-From: Daniel Axtens <dja@axtens.net>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: Re: [PATCH v7 10/50] powerpc/powernv: Simplify pnv_ioda_setup_pe_seg()
-In-Reply-To: <1446642770-4681-11-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1446642770-4681-11-git-send-email-gwshan@linux.vnet.ibm.com>
-Date: Fri, 06 Nov 2015 09:56:06 +1100
-Message-ID: <87r3k4hx89.fsf@gamma.ozlabs.ibm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+Date: Mon, 09 Nov 2015 21:09:31 +0100
+Message-ID: <6488357.xJV65iBRHq@wuerfel>
+In-Reply-To: <20151109171042.GA11909@red-moon>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com> <5640A8AA.4000806@semihalf.com> <20151109171042.GA11909@red-moon>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Monday 09 November 2015 17:10:43 Lorenzo Pieralisi wrote:
+> On Mon, Nov 09, 2015 at 03:07:38PM +0100, Tomasz Nowicki wrote:
+> > On 06.11.2015 14:22, Jiang Liu wrote:
+> > >On 2015/11/6 20:40, Tomasz Nowicki wrote:
+> > >>On 06.11.2015 12:46, Jiang Liu wrote:
+> > >>>On 2015/11/6 18:37, Tomasz Nowicki wrote:
+> > >>>>On 06.11.2015 09:52, Jiang Liu wrote:
+> > >>>>Sure, ARM64 (0-16M IO space) QEMU example:
+> > >>>>DWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
+> > >>>>           0x00000000,         // Granularity
+> > >>>>           0x00000000,         // Range Minimum
+> > >>>>           0x0000FFFF,         // Range Maximum
+> > >>>>           0x3EFF0000,         // Translation Offset
+> > >>>>           0x00010000,         // Length
+> > >>>>           ,, , TypeStatic)
+> > >>>The above DWordIO resource descriptor doesn't confirm to the ACPI spec.
+> > >>>According to my understanding, ARM/ARM64 has no concept of IO port
+> > >>>address space, so the PCI host bridge will map IO port on PCI side
+> > >>>onto MMIO on host side. In other words, PCI host bridge on ARM64
+> > >>>implement a IO Port->MMIO translation instead of a IO Port->IO Port
+> > >>>translation. If that's true, it should use 'TypeTranslation' instead
+> > >>>of 'TypeStatic'. And kernel ACPI resource parsing interface doesn't
+> > >>>support 'TypeTranslation' yet, so we need to find a solution for it.
+> > >>
+> > >>I think you are right, we need TypeTranslation flag for ARM64 DWordIO
+> > >>descriptors and an extra kernel patch to support it.
+> > >How about the attached to patch to support TypeTranslation?
+> > >It only passes compilation:)
+> > 
+> > Based on the further discussion, your draft patch looks good to me.
+> > Lorenzo, do you agree?
+> 
+> No, because I still do not understand the difference between ia64 and
+> arm64 (they both drive IO ports cycles through MMIO so the resource
+> descriptors content must be the same or better they must mean the same
+> thing). On top of that, this is something that was heavily debated for DT:
+> 
+> http://www.spinics.net/lists/arm-kernel/msg345633.html
+> 
+> and I would like to get Arnd and Bjorn opinion on this because we
+> should not "interpret" ACPI specifications, we should understand
+> what they are supposed to describe and write kernel code accordingly.
+> 
+> In particular, I would like to understand, for an eg DWordIO descriptor,
+> what Range Minimum, Range Maximum and Translation Offset represent,
+> they can't mean different things depending on the SW parsing them,
+> this totally defeats the purpose.
 
-Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+I have no clue about what those mean in ACPI though.
 
-> The original implementation of pnv_ioda_setup_pe_seg() configures
-> IO and M32 segments by separate logics, which can be merged by
-> by caching @segmap, @seg_size, @win in advance. This shouldn't
-> cause any behavioural changes.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  arch/powerpc/platforms/powernv/pci-ioda.c | 62 ++++++++++++++-----------=
-------
->  1 file changed, 28 insertions(+), 34 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/pla=
-tforms/powernv/pci-ioda.c
-> index 7ee7cfe..553d3f3 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -2752,8 +2752,10 @@ static void pnv_ioda_setup_pe_seg(struct pci_contr=
-oller *hose,
->  	struct pnv_phb *phb =3D hose->private_data;
->  	struct pci_bus_region region;
->  	struct resource *res;
-> -	int i, index;
-> -	int rc;
-> +	unsigned int segsize;
-> +	int *segmap, index, i;
-> +	uint16_t win;
-> +	int64_t rc;
+Generally speaking, each PCI domain is expected to have a (normally 64KB)
+range of CPU addresses that gets translated into PCI I/O space the same
+way that config space and memory space are handled.
+This is true for almost every architecture except for x86, which uses
+different CPU instructions for I/O space compared to the other spaces.
 
-Good catch! Opal return codes are 64 bit and that should be explicit
-in the type. However, I seem to remember that we preferred a different
-type for 64 bit ints in the kernel. I think it's s64, and there are some
-other uses of that in pci_ioda.c for return codes.
+> By the way, ia64 ioremaps the translation_offset (ie new_space()), so
+> basically that's the CPU physical address at which the PCI host bridge
+> map the IO space transactions), I do not think ia64 is any different from
+> arm64 in this respect, if it is please provide an HW description here from
+> the PCI bus perspective here (also an example of ia64 ACPI PCI host bridge
+> tables would help).
 
-(I'm actually surprised that's not picked up as a compiler
-warning. Maybe that's something to look at in future.)
+The main difference between ia64 and a lot of the other architectures (e.g.
+sparc is different again) is that ia64 defines a logical address range
+in terms of having a small number for each I/O space followed by the
+offset within that space as a 'port number' and uses a mapping function
+that is defined as
 
-The rest of the patch looks good on casual inspection - to be sure I'll
-test the entire series on a machine. (hopefully, time permitting!)
+static inline void *__ia64_mk_io_addr (unsigned long port)
+{
+        struct io_space *space = &io_space[IO_SPACE_NR(port)];
+        return (space->mmio_base | IO_SPACE_PORT(port););
+}
+static inline unsigned int inl(unsigned long port)
+{
+        return *__ia64_mk_io_addr(port);
+}
 
-Regards,
-Daniel
+Most architectures allow only one I/O port range and put it at a fixed
+virtual address so that inl() simply becomes 
 
->=20=20
->  	/*
->  	 * NOTE: We only care PCI bus based PE for now. For PCI
-> @@ -2770,23 +2772,9 @@ static void pnv_ioda_setup_pe_seg(struct pci_contr=
-oller *hose,
->  		if (res->flags & IORESOURCE_IO) {
->  			region.start =3D res->start - phb->ioda.io_pci_base;
->  			region.end   =3D res->end - phb->ioda.io_pci_base;
-> -			index =3D region.start / phb->ioda.io_segsize;
-> -
-> -			while (index < phb->ioda.total_pe_num &&
-> -			       region.start <=3D region.end) {
-> -				phb->ioda.io_segmap[index] =3D pe->pe_number;
-> -				rc =3D opal_pci_map_pe_mmio_window(phb->opal_id,
-> -					pe->pe_number, OPAL_IO_WINDOW_TYPE, 0, index);
-> -				if (rc !=3D OPAL_SUCCESS) {
-> -					pr_err("%s: OPAL error %d when mapping IO "
-> -					       "segment #%d to PE#%d\n",
-> -					       __func__, rc, index, pe->pe_number);
-> -					break;
-> -				}
-> -
-> -				region.start +=3D phb->ioda.io_segsize;
-> -				index++;
-> -			}
-> +			segsize      =3D phb->ioda.io_segsize;
-> +			segmap       =3D phb->ioda.io_segmap;
-> +			win          =3D OPAL_IO_WINDOW_TYPE;
->  		} else if ((res->flags & IORESOURCE_MEM) &&
->  			   !pnv_pci_is_mem_pref_64(res->flags)) {
->  			region.start =3D res->start -
-> @@ -2795,23 +2783,29 @@ static void pnv_ioda_setup_pe_seg(struct pci_cont=
-roller *hose,
->  			region.end   =3D res->end -
->  				       hose->mem_offset[0] -
->  				       phb->ioda.m32_pci_base;
-> -			index =3D region.start / phb->ioda.m32_segsize;
-> -
-> -			while (index < phb->ioda.total_pe_num &&
-> -			       region.start <=3D region.end) {
-> -				phb->ioda.m32_segmap[index] =3D pe->pe_number;
-> -				rc =3D opal_pci_map_pe_mmio_window(phb->opal_id,
-> -					pe->pe_number, OPAL_M32_WINDOW_TYPE, 0, index);
-> -				if (rc !=3D OPAL_SUCCESS) {
-> -					pr_err("%s: OPAL error %d when mapping M32 "
-> -					       "segment#%d to PE#%d",
-> -					       __func__, rc, index, pe->pe_number);
-> -					break;
-> -				}
-> +			segsize      =3D phb->ioda.m32_segsize;
-> +			segmap       =3D phb->ioda.m32_segmap;
-> +			win          =3D OPAL_M32_WINDOW_TYPE;
-> +		} else {
-> +			continue;
-> +		}
->=20=20
-> -				region.start +=3D phb->ioda.m32_segsize;
-> -				index++;
-> +		index =3D region.start / segsize;
-> +		while (index < phb->ioda.total_pe_num &&
-> +		       region.start <=3D region.end) {
-> +			segmap[index] =3D pe->pe_number;
-> +			rc =3D opal_pci_map_pe_mmio_window(phb->opal_id,
-> +					pe->pe_number, win, 0, index);
-> +			if (rc !=3D OPAL_SUCCESS) {
-> +				pr_warn("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
-> +					__func__, rc, win, index,
-> +					pe->phb->hose->global_number,
-> +					pe->pe_number);
-> +				break;
->  			}
-> +
-> +			region.start +=3D segsize;
-> +			index++;
->  		}
->  	}
->  }
-> --=20
-> 2.1.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+static inline u32 inl(unsigned long addr)
+{
+        return readl(PCI_IOBASE + addr);
+}
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+which noticeably reduces code size.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: GPGTools - https://gpgtools.org
+On some architectures (powerpc, arm, arm64), we then get the same simplified
+definition with a fixed virtual address, and use pci_ioremap_io() or
+something like that to to map a physical address range into this virtual
+address window at the correct io_offset;
 
-iQIcBAEBCgAGBQJWO96GAAoJEPC3R3P2I92Fp3wQAJUmEDH2VY7Sh2/y2+JpQ6tF
-dMP1LatPxYmYQDhilcdXfvSewPR+Kdj/lLMDUZSRRIJ0ul8knBdiz22DP8l1oUTV
-AQXyAYLmr+olseqJ1gxCM2Sqturlmpcp842ERDh/AszeyaiSQjfykh/f5gBeixnM
-kmrnf1/vKshd1k/mTgaDFUhgkimTSumCqzFTYnd6StPSIcGR25RNXeb/qwTcyQ8U
-k45tfD5PEX7baU+MY5Rgyppr/gYYT/2JHBeqh2hrGjA1BmCRvtPlH+RXCjOlr901
-sq8QOjszl3mIWCdrtGwyqC+snPzYiMa8IVnpZAYtmfHD0KYS8chs/d8qaqZShmLt
-ZUeF9YP0lsmvI3Dbj4sZI0ixUR8ksKs120+lWjQWontixjaP3K5qPAXPLBoxEsyh
-Sayl+2aVuY1YVZDOVJsHoPRgr0e6c5sMKN4DrA+qvDaZJjAQ37waITS5paOavhWb
-Y++THfVmLJrKDINHwK2rO/uxDJ/CfxIInbw6RaPJjJ0vIxgW97naF2rv28NSm7A4
-U34qv6lLAageWNe6+PlDHihbKw3Rk5EzGIBKFPQK3YtPCUYTV2bgfeo1ruWc/Wqa
-UutcCEalG0RVrVnE4ueHkFYFNP/j1cZ5dX09+04qP2PgCTAqDLpT0sZBUwxQfQbe
-KfEP9vx5RHyVKK4aJ2OV
-=EFtb
------END PGP SIGNATURE-----
---=-=-=--
+	Arnd
