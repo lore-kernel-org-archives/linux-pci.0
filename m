@@ -1,192 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:36530 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751416AbbKPIBv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 03:01:51 -0500
-Received: by pacdm15 with SMTP id dm15so167371708pac.3
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 00:01:51 -0800 (PST)
-Subject: Re: [PATCH v7 11/50] powerpc/powernv: IO and M32 mapping based on PCI
- device resources
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Daniel Axtens <dja@axtens.net>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-12-git-send-email-gwshan@linux.vnet.ibm.com>
- <87lha3j3n0.fsf@gamma.ozlabs.ibm.com> <20151112045525.GA6174@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <56498D67.1090600@ozlabs.ru>
-Date: Mon, 16 Nov 2015 19:01:43 +1100
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:41314 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752016AbbKIBxi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Nov 2015 20:53:38 -0500
+Received: from /spool/local
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 9 Nov 2015 07:23:35 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 57278125801E
+	for <linux-pci@vger.kernel.org>; Mon,  9 Nov 2015 07:23:35 +0530 (IST)
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA91rUi01310996
+	for <linux-pci@vger.kernel.org>; Mon, 9 Nov 2015 07:23:31 +0530
+Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA91rSZT028564
+	for <linux-pci@vger.kernel.org>; Mon, 9 Nov 2015 07:23:29 +0530
+Date: Mon, 9 Nov 2015 09:53:27 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, mpe@ellerman.id.au,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V13 0/9] VF EEH on Power8
+Message-ID: <20151109015327.GA1443@richards-mbp.cn.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <563FE06D.4080801@ozlabs.ru>
 MIME-Version: 1.0
-In-Reply-To: <20151112045525.GA6174@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <563FE06D.4080801@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/12/2015 03:55 PM, Gavin Shan wrote:
-> On Thu, Nov 12, 2015 at 02:30:27PM +1100, Daniel Axtens wrote:
->> Hi Gavin,
+On Mon, Nov 09, 2015 at 10:53:17AM +1100, Alexey Kardashevskiy wrote:
+>On 11/08/2015 10:30 AM, Wei Yang wrote:
+>>This patchset enables EEH on SRIOV VFs. The general idea is to create proper
+>>VF edev and VF PE and handle them properly.
 >>
->> Sorry to have taken so long to resume these reviews!
+>>Different from the Bus PE, VF PE just contain one VF. This introduces the
+>>difference of EEH error handling on a VF PE. Generally, it has several
+>>differences.
 >>
+>>First, the VF's removal and re-enumerate rely on its PF. VF has a tight
+>>relationship between its PF. This is not proper to enumerate a VF by usual
+>>scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
+>>set.
+>>
+>>Second, the reset/restore of a VF is done in kernel space. FW is not aware of
+>>the VF, this means the usual reset function done in FW will not work. One of
+>>the patch will imitate the reset/restore function in kernel space.
+>>
+>>Third, the VF may be removed during the PF's error_detected function. In this
+>>case, the original error_detected->slot_reset->resume sequence is not proper
+>>to those removed VFs, since they are re-created by PF in a fresh state. A flag
+>>in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
+>>track whether this device needs to be reset or not.
+>>
+>>This has been tested both on host and in guest on Power8 with latest kernel
+>>version.
 >
-> Thanks for your review, Daniel!
 >
->>> Currently, the IO and M32 segments are mapped to the corresponding
->>> PE based on the windows of the parent bridge of PE's primary bus.
->>> It's not going to work when the windows of root port or upstream
->>> port of the PCIe switch behind root port are extended to PHB's
->>> aperatuses in order to support hotplug in subsequent patch.
->> I'm not _entirely_ sure I understand this.
->>
->> I *think* you mean PHB's apertures (i.e. s/aperatuses/apertures/)?
->>
+>This does not apply on top of neither Linus master tree
+>(git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git sha1
+>ce5c2d2) nor Michael's PPC next tree
+>(git://git.kernel.org/pub/scm/linux/kernel/git/powerpc/linux.git sha1
+>8bdf2023). What did you base your work on?
 >
-> I'll fix the typo in next revision.
->
->>> This fixes the issue by mapping IO and M32 segments based on the
->>> resources of the PCI devices included in the PE, instead of the
->>> windows of the parent bridge of the PE's primary bus.
->>
->> This solution seems to make a lot of sense, but I don't have a very good
->> understanding of PCI yet: why was it done that way and not this way
->> originally? Looking at the code, it looks like the old way was simple
->> but didn't support SR-IOV?
->>
->
-> It's not related to SRIOV. Originally, the IO or M32 segments are mapped
-> according to the bridge's windows.
 
+I didn't based this on the latest code.
 
-Sorry, I do not understand what this means...
-
-
-> The bridge windows on root port or the
-> upstream port of the switch behind that will be extended to PHB's apertures.
-
-What does "extended" mean here and why would the windows be extended anyway?
-
-
-> If we still use bridge's windows, all IO and M32 resources are mapped/assigned
-> to the PE corresponding to PCI bus#1 or PCI bus#2. That's not correct any more.
-> So the correct way is to do the mapping based on IO or M32 BARs of the devices
-> included in the PE.
-
-In this patch I see quite a lot of code movements and I fail to spot the 
-actual change here...
-
-
-It used to be a single loop:
-
-pci_bus_for_each_resource(pe->pbus, res, i) {
-	/* do stuff for each @res */
-}
-
-and now it is 2 loops inside another loop:
-
-list_for_each_entry(pdev, &pe->pbus->devices, bus_list) {
-	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
-		res = &pdev->resource[i];
-		/* do stuff for each @res */
-	}
-
-	for (i = 0; i <= PCI_BRIDGE_RESOURCE_NUM; i++) {
-	        res = &pdev->resource[PCI_BRIDGE_RESOURCES + i];
-		/* do stuff for each @res */
-	}
-}
-
-
-Is that correct? If yes, why is not the patch as simple as this? If no, 
-what did I miss?
-
-
+This is based on v4.3, commit "6a13feb Linux 4.3".
 
 >
->> There are a few comments inline as well.
->>
->>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> index 553d3f3..4ab93f8 100644
->>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> @@ -2741,71 +2741,90 @@ truncate_iov:
->>>   }
->>>   #endif /* CONFIG_PCI_IOV */
->>>
->>> -/*
->>> - * This function is supposed to be called on basis of PE from top
->>> - * to bottom style. So the the I/O or MMIO segment assigned to
->>> - * parent PE could be overrided by its child PEs if necessary.
->>> - */
->>> -static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
->>> -				  struct pnv_ioda_pe *pe)
->>> +static int pnv_ioda_setup_one_res(struct pnv_ioda_pe *pe,
->>> +				  struct resource *res)
->>>   {
->>> -	struct pnv_phb *phb = hose->private_data;
->>> +	struct pnv_phb *phb = pe->phb;
->>>   	struct pci_bus_region region;
->>> -	struct resource *res;
->>> -	unsigned int segsize;
->>> -	int *segmap, index, i;
->>> +	unsigned int index, segsize;
->>> +	int *segmap;
->>>   	uint16_t win;
->>>   	int64_t rc;
->>
->> s/int64_t/s64/;
->> I think we might also want to change the uint16_t as well.
->>
->
-> As I explained before, I changed it from s64 to int64_t and I won't change it
-> back since both of them are fine. Same situation to uint16 here. If we really
-> want to clean it all at once, I can do that later, but not in this patchset.
->
->>> -	/*
->>> -	 * NOTE: We only care PCI bus based PE for now. For PCI
->>> -	 * device based PE, for example SRIOV sensitive VF should
->>> -	 * be figured out later.
->>> -	 */
->>> -	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
->>> +	if (!res->parent || !res->flags || res->start > res->end)
->>> +		return 0;
->>>
->>> -	pci_bus_for_each_resource(pe->pbus, res, i) {
->>> -		if (!res || !res->flags ||
->>> -		    res->start > res->end)
->>> -			continue;
->>> +	if (res->flags & IORESOURCE_IO) {
->>> +		region.start = res->start - phb->ioda.io_pci_base;
->>> +		region.end   = res->end - phb->ioda.io_pci_base;
->>> +		segsize      = phb->ioda.io_segsize;
->>> +		segmap       = phb->ioda.io_segmap;
->>> +		win          = OPAL_IO_WINDOW_TYPE;
->>> +	} else if ((res->flags & IORESOURCE_MEM) &&
->>> +		   !pnv_pci_is_mem_pref_64(res->flags)) {
->>> +		region.start = res->start -
->>> +			       phb->hose->mem_offset[0] -
->>> +			       phb->ioda.m32_pci_base;
->>> +		region.end   = res->end -
->>> +			       phb->hose->mem_offset[0] -
->>> +			       phb->ioda.m32_pci_base;
->>> +		segsize      = phb->ioda.m32_segsize;
->>> +		segmap       = phb->ioda.m32_segmap;
->>> +		win          = OPAL_M32_WINDOW_TYPE;
-
-
-
-This code asks for a helper function
-
-pnv_ioda_do_setup_one_res(start, end, segsize, segmap, win)
-
-and then you won't need many local variables (region, segsize, segmap, win) ;)
-
-
-
-
+>-- 
+>Alexey
 
 -- 
-Alexey
+Richard Yang
+Help you, Help me
+
