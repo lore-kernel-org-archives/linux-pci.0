@@ -1,78 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <563B22F1.901@arm.com>
-Date: Thu, 05 Nov 2015 09:35:45 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ns.mm-sol.com ([37.157.136.199]:35606 "EHLO extserv.mm-sol.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751672AbbKIQ5D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Nov 2015 11:57:03 -0500
+Subject: Re: [PATCH v2 4/5] PCI: qcom: Add Qualcomm PCIe controller driver
+To: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com>
+ <1430743338-10441-5-git-send-email-svarbanov@mm-sol.com>
+ <20151106205033.GH24668@usrtlx11787.corpusers.net>
+Cc: Rob Herring <robh+dt@kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	Mathieu Olivari <mathieu@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <5640D059.3000805@mm-sol.com>
+Date: Mon, 9 Nov 2015 18:56:57 +0200
 MIME-Version: 1.0
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"majun (F)" <majun258@huawei.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH RFC 7/7] irqchip: [Example] dummy wired interrupt/MSI
- bridge driver
-References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com> <1444923568-17413-8-git-send-email-marc.zyngier@arm.com> <5639BB10.1090108@huawei.com> <5639C9F9.2010704@arm.com> <EE11001F9E5DDD47B7634E2F8A612F2E1629D8DD@lhreml503-mbs>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1629D8DD@lhreml503-mbs>
-Content-Type: text/plain; charset=gbk
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20151106205033.GH24668@usrtlx11787.corpusers.net>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/11/15 08:25, Gabriele Paoloni wrote:
-> Hi Marc
+Hi Bjorn,
+
+On 11/06/2015 10:50 PM, Bjorn Andersson wrote:
+> On Mon 04 May 05:42 PDT 2015, Stanimir Varbanov wrote:
 > 
->> -----Original Message-----
->> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
->> On Behalf Of Marc Zyngier
->> Sent: 04 November 2015 09:04
->> To: majun (F); Thomas Gleixner; Jiang Liu; Jason Cooper
->> Cc: linux-arm-kernel@lists.infradead.org; linux-pci@vger.kernel.org; linux-
->> kernel@vger.kernel.org
->> Subject: Re: [PATCH RFC 7/7] irqchip: [Example] dummy wired interrupt/MSI
->> bridge driver
+>> The PCIe driver reuse the Designware common code for host
+>> and MSI initialization, and also program the Qualcomm
+>> application specific registers.
 >>
->> On 04/11/15 08:00, majun (F) wrote:
-
-[...]
-
->>> I think,for a interrupt controller, msichip driver initialization maybe is
->> too late
->>> for some devices which connect to this irqchip if we use
->> module_platform_driver.
->>
->> That's a consequence of this design. This is why I insisted on the fact
->> that this is currently avoided by using deferred probe in drivers, and
 > 
-> Mmm using te deferred probe would mean to rework all the drivers of the
-> potential devices connected to mbi-gen...would that be sustainable/acceptable?
-
-I'm tempted to reply "Not my problem". Or rather, not a problem I'm
-trying to solve right now (or any time soon).
-
-I'm pretty sure that sprinkling -EPROBE_DEFER on all possible drivers
-will result in a resounding NAK, which is is why I suggested that
-someone with a vested interest dedicates some quality time helping those
-who are trying to solve this issue for good.
-
->> that it should be solved by having a probe order. Either way, this is
->> not something that we can solve at that level (see the multiple proposal
->> for this on the various lists).
+> I want to get the ethernet on the ifc6410 running and this seems like
+> the last patchset for the PCIe.
 > 
-> Could you point me to the relevant discussions for this...?
+>> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+> [..]
+>> diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
+>> new file mode 100644
+>> index 0000000..4f083c6
+>> --- /dev/null
+>> +++ b/drivers/pci/host/pcie-qcom.c
+>> @@ -0,0 +1,677 @@
+>> +/*
+>> + * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+> 
+> Bump the year, it's the future now :)
 
-Google is, as always, your dearest friend. But here you go:
+yep, thanks for the valuable comments I will address all of them on next
+version.
 
-- LWN has some quality coverage of the KS discussions (assuming you're a
-subscriber, otherwise you'll have to wait for another week):
-http://lwn.net/Articles/662820/
+I will probably restart the work on the driver this week.
 
-- There is also Tomeu Vizoso's series, which itself builds upon other
-previous attempts at solving this: https://lwn.net/Articles/658690/
-
-Thanks,
-
-	M.
 -- 
-Jazz is not dead. It just smells funny...
+regards,
+Stan
