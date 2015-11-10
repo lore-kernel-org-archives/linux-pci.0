@@ -1,214 +1,241 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:51707 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965422AbbKDNN5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:57 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 23:13:55 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 42/50] powerpc/powernv: Functions to get/set PCI slot status
-Date: Thu,  5 Nov 2015 00:12:42 +1100
-Message-Id: <1446642770-4681-43-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:51186 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751252AbbKJAqY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Nov 2015 19:46:24 -0500
+Date: Tue, 10 Nov 2015 09:46:19 +0900
+From: Simon Horman <horms@verge.net.au>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Wolfram Sang <wsa@the-dreams.de>
+Subject: Re: [PATCH 1/3 v2] PCI: pcie-rcar: Convert to DT resource parsing API
+Message-ID: <20151110004619.GE1040@verge.net.au>
+References: <PS1PR06MB11801A23491F06B6BE81DB6AF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <PS1PR06MB11801A23491F06B6BE81DB6AF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This exports 4 functins, which base on the corresponding OPAL
-APIs to get/set PCI slot status. Those functions are going to
-be used by PowerNV PCI hotplug driver:
+On Mon, Nov 09, 2015 at 10:26:39AM +0000, Phil Edworthy wrote:
+> The main purpose of this change is to avoid calling pci_ioremap_io() as
+> this is not available on arm64. However, instead of doing the range passing
+> in this driver we can utilise of_pci_get_host_bridge_resources().
+> 
+> This is similar to changes made to the generic PCI host driver in commit
+> dbf9826d "PCI: generic: Convert to DT resource parsing API".
+> 
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 
-   pnv_pci_get_device_tree()    opal_get_device_tree()
-   pnv_pci_get_presence_state() opal_pci_get_presence_state()
-   pnv_pci_get_power_state()    opal_pci_get_power_state()
-   pnv_pci_set_power_state()    opal_pci_set_power_state()
+I think the following should be carried over from v1:
 
-Besides, the patch also exports pnv_pci_hotplug_notifier_{register,
-unregister}() to allow registration and unregistration of PCI hotplug
-notifier, which will be used to receive PCI hotplug message from
-skiboot firmware in PowerNV PCI hotplug driver.
+Reported-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/opal-api.h            | 17 ++++++-
- arch/powerpc/include/asm/opal.h                |  4 ++
- arch/powerpc/include/asm/pnv-pci.h             |  7 +++
- arch/powerpc/platforms/powernv/opal-wrappers.S |  4 ++
- arch/powerpc/platforms/powernv/pci.c           | 66 ++++++++++++++++++++++++++
- 5 files changed, 97 insertions(+), 1 deletion(-)
+Bjorn, I know there have been a few false starts with regards
+to recent pcie-rcar changes. But some more rigor has been applied to this
+one. Please consider applying it.
 
-diff --git a/arch/powerpc/include/asm/opal-api.h b/arch/powerpc/include/asm/opal-api.h
-index 8374afe..fe3e458 100644
---- a/arch/powerpc/include/asm/opal-api.h
-+++ b/arch/powerpc/include/asm/opal-api.h
-@@ -157,7 +157,11 @@
- #define OPAL_LEDS_GET_INDICATOR			114
- #define OPAL_LEDS_SET_INDICATOR			115
- #define OPAL_CEC_REBOOT2			116
--#define OPAL_LAST				116
-+#define OPAL_GET_DEVICE_TREE			117
-+#define OPAL_PCI_GET_PRESENCE_STATE		118
-+#define OPAL_PCI_GET_POWER_STATE		119
-+#define OPAL_PCI_SET_POWER_STATE		120
-+#define OPAL_LAST				120
- 
- /* Device tree flags */
- 
-@@ -343,6 +347,16 @@ enum OpalPciResetState {
- 	OPAL_ASSERT_RESET   = 1
- };
- 
-+enum OpalPciSlotPresentenceState {
-+	OPAL_PCI_SLOT_EMPTY	= 0,
-+	OPAL_PCI_SLOT_PRESENT	= 1
-+};
-+
-+enum OpalPciSlotPowerState {
-+	OPAL_PCI_SLOT_POWER_OFF	= 0,
-+	OPAL_PCI_SLOT_POWER_ON	= 1
-+};
-+
- enum OpalSlotLedType {
- 	OPAL_SLOT_LED_TYPE_ID = 0,	/* IDENTIFY LED */
- 	OPAL_SLOT_LED_TYPE_FAULT = 1,	/* FAULT LED */
-@@ -377,6 +391,7 @@ enum opal_msg_type {
- 	OPAL_MSG_DPO,
- 	OPAL_MSG_PRD,
- 	OPAL_MSG_OCC,
-+	OPAL_MSG_PCI_HOTPLUG,
- 	OPAL_MSG_TYPE_MAX,
- };
- 
-diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
-index 11ee20e..47f200e 100644
---- a/arch/powerpc/include/asm/opal.h
-+++ b/arch/powerpc/include/asm/opal.h
-@@ -208,6 +208,10 @@ int64_t opal_flash_write(uint64_t id, uint64_t offset, uint64_t buf,
- 		uint64_t size, uint64_t token);
- int64_t opal_flash_erase(uint64_t id, uint64_t offset, uint64_t size,
- 		uint64_t token);
-+int64_t opal_get_device_tree(uint32_t phandle, uint64_t buf, uint64_t len);
-+int64_t opal_pci_get_presence_state(uint64_t id, uint8_t *state);
-+int64_t opal_pci_get_power_state(uint64_t id, uint8_t *state);
-+int64_t opal_pci_set_power_state(uint64_t id, uint8_t state);
- 
- /* Internal functions */
- extern int early_init_dt_scan_opal(unsigned long node, const char *uname,
-diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
-index 6f77f71..d9d095b 100644
---- a/arch/powerpc/include/asm/pnv-pci.h
-+++ b/arch/powerpc/include/asm/pnv-pci.h
-@@ -13,6 +13,13 @@
- #include <linux/pci.h>
- #include <misc/cxl-base.h>
- 
-+extern int pnv_pci_get_device_tree(uint32_t phandle, void *buf, uint64_t len);
-+extern int pnv_pci_get_presence_state(uint64_t id, uint8_t *state);
-+extern int pnv_pci_get_power_state(uint64_t id, uint8_t *state);
-+extern int pnv_pci_set_power_state(uint64_t id, uint8_t state);
-+extern int pnv_pci_hotplug_notifier_register(struct notifier_block *nb);
-+extern int pnv_pci_hotplug_notifier_unregister(struct notifier_block *nb);
-+
- int pnv_phb_to_cxl_mode(struct pci_dev *dev, uint64_t mode);
- int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
- 			   unsigned int virq);
-diff --git a/arch/powerpc/platforms/powernv/opal-wrappers.S b/arch/powerpc/platforms/powernv/opal-wrappers.S
-index b7a464f..55f1fd4 100644
---- a/arch/powerpc/platforms/powernv/opal-wrappers.S
-+++ b/arch/powerpc/platforms/powernv/opal-wrappers.S
-@@ -301,3 +301,7 @@ OPAL_CALL(opal_flash_erase,			OPAL_FLASH_ERASE);
- OPAL_CALL(opal_prd_msg,				OPAL_PRD_MSG);
- OPAL_CALL(opal_leds_get_ind,			OPAL_LEDS_GET_INDICATOR);
- OPAL_CALL(opal_leds_set_ind,			OPAL_LEDS_SET_INDICATOR);
-+OPAL_CALL(opal_get_device_tree,			OPAL_GET_DEVICE_TREE);
-+OPAL_CALL(opal_pci_get_presence_state,		OPAL_PCI_GET_PRESENCE_STATE);
-+OPAL_CALL(opal_pci_get_power_state,		OPAL_PCI_GET_POWER_STATE);
-+OPAL_CALL(opal_pci_set_power_state,		OPAL_PCI_SET_POWER_STATE);
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index ae0f0c1..71c648e 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -65,6 +65,72 @@ int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *state)
- 	return (rval == OPAL_SUCCESS) ? 0 : -EIO;
- }
- 
-+int pnv_pci_get_device_tree(uint32_t phandle, void *buf, uint64_t len)
-+{
-+	int64_t rc;
-+
-+	if (!opal_check_token(OPAL_GET_DEVICE_TREE))
-+		return -ENXIO;
-+
-+	rc = opal_get_device_tree(phandle, (uint64_t)buf, len);
-+	if (rc != OPAL_SUCCESS)
-+		return -EIO;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_device_tree);
-+
-+int pnv_pci_get_presence_state(uint64_t id, uint8_t *state)
-+{
-+	int64_t rc;
-+
-+	if (!opal_check_token(OPAL_PCI_GET_PRESENCE_STATE))
-+		return -ENXIO;
-+
-+	rc = opal_pci_get_presence_state(id, state);
-+	if (rc != OPAL_SUCCESS)
-+		return -EIO;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_presence_state);
-+
-+int pnv_pci_get_power_state(uint64_t id, uint8_t *state)
-+{
-+	int64_t rc;
-+
-+	if (!opal_check_token(OPAL_PCI_GET_POWER_STATE))
-+		return -ENXIO;
-+
-+	rc = opal_pci_get_power_state(id, state);
-+	return pnv_pci_poll(id, rc, state);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_power_state);
-+
-+int pnv_pci_set_power_state(uint64_t id, uint8_t state)
-+{
-+	int64_t rc;
-+
-+	if (!opal_check_token(OPAL_PCI_SET_POWER_STATE))
-+		return -ENXIO;
-+
-+	rc = opal_pci_set_power_state(id, state);
-+	return pnv_pci_poll(id, rc, NULL);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_set_power_state);
-+
-+int pnv_pci_hotplug_notifier_register(struct notifier_block *nb)
-+{
-+	return opal_message_notifier_register(OPAL_MSG_PCI_HOTPLUG, nb);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_hotplug_notifier_register);
-+
-+int pnv_pci_hotplug_notifier_unregister(struct notifier_block *nb)
-+{
-+	return opal_message_notifier_unregister(OPAL_MSG_PCI_HOTPLUG, nb);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_hotplug_notifier_unregister);
-+
- #ifdef CONFIG_PCI_MSI
- int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- {
--- 
-2.1.0
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
 
+> ---
+> v2:
+>  - Remove incorrect res_valid check
+> ---
+>  drivers/pci/host/pcie-rcar.c | 116 +++++++++++++++++++++++++++----------------
+>  1 file changed, 73 insertions(+), 43 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 6a3a612..c977fa6 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -108,8 +108,6 @@
+>  #define RCAR_PCI_MAX_RESOURCES 4
+>  #define MAX_NR_INBOUND_MAPS 6
+>  
+> -static unsigned long global_io_offset;
+> -
+>  struct rcar_msi {
+>  	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+>  	struct irq_domain *domain;
+> @@ -138,8 +136,7 @@ struct rcar_pcie {
+>  #endif
+>  	struct device		*dev;
+>  	void __iomem		*base;
+> -	struct resource		res[RCAR_PCI_MAX_RESOURCES];
+> -	struct resource		busn;
+> +	struct list_head	resources;
+>  	int			root_bus_nr;
+>  	struct clk		*clk;
+>  	struct clk		*bus_clk;
+> @@ -323,10 +320,9 @@ static struct pci_ops rcar_pcie_ops = {
+>  	.write	= rcar_pcie_write_conf,
+>  };
+>  
+> -static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie)
+> +static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie,
+> +				   struct resource *res)
+>  {
+> -	struct resource *res = &pcie->res[win];
+> -
+>  	/* Setup PCIe address space mappings for each resource */
+>  	resource_size_t size;
+>  	resource_size_t res_start;
+> @@ -359,31 +355,33 @@ static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie)
+>  	rcar_pci_write_reg(pcie, mask, PCIEPTCTLR(win));
+>  }
+>  
+> -static int rcar_pcie_setup(struct list_head *resource, struct rcar_pcie *pcie)
+> +static int rcar_pcie_setup(struct list_head *resource, struct rcar_pcie *pci)
+>  {
+> -	struct resource *res;
+> -	int i;
+> -
+> -	pcie->root_bus_nr = pcie->busn.start;
+> +	struct resource_entry *win;
+> +	int i = 0;
+>  
+>  	/* Setup PCI resources */
+> -	for (i = 0; i < RCAR_PCI_MAX_RESOURCES; i++) {
+> +	resource_list_for_each_entry(win, &pci->resources) {
+> +		struct resource *res = win->res;
+>  
+> -		res = &pcie->res[i];
+>  		if (!res->flags)
+>  			continue;
+>  
+> -		rcar_pcie_setup_window(i, pcie);
+> -
+> -		if (res->flags & IORESOURCE_IO) {
+> -			phys_addr_t io_start = pci_pio_to_address(res->start);
+> -			pci_ioremap_io(global_io_offset, io_start);
+> -			global_io_offset += SZ_64K;
+> +		switch (resource_type(res)) {
+> +		case IORESOURCE_IO:
+> +		case IORESOURCE_MEM:
+> +			rcar_pcie_setup_window(i, pci, res);
+> +			i++;
+> +			break;
+> +		case IORESOURCE_BUS:
+> +			pci->root_bus_nr = res->start;
+> +			break;
+> +		default:
+> +			continue;
+>  		}
+>  
+>  		pci_add_resource(resource, res);
+>  	}
+> -	pci_add_resource(resource, &pcie->busn);
+>  
+>  	return 1;
+>  }
+> @@ -923,14 +921,63 @@ static const struct of_device_id rcar_pcie_of_match[] = {
+>  };
+>  MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
+>  
+> +static void rcar_pcie_release_of_pci_ranges(struct rcar_pcie *pci)
+> +{
+> +	pci_free_resource_list(&pci->resources);
+> +}
+> +
+> +static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
+> +{
+> +	int err;
+> +	struct device *dev = pci->dev;
+> +	struct device_node *np = dev->of_node;
+> +	resource_size_t iobase;
+> +	struct resource_entry *win;
+> +
+> +	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources, &iobase);
+> +	if (err)
+> +		return err;
+> +
+> +	resource_list_for_each_entry(win, &pci->resources) {
+> +		struct resource *parent, *res = win->res;
+> +
+> +		switch (resource_type(res)) {
+> +		case IORESOURCE_IO:
+> +			parent = &ioport_resource;
+> +			err = pci_remap_iospace(res, iobase);
+> +			if (err) {
+> +				dev_warn(dev, "error %d: failed to map resource %pR\n",
+> +					 err, res);
+> +				continue;
+> +			}
+> +			break;
+> +		case IORESOURCE_MEM:
+> +			parent = &iomem_resource;
+> +			break;
+> +
+> +		case IORESOURCE_BUS:
+> +		default:
+> +			continue;
+> +		}
+> +
+> +		err = devm_request_resource(dev, parent, res);
+> +		if (err)
+> +			goto out_release_res;
+> +	}
+> +
+> +	return 0;
+> +
+> +out_release_res:
+> +	rcar_pcie_release_of_pci_ranges(pci);
+> +	return err;
+> +}
+> +
+>  static int rcar_pcie_probe(struct platform_device *pdev)
+>  {
+>  	struct rcar_pcie *pcie;
+>  	unsigned int data;
+> -	struct of_pci_range range;
+> -	struct of_pci_range_parser parser;
+>  	const struct of_device_id *of_id;
+> -	int err, win = 0;
+> +	int err;
+>  	int (*hw_init_fn)(struct rcar_pcie *);
+>  
+>  	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
+> @@ -940,16 +987,9 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>  	pcie->dev = &pdev->dev;
+>  	platform_set_drvdata(pdev, pcie);
+>  
+> -	/* Get the bus range */
+> -	if (of_pci_parse_bus_range(pdev->dev.of_node, &pcie->busn)) {
+> -		dev_err(&pdev->dev, "failed to parse bus-range property\n");
+> -		return -EINVAL;
+> -	}
+> +	INIT_LIST_HEAD(&pcie->resources);
+>  
+> -	if (of_pci_range_parser_init(&parser, pdev->dev.of_node)) {
+> -		dev_err(&pdev->dev, "missing ranges property\n");
+> -		return -EINVAL;
+> -	}
+> +	rcar_pcie_parse_request_of_pci_ranges(pcie);
+>  
+>  	err = rcar_pcie_get_resources(pdev, pcie);
+>  	if (err < 0) {
+> @@ -957,16 +997,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>  		return err;
+>  	}
+>  
+> -	for_each_of_pci_range(&parser, &range) {
+> -		err = of_pci_range_to_resource(&range, pdev->dev.of_node,
+> -						&pcie->res[win++]);
+> -		if (err < 0)
+> -			return err;
+> -
+> -		if (win > RCAR_PCI_MAX_RESOURCES)
+> -			break;
+> -	}
+> -
+>  	 err = rcar_pcie_parse_map_dma_ranges(pcie, pdev->dev.of_node);
+>  	 if (err)
+>  		return err;
+> -- 
+> 1.9.1
+> 
