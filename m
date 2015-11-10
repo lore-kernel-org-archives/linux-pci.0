@@ -1,86 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:35867 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754243AbbKRAqi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 19:46:38 -0500
-Message-ID: <564BCA33.9020801@gmail.com>
-Date: Tue, 17 Nov 2015 16:45:39 -0800
-From: Florian Fainelli <f.fainelli@gmail.com>
-MIME-Version: 1.0
-To: Ray Jui <rjui@broadcom.com>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/5] PCI: iproc: Add PAXC interface support
-References: <1447806715-30043-1-git-send-email-rjui@broadcom.com> <1447806715-30043-3-git-send-email-rjui@broadcom.com> <564BC79D.9010705@gmail.com> <564BCA4C.6030809@broadcom.com>
-In-Reply-To: <564BCA4C.6030809@broadcom.com>
-Content-Type: text/plain; charset=utf-8
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:50259 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752086AbbKJJtI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Nov 2015 04:49:08 -0500
+Message-ID: <1447148944.3142.10.camel@pengutronix.de>
+Subject: Re: [PATCH RFC] PCI: imx6: add dt prop for link gen, default to gen1
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Tim Harvey <tharvey@gateworks.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Date: Tue, 10 Nov 2015 10:49:04 +0100
+In-Reply-To: <CAJ+vNU1ME+LgHohZv1oy9MbZ-Y+U44ihVasjEnvw2AAcr40RHg@mail.gmail.com>
+References: <1446735481-27326-1-git-send-email-tharvey@gateworks.com>
+	 <1446802576.3126.5.camel@pengutronix.de>
+	 <CAJ+vNU1ME+LgHohZv1oy9MbZ-Y+U44ihVasjEnvw2AAcr40RHg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17/11/15 16:46, Ray Jui wrote:
+Am Freitag, den 06.11.2015, 11:59 -0800 schrieb Tim Harvey:
+> On Fri, Nov 6, 2015 at 1:36 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> > Am Donnerstag, den 05.11.2015, 06:58 -0800 schrieb Tim Harvey:
+> >> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
+> >> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
+> >> external clock source is present and supplied back to the IMX6 PCIe core
+> >> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
+> >>
+> >> Add a dt property to specify gen1 vs gen2 and check this before allowing
+> >> a Gen2 link.
+> >>
+> > I think I already said this in the last round: there is nothing vendor
+> > specific in a max-link-speed property. I would really like to have this
+> > as a common DW PCIe property right from the beginning, so that we don't
+> > burden us with keeping backward compatibility with vendor specific
+> > properties when this moves to common code eventually.
 > 
+> Hi Lucas,
 > 
-> On 11/17/2015 4:34 PM, Florian Fainelli wrote:
->> On 17/11/15 16:31, Ray Jui wrote:
->>> Traditionally, all iProc PCIe root complexes use PAXB based wrapper,
->>> with an integrated on-chip Serdes to support external endpoint devices.
->>> On newer iProc platforms, a PAXC based wrapper is introduced, for
->>> connection with internally emulated PCIe endpoint devices in the ASIC
->>>
->>> This patch adds support for PAXC based iProc PCIe root complex in the
->>> iProc PCIe core driver. This change fators out common logic between
->>> PAXB and PAXC, and use tables to store register offsets that are
->>> different between PAXB and PAXC. This allows the driver to be scaled to
->>> support subsequent PAXC revisions in the future
->>>
->>> Signed-off-by: Ray Jui <rjui@broadcom.com>
->>> Reviewed-by: Scott Branden <sbranden@broadcom.com>
->>> ---
->>>   drivers/pci/host/pcie-iproc-platform.c |   8 ++
->>>   drivers/pci/host/pcie-iproc.c          | 202
->>> +++++++++++++++++++++++++++------
->>>   drivers/pci/host/pcie-iproc.h          |  19 ++++
->>>   3 files changed, 195 insertions(+), 34 deletions(-)
->>>
->>> diff --git a/drivers/pci/host/pcie-iproc-platform.c
->>> b/drivers/pci/host/pcie-iproc-platform.c
->>> index c9550dc..716b56b 100644
->>> --- a/drivers/pci/host/pcie-iproc-platform.c
->>> +++ b/drivers/pci/host/pcie-iproc-platform.c
->>> @@ -42,6 +42,13 @@ static int iproc_pcie_pltfm_probe(struct
->>> platform_device *pdev)
->>>       pcie->dev = &pdev->dev;
->>>       platform_set_drvdata(pdev, pcie);
->>>
->>> +    if (of_device_is_compatible(np, "brcm,iproc-pcie"))
->>> +        pcie->type = IPROC_PCIE_PAXB;
->>> +    else if (of_device_is_compatible(np, "brcm,iproc-pcie-paxc"))
->>> +        pcie->type = IPROC_PCIE_PAXC;
->>> +    else
->>> +        return -ENODEV;
->>
->> Sorry for not noticing earlier, but typically, to avoid repeating the
->> same compatible string twice (once if of_device_id, and somewhere else),
->> you would put the type in the .data member of the of_device_id lookup
->> table and you could fetch this directly here. So something like this:
->>
->>   static const struct of_device_id iproc_pcie_of_match_table[] = {
->>       { .compatible = "brcm,iproc-pcie", .data = (int
->> *)IPROC_PCIE_PAXB },
->> +    { .compatible = "brcm,iproc-pcie-paxc", .data = (int
->> *)IPROC_PCIE_PAXC },
->>       { /* sentinel */ }
->>
+> I did discuss this patch with you off-list but I think I misunderstood
+> your meaning then.
 > 
-> Just to confirm, if I do this, then the above code to check
-> of_device_is_compatible becomes the following?
+> So you are asking me to simply rename the properly
+> 'fsl,max-link-speed' to 'max-link-speed' and the rest of the patch is
+> good with you?
 > 
-> pcie->type = (enum iproc_pcie_type)of_id->data;
+Yes, rename to max-link-speed. Move parsing of the property to
+dw_pcie_host_init() (it is a common property, so must be in common code)
+before the call to ops->host_init and store value into the pcie_port
+structure with -1 meaning property in DT is missing.
 
-That is correct yes.
+imx6_pcie_establish_link can the treat values of -1 and 1 the same, only
+allowing Gen2 if the value is 2.
+
+Regards,
+Lucas
 -- 
-Florian
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
