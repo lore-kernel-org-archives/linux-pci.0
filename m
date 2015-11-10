@@ -1,104 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48827 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757752AbbKSSSh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Nov 2015 13:18:37 -0500
-From: Babu Moger <babu.moger@oracle.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	babu.moger@oracle.com
-Subject: [PATCH v3] pci: Limit VPD length for megaraid_sas adapter
-Date: Thu, 19 Nov 2015 10:18:22 -0800
-Message-Id: <1447957102-184860-1-git-send-email-babu.moger@oracle.com>
-In-Reply-To: <1447257297-198460-1-git-send-email-babu.moger@oracle.com>
-References: <1447257297-198460-1-git-send-email-babu.moger@oracle.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:43755 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850AbbKJAJb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Nov 2015 19:09:31 -0500
+Subject: Re: ECRC and Max Read Request Size
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <56310B34.6000102@codeaurora.org>
+ <20151106172205.GA1002@localhost> <563CE93F.5060209@codeaurora.org>
+ <20151107001143.GA17842@localhost> <563D7287.1050500@codeaurora.org>
+ <20151109194732.GB4789@localhost>
+Cc: linux-pci@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <564135B8.5090608@codeaurora.org>
+Date: Mon, 9 Nov 2015 19:09:28 -0500
+MIME-Version: 1.0
+In-Reply-To: <20151109194732.GB4789@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reading or Writing of PCI VPD data causes system panic.
-We saw this problem by running "lspci -vvv" in the beginning.
-However this can be easily reproduced by running
- cat /sys/bus/devices/XX../vpd
 
-VPD length has been set as 32768 by default. Accessing vpd
-will trigger read/write of 32k. This causes problem as we
-could read data beyond the VPD end tag. Behaviour is un-
-predictable when this happens. I see some other adapter doing
-similar quirks(commit bffadffd43d4 ("PCI: fix VPD limit quirk
-for Broadcom 5708S"))
 
-I see there is an attempt to fix this right way.
-https://patchwork.ozlabs.org/patch/534843/ or
-https://lkml.org/lkml/2015/10/23/97
+On 11/9/2015 2:47 PM, Bjorn Helgaas wrote:
+> On Fri, Nov 06, 2015 at 10:39:51PM -0500, Sinan Kaya wrote:
+>> On 11/6/2015 7:11 PM, Bjorn Helgaas wrote:
+>>> That should definitely be fixed.  Do we enable ECRC unconditionally,
+>>> or only when we boot with "pci=ecrc=on"?  The doc
+>>> (Documentation/kernel-parameters.txt) suggests the latter.
+>>>
+>>> It would be ideal if we could try to turn on ECRC all the time by
+>>> default for paths that support it.  I suppose there's some risk that
+>>> we'd trip over broken hardware.  If that's an issue, we could consider
+>>> turning it on all the time on machines newer than X (that's easy on
+>>> x86, where we have a DMI BIOS date, but maybe not so easy on other
+>>> arches).
+>>
+>> ecrc=on kernel option works like "force on" rather than just a simple on.
+>
+> What do you mean by "force on" as opposed to "simple on"?
+>
+>> I agree we should enable it by default.
+>
+> Part of the consideration is that enabling ECRC generation does
+> increase the size of every TLP by 4 bytes, which reduces the link
+> throughput slightly, so I'm not sure we want to blindly enable it.
+>
+> If I understand the current Linux code correctly, by default (booting
+> with no parameter at all, or with "pci=ecrc=bios"), we don't touch
+> ECRC at all -- we don't even look to see whether it's supported, and
+> we don't enable or disable anything.
+>
+> With "pci=ecrc=on", we turn on ECRC generation (if supported) and ECRC
+> checking (if supported) for every device, including those hot-added
+> after boot.
+>
+> I do like the idea of letting platform firmware decide whether ECRC
+> should be enabled by default, because then we don't have to decide on
+> a policy in Linux.  Following the lead of the firmware lets OEMs
+> decide whether ECRC is a feature they want to market and support.
+>
+> I think the current strategy could be improved for hot-added devices.
+> In the default ("pci=ecrc=bios") case, we leave them alone, which
+> means they won't check ECRC because the enable bits will be zero after
+> power-up.  If the platform firmware enabled ECRC generation in the
+> upstream Root Port, we're paying the cost of lower throughput without
+> getting any benefit for it.
+>
+> It doesn't look like ECRC has any dependencies or ordering
+> requirements, so we could also consider adding sysfs knobs to
+> enable/disable ECRC at run-time.  I can imagine systems where we want
+> ECRC on some paths, e.g., to a disk or network, but not on others,
+> e.g., to a display.  Sysfs would be a way to allow that, although it
+> *is* an administrative burden.
+>
 
-Tried to fix it this way, but problem is I dont see the proper
-start/end TAGs(at least for this adapter) at all. The data is
-mostly junk or zeros. This patch fixes the issue by setting the
-vpd length to 0x80.
+I had to go back and re-read the spec. My understanding was that you can 
+always enable ECRC checking but you need to have every device ECRC check 
+enabled in order to generate the ECRC downstream direction.
 
-Signed-off-by: Babu Moger <babu.moger@oracle.com>
-Reviewed-by: Khalid Aziz <khalid.aziz@oracle.com>
+Now, by looking at the spec section you mentioned; this turns out to be 
+not true. ECRC checking and generation can be enabled all the time.
 
-Changes since v2 -> v3
-Changed the vpd length from 0 to 0x80 which leaves the
-option open for someone to read first few bytes.
+I'll enable ECRC and run it against multiple cards to confirm. I was 
+using PCIe Keysight Exerciser when I was testing ECRC. Since it is a 
+PCIE exerciser, I might have forgotten to enable something in the GUI. 
+I'll double check.
 
-Changes since v1 -> v2
-Removed the changes in pci_id.h. Kept all the vendor
-ids in quirks.c
----
- drivers/pci/quirks.c |   38 ++++++++++++++++++++++++++++++++++++++
- 1 files changed, 38 insertions(+), 0 deletions(-)
+BTW, ECRC has negligible performance overhead.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b03373f..b8774e2 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2123,6 +2123,44 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
- 
- /*
-+ * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
-+ * will dump 32k of data. The default length is set as 32768.
-+ * Reading a full 32k will cause an access beyond the VPD end tag.
-+ * The system behaviour at that point is mostly unpredictable.
-+ * Also I dont believe vendors have implemented this VPD headers properly.
-+ * Atleast I dont see it in following megaraid sas controller.
-+ * That is why adding the quirk here.
-+ */
-+static void quirk_megaraid_sas_limit_vpd(struct pci_dev *dev)
-+{
-+	if (dev->vpd)
-+		dev->vpd->len = 0x80;
-+}
-+
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
-+		quirk_megaraid_sas_limit_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
-+		quirk_megaraid_sas_limit_vpd);
-+
-+/*
-  * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
-  * VPD end tag will hang the device.  This problem was initially
-  * observed when a vpd entry was created in sysfs
+
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
 -- 
-1.7.1
-
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
