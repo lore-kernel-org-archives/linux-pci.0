@@ -1,49 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:44179 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751266AbbKQBOu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 20:14:50 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Nov 2015 11:14:48 +1000
-Date: Tue, 17 Nov 2015 12:04:46 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-Subject: Re: [PATCH v7 12/50] powerpc/powernv: Track M64 segment consumption
-Message-ID: <20151117010446.GA26294@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-13-git-send-email-gwshan@linux.vnet.ibm.com>
- <56498D77.2060101@ozlabs.ru>
+Received: from mout.kundenserver.de ([212.227.17.24]:54390 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751756AbbKJJaG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Nov 2015 04:30:06 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
+	linux-pci@vger.kernel.org, Richard.Zhu@freescale.com,
+	linux-kernel@vger.kernel.org, David Mueller <dave.mueller@gmx.ch>,
+	bhelgaas@google.com
+Subject: Re: [PATCH] PCI: imx6:don't sleep in atomic context
+Date: Tue, 10 Nov 2015 10:28:46 +0100
+Message-ID: <4800389.dqcmlJY3HC@wuerfel>
+In-Reply-To: <1447144878.3142.3.camel@pengutronix.de>
+References: <1447066080-5859-1-git-send-email-sanjeev_sharma@mentor.com> <1447144878.3142.3.camel@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56498D77.2060101@ozlabs.ru>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 16, 2015 at 07:01:59PM +1100, Alexey Kardashevskiy wrote:
->On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>As we track M32 segment consumption, this introduces an array to
->>the PHB to track the mapping between M64 segment and PE number.
->>The information is going to be used to find M64 segment from the
->>PE number during PCI unplugging time in subsequent patches.
->
->
->It would not hurt to put a few words about how we managed to live without
->such a mapping for M64 before but we needed mapping for M32.
->
+On Tuesday 10 November 2015 09:41:18 Lucas Stach wrote:
+> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> > index 233a196..9769b13 100644
+> > --- a/drivers/pci/host/pci-imx6.c
+> > +++ b/drivers/pci/host/pci-imx6.c
+> > @@ -499,7 +499,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+> >                * Wait a little bit, then re-check if the link finished
+> >                * the training.
+> >                */
+> > -             usleep_range(1000, 2000);
+> > +             mdelay(1000);
+> 
+> A mdelay(1000) is a whole different timescale than a usleep(1000). If
+> this patch works for you with mdelay(1) or maybe mdelay(2) I would be
+> fine with it.
 
-The M32 mapping (phb->ioda.m32_segmap[]) isn't used for anything before
-this patcheset. There're no need for M64 mapping before this patchset
-similarly, no need to add the words.
+mdelay(1) is still a really long time to block the CPU for, on potentially
+every config space access.
 
-Thanks,
-Gavin
+Everybody else just returns the link status here, which seems to be
+the better alternative. If you need to delay the startup, better have
+a msleep(1) loop in the initial probe function where you are allowed to
+sleep.
 
+	Arnd
