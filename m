@@ -1,124 +1,318 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:27841 "EHLO
-	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752859AbbKROZK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2015 09:25:10 -0500
-From: Josef Bacik <jbacik@fb.com>
-To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>, <bhelgaas@google.com>, <shli@fb.com>,
-	<kernel-team@fb.com>
-Subject: [PATCH] pci: completely disable aspm if it's unsupported
-Date: Wed, 18 Nov 2015 09:25:03 -0500
-Message-ID: <1447856703-2566-1-git-send-email-jbacik@fb.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAC1AzdfCuT2LHFPVZpwvSjAvVRSpsWY+eGPAt47kN5YD+5yosA@mail.gmail.com>
+References: <1436565766-21820-1-git-send-email-jordan_hargrave@dell.com>
+	<20150713093518.7e869d07@endymion.delvare>
+	<CAC1AzdfFjPrfvg2iBYXY5JDKhbVH3LPQdh5LzyjMaBFSNDBi6Q@mail.gmail.com>
+	<20150721165759.GD21967@google.com>
+	<CAC1AzddX-HQe_UQ4C=ohyWDGjE=aed5+soDzjypQjjcqFfWTNA@mail.gmail.com>
+	<20150722010950.GE3691@google.com>
+	<CAC1AzdeY19ncJVhAOGS2J=tpa2VmnXv0CqO=AYDGY-fP=DiVCw@mail.gmail.com>
+	<20150723172438.GB21967@google.com>
+	<CAC1AzdfwMxLJk9G5x7WSDO9QdaFDpVhCWdNSys5hDho9h1DhEA@mail.gmail.com>
+	<CAC1AzdfCuT2LHFPVZpwvSjAvVRSpsWY+eGPAt47kN5YD+5yosA@mail.gmail.com>
+Date: Tue, 10 Nov 2015 08:40:15 -0600
+Message-ID: <CAC1Azde5sYFgJ3nAQ1zsPhU313NV+EqPs=nAC3XEBBrja-itkg@mail.gmail.com>
+Subject: Re: [PATCH] Add support for reading SMBIOS Slot number for PCI devices
+From: Jordan Hargrave <jharg93@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jean Delvare <jdelvare@suse.de>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We have some hardware that takes about 30 seconds to setup common clocks for
-ASPM, but our bios'es don't actually allow ASPM.  It seems we had this thing in
-place where we would disable ASPM after the pci bus probe so that we would make
-sure that pre pcie 1.1 devices would be properly skipped during initialization.
-This is because the mechanism to disable ASPM doesn't actually disable the
-setting up of the link state stuff, it just keeps us from changing the link
-state after the fact.  So instead make it so that when we call pcie_no_aspm()
-that we disable ASPM completley, that is we skip setting up the link state and
-everything.  This way we avoid the costly setup for a feature we cannot support
-in the first place and we also make sure we are safe from future tampering with
-the ASPM link state.  Thanks,
+On Thu, Jul 23, 2015 at 10:11 PM, Jordan Hargrave <jharg93@gmail.com> wrote:
+> On Thu, Jul 23, 2015 at 9:31 PM, Jordan Hargrave <jharg93@gmail.com> wrote:
+>> On Thu, Jul 23, 2015 at 12:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> [+cc Matthew for PCIe-SSD perspective]
+>>>
+>>> On Wed, Jul 22, 2015 at 03:07:46PM -0500, Jordan Hargrave wrote:
+>>>> On Tue, Jul 21, 2015 at 8:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>> > On Tue, Jul 21, 2015 at 12:31:35PM -0500, Jordan Hargrave wrote:
+>>>> >> On Tue, Jul 21, 2015 at 11:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>> >> > On Mon, Jul 13, 2015 at 09:57:32AM -0500, Jordan Hargrave wrote:
+>>>> >> >> On Mon, Jul 13, 2015 at 2:35 AM, Jean Delvare <jdelvare@suse.de> wrote:
+>>>> >> >>
+>>>> >> >> > Hi Jordan,
+>>>> >> >> >
+>>>> >> >> > On Fri, 10 Jul 2015 17:02:46 -0500, Jordan Hargrave wrote:
+>>>> >> >> > > From: Jordan Hargrave <Jordan_Hargrave@dell.com>
+>>>> >> >> > >
+>>>> >> >> > > There currently isn't an easy way to determine which PCI devices belong
+>>>> >> >> > to
+>>>> >> >> > > system slots.  This patch adds support to read SMBIOS Type 9 (System
+>>>> >> >> > Slots).
+>>>> >> >> >
+>>>> >> >> > I'm wondering, can't you use dmidecode or libsmbios to retrieve the
+>>>> >> >> > same information?
+>>>> >> >> >
+>>>> >> >> > --
+>>>> >> >> > Jean Delvare
+>>>> >> >> > SUSE L3 Support
+>>>> >> >> >
+>>>> >> >>
+>>>> >> >> You can but it's as not easy to determine the slot number for leaf devices
+>>>> >> >> on bridges.  Eventually planning on using this for pulling slot number for
+>>>> >> >> identifying network cards and disk numbering for systemd
+>>>> >> >
+>>>> >> > Can you outline the problems with using dmidecode or libsmbios?
+>>>> >>
+>>>> >> Neither dmidecode nor libsmbios report the slot number for devices
+>>>> >> behind bridges in a slot.
+>>>> >
+>>>> > True, but it's straightforward to walk up the PCI tree in sysfs, e.g.,
+>>>> > given a path like /sys/devices/pci0000:00/0000:00:1c.5/0000:03:00.0/, it's
+>>>> > easy to see what the upstream bridges are.
+>>>> >
+>>>> It makes it more complicated I think. You have to check all functions
+>>>> on all devices as well on the walk to the root.
+>>>>
+>>>> Would it look something like this?
+>>>> while (pdev) {
+>>>>   if (pdev->bus->number == dslot->bus && PCI_SLOT(pdev->devfn) ==
+>>>> PCI_SLOT(dslot->devfn) &&
+>>>>      (pci_pcie_type(pdev) != PCI_ROOT_PORT || PCI_FUNC(pdev->devfn) ==
+>>>> PCI_FUNC(dslot->devfn))
+>>>>     return dslot->instance;
+>>>>   if (!pdev->bus->parent)
+>>>>     break;
+>>>>   pdev = pdev->bus->parent->self;
+>>>> }
+>>>>
+>>>> >> I'm wanting to use this sysfs variable to
+>>>> >> get slot numbers for systemd, so using libsmbios and dmidecode aren't
+>>>> >> very useful.
+>>>> >
+>>>> > If you want this in systemd, I see why you wouldn't want a command like
+>>>> > dmidecode.  Help me understand the problem with libsmbios.  Is it not
+>>>> > useful because (a) systemd doesn't want to link with it, or (b) libsmbios
+>>>> > doesn't have the right information, or (c) something else?
+>>>> >
+>>>> Linking with libsmbios would be a problem, and libsmbios doesn't have
+>>>> this info anyway.
+>>>>
+>>>> > It doesn't *look* like this is using any information that is only available
+>>>> > in the kernel, so in principle it seems like this could be done in
+>>>> > user-space.
+>>>> >
+>>>>
+>>>> I actually just got an email from someone who needs to determine the
+>>>> card slot number in their driver... so I've added an external callable
+>>>> 'pci_get_smbios_slot' function to enable this.
+>>>>
+>>>> >> We already report the index for embedded devices in
+>>>> >> pci-label.c, this code should have gone in at the same time.
+>>>> >>
+>>>> >> For example.  The SMBIOS entry for slot 3 is 40:00.0 There is a
+>>>> >> quad-port NIC in the slot with a bridge at 40:00.0
+>>>> >>
+>>>> >> 42:00.0 Bridge (sec=43, sub=45)
+>>>> >> 43:02.0 Bridge (sec=44, sub=44)
+>>>> >> 43:04.0 Bridge (sec=45, sub=45)
+>>>> >> 44:00.0 Ethernet
+>>>> >> 44:00.1 Ethernet
+>>>> >> 45:00.0 Ethernet
+>>>> >> 45:00.1 Ethernet
+>>>> >>
+>>>> >> So dmidecode only returns the slot number for 42:00.0 but not any
+>>>> >> child devices.  This code will provide a 'slot' sysfs variable that
+>>>> >> reports '3' for all devices under and including the bridge.
+>>>> >
+>>>> > What if the card in slot 3 is an adapter leading to an external PCI
+>>>> > chassis?  Wouldn't we then have a 'slot' file for every card in that
+>>>> > chassis, all containing '3'?  This sounds confusing, although it is true
+>>>> > that they all would be connected via the system board slot 3.
+>>>> >
+>>>> Yes that is correct.  Unless SMBIOS had a table of the second chassis.
+>>>>
+>>>> > Also, we do have the /sys/bus/pci/slots/ hierarchy already.  If we do put
+>>>> > something like this in the kernel, how would it relate to that hierarchy?
+>>>> > Could this SMBIOS stuff be integrated into that somehow?
+>>>> >
+>>>>
+>>>> /sys/bus/pci/slots only map a slot to a single PCI device.  systemd
+>>>> does use /sys/bus/pci/slots but it can't see the slot number on cards
+>>>> with bridges as the actual slot number is a parent.  And that's not
+>>>> easily to determine a parent device from the slots interface.  I'd
+>>>> really like something generic here. I'm also looking for some method
+>>>> for reporting bay/enclosure ID for PCIe-SSD devices.
+>>>>
+>>>> > We have a bit of a hodge-podge of slot names already, and I'd like to
+>>>> > simplify things if we can.
+>>>
+>>> We aren't really converging here yet.
+>>>
+>>> We need to figure out exactly what has to be done in the kernel because it
+>>> can't be done in user-space.  So far, your patch *looks* like it could (in
+>>> principle) be done in user-space, given a sysfs PCI hierarchy and the
+>>> SMBIOS information.
+>>
+>> It's a pain to do in user space as you have to read DMI information,
+>> then traverse PCI hierarchy until you find a match.  Every utility or
+>> code that wants to match a PCI device to a SMBIOS slot must reinvent
+>> the wheel.  biosdevname has its own code to read the entire SMBIOS
+>> table. It then reads in all pci devices and attempts to do a mapping.
+>> Why do this when the kernel already has this info easily available.
+>>
+>>>
+>>> The goal ("determine which PCI devices belong to system slots") is
+>>> definitely generic and useful.  We have quite a bit of slot stuff already
+>>> in the kernel, and some is already exposed via sysfs, so if we're still
+>>> missing what you need, it seems like the current code is off the rails
+>>> somewhere and should be fixed.
+>>>
+>>> Can we explore what you need in a little more detail, with some concrete
+>>> examples?  I heard:
+>>>
+>>>   - Systemd uses /sys/bus/pci/slots but gets the wrong slot information for
+>>>     cards with bridges on them.  Can you give an example including all the
+>>>     PCI devices involved and the related /sys/bus/pci/slots info so we can
+>>>     see exactly what's wrong?
+>>
+>> I created a quick and dirty module that populates /sys/bus/pci/slots:
+>>
+>> #include <linux/kernel.h>
+>> #include <linux/module.h>
+>> #include <linux/pci.h>
+>> #include <linux/dmi.h>
+>>
+>> static int __init kslot_init(void)
+>> {
+>>         const struct dmi_device *dmi;
+>>         struct dmi_dev_onboard *dslot;
+>>         struct pci_dev *sdev;
+>>
+>>         dmi = NULL;
+>>         while ((dmi = dmi_find_device(DMI_DEV_TYPE_SYSTEM_SLOT, NULL,
+>> dmi)) != NULL) {
+>>                 dslot = dmi->device_data;
+>>                 sdev = pci_get_domain_bus_and_slot(dslot->segment, dslot->bus,
+>>                                              dslot->devfn);
+>>                 if (!sdev)
+>>                         continue;
+>>                 pci_create_slot(sdev->bus, dslot->instance, dslot->dev.name,
+>>                                 NULL);
+>>                 pci_dev_put(sdev);
+>>         }
+>>         return 0;
+>> }
+>>
+>> static void __exit kslot_exit(void)
+>> {
+>> }
+>>
+>> module_init(kslot_init);
+>> module_exit(kslot_exit);
+>>
+>> MODULE_AUTHOR("jordan_hargrave@dell.com");
+>> MODULE_LICENSE("GPL");
+>> ===
+>>
+>> # ls -l /sys/bus/pci/slots
+>> total 0
+>> drwxr-xr-x 2 root root 0 Jul 23 21:43 PCI1
+>> drwxr-xr-x 2 root root 0 Jul 23 21:43 PCI2
+>> drwxr-xr-x 2 root root 0 Jul 23 21:43 PCI3
+>>
+>> # for X in /sys/bus/pci/slots/* ; do echo -n "$X = "; cat $X/address; done
+>> /sys/bus/pci/slots/PCI1 = 0000:41:01
+>> /sys/bus/pci/slots/PCI2 = 0000:42:02
+>> /sys/bus/pci/slots/PCI3 = 0000:04:03
+>>
+>> So one problem with this already is the string that gets output. It's
+>> <domain>:<bus>:<slot>   so you still have the problem of what about
+>> bus 43-45 that are children of bus 42.
+>>
+>> So wrote a script:
+>> #!/usr/bin/bash
+>> for X in /sys/bus/pci/devices/* ; do
+>>     RX=$(readlink -f $X)
+>>     for Z in /sys/bus/pci/slots/* ; do
+>>         NAME=$(basename $Z)
+>>         ADDR=$(cat $Z/address | cut -f1-2 -d:)
+>>         if [[ $RX =~ $ADDR ]] ; then
+>>             echo $RX,$NAME
+>>         fi
+>>     done
+>> done
+>>
+>> for each PCI device you have to iterate all devices in
+>> /sys/bus/pci/slots, and munge the 'address' to actually find a match
+>>
+>> output is:
+>> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.0,PCI3 [SMBIOS entry]
+>> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.1,PCI3
+>> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.2,PCI3
+>> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.3,PCI3
+>> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.4,PCI3
+>> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.5,PCI3
+>> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.6,PCI3
+>> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.7,PCI3
+>> /sys/devices/pci0000:40/0000:40:01.0/0000:41:00.0,PCI1 [SMBIOS entry]
+>> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0,PCI2 [SMBIOS entry]
+>> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0/0000:43:02.0,PCI2
+>> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0/0000:43:04.0,PCI2
+>> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0/0000:43:02.0/0000:44:00.0,PCI2
+>> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0/0000:43:02.0/0000:44:00.1,PCI2
+>> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0/0000:43:04.0/0000:45:00.0,PCI2
+>> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0/0000:43:04.0/0000:45:00.1,PCI2
+>>
+>> And I'm not totally convinced this will work on some weird
+>> configurations I've seen of SMBIOS entries.  as in the B:D:F must
+>> match, not just the bus number.
+>
+> Yeah just verified this won't work on this config.
+>
+> I have a lspci output that defines the following bridges
+> (segment:bus:dev:func -> secondary:subordinate)
+> 0000:00:01.0 -> 01:01
+> 0000:00:02.0 -> 02:02
+> 0000:00:03.0 -> 03:03
+> 0000:00:03.2 -> 04:04
+> 0000:00:1c.0 -> 05:05
+> 0000:00:1c.4 -> 06:06
+>
+> The SMBIOS table defines the following entries:
+> Descriptor: MEZZ1  ID:1 0000:00:03.0
+> Descriptor: MEZZ2  ID:2 0000:00:03.2
+>
+> creating /sys/bus/pci/slots:
+> # ls -l /sys/bus/pci/slots/
+> total 0
+> drwxr-xr-x 2 root root 0 Jul 23 23:04 MEZZ1
+> drwxr-xr-x 2 root root 0 Jul 23 23:04 MEZZ2
+>
+> # for X in /sys/bus/pci/slots/* ; do echo -n "$X = "; cat $X/address; done
+> /sys/bus/pci/slots/MEZZ1 = 0000:00:01
+> /sys/bus/pci/slots/MEZZ2 = 0000:00:02
+>
+> Both entries are showing Bus 0 only... not 0:3.0 and 0:3.2
+>>
+>>>
+>>>   - A driver needs the card slot number.  A slot number seems like a user
+>>>     interface thing, so I'm surprised that a driver would be concerned with
+>>>     it.  And of course, SMBIOS is an arch-specific thing, so the driver
+>>>     would have to be able to get along without the slot number anyway.
+>>>
+>> pci_get_smbios_slot would just return -ENODEV or something on systems
+>> without SMBIOS.
+>>
+>>>   - PCIe-SSD bay/enclosure IDs.  Where would these IDs come from, and what
+>>>     sort of reporting mechanism are you looking for?  How are these
+>>>     structured?  Is there a separate PCIe device for every bay/enclosure
+>>>     ID, so there would be a 1:1 mapping from PCIe device to ID?
+>>>
+>> On our system the enclosure IDs actually come from IPMI commands.
+>> However you must query every PCI Bus number in the system to get the
+>> correct enclosure mapping.  Currently yes there is a 1:1 mapping.
+>>
+>>> Bjorn
 
-Signed-off-by: Josef Bacik <jbacik@fb.com>
----
- drivers/acpi/pci_root.c | 22 +++++-----------------
- drivers/pci/pcie/aspm.c |  1 +
- 2 files changed, 6 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 393706a..00e164a 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -419,7 +419,7 @@ out:
- }
- EXPORT_SYMBOL(acpi_pci_osc_control_set);
- 
--static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
-+static void negotiate_os_control(struct acpi_pci_root *root)
- {
- 	u32 support, control, requested;
- 	acpi_status status;
-@@ -456,7 +456,7 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- 	if (ACPI_FAILURE(status)) {
- 		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
- 			 acpi_format_exception(status));
--		*no_aspm = 1;
-+		pcie_no_aspm();
- 		return;
- 	}
- 
-@@ -495,22 +495,14 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- 			 * intact and prevent the OS from touching it.
- 			 */
- 			dev_info(&device->dev, "FADT indicates ASPM is unsupported, using BIOS configuration\n");
--			*no_aspm = 1;
-+			pcie_no_aspm();
- 		}
- 	} else {
- 		decode_osc_control(root, "OS requested", requested);
- 		decode_osc_control(root, "platform willing to grant", control);
- 		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
- 			acpi_format_exception(status));
--
--		/*
--		 * We want to disable ASPM here, but aspm_disabled
--		 * needs to remain in its state from boot so that we
--		 * properly handle PCIe 1.1 devices.  So we set this
--		 * flag here, to defer the action until after the ACPI
--		 * root scan.
--		 */
--		*no_aspm = 1;
-+		pcie_no_aspm();
- 	}
- }
- 
-@@ -522,7 +514,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	int result;
- 	struct acpi_pci_root *root;
- 	acpi_handle handle = device->handle;
--	int no_aspm = 0;
- 	bool hotadd = system_state != SYSTEM_BOOTING;
- 
- 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
-@@ -581,7 +572,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 
- 	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
- 
--	negotiate_os_control(root, &no_aspm);
-+	negotiate_os_control(root);
- 
- 	/*
- 	 * TBD: Need PCI interface for enumeration/configuration of roots.
-@@ -604,9 +595,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 		goto remove_dmar;
- 	}
- 
--	if (no_aspm)
--		pcie_no_aspm();
--
- 	pci_acpi_add_bus_pm_notifier(device);
- 	if (device->wakeup.flags.run_wake)
- 		device_set_run_wake(root->bus->bridge, true);
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 317e355..5f84af2 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -954,6 +954,7 @@ void pcie_no_aspm(void)
- 	if (!aspm_force) {
- 		aspm_policy = POLICY_DEFAULT;
- 		aspm_disabled = 1;
-+		aspm_support_enabled = false;
- 	}
- }
- 
--- 
-2.1.0
-
+The systemd maintainers are still refusing to add in code to parse
+SMBIOS directly, so we need for this to be in the kernel as a sysfs
+variable. Perferrably per-PCI device instead of /sys/bus/pci/XXX/slots
+as that only gets populated for the upstream device if a card has one
+or more levels of bridges.
