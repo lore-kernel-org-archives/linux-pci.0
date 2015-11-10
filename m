@@ -1,98 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:58165 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753324AbbKQRDF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Nov 2015 12:03:05 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Catalin Marinas <catalin.marinas@arm.com>
-Subject: [PATCH 3/3] arm/arm64: pci: remove arch specific pcibios_enable_device()
-Date: Tue, 17 Nov 2015 17:03:58 +0000
-Message-Id: <1447779838-15585-3-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1447779838-15585-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1447779838-15585-1-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:58256 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751750AbbKJJfP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Nov 2015 04:35:15 -0500
+Message-ID: <1447148110.3142.6.camel@pengutronix.de>
+Subject: Re: [PATCH] PCI: imx6:don't sleep in atomic context
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
+	linux-pci@vger.kernel.org, Richard.Zhu@freescale.com,
+	linux-kernel@vger.kernel.org, David Mueller <dave.mueller@gmx.ch>,
+	bhelgaas@google.com
+Date: Tue, 10 Nov 2015 10:35:10 +0100
+In-Reply-To: <4800389.dqcmlJY3HC@wuerfel>
+References: <1447066080-5859-1-git-send-email-sanjeev_sharma@mentor.com>
+	 <1447144878.3142.3.camel@pengutronix.de> <4800389.dqcmlJY3HC@wuerfel>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The arm/arm64 pcibios_enable_device() implementations exist solely
-to prevent enabling PCI resources on PROBE_ONLY systems, since
-on those systems the PCI resources are currently not claimed (ie
-validated and inserted in the PCI resource tree) therefore they can
-not be enabled since this would trigger PCI set-ups failures.
+Am Dienstag, den 10.11.2015, 10:28 +0100 schrieb Arnd Bergmann:
+> On Tuesday 10 November 2015 09:41:18 Lucas Stach wrote:
+> > > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> > > index 233a196..9769b13 100644
+> > > --- a/drivers/pci/host/pci-imx6.c
+> > > +++ b/drivers/pci/host/pci-imx6.c
+> > > @@ -499,7 +499,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+> > >                * Wait a little bit, then re-check if the link finished
+> > >                * the training.
+> > >                */
+> > > -             usleep_range(1000, 2000);
+> > > +             mdelay(1000);
+> > 
+> > A mdelay(1000) is a whole different timescale than a usleep(1000). If
+> > this patch works for you with mdelay(1) or maybe mdelay(2) I would be
+> > fine with it.
+> 
+> mdelay(1) is still a really long time to block the CPU for, on potentially
+> every config space access.
+> 
+> Everybody else just returns the link status here, which seems to be
+> the better alternative. If you need to delay the startup, better have
+> a msleep(1) loop in the initial probe function where you are allowed to
+> sleep.
+> 
+Yes, it's somewhere on my TODO list to rework the link-up handling here,
+but as there are quite a few timing and ordering implications in that
+code, this needs a good thought and a good deal of testing. So I'm
+inclined to ACK the current patch to get rid of the obvious bug and sort
+things out properly in a follow on patchset.
 
-By introducing resources claiming in the PCI host controllers set-ups
-that have PROBE_ONLY as a probe option, there is no need for arch specific
-pcibios_enable_device() implementations anymore in that the kernel can
-rely on the generic pcibios_enable_device() implementation without
-resorting to arch specific code to work around the missing resources
-claiming enumeration step.
+Regards,
+Lucas
 
-This patch removes the pcibios_enable_device() implementations from
-the arm/arm64 arch back-ends.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
----
- arch/arm/kernel/bios32.c | 12 ------------
- arch/arm64/kernel/pci.c  | 13 -------------
- 2 files changed, 25 deletions(-)
-
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 6551d28..9c998d5 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -590,18 +590,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	return start;
- }
- 
--/**
-- * pcibios_enable_device - Enable I/O and memory.
-- * @dev: PCI device to be enabled
-- */
--int pcibios_enable_device(struct pci_dev *dev, int mask)
--{
--	if (pci_has_flag(PCI_PROBE_ONLY))
--		return 0;
--
--	return pci_enable_resources(dev, mask);
--}
--
- int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index b3d098b..4095379 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -38,19 +38,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	return res->start;
- }
- 
--/**
-- * pcibios_enable_device - Enable I/O and memory.
-- * @dev: PCI device to be enabled
-- * @mask: bitmask of BARs to enable
-- */
--int pcibios_enable_device(struct pci_dev *dev, int mask)
--{
--	if (pci_has_flag(PCI_PROBE_ONLY))
--		return 0;
--
--	return pci_enable_resources(dev, mask);
--}
--
- /*
-  * Try to assign the IRQ number from DT when adding a new device
-  */
 -- 
-2.5.1
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
