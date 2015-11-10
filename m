@@ -1,72 +1,61 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v4 5/5] ARM: dts: Enable MSI support for Broadcom Cygnus
-Date: Fri, 27 Nov 2015 09:37:48 -0800
-Message-ID: <1448645868-5730-6-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
-References: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Message-ID: <1447144878.3142.3.camel@pengutronix.de>
+Subject: Re: [PATCH] PCI: imx6:don't sleep in atomic context
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+Cc: Richard.Zhu@freescale.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, David Mueller <dave.mueller@gmx.ch>
+Date: Tue, 10 Nov 2015 09:41:18 +0100
+In-Reply-To: <1447066080-5859-1-git-send-email-sanjeev_sharma@mentor.com>
+References: <1447066080-5859-1-git-send-email-sanjeev_sharma@mentor.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable MSI support for Broadcom Cygnus platforms
+Am Montag, den 09.11.2015, 16:18 +0530 schrieb Sanjeev Sharma:
+> If additional PCIe switch get connected between the
+> host and the NIC,the kernel crashes with "BUG:
+> scheduling while atomic". To handle this we need to
+> call mdelay() instead of usleep_range().
+> 
+> For more detail please refer bugzilla.kernel.org, Bug
+> 100031
+> 
+> Signed-off-by: Sanjeev Sharma <sanjeev_sharma@mentor.com>
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Anup Patel <anup.patel@broadcom.com>
-Reviewed-by: Pramod KUMAR <pramodku@broadcom.com>
-Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
----
- arch/arm/boot/dts/bcm-cygnus.dtsi | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+This is wrong. You are not the author of this patch and this should be
+reflected both in the From: line as well as in the order of signoffs.
 
-diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi b/arch/arm/boot/dts/bcm-cygnus.dtsi
-index 2778533..789b519 100644
---- a/arch/arm/boot/dts/bcm-cygnus.dtsi
-+++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
-@@ -162,6 +162,17 @@
- 				  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
- 
- 			status = "disabled";
-+
-+			msi-parent = <&msi0>;
-+			msi0: msi@18012000 {
-+				compatible = "brcm,iproc-msi";
-+				msi-controller;
-+				interrupt-parent = <&gic>;
-+				interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 97 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 98 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 99 IRQ_TYPE_NONE>;
-+			};
- 		};
- 
- 		pcie1: pcie@18013000 {
-@@ -183,6 +194,17 @@
- 				  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
- 
- 			status = "disabled";
-+
-+			msi-parent = <&msi1>;
-+			msi1: msi@18013000 {
-+				compatible = "brcm,iproc-msi";
-+				msi-controller;
-+				interrupt-parent = <&gic>;
-+				interrupts = <GIC_SPI 102 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 103 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 104 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 105 IRQ_TYPE_NONE>;
-+			};
- 		};
- 
- 		uart0: serial@18020000 {
+> Signed-off-by: David Mueller <dave.mueller@gmx.ch>
+> ---
+>  drivers/pci/host/pci-imx6.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 233a196..9769b13 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -499,7 +499,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+>  		 * Wait a little bit, then re-check if the link finished
+>  		 * the training.
+>  		 */
+> -		usleep_range(1000, 2000);
+> +		mdelay(1000);
+
+A mdelay(1000) is a whole different timescale than a usleep(1000). If
+this patch works for you with mdelay(1) or maybe mdelay(2) I would be
+fine with it.
+
+Regards,
+Lucas
+
+>  	}
+>  	/*
+>  	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
+
 -- 
-1.9.1
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
