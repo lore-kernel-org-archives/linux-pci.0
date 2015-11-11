@@ -1,66 +1,98 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH] pci: completely disable aspm if it's unsupported
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1447856703-2566-1-git-send-email-jbacik@fb.com>
- <20151118184038.GA4462@localhost>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>, <bhelgaas@google.com>, <shli@fb.com>,
-	<kernel-team@fb.com>, Matthew Garrett <mjg59@coreos.com>
-From: Josef Bacik <jbacik@fb.com>
-Message-ID: <564CCAC2.5050600@fb.com>
-Date: Wed, 18 Nov 2015 14:00:18 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 11 Nov 2015 17:37:12 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<michals@xilinx.com>, <sorenb@xilinx.com>, <bhelgaas@google.com>,
+	<arnd@arndb.de>, <tinamdar@apm.com>, <treding@nvidia.com>,
+	<rjui@broadcom.com>, <Minghuan.Lian@freescale.com>,
+	<m-karicheri2@ti.com>, <hauke@hauke-m.de>, <dhdang@apm.com>,
+	<sbranden@broadcom.com>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH v8] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+Message-ID: <20151111173712.7dde8a42@arm.com>
+In-Reply-To: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>
+References: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
-In-Reply-To: <20151118184038.GA4462@localhost>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/18/2015 01:40 PM, Bjorn Helgaas wrote:
-> [+cc Matthew]
->
-> Hi Josef,
->
-> On Wed, Nov 18, 2015 at 09:25:03AM -0500, Josef Bacik wrote:
->> We have some hardware that takes about 30 seconds to setup common clocks for
->> ASPM, but our bios'es don't actually allow ASPM.  It seems we had this thing in
->> place where we would disable ASPM after the pci bus probe so that we would make
->> sure that pre pcie 1.1 devices would be properly skipped during initialization.
->> This is because the mechanism to disable ASPM doesn't actually disable the
->> setting up of the link state stuff, it just keeps us from changing the link
->> state after the fact.  So instead make it so that when we call pcie_no_aspm()
->> that we disable ASPM completley, that is we skip setting up the link state and
->> everything.  This way we avoid the costly setup for a feature we cannot support
->> in the first place and we also make sure we are safe from future tampering with
->> the ASPM link state.  Thanks,
->
-> Can you clarify what your BIOS does?  I assume it's an x86 ACPI BIOS.
-> Does it enable ASPM before handing off to the OS?  Does it set the
-> ACPI_FADT_NO_ASPM bit? (ACPI spec 5.0, sec 5.2.9.3)
->
-> You're changing the _OSC failure path.  Why does _OSC fail?  I know
-> there is some sort of unresolved problem there
-> (https://bugzilla.kernel.org/show_bug.cgi?id=94661); maybe you're
-> tripping over that?
->
+On Wed, 11 Nov 2015 12:03:39 +0530
+Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
 
-This is what I see in dmesg
+> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+> 
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> ---
+> Added logic to allocate contiguous hwirq in nwl_irq_domain_alloc function.
+> Moved MSI functionality to separate functions.
+> Changed error return values.
+> ---
+>  .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
+>  drivers/pci/host/Kconfig                           |   16 +-
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pcie-xilinx-nwl.c                 | 1062 ++++++++++++++++++++
+>  4 files changed, 1144 insertions(+), 3 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
+>  create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
+> 
+> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+> new file mode 100644
+> index 0000000..8bc509c
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-xilinx-nwl.c
 
-[ 8.647398] acpi PNP0A03:00: _OSC: OS supports [ExtendedConfig ASPM 
-ClockPM Segments MSI]
-[ 8.647716] acpi PNP0A03:00: _OSC failed (AE_NOT_FOUND); disabling ASPM
+[...]
 
-So seems like the same bug?
+> +static struct msi_domain_info nwl_msi_domain_info = {
+> +	.flags = (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+> +		  MSI_FLAG_MULTI_PCI_MSI),
 
-> It seems like you're proposing to reverse what Matthew just did with
-> 387d37577fdd ("PCI: Don't clear ASPM bits when the FADT declares it's
-> unsupported").
->
+Given that you claim to support multi-MSI...
 
-It looks to me I'm doing what Matthew set out to do, only with a bigger 
-hammer ;).  His patch still allowed the initialization of the ASPM 
-stuff, like setting up the clocks and such, but then made it so we 
-couldn't change the ASPM state at all.  My patch goes the step further 
-of not even doing the initialization stuff.  Thanks,
+[...]
 
-Josef
+> +static int nwl_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
+> +				unsigned int nr_irqs, void *args)
+> +{
+> +	struct nwl_pcie *pcie = domain->host_data;
+> +	struct nwl_msi *msi = &pcie->msi;
+> +	unsigned long bit;
+> +	int i;
+> +
+> +	mutex_lock(&msi->lock);
+> +	for (i = 0; i < nr_irqs; i++) {
+> +		bit = find_first_zero_bit(msi->used, INT_PCI_MSI_NR);
+> +		if (bit < INT_PCI_MSI_NR)
+> +			set_bit(bit, msi->used);
+> +		else
+> +			bit = -ENOSPC;
+> +
+> +		if (bit < 0) {
+> +			mutex_unlock(&msi->lock);
+> +			return bit;
+> +		}
+> +
+> +		irq_domain_set_info(domain, virq, bit, &nwl_irq_chip,
+> +				domain->host_data, handle_simple_irq,
+> +				NULL, NULL);
+> +		virq = virq + 1;
+> +	}
 
+I really don't see how this allocator guarantees that all hwirqs are
+contiguous. I already mentioned this when reviewing v7, and you still
+haven't got it right. So either you allocate *contiguous* hwirqs in an
+atomic fashion, or you drop support for multi-MSI.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny.
