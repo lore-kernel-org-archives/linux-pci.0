@@ -1,43 +1,170 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:56093 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751671AbbKLAHo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2015 19:07:44 -0500
-From: Marek Vasut <marex@denx.de>
-To: Sean Cross <xobs@kosagi.com>
-Subject: Re: [PATCH v3 0/3] Add support for kosagi novena
-Date: Thu, 12 Nov 2015 01:07:38 +0100
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Shawn Guo <shawn.guo@freescale.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 11 Nov 2015 18:12:07 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Tomasz Nowicki <tn@semihalf.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	linux-pci@vger.kernel.org, bunnie@kosagi.com
-References: <1423650182-16865-1-git-send-email-xobs@kosagi.com>
-In-Reply-To: <1423650182-16865-1-git-send-email-xobs@kosagi.com>
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+Message-ID: <20151111181207.GU963@e106497-lin.cambridge.arm.com>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <5640A8AA.4000806@semihalf.com>
+ <20151109171042.GA11909@red-moon>
+ <6488357.xJV65iBRHq@wuerfel>
+ <564185B6.8040006@linux.intel.com>
+ <20151111174647.GA30051@red-moon>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201511120107.38409.marex@denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20151111174647.GA30051@red-moon>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, February 11, 2015 at 11:22:59 AM, Sean Cross wrote:
-> The Kosagi Novena mainboard contains an i.MX6, along with a PCI Express
-> slot. This patchset adds device tree support for the Novena mainboard.
+On Wed, Nov 11, 2015 at 05:46:47PM +0000, Lorenzo Pieralisi wrote:
+> On Tue, Nov 10, 2015 at 01:50:46PM +0800, Jiang Liu wrote:
+> 
+> [...]
+> 
+> > >> In particular, I would like to understand, for an eg DWordIO descriptor,
+> > >> what Range Minimum, Range Maximum and Translation Offset represent,
+> > >> they can't mean different things depending on the SW parsing them,
+> > >> this totally defeats the purpose.
+> > > 
+> > > I have no clue about what those mean in ACPI though.
+> > > 
+> > > Generally speaking, each PCI domain is expected to have a (normally 64KB)
+> > > range of CPU addresses that gets translated into PCI I/O space the same
+> > > way that config space and memory space are handled.
+> > > This is true for almost every architecture except for x86, which uses
+> > > different CPU instructions for I/O space compared to the other spaces.
+> > > 
+> > >> By the way, ia64 ioremaps the translation_offset (ie new_space()), so
+> > >> basically that's the CPU physical address at which the PCI host bridge
+> > >> map the IO space transactions), I do not think ia64 is any different from
+> > >> arm64 in this respect, if it is please provide an HW description here from
+> > >> the PCI bus perspective here (also an example of ia64 ACPI PCI host bridge
+> > >> tables would help).
+> > > 
+> > > The main difference between ia64 and a lot of the other architectures (e.g.
+> > > sparc is different again) is that ia64 defines a logical address range
+> > > in terms of having a small number for each I/O space followed by the
+> > > offset within that space as a 'port number' and uses a mapping function
+> > > that is defined as
+> > > 
+> > > static inline void *__ia64_mk_io_addr (unsigned long port)
+> > > {
+> > >         struct io_space *space = &io_space[IO_SPACE_NR(port)];
+> > >         return (space->mmio_base | IO_SPACE_PORT(port););
+> > > }
+> > > static inline unsigned int inl(unsigned long port)
+> > > {
+> > >         return *__ia64_mk_io_addr(port);
+> > > }
+> > > 
+> > > Most architectures allow only one I/O port range and put it at a fixed
+> > > virtual address so that inl() simply becomes 
+> > > 
+> > > static inline u32 inl(unsigned long addr)
+> > > {
+> > >         return readl(PCI_IOBASE + addr);
+> > > }
+> > > 
+> > > which noticeably reduces code size.
+> > > 
+> > > On some architectures (powerpc, arm, arm64), we then get the same simplified
+> > > definition with a fixed virtual address, and use pci_ioremap_io() or
+> > > something like that to to map a physical address range into this virtual
+> > > address window at the correct io_offset;
+> > Hi all,
+> > 	Thanks for explanation, I found a way to make the ACPI resource
+> > parsing interface arch neutral, it should help to address Lorenzo's
+> > concern. Please refer to the attached patch. (It's still RFC, not tested
+> > yet).
+> 
+> If we go with this approach though, you are not adding the offset to
+> the resource when parsing the memory spaces in acpi_decode_space(), are we
+> sure that's what we really want ?
+> 
+> In DT, a host bridge range has a:
+> 
+> - CPU physical address
+> - PCI bus address
+> 
+> We use that to compute the offset between primary bus (ie CPU physical
+> address) and secondary bus (ie PCI bus address).
+> 
+> The value ending up in the PCI resource struct (for memory space) is
+> the CPU physical address, if you do not add the offset in acpi_decode_space
+> that does not hold true on platforms where CPU<->PCI offset != 0 on ACPI,
+> am I wrong ?
+> 
+> Overall I think the point is related to ioport_resource and its check
+> in acpi_pci_root_validate_resources() which basically that's the
+> problem that started this thread.
+> 
+> On arm64, IO_SPACE_LIMIT is 16M, which, AFAIK is a kernel limit, not
+> a HW one. 
 
-Hi,
+You're right, it is a kernel limit. There is no HW limit for IO on arm64.
 
-is there any reason why this series never got applied ?
+> Comparing the resources parsed from the PCI bridge _CRS against
+> the range 0..IO_SPACE_LIMIT is not necessarily meaningful (or at least
+> not meaningful in its current form), on ia64 it works because IO_SPACE_LIMIT
+> is bumped up to 4G, that's the reason why adding the offset to the ACPI IO
+> resources work on ia64 as far as I understand.
+> 
+> And that's why I pulled Arnd in this discussion since he knows better
+> than me: what does ioport_resource _really_ represent on ARM64 ? It seems
+> to me that it is a range of IO ports values (ie a window that defines
+> the allowed offset in the virtual address space allocated to PCI IO) that
+> has _nothing_ to do with the CPU physical address at which the IO space is
+> actually mapped.
 
-I'm planning to rebase and repost this series, but I'd like to know if there
-is some feedback which I should address first.
-
-Thanks!
+Correct. The idea is that you can have any number of host bridges and what
+you get back for an ioport_resource is a window inside the host bridge IO
+space. That space is also offset-ed inside the kernel's IO port space
+(0..IO_SPACE_LIMIT) by the amount of space already taken by preceeding
+host bridges, so that two ioport_resources comming from two different
+host bridges don't overlap in the CPU address space.
 
 Best regards,
-Marek Vasut
+Liviu
+
+
+> 
+> To sum it up for a, say, DWordIo/Memory descriptor:
+> 
+> - AddressMinimum, AddressMaximum represent the PCI bus addresses defining
+>   the resource start..end
+> - AddressTranslation is the offset that has to be added to AddressMinimum
+>   and AddressMaximum to get the window in CPU physical address space
+> 
+> So:
+> 
+> - Either we go with the patch attached (but please check my comment on
+>   the memory spaces)
+> - Or we patch acpi_pci_root_validate_resources() to amend the way
+>   IORESOURCE_IO is currently checked against ioport_resource, it can't
+>   work on arm64 at present, I described why above
+> 
+> Thoughts appreciated it is time we got this sorted and thanks for
+> the patch.
+> 
+> Thanks,
+> Lorenzo
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
