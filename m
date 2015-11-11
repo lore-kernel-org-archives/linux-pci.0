@@ -1,179 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:56030 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755502AbbKDNNT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:19 -0500
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 18:43:17 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
-Date: Thu,  5 Nov 2015 00:12:14 +1100
-Message-Id: <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:33403 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752109AbbKKTaP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2015 14:30:15 -0500
+MIME-Version: 1.0
+In-Reply-To: <1447257297-198460-1-git-send-email-babu.moger@oracle.com>
+References: <1447257297-198460-1-git-send-email-babu.moger@oracle.com>
+Date: Wed, 11 Nov 2015 12:30:14 -0700
+Message-ID: <CAL-B5D1pn3Rk3RVmmjKy+ChwSCOYf0y+REfiwznrFTj8e70Zcg@mail.gmail.com>
+Subject: Re: [PATCH v2] pci: Limit VPD length for megaraid_sas adapter
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Babu Moger <babu.moger@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This enables M64 window on P7IOC, which has been enabled on PHB3.
-Different from PHB3 where 16 M64 BARs are supported and each of
-them can be owned by one particular PE# exclusively or divided
-evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
-of them are divided to 8 segments. So every P7IOC PHB supports
-128 M64 segments in total. P7IOC has M64DT, which helps mapping
-one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
-M64DT, indicating that one M64 segment can only be pinned to the
-fixed PE#. In order to have same code to support M64 on P7IOC and
-PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
-of them is pinned to the fixed PE# by bypassing the function of
-M64DT. In turn, we just need different phb->init_m64() for P7IOC
-and PHB3 to support M64.
+On Wed, Nov 11, 2015 at 8:54 AM, Babu Moger <babu.moger@oracle.com> wrote:
+> Changes since v1 -> v2
+> Removed the changes in pci_id.h. Kept all the vendor
+> ids in quirks.c
+>
+> Reading or Writing of PCI VPD data causes system panic.
+> We saw this problem by running "lspci -vvv" in the beginning.
+> However this can be easily reproduced by running
+>  cat /sys/bus/devices/XX../vpd
+>
+> VPD length has been set as 32768 by default. Accessing vpd
+> will trigger read/write of 32k. This causes problem as we
+> could read data beyond the VPD end tag. Behaviour is un-
+> predictable when this happens. I see some other adapter doing
+> similar quirks(commit id bffadffd43d438c3143b8d172a463de89345b836)
+>
+> I see there is an attempt to fix this right way.
+> https://patchwork.ozlabs.org/patch/534843/ or
+> https://lkml.org/lkml/2015/10/23/97
+>
+> Tried to fix it this way, but problem is I dont see the proper
+> start/end TAGs(at least for this adapter) at all. The data is
+> mostly junk or zeros. This patch fixes the issue by setting the
+> vpd length to 0.
+>
+> Signed-off-by: Babu Moger <babu.moger@oracle.com>
+> ---
+>  drivers/pci/quirks.c |   38 ++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 38 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index b03373f..f739e47 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2123,6 +2123,44 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
+>
+>  /*
+> + * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
+> + * will dump 32k of data. The default length is set as 32768.
+> + * Reading a full 32k will cause an access beyond the VPD end tag.
+> + * The system behaviour at that point is mostly unpredictable.
+> + * Also I dont believe vendors have implemented this VPD headers properly.
+> + * Atleast I dont see it in following megaraid sas controller.
+> + * That is why adding the quirk here.
+> + */
+> +static void quirk_megaraid_sas_limit_vpd(struct pci_dev *dev)
+> +{
+> +       if (dev->vpd)
+> +               dev->vpd->len = 0;
+> +}
+> +
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
+> +               quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
+> +               quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
+> +               quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
+> +               quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
+> +               quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
+> +               quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
+> +               quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
+> +               quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
+> +               quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
+> +               quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
+> +               quirk_megaraid_sas_limit_vpd);
+> +
+> +/*
+>   * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
+>   * VPD end tag will hang the device.  This problem was initially
+>   * observed when a vpd entry was created in sysfs
+> --
+> 1.7.1
+>
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 86 +++++++++++++++++++++++++++++--
- arch/powerpc/platforms/powernv/pci.h      |  3 ++
- 2 files changed, 86 insertions(+), 3 deletions(-)
+Just to confirm, I've encountered similar results on a MegaRAID SAS 2208 -
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 1f7d985..bfe69f1 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -256,6 +256,64 @@ static void pnv_ioda_reserve_dev_m64_pe(struct pci_dev *pdev,
- 	}
- }
- 
-+static int pnv_ioda1_init_m64(struct pnv_phb *phb)
-+{
-+	struct resource *r;
-+	int index;
-+
-+	/*
-+	 * There are 16 M64 BARs, each of which has 8 segments. So
-+	 * there are as many M64 segments as the maximum number of
-+	 * PEs, which is 128.
-+	 */
-+	for (index = 0; index < PNV_IODA1_M64_NUM; index++) {
-+		unsigned long base, segsz = phb->ioda.m64_segsize;
-+		int64_t rc;
-+
-+		base = phb->ioda.m64_base +
-+		       index * PNV_IODA1_M64_SEGS * segsz;
-+		rc = opal_pci_set_phb_mem_window(phb->opal_id,
-+				OPAL_M64_WINDOW_TYPE, index, base, 0,
-+				PNV_IODA1_M64_SEGS * segsz);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_warn("  Error %lld setting M64 PHB#%d-BAR#%d\n",
-+				rc, phb->hose->global_number, index);
-+			goto fail;
-+		}
-+
-+		rc = opal_pci_phb_mmio_enable(phb->opal_id,
-+				OPAL_M64_WINDOW_TYPE, index,
-+				OPAL_ENABLE_M64_SPLIT);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_warn("  Error %lld enabling M64 PHB#%d-BAR#%d\n",
-+				rc, phb->hose->global_number, index);
-+			goto fail;
-+		}
-+	}
-+
-+	/*
-+	 * Exclude the segment used by the reserved PE, which
-+	 * is expected to be 0 or last supported PE#.
-+	 */
-+	r = &phb->hose->mem_resources[1];
-+	if (phb->ioda.reserved_pe_idx == 0)
-+		r->start += phb->ioda.m64_segsize;
-+	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
-+		r->end -= phb->ioda.m64_segsize;
-+	else
-+		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
-+			phb->ioda.reserved_pe_idx);
-+
-+	return 0;
-+
-+fail:
-+	for ( ; index >= 0; index--)
-+		opal_pci_phb_mmio_enable(phb->opal_id,
-+			OPAL_M64_WINDOW_TYPE, index, OPAL_DISABLE_M64);
-+
-+	return -EIO;
-+}
-+
- static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
- 				    unsigned long *pe_bitmap,
- 				    bool all)
-@@ -325,6 +383,26 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 			pe->master = master_pe;
- 			list_add_tail(&pe->list, &master_pe->slaves);
- 		}
-+
-+		/*
-+		 * P7IOC supports M64DT, which helps mapping M64 segment
-+		 * to one particular PE#. However, PHB3 has fixed mapping
-+		 * between M64 segment and PE#. In order to have same logic
-+		 * for P7IOC and PHB3, we enforce fixed mapping between M64
-+		 * segment and PE# on P7IOC.
-+		 */
-+		if (phb->type == PNV_PHB_IODA1) {
-+			int64_t rc;
-+
-+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+					pe->pe_number, OPAL_M64_WINDOW_TYPE,
-+					pe->pe_number / PNV_IODA1_M64_SEGS,
-+					pe->pe_number % PNV_IODA1_M64_SEGS);
-+			if (rc != OPAL_SUCCESS)
-+				pr_warn("%s: Error %lld mapping M64 for PHB#%d-PE#%d\n",
-+					__func__, rc, phb->hose->global_number,
-+					pe->pe_number);
-+		}
- 	}
- 
- 	kfree(pe_alloc);
-@@ -339,8 +417,7 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
- 	const u32 *r;
- 	u64 pci_addr;
- 
--	/* FIXME: Support M64 for P7IOC */
--	if (phb->type != PNV_PHB_IODA2) {
-+	if (phb->type != PNV_PHB_IODA1 && phb->type != PNV_PHB_IODA2) {
- 		pr_info("  Not support M64 window\n");
- 		return;
- 	}
-@@ -373,7 +450,10 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
- 
- 	/* Use last M64 BAR to cover M64 window */
- 	phb->ioda.m64_bar_idx = 15;
--	phb->init_m64 = pnv_ioda2_init_m64;
-+	if (phb->type == PNV_PHB_IODA1)
-+		phb->init_m64 = pnv_ioda1_init_m64;
-+	else
-+		phb->init_m64 = pnv_ioda2_init_m64;
- 	phb->reserve_m64_pe = pnv_ioda_reserve_m64_pe;
- 	phb->pick_m64_pe = pnv_ioda_pick_m64_pe;
- }
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 671fd13..c4019ac 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -78,6 +78,9 @@ struct pnv_ioda_pe {
- 	struct list_head	list;
- };
- 
-+#define PNV_IODA1_M64_NUM	16	/* Number of M64 BARs   */
-+#define PNV_IODA1_M64_SEGS	8	/* Segments per M64 BAR */
-+
- #define PNV_PHB_FLAG_EEH	(1 << 0)
- 
- struct pnv_phb {
--- 
-2.1.0
+  $ lspci -vvv -s 02:00.0
+  02:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 2208
+  [Thunderbolt] (rev 05)
+        Capabilities: [d0] Vital Product Data
+                Unknown small resource type 00, will not decode more.
 
+  $ cat /sys/devices/pci0000:00/0000:00:02.2/0000:02:00.0/vpd |
+     od -A x -t x1z -v
+  000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  >................<
+  *
+  007ff0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  >................<
+  008000
+
+and got the following on the NIC related ports of a Brocade device -
+
+ $ lspci -vvv -s 03:00.0
+  03:00.0 Fibre Channel: Brocade Communications Systems, Inc.
+  1010/1020/1007/1741 10Gbps CNA (rev 01)
+        Capabilities: [a0] Vital Product Data
+                No end tag found
+
+  $ cat /sys/devices/pci0000:00/0000:00:02.0/0000:03:00.0/vpd |
+     od -A x -t x1z -v
+  000000 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff  >................<
+  *
+  007ff0 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff  >................<
+  008000
+
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
