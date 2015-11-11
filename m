@@ -1,129 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:36564 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752764AbbKRD7k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 22:59:40 -0500
-Received: by pacdm15 with SMTP id dm15so30462386pac.3
-        for <linux-pci@vger.kernel.org>; Tue, 17 Nov 2015 19:59:39 -0800 (PST)
-Subject: Re: [PATCH v7 29/50] powerpc/pci: Rename pcibios_find_pci_bus()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-30-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, frowand.list@gmail.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <564BF7A4.3060105@ozlabs.ru>
-Date: Wed, 18 Nov 2015 14:59:32 +1100
+Received: from mout.kundenserver.de ([212.227.17.10]:58248 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015AbbKKIx5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2015 03:53:57 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	linux-pci@vger.kernel.org, lorenzo.pieralisi@arm.com,
+	linux@arm.linux.org.uk, xuwei5@hisilicon.com,
+	wangzhou1@hisilicon.com, bhelgaas@google.com,
+	liguozhu@hisilicon.com
+Subject: Re: [PATCH] ARM/PCI: move align_resource function pointer into pci_host_bridge structure
+Date: Wed, 11 Nov 2015 09:47:38 +0100
+Message-ID: <5509277.PRqCf43vDc@wuerfel>
+In-Reply-To: <1447204345-143793-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1447204345-143793-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1446642770-4681-30-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/05/2015 12:12 AM, Gavin Shan wrote:
-> This renames pcibios_find_pci_bus() to pci_find_bus_by_node() to
-> avoid conflicts with those PCI subsystem weak function names, which
-> have prefix "pcibios". No logical changes introduced.
+On Wednesday 11 November 2015 09:12:25 Gabriele Paoloni wrote:
+> From: gabpao01 <gabriele.paoloni@huawei.com>
 
-Could be merged into [PATCH v7 28/50] powerpc/pci: Rename 
-pcibios_{add,remove}_pci_devices()  or/and moved to the beginning of the 
-series?
+Regardless of this patch, you might want to update your global git config
+to use the proper name for your commits.
 
+> commit b3a72384fe29 ("ARM/PCI: Replace
+> pci_sys_data->align_resource with global function pointer") has
+> introduced a global function pointer that makes the ARM specific
+> code not portable and broken in case any platform have a two
+> different HW IPs for the PCIe host bridge controller.
+> This patch moves align_resource function pointer into
+> pci_host_bridge structure so that the code is now suitable to be
+> reworked as we want to get rid of hw_pci structure (the host bridge
+> drivers can just set the align function pointer in the
+> pci_host_bridge structure) and there is no more broken code for a
+> SoC with two HW IPs.
+> 
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/include/asm/pci-bridge.h      | 2 +-
->   arch/powerpc/platforms/pseries/pci_dlpar.c | 5 ++---
->   drivers/pci/hotplug/rpadlpar_core.c        | 6 +++---
->   drivers/pci/hotplug/rpaphp_pci.c           | 2 +-
->   4 files changed, 7 insertions(+), 8 deletions(-)
->
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index c2360c8..28385cb 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -257,7 +257,7 @@ static inline struct eeh_dev *pdn_to_eeh_dev(struct pci_dn *pdn)
->   #endif
->
->   /** Find the bus corresponding to the indicated device node */
-> -extern struct pci_bus *pcibios_find_pci_bus(struct device_node *dn);
-> +extern struct pci_bus *pci_find_bus_by_node(struct device_node *dn);
->
->   /** Remove all of the PCI devices under this bus */
->   extern void pci_remove_pci_devices(struct pci_bus *bus);
-> diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
-> index 5d4a3df..aee22b4 100644
-> --- a/arch/powerpc/platforms/pseries/pci_dlpar.c
-> +++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
-> @@ -54,8 +54,7 @@ find_bus_among_children(struct pci_bus *bus,
->   	return child;
->   }
->
-> -struct pci_bus *
-> -pcibios_find_pci_bus(struct device_node *dn)
-> +struct pci_bus *pci_find_bus_by_node(struct device_node *dn)
->   {
->   	struct pci_dn *pdn = dn->data;
->
-> @@ -64,7 +63,7 @@ pcibios_find_pci_bus(struct device_node *dn)
->
->   	return find_bus_among_children(pdn->phb->bus, dn);
->   }
-> -EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
-> +EXPORT_SYMBOL_GPL(pci_find_bus_by_node);
->
->   struct pci_controller *init_phb_dynamic(struct device_node *dn)
->   {
-> diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
-> index ebd283b..9aa392b 100644
-> --- a/drivers/pci/hotplug/rpadlpar_core.c
-> +++ b/drivers/pci/hotplug/rpadlpar_core.c
-> @@ -176,7 +176,7 @@ static int dlpar_add_pci_slot(char *drc_name, struct device_node *dn)
->   	struct pci_dev *dev;
->   	struct pci_controller *phb;
->
-> -	if (pcibios_find_pci_bus(dn))
-> +	if (pci_find_bus_by_node(dn))
->   		return -EINVAL;
->
->   	/* Add pci bus */
-> @@ -213,7 +213,7 @@ static int dlpar_remove_phb(char *drc_name, struct device_node *dn)
->   	struct pci_dn *pdn;
->   	int rc = 0;
->
-> -	if (!pcibios_find_pci_bus(dn))
-> +	if (!pci_find_bus_by_node(dn))
->   		return -EINVAL;
->
->   	/* If pci slot is hotpluggable, use hotplug to remove it */
-> @@ -357,7 +357,7 @@ int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
->
->   	pci_lock_rescan_remove();
->
-> -	bus = pcibios_find_pci_bus(dn);
-> +	bus = pci_find_bus_by_node(dn);
->   	if (!bus) {
->   		ret = -EINVAL;
->   		goto out;
-> diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
-> index 256066c..e7dd573 100644
-> --- a/drivers/pci/hotplug/rpaphp_pci.c
-> +++ b/drivers/pci/hotplug/rpaphp_pci.c
-> @@ -93,7 +93,7 @@ int rpaphp_enable_slot(struct slot *slot)
->   	if (rc)
->   		return rc;
->
-> -	bus = pcibios_find_pci_bus(slot->dn);
-> +	bus = pci_find_bus_by_node(slot->dn);
->   	if (!bus) {
->   		err("%s: no pci_bus for dn %s\n", __func__, slot->dn->full_name);
->   		return -EINVAL;
->
+Thanks for doing this, that addresses my main concerns, and is probably
+small enough to still get it into 4.4 if Bjorn agrees with the general
+idea of putting more function pointers into struct pci_host_bridge.
 
+As a follow-on to this, we can now try to get rid of pcibios_align_resource
+by moving the existing per-architecture implementations in there as well,
+with a reasonable default for the common case.
 
--- 
-Alexey
+	Arnd
