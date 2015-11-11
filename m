@@ -1,58 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:60312 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754166AbbKLMV6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 07:21:58 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Jisheng Zhang <jszhang@marvell.com>, wangzhou1@hisilicon.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: hisi: Fix Section mismatch compilation warning for probe()
-Date: Thu, 12 Nov 2015 13:21:02 +0100
-Message-ID: <4599031.EERjkvxHAA@wuerfel>
-In-Reply-To: <1447329728-1589-1-git-send-email-jszhang@marvell.com>
-References: <1447329728-1589-1-git-send-email-jszhang@marvell.com>
+Received: from foss.arm.com ([217.140.101.70]:32930 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750781AbbKKSY6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 11 Nov 2015 13:24:58 -0500
+Date: Wed, 11 Nov 2015 18:24:56 +0000
+From: "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Magnus <magnus.damm@gmail.com>
+Subject: Re: PCIe host controller behind IOMMU on ARM
+Message-ID: <20151111182456.GV963@e106497-lin.cambridge.arm.com>
+References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151104142412.GS963@e106497-lin.cambridge.arm.com>
+ <PS1PR06MB11804263DD55C54C5987654EF52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151104150147.GT963@e106497-lin.cambridge.arm.com>
+ <PS1PR06MB11806B65D3408BDFBEAD9D3AF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <PS1PR06MB11806B65D3408BDFBEAD9D3AF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 12 November 2015 20:02:08 Jisheng Zhang wrote:
-> Following compilation warning occurs when compiled with:
-> CONFIG_DEBUG_SECTION_MISMATCH=y
+On Mon, Nov 09, 2015 at 12:32:13PM +0000, Phil Edworthy wrote:
+> Hi Liviu, Will,
 > 
->  WARNING: drivers/pci/host/built-in.o(.data+0x308): Section mismatch in
->  reference from the variable hisi_pcie_driver to the function
->  .init.text:hisi_pcie_probe()
+> On 04 November 2015 15:19, Phil wrote:
+> > On 04 November 2015 15:02, Liviu wrote:
+> > > On Wed, Nov 04, 2015 at 02:48:38PM +0000, Phil Edworthy wrote:
+> > > > Hi Liviu,
+> > > >
+> > > > On 04 November 2015 14:24, Liviu wrote:
+> > > > > On Wed, Nov 04, 2015 at 01:57:48PM +0000, Phil Edworthy wrote:
+> > > > > > Hi,
+> > > > > >
+> > > > > > I am trying to hook up a PCIe host controller that sits behind an IOMMU,
+> > > > > > but having some problems.
+> > > > > >
+> > > > > > I'm using the pcie-rcar PCIe host controller and it works fine without
+> > > > > > the IOMMU, and I can attach the IOMMU to the controller such that any
+> > > calls
+> > > > > > to dma_alloc_coherent made by the controller driver uses the
+> > iommu_ops
+> > > > > > version of dma_ops.
+> > > > > >
+> > > > > > However, I can't see how to make the endpoints to utilise the dma_ops
+> > that
+> > > > > > the controller uses. Shouldn't the endpoints inherit the dma_ops from the
+> > > > > > controller?
+> > > > >
+> > > > > No, not directly.
+> > > > >
+> > > > > > Any pointers for this?
+> > > > >
+> > > > > You need to understand the process through which a driver for endpoint
+> > get
+> > > > > an address to be passed down to the device. Have a look at
+> > > > > Documentation/DMA-API-HOWTO.txt, there is a nice explanation there.
+> > > > > (Hint: EP driver needs to call dma_map_single).
+> > > > >
+> > > > > Also, you need to make sure that the bus address that ends up being set
+> > into
+> > > > > the endpoint gets translated correctly by the host controller into an address
+> > > > > that the IOMMU can then translate into physical address.
+> > > > Sure, though since this is bog standard Intel PCIe ethernet card which works
+> > > > fine when the IOMMU is effectively unused, I don’t think there is a problem
+> > > > with that.
+> > > >
+> > > > The driver for the PCIe controller sets up the IOMMU mapping ok when I
+> > > > do a test call to dma_alloc_coherent() in the controller's driver. i.e. when I
+> > > > do this, it ends up in arm_iommu_alloc_attrs(), which calls
+> > > > __iommu_alloc_buffer() and __alloc_iova().
+> > > >
+> > > > When an endpoint driver allocates and maps a dma coherent buffer it
+> > > > also needs to end up in arm_iommu_alloc_attrs(), but it doesn't.
+> > >
+> > > Why do you think that? Remember that the only thing attached to the IOMMU
+> > is
+> > > the
+> > > host controller. The endpoint is on the PCIe bus, which gets a different
+> > > translation
+> > > that the IOMMU knows nothing about. If it helps you to visualise it better, think
+> > > of the host controller as another IOMMU device. It's the ops of the host
+> > > controller
+> > > that should be invoked, not the IOMMU's.
+> > Ok, that makes sense. I'll have a think and poke it a bit more...
+
+Hi Phil,
+
+Not trying to ignore your email, but I thought this is more in Will's backyard.
+
+> Somewhat related to this, since our PCIe controller HW is limited to
+> 32-bit AXI address range, before trying to hook up the IOMMU I have
+> tried to limit the dma_mask for PCI cards to DMA_BIT_MASK(32). The
+> reason being that Linux uses a 1 to 1 mapping between PCI addresses
+> and cpu (phys) addresses when there isn't an IOMMU involved, so I
+> think that we need to limit the PCI address space used.
+
+I think you're mixing things a bit or not explaining them very well. Having the
+PCIe controller limited to 32-bit AXI does not mean that the PCIe bus cannot
+carry 64-bit addresses. It depends on how they get translated by the host bridge
+or its associated ATS block. I can't see why you can't have a setup where
+the CPU addresses are 32-bit but the PCIe bus addresses are all 64-bit.
+You just have to be careful on how you setup your mem64 ranges so that they don't
+overlap with the 32-bit ranges when translated.
+
+And no, you should not limit at the card driver the DMA_BIT_MASK() unless the
+card is not capable of supporting more than 32-bit addresses.
+
 > 
-> Fix it by dropping __init from hisi_pcie_probe().
-
-The patch description should ideally say what the impact is here, not
-only what the warning says.
-
-> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
-> Fixes: 500a1d9a43e0 ("PCI: hisi: Add HiSilicon SoC Hip05 PCIe driver")
-> ---
->  drivers/pci/host/pcie-hisi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Since pci_setup_device() sets up dma_mask, I added a bus notifier in the
+> PCIe controller driver so I can change the mask, if needed, on the
+> BUS_NOTIFY_BOUND_DRIVER action.
+> However, I think there is the potential for card drivers to allocate and
+> map buffers before the bus notifier get called. Additionally, I've seen
+> drivers change their behaviour based on the success or failure of
+> dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64)), so the
+> driver could, theoretically at least, operate in a way that is not
+> compatible with a more restricted dma_mask (though I can't think
+> of any way this would not work with hardware I've seen).
 > 
-> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-> index 35457ec..1cc0a21 100644
-> --- a/drivers/pci/host/pcie-hisi.c
-> +++ b/drivers/pci/host/pcie-hisi.c
-> @@ -139,7 +139,7 @@ static int __init hisi_add_pcie_port(struct pcie_port *pp,
->         return 0;
->  }
->  
-> -static int __init hisi_pcie_probe(struct platform_device *pdev)
-> +static int hisi_pcie_probe(struct platform_device *pdev)
->  {
->         struct hisi_pcie *hisi_pcie;
->         struct pcie_port *pp;
+> So, I think that using a bus notifier is the wrong way to go, but I don’t
+> know what other options I have. Any suggestions?
 
-This seems incomplete, you now get a new warning about hisi_add_pcie_port().
+I would first have a look at how the PCIe bus addresses are translated by the
+host controller. 
 
-I did a similar patch yesterday, will follow up with my version.
+Best regards,
+Liviu
 
-	Arnd
+> 
+> Thanks for your help
+> Phil
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
