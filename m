@@ -1,204 +1,217 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-To: Jiang Liu <jiang.liu@linux.intel.com>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
- <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
- <563B65EE.7000406@semihalf.com> <20151105181959.GA352@red-moon>
- <563C6A5F.5030500@linux.intel.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <563C82FA.7050707@semihalf.com>
-Date: Fri, 6 Nov 2015 11:37:46 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Thierry Reding <treding@nvidia.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: RE: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
+Date: Thu, 12 Nov 2015 08:57:03 +0000
+Message-ID: <PS1PR06MB11806B2B906CABB553B94442F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>
+	<PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	<20151109161115.GA13870@ulmo.nvidia.com>
+	<PS1PR06MB1180111D6423287273B64B0FF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	<20151110155232.GA25368@ulmo.nvidia.com> <20151111163802.3a96080c@arm.com>
+In-Reply-To: <20151111163802.3a96080c@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <563C6A5F.5030500@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06.11.2015 09:52, Jiang Liu wrote:
-> On 2015/11/6 2:19, Lorenzo Pieralisi wrote:
->> On Thu, Nov 05, 2015 at 03:21:34PM +0100, Tomasz Nowicki wrote:
->>> On 14.10.2015 08:29, Jiang Liu wrote:
->>
->> [...]
->>
->>>> +static void acpi_pci_root_validate_resources(struct device *dev,
->>>> +					     struct list_head *resources,
->>>> +					     unsigned long type)
->>>> +{
->>>> +	LIST_HEAD(list);
->>>> +	struct resource *res1, *res2, *root = NULL;
->>>> +	struct resource_entry *tmp, *entry, *entry2;
->>>> +
->>>> +	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
->>>> +	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
->>>> +
->>>> +	list_splice_init(resources, &list);
->>>> +	resource_list_for_each_entry_safe(entry, tmp, &list) {
->>>> +		bool free = false;
->>>> +		resource_size_t end;
->>>> +
->>>> +		res1 = entry->res;
->>>> +		if (!(res1->flags & type))
->>>> +			goto next;
->>>> +
->>>> +		/* Exclude non-addressable range or non-addressable portion */
->>>> +		end = min(res1->end, root->end);
->>>> +		if (end <= res1->start) {
->>>> +			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
->>>> +				 res1);
->>>> +			free = true;
->>>> +			goto next;
->>>> +		} else if (res1->end != end) {
->>>> +			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
->>>> +				 res1, (unsigned long long)end + 1,
->>>> +				 (unsigned long long)res1->end);
->>>> +			res1->end = end;
->>>> +		}
->>>> +
->>>> +		resource_list_for_each_entry(entry2, resources) {
->>>> +			res2 = entry2->res;
->>>> +			if (!(res2->flags & type))
->>>> +				continue;
->>>> +
->>>> +			/*
->>>> +			 * I don't like throwing away windows because then
->>>> +			 * our resources no longer match the ACPI _CRS, but
->>>> +			 * the kernel resource tree doesn't allow overlaps.
->>>> +			 */
->>>> +			if (resource_overlaps(res1, res2)) {
->>>> +				res2->start = min(res1->start, res2->start);
->>>> +				res2->end = max(res1->end, res2->end);
->>>> +				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
->>>> +					 res2, res1);
->>>> +				free = true;
->>>> +				goto next;
->>>> +			}
->>>> +		}
->>>> +
->>>> +next:
->>>> +		resource_list_del(entry);
->>>> +		if (free)
->>>> +			resource_list_free_entry(entry);
->>>> +		else
->>>> +			resource_list_add_tail(entry, resources);
->>>> +	}
->>>> +}
->>>> +
->>>> +int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
->>>> +{
->>>> +	int ret;
->>>> +	struct list_head *list = &info->resources;
->>>> +	struct acpi_device *device = info->bridge;
->>>> +	struct resource_entry *entry, *tmp;
->>>> +	unsigned long flags;
->>>> +
->>>> +	flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT;
->>>> +	ret = acpi_dev_get_resources(device, list,
->>>> +				     acpi_dev_filter_resource_type_cb,
->>>> +				     (void *)flags);
->>>> +	if (ret < 0)
->>>> +		dev_warn(&device->dev,
->>>> +			 "failed to parse _CRS method, error code %d\n", ret);
->>>> +	else if (ret == 0)
->>>> +		dev_dbg(&device->dev,
->>>> +			"no IO and memory resources present in _CRS\n");
->>>> +	else {
->>>> +		resource_list_for_each_entry_safe(entry, tmp, list) {
->>>> +			if (entry->res->flags & IORESOURCE_DISABLED)
->>>> +				resource_list_destroy_entry(entry);
->>>> +			else
->>>> +				entry->res->name = info->name;
->>>> +		}
->>>> +		acpi_pci_root_validate_resources(&device->dev, list,
->>>> +						 IORESOURCE_MEM);
->>>> +		acpi_pci_root_validate_resources(&device->dev, list,
->>>> +						 IORESOURCE_IO);
->>>
->>> It is not clear to me why we need these two calls above ^^^. We are
->>> using pci_acpi_root_add_resources(info) later. Is it not enough?
->>>
->>> Also, I cannot use acpi_pci_probe_root_resources() in my ARM64 PCI
->>> driver. It is because acpi_dev_get_resources is adding
->>> translation_offset to IO ranges start address and then:
->>> acpi_pci_root_validate_resources(&device->dev, list,
->>> 				 IORESOURCE_IO);
->>> rejects that IO regions as it is out of my 0x0-SZ_16M window.
->>>
->>> Does acpi_pci_probe_root_resources meant to be x86 specific and I
->>> should avoid using it?
->>
->> IIUC, you _have_ to have the proper translation_offset to map the bridge
->> window into the IO address space:
->>
->> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-June/348708.html
->>
->> Then, using the offset, you should do something ia64 does, namely,
->> retrieve the CPU address corresponding to IO space (see arch/ia64/pci/pci.c
->> - add_io_space()) and map it in the physical address space by using
->> pci_remap_iospace(), it is similar to what we have to do with DT.
->>
->> It is extremely confusing and I am not sure I got it right myself,
->> I am still grokking ia64 code to understand what it really does.
->>
->> So basically, the IO bridge window coming from acpi_dev_get_resource()
->> should represent the IO space in 0 - 16M, IIUC.
->>
->> By using the offset (that was initialized using translation_offset) and
->> the resource->start, you can retrieve the cpu address that you need to
->> actually map the IO space, since that's what we do on ARM (ie the
->> IO resource is an offset into the virtual address space set aside
->> for IO).
->>
->> Confusing, to say the least. Jiang, did I get it right ?
-> Hi Lorenzo and Tomasz,
-> 	With a cup of coffee, I got myself awake eventually:)
-> Now we are going to talk about IO port on IA64, really a little
-> complex:( Actually there are two types of translation.
-> 1) A PCI domain has a 24-bit IO port address space, there may
-> be multiple IO port address spaces in systems with multiple PCI
-> domains. So the first type of translation is to translate domain
-> specific IO port address into system global IO port address
-> (iomem_resource) by
->    res->start = acpi_des->start + acpi_des->translation_offset
->
-> 2) IA64 needs to map IO port address spaces into MMIO address
-> space because it has no instructions to access IO ports directly.
-> So IA64 has reserved a MMIO range to map IO port address spaces.
-> This type of translation relies on architecture specific information
-> instead of ACPI descriptors.
->
-> On the other hand, ACPI specification has defined  "I/O to Memory
-> Translation" flag and "Memory to I/O Translation" flag in
-> ACPI Extended Address Space Descriptor,
+Hi Marc,
 
-Based on 2) and above, does it mean IA64 should use "ACPI Extended 
-Address Space Descriptor" for its PCI bridge IO windows only?
+On 11 November 2015 16:38, Marc Zyngier wrote:
+> On Tue, 10 Nov 2015 16:52:33 +0100
+> Thierry Reding <treding@nvidia.com> wrote:
+> 
+> > On Mon, Nov 09, 2015 at 06:01:49PM +0000, Phil Edworthy wrote:
+> > > Hi Thierry,
+> > >
+> > > On 09 November 2015 17:24, Phil wrote:
+> > > > On 09 November 2015 16:11, Thierry wrote:
+> > > > > On Mon, Nov 09, 2015 at 03:20:24PM +0000, Phil Edworthy wrote:
+> > > > > > cc'ing others (Tegra, Altera, Designware) who may have the same bug
+> > > > > >
+> > > > > > On 03 November 2015 09:28, Phil Edworthy wrote:
+> > > > > > > The OF node passed to irq_domain_add_linear() should be a
+> > > > > > > pointer to interrupt controller's device tree node, or NULL,
+> > > > > > > but not the PCI controller's node.
+> > > > > > >
+> > > > > > > This fixes an oops in msi_domain_alloc_irqs() when it tries
+> > > > > > > to call msi_check().
+> > > > > > >
+> > > > > > > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> > > > > > > ---
+> > > > > > >  drivers/pci/host/pcie-rcar.c | 2 +-
+> > > > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > > > >
+> > > > > > > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> > > > > > > index 2377bf0..c6fa562 100644
+> > > > > > > --- a/drivers/pci/host/pcie-rcar.c
+> > > > > > > +++ b/drivers/pci/host/pcie-rcar.c
+> > > > > > > @@ -709,7 +709,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie
+> > > > *pcie)
+> > > > > > >  	msi->chip.setup_irq = rcar_msi_setup_irq;
+> > > > > > >  	msi->chip.teardown_irq = rcar_msi_teardown_irq;
+> > > > > > >
+> > > > > > > -	msi->domain = irq_domain_add_linear(pcie->dev->of_node,
+> > > > > > > INT_PCI_MSI_NR,
+> > > > > > > +	msi->domain = irq_domain_add_linear(NULL, INT_PCI_MSI_NR,
+> > > > > > >  					    &msi_domain_ops, &msi-
+> >chip);
+> > > > > > >  	if (!msi->domain) {
+> > > > > > >  		dev_err(&pdev->dev, "failed to create IRQ domain\n");
+> > > > >
+> > > > > On Tegra the PCI controller is in fact the interrupt controller for
+> > > > > MSIs. And looking at the code here it seems like the same would apply to
+> > > > > RCAR.
+> > > > Yes you are correct here.
+> > > >
+> > > > > I'm also slightly confused as to why this would cause ->msi_check() to
+> > > > > fail. The default implementation (msi_domain_ops_check()) doesn't do
+> > > > > anything.
+> > > > >
+> > > > > Also, how is passing in NULL instead of a valid struct device_node *
+> > > > > going to prevent an oops? Perhaps this is one of those reference count
+> > > > > imbalance bugs that have recently been showing up?
+> > > > On arm64 (previously I didn't realise this just affects arm64, not arm),
+> > > > the changes in commit f075915ac0b11 ("PCI/MSI: Drop domain field from
+> > > > msi_controller") and d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use
+> > > > struct device::msi_domain") return an uninitialized msi domain that leads
+> > > > to the oops. It appears that these changes assume that msi interrupt
+> > > > controller is separate from the PCI controller.
+> > > More accurately, when CONFIG_GENERIC_MSI_IRQ_DOMAIN is enabled,
+> > > pci_msi_get_domain() calls dev_get_msi_domain() and at this point
+> > > dev->msi_domain is uninitialized.
+> >
+> > Marc, any idea what's going on here?
+> 
+> Thanks for putting me in the loop.
+> 
+> No precise idea yet, but the proposed fix definitely looks like the
+> wrong one. Actually, not passing a node identifier to any domain
+> constructor is pretty much always a mistake when using DT.
+> 
+> Can someone post a stack trace for this issue so that I can have a
+> look? I'm currently traveling, so expect a slightly delayed reply...
 
-  but current implementation
-> doesn't really support such a use case. So we need to find a way
-> out here. Could you please help to provide more information about
-> PCI host bridge resource descriptor implementation details on
-> ARM64?
->
+Unfortunately, not all the code for this arm64 board is upstream
+yet, this code base is off 4.3-rc7.
 
-Sure, ARM64 (0-16M IO space) QEMU example:
-DWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
-          0x00000000,         // Granularity
-          0x00000000,         // Range Minimum
-          0x0000FFFF,         // Range Maximum
-          0x3EFF0000,         // Translation Offset
-          0x00010000,         // Length
-          ,, , TypeStatic)
+systemd-udevd[1315]: undefined instruction: pc=ffffffc03106d41c
+Code: ffffffc0 311f9740 ffffffc0 3106d138 (ffffffc0)
+Internal error: Oops - undefined instruction: 0 [#1] PREEMPT SMP
+Modules linked in: e1000e(+)
+CPU: 0 PID: 1315 Comm: systemd-udevd Not tainted 4.3.0-rc7+ #4
+Hardware name: Renesas Salvator-X board based on r8a7795 (DT)
+task: ffffffc0307af080 ti: ffffffc030ecc000 task.ti: ffffffc030ecc000
+PC is at 0xffffffc03106d41c
+LR is at msi_domain_alloc_irqs+0x3c/0x1e0
+pc : [<ffffffc03106d41c>] lr : [<ffffffc0000fa744>] pstate: 00000145
+sp : ffffffc030ecf930
+x29: ffffffc030ecf930 x28: 0000000000000124
+x27: ffffffc0312628dc x26: ffffffc03193c890
+x25: ffffffc0311fd000 x24: 00000000000001b4
+x23: ffffffc0311fd160 x22: ffffffc03193a810
+x21: ffffffc03193c800 x20: ffffffc0312628c0
+x19: 0000000000000003 x18: 0000000000770000
+x17: 0000007f96948570 x16: ffffffc0001dfa70
+x15: 003b9aca00000000 x14: 63696d616e796420
+x13: 6f74207465732029 x12: 0000000000000038
+x11: ffffff8000668fff x10: 0140000000000000
+x9 : 0000000000000000 x8 : ffffffc030d7f500
+x7 : 0000000000000000 x6 : 000000000000003f
+x5 : 0000000000000040 x4 : 0000000000000000
+x3 : ffffffc03106d418 x2 : ffffffc03193c890
+x1 : ffffffc0311fd160 x0 : ffffffc0311fd000
 
-You can also have a look at my implementation example in mail to Lorenzo.
+Process systemd-udevd (pid: 1315, stack limit = 0xffffffc030ecc020)
+Stack: (0xffffffc030ecf930 to 0xffffffc030ed0000)
+f920:                                   ffffffc030ecf9a0 ffffffc00036537c
+f940: ffffffc03193c800 ffffffc0312628c0 ffffffc03193c800 ffffff8000668000
+f960: ffffffc03193c890 0000000000000001 0000000000000003 ffffffc03193ca70
+f980: ffffffc03193c890 0000000000000001 0000000000000002 ffffffc03193ca70
+f9a0: ffffffc030ecf9d0 ffffffc000365990 0000000000000003 ffffffc000365960
+f9c0: 0000000000000003 ffffffc0003658dc ffffffc030ecfa40 ffffffc000365a30
+f9e0: 0000000000000003 ffffffc0312628c0 ffffffc03193c800 0000000000000003
+fa00: ffffffc0304107c0 ffffffbffc020250 ffffffc030410000 0000000000020000
+fa20: 0000000000000001 ffffffc03193c800 ffffffc03193c890 000000000004e5e0
+fa40: ffffffc030ecfa70 ffffffbffc0192ec ffffffc0304107c0 ffffffc03193c800
+fa60: ffffffc03193c890 ffffffbffc01e5e0 ffffffc030ecfa90 ffffffbffc01c9b8
+fa80: ffffffc0304127c0 ffffffbffc01e5e0 ffffffc030ecfb10 ffffffc00035aaf0
+faa0: ffffffc03193c890 ffffffbffc025f98 ffffffc03193c800 ffffffbffc025f30
+fac0: ffffffbffc0206e8 ffffffbffc026090 ffffffc030ff3d00 ffffff800029d000
+fae0: ffffffc0001173bc ffffffc00035aadc ffffffc03193c890 0000ffbffc025f98
+fb00: ffffffc03193c800 ffffffbffc025f30 ffffffc030ecfb50 ffffffc0003d6030
+fb20: ffffffc03193c890 ffffffc0009ca000 0000000000000000 ffffffbffc025f98
+fb40: 0000000000000002 ffffffc0009ca000 ffffffc030ecfb90 ffffffc0003d61c0
+fb60: ffffffc03193c890 ffffffbffc025f98 ffffffc03193c8f0 ffffffc00095bf08
+fb80: ffffffc000968000 ffffffc0003d614c ffffffc030ecfbc0 ffffffc0003d4240
+fba0: 0000000000000000 ffffffbffc025f98 ffffffc0003d6124 ffffffc030ecfc10
+fbc0: ffffffc030ecfc00 ffffffc0003d5a9c ffffffbffc025f98 ffffffc030502cc0
+fbe0: 0000000000000000 ffffffc000608b28 ffffffc0318e04a8 ffffffc0319d47e8
+fc00: ffffffc030ecfc10 ffffffc0003d56d8 ffffffc030ecfc50 ffffffc0003d6a38
+fc20: ffffffbffc025f98 ffffffc000934b20 ffffffc031262d00 ffffffbffc031000
+fc40: 0000000000000000 0000000000000008 ffffffc030ecfc70 ffffffc00035995c
+fc60: ffffffc000934b20 ffffffc000934b20 ffffffc030ecfc80 ffffffbffc031034
+fc80: ffffffc030ecfc90 ffffffc0000828ec ffffffc030ecfd10 ffffffc00013ecc4
+fca0: ffffffbffc026040 ffffffc000941000 ffffffbffc026040 ffffffc031262dc0
+fcc0: 0000000000000001 ffffffc000941000 ffffffbffc026040 0000000000000001
+fce0: 0000000000000001 ffffffbffc026090 ffffffc030ff3d00 ffffff800029d000
+fd00: ffffffc0001173bc ffffffc030ff3d10 ffffffc030ecfd40 ffffffc00011a700
+fd20: ffffffc030ecfe70 ffffffc030ff3d10 ffffffbffc026040 0000000000000001
+fd40: ffffffc030ecfe40 ffffffc00011ac3c 0000000000000000 0000000000000009
+fd60: 0000007f96809f40 0000007f96944c14 0000000080000000 0000000000000015
+fd80: 000000000000011c 0000000000000111 ffffffc00061b000 ffffffc030ecc000
+fda0: ffffffc000000076 0000006400000077 ffffffbf00000072 ffffff800000006e
+fdc0: ffffffbf0000003f ffffffbffc031070 ffffffc0306125c0 ffffffc0306125c0
+fde0: 000081a40000000f 0000000000000001 0000000000000000 00000000003c10e3
+fe00: 00000000564449f9 0000000000000000 0000000000000000 0000000000000000
+fe20: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+fe40: 0000007fef721500 ffffffc000085cb0 0000000000000000 0000007f96809f40
+fe60: ffffffffffffffff ffffffc030ecfed0 ffffff800029d000 00000000003c10e3
+fe80: ffffff8000497b90 ffffff80004979d5 ffffff8000659d80 0000000000026370
+fea0: 000000000002c418 0000000000000000 0000000000000000 0000002d0000002c
+fec0: 0000000000000017 0000000000000012 0000000000000009 0000007f96809f40
+fee0: 0000000000000000 0000000000000009 0000000000000000 60ceffffffffffff
+ff00: ffffffffffffffff ffffffffffffffff 0000000000000111 fefefefefefeff42
+ff20: 0101010101010101 0000000000000018 0000000000000000 ffffffffffff0000
+ff40: 0000007f9688366c 0000000000000020 0000007f96944bf0 0000007f9681a768
+ff60: 0000000000520000 000000559d66f190 0000007f96809f40 0000000000020000
+ff80: 0000000000000000 0000007fef721ad8 0000000000000000 000000559d671360
+ffa0: 0000000000000000 0000007fef721ac8 0000000000020000 0000007fef721500
+ffc0: 0000007f96803c44 0000007fef721500 0000007f96944c14 0000000080000000
+ffe0: 0000000000000009 0000000000000111 ffffffffffffffff ffffffffffffffff
+Call trace:
+[<ffffffc03106d41c>] 0xffffffc03106d41c
+[<ffffffc000365378>] pci_msi_setup_msi_irqs+0x24/0x64
+[<ffffffc00036598c>] pci_enable_msix+0x3cc/0x438
+[<ffffffc000365a2c>] pci_enable_msix_range+0x34/0x80
+[<ffffffbffc0192e8>] e1000e_set_interrupt_capability+0xd0/0x110 [e1000e]
+[<ffffffbffc01c9b4>] e1000_probe+0x444/0xcb8 [e1000e]
+[<ffffffc00035aaec>] pci_device_probe+0x94/0x10c
+[<ffffffc0003d602c>] driver_probe_device+0x1e8/0x2e0
+[<ffffffc0003d61bc>] __driver_attach+0x98/0xa0
+[<ffffffc0003d423c>] bus_for_each_dev+0x54/0x98
+[<ffffffc0003d5a98>] driver_attach+0x1c/0x28
+[<ffffffc0003d56d4>] bus_add_driver+0x1c0/0x228
+[<ffffffc0003d6a34>] driver_register+0x5c/0xf4
+[<ffffffc000359958>] __pci_register_driver+0x40/0x4c
+[<ffffffbffc031030>] e1000_init_module+0x30/0x70 [e1000e]
+[<ffffffc0000828e8>] do_one_initcall+0x88/0x198
+[<ffffffc00013ecc0>] do_init_module+0x58/0x1c4
+[<ffffffc00011a6fc>] load_module+0x1954/0x1ce0
+[<ffffffc00011ac38>] SyS_finit_module+0x78/0x88
+[<ffffffc000085cac>] el0_svc_naked+0x20/0x28
+Code: ffffffc0 311f9740 ffffffc0 3106d138 (ffffffc0)
+---[ end trace 3249daca187c36b0 ]---
 
-Thanks,
-Tomasz
+Thanks
+Phil
