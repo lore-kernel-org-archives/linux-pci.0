@@ -1,73 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:63082 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751199AbbKJGUP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Nov 2015 01:20:15 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Magnus <magnus.damm@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
 	Will Deacon <will.deacon@arm.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>
-Subject: RE: [PATCH] drivers: pci: remove unused pci_sys_data structures
-Date: Tue, 10 Nov 2015 06:19:17 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162A5EC2@lhreml503-mbs>
-References: <1447095459-21777-1-git-send-email-lorenzo.pieralisi@arm.com>
- <7247058.o5kTvZ3CSC@wuerfel>
-In-Reply-To: <7247058.o5kTvZ3CSC@wuerfel>
-Content-Type: text/plain; charset="Windows-1252"
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: PCIe host controller behind IOMMU on ARM
+Date: Thu, 12 Nov 2015 17:16:41 +0100
+Message-ID: <4169020.aC5VXkILQm@wuerfel>
+In-Reply-To: <PS1PR06MB11802B4278C95E3808EEBDD5F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com> <6255198.JqytBn7T9E@wuerfel> <PS1PR06MB11802B4278C95E3808EEBDD5F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd
-
-[...]
+On Thursday 12 November 2015 15:33:41 Phil Edworthy wrote:
+> On 12 November 2015 09:49, Arnd Bergmann wrote:
+> > On Thursday 12 November 2015 09:26:33 Phil Edworthy wrote:
+> > > On 11 November 2015 18:25, LIviu wrote:
+> > > > On Mon, Nov 09, 2015 at 12:32:13PM +0000, Phil Edworthy wrote:
+> > 
+> > of_dma_configure calls of_dma_get_range to do all this for the PCIe host,
+> > and then calls arch_setup_dma_ops() so the architecture specific code can
+> > enforce the limits in dma_set_mask and pick an appropriate set of dma
+> > operations. The missing part is in the implementation of arch_setup_dma_ops,
+> > which currently happily ignores the base and limit.
+> I don't think it's as simple as that, though I could be wrong!
 > 
-> Nice!
-> 
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
-> 
-> On the downside, I just saw how b3a72384fe29 ("ARM/PCI: Replace
-> pci_sys_data->align_resource with global function pointer") manages
-> to get rid of the last user of this, and how this is not the way
-> we had planned for it to be done.
-> 
-> It doesn't matter that much, because there is only a single
-> user of hw->align_resource, but this is now unportable code and
-> cannot easily be separated from hw_pci. It also breaks if we ever
-> get a machine with two different host controllers on ARM that
-> don't use the same pointer here.
-> 
-> I really would have hoped we could put that function pointer
-> into 'struct pci_host_bridge' instead, and eventually killed
-> off the architecture specific pcibios_align_resource function
-> as well.
+> First off, of_dma_configure() sets a default coherent_dma_mask to 4GiB.
+> This default is set for the 'platform soc' device. For my own testing I increased
+> this to DMA_BIT_MASK(63). Note that setting it to DMA_BIT_MASK(64) causes
+> boot failure that I haven't looked into.
 
-say we move that in pci_host_bridge struct,
+Most platform devices actually need the 32-bit mask, so we intentionally
+followed what PCI does here and default to that and require platform drivers
+to explicitly ask for a larger mask if they need it.
 
-Are you suggesting to modify pcibios_init_hw to assign the 
-align_resource function pointer at the end after
-pci_scan_root_bus_msi() has created the host bridge structure;
-then we can retrieve it in pcibios_align_resource using
-pci_find_host_bridge(dev->bus)....?
+> Then pci_device_add() sets the devices coherent_dma_mask to 4GiB before
+> calling of_pci_dma_configure(). I assume it does this on the basis that this is a
+> good default for PCI drivers that don't call dma_set_mask().
+> So if arch_setup_dma_ops() walks up the parents to limit the mask, you'll hit
+> this mask.
 
-> 
-> Any idea why it was done with a global function pointer for
-> ARM rather than a proper solution?
+arch_setup_dma_ops() does not walk up the hierarchy, of_dma_configure()
+does this before calling arch_setup_dma_ops(). The PCI devices start out
+with the 32-bit mask, but the limit should be whatever PCI host uses.
 
-Well just because I didn't think about the solution above...
+> Finally, dma_set_mask_and_coherent() is called from the PCI card driver
+> but it doesn't check the parents dma masks either.
 
-If you think the above one can work I can send out another
-patch to fix this...
+The way I think this should work is that arch_setup_dma_ops() stores the
+allowed mask in the struct device, and that dma_set_mask compares the
+mask against that.
 
-Many Thanks
-
-Gab
-
-
-> 
-> 	Arnd
+	Arnd
