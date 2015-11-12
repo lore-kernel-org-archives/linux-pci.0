@@ -1,66 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv5 0/6] Driver for new VMD device
-Date: Fri, 13 Nov 2015 10:17:31 -0700
-Message-Id: <1447435057-5212-1-git-send-email-keith.busch@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.131]:60312 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754166AbbKLMV6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 07:21:58 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Jisheng Zhang <jszhang@marvell.com>, wangzhou1@hisilicon.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: hisi: Fix Section mismatch compilation warning for probe()
+Date: Thu, 12 Nov 2015 13:21:02 +0100
+Message-ID: <4599031.EERjkvxHAA@wuerfel>
+In-Reply-To: <1447329728-1589-1-git-send-email-jszhang@marvell.com>
+References: <1447329728-1589-1-git-send-email-jszhang@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Latest revision after incorporating maintainer comments, mostly code
-style and comments.
+On Thursday 12 November 2015 20:02:08 Jisheng Zhang wrote:
+> Following compilation warning occurs when compiled with:
+> CONFIG_DEBUG_SECTION_MISMATCH=y
+> 
+>  WARNING: drivers/pci/host/built-in.o(.data+0x308): Section mismatch in
+>  reference from the variable hisi_pcie_driver to the function
+>  .init.text:hisi_pcie_probe()
+> 
+> Fix it by dropping __init from hisi_pcie_probe().
 
-Is it too late to hope for a 4.4 inclusion? :)
+The patch description should ideally say what the impact is here, not
+only what the warning says.
 
-v4 -> v5:
+> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+> Fixes: 500a1d9a43e0 ("PCI: hisi: Add HiSilicon SoC Hip05 PCIe driver")
+> ---
+>  drivers/pci/host/pcie-hisi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+> index 35457ec..1cc0a21 100644
+> --- a/drivers/pci/host/pcie-hisi.c
+> +++ b/drivers/pci/host/pcie-hisi.c
+> @@ -139,7 +139,7 @@ static int __init hisi_add_pcie_port(struct pcie_port *pp,
+>         return 0;
+>  }
+>  
+> -static int __init hisi_pcie_probe(struct platform_device *pdev)
+> +static int hisi_pcie_probe(struct platform_device *pdev)
+>  {
+>         struct hisi_pcie *hisi_pcie;
+>         struct pcie_port *pp;
 
-  Updated struct comments to kernel-doc style.
+This seems incomplete, you now get a new warning about hisi_add_pcie_port().
 
-  Added comments to call out future work for enhanced irq sharing and
-  affinity mask settings.
+I did a similar patch yesterday, will follow up with my version.
 
-  Commended the potential list corruption if NMI, interrupt, and irq
-  teardown occur concurrently.
-
-  Using raw spinlock for irq list manipulation.
-
-  Fix IRQ flags: removed IRQF_SHARED.
-
-  Fixed the SoB in patch 1, added my Tested-by.
-
-Keith Busch (5):
-  pci: skip child bus with conflicting resources
-  Export msi and irq functions for module use
-  x86-pci: allow pci domain specific dma ops
-  x86/pci: Initial commit for new VMD device driver
-  pciutils: Allow 32-bit domains
-
-Jiang Liu (1):
-  msi: Relax msi_domain_alloc() to support parentless MSI irqdomains
-
- arch/x86/Kconfig              |  13 +
- arch/x86/include/asm/device.h |  10 +
- arch/x86/include/asm/hw_irq.h |   5 +
- arch/x86/pci/Makefile         |   2 +
- arch/x86/pci/common.c         |  38 +++
- arch/x86/pci/vmd.c            | 677 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/msi.c             |   2 +
- drivers/pci/probe.c           |  10 +-
- kernel/irq/irqdomain.c        |   1 +
- kernel/irq/msi.c              |   8 +-
- 10 files changed, 761 insertions(+), 5 deletions(-)
- create mode 100644 arch/x86/pci/vmd.c
-
--- 
-2.6.2.307.g37023ba
-
+	Arnd
