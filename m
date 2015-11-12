@@ -1,96 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:35750 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965429AbbKDNOA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:14:00 -0500
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59709 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932686AbbKLX0y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 18:26:54 -0500
 Received: from localhost
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 23:13:58 +1000
+	Fri, 13 Nov 2015 09:26:51 +1000
+Date: Fri, 13 Nov 2015 10:25:50 +1100
 From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 12/50] powerpc/powernv: Track M64 segment consumption
-Date: Thu,  5 Nov 2015 00:12:12 +1100
-Message-Id: <1446642770-4681-13-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+To: Daniel Axtens <dja@axtens.net>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, aik@ozlabs.ru, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+Subject: Re: [PATCH v7 38/50] powerpc/powernv: Exclude root bus in
+ pnv_pci_reset_secondary_bus()
+Message-ID: <20151112232550.GA14719@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
 References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-39-git-send-email-gwshan@linux.vnet.ibm.com>
+ <87lha2zuwg.fsf@gamma.ozlabs.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87lha2zuwg.fsf@gamma.ozlabs.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As we track M32 segment consumption, this introduces an array to
-the PHB to track the mapping between M64 segment and PE number.
-The information is going to be used to find M64 segment from the
-PE number during PCI unplugging time in subsequent patches.
+On Fri, Nov 13, 2015 at 09:59:27AM +1100, Daniel Axtens wrote:
+>Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+>
+>> When pnv_pci_reset_secondary_bus() is called to issue reset on
+>> the indicated secondary bus, the bus can't be root bus. So we
+>> needn't consider root bus in the function.
+>
+>It took me a while to convince myself that this is correct. For the
+>record, this is why it's correct:
+>
+>pnv_pci_reset_secondary_bus fills the reset_secondary_bus callback in
+>the pci_controller_ops structure, and isn't used elsewhere.
+>
+>In arch/powerpc/kernel/pci.c, that callback is called (if it exists) in 
+>pcibios_reset_secondary_bus(). It's not called anywhere else.
+>
+>The PPC pcibios_reset_secondary_bus overrides the weak version in
+>drivers/pci/pci.c. It's called from the same file by
+>pci_reset_bridge_secondary_device() (and nowhere else).
+>
+>pci_reset_bridge_secondary_device() is nicely documented:
+>
+>/**
+> * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
+> * @dev: Bridge device
+> *
+> * Use the bridge control register to assert reset on the secondary bus.
+> * Devices on the secondary bus are left in power-on state.
+> */
+>
+>Therefore, by the definiton of pci_reset_bridge_secondary_bus,
+>pnv_pci_reset_secondary_bus() can only be called with a bridge
+>device. As such, a bridge reset only is appropriate. If this breaks
+>anything, the caller is broken.
+>
+>It might be worth including a condensed version of this in the commit
+>message.
+>
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 10 ++++++++--
- arch/powerpc/platforms/powernv/pci.h      |  3 ++-
- 2 files changed, 10 insertions(+), 3 deletions(-)
+Right. I'll add more description to the changelog in next revision.
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 4ab93f8..76ce694 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -315,6 +315,7 @@ static int pnv_ioda2_pick_m64_pe(struct pci_bus *bus, bool all)
- 		phb->ioda.total_pe_num) {
- 		pe = &phb->ioda.pe_array[i];
- 
-+		phb->ioda.m64_segmap[pe->pe_number] = pe->pe_number;
- 		if (!master_pe) {
- 			pe->flags |= PNV_IODA_PE_MASTER;
- 			INIT_LIST_HEAD(&pe->slaves);
-@@ -3018,7 +3019,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- {
- 	struct pci_controller *hose;
- 	struct pnv_phb *phb;
--	unsigned long size, m32map_off, pemap_off, iomap_off = 0;
-+	unsigned long size, m64map_off, m32map_off, pemap_off, iomap_off = 0;
- 	const __be64 *prop64;
- 	const __be32 *prop32;
- 	int i, len;
-@@ -3103,6 +3104,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 
- 	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
- 	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
-+	m64map_off = size;
-+	size += phb->ioda.total_pe_num * sizeof(phb->ioda.m64_segmap[0]);
- 	m32map_off = size;
- 	size += phb->ioda.total_pe_num * sizeof(phb->ioda.m32_segmap[0]);
- 	if (phb->type == PNV_PHB_IODA1) {
-@@ -3113,9 +3116,12 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	size += phb->ioda.total_pe_num * sizeof(struct pnv_ioda_pe);
- 	aux = memblock_virt_alloc(size, 0);
- 	phb->ioda.pe_alloc = aux;
-+	phb->ioda.m64_segmap = aux + m64map_off;
- 	phb->ioda.m32_segmap = aux + m32map_off;
--	for (i = 0; i < phb->ioda.total_pe_num; i++)
-+	for (i = 0; i < phb->ioda.total_pe_num; i++) {
-+		phb->ioda.m64_segmap[i] = IODA_INVALID_PE;
- 		phb->ioda.m32_segmap[i] = IODA_INVALID_PE;
-+	}
- 	if (phb->type == PNV_PHB_IODA1) {
- 		phb->ioda.io_segmap = aux + iomap_off;
- 		for (i = 0; i < phb->ioda.total_pe_num; i++)
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 2e01edd..671fd13 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -147,7 +147,8 @@ struct pnv_phb {
- 			unsigned long		*pe_alloc;
- 			struct pnv_ioda_pe	*pe_array;
- 
--			/* M32 & IO segment maps */
-+			/* M64/M32/IO segment maps */
-+			int			*m64_segmap;
- 			int			*m32_segmap;
- 			int			*io_segmap;
- 
--- 
-2.1.0
+>Reviewed-by: Daniel Axtens <dja@axtens.net>
+>
+
+Thanks,
+Gavin
+
+>Regards,
+>Daniel Axtens
+>
+>>
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 12 ++----------
+>>  1 file changed, 2 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>> index a7d84a4..c69b6a1 100644
+>> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>> @@ -880,16 +880,8 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>  
+>>  void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+>>  {
+>> -	struct pci_controller *hose;
+>> -
+>> -	if (pci_is_root_bus(dev->bus)) {
+>> -		hose = pci_bus_to_host(dev->bus);
+>> -		pnv_eeh_root_reset(hose, EEH_RESET_HOT);
+>> -		pnv_eeh_root_reset(hose, EEH_RESET_DEACTIVATE);
+>> -	} else {
+>> -		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
+>> -		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
+>> -	}
+>> +	pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
+>> +	pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
+>>  }
+>>  
+>>  /**
+>> -- 
+>> 2.1.0
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
