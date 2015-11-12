@@ -1,41 +1,45 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>, <linux-pci@vger.kernel.org>,
-	<linux-sh@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Subject: [PATCH 2/3] Revert "PCI: rcar: Build pcie-rcar.c only on ARM"
-Date: Mon,  2 Nov 2015 16:36:14 +0000
-Message-Id: <1446482175-26507-3-git-send-email-phil.edworthy@renesas.com>
-In-Reply-To: <1446482175-26507-1-git-send-email-phil.edworthy@renesas.com>
-References: <1446482175-26507-1-git-send-email-phil.edworthy@renesas.com>
+From: Jisheng Zhang <jszhang@marvell.com>
+To: <wangzhou1@hisilicon.com>, <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Jisheng Zhang <jszhang@marvell.com>
+Subject: [PATCH] PCI: hisi: Fix Section mismatch compilation warning for probe()
+Date: Thu, 12 Nov 2015 20:02:08 +0800
+Message-ID: <1447329728-1589-1-git-send-email-jszhang@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we can build on arm64, revert commit 7c537c67d2e4
-("PCI: rcar: Build pcie-rcar.c only on ARM").
+Following compilation warning occurs when compiled with:
+CONFIG_DEBUG_SECTION_MISMATCH=y
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+ WARNING: drivers/pci/host/built-in.o(.data+0x308): Section mismatch in
+ reference from the variable hisi_pcie_driver to the function
+ .init.text:hisi_pcie_probe()
+
+Fix it by dropping __init from hisi_pcie_probe().
+
+Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+Fixes: 500a1d9a43e0 ("PCI: hisi: Add HiSilicon SoC Hip05 PCIe driver")
 ---
- drivers/pci/host/Kconfig | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/pci/host/pcie-hisi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 2af0571..ad27664 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -48,8 +48,7 @@ config PCI_RCAR_GEN2
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index 35457ec..1cc0a21 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -139,7 +139,7 @@ static int __init hisi_add_pcie_port(struct pcie_port *pp,
+ 	return 0;
+ }
  
- config PCI_RCAR_GEN2_PCIE
- 	bool "Renesas R-Car PCIe controller"
--	depends on ARM
--	depends on ARCH_SHMOBILE || COMPILE_TEST
-+	depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
- 	help
- 	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
- 
+-static int __init hisi_pcie_probe(struct platform_device *pdev)
++static int hisi_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct hisi_pcie *hisi_pcie;
+ 	struct pcie_port *pp;
 -- 
-1.9.1
+2.6.2
 
