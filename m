@@ -1,74 +1,196 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:18091 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754287AbbKBVdd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2015 16:33:33 -0500
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v6 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
-Date: Mon,  2 Nov 2015 21:33:09 +0000
-Message-Id: <1446499996-1350-1-git-send-email-jakeo@microsoft.com>
+Received: from mail-lf0-f48.google.com ([209.85.215.48]:36461 "EHLO
+	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753793AbbKLOpx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 09:45:53 -0500
+Received: by lfs39 with SMTP id 39so35251044lfs.3
+        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2015 06:45:51 -0800 (PST)
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <5640A8AA.4000806@semihalf.com> <20151109171042.GA11909@red-moon>
+ <6488357.xJV65iBRHq@wuerfel> <564185B6.8040006@linux.intel.com>
+ <20151111174647.GA30051@red-moon> <56445117.8090307@linux.intel.com>
+ <56449246.2010308@semihalf.com> <56449C55.2090001@linux.intel.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5644A613.2010304@semihalf.com>
+Date: Thu, 12 Nov 2015 15:45:39 +0100
+MIME-Version: 1.0
+In-Reply-To: <56449C55.2090001@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On 12.11.2015 15:04, Jiang Liu wrote:
+> On 2015/11/12 21:21, Tomasz Nowicki wrote:
+>> On 12.11.2015 09:43, Jiang Liu wrote:
+>>> On 2015/11/12 1:46, Lorenzo Pieralisi wrote:
+>>>> On Tue, Nov 10, 2015 at 01:50:46PM +0800, Jiang Liu wrote:
+>>>>
+>>>> [...]
+>>>>
+>>>>>>> In particular, I would like to understand, for an eg DWordIO
+>>>>>>> descriptor,
+>>>>>>> what Range Minimum, Range Maximum and Translation Offset represent,
+>>>>>>> they can't mean different things depending on the SW parsing them,
+>>>>>>> this totally defeats the purpose.
+>>>>>>
+>>>>>> I have no clue about what those mean in ACPI though.
+>>>>>>
+>>>>>> Generally speaking, each PCI domain is expected to have a (normally
+>>>>>> 64KB)
+>>>>>> range of CPU addresses that gets translated into PCI I/O space the
+>>>>>> same
+>>>>>> way that config space and memory space are handled.
+>>>>>> This is true for almost every architecture except for x86, which uses
+>>>>>> different CPU instructions for I/O space compared to the other spaces.
+>>>>>>
+>>>>>>> By the way, ia64 ioremaps the translation_offset (ie new_space()), so
+>>>>>>> basically that's the CPU physical address at which the PCI host
+>>>>>>> bridge
+>>>>>>> map the IO space transactions), I do not think ia64 is any
+>>>>>>> different from
+>>>>>>> arm64 in this respect, if it is please provide an HW description
+>>>>>>> here from
+>>>>>>> the PCI bus perspective here (also an example of ia64 ACPI PCI
+>>>>>>> host bridge
+>>>>>>> tables would help).
+>>>>>>
+>>>>>> The main difference between ia64 and a lot of the other
+>>>>>> architectures (e.g.
+>>>>>> sparc is different again) is that ia64 defines a logical address range
+>>>>>> in terms of having a small number for each I/O space followed by the
+>>>>>> offset within that space as a 'port number' and uses a mapping
+>>>>>> function
+>>>>>> that is defined as
+>>>>>>
+>>>>>> static inline void *__ia64_mk_io_addr (unsigned long port)
+>>>>>> {
+>>>>>>           struct io_space *space = &io_space[IO_SPACE_NR(port)];
+>>>>>>           return (space->mmio_base | IO_SPACE_PORT(port););
+>>>>>> }
+>>>>>> static inline unsigned int inl(unsigned long port)
+>>>>>> {
+>>>>>>           return *__ia64_mk_io_addr(port);
+>>>>>> }
+>>>>>>
+>>>>>> Most architectures allow only one I/O port range and put it at a fixed
+>>>>>> virtual address so that inl() simply becomes
+>>>>>>
+>>>>>> static inline u32 inl(unsigned long addr)
+>>>>>> {
+>>>>>>           return readl(PCI_IOBASE + addr);
+>>>>>> }
+>>>>>>
+>>>>>> which noticeably reduces code size.
+>>>>>>
+>>>>>> On some architectures (powerpc, arm, arm64), we then get the same
+>>>>>> simplified
+>>>>>> definition with a fixed virtual address, and use pci_ioremap_io() or
+>>>>>> something like that to to map a physical address range into this
+>>>>>> virtual
+>>>>>> address window at the correct io_offset;
+>>>>> Hi all,
+>>>>>      Thanks for explanation, I found a way to make the ACPI resource
+>>>>> parsing interface arch neutral, it should help to address Lorenzo's
+>>>>> concern. Please refer to the attached patch. (It's still RFC, not
+>>>>> tested
+>>>>> yet).
+>>>>
+>>>> If we go with this approach though, you are not adding the offset to
+>>>> the resource when parsing the memory spaces in acpi_decode_space(),
+>>>> are we
+>>>> sure that's what we really want ?
+>>>>
+>>>> In DT, a host bridge range has a:
+>>>>
+>>>> - CPU physical address
+>>>> - PCI bus address
+>>>>
+>>>> We use that to compute the offset between primary bus (ie CPU physical
+>>>> address) and secondary bus (ie PCI bus address).
+>>>>
+>>>> The value ending up in the PCI resource struct (for memory space) is
+>>>> the CPU physical address, if you do not add the offset in
+>>>> acpi_decode_space
+>>>> that does not hold true on platforms where CPU<->PCI offset != 0 on
+>>>> ACPI,
+>>>> am I wrong ?
+>>> Hi Lorenzo,
+>>>      I may have found the divergence between us about the design here. You
+>>> treat it as a one-stage translation but I treat it as a
+>>> two-stage translation as below:
+>>> stage 1: map(translate) per-PCI-domain IO port address[0, 16M) into
+>>> system global IO port address. Here system global IO port address is
+>>> ioport_resource[0, IO_SPACE_LIMIT).
+>>> stage 2: map system IO port address into system memory address.
+>>>
+>>> We need two objects of struct resource_win to support above two-stage
+>>> translation. One object, type of IORESOURCE_IO, is used to support
+>>> stage one, and it will also used to allocate IO port resources
+>>> for PCI devices. Another object, type of IORESOURCE_MMIO, is used
+>>> to allocate resource from iomem_resource and setup MMIO mapping
+>>> to actually access IO ports.
+>>>
+>>> For ARM64, it doesn't support multiple per-PCI-domain(bus local)
+>>> IO port address space yet, so stage one seems to be optional
+>>> becomes the offset between bus local IO port address and system
+>>> IO port address is always 0. But we still need two objects of
+>>> struct resource_win. The first object is
+>>>      {
+>>>          offset:0,
+>>>          start:AddressMinimum,
+>>>          end:AddressMaximum,
+>>>          flags:IORESOURCE_IO
+>>>      }
+>>> Here it's type of IORESOURCE_IO and offset must be zero because
+>>> pcibios_resource_to_bus() will access it translate system IO
+>>> port address into bus local IO port address. With my patch,
+>>> the struct resource_win object created by the ACPI core will
+>>> be reused for this.
+>>>
+>>> The second object is:
+>>>      {
+>>>          offset:Translation_Offset,
+>>>          start:AddressMinimum + Translation_Offset,
+>>>          end:AddressMaximum + Translation_Offset,
+>>>          flags:IORESOURCE_MMIO
+>>>      }
+>>> Arch code need to create the second struct resource_win object
+>>> and actually setup the MMIO mapping.
+>>>
+>>> But there's really another bug need to get fixed, funciton
+>>> acpi_dev_ioresource_flags() assumes bus local IO port address
+>>> space is size of 64K, which is wrong for IA64 and ARM64.
+>>>
+>>
+>> So what would be the Translation_Offset meaning for two cases DWordIo
+>> (....,TypeTranslation) vs DWordIo (....,TypeStatic)? And why we did not
+>> use TypeTranslation for IA64 so far?
+>
+> IA64 actually ignores the translation type flag and just assume it's
+> TypeTranslation, so there may be some IA64 BIOS implementations
+> accidentally using TypeStatic. That's why we parsing SparseTranslation
+> flag without checking TranslationType flag. I feel ARM64 may face the
+> same situation as IA64:(
+>
+> We may expect (TypeStatic, 0-offset) and (TypeTranslation,
+> non-0-offset) in real word. For other two combinations, I haven't
+> found a real usage yet, though theoretically they are possible.
+>
 
-This version of this patch series incorporates feedback from Andy Shevchenko.
+I think we should not bend the generic code for IA64 only and expose 
+other platforms to the same issue. Instead, lets interpret spec 
+correctly and create IA64 quirk for the sake of backward compatibility. 
+Thoughts?
 
-First, export functions that allow correlating Hyper-V virtual processors
-and Linux cpus, along with the means for invoking a hypercall that targets
-interrupts at chosen vectors on specfic cpus.
-
-Second, mark various parts of IRQ domain related code as exported, so that
-this PCI front-end can implement an IRQ domain as part of a module.  (The
-alternative would be to pull all this into the kernel, which would pull
-in a lot of other Hyper-V related code, as this IRQ domain depends on
-hv_vmbus.ko.)
-
-Third, modify PCI so that new root PCI buses can be marked with an associated
-fwnode_handle, and so that root PCI buses can look up their associated IRQ
-domain by that handle.
-
-Fourth, introduce a new driver, hv_pcifront, which eposes root PCI buses in
-a Hyper-V VM.  These root PCI buses expose real PCIe devices, or PCI Virtual
-Functions.
-
-Jake Oshins (7):
-  drivers:hv: Export a function that maps Linux CPU num onto Hyper-V
-    proc num
-  drivers:hv: Export hv_do_hypercall()
-  PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
-  PCI: Add fwnode_handle to pci_sysdata
-  PCI: irqdomain: Look up IRQ domain by fwnode_handle
-  drivers:hv: Define the channel type of Hyper-V PCI Express
-    pass-through
-  PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
-
- MAINTAINERS                    |    1 +
- arch/x86/include/asm/msi.h     |    4 +
- arch/x86/include/asm/pci.h     |   13 +
- arch/x86/kernel/apic/msi.c     |    5 +-
- arch/x86/kernel/apic/vector.c  |    2 +
- drivers/hv/hv.c                |   20 +-
- drivers/hv/hyperv_vmbus.h      |    2 +-
- drivers/hv/vmbus_drv.c         |   17 +
- drivers/pci/Kconfig            |    7 +
- drivers/pci/host/Makefile      |    1 +
- drivers/pci/host/hv_pcifront.c | 2267 ++++++++++++++++++++++++++++++++++++++++
- drivers/pci/msi.c              |    4 +
- drivers/pci/probe.c            |   14 +
- include/asm-generic/pci.h      |    4 +
- include/linux/hyperv.h         |   14 +
- kernel/irq/chip.c              |    1 +
- kernel/irq/irqdomain.c         |    2 +
- 17 files changed, 2365 insertions(+), 13 deletions(-)
- create mode 100644 drivers/pci/host/hv_pcifront.c
-
--- 
-1.9.1
-
+Regards,
+Tomasz
