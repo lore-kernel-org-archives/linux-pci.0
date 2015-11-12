@@ -1,30 +1,195 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 24 Nov 2015 23:04:13 +0000
-From: Keith Busch <keith.busch@intel.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	x86@kernel.org, Arthur Marsh <arthur.marsh@internode.on.net>
-Subject: Re: [Bugfix] x86/PCI: Fix regression caused by commit 4d6b4e69a245
-Message-ID: <20151124230413.GA11608@localhost.localdomain>
-References: <1447648057-13644-1-git-send-email-jiang.liu@linux.intel.com>
- <20151124164907.GA24819@localhost>
- <CAJZ5v0irOUq6C9eSfCfmzyOiY1n1rUSxyUeUbvS9Nj0jNT2JrQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:41248 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753209AbbKLE43 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2015 23:56:29 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 12 Nov 2015 14:56:26 +1000
+Date: Thu, 12 Nov 2015 15:55:25 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Daniel Axtens <dja@axtens.net>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, aik@ozlabs.ru, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+Subject: Re: [PATCH v7 11/50] powerpc/powernv: IO and M32 mapping based on
+ PCI device resources
+Message-ID: <20151112045525.GA6174@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-12-git-send-email-gwshan@linux.vnet.ibm.com>
+ <87lha3j3n0.fsf@gamma.ozlabs.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0irOUq6C9eSfCfmzyOiY1n1rUSxyUeUbvS9Nj0jNT2JrQ@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <87lha3j3n0.fsf@gamma.ozlabs.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 24, 2015 at 11:19:34PM +0100, Rafael J. Wysocki wrote:
-> Quite frankly, I'm more likely to revert the offending commit at this
-> point as that's not the only regression reported against it and the
-> fix only helps in one case (out of three known to me).
+On Thu, Nov 12, 2015 at 02:30:27PM +1100, Daniel Axtens wrote:
+>Hi Gavin,
+>
+>Sorry to have taken so long to resume these reviews!
+>
 
-Using 4.4-rc1 and can confirm the patch fixes my regression report. The
-revert also fixes it, so either way is good for me!
+Thanks for your review, Daniel!
+
+>> Currently, the IO and M32 segments are mapped to the corresponding
+>> PE based on the windows of the parent bridge of PE's primary bus.
+>> It's not going to work when the windows of root port or upstream
+>> port of the PCIe switch behind root port are extended to PHB's
+>> aperatuses in order to support hotplug in subsequent patch.
+>I'm not _entirely_ sure I understand this.
+>
+>I *think* you mean PHB's apertures (i.e. s/aperatuses/apertures/)?
+>
+
+I'll fix the typo in next revision.
+
+>> This fixes the issue by mapping IO and M32 segments based on the
+>> resources of the PCI devices included in the PE, instead of the
+>> windows of the parent bridge of the PE's primary bus.
+>
+>This solution seems to make a lot of sense, but I don't have a very good
+>understanding of PCI yet: why was it done that way and not this way
+>originally? Looking at the code, it looks like the old way was simple
+>but didn't support SR-IOV?
+>
+
+It's not related to SRIOV. Originally, the IO or M32 segments are mapped
+according to the bridge's windows. The bridge windows on root port or the
+upstream port of the switch behind that will be extended to PHB's apertures.
+If we still use bridge's windows, all IO and M32 resources are mapped/assigned
+to the PE corresponding to PCI bus#1 or PCI bus#2. That's not correct any more.
+So the correct way is to do the mapping based on IO or M32 BARs of the devices
+included in the PE.
+
+>There are a few comments inline as well.
+>
+>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> index 553d3f3..4ab93f8 100644
+>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> @@ -2741,71 +2741,90 @@ truncate_iov:
+>>  }
+>>  #endif /* CONFIG_PCI_IOV */
+>>  
+>> -/*
+>> - * This function is supposed to be called on basis of PE from top
+>> - * to bottom style. So the the I/O or MMIO segment assigned to
+>> - * parent PE could be overrided by its child PEs if necessary.
+>> - */
+>> -static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>> -				  struct pnv_ioda_pe *pe)
+>> +static int pnv_ioda_setup_one_res(struct pnv_ioda_pe *pe,
+>> +				  struct resource *res)
+>>  {
+>> -	struct pnv_phb *phb = hose->private_data;
+>> +	struct pnv_phb *phb = pe->phb;
+>>  	struct pci_bus_region region;
+>> -	struct resource *res;
+>> -	unsigned int segsize;
+>> -	int *segmap, index, i;
+>> +	unsigned int index, segsize;
+>> +	int *segmap;
+>>  	uint16_t win;
+>>  	int64_t rc;
+>
+>s/int64_t/s64/;
+>I think we might also want to change the uint16_t as well.
+>
+
+As I explained before, I changed it from s64 to int64_t and I won't change it
+back since both of them are fine. Same situation to uint16 here. If we really
+want to clean it all at once, I can do that later, but not in this patchset.
+
+>> -	/*
+>> -	 * NOTE: We only care PCI bus based PE for now. For PCI
+>> -	 * device based PE, for example SRIOV sensitive VF should
+>> -	 * be figured out later.
+>> -	 */
+>> -	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
+>> +	if (!res->parent || !res->flags || res->start > res->end)
+>> +		return 0;
+>>  
+>> -	pci_bus_for_each_resource(pe->pbus, res, i) {
+>> -		if (!res || !res->flags ||
+>> -		    res->start > res->end)
+>> -			continue;
+>> +	if (res->flags & IORESOURCE_IO) {
+>> +		region.start = res->start - phb->ioda.io_pci_base;
+>> +		region.end   = res->end - phb->ioda.io_pci_base;
+>> +		segsize      = phb->ioda.io_segsize;
+>> +		segmap       = phb->ioda.io_segmap;
+>> +		win          = OPAL_IO_WINDOW_TYPE;
+>> +	} else if ((res->flags & IORESOURCE_MEM) &&
+>> +		   !pnv_pci_is_mem_pref_64(res->flags)) {
+>> +		region.start = res->start -
+>> +			       phb->hose->mem_offset[0] -
+>> +			       phb->ioda.m32_pci_base;
+>> +		region.end   = res->end -
+>> +			       phb->hose->mem_offset[0] -
+>> +			       phb->ioda.m32_pci_base;
+>> +		segsize      = phb->ioda.m32_segsize;
+>> +		segmap       = phb->ioda.m32_segmap;
+>> +		win          = OPAL_M32_WINDOW_TYPE;
+>> +	} else {
+>> +		return 0;
+>The return codes are currently unused, but should this get a more
+>informative return code? Are there any invalid ones that should be
+>flagged, or is it just safe to ignore stuff we don't recognise?
+>
+
+It's safe to ignore M64 (64-bits prefetchable BARs) whose mapping is
+done in different path.
+
+>> +	}
+>
+>
+>> +static void pnv_ioda_setup_pe_seg(struct pnv_ioda_pe *pe)
+>> +{
+>> +	struct pci_dev *pdev;
+>> +	struct resource *res;
+>> +	int i;
+>> +
+>> +	/* This function only works for bus dependent PE */
+>> +	WARN_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
+>> +
+>> +	list_for_each_entry(pdev, &pe->pbus->devices, bus_list) {
+>> +		for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+>> +			res = &pdev->resource[i];
+>> +			if (pnv_ioda_setup_one_res(pe, res))
+>> +				return;
+>As I mentioned earlier, setup_one_res can potentially return -EIO:
+>should we be trying to propagate that up?
+
+I think it's a good idea. I'll do in next revision.
+
+>> +		}
+>> +
+>> +		/*
+>> +		 * If the PE contains all subordinate PCI buses, the
+>> +		 * windows of the child bridges should be mapped to
+>> +		 * the PE as well.
+>> +		 */
+>> +		if (!(pe->flags & PNV_IODA_PE_BUS_ALL && pci_is_bridge(pdev)))
+>> +			continue;
+>>  
+>> -			region.start += segsize;
+>> -			index++;
+>> +		for (i = 0; i <= PCI_BRIDGE_RESOURCE_NUM; i++) {
+>> +			res = &pdev->resource[PCI_BRIDGE_RESOURCES + i];
+>> +			if (pnv_ioda_setup_one_res(pe, res))
+>> +				return;
+>>  		}
+>>  	}
+>>  }
+>
+
+Thanks,
+Gavin
+
+
