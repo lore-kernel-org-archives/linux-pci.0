@@ -1,116 +1,144 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Wolfram Sang <wsa@the-dreams.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 0/4] PCI: rcar: Add support for ARM64 and multiple
- instances
-Date: Mon, 2 Nov 2015 10:56:39 +0000
-Message-ID: <PS1PR06MB11807DB6AC86EC5218436CC0F52C0@PS1PR06MB1180.apcprd06.prod.outlook.com>
-References: <1443781507-5011-1-git-send-email-phil.edworthy@renesas.com>
- <20151029123755.GC2351@katana>
- <PS1PR06MB118061CA5128E4C1A2C70A18F5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151029163930.GC22218@katana>
- <PS1PR06MB11804B39B09D6FCAA9B3D9DCF5200@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151029184800.GB8992@katana> <20151029230314.GA11994@localhost>
- <PS1PR06MB1180BAA32BDBEE6BFD8229C3F52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <PS1PR06MB11807765B8231D1DD01B05ADF52F0@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151030133150.GA17889@localhost>
-In-Reply-To: <20151030133150.GA17889@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:33178 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752892AbbKLESf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Nov 2015 23:18:35 -0500
+Received: by pabfh17 with SMTP id fh17so52018933pab.0
+        for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2015 20:18:34 -0800 (PST)
+From: Daniel Axtens <dja@axtens.net>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: Re: [PATCH v7 12/50] powerpc/powernv: Track M64 segment consumption
+In-Reply-To: <1446642770-4681-13-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1446642770-4681-13-git-send-email-gwshan@linux.vnet.ibm.com>
+Date: Thu, 12 Nov 2015 15:18:20 +1100
+Message-ID: <87io57j1f7.fsf@gamma.ozlabs.ibm.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha512; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On 30 October 2015 13:32, Bjorn wrote:
-> On Fri, Oct 30, 2015 at 09:00:20AM +0000, Phil Edworthy wrote:
-> > Hi Bjorn,
-> >
-> > On 30 October 2015 07:24, Phil wrote:
-> > > On 30 October 2015 07:19, Phil wrote
-> > > > On 29 October 2015 23:03, Bjorn wrote:
-> > > > > On Thu, Oct 29, 2015 at 07:48:00PM +0100, Wolfram Sang wrote:
-> > > > > > On Thu, Oct 29, 2015 at 04:44:06PM +0000, Phil Edworthy wrote:
-> > > > > > > Hi Wolfram,
-> > > > > > >
-> > > > > > > On 29 October 2015 16:40, Wolfram wrote:
-> > > > > > > > > Ouch, my bad. I have been working with our out-of-tree BSP for
-> the
-> > > > > Salvator-X
-> > > > > > > > board on
-> > > > > > > > > http://git.kernel.org/cgit/linux/kernel/git/horms/renesas-bsp.git,
-> > > rcar-
-> > > > > 3.0.2
-> > > > > > > > tag along
-> > > > > > > > > with some patches from colleagues. I hadn't noticed this patch:
-> > > > > > > >
-> > > > > > > > Thanks! Any plans for pushing this upstream? We will have the build
-> > > error
-> > > > > > > > otherwise...
-> > > > > > > After some digging, that patch won't be accepted upstream. I'm
-> looking
-> > > into
-> > > > > how the
-> > > > > > > driver can be modified so it doesn't need to call this, but I don't expect
-> a
-> > > > small
-> > > > > or
-> > > > > > > imminent fix.
-> > > > > >
-> > > > > > Yes, I'd think so, too. However, a fix for 4.4 would be needed to
-> > > > > > prevent having a final release with a build error.
-> > > > >
-> > > > > I'm thinking I should drop my pci/host-rcar branch until we
-> > > > > have a fix for this.  It currently contains:
-> > > > >
-> > > > >   9ac724f20774 PCI: rcar: Fix I/O offset for multiple host bridges
-> > > > >   7d75b413f5c6 PCI: rcar: Set root bus nr to that provided in DT
-> > > > >   4c22eab88c68 PCI: rcar: Remove dependency on ARM-specific struct
-> hw_pci
-> > > > >   ef18d2e55ea0 PCI: rcar: Make PCI aware of the I/O resources
-> > > > >
-> > > > > Is that right?  Last I heard, Linus expects to release v4.3 on Sunday,
-> > > > > so we really don't have much time to sort this out.
-> > > > The simple thing is to re-add Geert's patch to stop this driver being built for
-> > > > arm64.
-> > > Btw, it's this one: https://patchwork.ozlabs.org/patch/512040/
-> > It's worth mentioning that Geert's patch stops both the rcar-pcie driver and the
-> > rcar-pci-gen2 driver from being built on arm64 due to build failures for both of
-> > them. The rcar-pci-gen2 driver is not for R-Car Gen3 devices, and so should not
-> > be built for arm64. The rcar-pcie driver will be used on R-Car Gen3 devices.
-> >
-> > So if we don't use Geert's patch, I need to fix the rcar-pcie driver so it doesn't
-> > use pci_ioremap_io(), _and_ fix Kconfig so that the rcar-pci-gen2 driver doesn't
-> > get built on arm64.
-> > Let's just use Geert's patch for now.
-> 
-> OK, I re-added Geert's patch.  I split it into two, one for
-> rcar-pci-gen2 and another for rcar-pcie, to help me keep things
-> straight.  If I understand correctly,
-> 
->   - rcar-pci-gen2 depends on the ARM-specific pci_sys_data, and I
->     don't have anything queued to address that.
-Correct, but you don't need anything other than Geert's patch to
-ensure it's not built for arm64.
+Looks good.
 
->   - rcar-pcie depended on the ARM-specific pci_sys_data and
->     pci_ioremap_io().  Your patches remove the pci_sys_data
->     dependency, and it sounds like future changes will remove the
->     pci_ioremap_io() dependency.
-That's correct, hopefully I'll have a patch shortly.
-Thanks for taking care of this.
+Will hold off on an official review until I can test the series.
 
- 
-> The result is in my pci/host-rcar branch:
-> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-rcar
-I haven't tested this yet, but I have looked them over and they look ok.
+Regards,
+Daniel
 
-Thanks
-Phil
+Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+
+> As we track M32 segment consumption, this introduces an array to
+> the PHB to track the mapping between M64 segment and PE number.
+> The information is going to be used to find M64 segment from the
+> PE number during PCI unplugging time in subsequent patches.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/platforms/powernv/pci-ioda.c | 10 ++++++++--
+>  arch/powerpc/platforms/powernv/pci.h      |  3 ++-
+>  2 files changed, 10 insertions(+), 3 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/pla=
+tforms/powernv/pci-ioda.c
+> index 4ab93f8..76ce694 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -315,6 +315,7 @@ static int pnv_ioda2_pick_m64_pe(struct pci_bus *bus,=
+ bool all)
+>  		phb->ioda.total_pe_num) {
+>  		pe =3D &phb->ioda.pe_array[i];
+>=20=20
+> +		phb->ioda.m64_segmap[pe->pe_number] =3D pe->pe_number;
+>  		if (!master_pe) {
+>  			pe->flags |=3D PNV_IODA_PE_MASTER;
+>  			INIT_LIST_HEAD(&pe->slaves);
+> @@ -3018,7 +3019,7 @@ static void __init pnv_pci_init_ioda_phb(struct dev=
+ice_node *np,
+>  {
+>  	struct pci_controller *hose;
+>  	struct pnv_phb *phb;
+> -	unsigned long size, m32map_off, pemap_off, iomap_off =3D 0;
+> +	unsigned long size, m64map_off, m32map_off, pemap_off, iomap_off =3D 0;
+>  	const __be64 *prop64;
+>  	const __be32 *prop32;
+>  	int i, len;
+> @@ -3103,6 +3104,8 @@ static void __init pnv_pci_init_ioda_phb(struct dev=
+ice_node *np,
+>=20=20
+>  	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
+>  	size =3D _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
+> +	m64map_off =3D size;
+> +	size +=3D phb->ioda.total_pe_num * sizeof(phb->ioda.m64_segmap[0]);
+>  	m32map_off =3D size;
+>  	size +=3D phb->ioda.total_pe_num * sizeof(phb->ioda.m32_segmap[0]);
+>  	if (phb->type =3D=3D PNV_PHB_IODA1) {
+> @@ -3113,9 +3116,12 @@ static void __init pnv_pci_init_ioda_phb(struct de=
+vice_node *np,
+>  	size +=3D phb->ioda.total_pe_num * sizeof(struct pnv_ioda_pe);
+>  	aux =3D memblock_virt_alloc(size, 0);
+>  	phb->ioda.pe_alloc =3D aux;
+> +	phb->ioda.m64_segmap =3D aux + m64map_off;
+>  	phb->ioda.m32_segmap =3D aux + m32map_off;
+> -	for (i =3D 0; i < phb->ioda.total_pe_num; i++)
+> +	for (i =3D 0; i < phb->ioda.total_pe_num; i++) {
+> +		phb->ioda.m64_segmap[i] =3D IODA_INVALID_PE;
+>  		phb->ioda.m32_segmap[i] =3D IODA_INVALID_PE;
+> +	}
+>  	if (phb->type =3D=3D PNV_PHB_IODA1) {
+>  		phb->ioda.io_segmap =3D aux + iomap_off;
+>  		for (i =3D 0; i < phb->ioda.total_pe_num; i++)
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platform=
+s/powernv/pci.h
+> index 2e01edd..671fd13 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -147,7 +147,8 @@ struct pnv_phb {
+>  			unsigned long		*pe_alloc;
+>  			struct pnv_ioda_pe	*pe_array;
+>=20=20
+> -			/* M32 & IO segment maps */
+> +			/* M64/M32/IO segment maps */
+> +			int			*m64_segmap;
+>  			int			*m32_segmap;
+>  			int			*io_segmap;
+>=20=20
+> --=20
+> 2.1.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: GPGTools - https://gpgtools.org
+
+iQIcBAEBCgAGBQJWRBMNAAoJEPC3R3P2I92FVm8P/RuuqTklgw3NyjkrzxIly6Xd
+jbQV/STBvkuOtEaK7TDgYfeELKmCUkGeRxum1ZWuRRhGQmSSNtPIggmuLdwGACvI
+oMNJzbwQOodex2rBFX07qqJlsM0ywKf+slWtXdxj0jq99kfMeurnYm2Vaea6UdiP
+tNpfvUAWx//ZTQl/bIEkSHLNCVgu2szEYE1k1IsFjXPXvWgaPAG+p8fnzMb+1Sip
+zd+kjZ5WHkwP8C/QaIQa8DJQ0arV79jYf1EaxEYyC1Ja9dkI4Duf29UKEHQwUlbU
+mNU0HURvzh0loFRfjjCd9KoOjucUrpGzSKyQZbR/2fDyu8EXOD/217Xv0+uusbE3
+1sKtGqfvQNFvjNTAsc2dmulH1J6HnDO1a5NzQ1DhyqISKJHBDzStLnUUFWckYi8f
+o4h/RM3AYe5Gsn83FeweX/Fl1HFXB8uoec2eMQ9nkeL42CZuA36c0+vH23WyRZ09
+XrAgGOjogdQNPD2AoFd0uMih7XwWHHSQjrs6wFkrCiJoM30oeY1LvwPyK/Y+77sV
+CoLFh0yosI9mkQRuy4JjxsJEmH64e2VbZCTUyaxLaYOMFJZwOk/3ZcjWffWlCAub
+jn/8Jp0x5Dlwo5AJXUOdNInD1Aaw0FamaR91HpCSg2zLpVqtmmZ7g4XKMzbsh+61
+inR19LtpWxBV+XWhAzsu
+=dzip
+-----END PGP SIGNATURE-----
+--=-=-=--
