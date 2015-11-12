@@ -1,58 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:17129 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932428AbbKDOsq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 09:48:46 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
 	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Magnus <magnus.damm@gmail.com>
-Subject: RE: PCIe host controller behind IOMMU on ARM
-Date: Wed, 4 Nov 2015 14:48:38 +0000
-Message-ID: <PS1PR06MB11804263DD55C54C5987654EF52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
-References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151104142412.GS963@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20151104142412.GS963@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
+	Magnus <magnus.damm@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: PCIe host controller behind IOMMU on ARM
+Date: Thu, 12 Nov 2015 10:49:27 +0100
+Message-ID: <6255198.JqytBn7T9E@wuerfel>
+In-Reply-To: <PS1PR06MB118013A957CFFDF129430C58F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com> <20151111182456.GV963@e106497-lin.cambridge.arm.com> <PS1PR06MB118013A957CFFDF129430C58F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTGl2aXUsDQoNCk9uIDA0IE5vdmVtYmVyIDIwMTUgMTQ6MjQsIExpdml1IHdyb3RlOg0KPiBP
-biBXZWQsIE5vdiAwNCwgMjAxNSBhdCAwMTo1Nzo0OFBNICswMDAwLCBQaGlsIEVkd29ydGh5IHdy
-b3RlOg0KPiA+IEhpLA0KPiA+DQo+ID4gSSBhbSB0cnlpbmcgdG8gaG9vayB1cCBhIFBDSWUgaG9z
-dCBjb250cm9sbGVyIHRoYXQgc2l0cyBiZWhpbmQgYW4gSU9NTVUsDQo+ID4gYnV0IGhhdmluZyBz
-b21lIHByb2JsZW1zLg0KPiA+DQo+ID4gSSdtIHVzaW5nIHRoZSBwY2llLXJjYXIgUENJZSBob3N0
-IGNvbnRyb2xsZXIgYW5kIGl0IHdvcmtzIGZpbmUgd2l0aG91dA0KPiA+IHRoZSBJT01NVSwgYW5k
-IEkgY2FuIGF0dGFjaCB0aGUgSU9NTVUgdG8gdGhlIGNvbnRyb2xsZXIgc3VjaCB0aGF0IGFueSBj
-YWxscw0KPiA+IHRvIGRtYV9hbGxvY19jb2hlcmVudCBtYWRlIGJ5IHRoZSBjb250cm9sbGVyIGRy
-aXZlciB1c2VzIHRoZSBpb21tdV9vcHMNCj4gPiB2ZXJzaW9uIG9mIGRtYV9vcHMuDQo+ID4NCj4g
-PiBIb3dldmVyLCBJIGNhbid0IHNlZSBob3cgdG8gbWFrZSB0aGUgZW5kcG9pbnRzIHRvIHV0aWxp
-c2UgdGhlIGRtYV9vcHMgdGhhdA0KPiA+IHRoZSBjb250cm9sbGVyIHVzZXMuIFNob3VsZG4ndCB0
-aGUgZW5kcG9pbnRzIGluaGVyaXQgdGhlIGRtYV9vcHMgZnJvbSB0aGUNCj4gPiBjb250cm9sbGVy
-Pw0KPiANCj4gTm8sIG5vdCBkaXJlY3RseS4NCj4gDQo+ID4gQW55IHBvaW50ZXJzIGZvciB0aGlz
-Pw0KPiANCj4gWW91IG5lZWQgdG8gdW5kZXJzdGFuZCB0aGUgcHJvY2VzcyB0aHJvdWdoIHdoaWNo
-IGEgZHJpdmVyIGZvciBlbmRwb2ludCBnZXQNCj4gYW4gYWRkcmVzcyB0byBiZSBwYXNzZWQgZG93
-biB0byB0aGUgZGV2aWNlLiBIYXZlIGEgbG9vayBhdA0KPiBEb2N1bWVudGF0aW9uL0RNQS1BUEkt
-SE9XVE8udHh0LCB0aGVyZSBpcyBhIG5pY2UgZXhwbGFuYXRpb24gdGhlcmUuDQo+IChIaW50OiBF
-UCBkcml2ZXIgbmVlZHMgdG8gY2FsbCBkbWFfbWFwX3NpbmdsZSkuDQo+IA0KPiBBbHNvLCB5b3Ug
-bmVlZCB0byBtYWtlIHN1cmUgdGhhdCB0aGUgYnVzIGFkZHJlc3MgdGhhdCBlbmRzIHVwIGJlaW5n
-IHNldCBpbnRvDQo+IHRoZSBlbmRwb2ludCBnZXRzIHRyYW5zbGF0ZWQgY29ycmVjdGx5IGJ5IHRo
-ZSBob3N0IGNvbnRyb2xsZXIgaW50byBhbiBhZGRyZXNzDQo+IHRoYXQgdGhlIElPTU1VIGNhbiB0
-aGVuIHRyYW5zbGF0ZSBpbnRvIHBoeXNpY2FsIGFkZHJlc3MuDQpTdXJlLCB0aG91Z2ggc2luY2Ug
-dGhpcyBpcyBib2cgc3RhbmRhcmQgSW50ZWwgUENJZSBldGhlcm5ldCBjYXJkIHdoaWNoIHdvcmtz
-DQpmaW5lIHdoZW4gdGhlIElPTU1VIGlzIGVmZmVjdGl2ZWx5IHVudXNlZCwgSSBkb27igJl0IHRo
-aW5rIHRoZXJlIGlzIGEgcHJvYmxlbQ0Kd2l0aCB0aGF0Lg0KDQpUaGUgZHJpdmVyIGZvciB0aGUg
-UENJZSBjb250cm9sbGVyIHNldHMgdXAgdGhlIElPTU1VIG1hcHBpbmcgb2sgd2hlbiBJDQpkbyBh
-IHRlc3QgY2FsbCB0byBkbWFfYWxsb2NfY29oZXJlbnQoKSBpbiB0aGUgY29udHJvbGxlcidzIGRy
-aXZlci4gaS5lLiB3aGVuIEkNCmRvIHRoaXMsIGl0IGVuZHMgdXAgaW4gYXJtX2lvbW11X2FsbG9j
-X2F0dHJzKCksIHdoaWNoIGNhbGxzDQpfX2lvbW11X2FsbG9jX2J1ZmZlcigpIGFuZCBfX2FsbG9j
-X2lvdmEoKS4NCg0KV2hlbiBhbiBlbmRwb2ludCBkcml2ZXIgYWxsb2NhdGVzIGFuZCBtYXBzIGEg
-ZG1hIGNvaGVyZW50IGJ1ZmZlciBpdA0KYWxzbyBuZWVkcyB0byBlbmQgdXAgaW4gYXJtX2lvbW11
-X2FsbG9jX2F0dHJzKCksIGJ1dCBpdCBkb2Vzbid0Lg0KDQpUaGFua3MNClBoaWwNCg==
+On Thursday 12 November 2015 09:26:33 Phil Edworthy wrote:
+> On 11 November 2015 18:25, LIviu wrote:
+> > On Mon, Nov 09, 2015 at 12:32:13PM +0000, Phil Edworthy wrote:
+
+> > I think you're mixing things a bit or not explaining them very well. Having the
+> > PCIe controller limited to 32-bit AXI does not mean that the PCIe bus cannot
+> > carry 64-bit addresses. It depends on how they get translated by the host bridge
+> > or its associated ATS block. I can't see why you can't have a setup where
+> > the CPU addresses are 32-bit but the PCIe bus addresses are all 64-bit.
+> > You just have to be careful on how you setup your mem64 ranges so that they
+> > don't
+> > overlap with the 32-bit ranges when translated.
+> From a HW point of view I agree that we can setup the PCI host bridge such that
+> it uses 64-bit PCI address, with 32-bit cpu addresses. Though in practice doesn't
+> this mean that the dma ops used by card drivers has to be provided by our PCI
+> host bridge driver so we can apply the translation to those PCI addresses?
+> This comes back to my point below about how to do this. Adding a bus notifier
+> to do this may be too late, and arm64 doesn't implement set_dma_ops().
+> 
+> > And no, you should not limit at the card driver the DMA_BIT_MASK() unless the
+> > card is not capable of supporting more than 32-bit addresses.
+> If there was infrastructure that checked all parents dma-ranges when the
+> dma_set_mask() function is called as Arnd pointed out, this would nicely solve
+> the problem.
+
+of_dma_configure calls of_dma_get_range to do all this for the PCIe host,
+and then calls arch_setup_dma_ops() so the architecture specific code can
+enforce the limits in dma_set_mask and pick an appropriate set of dma
+operations. The missing part is in the implementation of arch_setup_dma_ops,
+which currently happily ignores the base and limit.
+
+	Arnd
