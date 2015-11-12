@@ -1,92 +1,159 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59131 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751682AbbKITPX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Nov 2015 14:15:23 -0500
-Date: Mon, 9 Nov 2015 13:15:17 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: ECRC and Max Read Request Size
-Message-ID: <20151109191517.GA4789@localhost>
-References: <56310B34.6000102@codeaurora.org>
- <20151106172205.GA1002@localhost>
- <563CE93F.5060209@codeaurora.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
+ <5640A8AA.4000806@semihalf.com> <20151109171042.GA11909@red-moon>
+ <6488357.xJV65iBRHq@wuerfel> <564185B6.8040006@linux.intel.com>
+ <20151111174647.GA30051@red-moon> <56445117.8090307@linux.intel.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <56449246.2010308@semihalf.com>
+Date: Thu, 12 Nov 2015 14:21:10 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <563CE93F.5060209@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <56445117.8090307@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 06, 2015 at 12:54:07PM -0500, Sinan Kaya wrote:
-> ECRC is an optional PCIe feature. Even ECRC support has some flavors
-> 
-> - A card can support ECRC checking.
-> - A card can support ECRC checking and generation.
-> 
-> Right now, the code is enabling both without checking if they are
-> supported at all.
-> 
-> I have some legacy PCIe cards that don't support ECRC completely
-> even though the host bridge supports it. If ECRC checking and
-> generation is enabled under this situation, I have problems
-> communicating to the endpoint.
-> 
-> I would like to be able to turn on this feature all the time and not
-> think about if things will break or not.
-> 
-> Maybe, I can fix the code and enable it only when the entire bus
-> supports it instead of adding a new feature if nobody objects.
+On 12.11.2015 09:43, Jiang Liu wrote:
+> On 2015/11/12 1:46, Lorenzo Pieralisi wrote:
+>> On Tue, Nov 10, 2015 at 01:50:46PM +0800, Jiang Liu wrote:
+>>
+>> [...]
+>>
+>>>>> In particular, I would like to understand, for an eg DWordIO descriptor,
+>>>>> what Range Minimum, Range Maximum and Translation Offset represent,
+>>>>> they can't mean different things depending on the SW parsing them,
+>>>>> this totally defeats the purpose.
+>>>>
+>>>> I have no clue about what those mean in ACPI though.
+>>>>
+>>>> Generally speaking, each PCI domain is expected to have a (normally 64KB)
+>>>> range of CPU addresses that gets translated into PCI I/O space the same
+>>>> way that config space and memory space are handled.
+>>>> This is true for almost every architecture except for x86, which uses
+>>>> different CPU instructions for I/O space compared to the other spaces.
+>>>>
+>>>>> By the way, ia64 ioremaps the translation_offset (ie new_space()), so
+>>>>> basically that's the CPU physical address at which the PCI host bridge
+>>>>> map the IO space transactions), I do not think ia64 is any different from
+>>>>> arm64 in this respect, if it is please provide an HW description here from
+>>>>> the PCI bus perspective here (also an example of ia64 ACPI PCI host bridge
+>>>>> tables would help).
+>>>>
+>>>> The main difference between ia64 and a lot of the other architectures (e.g.
+>>>> sparc is different again) is that ia64 defines a logical address range
+>>>> in terms of having a small number for each I/O space followed by the
+>>>> offset within that space as a 'port number' and uses a mapping function
+>>>> that is defined as
+>>>>
+>>>> static inline void *__ia64_mk_io_addr (unsigned long port)
+>>>> {
+>>>>          struct io_space *space = &io_space[IO_SPACE_NR(port)];
+>>>>          return (space->mmio_base | IO_SPACE_PORT(port););
+>>>> }
+>>>> static inline unsigned int inl(unsigned long port)
+>>>> {
+>>>>          return *__ia64_mk_io_addr(port);
+>>>> }
+>>>>
+>>>> Most architectures allow only one I/O port range and put it at a fixed
+>>>> virtual address so that inl() simply becomes
+>>>>
+>>>> static inline u32 inl(unsigned long addr)
+>>>> {
+>>>>          return readl(PCI_IOBASE + addr);
+>>>> }
+>>>>
+>>>> which noticeably reduces code size.
+>>>>
+>>>> On some architectures (powerpc, arm, arm64), we then get the same simplified
+>>>> definition with a fixed virtual address, and use pci_ioremap_io() or
+>>>> something like that to to map a physical address range into this virtual
+>>>> address window at the correct io_offset;
+>>> Hi all,
+>>> 	Thanks for explanation, I found a way to make the ACPI resource
+>>> parsing interface arch neutral, it should help to address Lorenzo's
+>>> concern. Please refer to the attached patch. (It's still RFC, not tested
+>>> yet).
+>>
+>> If we go with this approach though, you are not adding the offset to
+>> the resource when parsing the memory spaces in acpi_decode_space(), are we
+>> sure that's what we really want ?
+>>
+>> In DT, a host bridge range has a:
+>>
+>> - CPU physical address
+>> - PCI bus address
+>>
+>> We use that to compute the offset between primary bus (ie CPU physical
+>> address) and secondary bus (ie PCI bus address).
+>>
+>> The value ending up in the PCI resource struct (for memory space) is
+>> the CPU physical address, if you do not add the offset in acpi_decode_space
+>> that does not hold true on platforms where CPU<->PCI offset != 0 on ACPI,
+>> am I wrong ?
+> Hi Lorenzo,
+> 	I may have found the divergence between us about the design here. You
+> treat it as a one-stage translation but I treat it as a
+> two-stage translation as below:
+> stage 1: map(translate) per-PCI-domain IO port address[0, 16M) into
+> system global IO port address. Here system global IO port address is
+> ioport_resource[0, IO_SPACE_LIMIT).
+> stage 2: map system IO port address into system memory address.
+>
+> We need two objects of struct resource_win to support above two-stage
+> translation. One object, type of IORESOURCE_IO, is used to support
+> stage one, and it will also used to allocate IO port resources
+> for PCI devices. Another object, type of IORESOURCE_MMIO, is used
+> to allocate resource from iomem_resource and setup MMIO mapping
+> to actually access IO ports.
+>
+> For ARM64, it doesn't support multiple per-PCI-domain(bus local)
+> IO port address space yet, so stage one seems to be optional
+> becomes the offset between bus local IO port address and system
+> IO port address is always 0. But we still need two objects of
+> struct resource_win. The first object is
+> 	{
+> 		offset:0,
+> 		start:AddressMinimum,
+> 		end:AddressMaximum,
+> 		flags:IORESOURCE_IO
+> 	}
+> Here it's type of IORESOURCE_IO and offset must be zero because
+> pcibios_resource_to_bus() will access it translate system IO
+> port address into bus local IO port address. With my patch,
+> the struct resource_win object created by the ACPI core will
+> be reused for this.
+>
+> The second object is:
+> 	{
+> 		offset:Translation_Offset,
+> 		start:AddressMinimum + Translation_Offset,
+> 		end:AddressMaximum + Translation_Offset,
+> 		flags:IORESOURCE_MMIO
+> 	}
+> Arch code need to create the second struct resource_win object
+> and actually setup the MMIO mapping.
+>
+> But there's really another bug need to get fixed, funciton
+> acpi_dev_ioresource_flags() assumes bus local IO port address
+> space is size of 64K, which is wrong for IA64 and ARM64.
+>
 
-I don't know whether this is a Linux kernel defect or a hardware
-defect in the PCIe card.  The ECRC is in the TLP Digest, and per spec,
-if a TLP receiver does not support ECRC, it must ignore the TLP Digest
-(PCIe spec r3.0, sec 2.2.3).
+So what would be the Translation_Offset meaning for two cases DWordIo 
+(....,TypeTranslation) vs DWordIo (....,TypeStatic)? And why we did not 
+use TypeTranslation for IA64 so far?
 
-If a card doesn't support ECRC checking at all, i.e., the AER "ECRC
-Check Capable" bit is zero, I would expect the card to work fine even
-if you enable ECRC at the Root Port.  If it doesn't, that sounds like
-a hardware issue with the card.
+I am worried that TypeTranslation fall into the IA64 category but ACPI 
+tables were already written incorrectly.
 
-It sounds like you're contemplating enabling ECRC only when the Root
-Port and every device in the hierarchy below it supports ECRC
-checking.  As I read the spec, that would be overly restrictive.  If I
-understand it correctly, it should be safe to enable ECRC generation
-on every device that supports it.  Devices where ECRC checking is
-supported and enabled should check ECRC, and other devices should just
-ignore it.
+Tomasz
 
-> >>The other problem I'm seeing is about the maximum read request size.
-> >>If I choose the PCI bus performance mode, maximum read request size
-> >>is being limited to the maximum payload size.
-> >>
-> >>I'd like to add a new mode where I can have bigger read request size
-> >>than the maximum payload size.
-> >
-> >I've never been thrilled about the way Linux ties MRRS and MPS
-> >together.  I don't think the spec envisioned MRRS being used to
-> >control segment size on the link.  My impression is that the purpose
-> >of MRRS is to limit the amount of time one device can dominate a link.
-> >
-> >I am sympathetic to the idea of having MRRS larger than MPS.  The
-> >question is how to accomplish that.  I'm not really happy with the
-> >current set of "pcie_bus_tune_*" parameters, so I'd hesitate to add
-> >yet another one.  They feel like they're basically workarounds for the
-> >fact that Linux can't optimize MPS directly itself.
-> >
-> >Can you give any more specifics of your MRRS/MPS situation?  I guess
-> >you hope to improve bandwidth to some device by reducing the number of
-> >read requests?  Do you have any quantitative estimate of what you can
-> >gain?
-> 
-> I talked to our performance team. They are saying that max read
-> request does not gain you much compared to max payload size single
-> direction but it helps tremendously if you are moving data forth and
-> back between the card. I don't have real numbers though.
-
-I'm not enough of a hardware or performance person to visualize how
-MRRS makes a tremendous difference in this situation.  Sample
-timelines comparing small vs. large MRRS would help everybody
-understand what's happening here.
-
-Bjorn
