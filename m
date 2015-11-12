@@ -1,77 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ibawizard.net ([82.208.49.253]:59443 "EHLO
-	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781AbbKPPZB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 10:25:01 -0500
-From: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
-To: linux-arm-kernel@lists.infradead.org
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	=?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
-Subject: [PATCH] PCI: imx6: Fix reset-gpio to work with active low GPIO
-Date: Mon, 16 Nov 2015 16:19:07 +0100
-Message-Id: <1447687147-19436-1-git-send-email-ynezz@true.cz>
+Received: from relmlor4.renesas.com ([210.160.252.174]:8775 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754035AbbKLJ0k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 04:26:40 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+CC: Will Deacon <will.deacon@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Magnus <magnus.damm@gmail.com>
+Subject: RE: PCIe host controller behind IOMMU on ARM
+Date: Thu, 12 Nov 2015 09:26:33 +0000
+Message-ID: <PS1PR06MB118013A957CFFDF129430C58F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151104142412.GS963@e106497-lin.cambridge.arm.com>
+ <PS1PR06MB11804263DD55C54C5987654EF52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151104150147.GT963@e106497-lin.cambridge.arm.com>
+ <PS1PR06MB11806B65D3408BDFBEAD9D3AF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151111182456.GV963@e106497-lin.cambridge.arm.com>
+In-Reply-To: <20151111182456.GV963@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It's currently not possible to use reset-gpio on board where the GPIO is
-active low as the code incorrectly assumes, that reset-gpio will be
-always active high.
-
-In my case the broken behavior was observed on Toradex Apalis SoM with
-Ixora base board.
-
-Signed-off-by: Petr Štetiar <ynezz@true.cz>
----
- drivers/pci/host/pci-imx6.c |   15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index fdb9536..cd7ed71 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -293,9 +293,11 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 
- 	/* Some boards don't have PCIe reset GPIO. */
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
--		gpio_set_value(imx6_pcie->reset_gpio, 0);
-+		struct gpio_desc *gd = gpio_to_desc(imx6_pcie->reset_gpio);
-+
-+		gpiod_set_value(gd, 0);
- 		msleep(100);
--		gpio_set_value(imx6_pcie->reset_gpio, 1);
-+		gpiod_set_value(gd, 1);
- 	}
- 	return 0;
- 
-@@ -559,6 +561,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	struct pcie_port *pp;
- 	struct device_node *np = pdev->dev.of_node;
- 	struct resource *dbi_base;
-+	enum of_gpio_flags of_flags;
-+	int flags = GPIOF_OUT_INIT_LOW;
- 	int ret;
- 
- 	imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie), GFP_KERNEL);
-@@ -578,10 +582,13 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(pp->dbi_base);
- 
- 	/* Fetch GPIOs */
--	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-+	imx6_pcie->reset_gpio = of_get_named_gpio_flags(np, "reset-gpio", 0,
-+							&of_flags);
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-+		if (of_flags & OF_GPIO_ACTIVE_LOW)
-+			flags |= GPIOF_ACTIVE_LOW;
- 		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
--					    GPIOF_OUT_INIT_LOW, "PCIe reset");
-+					    flags, "PCIe reset");
- 		if (ret) {
- 			dev_err(&pdev->dev, "unable to get reset gpio\n");
- 			return ret;
--- 
-1.7.9.5
-
+SGkgTGl2aXUsIEFybmQsDQoNCk9uIDExIE5vdmVtYmVyIDIwMTUgMTg6MjUsIExJdml1IHdyb3Rl
+Og0KPiBPbiBNb24sIE5vdiAwOSwgMjAxNSBhdCAxMjozMjoxM1BNICswMDAwLCBQaGlsIEVkd29y
+dGh5IHdyb3RlOg0KPiA+IEhpIExpdml1LCBXaWxsLA0KPiA+DQo+ID4gT24gMDQgTm92ZW1iZXIg
+MjAxNSAxNToxOSwgUGhpbCB3cm90ZToNCj4gPiA+IE9uIDA0IE5vdmVtYmVyIDIwMTUgMTU6MDIs
+IExpdml1IHdyb3RlOg0KPiA+ID4gPiBPbiBXZWQsIE5vdiAwNCwgMjAxNSBhdCAwMjo0ODozOFBN
+ICswMDAwLCBQaGlsIEVkd29ydGh5IHdyb3RlOg0KPiA+ID4gPiA+IEhpIExpdml1LA0KPiA+ID4g
+PiA+DQo+ID4gPiA+ID4gT24gMDQgTm92ZW1iZXIgMjAxNSAxNDoyNCwgTGl2aXUgd3JvdGU6DQo+
+ID4gPiA+ID4gPiBPbiBXZWQsIE5vdiAwNCwgMjAxNSBhdCAwMTo1Nzo0OFBNICswMDAwLCBQaGls
+IEVkd29ydGh5IHdyb3RlOg0KPiA+ID4gPiA+ID4gPiBIaSwNCj4gPiA+ID4gPiA+ID4NCj4gPiA+
+ID4gPiA+ID4gSSBhbSB0cnlpbmcgdG8gaG9vayB1cCBhIFBDSWUgaG9zdCBjb250cm9sbGVyIHRo
+YXQgc2l0cyBiZWhpbmQgYW4NCj4gSU9NTVUsDQo+ID4gPiA+ID4gPiA+IGJ1dCBoYXZpbmcgc29t
+ZSBwcm9ibGVtcy4NCj4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gSSdtIHVzaW5nIHRoZSBw
+Y2llLXJjYXIgUENJZSBob3N0IGNvbnRyb2xsZXIgYW5kIGl0IHdvcmtzIGZpbmUgd2l0aG91dA0K
+PiA+ID4gPiA+ID4gPiB0aGUgSU9NTVUsIGFuZCBJIGNhbiBhdHRhY2ggdGhlIElPTU1VIHRvIHRo
+ZSBjb250cm9sbGVyIHN1Y2ggdGhhdA0KPiBhbnkNCj4gPiA+ID4gY2FsbHMNCj4gPiA+ID4gPiA+
+ID4gdG8gZG1hX2FsbG9jX2NvaGVyZW50IG1hZGUgYnkgdGhlIGNvbnRyb2xsZXIgZHJpdmVyIHVz
+ZXMgdGhlDQo+ID4gPiBpb21tdV9vcHMNCj4gPiA+ID4gPiA+ID4gdmVyc2lvbiBvZiBkbWFfb3Bz
+Lg0KPiA+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gPiBIb3dldmVyLCBJIGNhbid0IHNlZSBob3cg
+dG8gbWFrZSB0aGUgZW5kcG9pbnRzIHRvIHV0aWxpc2UgdGhlDQo+IGRtYV9vcHMNCj4gPiA+IHRo
+YXQNCj4gPiA+ID4gPiA+ID4gdGhlIGNvbnRyb2xsZXIgdXNlcy4gU2hvdWxkbid0IHRoZSBlbmRw
+b2ludHMgaW5oZXJpdCB0aGUgZG1hX29wcyBmcm9tDQo+IHRoZQ0KPiA+ID4gPiA+ID4gPiBjb250
+cm9sbGVyPw0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IE5vLCBub3QgZGlyZWN0bHkuDQo+ID4g
+PiA+ID4gPg0KPiA+ID4gPiA+ID4gPiBBbnkgcG9pbnRlcnMgZm9yIHRoaXM/DQo+ID4gPiA+ID4g
+Pg0KPiA+ID4gPiA+ID4gWW91IG5lZWQgdG8gdW5kZXJzdGFuZCB0aGUgcHJvY2VzcyB0aHJvdWdo
+IHdoaWNoIGEgZHJpdmVyIGZvcg0KPiBlbmRwb2ludA0KPiA+ID4gZ2V0DQo+ID4gPiA+ID4gPiBh
+biBhZGRyZXNzIHRvIGJlIHBhc3NlZCBkb3duIHRvIHRoZSBkZXZpY2UuIEhhdmUgYSBsb29rIGF0
+DQo+ID4gPiA+ID4gPiBEb2N1bWVudGF0aW9uL0RNQS1BUEktSE9XVE8udHh0LCB0aGVyZSBpcyBh
+IG5pY2UgZXhwbGFuYXRpb24gdGhlcmUuDQo+ID4gPiA+ID4gPiAoSGludDogRVAgZHJpdmVyIG5l
+ZWRzIHRvIGNhbGwgZG1hX21hcF9zaW5nbGUpLg0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IEFs
+c28sIHlvdSBuZWVkIHRvIG1ha2Ugc3VyZSB0aGF0IHRoZSBidXMgYWRkcmVzcyB0aGF0IGVuZHMg
+dXAgYmVpbmcgc2V0DQo+ID4gPiBpbnRvDQo+ID4gPiA+ID4gPiB0aGUgZW5kcG9pbnQgZ2V0cyB0
+cmFuc2xhdGVkIGNvcnJlY3RseSBieSB0aGUgaG9zdCBjb250cm9sbGVyIGludG8gYW4NCj4gYWRk
+cmVzcw0KPiA+ID4gPiA+ID4gdGhhdCB0aGUgSU9NTVUgY2FuIHRoZW4gdHJhbnNsYXRlIGludG8g
+cGh5c2ljYWwgYWRkcmVzcy4NCj4gPiA+ID4gPiBTdXJlLCB0aG91Z2ggc2luY2UgdGhpcyBpcyBi
+b2cgc3RhbmRhcmQgSW50ZWwgUENJZSBldGhlcm5ldCBjYXJkIHdoaWNoDQo+IHdvcmtzDQo+ID4g
+PiA+ID4gZmluZSB3aGVuIHRoZSBJT01NVSBpcyBlZmZlY3RpdmVseSB1bnVzZWQsIEkgZG9u4oCZ
+dCB0aGluayB0aGVyZSBpcyBhDQo+IHByb2JsZW0NCj4gPiA+ID4gPiB3aXRoIHRoYXQuDQo+ID4g
+PiA+ID4NCj4gPiA+ID4gPiBUaGUgZHJpdmVyIGZvciB0aGUgUENJZSBjb250cm9sbGVyIHNldHMg
+dXAgdGhlIElPTU1VIG1hcHBpbmcgb2sgd2hlbiBJDQo+ID4gPiA+ID4gZG8gYSB0ZXN0IGNhbGwg
+dG8gZG1hX2FsbG9jX2NvaGVyZW50KCkgaW4gdGhlIGNvbnRyb2xsZXIncyBkcml2ZXIuIGkuZS4g
+d2hlbiBJDQo+ID4gPiA+ID4gZG8gdGhpcywgaXQgZW5kcyB1cCBpbiBhcm1faW9tbXVfYWxsb2Nf
+YXR0cnMoKSwgd2hpY2ggY2FsbHMNCj4gPiA+ID4gPiBfX2lvbW11X2FsbG9jX2J1ZmZlcigpIGFu
+ZCBfX2FsbG9jX2lvdmEoKS4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IFdoZW4gYW4gZW5kcG9pbnQg
+ZHJpdmVyIGFsbG9jYXRlcyBhbmQgbWFwcyBhIGRtYSBjb2hlcmVudCBidWZmZXIgaXQNCj4gPiA+
+ID4gPiBhbHNvIG5lZWRzIHRvIGVuZCB1cCBpbiBhcm1faW9tbXVfYWxsb2NfYXR0cnMoKSwgYnV0
+IGl0IGRvZXNuJ3QuDQo+ID4gPiA+DQo+ID4gPiA+IFdoeSBkbyB5b3UgdGhpbmsgdGhhdD8gUmVt
+ZW1iZXIgdGhhdCB0aGUgb25seSB0aGluZyBhdHRhY2hlZCB0byB0aGUNCj4gSU9NTVUNCj4gPiA+
+IGlzDQo+ID4gPiA+IHRoZQ0KPiA+ID4gPiBob3N0IGNvbnRyb2xsZXIuIFRoZSBlbmRwb2ludCBp
+cyBvbiB0aGUgUENJZSBidXMsIHdoaWNoIGdldHMgYSBkaWZmZXJlbnQNCj4gPiA+ID4gdHJhbnNs
+YXRpb24NCj4gPiA+ID4gdGhhdCB0aGUgSU9NTVUga25vd3Mgbm90aGluZyBhYm91dC4gSWYgaXQg
+aGVscHMgeW91IHRvIHZpc3VhbGlzZSBpdCBiZXR0ZXIsDQo+IHRoaW5rDQo+ID4gPiA+IG9mIHRo
+ZSBob3N0IGNvbnRyb2xsZXIgYXMgYW5vdGhlciBJT01NVSBkZXZpY2UuIEl0J3MgdGhlIG9wcyBv
+ZiB0aGUgaG9zdA0KPiA+ID4gPiBjb250cm9sbGVyDQo+ID4gPiA+IHRoYXQgc2hvdWxkIGJlIGlu
+dm9rZWQsIG5vdCB0aGUgSU9NTVUncy4NCj4gPiA+IE9rLCB0aGF0IG1ha2VzIHNlbnNlLiBJJ2xs
+IGhhdmUgYSB0aGluayBhbmQgcG9rZSBpdCBhIGJpdCBtb3JlLi4uDQo+IA0KPiBIaSBQaGlsLA0K
+PiANCj4gTm90IHRyeWluZyB0byBpZ25vcmUgeW91ciBlbWFpbCwgYnV0IEkgdGhvdWdodCB0aGlz
+IGlzIG1vcmUgaW4gV2lsbCdzIGJhY2t5YXJkLg0KPiANCj4gPiBTb21ld2hhdCByZWxhdGVkIHRv
+IHRoaXMsIHNpbmNlIG91ciBQQ0llIGNvbnRyb2xsZXIgSFcgaXMgbGltaXRlZCB0bw0KPiA+IDMy
+LWJpdCBBWEkgYWRkcmVzcyByYW5nZSwgYmVmb3JlIHRyeWluZyB0byBob29rIHVwIHRoZSBJT01N
+VSBJIGhhdmUNCj4gPiB0cmllZCB0byBsaW1pdCB0aGUgZG1hX21hc2sgZm9yIFBDSSBjYXJkcyB0
+byBETUFfQklUX01BU0soMzIpLiBUaGUNCj4gPiByZWFzb24gYmVpbmcgdGhhdCBMaW51eCB1c2Vz
+IGEgMSB0byAxIG1hcHBpbmcgYmV0d2VlbiBQQ0kgYWRkcmVzc2VzDQo+ID4gYW5kIGNwdSAocGh5
+cykgYWRkcmVzc2VzIHdoZW4gdGhlcmUgaXNuJ3QgYW4gSU9NTVUgaW52b2x2ZWQsIHNvIEkNCj4g
+PiB0aGluayB0aGF0IHdlIG5lZWQgdG8gbGltaXQgdGhlIFBDSSBhZGRyZXNzIHNwYWNlIHVzZWQu
+DQo+IA0KPiBJIHRoaW5rIHlvdSdyZSBtaXhpbmcgdGhpbmdzIGEgYml0IG9yIG5vdCBleHBsYWlu
+aW5nIHRoZW0gdmVyeSB3ZWxsLiBIYXZpbmcgdGhlDQo+IFBDSWUgY29udHJvbGxlciBsaW1pdGVk
+IHRvIDMyLWJpdCBBWEkgZG9lcyBub3QgbWVhbiB0aGF0IHRoZSBQQ0llIGJ1cyBjYW5ub3QNCj4g
+Y2FycnkgNjQtYml0IGFkZHJlc3Nlcy4gSXQgZGVwZW5kcyBvbiBob3cgdGhleSBnZXQgdHJhbnNs
+YXRlZCBieSB0aGUgaG9zdCBicmlkZ2UNCj4gb3IgaXRzIGFzc29jaWF0ZWQgQVRTIGJsb2NrLiBJ
+IGNhbid0IHNlZSB3aHkgeW91IGNhbid0IGhhdmUgYSBzZXR1cCB3aGVyZQ0KPiB0aGUgQ1BVIGFk
+ZHJlc3NlcyBhcmUgMzItYml0IGJ1dCB0aGUgUENJZSBidXMgYWRkcmVzc2VzIGFyZSBhbGwgNjQt
+Yml0Lg0KPiBZb3UganVzdCBoYXZlIHRvIGJlIGNhcmVmdWwgb24gaG93IHlvdSBzZXR1cCB5b3Vy
+IG1lbTY0IHJhbmdlcyBzbyB0aGF0IHRoZXkNCj4gZG9uJ3QNCj4gb3ZlcmxhcCB3aXRoIHRoZSAz
+Mi1iaXQgcmFuZ2VzIHdoZW4gdHJhbnNsYXRlZC4NCkZyb20gYSBIVyBwb2ludCBvZiB2aWV3IEkg
+YWdyZWUgdGhhdCB3ZSBjYW4gc2V0dXAgdGhlIFBDSSBob3N0IGJyaWRnZSBzdWNoIHRoYXQNCml0
+IHVzZXMgNjQtYml0IFBDSSBhZGRyZXNzLCB3aXRoIDMyLWJpdCBjcHUgYWRkcmVzc2VzLiBUaG91
+Z2ggaW4gcHJhY3RpY2UgZG9lc24ndA0KdGhpcyBtZWFuIHRoYXQgdGhlIGRtYSBvcHMgdXNlZCBi
+eSBjYXJkIGRyaXZlcnMgaGFzIHRvIGJlIHByb3ZpZGVkIGJ5IG91ciBQQ0kNCmhvc3QgYnJpZGdl
+IGRyaXZlciBzbyB3ZSBjYW4gYXBwbHkgdGhlIHRyYW5zbGF0aW9uIHRvIHRob3NlIFBDSSBhZGRy
+ZXNzZXM/DQpUaGlzIGNvbWVzIGJhY2sgdG8gbXkgcG9pbnQgYmVsb3cgYWJvdXQgaG93IHRvIGRv
+IHRoaXMuIEFkZGluZyBhIGJ1cyBub3RpZmllcg0KdG8gZG8gdGhpcyBtYXkgYmUgdG9vIGxhdGUs
+IGFuZCBhcm02NCBkb2Vzbid0IGltcGxlbWVudCBzZXRfZG1hX29wcygpLg0KDQo+IEFuZCBubywg
+eW91IHNob3VsZCBub3QgbGltaXQgYXQgdGhlIGNhcmQgZHJpdmVyIHRoZSBETUFfQklUX01BU0so
+KSB1bmxlc3MgdGhlDQo+IGNhcmQgaXMgbm90IGNhcGFibGUgb2Ygc3VwcG9ydGluZyBtb3JlIHRo
+YW4gMzItYml0IGFkZHJlc3Nlcy4NCklmIHRoZXJlIHdhcyBpbmZyYXN0cnVjdHVyZSB0aGF0IGNo
+ZWNrZWQgYWxsIHBhcmVudHMgZG1hLXJhbmdlcyB3aGVuIHRoZQ0KZG1hX3NldF9tYXNrKCkgZnVu
+Y3Rpb24gaXMgY2FsbGVkIGFzIEFybmQgcG9pbnRlZCBvdXQsIHRoaXMgd291bGQgbmljZWx5IHNv
+bHZlDQp0aGUgcHJvYmxlbS4NCg0KPiA+IFNpbmNlIHBjaV9zZXR1cF9kZXZpY2UoKSBzZXRzIHVw
+IGRtYV9tYXNrLCBJIGFkZGVkIGEgYnVzIG5vdGlmaWVyIGluIHRoZQ0KPiA+IFBDSWUgY29udHJv
+bGxlciBkcml2ZXIgc28gSSBjYW4gY2hhbmdlIHRoZSBtYXNrLCBpZiBuZWVkZWQsIG9uIHRoZQ0K
+PiA+IEJVU19OT1RJRllfQk9VTkRfRFJJVkVSIGFjdGlvbi4NCj4gPiBIb3dldmVyLCBJIHRoaW5r
+IHRoZXJlIGlzIHRoZSBwb3RlbnRpYWwgZm9yIGNhcmQgZHJpdmVycyB0byBhbGxvY2F0ZSBhbmQN
+Cj4gPiBtYXAgYnVmZmVycyBiZWZvcmUgdGhlIGJ1cyBub3RpZmllciBnZXQgY2FsbGVkLiBBZGRp
+dGlvbmFsbHksIEkndmUgc2Vlbg0KPiA+IGRyaXZlcnMgY2hhbmdlIHRoZWlyIGJlaGF2aW91ciBi
+YXNlZCBvbiB0aGUgc3VjY2VzcyBvciBmYWlsdXJlIG9mDQo+ID4gZG1hX3NldF9tYXNrX2FuZF9j
+b2hlcmVudChkZXYsIERNQV9CSVRfTUFTSyg2NCkpLCBzbyB0aGUNCj4gPiBkcml2ZXIgY291bGQs
+IHRoZW9yZXRpY2FsbHkgYXQgbGVhc3QsIG9wZXJhdGUgaW4gYSB3YXkgdGhhdCBpcyBub3QNCj4g
+PiBjb21wYXRpYmxlIHdpdGggYSBtb3JlIHJlc3RyaWN0ZWQgZG1hX21hc2sgKHRob3VnaCBJIGNh
+bid0IHRoaW5rDQo+ID4gb2YgYW55IHdheSB0aGlzIHdvdWxkIG5vdCB3b3JrIHdpdGggaGFyZHdh
+cmUgSSd2ZSBzZWVuKS4NCj4gPg0KPiA+IFNvLCBJIHRoaW5rIHRoYXQgdXNpbmcgYSBidXMgbm90
+aWZpZXIgaXMgdGhlIHdyb25nIHdheSB0byBnbywgYnV0IEkgZG9u4oCZdA0KPiA+IGtub3cgd2hh
+dCBvdGhlciBvcHRpb25zIEkgaGF2ZS4gQW55IHN1Z2dlc3Rpb25zPw0KPiANCj4gSSB3b3VsZCBm
+aXJzdCBoYXZlIGEgbG9vayBhdCBob3cgdGhlIFBDSWUgYnVzIGFkZHJlc3NlcyBhcmUgdHJhbnNs
+YXRlZCBieSB0aGUNCj4gaG9zdCBjb250cm9sbGVyLg0KPiANCj4gQmVzdCByZWdhcmRzLA0KPiBM
+aXZpdQ0KPiANClRoYW5rcw0KUGhpbA0K
