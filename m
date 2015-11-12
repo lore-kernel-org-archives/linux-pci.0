@@ -1,77 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:6830 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754450AbbK0U4H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Nov 2015 15:56:07 -0500
-Subject: Re: [PATCH v4 2/5] PCI: iproc: Add PAXC interface support
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
- <1448645868-5730-3-git-send-email-rjui@broadcom.com>
- <2502233.oJMLi3GpfH@wuerfel>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-Message-ID: <5658C365.5080209@broadcom.com>
-Date: Fri, 27 Nov 2015 12:56:05 -0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 12 Nov 2015 20:31:00 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Thierry Reding <treding@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
+Message-ID: <20151112203100.2e91da2a@arm.com>
+In-Reply-To: <PS1PR06MB11806B2B906CABB553B94442F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>
+	<PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	<20151109161115.GA13870@ulmo.nvidia.com>
+	<PS1PR06MB1180111D6423287273B64B0FF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	<20151110155232.GA25368@ulmo.nvidia.com>
+	<20151111163802.3a96080c@arm.com>
+	<PS1PR06MB11806B2B906CABB553B94442F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <2502233.oJMLi3GpfH@wuerfel>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+On Thu, 12 Nov 2015 08:57:03 +0000
+Phil Edworthy <phil.edworthy@renesas.com> wrote:
 
-On 11/27/2015 12:22 PM, Arnd Bergmann wrote:
-> On Friday 27 November 2015 09:37:45 Ray Jui wrote:
->>
->> +static const struct of_device_id iproc_pcie_of_match_table[] = {
->> +       {
->> +               .compatible = "brcm,iproc-pcie",
->> +               .data = (int *)IPROC_PCIE_PAXB,
->> +       }, {
->> +               .compatible = "brcm,iproc-pcie-paxc",
->> +               .data = (int *)IPROC_PCIE_PAXC,
->> +       },
->> +       { /* sentinel */ }
->> +};
->> +MODULE_DEVICE_TABLE(of, iproc_pcie_of_match_table);
->
-> You seem to only need the identifiers in order to set a single
-> pointer, so just point to that array directly.
+> Hi Marc,
+> 
+> On 11 November 2015 16:38, Marc Zyngier wrote:
+> > On Tue, 10 Nov 2015 16:52:33 +0100
+> > Thierry Reding <treding@nvidia.com> wrote:
+> > 
+> > > On Mon, Nov 09, 2015 at 06:01:49PM +0000, Phil Edworthy wrote:
+> > > > Hi Thierry,
+> > > >
+> > > > On 09 November 2015 17:24, Phil wrote:
+> > > > > On 09 November 2015 16:11, Thierry wrote:
+> > > > > > On Mon, Nov 09, 2015 at 03:20:24PM +0000, Phil Edworthy wrote:
+> > > > > > > cc'ing others (Tegra, Altera, Designware) who may have the same bug
+> > > > > > >
+> > > > > > > On 03 November 2015 09:28, Phil Edworthy wrote:
+> > > > > > > > The OF node passed to irq_domain_add_linear() should be a
+> > > > > > > > pointer to interrupt controller's device tree node, or NULL,
+> > > > > > > > but not the PCI controller's node.
+> > > > > > > >
+> > > > > > > > This fixes an oops in msi_domain_alloc_irqs() when it tries
+> > > > > > > > to call msi_check().
+> > > > > > > >
+> > > > > > > > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> > > > > > > > ---
+> > > > > > > >  drivers/pci/host/pcie-rcar.c | 2 +-
+> > > > > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > > > > >
+> > > > > > > > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> > > > > > > > index 2377bf0..c6fa562 100644
+> > > > > > > > --- a/drivers/pci/host/pcie-rcar.c
+> > > > > > > > +++ b/drivers/pci/host/pcie-rcar.c
+> > > > > > > > @@ -709,7 +709,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie
+> > > > > *pcie)
+> > > > > > > >  	msi->chip.setup_irq = rcar_msi_setup_irq;
+> > > > > > > >  	msi->chip.teardown_irq = rcar_msi_teardown_irq;
+> > > > > > > >
+> > > > > > > > -	msi->domain = irq_domain_add_linear(pcie->dev->of_node,
+> > > > > > > > INT_PCI_MSI_NR,
+> > > > > > > > +	msi->domain = irq_domain_add_linear(NULL, INT_PCI_MSI_NR,
+> > > > > > > >  					    &msi_domain_ops, &msi-
+> > >chip);
+> > > > > > > >  	if (!msi->domain) {
+> > > > > > > >  		dev_err(&pdev->dev, "failed to create IRQ domain\n");
+> > > > > >
+> > > > > > On Tegra the PCI controller is in fact the interrupt controller for
+> > > > > > MSIs. And looking at the code here it seems like the same would apply to
+> > > > > > RCAR.
+> > > > > Yes you are correct here.
+> > > > >
+> > > > > > I'm also slightly confused as to why this would cause ->msi_check() to
+> > > > > > fail. The default implementation (msi_domain_ops_check()) doesn't do
+> > > > > > anything.
+> > > > > >
+> > > > > > Also, how is passing in NULL instead of a valid struct device_node *
+> > > > > > going to prevent an oops? Perhaps this is one of those reference count
+> > > > > > imbalance bugs that have recently been showing up?
+> > > > > On arm64 (previously I didn't realise this just affects arm64, not arm),
+> > > > > the changes in commit f075915ac0b11 ("PCI/MSI: Drop domain field from
+> > > > > msi_controller") and d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use
+> > > > > struct device::msi_domain") return an uninitialized msi domain that leads
+> > > > > to the oops. It appears that these changes assume that msi interrupt
+> > > > > controller is separate from the PCI controller.
+> > > > More accurately, when CONFIG_GENERIC_MSI_IRQ_DOMAIN is enabled,
+> > > > pci_msi_get_domain() calls dev_get_msi_domain() and at this point
+> > > > dev->msi_domain is uninitialized.
+> > >
+> > > Marc, any idea what's going on here?
+> > 
+> > Thanks for putting me in the loop.
+> > 
+> > No precise idea yet, but the proposed fix definitely looks like the
+> > wrong one. Actually, not passing a node identifier to any domain
+> > constructor is pretty much always a mistake when using DT.
+> > 
+> > Can someone post a stack trace for this issue so that I can have a
+> > look? I'm currently traveling, so expect a slightly delayed reply...
+> 
+> Unfortunately, not all the code for this arm64 board is upstream
+> yet, this code base is off 4.3-rc7.
 
-Not just a single pointer. This sets the iProc PCIe interface type, 
-which is an enum. Based on the interface type, both the iProc PCIe core 
-driver and the iProc PCIe MSI driver can 1) load the correct set of 
-register offsets; 2) skip/invoke some of the link detection, controller 
-reset related behaviors; 3) setting up the correct number of MSI event 
-queue regions and MSI address regions.
+Oh, this is arm64? Well, you're not supposed to use the old
+msi_controller stuff on arm64 - I really want all arm64 controllers to
+be converted to generic MSI domains. Please have a look at the xgene
+code, for example.
 
-> Alternatively,
-> do the more common thing and point to a structure of function
-> pointers and have different implementations of the low-level
-> access functions there.
+But irrespective of that, I share Thierry's skepticism:
 
-I thought about replacing the reset and link check functions in 
-pcie-iproc.c with callbacks but felt it has not reached the point where 
-we need callbacks to completely differentiate the operations. I'm hoping 
-to wait until I see the next revision of PAXC (PAXC v2) implementation 
-in the next-gen iProc SoC to make the call....
+> systemd-udevd[1315]: undefined instruction: pc=ffffffc03106d41c
+> Code: ffffffc0 311f9740 ffffffc0 3106d138 (ffffffc0)
+> Internal error: Oops - undefined instruction: 0 [#1] PREEMPT SMP
+> Modules linked in: e1000e(+)
+> CPU: 0 PID: 1315 Comm: systemd-udevd Not tainted 4.3.0-rc7+ #4
+> Hardware name: Renesas Salvator-X board based on r8a7795 (DT)
+> task: ffffffc0307af080 ti: ffffffc030ecc000 task.ti: ffffffc030ecc000
+> PC is at 0xffffffc03106d41c
 
-Note even with the callback approach, it would not change much of the 
-pcie-iproc-platform.c here, which still needs to pass in just the 
-interface information but no more than that. Main reason being the core 
-driver and MSI drivers are used by both the platform driver and BCMA 
-driver, and I do not want to duplicate the callback implementation at 
-the bus driver level.
-
->
-> 	Arnd
->
+You are clearly jumping to nowhereland, and I doubt this is related to
+the domain of_node being set. Are you overriding arch_setup_msi_irq one
+way or another?
 
 Thanks,
 
-Ray
+	M.
+-- 
+Jazz is not dead. It just smells funny.
