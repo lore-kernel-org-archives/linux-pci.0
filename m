@@ -1,47 +1,52 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: PCIe regression with DRA7xx in 4.4-rc1
-To: <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>, <james.morse@arm.com>,
-	<gabriel.fernandez@st.com>, <Minghuan.Lian@freescale.com>,
-	<wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
-	<arnd@arndb.de>, <bhelgaas@google.com>, <pratyush.anand@gmail.com>,
-	"Nori, Sekhar" <nsekhar@ti.com>, <jingoohan1@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>
-Message-ID: <56545183.8000507@ti.com>
-Date: Tue, 24 Nov 2015 17:31:07 +0530
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Jisheng Zhang <jszhang@marvell.com>, wangzhou1@hisilicon.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: hisi: fix deferred probing
+Date: Thu, 12 Nov 2015 13:21:37 +0100
+Message-ID: <4417267.EzK5DAjM5p@wuerfel>
+In-Reply-To: <1447329728-1589-1-git-send-email-jszhang@marvell.com>
+References: <1447329728-1589-1-git-send-email-jszhang@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+The hisi_pcie_probe function is incorrectly marked as __init, as Kconfig
+tells us:
 
-I'm seeing a regression with <d1b9cf31252e905ad563b9e863fd4470f6c3dd1c>("PCI:
-designware: Make driver arch-agnostic").
+WARNING: drivers/pci/host/built-in.o(.data+0x7780): Section mismatch in reference from the variable hisi_pcie_driver to the function .init.text:hisi_pcie_probe()
 
-Logs using a SATA PCIe card [1]. The PCIe card enumerates fine but after that I
-observe "ata3.00: qc timeout (cmd 0xec), ata3.00: failed to IDENTIFY (I/O
-error, err_mask=0x4)"
+If the probe for this device gets deferred past the point where __init
+functions are removed, or the device is unbound and then reattached to
+the driver, we branch into uninitialized memory, which is bad.
 
-Logs using a Ethenet PCIe card [2]. Again here the PCIe card enumerates fine
-but when I give ifconfig up, it fails.
+This removes the __init annotation.
 
-If I just revert commit <d1b9cf31252e905ad563b9e863fd4470f6c3dd1c>, the PCIe
-cards starts to work fine again
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Logs using a SATA PCIe card [3]. Here the KINGSTON SSD gets detected fine.
-Logs using a Ethernet PCIe card [4]. I'm able to do ping tests now.
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index 35457ecd8e70..163671a4f798 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -111,7 +111,7 @@ static struct pcie_host_ops hisi_pcie_host_ops = {
+ 	.link_up = hisi_pcie_link_up,
+ };
+ 
+-static int __init hisi_add_pcie_port(struct pcie_port *pp,
++static int hisi_add_pcie_port(struct pcie_port *pp,
+ 				     struct platform_device *pdev)
+ {
+ 	int ret;
+@@ -139,7 +139,7 @@ static int __init hisi_add_pcie_port(struct pcie_port *pp,
+ 	return 0;
+ }
+ 
+-static int __init hisi_pcie_probe(struct platform_device *pdev)
++static int hisi_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct hisi_pcie *hisi_pcie;
+ 	struct pcie_port *pp;
 
-Actually I'm not able to find any obvious problems with the patch and the irq
-number and the memory resource also looks fine. Any idea what could be the problem?
-
-[1] -> http://pastebin.ubuntu.com/13491456/
-[2] -> http://pastebin.ubuntu.com/13491526/
-
-[3] -> http://pastebin.ubuntu.com/13491658/
-[4] -> http://pastebin.ubuntu.com/13491593/
-
-Thanks
-Kishon
