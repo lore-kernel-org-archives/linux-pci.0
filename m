@@ -1,68 +1,133 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"gabriel.fernandez@st.com" <gabriel.fernandez@st.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"Nori, Sekhar" <nsekhar@ti.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: PCIe regression with DRA7xx in 4.4-rc1
-Date: Tue, 24 Nov 2015 12:08:17 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162C92FB@lhreml503-mbs>
-References: <56545183.8000507@ti.com>
-In-Reply-To: <56545183.8000507@ti.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:33263 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754133AbbKLW7t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 17:59:49 -0500
+Received: by pabfh17 with SMTP id fh17so78777792pab.0
+        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2015 14:59:49 -0800 (PST)
+From: Daniel Axtens <dja@axtens.net>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: Re: [PATCH v7 38/50] powerpc/powernv: Exclude root bus in pnv_pci_reset_secondary_bus()
+In-Reply-To: <1446642770-4681-39-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1446642770-4681-39-git-send-email-gwshan@linux.vnet.ibm.com>
+Date: Fri, 13 Nov 2015 09:59:27 +1100
+Message-ID: <87lha2zuwg.fsf@gamma.ozlabs.ibm.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha512; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgS2lzaG9uDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS2lzaG9u
-IFZpamF5IEFicmFoYW0gSSBbbWFpbHRvOmtpc2hvbkB0aS5jb21dDQo+IFNlbnQ6IDI0IE5vdmVt
-YmVyIDIwMTUgMTI6MDENCj4gVG86IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtl
-cm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0KPiBvbWFwQHZnZXIua2VybmVsLm9yZzsgamFt
-ZXMubW9yc2VAYXJtLmNvbTsgZ2FicmllbC5mZXJuYW5kZXpAc3QuY29tOw0KPiBNaW5naHVhbi5M
-aWFuQGZyZWVzY2FsZS5jb207IFdhbmd6aG91IChCKTsgR2FicmllbGUgUGFvbG9uaTsgYXJuZEBh
-cm5kYi5kZTsNCj4gYmhlbGdhYXNAZ29vZ2xlLmNvbTsgcHJhdHl1c2guYW5hbmRAZ21haWwuY29t
-OyBOb3JpLCBTZWtoYXI7DQo+IGppbmdvb2hhbjFAZ21haWwuY29tOyBsaW51eC1hcm0ta2VybmVs
-QGxpc3RzLmluZnJhZGVhZC5vcmcNCj4gU3ViamVjdDogUENJZSByZWdyZXNzaW9uIHdpdGggRFJB
-N3h4IGluIDQuNC1yYzENCj4gDQo+IEhpLA0KPiANCj4gSSdtIHNlZWluZyBhIHJlZ3Jlc3Npb24g
-d2l0aCA8ZDFiOWNmMzEyNTJlOTA1YWQ1NjNiOWU4NjNmZDQ0NzBmNmMzZGQxYz4oIlBDSToNCj4g
-ZGVzaWdud2FyZTogTWFrZSBkcml2ZXIgYXJjaC1hZ25vc3RpYyIpLg0KPiANCj4gTG9ncyB1c2lu
-ZyBhIFNBVEEgUENJZSBjYXJkIFsxXS4gVGhlIFBDSWUgY2FyZCBlbnVtZXJhdGVzIGZpbmUgYnV0
-IGFmdGVyIHRoYXQNCj4gSQ0KPiBvYnNlcnZlICJhdGEzLjAwOiBxYyB0aW1lb3V0IChjbWQgMHhl
-YyksIGF0YTMuMDA6IGZhaWxlZCB0byBJREVOVElGWSAoSS9PDQo+IGVycm9yLCBlcnJfbWFzaz0w
-eDQpIg0KPiANCg0KTWF5IHRoaXMgYmUgcmVsYXRlZCB0byB0aGUgYnVnIGZsYWdnZWQgaW46DQoN
-CltQQVRDSF0gUENJOiBkZXNpZ253YXJlOiByZW1vdmUgd3JvbmcgaW9fYmFzZSBhc3NpZ25tZW50
-DQoNClsuLi5dDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUu
-YyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMNCmluZGV4IDU0MGYwNzdjMzdl
-YS4uMDJhNzQ1MmJkZjIzIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2ln
-bndhcmUuYw0KKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYw0KQEAgLTQ0
-MCw3ICs0NDAsNiBAQCBpbnQgZHdfcGNpZV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHAp
-DQogCQkJCQkgcmV0LCBwcC0+aW8pOw0KIAkJCQljb250aW51ZTsNCiAJCQl9DQotCQkJcHAtPmlv
-X2Jhc2UgPSBwcC0+aW8tPnN0YXJ0Ow0KIAkJCWJyZWFrOw0KIAkJY2FzZSBJT1JFU09VUkNFX01F
-TToNCiAJCQlwcC0+bWVtID0gd2luLT5yZXM7DQotLSANCjEuNy45LjUNClsuLi5dDQoNCkNhbiB5
-b3UgdHJ5IHRvIHNlZSBpZiBhcHBseWluZyB0aGUgcGF0Y2ggYWJvdmUgc29sdmVzIHRoZSBpc3N1
-ZT8NCg0KVGhhbmtzDQoNCkdhYg0KDQo+IExvZ3MgdXNpbmcgYSBFdGhlbmV0IFBDSWUgY2FyZCBb
-Ml0uIEFnYWluIGhlcmUgdGhlIFBDSWUgY2FyZCBlbnVtZXJhdGVzIGZpbmUNCj4gYnV0IHdoZW4g
-SSBnaXZlIGlmY29uZmlnIHVwLCBpdCBmYWlscy4NCj4gDQo+IElmIEkganVzdCByZXZlcnQgY29t
-bWl0IDxkMWI5Y2YzMTI1MmU5MDVhZDU2M2I5ZTg2M2ZkNDQ3MGY2YzNkZDFjPiwgdGhlIFBDSWUN
-Cj4gY2FyZHMgc3RhcnRzIHRvIHdvcmsgZmluZSBhZ2Fpbg0KPiANCj4gTG9ncyB1c2luZyBhIFNB
-VEEgUENJZSBjYXJkIFszXS4gSGVyZSB0aGUgS0lOR1NUT04gU1NEIGdldHMgZGV0ZWN0ZWQgZmlu
-ZS4NCj4gTG9ncyB1c2luZyBhIEV0aGVybmV0IFBDSWUgY2FyZCBbNF0uIEknbSBhYmxlIHRvIGRv
-IHBpbmcgdGVzdHMgbm93Lg0KPiANCj4gQWN0dWFsbHkgSSdtIG5vdCBhYmxlIHRvIGZpbmQgYW55
-IG9idmlvdXMgcHJvYmxlbXMgd2l0aCB0aGUgcGF0Y2ggYW5kIHRoZSBpcnENCj4gbnVtYmVyIGFu
-ZCB0aGUgbWVtb3J5IHJlc291cmNlIGFsc28gbG9va3MgZmluZS4gQW55IGlkZWEgd2hhdCBjb3Vs
-ZCBiZSB0aGUNCj4gcHJvYmxlbT8NCj4gDQo+IFsxXSAtPiBodHRwOi8vcGFzdGViaW4udWJ1bnR1
-LmNvbS8xMzQ5MTQ1Ni8NCj4gWzJdIC0+IGh0dHA6Ly9wYXN0ZWJpbi51YnVudHUuY29tLzEzNDkx
-NTI2Lw0KPiANCj4gWzNdIC0+IGh0dHA6Ly9wYXN0ZWJpbi51YnVudHUuY29tLzEzNDkxNjU4Lw0K
-PiBbNF0gLT4gaHR0cDovL3Bhc3RlYmluLnVidW50dS5jb20vMTM0OTE1OTMvDQo+IA0KPiBUaGFu
-a3MNCj4gS2lzaG9uDQo=
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+
+> When pnv_pci_reset_secondary_bus() is called to issue reset on
+> the indicated secondary bus, the bus can't be root bus. So we
+> needn't consider root bus in the function.
+
+It took me a while to convince myself that this is correct. For the
+record, this is why it's correct:
+
+pnv_pci_reset_secondary_bus fills the reset_secondary_bus callback in
+the pci_controller_ops structure, and isn't used elsewhere.
+
+In arch/powerpc/kernel/pci.c, that callback is called (if it exists) in=20
+pcibios_reset_secondary_bus(). It's not called anywhere else.
+
+The PPC pcibios_reset_secondary_bus overrides the weak version in
+drivers/pci/pci.c. It's called from the same file by
+pci_reset_bridge_secondary_device() (and nowhere else).
+
+pci_reset_bridge_secondary_device() is nicely documented:
+
+/**
+ * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
+ * @dev: Bridge device
+ *
+ * Use the bridge control register to assert reset on the secondary bus.
+ * Devices on the secondary bus are left in power-on state.
+ */
+
+Therefore, by the definiton of pci_reset_bridge_secondary_bus,
+pnv_pci_reset_secondary_bus() can only be called with a bridge
+device. As such, a bridge reset only is appropriate. If this breaks
+anything, the caller is broken.
+
+It might be worth including a condensed version of this in the commit
+message.
+
+Reviewed-by: Daniel Axtens <dja@axtens.net>
+
+Regards,
+Daniel Axtens
+
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/platforms/powernv/eeh-powernv.c | 12 ++----------
+>  1 file changed, 2 insertions(+), 10 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/=
+platforms/powernv/eeh-powernv.c
+> index a7d84a4..c69b6a1 100644
+> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> @@ -880,16 +880,8 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev,=
+ int option)
+>=20=20
+>  void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+>  {
+> -	struct pci_controller *hose;
+> -
+> -	if (pci_is_root_bus(dev->bus)) {
+> -		hose =3D pci_bus_to_host(dev->bus);
+> -		pnv_eeh_root_reset(hose, EEH_RESET_HOT);
+> -		pnv_eeh_root_reset(hose, EEH_RESET_DEACTIVATE);
+> -	} else {
+> -		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
+> -		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
+> -	}
+> +	pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
+> +	pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
+>  }
+>=20=20
+>  /**
+> --=20
+> 2.1.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: GPGTools - https://gpgtools.org
+
+iQIcBAEBCgAGBQJWRRnPAAoJEPC3R3P2I92F/boP/iIQ9pke3BKGqtBsAAZ8dDJG
+mHTNFOeC9/s1Ykh2Mru/Kp/7b/rVKxIuah5S8ODhUcu44Xf6e1tVU2O6+wAHF2nh
+h+McoeF1hxD6ZWq+0eJX/h1wmUC4H6CBQrSwoaOj1Zg3m/yiStXeG/06DEwDCGtM
+NJmieCPmNzIobt/I/RBkptx9vRajinZ2/kEtsSjZqwz6F65uQe3JAMsI2Vm9BNXx
+YpIYCSCTrnxuEKt+3D/nve2qeBdffUw0fLYOz76EqnJ3SsI/rgPbGnMFOGRrD9SE
+Bmpvhq7D9utw1BgjXvWbQAH0dLqqnL9lU12f0ouCGpaE/WCTohjF5pmvLDZvwVC8
+UKRdl9TVRNJjsXyVrygLKQNqHp4Nit8NHSHUxZOjDBnkb92N/Rk2W8loxk3YbO00
+kNkqBl3lVlND7ZIBOkbl0A3veVqxOai3GXwHqkgHOOxsr43fN7xlpSjBcd7U0CtC
+LJuy+O+xe76U7QGjpM9zHRIn44fDyTLGtw6NWWAUvTmw8NBvHssTvrub96eojHRL
+aspVRz7dyqJueX8GflbZ2cVZab1FwZP8vbMRIYFH4pcSfWEEBU6f0Lvn49tWMnwm
+HYiwSBPn2dnYSKVoVg4TbmvWaQxqHqxSRF7LSZrXTd3VEMwaR3Cg9GT5P8VdJqDK
+u3bhKVw2Zw4wJFJyxhd7
+=5Is4
+-----END PGP SIGNATURE-----
+--=-=-=--
