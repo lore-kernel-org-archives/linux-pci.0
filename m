@@ -1,39 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43023 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751617AbbKMVnc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 13 Nov 2015 16:43:32 -0500
-Date: Fri, 13 Nov 2015 21:43:31 +0000
-From: Keith Busch <keith.busch@intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv5 5/6] x86/pci: Initial commit for new VMD device driver
-Message-ID: <20151113214330.GB29179@localhost.localdomain>
-References: <1447435057-5212-1-git-send-email-keith.busch@intel.com>
- <1447435057-5212-6-git-send-email-keith.busch@intel.com>
- <alpine.DEB.2.11.1511131624580.3987@nanos>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:9386 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754332AbbKLM2y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 07:28:54 -0500
+Date: Thu, 12 Nov 2015 20:24:28 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>, <wangzhou1@hisilicon.com>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: hisi: Fix Section mismatch compilation warning for
+ probe()
+Message-ID: <20151112202428.3c1cefc8@xhacker>
+In-Reply-To: <4599031.EERjkvxHAA@wuerfel>
+References: <1447329728-1589-1-git-send-email-jszhang@marvell.com>
+	<4599031.EERjkvxHAA@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.11.1511131624580.3987@nanos>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 13, 2015 at 04:27:07PM -0500, Thomas Gleixner wrote:
-> On Fri, 13 Nov 2015, Keith Busch wrote:
-> > +/**
-> > + * struct vmd_irq_list - list of driver requested irq's mapping to a vmd vector
-> > + * &irq_list:	list of child irq's the VMD one demuxes to.
+On Thu, 12 Nov 2015 13:21:02 +0100
+Arnd Bergmann <arnd@arndb.de> wrote:
+
+> On Thursday 12 November 2015 20:02:08 Jisheng Zhang wrote:
+> > Following compilation warning occurs when compiled with:
+> > CONFIG_DEBUG_SECTION_MISMATCH=y
+> > 
+> >  WARNING: drivers/pci/host/built-in.o(.data+0x308): Section mismatch in
+> >  reference from the variable hisi_pcie_driver to the function
+> >  .init.text:hisi_pcie_probe()
+> > 
+> > Fix it by dropping __init from hisi_pcie_probe().  
 > 
-> Is "&" a  new KernelDoc mechanism?
+> The patch description should ideally say what the impact is here, not
+> only what the warning says.
+> 
+> > Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+> > Fixes: 500a1d9a43e0 ("PCI: hisi: Add HiSilicon SoC Hip05 PCIe driver")
+> > ---
+> >  drivers/pci/host/pcie-hisi.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+> > index 35457ec..1cc0a21 100644
+> > --- a/drivers/pci/host/pcie-hisi.c
+> > +++ b/drivers/pci/host/pcie-hisi.c
+> > @@ -139,7 +139,7 @@ static int __init hisi_add_pcie_port(struct pcie_port *pp,
+> >         return 0;
+> >  }
+> >  
+> > -static int __init hisi_pcie_probe(struct platform_device *pdev)
+> > +static int hisi_pcie_probe(struct platform_device *pdev)
+> >  {
+> >         struct hisi_pcie *hisi_pcie;
+> >         struct pcie_port *pp;  
+> 
+> This seems incomplete, you now get a new warning about hisi_add_pcie_port().
 
-Curses!
+oops, yes. Thanks.
 
-It's a typo in my vi macro. So much for trying to be clever to save a
-whole 20 seconds of manual typing...
+> 
+> I did a similar patch yesterday, will follow up with my version.
+
+Your version is completed.
+
+Thanks,
+Jisheng
