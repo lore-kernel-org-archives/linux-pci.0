@@ -1,215 +1,171 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-To: Tomasz Nowicki <tn@semihalf.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
- <5640A8AA.4000806@semihalf.com> <20151109171042.GA11909@red-moon>
- <6488357.xJV65iBRHq@wuerfel> <564185B6.8040006@linux.intel.com>
- <20151111174647.GA30051@red-moon> <56445117.8090307@linux.intel.com>
- <56449246.2010308@semihalf.com> <56449C55.2090001@linux.intel.com>
- <5644A613.2010304@semihalf.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <5644AAB9.6010700@linux.intel.com>
-Date: Thu, 12 Nov 2015 23:05:29 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor4.renesas.com ([210.160.252.174]:10215 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753787AbbKMJgx convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 13 Nov 2015 04:36:53 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: Thierry Reding <treding@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: RE: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
+Date: Fri, 13 Nov 2015 09:36:48 +0000
+Message-ID: <PS1PR06MB11800B547C8957B226077B83F5110@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>
+	<PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	<20151109161115.GA13870@ulmo.nvidia.com>
+	<PS1PR06MB1180111D6423287273B64B0FF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	<20151110155232.GA25368@ulmo.nvidia.com>	<20151111163802.3a96080c@arm.com>
+	<PS1PR06MB11806B2B906CABB553B94442F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151112203100.2e91da2a@arm.com>
+In-Reply-To: <20151112203100.2e91da2a@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <5644A613.2010304@semihalf.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/11/12 22:45, Tomasz Nowicki wrote:
-> On 12.11.2015 15:04, Jiang Liu wrote:
->> On 2015/11/12 21:21, Tomasz Nowicki wrote:
->>> On 12.11.2015 09:43, Jiang Liu wrote:
->>>> On 2015/11/12 1:46, Lorenzo Pieralisi wrote:
->>>>> On Tue, Nov 10, 2015 at 01:50:46PM +0800, Jiang Liu wrote:
->>>>>
->>>>> [...]
->>>>>
->>>>>>>> In particular, I would like to understand, for an eg DWordIO
->>>>>>>> descriptor,
->>>>>>>> what Range Minimum, Range Maximum and Translation Offset represent,
->>>>>>>> they can't mean different things depending on the SW parsing them,
->>>>>>>> this totally defeats the purpose.
->>>>>>>
->>>>>>> I have no clue about what those mean in ACPI though.
->>>>>>>
->>>>>>> Generally speaking, each PCI domain is expected to have a (normally
->>>>>>> 64KB)
->>>>>>> range of CPU addresses that gets translated into PCI I/O space the
->>>>>>> same
->>>>>>> way that config space and memory space are handled.
->>>>>>> This is true for almost every architecture except for x86, which
->>>>>>> uses
->>>>>>> different CPU instructions for I/O space compared to the other
->>>>>>> spaces.
->>>>>>>
->>>>>>>> By the way, ia64 ioremaps the translation_offset (ie
->>>>>>>> new_space()), so
->>>>>>>> basically that's the CPU physical address at which the PCI host
->>>>>>>> bridge
->>>>>>>> map the IO space transactions), I do not think ia64 is any
->>>>>>>> different from
->>>>>>>> arm64 in this respect, if it is please provide an HW description
->>>>>>>> here from
->>>>>>>> the PCI bus perspective here (also an example of ia64 ACPI PCI
->>>>>>>> host bridge
->>>>>>>> tables would help).
->>>>>>>
->>>>>>> The main difference between ia64 and a lot of the other
->>>>>>> architectures (e.g.
->>>>>>> sparc is different again) is that ia64 defines a logical address
->>>>>>> range
->>>>>>> in terms of having a small number for each I/O space followed by the
->>>>>>> offset within that space as a 'port number' and uses a mapping
->>>>>>> function
->>>>>>> that is defined as
->>>>>>>
->>>>>>> static inline void *__ia64_mk_io_addr (unsigned long port)
->>>>>>> {
->>>>>>>           struct io_space *space = &io_space[IO_SPACE_NR(port)];
->>>>>>>           return (space->mmio_base | IO_SPACE_PORT(port););
->>>>>>> }
->>>>>>> static inline unsigned int inl(unsigned long port)
->>>>>>> {
->>>>>>>           return *__ia64_mk_io_addr(port);
->>>>>>> }
->>>>>>>
->>>>>>> Most architectures allow only one I/O port range and put it at a
->>>>>>> fixed
->>>>>>> virtual address so that inl() simply becomes
->>>>>>>
->>>>>>> static inline u32 inl(unsigned long addr)
->>>>>>> {
->>>>>>>           return readl(PCI_IOBASE + addr);
->>>>>>> }
->>>>>>>
->>>>>>> which noticeably reduces code size.
->>>>>>>
->>>>>>> On some architectures (powerpc, arm, arm64), we then get the same
->>>>>>> simplified
->>>>>>> definition with a fixed virtual address, and use pci_ioremap_io() or
->>>>>>> something like that to to map a physical address range into this
->>>>>>> virtual
->>>>>>> address window at the correct io_offset;
->>>>>> Hi all,
->>>>>>      Thanks for explanation, I found a way to make the ACPI resource
->>>>>> parsing interface arch neutral, it should help to address Lorenzo's
->>>>>> concern. Please refer to the attached patch. (It's still RFC, not
->>>>>> tested
->>>>>> yet).
->>>>>
->>>>> If we go with this approach though, you are not adding the offset to
->>>>> the resource when parsing the memory spaces in acpi_decode_space(),
->>>>> are we
->>>>> sure that's what we really want ?
->>>>>
->>>>> In DT, a host bridge range has a:
->>>>>
->>>>> - CPU physical address
->>>>> - PCI bus address
->>>>>
->>>>> We use that to compute the offset between primary bus (ie CPU physical
->>>>> address) and secondary bus (ie PCI bus address).
->>>>>
->>>>> The value ending up in the PCI resource struct (for memory space) is
->>>>> the CPU physical address, if you do not add the offset in
->>>>> acpi_decode_space
->>>>> that does not hold true on platforms where CPU<->PCI offset != 0 on
->>>>> ACPI,
->>>>> am I wrong ?
->>>> Hi Lorenzo,
->>>>      I may have found the divergence between us about the design
->>>> here. You
->>>> treat it as a one-stage translation but I treat it as a
->>>> two-stage translation as below:
->>>> stage 1: map(translate) per-PCI-domain IO port address[0, 16M) into
->>>> system global IO port address. Here system global IO port address is
->>>> ioport_resource[0, IO_SPACE_LIMIT).
->>>> stage 2: map system IO port address into system memory address.
->>>>
->>>> We need two objects of struct resource_win to support above two-stage
->>>> translation. One object, type of IORESOURCE_IO, is used to support
->>>> stage one, and it will also used to allocate IO port resources
->>>> for PCI devices. Another object, type of IORESOURCE_MMIO, is used
->>>> to allocate resource from iomem_resource and setup MMIO mapping
->>>> to actually access IO ports.
->>>>
->>>> For ARM64, it doesn't support multiple per-PCI-domain(bus local)
->>>> IO port address space yet, so stage one seems to be optional
->>>> becomes the offset between bus local IO port address and system
->>>> IO port address is always 0. But we still need two objects of
->>>> struct resource_win. The first object is
->>>>      {
->>>>          offset:0,
->>>>          start:AddressMinimum,
->>>>          end:AddressMaximum,
->>>>          flags:IORESOURCE_IO
->>>>      }
->>>> Here it's type of IORESOURCE_IO and offset must be zero because
->>>> pcibios_resource_to_bus() will access it translate system IO
->>>> port address into bus local IO port address. With my patch,
->>>> the struct resource_win object created by the ACPI core will
->>>> be reused for this.
->>>>
->>>> The second object is:
->>>>      {
->>>>          offset:Translation_Offset,
->>>>          start:AddressMinimum + Translation_Offset,
->>>>          end:AddressMaximum + Translation_Offset,
->>>>          flags:IORESOURCE_MMIO
->>>>      }
->>>> Arch code need to create the second struct resource_win object
->>>> and actually setup the MMIO mapping.
->>>>
->>>> But there's really another bug need to get fixed, funciton
->>>> acpi_dev_ioresource_flags() assumes bus local IO port address
->>>> space is size of 64K, which is wrong for IA64 and ARM64.
->>>>
->>>
->>> So what would be the Translation_Offset meaning for two cases DWordIo
->>> (....,TypeTranslation) vs DWordIo (....,TypeStatic)? And why we did not
->>> use TypeTranslation for IA64 so far?
->>
->> IA64 actually ignores the translation type flag and just assume it's
->> TypeTranslation, so there may be some IA64 BIOS implementations
->> accidentally using TypeStatic. That's why we parsing SparseTranslation
->> flag without checking TranslationType flag. I feel ARM64 may face the
->> same situation as IA64:(
->>
->> We may expect (TypeStatic, 0-offset) and (TypeTranslation,
->> non-0-offset) in real word. For other two combinations, I haven't
->> found a real usage yet, though theoretically they are possible.
->>
+Hi Marc,
+
+On 12 November 2015 20:31, Marc Zyngier wrote:
+> Phil Edworthy <phil.edworthy@renesas.com> wrote:
+> > On 11 November 2015 16:38, Marc Zyngier wrote:
+> > > On Tue, 10 Nov 2015 16:52:33 +0100
+> > > Thierry Reding <treding@nvidia.com> wrote:
+> > >
+> > > > On Mon, Nov 09, 2015 at 06:01:49PM +0000, Phil Edworthy wrote:
+> > > > > Hi Thierry,
+> > > > >
+> > > > > On 09 November 2015 17:24, Phil wrote:
+> > > > > > On 09 November 2015 16:11, Thierry wrote:
+> > > > > > > On Mon, Nov 09, 2015 at 03:20:24PM +0000, Phil Edworthy wrote:
+> > > > > > > > cc'ing others (Tegra, Altera, Designware) who may have the same
+> bug
+> > > > > > > >
+> > > > > > > > On 03 November 2015 09:28, Phil Edworthy wrote:
+> > > > > > > > > The OF node passed to irq_domain_add_linear() should be a
+> > > > > > > > > pointer to interrupt controller's device tree node, or NULL,
+> > > > > > > > > but not the PCI controller's node.
+> > > > > > > > >
+> > > > > > > > > This fixes an oops in msi_domain_alloc_irqs() when it tries
+> > > > > > > > > to call msi_check().
+> > > > > > > > >
+> > > > > > > > > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> > > > > > > > > ---
+> > > > > > > > >  drivers/pci/host/pcie-rcar.c | 2 +-
+> > > > > > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > > > > > >
+> > > > > > > > > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-
+> rcar.c
+> > > > > > > > > index 2377bf0..c6fa562 100644
+> > > > > > > > > --- a/drivers/pci/host/pcie-rcar.c
+> > > > > > > > > +++ b/drivers/pci/host/pcie-rcar.c
+> > > > > > > > > @@ -709,7 +709,7 @@ static int rcar_pcie_enable_msi(struct
+> rcar_pcie
+> > > > > > *pcie)
+> > > > > > > > >  	msi->chip.setup_irq = rcar_msi_setup_irq;
+> > > > > > > > >  	msi->chip.teardown_irq = rcar_msi_teardown_irq;
+> > > > > > > > >
+> > > > > > > > > -	msi->domain = irq_domain_add_linear(pcie->dev->of_node,
+> > > > > > > > > INT_PCI_MSI_NR,
+> > > > > > > > > +	msi->domain = irq_domain_add_linear(NULL,
+> INT_PCI_MSI_NR,
+> > > > > > > > >  					    &msi_domain_ops, &msi-
+> > > >chip);
+> > > > > > > > >  	if (!msi->domain) {
+> > > > > > > > >  		dev_err(&pdev->dev, "failed to create IRQ domain\n");
+> > > > > > >
+> > > > > > > On Tegra the PCI controller is in fact the interrupt controller for
+> > > > > > > MSIs. And looking at the code here it seems like the same would apply
+> to
+> > > > > > > RCAR.
+> > > > > > Yes you are correct here.
+> > > > > >
+> > > > > > > I'm also slightly confused as to why this would cause ->msi_check() to
+> > > > > > > fail. The default implementation (msi_domain_ops_check()) doesn't
+> do
+> > > > > > > anything.
+> > > > > > >
+> > > > > > > Also, how is passing in NULL instead of a valid struct device_node *
+> > > > > > > going to prevent an oops? Perhaps this is one of those reference
+> count
+> > > > > > > imbalance bugs that have recently been showing up?
+> > > > > > On arm64 (previously I didn't realise this just affects arm64, not arm),
+> > > > > > the changes in commit f075915ac0b11 ("PCI/MSI: Drop domain field
+> from
+> > > > > > msi_controller") and d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain
+> use
+> > > > > > struct device::msi_domain") return an uninitialized msi domain that
+> leads
+> > > > > > to the oops. It appears that these changes assume that msi interrupt
+> > > > > > controller is separate from the PCI controller.
+> > > > > More accurately, when CONFIG_GENERIC_MSI_IRQ_DOMAIN is enabled,
+> > > > > pci_msi_get_domain() calls dev_get_msi_domain() and at this point
+> > > > > dev->msi_domain is uninitialized.
+> > > >
+> > > > Marc, any idea what's going on here?
+> > >
+> > > Thanks for putting me in the loop.
+> > >
+> > > No precise idea yet, but the proposed fix definitely looks like the
+> > > wrong one. Actually, not passing a node identifier to any domain
+> > > constructor is pretty much always a mistake when using DT.
+> > >
+> > > Can someone post a stack trace for this issue so that I can have a
+> > > look? I'm currently traveling, so expect a slightly delayed reply...
+> >
+> > Unfortunately, not all the code for this arm64 board is upstream
+> > yet, this code base is off 4.3-rc7.
 > 
-> I think we should not bend the generic code for IA64 only and expose
-> other platforms to the same issue. Instead, lets interpret spec
-> correctly and create IA64 quirk for the sake of backward compatibility.
-> Thoughts?
-I think there are at least two factors related to this issue.
+> Oh, this is arm64? Well, you're not supposed to use the old
+> msi_controller stuff on arm64 - I really want all arm64 controllers to
+> be converted to generic MSI domains. Please have a look at the xgene
+> code, for example.
+Oh right, I wasn't aware of that. I had hoped that drivers weren't so
+arch specific...
 
-First we still lack of a way/framework to fix errors in ACPI resource
-descriptors. Recently we have refined ACPI resource parsing interfaces
-and enforced strictly sanity check. This brings us some regressions
-which are really BIOS flaws, but it used to work and now breaks:(
-I'm still struggling to get those regressions fixed. So we may run
-into the same situation if we enforce strict check for TranslationType:(
+ 
+> But irrespective of that, I share Thierry's skepticism:
+> 
+> > systemd-udevd[1315]: undefined instruction: pc=ffffffc03106d41c
+> > Code: ffffffc0 311f9740 ffffffc0 3106d138 (ffffffc0)
+> > Internal error: Oops - undefined instruction: 0 [#1] PREEMPT SMP
+> > Modules linked in: e1000e(+)
+> > CPU: 0 PID: 1315 Comm: systemd-udevd Not tainted 4.3.0-rc7+ #4
+> > Hardware name: Renesas Salvator-X board based on r8a7795 (DT)
+> > task: ffffffc0307af080 ti: ffffffc030ecc000 task.ti: ffffffc030ecc000
+> > PC is at 0xffffffc03106d41c
+> 
+> You are clearly jumping to nowhereland, and I doubt this is related to
+> the domain of_node being set. Are you overriding arch_setup_msi_irq one
+> way or another?
+No, I'm not overriding arch_setup_msi_irq at all.
 
-Second enforcing strict check doesn't bring us too much benifits.
-Translation type is almost platform specific, and we haven't found a
-platform support both TypeTranslation and TypeStatic, so arch code
-may assume the correct translation type no matter what BIOS reports.
-So it won't hurt us even BIOS reports wrong translation type.
+Since the stack trace doesn't help that much I added some tracing:
+pci_msi_setup_msi_irqs()
+  calls pci_msi_get_domain()
+    calls dev_get_msi_domain(), gets a non-NULL domain.
+pci_msi_setup_msi_irqs()
+  calls pci_msi_domain_alloc_irqs()
+    calls msi_domain_alloc_irqs()
+msi_domain_alloc_irqs:273: ops=ffffffc03193a810
+msi_domain_alloc_irqs:274: ops->msi_check=ffffffc031161418
+systemd-udevd[1311]: undefined instruction: pc=ffffffc03116141c
+That looks to me as though msi_check is off pointing to the weeds.
 
-So I'm tending to keep current implementation with looser checking,
-otherwise it may cause regressions.
-Thanks,
-Gerry
+By passing a NULL domain into irq_domain_add_linear() you get:
+pci_msi_setup_msi_irqs()
+  calls pci_msi_get_domain()
+    calls dev_get_msi_domain(), gets a NULL domain.
+    calls arch_setup_msi_irq()
+All ok then.
 
+Thanks for your help,
+Phil
