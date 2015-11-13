@@ -1,125 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:60082 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965454AbbKDNOI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:14:08 -0500
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 23:14:06 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 30/50] powerpc/pci: Move pci_find_bus_by_node() around
-Date: Thu,  5 Nov 2015 00:12:30 +1100
-Message-Id: <1446642770-4681-31-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:17949 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754270AbbKMDHS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 22:07:18 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>
+CC: Jisheng Zhang <jszhang@marvell.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] PCI: hisi: fix deferred probing
+Date: Fri, 13 Nov 2015 03:06:27 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162AA609@lhreml503-mbs>
+References: <1447329728-1589-1-git-send-email-jszhang@marvell.com>
+ <4417267.EzK5DAjM5p@wuerfel>
+In-Reply-To: <4417267.EzK5DAjM5p@wuerfel>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This moves pci_find_bus_by_node() from arch/powerpc/platforms/
-pseries/pci_dlpar.c to arch/powerpc/kernel/pci-hotplug.c so that
-the function can be used by pSeries and PowerNV platform at the
-same time. Also, below cleanup applied. No functional changes
-introduced.
+Thanks Arnd, this looks ok to me
 
-   * Remove variable "busdn" in find_bus_among_children()
-   * Use PCI_DN() to convert device node to pci_dn
+Zhou Wang can you please Ack?
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
----
- arch/powerpc/kernel/pci-hotplug.c          | 29 ++++++++++++++++++++++++++++
- arch/powerpc/platforms/pseries/pci_dlpar.c | 31 ------------------------------
- 2 files changed, 29 insertions(+), 31 deletions(-)
-
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 3f62821..96e2cc3 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -21,6 +21,35 @@
- #include <asm/firmware.h>
- #include <asm/eeh.h>
- 
-+static struct pci_bus *find_bus_among_children(struct pci_bus *bus,
-+					       struct device_node *dn)
-+{
-+	struct pci_bus *child = NULL;
-+	struct pci_bus *tmp;
-+
-+	if (pci_bus_to_OF_node(bus) == dn)
-+		return bus;
-+
-+	list_for_each_entry(tmp, &bus->children, node) {
-+		child = find_bus_among_children(tmp, dn);
-+		if (child)
-+			break;
-+	}
-+
-+	return child;
-+}
-+
-+struct pci_bus *pci_find_bus_by_node(struct device_node *dn)
-+{
-+	struct pci_dn *pdn = PCI_DN(dn);
-+
-+	if (!pdn  || !pdn->phb || !pdn->phb->bus)
-+		return NULL;
-+
-+	return find_bus_among_children(pdn->phb->bus, dn);
-+}
-+EXPORT_SYMBOL_GPL(pci_find_bus_by_node);
-+
- /**
-  * pcibios_release_device - release PCI device
-  * @dev: PCI device
-diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
-index aee22b4..906dbaa 100644
---- a/arch/powerpc/platforms/pseries/pci_dlpar.c
-+++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
-@@ -34,37 +34,6 @@
- 
- #include "pseries.h"
- 
--static struct pci_bus *
--find_bus_among_children(struct pci_bus *bus,
--                        struct device_node *dn)
--{
--	struct pci_bus *child = NULL;
--	struct pci_bus *tmp;
--	struct device_node *busdn;
--
--	busdn = pci_bus_to_OF_node(bus);
--	if (busdn == dn)
--		return bus;
--
--	list_for_each_entry(tmp, &bus->children, node) {
--		child = find_bus_among_children(tmp, dn);
--		if (child)
--			break;
--	};
--	return child;
--}
--
--struct pci_bus *pci_find_bus_by_node(struct device_node *dn)
--{
--	struct pci_dn *pdn = dn->data;
--
--	if (!pdn  || !pdn->phb || !pdn->phb->bus)
--		return NULL;
--
--	return find_bus_among_children(pdn->phb->bus, dn);
--}
--EXPORT_SYMBOL_GPL(pci_find_bus_by_node);
--
- struct pci_controller *init_phb_dynamic(struct device_node *dn)
- {
- 	struct pci_controller *phb;
--- 
-2.1.0
-
+> -----Original Message-----
+> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+> owner@vger.kernel.org] On Behalf Of Arnd Bergmann
+> Sent: 12 November 2015 12:22
+> To: linux-arm-kernel@lists.infradead.org
+> Cc: Jisheng Zhang; Wangzhou (B); bhelgaas@google.com; linux-
+> pci@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: [PATCH] PCI: hisi: fix deferred probing
+> 
+> The hisi_pcie_probe function is incorrectly marked as __init, as Kconfig
+> tells us:
+> 
+> WARNING: drivers/pci/host/built-in.o(.data+0x7780): Section mismatch in
+> reference from the variable hisi_pcie_driver to the
+> function .init.text:hisi_pcie_probe()
+> 
+> If the probe for this device gets deferred past the point where __init
+> functions are removed, or the device is unbound and then reattached to
+> the driver, we branch into uninitialized memory, which is bad.
+> 
+> This removes the __init annotation.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> 
+> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+> index 35457ecd8e70..163671a4f798 100644
+> --- a/drivers/pci/host/pcie-hisi.c
+> +++ b/drivers/pci/host/pcie-hisi.c
+> @@ -111,7 +111,7 @@ static struct pcie_host_ops hisi_pcie_host_ops = {
+>  	.link_up = hisi_pcie_link_up,
+>  };
+> 
+> -static int __init hisi_add_pcie_port(struct pcie_port *pp,
+> +static int hisi_add_pcie_port(struct pcie_port *pp,
+>  				     struct platform_device *pdev)
+>  {
+>  	int ret;
+> @@ -139,7 +139,7 @@ static int __init hisi_add_pcie_port(struct pcie_port *pp,
+>  	return 0;
+>  }
+> 
+> -static int __init hisi_pcie_probe(struct platform_device *pdev)
+> +static int hisi_pcie_probe(struct platform_device *pdev)
+>  {
+>  	struct hisi_pcie *hisi_pcie;
+>  	struct pcie_port *pp;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
