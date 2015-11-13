@@ -1,92 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:60798 "EHLO foss.arm.com"
+Received: from mga09.intel.com ([134.134.136.24]:9725 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030324AbbKDPBt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Nov 2015 10:01:49 -0500
-Date: Wed, 4 Nov 2015 15:01:47 +0000
-From: "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+	id S932838AbbKMRRq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 13 Nov 2015 12:17:46 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Magnus <magnus.damm@gmail.com>
-Subject: Re: PCIe host controller behind IOMMU on ARM
-Message-ID: <20151104150147.GT963@e106497-lin.cambridge.arm.com>
-References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151104142412.GS963@e106497-lin.cambridge.arm.com>
- <PS1PR06MB11804263DD55C54C5987654EF52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <PS1PR06MB11804263DD55C54C5987654EF52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv5 2/6] pci: skip child bus with conflicting resources
+Date: Fri, 13 Nov 2015 10:17:33 -0700
+Message-Id: <1447435057-5212-3-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1447435057-5212-1-git-send-email-keith.busch@intel.com>
+References: <1447435057-5212-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 04, 2015 at 02:48:38PM +0000, Phil Edworthy wrote:
-> Hi Liviu,
-> 
-> On 04 November 2015 14:24, Liviu wrote:
-> > On Wed, Nov 04, 2015 at 01:57:48PM +0000, Phil Edworthy wrote:
-> > > Hi,
-> > >
-> > > I am trying to hook up a PCIe host controller that sits behind an IOMMU,
-> > > but having some problems.
-> > >
-> > > I'm using the pcie-rcar PCIe host controller and it works fine without
-> > > the IOMMU, and I can attach the IOMMU to the controller such that any calls
-> > > to dma_alloc_coherent made by the controller driver uses the iommu_ops
-> > > version of dma_ops.
-> > >
-> > > However, I can't see how to make the endpoints to utilise the dma_ops that
-> > > the controller uses. Shouldn't the endpoints inherit the dma_ops from the
-> > > controller?
-> > 
-> > No, not directly.
-> > 
-> > > Any pointers for this?
-> > 
-> > You need to understand the process through which a driver for endpoint get
-> > an address to be passed down to the device. Have a look at
-> > Documentation/DMA-API-HOWTO.txt, there is a nice explanation there.
-> > (Hint: EP driver needs to call dma_map_single).
-> > 
-> > Also, you need to make sure that the bus address that ends up being set into
-> > the endpoint gets translated correctly by the host controller into an address
-> > that the IOMMU can then translate into physical address.
-> Sure, though since this is bog standard Intel PCIe ethernet card which works
-> fine when the IOMMU is effectively unused, I don’t think there is a problem
-> with that.
-> 
-> The driver for the PCIe controller sets up the IOMMU mapping ok when I
-> do a test call to dma_alloc_coherent() in the controller's driver. i.e. when I
-> do this, it ends up in arm_iommu_alloc_attrs(), which calls
-> __iommu_alloc_buffer() and __alloc_iova().
-> 
-> When an endpoint driver allocates and maps a dma coherent buffer it
-> also needs to end up in arm_iommu_alloc_attrs(), but it doesn't.
+And use the max bus resource from the parent rather than assume 255.
 
-Why do you think that? Remember that the only thing attached to the IOMMU is the
-host controller. The endpoint is on the PCIe bus, which gets a different translation
-that the IOMMU knows nothing about. If it helps you to visualise it better, think
-of the host controller as another IOMMU device. It's the ops of the host controller
-that should be invoked, not the IOMMU's.
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/probe.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-Best regards,
-Liviu
-
-> 
-> Thanks
-> Phil
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index f14a970..ae5a4b3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -856,7 +856,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 			if (!child)
+ 				goto out;
+ 			child->primary = primary;
+-			pci_bus_insert_busn_res(child, secondary, subordinate);
++			if (!pci_bus_insert_busn_res(child, secondary, subordinate)) {
++				pci_remove_bus(child);
++				goto out;
++			}
+ 			child->bridge_ctl = bctl;
+ 		}
+ 
+@@ -896,7 +899,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 			child = pci_add_new_bus(bus, dev, max+1);
+ 			if (!child)
+ 				goto out;
+-			pci_bus_insert_busn_res(child, max+1, 0xff);
++			if (!pci_bus_insert_busn_res(child, max+1, bus->busn_res.end)) {
++				pci_remove_bus(child);
++				goto out;
++			}
+ 		}
+ 		max++;
+ 		buses = (buses & 0xff000000)
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+2.6.2.307.g37023ba
+
