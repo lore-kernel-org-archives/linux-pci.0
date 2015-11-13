@@ -1,59 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:48264 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753468AbbKDDab (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2015 22:30:31 -0500
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 09:00:28 +0530
-Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 15F141258059
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2015 09:00:25 +0530 (IST)
-Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
-	by d28relay01.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA43UOdB37683378
-	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 09:00:24 +0530
-Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
-	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA43UM6p000914
-	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 09:00:23 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V12 3/9] powerpc/pci: Remove VFs prior to PF
-Date: Wed,  4 Nov 2015 11:28:46 +0800
-Message-Id: <1446607732-4166-4-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1446607732-4166-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1446607732-4166-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>
+References: <20151109171042.GA11909@red-moon> <6488357.xJV65iBRHq@wuerfel>
+ <564185B6.8040006@linux.intel.com> <20151111174647.GA30051@red-moon>
+ <56445117.8090307@linux.intel.com> <56449246.2010308@semihalf.com>
+ <56449C55.2090001@linux.intel.com> <5644A613.2010304@semihalf.com>
+ <5644AAB9.6010700@linux.intel.com> <5645DE3A.7040406@semihalf.com>
+ <20151113170316.GB15253@red-moon>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <56462294.3060701@linux.intel.com>
+Date: Sat, 14 Nov 2015 01:49:08 +0800
+MIME-Version: 1.0
+In-Reply-To: <20151113170316.GB15253@red-moon>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As commit ac205b7bb72f ("PCI: make sriov work with hotplug remove")
-indicates, VFs which is on the same PCI bus as their PF, should be removed
-before the PF. Otherwise, the PCI hot unplugging of PCI devices on the PCI
-bus would cause kernel crash.
+On 2015/11/14 1:03, Lorenzo Pieralisi wrote:
+> Please trim your emails, thanks.
+> 
+> On Fri, Nov 13, 2015 at 01:57:30PM +0100, Tomasz Nowicki wrote:
+>> On 12.11.2015 16:05, Jiang Liu wrote:
+> 
+> [...]
+> 
+>>>>> IA64 actually ignores the translation type flag and just assume it's
+>>>>> TypeTranslation, so there may be some IA64 BIOS implementations
+>>>>> accidentally using TypeStatic. That's why we parsing SparseTranslation
+>>>>> flag without checking TranslationType flag. I feel ARM64 may face the
+>>>>> same situation as IA64:(
+>>>>>
+>>>>> We may expect (TypeStatic, 0-offset) and (TypeTranslation,
+>>>>> non-0-offset) in real word. For other two combinations, I haven't
+>>>>> found a real usage yet, though theoretically they are possible.
+> 
+> I do not understand why (TypeStatic, non-0-offset) is not a valid
+> option. Aren't there any (x86) platforms with a CPU<->PCI _physical_
+> address space offset out there (I am talking about memory space) ?
 
-The patch applies the above pattern to PowerPC PCI hotplug path.
+It's possible, but we have found such a design yet. If we eventually
+encounter such a case, we need to enhance x86 specific code to support
+it.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/pci-hotplug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+>>>> I think we should not bend the generic code for IA64 only and expose
+>>>> other platforms to the same issue. Instead, lets interpret spec
+>>>> correctly and create IA64 quirk for the sake of backward compatibility.
+>>>> Thoughts?
+>>> I think there are at least two factors related to this issue.
+>>>
+>>> First we still lack of a way/framework to fix errors in ACPI resource
+>>> descriptors. Recently we have refined ACPI resource parsing interfaces
+>>> and enforced strictly sanity check. This brings us some regressions
+>>> which are really BIOS flaws, but it used to work and now breaks:(
+>>> I'm still struggling to get those regressions fixed. So we may run
+>>> into the same situation if we enforce strict check for TranslationType:(
+>>>
+>>> Second enforcing strict check doesn't bring us too much benifits.
+>>> Translation type is almost platform specific, and we haven't found a
+>>> platform support both TypeTranslation and TypeStatic, so arch code
+>>> may assume the correct translation type no matter what BIOS reports.
+>>> So it won't hurt us even BIOS reports wrong translation type.
+> 
+> TBH I still do not understand what TranslationType actually means,
+> I will ask whoever added that to the specification to understand it.
+> 
+>> That is my point, lets pass down all we need from resource range
+>> descriptors to arch code, then archs with known quirks can whatever
+>> is needed to make it works. However, generic code like
+>> acpi_decode_space cannot play with offsets with silent IA64
+>> assumption.
+>>
+>> To sum it up, your last patch looks ok to me modulo Lorenzo's concern:
+>>>>>>>> If we go with this approach though, you are not adding the offset to
+>>>>>>>> the resource when parsing the memory spaces in acpi_decode_space(),
+>>>>>>>> are we
+>>>>>>>> sure that's what we really want ?
+>>>>>>>>
+>>>>>>>> In DT, a host bridge range has a:
+>>>>>>>>
+>>>>>>>> - CPU physical address
+>>>>>>>> - PCI bus address
+>>>>>>>>
+>>>>>>>> We use that to compute the offset between primary bus (ie CPU
+>> physical
+>>>>>>>> address) and secondary bus (ie PCI bus address).
+>>>>>>>>
+>>>>>>>> The value ending up in the PCI resource struct (for memory space) is
+>>>>>>>> the CPU physical address, if you do not add the offset in
+>>>>>>>> acpi_decode_space
+>>>>>>>> that does not hold true on platforms where CPU<->PCI offset != 0 on
+>>>>>>>> ACPI,
+>>>>>>>> am I wrong ?
+>> His concern is that your patch will cause:
+>> acpi_pci_root_validate_resources(&device->dev, list,
+>> 				 IORESOURCE_MEM);
+>> to fail now.
+> 
+> Not really. My concern is that there might be platforms out there with
+> an offset between the CPU and PCI physical address spaces, and if we
+> remove the offset value in acpi_decode_space we can break them,
+> because in the kernel struct resource data we have to have CPU physical
+> addresses, not PCI ones. If offset == 0, we are home and dry, I do not
+> understand why that's a given, which is what we would assume if Jiang's
+> patch is merged as-is unless I am mistaken.
+We try to exclude offset from struct resource in generic ACPI code,
+and it's the arch's responsibility to decide how to manipulate struct
+resource object if offset is not zero.
 
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 7f9ed0c..59c4361 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -55,7 +55,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
- 
- 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
- 		 pci_domain_nr(bus),  bus->number);
--	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
-+	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
- 		pr_debug("   Removing %s...\n", pci_name(dev));
- 		pci_stop_and_remove_bus_device(dev);
- 	}
--- 
-2.5.0
+Currently offset is always zero for x86, and IA64 has arch specific
+code to handle non-zero offset. So we should be safe without breaking
+existing code. For ARM64, it's a little different from IA64 so it's
+hard to share code between IA64 and ARM64.
 
+> 
+> Thanks,
+> Lorenzo
+> 
