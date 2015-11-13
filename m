@@ -1,162 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
- <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
- <563B65EE.7000406@semihalf.com> <20151105181959.GA352@red-moon>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <563C5CEC.4070507@linux.intel.com>
-Date: Fri, 6 Nov 2015 15:55:24 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:57226 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754032AbbKMAVT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 19:21:19 -0500
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 13 Nov 2015 10:21:16 +1000
+Date: Fri, 13 Nov 2015 11:20:15 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Daniel Axtens <dja@axtens.net>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, aik@ozlabs.ru, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+Subject: Re: [PATCH v7 39/50] powerpc/powernv: Fundamental reset in
+ pnv_pci_reset_secondary_bus()
+Message-ID: <20151113002015.GA21341@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-40-git-send-email-gwshan@linux.vnet.ibm.com>
+ <87fv0azrpe.fsf@gamma.ozlabs.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20151105181959.GA352@red-moon>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87fv0azrpe.fsf@gamma.ozlabs.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/11/6 2:19, Lorenzo Pieralisi wrote:
-> On Thu, Nov 05, 2015 at 03:21:34PM +0100, Tomasz Nowicki wrote:
->> On 14.10.2015 08:29, Jiang Liu wrote:
-> 
-> [...]
-> 
->>> +static void acpi_pci_root_validate_resources(struct device *dev,
->>> +					     struct list_head *resources,
->>> +					     unsigned long type)
->>> +{
->>> +	LIST_HEAD(list);
->>> +	struct resource *res1, *res2, *root = NULL;
->>> +	struct resource_entry *tmp, *entry, *entry2;
->>> +
->>> +	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
->>> +	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
->>> +
->>> +	list_splice_init(resources, &list);
->>> +	resource_list_for_each_entry_safe(entry, tmp, &list) {
->>> +		bool free = false;
->>> +		resource_size_t end;
->>> +
->>> +		res1 = entry->res;
->>> +		if (!(res1->flags & type))
->>> +			goto next;
->>> +
->>> +		/* Exclude non-addressable range or non-addressable portion */
->>> +		end = min(res1->end, root->end);
->>> +		if (end <= res1->start) {
->>> +			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
->>> +				 res1);
->>> +			free = true;
->>> +			goto next;
->>> +		} else if (res1->end != end) {
->>> +			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
->>> +				 res1, (unsigned long long)end + 1,
->>> +				 (unsigned long long)res1->end);
->>> +			res1->end = end;
->>> +		}
->>> +
->>> +		resource_list_for_each_entry(entry2, resources) {
->>> +			res2 = entry2->res;
->>> +			if (!(res2->flags & type))
->>> +				continue;
->>> +
->>> +			/*
->>> +			 * I don't like throwing away windows because then
->>> +			 * our resources no longer match the ACPI _CRS, but
->>> +			 * the kernel resource tree doesn't allow overlaps.
->>> +			 */
->>> +			if (resource_overlaps(res1, res2)) {
->>> +				res2->start = min(res1->start, res2->start);
->>> +				res2->end = max(res1->end, res2->end);
->>> +				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
->>> +					 res2, res1);
->>> +				free = true;
->>> +				goto next;
->>> +			}
->>> +		}
->>> +
->>> +next:
->>> +		resource_list_del(entry);
->>> +		if (free)
->>> +			resource_list_free_entry(entry);
->>> +		else
->>> +			resource_list_add_tail(entry, resources);
->>> +	}
->>> +}
->>> +
->>> +int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
->>> +{
->>> +	int ret;
->>> +	struct list_head *list = &info->resources;
->>> +	struct acpi_device *device = info->bridge;
->>> +	struct resource_entry *entry, *tmp;
->>> +	unsigned long flags;
->>> +
->>> +	flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT;
->>> +	ret = acpi_dev_get_resources(device, list,
->>> +				     acpi_dev_filter_resource_type_cb,
->>> +				     (void *)flags);
->>> +	if (ret < 0)
->>> +		dev_warn(&device->dev,
->>> +			 "failed to parse _CRS method, error code %d\n", ret);
->>> +	else if (ret == 0)
->>> +		dev_dbg(&device->dev,
->>> +			"no IO and memory resources present in _CRS\n");
->>> +	else {
->>> +		resource_list_for_each_entry_safe(entry, tmp, list) {
->>> +			if (entry->res->flags & IORESOURCE_DISABLED)
->>> +				resource_list_destroy_entry(entry);
->>> +			else
->>> +				entry->res->name = info->name;
->>> +		}
->>> +		acpi_pci_root_validate_resources(&device->dev, list,
->>> +						 IORESOURCE_MEM);
->>> +		acpi_pci_root_validate_resources(&device->dev, list,
->>> +						 IORESOURCE_IO);
->>
->> It is not clear to me why we need these two calls above ^^^. We are
->> using pci_acpi_root_add_resources(info) later. Is it not enough?
->>
->> Also, I cannot use acpi_pci_probe_root_resources() in my ARM64 PCI
->> driver. It is because acpi_dev_get_resources is adding
->> translation_offset to IO ranges start address and then:
->> acpi_pci_root_validate_resources(&device->dev, list,
->> 				 IORESOURCE_IO);
->> rejects that IO regions as it is out of my 0x0-SZ_16M window.
->>
->> Does acpi_pci_probe_root_resources meant to be x86 specific and I
->> should avoid using it?
-> 
-> IIUC, you _have_ to have the proper translation_offset to map the bridge
-> window into the IO address space:
-> 
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-June/348708.html
-> 
-> Then, using the offset, you should do something ia64 does, namely,
-> retrieve the CPU address corresponding to IO space (see arch/ia64/pci/pci.c
-> - add_io_space()) and map it in the physical address space by using
-> pci_remap_iospace(), it is similar to what we have to do with DT.
-> 
-> It is extremely confusing and I am not sure I got it right myself,
-> I am still grokking ia64 code to understand what it really does.
-> 
-> So basically, the IO bridge window coming from acpi_dev_get_resource()
-> should represent the IO space in 0 - 16M, IIUC.
-> 
-> By using the offset (that was initialized using translation_offset) and
-> the resource->start, you can retrieve the cpu address that you need to
-> actually map the IO space, since that's what we do on ARM (ie the
-> IO resource is an offset into the virtual address space set aside
-> for IO).
-> 
-> Confusing, to say the least. Jiang, did I get it right ?
-Yes, you are right, but seems I have done something wrong here.
-Currently res->start = acpi_des->start + acpi_des->translation_offset,
-which seems wrong. I will try to check IA64 side again and find
-a fix for this.
+On Fri, Nov 13, 2015 at 11:08:29AM +1100, Daniel Axtens wrote:
+>Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+>
+>>  void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+>>  {
+>> -	pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
+>> +	int option, freset = 0;
+>> +
+>> +	if (dev->subordinate)
+>> +		pci_walk_bus(dev->subordinate,
+>> +			     pnv_pci_dev_reset_type, &freset);
+>> +
+>> +	option = freset ? EEH_RESET_FUNDAMENTAL : EEH_RESET_HOT;
+>> +	pnv_eeh_bridge_reset(dev, option);
+>
+>According to the skiboot sources, fundamental reset isn't supported on
+>p5ioc2. As far as I can tell from your corresponding skiboot patches,
+>this is still the case after they are applied. Do we need a fallback to
+>EEH_RESET_HOT in this case? Otherwise there will be no reset performed
+>at all.
+>
+>Likewise, if the FUNDAMENTAL reset fails for any reason, should we fall
+>back to a HOT reset?
+>
+
+P5IOC2 won't export any PCI slots. So kernel won't issue fundamental reset
+to PCI buses on P5IOC2.
+
+We had the failback: hot reset is picked if fundamental reset can't be
+supported on the target PCI bus. In case fundamental reset fails, we
+shouldn't go ahead try hot reset.
+
+Thanks,
+Gavin
+
+>Regards,
+>Daniel
+
+
