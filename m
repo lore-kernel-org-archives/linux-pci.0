@@ -1,59 +1,403 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-To: Jiang Liu <jiang.liu@linux.intel.com>
-References: <564185B6.8040006@linux.intel.com>
- <20151111174647.GA30051@red-moon> <56445117.8090307@linux.intel.com>
- <56449246.2010308@semihalf.com> <56449C55.2090001@linux.intel.com>
- <5644A613.2010304@semihalf.com> <5644AAB9.6010700@linux.intel.com>
- <5645DE3A.7040406@semihalf.com> <20151113170316.GB15253@red-moon>
- <56462294.3060701@linux.intel.com> <20151120101840.GD15819@red-moon>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <5657FF4A.2080804@semihalf.com>
-Date: Fri, 27 Nov 2015 07:59:22 +0100
-MIME-Version: 1.0
-In-Reply-To: <20151120101840.GD15819@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:51128 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753056AbbKMMHD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Nov 2015 07:07:03 -0500
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com
+Cc: CARLOS.PALMINHA@synopsys.com, linux-pci@vger.kernel.org,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCHv3] add new platform driver for PCI RC
+Date: Fri, 13 Nov 2015 12:06:42 +0000
+Message-Id: <56c2031ee4b5d6d9d5452ac6cca724a15942cbf7.1447411031.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1447411031.git.jpinto@synopsys.com>
+References: <cover.1447411031.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20.11.2015 11:18, Lorenzo Pieralisi wrote:
-> Hi Jiang,
->
-> On Sat, Nov 14, 2015 at 01:49:08AM +0800, Jiang Liu wrote:
->
-> [...]
->
->>> Not really. My concern is that there might be platforms out there with
->>> an offset between the CPU and PCI physical address spaces, and if we
->>> remove the offset value in acpi_decode_space we can break them,
->>> because in the kernel struct resource data we have to have CPU physical
->>> addresses, not PCI ones. If offset == 0, we are home and dry, I do not
->>> understand why that's a given, which is what we would assume if Jiang's
->>> patch is merged as-is unless I am mistaken.
->> We try to exclude offset from struct resource in generic ACPI code,
->> and it's the arch's responsibility to decide how to manipulate struct
->> resource object if offset is not zero.
->>
->> Currently offset is always zero for x86, and IA64 has arch specific
->> code to handle non-zero offset. So we should be safe without breaking
->> existing code. For ARM64, it's a little different from IA64 so it's
->> hard to share code between IA64 and ARM64.
->
-> Can you drop the patch on the mailing lists please, we actually need it
-> to get ACPI ARM64 PCIe support in the kernel, please let me know how
-> you want to handle this and if you need any help.
->
+This patch goal is to add a new platform driver called pcie-snpsdev for PCI RC 
+using Synopsys' PCI RC DesignWare Core.
 
-Kindly reminder.
+This driver will be used extensively because it is going to be the official 
+platform driver of the DesignWare PCI RC IP Prototyping Kit which provides a 
+FPGA containing a DW PCI RC controller and a software development environment.
 
-Regards,
-Tomasz
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+
+Changes v1->v2 (kbuild test robot <lkp@intel.com>):
+- owner from the driver structure
+Changes v2->v3 (kbuild test robot <lkp@intel.com>):
+- removed dw_pcie_link_retrain() that does not exist in pcie-designware
+
+ drivers/pci/host/Kconfig        |   5 +
+ drivers/pci/host/Makefile       |   1 +
+ drivers/pci/host/pcie-snpsdev.c | 337 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 343 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-snpsdev.c
+
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index d5e58ba..b9d59f6 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -145,4 +145,9 @@ config PCIE_IPROC_BCMA
+ 	  Say Y here if you want to use the Broadcom iProc PCIe controller
+ 	  through the BCMA bus interface
+ 
++config PCIE_SNPSDEV 
++	bool "Platform Driver for Synopsys Device" 
++	select PCIEPORTBUS 
++	select PCIE_DW 
++
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 140d66f..c35c42a 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -17,3 +17,4 @@ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+ obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
++obj-$(CONFIG_PCIE_SNPSDEV) += pcie-snpsdev.o
+diff --git a/drivers/pci/host/pcie-snpsdev.c b/drivers/pci/host/pcie-snpsdev.c
+new file mode 100644
+index 0000000..7389097
+--- /dev/null
++++ b/drivers/pci/host/pcie-snpsdev.c
+@@ -0,0 +1,333 @@
++/*
++ * PCIe RC driver for Synopsys Designware Core
++ *
++ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
++ *
++ * Authors: Manjunath Bettegowda <manjumb@synopsys.com>,
++ *	    Jie Deng <jiedeng@synopsys.com>
++ *	    Joao Pinto <jpinto@synopsys.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/gpio.h>
++#include <linux/interrupt.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_gpio.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++#include <linux/resource.h>
++#include <linux/signal.h>
++#include <linux/types.h>
++
++#include "pcie-designware.h"
++
++#define to_snpsdev_pcie(x)	container_of(x, struct snpsdev_pcie, pp)
++
++struct snpsdev_pcie {
++	void __iomem		*mem_base; /* Memory Base to access Core's [RC] Config Space Layout */
++	struct pcie_port	pp;        /* RC Root Port specific structrue - DWC_PCIE_RC stuff */
++};
++
++#define SIZE_1GB 0x40000000
++#define PCI_EQUAL_CONTROL_PHY 0x00000707
++
++/* PCIe Port Logic registers (memory-mapped) */
++#define PLR_OFFSET 0x700
++#define PCIE_PHY_DEBUG_R0 (PLR_OFFSET + 0x28) /* 0x728 */
++#define PCIE_PHY_DEBUG_R1 (PLR_OFFSET + 0x2c) /* 0x72c */
++
++/* PCIE PHY CONTROL REGISTER: Useful for cfg_phy_control GPIO outputs */
++#define PCIE_PHY_CTRL (PLR_OFFSET + 0x114)    /* 0x814 */
++/* PCIE PHY STATUS REGISTER: Useful for phy_cfg_status GPIO inputs */
++#define PCIE_PHY_STAT (PLR_OFFSET + 0x110)    /* 0x810 */
++
++static void snpsdev_pcie_fixup_bridge(struct pci_dev *dev)
++{
++	u32 slot_cap;
++	u16 caps_reg = pcie_caps_reg(dev) | PCI_EXP_FLAGS_SLOT;
++	pcie_capability_write_word(dev, PCI_EXP_FLAGS, caps_reg);
++	dev->pcie_flags_reg = caps_reg;
++
++	pcie_capability_read_dword(dev, PCI_EXP_SLTCAP, &slot_cap);
++	slot_cap = slot_cap & (~PCI_EXP_SLTCAP_SPLV);
++	slot_cap = slot_cap | (0x30 << 7);
++	pcie_capability_write_dword(dev, PCI_EXP_SLTCAP, slot_cap);
++
++	if (pcibios_enable_device(dev, ~0) < 0) {
++		pr_err("PCI: synopsys device enable failed\n");
++		return;
++	}
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, snpsdev_pcie_fixup_bridge);
++
++static void snpsdev_pcie_fixup_res(struct pci_dev *dev)
++{
++	struct resource *res;
++	resource_size_t size;
++	int bar;
++
++	for (bar = 0; bar < 6; bar++) {
++		res = dev->resource + bar;
++		size = resource_size(res);
++
++		if (size == SIZE_1GB)
++		{
++			res->start = 0;
++			res->end   = 0;
++			res->flags = 0;
++		}
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, snpsdev_pcie_fixup_res);
++
++/* This handler was created for future work */
++static irqreturn_t snpsdev_pcie_irq_handler(int irq, void *arg)
++{
++	return IRQ_NONE;
++}
++
++static irqreturn_t snpsdev_pcie_msi_irq_handler(int irq, void *arg)
++{
++	struct pcie_port *pp = arg;
++
++	dw_handle_msi_irq(pp);
++
++	return IRQ_HANDLED;
++}
++
++static void snpsdev_pcie_init_phy(struct pcie_port *pp)
++{
++	/* write Lane 0 Equalization Control fields register */
++	writel(PCI_EQUAL_CONTROL_PHY,pp->dbi_base + 0x154);
++}
++
++static int snpsdev_pcie_deassert_core_reset(struct pcie_port *pp)
++{
++	return 0;
++}
++
++/*
++ * snpsdev_pcie_host_init()
++ * Platform specific host/RC initialization 
++ * 	a. Assert the core reset
++ * 	b. Assert and deassert phy reset and initialize the phy
++ * 	c. De-Assert the core reset
++ * 	d. Initializet the Root Port (BARs/Memory Or IO/ Interrupt/ Commnad Reg)
++ * 	e. Initiate Link startup procedure
++ *
++ */ 
++static void snpsdev_pcie_host_init(struct pcie_port *pp)
++{
++	int count = 0;
++
++	/* Initialize Phy (Reset/poweron/control-inputs ) */
++	snpsdev_pcie_init_phy(pp);
++
++	/* de-assert core reset */
++	snpsdev_pcie_deassert_core_reset(pp);
++ 
++	/*We expect the PCIE Link to be up by this time*/
++	dw_pcie_setup_rc(pp);
++	
++	/* Check for Link up indication */
++	while (!dw_pcie_link_up(pp)) {
++		usleep_range(1000,1100);
++		count++;
++		if (count == 20) {
++			dev_err(pp->dev, "phy link never came up\n");
++			dev_dbg(pp->dev,
++				"PL_DEBUG0: 0x%08x, DEBUG_R1: 0x%08x\n",
++				readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
++				readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
++			break;
++		}
++	}
++
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		dw_pcie_msi_init(pp);
++
++	return;
++}
++/**
++ *
++ * Let all outof band signalling be handled by cfg_phy_control[31:0]
++ * which is selected through optional config attribute PHY_CONTROL_REG
++ *
++ * Monitor cxpl_debug_info as required to take necessary action
++ * This is available in the register PCIE_PHY_DEBUG_R0 & PCIE_PHY_DEBUG_R1
++ *
++ */ 
++static int snpsdev_pcie_link_up(struct pcie_port *pp)
++{
++	u32 status;
++
++	/* Bit number 36: reports LTSSM PHY Link UP; Available in bit 3 of
++         *  PCIE_PHY_DEBUG_R1 */
++	status = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1) & (0x1 << 4);
++	if(status != 0)
++		return 1;
++
++	/* TODO: Now Link is in L0; Initiate GEN2/GEN3 migration if RC Supports */
++	return 0;
++}
++
++
++/**
++ * This is RC operation structure
++ * snpsdev_pcie_link_up: the function which initiates the phy link up procedure
++ * snpsdev_pcie_host_init: the function whihc does the host/RC Root port initialization
++ */ 
++static struct pcie_host_ops snpsdev_pcie_host_ops = {
++	.link_up = snpsdev_pcie_link_up,
++	.host_init = snpsdev_pcie_host_init,
++};
++
++/**
++ * snpsdev_add_pcie_port
++ * This function 
++ * a. installs the interrupt handler
++ * b. registers host operations int he pcie_port structure
++ */ 
++static int snpsdev_add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
++{
++	int ret;
++
++	pp->irq = platform_get_irq(pdev, 1);
++
++	if (pp->irq < 0) {
++		if (pp->irq != -EPROBE_DEFER)
++			dev_err(&pdev->dev, "cannot get irq\n");
++		return pp->irq;
++	}
++
++	ret = devm_request_irq(&pdev->dev, pp->irq, snpsdev_pcie_irq_handler,
++				IRQF_SHARED, "snpsdev-pcie", pp);
++
++	if (ret) {
++		dev_err(&pdev->dev, "failed to request irq\n");
++		return ret;
++	}
++
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		pp->msi_irq = platform_get_irq(pdev, 0);
++
++		if (pp->msi_irq < 0) {
++			if (pp->msi_irq != -EPROBE_DEFER)
++				dev_err(&pdev->dev, "cannot get msi irq\n");
++			return pp->msi_irq;
++		}
++
++		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
++					snpsdev_pcie_msi_irq_handler,
++					IRQF_SHARED, "snpsdev-pcie-msi", pp);
++		if (ret) {
++			dev_err(&pdev->dev, "failed to request msi irq\n");
++			return ret;
++		}
++	}
++
++	pp->root_bus_nr = -1;
++	pp->ops = &snpsdev_pcie_host_ops;
++
++	/* Below function: 
++ 	 * Checks for range property from DT
++ 	 * Gets the IO and MEMORY and CONFIG-Space ranges from DT
++ 	 * Does IOREMAPS on the physical addresses 
++ 	 * Gets the num-lanes from DT
++ 	 * Gets MSI capability from DT
++ 	 * Calls the platform specific host initialization
++ 	 * Program the correct class, BAR0, Link width,  in Config space
++ 	 * Then it calls pci common init routine
++ 	 * Then it calls funtion to assign "unassigend reources"
++         */
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++/**
++ * snpsdev_pcie_rc_probe()
++ * This function gets called as part of pcie registration. if the id matches
++ * the platform driver framework will call this function.
++ *
++ * @pdev: Pointer to the platform_device structure
++ *
++ * Returns zero on success; Negative errorno on failure
++ */
++static int __init snpsdev_pcie_rc_probe(struct platform_device *pdev)
++{
++	struct snpsdev_pcie *snpsdev_pcie;
++	struct pcie_port *pp;
++	struct resource *dwc_pcie_rc_res;  /* Resource from DT */
++	int ret;
++
++	snpsdev_pcie = devm_kzalloc(&pdev->dev, sizeof(*snpsdev_pcie), GFP_KERNEL);
++	if (!snpsdev_pcie) {
++		dev_err(&pdev->dev, "no memory for snpsdev pcie\n");
++		return -ENOMEM;
++	}
++
++	pp = &snpsdev_pcie->pp;
++	pp->dev = &pdev->dev;
++
++	dwc_pcie_rc_res= platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!dwc_pcie_rc_res) {
++		dev_err(&pdev->dev, "dwc_pcie_rc_res resource not found\n");
++		return -ENODEV;
++	}
++
++	snpsdev_pcie->mem_base = devm_ioremap_resource(&pdev->dev, dwc_pcie_rc_res);
++	if (IS_ERR(snpsdev_pcie->mem_base)) {
++		ret = PTR_ERR(snpsdev_pcie->mem_base);
++		return ret;
++	}
++	pp->dbi_base = snpsdev_pcie->mem_base;	
++
++	ret = snpsdev_add_pcie_port(pp, pdev);
++	if (ret < 0)
++		return ret;
++
++	platform_set_drvdata(pdev, snpsdev_pcie);
++
++	return 0;
++}
++
++static int __exit snpsdev_pcie_rc_remove(struct platform_device *pdev)
++{
++	return 0;
++}
++
++static const struct of_device_id snpsdev_pcie_rc_of_match[] = {
++	{ .compatible = "snps,pcie-snpsdev", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, snpsdev_pcie_rc_of_match);
++
++static struct platform_driver snpsdev_pcie_rc_driver = {
++	.remove		= __exit_p(snpsdev_pcie_rc_remove),
++	.driver = {
++		.name	= "pcie-snpsdev",
++		.of_match_table = snpsdev_pcie_rc_of_match,
++	},
++};
++
++static int __init snpsdev_pcie_init(void)
++{
++	return platform_driver_probe(&snpsdev_pcie_rc_driver, snpsdev_pcie_rc_probe);
++}
++subsys_initcall(snpsdev_pcie_init);
++
++MODULE_AUTHOR("Manjunath Bettegowda <manjumb@synopsys.com>");
++MODULE_DESCRIPTION("Platform Driver for Synopsys Device");
++MODULE_LICENSE("GPL v2");
++
+-- 
+1.8.1.5
+
