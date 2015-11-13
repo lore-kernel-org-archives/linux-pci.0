@@ -1,61 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:35945 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030685AbbKEPkc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2015 10:40:32 -0500
-Received: by igdg1 with SMTP id g1so14409078igd.1
-        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2015 07:40:32 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1446735481-27326-1-git-send-email-tharvey@gateworks.com>
-References: <1446735481-27326-1-git-send-email-tharvey@gateworks.com>
-Date: Thu, 5 Nov 2015 13:40:32 -0200
-Message-ID: <CAOMZO5COsBaL_Czo_V-GoDAaycJX2kOziYzzo4Dp5b1pKP_amA@mail.gmail.com>
-Subject: Re: [PATCH RFC] PCI: imx6: add dt prop for link gen, default to gen1
-From: Fabio Estevam <festevam@gmail.com>
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <helgaas@kernel.org>,
+Received: from relmlor3.renesas.com ([210.160.252.173]:65191 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752126AbbKMOLy convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 13 Nov 2015 09:11:54 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Magnus <magnus.damm@gmail.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	Richard Zhu <r65037@freescale.com>
-Content-Type: text/plain; charset=UTF-8
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
+Subject: RE: PCIe host controller behind IOMMU on ARM
+Date: Fri, 13 Nov 2015 14:11:47 +0000
+Message-ID: <PS1PR06MB11808E4C2C15BC9FD01E214EF5110@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <4169020.aC5VXkILQm@wuerfel>
+ <PS1PR06MB11801D6BBC939517912BE185F5110@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <4744053.Iz6Y8QJQYF@wuerfel>
+In-Reply-To: <4744053.Iz6Y8QJQYF@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Adding Richard Zhu]
+On 13 November 2015 14:00, Arnd Bergmann wrote:
+> On Friday 13 November 2015 13:03:11 Phil Edworthy wrote:
+> >
+> > > > Then pci_device_add() sets the devices coherent_dma_mask to 4GiB
+> before
+> > > > calling of_pci_dma_configure(). I assume it does this on the basis that this is
+> a
+> > > > good default for PCI drivers that don't call dma_set_mask().
+> > > > So if arch_setup_dma_ops() walks up the parents to limit the mask, you'll
+> hit
+> > > > this mask.
+> > >
+> > > arch_setup_dma_ops() does not walk up the hierarchy, of_dma_configure()
+> > > does this before calling arch_setup_dma_ops(). The PCI devices start out
+> > > with the 32-bit mask, but the limit should be whatever PCI host uses.
+> > Ok, so of_dma_configure() could walk up the tree and restrict the dma
+> > mask to whatever parents limit it to. Then it could be overridden by
+> > a dma-ranges entry in the DT node, right?
+> 
+> No, the dma-ranges properties tell you what the allowed masks are,
+> this is what of_dma_configure() looks at.
+Ok, I understand now.
 
-On Thu, Nov 5, 2015 at 12:58 PM, Tim Harvey <tharvey@gateworks.com> wrote:
-> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
-> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
-> external clock source is present and supplied back to the IMX6 PCIe core
-> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
->
-> Add a dt property to specify gen1 vs gen2 and check this before allowing
-> a Gen2 link.
->
-> We default to Gen1 if the property is not present because at this time there
-> are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
->
-> In order to be Gen2 compliant on IMX6 you need to:
->  - have a Gen2 compliant external clock generator and route that clock back
->    to either LVDS CLK1 or LVDS CLK2 as an input.
->    (see IMX6SX-SabreSD reference design)
->  - specify this clock in the pcie node in the dt
->    (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
->     IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
->
-> [1] https://community.freescale.com/message/453209
->
-> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
->
-> This is an RFC because I'm assuming the decision to default to Gen1 link only
-> is going to ruffle some feathers. My understanding is that if you do not
-> use an external Gen2 compliant clockgen for peripepherals 'and' the IMX6 core
-> you should not claim Gen2 compliance. This was not obvious on original IMX6
-> reference designs and I believe the jitter issue was discovered by Freescale
-> later and future reference designs were modified to state you need an ext
-> clockgen for Gen2 compliance.
 
-Looks good to me:
+> > If so, one problem I can see is PCI controllers already use the
+> > dma-ranges binding but with 3 address cells since it also specifies
+> > the PCI address range.
+> >
+> > I noticed that of_dma_get_range() skips straight to the parent node.
+> > Shouldn't it attempt to get the dma-ranges for the device's node
+> > first?
+> 
+> No, the dma-ranges explain the capabilities of the bus, this is
+> what you have to look at. The device itself may have additional
+> restrictions, but those are what the driver knows based on the
+> compatibility value when it passes the device specific mask into
+> dma_set_mask()
+Ok, this is making sense now.
 
-Reviewed-by: Fabio Estevam <fabio.estevam@freescale.com>
+
+> > I mean most hardware is limited by the peripheral's
+> > capabilities, not the bus. If fact, of_dma_get_range() gets the number
+> > of address and size cells from the device node, but gets the dma-ranges
+> > from the parent. That seems a little odd to me.
+> 
+> of_dma_get_range() calls of_n_addr_cells()/of_n_size_cells(), which get
+> the #address-cells/#size-cells property from the parent device (except
+> for the root, which is special).
+Right, I should have checked what of_n_addr/size_cell() actually did.
+
+
+> > The only other problem I can see is that currently all PCI drivers can
+> > try to set their dma mask to 64 bits. At the moment that succeeds
+> > because there are no checks.
+> 
+> Right, this is the main bug we need to fix.
+Yep.
+
+
+> > Until devices using them have their DTs
+> > updated with dma-ranges, we would be limiting them to a 32 bit mask. I
+> > guess that's not much of an issue in practice.
+> 
+> Correct. I've tried to tell everyone about this when they added device
+> nodes for DMA capable devices. In most cases, they want 32-bit masks
+> anyway.
+
+Thanks for your help & patience, much appreciated!
+Phil
