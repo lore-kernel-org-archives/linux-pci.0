@@ -1,36 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1448314314.15591.1.camel@oracle.com>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-	<5633E570.6040906@oracle.com>
-	<CAE9FiQU5YkwFVuEiDOCT+BDrrSLGhTiDfW7GZV6qVtBRKDBpDw@mail.gmail.com>
-	<1448314314.15591.1.camel@oracle.com>
-Date: Mon, 23 Nov 2015 18:39:14 -0800
-Message-ID: <CAE9FiQWiWvOuW3gKRKSDWwPTzNAE7w=u2UiA=XSAXMscxJe2SQ@mail.gmail.com>
-Subject: Re: [PATCH v8 00/61] PCI: Resource allocation cleanup for v4.4
-From: Yinghai Lu <yinghai@kernel.org>
-To: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:35410 "EHLO
+	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751242AbbKOMoE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Nov 2015 07:44:04 -0500
+From: Bogicevic Sasa <brutallesale@gmail.com>
+To: bhelgaas@google.com
+Cc: wangyijing@huawei.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bogicevic Sasa <brutallesale@gmail.com>
+Subject: [PATCH] drivers:pci:hotplug Fix  simple_strtoul is obsolete, use kstrtoul instead
+Date: Sun, 15 Nov 2015 13:43:55 +0100
+Message-Id: <1447591435-3957-1-git-send-email-brutallesale@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 23, 2015 at 1:31 PM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
->> Looks like only the device BAR6 is not assigned form OF?
->
-> Any progress on this? Do you need any more information from me?
+This fixes messages "simple_strtoul is obsolete, use kstrtoul instead"
+from checkpatch.pl script
 
-Should be one warning about this device in that system.
+Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
+---
+ drivers/pci/hotplug/pci_hotplug_core.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-We don't need to do anything about it if the device is working with
-this patch set.
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index d379d49..a1160c8 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -103,7 +103,7 @@ static ssize_t power_write_file(struct pci_slot *pci_slot, const char *buf,
+ 	u8 power;
+ 	int retval = 0;
+ 
+-	lpower = simple_strtoul(buf, NULL, 10);
++	lpower = kstrtoul(buf, NULL, 10);
+ 	power = (u8)(lpower & 0xff);
+ 	dbg("power = %d\n", power);
+ 
+@@ -160,7 +160,7 @@ static ssize_t attention_write_file(struct pci_slot *pci_slot, const char *buf,
+ 	u8 attention;
+ 	int retval = 0;
+ 
+-	lattention = simple_strtoul(buf, NULL, 10);
++	lattention = kstrtoul(buf, NULL, 10);
+ 	attention = (u8)(lattention & 0xff);
+ 	dbg(" - attention = %d\n", attention);
+ 
+@@ -226,7 +226,7 @@ static ssize_t test_write_file(struct pci_slot *pci_slot, const char *buf,
+ 	u32 test;
+ 	int retval = 0;
+ 
+-	ltest = simple_strtoul(buf, NULL, 10);
++	ltest = kstrtoul(buf, NULL, 10);
+ 	test = (u32)(ltest & 0xffffffff);
+ 	dbg("test = %d\n", test);
+ 
+-- 
+2.1.4
 
-Thanks
-
-Yinghai
