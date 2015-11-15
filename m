@@ -1,72 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v2 5/5] ARM: dts: Enable MSI support for Broadcom Cygnus
-Date: Tue, 24 Nov 2015 15:04:54 -0800
-Message-ID: <1448406294-732-6-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1448406294-732-1-git-send-email-rjui@broadcom.com>
-References: <1448406294-732-1-git-send-email-rjui@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:38351 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751242AbbKOMhw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Nov 2015 07:37:52 -0500
+From: Bogicevic Sasa <brutallesale@gmail.com>
+To: bhelgaas@google.com
+Cc: wangyijing@huawei.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bogicevic Sasa <brutallesale@gmail.com>
+Subject: [PATCH] drivers:pci:hotplug Fix space prohibited after function name
+Date: Sun, 15 Nov 2015 13:37:36 +0100
+Message-Id: <1447591056-3733-1-git-send-email-brutallesale@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable MSI support for Broadcom Cygnus platforms
+This fixes warning that a space is prohibited after function name
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Anup Patel <anup.patel@broadcom.com>
-Reviewed-by: Pramod KUMAR <pramodku@broadcom.com>
-Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
+Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
 ---
- arch/arm/boot/dts/bcm-cygnus.dtsi | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ drivers/pci/hotplug/pci_hotplug_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi b/arch/arm/boot/dts/bcm-cygnus.dtsi
-index 2778533..789b519 100644
---- a/arch/arm/boot/dts/bcm-cygnus.dtsi
-+++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
-@@ -162,6 +162,17 @@
- 				  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index 2bac1b9..d379d49 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -226,7 +226,7 @@ static ssize_t test_write_file(struct pci_slot *pci_slot, const char *buf,
+ 	u32 test;
+ 	int retval = 0;
  
- 			status = "disabled";
-+
-+			msi-parent = <&msi0>;
-+			msi0: msi@18012000 {
-+				compatible = "brcm,iproc-msi";
-+				msi-controller;
-+				interrupt-parent = <&gic>;
-+				interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 97 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 98 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 99 IRQ_TYPE_NONE>;
-+			};
- 		};
+-	ltest = simple_strtoul (buf, NULL, 10);
++	ltest = simple_strtoul(buf, NULL, 10);
+ 	test = (u32)(ltest & 0xffffffff);
+ 	dbg("test = %d\n", test);
  
- 		pcie1: pcie@18013000 {
-@@ -183,6 +194,17 @@
- 				  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
- 
- 			status = "disabled";
-+
-+			msi-parent = <&msi1>;
-+			msi1: msi@18013000 {
-+				compatible = "brcm,iproc-msi";
-+				msi-controller;
-+				interrupt-parent = <&gic>;
-+				interrupts = <GIC_SPI 102 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 103 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 104 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 105 IRQ_TYPE_NONE>;
-+			};
- 		};
- 
- 		uart0: serial@18020000 {
 -- 
-1.9.1
+2.1.4
 
