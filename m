@@ -1,71 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db3on0123.outbound.protection.outlook.com ([157.55.234.123]:44807
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751811AbbKXPdI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Nov 2015 10:33:08 -0500
-From: Ramon Fried <ramon.fried@tandemg.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: PCIe endpoint generic driver
-Date: Tue, 24 Nov 2015 15:33:04 +0000
-Message-ID: <AM2PR02MB0689D08FDBB116A8EDE4669AE8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
-References: <AM2PR02MB06895C98FE39F8BB6D958389E8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E162C98EA@lhreml503-mbs>
- <AM2PR02MB06897BD3549D017DCF17FE36E8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E162C9A21@lhreml503-mbs>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E162C9A21@lhreml503-mbs>
-Content-Type: text/plain; charset="us-ascii"
+Received: from foss.arm.com ([217.140.101.70]:50525 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750777AbbKPPOm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Nov 2015 10:14:42 -0500
+Message-ID: <5649F2D9.7070902@arm.com>
+Date: Mon, 16 Nov 2015 15:14:33 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	michals@xilinx.com, sorenb@xilinx.com, bhelgaas@google.com,
+	arnd@arndb.de, tinamdar@apm.com, treding@nvidia.com,
+	rjui@broadcom.com, Minghuan.Lian@freescale.com,
+	m-karicheri2@ti.com, hauke@hauke-m.de, dhdang@apm.com,
+	sbranden@broadcom.com
+CC: devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH v8] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+References: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 11/11/15 06:33, Bharat Kumar Gogada wrote:
+> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+> 
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> ---
+> Added logic to allocate contiguous hwirq in nwl_irq_domain_alloc function.
+> Moved MSI functionality to separate functions.
+> Changed error return values.
+> ---
+>  .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
+>  drivers/pci/host/Kconfig                           |   16 +-
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pcie-xilinx-nwl.c                 | 1062 ++++++++++++++++++++
+>  4 files changed, 1144 insertions(+), 3 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
+>  create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
+> 
 
->> -----Original Message-----
->> From: linux-pci-owner@vger.kernel.org 
->> [mailto:linux-pci-owner@vger.kernel.org]
->> On Behalf Of Ramon Fried
->> Sent: 24 November 2015 15:02
->> To: linux-pci@vger.kernel.org
->> Subject: RE: PCIe endpoint generic driver
->> 
->> > > Hi.
->> > > Sorry for the noob question :)
->> > > I'm currently developing a PCIe endpoint driver for a board that 
->> > > runs Linux.
->> > > The board will be used as an expansion PCIe card for x86 PC's.
->> > > Is there any guidelines, documentation related to PCI endpoint 
->> > > drivers for Linux kernel ?
->>> 
->> > Hi Ramon
->> >
->> > Have you looked at
->> > http://lxr.free-electrons.com/source/Documentation/PCI/pci.txt
->> >?
->> >
->> > Regards
->> >
->> > Gab
->> 
->> Hi Gab, you misunderstood my driver type.
->> This is not a host driver, that I'm writing, but the actual endpoint driver.
->> Then Linux is on the PCIe board.
->
-> Hi Ramon, I understood your driver type.
-> I think you misunderstood the Documentation.
-> Host Bridges are under drivers/pci/host and none of them use pci_register_driver() API.
->
-> pci_register_driver() is actually for endpoints. Please read the link above again.
+[...]
 
-Hi Gab.
-Host bridges AFAIK are supposed to connect between the host CPU, main memory and the PCI itself.
-This is not what I need as I'm not at the host side.
-pci_register_driver() is a host driver for pci endpoints.
+> +static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus *bus)
+> +{
+> +	struct platform_device *pdev = to_platform_device(pcie->dev);
+> +	struct nwl_msi *msi = &pcie->msi;
+> +	unsigned long base;
+> +	int ret;
+> +
+> +	mutex_init(&msi->lock);
+> +
+> +	/* Check for msii_present bit */
+> +	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) & MSII_PRESENT;
+> +	if (!ret) {
+> +		dev_err(pcie->dev, "MSI not present\n");
+> +		ret = -EIO;
+> +		goto err;
+> +	}
+> +
+> +	/* Enable MSII */
+> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
+> +			  MSII_ENABLE, I_MSII_CONTROL);
+> +
+> +	/* Enable MSII status */
+> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
+> +			  MSII_STATUS_ENABLE, I_MSII_CONTROL);
+> +
+> +	/* setup AFI/FPCI range */
+> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> +	base = virt_to_phys((void *)msi->pages);
+> +	nwl_bridge_writel(pcie, lower_32_bits(base), I_MSII_BASE_LO);
+> +	nwl_bridge_writel(pcie, upper_32_bits(base), I_MSII_BASE_HI);
 
-On the device side, pci_register_driver() doesn't make any sense. There's no root complex, no enumeration, etc.
-I need for instance a method to send a MSI/MSIx interrupt to the host. I need to develop a function that does it.
+BTW, you still haven't answered my question as to why you need to waste
+a page of memory here, and why putting a device address doesn't work.
 
-My original question was if there's a framework/guidelines for achieving that.
+As this is (to the best of my knowledge) the only driver doing so, I'd
+really like you to explain the rational behind this.
 
-Thanks.
-Ramon
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
