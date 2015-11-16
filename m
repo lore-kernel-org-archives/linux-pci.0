@@ -1,318 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:37449 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751350AbbKQCCp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 21:02:45 -0500
-Received: from localhost
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Nov 2015 12:02:42 +1000
-Date: Tue, 17 Nov 2015 13:01:39 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-Subject: Re: [PATCH v7 18/50] powerpc/powernv: Remove DMA32 PE list
-Message-ID: <20151117020139.GA3094@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-19-git-send-email-gwshan@linux.vnet.ibm.com>
- <564A88BC.803@ozlabs.ru>
+Received: from foss.arm.com ([217.140.101.70]:51901 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751465AbbKPSbd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Nov 2015 13:31:33 -0500
+Message-ID: <564A2101.90600@arm.com>
+Date: Mon, 16 Nov 2015 18:31:29 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <564A88BC.803@ozlabs.ru>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+CC: Thierry Reding <treding@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
+References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>	<PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>	<20151109161115.GA13870@ulmo.nvidia.com>	<PS1PR06MB1180111D6423287273B64B0FF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>	<20151110155232.GA25368@ulmo.nvidia.com>	<20151111163802.3a96080c@arm.com>	<PS1PR06MB11806B2B906CABB553B94442F5120@PS1PR06MB1180.apcprd06.prod.outlook.com> <20151112203100.2e91da2a@arm.com> <PS1PR06MB11800B547C8957B226077B83F5110@PS1PR06MB1180.apcprd06.prod.outlook.com>
+In-Reply-To: <PS1PR06MB11800B547C8957B226077B83F5110@PS1PR06MB1180.apcprd06.prod.outlook.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 17, 2015 at 12:54:04PM +1100, Alexey Kardashevskiy wrote:
->On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>PEs are put into PHB DMA32 list (phb->ioda.pe_dma_list) according
->>to their DMA32 weight. The PEs on the list are iterated to setup
->>their TCE32 tables at system booting time. The list is used for
->>once and there is no good reason for it to survive.
->
->From the above I concluded that you need a list, just do not need to keep
->after the configuration is done but in fact you remove the list completely so
->just remove "to survive" (s/for it to survive/for keep having it/) :)
->
+On 13/11/15 09:36, Phil Edworthy wrote:
+> Hi Marc,
+> 
+> On 12 November 2015 20:31, Marc Zyngier wrote:
+>> Phil Edworthy <phil.edworthy@renesas.com> wrote:
+>>> On 11 November 2015 16:38, Marc Zyngier wrote:
+>>>> On Tue, 10 Nov 2015 16:52:33 +0100
+>>>> Thierry Reding <treding@nvidia.com> wrote:
+>>>>
+>>>>> On Mon, Nov 09, 2015 at 06:01:49PM +0000, Phil Edworthy wrote:
+>>>>>> Hi Thierry,
+>>>>>>
+>>>>>> On 09 November 2015 17:24, Phil wrote:
+>>>>>>> On 09 November 2015 16:11, Thierry wrote:
+>>>>>>>> On Mon, Nov 09, 2015 at 03:20:24PM +0000, Phil Edworthy wrote:
+>>>>>>>>> cc'ing others (Tegra, Altera, Designware) who may have the same
+>> bug
+>>>>>>>>>
+>>>>>>>>> On 03 November 2015 09:28, Phil Edworthy wrote:
+>>>>>>>>>> The OF node passed to irq_domain_add_linear() should be a
+>>>>>>>>>> pointer to interrupt controller's device tree node, or NULL,
+>>>>>>>>>> but not the PCI controller's node.
+>>>>>>>>>>
+>>>>>>>>>> This fixes an oops in msi_domain_alloc_irqs() when it tries
+>>>>>>>>>> to call msi_check().
+>>>>>>>>>>
+>>>>>>>>>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+>>>>>>>>>> ---
+>>>>>>>>>>  drivers/pci/host/pcie-rcar.c | 2 +-
+>>>>>>>>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>>>>>>>
+>>>>>>>>>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-
+>> rcar.c
+>>>>>>>>>> index 2377bf0..c6fa562 100644
+>>>>>>>>>> --- a/drivers/pci/host/pcie-rcar.c
+>>>>>>>>>> +++ b/drivers/pci/host/pcie-rcar.c
+>>>>>>>>>> @@ -709,7 +709,7 @@ static int rcar_pcie_enable_msi(struct
+>> rcar_pcie
+>>>>>>> *pcie)
+>>>>>>>>>>  	msi->chip.setup_irq = rcar_msi_setup_irq;
+>>>>>>>>>>  	msi->chip.teardown_irq = rcar_msi_teardown_irq;
+>>>>>>>>>>
+>>>>>>>>>> -	msi->domain = irq_domain_add_linear(pcie->dev->of_node,
+>>>>>>>>>> INT_PCI_MSI_NR,
+>>>>>>>>>> +	msi->domain = irq_domain_add_linear(NULL,
+>> INT_PCI_MSI_NR,
+>>>>>>>>>>  					    &msi_domain_ops, &msi-
+>>>>> chip);
+>>>>>>>>>>  	if (!msi->domain) {
+>>>>>>>>>>  		dev_err(&pdev->dev, "failed to create IRQ domain\n");
+>>>>>>>>
+>>>>>>>> On Tegra the PCI controller is in fact the interrupt controller for
+>>>>>>>> MSIs. And looking at the code here it seems like the same would apply
+>> to
+>>>>>>>> RCAR.
+>>>>>>> Yes you are correct here.
+>>>>>>>
+>>>>>>>> I'm also slightly confused as to why this would cause ->msi_check() to
+>>>>>>>> fail. The default implementation (msi_domain_ops_check()) doesn't
+>> do
+>>>>>>>> anything.
+>>>>>>>>
+>>>>>>>> Also, how is passing in NULL instead of a valid struct device_node *
+>>>>>>>> going to prevent an oops? Perhaps this is one of those reference
+>> count
+>>>>>>>> imbalance bugs that have recently been showing up?
+>>>>>>> On arm64 (previously I didn't realise this just affects arm64, not arm),
+>>>>>>> the changes in commit f075915ac0b11 ("PCI/MSI: Drop domain field
+>> from
+>>>>>>> msi_controller") and d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain
+>> use
+>>>>>>> struct device::msi_domain") return an uninitialized msi domain that
+>> leads
+>>>>>>> to the oops. It appears that these changes assume that msi interrupt
+>>>>>>> controller is separate from the PCI controller.
+>>>>>> More accurately, when CONFIG_GENERIC_MSI_IRQ_DOMAIN is enabled,
+>>>>>> pci_msi_get_domain() calls dev_get_msi_domain() and at this point
+>>>>>> dev->msi_domain is uninitialized.
+>>>>>
+>>>>> Marc, any idea what's going on here?
+>>>>
+>>>> Thanks for putting me in the loop.
+>>>>
+>>>> No precise idea yet, but the proposed fix definitely looks like the
+>>>> wrong one. Actually, not passing a node identifier to any domain
+>>>> constructor is pretty much always a mistake when using DT.
+>>>>
+>>>> Can someone post a stack trace for this issue so that I can have a
+>>>> look? I'm currently traveling, so expect a slightly delayed reply...
+>>>
+>>> Unfortunately, not all the code for this arm64 board is upstream
+>>> yet, this code base is off 4.3-rc7.
+>>
+>> Oh, this is arm64? Well, you're not supposed to use the old
+>> msi_controller stuff on arm64 - I really want all arm64 controllers to
+>> be converted to generic MSI domains. Please have a look at the xgene
+>> code, for example.
+> Oh right, I wasn't aware of that. I had hoped that drivers weren't so
+> arch specific...
 
-Thanks & will change it accordingly in next revision :)
+They are not. Generic MSI domains are supported on all other
+architectures that select this option (arm, x86).
 
+>> But irrespective of that, I share Thierry's skepticism:
 >>
->>This moves the logic calculating DMA32 weight of PHB and PE to
->>pnv_pci_ioda1_setup_dma() to drop PHB's DMA32 list.
+>>> systemd-udevd[1315]: undefined instruction: pc=ffffffc03106d41c
+>>> Code: ffffffc0 311f9740 ffffffc0 3106d138 (ffffffc0)
+>>> Internal error: Oops - undefined instruction: 0 [#1] PREEMPT SMP
+>>> Modules linked in: e1000e(+)
+>>> CPU: 0 PID: 1315 Comm: systemd-udevd Not tainted 4.3.0-rc7+ #4
+>>> Hardware name: Renesas Salvator-X board based on r8a7795 (DT)
+>>> task: ffffffc0307af080 ti: ffffffc030ecc000 task.ti: ffffffc030ecc000
+>>> PC is at 0xffffffc03106d41c
 >>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/platforms/powernv/pci-ioda.c | 150 ++++++++++++++----------------
->>  arch/powerpc/platforms/powernv/pci.h      |  19 ----
->>  2 files changed, 68 insertions(+), 101 deletions(-)
->>
->>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>index 4c2e023..20ebe6e 100644
->>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>@@ -891,44 +891,6 @@ out:
->>  	return 0;
->>  }
->>
->>-static void pnv_ioda_link_pe_by_weight(struct pnv_phb *phb,
->>-				       struct pnv_ioda_pe *pe)
->>-{
->>-	struct pnv_ioda_pe *lpe;
->>-
->>-	list_for_each_entry(lpe, &phb->ioda.pe_dma_list, dma_link) {
->>-		if (lpe->dma_weight < pe->dma_weight) {
->>-			list_add_tail(&pe->dma_link, &lpe->dma_link);
->>-			return;
->>-		}
->>-	}
->>-	list_add_tail(&pe->dma_link, &phb->ioda.pe_dma_list);
->>-}
->>-
->>-static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
->>-{
->>-	/* This is quite simplistic. The "base" weight of a device
->>-	 * is 10. 0 means no DMA is to be accounted for it.
->>-	 */
->>-
->>-	/* If it's a bridge, no DMA */
->>-	if (dev->hdr_type != PCI_HEADER_TYPE_NORMAL)
->>-		return 0;
->>-
->>-	/* Reduce the weight of slow USB controllers */
->>-	if (dev->class == PCI_CLASS_SERIAL_USB_UHCI ||
->>-	    dev->class == PCI_CLASS_SERIAL_USB_OHCI ||
->>-	    dev->class == PCI_CLASS_SERIAL_USB_EHCI)
->>-		return 3;
->>-
->>-	/* Increase the weight of RAID (includes Obsidian) */
->>-	if ((dev->class >> 8) == PCI_CLASS_STORAGE_RAID)
->>-		return 15;
->>-
->>-	/* Default */
->>-	return 10;
->>-}
->>-
->>  #ifdef CONFIG_PCI_IOV
->>  static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
->>  {
->>@@ -1009,7 +971,6 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
->>  			continue;
->>  		}
->>  		pdn->pe_number = pe->pe_number;
->>-		pe->dma_weight += pnv_ioda_dma_weight(dev);
->>  		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
->>  			pnv_ioda_setup_same_PE(dev->subordinate, pe);
->>  	}
->>@@ -1046,10 +1007,8 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
->>  	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
->>  	pe->pbus = bus;
->>  	pe->pdev = NULL;
->>-	pe->tce32_seg = -1;
->>  	pe->mve_number = -1;
->>  	pe->rid = bus->busn_res.start << 8;
->>-	pe->dma_weight = 0;
->>
->>  	if (all)
->>  		pe_info(pe, "Secondary bus %d..%d associated with PE#%d\n",
->>@@ -1071,17 +1030,6 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
->>
->>  	/* Put PE to the list */
->>  	list_add_tail(&pe->list, &phb->ioda.pe_list);
->>-
->>-	/* Account for one DMA PE if at least one DMA capable device exist
->>-	 * below the bridge
->>-	 */
->>-	if (pe->dma_weight != 0) {
->>-		phb->ioda.dma_weight += pe->dma_weight;
->>-		phb->ioda.dma_pe_count++;
->>-	}
->>-
->>-	/* Link the PE */
->>-	pnv_ioda_link_pe_by_weight(phb, pe);
->>  }
->>
->>  static void pnv_ioda_setup_PEs(struct pci_bus *bus)
->>@@ -1389,7 +1337,6 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
->>  		pe->flags = PNV_IODA_PE_VF;
->>  		pe->pbus = NULL;
->>  		pe->parent_dev = pdev;
->>-		pe->tce32_seg = -1;
->>  		pe->mve_number = -1;
->>  		pe->rid = (pci_iov_virtfn_bus(pdev, vf_index) << 8) |
->>  			   pci_iov_virtfn_devfn(pdev, vf_index);
->>@@ -1842,6 +1789,47 @@ static struct iommu_table_ops pnv_ioda2_iommu_ops = {
->>  	.free = pnv_ioda2_table_free,
->>  };
->>
->>+static int pnv_pci_ioda_dev_dma_weight(struct pci_dev *dev, void *data)
->>+{
->>+	unsigned int *weight = (unsigned int *)data;
->>+
->>+	/* This is quite simplistic. The "base" weight of a device
->>+	 * is 10. 0 means no DMA is to be accounted for it.
->>+	 */
->>+
->>+	if (dev->hdr_type != PCI_HEADER_TYPE_NORMAL)
->>+		return 0;
->>+
->>+	if (dev->class == PCI_CLASS_SERIAL_USB_UHCI ||
->>+	    dev->class == PCI_CLASS_SERIAL_USB_OHCI ||
->>+	    dev->class == PCI_CLASS_SERIAL_USB_EHCI)
->>+		*weight += 3;
->>+	else if ((dev->class >> 8) == PCI_CLASS_STORAGE_RAID)
->>+		*weight += 15;
->>+	else
->>+		*weight += 10;
->>+
->>+	return 0;
->>+}
->>+
->>+static unsigned int pnv_pci_ioda_pe_dma_weight(struct pnv_ioda_pe *pe)
->>+{
->>+	unsigned int weight = 0;
->>+
->>+	if ((pe->flags & PNV_IODA_PE_DEV) && pe->pdev) {
->>+		pnv_pci_ioda_dev_dma_weight(pe->pdev, &weight);
->>+	} else if ((pe->flags & PNV_IODA_PE_BUS) && pe->pbus) {
->>+		struct pci_dev *pdev;
->>+
->>+		list_for_each_entry(pdev, &pe->pbus->devices, bus_list)
->>+			pnv_pci_ioda_dev_dma_weight(pdev, &weight);
->>+	} else if ((pe->flags & PNV_IODA_PE_BUS_ALL) && pe->pbus) {
->>+		pci_walk_bus(pe->pbus, pnv_pci_ioda_dev_dma_weight, &weight);
->>+	}
->>+
->>+	return weight;
->>+}
->>+
->>  static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
->>  				       struct pnv_ioda_pe *pe,
->>  				       unsigned int base,
->>@@ -1858,17 +1846,12 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
->>  	/* XXX FIXME: Provide 64-bit DMA facilities & non-4K TCE tables etc.. */
->>  	/* XXX FIXME: Allocate multi-level tables on PHB3 */
->>
->>-	/* We shouldn't already have a 32-bit DMA associated */
->>-	if (WARN_ON(pe->tce32_seg >= 0))
->>-		return;
->>-
->>  	tbl = pnv_pci_table_alloc(phb->hose->node);
->>  	iommu_register_group(&pe->table_group, phb->hose->global_number,
->>  			pe->pe_number);
->>  	pnv_pci_link_table_and_group(phb->hose->node, 0, tbl, &pe->table_group);
->>
->>  	/* Grab a 32-bit TCE table */
->>-	pe->tce32_seg = base;
->>  	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
->>  		base * PNV_IODA1_DMA32_SEGSIZE,
->>  		(base + segs) * PNV_IODA1_DMA32_SEGSIZE - 1);
->>@@ -1932,8 +1915,6 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
->>  	return;
->>   fail:
->>  	/* XXX Failure: Try to fallback to 64-bit only ? */
->>-	if (pe->tce32_seg >= 0)
->>-		pe->tce32_seg = -1;
->>  	if (tce_mem)
->>  		__free_pages(tce_mem, get_order(tce32_segsz * segs));
->>  	if (tbl) {
->>@@ -2344,10 +2325,6 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->>  {
->>  	int64_t rc;
->>
->>-	/* We shouldn't already have a 32-bit DMA associated */
->>-	if (WARN_ON(pe->tce32_seg >= 0))
->>-		return;
->>-
->>  	/* TVE #1 is selected by PCI address bit 59 */
->>  	pe->tce_bypass_base = 1ull << 59;
->>
->>@@ -2355,7 +2332,6 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->>  			pe->pe_number);
->>
->>  	/* The PE will reserve all possible 32-bits space */
->>-	pe->tce32_seg = 0;
->>  	pe_info(pe, "Setting up 32-bit TCE table at 0..%08x\n",
->>  		phb->ioda.m32_pci_base);
->>
->>@@ -2371,11 +2347,8 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->>  #endif
->>
->>  	rc = pnv_pci_ioda2_setup_default_config(pe);
->>-	if (rc) {
->>-		if (pe->tce32_seg >= 0)
->>-			pe->tce32_seg = -1;
->>+	if (rc)
->>  		return;
->>-	}
->>
->>  	if (pe->flags & PNV_IODA_PE_DEV)
->>  		iommu_add_device(&pe->pdev->dev);
->>@@ -2386,24 +2359,34 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->>  static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
->>  {
->>  	struct pci_controller *hose = phb->hose;
->>-	unsigned int residual, remaining, segs, tw, base;
->>+	unsigned int weight, total_weight, dma_pe_count;
->>+	unsigned int residual, remaining, segs, base;
->>  	struct pnv_ioda_pe *pe;
->>
->>+	total_weight = 0;
->>+	dma_pe_count = 0;
->>+	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
->>+		weight = pnv_pci_ioda_pe_dma_weight(pe);
->>+		if (weight > 0)
->>+			dma_pe_count++;
->>+
->>+		total_weight += weight;
->>+	}
->>+
->>  	/* If we have more PE# than segments available, hand out one
->>  	 * per PE until we run out and let the rest fail. If not,
->>  	 * then we assign at least one segment per PE, plus more based
->>  	 * on the amount of devices under that PE
->>  	 */
->>-	if (phb->ioda.dma_pe_count > phb->ioda.tce32_count)
->>+	if (dma_pe_count > phb->ioda.tce32_count)
->>  		residual = 0;
->>  	else
->>-		residual = phb->ioda.tce32_count -
->>-			phb->ioda.dma_pe_count;
->>+		residual = phb->ioda.tce32_count - dma_pe_count;
->>
->>  	pr_info("PCI: Domain %04x has %ld available 32-bit DMA segments\n",
->>  		hose->global_number, phb->ioda.tce32_count);
->>  	pr_info("PCI: %d PE# for a total weight of %d\n",
->>-		phb->ioda.dma_pe_count, phb->ioda.dma_weight);
->>+		dma_pe_count, total_weight);
->>
->>  	pnv_pci_ioda_setup_opal_tce_kill(phb);
->>
->>@@ -2412,24 +2395,26 @@ static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
->>  	 * weight
->>  	 */
->>  	remaining = phb->ioda.tce32_count;
->>-	tw = phb->ioda.dma_weight;
->>  	base = 0;
->>-	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
->>-		if (!pe->dma_weight)
->>+	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
->>+		weight = pnv_pci_ioda_pe_dma_weight(pe);
->>+		if (!weight)
->>  			continue;
->>+
->
->
->Unrelated new line.
->
+>> You are clearly jumping to nowhereland, and I doubt this is related to
+>> the domain of_node being set. Are you overriding arch_setup_msi_irq one
+>> way or another?
+> No, I'm not overriding arch_setup_msi_irq at all.
+> 
+> Since the stack trace doesn't help that much I added some tracing:
+> pci_msi_setup_msi_irqs()
+>   calls pci_msi_get_domain()
+>     calls dev_get_msi_domain(), gets a non-NULL domain.
+> pci_msi_setup_msi_irqs()
+>   calls pci_msi_domain_alloc_irqs()
+>     calls msi_domain_alloc_irqs()
+> msi_domain_alloc_irqs:273: ops=ffffffc03193a810
+> msi_domain_alloc_irqs:274: ops->msi_check=ffffffc031161418
+> systemd-udevd[1311]: undefined instruction: pc=ffffffc03116141c
+> That looks to me as though msi_check is off pointing to the weeds.
 
-Will remove it in next revision.
+So the next step is to find out who initializes msi_check. Assuming
+someone does...
+
+> By passing a NULL domain into irq_domain_add_linear() you get:
+> pci_msi_setup_msi_irqs()
+>   calls pci_msi_get_domain()
+>     calls dev_get_msi_domain(), gets a NULL domain.
+>     calls arch_setup_msi_irq()
+> All ok then.
+
+Yes, because you're sidestepping the issue. Any chance you could dig a
+bit deeper? I'd really like to nail this one down (before we convert
+your PCI driver to the right API... ;-).
 
 Thanks,
-Gavin
 
+	M.
+-- 
+Jazz is not dead. It just smells funny...
