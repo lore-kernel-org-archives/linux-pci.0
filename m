@@ -1,166 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:54866 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933129AbbKGXcF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Nov 2015 18:32:05 -0500
-Received: from localhost
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Sun, 8 Nov 2015 09:32:02 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 9C7732CE8052
-	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2015 10:31:56 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA7NVnEO22675466
-	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 10:31:58 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA7NVNPD015995
-	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 10:31:23 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V13 0/9] VF EEH on Power8
-Date: Sun,  8 Nov 2015 07:30:26 +0800
-Message-Id: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:36846 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752138AbbKPICK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 03:02:10 -0500
+Received: by pacdm15 with SMTP id dm15so167380536pac.3
+        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 00:02:10 -0800 (PST)
+Subject: Re: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <56498D7B.7000307@ozlabs.ru>
+Date: Mon, 16 Nov 2015 19:02:03 +1100
+MIME-Version: 1.0
+In-Reply-To: <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset enables EEH on SRIOV VFs. The general idea is to create proper
-VF edev and VF PE and handle them properly.
-
-Different from the Bus PE, VF PE just contain one VF. This introduces the
-difference of EEH error handling on a VF PE. Generally, it has several
-differences.
-
-First, the VF's removal and re-enumerate rely on its PF. VF has a tight
-relationship between its PF. This is not proper to enumerate a VF by usual
-scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
-set.
-
-Second, the reset/restore of a VF is done in kernel space. FW is not aware of
-the VF, this means the usual reset function done in FW will not work. One of
-the patch will imitate the reset/restore function in kernel space.
-
-Third, the VF may be removed during the PF's error_detected function. In this
-case, the original error_detected->slot_reset->resume sequence is not proper
-to those removed VFs, since they are re-created by PF in a fresh state. A flag
-in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
-track whether this device needs to be reset or not.
-
-This has been tested both on host and in guest on Power8 with latest kernel
-version.
-
-v13:
-   * move eeh_rmv_data{} to eeh_driver.c
-v12:
-   * Rephrase some commit log to make it more clear and specific
-   * move vf_index assignment in CONFIG_PPC_POWERNV
-   * merge "Cache VF index in pci_dn" with "Support error recovery for VF PE"
-   * check the return value after eeh_dev_init() for VF
-   * initialize the parameter before pass to read_config()
-   * make pnv_pci_fixup_vf_mps() a dedicated patch, which fixup and store mps
-     value in pci_dn
-v11:
-   * move vf_index assignment in marco CONFIG_PPC_POWERNV
-   * merge Patch "Cache VF index in pci_dn" into Patch "Support error recovery
-     for VF PE" 
-v10:
-   * rebased on v4.2
-   * delete the last patch "powerpc/powernv: compound PE for VFs" since after
-     redesign of SRIOV, there is no compound PE for VFs now.
-   * add two patches which fix problems found during tests
-     powerpc/eeh: Support error recovery for VF PE                                 
-     powerpc/eeh: Handle hot removed VF when PF is EEH aware
-v9:
-   * split pcibios_bus_add_device() into a separate patch
-   * Bjorn acked the PCI part and agreed this patch set to be merged from ppc
-     tree
-   * rebased on mpe/linux.git next branch
-v8:
-   * fix on checking the return value of pnv_eeh_do_flr()
-   * introduced a weak function pcibios_bus_add_device() to create PE for VFs
-v7:
-   * fix compile error when PCI_IOV is not set
-v6:
-   * code / commit log refactor by Gavin
-v5:
-   * remove the compound field, iterate on Master VF PE instead
-   * some code refine on PCI config restore and reset on VF
-     the wait time for assert and deassert
-     PCI device address format
-     check on edev->pcie_cap and edev->aer_cap before access them
-v4:
-   * refine the change logs, comment and code style
-   * change pnv_pci_fixup_vf_eeh() to pnv_eeh_vf_final_fixup() and remove the
-     CONFIG_PCI_IOV macro
-   * reorder patch 5/6 to make the logic more reasonable
-   * remove remove_dev_pci_data()
-   * remove the EEH_DEV_VF flag, use edev->physfn to identify a VF EEH DEV and
-     remove related CONFIG_PCI_IOV macro
-   * add the option for VF reset
-   * fix the pnv_eeh_cfg_blocked() logic
-   * replace pnv_pci_cfg_{read,write} with eeh_ops->{read,write}_config in
-     pnv_eeh_vf_restore_config()
-   * rename pnv_eeh_vf_restore_config() to pnv_eeh_restore_vf_config()
-   * rename pnv_pci_fixup_vf_caps() to pnv_pci_vf_header_fixup() and move it
-     to arch/powerpc/platforms/powernv/pci.c
-   * add a field compound in pnv_ioda_pe to link compound PEs
-   * handle compound PE for VF PEs
-v3:
-   * add back vf_index in pci_dn to track the VF's index
-   * rename ppdev in eeh_dev to physfn for consistency
-   * move edev->physfn assignment before dev->dev.archdata.edev is set
-   * move pnv_pci_fixup_vf_eeh() and pnv_pci_fixup_vf_caps() to eeh-powernv.c
-   * more clear and detail in commit log and comment in code
-   * merge eeh_rmv_virt_device() with eeh_rmv_device()
-   * move the cfg_blocked check logic from pnv_eeh_read/write_config() to
-     pnv_eeh_cfg_blocked()
-   * move the vf reset/restore logic into its own patch, two patches are
-     created.
-     powerpc/powernv: Support PCI config restore for VFs
-     powerpc/powernv: Support EEH reset for VFs
-   * simplify the vf reset logic
-v2:
-   * add prefix pci_iov_ to virtfn_add/virtfn_remove
-   * use EEH_DEV_VF as a flag for a VF's eeh_dev
-   * use eeh_dev instead of edev in change log
-   * remove vf_index in eeh_dev, calculate it from pdn->busno and devfn
-   * do eeh_add_device_late() and eeh_sysfs_add_device() both after pci_dev is
-     well initialized
-   * do FLR to reset a VF PE
-   * imitate the restore function in FW for VF
-   * remove the reverse order patch, since it is still under discussion
+On 11/05/2015 12:12 AM, Gavin Shan wrote:
+> This enables M64 window on P7IOC, which has been enabled on PHB3.
+> Different from PHB3 where 16 M64 BARs are supported and each of
+> them can be owned by one particular PE# exclusively or divided
+> evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
+> of them are divided to 8 segments. So every P7IOC PHB supports
+> 128 M64 segments in total. P7IOC has M64DT, which helps mapping
+> one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
+> M64DT, indicating that one M64 segment can only be pinned to the
+> fixed PE#. In order to have same code to support M64 on P7IOC and
+> PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
+> of them is pinned to the fixed PE# by bypassing the function of
+> M64DT. In turn, we just need different phb->init_m64() for P7IOC
+> and PHB3 to support M64.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 86 +++++++++++++++++++++++++++++--
+>   arch/powerpc/platforms/powernv/pci.h      |  3 ++
+>   2 files changed, 86 insertions(+), 3 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 1f7d985..bfe69f1 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -256,6 +256,64 @@ static void pnv_ioda_reserve_dev_m64_pe(struct pci_dev *pdev,
+>   	}
+>   }
+>
+> +static int pnv_ioda1_init_m64(struct pnv_phb *phb)
+> +{
+> +	struct resource *r;
+> +	int index;
+> +
+> +	/*
+> +	 * There are 16 M64 BARs, each of which has 8 segments. So
+> +	 * there are as many M64 segments as the maximum number of
+> +	 * PEs, which is 128.
+> +	 */
+> +	for (index = 0; index < PNV_IODA1_M64_NUM; index++) {
+> +		unsigned long base, segsz = phb->ioda.m64_segsize;
+> +		int64_t rc;
+> +
+> +		base = phb->ioda.m64_base +
+> +		       index * PNV_IODA1_M64_SEGS * segsz;
+> +		rc = opal_pci_set_phb_mem_window(phb->opal_id,
+> +				OPAL_M64_WINDOW_TYPE, index, base, 0,
+> +				PNV_IODA1_M64_SEGS * segsz);
+> +		if (rc != OPAL_SUCCESS) {
+> +			pr_warn("  Error %lld setting M64 PHB#%d-BAR#%d\n",
+> +				rc, phb->hose->global_number, index);
+> +			goto fail;
+> +		}
+> +
+> +		rc = opal_pci_phb_mmio_enable(phb->opal_id,
+> +				OPAL_M64_WINDOW_TYPE, index,
+> +				OPAL_ENABLE_M64_SPLIT);
+> +		if (rc != OPAL_SUCCESS) {
+> +			pr_warn("  Error %lld enabling M64 PHB#%d-BAR#%d\n",
+> +				rc, phb->hose->global_number, index);
+> +			goto fail;
+> +		}
+> +	}
+> +
+> +	/*
+> +	 * Exclude the segment used by the reserved PE, which
+> +	 * is expected to be 0 or last supported PE#.
+> +	 */
+> +	r = &phb->hose->mem_resources[1];
 
 
-Wei Yang (9):
-  PCI/IOV: Rename and export virtfn_add/virtfn_remove
-  PCI: Add pcibios_bus_add_device() weak function
-  powerpc/pci: Remove VFs prior to PF
-  powerpc/eeh: Cache only BARs, not windows or IOV BARs
-  powerpc/powernv: EEH device for VF
-  powerpc/eeh: Create PE for VFs
-  powerpc/powernv: Support EEH reset for VF PE
-  powerpc/powernv: Support PCI config restore for VFs
-  powerpc/eeh: Support error recovery for VF PE
+What does "1" mean here? A bridge's 64bit prefetchable window?
 
- arch/powerpc/include/asm/eeh.h               |   5 +
- arch/powerpc/include/asm/pci-bridge.h        |   2 +
- arch/powerpc/kernel/eeh.c                    |  17 ++-
- arch/powerpc/kernel/eeh_cache.c              |  11 +-
- arch/powerpc/kernel/eeh_dev.c                |   1 +
- arch/powerpc/kernel/eeh_driver.c             | 132 ++++++++++++----
- arch/powerpc/kernel/eeh_pe.c                 |  13 +-
- arch/powerpc/kernel/pci-hotplug.c            |   2 +-
- arch/powerpc/kernel/pci_dn.c                 |  17 ++-
- arch/powerpc/platforms/powernv/eeh-powernv.c | 219 ++++++++++++++++++++++++++-
- arch/powerpc/platforms/powernv/pci.c         |  18 +++
- drivers/pci/bus.c                            |   3 +
- drivers/pci/iov.c                            |  10 +-
- include/linux/pci.h                          |   8 +
- 14 files changed, 411 insertions(+), 47 deletions(-)
+
+> +	if (phb->ioda.reserved_pe_idx == 0)
+> +		r->start += phb->ioda.m64_segsize;
+> +	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
+> +		r->end -= phb->ioda.m64_segsize;
+> +	else
+> +		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
+> +			phb->ioda.reserved_pe_idx);
+> +
+
+
 
 -- 
-2.5.0
-
+Alexey
