@@ -1,105 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	Stanimir Varbanov <stanimir.varbanov@linaro.org>
-CC: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Srinivas Kandagatla" <srinivas.kandagatla@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	"Pratyush Anand" <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Subject: RE: [PATCH v3 1/6] PCI: designware: remove wrong io_base assignment
-Date: Mon, 23 Nov 2015 10:27:36 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162C6F70@lhreml503-mbs>
-References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
- <44d133d5ebd4f7b9e8b817aa8bae12f690e70000.1448270813.git.stanimir.varbanov@linaro.org>
- <6048361.Am0T3g77Bd@wuerfel>
-In-Reply-To: <6048361.Am0T3g77Bd@wuerfel>
-Content-Type: text/plain; charset="Windows-1252"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:36087 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751946AbbKPIC0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 03:02:26 -0500
+Received: by pacdm15 with SMTP id dm15so167387854pac.3
+        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 00:02:26 -0800 (PST)
+Subject: Re: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <56498D8A.2050505@ozlabs.ru>
+Date: Mon, 16 Nov 2015 19:02:18 +1100
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Stanimir, Many Thanks for this fix
+On 11/05/2015 12:12 AM, Gavin Shan wrote:
+> This enables M64 window on P7IOC, which has been enabled on PHB3.
+> Different from PHB3 where 16 M64 BARs are supported and each of
+> them can be owned by one particular PE# exclusively or divided
+> evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
+> of them are divided to 8 segments. So every P7IOC PHB supports
+> 128 M64 segments in total. P7IOC has M64DT, which helps mapping
+> one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
+> M64DT, indicating that one M64 segment can only be pinned to the
+> fixed PE#. In order to have same code to support M64 on P7IOC and
+> PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
+> of them is pinned to the fixed PE# by bypassing the function of
+> M64DT. In turn, we just need different phb->init_m64() for P7IOC
+> and PHB3 to support M64.
 
-> -----Original Message-----
-> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> owner@vger.kernel.org] On Behalf Of Arnd Bergmann
-> Sent: 23 November 2015 10:00
-> To: Stanimir Varbanov
-> Cc: linux-arm-msm@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; devicetree@vger.kernel.org; linux-
-> pci@vger.kernel.org; Bjorn Helgaas; Srinivas Kandagatla; Rob Herring; Rob
-> Herring; Mark Rutland; Pawel Moll; Ian Campbell; Jingoo Han; Pratyush Anand;
-> Bjorn Andersson
-> Subject: Re: [PATCH v3 1/6] PCI: designware: remove wrong io_base assignment
-> 
-> On Monday 23 November 2015 11:28:58 Stanimir Varbanov wrote:
-> > The io_base is used to keep the cpu physical address parsed
-> > from ranges dt property. After issue pci_remap_iospace the
-> > io_base has been assigned with io->start, which is not correct
-> > cause io->start is a PCI bus address.
-> >
-> > Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-> > ---
-> >  drivers/pci/host/pcie-designware.c |    1 -
-> >  1 file changed, 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-
-> designware.c
-> > index 540f077c37ea..02a7452bdf23 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -440,7 +440,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> >  					 ret, pp->io);
-> >  				continue;
-> >  			}
-> > -			pp->io_base = pp->io->start;
-> >  			break;
-> >  		case IORESOURCE_MEM:
-> >  			pp->mem = win->res;
-> 
-> I was surprised to see such an obvious bug here, as we had spent a lot of
-> time trying to get it right. However, it broke only recently and it's
-> worth mentioning what commit did it, so
+I thought we decided (Ben suggested?) not to push P7IOC code now (or ever) 
+as there is no user for it, has this changed?
 
-Looking at 
-"[PATCH v12 0/8] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05":
+btw please put ioda1/ioda2/p7ioc/etc to the subject line to make it easier 
+to see how much work is there about particular PHB type. You rename quite 
+many functions and I generally want to ask you to group all renaming 
+patches first but it would also make sense to keep them close to (for 
+example) p7ioc-related patches so having more descriptive subject lines may 
+help. Thanks.
 
-actually the bug came in as patch 3/6 of v11 patchset split
 
-[...]
-
-Change from v11:
-- Split 3/6 in v11 to 3/8, 4/8, 5/8 in v12.
-
-[...]
-
-This was not present in v11...sorry about this.
-
-Gab
-
-> 
-> Fixes: 0021d22b73d6 ("PCI: designware: Use of_pci_get_host_bridge_resources()
-> to parse DT")
-> Reviewed-by: Arnd Bergmann <arnd@arndb.de>
-> 
-> The bug is present in 4.4-rc1 and we should get your fix merged into 4.4
-> as well, while all the other patches in your series are presumably for 4.5.
-> 
-> 	Arnd
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+-- 
+Alexey
