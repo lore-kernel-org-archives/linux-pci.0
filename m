@@ -1,196 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f48.google.com ([209.85.215.48]:36461 "EHLO
-	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753793AbbKLOpx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 09:45:53 -0500
-Received: by lfs39 with SMTP id 39so35251044lfs.3
-        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2015 06:45:51 -0800 (PST)
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
- <5640A8AA.4000806@semihalf.com> <20151109171042.GA11909@red-moon>
- <6488357.xJV65iBRHq@wuerfel> <564185B6.8040006@linux.intel.com>
- <20151111174647.GA30051@red-moon> <56445117.8090307@linux.intel.com>
- <56449246.2010308@semihalf.com> <56449C55.2090001@linux.intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <5644A613.2010304@semihalf.com>
-Date: Thu, 12 Nov 2015 15:45:39 +0100
+Received: from ibawizard.net ([82.208.49.253]:59443 "EHLO
+	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750781AbbKPPZB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 10:25:01 -0500
+From: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+To: linux-arm-kernel@lists.infradead.org
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	=?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+Subject: [PATCH] PCI: imx6: Fix reset-gpio to work with active low GPIO
+Date: Mon, 16 Nov 2015 16:19:07 +0100
+Message-Id: <1447687147-19436-1-git-send-email-ynezz@true.cz>
 MIME-Version: 1.0
-In-Reply-To: <56449C55.2090001@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12.11.2015 15:04, Jiang Liu wrote:
-> On 2015/11/12 21:21, Tomasz Nowicki wrote:
->> On 12.11.2015 09:43, Jiang Liu wrote:
->>> On 2015/11/12 1:46, Lorenzo Pieralisi wrote:
->>>> On Tue, Nov 10, 2015 at 01:50:46PM +0800, Jiang Liu wrote:
->>>>
->>>> [...]
->>>>
->>>>>>> In particular, I would like to understand, for an eg DWordIO
->>>>>>> descriptor,
->>>>>>> what Range Minimum, Range Maximum and Translation Offset represent,
->>>>>>> they can't mean different things depending on the SW parsing them,
->>>>>>> this totally defeats the purpose.
->>>>>>
->>>>>> I have no clue about what those mean in ACPI though.
->>>>>>
->>>>>> Generally speaking, each PCI domain is expected to have a (normally
->>>>>> 64KB)
->>>>>> range of CPU addresses that gets translated into PCI I/O space the
->>>>>> same
->>>>>> way that config space and memory space are handled.
->>>>>> This is true for almost every architecture except for x86, which uses
->>>>>> different CPU instructions for I/O space compared to the other spaces.
->>>>>>
->>>>>>> By the way, ia64 ioremaps the translation_offset (ie new_space()), so
->>>>>>> basically that's the CPU physical address at which the PCI host
->>>>>>> bridge
->>>>>>> map the IO space transactions), I do not think ia64 is any
->>>>>>> different from
->>>>>>> arm64 in this respect, if it is please provide an HW description
->>>>>>> here from
->>>>>>> the PCI bus perspective here (also an example of ia64 ACPI PCI
->>>>>>> host bridge
->>>>>>> tables would help).
->>>>>>
->>>>>> The main difference between ia64 and a lot of the other
->>>>>> architectures (e.g.
->>>>>> sparc is different again) is that ia64 defines a logical address range
->>>>>> in terms of having a small number for each I/O space followed by the
->>>>>> offset within that space as a 'port number' and uses a mapping
->>>>>> function
->>>>>> that is defined as
->>>>>>
->>>>>> static inline void *__ia64_mk_io_addr (unsigned long port)
->>>>>> {
->>>>>>           struct io_space *space = &io_space[IO_SPACE_NR(port)];
->>>>>>           return (space->mmio_base | IO_SPACE_PORT(port););
->>>>>> }
->>>>>> static inline unsigned int inl(unsigned long port)
->>>>>> {
->>>>>>           return *__ia64_mk_io_addr(port);
->>>>>> }
->>>>>>
->>>>>> Most architectures allow only one I/O port range and put it at a fixed
->>>>>> virtual address so that inl() simply becomes
->>>>>>
->>>>>> static inline u32 inl(unsigned long addr)
->>>>>> {
->>>>>>           return readl(PCI_IOBASE + addr);
->>>>>> }
->>>>>>
->>>>>> which noticeably reduces code size.
->>>>>>
->>>>>> On some architectures (powerpc, arm, arm64), we then get the same
->>>>>> simplified
->>>>>> definition with a fixed virtual address, and use pci_ioremap_io() or
->>>>>> something like that to to map a physical address range into this
->>>>>> virtual
->>>>>> address window at the correct io_offset;
->>>>> Hi all,
->>>>>      Thanks for explanation, I found a way to make the ACPI resource
->>>>> parsing interface arch neutral, it should help to address Lorenzo's
->>>>> concern. Please refer to the attached patch. (It's still RFC, not
->>>>> tested
->>>>> yet).
->>>>
->>>> If we go with this approach though, you are not adding the offset to
->>>> the resource when parsing the memory spaces in acpi_decode_space(),
->>>> are we
->>>> sure that's what we really want ?
->>>>
->>>> In DT, a host bridge range has a:
->>>>
->>>> - CPU physical address
->>>> - PCI bus address
->>>>
->>>> We use that to compute the offset between primary bus (ie CPU physical
->>>> address) and secondary bus (ie PCI bus address).
->>>>
->>>> The value ending up in the PCI resource struct (for memory space) is
->>>> the CPU physical address, if you do not add the offset in
->>>> acpi_decode_space
->>>> that does not hold true on platforms where CPU<->PCI offset != 0 on
->>>> ACPI,
->>>> am I wrong ?
->>> Hi Lorenzo,
->>>      I may have found the divergence between us about the design here. You
->>> treat it as a one-stage translation but I treat it as a
->>> two-stage translation as below:
->>> stage 1: map(translate) per-PCI-domain IO port address[0, 16M) into
->>> system global IO port address. Here system global IO port address is
->>> ioport_resource[0, IO_SPACE_LIMIT).
->>> stage 2: map system IO port address into system memory address.
->>>
->>> We need two objects of struct resource_win to support above two-stage
->>> translation. One object, type of IORESOURCE_IO, is used to support
->>> stage one, and it will also used to allocate IO port resources
->>> for PCI devices. Another object, type of IORESOURCE_MMIO, is used
->>> to allocate resource from iomem_resource and setup MMIO mapping
->>> to actually access IO ports.
->>>
->>> For ARM64, it doesn't support multiple per-PCI-domain(bus local)
->>> IO port address space yet, so stage one seems to be optional
->>> becomes the offset between bus local IO port address and system
->>> IO port address is always 0. But we still need two objects of
->>> struct resource_win. The first object is
->>>      {
->>>          offset:0,
->>>          start:AddressMinimum,
->>>          end:AddressMaximum,
->>>          flags:IORESOURCE_IO
->>>      }
->>> Here it's type of IORESOURCE_IO and offset must be zero because
->>> pcibios_resource_to_bus() will access it translate system IO
->>> port address into bus local IO port address. With my patch,
->>> the struct resource_win object created by the ACPI core will
->>> be reused for this.
->>>
->>> The second object is:
->>>      {
->>>          offset:Translation_Offset,
->>>          start:AddressMinimum + Translation_Offset,
->>>          end:AddressMaximum + Translation_Offset,
->>>          flags:IORESOURCE_MMIO
->>>      }
->>> Arch code need to create the second struct resource_win object
->>> and actually setup the MMIO mapping.
->>>
->>> But there's really another bug need to get fixed, funciton
->>> acpi_dev_ioresource_flags() assumes bus local IO port address
->>> space is size of 64K, which is wrong for IA64 and ARM64.
->>>
->>
->> So what would be the Translation_Offset meaning for two cases DWordIo
->> (....,TypeTranslation) vs DWordIo (....,TypeStatic)? And why we did not
->> use TypeTranslation for IA64 so far?
->
-> IA64 actually ignores the translation type flag and just assume it's
-> TypeTranslation, so there may be some IA64 BIOS implementations
-> accidentally using TypeStatic. That's why we parsing SparseTranslation
-> flag without checking TranslationType flag. I feel ARM64 may face the
-> same situation as IA64:(
->
-> We may expect (TypeStatic, 0-offset) and (TypeTranslation,
-> non-0-offset) in real word. For other two combinations, I haven't
-> found a real usage yet, though theoretically they are possible.
->
+It's currently not possible to use reset-gpio on board where the GPIO is
+active low as the code incorrectly assumes, that reset-gpio will be
+always active high.
 
-I think we should not bend the generic code for IA64 only and expose 
-other platforms to the same issue. Instead, lets interpret spec 
-correctly and create IA64 quirk for the sake of backward compatibility. 
-Thoughts?
+In my case the broken behavior was observed on Toradex Apalis SoM with
+Ixora base board.
 
-Regards,
-Tomasz
+Signed-off-by: Petr Štetiar <ynezz@true.cz>
+---
+ drivers/pci/host/pci-imx6.c |   15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index fdb9536..cd7ed71 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -293,9 +293,11 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+-		gpio_set_value(imx6_pcie->reset_gpio, 0);
++		struct gpio_desc *gd = gpio_to_desc(imx6_pcie->reset_gpio);
++
++		gpiod_set_value(gd, 0);
+ 		msleep(100);
+-		gpio_set_value(imx6_pcie->reset_gpio, 1);
++		gpiod_set_value(gd, 1);
+ 	}
+ 	return 0;
+ 
+@@ -559,6 +561,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 	struct pcie_port *pp;
+ 	struct device_node *np = pdev->dev.of_node;
+ 	struct resource *dbi_base;
++	enum of_gpio_flags of_flags;
++	int flags = GPIOF_OUT_INIT_LOW;
+ 	int ret;
+ 
+ 	imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie), GFP_KERNEL);
+@@ -578,10 +582,13 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(pp->dbi_base);
+ 
+ 	/* Fetch GPIOs */
+-	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
++	imx6_pcie->reset_gpio = of_get_named_gpio_flags(np, "reset-gpio", 0,
++							&of_flags);
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
++		if (of_flags & OF_GPIO_ACTIVE_LOW)
++			flags |= GPIOF_ACTIVE_LOW;
+ 		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
+-					    GPIOF_OUT_INIT_LOW, "PCIe reset");
++					    flags, "PCIe reset");
+ 		if (ret) {
+ 			dev_err(&pdev->dev, "unable to get reset gpio\n");
+ 			return ret;
+-- 
+1.7.9.5
+
