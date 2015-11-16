@@ -1,69 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:34321 "EHLO
-	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751633AbbKBVIH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2015 16:08:07 -0500
-Received: by lfgh9 with SMTP id h9so20882793lfg.1
-        for <linux-pci@vger.kernel.org>; Mon, 02 Nov 2015 13:08:05 -0800 (PST)
+Received: from relay1.mentorg.com ([192.94.38.131]:40000 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752478AbbKPJiI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 04:38:08 -0500
+From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
+To: Arnd Bergmann <arnd@arndb.de>, Lucas Stach <l.stach@pengutronix.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Richard.Zhu@freescale.com" <Richard.Zhu@freescale.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Mueller <dave.mueller@gmx.ch>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: RE: [PATCH] PCI: imx6:don't sleep in atomic context
+Date: Mon, 16 Nov 2015 09:36:17 +0000
+Message-ID: <FDC088D3B5555644AE135ED28A7ABDE98636E07B@EU-MBX-02.mgc.mentorg.com>
+References: <1447066080-5859-1-git-send-email-sanjeev_sharma@mentor.com>
+ <4800389.dqcmlJY3HC@wuerfel> <1447148110.3142.6.camel@pengutronix.de>
+ <6415545.xzR4A6SaUL@wuerfel>
+In-Reply-To: <6415545.xzR4A6SaUL@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20151022180813.GA25693@localhost>
-References: <1444979960-24100-1-git-send-email-Minghuan.Lian@freescale.com>
-	<1444979960-24100-5-git-send-email-Minghuan.Lian@freescale.com>
-	<20151021213612.GK1583@localhost>
-	<CADRPPNSPP1m_7zNF6wEfw9+Bpe=Z_gUA81cSaV4SENVpR34YWQ@mail.gmail.com>
-	<20151022180813.GA25693@localhost>
-Date: Mon, 2 Nov 2015 15:08:04 -0600
-Message-ID: <CADRPPNRQCrSukyjnS1yBck-jaNTWFOFJy3tomeD0HnXwc8WOBQ@mail.gmail.com>
-Subject: Re: [PATCH v4 5/6] PCI: layerscape: add PCIe support for LS1043a and LS2080a
-From: Li Yang <leoli@freescale.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 22, 2015 at 1:08 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> Hi Leo,
->
-> On Thu, Oct 22, 2015 at 12:38:48PM -0500, Li Yang wrote:
->> On Wed, Oct 21, 2015 at 4:36 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> > On Fri, Oct 16, 2015 at 03:19:19PM +0800, Minghuan Lian wrote:
->> >> Both LS1043a and LS2080a are based on ARMv8 64-bit architecture
->> >> and have similar PCIe implementation. LUT is added to controller.
->> >> The patch removes the necessary fields from struct ls_pcie.
->> >>
->> >> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
->> >> ---
->> >> This patch is based on v4.3-rc4 and [PATCH v10 3/6]
->> >> PCI: designware: Add ARM64 support.
->>
->> Hi Bjorn,
->>
->> Are you also applying this patch
->> https://patchwork.ozlabs.org/patch/531184/ in this merge windows?
->> Because the new hardware can only work with the generic ARM64 support
->> added in the designware pcie driver.
->
-> I'm reviewing that patch right now, and I do hope to apply it for
-> v4.4.
->
-> There was no cover letter for this series (Minghuan's Layerscape v4
-> series), and I didn't see any mention of dependencies, so I applied it
-> on top of v4.3-rc1.  Is that the wrong thing to do?  If it depends on
-> the Zhou's v11 series, I can hold the Layerscape branch until after
-> that.
+On Tuesday 10 November 2015 10:35:10 Lucas Stach wrote:
+> Am Dienstag, den 10.11.2015, 10:28 +0100 schrieb Arnd Bergmann:
+> > On Tuesday 10 November 2015 09:41:18 Lucas Stach wrote:
+> > > > diff --git a/drivers/pci/host/pci-imx6.c 
+> > > > b/drivers/pci/host/pci-imx6.c index 233a196..9769b13 100644
+> > > > --- a/drivers/pci/host/pci-imx6.c
+> > > > +++ b/drivers/pci/host/pci-imx6.c
+> > > > @@ -499,7 +499,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+> > > >                * Wait a little bit, then re-check if the link finished
+> > > >                * the training.
+> > > >                */
+> > > > -             usleep_range(1000, 2000);
+> > > > +             mdelay(1000);
+> > > 
+> > > A mdelay(1000) is a whole different timescale than a usleep(1000). 
+> > > If this patch works for you with mdelay(1) or maybe mdelay(2) I 
+> > > would be fine with it.
+> > 
+> > mdelay(1) is still a really long time to block the CPU for, on 
+> > potentially every config space access.
+> > 
+> > Everybody else just returns the link status here, which seems to be 
+> > the better alternative. If you need to delay the startup, better 
+> > have a msleep(1) loop in the initial probe function where you are 
+> > allowed to sleep.
+> > 
+> Yes, it's somewhere on my TODO list to rework the link-up handling 
+> here, but as there are quite a few timing and ordering implications in 
+> that code, this needs a good thought and a good deal of testing. So 
+> I'm inclined to ACK the current patch to get rid of the obvious bug 
+> and sort things out properly in a follow on patchset.
 
-I noticed that you have merged Zhou's latest patch.  Probably you can
-also merge the Layerscape branch now.
+Maybe use that patch with some modifications then:
 
-Regards,
-Leo
+* add a comment to explain that this is currently called from possibly
+  atomic context through pci_config_{read,write} and that the link
+  state handling never belonged here.
+
+* instead of looping five times for up to 2ms each, loop 100 times
+  around a udelay(20) to hopefully be done earlier. I was going to
+  suggest using time_before(timeout, jiffies) as the condition to
+  wait for, but that doesn't work if called with interrupts disabled.
+
+	Arnd
+Shall I go ahead by changing only current patch to mdelay(1). I will also
+Incorporate comment  #1 given by Arnd above. 
