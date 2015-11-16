@@ -1,103 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5654E422.5070604@caviumnetworks.com>
-Date: Tue, 24 Nov 2015 14:26:42 -0800
-From: David Daney <ddaney@caviumnetworks.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: David Daney <ddaney.cavm@gmail.com>,
-	<linux-kernel@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:60979 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751939AbbKPWCc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 17:02:32 -0500
+Subject: Re: [PATCH v8] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<michals@xilinx.com>, <sorenb@xilinx.com>, <bhelgaas@google.com>,
+	<arnd@arndb.de>, <tinamdar@apm.com>, <treding@nvidia.com>,
+	<Minghuan.Lian@freescale.com>, <m-karicheri2@ti.com>,
+	<hauke@hauke-m.de>, <dhdang@apm.com>, <sbranden@broadcom.com>
+References: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>
+ <5649F2D9.7070902@arm.com>
+CC: <devicetree@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH] arm64/pci: Add quirks for Cavium Thunder PCI bridges.
-References: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com> <20151124215200.GF17377@localhost>
-In-Reply-To: <20151124215200.GF17377@localhost>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+From: Ray Jui <rjui@broadcom.com>
+Message-ID: <564A5255.3020603@broadcom.com>
+Date: Mon, 16 Nov 2015 14:01:57 -0800
+MIME-Version: 1.0
+In-Reply-To: <5649F2D9.7070902@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/24/2015 01:52 PM, Bjorn Helgaas wrote:
-> Hi David,
->
-> On Tue, Sep 22, 2015 at 05:09:56PM -0700, David Daney wrote:
->> From: David Daney <david.daney@cavium.com>
+
+
+On 11/16/2015 7:14 AM, Marc Zyngier wrote:
+> On 11/11/15 06:33, Bharat Kumar Gogada wrote:
+>> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
 >>
->> The Cavium ThunderX SoC needs a PCI quirk for its on-chip bridges.
->> Since it is arm64, create a new quirks.c file there to contain arm64
->> related quirks.  Add the ThunderX bridge quirk, gated by a new config
->> variable, so that it can be disabled for kernels that aren't expected
->> to be used on ThunderX.
->
-> Is this still needed?
-
-No.
-
-The EA patch set that you merged to 4.4 supersedes this.
-
-> I've seen some follow-up Cavium stuff, but
-> nothing further on this one.  If we still need it, we should figure
-> out who should take it.  It's all under arch/arm64, so ordinarily I
-> would leave it up to the arm64 guys.
->
->> Signed-off-by: David Daney <david.daney@cavium.com>
+>> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+>> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
 >> ---
->>   arch/arm64/Kconfig         | 11 +++++++++++
->>   arch/arm64/kernel/Makefile |  2 +-
->>   arch/arm64/kernel/quirks.c | 36 ++++++++++++++++++++++++++++++++++++
->>   3 files changed, 48 insertions(+), 1 deletion(-)
->>   create mode 100644 arch/arm64/kernel/quirks.c
->
->> +#ifdef CONFIG_CAVIUM_THUNDER_PCI_QUIRKS
->> +static void thunder_bridge_fixup(struct pci_dev *dev)
->> +{
->> +	/*
->> +	 * This bridge is broken in that it doesn't have correct
->> +	 * resource ranges for the buses behind it.
->> +	 *
->> +	 * The upstream bus resources are a close enough approximation
->> +	 * to what is needed, that they can be used instead.  Copy
->> +	 * upstream root bus resources so that resource claiming for
->> +	 * downstream devices can be done.
->> +	 */
->> +	int resno;
->> +	struct pci_bus *bus = dev->subordinate;
->> +
->> +	for (resno = 0; resno < PCI_BRIDGE_RESOURCE_NUM; resno++) {
->> +		bus->resource[resno] =
->> +			pci_bus_resource_n(bus->parent,
->> +					   PCI_BRIDGE_RESOURCE_NUM + resno);
->
-> I am curious about this.  Is this a standard PCI-PCI bridge,
-
-Yes it is PCI-PCI
-
-> or is it
-> a host bridge.  If the former, I guess it must be broken in some way
-> that keeps the usual bridge window reading code from working?
->
-> Copying the upstream bus resources to the downstream bus might sort of
-> work sometimes, but seems fragile in general.  If the bridge has any
-> peers, it seems like we're headed for a conflict between the peer's
-> resources and anything downstream of the bridge.
-
-The problem is that all the downstream devices require 64-bit 
-non-prefetchable addressing, which cannot be satisfied with the bridge 
-provisioning code.  EA allows this to be described.
-
-In any event the patch is not needed now that the EA code is in place.
-
->
->> +	}
->> +}
->> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa002, thunder_bridge_fixup);
->> +#endif /* CONFIG_CAVIUM_THUNDER_PCI_QUIRKS */
->> --
->> 1.9.1
+>> Added logic to allocate contiguous hwirq in nwl_irq_domain_alloc function.
+>> Moved MSI functionality to separate functions.
+>> Changed error return values.
+>> ---
+>>   .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
+>>   drivers/pci/host/Kconfig                           |   16 +-
+>>   drivers/pci/host/Makefile                          |    1 +
+>>   drivers/pci/host/pcie-xilinx-nwl.c                 | 1062 ++++++++++++++++++++
+>>   4 files changed, 1144 insertions(+), 3 deletions(-)
+>>   create mode 100644 Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
+>>   create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
 >>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> [...]
+>
+>> +static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus *bus)
+>> +{
+>> +	struct platform_device *pdev = to_platform_device(pcie->dev);
+>> +	struct nwl_msi *msi = &pcie->msi;
+>> +	unsigned long base;
+>> +	int ret;
+>> +
+>> +	mutex_init(&msi->lock);
+>> +
+>> +	/* Check for msii_present bit */
+>> +	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) & MSII_PRESENT;
+>> +	if (!ret) {
+>> +		dev_err(pcie->dev, "MSI not present\n");
+>> +		ret = -EIO;
+>> +		goto err;
+>> +	}
+>> +
+>> +	/* Enable MSII */
+>> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
+>> +			  MSII_ENABLE, I_MSII_CONTROL);
+>> +
+>> +	/* Enable MSII status */
+>> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
+>> +			  MSII_STATUS_ENABLE, I_MSII_CONTROL);
+>> +
+>> +	/* setup AFI/FPCI range */
+>> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+>> +	base = virt_to_phys((void *)msi->pages);
+>> +	nwl_bridge_writel(pcie, lower_32_bits(base), I_MSII_BASE_LO);
+>> +	nwl_bridge_writel(pcie, upper_32_bits(base), I_MSII_BASE_HI);
+>
+> BTW, you still haven't answered my question as to why you need to waste
+> a page of memory here, and why putting a device address doesn't work.
+>
+> As this is (to the best of my knowledge) the only driver doing so, I'd
+> really like you to explain the rational behind this.
 
+Might not be the only driver doing so after I start sending out patches 
+for the iProc MSI support (soon), :)
+
+I'm not sure how it works for the Xilinx NWL controller, which Bharat 
+should be able to help to explain. But for the iProc MSI controller, 
+there's no device I/O memory reserved for MSI posted writes in the ASIC. 
+Therefore one needs to reserve host memory for these writes.
+
+Ray
+
+>
+> Thanks,
+>
+> 	M.
+>
