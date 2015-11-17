@@ -1,109 +1,132 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 3 Nov 2015 10:01:49 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	ethan zhao <ethan.zhao@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alexander Duyck <aduyck@mirantis.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 5/7] PCI: Wait 1 second between disabling VFs and
- clearing NumVFs
-Message-ID: <20151103020149.GA1763@richards-mbp.cn.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151029222322.11908.13738.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151030051458.GD5119@richards-mbp.cn.ibm.com>
- <56330771.90509@oracle.com>
- <5633935D.10807@gmail.com>
- <20151102083334.GC1120@richards-mbp.cn.ibm.com>
- <56378550.4080209@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:36323 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752138AbbKQA3k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 19:29:40 -0500
+Received: by pacdm15 with SMTP id dm15so191216770pac.3
+        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 16:29:40 -0800 (PST)
+From: Daniel Axtens <dja@axtens.net>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: Re: [PATCH v7 21/50] powerpc/powernv: Increase PE# capacity
+In-Reply-To: <1446642770-4681-22-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1446642770-4681-22-git-send-email-gwshan@linux.vnet.ibm.com>
+Date: Tue, 17 Nov 2015 11:29:26 +1100
+Message-ID: <87y4dxbh95.fsf@gamma.ozlabs.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56378550.4080209@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha512; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 02, 2015 at 07:46:24AM -0800, Alexander Duyck wrote:
->On 11/02/2015 12:33 AM, Wei Yang wrote:
->>On Fri, Oct 30, 2015 at 08:57:17AM -0700, Alexander Duyck wrote:
->>>On 10/29/2015 11:00 PM, ethan zhao wrote:
->>>>Wei,
->>>>
->>>>On 2015/10/30 13:14, Wei Yang wrote:
->>>>>On Thu, Oct 29, 2015 at 05:23:22PM -0500, Bjorn Helgaas wrote:
->>>>>>From: Alexander Duyck <aduyck@mirantis.com>
->>>>>>
->>>>>>Per sec 3.3.3.1 of the SR-IOV spec, r1.1, we must allow 1.0s after
->>>>>>clearing
->>>>>>VF Enable before reading any field in the SR-IOV Extended Capability.
->>>>>>
->>>>>>Wait 1 second before calling pci_iov_set_numvfs(), which reads
->>>>>>PCI_SRIOV_VF_OFFSET and PCI_SRIOV_VF_STRIDE after it sets
->>>>>>PCI_SRIOV_NUM_VF.
->>>>>>
->>>>>>[bhelgaas: split to separate patch for reviewability, add spec
->>>>>>reference]
->>>>>>Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
->>>>>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>>>>---
->>>>>>drivers/pci/iov.c |    2 +-
->>>>>>1 file changed, 1 insertion(+), 1 deletion(-)
->>>>>>
->>>>>>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>>>>>index fada98d..24428d5 100644
->>>>>>--- a/drivers/pci/iov.c
->>>>>>+++ b/drivers/pci/iov.c
->>>>>>@@ -339,13 +339,13 @@ failed:
->>>>>>    iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
->>>>>>    pci_cfg_access_lock(dev);
->>>>>>    pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->>>>>>-    pci_iov_set_numvfs(dev, 0);
->>>>>>    ssleep(1);
->>>>>>    pci_cfg_access_unlock(dev);
->>>>>>
->>>>>>    if (iov->link != dev->devfn)
->>>>>>        sysfs_remove_link(&dev->dev.kobj, "dep_link");
->>>>>>
->>>>>>+    pci_iov_set_numvfs(dev, 0);
->>>>>One small question, any specific reason put it here instead of just after
->>>>>sleep()?
->>>>Agree,  pci_iov_set_numvfs(dev, 0) should be put before
->>>>pci_cfg_access_unlock(dev) to avoid race,  because "NumVFs may only be
->>>>written while VF Enable is Clear"
->>>We are already guaranteeing that aren't we?  I'm assuming there is already
->>>code in place here somewhere that prevents us from both enabling and
->>>disabling SR-IOV from more than one thread.  Otherwise how could we hope to
->>>have any sort of consistent state?
->>>
->>>I'm fine with us being more explicit about it if we want to be, but if we are
->>>going to do it we should probably update all 3 spots where we update NumVFs
->>>after init instead of just this one.  Perhaps it should be a separate patch.
->>>
->>Yep, I think the statement is met, "NumVFs may only be written while VF Enable
->>is Clear".
->>
->>While in your commit log, the purpose of this patch is to wait 1 second before
->>write NumVFs. So I am interesting to know why you move this out of the
->>pci_cfg_access_lock. Because it looks better? have better performance?
->>
->>Actually, this is a question instead of a challenge :-)
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+
+> Each PHB maintains an array helping to translate 2-bytes Request
+> ID (RID) to PE# with the assumption that PE# takes one byte, meaning
+> that we can't have more than 256 PEs. However, pci_dn->pe_number
+> already had 4-bytes for the PE#.
 >
->It is because the first call to pci_iov_set_numvfs is done outside of the
->pci_cfg_access_lock.  This way when I add the clean-up for the bus numbering
->failure in patch 7 I don't have to modify as much code either since the write
->is already pulled out.
+> This extends the PE# capacity so that each of them will be 4-bytes
+> long. Then we can reuse IODA_INVALID_PE to check the PE# stored in
+> phb->pe_rmap[] is valid or not.
+
+Just for clarity, could you make it clear in the commit message that
+you're increasing the PE# capacity _in the PHB_? I just found it a bit
+confusing the first time I read it.
+
+With that clarified I'll be happy to add my reviewed-by tag.
+
+Regards,
+Daniel
 >
->An added bonus is the code is now much closer to what we have in
->sriov_disable which has seen much more use than the exception handling case
->for sriov_enable, so it has been more thoroughly tested.
-
-Thanks~ I am more comfortable with this change~
-
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/platforms/powernv/pci-ioda.c | 6 +++++-
+>  arch/powerpc/platforms/powernv/pci.h      | 7 ++-----
+>  2 files changed, 7 insertions(+), 6 deletions(-)
 >
->- Alex
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/pla=
+tforms/powernv/pci-ioda.c
+> index 0e66c4d..ef93a01 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -766,7 +766,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *ph=
+b, struct pnv_ioda_pe *pe)
+>=20=20
+>  	/* Clear the reverse map */
+>  	for (rid =3D pe->rid; rid < rid_end; rid++)
+> -		phb->ioda.pe_rmap[rid] =3D 0;
+> +		phb->ioda.pe_rmap[rid] =3D IODA_INVALID_PE;
+>=20=20
+>  	/* Release from all parents PELT-V */
+>  	while (parent) {
+> @@ -3164,6 +3164,10 @@ static void __init pnv_pci_init_ioda_phb(struct de=
+vice_node *np,
+>  	if (prop32)
+>  		phb->ioda.reserved_pe_idx =3D be32_to_cpup(prop32);
+>=20=20
+> +	/* Invalidate RID to PE# mapping */
+> +	for (i =3D 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
+> +		phb->ioda.pe_rmap[i] =3D IODA_INVALID_PE;
+> +
+>  	/* Parse 64-bit MMIO range */
+>  	pnv_ioda_parse_m64_window(phb);
+>=20=20
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platform=
+s/powernv/pci.h
+> index 0802fcd..5df945f 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -162,11 +162,8 @@ struct pnv_phb {
+>  			struct list_head	pe_list;
+>  			struct mutex            pe_list_mutex;
+>=20=20
+> -			/* Reverse map of PEs, will have to extend if
+> -			 * we are to support more than 256 PEs, indexed
+> -			 * bus { bus, devfn }
+> -			 */
+> -			unsigned char		pe_rmap[0x10000];
+> +			/* Reverse map of PEs, indexed by {bus, devfn} */
+> +			int			pe_rmap[0x10000];
+>=20=20
+>  			/* TCE cache invalidate registers (physical and
+>  			 * remapped)
+> --=20
+> 2.1.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--- 
-Richard Yang
-Help you, Help me
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: GPGTools - https://gpgtools.org
+
+iQIcBAEBCgAGBQJWSnTnAAoJEPC3R3P2I92FOTUQAIPGUQDll+7Uc1lau7ToBOR2
+jvP/H0wVrZGZEOBpXRaz0rFFmiUgKythKkGFCm2w8dq0cjexn02qvh4CmQEHeJRS
+D+Si7rfSNezDahJL9QMu/MOUwUaFexFRCPJQxFFLwxrvulUGhUvlv1oB83fw2IAB
+Eq1gVqW0Hs1zceSJ7ebYjJoEhj0ZRSQFx7Jp2Yj6sWKRVlvcMYECWZ83lrn4ixn1
+DPkCC3SfVle/aANMKUK4sY1FqaGSvX8s3Fe6PXpXhvfr2xoIso6dlJmFhNMTgP8r
+AmNWyaT+s3pg9tEsFKwQTJWQvK7G/ScPg01ywfiaOk1PuIA7zQcCpILtwbHloo+q
+4okga3e17nBS7HYGAKTN3JDZgI5Jr8F7Fd2K2qO/Tkgsov3DsPP0dMT+vYSAXk4y
+WZ3oQXgYzCf/4uABQ72zl2/0L8pnUHK5omcBNex/2IQRvF0D2E8t6sRaX7NpqQjg
+AKGFBXCXed9SRuKwetYurtHrHbem1roQm1tD94x23LBbYqnp5zakhEIX4riDzwbE
+MSerG1y04jlwxyy72aEFNGuRVi18R5aO+3h0hZH/PonE+nCIWvxem6mmgC8aeTll
+juv0Dg5RPfdcTAXR534EOQqz5BV7p5TjH5Ny7q7ufbBSzyyY9cudNzD8IknviA38
+z3V6mdbW9gx4H6b4FpNJ
+=WeRL
+-----END PGP SIGNATURE-----
+--=-=-=--
