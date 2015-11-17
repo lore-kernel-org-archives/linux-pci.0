@@ -1,215 +1,435 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Bugfix v4] PCI, ACPI: Fix regressions caused by resource_size_t
- overflow with 32-bit kernel
-To: Tomasz Nowicki <tn@semihalf.com>
-References: <559107F2.3080701@pr.hu>
- <1436340399-19695-1-git-send-email-jiang.liu@linux.intel.com>
- <563780FC.5070503@linaro.org> <563B5161.1060105@semihalf.com>
-Cc: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@kernel.org>,
-	Boszormenyi Zoltan <zboszor@pr.hu>,
-	Len Brown <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <563B588C.1010507@linux.intel.com>
-Date: Thu, 5 Nov 2015 21:24:28 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:35127 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752098AbbKQH52 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 02:57:28 -0500
+Received: by pacej9 with SMTP id ej9so1226581pac.2
+        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 23:57:27 -0800 (PST)
+Subject: Re: [PATCH v7 26/50] powerpc/powernv: Create PEs at PCI hot plugging
+ time
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-27-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <564ADDE0.8030904@ozlabs.ru>
+Date: Tue, 17 Nov 2015 18:57:20 +1100
 MIME-Version: 1.0
-In-Reply-To: <563B5161.1060105@semihalf.com>
-Content-Type: multipart/mixed;
- boundary="------------070305040105010509060604"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1446642770-4681-27-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------070305040105010509060604
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-
-On 2015/11/5 20:53, Tomasz Nowicki wrote:
-> On 02.11.2015 16:27, Tomasz Nowicki wrote:
->> On 08.07.2015 09:26, Jiang Liu wrote:
->>> Zoltan Boszormenyi reported this regression:
->>>    "There's a Realtek RTL8111/8168/8411 (PCI ID 10ec:8168, Subsystem ID
->>>     1565:230e) network chip on the mainboard. After the r8169 driver
->>> loaded
->>>     the IRQs in the machine went berserk. Keyboard keypressed arrived
->>> with
->>>     considerable latency and duplicated, so no real work was possible.
->>>     The machine responded to the power button but didn't actually power
->>>     down. It just stuck at the powering down message. I had to press the
->>>     power button for 4 seconds to power it down.
->>>
->>>     The computer is a POS machine with a big battery inside. Because
->>> of this,
->>>     either ACPI or the Realtek chip kept the bad state and after
->>> rebooting,
->>>     the network chip didn't even show up in lspci. Not even the PXE ROM
->>>     announced itself during boot. I had to disconnect the battery to
->>> beat
->>>     some sense back to the computer.
->>>
->>>     The regression happens with 4.0.5, 4.1.0-rc8 and 4.1.0-final.
->>> 3.18.16 was
->>>     good."
->>>
->>> The regression is caused by commit 593669c2ac0f ("x86/PCI/ACPI: Use
->>> common
->>> ACPI resource interfaces to simplify implementation"). Since commit
->>> 593669c2ac0f, x86 PCI ACPI host bridge driver validates ACPI
->>> resources by
->>> first converting an ACPI resource to a 'struct resource' structure and
->>> then applying checks against the converted resource structure. The
->>> 'start'
->>> and 'end' fields in 'struct resource' are defined to be type of
->>> resource_size_t, which may be 32 bits or 64 bits depending on
->>> CONFIG_PHYS_ADDR_T_64BIT.
->>>
->>> This may cause incorrect resource validation results with 32-bit kernels
->>> because 64-bit ACPI resource descriptors may get truncated when
->>> converting
->>> to 32-bit 'start' and 'end' fields in 'struct resource'. It eventually
->>> affects PCI resource allocation subsystem and makes some PCI devices and
->>> the system behave abnormally due to incorrect resource assignment.
->>>
->>> So enhance the ACPI resource parsing interfaces to ignore ACPI resource
->>> descriptors with address/offset above 4G when running in 32-bit mode.
->>>
->>> With the fix applied, the behavior of the machine was restored to how
->>> 3.18.16 worked, i.e. the memory range that is over 4GB is ignored again,
->>> and lspci -vvxxx shows that everything is at the same memory window as
->>> they were with 3.18.16.
->>>
->>> Reported-and-Tested-by: Boszormenyi Zoltan <zboszor@pr.hu>
->>> Fixes: 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
->>> interfaces to simplify implementation")
->>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>> Cc: stable@vger.kernel.org # 4.0
->>> ---
->>>   drivers/acpi/resource.c |   24 +++++++++++++++---------
->>>   1 file changed, 15 insertions(+), 9 deletions(-)
->>>
->>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->>> index 10561ce16ed1..e8d281739cbc 100644
->>> --- a/drivers/acpi/resource.c
->>> +++ b/drivers/acpi/resource.c
->>> @@ -194,6 +194,7 @@ static bool acpi_decode_space(struct resource_win
->>> *win,
->>>       u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 :
->>> ACPI_DECODE_16;
->>>       bool wp = addr->info.mem.write_protect;
->>>       u64 len = attr->address_length;
->>> +    u64 start, end, offset = 0;
->>>       struct resource *res = &win->res;
->>>
->>>       /*
->>> @@ -205,9 +206,6 @@ static bool acpi_decode_space(struct resource_win
->>> *win,
->>>           pr_debug("ACPI: Invalid address space min_addr_fix %d,
->>> max_addr_fix %d, len %llx\n",
->>>                addr->min_address_fixed, addr->max_address_fixed, len);
->>>
->>> -    res->start = attr->minimum;
->>> -    res->end = attr->maximum;
->>> -
->>>       /*
->>>        * For bridges that translate addresses across the bridge,
->>>        * translation_offset is the offset that must be added to the
->>> @@ -215,12 +213,22 @@ static bool acpi_decode_space(struct
->>> resource_win *win,
->>>        * primary side. Non-bridge devices must list 0 for all Address
->>>        * Translation offset bits.
->>>        */
->>> -    if (addr->producer_consumer == ACPI_PRODUCER) {
->>> -        res->start += attr->translation_offset;
->>> -        res->end += attr->translation_offset;
->>> -    } else if (attr->translation_offset) {
->>> +    if (addr->producer_consumer == ACPI_PRODUCER)
->>> +        offset = attr->translation_offset;
->>> +    else if (attr->translation_offset)
->>>           pr_debug("ACPI: translation_offset(%lld) is invalid for
->>> non-bridge device.\n",
->>>                attr->translation_offset);
->>> +    start = attr->minimum + offset;
->>> +    end = attr->maximum + offset;
->>
->> I still see the issue for this area, I mean ACPI_IO_RANGE. You are
->> adding translation offset to attr->minimum, build resource structure
->> which is then passed to acpi_dev_ioresource_flags and compared against
->> 0x10003. It causes some IO ranges to be ignored.
->>
-> 
-> Kindly reminder, any comments?
-> 
-> Tomasz
-Hi Tomasz,
-	Thanks for reporting this issue! Could you please help to
-test the attached patch?
-Thanks,
-Gerry
+On 11/05/2015 12:12 AM, Gavin Shan wrote:
+> Currently, the PEs and their associated resources are assigned
+> in ppc_md.pcibios_fixup() except those used by SRIOV VFs. The
+> function is called for once after PCI probing and resources
+> assignment is completed. So it isn't hotplug friendly.
+>
+> This creates PEs dynamically by ppc_md.pcibios_setup_bridge(), which
+> is called on the event during system bootup and PCI hotplug: updating
+> PCI bridge's windows after resource assignment/reassignment are done.
+> For partial hotplug case, where not all PCI devices belonging to the
+> PE are unplugged and plugged again, we just need unbinding/binding
+> the affected PCI devices with the corresponding PE without creating
+> new one.
+>
+> As there is no upstream bridge for root bus that needs to be covered
+> by PE,
 
 
---------------070305040105010509060604
-Content-Type: text/x-patch;
- name="0001-ACPI-Fix-an-error-in-IO-port-range-validation.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0001-ACPI-Fix-an-error-in-IO-port-range-validation.patch"
-
->From 2afdf4595dc961a2472ba1a35d7f67046b1845d2 Mon Sep 17 00:00:00 2001
-From: Liu Jiang <jiang.liu@linux.intel.com>
-Date: Thu, 5 Nov 2015 21:13:23 +0800
-Subject: [PATCH] ACPI: Fix an error in IO port range validation
+Does "that needs" part relate to a root bus or a an upstream bridge?
 
 
-Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> we have to create PE for root bus in ppc_md.pcibios_setup_bridge()
+> before any other PEs can be created, as PE for root bus is the ancestor
+> to anyone else.
+>
+> On the other hand, the windows of root port or the upstream port
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 15d22db05054..5bb1daa562b0 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -119,14 +119,14 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
- 
- static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
--				      u8 io_decode)
-+				      u64 offset, u8 io_decode)
- {
- 	res->flags = IORESOURCE_IO;
- 
- 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
- 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
- 
--	if (res->end >= 0x10003)
-+	if (res->end - offset >= 0x10003)
- 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
- 
- 	if (io_decode == ACPI_DECODE_16)
-@@ -138,7 +138,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
- {
- 	res->start = start;
- 	res->end = start + len - 1;
--	acpi_dev_ioresource_flags(res, len, io_decode);
-+	acpi_dev_ioresource_flags(res, len, 0, io_decode);
- }
- 
- /**
-@@ -231,7 +231,7 @@ static bool acpi_decode_space(struct resource_win *win,
- 		acpi_dev_memresource_flags(res, len, wp);
- 		break;
- 	case ACPI_IO_RANGE:
--		acpi_dev_ioresource_flags(res, len, iodec);
-+		acpi_dev_ioresource_flags(res, len, offset, iodec);
- 		break;
- 	case ACPI_BUS_NUMBER_RANGE:
- 		res->flags = IORESOURCE_BUS;
+s/On the other hand, /Also/ ?
+
+> of PCIe switch behind root port are extended to be PHB's aperatuses
+
+apertures?
+
+
+> to accommodate the additonal resources needed by newly plugged devices
+
+s/additonal/additional
+
+
+> based on the fact: hotpluggable slot is behind root port or downstream
+> port of the PCIe switch behind root port. The extension for those
+> PCI brdiges' windows is done in ppc_md.pcibios_setup_bridge() as
+> well.
+
+
+I find it quite difficult to separate "cut-n-paste" changes from functional 
+changes... May be it is just me.
+I would suggest splitting this patch into several. First define the 
+setup_bridge() callback, then rework pnv_pci_ioda_setup_PEs(),
+pnv_pci_ioda_setup_seg(), pnv_pci_ioda_setup_DMA(), and then add "partial 
+hotplug" handling may be.
+
+Or just get "reviewed-by" from Ben :)
+
+
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 240 +++++++++++++++++-------------
+>   arch/powerpc/platforms/powernv/pci.h      |   1 +
+>   2 files changed, 138 insertions(+), 103 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 5e6745f..0bb0056 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -975,6 +975,15 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+>   				pci_name(dev));
+>   			continue;
+>   		}
+> +
+> +		/*
+> +		 * In partial hotplug case, the PCI device might be still
+> +		 * associated with the PE and needn't be attached to the
+> +		 * PE again.
+> +		 */
+> +		if (pdn->pe_number != IODA_INVALID_PE)
+> +			continue;
+> +
+>   		pdn->pe_number = pe->pe_number;
+>   		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
+>   			pnv_ioda_setup_same_PE(dev->subordinate, pe);
+> @@ -992,9 +1001,26 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>   	struct pci_controller *hose = pci_bus_to_host(bus);
+>   	struct pnv_phb *phb = hose->private_data;
+>   	struct pnv_ioda_pe *pe = NULL;
+> +	int pe_num;
+> +
+> +	/*
+> +	 * In partial hotplug case, the PE instance might be still alive.
+> +	 * We should reuse it instead of allocating a new one.
+> +	 */
+> +	pe_num = phb->ioda.pe_rmap[bus->number << 8];
+> +	if (pe_num != IODA_INVALID_PE) {
+> +		pe = &phb->ioda.pe_array[pe_num];
+> +		pnv_ioda_setup_same_PE(bus, pe);
+> +		return NULL;
+> +	}
+> +
+> +	/* PE number for root bus should have been reserved */
+> +	if (pci_is_root_bus(bus) &&
+> +	    phb->ioda.root_pe_idx != IODA_INVALID_PE)
+> +		pe = &phb->ioda.pe_array[phb->ioda.root_pe_idx];
+>
+>   	/* Check if PE is determined by M64 */
+> -	if (phb->pick_m64_pe)
+> +	if (!pe && phb->pick_m64_pe)
+>   		pe = phb->pick_m64_pe(bus, all);
+>
+>   	/* The PE number isn't pinned by M64 */
+> @@ -1036,46 +1062,6 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>   	return pe;
+>   }
+>
+> -static void pnv_ioda_setup_PEs(struct pci_bus *bus)
+> -{
+> -	struct pci_dev *dev;
+> -
+> -	pnv_ioda_setup_bus_PE(bus, false);
+> -
+> -	list_for_each_entry(dev, &bus->devices, bus_list) {
+> -		if (dev->subordinate) {
+> -			if (pci_pcie_type(dev) == PCI_EXP_TYPE_PCI_BRIDGE)
+> -				pnv_ioda_setup_bus_PE(dev->subordinate, true);
+> -			else
+> -				pnv_ioda_setup_PEs(dev->subordinate);
+> -		}
+> -	}
+> -}
+> -
+> -/*
+> - * Configure PEs so that the downstream PCI buses and devices
+> - * could have their associated PE#. Unfortunately, we didn't
+> - * figure out the way to identify the PLX bridge yet. So we
+> - * simply put the PCI bus and the subordinate behind the root
+> - * port to PE# here. The game rule here is expected to be changed
+> - * as soon as we can detected PLX bridge correctly.
+> - */
+> -static void pnv_pci_ioda_setup_PEs(void)
+> -{
+> -	struct pci_controller *hose, *tmp;
+> -	struct pnv_phb *phb;
+> -
+> -	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+> -		phb = hose->private_data;
+> -
+> -		/* M64 layout might affect PE allocation */
+> -		if (phb->reserve_m64_pe)
+> -			phb->reserve_m64_pe(hose->bus, NULL, true);
+> -
+> -		pnv_ioda_setup_PEs(hose->bus);
+> -	}
+> -}
+> -
+>   #ifdef CONFIG_PCI_IOV
+>   static int pnv_pci_vf_release_m64(struct pci_dev *pdev, u16 num_vfs)
+>   {
+> @@ -2391,8 +2377,13 @@ static void pnv_pci_ioda2_table_free_pages(struct iommu_table *tbl)
+>   static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>   				       struct pnv_ioda_pe *pe)
+>   {
+> +	unsigned int weight;
+>   	int64_t rc;
+>
+> +	weight = pnv_pci_ioda_pe_dma_weight(pe);
+> +	if (!weight)
+> +		return;
+> +
+>   	/* TVE #1 is selected by PCI address bit 59 */
+>   	pe->tce_bypass_base = 1ull << 59;
+>
+> @@ -2424,33 +2415,6 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>   		pnv_ioda_setup_bus_dma(pe, pe->pbus);
+>   }
+>
+> -static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
+> -{
+> -	struct pnv_ioda_pe *pe;
+> -
+> -	pnv_pci_ioda_setup_opal_tce_kill(phb);
+> -
+> -	list_for_each_entry(pe, &phb->ioda.pe_list, list)
+> -		pnv_pci_ioda1_setup_dma_pe(phb, pe);
+> -}
+> -
+> -static void pnv_pci_ioda2_setup_dma(struct pnv_phb *phb)
+> -{
+> -	struct pnv_ioda_pe *pe;
+> -	unsigned int weight;
+> -
+> -	pnv_pci_ioda_setup_opal_tce_kill(phb);
+> -
+> -	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+> -		weight = pnv_pci_ioda_pe_dma_weight(pe);
+> -		if (!weight)
+> -			continue;
+> -
+> -		pe_info(pe, "Assign DMA32 space\n");
+> -		pnv_pci_ioda2_setup_dma_pe(phb, pe);
+> -	}
+> -}
+> -
+>   #ifdef CONFIG_PCI_MSI
+>   static void pnv_ioda2_msi_eoi(struct irq_data *d)
+>   {
+> @@ -2914,37 +2878,6 @@ static void pnv_ioda_setup_pe_seg(struct pnv_ioda_pe *pe)
+>   	}
+>   }
+>
+> -static void pnv_pci_ioda_setup_seg(void)
+> -{
+> -	struct pci_controller *tmp, *hose;
+> -	struct pnv_phb *phb;
+> -	struct pnv_ioda_pe *pe;
+> -
+> -	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+> -		phb = hose->private_data;
+> -		list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+> -			pnv_ioda_setup_pe_seg(pe);
+> -		}
+> -	}
+> -}
+> -
+> -static void pnv_pci_ioda_setup_DMA(void)
+> -{
+> -	struct pci_controller *hose, *tmp;
+> -	struct pnv_phb *phb;
+> -
+> -	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+> -		phb = hose->private_data;
+> -		if (phb->type == PNV_PHB_IODA1)
+> -			pnv_pci_ioda1_setup_dma(phb);
+> -		else
+> -			pnv_pci_ioda2_setup_dma(phb);
+> -
+> -		/* Mark the PHB initialization done */
+> -		phb->initialized = 1;
+> -	}
+> -}
+> -
+>   static void pnv_pci_ioda_create_dbgfs(void)
+>   {
+>   #ifdef CONFIG_DEBUG_FS
+> @@ -2955,6 +2888,9 @@ static void pnv_pci_ioda_create_dbgfs(void)
+>   	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+>   		phb = hose->private_data;
+>
+> +		/* Notify initialization of PHB done */
+> +		phb->initialized = 1;
+> +
+>   		sprintf(name, "PCI%04x", hose->global_number);
+>   		phb->dbgfs = debugfs_create_dir(name, powerpc_debugfs_root);
+>   		if (!phb->dbgfs)
+> @@ -2966,10 +2902,6 @@ static void pnv_pci_ioda_create_dbgfs(void)
+>
+>   static void pnv_pci_ioda_fixup(void)
+>   {
+> -	pnv_pci_ioda_setup_PEs();
+> -	pnv_pci_ioda_setup_seg();
+> -	pnv_pci_ioda_setup_DMA();
+> -
+>   	pnv_pci_ioda_create_dbgfs();
+>
+>   #ifdef CONFIG_EEH
+> @@ -3019,6 +2951,104 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
+>   	return phb->ioda.io_segsize;
+>   }
+>
+> +/*
+> + * We are updating root port or the upstream port of the
+> + * bridge behind the root port with PHB's windows in order
+> + * to accommodate the changes on required resources during
+> + * PCI (slot) hotplug, which is connected to either root
+> + * port or the downstream ports of PCIe switch behind the
+> + * root port.
+> + */
+> +static void pnv_pci_fixup_bridge_resources(struct pci_bus *bus,
+> +					   unsigned long type)
+> +{
+> +	struct pci_controller *hose = pci_bus_to_host(bus);
+> +	struct pnv_phb *phb = hose->private_data;
+> +	struct pci_dev *bridge = bus->self;
+> +	struct resource *r, *w;
+> +	int i;
+> +
+> +	/* Check if we need apply fixup to the bridge's windows */
+> +	if (!pci_is_root_bus(bridge->bus) &&
+> +	    !pci_is_root_bus(bridge->bus->self->bus))
+> +		return;
+> +
+> +	/* Fixup the resoureces */
+
+
+s/resoureces/resources/
+
+
+> +	for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
+> +		r = &bridge->resource[PCI_BRIDGE_RESOURCES + i];
+> +		if (!r->flags || !r->parent)
+> +			continue;
+> +
+> +		w = NULL;
+> +		if (r->flags & type & IORESOURCE_IO)
+> +			w = &hose->io_resource;
+> +		else if (pnv_pci_is_mem_pref_64(r->flags) &&
+> +			 (type & IORESOURCE_PREFETCH) &&
+> +			 phb->ioda.m64_segsize)
+> +			w = &hose->mem_resources[1];
+> +		else if (r->flags & type & IORESOURCE_MEM)
+> +			w = &hose->mem_resources[0];
+> +
+> +		r->start = w->start;
+> +		r->end = w->end;
+> +	}
+> +}
+> +
+> +static void pnv_pci_setup_bridge(struct pci_bus *bus,
+> +				 unsigned long type)
+> +{
+> +	struct pci_controller *hose = pci_bus_to_host(bus);
+> +	struct pnv_phb *phb = hose->private_data;
+> +	struct pci_dev *bridge = bus->self;
+> +	struct pnv_ioda_pe *pe;
+> +	bool all = (pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE);
+> +
+> +	 /* The PE for root bus should be realized before any one else */
+> +	if (!phb->ioda.root_pe_populated) {
+> +		pe = pnv_ioda_setup_bus_PE(phb->hose->bus, false);
+> +		if (pe) {
+> +			phb->ioda.root_pe_idx = pe->pe_number;
+> +			phb->ioda.root_pe_populated = true;
+> +		}
+> +	}
+> +
+> +	/* Extend bridge's windows if necessary */
+> +	pnv_pci_fixup_bridge_resources(bus, type);
+> +
+> +	/* Don't assign PE to PCI bus, which doesn't have subordinate devices */
+> +	if (list_empty(&bus->devices))
+> +		return;
+> +
+> +	/* Reserve PEs according to used M64 resources */
+> +	if (phb->reserve_m64_pe)
+> +		phb->reserve_m64_pe(bus, NULL, all);
+> +
+> +	/*
+> +	 * Assign PE. We might run here because of partial hotplug.
+> +	 * For the case, we just pick up the existing PE and should
+> +	 * not allocate resources again.
+> +	 */
+> +	pe = pnv_ioda_setup_bus_PE(bus, all);
+> +	if (!pe)
+> +		return;
+> +
+> +	/* Setup MMIO mapping */
+> +	pnv_ioda_setup_pe_seg(pe);
+> +
+> +	/* Setup DMA */
+> +	switch (phb->type) {
+> +	case PNV_PHB_IODA1:
+> +		pnv_pci_ioda1_setup_dma_pe(phb, pe);
+> +		break;
+> +	case PNV_PHB_IODA2:
+> +		pnv_pci_ioda2_setup_dma_pe(phb, pe);
+> +		break;
+> +	default:
+> +		pr_warn("%s: No DMA for PHB#%d (type %d)\n",
+> +			__func__, phb->hose->global_number, phb->type);
+> +	}
+> +}
+> +
+>   #ifdef CONFIG_PCI_IOV
+>   static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
+>   						      int resno)
+> @@ -3095,6 +3125,7 @@ static const struct pci_controller_ops pnv_pci_ioda_controller_ops = {
+>   #endif
+>   	.enable_device_hook	= pnv_pci_enable_device_hook,
+>   	.window_alignment	= pnv_pci_window_alignment,
+> +	.setup_bridge		= pnv_pci_setup_bridge,
+>   	.reset_secondary_bus	= pnv_pci_reset_secondary_bus,
+>   	.dma_set_mask		= pnv_pci_ioda_dma_set_mask,
+>   	.dma_get_required_mask	= pnv_pci_ioda_dma_get_required_mask,
+> @@ -3168,6 +3199,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>   	if (phb->regs == NULL)
+>   		pr_err("  Failed to map registers !\n");
+>
+> +	/* Initialize TCE kill register */
+> +	pnv_pci_ioda_setup_opal_tce_kill(phb);
+> +
+>   	/* Initialize more IODA stuff */
+>   	phb->ioda.total_pe_num = 1;
+>   	prop32 = of_get_property(np, "ibm,opal-num-pes", NULL);
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index a8ba97f..ef5271a 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -121,6 +121,7 @@ struct pnv_phb {
+>   			unsigned int		total_pe_num;
+>   			unsigned int		reserved_pe_idx;
+>   			unsigned int		root_pe_idx;
+> +			bool			root_pe_populated;
+>
+>   			/* 32-bit MMIO window */
+>   			unsigned int		m32_size;
+>
+
+
 -- 
-1.7.10.4
-
-
---------------070305040105010509060604--
+Alexey
