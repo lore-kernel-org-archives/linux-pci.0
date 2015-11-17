@@ -1,50 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35475 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752795AbbKSQIZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 19 Nov 2015 11:08:25 -0500
-From: Andy Lutomirski <luto@kernel.org>
-To: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
-	Andy Lutomirski <luto@kernel.org>
-Subject: [PATCH 1/2] acpi: Tidy up _OSC error spacing
-Date: Thu, 19 Nov 2015 08:08:19 -0800
-Message-Id: <cd180d52de6dc9e217bd0a0aed32efa68d0c73f8.1447949171.git.luto@kernel.org>
-In-Reply-To: <cover.1447949171.git.luto@kernel.org>
-References: <cover.1447949171.git.luto@kernel.org>
-In-Reply-To: <cover.1447949171.git.luto@kernel.org>
-References: <cover.1447949171.git.luto@kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:55176 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751350AbbKQB4x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 20:56:53 -0500
+Received: from localhost
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 17 Nov 2015 11:56:50 +1000
+Date: Tue, 17 Nov 2015 12:55:50 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Daniel Axtens <dja@axtens.net>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, aik@ozlabs.ru, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+Subject: Re: [PATCH v7 19/50] powerpc/powernv: Track DMA32 segment consumption
+Message-ID: <20151117015550.GA1452@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-20-git-send-email-gwshan@linux.vnet.ibm.com>
+ <87ziydbhaz.fsf@gamma.ozlabs.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87ziydbhaz.fsf@gamma.ozlabs.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The whitespace in _OSC error reports is weird.  Improve it.
+On Tue, Nov 17, 2015 at 11:28:20AM +1100, Daniel Axtens wrote:
+>Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+>
+>> Similar to the mechanism tracking consumed IO/M32/M64 segments,
+>> this introduces an array for each PHB to track the consumed DMA32
+>> segments, which are going to be released on PCI unplugging time.
+>> The index of the array is the DMA32 segment number while the value
+>> stored in the element is the assigned PE number.
+>>
+>
+>
+>> +	/* Setup TCE32 segment mapping */
+>Do you mean DMA32 rather than TCE32?
 
-Signed-off-by: Andy Lutomirski <luto@kernel.org>
----
- drivers/acpi/bus.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Right, will change it to "DMA32" in next revision.
 
-diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
-index a212cefae524..2177ef0b16e4 100644
---- a/drivers/acpi/bus.c
-+++ b/drivers/acpi/bus.c
-@@ -182,12 +182,12 @@ static void acpi_print_osc_error(acpi_handle handle,
- 	if (ACPI_FAILURE(acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer)))
- 		printk(KERN_DEBUG "%s\n", error);
- 	else {
--		printk(KERN_DEBUG "%s:%s\n", (char *)buffer.pointer, error);
-+		printk(KERN_DEBUG "%s: %s\n", (char *)buffer.pointer, error);
- 		kfree(buffer.pointer);
- 	}
--	printk(KERN_DEBUG"_OSC request data:");
-+	printk(KERN_DEBUG "_OSC request data:");
- 	for (i = 0; i < context->cap.length; i += sizeof(u32))
--		printk("%x ", *((u32 *)(context->cap.pointer + i)));
-+		printk(" %x", *((u32 *)(context->cap.pointer + i)));
- 	printk("\n");
- }
- 
--- 
-2.5.0
+>> +	for (i = base; i < base + segs; i++)
+>> +		phb->ioda.dma32_segmap[i] = pe->pe_number;
+>> +
+>I'm pretty sure this is right, but can you just confirm that you
+>intended to index into the array starting at base and going to base + segs,
+>and not going from 0 to segs? (i.e. not dma32_segmap[i - base]).
+>
+
+I think you're saying "I'm not pretty sure this is right". The code doesn't
+have problem here: it starts from @base.
+
+>Otherwise looks good.
+>
+>
+>>  	/* Setup linux iommu table */
+>>  	pnv_pci_setup_iommu_table(tbl, addr, tce32_segsz * segs,
+>>  				  base * PNV_IODA1_DMA32_SEGSIZE,
+>> @@ -2378,13 +2382,13 @@ static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
+>>  	 * then we assign at least one segment per PE, plus more based
+>>  	 * on the amount of devices under that PE
+>>  	 */
+>> -	if (dma_pe_count > phb->ioda.tce32_count)
+>> +	if (dma_pe_count > phb->ioda.dma32_count)
+>>  		residual = 0;
+>>  	else
+>> -		residual = phb->ioda.tce32_count - dma_pe_count;
+>> +		residual = phb->ioda.dma32_count - dma_pe_count;
+>>  
+>>  	pr_info("PCI: Domain %04x has %ld available 32-bit DMA segments\n",
+>> -		hose->global_number, phb->ioda.tce32_count);
+>> +		hose->global_number, phb->ioda.dma32_count);
+>>  	pr_info("PCI: %d PE# for a total weight of %d\n",
+>>  		dma_pe_count, total_weight);
+>>  
+>> @@ -2394,7 +2398,7 @@ static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
+>>  	 * out one base segment plus any residual segments based on
+>>  	 * weight
+>>  	 */
+>> -	remaining = phb->ioda.tce32_count;
+>> +	remaining = phb->ioda.dma32_count;
+>>  	base = 0;
+>>  	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+>>  		weight = pnv_pci_ioda_pe_dma_weight(pe);
+>> @@ -3094,7 +3098,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  {
+>>  	struct pci_controller *hose;
+>>  	struct pnv_phb *phb;
+>> -	unsigned long size, m64map_off, m32map_off, pemap_off, iomap_off = 0;
+>> +	unsigned long size, m64map_off, m32map_off, pemap_off;
+>> +	unsigned long iomap_off = 0, dma32map_off = 0;
+>>  	const __be64 *prop64;
+>>  	const __be32 *prop32;
+>>  	int i, len;
+>> @@ -3177,6 +3182,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  	phb->ioda.io_segsize = phb->ioda.io_size / phb->ioda.total_pe_num;
+>>  	phb->ioda.io_pci_base = 0; /* XXX calculate this ? */
+>>  
+>> +	/* Calculate how many 32-bit TCE segments we have */
+>> +	phb->ioda.dma32_count = phb->ioda.m32_pci_base /
+>> +				PNV_IODA1_DMA32_SEGSIZE;
+>> +
+>>  	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
+>>  	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
+>>  	m64map_off = size;
+>> @@ -3186,6 +3195,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  	if (phb->type == PNV_PHB_IODA1) {
+>>  		iomap_off = size;
+>>  		size += phb->ioda.total_pe_num * sizeof(phb->ioda.io_segmap[0]);
+>> +		dma32map_off = size;
+>> +		size += phb->ioda.dma32_count *
+>> +			sizeof(phb->ioda.dma32_segmap[0]);
+>>  	}
+>>  	pemap_off = size;
+>>  	size += phb->ioda.total_pe_num * sizeof(struct pnv_ioda_pe);
+>> @@ -3201,6 +3213,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  		phb->ioda.io_segmap = aux + iomap_off;
+>>  		for (i = 0; i < phb->ioda.total_pe_num; i++)
+>>  			phb->ioda.io_segmap[i] = IODA_INVALID_PE;
+>> +
+>> +		phb->ioda.dma32_segmap = aux + dma32map_off;
+>> +		for (i = 0; i < phb->ioda.dma32_count; i++)
+>> +			phb->ioda.dma32_segmap[i] = IODA_INVALID_PE;
+>>  	}
+>>  	phb->ioda.pe_array = aux + pemap_off;
+>>  	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
+>> @@ -3208,10 +3224,6 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  	INIT_LIST_HEAD(&phb->ioda.pe_list);
+>>  	mutex_init(&phb->ioda.pe_list_mutex);
+>>  
+>> -	/* Calculate how many 32-bit TCE segments we have */
+>> -	phb->ioda.tce32_count = phb->ioda.m32_pci_base /
+>> -				PNV_IODA1_DMA32_SEGSIZE;
+>> -
+>>  #if 0 /* We should really do that ... */
+>>  	rc = opal_pci_set_phb_mem_window(opal->phb_id,
+>>  					 window_type,
+>> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>> index 2038ef2..0802fcd 100644
+>> --- a/arch/powerpc/platforms/powernv/pci.h
+>> +++ b/arch/powerpc/platforms/powernv/pci.h
+>> @@ -148,6 +148,10 @@ struct pnv_phb {
+>>  			int			*m32_segmap;
+>>  			int			*io_segmap;
+>>  
+>> +			/* DMA32 segment maps - IODA1 only */
+>> +			unsigned long		dma32_count;
+>> +			int			*dma32_segmap;
+>> +
+>>  			/* IRQ chip */
+>>  			int			irq_chip_init;
+>>  			struct irq_chip		irq_chip;
+>> @@ -164,9 +168,6 @@ struct pnv_phb {
+>>  			 */
+>>  			unsigned char		pe_rmap[0x10000];
+>>  
+>> -			/* 32-bit TCE tables allocation */
+>> -			unsigned long		tce32_count;
+>> -
+>>  			/* TCE cache invalidate registers (physical and
+>>  			 * remapped)
+>>  			 */
+
+Thanks,
+Gavin
 
