@@ -1,185 +1,456 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50221 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754859AbbK0PdP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 27 Nov 2015 10:33:15 -0500
-Message-ID: <565877B5.9060503@arm.com>
-Date: Fri, 27 Nov 2015 15:33:09 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:37923 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752863AbbKQJNF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 04:13:05 -0500
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 17 Nov 2015 19:13:03 +1000
+Date: Tue, 17 Nov 2015 20:12:09 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com
+Subject: Re: [PATCH v7 26/50] powerpc/powernv: Create PEs at PCI hot plugging
+ time
+Message-ID: <20151117091208.GA20673@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-27-git-send-email-gwshan@linux.vnet.ibm.com>
+ <564ADDE0.8030904@ozlabs.ru>
 MIME-Version: 1.0
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	michals@xilinx.com, sorenb@xilinx.com, bhelgaas@google.com,
-	arnd@arndb.de, tinamdar@apm.com, treding@nvidia.com,
-	rjui@broadcom.com, Minghuan.Lian@freescale.com,
-	m-karicheri2@ti.com, hauke@hauke-m.de, dhdang@apm.com,
-	sbranden@broadcom.com
-CC: devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH v10] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-References: <1448636523-20503-1-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1448636523-20503-1-git-send-email-bharatku@xilinx.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <564ADDE0.8030904@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/11/15 15:02, Bharat Kumar Gogada wrote:
-> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
-> 
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> Acked-by: Rob Herring <robh@kernel.org>
-> ---
-> Changes for v10:
-> -> Changed MSI address to PCIe controller base.
-> -> Removed nwl_check_hwirq function, instead using bitmap_find_next_zero_area
->    API to do the same.
-> ---
->  .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
->  drivers/pci/host/Kconfig                           |   10 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pcie-xilinx-nwl.c                 | 1068 ++++++++++++++++++++
->  4 files changed, 1147 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
->  create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
-> 
-> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-> new file mode 100644
-> index 0000000..d070344
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-xilinx-nwl.c
+On Tue, Nov 17, 2015 at 06:57:20PM +1100, Alexey Kardashevskiy wrote:
+>On 11/05/2015 12:12 AM, Gavin Shan wrote:
+>>Currently, the PEs and their associated resources are assigned
+>>in ppc_md.pcibios_fixup() except those used by SRIOV VFs. The
+>>function is called for once after PCI probing and resources
+>>assignment is completed. So it isn't hotplug friendly.
+>>
+>>This creates PEs dynamically by ppc_md.pcibios_setup_bridge(), which
+>>is called on the event during system bootup and PCI hotplug: updating
+>>PCI bridge's windows after resource assignment/reassignment are done.
+>>For partial hotplug case, where not all PCI devices belonging to the
+>>PE are unplugged and plugged again, we just need unbinding/binding
+>>the affected PCI devices with the corresponding PE without creating
+>>new one.
+>>
+>>As there is no upstream bridge for root bus that needs to be covered
+>>by PE,
+>
+>
+>Does "that needs" part relate to a root bus or a an upstream bridge?
+>
 
-[...]
+root bus.
 
-> +#define MSI_ADDRESS				0xFD480000
-> +
+>>we have to create PE for root bus in ppc_md.pcibios_setup_bridge()
+>>before any other PEs can be created, as PE for root bus is the ancestor
+>>to anyone else.
+>>
+>>On the other hand, the windows of root port or the upstream port
+>
+>s/On the other hand, /Also/ ?
+>
 
-Really? Why do you bother having DT support then? You might as well
-hardcode everything, while you're at it.
+It's fine to keep "On the other hand".
 
-/me felling depressed now.
+>>of PCIe switch behind root port are extended to be PHB's aperatuses
+>
+>apertures?
+>
 
-> +struct nwl_msi {			/* MSI information */
-> +	struct irq_domain *msi_domain;
-> +	unsigned long *bitmap;
-> +	struct irq_domain *dev_domain;
-> +	struct mutex lock;		/* protect bitmap variable */
-> +	int irq_msi0;
-> +	int irq_msi1;
-> +};
-> +
-> +struct nwl_pcie {
-> +	struct device *dev;
-> +	void __iomem *breg_base;
-> +	void __iomem *pcireg_base;
-> +	void __iomem *ecam_base;
-> +	u32 phys_breg_base;		/* Physical Bridge Register Base */
-> +	u32 phys_pcie_reg_base;		/* Physical PCIe Controller Base */
-> +	u32 phys_ecam_base;		/* Physical Configuration Base */
+Will fix in next revision.
 
-All these u32 should be phys_addr_t. Not all the world is 32bit,
-fortunately.
+>>to accommodate the additonal resources needed by newly plugged devices
+>
+>s/additonal/additional
+>
 
-> +	u32 breg_size;
-> +	u32 pcie_reg_size;
-> +	u32 ecam_size;
-> +	int irq_intx;
-> +	int irq_misc;
-> +	u32 ecam_value;
-> +	u8 last_busno;
-> +	u8 root_busno;
-> +	u8 link_up;
-> +	struct nwl_msi msi;
-> +	struct irq_domain *legacy_irq_domain;
-> +};
+Will fix in next revision.
 
-[...]
+>>based on the fact: hotpluggable slot is behind root port or downstream
+>>port of the PCIe switch behind root port. The extension for those
+>>PCI brdiges' windows is done in ppc_md.pcibios_setup_bridge() as
+>>well.
+>
+>
+>I find it quite difficult to separate "cut-n-paste" changes from functional
+>changes... May be it is just me.
+>I would suggest splitting this patch into several. First define the
+>setup_bridge() callback, then rework pnv_pci_ioda_setup_PEs(),
+>pnv_pci_ioda_setup_seg(), pnv_pci_ioda_setup_DMA(), and then add "partial
+>hotplug" handling may be.
+>
+>Or just get "reviewed-by" from Ben :)
+>
 
-> +static void nwl_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> +{
-> +	phys_addr_t msi_addr = MSI_ADDRESS;
+Ok. I'll try to split it accordingly in next revision. Nope, I need your
+reviewed-by :-)
 
-Fix this.
+>
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c | 240 +++++++++++++++++-------------
+>>  arch/powerpc/platforms/powernv/pci.h      |   1 +
+>>  2 files changed, 138 insertions(+), 103 deletions(-)
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index 5e6745f..0bb0056 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -975,6 +975,15 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+>>  				pci_name(dev));
+>>  			continue;
+>>  		}
+>>+
+>>+		/*
+>>+		 * In partial hotplug case, the PCI device might be still
+>>+		 * associated with the PE and needn't be attached to the
+>>+		 * PE again.
+>>+		 */
+>>+		if (pdn->pe_number != IODA_INVALID_PE)
+>>+			continue;
+>>+
+>>  		pdn->pe_number = pe->pe_number;
+>>  		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
+>>  			pnv_ioda_setup_same_PE(dev->subordinate, pe);
+>>@@ -992,9 +1001,26 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>>  	struct pci_controller *hose = pci_bus_to_host(bus);
+>>  	struct pnv_phb *phb = hose->private_data;
+>>  	struct pnv_ioda_pe *pe = NULL;
+>>+	int pe_num;
+>>+
+>>+	/*
+>>+	 * In partial hotplug case, the PE instance might be still alive.
+>>+	 * We should reuse it instead of allocating a new one.
+>>+	 */
+>>+	pe_num = phb->ioda.pe_rmap[bus->number << 8];
+>>+	if (pe_num != IODA_INVALID_PE) {
+>>+		pe = &phb->ioda.pe_array[pe_num];
+>>+		pnv_ioda_setup_same_PE(bus, pe);
+>>+		return NULL;
+>>+	}
+>>+
+>>+	/* PE number for root bus should have been reserved */
+>>+	if (pci_is_root_bus(bus) &&
+>>+	    phb->ioda.root_pe_idx != IODA_INVALID_PE)
+>>+		pe = &phb->ioda.pe_array[phb->ioda.root_pe_idx];
+>>
+>>  	/* Check if PE is determined by M64 */
+>>-	if (phb->pick_m64_pe)
+>>+	if (!pe && phb->pick_m64_pe)
+>>  		pe = phb->pick_m64_pe(bus, all);
+>>
+>>  	/* The PE number isn't pinned by M64 */
+>>@@ -1036,46 +1062,6 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>>  	return pe;
+>>  }
+>>
+>>-static void pnv_ioda_setup_PEs(struct pci_bus *bus)
+>>-{
+>>-	struct pci_dev *dev;
+>>-
+>>-	pnv_ioda_setup_bus_PE(bus, false);
+>>-
+>>-	list_for_each_entry(dev, &bus->devices, bus_list) {
+>>-		if (dev->subordinate) {
+>>-			if (pci_pcie_type(dev) == PCI_EXP_TYPE_PCI_BRIDGE)
+>>-				pnv_ioda_setup_bus_PE(dev->subordinate, true);
+>>-			else
+>>-				pnv_ioda_setup_PEs(dev->subordinate);
+>>-		}
+>>-	}
+>>-}
+>>-
+>>-/*
+>>- * Configure PEs so that the downstream PCI buses and devices
+>>- * could have their associated PE#. Unfortunately, we didn't
+>>- * figure out the way to identify the PLX bridge yet. So we
+>>- * simply put the PCI bus and the subordinate behind the root
+>>- * port to PE# here. The game rule here is expected to be changed
+>>- * as soon as we can detected PLX bridge correctly.
+>>- */
+>>-static void pnv_pci_ioda_setup_PEs(void)
+>>-{
+>>-	struct pci_controller *hose, *tmp;
+>>-	struct pnv_phb *phb;
+>>-
+>>-	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+>>-		phb = hose->private_data;
+>>-
+>>-		/* M64 layout might affect PE allocation */
+>>-		if (phb->reserve_m64_pe)
+>>-			phb->reserve_m64_pe(hose->bus, NULL, true);
+>>-
+>>-		pnv_ioda_setup_PEs(hose->bus);
+>>-	}
+>>-}
+>>-
+>>  #ifdef CONFIG_PCI_IOV
+>>  static int pnv_pci_vf_release_m64(struct pci_dev *pdev, u16 num_vfs)
+>>  {
+>>@@ -2391,8 +2377,13 @@ static void pnv_pci_ioda2_table_free_pages(struct iommu_table *tbl)
+>>  static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>>  				       struct pnv_ioda_pe *pe)
+>>  {
+>>+	unsigned int weight;
+>>  	int64_t rc;
+>>
+>>+	weight = pnv_pci_ioda_pe_dma_weight(pe);
+>>+	if (!weight)
+>>+		return;
+>>+
+>>  	/* TVE #1 is selected by PCI address bit 59 */
+>>  	pe->tce_bypass_base = 1ull << 59;
+>>
+>>@@ -2424,33 +2415,6 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>>  		pnv_ioda_setup_bus_dma(pe, pe->pbus);
+>>  }
+>>
+>>-static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
+>>-{
+>>-	struct pnv_ioda_pe *pe;
+>>-
+>>-	pnv_pci_ioda_setup_opal_tce_kill(phb);
+>>-
+>>-	list_for_each_entry(pe, &phb->ioda.pe_list, list)
+>>-		pnv_pci_ioda1_setup_dma_pe(phb, pe);
+>>-}
+>>-
+>>-static void pnv_pci_ioda2_setup_dma(struct pnv_phb *phb)
+>>-{
+>>-	struct pnv_ioda_pe *pe;
+>>-	unsigned int weight;
+>>-
+>>-	pnv_pci_ioda_setup_opal_tce_kill(phb);
+>>-
+>>-	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+>>-		weight = pnv_pci_ioda_pe_dma_weight(pe);
+>>-		if (!weight)
+>>-			continue;
+>>-
+>>-		pe_info(pe, "Assign DMA32 space\n");
+>>-		pnv_pci_ioda2_setup_dma_pe(phb, pe);
+>>-	}
+>>-}
+>>-
+>>  #ifdef CONFIG_PCI_MSI
+>>  static void pnv_ioda2_msi_eoi(struct irq_data *d)
+>>  {
+>>@@ -2914,37 +2878,6 @@ static void pnv_ioda_setup_pe_seg(struct pnv_ioda_pe *pe)
+>>  	}
+>>  }
+>>
+>>-static void pnv_pci_ioda_setup_seg(void)
+>>-{
+>>-	struct pci_controller *tmp, *hose;
+>>-	struct pnv_phb *phb;
+>>-	struct pnv_ioda_pe *pe;
+>>-
+>>-	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+>>-		phb = hose->private_data;
+>>-		list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+>>-			pnv_ioda_setup_pe_seg(pe);
+>>-		}
+>>-	}
+>>-}
+>>-
+>>-static void pnv_pci_ioda_setup_DMA(void)
+>>-{
+>>-	struct pci_controller *hose, *tmp;
+>>-	struct pnv_phb *phb;
+>>-
+>>-	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+>>-		phb = hose->private_data;
+>>-		if (phb->type == PNV_PHB_IODA1)
+>>-			pnv_pci_ioda1_setup_dma(phb);
+>>-		else
+>>-			pnv_pci_ioda2_setup_dma(phb);
+>>-
+>>-		/* Mark the PHB initialization done */
+>>-		phb->initialized = 1;
+>>-	}
+>>-}
+>>-
+>>  static void pnv_pci_ioda_create_dbgfs(void)
+>>  {
+>>  #ifdef CONFIG_DEBUG_FS
+>>@@ -2955,6 +2888,9 @@ static void pnv_pci_ioda_create_dbgfs(void)
+>>  	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+>>  		phb = hose->private_data;
+>>
+>>+		/* Notify initialization of PHB done */
+>>+		phb->initialized = 1;
+>>+
+>>  		sprintf(name, "PCI%04x", hose->global_number);
+>>  		phb->dbgfs = debugfs_create_dir(name, powerpc_debugfs_root);
+>>  		if (!phb->dbgfs)
+>>@@ -2966,10 +2902,6 @@ static void pnv_pci_ioda_create_dbgfs(void)
+>>
+>>  static void pnv_pci_ioda_fixup(void)
+>>  {
+>>-	pnv_pci_ioda_setup_PEs();
+>>-	pnv_pci_ioda_setup_seg();
+>>-	pnv_pci_ioda_setup_DMA();
+>>-
+>>  	pnv_pci_ioda_create_dbgfs();
+>>
+>>  #ifdef CONFIG_EEH
+>>@@ -3019,6 +2951,104 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
+>>  	return phb->ioda.io_segsize;
+>>  }
+>>
+>>+/*
+>>+ * We are updating root port or the upstream port of the
+>>+ * bridge behind the root port with PHB's windows in order
+>>+ * to accommodate the changes on required resources during
+>>+ * PCI (slot) hotplug, which is connected to either root
+>>+ * port or the downstream ports of PCIe switch behind the
+>>+ * root port.
+>>+ */
+>>+static void pnv_pci_fixup_bridge_resources(struct pci_bus *bus,
+>>+					   unsigned long type)
+>>+{
+>>+	struct pci_controller *hose = pci_bus_to_host(bus);
+>>+	struct pnv_phb *phb = hose->private_data;
+>>+	struct pci_dev *bridge = bus->self;
+>>+	struct resource *r, *w;
+>>+	int i;
+>>+
+>>+	/* Check if we need apply fixup to the bridge's windows */
+>>+	if (!pci_is_root_bus(bridge->bus) &&
+>>+	    !pci_is_root_bus(bridge->bus->self->bus))
+>>+		return;
+>>+
+>>+	/* Fixup the resoureces */
+>
+>
+>s/resoureces/resources/
+>
 
-> +
-> +	msg->address_lo = lower_32_bits(msi_addr);
-> +	msg->address_hi = upper_32_bits(msi_addr);
-> +	msg->data = data->hwirq;
-> +}
+Will fix.
 
-[...]
+>>+	for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
+>>+		r = &bridge->resource[PCI_BRIDGE_RESOURCES + i];
+>>+		if (!r->flags || !r->parent)
+>>+			continue;
+>>+
+>>+		w = NULL;
+>>+		if (r->flags & type & IORESOURCE_IO)
+>>+			w = &hose->io_resource;
+>>+		else if (pnv_pci_is_mem_pref_64(r->flags) &&
+>>+			 (type & IORESOURCE_PREFETCH) &&
+>>+			 phb->ioda.m64_segsize)
+>>+			w = &hose->mem_resources[1];
+>>+		else if (r->flags & type & IORESOURCE_MEM)
+>>+			w = &hose->mem_resources[0];
+>>+
+>>+		r->start = w->start;
+>>+		r->end = w->end;
+>>+	}
+>>+}
+>>+
+>>+static void pnv_pci_setup_bridge(struct pci_bus *bus,
+>>+				 unsigned long type)
+>>+{
+>>+	struct pci_controller *hose = pci_bus_to_host(bus);
+>>+	struct pnv_phb *phb = hose->private_data;
+>>+	struct pci_dev *bridge = bus->self;
+>>+	struct pnv_ioda_pe *pe;
+>>+	bool all = (pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE);
+>>+
+>>+	 /* The PE for root bus should be realized before any one else */
+>>+	if (!phb->ioda.root_pe_populated) {
+>>+		pe = pnv_ioda_setup_bus_PE(phb->hose->bus, false);
+>>+		if (pe) {
+>>+			phb->ioda.root_pe_idx = pe->pe_number;
+>>+			phb->ioda.root_pe_populated = true;
+>>+		}
+>>+	}
+>>+
+>>+	/* Extend bridge's windows if necessary */
+>>+	pnv_pci_fixup_bridge_resources(bus, type);
+>>+
+>>+	/* Don't assign PE to PCI bus, which doesn't have subordinate devices */
+>>+	if (list_empty(&bus->devices))
+>>+		return;
+>>+
+>>+	/* Reserve PEs according to used M64 resources */
+>>+	if (phb->reserve_m64_pe)
+>>+		phb->reserve_m64_pe(bus, NULL, all);
+>>+
+>>+	/*
+>>+	 * Assign PE. We might run here because of partial hotplug.
+>>+	 * For the case, we just pick up the existing PE and should
+>>+	 * not allocate resources again.
+>>+	 */
+>>+	pe = pnv_ioda_setup_bus_PE(bus, all);
+>>+	if (!pe)
+>>+		return;
+>>+
+>>+	/* Setup MMIO mapping */
+>>+	pnv_ioda_setup_pe_seg(pe);
+>>+
+>>+	/* Setup DMA */
+>>+	switch (phb->type) {
+>>+	case PNV_PHB_IODA1:
+>>+		pnv_pci_ioda1_setup_dma_pe(phb, pe);
+>>+		break;
+>>+	case PNV_PHB_IODA2:
+>>+		pnv_pci_ioda2_setup_dma_pe(phb, pe);
+>>+		break;
+>>+	default:
+>>+		pr_warn("%s: No DMA for PHB#%d (type %d)\n",
+>>+			__func__, phb->hose->global_number, phb->type);
+>>+	}
+>>+}
+>>+
+>>  #ifdef CONFIG_PCI_IOV
+>>  static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
+>>  						      int resno)
+>>@@ -3095,6 +3125,7 @@ static const struct pci_controller_ops pnv_pci_ioda_controller_ops = {
+>>  #endif
+>>  	.enable_device_hook	= pnv_pci_enable_device_hook,
+>>  	.window_alignment	= pnv_pci_window_alignment,
+>>+	.setup_bridge		= pnv_pci_setup_bridge,
+>>  	.reset_secondary_bus	= pnv_pci_reset_secondary_bus,
+>>  	.dma_set_mask		= pnv_pci_ioda_dma_set_mask,
+>>  	.dma_get_required_mask	= pnv_pci_ioda_dma_get_required_mask,
+>>@@ -3168,6 +3199,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  	if (phb->regs == NULL)
+>>  		pr_err("  Failed to map registers !\n");
+>>
+>>+	/* Initialize TCE kill register */
+>>+	pnv_pci_ioda_setup_opal_tce_kill(phb);
+>>+
+>>  	/* Initialize more IODA stuff */
+>>  	phb->ioda.total_pe_num = 1;
+>>  	prop32 = of_get_property(np, "ibm,opal-num-pes", NULL);
+>>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>index a8ba97f..ef5271a 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.h
+>>+++ b/arch/powerpc/platforms/powernv/pci.h
+>>@@ -121,6 +121,7 @@ struct pnv_phb {
+>>  			unsigned int		total_pe_num;
+>>  			unsigned int		reserved_pe_idx;
+>>  			unsigned int		root_pe_idx;
+>>+			bool			root_pe_populated;
+>>
+>>  			/* 32-bit MMIO window */
+>>  			unsigned int		m32_size;
+>>
 
-> +static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
-> +{
-> +	struct platform_device *pdev = to_platform_device(pcie->dev);
-> +	u32 breg_val, ecam_val, first_busno = 0;
-> +	int err;
-> +	int check_link_up = 0;
-> +
-> +	/* Check for BREG present bit */
-> +	breg_val = nwl_bridge_readl(pcie, E_BREG_CAPABILITIES) & BREG_PRESENT;
-> +	if (!breg_val) {
-> +		dev_err(pcie->dev, "BREG is not present\n");
-> +		return breg_val;
-> +	}
-> +	/* Write bridge_off to breg base */
-> +	nwl_bridge_writel(pcie, (u32)(pcie->phys_breg_base),
-> +			  E_BREG_BASE_LO);
-> +
+Thanks,
+Gavin
 
-I love the casting of a u32 to a u32. You have to program E_BREG_BASE_HI
-as well, once you've fixed the data type.
-
-> +	/* Enable BREG */
-> +	nwl_bridge_writel(pcie, ~BREG_ENABLE_FORCE & BREG_ENABLE,
-> +			  E_BREG_CONTROL);
-> +
-> +	/* Disable DMA channel registers */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, BRCFG_PCIE_RX0) |
-> +			  CFG_DMA_REG_BAR, BRCFG_PCIE_RX0);
-> +
-> +	/* Enable the bridge config interrupt */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, BRCFG_INTERRUPT) |
-> +			  BRCFG_INTERRUPT_MASK, BRCFG_INTERRUPT);
-> +	/* Enable Ingress subtractive decode translation */
-> +	nwl_bridge_writel(pcie, SET_ISUB_CONTROL, I_ISUB_CONTROL);
-> +
-> +	/* Enable msg filtering details */
-> +	nwl_bridge_writel(pcie, CFG_ENABLE_MSG_FILTER_MASK,
-> +			  BRCFG_PCIE_RX_MSG_FILTER);
-> +	do {
-> +		err = nwl_pcie_link_up(pcie, PHY_RDY_LINKUP);
-> +		if (err != 1) {
-> +			check_link_up++;
-> +			if (check_link_up > LINKUP_ITER_CHECK)
-> +				return -ENODEV;
-> +			mdelay(1000);
-> +		}
-> +	} while (!err);
-> +
-> +	/* Check for ECAM present bit */
-> +	ecam_val = nwl_bridge_readl(pcie, E_ECAM_CAPABILITIES) & E_ECAM_PRESENT;
-> +	if (!ecam_val) {
-> +		dev_err(pcie->dev, "ECAM is not present\n");
-> +		return ecam_val;
-> +	}
-> +
-> +	/* Enable ECAM */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, E_ECAM_CONTROL) |
-> +			  E_ECAM_CR_ENABLE, E_ECAM_CONTROL);
-> +	/* Write ecam_value on ecam_control */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, E_ECAM_CONTROL) |
-> +			  (pcie->ecam_value << E_ECAM_SIZE_SHIFT),
-> +			  E_ECAM_CONTROL);
-> +	/* Write phy_reg_base to ecam base */
-> +	nwl_bridge_writel(pcie, (u32)pcie->phys_ecam_base, E_ECAM_BASE_LO);
-
-Same here.
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
