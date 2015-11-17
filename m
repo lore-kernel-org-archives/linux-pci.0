@@ -1,77 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:59908 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965893AbbKEXqn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2015 18:46:43 -0500
-Received: from localhost
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 6 Nov 2015 09:46:41 +1000
-Date: Fri, 6 Nov 2015 10:45:37 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Daniel Axtens <dja@axtens.net>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, aik@ozlabs.ru, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, frowand.list@gmail.com
-Subject: Re: [PATCH v7 03/50] powerpc/pci: Cleanup on struct
- pci_controller_ops
-Message-ID: <20151105234537.GB30465@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-4-git-send-email-gwshan@linux.vnet.ibm.com>
- <87si4khyau.fsf@gamma.ozlabs.ibm.com>
+Received: from hauke-m.de ([5.39.93.123]:37386 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752805AbbKQTdy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Nov 2015 14:33:54 -0500
+Message-ID: <564B811D.4000401@hauke-m.de>
+Date: Tue, 17 Nov 2015 20:33:49 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87si4khyau.fsf@gamma.ozlabs.ibm.com>
+To: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Ray Jui <rjui@broadcom.com.com>,
+	zajec5@gmail.com
+Subject: Re: [PATCH] PCI: iproc: hide CONFIG_PCIE_IPROC
+References: <11420214.lrdhuUq0ZO@wuerfel>
+In-Reply-To: <11420214.lrdhuUq0ZO@wuerfel>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 06, 2015 at 09:32:57AM +1100, Daniel Axtens wrote:
->Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
->
->> Each PHB has one instance of "struct pci_controller_ops", which
->> includes various callbacks called by PCI subsystem. In the definition
->> of this struct, some callbacks have explicit names for its arguments,
->> but the left don't have.
->>
->> This adds all explicit names of the arguments to the callbacks in
->> "struct pci_controller_ops" so that the code looks consistent.
->
->Thank you very much for doing this - I should have done it the first
->time I created pci_controller_ops.
->
->They all look good, with one nit-pick:
->
->> -	void		(*shutdown)(struct pci_controller *);
->> +	void		(*shutdown)(struct pci_controller *hose);
->
->I think we're trying to move from hose to phb in new code.
->
+On 11/17/2015 05:08 PM, Arnd Bergmann wrote:
+> PCIE_IPROC_BCMA does not require CONFIG_OF in Kconfig, but
+> CONFIG_PCIE_IPROC does, so we can get a warning when building
+> for an ARM platform without DT support:
+> 
+> warning: (PCIE_IPROC_PLATFORM && PCIE_IPROC_BCMA) selects PCIE_IPROC which has unmet direct dependencies (PCI && OF && (ARM || ARM64))
+> 
+> It turns out that CONFIG_PCIE_IPROC never needs to be enabled
+> by a user anyway, we can simply rely on it being selected
+> implictly through either PCIE_IPROC_PLATFORM or PCIE_IPROC_BCMA.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 4785ffbdc9b5 ("PCI: iproc: Add BCMA PCIe driver")
+> 
 
-Nope, We don't have the movement as I explained in previous reply:
-hose for pci_controller while phb represents pnv_phb on PowerNV
-platform.
+Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
 
->Once that is fixed:
->  Reviewed-by: Daniel Axtens <dja@axtens.net>
->
+Thanks for spotting and fixing this.
 
-Thanks,
-Gavin
-
->
->>  };
->>  
->>  /*
->> -- 
->> 2.1.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+hauke
