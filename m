@@ -1,54 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1448314314.15591.1.camel@oracle.com>
-Subject: Re: [PATCH v8 00/61] PCI: Resource allocation cleanup for v4.4
-From: Khalid Aziz <khalid.aziz@oracle.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0083.outbound.protection.outlook.com ([104.47.38.83]:7485
+	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750853AbbKQFCA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 00:02:00 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Ray Jui <rjui@broadcom.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	"dhdang@apm.com" <dhdang@apm.com>,
+	"sbranden@broadcom.com" <sbranden@broadcom.com>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Mon, 23 Nov 2015 14:31:54 -0700
-In-Reply-To: <CAE9FiQU5YkwFVuEiDOCT+BDrrSLGhTiDfW7GZV6qVtBRKDBpDw@mail.gmail.com>
-References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
-	 <5633E570.6040906@oracle.com>
-	 <CAE9FiQU5YkwFVuEiDOCT+BDrrSLGhTiDfW7GZV6qVtBRKDBpDw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH v8] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+Date: Tue, 17 Nov 2015 05:01:54 +0000
+Message-ID: <8520D5D51A55D047800579B0941471982585CBE6@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>
+ <564A55C9.40200@broadcom.com>
+In-Reply-To: <564A55C9.40200@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2015-10-30 at 18:53 -0700, Yinghai Lu wrote:
-> On Fri, Oct 30, 2015 at 2:47 PM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
+ 
+> On 11/10/2015 10:33 PM, Bharat Kumar Gogada wrote:
+> > Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
 > >
-> > I applied patches 1-8 and 11-16 to 4.3.0-rc7 to test on sparc platforms. I
-> > am seeing a "can't claim BAR" message on a T4:
-> >
-> > pci 0000:04:00.0: can't claim BAR 6 [mem 0x84000000000-0x8400000ffff]:
-> > address conflict with 0000:04:00.0 [mem 0x84000000000-0x840007fffff]
+> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> > ---
+> > Added logic to allocate contiguous hwirq in nwl_irq_domain_alloc function.
+> > Moved MSI functionality to separate functions.
+> > Changed error return values.
+> > +static int nwl_irq_domain_alloc(struct irq_domain *domain, unsigned int
+> virq,
+> > +				unsigned int nr_irqs, void *args) {
+> > +	struct nwl_pcie *pcie = domain->host_data;
+> > +	struct nwl_msi *msi = &pcie->msi;
+> > +	unsigned long bit;
+> > +	int i;
+> > +
+> > +	mutex_lock(&msi->lock);
+> > +	for (i = 0; i < nr_irqs; i++) {
+> > +		bit = find_first_zero_bit(msi->used, INT_PCI_MSI_NR);
+> > +		if (bit < INT_PCI_MSI_NR)
+> > +			set_bit(bit, msi->used);
+> > +		else
+> > +			bit = -ENOSPC;
 > 
-> PCI: scan_bus[/pci@400/pci@1/pci@0/pci@0/pci@0] bus no 4
->   * /pci@400/pci@1/pci@0/pci@0/pci@0/display@0
->     create device, devfn: 0, type: display
->     class: 0x30000 device name: 0000:04:00.0
->     parse addresses (80 bytes) @ fff8001fffe34f40
->   start: 84000000000, end: 840007fffff, i: 10
->   start: 84000800000, end: 8400081ffff, i: 14
->   start: 85100000000, end: 8510000007f, i: 18
->   start: 84000000000, end: 8400000ffff, i: 30
+> Don't you get a compiler warning with this? Note bit is unsigned long and you
+> assign -ENOSPC to it.
 > 
-> so the BAR 6 the ROM bar is overlapping with BAR0.
-> and the ROM bar get rejected.
+Ya that's a mistake, I will address these in next patch.
+> > +
+> > +		if (bit < 0) {
 > 
-> Looks like only the device BAR6 is not assigned form OF?
+> how can bit < 0 if it's unsigned long?
 > 
-
-Hi Yinghai,
-
-Any progress on this? Do you need any more information from me?
-
-Thanks,
-Khalid
+> > +			mutex_unlock(&msi->lock);
+> > +			return bit;
+> > +		}
+> > +
+> > +		irq_domain_set_info(domain, virq, bit, &nwl_irq_chip,
+> > +				domain->host_data, handle_simple_irq,
+> > +				NULL, NULL);
+> 
+> nit, but if you do irq_domain_set_info(domain, virq + i, ...
+> 
+> then you can get rid of the code below.
+> 
+> > +		virq = virq + 1;
+> > +	}
+> > +	mutex_unlock(&msi->lock);
+> > +	return 0;
+> > +}
+> > +
 
