@@ -1,127 +1,210 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-References: <20151109171042.GA11909@red-moon> <6488357.xJV65iBRHq@wuerfel>
- <564185B6.8040006@linux.intel.com> <20151111174647.GA30051@red-moon>
- <56445117.8090307@linux.intel.com> <56449246.2010308@semihalf.com>
- <56449C55.2090001@linux.intel.com> <5644A613.2010304@semihalf.com>
- <5644AAB9.6010700@linux.intel.com> <5645DE3A.7040406@semihalf.com>
- <20151113170316.GB15253@red-moon>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <56462294.3060701@linux.intel.com>
-Date: Sat, 14 Nov 2015 01:49:08 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:51333 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751708AbbKQBeZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 20:34:25 -0500
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 17 Nov 2015 11:34:23 +1000
+Date: Tue, 17 Nov 2015 12:33:21 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Daniel Axtens <dja@axtens.net>, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+Subject: Re: [PATCH v7 11/50] powerpc/powernv: IO and M32 mapping based on
+ PCI device resources
+Message-ID: <20151117013321.GA30246@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-12-git-send-email-gwshan@linux.vnet.ibm.com>
+ <87lha3j3n0.fsf@gamma.ozlabs.ibm.com>
+ <20151112045525.GA6174@gwshan>
+ <56498D67.1090600@ozlabs.ru>
 MIME-Version: 1.0
-In-Reply-To: <20151113170316.GB15253@red-moon>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56498D67.1090600@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/11/14 1:03, Lorenzo Pieralisi wrote:
-> Please trim your emails, thanks.
-> 
-> On Fri, Nov 13, 2015 at 01:57:30PM +0100, Tomasz Nowicki wrote:
->> On 12.11.2015 16:05, Jiang Liu wrote:
-> 
-> [...]
-> 
->>>>> IA64 actually ignores the translation type flag and just assume it's
->>>>> TypeTranslation, so there may be some IA64 BIOS implementations
->>>>> accidentally using TypeStatic. That's why we parsing SparseTranslation
->>>>> flag without checking TranslationType flag. I feel ARM64 may face the
->>>>> same situation as IA64:(
->>>>>
->>>>> We may expect (TypeStatic, 0-offset) and (TypeTranslation,
->>>>> non-0-offset) in real word. For other two combinations, I haven't
->>>>> found a real usage yet, though theoretically they are possible.
-> 
-> I do not understand why (TypeStatic, non-0-offset) is not a valid
-> option. Aren't there any (x86) platforms with a CPU<->PCI _physical_
-> address space offset out there (I am talking about memory space) ?
-
-It's possible, but we have found such a design yet. If we eventually
-encounter such a case, we need to enhance x86 specific code to support
-it.
-
-> 
->>>> I think we should not bend the generic code for IA64 only and expose
->>>> other platforms to the same issue. Instead, lets interpret spec
->>>> correctly and create IA64 quirk for the sake of backward compatibility.
->>>> Thoughts?
->>> I think there are at least two factors related to this issue.
+On Mon, Nov 16, 2015 at 07:01:43PM +1100, Alexey Kardashevskiy wrote:
+>On 11/12/2015 03:55 PM, Gavin Shan wrote:
+>>On Thu, Nov 12, 2015 at 02:30:27PM +1100, Daniel Axtens wrote:
+>>>Hi Gavin,
 >>>
->>> First we still lack of a way/framework to fix errors in ACPI resource
->>> descriptors. Recently we have refined ACPI resource parsing interfaces
->>> and enforced strictly sanity check. This brings us some regressions
->>> which are really BIOS flaws, but it used to work and now breaks:(
->>> I'm still struggling to get those regressions fixed. So we may run
->>> into the same situation if we enforce strict check for TranslationType:(
+>>>Sorry to have taken so long to resume these reviews!
 >>>
->>> Second enforcing strict check doesn't bring us too much benifits.
->>> Translation type is almost platform specific, and we haven't found a
->>> platform support both TypeTranslation and TypeStatic, so arch code
->>> may assume the correct translation type no matter what BIOS reports.
->>> So it won't hurt us even BIOS reports wrong translation type.
-> 
-> TBH I still do not understand what TranslationType actually means,
-> I will ask whoever added that to the specification to understand it.
-> 
->> That is my point, lets pass down all we need from resource range
->> descriptors to arch code, then archs with known quirks can whatever
->> is needed to make it works. However, generic code like
->> acpi_decode_space cannot play with offsets with silent IA64
->> assumption.
 >>
->> To sum it up, your last patch looks ok to me modulo Lorenzo's concern:
->>>>>>>> If we go with this approach though, you are not adding the offset to
->>>>>>>> the resource when parsing the memory spaces in acpi_decode_space(),
->>>>>>>> are we
->>>>>>>> sure that's what we really want ?
->>>>>>>>
->>>>>>>> In DT, a host bridge range has a:
->>>>>>>>
->>>>>>>> - CPU physical address
->>>>>>>> - PCI bus address
->>>>>>>>
->>>>>>>> We use that to compute the offset between primary bus (ie CPU
->> physical
->>>>>>>> address) and secondary bus (ie PCI bus address).
->>>>>>>>
->>>>>>>> The value ending up in the PCI resource struct (for memory space) is
->>>>>>>> the CPU physical address, if you do not add the offset in
->>>>>>>> acpi_decode_space
->>>>>>>> that does not hold true on platforms where CPU<->PCI offset != 0 on
->>>>>>>> ACPI,
->>>>>>>> am I wrong ?
->> His concern is that your patch will cause:
->> acpi_pci_root_validate_resources(&device->dev, list,
->> 				 IORESOURCE_MEM);
->> to fail now.
-> 
-> Not really. My concern is that there might be platforms out there with
-> an offset between the CPU and PCI physical address spaces, and if we
-> remove the offset value in acpi_decode_space we can break them,
-> because in the kernel struct resource data we have to have CPU physical
-> addresses, not PCI ones. If offset == 0, we are home and dry, I do not
-> understand why that's a given, which is what we would assume if Jiang's
-> patch is merged as-is unless I am mistaken.
-We try to exclude offset from struct resource in generic ACPI code,
-and it's the arch's responsibility to decide how to manipulate struct
-resource object if offset is not zero.
+>>Thanks for your review, Daniel!
+>>
+>>>>Currently, the IO and M32 segments are mapped to the corresponding
+>>>>PE based on the windows of the parent bridge of PE's primary bus.
+>>>>It's not going to work when the windows of root port or upstream
+>>>>port of the PCIe switch behind root port are extended to PHB's
+>>>>aperatuses in order to support hotplug in subsequent patch.
+>>>I'm not _entirely_ sure I understand this.
+>>>
+>>>I *think* you mean PHB's apertures (i.e. s/aperatuses/apertures/)?
+>>>
+>>
+>>I'll fix the typo in next revision.
+>>
+>>>>This fixes the issue by mapping IO and M32 segments based on the
+>>>>resources of the PCI devices included in the PE, instead of the
+>>>>windows of the parent bridge of the PE's primary bus.
+>>>
+>>>This solution seems to make a lot of sense, but I don't have a very good
+>>>understanding of PCI yet: why was it done that way and not this way
+>>>originally? Looking at the code, it looks like the old way was simple
+>>>but didn't support SR-IOV?
+>>>
+>>
+>>It's not related to SRIOV. Originally, the IO or M32 segments are mapped
+>>according to the bridge's windows.
+>
+>
+>Sorry, I do not understand what this means...
+>
 
-Currently offset is always zero for x86, and IA64 has arch specific
-code to handle non-zero offset. So we should be safe without breaking
-existing code. For ARM64, it's a little different from IA64 so it's
-hard to share code between IA64 and ARM64.
+Before this patchset, the IO or M32 segments consumed by one PE are mapped
+according to the windows of PCI bridge of the PE's primary bus if the PE
+isn't including all subordinate PCI buses orginated from the bridge. Otherwise,
+the bridge's windows should be taken into account as well.
 
-> 
-> Thanks,
-> Lorenzo
-> 
+>
+>>The bridge windows on root port or the
+>>upstream port of the switch behind that will be extended to PHB's apertures.
+>
+>What does "extended" mean here and why would the windows be extended anyway?
+>
+
+It's reserving IO or memory resource for possible plugged adapters in the future.
+
+>>If we still use bridge's windows, all IO and M32 resources are mapped/assigned
+>>to the PE corresponding to PCI bus#1 or PCI bus#2. That's not correct any more.
+>>So the correct way is to do the mapping based on IO or M32 BARs of the devices
+>>included in the PE.
+>
+>In this patch I see quite a lot of code movements and I fail to spot the
+>actual change here...
+>
+>
+>It used to be a single loop:
+>
+>pci_bus_for_each_resource(pe->pbus, res, i) {
+>	/* do stuff for each @res */
+>}
+>
+>and now it is 2 loops inside another loop:
+>
+>list_for_each_entry(pdev, &pe->pbus->devices, bus_list) {
+>	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+>		res = &pdev->resource[i];
+>		/* do stuff for each @res */
+>	}
+>
+>	for (i = 0; i <= PCI_BRIDGE_RESOURCE_NUM; i++) {
+>	        res = &pdev->resource[PCI_BRIDGE_RESOURCES + i];
+>		/* do stuff for each @res */
+>	}
+>}
+>
+>
+>Is that correct? If yes, why is not the patch as simple as this? If no, what
+>did I miss?
+>
+
+That's correct. The resource tracked by the PCI bridge windows can belonged
+to another PE instead the one tracked by @pe in the code.
+
+>
+>
+>>
+>>>There are a few comments inline as well.
+>>>
+>>>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>index 553d3f3..4ab93f8 100644
+>>>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>@@ -2741,71 +2741,90 @@ truncate_iov:
+>>>>  }
+>>>>  #endif /* CONFIG_PCI_IOV */
+>>>>
+>>>>-/*
+>>>>- * This function is supposed to be called on basis of PE from top
+>>>>- * to bottom style. So the the I/O or MMIO segment assigned to
+>>>>- * parent PE could be overrided by its child PEs if necessary.
+>>>>- */
+>>>>-static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>>>>-				  struct pnv_ioda_pe *pe)
+>>>>+static int pnv_ioda_setup_one_res(struct pnv_ioda_pe *pe,
+>>>>+				  struct resource *res)
+>>>>  {
+>>>>-	struct pnv_phb *phb = hose->private_data;
+>>>>+	struct pnv_phb *phb = pe->phb;
+>>>>  	struct pci_bus_region region;
+>>>>-	struct resource *res;
+>>>>-	unsigned int segsize;
+>>>>-	int *segmap, index, i;
+>>>>+	unsigned int index, segsize;
+>>>>+	int *segmap;
+>>>>  	uint16_t win;
+>>>>  	int64_t rc;
+>>>
+>>>s/int64_t/s64/;
+>>>I think we might also want to change the uint16_t as well.
+>>>
+>>
+>>As I explained before, I changed it from s64 to int64_t and I won't change it
+>>back since both of them are fine. Same situation to uint16 here. If we really
+>>want to clean it all at once, I can do that later, but not in this patchset.
+>>
+>>>>-	/*
+>>>>-	 * NOTE: We only care PCI bus based PE for now. For PCI
+>>>>-	 * device based PE, for example SRIOV sensitive VF should
+>>>>-	 * be figured out later.
+>>>>-	 */
+>>>>-	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
+>>>>+	if (!res->parent || !res->flags || res->start > res->end)
+>>>>+		return 0;
+>>>>
+>>>>-	pci_bus_for_each_resource(pe->pbus, res, i) {
+>>>>-		if (!res || !res->flags ||
+>>>>-		    res->start > res->end)
+>>>>-			continue;
+>>>>+	if (res->flags & IORESOURCE_IO) {
+>>>>+		region.start = res->start - phb->ioda.io_pci_base;
+>>>>+		region.end   = res->end - phb->ioda.io_pci_base;
+>>>>+		segsize      = phb->ioda.io_segsize;
+>>>>+		segmap       = phb->ioda.io_segmap;
+>>>>+		win          = OPAL_IO_WINDOW_TYPE;
+>>>>+	} else if ((res->flags & IORESOURCE_MEM) &&
+>>>>+		   !pnv_pci_is_mem_pref_64(res->flags)) {
+>>>>+		region.start = res->start -
+>>>>+			       phb->hose->mem_offset[0] -
+>>>>+			       phb->ioda.m32_pci_base;
+>>>>+		region.end   = res->end -
+>>>>+			       phb->hose->mem_offset[0] -
+>>>>+			       phb->ioda.m32_pci_base;
+>>>>+		segsize      = phb->ioda.m32_segsize;
+>>>>+		segmap       = phb->ioda.m32_segmap;
+>>>>+		win          = OPAL_M32_WINDOW_TYPE;
+>
+>
+>
+>This code asks for a helper function
+>
+>pnv_ioda_do_setup_one_res(start, end, segsize, segmap, win)
+>
+>and then you won't need many local variables (region, segsize, segmap, win) ;)
+>
+
+Sounds like a good idea. I'll change accordingly in next revision.
+
+Thanks,
+Gavin
+
