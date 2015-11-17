@@ -1,61 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:27790 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754645AbbK0VSS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Nov 2015 16:18:18 -0500
-Subject: Re: [PATCH v4 2/5] PCI: iproc: Add PAXC interface support
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
- <2502233.oJMLi3GpfH@wuerfel> <5658C365.5080209@broadcom.com>
- <3529525.ts0Jjxrtm5@wuerfel>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-Message-ID: <5658C897.4090002@broadcom.com>
-Date: Fri, 27 Nov 2015 13:18:15 -0800
-MIME-Version: 1.0
-In-Reply-To: <3529525.ts0Jjxrtm5@wuerfel>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Received: from foss.arm.com ([217.140.101.70]:58165 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753324AbbKQRDF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Nov 2015 12:03:05 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Catalin Marinas <catalin.marinas@arm.com>
+Subject: [PATCH 3/3] arm/arm64: pci: remove arch specific pcibios_enable_device()
+Date: Tue, 17 Nov 2015 17:03:58 +0000
+Message-Id: <1447779838-15585-3-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1447779838-15585-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1447779838-15585-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+The arm/arm64 pcibios_enable_device() implementations exist solely
+to prevent enabling PCI resources on PROBE_ONLY systems, since
+on those systems the PCI resources are currently not claimed (ie
+validated and inserted in the PCI resource tree) therefore they can
+not be enabled since this would trigger PCI set-ups failures.
 
-On 11/27/2015 1:11 PM, Arnd Bergmann wrote:
-> On Friday 27 November 2015 12:56:05 Ray Jui wrote:
->>>
->>> You seem to only need the identifiers in order to set a single
->>> pointer, so just point to that array directly.
->>
->> Not just a single pointer. This sets the iProc PCIe interface type,
->> which is an enum. Based on the interface type, both the iProc PCIe core
->> driver and the iProc PCIe MSI driver can 1) load the correct set of
->> register offsets; 2) skip/invoke some of the link detection, controller
->> reset related behaviors; 3) setting up the correct number of MSI event
->> queue regions and MSI address regions.
->
-> Ok, fair enough. I had missed 2) and 3) here. It could still be done
-> as a structure (rather than function pointers) with individual named
-> members for each register offset along with bool flags for 2) and
-> integers to describe 3).
->
-> Please that suggestion some thought, and then decide for yourself,
-> I won't complain if you keep the current version.
->
-> 	Arnd
->
+By introducing resources claiming in the PCI host controllers set-ups
+that have PROBE_ONLY as a probe option, there is no need for arch specific
+pcibios_enable_device() implementations anymore in that the kernel can
+rely on the generic pcibios_enable_device() implementation without
+resorting to arch specific code to work around the missing resources
+claiming enumeration step.
 
-I'll definitely re-visit this when I need to add support to the next 
-revision of PAXC interface. At that time, what you have suggested may 
-become almost mandatory in order to make the core code clean and more 
-maintainable.
+This patch removes the pcibios_enable_device() implementations from
+the arm/arm64 arch back-ends.
 
-For now, I'll keep this as it is.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+---
+ arch/arm/kernel/bios32.c | 12 ------------
+ arch/arm64/kernel/pci.c  | 13 -------------
+ 2 files changed, 25 deletions(-)
 
-Thanks!
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 6551d28..9c998d5 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -590,18 +590,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	return start;
+ }
+ 
+-/**
+- * pcibios_enable_device - Enable I/O and memory.
+- * @dev: PCI device to be enabled
+- */
+-int pcibios_enable_device(struct pci_dev *dev, int mask)
+-{
+-	if (pci_has_flag(PCI_PROBE_ONLY))
+-		return 0;
+-
+-	return pci_enable_resources(dev, mask);
+-}
+-
+ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index b3d098b..4095379 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -38,19 +38,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	return res->start;
+ }
+ 
+-/**
+- * pcibios_enable_device - Enable I/O and memory.
+- * @dev: PCI device to be enabled
+- * @mask: bitmask of BARs to enable
+- */
+-int pcibios_enable_device(struct pci_dev *dev, int mask)
+-{
+-	if (pci_has_flag(PCI_PROBE_ONLY))
+-		return 0;
+-
+-	return pci_enable_resources(dev, mask);
+-}
+-
+ /*
+  * Try to assign the IRQ number from DT when adding a new device
+  */
+-- 
+2.5.1
 
-Ray
