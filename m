@@ -1,142 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp06.in.ibm.com ([122.248.162.6]:41469 "EHLO
-	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752252AbbKBI1q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2015 03:27:46 -0500
-Received: from /spool/local
-	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 2 Nov 2015 13:57:43 +0530
-Date: Mon, 2 Nov 2015 16:27:21 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alexander Duyck <aduyck@mirantis.com>,
-	linux-pci@vger.kernel.org, Ethan Zhao <ethan.zhao@oracle.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 7/7] PCI: Set NumVFs before computing how many buses
- VFs require
-Message-ID: <20151102082721.GB1120@richards-mbp.cn.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151029222336.11908.66193.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151030052249.GF5119@richards-mbp.cn.ibm.com>
- <563394EA.7050603@gmail.com>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:36151 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041AbbKQDFl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 22:05:41 -0500
+Received: from localhost
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 17 Nov 2015 13:05:38 +1000
+Date: Tue, 17 Nov 2015 14:04:06 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com
+Subject: Re: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
+Message-ID: <20151117030406.GB10142@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
+ <56498D8A.2050505@ozlabs.ru>
+ <20151117014203.GC31584@gwshan>
+ <564A92E2.1040506@ozlabs.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <563394EA.7050603@gmail.com>
+In-Reply-To: <564A92E2.1040506@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 30, 2015 at 09:03:54AM -0700, Alexander Duyck wrote:
->On 10/29/2015 10:22 PM, Wei Yang wrote:
->>On Thu, Oct 29, 2015 at 05:23:36PM -0500, Bjorn Helgaas wrote:
->>>From: Alexander Duyck <aduyck@mirantis.com>
+On Tue, Nov 17, 2015 at 01:37:22PM +1100, Alexey Kardashevskiy wrote:
+>On 11/17/2015 12:42 PM, Gavin Shan wrote:
+>>On Mon, Nov 16, 2015 at 07:02:18PM +1100, Alexey Kardashevskiy wrote:
+>>>On 11/05/2015 12:12 AM, Gavin Shan wrote:
+>>>>This enables M64 window on P7IOC, which has been enabled on PHB3.
+>>>>Different from PHB3 where 16 M64 BARs are supported and each of
+>>>>them can be owned by one particular PE# exclusively or divided
+>>>>evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
+>>>>of them are divided to 8 segments. So every P7IOC PHB supports
+>>>>128 M64 segments in total. P7IOC has M64DT, which helps mapping
+>>>>one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
+>>>>M64DT, indicating that one M64 segment can only be pinned to the
+>>>>fixed PE#. In order to have same code to support M64 on P7IOC and
+>>>>PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
+>>>>of them is pinned to the fixed PE# by bypassing the function of
+>>>>M64DT. In turn, we just need different phb->init_m64() for P7IOC
+>>>>and PHB3 to support M64.
 >>>
->>>VF bus numbers depend on the First VF Offset and VF Stride, and per
->>>sections 3.3.9 and 3.3.10 of the SR-IOV spec r1.1, these depend on the
->>>NumVF value.
+>>>I thought we decided (Ben suggested?) not to push P7IOC code now (or ever) as
+>>>there is no user for it, has this changed?
 >>>
->>>Wait until after we set NumVFs to compute and validate the bus number of
->>>the last VF.
->>>
->>>[bhelgaas: changelog, add spec reference, split to separate patch for
->>>reviewability]
->>>Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
->>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>---
->>>drivers/pci/iov.c |   18 ++++++++++--------
->>>1 file changed, 10 insertions(+), 8 deletions(-)
->>>
->>>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>>index bd1c4fa..9d29712 100644
->>>--- a/drivers/pci/iov.c
->>>+++ b/drivers/pci/iov.c
->>>@@ -274,13 +274,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->>>		return -ENOMEM;
->>>	}
->>>
->>>-	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
->>>-	if (bus > dev->bus->busn_res.end) {
->>>-		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
->>>-			nr_virtfn, bus, &dev->bus->busn_res);
->>>-		return -ENOMEM;
->>>-	}
->>>-
->>>	if (pci_enable_resources(dev, bars)) {
->>>		dev_err(&dev->dev, "SR-IOV: IOV BARS not allocated\n");
->>>		return -ENOMEM;
->>>@@ -304,6 +297,15 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->>>	}
->>>
->>>	pci_iov_set_numvfs(dev, nr_virtfn);
->>How about move it up?
+>>
+>>Remember that the code is mixed for P7IOC/PHB3. It's not harmful to support
+>>M64 window on P7IOC, which is much larger than M32.
 >
->The idea with moving the write down is to keep the pollution of the SR-IOV
->capability to a minimum.  Basically we have addressed all of the possible
->software issues at this point so all that remains is possible hardware
->complications.  In addition by moving this code down we only have to modify
->this code instead of adding "rc=X; goto foo;" in places where "return X;" was
->used.
+>
+>The patchset starts with removing dead code and then adds more dead code.
+>This is not right...
 >
 
-I think your logic is clear, while it is not easy to classify the software
-issue and hardware complications. For example, at the beginning of
-sriov_enable(), the hardware value initial VFs number is checked.
+Sorry, you mean it's fine to break the code on P7IOC as it's going to be dead.
+But I'm curious when it's going happen, any idea about that?
 
-And in my mind, this is reasonable to check the hardware issue before software
-issue.
-
-For your comment, adding "rc=X; goto foo;", I don't see this would happen.
-The code in my mind would like this:
-
-
-+	pci_iov_set_numvfs(dev, nr_virtfn);
- 	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
- 	if (bus > dev->bus->busn_res.end) {
- 		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
- 			nr_virtfn, bus, &dev->bus->busn_res);
- 		return -ENOMEM;
- 	}
- 
-	if (pci_enable_resources(dev, bars)) {
-		dev_err(&dev->dev, "SR-IOV: IOV BARS not allocated\n");
-		return -ENOMEM;
-
-Do I missed something?
-
->Also this is an exception case.  There really isn't much point in optimizing
->for something that should never really happen.
->
->>>+
->>>+	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
->>>+	if (bus > dev->bus->busn_res.end) {
->>>+		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
->>>+			nr_virtfn, bus, &dev->bus->busn_res);
->>>+		rc = -ENOMEM;
->>>+		goto err_bus;
->>>+	}
->>>+
->>>	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
->>>	pci_cfg_access_lock(dev);
->>>	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->>>@@ -342,7 +344,7 @@ err_pcibios:
->>>	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->>>	ssleep(1);
->>>	pci_cfg_access_unlock(dev);
->>>-
->>>+err_bus:
->>>	if (iov->link != dev->devfn)
->>>		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>>>btw please put ioda1/ioda2/p7ioc/etc to the subject line to make it easier to
+>>>see how much work is there about particular PHB type. You rename quite many
+>>>functions and I generally want to ask you to group all renaming patches first
+>>>but it would also make sense to keep them close to (for example)
+>>>p7ioc-related patches so having more descriptive subject lines may help.
+>>>Thanks.
 >>>
+>>
+>>As the code is mixed for P7IOC/PHB3, I'm not following the line (IODA1/IODA2/p7ioc/phb3)
+>>in this patchset.
 >
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>But you should draw the bold line between PHB types imho.
+>
+>>Instead, the sequence of patchset is order related to: cod refactoring,
+>>IO/M32/M64, DMA, PE allocation/releaseing.
+>
+>
+>Some patches from this patchset are about P7IOC only. All I am asking is to
+>say specifically in the subject line what the patch touches -
+>IODA1/IODA2/p7ioc/phb3/all_of_them. Or I can walk through all of them, pick
+>P7IOC's ones, evaluate the amount of code and entropy they actually add and
+>then ask Ben what we do about it, it will just take longer rather than if you
+>did it.
+>
 
--- 
-Richard Yang
-Help you, Help me
+Please give me a clear command what key words you need in the subject in next revision.
+What I understood is you want to see one of them:
+
+powerpc/powernv/ioda1:
+powerpc/powernv/ioda2:
+powerpc/powernv/all:
+
+Thanks,
+Gavin
+
+>
+>-- 
+>Alexey
+>
 
