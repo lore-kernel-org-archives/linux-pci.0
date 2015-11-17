@@ -1,131 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46999 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751120AbbK3SHH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Nov 2015 13:07:07 -0500
-Date: Mon, 30 Nov 2015 12:07:02 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Imre Deak <imre.deak@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Jani Nikula <jani.nikula@intel.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	intel-gfx@lists.freedesktop.org,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH v4] PCI / PM: tune down RPM suspend error message with
- EBUSY and EAGAIN retval
-Message-ID: <20151130180702.GB29242@localhost>
-References: <1448648254-12639-1-git-send-email-imre.deak@intel.com>
- <1448699664-4178-1-git-send-email-imre.deak@intel.com>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:46381 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750913AbbKQB5i (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 20:57:38 -0500
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 17 Nov 2015 11:57:36 +1000
+Date: Tue, 17 Nov 2015 12:56:34 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Daniel Axtens <dja@axtens.net>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, aik@ozlabs.ru, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+Subject: Re: [PATCH v7 21/50] powerpc/powernv: Increase PE# capacity
+Message-ID: <20151117015634.GB1452@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-22-git-send-email-gwshan@linux.vnet.ibm.com>
+ <87y4dxbh95.fsf@gamma.ozlabs.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1448699664-4178-1-git-send-email-imre.deak@intel.com>
+In-Reply-To: <87y4dxbh95.fsf@gamma.ozlabs.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Imre,
+On Tue, Nov 17, 2015 at 11:29:26AM +1100, Daniel Axtens wrote:
+>Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+>
+>> Each PHB maintains an array helping to translate 2-bytes Request
+>> ID (RID) to PE# with the assumption that PE# takes one byte, meaning
+>> that we can't have more than 256 PEs. However, pci_dn->pe_number
+>> already had 4-bytes for the PE#.
+>>
+>> This extends the PE# capacity so that each of them will be 4-bytes
+>> long. Then we can reuse IODA_INVALID_PE to check the PE# stored in
+>> phb->pe_rmap[] is valid or not.
+>
+>Just for clarity, could you make it clear in the commit message that
+>you're increasing the PE# capacity _in the PHB_? I just found it a bit
+>confusing the first time I read it.
+>
+>With that clarified I'll be happy to add my reviewed-by tag.
+>
 
-> PCI / PM: tune down RPM suspend error message with EBUSY and EAGAIN retval
+Sure, will add it and thanks for your happiness :-)
 
-Please capitalize the first word, e.g., "Tune ..."
+>>
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c | 6 +++++-
+>>  arch/powerpc/platforms/powernv/pci.h      | 7 ++-----
+>>  2 files changed, 7 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> index 0e66c4d..ef93a01 100644
+>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> @@ -766,7 +766,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>>  
+>>  	/* Clear the reverse map */
+>>  	for (rid = pe->rid; rid < rid_end; rid++)
+>> -		phb->ioda.pe_rmap[rid] = 0;
+>> +		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
+>>  
+>>  	/* Release from all parents PELT-V */
+>>  	while (parent) {
+>> @@ -3164,6 +3164,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  	if (prop32)
+>>  		phb->ioda.reserved_pe_idx = be32_to_cpup(prop32);
+>>  
+>> +	/* Invalidate RID to PE# mapping */
+>> +	for (i = 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
+>> +		phb->ioda.pe_rmap[i] = IODA_INVALID_PE;
+>> +
+>>  	/* Parse 64-bit MMIO range */
+>>  	pnv_ioda_parse_m64_window(phb);
+>>  
+>> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>> index 0802fcd..5df945f 100644
+>> --- a/arch/powerpc/platforms/powernv/pci.h
+>> +++ b/arch/powerpc/platforms/powernv/pci.h
+>> @@ -162,11 +162,8 @@ struct pnv_phb {
+>>  			struct list_head	pe_list;
+>>  			struct mutex            pe_list_mutex;
+>>  
+>> -			/* Reverse map of PEs, will have to extend if
+>> -			 * we are to support more than 256 PEs, indexed
+>> -			 * bus { bus, devfn }
+>> -			 */
+>> -			unsigned char		pe_rmap[0x10000];
+>> +			/* Reverse map of PEs, indexed by {bus, devfn} */
+>> +			int			pe_rmap[0x10000];
+>>  
+>>  			/* TCE cache invalidate registers (physical and
+>>  			 * remapped)
 
-Maybe "Tune down non-fatal runtime suspend error messages" would be
-more to the point.  Or maybe "retryable," since it sounds like that's
-what's supposed to happen.
+Thanks,
+Gavin
 
-
-On Sat, Nov 28, 2015 at 10:34:24AM +0200, Imre Deak wrote:
-> The runtime PM core doesn't treat EBUSY and EAGAIN retvals from the driver
-> suspend hooks as errors, but they still show up as errors in dmesg. Tune
-> them down.
-
-I looked briefly for the place in the runtime PM core where we handle
-EBUSY and EAGAIN specially, but I didn't find it.  A pointer would be
-helpful.
-
-> One problem caused by this was noticed by Daniel: the i915 driver
-> returns EAGAIN to signal a temporary failure to suspend and as a request
-> towards the RPM core for scheduling a suspend again. This is a normal
-> event, but the resulting error message flags a breakage during the
-> driver's automated testing which parses dmesg and picks up the error.
-> 
-> v2:
-> - fix compile breake when CONFIG_PM_SLEEP=n (0-day builder)
-> v3:
-> - instead of modifying the suspend_report_result() helper to disinguish
->   between the runtime and system suspend case, inline the error
->   printing, it's not used anywhere else (Rafael)
-> v4:
-> - don't refer to log levels as flags in code comment (Rafael)
-> - use pr_debug(), pr_err() instead of the corresponding printk() (Rafael)
-
-The version history is very useful during development but not after
-merging, so I prefer it to go after the "---" marker so it doesn't get
-included in the permanent changelog.
-
-> Reported-by: Daniel Vetter <daniel.vetter@intel.com>
-> Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=92992
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Signed-off-by: Imre Deak <imre.deak@intel.com>
-> ---
->  drivers/pci/pci-driver.c | 16 ++++++++++++++--
->  1 file changed, 14 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 4446fcb..32a9947 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -1146,9 +1146,21 @@ static int pci_pm_runtime_suspend(struct device *dev)
->  	pci_dev->state_saved = false;
->  	pci_dev->no_d3cold = false;
->  	error = pm->runtime_suspend(dev);
-> -	suspend_report_result(pm->runtime_suspend, error);
-> -	if (error)
-> +	if (error) {
-> +		/*
-> +		 * -EBUSY and -EAGAIN is used to request the runtime PM core
-> +		 * to schedule a new suspend, so log the event only with debug
-> +		 * log level.
-> +		 */
-> +		if (error == -EBUSY || error == -EAGAIN)
-> +			pr_debug("%s(): %pF returns %d\n", __func__,
-> +				 pm->runtime_suspend, error);
-> +		else
-> +			pr_err("%s(): %pF returns %d\n", __func__,
-> +			       pm->runtime_suspend, error);
-
-This looks fine to me in principle.
-
-We have the device pointer, so please use dev_printk(KERN_DEBUG) and
-dev_err().  If you're OK with changing the semantics so the debug
-message is only emitted when dynamically enabled, you could use
-dev_dbg().
-
-I don't know what a user is supposed to do with a message like:
-
-  pci_pm_runtime_suspend(): ata_port_runtime_suspend+0x0/0x200 returns -12
-
-It feels a little bit ... internal.  Using dev_err() will help anchor
-it to a specific device.  It's not related to a specific PC in the
-function, so maybe use %pf instead of %pF to get rid of the function
-offset and size.  And the message doesn't say anything about what the
-return code *means*; maybe something like:
-
-  ata_piix 0000:00:14.0: can't suspend now (ata_port_runtime_suspend returned -11)
-  ata_piix 0000:00:14.0: can't suspend (ata_port_runtime_suspend returned -12)
-
-> +
->  		return error;
-> +	}
->  	if (!pci_dev->d3cold_allowed)
->  		pci_dev->no_d3cold = true;
->  
-> -- 
-> 2.5.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
