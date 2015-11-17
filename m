@@ -1,72 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Robin Murphy <robin.murphy@arm.com>,
-	bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
-	will.deacon@arm.com, thomas.lendacky@amd.com,
-	herbert@gondor.apana.org.au, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	hanjun.guo@linaro.org, davem@davemloft.net,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V5 8/9] PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
-Date: Wed, 18 Nov 2015 22:24:52 +0100
-Message-ID: <7324830.G6XBOApVhh@vostro.rjw.lan>
-In-Reply-To: <564CAD63.3020306@amd.com>
-References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com> <3822315.uJPjk3L2zB@wuerfel> <564CAD63.3020306@amd.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Ray Jui <rjui@broadcom.com>, Marc Zyngier <marc.zyngier@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"dhdang@apm.com" <dhdang@apm.com>,
+	"sbranden@broadcom.com" <sbranden@broadcom.com>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH v8] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+Date: Tue, 17 Nov 2015 04:59:39 +0000
+Message-ID: <8520D5D51A55D047800579B0941471982585CBDA@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>
+ <5649F2D9.7070902@arm.com> <564A5255.3020603@broadcom.com>
+In-Reply-To: <564A5255.3020603@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, November 18, 2015 10:54:59 AM Suravee Suthikulanit wrote:
-> Hi All,
-> 
-> On 11/18/2015 6:41 AM, Arnd Bergmann wrote:
-> > On Wednesday 18 November 2015 12:00:32 Robin Murphy wrote:
-> >> On 17/11/15 15:00, Robin Murphy wrote:
-> >>> On 28/10/15 22:50, Suravee Suthikulpanit wrote:
-> >>>> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> >>>> Acked-by: Rob Herring <robh+dt@kernel.org>
-> >>>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> >>>> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-> >>>> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
-> >> [...]
-> >>>> +/**
-> >>>> + * pci_dma_configure - Setup DMA configuration
-> >>>> + * @dev: ptr to pci_dev struct of the PCI device
-> >>>> + *
-> >>>> + * Function to update PCI devices's DMA configuration using the same
-> >>>> + * info from the OF node of host bridge's parent (if any).
-> >>>> + */
-> >>>> +static void pci_dma_configure(struct pci_dev *dev)
-> >>>> +{
-> >>>> +    struct device *bridge = pci_get_host_bridge_device(dev);
-> >>>> +
-> >>>> +    if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
-> >>>
-> >>> Previously I was seeing of_dma_configure, and thus of_iommu_configure,
-> >>> called for every PCI device on Juno. The check above now prevents this
-> >>> happening, since the PCI devices are probed directly from the bus and
-> >>> don't have OF nodes of their own. They now get left in some
-> >>> half-configured state where arch_setup_dma_ops isn't called either.
+> On 11/16/2015 7:14 AM, Marc Zyngier wrote:
+> > On 11/11/15 06:33, Bharat Kumar Gogada wrote:
+> >> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
 > >>
-> >> Just to follow up on that, Arnd's patch to tidy up dma_get_ops (now
-> >> queued[1]) makes this even worse, since preventing arch_setup_dma_ops
-> >> being called means the PCI devices now get the dummy DMA ops which leave
-> >> the drivers failing to probe at all, IOMMU hacks or not
+> >> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> >> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> >> ---
+> >> Added logic to allocate contiguous hwirq in nwl_irq_domain_alloc
+> function.
+> >> Moved MSI functionality to separate functions.
+> >> Changed error return values.
+> >> ---
+> >>   .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
+> >>   drivers/pci/host/Kconfig                           |   16 +-
+> >>   drivers/pci/host/Makefile                          |    1 +
+> >>   drivers/pci/host/pcie-xilinx-nwl.c                 | 1062
+> ++++++++++++++++++++
+> >>   4 files changed, 1144 insertions(+), 3 deletions(-)
+> >>   create mode 100644 Documentation/devicetree/bindings/pci/xilinx-nwl-
+> pcie.txt
+> >>   create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
+> >>
 > >
-> > Ok, glad we found that with my patch then. We really have to
-> > configure the DMA (offset/size/coherency/iommu) for all devices that might
-> > be masters, otherwise things can randomly go wrong.
+> > [...]
 > >
-> > 	ARnd
+> >> +static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus
+> >> +*bus) {
+> >> +	struct platform_device *pdev = to_platform_device(pcie->dev);
+> >> +	struct nwl_msi *msi = &pcie->msi;
+> >> +	unsigned long base;
+> >> +	int ret;
+> >> +
+> >> +	mutex_init(&msi->lock);
+> >> +
+> >> +	/* Check for msii_present bit */
+> >> +	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) & MSII_PRESENT;
+> >> +	if (!ret) {
+> >> +		dev_err(pcie->dev, "MSI not present\n");
+> >> +		ret = -EIO;
+> >> +		goto err;
+> >> +	}
+> >> +
+> >> +	/* Enable MSII */
+> >> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
+> >> +			  MSII_ENABLE, I_MSII_CONTROL);
+> >> +
+> >> +	/* Enable MSII status */
+> >> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
+> >> +			  MSII_STATUS_ENABLE, I_MSII_CONTROL);
+> >> +
+> >> +	/* setup AFI/FPCI range */
+> >> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> >> +	base = virt_to_phys((void *)msi->pages);
+> >> +	nwl_bridge_writel(pcie, lower_32_bits(base), I_MSII_BASE_LO);
+> >> +	nwl_bridge_writel(pcie, upper_32_bits(base), I_MSII_BASE_HI);
+> >
+> > BTW, you still haven't answered my question as to why you need to
+> > waste a page of memory here, and why putting a device address doesn't
+> work.
+> >
+> > As this is (to the best of my knowledge) the only driver doing so, I'd
+> > really like you to explain the rational behind this.
 > 
-> Robin is correct. Thanks for catching the bug. Rafael, do you want me to 
-> submit just the fixed-up patch on top of what we had earlier. Or do you 
-> want a new revision (V6)?
+> Might not be the only driver doing so after I start sending out patches for the
+> iProc MSI support (soon), :)
+> 
+> I'm not sure how it works for the Xilinx NWL controller, which Bharat should
+> be able to help to explain. But for the iProc MSI controller, there's no device
+> I/O memory reserved for MSI posted writes in the ASIC.
+> Therefore one needs to reserve host memory for these writes.
+> >
 
-This is in 4.4-rc1, right?  So new revisions surely won't work, will they?
+Our SoC doesn't reserve any memory for MSI, hence we need to assign a memory space for it out of RAM.
 
-Thanks,
-Rafael
+Regards,
+Bharat
+
 
