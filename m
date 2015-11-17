@@ -1,63 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:29742 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757699AbbKFWmC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Nov 2015 17:42:02 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv4 2/6] pci: skip child bus with conflicting resources
-Date: Fri,  6 Nov 2015 15:35:42 -0700
-Message-Id: <1446849346-8242-3-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1446849346-8242-1-git-send-email-keith.busch@intel.com>
-References: <1446849346-8242-1-git-send-email-keith.busch@intel.com>
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:35438 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751532AbbKQBHZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 20:07:25 -0500
+Received: by pacej9 with SMTP id ej9so85566144pac.2
+        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 17:07:24 -0800 (PST)
+Subject: Re: [PATCH v7 17/50] powerpc/powernv: Avoid calculating DMA32
+ segments on PHB3
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-18-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <564A7DC5.5060702@ozlabs.ru>
+Date: Tue, 17 Nov 2015 12:07:17 +1100
+MIME-Version: 1.0
+In-Reply-To: <1446642770-4681-18-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-And use the max bus resource from the parent rather than assume 255.
+On 11/05/2015 12:12 AM, Gavin Shan wrote:
+> In pnv_ioda_setup_dma(), it's unnecessary to calculate the DMA32
+> segments for PEs on PHB3 as the whole available DMA32 space can
+> be assigned to one specific PE on PHB3.
+>
+> This splits pnv_ioda_setup_dma() to pnv_pci_ioda1_setup_dma() and
+> pnv_pci_ioda2_setup_dma() in order to avoid calculating DMA32
+> segments for PEs on PHB3. No logical changes introduced.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/probe.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8361d27..1cb3be7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -856,7 +856,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 			if (!child)
- 				goto out;
- 			child->primary = primary;
--			pci_bus_insert_busn_res(child, secondary, subordinate);
-+			if (!pci_bus_insert_busn_res(child, secondary, subordinate)) {
-+				pci_remove_bus(child);
-+				goto out;
-+			}
- 			child->bridge_ctl = bctl;
- 		}
- 
-@@ -896,7 +899,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 			child = pci_add_new_bus(bus, dev, max+1);
- 			if (!child)
- 				goto out;
--			pci_bus_insert_busn_res(child, max+1, 0xff);
-+			if (!pci_bus_insert_busn_res(child, max+1, bus->busn_res.end)) {
-+				pci_remove_bus(child);
-+				goto out;
-+			}
- 		}
- 		max++;
- 		buses = (buses & 0xff000000)
+This patch is not needed as
+
+[PATCH v7 20/50] powerpc/powernv: Improve DMA32 segment calculation
+
+moves this calculation to another place (which already makes this patch 
+unnecessary) and
+
+[PATCH v7 26/50] powerpc/powernv: Create PEs at PCI hot plugging time
+
+removes just introduced pnv_pci_ioda1_setup_dma() - if you remove it, then 
+there is no point in fixing it in the first place.
+
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 41 ++++++++++++++++++-------------
+>   1 file changed, 24 insertions(+), 17 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 5a08e20..4c2e023 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -2383,7 +2383,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>   		pnv_ioda_setup_bus_dma(pe, pe->pbus);
+>   }
+>
+> -static void pnv_ioda_setup_dma(struct pnv_phb *phb)
+> +static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
+>   {
+>   	struct pci_controller *hose = phb->hose;
+>   	unsigned int residual, remaining, segs, tw, base;
+> @@ -2428,26 +2428,30 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
+>   				segs = remaining;
+>   		}
+>
+> -		/*
+> -		 * For IODA2 compliant PHB3, we needn't care about the weight.
+> -		 * The all available 32-bits DMA space will be assigned to
+> -		 * the specific PE.
+> -		 */
+> -		if (phb->type == PNV_PHB_IODA1) {
+> -			pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
+> -				pe->dma_weight, segs);
+> -			pnv_pci_ioda1_setup_dma_pe(phb, pe, base, segs);
+> -		} else {
+> -			pe_info(pe, "Assign DMA32 space\n");
+> -			segs = 0;
+> -			pnv_pci_ioda2_setup_dma_pe(phb, pe);
+> -		}
+> +		pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
+> +			pe->dma_weight, segs);
+> +		pnv_pci_ioda1_setup_dma_pe(phb, pe, base, segs);
+>
+>   		remaining -= segs;
+>   		base += segs;
+>   	}
+>   }
+>
+> +static void pnv_pci_ioda2_setup_dma(struct pnv_phb *phb)
+> +{
+> +	struct pnv_ioda_pe *pe;
+> +
+> +	pnv_pci_ioda_setup_opal_tce_kill(phb);
+> +
+> +	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
+> +		if (!pe->dma_weight)
+> +			continue;
+> +
+> +		pe_info(pe, "Assign DMA32 space\n");
+> +		pnv_pci_ioda2_setup_dma_pe(phb, pe);
+> +	}
+> +}
+> +
+>   #ifdef CONFIG_PCI_MSI
+>   static void pnv_ioda2_msi_eoi(struct irq_data *d)
+>   {
+> @@ -2931,10 +2935,13 @@ static void pnv_pci_ioda_setup_DMA(void)
+>   	struct pnv_phb *phb;
+>
+>   	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+> -		pnv_ioda_setup_dma(hose->private_data);
+> +		phb = hose->private_data;
+> +		if (phb->type == PNV_PHB_IODA1)
+> +			pnv_pci_ioda1_setup_dma(phb);
+> +		else
+> +			pnv_pci_ioda2_setup_dma(phb);
+>
+>   		/* Mark the PHB initialization done */
+> -		phb = hose->private_data;
+>   		phb->initialized = 1;
+>   	}
+>   }
+>
+
+
 -- 
-2.6.2.307.g37023ba
-
+Alexey
