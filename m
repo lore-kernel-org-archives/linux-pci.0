@@ -1,41 +1,141 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <4309044.Hy8Vx01ZVW@wuerfel>
-References: <4309044.Hy8Vx01ZVW@wuerfel>
-Date: Thu, 5 Nov 2015 09:55:48 +0800
-Message-ID: <CAFiDJ592xoLFK74JbFh60tYtLQcc=XtJw2u=4+mFmVsODCcMkQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: altera: use fwnode API for pci_msi_create_irq_domain
-From: Ley Foon Tan <lftan@altera.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: Ray Jui <rjui@broadcom.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"dhdang@apm.com" <dhdang@apm.com>,
+	"sbranden@broadcom.com" <sbranden@broadcom.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>
-Content-Type: text/plain; charset=UTF-8
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH v8] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+Date: Tue, 17 Nov 2015 13:27:39 +0000
+Message-ID: <8520D5D51A55D047800579B0941471982585CD78@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>
+	<5649F2D9.7070902@arm.com>	<564A5255.3020603@broadcom.com>
+	<8520D5D51A55D047800579B0941471982585CBDA@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20151117092100.76babf7f@arm.com>
+In-Reply-To: <20151117092100.76babf7f@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 4, 2015 at 8:39 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> There is a new conflict between Thomas Gleixner's IRQ tree that contains
-> a patch from Marc Zyngier to change the prototype for
-> pci_msi_create_irq_domain, and Bjorn Helgaas' PCI tree that contains
-> a new driver for the Altera PCI MSI host, with the old interface,
-> as gcc now warns in linux-next:
->
-> drivers/pci/host/pcie-altera-msi.c: In function 'altera_allocate_domains':
-> drivers/pci/host/pcie-altera-msi.c:191:46: warning: passing argument 1 of 'pci_msi_create_irq_domain' from incompatible pointer type [-Wincompatible-pointer-types]
->   msi->msi_domain = pci_msi_create_irq_domain(msi->pdev->dev.of_node,
-> include/linux/msi.h:286:20: note: expected 'struct fwnode_handle *' but argument is of type 'struct device_node *'
->
-> This changes the new driver use the modified API.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: af1169b48b17 ("PCI: altera: Add Altera PCIe MSI driver")
-> Fixes: be5436c83ac8 ("irqdomain/msi: Use fwnode instead of of_node")
+> 
+> On Tue, 17 Nov 2015 04:59:39 +0000
+> Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
+> 
+> > > On 11/16/2015 7:14 AM, Marc Zyngier wrote:
+> > > > On 11/11/15 06:33, Bharat Kumar Gogada wrote:
+> > > >> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+> > > >>
+> > > >> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > > >> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> > > >> ---
+> > > >> Added logic to allocate contiguous hwirq in nwl_irq_domain_alloc
+> > > function.
+> > > >> Moved MSI functionality to separate functions.
+> > > >> Changed error return values.
+> > > >> ---
+> > > >>   .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
+> > > >>   drivers/pci/host/Kconfig                           |   16 +-
+> > > >>   drivers/pci/host/Makefile                          |    1 +
+> > > >>   drivers/pci/host/pcie-xilinx-nwl.c                 | 1062
+> > > ++++++++++++++++++++
+> > > >>   4 files changed, 1144 insertions(+), 3 deletions(-)
+> > > >>   create mode 100644
+> > > >> Documentation/devicetree/bindings/pci/xilinx-nwl-
+> > > pcie.txt
+> > > >>   create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
+> > > >>
+> > > >
+> > > > [...]
+> > > >
+> > > >> +static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct
+> > > >> +pci_bus
+> > > >> +*bus) {
+> > > >> +	struct platform_device *pdev = to_platform_device(pcie-
+> >dev);
+> > > >> +	struct nwl_msi *msi = &pcie->msi;
+> > > >> +	unsigned long base;
+> > > >> +	int ret;
+> > > >> +
+> > > >> +	mutex_init(&msi->lock);
+> > > >> +
+> > > >> +	/* Check for msii_present bit */
+> > > >> +	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) &
+> MSII_PRESENT;
+> > > >> +	if (!ret) {
+> > > >> +		dev_err(pcie->dev, "MSI not present\n");
+> > > >> +		ret = -EIO;
+> > > >> +		goto err;
+> > > >> +	}
+> > > >> +
+> > > >> +	/* Enable MSII */
+> > > >> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,
+> I_MSII_CONTROL) |
+> > > >> +			  MSII_ENABLE, I_MSII_CONTROL);
+> > > >> +
+> > > >> +	/* Enable MSII status */
+> > > >> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,
+> I_MSII_CONTROL) |
+> > > >> +			  MSII_STATUS_ENABLE, I_MSII_CONTROL);
+> > > >> +
+> > > >> +	/* setup AFI/FPCI range */
+> > > >> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> > > >> +	base = virt_to_phys((void *)msi->pages);
+> > > >> +	nwl_bridge_writel(pcie, lower_32_bits(base),
+> I_MSII_BASE_LO);
+> > > >> +	nwl_bridge_writel(pcie, upper_32_bits(base),
+> I_MSII_BASE_HI);
+> > > >
+> > > > BTW, you still haven't answered my question as to why you need to
+> > > > waste a page of memory here, and why putting a device address
+> > > > doesn't
+> > > work.
+> > > >
+> > > > As this is (to the best of my knowledge) the only driver doing so,
+> > > > I'd really like you to explain the rational behind this.
+> > >
+> > > Might not be the only driver doing so after I start sending out
+> > > patches for the iProc MSI support (soon), :)
+> > >
+> > > I'm not sure how it works for the Xilinx NWL controller, which
+> > > Bharat should be able to help to explain. But for the iProc MSI
+> > > controller, there's no device I/O memory reserved for MSI posted writes
+> in the ASIC.
+> > > Therefore one needs to reserve host memory for these writes.
+> > > >
+> >
+> > Our SoC doesn't reserve any memory for MSI, hence we need to assign a
+> > memory space for it out of RAM.
+> 
+> Question to both of you: Does the write make it to memory? Or is it sampled
+> by the bridge and dropped?
+> 
+No, write will not do any modification in memory, it is consumed by bridge.
 
-Acked-by: Ley Foon Tan <lftan@altera.com>
+> What happens if you replace the page in RAM with a dummy address?
+What do you mean by dummy address ?
 
-Thanks for the fix.
+Regards,
+Bharat
 
-Regards
-Ley Foon
+
