@@ -1,117 +1,167 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: David Daney <ddaney@caviumnetworks.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Tomasz Nowicki <tn@semihalf.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:65208 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753653AbbKQQYt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 11:24:49 -0500
+Subject: Re: [PATCH v8] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+References: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>
+ <5649F2D9.7070902@arm.com> <564A5255.3020603@broadcom.com>
+ <8520D5D51A55D047800579B0941471982585CBDA@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20151117092100.76babf7f@arm.com>
+ <8520D5D51A55D047800579B0941471982585CD78@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <564B31BB.3010404@arm.com>
+CC: "robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
 	"bhelgaas@google.com" <bhelgaas@google.com>,
 	"arnd@arndb.de" <arnd@arndb.de>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"robert.richter@caviumnetworks.com"
-	<robert.richter@caviumnetworks.com>,
-	"Narinder.Dhillon@caviumnetworks.com"
-	<Narinder.Dhillon@caviumnetworks.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	Wangyijing <wangyijing@huawei.com>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"dhdang@apm.com" <dhdang@apm.com>,
+	"sbranden@broadcom.com" <sbranden@broadcom.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>
-Subject: RE: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
- hostbridge init
-Date: Tue, 3 Nov 2015 18:00:10 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1629984F@lhreml503-mbs>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
- <1445963922-22711-12-git-send-email-tn@semihalf.com>
- <5631180D.2000902@codeaurora.org> <20151103141512.GC3574@red-moon>
- <5638D07B.2030001@linaro.org> <5638F13D.3080406@caviumnetworks.com>
-In-Reply-To: <5638F13D.3080406@caviumnetworks.com>
-Content-Type: text/plain; charset="Windows-1252"
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
+	Robin Murphy <Robin.Murphy@arm.com>
+From: Ray Jui <rjui@broadcom.com>
+Message-ID: <564B54CF.5010307@broadcom.com>
+Date: Tue, 17 Nov 2015 08:24:47 -0800
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <564B31BB.3010404@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David
 
-> -----Original Message-----
-> From: David Daney [mailto:ddaney@caviumnetworks.com]
-> Sent: 03 November 2015 17:39
-> To: Hanjun Guo
-> Cc: Lorenzo Pieralisi; Sinan Kaya; Tomasz Nowicki; bhelgaas@google.com;
-> arnd@arndb.de; will.deacon@arm.com; catalin.marinas@arm.com; rjw@rjwysocki.net;
-> jiang.liu@linux.intel.com; robert.richter@caviumnetworks.com;
-> Narinder.Dhillon@caviumnetworks.com; Liviu.Dudau@arm.com; tglx@linutronix.de;
-> Wangyijing; Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
-> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; Gabriele Paoloni; Wangzhou
-> (B); liudongdong (C)
-> Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
-> hostbridge init
-> 
-> On 11/03/2015 07:19 AM, Hanjun Guo wrote:
-> > On 11/03/2015 10:15 PM, Lorenzo Pieralisi wrote:
-> >> On Wed, Oct 28, 2015 at 02:46:37PM -0400, Sinan Kaya wrote:
-> >>
-> >> [...]
-> >>
-> >>>> -int raw_pci_write(unsigned int domain, unsigned int bus,
-> >>>> -        unsigned int devfn, int reg, int len, u32 val)
-> >>>> +struct pci_ops pci_root_ops = {
-> >>>> +    .map_bus = pci_mcfg_dev_base,
-> >>>> +    .read = pci_generic_config_read,
-> >>>> +    .write = pci_generic_config_write,
-> >>>
-> >>>
-> >>> Can you change these with pci_generic_config_read32 and
-> >>> pci_generic_config_write32? We have some targets that can only do 32
-> >>> bits PCI config space access.
-> >>
-> >> No.
-> >>
-> >> http://www.spinics.net/lists/linux-pci/msg44869.html
-> >>
-> >> Can you be a bit more specific please ?
-> >>
-> >> Sigh. Looks like we have to start adding platform specific quirks even
-> >> before we merged the generic ACPI PCIe host controller implementation.
-> >
-> > Cc Gab, Zhou, and Dondong who upstream the hip05 (designware) PCIe host
-> > support.
-> >
-> > I think so, some platform may not support ECAM for root complex,
-> > which needs special handling of access config space, we may need
-> > to consider those cases.
-> >
-> 
-> Yes, it is indeed true.  For example, some Cavium ThunderX processors
-> fall into this category.
-> 
-> Some options I thought of are:
-> 
->   o Use DECLARE_ACPI_MCFG_FIXUP() in the kernel to supply the needed
-> config space accessors.
-> 
->   o Define additional root_device_ids that imply the needed config space
-> accessors.
 
-Yes I like this
+On 11/17/2015 5:55 AM, Marc Zyngier wrote:
+> On 17/11/15 13:27, Bharat Kumar Gogada wrote:
+>>>
+>>> On Tue, 17 Nov 2015 04:59:39 +0000
+>>> Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
+>>>
+>>>>> On 11/16/2015 7:14 AM, Marc Zyngier wrote:
+>>>>>> On 11/11/15 06:33, Bharat Kumar Gogada wrote:
+>>>>>>> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+>>>>>>>
+>>>>>>> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+>>>>>>> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+>>>>>>> ---
+>>>>>>> Added logic to allocate contiguous hwirq in nwl_irq_domain_alloc
+>>>>> function.
+>>>>>>> Moved MSI functionality to separate functions.
+>>>>>>> Changed error return values.
+>>>>>>> ---
+>>>>>>>    .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
+>>>>>>>    drivers/pci/host/Kconfig                           |   16 +-
+>>>>>>>    drivers/pci/host/Makefile                          |    1 +
+>>>>>>>    drivers/pci/host/pcie-xilinx-nwl.c                 | 1062
+>>>>> ++++++++++++++++++++
+>>>>>>>    4 files changed, 1144 insertions(+), 3 deletions(-)
+>>>>>>>    create mode 100644
+>>>>>>> Documentation/devicetree/bindings/pci/xilinx-nwl-
+>>>>> pcie.txt
+>>>>>>>    create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
+>>>>>>>
+>>>>>>
+>>>>>> [...]
+>>>>>>
+>>>>>>> +static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct
+>>>>>>> +pci_bus
+>>>>>>> +*bus) {
+>>>>>>> +	struct platform_device *pdev = to_platform_device(pcie-
+>>>> dev);
+>>>>>>> +	struct nwl_msi *msi = &pcie->msi;
+>>>>>>> +	unsigned long base;
+>>>>>>> +	int ret;
+>>>>>>> +
+>>>>>>> +	mutex_init(&msi->lock);
+>>>>>>> +
+>>>>>>> +	/* Check for msii_present bit */
+>>>>>>> +	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) &
+>>> MSII_PRESENT;
+>>>>>>> +	if (!ret) {
+>>>>>>> +		dev_err(pcie->dev, "MSI not present\n");
+>>>>>>> +		ret = -EIO;
+>>>>>>> +		goto err;
+>>>>>>> +	}
+>>>>>>> +
+>>>>>>> +	/* Enable MSII */
+>>>>>>> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,
+>>> I_MSII_CONTROL) |
+>>>>>>> +			  MSII_ENABLE, I_MSII_CONTROL);
+>>>>>>> +
+>>>>>>> +	/* Enable MSII status */
+>>>>>>> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,
+>>> I_MSII_CONTROL) |
+>>>>>>> +			  MSII_STATUS_ENABLE, I_MSII_CONTROL);
+>>>>>>> +
+>>>>>>> +	/* setup AFI/FPCI range */
+>>>>>>> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+>>>>>>> +	base = virt_to_phys((void *)msi->pages);
+>>>>>>> +	nwl_bridge_writel(pcie, lower_32_bits(base),
+>>> I_MSII_BASE_LO);
+>>>>>>> +	nwl_bridge_writel(pcie, upper_32_bits(base),
+>>> I_MSII_BASE_HI);
+>>>>>>
+>>>>>> BTW, you still haven't answered my question as to why you need to
+>>>>>> waste a page of memory here, and why putting a device address
+>>>>>> doesn't
+>>>>> work.
+>>>>>>
+>>>>>> As this is (to the best of my knowledge) the only driver doing so,
+>>>>>> I'd really like you to explain the rational behind this.
+>>>>>
+>>>>> Might not be the only driver doing so after I start sending out
+>>>>> patches for the iProc MSI support (soon), :)
+>>>>>
+>>>>> I'm not sure how it works for the Xilinx NWL controller, which
+>>>>> Bharat should be able to help to explain. But for the iProc MSI
+>>>>> controller, there's no device I/O memory reserved for MSI posted writes
+>>> in the ASIC.
+>>>>> Therefore one needs to reserve host memory for these writes.
+>>>>>>
+>>>>
+>>>> Our SoC doesn't reserve any memory for MSI, hence we need to assign a
+>>>> memory space for it out of RAM.
+>>>
+>>> Question to both of you: Does the write make it to memory? Or is it sampled
+>>> by the bridge and dropped?
+>>>
+>> No, write will not do any modification in memory, it is consumed by bridge.
+>
+> Then you do not need to allocate memory at all. Use whatever memory you
+> already have. CC-ing Robin, as this may have interaction with the SMMU.
+>
+>>
+>>> What happens if you replace the page in RAM with a dummy address?
+>> What do you mean by dummy address ?
+>
+> Any random (and suitably aligned) address. 0x00000deadbeef000 for example.
 
-it would fit designware too
+In our case, I'm pretty sure the writes make it to memory (RAM). I can 
+try replacing it with a dummy address, but I'm pretty sure that will not 
+work.
 
-Gab
+Thanks,
 
-> 
-> 
-> > Thanks
-> > Hanjun
+Ray
 
+>
+> Thanks,
+>
+> 	M.
+>
