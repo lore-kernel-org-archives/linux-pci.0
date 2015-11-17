@@ -1,104 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:59278 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932401AbbKDJD4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Nov 2015 04:03:56 -0500
-Message-ID: <5639C9F9.2010704@arm.com>
-Date: Wed, 04 Nov 2015 09:03:53 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:35590 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151AbbKQGEu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 01:04:50 -0500
+Received: by pacej9 with SMTP id ej9so93707905pac.2
+        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 22:04:49 -0800 (PST)
+Subject: Re: [PATCH v7 25/50] powerpc/powernv: Reserve PE for root bus
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-26-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <564AC37A.2060701@ozlabs.ru>
+Date: Tue, 17 Nov 2015 17:04:42 +1100
 MIME-Version: 1.0
-To: "majun (F)" <majun258@huawei.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-CC: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RFC 7/7] irqchip: [Example] dummy wired interrupt/MSI
- bridge driver
-References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com> <1444923568-17413-8-git-send-email-marc.zyngier@arm.com> <5639BB10.1090108@huawei.com>
-In-Reply-To: <5639BB10.1090108@huawei.com>
-Content-Type: text/plain; charset=gbk
+In-Reply-To: <1446642770-4681-26-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/11/15 08:00, majun (F) wrote:
-> Hi Marc:
-> 
-> ÔÚ 2015/10/15 23:39, Marc Zyngier Ð´µÀ:
->> In order to demonstrate how to put together a wire/MSI bridge,
->> add a dummy driver that doesn't do anything at all, except
->> for allocating interrupts.
->>
->> It comes together with an even more stupid client driver that
->> allocates an interrupt and dump the hierarchy of that interrupt.
->>
->> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
->> ---
-> [...]
->> +
->> +static int msichip_domain_alloc(struct irq_domain *domain, unsigned int virq,
->> +				   unsigned int nr_irqs, void *arg)
->> +{
->> +	int i, err;
->> +	irq_hw_number_t hwirq;
->> +	unsigned int type;
->> +	struct irq_fwspec *fwspec = arg;
->> +	void *data;
->> +
->> +	err = msichip_domain_translate(domain, fwspec, &hwirq, &type);
->> +	if (err)
->> +		return err;
->> +
-> 
-> .translate function already called once in  irq_domain_translate(),
-> I think we don't need call this fucntion one more time here.
+On 11/05/2015 12:12 AM, Gavin Shan wrote:
+> We're going to reserve/assign PEs when pcibios_setup_bridge() is
+> called. The function won't be called for root bus as it doesn't
+> have parent bridge. However, the root bus still needs a PE to be
+> covered.
+>
+> This reserves PE numbers that are adjacent to the reserved one
+> for root buses.
 
-if you don't translate it here, how do you obtain the hwirq that you
-have to pass to irq_domain_set_hwirq_and_chip just below?
 
->> +	err = platform_msi_domain_alloc(domain, virq, nr_irqs);
->> +	if (err)
->> +		return err;
->> +
->> +	data = platform_msi_get_host_data(domain);
->> +	for (i = 0; i < nr_irqs; i++)
->> +		irq_domain_set_hwirq_and_chip(domain, virq + i, hwirq + i,
->> +					      &msichip_chip, data);
->> +
->> +	return 0;
->> +}
->> +
-> [...]
->> +
->> +static struct platform_driver msichip_driver = {
->> +	.driver = {
->> +		.name		= "msichip",
->> +		.of_match_table	= msichip_of_match,
->> +	},
->> +	.probe			= msichip_probe,
->> +};
->> +/* Do not define this as an irqchip */
->> +module_platform_driver(msichip_driver);
->> +
->> +
-> 
-> I think,for a interrupt controller, msichip driver initialization maybe is too late
-> for some devices which connect to this irqchip if we use module_platform_driver.
+Somewhere in the patchset you need to describe why you need a separate PE 
+for a root bus and why reserved_pe_idx is not enough for this.
 
-That's a consequence of this design. This is why I insisted on the fact
-that this is currently avoided by using deferred probe in drivers, and
-that it should be solved by having a probe order. Either way, this is
-not something that we can solve at that level (see the multiple proposal
-for this on the various lists).
 
-> So, how about use the arch_initcall to register the msichip driver?
 
-You're only pushing the problem one level up. And you'll realize that
-this is not enough for some random driver. This is not sustainable, and
-must be addressed properly.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 33 ++++++++++++++++++++++---------
+>   arch/powerpc/platforms/powernv/pci.h      |  1 +
+>   2 files changed, 25 insertions(+), 9 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index eea1c96..5e6745f 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -207,14 +207,14 @@ static int pnv_ioda2_init_m64(struct pnv_phb *phb)
+>   	set_bit(phb->ioda.m64_bar_idx, &phb->ioda.m64_bar_alloc);
+>
+>   	/*
+> -	 * Strip off the segment used by the reserved PE, which is
+> -	 * expected to be 0 or last one of PE capabicity.
+> +	 * Exclude the segments for reserved and root bus PE, which
+> +	 * are first or last two PEs.
+>   	 */
+>   	r = &phb->hose->mem_resources[1];
+>   	if (phb->ioda.reserved_pe_idx == 0)
+> -		r->start += phb->ioda.m64_segsize;
+> +		r->start += (2 * phb->ioda.m64_segsize);
+>   	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
+> -		r->end -= phb->ioda.m64_segsize;
+> +		r->end -= (2 * phb->ioda.m64_segsize);
+>   	else
+>   		pr_warn("  Cannot strip M64 segment for reserved PE#%d\n",
+>   			phb->ioda.reserved_pe_idx);
+> @@ -294,14 +294,14 @@ static int pnv_ioda1_init_m64(struct pnv_phb *phb)
+>   	}
+>
+>   	/*
+> -	 * Exclude the segment used by the reserved PE, which
+> -	 * is expected to be 0 or last supported PE#.
+> +	 * Exclude the segments for reserved and root bus PE, which
+> +	 * are first or last two PEs.
+>   	 */
+>   	r = &phb->hose->mem_resources[1];
+>   	if (phb->ioda.reserved_pe_idx == 0)
+> -		r->start += phb->ioda.m64_segsize;
+> +		r->start += (2 * phb->ioda.m64_segsize);
+>   	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
+> -		r->end -= phb->ioda.m64_segsize;
+> +		r->end -= (2 * phb->ioda.m64_segsize);
+>   	else
+>   		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
+>   			phb->ioda.reserved_pe_idx);
+> @@ -3231,7 +3231,22 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>   			phb->ioda.dma32_segmap[i] = IODA_INVALID_PE;
+>   	}
+>   	phb->ioda.pe_array = aux + pemap_off;
+> -	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
+> +
+> +	/*
+> +	 * Choose PE number for root bus, which shouldn't have
+> +	 * M64 resources consumed by its child devices. To pick
+> +	 * the PE number adjacent to the reserved one if possible.
+> +	 */
+> +	pnv_ioda_reserve_pe(phb, phb->ioda.reserved_pe_idx);
+> +	if (phb->ioda.reserved_pe_idx == 0) {
+> +		phb->ioda.root_pe_idx = 1;
+> +		pnv_ioda_reserve_pe(phb, phb->ioda.root_pe_idx);
+> +	} else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1)) {
+> +		phb->ioda.root_pe_idx = phb->ioda.reserved_pe_idx - 1;
+> +		pnv_ioda_reserve_pe(phb, phb->ioda.root_pe_idx);
+> +	} else {
+> +		phb->ioda.root_pe_idx = IODA_INVALID_PE;
+> +	}
+>
+>   	INIT_LIST_HEAD(&phb->ioda.pe_list);
+>   	mutex_init(&phb->ioda.pe_list_mutex);
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index e55ab0e..a8ba97f 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -120,6 +120,7 @@ struct pnv_phb {
+>   			/* Global bridge info */
+>   			unsigned int		total_pe_num;
+>   			unsigned int		reserved_pe_idx;
+> +			unsigned int		root_pe_idx;
+>
+>   			/* 32-bit MMIO window */
+>   			unsigned int		m32_size;
+>
 
-Thanks,
 
-	M.
 -- 
-Jazz is not dead. It just smells funny...
+Alexey
