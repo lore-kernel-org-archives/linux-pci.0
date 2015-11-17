@@ -1,177 +1,212 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51901 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751465AbbKPSbd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 Nov 2015 13:31:33 -0500
-Message-ID: <564A2101.90600@arm.com>
-Date: Mon, 16 Nov 2015 18:31:29 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:51914 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750948AbbKQBX1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 20:23:27 -0500
+Received: from localhost
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 17 Nov 2015 11:23:24 +1000
+Date: Tue, 17 Nov 2015 12:22:23 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com
+Subject: Re: [PATCH v7 08/50] powerpc/powernv: Rename PE# fields in struct
+ pnv_phb
+Message-ID: <20151117012223.GA28026@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-9-git-send-email-gwshan@linux.vnet.ibm.com>
+ <56498D42.3000505@ozlabs.ru>
 MIME-Version: 1.0
-To: Phil Edworthy <phil.edworthy@renesas.com>
-CC: Thierry Reding <treding@nvidia.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
-References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>	<PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>	<20151109161115.GA13870@ulmo.nvidia.com>	<PS1PR06MB1180111D6423287273B64B0FF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>	<20151110155232.GA25368@ulmo.nvidia.com>	<20151111163802.3a96080c@arm.com>	<PS1PR06MB11806B2B906CABB553B94442F5120@PS1PR06MB1180.apcprd06.prod.outlook.com> <20151112203100.2e91da2a@arm.com> <PS1PR06MB11800B547C8957B226077B83F5110@PS1PR06MB1180.apcprd06.prod.outlook.com>
-In-Reply-To: <PS1PR06MB11800B547C8957B226077B83F5110@PS1PR06MB1180.apcprd06.prod.outlook.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56498D42.3000505@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/11/15 09:36, Phil Edworthy wrote:
-> Hi Marc,
-> 
-> On 12 November 2015 20:31, Marc Zyngier wrote:
->> Phil Edworthy <phil.edworthy@renesas.com> wrote:
->>> On 11 November 2015 16:38, Marc Zyngier wrote:
->>>> On Tue, 10 Nov 2015 16:52:33 +0100
->>>> Thierry Reding <treding@nvidia.com> wrote:
->>>>
->>>>> On Mon, Nov 09, 2015 at 06:01:49PM +0000, Phil Edworthy wrote:
->>>>>> Hi Thierry,
->>>>>>
->>>>>> On 09 November 2015 17:24, Phil wrote:
->>>>>>> On 09 November 2015 16:11, Thierry wrote:
->>>>>>>> On Mon, Nov 09, 2015 at 03:20:24PM +0000, Phil Edworthy wrote:
->>>>>>>>> cc'ing others (Tegra, Altera, Designware) who may have the same
->> bug
->>>>>>>>>
->>>>>>>>> On 03 November 2015 09:28, Phil Edworthy wrote:
->>>>>>>>>> The OF node passed to irq_domain_add_linear() should be a
->>>>>>>>>> pointer to interrupt controller's device tree node, or NULL,
->>>>>>>>>> but not the PCI controller's node.
->>>>>>>>>>
->>>>>>>>>> This fixes an oops in msi_domain_alloc_irqs() when it tries
->>>>>>>>>> to call msi_check().
->>>>>>>>>>
->>>>>>>>>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
->>>>>>>>>> ---
->>>>>>>>>>  drivers/pci/host/pcie-rcar.c | 2 +-
->>>>>>>>>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>>>>>>>>
->>>>>>>>>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-
->> rcar.c
->>>>>>>>>> index 2377bf0..c6fa562 100644
->>>>>>>>>> --- a/drivers/pci/host/pcie-rcar.c
->>>>>>>>>> +++ b/drivers/pci/host/pcie-rcar.c
->>>>>>>>>> @@ -709,7 +709,7 @@ static int rcar_pcie_enable_msi(struct
->> rcar_pcie
->>>>>>> *pcie)
->>>>>>>>>>  	msi->chip.setup_irq = rcar_msi_setup_irq;
->>>>>>>>>>  	msi->chip.teardown_irq = rcar_msi_teardown_irq;
->>>>>>>>>>
->>>>>>>>>> -	msi->domain = irq_domain_add_linear(pcie->dev->of_node,
->>>>>>>>>> INT_PCI_MSI_NR,
->>>>>>>>>> +	msi->domain = irq_domain_add_linear(NULL,
->> INT_PCI_MSI_NR,
->>>>>>>>>>  					    &msi_domain_ops, &msi-
->>>>> chip);
->>>>>>>>>>  	if (!msi->domain) {
->>>>>>>>>>  		dev_err(&pdev->dev, "failed to create IRQ domain\n");
->>>>>>>>
->>>>>>>> On Tegra the PCI controller is in fact the interrupt controller for
->>>>>>>> MSIs. And looking at the code here it seems like the same would apply
->> to
->>>>>>>> RCAR.
->>>>>>> Yes you are correct here.
->>>>>>>
->>>>>>>> I'm also slightly confused as to why this would cause ->msi_check() to
->>>>>>>> fail. The default implementation (msi_domain_ops_check()) doesn't
->> do
->>>>>>>> anything.
->>>>>>>>
->>>>>>>> Also, how is passing in NULL instead of a valid struct device_node *
->>>>>>>> going to prevent an oops? Perhaps this is one of those reference
->> count
->>>>>>>> imbalance bugs that have recently been showing up?
->>>>>>> On arm64 (previously I didn't realise this just affects arm64, not arm),
->>>>>>> the changes in commit f075915ac0b11 ("PCI/MSI: Drop domain field
->> from
->>>>>>> msi_controller") and d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain
->> use
->>>>>>> struct device::msi_domain") return an uninitialized msi domain that
->> leads
->>>>>>> to the oops. It appears that these changes assume that msi interrupt
->>>>>>> controller is separate from the PCI controller.
->>>>>> More accurately, when CONFIG_GENERIC_MSI_IRQ_DOMAIN is enabled,
->>>>>> pci_msi_get_domain() calls dev_get_msi_domain() and at this point
->>>>>> dev->msi_domain is uninitialized.
->>>>>
->>>>> Marc, any idea what's going on here?
->>>>
->>>> Thanks for putting me in the loop.
->>>>
->>>> No precise idea yet, but the proposed fix definitely looks like the
->>>> wrong one. Actually, not passing a node identifier to any domain
->>>> constructor is pretty much always a mistake when using DT.
->>>>
->>>> Can someone post a stack trace for this issue so that I can have a
->>>> look? I'm currently traveling, so expect a slightly delayed reply...
->>>
->>> Unfortunately, not all the code for this arm64 board is upstream
->>> yet, this code base is off 4.3-rc7.
+On Mon, Nov 16, 2015 at 07:01:06PM +1100, Alexey Kardashevskiy wrote:
+>On 11/05/2015 12:12 AM, Gavin Shan wrote:
+>>This renames the fields related to PE number in "struct pnv_phb"
+>>for better reflecting of their usages as Alexey suggested. No
+>>logical changes introduced.
 >>
->> Oh, this is arm64? Well, you're not supposed to use the old
->> msi_controller stuff on arm64 - I really want all arm64 controllers to
->> be converted to generic MSI domains. Please have a look at the xgene
->> code, for example.
-> Oh right, I wasn't aware of that. I had hoped that drivers weren't so
-> arch specific...
-
-They are not. Generic MSI domains are supported on all other
-architectures that select this option (arm, x86).
-
->> But irrespective of that, I share Thierry's skepticism:
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/platforms/powernv/eeh-powernv.c |  2 +-
+>>  arch/powerpc/platforms/powernv/pci-ioda.c    | 56 ++++++++++++++--------------
+>>  arch/powerpc/platforms/powernv/pci.c         |  2 +-
+>>  arch/powerpc/platforms/powernv/pci.h         |  4 +-
+>>  4 files changed, 32 insertions(+), 32 deletions(-)
 >>
->>> systemd-udevd[1315]: undefined instruction: pc=ffffffc03106d41c
->>> Code: ffffffc0 311f9740 ffffffc0 3106d138 (ffffffc0)
->>> Internal error: Oops - undefined instruction: 0 [#1] PREEMPT SMP
->>> Modules linked in: e1000e(+)
->>> CPU: 0 PID: 1315 Comm: systemd-udevd Not tainted 4.3.0-rc7+ #4
->>> Hardware name: Renesas Salvator-X board based on r8a7795 (DT)
->>> task: ffffffc0307af080 ti: ffffffc030ecc000 task.ti: ffffffc030ecc000
->>> PC is at 0xffffffc03106d41c
+>>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>index e1c9072..861a7d2 100644
+>>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>@@ -75,7 +75,7 @@ static int pnv_eeh_init(void)
+>>  		 * and P7IOC separately. So we should regard
+>>  		 * PE#0 as valid for PHB3 and P7IOC.
+>>  		 */
+>>-		if (phb->ioda.reserved_pe != 0)
+>>+		if (phb->ioda.reserved_pe_idx != 0)
+>>  			eeh_add_flag(EEH_VALID_PE_ZERO);
 >>
->> You are clearly jumping to nowhereland, and I doubt this is related to
->> the domain of_node being set. Are you overriding arch_setup_msi_irq one
->> way or another?
-> No, I'm not overriding arch_setup_msi_irq at all.
-> 
-> Since the stack trace doesn't help that much I added some tracing:
-> pci_msi_setup_msi_irqs()
->   calls pci_msi_get_domain()
->     calls dev_get_msi_domain(), gets a non-NULL domain.
-> pci_msi_setup_msi_irqs()
->   calls pci_msi_domain_alloc_irqs()
->     calls msi_domain_alloc_irqs()
-> msi_domain_alloc_irqs:273: ops=ffffffc03193a810
-> msi_domain_alloc_irqs:274: ops->msi_check=ffffffc031161418
-> systemd-udevd[1311]: undefined instruction: pc=ffffffc03116141c
-> That looks to me as though msi_check is off pointing to the weeds.
+>>  		break;
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index 968da91..b4932c3 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -134,7 +134,7 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
+>>
+>>  static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>  {
+>>-	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe)) {
+>>+	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe_num)) {
+>>  		pr_warn("%s: Invalid PE %d on PHB#%x\n",
+>>  			__func__, pe_no, phb->hose->global_number);
+>>  		return;
+>>@@ -154,8 +154,8 @@ static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>>
+>>  	do {
+>>  		pe = find_next_zero_bit(phb->ioda.pe_alloc,
+>>-					phb->ioda.total_pe, 0);
+>>-		if (pe >= phb->ioda.total_pe)
+>>+					phb->ioda.total_pe_num, 0);
+>>+		if (pe >= phb->ioda.total_pe_num)
+>>  			return IODA_INVALID_PE;
+>>  	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
+>>
+>>@@ -209,13 +209,13 @@ static int pnv_ioda2_init_m64(struct pnv_phb *phb)
+>>  	 * expected to be 0 or last one of PE capabicity.
+>>  	 */
+>>  	r = &phb->hose->mem_resources[1];
+>>-	if (phb->ioda.reserved_pe == 0)
+>>+	if (phb->ioda.reserved_pe_idx == 0)
+>>  		r->start += phb->ioda.m64_segsize;
+>>-	else if (phb->ioda.reserved_pe == (phb->ioda.total_pe - 1))
+>>+	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
+>>  		r->end -= phb->ioda.m64_segsize;
+>>  	else
+>>  		pr_warn("  Cannot strip M64 segment for reserved PE#%d\n",
+>>-			phb->ioda.reserved_pe);
+>>+			phb->ioda.reserved_pe_idx);
+>>
+>>  	return 0;
+>>
+>>@@ -284,7 +284,7 @@ static int pnv_ioda2_pick_m64_pe(struct pci_bus *bus, bool all)
+>>  		return IODA_INVALID_PE;
+>>
+>>  	/* Allocate bitmap */
+>>-	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
+>>+	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
+>>  	pe_alloc = kzalloc(size, GFP_KERNEL);
+>>  	if (!pe_alloc) {
+>>  		pr_warn("%s: Out of memory !\n",
+>>@@ -300,7 +300,7 @@ static int pnv_ioda2_pick_m64_pe(struct pci_bus *bus, bool all)
+>>  	 * contributed by its child buses. For the case, we needn't
+>>  	 * pick M64 dependent PE#.
+>>  	 */
+>>-	if (bitmap_empty(pe_alloc, phb->ioda.total_pe)) {
+>>+	if (bitmap_empty(pe_alloc, phb->ioda.total_pe_num)) {
+>>  		kfree(pe_alloc);
+>>  		return IODA_INVALID_PE;
+>>  	}
+>>@@ -311,8 +311,8 @@ static int pnv_ioda2_pick_m64_pe(struct pci_bus *bus, bool all)
+>>  	 */
+>>  	master_pe = NULL;
+>>  	i = -1;
+>>-	while ((i = find_next_bit(pe_alloc, phb->ioda.total_pe, i + 1)) <
+>>-		phb->ioda.total_pe) {
+>>+	while ((i = find_next_bit(pe_alloc, phb->ioda.total_pe_num, i + 1)) <
+>>+		phb->ioda.total_pe_num) {
+>>  		pe = &phb->ioda.pe_array[i];
+>>
+>>  		if (!master_pe) {
+>>@@ -364,7 +364,7 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+>>  	hose->mem_offset[1] = res->start - pci_addr;
+>>
+>>  	phb->ioda.m64_size = resource_size(res);
+>>-	phb->ioda.m64_segsize = phb->ioda.m64_size / phb->ioda.total_pe;
+>>+	phb->ioda.m64_segsize = phb->ioda.m64_size / phb->ioda.total_pe_num;
+>>  	phb->ioda.m64_base = pci_addr;
+>>
+>>  	pr_info(" MEM64 0x%016llx..0x%016llx -> 0x%016llx\n",
+>>@@ -465,7 +465,7 @@ static int pnv_ioda_get_pe_state(struct pnv_phb *phb, int pe_no)
+>>  	s64 rc;
+>>
+>>  	/* Sanity check on PE number */
+>>-	if (pe_no < 0 || pe_no >= phb->ioda.total_pe)
+>>+	if (pe_no < 0 || pe_no >= phb->ioda.total_pe_num)
+>>  		return OPAL_EEH_STOPPED_PERM_UNAVAIL;
+>>
+>>  	/*
+>>@@ -1394,9 +1394,9 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>>  		} else {
+>>  			mutex_lock(&phb->ioda.pe_alloc_mutex);
+>>  			*pdn->pe_num_map = bitmap_find_next_zero_area(
+>>-				phb->ioda.pe_alloc, phb->ioda.total_pe,
+>>+				phb->ioda.pe_alloc, phb->ioda.total_pe_num,
+>>  				0, num_vfs, 0);
+>>-			if (*pdn->pe_num_map >= phb->ioda.total_pe) {
+>>+			if (*pdn->pe_num_map >= phb->ioda.total_pe_num) {
+>>  				mutex_unlock(&phb->ioda.pe_alloc_mutex);
+>>  				dev_info(&pdev->dev, "Failed to enable VF%d\n", num_vfs);
+>>  				kfree(pdn->pe_num_map);
+>>@@ -2670,7 +2670,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>>  	pdn->m64_single_mode = false;
+>>
+>>  	total_vfs = pci_sriov_get_totalvfs(pdev);
+>>-	mul = phb->ioda.total_pe;
+>>+	mul = phb->ioda.total_pe_num;
+>>  	total_vf_bar_sz = 0;
+>>
+>>  	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>>@@ -2772,7 +2772,7 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>>  			region.end   = res->end - phb->ioda.io_pci_base;
+>>  			index = region.start / phb->ioda.io_segsize;
+>>
+>>-			while (index < phb->ioda.total_pe &&
+>>+			while (index < phb->ioda.total_pe_num &&
+>>  			       region.start <= region.end) {
+>>  				phb->ioda.io_segmap[index] = pe->pe_number;
+>>  				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>>@@ -2797,7 +2797,7 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>>  				       phb->ioda.m32_pci_base;
+>>  			index = region.start / phb->ioda.m32_segsize;
+>>
+>>-			while (index < phb->ioda.total_pe &&
+>>+			while (index < phb->ioda.total_pe_num &&
+>>  			       region.start <= region.end) {
+>>  				phb->ioda.m32_segmap[index] = pe->pe_number;
+>>  				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>>@@ -3067,13 +3067,13 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  		pr_err("  Failed to map registers !\n");
+>>
+>>  	/* Initialize more IODA stuff */
+>>-	phb->ioda.total_pe = 1;
+>>+	phb->ioda.total_pe_num = 1;
+>>  	prop32 = of_get_property(np, "ibm,opal-num-pes", NULL);
+>>  	if (prop32)
+>>-		phb->ioda.total_pe = be32_to_cpup(prop32);
+>>+		phb->ioda.total_pe_num = be32_to_cpup(prop32);
+>>  	prop32 = of_get_property(np, "ibm,opal-reserved-pe", NULL);
+>>  	if (prop32)
+>>-		phb->ioda.reserved_pe = be32_to_cpup(prop32);
+>>+		phb->ioda.reserved_pe_idx = be32_to_cpup(prop32);
+>
+>
+>It is not related to the patch but you initialize total_pe to 1 before
+>checking the device tree (which is ok) but you do not initialize reserved_pe
+>and I cannot find where @phb would be zeroed - it is allocated by
+>memblock_virt_alloc() which does not do that.
+>
 
-So the next step is to find out who initializes msi_check. Assuming
-someone does...
-
-> By passing a NULL domain into irq_domain_add_linear() you get:
-> pci_msi_setup_msi_irqs()
->   calls pci_msi_get_domain()
->     calls dev_get_msi_domain(), gets a NULL domain.
->     calls arch_setup_msi_irq()
-> All ok then.
-
-Yes, because you're sidestepping the issue. Any chance you could dig a
-bit deeper? I'd really like to nail this one down (before we convert
-your PCI driver to the right API... ;-).
+There is a call "memset(ptr, 0, size)" in memblock_virt_alloc_internal().
 
 Thanks,
+Gavin
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
