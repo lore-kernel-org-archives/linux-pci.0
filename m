@@ -1,219 +1,147 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 3 Nov 2015 14:15:12 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org
-Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
- hostbridge init
-Message-ID: <20151103141512.GC3574@red-moon>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
- <1445963922-22711-12-git-send-email-tn@semihalf.com>
- <5631180D.2000902@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:51271 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742AbbKQItL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 03:49:11 -0500
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 17 Nov 2015 18:49:09 +1000
+Date: Tue, 17 Nov 2015 19:48:15 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com
+Subject: Re: [PATCH v7 17/50] powerpc/powernv: Avoid calculating DMA32
+ segments on PHB3
+Message-ID: <20151117084815.GB16586@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-18-git-send-email-gwshan@linux.vnet.ibm.com>
+ <564A7DC5.5060702@ozlabs.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5631180D.2000902@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <564A7DC5.5060702@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 28, 2015 at 02:46:37PM -0400, Sinan Kaya wrote:
+On Tue, Nov 17, 2015 at 12:07:17PM +1100, Alexey Kardashevskiy wrote:
+>On 11/05/2015 12:12 AM, Gavin Shan wrote:
+>>In pnv_ioda_setup_dma(), it's unnecessary to calculate the DMA32
+>>segments for PEs on PHB3 as the whole available DMA32 space can
+>>be assigned to one specific PE on PHB3.
+>>
+>>This splits pnv_ioda_setup_dma() to pnv_pci_ioda1_setup_dma() and
+>>pnv_pci_ioda2_setup_dma() in order to avoid calculating DMA32
+>>segments for PEs on PHB3. No logical changes introduced.
+>
+>
+>This patch is not needed as
+>
+>[PATCH v7 20/50] powerpc/powernv: Improve DMA32 segment calculation
+>
+>moves this calculation to another place (which already makes this patch
+>unnecessary) and
+>
 
-[...]
+I don't follow your comments, can you tell me how to split/merge the patches?
 
-> >-int raw_pci_write(unsigned int domain, unsigned int bus,
-> >-		unsigned int devfn, int reg, int len, u32 val)
-> >+struct pci_ops pci_root_ops = {
-> >+	.map_bus = pci_mcfg_dev_base,
-> >+	.read = pci_generic_config_read,
-> >+	.write = pci_generic_config_write,
-> 
-> 
-> Can you change these with pci_generic_config_read32 and
-> pci_generic_config_write32? We have some targets that can only do 32
-> bits PCI config space access.
+>[PATCH v7 26/50] powerpc/powernv: Create PEs at PCI hot plugging time
+>
+>removes just introduced pnv_pci_ioda1_setup_dma() - if you remove it, then
+>there is no point in fixing it in the first place.
+>
 
-No.
+This function isn't removed in 26/50, could you double check?
 
-http://www.spinics.net/lists/linux-pci/msg44869.html
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c | 41 ++++++++++++++++++-------------
+>>  1 file changed, 24 insertions(+), 17 deletions(-)
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index 5a08e20..4c2e023 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -2383,7 +2383,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>>  		pnv_ioda_setup_bus_dma(pe, pe->pbus);
+>>  }
+>>
+>>-static void pnv_ioda_setup_dma(struct pnv_phb *phb)
+>>+static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
+>>  {
+>>  	struct pci_controller *hose = phb->hose;
+>>  	unsigned int residual, remaining, segs, tw, base;
+>>@@ -2428,26 +2428,30 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
+>>  				segs = remaining;
+>>  		}
+>>
+>>-		/*
+>>-		 * For IODA2 compliant PHB3, we needn't care about the weight.
+>>-		 * The all available 32-bits DMA space will be assigned to
+>>-		 * the specific PE.
+>>-		 */
+>>-		if (phb->type == PNV_PHB_IODA1) {
+>>-			pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
+>>-				pe->dma_weight, segs);
+>>-			pnv_pci_ioda1_setup_dma_pe(phb, pe, base, segs);
+>>-		} else {
+>>-			pe_info(pe, "Assign DMA32 space\n");
+>>-			segs = 0;
+>>-			pnv_pci_ioda2_setup_dma_pe(phb, pe);
+>>-		}
+>>+		pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
+>>+			pe->dma_weight, segs);
+>>+		pnv_pci_ioda1_setup_dma_pe(phb, pe, base, segs);
+>>
+>>  		remaining -= segs;
+>>  		base += segs;
+>>  	}
+>>  }
+>>
+>>+static void pnv_pci_ioda2_setup_dma(struct pnv_phb *phb)
+>>+{
+>>+	struct pnv_ioda_pe *pe;
+>>+
+>>+	pnv_pci_ioda_setup_opal_tce_kill(phb);
+>>+
+>>+	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
+>>+		if (!pe->dma_weight)
+>>+			continue;
+>>+
+>>+		pe_info(pe, "Assign DMA32 space\n");
+>>+		pnv_pci_ioda2_setup_dma_pe(phb, pe);
+>>+	}
+>>+}
+>>+
+>>  #ifdef CONFIG_PCI_MSI
+>>  static void pnv_ioda2_msi_eoi(struct irq_data *d)
+>>  {
+>>@@ -2931,10 +2935,13 @@ static void pnv_pci_ioda_setup_DMA(void)
+>>  	struct pnv_phb *phb;
+>>
+>>  	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+>>-		pnv_ioda_setup_dma(hose->private_data);
+>>+		phb = hose->private_data;
+>>+		if (phb->type == PNV_PHB_IODA1)
+>>+			pnv_pci_ioda1_setup_dma(phb);
+>>+		else
+>>+			pnv_pci_ioda2_setup_dma(phb);
+>>
+>>  		/* Mark the PHB initialization done */
+>>-		phb = hose->private_data;
+>>  		phb->initialized = 1;
+>>  	}
+>>  }
+>>
+>
+>
+>-- 
+>Alexey
+>
 
-Can you be a bit more specific please ?
-
-Sigh. Looks like we have to start adding platform specific quirks even
-before we merged the generic ACPI PCIe host controller implementation.
-
-Lorenzo
-
-> >+};
-> >+
-> >+#ifdef CONFIG_PCI_MMCONFIG
-> >+static int pci_add_mmconfig_region(struct acpi_pci_root_info *ci)
-> >  {
-> >-	return -ENXIO;
-> >+	struct pci_mmcfg_region *cfg;
-> >+	struct acpi_pci_root *root;
-> >+	int seg, start, end, err;
-> >+
-> >+	root = ci->root;
-> >+	seg = root->segment;
-> >+	start = root->secondary.start;
-> >+	end = root->secondary.end;
-> >+
-> >+	cfg = pci_mmconfig_lookup(seg, start);
-> >+	if (cfg)
-> >+		return 0;
-> >+
-> >+	cfg = pci_mmconfig_alloc(seg, start, end, root->mcfg_addr);
-> >+	if (!cfg)
-> >+		return -ENOMEM;
-> >+
-> >+	err = pci_mmconfig_inject(cfg);
-> >+	return err;
-> >  }
-> >
-> >-#ifdef CONFIG_ACPI
-> >+static void pci_remove_mmconfig_region(struct acpi_pci_root_info *ci)
-> >+{
-> >+	struct acpi_pci_root *root = ci->root;
-> >+	struct pci_mmcfg_region *cfg;
-> >+
-> >+	cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
-> >+	if (cfg)
-> >+		return;
-> >+
-> >+	if (cfg->hot_added)
-> >+		pci_mmconfig_delete(root->segment, root->secondary.start,
-> >+				    root->secondary.end);
-> >+}
-> >+#else
-> >+static int pci_add_mmconfig_region(struct acpi_pci_root_info *ci)
-> >+{
-> >+	return 0;
-> >+}
-> >+
-> >+static void pci_remove_mmconfig_region(struct acpi_pci_root_info *ci) { }
-> >+#endif
-> >+
-> >+static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
-> >+{
-> >+	return pci_add_mmconfig_region(ci);
-> >+}
-> >+
-> >+static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
-> >+{
-> >+	pci_remove_mmconfig_region(ci);
-> >+	kfree(ci);
-> >+}
-> >+
-> >+static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
-> >+{
-> >+	struct resource_entry *entry, *tmp;
-> >+	int ret;
-> >+
-> >+	ret = acpi_pci_probe_root_resources(ci);
-> >+	if (ret < 0)
-> >+		return ret;
-> >+
-> >+	resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
-> >+		struct resource *res = entry->res;
-> >+
-> >+		/*
-> >+		 * Special handling for ARM IO range
-> >+		 * TODO: need to move pci_register_io_range() function out
-> >+		 * of drivers/of/address.c for both used by DT and ACPI
-> >+		 */
-> >+		if (res->flags & IORESOURCE_IO) {
-> >+			unsigned long port;
-> >+			int err;
-> >+			resource_size_t length = res->end - res->start;
-> >+
-> >+			err = pci_register_io_range(res->start, length);
-> >+			if (err) {
-> >+				resource_list_destroy_entry(entry);
-> >+				continue;
-> >+			}
-> >+
-> >+			port = pci_address_to_pio(res->start);
-> >+			if (port == (unsigned long)-1) {
-> >+				resource_list_destroy_entry(entry);
-> >+				continue;
-> >+			}
-> >+
-> >+			res->start = port;
-> >+			res->end = res->start + length - 1;
-> >+
-> >+			if (pci_remap_iospace(res, res->start) < 0)
-> >+				resource_list_destroy_entry(entry);
-> >+		}
-> >+	}
-> >+
-> >+	return 0;
-> >+}
-> >+
-> >+static struct acpi_pci_root_ops acpi_pci_root_ops = {
-> >+	.pci_ops = &pci_root_ops,
-> >+	.init_info = pci_acpi_root_init_info,
-> >+	.release_info = pci_acpi_root_release_info,
-> >+	.prepare_resources = pci_acpi_root_prepare_resources,
-> >+};
-> >+
-> >  /* Root bridge scanning */
-> >  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
-> >  {
-> >-	/* TODO: Should be revisited when implementing PCI on ACPI */
-> >-	return NULL;
-> >+	int node = acpi_get_node(root->device->handle);
-> >+	int domain = root->segment;
-> >+	int busnum = root->secondary.start;
-> >+	struct acpi_pci_root_info *info;
-> >+	struct pci_bus *bus;
-> >+
-> >+	if (domain && !pci_domains_supported) {
-> >+		pr_warn("PCI %04x:%02x: multiple domains not supported.\n",
-> >+			domain, busnum);
-> >+		return NULL;
-> >+	}
-> >+
-> >+	info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
-> >+	if (!info) {
-> >+		dev_err(&root->device->dev,
-> >+			"pci_bus %04x:%02x: ignored (out of memory)\n",
-> >+			domain, busnum);
-> >+		return NULL;
-> >+	}
-> >+
-> >+	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, info, root);
-> >+
-> >+	/* After the PCI-E bus has been walked and all devices discovered,
-> >+	 * configure any settings of the fabric that might be necessary.
-> >+	 */
-> >+	if (bus) {
-> >+		struct pci_bus *child;
-> >+
-> >+		list_for_each_entry(child, &bus->children, node)
-> >+			pcie_bus_configure_settings(child);
-> >+	}
-> >+
-> >+	return bus;
-> >  }
-> >  #endif
-> >
-> 
-> -- 
-> Sinan Kaya
-> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
-> Linux Foundation Collaborative Project
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
