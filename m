@@ -1,89 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:35918 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755198AbbK0RiD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Nov 2015 12:38:03 -0500
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v4 3/5] PCI: iproc: Add iProc PCIe MSI device tree binding
-Date: Fri, 27 Nov 2015 09:37:46 -0800
-Message-ID: <1448645868-5730-4-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
-References: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:56802 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751646AbbKQCpZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 21:45:25 -0500
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 17 Nov 2015 12:45:23 +1000
+Date: Tue, 17 Nov 2015 13:44:22 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com
+Subject: Re: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
+Message-ID: <20151117024422.GA9229@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
+ <56498D7B.7000307@ozlabs.ru>
+ <20151117013813.GB31584@gwshan>
+ <564A8CEC.4050906@ozlabs.ru>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <564A8CEC.4050906@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch updates the iProc PCIe device tree bindings with added
-binding information for MSI
+On Tue, Nov 17, 2015 at 01:11:56PM +1100, Alexey Kardashevskiy wrote:
+>On 11/17/2015 12:38 PM, Gavin Shan wrote:
+>>On Mon, Nov 16, 2015 at 07:02:03PM +1100, Alexey Kardashevskiy wrote:
+>>>On 11/05/2015 12:12 AM, Gavin Shan wrote:
+>>>>This enables M64 window on P7IOC, which has been enabled on PHB3.
+>>>>Different from PHB3 where 16 M64 BARs are supported and each of
+>>>>them can be owned by one particular PE# exclusively or divided
+>>>>evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
+>>>>of them are divided to 8 segments. So every P7IOC PHB supports
+>>>>128 M64 segments in total. P7IOC has M64DT, which helps mapping
+>>>>one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
+>>>>M64DT, indicating that one M64 segment can only be pinned to the
+>>>>fixed PE#. In order to have same code to support M64 on P7IOC and
+>>>>PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
+>>>>of them is pinned to the fixed PE# by bypassing the function of
+>>>>M64DT. In turn, we just need different phb->init_m64() for P7IOC
+>>>>and PHB3 to support M64.
+>>>>
+>>>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>>>---
+>>>>  arch/powerpc/platforms/powernv/pci-ioda.c | 86 +++++++++++++++++++++++++++++--
+>>>>  arch/powerpc/platforms/powernv/pci.h      |  3 ++
+>>>>  2 files changed, 86 insertions(+), 3 deletions(-)
+>>>>
+>>>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>index 1f7d985..bfe69f1 100644
+>>>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>@@ -256,6 +256,64 @@ static void pnv_ioda_reserve_dev_m64_pe(struct pci_dev *pdev,
+>>>>  	}
+>>>>  }
+>>>>
+>>>>+static int pnv_ioda1_init_m64(struct pnv_phb *phb)
+>>>>+{
+>>>>+	struct resource *r;
+>>>>+	int index;
+>>>>+
+>>>>+	/*
+>>>>+	 * There are 16 M64 BARs, each of which has 8 segments. So
+>>>>+	 * there are as many M64 segments as the maximum number of
+>>>>+	 * PEs, which is 128.
+>>>>+	 */
+>>>>+	for (index = 0; index < PNV_IODA1_M64_NUM; index++) {
+>>>>+		unsigned long base, segsz = phb->ioda.m64_segsize;
+>>>>+		int64_t rc;
+>>>>+
+>>>>+		base = phb->ioda.m64_base +
+>>>>+		       index * PNV_IODA1_M64_SEGS * segsz;
+>>>>+		rc = opal_pci_set_phb_mem_window(phb->opal_id,
+>>>>+				OPAL_M64_WINDOW_TYPE, index, base, 0,
+>>>>+				PNV_IODA1_M64_SEGS * segsz);
+>>>>+		if (rc != OPAL_SUCCESS) {
+>>>>+			pr_warn("  Error %lld setting M64 PHB#%d-BAR#%d\n",
+>>>>+				rc, phb->hose->global_number, index);
+>>>>+			goto fail;
+>>>>+		}
+>>>>+
+>>>>+		rc = opal_pci_phb_mmio_enable(phb->opal_id,
+>>>>+				OPAL_M64_WINDOW_TYPE, index,
+>>>>+				OPAL_ENABLE_M64_SPLIT);
+>>>>+		if (rc != OPAL_SUCCESS) {
+>>>>+			pr_warn("  Error %lld enabling M64 PHB#%d-BAR#%d\n",
+>>>>+				rc, phb->hose->global_number, index);
+>>>>+			goto fail;
+>>>>+		}
+>>>>+	}
+>>>>+
+>>>>+	/*
+>>>>+	 * Exclude the segment used by the reserved PE, which
+>>>>+	 * is expected to be 0 or last supported PE#.
+>>>>+	 */
+>>>>+	r = &phb->hose->mem_resources[1];
+>>>
+>>>
+>>>What does "1" mean here? A bridge's 64bit prefetchable window?
+>>>
+>>
+>>It's PHB's M64 window.
+>
+>mem_resources[] of a hose are not windows of the root PCI bridge?
+>
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Anup Patel <anup.patel@broadcom.com>
-Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
----
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    | 35 ++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
+No. They're windows for root bus, but not for root PCI bridge.
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-index 06eae0f..acbdbad 100644
---- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-@@ -35,6 +35,28 @@ Optional:
- - brcm,pcie-ob-oarr-size: Some iProc SoCs need the OARR size bit to be set to
- increase the outbound window size
- 
-+MSI support (optional):
-+
-+For older platforms without MSI integrated in the GIC, iProc PCIe core provides
-+an event queue based MSI support. The iProc MSI uses host memories to store
-+MSI posted writes in the event queues
-+
-+- msi-parent: Link to the device node of the MSI controller. On newer iProc
-+platforms, the MSI controller may be gicv2m or gicv3-its. On older iProc
-+platforms without MSI support in its interrupt controller, one may use the
-+event queue based MSI support integrated within the iProc PCIe core
-+
-+When the iProc event queue based MSI is used, one needs to define the
-+following properties in the MSI device node:
-+- compatible: Must be "brcm,iproc-msi"
-+- msi-controller: claims itself as an MSI controller
-+- interrupt-parent: Link to its parent interrupt device
-+- interrupts: List of interrupt IDs from its parent interrupt device
-+
-+Optional properties:
-+- brcm,pcie-msi-inten: Needs to be present for some older iProc platforms that
-+require the interrupt enable registers to be set explicitly to enable MSI
-+
- Example:
- 	pcie0: pcie@18012000 {
- 		compatible = "brcm,iproc-pcie";
-@@ -61,6 +83,19 @@ Example:
- 		brcm,pcie-ob-oarr-size;
- 		brcm,pcie-ob-axi-offset = <0x00000000>;
- 		brcm,pcie-ob-window-size = <256>;
-+
-+		msi-parent = <&msi0>;
-+
-+		/* iProc event queue based MSI */
-+		msi0: msi@18012000 {
-+			compatible = "brcm,iproc-msi";
-+			msi-controller;
-+			interrupt-parent = <&gic>;
-+			interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
-+				     <GIC_SPI 97 IRQ_TYPE_NONE>,
-+				     <GIC_SPI 98 IRQ_TYPE_NONE>,
-+				     <GIC_SPI 99 IRQ_TYPE_NONE>,
-+		};
- 	};
- 
- 	pcie1: pcie@18013000 {
--- 
-1.9.1
+>>
+>>>
+>>>>+	if (phb->ioda.reserved_pe_idx == 0)
+>>>>+		r->start += phb->ioda.m64_segsize;
+>>>>+	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
+>>>>+		r->end -= phb->ioda.m64_segsize;
+>>>>+	else
+>>>>+		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
+>>>>+			phb->ioda.reserved_pe_idx);
+>>>>+
+>>
+
+Thanks,
+Gavin
 
