@@ -1,112 +1,306 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:35622 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753174AbbKBPju (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2015 10:39:50 -0500
-Subject: Re: [PATCH v2 7/7] PCI: Set NumVFs before computing how many buses
- VFs require
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20151029221701.11908.82718.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151029222336.11908.66193.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20151030052249.GF5119@richards-mbp.cn.ibm.com> <563394EA.7050603@gmail.com>
- <20151102082721.GB1120@richards-mbp.cn.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Alexander Duyck <aduyck@mirantis.com>,
-	linux-pci@vger.kernel.org, Ethan Zhao <ethan.zhao@oracle.com>,
-	linux-kernel@vger.kernel.org
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Message-ID: <563783C4.4000204@gmail.com>
-Date: Mon, 2 Nov 2015 07:39:48 -0800
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33882 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318AbbKQByL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 20:54:11 -0500
+Received: by padhx2 with SMTP id hx2so193661095pad.1
+        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 17:54:10 -0800 (PST)
+Subject: Re: [PATCH v7 18/50] powerpc/powernv: Remove DMA32 PE list
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-19-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <564A88BC.803@ozlabs.ru>
+Date: Tue, 17 Nov 2015 12:54:04 +1100
 MIME-Version: 1.0
-In-Reply-To: <20151102082721.GB1120@richards-mbp.cn.ibm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1446642770-4681-19-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/02/2015 12:27 AM, Wei Yang wrote:
-> On Fri, Oct 30, 2015 at 09:03:54AM -0700, Alexander Duyck wrote:
->> On 10/29/2015 10:22 PM, Wei Yang wrote:
->>> On Thu, Oct 29, 2015 at 05:23:36PM -0500, Bjorn Helgaas wrote:
->>>> From: Alexander Duyck <aduyck@mirantis.com>
->>>>
->>>> VF bus numbers depend on the First VF Offset and VF Stride, and per
->>>> sections 3.3.9 and 3.3.10 of the SR-IOV spec r1.1, these depend on the
->>>> NumVF value.
->>>>
->>>> Wait until after we set NumVFs to compute and validate the bus number of
->>>> the last VF.
->>>>
->>>> [bhelgaas: changelog, add spec reference, split to separate patch for
->>>> reviewability]
->>>> Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
->>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>> ---
->>>> drivers/pci/iov.c |   18 ++++++++++--------
->>>> 1 file changed, 10 insertions(+), 8 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>>> index bd1c4fa..9d29712 100644
->>>> --- a/drivers/pci/iov.c
->>>> +++ b/drivers/pci/iov.c
->>>> @@ -274,13 +274,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->>>> 		return -ENOMEM;
->>>> 	}
->>>>
->>>> -	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
->>>> -	if (bus > dev->bus->busn_res.end) {
->>>> -		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
->>>> -			nr_virtfn, bus, &dev->bus->busn_res);
->>>> -		return -ENOMEM;
->>>> -	}
->>>> -
->>>> 	if (pci_enable_resources(dev, bars)) {
->>>> 		dev_err(&dev->dev, "SR-IOV: IOV BARS not allocated\n");
->>>> 		return -ENOMEM;
->>>> @@ -304,6 +297,15 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->>>> 	}
->>>>
->>>> 	pci_iov_set_numvfs(dev, nr_virtfn);
->>> How about move it up?
->>
->> The idea with moving the write down is to keep the pollution of the SR-IOV
->> capability to a minimum.  Basically we have addressed all of the possible
->> software issues at this point so all that remains is possible hardware
->> complications.  In addition by moving this code down we only have to modify
->> this code instead of adding "rc=X; goto foo;" in places where "return X;" was
->> used.
->>
+On 11/05/2015 12:12 AM, Gavin Shan wrote:
+> PEs are put into PHB DMA32 list (phb->ioda.pe_dma_list) according
+> to their DMA32 weight. The PEs on the list are iterated to setup
+> their TCE32 tables at system booting time. The list is used for
+> once and there is no good reason for it to survive.
+
+ From the above I concluded that you need a list, just do not need to keep 
+after the configuration is done but in fact you remove the list completely 
+so just remove "to survive" (s/for it to survive/for keep having it/) :)
+
 >
-> I think your logic is clear, while it is not easy to classify the software
-> issue and hardware complications. For example, at the beginning of
-> sriov_enable(), the hardware value initial VFs number is checked.
+> This moves the logic calculating DMA32 weight of PHB and PE to
+> pnv_pci_ioda1_setup_dma() to drop PHB's DMA32 list.
 >
-> And in my mind, this is reasonable to check the hardware issue before software
-> issue.
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 150 ++++++++++++++----------------
+>   arch/powerpc/platforms/powernv/pci.h      |  19 ----
+>   2 files changed, 68 insertions(+), 101 deletions(-)
 >
-> For your comment, adding "rc=X; goto foo;", I don't see this would happen.
-> The code in my mind would like this:
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 4c2e023..20ebe6e 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -891,44 +891,6 @@ out:
+>   	return 0;
+>   }
 >
->
-> +	pci_iov_set_numvfs(dev, nr_virtfn);
->   	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
->   	if (bus > dev->bus->busn_res.end) {
->   		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
->   			nr_virtfn, bus, &dev->bus->busn_res);
->   		return -ENOMEM;
+> -static void pnv_ioda_link_pe_by_weight(struct pnv_phb *phb,
+> -				       struct pnv_ioda_pe *pe)
+> -{
+> -	struct pnv_ioda_pe *lpe;
+> -
+> -	list_for_each_entry(lpe, &phb->ioda.pe_dma_list, dma_link) {
+> -		if (lpe->dma_weight < pe->dma_weight) {
+> -			list_add_tail(&pe->dma_link, &lpe->dma_link);
+> -			return;
+> -		}
+> -	}
+> -	list_add_tail(&pe->dma_link, &phb->ioda.pe_dma_list);
+> -}
+> -
+> -static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
+> -{
+> -	/* This is quite simplistic. The "base" weight of a device
+> -	 * is 10. 0 means no DMA is to be accounted for it.
+> -	 */
+> -
+> -	/* If it's a bridge, no DMA */
+> -	if (dev->hdr_type != PCI_HEADER_TYPE_NORMAL)
+> -		return 0;
+> -
+> -	/* Reduce the weight of slow USB controllers */
+> -	if (dev->class == PCI_CLASS_SERIAL_USB_UHCI ||
+> -	    dev->class == PCI_CLASS_SERIAL_USB_OHCI ||
+> -	    dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+> -		return 3;
+> -
+> -	/* Increase the weight of RAID (includes Obsidian) */
+> -	if ((dev->class >> 8) == PCI_CLASS_STORAGE_RAID)
+> -		return 15;
+> -
+> -	/* Default */
+> -	return 10;
+> -}
+> -
+>   #ifdef CONFIG_PCI_IOV
+>   static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+>   {
+> @@ -1009,7 +971,6 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+>   			continue;
+>   		}
+>   		pdn->pe_number = pe->pe_number;
+> -		pe->dma_weight += pnv_ioda_dma_weight(dev);
+>   		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
+>   			pnv_ioda_setup_same_PE(dev->subordinate, pe);
 >   	}
+> @@ -1046,10 +1007,8 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>   	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
+>   	pe->pbus = bus;
+>   	pe->pdev = NULL;
+> -	pe->tce32_seg = -1;
+>   	pe->mve_number = -1;
+>   	pe->rid = bus->busn_res.start << 8;
+> -	pe->dma_weight = 0;
 >
-> 	if (pci_enable_resources(dev, bars)) {
-> 		dev_err(&dev->dev, "SR-IOV: IOV BARS not allocated\n");
-> 		return -ENOMEM;
+>   	if (all)
+>   		pe_info(pe, "Secondary bus %d..%d associated with PE#%d\n",
+> @@ -1071,17 +1030,6 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
 >
-> Do I missed something?
+>   	/* Put PE to the list */
+>   	list_add_tail(&pe->list, &phb->ioda.pe_list);
+> -
+> -	/* Account for one DMA PE if at least one DMA capable device exist
+> -	 * below the bridge
+> -	 */
+> -	if (pe->dma_weight != 0) {
+> -		phb->ioda.dma_weight += pe->dma_weight;
+> -		phb->ioda.dma_pe_count++;
+> -	}
+> -
+> -	/* Link the PE */
+> -	pnv_ioda_link_pe_by_weight(phb, pe);
+>   }
+>
+>   static void pnv_ioda_setup_PEs(struct pci_bus *bus)
+> @@ -1389,7 +1337,6 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+>   		pe->flags = PNV_IODA_PE_VF;
+>   		pe->pbus = NULL;
+>   		pe->parent_dev = pdev;
+> -		pe->tce32_seg = -1;
+>   		pe->mve_number = -1;
+>   		pe->rid = (pci_iov_virtfn_bus(pdev, vf_index) << 8) |
+>   			   pci_iov_virtfn_devfn(pdev, vf_index);
+> @@ -1842,6 +1789,47 @@ static struct iommu_table_ops pnv_ioda2_iommu_ops = {
+>   	.free = pnv_ioda2_table_free,
+>   };
+>
+> +static int pnv_pci_ioda_dev_dma_weight(struct pci_dev *dev, void *data)
+> +{
+> +	unsigned int *weight = (unsigned int *)data;
+> +
+> +	/* This is quite simplistic. The "base" weight of a device
+> +	 * is 10. 0 means no DMA is to be accounted for it.
+> +	 */
+> +
+> +	if (dev->hdr_type != PCI_HEADER_TYPE_NORMAL)
+> +		return 0;
+> +
+> +	if (dev->class == PCI_CLASS_SERIAL_USB_UHCI ||
+> +	    dev->class == PCI_CLASS_SERIAL_USB_OHCI ||
+> +	    dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+> +		*weight += 3;
+> +	else if ((dev->class >> 8) == PCI_CLASS_STORAGE_RAID)
+> +		*weight += 15;
+> +	else
+> +		*weight += 10;
+> +
+> +	return 0;
+> +}
+> +
+> +static unsigned int pnv_pci_ioda_pe_dma_weight(struct pnv_ioda_pe *pe)
+> +{
+> +	unsigned int weight = 0;
+> +
+> +	if ((pe->flags & PNV_IODA_PE_DEV) && pe->pdev) {
+> +		pnv_pci_ioda_dev_dma_weight(pe->pdev, &weight);
+> +	} else if ((pe->flags & PNV_IODA_PE_BUS) && pe->pbus) {
+> +		struct pci_dev *pdev;
+> +
+> +		list_for_each_entry(pdev, &pe->pbus->devices, bus_list)
+> +			pnv_pci_ioda_dev_dma_weight(pdev, &weight);
+> +	} else if ((pe->flags & PNV_IODA_PE_BUS_ALL) && pe->pbus) {
+> +		pci_walk_bus(pe->pbus, pnv_pci_ioda_dev_dma_weight, &weight);
+> +	}
+> +
+> +	return weight;
+> +}
+> +
+>   static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+>   				       struct pnv_ioda_pe *pe,
+>   				       unsigned int base,
+> @@ -1858,17 +1846,12 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+>   	/* XXX FIXME: Provide 64-bit DMA facilities & non-4K TCE tables etc.. */
+>   	/* XXX FIXME: Allocate multi-level tables on PHB3 */
+>
+> -	/* We shouldn't already have a 32-bit DMA associated */
+> -	if (WARN_ON(pe->tce32_seg >= 0))
+> -		return;
+> -
+>   	tbl = pnv_pci_table_alloc(phb->hose->node);
+>   	iommu_register_group(&pe->table_group, phb->hose->global_number,
+>   			pe->pe_number);
+>   	pnv_pci_link_table_and_group(phb->hose->node, 0, tbl, &pe->table_group);
+>
+>   	/* Grab a 32-bit TCE table */
+> -	pe->tce32_seg = base;
+>   	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
+>   		base * PNV_IODA1_DMA32_SEGSIZE,
+>   		(base + segs) * PNV_IODA1_DMA32_SEGSIZE - 1);
+> @@ -1932,8 +1915,6 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+>   	return;
+>    fail:
+>   	/* XXX Failure: Try to fallback to 64-bit only ? */
+> -	if (pe->tce32_seg >= 0)
+> -		pe->tce32_seg = -1;
+>   	if (tce_mem)
+>   		__free_pages(tce_mem, get_order(tce32_segsz * segs));
+>   	if (tbl) {
+> @@ -2344,10 +2325,6 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>   {
+>   	int64_t rc;
+>
+> -	/* We shouldn't already have a 32-bit DMA associated */
+> -	if (WARN_ON(pe->tce32_seg >= 0))
+> -		return;
+> -
+>   	/* TVE #1 is selected by PCI address bit 59 */
+>   	pe->tce_bypass_base = 1ull << 59;
+>
+> @@ -2355,7 +2332,6 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>   			pe->pe_number);
+>
+>   	/* The PE will reserve all possible 32-bits space */
+> -	pe->tce32_seg = 0;
+>   	pe_info(pe, "Setting up 32-bit TCE table at 0..%08x\n",
+>   		phb->ioda.m32_pci_base);
+>
+> @@ -2371,11 +2347,8 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>   #endif
+>
+>   	rc = pnv_pci_ioda2_setup_default_config(pe);
+> -	if (rc) {
+> -		if (pe->tce32_seg >= 0)
+> -			pe->tce32_seg = -1;
+> +	if (rc)
+>   		return;
+> -	}
+>
+>   	if (pe->flags & PNV_IODA_PE_DEV)
+>   		iommu_add_device(&pe->pdev->dev);
+> @@ -2386,24 +2359,34 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>   static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
+>   {
+>   	struct pci_controller *hose = phb->hose;
+> -	unsigned int residual, remaining, segs, tw, base;
+> +	unsigned int weight, total_weight, dma_pe_count;
+> +	unsigned int residual, remaining, segs, base;
+>   	struct pnv_ioda_pe *pe;
+>
+> +	total_weight = 0;
+> +	dma_pe_count = 0;
+> +	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+> +		weight = pnv_pci_ioda_pe_dma_weight(pe);
+> +		if (weight > 0)
+> +			dma_pe_count++;
+> +
+> +		total_weight += weight;
+> +	}
+> +
+>   	/* If we have more PE# than segments available, hand out one
+>   	 * per PE until we run out and let the rest fail. If not,
+>   	 * then we assign at least one segment per PE, plus more based
+>   	 * on the amount of devices under that PE
+>   	 */
+> -	if (phb->ioda.dma_pe_count > phb->ioda.tce32_count)
+> +	if (dma_pe_count > phb->ioda.tce32_count)
+>   		residual = 0;
+>   	else
+> -		residual = phb->ioda.tce32_count -
+> -			phb->ioda.dma_pe_count;
+> +		residual = phb->ioda.tce32_count - dma_pe_count;
+>
+>   	pr_info("PCI: Domain %04x has %ld available 32-bit DMA segments\n",
+>   		hose->global_number, phb->ioda.tce32_count);
+>   	pr_info("PCI: %d PE# for a total weight of %d\n",
+> -		phb->ioda.dma_pe_count, phb->ioda.dma_weight);
+> +		dma_pe_count, total_weight);
+>
+>   	pnv_pci_ioda_setup_opal_tce_kill(phb);
+>
+> @@ -2412,24 +2395,26 @@ static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
+>   	 * weight
+>   	 */
+>   	remaining = phb->ioda.tce32_count;
+> -	tw = phb->ioda.dma_weight;
+>   	base = 0;
+> -	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
+> -		if (!pe->dma_weight)
+> +	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+> +		weight = pnv_pci_ioda_pe_dma_weight(pe);
+> +		if (!weight)
+>   			continue;
+> +
 
-The problem is that pci_iov_set_numvfs has side effects visible to the 
-user since they can read NumVFs lspci and via sysfs.  As such we want to 
-keep the two in sync, and if you get the bus error here that is not the 
-case.
 
-That is why you must call pci_iov_set_numvfs(dev, 0) if this fails.
+Unrelated new line.
 
-- Alex
 
+-- 
+Alexey
