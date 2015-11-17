@@ -1,73 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49066 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751237AbbLABnK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Nov 2015 20:43:10 -0500
-Subject: [PATCH] PCI/MSI: Remove empty pci_msi_init_pci_dev()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Date: Mon, 30 Nov 2015 19:43:06 -0600
-Message-ID: <20151201014306.17812.84340.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:33587 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751787AbbKQChk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 21:37:40 -0500
+Received: by pabfh17 with SMTP id fh17so197971440pab.0
+        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 18:37:39 -0800 (PST)
+Subject: Re: [PATCH v7 22/50] powerpc/powernv: Introduce pnv_ioda_init_pe()
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Daniel Axtens <dja@axtens.net>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-23-git-send-email-gwshan@linux.vnet.ibm.com>
+ <87wpthbh6u.fsf@gamma.ozlabs.ibm.com> <20151117015817.GC1452@gwshan>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <564A92ED.2010305@ozlabs.ru>
+Date: Tue, 17 Nov 2015 13:37:33 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20151117015817.GC1452@gwshan>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-4a7cc8316705 ("genirq/MSI: Move msi_list from struct pci_dev to struct
-device") removed the contents of pci_msi_init_pci_dev().  All
-implementation of it are now empty, so remove it completely.
+On 11/17/2015 12:58 PM, Gavin Shan wrote:
+> On Tue, Nov 17, 2015 at 11:30:49AM +1100, Daniel Axtens wrote:
+>> Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+>>
+>>> This introduces pnv_ioda_init_pe() to initialize the specified PE
+>>> instance (phb->ioda.pe_array[x]). It's used by pnv_ioda_alloc_pe()
+>>> and pnv_ioda_reserve_pe(). No logical changes introduced.
+>>>
+>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>> ---
+>>>   arch/powerpc/platforms/powernv/pci-ioda.c | 14 ++++++++++----
+>>>   1 file changed, 10 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> index ef93a01..488e0f8 100644
+>>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> @@ -129,6 +129,14 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
+>>>   		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
+>>>   }
+>>>
+>>> +static struct pnv_ioda_pe *pnv_ioda_init_pe(struct pnv_phb *phb, int pe_no)
+>>> +{
+>>> +	phb->ioda.pe_array[pe_no].phb = phb;
+>>> +	phb->ioda.pe_array[pe_no].pe_number = pe_no;
+>>> +
+>>> +	return &phb->ioda.pe_array[pe_no];
+>> You have the function returning the newly initalized PE here...
+>>
+>>> +}
+>>> +
+>>>   static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>>   {
+>>>   	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe_num)) {
+>>> @@ -141,8 +149,7 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>>   		pr_debug("%s: PE %d was reserved on PHB#%x\n",
+>>>   			 __func__, pe_no, phb->hose->global_number);
+>>>
+>>> -	phb->ioda.pe_array[pe_no].phb = phb;
+>>> -	phb->ioda.pe_array[pe_no].pe_number = pe_no;
+>>> +	pnv_ioda_init_pe(phb, pe_no);
+>> ... but then you ignore the result here and in the other function you've
+>> modified.
+>>
+>> It looks like you're using the result in the next patch though, so I
+>> wonder if you would be better to merge this patch with the next
+>> one. However, as I said before I'll defer to Alexey on decisions about
+>> how to split the patch series if he has a different opinion.
+>>
+>
+> I'd like to keep this separate when thinking about the rule I was told before:
+> one patch does one thing if it can. Also, merging it to next one will make
+> next one harder to be reiview.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c   |    4 ----
- drivers/pci/pci.h   |    2 --
- drivers/pci/probe.c |    3 ---
- 3 files changed, 9 deletions(-)
+This patch merged into the next one will make the next one easier to review 
+because you won't have to change there the code which you just added in 
+this patch (which is always good).
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 53e4632..b64d267 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1024,10 +1024,6 @@ int pci_msi_enabled(void)
- }
- EXPORT_SYMBOL(pci_msi_enabled);
- 
--void pci_msi_init_pci_dev(struct pci_dev *dev)
--{
--}
--
- /**
-  * pci_enable_msi_range - configure device's MSI capability structure
-  * @dev: device to configure
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index fd2f03f..44d9859 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -144,10 +144,8 @@ extern unsigned int pci_pm_d3_delay;
- 
- #ifdef CONFIG_PCI_MSI
- void pci_no_msi(void);
--void pci_msi_init_pci_dev(struct pci_dev *dev);
- #else
- static inline void pci_no_msi(void) { }
--static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
- #endif
- 
- static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cd94737..88f0fed 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1601,9 +1601,6 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	/* Enhanced Allocation */
- 	pci_ea_init(dev);
- 
--	/* MSI/MSI-X list */
--	pci_msi_init_pci_dev(dev);
--
- 	/* Setup MSI caps & disable MSI/MSI-X interrupts */
- 	pci_msi_setup_pci_dev(dev);
- 
 
+
+-- 
+Alexey
