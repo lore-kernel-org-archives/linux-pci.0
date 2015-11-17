@@ -1,76 +1,132 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 30 Nov 2015 11:19:49 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Hans de Bruin <jmdebruin@xmsnet.nl>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Arthur Marsh <arthur.marsh@internode.on.net>
-Subject: Re: [PATCH] x86/PCI: Fix regression caused by commit 4d6b4e69a245
-Message-ID: <20151130171949.GA29242@localhost>
-References: <5655B392.7070701@intel.com>
- <8206751.4eTpiUuo7l@vostro.rjw.lan>
- <565BA446.7080003@linux.intel.com>
- <2099144.E7yRfeyfk4@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:54774 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752122AbbKQJVO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Nov 2015 04:21:14 -0500
+Date: Tue, 17 Nov 2015 09:21:00 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: Ray Jui <rjui@broadcom.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"dhdang@apm.com" <dhdang@apm.com>,
+	"sbranden@broadcom.com" <sbranden@broadcom.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH v8] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+Message-ID: <20151117092100.76babf7f@arm.com>
+In-Reply-To: <8520D5D51A55D047800579B0941471982585CBDA@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>
+	<5649F2D9.7070902@arm.com>
+	<564A5255.3020603@broadcom.com>
+	<8520D5D51A55D047800579B0941471982585CBDA@XAP-PVEXMBX01.xlnx.xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2099144.E7yRfeyfk4@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 30, 2015 at 03:11:14AM +0100, Rafael J. Wysocki wrote:
-> On Monday, November 30, 2015 09:20:06 AM Jiang Liu wrote:
-> > On 2015/11/28 0:06, Rafael J. Wysocki wrote:
-> > > On Friday, November 27, 2015 11:12:33 AM Jiang Liu wrote:
-> > >> From: Liu Jiang <jiang.liu@linux.intel.com>
-> > >>
-> > >> Commit 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support
-> > >> PCI host bridge") converted x86 to use the common interface
-> > >> acpi_pci_root_create, but the conversion missed on code piece in
-> > >> arch/x86/pci/bus_numa.c, which causes regression on some legacy
-> > >> AMD platforms as reported by Arthur Marsh <arthur.marsh@internode.on.net>.
-> > >> The root causes is that acpi_pci_root_create() fails to insert
-> > >> host bridge resources into iomem_resource/ioport_resource because
-> > >> x86_pci_root_bus_resources() has already inserted those resources.
-> > >> So change x86_pci_root_bus_resources() to not insert resources into
-> > >> iomem_resource/ioport_resource.
-> > >>
-> > >> Fixes: 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support PCI host bridge")
-> > >> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> > >> Reported-and-tested-by: Arthur Marsh <arthur.marsh@internode.on.net>
-> > >> Cc: Keith Busch <keith.busch@intel.com>
-> > >> Cc: Arthur Marsh <arthur.marsh@internode.on.net>
-> > >> Cc: Hans de Bruin <jmdebruin@xmsnet.nl>
-> > > 
-> > > What exactly has changed between this version and the previous one?
-> > Hi Rafael,
-> > 	I have removed following changes against the original patch
-> > posted at Nov 16.
-> >  	       bus);
-> > 
-> >  	/* already added by acpi ? */
-> > -	resource_list_for_each_entry(window, resources)
-> > +	resource_list_for_each_entry(window, &info->resources)
-> >  		if (window->res->flags & IORESOURCE_BUS) {
-> >  			found = true;
-> >  			break;
-> >  		}
-> > -
-> >  	if (!found)
-> >  		pci_add_resource(resources, &info->busn);
-> > 
-> > And I only refined the commit message based on the test patch
-> > I sent to Authur as an attachment at Nov 25.
-> 
-> OK, thanks.
-> 
-> Keith, Hans, can you test this version too please?
-> 
-> Bjorn, any more comments from you on this one?
+On Tue, 17 Nov 2015 04:59:39 +0000
+Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
 
-I haven't reviewed it in detail, but I don't have any objections to it.
+> > On 11/16/2015 7:14 AM, Marc Zyngier wrote:
+> > > On 11/11/15 06:33, Bharat Kumar Gogada wrote:
+> > >> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+> > >>
+> > >> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > >> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> > >> ---
+> > >> Added logic to allocate contiguous hwirq in nwl_irq_domain_alloc
+> > function.
+> > >> Moved MSI functionality to separate functions.
+> > >> Changed error return values.
+> > >> ---
+> > >>   .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
+> > >>   drivers/pci/host/Kconfig                           |   16 +-
+> > >>   drivers/pci/host/Makefile                          |    1 +
+> > >>   drivers/pci/host/pcie-xilinx-nwl.c                 | 1062
+> > ++++++++++++++++++++
+> > >>   4 files changed, 1144 insertions(+), 3 deletions(-)
+> > >>   create mode 100644 Documentation/devicetree/bindings/pci/xilinx-nwl-
+> > pcie.txt
+> > >>   create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
+> > >>
+> > >
+> > > [...]
+> > >
+> > >> +static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus
+> > >> +*bus) {
+> > >> +	struct platform_device *pdev = to_platform_device(pcie->dev);
+> > >> +	struct nwl_msi *msi = &pcie->msi;
+> > >> +	unsigned long base;
+> > >> +	int ret;
+> > >> +
+> > >> +	mutex_init(&msi->lock);
+> > >> +
+> > >> +	/* Check for msii_present bit */
+> > >> +	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) & MSII_PRESENT;
+> > >> +	if (!ret) {
+> > >> +		dev_err(pcie->dev, "MSI not present\n");
+> > >> +		ret = -EIO;
+> > >> +		goto err;
+> > >> +	}
+> > >> +
+> > >> +	/* Enable MSII */
+> > >> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
+> > >> +			  MSII_ENABLE, I_MSII_CONTROL);
+> > >> +
+> > >> +	/* Enable MSII status */
+> > >> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
+> > >> +			  MSII_STATUS_ENABLE, I_MSII_CONTROL);
+> > >> +
+> > >> +	/* setup AFI/FPCI range */
+> > >> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> > >> +	base = virt_to_phys((void *)msi->pages);
+> > >> +	nwl_bridge_writel(pcie, lower_32_bits(base), I_MSII_BASE_LO);
+> > >> +	nwl_bridge_writel(pcie, upper_32_bits(base), I_MSII_BASE_HI);
+> > >
+> > > BTW, you still haven't answered my question as to why you need to
+> > > waste a page of memory here, and why putting a device address doesn't
+> > work.
+> > >
+> > > As this is (to the best of my knowledge) the only driver doing so, I'd
+> > > really like you to explain the rational behind this.
+> > 
+> > Might not be the only driver doing so after I start sending out patches for the
+> > iProc MSI support (soon), :)
+> > 
+> > I'm not sure how it works for the Xilinx NWL controller, which Bharat should
+> > be able to help to explain. But for the iProc MSI controller, there's no device
+> > I/O memory reserved for MSI posted writes in the ASIC.
+> > Therefore one needs to reserve host memory for these writes.
+> > >
+> 
+> Our SoC doesn't reserve any memory for MSI, hence we need to assign a
+> memory space for it out of RAM.
 
-Bjorn
+Question to both of you: Does the write make it to memory? Or is it
+sampled by the bridge and dropped?
+
+What happens if you replace the page in RAM with a dummy address?
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny.
