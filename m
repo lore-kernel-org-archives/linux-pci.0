@@ -1,47 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 4/5] PCI: iproc: Add iProc PCIe MSI support
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1447806715-30043-1-git-send-email-rjui@broadcom.com>
- <20151118084845.49ba6304@arm.com> <564D27CC.3030505@broadcom.com>
- <6927787.cmOcTVpP16@wuerfel>
-CC: Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-Message-ID: <564E55BB.1030708@broadcom.com>
-Date: Thu, 19 Nov 2015 15:05:31 -0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:33132 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751363AbbKQCyu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 21:54:50 -0500
+Received: from localhost
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 17 Nov 2015 12:54:47 +1000
+Date: Tue, 17 Nov 2015 13:53:45 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Daniel Axtens <dja@axtens.net>, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+Subject: Re: [PATCH v7 22/50] powerpc/powernv: Introduce pnv_ioda_init_pe()
+Message-ID: <20151117025345.GA10142@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-23-git-send-email-gwshan@linux.vnet.ibm.com>
+ <87wpthbh6u.fsf@gamma.ozlabs.ibm.com>
+ <20151117015817.GC1452@gwshan>
+ <564A92ED.2010305@ozlabs.ru>
 MIME-Version: 1.0
-In-Reply-To: <6927787.cmOcTVpP16@wuerfel>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <564A92ED.2010305@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
-
-On 11/19/2015 12:31 AM, Arnd Bergmann wrote:
-> On Wednesday 18 November 2015 17:37:16 Ray Jui wrote:
-
->> I haven't spent too much time investigating, and am hoping to eventually
->> enable affinity support with an incremental patch in the future when I
->> have more time to investigate.
+On Tue, Nov 17, 2015 at 01:37:33PM +1100, Alexey Kardashevskiy wrote:
+>On 11/17/2015 12:58 PM, Gavin Shan wrote:
+>>On Tue, Nov 17, 2015 at 11:30:49AM +1100, Daniel Axtens wrote:
+>>>Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+>>>
+>>>>This introduces pnv_ioda_init_pe() to initialize the specified PE
+>>>>instance (phb->ioda.pe_array[x]). It's used by pnv_ioda_alloc_pe()
+>>>>and pnv_ioda_reserve_pe(). No logical changes introduced.
+>>>>
+>>>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>>>---
+>>>>  arch/powerpc/platforms/powernv/pci-ioda.c | 14 ++++++++++----
+>>>>  1 file changed, 10 insertions(+), 4 deletions(-)
+>>>>
+>>>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>index ef93a01..488e0f8 100644
+>>>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>@@ -129,6 +129,14 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
+>>>>  		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
+>>>>  }
+>>>>
+>>>>+static struct pnv_ioda_pe *pnv_ioda_init_pe(struct pnv_phb *phb, int pe_no)
+>>>>+{
+>>>>+	phb->ioda.pe_array[pe_no].phb = phb;
+>>>>+	phb->ioda.pe_array[pe_no].pe_number = pe_no;
+>>>>+
+>>>>+	return &phb->ioda.pe_array[pe_no];
+>>>You have the function returning the newly initalized PE here...
+>>>
+>>>>+}
+>>>>+
+>>>>  static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>>>  {
+>>>>  	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe_num)) {
+>>>>@@ -141,8 +149,7 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>>>  		pr_debug("%s: PE %d was reserved on PHB#%x\n",
+>>>>  			 __func__, pe_no, phb->hose->global_number);
+>>>>
+>>>>-	phb->ioda.pe_array[pe_no].phb = phb;
+>>>>-	phb->ioda.pe_array[pe_no].pe_number = pe_no;
+>>>>+	pnv_ioda_init_pe(phb, pe_no);
+>>>... but then you ignore the result here and in the other function you've
+>>>modified.
+>>>
+>>>It looks like you're using the result in the next patch though, so I
+>>>wonder if you would be better to merge this patch with the next
+>>>one. However, as I said before I'll defer to Alexey on decisions about
+>>>how to split the patch series if he has a different opinion.
+>>>
+>>
+>>I'd like to keep this separate when thinking about the rule I was told before:
+>>one patch does one thing if it can. Also, merging it to next one will make
+>>next one harder to be reiview.
 >
-> Is it possible that you have a set of MSIs per GIC interrupt (as Marc
-> suggested earlier) and that the way it is intended to be used is by
-> having each one of them target a different CPU? That way you can do
-> affinity by switching to a different MSI in .set_affinity(), I think
-> that is how the old style MSI all used to work when each CPU had its
-> own MSI register.
->
-> 	Arnd
+>This patch merged into the next one will make the next one easier to review
+>because you won't have to change there the code which you just added in this
+>patch (which is always good).
 >
 
-Okay, I see that Xgene MSI has a very similar implementation to support 
-MSI IRQ affinity. I plan to take a closer look and try it out in the 
-future. But it likely won't be included in the current round of patch set.
+Ok & will do in next revision.
 
 Thanks,
+Gavin
 
-Ray
