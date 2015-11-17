@@ -1,86 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f174.google.com ([209.85.160.174]:34610 "EHLO
-	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754688AbbKXT1G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Nov 2015 14:27:06 -0500
-Received: by ykfs79 with SMTP id s79so31086087ykf.1
-        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2015 11:27:04 -0800 (PST)
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:36351 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752840AbbKQEng (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 23:43:36 -0500
+Received: by pacdm15 with SMTP id dm15so198108626pac.3
+        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 20:43:35 -0800 (PST)
+Subject: Re: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
+ <56498D8A.2050505@ozlabs.ru> <20151117014203.GC31584@gwshan>
+ <564A92E2.1040506@ozlabs.ru> <20151117030406.GB10142@gwshan>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <564AB070.9040500@ozlabs.ru>
+Date: Tue, 17 Nov 2015 15:43:28 +1100
 MIME-Version: 1.0
-In-Reply-To: <20151124184957.GB27957@localhost>
-References: <1447095627-12798-1-git-send-email-minipli@googlemail.com>
-	<20151124184957.GB27957@localhost>
-Date: Tue, 24 Nov 2015 20:27:04 +0100
-Message-ID: <CA+rthh_hmYqpyu-cREMtFBevPJjpUG3LE28htrtSGr3ipdzD_w@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: Prevent out of bounds access in numa_node
- override - part 2
-From: Mathias Krause <minipli@googlemail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Sasha Levin <sasha.levin@oracle.com>,
-	Prarit Bhargava <prarit@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20151117030406.GB10142@gwshan>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 24 November 2015 at 19:49, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> Applied as tweaked below to for-linus for v4.4, thanks!  As written,
-> if NUMA_NO_NODE were defined as -2, we would incorrectly accept -1.
-> Let me know if you disagree with my fix.
-
-I don't think the value of NUMA_NO_NODE will (or even has to) ever
-change, as we're already exporting that value to userland via sysfs.
-But you're right, the code shouldn't make any assumptions about the
-concrete value of NUMA_NO_NODE and just handle it as a special
-symbolic value.
-
-> commit 2a35194c5a45fbb9ca1d88bc56804dfb51a75233
-> Author: Mathias Krause <minipli@googlemail.com>
-> Date:   Mon Nov 9 20:00:27 2015 +0100
+On 11/17/2015 02:04 PM, Gavin Shan wrote:
+> On Tue, Nov 17, 2015 at 01:37:22PM +1100, Alexey Kardashevskiy wrote:
+>> On 11/17/2015 12:42 PM, Gavin Shan wrote:
+>>> On Mon, Nov 16, 2015 at 07:02:18PM +1100, Alexey Kardashevskiy wrote:
+>>>> On 11/05/2015 12:12 AM, Gavin Shan wrote:
+>>>>> This enables M64 window on P7IOC, which has been enabled on PHB3.
+>>>>> Different from PHB3 where 16 M64 BARs are supported and each of
+>>>>> them can be owned by one particular PE# exclusively or divided
+>>>>> evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
+>>>>> of them are divided to 8 segments. So every P7IOC PHB supports
+>>>>> 128 M64 segments in total. P7IOC has M64DT, which helps mapping
+>>>>> one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
+>>>>> M64DT, indicating that one M64 segment can only be pinned to the
+>>>>> fixed PE#. In order to have same code to support M64 on P7IOC and
+>>>>> PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
+>>>>> of them is pinned to the fixed PE# by bypassing the function of
+>>>>> M64DT. In turn, we just need different phb->init_m64() for P7IOC
+>>>>> and PHB3 to support M64.
+>>>>
+>>>> I thought we decided (Ben suggested?) not to push P7IOC code now (or ever) as
+>>>> there is no user for it, has this changed?
+>>>>
+>>>
+>>> Remember that the code is mixed for P7IOC/PHB3. It's not harmful to support
+>>> M64 window on P7IOC, which is much larger than M32.
+>>
+>>
+>> The patchset starts with removing dead code and then adds more dead code.
+>> This is not right...
+>>
 >
->     PCI: Prevent out of bounds access in numa_node override
->
->     Commit 1266963170f5 ("PCI: Prevent out of bounds access in numa_node
->     override") missed that the user-provided node could also be negative.
->     Handle this case as well to avoid out-of-bounds accesses to the
->     node_states[] array.  However, allow the special value -1, i.e.
->     NUMA_NO_NODE, to be able to set the 'no specific node' configuration.
->
->     [bhelgaas: remove assumption that NUMA_NO_NODE == -1]
->     Fixes: 1266963170f5 ("PCI: Prevent out of bounds access in numa_node override")
->     Fixes: 63692df103e9 ("PCI: Allow numa_node override via sysfs")
->     Signed-off-by: Mathias Krause <minipli@googlemail.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     CC: Sasha Levin <sasha.levin@oracle.com>
->     CC: Prarit Bhargava <prarit@redhat.com>
->     CC: stable@vger.kernel.org  # v3.19+
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 9261868..50f4747 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -216,7 +216,12 @@ static ssize_t numa_node_store(struct device *dev,
->         if (ret)
->                 return ret;
->
-> -       if (node >= MAX_NUMNODES || !node_online(node))
-> +       if (node < 0 || node >= MAX_NUMNODES) {
-> +               if (node != NUMA_NO_NODE)
-> +                       return -EINVAL;
-> +       }
+> Sorry, you mean it's fine to break the code on P7IOC as it's going to be dead.
 
-I would have written something like this:
 
-    if ((node < 0 && node != NUMA_NO_NODE) || node >= MAX_NUMNODES)
-        return -EINVAL;
+I am saying that the _new_ code which implements PCI hotplug on P7IOC is 
+dead, not the existing P7IOC support which needs to keep working. Reworks 
+you make should keep P7IOC alive but they do not have to add hotplug.
 
-It's more compact, but your solution is essentially the same, so I'm
-fine with it.
+imho it is more likely that we drop P7IOC support in the mainline kernel in 
+next 5 years than someone plugs a PCI device to a running P7IOC machine 
+anywhere.
 
-> +
-> +       if (node != NUMA_NO_NODE && !node_online(node))
->                 return -EINVAL;
+
+> But I'm curious when it's going happen, any idea about that?
 >
->         add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+>>>> btw please put ioda1/ioda2/p7ioc/etc to the subject line to make it easier to
+>>>> see how much work is there about particular PHB type. You rename quite many
+>>>> functions and I generally want to ask you to group all renaming patches first
+>>>> but it would also make sense to keep them close to (for example)
+>>>> p7ioc-related patches so having more descriptive subject lines may help.
+>>>> Thanks.
+>>>>
+>>>
+>>> As the code is mixed for P7IOC/PHB3, I'm not following the line (IODA1/IODA2/p7ioc/phb3)
+>>> in this patchset.
+>>
+>> But you should draw the bold line between PHB types imho.
+>>
+>>> Instead, the sequence of patchset is order related to: cod refactoring,
+>>> IO/M32/M64, DMA, PE allocation/releaseing.
+>>
+>>
+>> Some patches from this patchset are about P7IOC only. All I am asking is to
+>> say specifically in the subject line what the patch touches -
+>> IODA1/IODA2/p7ioc/phb3/all_of_them. Or I can walk through all of them, pick
+>> P7IOC's ones, evaluate the amount of code and entropy they actually add and
+>> then ask Ben what we do about it, it will just take longer rather than if you
+>> did it.
+>>
+>
+> Please give me a clear command what key words you need in the subject in next revision.
+> What I understood is you want to see one of them:
+>
+> powerpc/powernv/ioda1:
 
-Thanks,
-Mathias
+Yes, looks good.
+
+> powerpc/powernv/ioda2:
+
+
+Yes.
+
+> powerpc/powernv/all:
+
+Just "powerpc/powernv".
+
+
+
+-- 
+Alexey
