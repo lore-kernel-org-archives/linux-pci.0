@@ -1,68 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sauhun.de ([89.238.76.85]:58874 "EHLO pokefinder.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754140AbbKBVdU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 2 Nov 2015 16:33:20 -0500
-Date: Mon, 2 Nov 2015 22:33:05 +0100
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/3] Fix rcar-pcie for arm64
-Message-ID: <20151102213305.GA1158@tetsubishi>
-References: <1446482175-26507-1-git-send-email-phil.edworthy@renesas.com>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:35867 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754243AbbKRAqi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 19:46:38 -0500
+Message-ID: <564BCA33.9020801@gmail.com>
+Date: Tue, 17 Nov 2015 16:45:39 -0800
+From: Florian Fainelli <f.fainelli@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="6TrnltStXW4iwmi0"
-In-Reply-To: <1446482175-26507-1-git-send-email-phil.edworthy@renesas.com>
+To: Ray Jui <rjui@broadcom.com>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/5] PCI: iproc: Add PAXC interface support
+References: <1447806715-30043-1-git-send-email-rjui@broadcom.com> <1447806715-30043-3-git-send-email-rjui@broadcom.com> <564BC79D.9010705@gmail.com> <564BCA4C.6030809@broadcom.com>
+In-Reply-To: <564BCA4C.6030809@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 17/11/15 16:46, Ray Jui wrote:
+> 
+> 
+> On 11/17/2015 4:34 PM, Florian Fainelli wrote:
+>> On 17/11/15 16:31, Ray Jui wrote:
+>>> Traditionally, all iProc PCIe root complexes use PAXB based wrapper,
+>>> with an integrated on-chip Serdes to support external endpoint devices.
+>>> On newer iProc platforms, a PAXC based wrapper is introduced, for
+>>> connection with internally emulated PCIe endpoint devices in the ASIC
+>>>
+>>> This patch adds support for PAXC based iProc PCIe root complex in the
+>>> iProc PCIe core driver. This change fators out common logic between
+>>> PAXB and PAXC, and use tables to store register offsets that are
+>>> different between PAXB and PAXC. This allows the driver to be scaled to
+>>> support subsequent PAXC revisions in the future
+>>>
+>>> Signed-off-by: Ray Jui <rjui@broadcom.com>
+>>> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+>>> ---
+>>>   drivers/pci/host/pcie-iproc-platform.c |   8 ++
+>>>   drivers/pci/host/pcie-iproc.c          | 202
+>>> +++++++++++++++++++++++++++------
+>>>   drivers/pci/host/pcie-iproc.h          |  19 ++++
+>>>   3 files changed, 195 insertions(+), 34 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/host/pcie-iproc-platform.c
+>>> b/drivers/pci/host/pcie-iproc-platform.c
+>>> index c9550dc..716b56b 100644
+>>> --- a/drivers/pci/host/pcie-iproc-platform.c
+>>> +++ b/drivers/pci/host/pcie-iproc-platform.c
+>>> @@ -42,6 +42,13 @@ static int iproc_pcie_pltfm_probe(struct
+>>> platform_device *pdev)
+>>>       pcie->dev = &pdev->dev;
+>>>       platform_set_drvdata(pdev, pcie);
+>>>
+>>> +    if (of_device_is_compatible(np, "brcm,iproc-pcie"))
+>>> +        pcie->type = IPROC_PCIE_PAXB;
+>>> +    else if (of_device_is_compatible(np, "brcm,iproc-pcie-paxc"))
+>>> +        pcie->type = IPROC_PCIE_PAXC;
+>>> +    else
+>>> +        return -ENODEV;
+>>
+>> Sorry for not noticing earlier, but typically, to avoid repeating the
+>> same compatible string twice (once if of_device_id, and somewhere else),
+>> you would put the type in the .data member of the of_device_id lookup
+>> table and you could fetch this directly here. So something like this:
+>>
+>>   static const struct of_device_id iproc_pcie_of_match_table[] = {
+>>       { .compatible = "brcm,iproc-pcie", .data = (int
+>> *)IPROC_PCIE_PAXB },
+>> +    { .compatible = "brcm,iproc-pcie-paxc", .data = (int
+>> *)IPROC_PCIE_PAXC },
+>>       { /* sentinel */ }
+>>
+> 
+> Just to confirm, if I do this, then the above code to check
+> of_device_is_compatible becomes the following?
+> 
+> pcie->type = (enum iproc_pcie_type)of_id->data;
 
---6TrnltStXW4iwmi0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-
-> The first patches fixes the build problem, and the second patch reverts the
-> patch that removed the driver from arm64 builds. The final patch add a compat
-> string for the r8a7795 (arm64) device.
-
-Thanks. I will test them next week when I have access to my board again.
-
-> Apart from patches to add the PCIe clock and DT nodes, I had to revert these
-> patches to get it to work on arm64:
->  f075915ac0b1 ("PCI/MSI: Drop domain field from msi_controller")
->  d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use struct device::msi_domain")
-
-Does that solve the MSI problems you mentioned?
-
-Regards,
-
-   Wolfram
-
-
---6TrnltStXW4iwmi0
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIbBAEBAgAGBQJWN9aRAAoJEBQN5MwUoCm2Pm4P+L482xGmQKOByU6eZ3F1AZ84
-jUDdOzZK6NaKTlFOicZer47e1tmOHNFjy0JrSLOb6I9gIFZYWWmo5weUZgEiH3oy
-QVcX1mXB4BLmu1I2is9tuKpZbFc3yypc3nvVQ7N67OdEaOu0zLkP0ePOOdqX7mSt
-a7H80lfaGE+TmSUVFB3e/aWgMMtWoAzqhf0ZkUovRLnWcy8jRff9qqX52jI/t4ux
-UANwpQGzX3qRwQVN3eBmcWuWn/Lq0S0CYF2aLPihDD7VSJdKhjZFLD0jaDd66jbV
-nbQYpy0cpbvhxLQTOkXQb84lBJ2Vq+cZKuSELObm5idJoj0vFrid4F8UQTaTHQDP
-Gg4j6yh2He+eU1kPQ08fDxOzFT1owvx3VszDrA/T9V6QiajHMYZjCGqV+wq6sT9w
-DhXRrjR89yDu8YB6uooHFvCM/AfasOfjHdakFdQaV3q69lZwFbcnBaagT+QDDdjk
-IRSubv7S8pOsT4nCQKi4Rv0i1dyhykItHl15mK1PrTQMnghAZ0oAVz+SLh0vX+OZ
-bnNkj9kEoU3rVS7RxnI5jUbR3S1TfQ+UW+wuFN4dRF7OsaNBATSh5rCsdu7PkP3I
-EDjJ4vV+3PPcJxebcnRIN+mQN8iHk/DTX331pbfcx0DOnu+UROfoMYRJqyZuBfkX
-wQcAZjXeENzAODjbetI=
-=zEfu
------END PGP SIGNATURE-----
-
---6TrnltStXW4iwmi0--
+That is correct yes.
+-- 
+Florian
