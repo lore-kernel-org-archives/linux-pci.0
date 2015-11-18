@@ -1,59 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv4 6/6] pciutils: Allow 32-bit domains
-Date: Fri,  6 Nov 2015 15:35:46 -0700
-Message-Id: <1446849346-8242-7-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1446849346-8242-1-git-send-email-keith.busch@intel.com>
-References: <1446849346-8242-1-git-send-email-keith.busch@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V5 8/9] PCI: OF: Move of_pci_dma_configure() to
+ pci_dma_configure()
+To: Arnd Bergmann <arnd@arndb.de>, Robin Murphy <robin.murphy@arm.com>
+References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+ <564B4111.6010805@arm.com> <564C6860.4000002@arm.com>
+ <3822315.uJPjk3L2zB@wuerfel>
+CC: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>,
+	<thomas.lendacky@amd.com>, <herbert@gondor.apana.org.au>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>, <hanjun.guo@linaro.org>,
+	<davem@davemloft.net>, <linux-arm-kernel@lists.infradead.org>
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Message-ID: <564C94F0.2090902@amd.com>
+Date: Wed, 18 Nov 2015 09:10:40 -0600
+MIME-Version: 1.0
+In-Reply-To: <3822315.uJPjk3L2zB@wuerfel>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI-e segments will continue to use the lower 16 bits as required by
-ACPI. Special domains may use the full 32-bits.
+On 11/18/2015 6:41 AM, Arnd Bergmann wrote:
+> On Wednesday 18 November 2015 12:00:32 Robin Murphy wrote:
+>> On 17/11/15 15:00, Robin Murphy wrote:
+>>> On 28/10/15 22:50, Suravee Suthikulpanit wrote:
+>>>> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>>>> Acked-by: Rob Herring <robh+dt@kernel.org>
+>>>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+>>>> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+>> [...]
+>>>> +/**
+>>>> + * pci_dma_configure - Setup DMA configuration
+>>>> + * @dev: ptr to pci_dev struct of the PCI device
+>>>> + *
+>>>> + * Function to update PCI devices's DMA configuration using the same
+>>>> + * info from the OF node of host bridge's parent (if any).
+>>>> + */
+>>>> +static void pci_dma_configure(struct pci_dev *dev)
+>>>> +{
+>>>> +    struct device *bridge = pci_get_host_bridge_device(dev);
+>>>> +
+>>>> +    if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
+>>>
+>>> Previously I was seeing of_dma_configure, and thus of_iommu_configure,
+>>> called for every PCI device on Juno. The check above now prevents this
+>>> happening, since the PCI devices are probed directly from the bus and
+>>> don't have OF nodes of their own. They now get left in some
+>>> half-configured state where arch_setup_dma_ops isn't called either.
+>>
+>> Just to follow up on that, Arnd's patch to tidy up dma_get_ops (now
+>> queued[1]) makes this even worse, since preventing arch_setup_dma_ops
+>> being called means the PCI devices now get the dummy DMA ops which leave
+>> the drivers failing to probe at all, IOMMU hacks or not
+>
+> Ok, glad we found that with my patch then. We really have to
+> configure the DMA (offset/size/coherency/iommu) for all devices that might
+> be masters, otherwise things can randomly go wrong.
+>
+> 	ARnd
+>
+I'm double checking this and will get back ASAP.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- lib/filter.c |    2 +-
- lib/pci.h    |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/lib/filter.c b/lib/filter.c
-index d4254a0..075dc2f 100644
---- a/lib/filter.c
-+++ b/lib/filter.c
-@@ -45,7 +45,7 @@ pci_filter_parse_slot_v33(struct pci_filter *f, char *str)
- 	  if (str[0] && strcmp(str, "*"))
- 	    {
- 	      long int x = strtol(str, &e, 16);
--	      if ((e && *e) || (x < 0 || x > 0xffff))
-+	      if ((e && *e) || (x < 0))
- 		return "Invalid domain number";
- 	      f->domain = x;
- 	    }
-diff --git a/lib/pci.h b/lib/pci.h
-index 10ba831..7e42765 100644
---- a/lib/pci.h
-+++ b/lib/pci.h
-@@ -119,7 +119,7 @@ struct pci_param *pci_walk_params(struct pci_access *acc, struct pci_param *prev
- 
- struct pci_dev {
-   struct pci_dev *next;			/* Next device in the chain */
--  u16 domain;				/* PCI domain (host bridge) */
-+  int32_t domain;			/* PCI domain (host bridge) */
-   u8 bus, dev, func;			/* Bus inside domain, device and function */
- 
-   /* These fields are set by pci_fill_info() */
--- 
-1.7.10.4
-
+Suravee
