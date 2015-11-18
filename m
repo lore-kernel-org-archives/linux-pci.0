@@ -1,66 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] PCI: dra7xx: mark dra7xx_pcie_msi irq as IRQF_NO_THREAD
-To: Grygorii Strashko <grygorii.strashko@ti.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1446748990-27722-1-git-send-email-grygorii.strashko@ti.com>
-Cc: tony@atomide.com, nsekhar@ti.com, linux-omap@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Message-ID: <563C6A7D.7040503@linutronix.de>
-Date: Fri, 6 Nov 2015 09:53:17 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:36979 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932482AbbKRAb6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 19:31:58 -0500
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH 3/5] PCI: iproc: Add iProc PCIe MSI device tree binding
+Date: Tue, 17 Nov 2015 16:31:53 -0800
+Message-ID: <1447806715-30043-4-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1447806715-30043-1-git-send-email-rjui@broadcom.com>
+References: <1447806715-30043-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1446748990-27722-1-git-send-email-grygorii.strashko@ti.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/05/2015 07:43 PM, Grygorii Strashko wrote:
-> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> index 6589e7e..31460f4 100644
-> --- a/drivers/pci/host/pci-dra7xx.c
-> +++ b/drivers/pci/host/pci-dra7xx.c
-> @@ -302,8 +302,30 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
->  		return -EINVAL;
->  	}
->  
-> +	/*
-> +	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
-> +	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
-> +	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
-> +	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
-> +	 * which, in turn, will be resolved to handle_simple_irq() call.
-> +	 * The handle_simple_irq() expected to be called with IRQ disabled, as
-> +	 * result kernle will display warning:
-> +	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
-> +	 *
-> +	 * Current DRA7 PCIe hw configuration supports 32 interrupts,
-> +	 * which cannot change because it's hardwired in silicon, and can assume
-> +	 * that only a few (most of the time it will be exactly ONE) of those
-> +	 * interrupts are pending at the same time. So, It's sane way to dial
-> +	 * with above issue by marking dra7xx_pcie_msi IRQ as IRQF_NO_THREAD.
-> +	 * if some platform will utilize a lot of MSI IRQs and will suffer
-> +	 * form -RT latencies degradation because of that - IRQF_NO_THREAD can
-> +	 * be removed and "Warning Annihilation" W/A can be applied [1]
-> +	 *
-> +	 * [1] https://lkml.org/lkml/2015/11/2/578
+This patch updates the iProc PCIe device tree bindings with added
+binding information for MSI
 
-I don't think this novel is required. Also a reference to a patch which
-was not accepted is not a smart idea (since people might think they
-will improve their -RT latency by applying it without thinking).
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
+---
+ .../devicetree/bindings/pci/brcm,iproc-pcie.txt    | 40 ++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-Do you have any *real* numbers where you can say this patch does
-better/worse than what you suggester earlier? I'm simply asking because
-each gpio-irq multiplexing driver does the same thing.
+diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+index 06eae0f..701d626 100644
+--- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+@@ -35,6 +35,31 @@ Optional:
+ - brcm,pcie-ob-oarr-size: Some iProc SoCs need the OARR size bit to be set to
+ increase the outbound window size
+ 
++MSI support (optional):
++
++For older platforms without MSI integrated in the GIC, iProc PCIe core provides
++an event queue based MSI support. The iProc MSI uses host memories to store
++MSI posted writes and event queues
++
++- msi-parent: Link to the device node of the MSI controller. On newer iProc
++platforms, the MSI controller may be gicv2m or gicv3-its. On older iProc
++platforms without MSI support in its interrupt controller, one may use the
++event queue based MSI support integrated within the iProc PCIe core
++
++When the iProc event queue based MSI is used, one needs to define the
++following properties in the MSI device node:
++- compatible: Must be "brcm,iproc-msi"
++- msi-controller: claims itself as an MSI controller
++- interrupt-parent: Link to its parent interrupt device
++- interrupts: List of interrupt IDs from its parent interrupt device
++- brcm,num-eq-region: Required number of 4K aligned memory region for MSI event
++queue
++- brcm,num-msi-msg-region: Required number of 4K aligned memory region for MSI
++posted writes
++Optional:
++- brcm,pcie-msi-inten: Needs to be present for some older iProc platforms that
++require the interrupt enable registers to be set explicitly to enable MSI
++
+ Example:
+ 	pcie0: pcie@18012000 {
+ 		compatible = "brcm,iproc-pcie";
+@@ -61,6 +86,21 @@ Example:
+ 		brcm,pcie-ob-oarr-size;
+ 		brcm,pcie-ob-axi-offset = <0x00000000>;
+ 		brcm,pcie-ob-window-size = <256>;
++
++		msi-parent = <&msi0>;
++
++		/* iProc event queue based MSI */
++		msi0: msi@18012000 {
++			compatible = "brcm,iproc-msi";
++			msi-controller;
++			interrupt-parent = <&gic>;
++			interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
++				     <GIC_SPI 97 IRQ_TYPE_NONE>,
++				     <GIC_SPI 98 IRQ_TYPE_NONE>,
++				     <GIC_SPI 99 IRQ_TYPE_NONE>,
++			brcm,num-eq-region = <1>;
++			brcm,num-msi-msg-region = <1>;
++		};
+ 	};
+ 
+ 	pcie1: pcie@18013000 {
+-- 
+1.9.1
 
-> +	 */
->  	ret = devm_request_irq(&pdev->dev, pp->irq,
-> -			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
-> +			       dra7xx_pcie_msi_irq_handler,
-> +			       IRQF_SHARED | IRQF_NO_THREAD,
->  			       "dra7-pcie-msi",	pp);
->  	if (ret) {
->  		dev_err(&pdev->dev, "failed to request irq\n");
-> 
-Sebastian
