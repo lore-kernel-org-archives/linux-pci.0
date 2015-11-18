@@ -1,109 +1,29 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 23 Nov 2015 19:27:17 +0800
-From: Jisheng Zhang <jszhang@marvell.com>
-To: Sekhar Nori <nsekhar@ti.com>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] PCI: keystone: fix crash with deferred probe
-Message-ID: <20151123192717.4d4ddf06@xhacker>
-In-Reply-To: <20151123192209.38e2c101@xhacker>
-References: <866b2f1544f9d55fa932aa9f9cb5e7d523a23d05.1448017883.git.nsekhar@ti.com>
-	<20151123192209.38e2c101@xhacker>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <564CCAC2.5050600@fb.com>
+References: <1447856703-2566-1-git-send-email-jbacik@fb.com>
+	<20151118184038.GA4462@localhost>
+	<564CCAC2.5050600@fb.com>
+Date: Wed, 18 Nov 2015 11:19:02 -0800
+Message-ID: <CAPeXnHsdA0rDdSh020Yc7GUTQ_hQiEKdSOa1vcu1Ov=mJn4eDA@mail.gmail.com>
+Subject: Re: [PATCH] pci: completely disable aspm if it's unsupported
+From: Matthew Garrett <mjg59@coreos.com>
+To: Josef Bacik <jbacik@fb.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	shli@fb.com, kernel-team@fb.com
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 23 Nov 2015 19:22:09 +0800
-Jisheng Zhang <jszhang@marvell.com> wrote:
+On Wed, Nov 18, 2015 at 11:00 AM, Josef Bacik <jbacik@fb.com> wrote:
+> It looks to me I'm doing what Matthew set out to do, only with a bigger
+> hammer ;).  His patch still allowed the initialization of the ASPM stuff,
+> like setting up the clocks and such, but then made it so we couldn't change
+> the ASPM state at all.  My patch goes the step further of not even doing the
+> initialization stuff.  Thanks,
 
-> Dear Sekhar,
-> 
-> On Fri, 20 Nov 2015 16:47:02 +0530
-> Sekhar Nori wrote:
-> 
-> > Drop __init annotations for functions called during
-> > probe of keystone PCIe host.
-> > 
-> > This fixes kernel crashes seen because of init data
-> > reclamation if the driver defer probes because of
-> > phy unavailability.
-> > 
-> > While at it, drop the useless __refdata annotation
-> > to driver structure. If its really needed, it should
-> > be added back with a comment explaining why.
-> > 
-> > Signed-off-by: Sekhar Nori <nsekhar@ti.com>
-> > ---
-> >  drivers/pci/host/pci-keystone-dw.c | 2 +-
-> >  drivers/pci/host/pci-keystone.c    | 6 +++---
-> >  2 files changed, 4 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-> > index ed34c9520a02..47ddbcce53ca 100644
-> > --- a/drivers/pci/host/pci-keystone-dw.c
-> > +++ b/drivers/pci/host/pci-keystone-dw.c
-> > @@ -469,7 +469,7 @@ void ks_dw_pcie_initiate_link_train(struct keystone_pcie *ks_pcie)
-> >   * and call dw_pcie_v3_65_host_init() API to initialize the Keystone
-> >   * PCI host controller.
-> >   */
-> > -int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
-> > +int ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
-> >  				struct device_node *msi_intc_np)  
-> 
-> when trying to add berlin pcie support and came up one patch
-> 
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-November/384575.html
-> 
-> when build testing, I also realized this issue, but keystone relies on
-
-I mean ks_dw_pcie_host_init() calls hook_fault_code()
-
-> hook_fault_code() which is will be freed after boot, so your patch isn't
-> completed.
-
-And will introduce section mismatch warnings
-
-> 
-> And from the keystone driver implementation, it seems assume the driver won't
-> be defer probed.
-> 
-> Thanks
-> 
-> >  {
-> >  	struct pcie_port *pp = &ks_pcie->pp;
-> > diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> > index 0aa81bd3de12..593a58834c7d 100644
-> > --- a/drivers/pci/host/pci-keystone.c
-> > +++ b/drivers/pci/host/pci-keystone.c
-> > @@ -291,7 +291,7 @@ static struct pcie_host_ops keystone_pcie_host_ops = {
-> >  	.scan_bus = ks_dw_pcie_v3_65_scan_bus,
-> >  };
-> >  
-> > -static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
-> > +static int ks_add_pcie_port(struct keystone_pcie *ks_pcie,
-> >  			 struct platform_device *pdev)
-> >  {
-> >  	struct pcie_port *pp = &ks_pcie->pp;
-> > @@ -340,7 +340,7 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
-> >  	return 0;
-> >  }
-> >  
-> > -static int __init ks_pcie_probe(struct platform_device *pdev)
-> > +static int ks_pcie_probe(struct platform_device *pdev)
-> >  {
-> >  	struct device *dev = &pdev->dev;
-> >  	struct keystone_pcie *ks_pcie;
-> > @@ -396,7 +396,7 @@ fail_clk:
-> >  	return ret;
-> >  }
-> >  
-> > -static struct platform_driver ks_pcie_driver __refdata = {
-> > +static struct platform_driver ks_pcie_driver = {
-> >  	.probe  = ks_pcie_probe,
-> >  	.remove = __exit_p(ks_pcie_remove),
-> >  	.driver = {  
-> 
-
+That sounds fine - if we don't gain _OSC control then we should avoid
+touching any of the ASPM register state that the firmware has set. I'm
+happy to call the current state broken.
