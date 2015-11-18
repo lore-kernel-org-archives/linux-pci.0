@@ -1,103 +1,338 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:51997 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751149AbbKBAcG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Nov 2015 19:32:06 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
-	will.deacon@arm.com, hanjun.guo@linaro.org,
-	thomas.lendacky@amd.com, herbert@gondor.apana.org.au,
-	davem@davemloft.net, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V5 0/9] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
-Date: Mon, 02 Nov 2015 02:01:11 +0100
-Message-ID: <2082841.EuKXHJIeaT@vostro.rjw.lan>
-In-Reply-To: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:33494 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932724AbbKRAOD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 19:14:03 -0500
+Received: by pabfh17 with SMTP id fh17so25321667pab.0
+        for <linux-pci@vger.kernel.org>; Tue, 17 Nov 2015 16:14:03 -0800 (PST)
+Subject: Re: [PATCH v7 23/50] powerpc/powernv: Use PE instead of number during
+ setup and release
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-24-git-send-email-gwshan@linux.vnet.ibm.com>
+ <564AB64E.6060208@ozlabs.ru> <20151117090302.GD16586@gwshan>
+Cc: linuxppc-dev@lists.ozlabs.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, panto@antoniou-consulting.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	bhelgaas@google.com, frowand.list@gmail.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <564BC2C3.4060908@ozlabs.ru>
+Date: Wed, 18 Nov 2015 11:13:55 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20151117090302.GD16586@gwshan>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, October 28, 2015 03:50:45 PM Suravee Suthikulpanit wrote:
-> This patch series adds support to setup DMA coherency for PCI device using
-> the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
-> is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
-> support for ARM64 which is currently in development.  Also, this should
-> not affect other architectures that does not define 
-> CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
-> 
-> In the process, this series also introduces enum dev_dma_attr and a set
-> of APIs to query device DMA attribute. These APIs replace the obsolete
-> device_dma_is_coherent(), and acpi_check_dma().
-> 
-> I have also included a patch from Jeremy posted here:
->     http://www.spinics.net/lists/linux-usb/msg128582.html
-> 
-> This patch series is now rebased from:
->     https://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git linux-next
-> 
-> This patch series has been tested on AMD Seattle RevB platform.
-> The git tree containing tested code and pre-req patches is available here:
->     http://github.com/ssuthiku/linux.git pci-cca-v5
-> 
-> Changes from V4: (https://lkml.org/lkml/2015/10/21/535)
->     * Clean up from Hanjun, Bjorn, and Thomas review comments
->     * Rebased on top of Rafael's latest linux-next branch
->     * Added patch 7/9 to fix the  pci_get_host_bridge_device leak
->     * Added Acked-by from Bjorn
->     * Added Reviewed-by from Hanjun
-> 
-> Changes from V3: (https://lkml.org/lkml/2015/8/26/389)
->     * Clean up suggested by Bjorn
->     * Introduce enum dev_dma_attr
->     * Replace device_dma_is_coherent() and acpi_check_dma() with
->       new APIs.
-> 
-> Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
->     * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
->     * Add WARN() when fail to setup DMA for PCI device when booting
->       ACPI (per Arnd's suggestion)
->     * Added Acked-by from Rob.
->     * Minor clean up
-> 
-> Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
->     * Include patch 1 from Jeremy to enable support for _CCA=0
->     * Clean up acpi_check_dma() per Bjorn suggestions
->     * Split the original V1 patch into two patches (patch 3 and 4)
-> 
-> Jeremy Linton (1):
->   ACPI: Honor ACPI _CCA attribute setting
-> 
-> Suravee Suthikulpanit (8):
->   device property: Introducing enum dev_dma_attr
->   ACPI: Adding DMA Attribute APIs for ACPI Device
->   device property: Adding DMA Attribute APIs for Generic Devices
->   device property: ACPI: Make use of the new DMA Attribute APIs
->   device property: ACPI: Remove unused DMA APIs
->   of/pci: Fix pci_get_host_bridge_device leak
->   PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
->   PCI: ACPI: Add support for PCI device DMA coherency
-> 
->  drivers/acpi/acpi_platform.c              |  7 +++++-
->  drivers/acpi/glue.c                       |  8 +++---
->  drivers/acpi/scan.c                       | 42 +++++++++++++++++++++++++++++++
->  drivers/base/property.c                   | 32 +++++++++++++++++------
->  drivers/crypto/ccp/ccp-platform.c         | 15 ++++++++---
->  drivers/net/ethernet/amd/xgbe/xgbe-main.c |  8 +++++-
->  drivers/of/of_pci.c                       | 20 ---------------
->  drivers/pci/probe.c                       | 33 ++++++++++++++++++++++--
->  include/acpi/acpi_bus.h                   | 36 +++-----------------------
->  include/linux/acpi.h                      |  7 +++++-
->  include/linux/of_pci.h                    |  3 ---
->  include/linux/property.h                  | 10 +++++++-
->  12 files changed, 144 insertions(+), 77 deletions(-)
+On 11/17/2015 08:03 PM, Gavin Shan wrote:
+> On Tue, Nov 17, 2015 at 04:08:30PM +1100, Alexey Kardashevskiy wrote:
+>> On 11/05/2015 12:12 AM, Gavin Shan wrote:
+>>> In current implementation, the PEs that are allocated or picked
+>> >from the reserved list are identified by PE number. The PE instance
+>>> has to be picked according to the PE number eventually. We have
+>>> same issue when PE is released.
+>>>
+>>> For pnv_ioda_pick_m64_pe() and pnv_ioda_alloc_pe(), this returns
+>>> PE instance so that pnv_ioda_setup_bus_PE() can use the allocated
+>>> or reserved PE instance directly. Also, pnv_ioda_setup_bus_PE()
+>>> returns the reserved/allocated PE instance to be used in subsequent
+>>> patches. On the other hand, pnv_ioda_free_pe() uses PE instance
+>>> (not number) as its argument. No logical changes introduced.
+>>>
+>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>> ---
+>>>   arch/powerpc/platforms/powernv/pci-ioda.c | 81 +++++++++++++++++--------------
+>>>   arch/powerpc/platforms/powernv/pci.h      |  2 +-
+>>>   2 files changed, 46 insertions(+), 37 deletions(-)
+>>>
+>>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> index 488e0f8..ae82df1 100644
+>>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> @@ -152,7 +152,7 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>>   	pnv_ioda_init_pe(phb, pe_no);
+>>>   }
+>>>
+>>> -static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>>> +static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>>>   {
+>>>   	unsigned long pe;
+>>>
+>>> @@ -160,19 +160,20 @@ static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>>>   		pe = find_next_zero_bit(phb->ioda.pe_alloc,
+>>>   					phb->ioda.total_pe_num, 0);
+>>>   		if (pe >= phb->ioda.total_pe_num)
+>>> -			return IODA_INVALID_PE;
+>>> +			return NULL;
+>>>   	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
+>>>
+>>> -	pnv_ioda_init_pe(phb, pe);
+>>> -	return pe;
+>>> +	return pnv_ioda_init_pe(phb, pe);
+>>>   }
+>>>
+>>> -static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
+>>> +static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe)
+>>>   {
+>>> -	WARN_ON(phb->ioda.pe_array[pe].pdev);
+>>> +	struct pnv_phb *phb = pe->phb;
+>>> +
+>>> +	WARN_ON(pe->pdev);
+>>>
+>>> -	memset(&phb->ioda.pe_array[pe], 0, sizeof(struct pnv_ioda_pe));
+>>> -	clear_bit(pe, phb->ioda.pe_alloc);
+>>> +	memset(pe, 0, sizeof(struct pnv_ioda_pe));
+>>> +	clear_bit(pe->pe_number, phb->ioda.pe_alloc);
+>>>   }
+>>>
+>>>   /* The default M64 BAR is shared by all PEs */
+>>> @@ -332,7 +333,7 @@ static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
+>>>   	}
+>>>   }
+>>>
+>>> -static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>> +static struct pnv_ioda_pe *pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>>   {
+>>>   	struct pci_controller *hose = pci_bus_to_host(bus);
+>>>   	struct pnv_phb *phb = hose->private_data;
+>>> @@ -342,7 +343,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>>
+>>>   	/* Root bus shouldn't use M64 */
+>>>   	if (pci_is_root_bus(bus))
+>>> -		return IODA_INVALID_PE;
+>>> +		return NULL;
+>>>
+>>>   	/* Allocate bitmap */
+>>>   	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
+>>> @@ -350,7 +351,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>>   	if (!pe_alloc) {
+>>>   		pr_warn("%s: Out of memory !\n",
+>>>   			__func__);
+>>> -		return IODA_INVALID_PE;
+>>> +		return NULL;
+>>>   	}
+>>>
+>>>   	/* Figure out reserved PE numbers by the PE */
+>>> @@ -363,7 +364,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>>   	 */
+>>>   	if (bitmap_empty(pe_alloc, phb->ioda.total_pe_num)) {
+>>>   		kfree(pe_alloc);
+>>> -		return IODA_INVALID_PE;
+>>> +		return NULL;
+>>>   	}
+>>>
+>>>   	/*
+>>> @@ -409,7 +410,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>>   	}
+>>>
+>>>   	kfree(pe_alloc);
+>>> -	return master_pe->pe_number;
+>>> +	return master_pe;
+>>>   }
+>>>
+>>>   static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+>>> @@ -988,28 +989,26 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+>>>    * subordinate PCI devices and buses. The second type of PE is normally
+>>>    * orgiriated by PCIe-to-PCI bridge or PLX switch downstream ports.
+>>>    */
+>>> -static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>>> +static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>>>   {
+>>>   	struct pci_controller *hose = pci_bus_to_host(bus);
+>>>   	struct pnv_phb *phb = hose->private_data;
+>>> -	struct pnv_ioda_pe *pe;
+>>> -	int pe_num = IODA_INVALID_PE;
+>>> +	struct pnv_ioda_pe *pe = NULL;
+>>>
+>>>   	/* Check if PE is determined by M64 */
+>>>   	if (phb->pick_m64_pe)
+>>> -		pe_num = phb->pick_m64_pe(bus, all);
+>>> +		pe = phb->pick_m64_pe(bus, all);
+>>>
+>>>   	/* The PE number isn't pinned by M64 */
+>>> -	if (pe_num == IODA_INVALID_PE)
+>>> -		pe_num = pnv_ioda_alloc_pe(phb);
+>>> +	if (!pe)
+>>> +		pe = pnv_ioda_alloc_pe(phb);
+>>>
+>>> -	if (pe_num == IODA_INVALID_PE) {
+>>> +	if (!pe) {
+>>>   		pr_warning("%s: Not enough PE# available for PCI bus %04x:%02x\n",
+>>>   			__func__, pci_domain_nr(bus), bus->number);
+>>> -		return;
+>>> +		return NULL;
+>>>   	}
+>>>
+>>> -	pe = &phb->ioda.pe_array[pe_num];
+>>>   	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
+>>>   	pe->pbus = bus;
+>>>   	pe->pdev = NULL;
+>>> @@ -1018,17 +1017,16 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>>>
+>>>   	if (all)
+>>>   		pe_info(pe, "Secondary bus %d..%d associated with PE#%d\n",
+>>> -			bus->busn_res.start, bus->busn_res.end, pe_num);
+>>> +			bus->busn_res.start, bus->busn_res.end, pe->pe_number);
+>>>   	else
+>>>   		pe_info(pe, "Secondary bus %d associated with PE#%d\n",
+>>> -			bus->busn_res.start, pe_num);
+>>> +			bus->busn_res.start, pe->pe_number);
+>>>
+>>>   	if (pnv_ioda_configure_pe(phb, pe)) {
+>>>   		/* XXX What do we do here ? */
+>>> -		if (pe_num)
+>>> -			pnv_ioda_free_pe(phb, pe_num);
+>>> +		pnv_ioda_free_pe(pe);
+>>>   		pe->pbus = NULL;
+>>> -		return;
+>>> +		return NULL;
+>>>   	}
+>>>
+>>>   	/* Associate it with all child devices */
+>>> @@ -1036,6 +1034,8 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>>>
+>>>   	/* Put PE to the list */
+>>>   	list_add_tail(&pe->list, &phb->ioda.pe_list);
+>>> +
+>>> +	return pe;
+>>>   }
+>>>
+>>>   static void pnv_ioda_setup_PEs(struct pci_bus *bus)
+>>> @@ -1267,7 +1267,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
+>>>
+>>>   		pnv_ioda_deconfigure_pe(phb, pe);
+>>>
+>>> -		pnv_ioda_free_pe(phb, pe->pe_number);
+>>> +		pnv_ioda_free_pe(pe);
+>>>   	}
+>>>   }
+>>>
+>>> @@ -1276,6 +1276,7 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
+>>>   	struct pci_bus        *bus;
+>>>   	struct pci_controller *hose;
+>>>   	struct pnv_phb        *phb;
+>>> +	struct pnv_ioda_pe    *pe;
+>>>   	struct pci_dn         *pdn;
+>>>   	struct pci_sriov      *iov;
+>>>   	u16                    num_vfs, i;
+>>> @@ -1300,8 +1301,11 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
+>>>   		/* Release PE numbers */
+>>>   		if (pdn->m64_single_mode) {
+>>>   			for (i = 0; i < num_vfs; i++) {
+>>> -				if (pdn->pe_num_map[i] != IODA_INVALID_PE)
+>>> -					pnv_ioda_free_pe(phb, pdn->pe_num_map[i]);
+>>> +				if (pdn->pe_num_map[i] == IODA_INVALID_PE)
+>>> +					continue;
+>>> +
+>>> +				pe = &phb->ioda.pe_array[pdn->pe_num_map[i]];
+>>> +				pnv_ioda_free_pe(pe);
+>>>   			}
+>>>   		} else
+>>>   			bitmap_clear(phb->ioda.pe_alloc, *pdn->pe_num_map, num_vfs);
+>>> @@ -1354,9 +1358,8 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+>>>
+>>>   		if (pnv_ioda_configure_pe(phb, pe)) {
+>>>   			/* XXX What do we do here ? */
+>>> -			if (pe_num)
+>>> -				pnv_ioda_free_pe(phb, pe_num);
+>>>   			pe->pdev = NULL;
+>>> +			pnv_ioda_free_pe(pe);
+>>
+>>
+>>
+>> pnv_ioda_free_pe() does WARN_ON(pdev). Before this patch you would free PE
+>> first and then reset pe->pdev, now you reset it first, then call
+>> pnv_ioda_free_pe(). This change is not just about "Use PE instead of number
+>> during setup and release", is/was that a bug?
+>>
+>> And I fail to see when pe->pdev could get initialized in
+>> pnv_ioda_configure_pe() as pnv_pci_dma_dev_setup() should not be called while
+>> pnv_ioda_setup_vf_PE() is working.
+>>
+>
+> It wasn't or isn't a bug as
 
-Queued up for v4.4, but I'll include it into my second pull request in the
-second half of the merge window.
 
-Thanks,
-Rafael
+There is an unexplained change in behavior - after the patch pe->pdev gets 
+cleaned before pnv_ioda_free_pe(), before the patch it was opposite. Your 
+options are:
+- remove "No logical changes introduced" from the commit log and explain 
+the change or
+- move "pe->pdev = NULL;" after pnv_ioda_free_pe().
 
+
+
+> pe->pdev is initialized in arch/powerpc/platform/powernv/pci.c::
+> pnv_pci_dma_dev_setup()
+
+So when pnv_ioda_setup_vf_PE() starts working, it is valid for pe->pdev to 
+have not-NULL pointer? Because nothing in pnv_ioda_setup_vf_PE() calls 
+pnv_pci_dma_dev_setup(), explicitly or implicitly.
+
+
+
+
+>>
+>>>   			continue;
+>>>   		}
+>>>
+>>> @@ -1374,6 +1377,7 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>>>   	struct pci_bus        *bus;
+>>>   	struct pci_controller *hose;
+>>>   	struct pnv_phb        *phb;
+>>> +	struct pnv_ioda_pe    *pe;
+>>>   	struct pci_dn         *pdn;
+>>>   	int                    ret;
+>>>   	u16                    i;
+>>> @@ -1416,11 +1420,13 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>>>   		/* Calculate available PE for required VFs */
+>>>   		if (pdn->m64_single_mode) {
+>>>   			for (i = 0; i < num_vfs; i++) {
+>>> -				pdn->pe_num_map[i] = pnv_ioda_alloc_pe(phb);
+>>> -				if (pdn->pe_num_map[i] == IODA_INVALID_PE) {
+>>> +				pe = pnv_ioda_alloc_pe(phb);
+>>> +				if (!pe) {
+>>>   					ret = -EBUSY;
+>>>   					goto m64_failed;
+>>>   				}
+>>> +
+>>> +				pdn->pe_num_map[i] = pe->pe_number;
+>>>   			}
+>>>   		} else {
+>>>   			mutex_lock(&phb->ioda.pe_alloc_mutex);
+>>> @@ -1465,8 +1471,11 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>>>   m64_failed:
+>>>   	if (pdn->m64_single_mode) {
+>>>   		for (i = 0; i < num_vfs; i++) {
+>>> -			if (pdn->pe_num_map[i] != IODA_INVALID_PE)
+>>> -				pnv_ioda_free_pe(phb, pdn->pe_num_map[i]);
+>>> +			if (pdn->pe_num_map[i] == IODA_INVALID_PE)
+>>> +				continue;
+>>> +
+>>> +			pe = &phb->ioda.pe_array[pdn->pe_num_map[i]];
+>>> +			pnv_ioda_free_pe(pe);
+>>>   		}
+>>>   	} else
+>>>   		bitmap_clear(phb->ioda.pe_alloc, *pdn->pe_num_map, num_vfs);
+>>> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>> index 5df945f..e55ab0e 100644
+>>> --- a/arch/powerpc/platforms/powernv/pci.h
+>>> +++ b/arch/powerpc/platforms/powernv/pci.h
+>>> @@ -105,7 +105,7 @@ struct pnv_phb {
+>>>   	int (*init_m64)(struct pnv_phb *phb);
+>>>   	void (*reserve_m64_pe)(struct pci_bus *bus,
+>>>   			       unsigned long *pe_bitmap, bool all);
+>>> -	int (*pick_m64_pe)(struct pci_bus *bus, bool all);
+>>> +	struct pnv_ioda_pe *(*pick_m64_pe)(struct pci_bus *bus, bool all);
+>>>   	int (*get_pe_state)(struct pnv_phb *phb, int pe_no);
+>>>   	void (*freeze_pe)(struct pnv_phb *phb, int pe_no);
+>>>   	int (*unfreeze_pe)(struct pnv_phb *phb, int pe_no, int opt);
+>>>
+>
+> Thanks,
+> Gavin
+>
+
+
+-- 
+Alexey
