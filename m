@@ -1,71 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:44597 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965307AbbKEXps (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Nov 2015 18:45:48 -0500
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 6 Nov 2015 09:45:45 +1000
-Date: Fri, 6 Nov 2015 10:44:14 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Daniel Axtens <dja@axtens.net>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, aik@ozlabs.ru, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, frowand.list@gmail.com
-Subject: Re: [PATCH v7 02/50] powerpc/pci: Override pcibios_setup_bridge()
-Message-ID: <20151105234414.GA30465@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-3-git-send-email-gwshan@linux.vnet.ibm.com>
- <87wptwhyjl.fsf@gamma.ozlabs.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH 5/5] ARM: dts: Enable MSI support for Broadcom Cygnus
+Date: Tue, 17 Nov 2015 16:31:55 -0800
+Message-ID: <1447806715-30043-6-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1447806715-30043-1-git-send-email-rjui@broadcom.com>
+References: <1447806715-30043-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87wptwhyjl.fsf@gamma.ozlabs.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 06, 2015 at 09:27:42AM +1100, Daniel Axtens wrote:
->Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
->
->>  
->> +void pcibios_setup_bridge(struct pci_bus *bus, unsigned long type)
->> +{
->> +	struct pci_controller *hose = pci_bus_to_host(bus);
->Very much a nit-pick, but I thought we were trying to move towards using
->phb instead of hose in new code?
->
+Enable MSI support for Broadcom Cygnus platforms
 
-Take PowerNV platform as an example, "hose" means "struct pci_controller",
-but "phb" means "struct pnv_phb". We don't have the movement to use "phb"
-to represent "struct pci_controller".
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+Reviewed-by: Pramod KUMAR <pramodku@broadcom.com>
+Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
+---
+ arch/arm/boot/dts/bcm-cygnus.dtsi | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
->Apart from that this looks good. I would probably have merged it with
->the previous patch, but I know Alexey has been suggesting a lot of
->splitting and merging previously, so whatever he prefers here is OK.
->
-
-I'd like to keep them separate as they're for different subsystem:
-PCI generic subsystem and PowerPC subsystem. Separate maintainers
-for them can pick them as they will.
-
->> +
->> +	if (hose->controller_ops.setup_bridge)
->> +		hose->controller_ops.setup_bridge(bus, type);
->> +}
->> +
->>  void pcibios_reset_secondary_bus(struct pci_dev *dev)
->>  {
->>  	struct pci_controller *phb = pci_bus_to_host(dev->bus);
->> -- 
->> 2.1.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi b/arch/arm/boot/dts/bcm-cygnus.dtsi
+index 2778533..bae1ac2 100644
+--- a/arch/arm/boot/dts/bcm-cygnus.dtsi
++++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
+@@ -162,6 +162,19 @@
+ 				  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
+ 
+ 			status = "disabled";
++
++			msi-parent = <&msi0>;
++			msi0: msi@18012000 {
++				compatible = "brcm,iproc-msi";
++				msi-controller;
++				interrupt-parent = <&gic>;
++				interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
++					     <GIC_SPI 97 IRQ_TYPE_NONE>,
++					     <GIC_SPI 98 IRQ_TYPE_NONE>,
++					     <GIC_SPI 99 IRQ_TYPE_NONE>;
++				brcm,num-eq-region = <1>;
++				brcm,num-msi-msg-region = <1>;
++			};
+ 		};
+ 
+ 		pcie1: pcie@18013000 {
+@@ -183,6 +196,19 @@
+ 				  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
+ 
+ 			status = "disabled";
++
++			msi-parent = <&msi1>;
++			msi1: msi@18013000 {
++				compatible = "brcm,iproc-msi";
++				msi-controller;
++				interrupt-parent = <&gic>;
++				interrupts = <GIC_SPI 102 IRQ_TYPE_NONE>,
++					     <GIC_SPI 103 IRQ_TYPE_NONE>,
++					     <GIC_SPI 104 IRQ_TYPE_NONE>,
++					     <GIC_SPI 105 IRQ_TYPE_NONE>;
++				brcm,num-eq-region = <1>;
++				brcm,num-msi-msg-region = <1>;
++			};
+ 		};
+ 
+ 		uart0: serial@18020000 {
+-- 
+1.9.1
 
