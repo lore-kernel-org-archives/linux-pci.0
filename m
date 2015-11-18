@@ -1,439 +1,295 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:56706 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754274AbbKCQSs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 3 Nov 2015 11:18:48 -0500
-Message-ID: <5638DE62.6050605@arm.com>
-Date: Tue, 03 Nov 2015 16:18:42 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:13154 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755151AbbKRJlM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2015 04:41:12 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <wangzhou1@hisilicon.com>, <linux-pci@vger.kernel.org>
+CC: <gabriele.paoloni@huawei.com>, <xuwei5@hisilicon.com>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<qiujiang@huawei.com>, <liudongdong3@huawei.com>,
+	<liguozhu@hisilicon.com>, <linux-kernel@vger.kernel.org>,
+	<lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>
+Subject: [PATCH] PCI: hisi: Add support for HiSilicon Hip06 PCIe host bridge controllers
+Date: Wed, 18 Nov 2015 17:51:09 +0800
+Message-ID: <1447840269-25001-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	michals@xilinx.com, sorenb@xilinx.com, bhelgaas@google.com,
-	arnd@arndb.de, tinamdar@apm.com, treding@nvidia.com,
-	rjui@broadcom.com, Minghuan.Lian@freescale.com,
-	m-karicheri2@ti.com, hauke@hauke-m.de, dhdang@apm.com,
-	sbranden@broadcom.com
-CC: devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH v7] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-References: <1446564227-4704-1-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1446564227-4704-1-git-send-email-bharatku@xilinx.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/11/15 15:23, Bharat Kumar Gogada wrote:
-> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
-> 
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> ---
-> Removed msi_controller and added irq_domian for MSI domain hierarchy.
-> Modified code for filling MSI address in struct msg.
-> Added check for hwirq before passing it to irq_domain_set_info.
-> ---
->  .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
->  drivers/pci/host/Kconfig                           |   10 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pcie-xilinx-nwl.c                 | 1053 ++++++++++++++++++++
->  4 files changed, 1132 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
->  create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-[...]
+This patch adds support for HiSilicon Hip06 SoC that implements
+v2 HW IP of the PCIe Host Bridge controller.
+Hip05 SoC references have been replaced with v1-Hip05
+and references to v2-Hip06 have been added.
+Documentation has been updated to include Hip06 and the DT
+example also has been updated accordingly.
+Finally Gabriele Paoloni has been added as maintainer of the
+driver
 
-> +#ifdef CONFIG_PCI_MSI
-> +static struct irq_chip nwl_msi_irq_chip = {
-> +	.name = "nwl_pcie:msi",
-> +	.irq_enable = unmask_msi_irq,
-> +	.irq_disable = mask_msi_irq,
-> +	.irq_mask = mask_msi_irq,
-> +	.irq_unmask = unmask_msi_irq,
-> +
-> +};
-> +
-> +static struct msi_domain_info nwl_msi_domain_info = {
-> +	.flags = (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-> +		  MSI_FLAG_MULTI_PCI_MSI),
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+This patch is based on top of Arnd Bergmann patch
+[PATCH] PCI: hisi: fix deferred probing
+---
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     | 16 ++--
+ MAINTAINERS                                        |  1 +
+ drivers/pci/host/Kconfig                           |  5 +-
+ drivers/pci/host/pcie-hisi.c                       | 91 ++++++++++++++++++----
+ 4 files changed, 90 insertions(+), 23 deletions(-)
 
-If you're supporting multi-MSI, how do you ensure that all hwirqs are
-contiguous as required by the spec? Clearly, your allocator doesn't
-provide this guarantee.
-
-Also, you still lack support for MSI-X (which would come for free...).
-
-> +	.chip = &nwl_msi_irq_chip,
-> +};
-> +#endif
-> +
-> +static void nwl_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> +{
-> +	struct nwl_pcie *pcie = irq_data_get_irq_chip_data(data);
-> +	struct nwl_msi *msi = &pcie->msi;
-> +	phys_addr_t msi_addr = virt_to_phys((void *)msi->pages);
-> +
-> +	msg->address_lo = lower_32_bits(msi_addr);
-> +	msg->address_hi = upper_32_bits(msi_addr);
-> +	msg->data = data->hwirq;
-> +}
-> +
-> +static int nwl_msi_set_affinity(struct irq_data *irq_data,
-> +				const struct cpumask *mask, bool force)
-> +{
-> +	return -EINVAL;
-> +}
-> +
-> +static struct irq_chip nwl_irq_chip = {
-> +	.name = "Xilinx MSI",
-> +	.irq_compose_msi_msg = nwl_compose_msi_msg,
-> +	.irq_set_affinity = nwl_msi_set_affinity,
-> +};
-> +
-> +static int nwl_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
-> +				unsigned int nr_irqs, void *args)
-> +{
-> +	struct nwl_pcie *pcie = domain->host_data;
-> +	struct nwl_msi *msi = &pcie->msi;
-> +	unsigned long bit;
-> +
-> +	mutex_lock(&msi->lock);
-> +	bit = find_first_zero_bit(msi->used, INT_PCI_MSI_NR);
-> +	if (bit < INT_PCI_MSI_NR)
-> +		set_bit(bit, msi->used);
-> +	else
-> +		bit = -ENOSPC;
-> +
-> +	mutex_unlock(&msi->lock);
-> +
-> +	if (bit < 0)
-> +		return bit;
-> +
-> +	irq_domain_set_info(domain, virq, bit, &nwl_irq_chip,
-> +			domain->host_data, handle_simple_irq,
-> +			NULL, NULL);
-> +	return 0;
-> +}
-> +
-> +static void nwl_irq_domain_free(struct irq_domain *domain, unsigned int virq,
-> +					unsigned int nr_irqs)
-> +{
-> +	struct irq_data *data = irq_domain_get_irq_data(domain, virq);
-> +	struct nwl_pcie *pcie = irq_data_get_irq_chip_data(data);
-> +	struct nwl_msi *msi = &pcie->msi;
-> +
-> +	mutex_lock(&msi->lock);
-> +	if (!test_bit(data->hwirq, msi->used))
-> +		dev_err(pcie->dev, "freeing unused MSI %lu\n", data->hwirq);
-> +	else
-> +		clear_bit(data->hwirq, msi->used);
-> +
-> +	mutex_unlock(&msi->lock);
-> +}
-> +
-> +static const struct irq_domain_ops dev_msi_domain_ops = {
-> +	.alloc  = nwl_irq_domain_alloc,
-> +	.free   = nwl_irq_domain_free,
-> +};
-> +
-> +static void nwl_pcie_free_irq_domain(struct nwl_pcie *pcie)
-> +{
-> +	int i;
-> +	u32 irq;
-> +
-> +#ifdef CONFIG_PCI_MSI
-> +	struct nwl_msi *msi = &pcie->msi;
-> +#endif
-> +
-> +	for (i = 0; i < 4; i++) {
-> +		irq = irq_find_mapping(pcie->legacy_irq_domain, i + 1);
-> +		if (irq > 0)
-> +			irq_dispose_mapping(irq);
-> +	}
-> +
-> +	irq_domain_remove(pcie->legacy_irq_domain);
-> +
-> +#ifdef CONFIG_PCI_MSI
-> +	irq_set_chained_handler_and_data(msi->irq_msi0, NULL, NULL);
-> +	irq_set_chained_handler_and_data(msi->irq_msi1, NULL, NULL);
-> +
-> +	irq_domain_remove(msi->msi_domain);
-> +	irq_domain_remove(msi->dev_domain);
-> +#endif
-> +
-> +}
-
-Remove these #ifdefs. You can test the validity of these fields before
-calling the various functions. You can also move this to a separate
-function.
-
-> +
-> +static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
-> +{
-> +	struct device_node *node = pcie->dev->of_node;
-> +	struct device_node *legacy_intc_node;
-> +
-> +#ifdef CONFIG_PCI_MSI
-> +	struct nwl_msi *msi = &pcie->msi;
-> +#endif
-> +
-> +	legacy_intc_node = of_get_next_child(node, NULL);
-> +	if (!legacy_intc_node) {
-> +		dev_err(pcie->dev, "No legacy intc node found\n");
-> +		return PTR_ERR(legacy_intc_node);
-> +	}
-> +
-> +	pcie->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node, 4,
-> +							&legacy_domain_ops,
-> +							pcie);
-> +
-> +	if (!pcie->legacy_irq_domain) {
-> +		dev_err(pcie->dev, "failed to create IRQ domain\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +#ifdef CONFIG_PCI_MSI
-> +	msi->dev_domain = irq_domain_add_linear(NULL, INT_PCI_MSI_NR,
-> +					&dev_msi_domain_ops, pcie);
-> +	if (!msi->dev_domain) {
-> +		dev_err(pcie->dev, "failed to create dev IRQ domain\n");
-> +		return -ENOMEM;
-> +	}
-> +	msi->msi_domain = pci_msi_create_irq_domain(node,
-> +							&nwl_msi_domain_info,
-> +							msi->dev_domain);
-> +	if (!msi->msi_domain) {
-> +		dev_err(pcie->dev, "failed to create msi IRQ domain\n");
-> +		irq_domain_remove(msi->dev_domain);
-> +		return -ENOMEM;
-> +	}
-> +#endif
-
-Similar treatment here: move anything that's MSI-dependent to another
-function, and provide a dummy implementation for the !PCI_MSI case.
-
-> +	return 0;
-> +}
-> +
-> +static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus *bus)
-> +{
-> +	struct platform_device *pdev = to_platform_device(pcie->dev);
-> +	struct nwl_msi *msi = &pcie->msi;
-> +	unsigned long base;
-> +	int ret;
-> +
-> +	mutex_init(&msi->lock);
-> +
-> +	/* Check for msii_present bit */
-> +	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) & MSII_PRESENT;
-> +	if (!ret) {
-> +		dev_err(pcie->dev, "MSI not present\n");
-> +		ret = -EIO;
-> +		goto err;
-> +	}
-> +
-> +	/* Enable MSII */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
-> +			  MSII_ENABLE, I_MSII_CONTROL);
-> +
-> +	/* Enable MSII status */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
-> +			  MSII_STATUS_ENABLE, I_MSII_CONTROL);
-> +
-> +	/* setup AFI/FPCI range */
-> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-> +	base = virt_to_phys((void *)msi->pages);
-> +	nwl_bridge_writel(pcie, lower_32_bits(base), I_MSII_BASE_LO);
-> +	nwl_bridge_writel(pcie, upper_32_bits(base), I_MSII_BASE_HI);
-
-I just read this, and I'm puzzled. Actually, puzzled is an
-understatement. Why on Earth do you need to give RAM to your MSI HW?
-This should be a device, not RAM. By the look of it, this could be
-absolutely anything. Are you sure you have to supply RAM here?
-
-> +
-> +	/* Disable high range msi interrupts */
-> +	nwl_bridge_writel(pcie, (u32)~MSGF_MSI_SR_HI_MASK, MSGF_MSI_MASK_HI);
-> +
-> +	/* Clear pending high range msi interrupts */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie,  MSGF_MSI_STATUS_HI) &
-> +			  MSGF_MSI_SR_HI_MASK, MSGF_MSI_STATUS_HI);
-> +	/* Get msi_1 IRQ number */
-> +	msi->irq_msi1 = platform_get_irq_byname(pdev, "msi1");
-> +	if (msi->irq_msi1 < 0) {
-> +		dev_err(&pdev->dev, "failed to get IRQ#%d\n", msi->irq_msi1);
-> +		goto err;
-> +	}
-> +	/* Register msi handler */
-> +	irq_set_chained_handler_and_data(msi->irq_msi1,
-> +					 nwl_pcie_msi_handler_high, pcie);
-> +
-> +	/* Enable all high range msi interrupts */
-> +	nwl_bridge_writel(pcie, MSGF_MSI_SR_HI_MASK, MSGF_MSI_MASK_HI);
-> +
-> +	/* Disable low range msi interrupts */
-> +	nwl_bridge_writel(pcie, (u32)~MSGF_MSI_SR_LO_MASK, MSGF_MSI_MASK_LO);
-> +
-> +	/* Clear pending low range msi interrupts */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, MSGF_MSI_STATUS_LO) &
-> +			  MSGF_MSI_SR_LO_MASK, MSGF_MSI_STATUS_LO);
-> +	/* Get msi_0 IRQ number */
-> +	msi->irq_msi0 = platform_get_irq_byname(pdev, "msi0");
-> +	if (msi->irq_msi0 < 0) {
-> +		dev_err(&pdev->dev, "failed to get IRQ#%d\n", msi->irq_msi0);
-> +		goto err;
-> +	}
-> +
-> +	/* Register msi handler */
-> +	irq_set_chained_handler_and_data(msi->irq_msi0,
-> +					 nwl_pcie_msi_handler_low, pcie);
-> +
-> +	/* Enable all low range msi interrupts */
-> +	nwl_bridge_writel(pcie, MSGF_MSI_SR_LO_MASK, MSGF_MSI_MASK_LO);
-> +
-> +	return 0;
-> +err:
-> +	return ret;
-> +}
-> +
-> +static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
-> +{
-> +	struct platform_device *pdev = to_platform_device(pcie->dev);
-> +	u32 breg_val, ecam_val, first_busno = 0;
-> +	int err;
-> +	int check_link_up = 0;
-> +
-> +	/* Check for BREG present bit */
-> +	breg_val = nwl_bridge_readl(pcie, E_BREG_CAPABILITIES) & BREG_PRESENT;
-> +	if (!breg_val) {
-> +		dev_err(pcie->dev, "BREG is not present\n");
-> +		return breg_val;
-> +	}
-> +	/* Write bridge_off to breg base */
-> +	nwl_bridge_writel(pcie, (u32)(pcie->phys_breg_base),
-> +			  E_BREG_BASE_LO);
-> +
-> +	/* Enable BREG */
-> +	nwl_bridge_writel(pcie, ~BREG_ENABLE_FORCE & BREG_ENABLE,
-> +			  E_BREG_CONTROL);
-> +
-> +	/* Disable DMA channel registers */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, BRCFG_PCIE_RX0) |
-> +			  CFG_DMA_REG_BAR, BRCFG_PCIE_RX0);
-> +
-> +	/* Enable the bridge config interrupt */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, BRCFG_INTERRUPT) |
-> +			  BRCFG_INTERRUPT_MASK, BRCFG_INTERRUPT);
-> +	/* Enable Ingress subtractive decode translation */
-> +	nwl_bridge_writel(pcie, SET_ISUB_CONTROL, I_ISUB_CONTROL);
-> +
-> +	/* Enable msg filtering details */
-> +	nwl_bridge_writel(pcie, CFG_ENABLE_MSG_FILTER_MASK,
-> +			  BRCFG_PCIE_RX_MSG_FILTER);
-> +	do {
-> +		err = nwl_pcie_link_up(pcie, PHY_RDY_LINKUP);
-> +		if (err != 1) {
-> +			check_link_up++;
-> +			if (check_link_up > LINKUP_ITER_CHECK)
-> +				return -ENODEV;
-> +			mdelay(1000);
-> +		}
-> +	} while (!err);
-> +
-> +	/* Check for ECAM present bit */
-> +	ecam_val = nwl_bridge_readl(pcie, E_ECAM_CAPABILITIES) & E_ECAM_PRESENT;
-> +	if (!ecam_val) {
-> +		dev_err(pcie->dev, "ECAM is not present\n");
-> +		return ecam_val;
-> +	}
-> +
-> +	/* Enable ECAM */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, E_ECAM_CONTROL) |
-> +			  E_ECAM_CR_ENABLE, E_ECAM_CONTROL);
-> +	/* Write ecam_value on ecam_control */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, E_ECAM_CONTROL) |
-> +			  (pcie->ecam_value << E_ECAM_SIZE_SHIFT),
-> +			  E_ECAM_CONTROL);
-> +	/* Write phy_reg_base to ecam base */
-> +	nwl_bridge_writel(pcie, (u32)pcie->phys_ecam_base, E_ECAM_BASE_LO);
-> +
-> +	/* Get bus range */
-> +	ecam_val = nwl_bridge_readl(pcie, E_ECAM_CONTROL);
-> +	pcie->last_busno = (ecam_val & E_ECAM_SIZE_LOC) >> E_ECAM_SIZE_SHIFT;
-> +	/* Write primary, secondary and subordinate bus numbers */
-> +	ecam_val = first_busno;
-> +	ecam_val |= (first_busno + 1) << 8;
-> +	ecam_val |= (pcie->last_busno << E_ECAM_SIZE_SHIFT);
-> +	writel(ecam_val, (pcie->ecam_base + PCI_PRIMARY_BUS));
-> +
-> +	/* Check if PCIe link is up? */
-> +	pcie->link_up = nwl_pcie_link_up(pcie, PCIE_USER_LINKUP);
-> +	if (!pcie->link_up)
-> +		dev_info(pcie->dev, "Link is DOWN\n");
-> +	else
-> +		dev_info(pcie->dev, "Link is UP\n");
-> +
-> +	/* Disable all misc interrupts */
-> +	nwl_bridge_writel(pcie, (u32)~MSGF_MISC_SR_MASKALL, MSGF_MISC_MASK);
-> +
-> +	/* Clear pending misc interrupts */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, MSGF_MISC_STATUS) &
-> +			  MSGF_MISC_SR_MASKALL, MSGF_MISC_STATUS);
-> +
-> +	/* Get misc IRQ number */
-> +	pcie->irq_misc = platform_get_irq_byname(pdev, "misc");
-> +	if (pcie->irq_misc < 0) {
-> +		dev_err(&pdev->dev, "failed to get misc IRQ#%d\n",
-
-That's going to be a pretty funky interrupt number.
-
-> +			pcie->irq_misc);
-> +		return pcie->irq_misc;
-
-Don't you need to turn the thing down when you abort the probing?
-
-> +	}
-> +	/* Register misc handler */
-> +	err = devm_request_irq(pcie->dev, pcie->irq_misc,
-> +			       nwl_pcie_misc_handler, IRQF_SHARED,
-> +			       "nwl_pcie:misc", pcie);
-> +	if (err) {
-> +		dev_err(pcie->dev, "fail to register misc IRQ#%d\n",
-> +			pcie->irq_misc);
-> +		return err;
-> +	}
-> +	/* Enable all misc interrupts */
-> +	nwl_bridge_writel(pcie, MSGF_MISC_SR_MASKALL, MSGF_MISC_MASK);
-> +
-> +	/* Disable all legacy interrupts */
-> +	nwl_bridge_writel(pcie, (u32)~MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
-> +
-> +	/* Clear pending legacy interrupts */
-> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
-> +			  MSGF_LEG_SR_MASKALL, MSGF_LEG_STATUS);
-> +	/* Get intx IRQ number */
-> +	pcie->irq_intx = platform_get_irq_byname(pdev, "intx");
-> +	if (pcie->irq_intx < 0) {
-> +		dev_err(&pdev->dev, "failed to get intx IRQ#%d\n",
-
-Same here.
-
-> +			pcie->irq_intx);
-> +		return pcie->irq_intx;
-> +	}
-> +
-> +	/* Enable all legacy interrupts */
-> +	nwl_bridge_writel(pcie, MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
-> +
-> +	return 0;
-> +}
-
-Thanks,
-
-	M.
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+index 17c6ed9..3eee49a 100644
+--- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -1,4 +1,4 @@
+-HiSilicon PCIe host bridge DT description
++HiSilicon Hip05 and Hip06 PCIe host bridge DT description
+ 
+ HiSilicon PCIe host controller is based on Designware PCI core.
+ It shares common functions with PCIe Designware core driver and inherits
+@@ -7,8 +7,8 @@ Documentation/devicetree/bindings/pci/designware-pci.txt.
+ 
+ Additional properties are described here:
+ 
+-Required properties:
+-- compatible: Should contain "hisilicon,hip05-pcie".
++Required properties
++- compatible: Should contain "hisilicon,v1-pcie-hip05" or "hisilicon,v2-pcie-hip06".
+ - reg: Should contain rc_dbi, config registers location and length.
+ - reg-names: Must include the following entries:
+   "rc_dbi": controller configuration registers;
+@@ -20,10 +20,14 @@ Optional properties:
+ - status: Either "ok" or "disabled".
+ - dma-coherent: Present if DMA operations are coherent.
+ 
+-Example:
++Hip05/Hip06 Example:
+ 	pcie@0xb0080000 {
+-		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
++		compatible = "hisilicon,v1-pcie-hip05", "snps,dw-pcie";
+ 		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
++/* for v2 HW IP use
++ *		compatible = "hisilicon,v2-pcie-hip06", "snps,dw-pcie";
++ *		reg = <0 0xa0090000 0 0x10000>, <0 0xa8000000 0 0x2000>;
++ */
+ 		reg-names = "rc_dbi", "config";
+ 		bus-range = <0  15>;
+ 		msi-parent = <&its_pcie>;
+@@ -41,4 +45,4 @@ Example:
+ 				  0x0 0 0 3 &mbigen_pcie 3 12
+ 				  0x0 0 0 4 &mbigen_pcie 4 13>;
+ 		status = "ok";
+-	};
++	};
+\ No newline at end of file
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 7af7f4a..3f97cf1 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8195,6 +8195,7 @@ F:	drivers/pci/host/pci-xgene-msi.c
+ 
+ PCIE DRIVER FOR HISILICON
+ M:	Zhou Wang <wangzhou1@hisilicon.com>
++M:	Gabriele Paoloni <gabriele.paoloni@huawei.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index f131ba9..f5c58cf 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -166,10 +166,11 @@ config PCIE_ALTERA_MSI
+ 
+ config PCI_HISI
+ 	depends on OF && ARM64
+-	bool "HiSilicon SoC HIP05 PCIe controller"
++	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 	help
+-	  Say Y here if you want PCIe controller support on HiSilicon HIP05 SoC
++	  Say Y here if you want PCIe controller support on SoCs supporting
++	  HiSilicon Hip05 and Hip06 SoCs
+ 
+ endmenu
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index 163671a..1210685 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -1,10 +1,11 @@
+ /*
+- * PCIe host controller driver for HiSilicon Hip05 SoC
++ * PCIe host bridge controller driver for HiSilicon SoCs
+  *
+  * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
+  *
+- * Author: Zhou Wang <wangzhou1@hisilicon.com>
+- *         Dacai Zhu <zhudacai@hisilicon.com>
++ * Authors: Zhou Wang <wangzhou1@hisilicon.com>
++ *          Dacai Zhu <zhudacai@hisilicon.com>
++ *          Gabriele Paoloni <gabriele.paoloni@huawei.com>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -16,21 +17,35 @@
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <linux/platform_device.h>
++#include <linux/of_device.h>
+ #include <linux/regmap.h>
+ 
+ #include "pcie-designware.h"
+ 
+-#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
+-#define PCIE_LTSSM_LINKUP_STATE                         0x11
+-#define PCIE_LTSSM_STATE_MASK                           0x3F
++#define PCIE_HOST_V1                                 0x1
++#define PCIE_HOST_V2                                 0x2
++
++#define PCIE_LTSSM_LINKUP_STATE                      0x11
++#define PCIE_LTSSM_STATE_MASK                        0x3F
++#define PCIE_SUBCTRL_SYS_STATE4_REG                  0x6818
++#define PCIE_SYS_STATE4                              0x31c
++#define PCIE_V2_CTRL_OFF                             0x1000
+ 
+ #define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
+ 
++struct hisi_pcie;
++
++struct pcie_soc_ops {
++	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie);
++	u32 soc_type;
++};
++
+ struct hisi_pcie {
+ 	struct regmap *subctrl;
+ 	void __iomem *reg_base;
+ 	u32 port_id;
+ 	struct pcie_port pp;
++	struct pcie_soc_ops *soc_ops;
+ };
+ 
+ static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
+@@ -44,7 +59,7 @@ static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
+ 	return readl(pcie->reg_base + reg);
+ }
+ 
+-/* Hip05 PCIe host only supports 32-bit config access */
++/* HipXX PCIe host only supports 32-bit config access */
+ static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
+ 			      u32 *val)
+ {
+@@ -67,7 +82,7 @@ static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-/* Hip05 PCIe host only supports 32-bit config access */
++/* HipXX PCIe host only supports 32-bit config access */
+ static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int  size,
+ 				u32 val)
+ {
+@@ -96,13 +111,8 @@ static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int  size,
+ 
+ static int hisi_pcie_link_up(struct pcie_port *pp)
+ {
+-	u32 val;
+ 	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
+-
+-	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
+-		    0x100 * hisi_pcie->port_id, &val);
+-
+-	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++	return hisi_pcie->soc_ops->hisi_pcie_link_up(hisi_pcie);
+ }
+ 
+ static struct pcie_host_ops hisi_pcie_host_ops = {
+@@ -143,7 +153,9 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct hisi_pcie *hisi_pcie;
+ 	struct pcie_port *pp;
++	const struct of_device_id *match;
+ 	struct resource *reg;
++	struct device_driver *driver;
+ 	int ret;
+ 
+ 	hisi_pcie = devm_kzalloc(&pdev->dev, sizeof(*hisi_pcie), GFP_KERNEL);
+@@ -152,6 +164,10 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 
+ 	pp = &hisi_pcie->pp;
+ 	pp->dev = &pdev->dev;
++	driver = (pdev->dev).driver;
++
++	match = of_match_device(driver->of_match_table, &pdev->dev);
++	hisi_pcie->soc_ops = (struct pcie_soc_ops *) match->data;
+ 
+ 	hisi_pcie->subctrl =
+ 	syscon_regmap_lookup_by_compatible("hisilicon,pcie-sas-subctrl");
+@@ -180,11 +196,51 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++/* Check if the link is up for V1 PCIe HW IP*/
++static int hisi_pcie_link_up_v1(struct hisi_pcie *hisi_pcie)
++{
++	u32 val;
++
++	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
++		    0x100 * hisi_pcie->port_id, &val);
++
++	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++}
++
++/* Check if the link is up for V2 PCIe HW IP */
++static int hisi_pcie_link_up_v2(struct hisi_pcie *hisi_pcie)
++{
++	u32 val;
++
++	val = hisi_pcie_apb_readl(hisi_pcie, PCIE_V2_CTRL_OFF +
++			PCIE_SYS_STATE4);
++
++	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++}
++
++static struct pcie_soc_ops v2_ops = {
++		&hisi_pcie_link_up_v2,
++		PCIE_HOST_V2
++};
++
++static struct pcie_soc_ops v1_ops = {
++		&hisi_pcie_link_up_v1,
++		PCIE_HOST_V1
++};
++
+ static const struct of_device_id hisi_pcie_of_match[] = {
+-	{.compatible = "hisilicon,hip05-pcie",},
++	{
++			.compatible = "hisilicon,v1-pcie-hip05",
++			.data	    = (void *) &v1_ops,
++	},
++	{
++			.compatible = "hisilicon,v2-pcie-hip06",
++			.data	    = (void *) &v2_ops,
++	},
+ 	{},
+ };
+ 
++
+ MODULE_DEVICE_TABLE(of, hisi_pcie_of_match);
+ 
+ static struct platform_driver hisi_pcie_driver = {
+@@ -196,3 +252,8 @@ static struct platform_driver hisi_pcie_driver = {
+ };
+ 
+ module_platform_driver(hisi_pcie_driver);
++
++MODULE_AUTHOR("Zhou Wang <wangzhou1@hisilicon.com>");
++MODULE_AUTHOR("Dacai Zhu <zhudacai@hisilicon.com>");
++MODULE_AUTHOR("Gabriele Paoloni <gabriele.paoloni@huawei.com>");
++MODULE_LICENSE("GPL v2");
 -- 
-Jazz is not dead. It just smells funny...
+2.1.4
+
