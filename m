@@ -1,147 +1,420 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 18 Nov 2015 12:40:38 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Josef Bacik <jbacik@fb.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, bhelgaas@google.com, shli@fb.com,
-	kernel-team@fb.com, Matthew Garrett <mjg59@coreos.com>
-Subject: Re: [PATCH] pci: completely disable aspm if it's unsupported
-Message-ID: <20151118184038.GA4462@localhost>
-References: <1447856703-2566-1-git-send-email-jbacik@fb.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH 2/5] PCI: iproc: Add PAXC interface support
+Date: Tue, 17 Nov 2015 16:31:52 -0800
+Message-ID: <1447806715-30043-3-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1447806715-30043-1-git-send-email-rjui@broadcom.com>
+References: <1447806715-30043-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1447856703-2566-1-git-send-email-jbacik@fb.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Matthew]
+Traditionally, all iProc PCIe root complexes use PAXB based wrapper,
+with an integrated on-chip Serdes to support external endpoint devices.
+On newer iProc platforms, a PAXC based wrapper is introduced, for
+connection with internally emulated PCIe endpoint devices in the ASIC
 
-Hi Josef,
+This patch adds support for PAXC based iProc PCIe root complex in the
+iProc PCIe core driver. This change fators out common logic between
+PAXB and PAXC, and use tables to store register offsets that are
+different between PAXB and PAXC. This allows the driver to be scaled to
+support subsequent PAXC revisions in the future
 
-On Wed, Nov 18, 2015 at 09:25:03AM -0500, Josef Bacik wrote:
-> We have some hardware that takes about 30 seconds to setup common clocks for
-> ASPM, but our bios'es don't actually allow ASPM.  It seems we had this thing in
-> place where we would disable ASPM after the pci bus probe so that we would make
-> sure that pre pcie 1.1 devices would be properly skipped during initialization.
-> This is because the mechanism to disable ASPM doesn't actually disable the
-> setting up of the link state stuff, it just keeps us from changing the link
-> state after the fact.  So instead make it so that when we call pcie_no_aspm()
-> that we disable ASPM completley, that is we skip setting up the link state and
-> everything.  This way we avoid the costly setup for a feature we cannot support
-> in the first place and we also make sure we are safe from future tampering with
-> the ASPM link state.  Thanks,
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
+---
+ drivers/pci/host/pcie-iproc-platform.c |   8 ++
+ drivers/pci/host/pcie-iproc.c          | 202 +++++++++++++++++++++++++++------
+ drivers/pci/host/pcie-iproc.h          |  19 ++++
+ 3 files changed, 195 insertions(+), 34 deletions(-)
 
-Can you clarify what your BIOS does?  I assume it's an x86 ACPI BIOS.
-Does it enable ASPM before handing off to the OS?  Does it set the
-ACPI_FADT_NO_ASPM bit? (ACPI spec 5.0, sec 5.2.9.3)
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index c9550dc..716b56b 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -42,6 +42,13 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+ 	pcie->dev = &pdev->dev;
+ 	platform_set_drvdata(pdev, pcie);
+ 
++	if (of_device_is_compatible(np, "brcm,iproc-pcie"))
++		pcie->type = IPROC_PCIE_PAXB;
++	else if (of_device_is_compatible(np, "brcm,iproc-pcie-paxc"))
++		pcie->type = IPROC_PCIE_PAXC;
++	else
++		return -ENODEV;
++
+ 	ret = of_address_to_resource(np, 0, &reg);
+ 	if (ret < 0) {
+ 		dev_err(pcie->dev, "unable to obtain controller resources\n");
+@@ -116,6 +123,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+ 
+ static const struct of_device_id iproc_pcie_of_match_table[] = {
+ 	{ .compatible = "brcm,iproc-pcie", },
++	{ .compatible = "brcm,iproc-pcie-paxc", },
+ 	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, iproc_pcie_of_match_table);
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index eac719a..24d5b62 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -30,20 +30,16 @@
+ 
+ #include "pcie-iproc.h"
+ 
+-#define CLK_CONTROL_OFFSET           0x000
+ #define EP_PERST_SOURCE_SELECT_SHIFT 2
+ #define EP_PERST_SOURCE_SELECT       BIT(EP_PERST_SOURCE_SELECT_SHIFT)
+ #define EP_MODE_SURVIVE_PERST_SHIFT  1
+ #define EP_MODE_SURVIVE_PERST        BIT(EP_MODE_SURVIVE_PERST_SHIFT)
+ #define RC_PCIE_RST_OUTPUT_SHIFT     0
+ #define RC_PCIE_RST_OUTPUT           BIT(RC_PCIE_RST_OUTPUT_SHIFT)
++#define PAXC_RESET_MASK              0x7f
+ 
+-#define CFG_IND_ADDR_OFFSET          0x120
+ #define CFG_IND_ADDR_MASK            0x00001ffc
+ 
+-#define CFG_IND_DATA_OFFSET          0x124
+-
+-#define CFG_ADDR_OFFSET              0x1f8
+ #define CFG_ADDR_BUS_NUM_SHIFT       20
+ #define CFG_ADDR_BUS_NUM_MASK        0x0ff00000
+ #define CFG_ADDR_DEV_NUM_SHIFT       15
+@@ -55,12 +51,8 @@
+ #define CFG_ADDR_CFG_TYPE_SHIFT      0
+ #define CFG_ADDR_CFG_TYPE_MASK       0x00000003
+ 
+-#define CFG_DATA_OFFSET              0x1fc
+-
+-#define SYS_RC_INTX_EN               0x330
+ #define SYS_RC_INTX_MASK             0xf
+ 
+-#define PCIE_LINK_STATUS_OFFSET      0xf0c
+ #define PCIE_PHYLINKUP_SHIFT         3
+ #define PCIE_PHYLINKUP               BIT(PCIE_PHYLINKUP_SHIFT)
+ #define PCIE_DL_ACTIVE_SHIFT         2
+@@ -71,12 +63,54 @@
+ #define OARR_SIZE_CFG_SHIFT          1
+ #define OARR_SIZE_CFG                BIT(OARR_SIZE_CFG_SHIFT)
+ 
+-#define OARR_LO(window)              (0xd20 + (window) * 8)
+-#define OARR_HI(window)              (0xd24 + (window) * 8)
+-#define OMAP_LO(window)              (0xd40 + (window) * 8)
+-#define OMAP_HI(window)              (0xd44 + (window) * 8)
+-
+ #define MAX_NUM_OB_WINDOWS           2
++#define MAX_NUM_PAXC_PF              4
++
++#define IPROC_PCIE_REG_INVALID 0xffff
++
++enum iproc_pcie_reg {
++	IPROC_PCIE_CLK_CTRL = 0,
++	IPROC_PCIE_CFG_IND_ADDR,
++	IPROC_PCIE_CFG_IND_DATA,
++	IPROC_PCIE_CFG_ADDR,
++	IPROC_PCIE_CFG_DATA,
++	IPROC_PCIE_INTX_EN,
++	IPROC_PCIE_OARR_LO,
++	IPROC_PCIE_OARR_HI,
++	IPROC_PCIE_OMAP_LO,
++	IPROC_PCIE_OMAP_HI,
++	IPROC_PCIE_LINK_STATUS,
++};
++
++/* iProc PCIe PAXB registers */
++static const u16 iproc_pcie_reg_paxb[] = {
++	[IPROC_PCIE_CLK_CTRL]     = 0x000,
++	[IPROC_PCIE_CFG_IND_ADDR] = 0x120,
++	[IPROC_PCIE_CFG_IND_DATA] = 0x124,
++	[IPROC_PCIE_CFG_ADDR]     = 0x1f8,
++	[IPROC_PCIE_CFG_DATA]     = 0x1fc,
++	[IPROC_PCIE_INTX_EN]      = 0x330,
++	[IPROC_PCIE_OARR_LO]      = 0xd20,
++	[IPROC_PCIE_OARR_HI]      = 0xd24,
++	[IPROC_PCIE_OMAP_LO]      = 0xd40,
++	[IPROC_PCIE_OMAP_HI]      = 0xd44,
++	[IPROC_PCIE_LINK_STATUS]  = 0xf0c,
++};
++
++/* iProc PCIe PAXC v1 registers */
++static const u16 iproc_pcie_reg_paxc[] = {
++	[IPROC_PCIE_CLK_CTRL]     = 0x000,
++	[IPROC_PCIE_CFG_IND_ADDR] = 0x1f0,
++	[IPROC_PCIE_CFG_IND_DATA] = 0x1f4,
++	[IPROC_PCIE_CFG_ADDR]     = 0x1f8,
++	[IPROC_PCIE_CFG_DATA]     = 0x1fc,
++	[IPROC_PCIE_INTX_EN]      = IPROC_PCIE_REG_INVALID,
++	[IPROC_PCIE_OARR_LO]      = IPROC_PCIE_REG_INVALID,
++	[IPROC_PCIE_OARR_HI]      = IPROC_PCIE_REG_INVALID,
++	[IPROC_PCIE_OMAP_LO]      = IPROC_PCIE_REG_INVALID,
++	[IPROC_PCIE_OMAP_HI]      = IPROC_PCIE_REG_INVALID,
++	[IPROC_PCIE_LINK_STATUS]  = IPROC_PCIE_REG_INVALID,
++};
+ 
+ static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
+ {
+@@ -91,6 +125,65 @@ static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
+ 	return pcie;
+ }
+ 
++static inline bool iproc_pcie_reg_is_invalid(u16 reg_offset)
++{
++	return !!(reg_offset == IPROC_PCIE_REG_INVALID);
++}
++
++static inline u16 iproc_pcie_reg_offset(struct iproc_pcie *pcie,
++					enum iproc_pcie_reg reg)
++{
++	return pcie->reg_offsets[reg];
++}
++
++static inline u32 iproc_pcie_read_reg(struct iproc_pcie *pcie,
++				      enum iproc_pcie_reg reg)
++{
++	u16 offset = iproc_pcie_reg_offset(pcie, reg);
++
++	if (iproc_pcie_reg_is_invalid(offset))
++		return 0;
++
++	return readl(pcie->base + offset);
++}
++
++static inline void iproc_pcie_write_reg(struct iproc_pcie *pcie,
++					enum iproc_pcie_reg reg, u32 val)
++{
++	u16 offset = iproc_pcie_reg_offset(pcie, reg);
++
++	if (iproc_pcie_reg_is_invalid(offset))
++		return;
++
++	writel(val, pcie->base + offset);
++}
++
++static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
++				       enum iproc_pcie_reg reg,
++				       unsigned window, u32 val)
++{
++	u16 offset = iproc_pcie_reg_offset(pcie, reg);
++
++	if (iproc_pcie_reg_is_invalid(offset))
++		return;
++
++	writel(val, pcie->base + offset + (window * 8));
++}
++
++static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
++					      unsigned int slot,
++					      unsigned int fn)
++{
++	if (slot > 0)
++		return false;
++
++	/* PAXC can only support limited number of functions */
++	if (pcie->type == IPROC_PCIE_PAXC && fn >= MAX_NUM_PAXC_PF)
++		return false;
++
++	return true;
++}
++
+ /**
+  * Note access to the configuration registers are protected at the higher layer
+  * by 'pci_lock' in drivers/pci/access.c
+@@ -104,28 +197,34 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 	unsigned fn = PCI_FUNC(devfn);
+ 	unsigned busno = bus->number;
+ 	u32 val;
++	u16 offset;
++
++	if (!iproc_pcie_device_is_valid(pcie, slot, fn))
++		return NULL;
+ 
+ 	/* root complex access */
+ 	if (busno == 0) {
+-		if (slot >= 1)
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_IND_ADDR,
++				     where & CFG_IND_ADDR_MASK);
++		offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_IND_DATA);
++		if (iproc_pcie_reg_is_invalid(offset))
+ 			return NULL;
+-		writel(where & CFG_IND_ADDR_MASK,
+-		       pcie->base + CFG_IND_ADDR_OFFSET);
+-		return (pcie->base + CFG_IND_DATA_OFFSET);
++		else
++			return (pcie->base + offset);
+ 	}
+ 
+-	if (fn > 1)
+-		return NULL;
+-
+ 	/* EP device access */
+ 	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
+ 		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
+ 		(fn << CFG_ADDR_FUNC_NUM_SHIFT) |
+ 		(where & CFG_ADDR_REG_NUM_MASK) |
+ 		(1 & CFG_ADDR_CFG_TYPE_MASK);
+-	writel(val, pcie->base + CFG_ADDR_OFFSET);
+-
+-	return (pcie->base + CFG_DATA_OFFSET);
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
++	offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
++	if (iproc_pcie_reg_is_invalid(offset))
++		return NULL;
++	else
++		return (pcie->base + offset);
+ }
+ 
+ static struct pci_ops iproc_pcie_ops = {
+@@ -138,18 +237,29 @@ static void iproc_pcie_reset(struct iproc_pcie *pcie)
+ {
+ 	u32 val;
+ 
++	if (pcie->type == IPROC_PCIE_PAXC) {
++		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
++		val &= ~PAXC_RESET_MASK;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
++		udelay(100);
++		val |= PAXC_RESET_MASK;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
++		udelay(100);
++		return;
++	}
++
+ 	/*
+ 	 * Select perst_b signal as reset source. Put the device into reset,
+ 	 * and then bring it out of reset
+ 	 */
+-	val = readl(pcie->base + CLK_CONTROL_OFFSET);
++	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+ 	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+ 		~RC_PCIE_RST_OUTPUT;
+-	writel(val, pcie->base + CLK_CONTROL_OFFSET);
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+ 	udelay(250);
+ 
+ 	val |= RC_PCIE_RST_OUTPUT;
+-	writel(val, pcie->base + CLK_CONTROL_OFFSET);
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+ 	msleep(100);
+ }
+ 
+@@ -160,7 +270,14 @@ static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+ 	u16 pos, link_status;
+ 	bool link_is_active = false;
+ 
+-	val = readl(pcie->base + PCIE_LINK_STATUS_OFFSET);
++	/*
++	 * PAXC connects to emulated endpoint devices directly and does not
++	 * have a Serdes. Therefore skip the link detection logic here
++	 */
++	if (pcie->type == IPROC_PCIE_PAXC)
++		return 0;
++
++	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_LINK_STATUS);
+ 	if (!(val & PCIE_PHYLINKUP) || !(val & PCIE_DL_ACTIVE)) {
+ 		dev_err(pcie->dev, "PHY or data link is INACTIVE!\n");
+ 		return -ENODEV;
+@@ -221,7 +338,7 @@ static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+ 
+ static void iproc_pcie_enable(struct iproc_pcie *pcie)
+ {
+-	writel(SYS_RC_INTX_MASK, pcie->base + SYS_RC_INTX_EN);
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_INTX_EN, SYS_RC_INTX_MASK);
+ }
+ 
+ /**
+@@ -272,11 +389,15 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
+ 	axi_addr -= ob->axi_offset;
+ 
+ 	for (i = 0; i < MAX_NUM_OB_WINDOWS; i++) {
+-		writel(lower_32_bits(axi_addr) | OARR_VALID |
+-		       (ob->set_oarr_size ? 1 : 0), pcie->base + OARR_LO(i));
+-		writel(upper_32_bits(axi_addr), pcie->base + OARR_HI(i));
+-		writel(lower_32_bits(pci_addr), pcie->base + OMAP_LO(i));
+-		writel(upper_32_bits(pci_addr), pcie->base + OMAP_HI(i));
++		iproc_pcie_ob_write(pcie, IPROC_PCIE_OARR_LO, i,
++				    lower_32_bits(axi_addr) | OARR_VALID |
++				    (ob->set_oarr_size ? 1 : 0));
++		iproc_pcie_ob_write(pcie, IPROC_PCIE_OARR_HI, i,
++				    upper_32_bits(axi_addr));
++		iproc_pcie_ob_write(pcie, IPROC_PCIE_OMAP_LO, i,
++				    lower_32_bits(pci_addr));
++		iproc_pcie_ob_write(pcie, IPROC_PCIE_OMAP_HI, i,
++				    upper_32_bits(pci_addr));
+ 
+ 		size -= ob->window_size;
+ 		if (size == 0)
+@@ -340,6 +461,19 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 		goto err_exit_phy;
+ 	}
+ 
++	switch (pcie->type) {
++	case IPROC_PCIE_PAXB:
++		pcie->reg_offsets = iproc_pcie_reg_paxb;
++		break;
++	case IPROC_PCIE_PAXC:
++		pcie->reg_offsets = iproc_pcie_reg_paxc;
++		break;
++	default:
++		dev_err(pcie->dev, "incompatible iProc PCIe interface\n");
++		ret = -EINVAL;
++		goto err_power_off_phy;
++	}
++
+ 	iproc_pcie_reset(pcie);
+ 
+ 	if (pcie->need_ob_cfg) {
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index d3dc940..051b651 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -15,6 +15,20 @@
+ #define _PCIE_IPROC_H
+ 
+ /**
++ * iProc PCIe interface type
++ *
++ * PAXB is the wrapper used in root complex that can be connected to an
++ * external endpoint device
++ *
++ * PAXC is the wrapper used in root complex dedicated for internal emulated
++ * endpoint devices
++ */
++enum iproc_pcie_type {
++	IPROC_PCIE_PAXB = 0,
++	IPROC_PCIE_PAXC,
++};
++
++/**
+  * iProc PCIe outbound mapping
+  * @set_oarr_size: indicates the OARR size bit needs to be set
+  * @axi_offset: offset from the AXI address to the internal address used by
+@@ -29,7 +43,10 @@ struct iproc_pcie_ob {
+ 
+ /**
+  * iProc PCIe device
++ *
+  * @dev: pointer to device data structure
++ * @type: iProc PCIe interface type
++ * @reg_offsets: register offsets
+  * @base: PCIe host controller I/O register base
+  * @sysdata: Per PCI controller data (ARM-specific)
+  * @root_bus: pointer to root bus
+@@ -41,6 +58,8 @@ struct iproc_pcie_ob {
+  */
+ struct iproc_pcie {
+ 	struct device *dev;
++	enum iproc_pcie_type type;
++	const u16 *reg_offsets;
+ 	void __iomem *base;
+ #ifdef CONFIG_ARM
+ 	struct pci_sys_data sysdata;
+-- 
+1.9.1
 
-You're changing the _OSC failure path.  Why does _OSC fail?  I know
-there is some sort of unresolved problem there
-(https://bugzilla.kernel.org/show_bug.cgi?id=94661); maybe you're
-tripping over that?
-
-It seems like you're proposing to reverse what Matthew just did with
-387d37577fdd ("PCI: Don't clear ASPM bits when the FADT declares it's
-unsupported").
-
-Bjorn
-
-> Signed-off-by: Josef Bacik <jbacik@fb.com>
-> ---
->  drivers/acpi/pci_root.c | 22 +++++-----------------
->  drivers/pci/pcie/aspm.c |  1 +
->  2 files changed, 6 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 393706a..00e164a 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -419,7 +419,7 @@ out:
->  }
->  EXPORT_SYMBOL(acpi_pci_osc_control_set);
->  
-> -static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
-> +static void negotiate_os_control(struct acpi_pci_root *root)
->  {
->  	u32 support, control, requested;
->  	acpi_status status;
-> @@ -456,7 +456,7 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
->  	if (ACPI_FAILURE(status)) {
->  		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
->  			 acpi_format_exception(status));
-> -		*no_aspm = 1;
-> +		pcie_no_aspm();
->  		return;
->  	}
->  
-> @@ -495,22 +495,14 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
->  			 * intact and prevent the OS from touching it.
->  			 */
->  			dev_info(&device->dev, "FADT indicates ASPM is unsupported, using BIOS configuration\n");
-> -			*no_aspm = 1;
-> +			pcie_no_aspm();
->  		}
->  	} else {
->  		decode_osc_control(root, "OS requested", requested);
->  		decode_osc_control(root, "platform willing to grant", control);
->  		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
->  			acpi_format_exception(status));
-> -
-> -		/*
-> -		 * We want to disable ASPM here, but aspm_disabled
-> -		 * needs to remain in its state from boot so that we
-> -		 * properly handle PCIe 1.1 devices.  So we set this
-> -		 * flag here, to defer the action until after the ACPI
-> -		 * root scan.
-> -		 */
-> -		*no_aspm = 1;
-> +		pcie_no_aspm();
->  	}
->  }
->  
-> @@ -522,7 +514,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	int result;
->  	struct acpi_pci_root *root;
->  	acpi_handle handle = device->handle;
-> -	int no_aspm = 0;
->  	bool hotadd = system_state != SYSTEM_BOOTING;
->  
->  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
-> @@ -581,7 +572,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  
->  	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
->  
-> -	negotiate_os_control(root, &no_aspm);
-> +	negotiate_os_control(root);
->  
->  	/*
->  	 * TBD: Need PCI interface for enumeration/configuration of roots.
-> @@ -604,9 +595,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		goto remove_dmar;
->  	}
->  
-> -	if (no_aspm)
-> -		pcie_no_aspm();
-> -
->  	pci_acpi_add_bus_pm_notifier(device);
->  	if (device->wakeup.flags.run_wake)
->  		device_set_run_wake(root->bus->bridge, true);
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 317e355..5f84af2 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -954,6 +954,7 @@ void pcie_no_aspm(void)
->  	if (!aspm_force) {
->  		aspm_policy = POLICY_DEFAULT;
->  		aspm_disabled = 1;
-> +		aspm_support_enabled = false;
->  	}
->  }
->  
-> -- 
-> 2.1.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
