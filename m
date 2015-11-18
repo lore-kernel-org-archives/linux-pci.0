@@ -1,431 +1,579 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:56356 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754459AbbKGXfM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Nov 2015 18:35:12 -0500
-Received: from localhost
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Sun, 8 Nov 2015 09:35:09 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 48BA42BB0051
-	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2015 10:35:08 +1100 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA7NYs2c27066598
-	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 10:35:02 +1100
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA7NYYL5012490
-	for <linux-pci@vger.kernel.org>; Sun, 8 Nov 2015 10:34:35 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V13 9/9] powerpc/eeh: Support error recovery for VF PE
-Date: Sun,  8 Nov 2015 07:30:35 +0800
-Message-Id: <1446939035-2617-10-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1446939035-2617-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH 4/5] PCI: iproc: Add iProc PCIe MSI support
+Date: Tue, 17 Nov 2015 16:31:54 -0800
+Message-ID: <1447806715-30043-5-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1447806715-30043-1-git-send-email-rjui@broadcom.com>
+References: <1447806715-30043-1-git-send-email-rjui@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PFs are enumerated on PCI bus, while VFs are created by PF's driver.
+This patch adds PCIe MSI support for both PAXB and PAXC interfaces on
+all iProc based platforms. The patch follows the latest trend in the
+kernel to use MSI domain based implementation
 
-In EEH recovery, it has two cases:
-1. Device and driver is EEH aware, error handlers are called.
-2. Device and driver is not EEH aware, un-plug the device and plug it again
-by enumerating it.
+This iProc event queue based MSI support should not be used with newer
+platforms with integrated MSI support in the GIC (e.g., giv2m or
+gicv3-its)
 
-The special thing happens on the second case. For a PF, we could use the
-original pci core to enumerate the bus, while for VF we need to record the
-VFs which aer un-plugged then plug it again.
-
-Also The patch caches the VF index in pci_dn, which can be used to
-calculate VF's bus, device and function number. Those information helps to
-locate the VF's PCI device instance when doing hotplug during EEH recovery
-if necessary.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
 ---
- arch/powerpc/include/asm/eeh.h        |   2 +
- arch/powerpc/include/asm/pci-bridge.h |   1 +
- arch/powerpc/kernel/eeh.c             |   8 +++
- arch/powerpc/kernel/eeh_dev.c         |   1 +
- arch/powerpc/kernel/eeh_driver.c      | 132 +++++++++++++++++++++++++++-------
- arch/powerpc/kernel/eeh_pe.c          |   3 +-
- arch/powerpc/kernel/pci_dn.c          |   4 +-
- 7 files changed, 123 insertions(+), 28 deletions(-)
+ drivers/pci/host/Kconfig          |   9 +
+ drivers/pci/host/Makefile         |   1 +
+ drivers/pci/host/pcie-iproc-msi.c | 434 ++++++++++++++++++++++++++++++++++++++
+ drivers/pci/host/pcie-iproc.c     |  19 ++
+ drivers/pci/host/pcie-iproc.h     |  12 ++
+ 5 files changed, 475 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-iproc-msi.c
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 331c856..4448433 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -139,9 +139,11 @@ struct eeh_dev {
- 	int af_cap;			/* Saved AF capability		*/
- 	struct eeh_pe *pe;		/* Associated PE		*/
- 	struct list_head list;		/* Form link list in the PE	*/
-+	struct list_head rmv_list;	/* Record the removed edev 	*/
- 	struct pci_controller *phb;	/* Associated PHB		*/
- 	struct pci_dn *pdn;		/* Associated PCI device node	*/
- 	struct pci_dev *pdev;		/* Associated PCI device	*/
-+	bool   in_error;		/* Error flag for eeh_dev	*/
- 	struct pci_dev *physfn;		/* Associated PF PORT		*/
- 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
- };
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 9b365d6..533e6e9 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -211,6 +211,7 @@ struct pci_dn {
- #define IODA_INVALID_PE		(-1)
- #ifdef CONFIG_PPC_POWERNV
- 	int	pe_number;
-+	int     vf_index;		/* VF index in the PF */
- #ifdef CONFIG_PCI_IOV
- 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
- 	u16     num_vfs;		/* number of VFs enabled*/
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index 41a4b30..99c961a 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -1245,6 +1245,14 @@ void eeh_remove_device(struct pci_dev *dev)
- 	 * from the parent PE during the BAR resotre.
- 	 */
- 	edev->pdev = NULL;
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index f131ba9..972e906 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -126,6 +126,15 @@ config PCIE_IPROC
+ 	  iProc family of SoCs. An appropriate bus interface driver also needs
+ 	  to be enabled
+ 
++config PCIE_IPROC_MSI
++	bool "Broadcom iProc PCIe MSI support"
++	depends on ARCH_BCM_IPROC && PCI_MSI
++	select PCI_MSI_IRQ_DOMAIN
++	default ARCH_BCM_IPROC
++	help
++	  Say Y here if you want to enable MSI support for Broadcom's iProc
++	  PCIe controller
 +
-+	/*
-+	 * The flag "in_error" is used to trace EEH devices for VFs
-+	 * in error state or not. It's set in eeh_report_error(). If
-+	 * it's not set, eeh_report_{reset,resume}() won't be called
-+	 * for the VF EEH device.
-+	 */
-+	edev->in_error = false;
- 	dev->dev.archdata.edev = NULL;
- 	if (!(edev->pe->state & EEH_PE_KEEP))
- 		eeh_rmv_from_parent_pe(edev);
-diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
-index aabba94..7815095 100644
---- a/arch/powerpc/kernel/eeh_dev.c
-+++ b/arch/powerpc/kernel/eeh_dev.c
-@@ -67,6 +67,7 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
- 	edev->pdn = pdn;
- 	edev->phb = phb;
- 	INIT_LIST_HEAD(&edev->list);
-+	INIT_LIST_HEAD(&edev->rmv_list);
- 
- 	return NULL;
- }
-diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
-index 89eb4bc..f25428a 100644
---- a/arch/powerpc/kernel/eeh_driver.c
-+++ b/arch/powerpc/kernel/eeh_driver.c
-@@ -34,6 +34,11 @@
- #include <asm/prom.h>
- #include <asm/rtas.h>
- 
-+struct eeh_rmv_data {
-+	struct list_head edev_list;
-+	int removed;
+ config PCIE_IPROC_PLATFORM
+ 	tristate "Broadcom iProc PCIe platform bus driver"
+ 	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 9d4d3c6..0e4e95e 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -15,6 +15,7 @@ obj-$(CONFIG_PCI_XGENE_MSI) += pci-xgene-msi.o
+ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+ obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
++obj-$(CONFIG_PCIE_IPROC_MSI) += pcie-iproc-msi.o
+ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+diff --git a/drivers/pci/host/pcie-iproc-msi.c b/drivers/pci/host/pcie-iproc-msi.c
+new file mode 100644
+index 0000000..a55c707
+--- /dev/null
++++ b/drivers/pci/host/pcie-iproc-msi.c
+@@ -0,0 +1,434 @@
++/*
++ * Copyright (C) 2015 Broadcom Corporation
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation version 2.
++ *
++ * This program is distributed "as is" WITHOUT ANY WARRANTY of any
++ * kind, whether express or implied; without even the implied warranty
++ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#include <linux/irqchip/chained_irq.h>
++#include <linux/irqdomain.h>
++#include <linux/msi.h>
++#include <linux/of_irq.h>
++#include <linux/of_pci.h>
++#include <linux/pci.h>
++
++#include "pcie-iproc.h"
++
++#define IPROC_MSI_INTS_EN_OFFSET       0x208
++#define IPROC_MSI_INTR_EN_SHIFT        11
++#define IPROC_MSI_INTR_EN              BIT(IPROC_MSI_INTR_EN_SHIFT)
++#define IPROC_MSI_INT_N_EVENT_SHIFT    1
++#define IPROC_MSI_INT_N_EVENT          BIT(IPROC_MSI_INT_N_EVENT_SHIFT)
++#define IPROC_MSI_EQ_EN_SHIFT          0
++#define IPROC_MSI_EQ_EN                BIT(IPROC_MSI_EQ_EN_SHIFT)
++
++#define IPROC_MSI_EQ_MASK              0x3f
++
++/* number of queues in each event queue */
++#define IPROC_MSI_EQ_LEN               64
++
++/* size of each event queue memory region */
++#define EQ_MEM_REGION_SIZE           SZ_4K
++
++/* size of each MSI message memory region */
++#define MSI_MSG_MEM_REGION_SIZE      SZ_4K
++
++enum iproc_msi_reg {
++	IPROC_MSI_EQ_PAGE = 0,
++	IPROC_MSI_EQ_PAGE_UPPER,
++	IPROC_MSI_PAGE,
++	IPROC_MSI_PAGE_UPPER,
++	IPROC_MSI_CTRL,
++	IPROC_MSI_EQ_HEAD,
++	IPROC_MSI_EQ_TAIL,
++	IPROC_MSI_REG_SIZE,
 +};
 +
- /**
-  * eeh_pcid_name - Retrieve name of PCI device driver
-  * @pdev: PCI device
-@@ -211,6 +216,7 @@ static void *eeh_report_error(void *data, void *userdata)
- 	if (rc == PCI_ERS_RESULT_NEED_RESET) *res = rc;
- 	if (*res == PCI_ERS_RESULT_NONE) *res = rc;
- 
-+	edev->in_error = true;
- 	eeh_pcid_put(dev);
- 	return NULL;
- }
-@@ -282,7 +288,8 @@ static void *eeh_report_reset(void *data, void *userdata)
- 
- 	if (!driver->err_handler ||
- 	    !driver->err_handler->slot_reset ||
--	    (edev->mode & EEH_DEV_NO_HANDLER)) {
-+	    (edev->mode & EEH_DEV_NO_HANDLER) ||
-+	    (!edev->in_error)) {
- 		eeh_pcid_put(dev);
- 		return NULL;
- 	}
-@@ -326,6 +333,7 @@ static void *eeh_report_resume(void *data, void *userdata)
- {
- 	struct eeh_dev *edev = (struct eeh_dev *)data;
- 	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
-+	bool was_in_error;
- 	struct pci_driver *driver;
- 
- 	if (!dev || eeh_dev_removed(edev))
-@@ -335,11 +343,13 @@ static void *eeh_report_resume(void *data, void *userdata)
- 	driver = eeh_pcid_get(dev);
- 	if (!driver) return NULL;
- 
-+	was_in_error = edev->in_error;
-+	edev->in_error = false;
- 	eeh_enable_irq(dev);
- 
- 	if (!driver->err_handler ||
- 	    !driver->err_handler->resume ||
--	    (edev->mode & EEH_DEV_NO_HANDLER)) {
-+	    (edev->mode & EEH_DEV_NO_HANDLER) || !was_in_error) {
- 		edev->mode &= ~EEH_DEV_NO_HANDLER;
- 		eeh_pcid_put(dev);
- 		return NULL;
-@@ -386,12 +396,39 @@ static void *eeh_report_failure(void *data, void *userdata)
- 	return NULL;
- }
- 
-+static void *eeh_add_virt_device(void *data, void *userdata)
++/**
++ * iProc event queue based MSI
++ *
++ * Only meant to be used on platforms without MSI support integrated into the
++ * GIC
++ *
++ * @pcie: pointer to iProc PCIe data
++ * @reg_offsets: MSI register offsets
++ * @irqs: pointer to an array that contains the interrupt IDs
++ * @nirqs: number of total interrupts
++ * @has_inten_reg: indicates the MSI interrupt enable register needs to be
++ * set explicitly (required for some legacy platforms)
++ * @used: bitmap to track usage of MSI
++ * @inner_domain: inner IRQ domain
++ * @msi_domain: MSI IRQ domain
++ * @bitmap_lock: lock to protect access to the IRQ bitmap
++ * @n_eq_region: required number of 4K aligned memory region for MSI event
++ * queues
++ * @n_msi_msg_region: required number of 4K aligned memory region for MSI
++ * posted writes
++ * @eq_base: pointer to allocated memory region for MSI event queues
++ * @msi_base: pointer to allocated memory region for MSI posted writes
++ */
++struct iproc_msi {
++	struct iproc_pcie *pcie;
++	const u16 (*reg_offsets)[IPROC_MSI_REG_SIZE];
++	int *irqs;
++	int nirqs;
++	bool has_inten_reg;
++	DECLARE_BITMAP(used, IPROC_PCIE_MAX_NUM_IRQS);
++	struct irq_domain *inner_domain;
++	struct irq_domain *msi_domain;
++	struct mutex bitmap_lock;
++	unsigned int n_eq_region;
++	unsigned int n_msi_msg_region;
++	void *eq_base;
++	void *msi_base;
++};
++
++static const u16
++iproc_msi_reg_paxb[IPROC_PCIE_MAX_NUM_IRQS][IPROC_MSI_REG_SIZE] = {
++	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x210, 0x250, 0x254 },
++	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x214, 0x258, 0x25c },
++	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x218, 0x260, 0x264 },
++	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x21c, 0x268, 0x26c },
++	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x220, 0x270, 0x274 },
++	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x224, 0x278, 0x27c },
++};
++
++static const u16
++iproc_msi_reg_paxc[IPROC_PCIE_MAX_NUM_IRQS][IPROC_MSI_REG_SIZE] = {
++	{ 0xc00, 0xc04, 0xc08, 0xc0c, 0xc40, 0xc50, 0xc60 },
++	{ 0xc10, 0xc14, 0xc18, 0xc1c, 0xc44, 0xc54, 0xc64 },
++	{ 0xc20, 0xc24, 0xc28, 0xc2c, 0xc48, 0xc58, 0xc68 },
++	{ 0xc30, 0xc34, 0xc38, 0xc3c, 0xc4c, 0xc5c, 0xc6c },
++};
++
++static inline u32 iproc_msi_read_reg(struct iproc_msi *msi,
++				     enum iproc_msi_reg reg,
++				     unsigned int eq)
 +{
-+	struct pci_driver *driver;
-+	struct eeh_dev *edev = (struct eeh_dev *)data;
-+	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
-+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
++	struct iproc_pcie *pcie = msi->pcie;
 +
-+	if (!(edev->physfn)) {
-+		pr_warn("%s: EEH dev %04x:%02x:%02x.%01x not for VF\n",
-+			__func__, edev->phb->global_number, pdn->busno,
-+			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
-+		return NULL;
-+	}
-+
-+	driver = eeh_pcid_get(dev);
-+	if (driver) {
-+		eeh_pcid_put(dev);
-+		if (driver->err_handler)
-+			return NULL;
-+	}
-+
-+	pci_iov_virtfn_add(edev->physfn, pdn->vf_index, 0);
-+	return NULL;
++	return readl(pcie->base + msi->reg_offsets[eq][reg]);
 +}
 +
- static void *eeh_rmv_device(void *data, void *userdata)
- {
- 	struct pci_driver *driver;
- 	struct eeh_dev *edev = (struct eeh_dev *)data;
- 	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
--	int *removed = (int *)userdata;
-+	struct eeh_rmv_data *rmv_data = (struct eeh_rmv_data *)userdata;
-+	int *removed = rmv_data ? &rmv_data->removed : NULL;
-+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
- 
- 	/*
- 	 * Actually, we should remove the PCI bridges as well.
-@@ -416,7 +453,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
- 	driver = eeh_pcid_get(dev);
- 	if (driver) {
- 		eeh_pcid_put(dev);
--		if (driver->err_handler)
-+		if (removed && driver->err_handler)
- 			return NULL;
- 	}
- 
-@@ -425,11 +462,26 @@ static void *eeh_rmv_device(void *data, void *userdata)
- 		 pci_name(dev));
- 	edev->bus = dev->bus;
- 	edev->mode |= EEH_DEV_DISCONNECTED;
--	(*removed)++;
-+	if (removed)
-+		(*removed)++;
- 
--	pci_lock_rescan_remove();
--	pci_stop_and_remove_bus_device(dev);
--	pci_unlock_rescan_remove();
-+	if (edev->physfn) {
-+		pci_iov_virtfn_remove(edev->physfn, pdn->vf_index, 0);
-+		edev->pdev = NULL;
++static inline void iproc_msi_write_reg(struct iproc_msi *msi,
++				       enum iproc_msi_reg reg,
++				       int eq, u32 val)
++{
++	struct iproc_pcie *pcie = msi->pcie;
++
++	writel(val, pcie->base + msi->reg_offsets[eq][reg]);
++}
++
++static struct irq_chip iproc_msi_top_irq_chip = {
++	.name = "iProc MSI",
++	.irq_enable = pci_msi_unmask_irq,
++	.irq_disable = pci_msi_mask_irq,
++	.irq_mask = pci_msi_mask_irq,
++	.irq_unmask = pci_msi_unmask_irq,
++};
++
++static struct msi_domain_info iproc_msi_domain_info = {
++	.flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
++		MSI_FLAG_PCI_MSIX,
++	.chip = &iproc_msi_top_irq_chip,
++};
++
++static int iproc_msi_irq_set_affinity(struct irq_data *data,
++				      const struct cpumask *mask, bool force)
++{
++	return -EINVAL;
++}
++
++static void iproc_msi_irq_compose_msi_msg(struct irq_data *data,
++					  struct msi_msg *msg)
++{
++	struct iproc_msi *msi = irq_data_get_irq_chip_data(data);
++	phys_addr_t addr;
++
++	addr = virt_to_phys(msi->msi_base) | (data->hwirq * 4);
++	msg->address_lo = lower_32_bits(addr);
++	msg->address_hi = upper_32_bits(addr);
++	msg->data = data->hwirq;
++}
++
++static struct irq_chip iproc_msi_bottom_irq_chip = {
++	.name = "MSI",
++	.irq_set_affinity = iproc_msi_irq_set_affinity,
++	.irq_compose_msi_msg = iproc_msi_irq_compose_msi_msg,
++};
++
++static int iproc_msi_irq_domain_alloc(struct irq_domain *domain,
++				      unsigned int virq, unsigned int nr_irqs,
++				      void *args)
++{
++	struct iproc_msi *msi = domain->host_data;
++	int i, msi_irq;
++
++	mutex_lock(&msi->bitmap_lock);
++
++	for (i = 0; i < nr_irqs; i++) {
++		msi_irq = find_first_zero_bit(msi->used, msi->nirqs);
++		if (msi_irq < msi->nirqs) {
++			set_bit(msi_irq, msi->used);
++		} else {
++			mutex_unlock(&msi->bitmap_lock);
++			return -ENOSPC;
++		}
++
++		irq_domain_set_info(domain, virq + i, msi_irq,
++				    &iproc_msi_bottom_irq_chip,
++				    domain->host_data, handle_simple_irq,
++				    NULL, NULL);
++	}
++
++	mutex_unlock(&msi->bitmap_lock);
++	return 0;
++}
++
++static void iproc_msi_irq_domain_free(struct irq_domain *domain,
++				      unsigned int virq, unsigned int nr_irqs)
++{
++	struct irq_data *data = irq_domain_get_irq_data(domain, virq);
++	struct iproc_msi *msi = irq_data_get_irq_chip_data(data);
++	unsigned int i;
++
++	mutex_lock(&msi->bitmap_lock);
++
++	for (i = 0; i < nr_irqs; i++) {
++		struct irq_data *data = irq_domain_get_irq_data(domain,
++								virq + i);
++		if (!test_bit(data->hwirq, msi->used)) {
++			dev_warn(msi->pcie->dev, "freeing unused MSI %lu\n",
++				 data->hwirq);
++		} else
++			clear_bit(data->hwirq, msi->used);
++	}
++
++	mutex_unlock(&msi->bitmap_lock);
++	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
++}
++
++static const struct irq_domain_ops msi_domain_ops = {
++	.alloc = iproc_msi_irq_domain_alloc,
++	.free = iproc_msi_irq_domain_free,
++};
++
++static void iproc_msi_enable(struct iproc_msi *msi)
++{
++	struct iproc_pcie *pcie = msi->pcie;
++	int i, eq;
++	u32 val;
++
++	/* program memory region for each event queue */
++	for (i = 0; i < msi->n_eq_region; i++) {
++		phys_addr_t addr =
++			virt_to_phys(msi->eq_base + (i * EQ_MEM_REGION_SIZE));
++
++		iproc_msi_write_reg(msi, IPROC_MSI_EQ_PAGE, i,
++				    lower_32_bits(addr));
++		iproc_msi_write_reg(msi, IPROC_MSI_EQ_PAGE_UPPER, i,
++				    upper_32_bits(addr));
++	}
++
++	/* program memory region for MSI posted writes */
++	for (i = 0; i < msi->n_msi_msg_region; i++) {
++		phys_addr_t addr =
++			virt_to_phys(msi->msi_base +
++				     (i * MSI_MSG_MEM_REGION_SIZE));
++
++		iproc_msi_write_reg(msi, IPROC_MSI_PAGE, i,
++				    lower_32_bits(addr));
++		iproc_msi_write_reg(msi, IPROC_MSI_PAGE_UPPER, i,
++				    upper_32_bits(addr));
++	}
++
++	for (eq = 0; eq < msi->nirqs; eq++) {
++		/* enable MSI event queue */
++		val = IPROC_MSI_INTR_EN | IPROC_MSI_INT_N_EVENT |
++			IPROC_MSI_EQ_EN;
++		iproc_msi_write_reg(msi, IPROC_MSI_CTRL, eq, val);
 +
 +		/*
-+		 * We have to set the VF PE number to invalid one, which is
-+		 * required to plug the VF successfully.
++		 * Some legacy platforms require the MSI interrupt enable
++		 * register to be set explicitly
 +		 */
-+		pdn->pe_number = IODA_INVALID_PE;
-+
-+		if (rmv_data)
-+			list_add(&edev->rmv_list, &rmv_data->edev_list);
-+	} else {
-+		pci_lock_rescan_remove();
-+		pci_stop_and_remove_bus_device(dev);
-+		pci_unlock_rescan_remove();
-+	}
- 
- 	return NULL;
- }
-@@ -543,11 +595,13 @@ int eeh_pe_reset_and_recover(struct eeh_pe *pe)
-  * During the reset, udev might be invoked because those affected
-  * PCI devices will be removed and then added.
-  */
--static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
-+static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus,
-+				struct eeh_rmv_data *rmv_data)
- {
- 	struct pci_bus *frozen_bus = eeh_pe_bus_get(pe);
- 	struct timeval tstamp;
--	int cnt, rc, removed = 0;
-+	int cnt, rc;
-+	struct eeh_dev *edev;
- 
- 	/* pcibios will clear the counter; save the value */
- 	cnt = pe->freeze_count;
-@@ -561,12 +615,15 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 	 */
- 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
- 	if (bus) {
--		pci_lock_rescan_remove();
--		pcibios_remove_pci_devices(bus);
--		pci_unlock_rescan_remove();
--	} else if (frozen_bus) {
--		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
--	}
-+		if (pe->type & EEH_PE_VF) {
-+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
-+		} else {
-+			pci_lock_rescan_remove();
-+			pcibios_remove_pci_devices(bus);
-+			pci_unlock_rescan_remove();
++		if (msi->has_inten_reg) {
++			val = readl(pcie->base + IPROC_MSI_INTS_EN_OFFSET);
++			val |= BIT(eq);
++			writel(val, pcie->base + IPROC_MSI_INTS_EN_OFFSET);
 +		}
-+	} else if (frozen_bus)
-+		eeh_pe_dev_traverse(pe, eeh_rmv_device, rmv_data);
++	}
++}
++
++static void iproc_msi_handler(struct irq_desc *desc)
++{
++	unsigned int irq = irq_desc_get_irq(desc);
++	struct irq_chip *irq_chip = irq_desc_get_chip(desc);
++	struct iproc_msi *msi;
++	struct iproc_pcie *pcie;
++	u32 eq, head, tail, num_events;
++	int virq;
++
++	chained_irq_enter(irq_chip, desc);
++
++	msi = irq_get_handler_data(irq);
++	pcie = msi->pcie;
++
++	eq = irq - msi->irqs[0];
++	virq = irq_find_mapping(msi->inner_domain, eq);
++	head = iproc_msi_read_reg(msi, IPROC_MSI_EQ_HEAD, eq) &
++		IPROC_MSI_EQ_MASK;
++	do {
++		tail = iproc_msi_read_reg(msi, IPROC_MSI_EQ_TAIL, eq) &
++			IPROC_MSI_EQ_MASK;
++
++		num_events = (tail < head) ?
++			(IPROC_MSI_EQ_LEN - (head - tail)) : (tail - head);
++		if (!num_events)
++			break;
++
++		generic_handle_irq(virq);
++
++		head++;
++		head %= IPROC_MSI_EQ_LEN;
++		iproc_msi_write_reg(msi, IPROC_MSI_EQ_HEAD, eq, head);
++	} while (true);
++
++	chained_irq_exit(irq_chip, desc);
++}
++
++int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node)
++{
++	struct iproc_msi *msi;
++	struct device_node *parent_node;
++	struct irq_domain *parent_domain;
++	int i, ret;
++
++	if (!of_device_is_compatible(node, "brcm,iproc-msi"))
++		return -ENODEV;
++
++	if (!of_find_property(node, "msi-controller", NULL))
++		return -ENODEV;
++
++	parent_node = of_parse_phandle(node, "interrupt-parent", 0);
++	if (!parent_node) {
++		dev_err(pcie->dev, "unable to parse MSI interrupt parent\n");
++		return -ENODEV;
++	}
++
++	parent_domain = irq_find_host(parent_node);
++	if (!parent_domain) {
++		dev_err(pcie->dev, "unable to get MSI parent domain\n");
++		return -ENODEV;
++	}
++
++	msi = devm_kzalloc(pcie->dev, sizeof(*msi), GFP_KERNEL);
++	if (!msi)
++		return -ENOMEM;
++
++	msi->pcie = pcie;
++	mutex_init(&msi->bitmap_lock);
++
++	switch (pcie->type) {
++	case IPROC_PCIE_PAXB:
++		msi->reg_offsets = iproc_msi_reg_paxb;
++		break;
++	case IPROC_PCIE_PAXC:
++		msi->reg_offsets = iproc_msi_reg_paxc;
++		break;
++	default:
++		dev_err(pcie->dev, "incompatible iProc PCIe interface\n");
++		return -EINVAL;
++	}
++
++	ret = of_property_read_u32(node, "brcm,num-eq-region",
++				   &msi->n_eq_region);
++	if (ret || msi->n_eq_region == 0) {
++		dev_err(pcie->dev,
++			"invalid property 'brcm,num-eq-region' %u\n",
++			msi->n_eq_region);
++		return -ENODEV;
++	}
++
++	ret = of_property_read_u32(node, "brcm,num-msi-msg-region",
++				   &msi->n_msi_msg_region);
++	if (ret || msi->n_msi_msg_region == 0) {
++		dev_err(pcie->dev,
++			"invalid property 'brcm,num-msi-msg-region' %u\n",
++			msi->n_msi_msg_region);
++		return -ENODEV;
++	}
++
++	/* reserve memory for MSI event queue */
++	msi->eq_base = devm_kcalloc(pcie->dev, msi->n_eq_region + 1,
++				    EQ_MEM_REGION_SIZE, GFP_KERNEL);
++	if (!msi->eq_base)
++		return -ENOMEM;
++	msi->eq_base = PTR_ALIGN(msi->eq_base, EQ_MEM_REGION_SIZE);
++
++	/* reserve memory for MSI posted writes */
++	msi->msi_base = devm_kcalloc(pcie->dev, msi->n_msi_msg_region + 1,
++				     MSI_MSG_MEM_REGION_SIZE, GFP_KERNEL);
++	if (!msi->msi_base)
++		return -ENOMEM;
++	msi->msi_base = PTR_ALIGN(msi->msi_base, MSI_MSG_MEM_REGION_SIZE);
++
++	if (of_find_property(node, "brcm,pcie-msi-inten", NULL))
++		msi->has_inten_reg = true;
++
++	msi->nirqs = of_irq_count(node);
++	if (!msi->nirqs) {
++		dev_err(pcie->dev, "found no MSI interrupt in DT\n");
++		return -ENODEV;
++	}
++	if (msi->nirqs > IPROC_PCIE_MAX_NUM_IRQS) {
++		dev_warn(pcie->dev, "too many MSI interrupts defined %d\n",
++			 msi->nirqs);
++		msi->nirqs = IPROC_PCIE_MAX_NUM_IRQS;
++	}
++	msi->irqs = devm_kcalloc(pcie->dev, msi->nirqs, sizeof(*msi->irqs),
++				 GFP_KERNEL);
++	if (!msi->irqs)
++		return -ENOMEM;
++
++	for (i = 0; i < msi->nirqs; i++) {
++		msi->irqs[i] = irq_of_parse_and_map(node, i);
++		if (!msi->irqs[i]) {
++			dev_err(pcie->dev, "unable to parse/map interrupt\n");
++			return -ENODEV;
++		}
++	}
++
++	msi->inner_domain = irq_domain_add_hierarchy(parent_domain, 0,
++						     msi->nirqs, NULL,
++						     &msi_domain_ops,
++						     msi);
++	if (!msi->inner_domain) {
++		dev_err(pcie->dev, "failed to create inner domain\n");
++		return -ENOMEM;
++	}
++
++	msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(node),
++						    &iproc_msi_domain_info,
++						    msi->inner_domain);
++	if (!msi->msi_domain) {
++		dev_err(pcie->dev, "failed to create MSI domain\n");
++		irq_domain_remove(msi->inner_domain);
++		return -ENOMEM;
++	}
++
++	for (i = 0; i < msi->nirqs; i++)
++		irq_set_chained_handler_and_data(msi->irqs[i],
++						 iproc_msi_handler, msi);
++
++	iproc_msi_enable(msi);
++
++	return 0;
++}
++EXPORT_SYMBOL(iproc_msi_init);
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 24d5b62..a575ef3 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -440,6 +440,21 @@ static int iproc_pcie_map_ranges(struct iproc_pcie *pcie,
+ 	return 0;
+ }
  
- 	/*
- 	 * Reset the pci controller. (Asserts RST#; resets config space).
-@@ -607,14 +664,22 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 		 * PE. We should disconnect it so the binding can be
- 		 * rebuilt when adding PCI devices.
- 		 */
-+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
- 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
--		pcibios_add_pci_devices(bus);
--	} else if (frozen_bus && removed) {
-+		if (pe->type & EEH_PE_VF)
-+			eeh_add_virt_device(edev, NULL);
-+		else
-+			pcibios_add_pci_devices(bus);
-+	} else if (frozen_bus && rmv_data->removed) {
- 		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
- 		ssleep(5);
- 
-+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
- 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
--		pcibios_add_pci_devices(frozen_bus);
-+		if (pe->type & EEH_PE_VF)
-+			eeh_add_virt_device(edev, NULL);
-+		else
-+			pcibios_add_pci_devices(frozen_bus);
- 	}
- 	eeh_pe_state_clear(pe, EEH_PE_KEEP);
- 
-@@ -633,8 +698,10 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- static void eeh_handle_normal_event(struct eeh_pe *pe)
- {
- 	struct pci_bus *frozen_bus;
-+	struct eeh_dev *edev, *tmp;
- 	int rc = 0;
- 	enum pci_ers_result result = PCI_ERS_RESULT_NONE;
-+	struct eeh_rmv_data rmv_data = {LIST_HEAD_INIT(rmv_data.edev_list), 0};
- 
- 	frozen_bus = eeh_pe_bus_get(pe);
- 	if (!frozen_bus) {
-@@ -681,7 +748,7 @@ static void eeh_handle_normal_event(struct eeh_pe *pe)
- 	 */
- 	if (result == PCI_ERS_RESULT_NONE) {
- 		pr_info("EEH: Reset with hotplug activity\n");
--		rc = eeh_reset_device(pe, frozen_bus);
-+		rc = eeh_reset_device(pe, frozen_bus, NULL);
- 		if (rc) {
- 			pr_warn("%s: Unable to reset, err=%d\n",
- 				__func__, rc);
-@@ -733,7 +800,7 @@ static void eeh_handle_normal_event(struct eeh_pe *pe)
- 	/* If any device called out for a reset, then reset the slot */
- 	if (result == PCI_ERS_RESULT_NEED_RESET) {
- 		pr_info("EEH: Reset without hotplug activity\n");
--		rc = eeh_reset_device(pe, NULL);
-+		rc = eeh_reset_device(pe, NULL, &rmv_data);
- 		if (rc) {
- 			pr_warn("%s: Cannot reset, err=%d\n",
- 				__func__, rc);
-@@ -753,6 +820,15 @@ static void eeh_handle_normal_event(struct eeh_pe *pe)
- 		goto hard_fail;
- 	}
- 
++static int iproc_pcie_msi_enable(struct iproc_pcie *pcie)
++{
++	struct device_node *msi_node;
++
++	msi_node = of_parse_phandle(pcie->dev->of_node, "msi-parent", 0);
++	if (!msi_node)
++		return -ENODEV;
++
 +	/*
-+	 * For those hot removed VFs, we should add back them after PF get
-+	 * recovered properly.
++	 * If another MSI controller is being used, the call below should fail
++	 * but that is okay
 +	 */
-+	list_for_each_entry_safe(edev, tmp, &rmv_data.edev_list, rmv_list) {
-+		eeh_add_virt_device(edev, NULL);
-+		list_del(&edev->rmv_list);
-+	}
++	return iproc_msi_init(pcie, msi_node);
++}
 +
- 	/* Tell all device drivers that they can resume operations */
- 	pr_info("EEH: Notify device driver to resume\n");
- 	eeh_pe_dev_traverse(pe, eeh_report_resume, NULL);
-@@ -792,11 +868,15 @@ perm_error:
- 	 * the their PCI config any more.
- 	 */
- 	if (frozen_bus) {
--		eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
--
--		pci_lock_rescan_remove();
--		pcibios_remove_pci_devices(frozen_bus);
--		pci_unlock_rescan_remove();
-+		if (pe->type & EEH_PE_VF) {
-+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
-+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
-+		} else {
-+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
-+			pci_lock_rescan_remove();
-+			pcibios_remove_pci_devices(frozen_bus);
-+			pci_unlock_rescan_remove();
-+		}
- 	}
- }
- 
-diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
-index 29240ad..b7facb9 100644
---- a/arch/powerpc/kernel/eeh_pe.c
-+++ b/arch/powerpc/kernel/eeh_pe.c
-@@ -936,7 +936,8 @@ struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe)
- 	if (pe->type & EEH_PE_PHB) {
- 		bus = pe->phb->bus;
- 	} else if (pe->type & EEH_PE_BUS ||
--		   pe->type & EEH_PE_DEVICE) {
-+		   pe->type & EEH_PE_DEVICE ||
-+		   pe->type & EEH_PE_VF) {
- 		if (pe->bus) {
- 			bus = pe->bus;
- 			goto out;
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index 5091b05..9e9cb16 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -139,6 +139,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
- #ifdef CONFIG_PCI_IOV
- static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- 					   struct pci_dev *pdev,
-+					   int vf_index,
- 					   int busno, int devfn)
+ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
  {
- 	struct pci_dn *pdn;
-@@ -158,6 +159,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- 	pdn->busno = busno;
- 	pdn->devfn = devfn;
- #ifdef CONFIG_PPC_POWERNV
-+	pdn->vf_index = vf_index;
- 	pdn->pe_number = IODA_INVALID_PE;
- #endif
- 	INIT_LIST_HEAD(&pdn->child_list);
-@@ -198,7 +200,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
- 		return NULL;
+ 	int ret;
+@@ -507,6 +522,10 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
  
- 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
--		pdn = add_one_dev_pci_data(parent, NULL,
-+		pdn = add_one_dev_pci_data(parent, NULL, i,
- 					   pci_iov_virtfn_bus(pdev, i),
- 					   pci_iov_virtfn_devfn(pdev, i));
- 		if (!pdn) {
+ 	iproc_pcie_enable(pcie);
+ 
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		if (iproc_pcie_msi_enable(pcie))
++			dev_info(pcie->dev, "not using iProc MSI\n");
++
+ 	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
+ 	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index 051b651..17317ef 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -14,6 +14,8 @@
+ #ifndef _PCIE_IPROC_H
+ #define _PCIE_IPROC_H
+ 
++#define IPROC_PCIE_MAX_NUM_IRQS 6
++
+ /**
+  * iProc PCIe interface type
+  *
+@@ -74,4 +76,14 @@ struct iproc_pcie {
+ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+ int iproc_pcie_remove(struct iproc_pcie *pcie);
+ 
++#ifdef CONFIG_PCI_MSI
++int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
++#else
++static inline int iproc_msi_init(struct iproc_pcie *pcie,
++				 struct device_node *node)
++{
++	return -ENODEV;
++}
++#endif
++
+ #endif /* _PCIE_IPROC_H */
 -- 
-2.5.0
+1.9.1
 
