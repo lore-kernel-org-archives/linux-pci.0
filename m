@@ -1,89 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:33587 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751787AbbKQChk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 21:37:40 -0500
-Received: by pabfh17 with SMTP id fh17so197971440pab.0
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 18:37:39 -0800 (PST)
-Subject: Re: [PATCH v7 22/50] powerpc/powernv: Introduce pnv_ioda_init_pe()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Daniel Axtens <dja@axtens.net>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-23-git-send-email-gwshan@linux.vnet.ibm.com>
- <87wpthbh6u.fsf@gamma.ozlabs.ibm.com> <20151117015817.GC1452@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <564A92ED.2010305@ozlabs.ru>
-Date: Tue, 17 Nov 2015 13:37:33 +1100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V5 8/9] PCI: OF: Move of_pci_dma_configure() to
+ pci_dma_configure()
+To: Arnd Bergmann <arnd@arndb.de>, Robin Murphy <robin.murphy@arm.com>
+References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+ <564B4111.6010805@arm.com> <564C6860.4000002@arm.com>
+ <3822315.uJPjk3L2zB@wuerfel>
+CC: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>,
+	<thomas.lendacky@amd.com>, <herbert@gondor.apana.org.au>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>, <hanjun.guo@linaro.org>,
+	<davem@davemloft.net>, <linux-arm-kernel@lists.infradead.org>
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Message-ID: <564CAD63.3020306@amd.com>
+Date: Wed, 18 Nov 2015 10:54:59 -0600
 MIME-Version: 1.0
-In-Reply-To: <20151117015817.GC1452@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3822315.uJPjk3L2zB@wuerfel>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/17/2015 12:58 PM, Gavin Shan wrote:
-> On Tue, Nov 17, 2015 at 11:30:49AM +1100, Daniel Axtens wrote:
->> Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
->>
->>> This introduces pnv_ioda_init_pe() to initialize the specified PE
->>> instance (phb->ioda.pe_array[x]). It's used by pnv_ioda_alloc_pe()
->>> and pnv_ioda_reserve_pe(). No logical changes introduced.
+Hi All,
+
+On 11/18/2015 6:41 AM, Arnd Bergmann wrote:
+> On Wednesday 18 November 2015 12:00:32 Robin Murphy wrote:
+>> On 17/11/15 15:00, Robin Murphy wrote:
+>>> On 28/10/15 22:50, Suravee Suthikulpanit wrote:
+>>>> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>>>> Acked-by: Rob Herring <robh+dt@kernel.org>
+>>>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+>>>> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+>> [...]
+>>>> +/**
+>>>> + * pci_dma_configure - Setup DMA configuration
+>>>> + * @dev: ptr to pci_dev struct of the PCI device
+>>>> + *
+>>>> + * Function to update PCI devices's DMA configuration using the same
+>>>> + * info from the OF node of host bridge's parent (if any).
+>>>> + */
+>>>> +static void pci_dma_configure(struct pci_dev *dev)
+>>>> +{
+>>>> +    struct device *bridge = pci_get_host_bridge_device(dev);
+>>>> +
+>>>> +    if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
 >>>
->>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>> ---
->>>   arch/powerpc/platforms/powernv/pci-ioda.c | 14 ++++++++++----
->>>   1 file changed, 10 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> index ef93a01..488e0f8 100644
->>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> @@ -129,6 +129,14 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
->>>   		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
->>>   }
->>>
->>> +static struct pnv_ioda_pe *pnv_ioda_init_pe(struct pnv_phb *phb, int pe_no)
->>> +{
->>> +	phb->ioda.pe_array[pe_no].phb = phb;
->>> +	phb->ioda.pe_array[pe_no].pe_number = pe_no;
->>> +
->>> +	return &phb->ioda.pe_array[pe_no];
->> You have the function returning the newly initalized PE here...
+>>> Previously I was seeing of_dma_configure, and thus of_iommu_configure,
+>>> called for every PCI device on Juno. The check above now prevents this
+>>> happening, since the PCI devices are probed directly from the bus and
+>>> don't have OF nodes of their own. They now get left in some
+>>> half-configured state where arch_setup_dma_ops isn't called either.
 >>
->>> +}
->>> +
->>>   static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
->>>   {
->>>   	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe_num)) {
->>> @@ -141,8 +149,7 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
->>>   		pr_debug("%s: PE %d was reserved on PHB#%x\n",
->>>   			 __func__, pe_no, phb->hose->global_number);
->>>
->>> -	phb->ioda.pe_array[pe_no].phb = phb;
->>> -	phb->ioda.pe_array[pe_no].pe_number = pe_no;
->>> +	pnv_ioda_init_pe(phb, pe_no);
->> ... but then you ignore the result here and in the other function you've
->> modified.
->>
->> It looks like you're using the result in the next patch though, so I
->> wonder if you would be better to merge this patch with the next
->> one. However, as I said before I'll defer to Alexey on decisions about
->> how to split the patch series if he has a different opinion.
->>
+>> Just to follow up on that, Arnd's patch to tidy up dma_get_ops (now
+>> queued[1]) makes this even worse, since preventing arch_setup_dma_ops
+>> being called means the PCI devices now get the dummy DMA ops which leave
+>> the drivers failing to probe at all, IOMMU hacks or not
 >
-> I'd like to keep this separate when thinking about the rule I was told before:
-> one patch does one thing if it can. Also, merging it to next one will make
-> next one harder to be reiview.
+> Ok, glad we found that with my patch then. We really have to
+> configure the DMA (offset/size/coherency/iommu) for all devices that might
+> be masters, otherwise things can randomly go wrong.
+>
+> 	ARnd
 
-This patch merged into the next one will make the next one easier to review 
-because you won't have to change there the code which you just added in 
-this patch (which is always good).
+Robin is correct. Thanks for catching the bug. Rafael, do you want me to 
+submit just the fixed-up patch on top of what we had earlier. Or do you 
+want a new revision (V6)?
 
+Thanks,
+Suravee
 
-
--- 
-Alexey
