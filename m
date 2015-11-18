@@ -1,117 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:36351 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752840AbbKQEng (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 23:43:36 -0500
-Received: by pacdm15 with SMTP id dm15so198108626pac.3
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 20:43:35 -0800 (PST)
-Subject: Re: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
- <56498D8A.2050505@ozlabs.ru> <20151117014203.GC31584@gwshan>
- <564A92E2.1040506@ozlabs.ru> <20151117030406.GB10142@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <564AB070.9040500@ozlabs.ru>
-Date: Tue, 17 Nov 2015 15:43:28 +1100
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:27841 "EHLO
+	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752859AbbKROZK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2015 09:25:10 -0500
+From: Josef Bacik <jbacik@fb.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>, <bhelgaas@google.com>, <shli@fb.com>,
+	<kernel-team@fb.com>
+Subject: [PATCH] pci: completely disable aspm if it's unsupported
+Date: Wed, 18 Nov 2015 09:25:03 -0500
+Message-ID: <1447856703-2566-1-git-send-email-jbacik@fb.com>
 MIME-Version: 1.0
-In-Reply-To: <20151117030406.GB10142@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/17/2015 02:04 PM, Gavin Shan wrote:
-> On Tue, Nov 17, 2015 at 01:37:22PM +1100, Alexey Kardashevskiy wrote:
->> On 11/17/2015 12:42 PM, Gavin Shan wrote:
->>> On Mon, Nov 16, 2015 at 07:02:18PM +1100, Alexey Kardashevskiy wrote:
->>>> On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>>>> This enables M64 window on P7IOC, which has been enabled on PHB3.
->>>>> Different from PHB3 where 16 M64 BARs are supported and each of
->>>>> them can be owned by one particular PE# exclusively or divided
->>>>> evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
->>>>> of them are divided to 8 segments. So every P7IOC PHB supports
->>>>> 128 M64 segments in total. P7IOC has M64DT, which helps mapping
->>>>> one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
->>>>> M64DT, indicating that one M64 segment can only be pinned to the
->>>>> fixed PE#. In order to have same code to support M64 on P7IOC and
->>>>> PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
->>>>> of them is pinned to the fixed PE# by bypassing the function of
->>>>> M64DT. In turn, we just need different phb->init_m64() for P7IOC
->>>>> and PHB3 to support M64.
->>>>
->>>> I thought we decided (Ben suggested?) not to push P7IOC code now (or ever) as
->>>> there is no user for it, has this changed?
->>>>
->>>
->>> Remember that the code is mixed for P7IOC/PHB3. It's not harmful to support
->>> M64 window on P7IOC, which is much larger than M32.
->>
->>
->> The patchset starts with removing dead code and then adds more dead code.
->> This is not right...
->>
->
-> Sorry, you mean it's fine to break the code on P7IOC as it's going to be dead.
+We have some hardware that takes about 30 seconds to setup common clocks for
+ASPM, but our bios'es don't actually allow ASPM.  It seems we had this thing in
+place where we would disable ASPM after the pci bus probe so that we would make
+sure that pre pcie 1.1 devices would be properly skipped during initialization.
+This is because the mechanism to disable ASPM doesn't actually disable the
+setting up of the link state stuff, it just keeps us from changing the link
+state after the fact.  So instead make it so that when we call pcie_no_aspm()
+that we disable ASPM completley, that is we skip setting up the link state and
+everything.  This way we avoid the costly setup for a feature we cannot support
+in the first place and we also make sure we are safe from future tampering with
+the ASPM link state.  Thanks,
 
+Signed-off-by: Josef Bacik <jbacik@fb.com>
+---
+ drivers/acpi/pci_root.c | 22 +++++-----------------
+ drivers/pci/pcie/aspm.c |  1 +
+ 2 files changed, 6 insertions(+), 17 deletions(-)
 
-I am saying that the _new_ code which implements PCI hotplug on P7IOC is 
-dead, not the existing P7IOC support which needs to keep working. Reworks 
-you make should keep P7IOC alive but they do not have to add hotplug.
-
-imho it is more likely that we drop P7IOC support in the mainline kernel in 
-next 5 years than someone plugs a PCI device to a running P7IOC machine 
-anywhere.
-
-
-> But I'm curious when it's going happen, any idea about that?
->
->>>> btw please put ioda1/ioda2/p7ioc/etc to the subject line to make it easier to
->>>> see how much work is there about particular PHB type. You rename quite many
->>>> functions and I generally want to ask you to group all renaming patches first
->>>> but it would also make sense to keep them close to (for example)
->>>> p7ioc-related patches so having more descriptive subject lines may help.
->>>> Thanks.
->>>>
->>>
->>> As the code is mixed for P7IOC/PHB3, I'm not following the line (IODA1/IODA2/p7ioc/phb3)
->>> in this patchset.
->>
->> But you should draw the bold line between PHB types imho.
->>
->>> Instead, the sequence of patchset is order related to: cod refactoring,
->>> IO/M32/M64, DMA, PE allocation/releaseing.
->>
->>
->> Some patches from this patchset are about P7IOC only. All I am asking is to
->> say specifically in the subject line what the patch touches -
->> IODA1/IODA2/p7ioc/phb3/all_of_them. Or I can walk through all of them, pick
->> P7IOC's ones, evaluate the amount of code and entropy they actually add and
->> then ask Ben what we do about it, it will just take longer rather than if you
->> did it.
->>
->
-> Please give me a clear command what key words you need in the subject in next revision.
-> What I understood is you want to see one of them:
->
-> powerpc/powernv/ioda1:
-
-Yes, looks good.
-
-> powerpc/powernv/ioda2:
-
-
-Yes.
-
-> powerpc/powernv/all:
-
-Just "powerpc/powernv".
-
-
-
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 393706a..00e164a 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -419,7 +419,7 @@ out:
+ }
+ EXPORT_SYMBOL(acpi_pci_osc_control_set);
+ 
+-static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
++static void negotiate_os_control(struct acpi_pci_root *root)
+ {
+ 	u32 support, control, requested;
+ 	acpi_status status;
+@@ -456,7 +456,7 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+ 	if (ACPI_FAILURE(status)) {
+ 		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
+ 			 acpi_format_exception(status));
+-		*no_aspm = 1;
++		pcie_no_aspm();
+ 		return;
+ 	}
+ 
+@@ -495,22 +495,14 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+ 			 * intact and prevent the OS from touching it.
+ 			 */
+ 			dev_info(&device->dev, "FADT indicates ASPM is unsupported, using BIOS configuration\n");
+-			*no_aspm = 1;
++			pcie_no_aspm();
+ 		}
+ 	} else {
+ 		decode_osc_control(root, "OS requested", requested);
+ 		decode_osc_control(root, "platform willing to grant", control);
+ 		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
+ 			acpi_format_exception(status));
+-
+-		/*
+-		 * We want to disable ASPM here, but aspm_disabled
+-		 * needs to remain in its state from boot so that we
+-		 * properly handle PCIe 1.1 devices.  So we set this
+-		 * flag here, to defer the action until after the ACPI
+-		 * root scan.
+-		 */
+-		*no_aspm = 1;
++		pcie_no_aspm();
+ 	}
+ }
+ 
+@@ -522,7 +514,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	int result;
+ 	struct acpi_pci_root *root;
+ 	acpi_handle handle = device->handle;
+-	int no_aspm = 0;
+ 	bool hotadd = system_state != SYSTEM_BOOTING;
+ 
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+@@ -581,7 +572,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 
+ 	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
+ 
+-	negotiate_os_control(root, &no_aspm);
++	negotiate_os_control(root);
+ 
+ 	/*
+ 	 * TBD: Need PCI interface for enumeration/configuration of roots.
+@@ -604,9 +595,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 		goto remove_dmar;
+ 	}
+ 
+-	if (no_aspm)
+-		pcie_no_aspm();
+-
+ 	pci_acpi_add_bus_pm_notifier(device);
+ 	if (device->wakeup.flags.run_wake)
+ 		device_set_run_wake(root->bus->bridge, true);
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 317e355..5f84af2 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -954,6 +954,7 @@ void pcie_no_aspm(void)
+ 	if (!aspm_force) {
+ 		aspm_policy = POLICY_DEFAULT;
+ 		aspm_disabled = 1;
++		aspm_support_enabled = false;
+ 	}
+ }
+ 
 -- 
-Alexey
+2.1.0
+
