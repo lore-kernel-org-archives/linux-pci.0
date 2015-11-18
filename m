@@ -1,447 +1,513 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46928 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757374AbbKFQXQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Nov 2015 11:23:16 -0500
-Date: Fri, 6 Nov 2015 10:23:10 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [GIT PULL] PCI changes for v4.4
-Message-ID: <20151106162309.GA28078@localhost>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:40746 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753236AbbKRCYj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 21:24:39 -0500
+Received: from localhost
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <aik@au1.ibm.com>;
+	Wed, 18 Nov 2015 12:24:37 +1000
+Subject: Re: [PATCH v7 27/50] powerpc/powernv: Dynamically release PEs
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-28-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, frowand.list@gmail.com
+From: Alexey Kardashevskiy <aik@au1.ibm.com>
+Message-ID: <564BE109.8000809@au1.ibm.com>
+Date: Wed, 18 Nov 2015 13:23:05 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1446642770-4681-28-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
-
-Here are the PCI changes I intend for v4.4.
-
-There's one silent conflict because I added the Altera host driver, which
-uses the pci_msi_create_irq_domain() interface.  That interface was changed
-this cycle by be5436c83ac8 ("irqdomain/msi: Use fwnode instead of
-of_node").  I included Arnd's suggested resolution at the end of this
-email.
-
-Bjorn
-
-
-The following changes since commit 6ff33f3902c3b1c5d0db6b1e2c70b6d76fba357f:
-
-  Linux 4.3-rc1 (2015-09-12 16:35:56 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.4-changes
-
-for you to fetch changes up to 7225107e158241b7e22f15b9f4c3db0b3330984d:
-
-  Merge branch 'pci/host-layerscape' into next (2015-11-03 08:39:32 -0600)
-
-----------------------------------------------------------------
-PCI changes for the v4.4 merge window:
-
-  Resource management
-    Add support for Enhanced Allocation devices (Sean O. Stalley)
-    Add Enhanced Allocation register entries (Sean O. Stalley)
-    Handle IORESOURCE_PCI_FIXED when sizing resources (David Daney)
-    Handle IORESOURCE_PCI_FIXED when assigning resources (David Daney)
-    Handle Enhanced Allocation capability for SR-IOV devices (David Daney)
-    Clear IORESOURCE_UNSET when reverting to firmware-assigned address (Bjorn Helgaas)
-    Make Enhanced Allocation bitmasks more obvious (Bjorn Helgaas)
-    Expand Enhanced Allocation BAR output (Bjorn Helgaas)
-    Add of_pci_check_probe_only to parse "linux,pci-probe-only" (Marc Zyngier)
-    Fix lookup of linux,pci-probe-only property (Marc Zyngier)
-    Add sparc mem64 resource parsing for root bus (Yinghai Lu)
-
-  PCI device hotplug
-    pciehp: Queue power work requests in dedicated function (Guenter Roeck)
-
-  Driver binding
-    Add builtin_pci_driver() to avoid registration boilerplate (Paul Gortmaker)
-
-  Virtualization
-    Set SR-IOV NumVFs to zero after enumeration (Alexander Duyck)
-    Remove redundant validation of SR-IOV offset/stride registers (Alexander Duyck)
-    Remove VFs in reverse order if virtfn_add() fails (Alexander Duyck)
-    Reorder pcibios_sriov_disable() (Alexander Duyck)
-    Wait 1 second between disabling VFs and clearing NumVFs (Alexander Duyck)
-    Fix sriov_enable() error path for pcibios_enable_sriov() failures (Alexander Duyck)
-    Enable SR-IOV ARI Capable Hierarchy before reading TotalVFs (Ben Shelton)
-    Don't try to restore VF BARs (Wei Yang)
-
-  MSI
-    Don't alloc pcibios-irq when MSI is enabled (Joerg Roedel)
-    Add msi_controller setup_irqs() method for special multivector setup (Lucas Stach)
-    Export all remapped MSIs to sysfs attributes (Romain Bezut)
-    Disable MSI on SiS 761 (Ondrej Zary)
-
-  AER
-    Clear error status registers during enumeration and restore (Taku Izumi)
-
-  Generic host bridge driver
-    Fix lookup of linux,pci-probe-only property (Marc Zyngier)
-    Allow multiple hosts with different map_bus() methods (David Daney)
-    Pass starting bus number to pci_scan_root_bus() (David Daney)
-    Fix address window calculation for non-zero starting bus (David Daney)
-
-  Altera host bridge driver
-    Add msi.h to ARM Kbuild (Ley Foon Tan)
-    Add Altera PCIe host controller driver (Ley Foon Tan)
-    Add Altera PCIe MSI driver (Ley Foon Tan)
-
-  APM X-Gene host bridge driver
-    Remove msi_controller assignment (Duc Dang)
-
-  Broadcom iProc host bridge driver
-    Fix header comment "Corporation" misspelling (Florian Fainelli)
-    Fix code comment to match code (Ray Jui)
-    Remove unused struct iproc_pcie.irqs[] (Ray Jui)
-    Call pci_fixup_irqs() for ARM64 as well as ARM (Ray Jui)
-    Fix PCIe reset logic (Ray Jui)
-    Improve link detection logic (Ray Jui)
-    Update PCIe device tree bindings (Ray Jui)
-    Add outbound mapping support (Ray Jui)
-
-  Freescale i.MX6 host bridge driver
-    Return real error code from imx6_add_pcie_port() (Fabio Estevam)
-    Add PCIE_PHY_RX_ASIC_OUT_VALID definition (Fabio Estevam)
-
-  Freescale Layerscape host bridge driver
-    Remove ls_pcie_establish_link() (Minghuan Lian)
-    Ignore PCIe controllers in Endpoint mode (Minghuan Lian)
-    Factor out SCFG related function (Minghuan Lian)
-    Update ls_add_pcie_port() (Minghuan Lian)
-    Remove unused fields from struct ls_pcie (Minghuan Lian)
-    Add support for LS1043a and LS2080a (Minghuan Lian)
-    Add ls_pcie_msi_host_init() (Minghuan Lian)
-
-  HiSilicon host bridge driver
-    Add HiSilicon SoC Hip05 PCIe driver (Zhou Wang)
-
-  Marvell MVEBU host bridge driver
-    Return zero for reserved or unimplemented config space (Russell King)
-    Use exact config access size; don't read/modify/write (Russell King)
-    Use of_get_available_child_count() (Russell King)
-    Use for_each_available_child_of_node() to walk child nodes (Russell King)
-    Report full node name when reporting a DT error (Russell King)
-    Use port->name rather than "PCIe%d.%d" (Russell King)
-    Move port parsing and resource claiming to  separate function (Russell King)
-    Fix memory leaks and refcount leaks (Russell King)
-    Split port parsing and resource claiming from  port setup (Russell King)
-    Use gpio_set_value_cansleep() (Russell King)
-    Use devm_kcalloc() to allocate an array (Russell King)
-    Use gpio_desc to carry around gpio (Russell King)
-    Improve clock/reset handling (Russell King)
-    Add PCI Express root complex capability block (Russell King)
-    Remove code restricting accesses to slot 0 (Russell King)
-
-  NVIDIA Tegra host bridge driver
-    Wrap static pgprot_t initializer with __pgprot() (Ard Biesheuvel)
-
-  Renesas R-Car host bridge driver
-    Build pci-rcar-gen2.c only on ARM (Geert Uytterhoeven)
-    Build pcie-rcar.c only on ARM (Geert Uytterhoeven)
-    Make PCI aware of the I/O resources (Phil Edworthy)
-    Remove dependency on ARM-specific struct hw_pci (Phil Edworthy)
-    Set root bus nr to that provided in DT (Phil Edworthy)
-    Fix I/O offset for multiple host bridges (Phil Edworthy)
-
-  ST Microelectronics SPEAr13xx host bridge driver
-    Fix dw_pcie_cfg_read/write() usage (Gabriele Paoloni)
-
-  Synopsys DesignWare host bridge driver
-    Make "clocks" and "clock-names" optional DT properties (Bhupesh Sharma)
-    Use exact access size in dw_pcie_cfg_read() (Gabriele Paoloni)
-    Simplify dw_pcie_cfg_read/write() interfaces (Gabriele Paoloni)
-    Require config accesses to be naturally aligned (Gabriele Paoloni)
-    Make "num-lanes" an optional DT property (Gabriele Paoloni)
-    Move calculation of bus addresses to DRA7xx (Gabriele Paoloni)
-    Replace ARM pci_sys_data->align_resource with global function pointer (Gabriele Paoloni)
-    Factor out MSI msg setup (Lucas Stach)
-    Implement multivector MSI IRQ setup (Lucas Stach)
-    Make get_msi_addr() return phys_addr_t, not u32 (Lucas Stach)
-    Set up high part of MSI target address (Lucas Stach)
-    Fix PORT_LOGIC_LINK_WIDTH_MASK (Zhou Wang)
-    Revert "PCI: designware: Program ATU with untranslated address" (Zhou Wang)
-    Use of_pci_get_host_bridge_resources() to parse DT (Zhou Wang)
-    Make driver arch-agnostic (Zhou Wang)
-
-  Miscellaneous
-    Make x86 pci_subsys_init() static (Alexander Kuleshov)
-    Turn off Request Attributes to avoid Chelsio T5 Completion erratum (Hariprasad Shenai)
-
-----------------------------------------------------------------
-Alexander Duyck (6):
-      PCI: Set SR-IOV NumVFs to zero after enumeration
-      PCI: Remove redundant validation of SR-IOV offset/stride registers
-      PCI: Remove VFs in reverse order if virtfn_add() fails
-      PCI: Reorder pcibios_sriov_disable()
-      PCI: Wait 1 second between disabling VFs and clearing NumVFs
-      PCI: Fix sriov_enable() error path for pcibios_enable_sriov() failures
-
-Alexander Kuleshov (1):
-      x86/PCI: Make pci_subsys_init() static
-
-Ard Biesheuvel (1):
-      PCI: tegra: Wrap static pgprot_t initializer with __pgprot()
-
-Ben Shelton (1):
-      PCI: Enable SR-IOV ARI Capable Hierarchy before reading TotalVFs
-
-Bhupesh Sharma (1):
-      PCI: designware: Make "clocks" and "clock-names" optional DT properties
-
-Bjorn Helgaas (7):
-      PCI: Clear IORESOURCE_UNSET when reverting to firmware-assigned address
-      PCI: Make Enhanced Allocation bitmasks more obvious
-      PCI: Expand Enhanced Allocation BAR output
-      Merge branches 'pci/aer', 'pci/hotplug', 'pci/misc', 'pci/msi', 'pci/resource' and 'pci/virtualization' into next
-      Merge branches 'pci/host-altera', 'pci/host-designware', 'pci/host-generic', 'pci/host-imx6', 'pci/host-iproc', 'pci/host-mvebu', 'pci/host-rcar', 'pci/host-tegra' and 'pci/host-xgene' into next
-      Merge branch 'pci/host-hisi' into next
-      Merge branch 'pci/host-layerscape' into next
-
-David Daney (6):
-      PCI: generic: Allow multiple hosts with different map_bus() methods
-      PCI: generic: Pass starting bus number to pci_scan_root_bus()
-      PCI: generic: Fix address window calculation for non-zero starting bus
-      PCI: Handle IORESOURCE_PCI_FIXED when sizing resources
-      PCI: Handle IORESOURCE_PCI_FIXED when assigning resources
-      PCI: Handle Enhanced Allocation capability for SR-IOV devices
-
-Duc Dang (1):
-      PCI/MSI: xgene: Remove msi_controller assignment
-
-Fabio Estevam (2):
-      PCI: imx6: Return real error code from imx6_add_pcie_port()
-      PCI: imx6: Add PCIE_PHY_RX_ASIC_OUT_VALID definition
-
-Florian Fainelli (1):
-      PCI: iproc: Fix header comment "Corporation" misspelling
-
-Gabriele Paoloni (7):
-      PCI: spear: Fix dw_pcie_cfg_read/write() usage
-      PCI: designware: Use exact access size in dw_pcie_cfg_read()
-      PCI: designware: Simplify dw_pcie_cfg_read/write() interfaces
-      PCI: designware: Require config accesses to be naturally aligned
-      PCI: designware: Make "num-lanes" an optional DT property
-      PCI: designware: Move calculation of bus addresses to DRA7xx
-      ARM/PCI: Replace pci_sys_data->align_resource with global function pointer
-
-Geert Uytterhoeven (2):
-      PCI: rcar: Build pci-rcar-gen2.c only on ARM
-      PCI: rcar: Build pcie-rcar.c only on ARM
-
-Guenter Roeck (1):
-      PCI: pciehp: Queue power work requests in dedicated function
-
-Hariprasad Shenai (1):
-      PCI: Turn off Request Attributes to avoid Chelsio T5 Completion erratum
-
-Joerg Roedel (1):
-      x86/PCI: Don't alloc pcibios-irq when MSI is enabled
-
-Ley Foon Tan (3):
-      ARM: Add msi.h to Kbuild
-      PCI: altera: Add Altera PCIe host controller driver
-      PCI: altera: Add Altera PCIe MSI driver
-
-Lucas Stach (5):
-      PCI: Add msi_controller setup_irqs() method for special multivector setup
-      PCI: designware: Factor out MSI msg setup
-      PCI: designware: Implement multivector MSI IRQ setup
-      PCI: designware: Make get_msi_addr() return phys_addr_t, not u32
-      PCI: designware: Set up high part of MSI target address
-
-Marc Zyngier (4):
-      of/pci: Add of_pci_check_probe_only to parse "linux,pci-probe-only"
-      PCI: generic: Fix lookup of linux,pci-probe-only property
-      powerpc/PCI: Fix lookup of linux,pci-probe-only property
-      arm64: dts: Drop linux,pci-probe-only from the Seattle DTS
-
-Minghuan Lian (7):
-      PCI: layerscape: Remove ls_pcie_establish_link()
-      PCI: layerscape: Ignore PCIe controllers in Endpoint mode
-      PCI: layerscape: Factor out SCFG related function
-      PCI: layerscape: Update ls_add_pcie_port()
-      PCI: layerscape: Remove unused fields from struct ls_pcie
-      PCI: layerscape: Add support for LS1043a and LS2080a
-      PCI: layerscape: Add ls_pcie_msi_host_init()
-
-Ondrej Zary (1):
-      PCI: Disable MSI on SiS 761
-
-Paul Gortmaker (1):
-      PCI: Add builtin_pci_driver() to avoid registration boilerplate
-
-Phil Edworthy (4):
-      PCI: rcar: Make PCI aware of the I/O resources
-      PCI: rcar: Remove dependency on ARM-specific struct hw_pci
-      PCI: rcar: Set root bus nr to that provided in DT
-      PCI: rcar: Fix I/O offset for multiple host bridges
-
-Ray Jui (7):
-      PCI: iproc: Fix code comment to match code
-      PCI: iproc: Remove unused struct iproc_pcie.irqs[]
-      PCI: iproc: Call pci_fixup_irqs() for ARM64 as well as ARM
-      PCI: iproc: Fix PCIe reset logic
-      PCI: iproc: Improve link detection logic
-      PCI: iproc: Update PCIe device tree bindings
-      PCI: iproc: Add outbound mapping support
-
-Romain Bezut (1):
-      PCI/MSI: Export all remapped MSIs to sysfs attributes
-
-Russell King (15):
-      PCI: mvebu: Return zero for reserved or unimplemented config space
-      PCI: mvebu: Use exact config access size; don't read/modify/write
-      PCI: mvebu: Use of_get_available_child_count()
-      PCI: mvebu: Use for_each_available_child_of_node() to walk child nodes
-      PCI: mvebu: Report full node name when reporting a DT error
-      PCI: mvebu: Use port->name rather than "PCIe%d.%d"
-      PCI: mvebu: Move port parsing and resource claiming to  separate function
-      PCI: mvebu: Fix memory leaks and refcount leaks
-      PCI: mvebu: Split port parsing and resource claiming from  port setup
-      PCI: mvebu: Use gpio_set_value_cansleep()
-      PCI: mvebu: Use devm_kcalloc() to allocate an array
-      PCI: mvebu: Use gpio_desc to carry around gpio
-      PCI: mvebu: Improve clock/reset handling
-      PCI: mvebu: Add PCI Express root complex capability block
-      PCI: mvebu: Remove code restricting accesses to slot 0
-
-Sean O. Stalley (2):
-      PCI: Add Enhanced Allocation register entries
-      PCI: Add support for Enhanced Allocation devices
-
-Taku Izumi (1):
-      PCI/AER: Clear error status registers during enumeration and restore
-
-Wei Yang (1):
-      PCI: Don't try to restore VF BARs
-
-Yinghai Lu (1):
-      sparc/PCI: Add mem64 resource parsing for root bus
-
-Zhen Lei (1):
-      PCI: Remove unnecessary "if" statement
-
-Zhou Wang (5):
-      PCI: designware: Fix PORT_LOGIC_LINK_WIDTH_MASK
-      Revert "PCI: designware: Program ATU with untranslated address"
-      PCI: designware: Use of_pci_get_host_bridge_resources() to parse DT
-      PCI: designware: Make driver arch-agnostic
-      PCI: hisi: Add HiSilicon SoC Hip05 PCIe driver
-
- .../bindings/arm/hisilicon/hisilicon.txt           |  17 +
- .../devicetree/bindings/pci/altera-pcie-msi.txt    |  28 +
- .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  20 +
- .../devicetree/bindings/pci/designware-pcie.txt    |  12 +-
- .../devicetree/bindings/pci/hisilicon-pcie.txt     |  44 ++
- .../devicetree/bindings/pci/host-generic-pci.txt   |   5 +-
- .../devicetree/bindings/pci/layerscape-pci.txt     |  14 +-
- MAINTAINERS                                        |  23 +
- arch/arm/include/asm/Kbuild                        |   1 +
- arch/arm/include/asm/mach/pci.h                    |   6 -
- arch/arm/kernel/bios32.c                           |  12 +-
- arch/arm64/boot/dts/amd/amd-overdrive.dts          |   1 -
- arch/powerpc/platforms/pseries/setup.c             |  14 +-
- arch/sparc/kernel/pci.c                            |   7 +-
- arch/sparc/kernel/pci_common.c                     |  17 +-
- arch/sparc/kernel/pci_impl.h                       |   1 +
- arch/x86/pci/common.c                              |   8 +
- arch/x86/pci/legacy.c                              |   2 +-
- drivers/of/of_pci.c                                |  26 +
- drivers/pci/host/Kconfig                           |  33 +-
- drivers/pci/host/Makefile                          |   3 +
- drivers/pci/host/pci-dra7xx.c                      |   7 +
- drivers/pci/host/pci-exynos.c                      |   5 +-
- drivers/pci/host/pci-host-generic.c                |  41 +-
- drivers/pci/host/pci-imx6.c                        |   5 +-
- drivers/pci/host/pci-keystone-dw.c                 |   8 +-
- drivers/pci/host/pci-keystone.h                    |   2 +-
- drivers/pci/host/pci-layerscape.c                  | 199 +++++--
- drivers/pci/host/pci-mvebu.c                       | 473 ++++++++++++-----
- drivers/pci/host/pci-tegra.c                       |   4 +-
- drivers/pci/host/pci-xgene.c                       |  22 -
- drivers/pci/host/pcie-altera-msi.c                 | 312 +++++++++++
- drivers/pci/host/pcie-altera.c                     | 579 +++++++++++++++++++++
- drivers/pci/host/pcie-designware.c                 | 375 ++++++-------
- drivers/pci/host/pcie-designware.h                 |  20 +-
- drivers/pci/host/pcie-hisi.c                       | 198 +++++++
- drivers/pci/host/pcie-iproc-platform.c             |  27 +
- drivers/pci/host/pcie-iproc.c                      | 163 +++++-
- drivers/pci/host/pcie-iproc.h                      |  20 +-
- drivers/pci/host/pcie-rcar.c                       |  86 +--
- drivers/pci/host/pcie-spear13xx.c                  |  24 +-
- drivers/pci/hotplug/pciehp_ctrl.c                  |  75 +--
- drivers/pci/iov.c                                  | 101 ++--
- drivers/pci/msi.c                                  |  34 +-
- drivers/pci/pci-driver.c                           |   8 +-
- drivers/pci/pci.c                                  | 225 +++++++-
- drivers/pci/pci.h                                  |   1 +
- drivers/pci/pcie/aer/aerdrv_core.c                 |  28 +
- drivers/pci/probe.c                                |   6 +
- drivers/pci/quirks.c                               |  58 +++
- drivers/pci/setup-bus.c                            |  50 +-
- drivers/pci/setup-res.c                            |   7 +
- include/linux/aer.h                                |   5 +
- include/linux/msi.h                                |   2 +
- include/linux/of_pci.h                             |   3 +
- include/linux/pci.h                                |  12 +
- include/uapi/linux/pci_regs.h                      |  43 +-
- 58 files changed, 2894 insertions(+), 677 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
- create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
- create mode 100644 drivers/pci/host/pcie-altera-msi.c
- create mode 100644 drivers/pci/host/pcie-altera.c
- create mode 100644 drivers/pci/host/pcie-hisi.c
-
-
-From: Arnd Bergmann <arnd@arndb.de>
-
-PCI: altera: use fwnode API for pci_msi_create_irq_domain()
-
-There is a new conflict between Thomas Gleixner's IRQ tree that contains
-a patch from Marc Zyngier to change the prototype for
-pci_msi_create_irq_domain(), and Bjorn Helgaas' PCI tree that contains
-a new driver for the Altera PCI MSI host, with the old interface,
-as gcc now warns in linux-next:
-
-  drivers/pci/host/pcie-altera-msi.c: In function 'altera_allocate_domains':
-  drivers/pci/host/pcie-altera-msi.c:191:46: warning: passing argument 1 of 'pci_msi_create_irq_domain' from incompatible pointer type [-Wincompatible-pointer-types]
-    msi->msi_domain = pci_msi_create_irq_domain(msi->pdev->dev.of_node,
-  include/linux/msi.h:286:20: note: expected 'struct fwnode_handle *' but argument is of type 'struct device_node *'
-
-Change the new driver use the modified API.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: af1169b48b17 ("PCI: altera: Add Altera PCIe MSI driver")
-Fixes: be5436c83ac8 ("irqdomain/msi: Use fwnode instead of of_node")
-
-diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/host/pcie-altera-msi.c
-index 2c37e8620c37..99177f4ccde2 100644
---- a/drivers/pci/host/pcie-altera-msi.c
-+++ b/drivers/pci/host/pcie-altera-msi.c
-@@ -181,6 +181,8 @@ static const struct irq_domain_ops msi_domain_ops = {
- 
- static int altera_allocate_domains(struct altera_msi *msi)
- {
-+	struct fwnode_handle *fwnode = of_node_to_fwnode(msi->pdev->dev.of_node);
-+
- 	msi->inner_domain = irq_domain_add_linear(NULL, msi->num_of_vectors,
- 					     &msi_domain_ops, msi);
- 	if (!msi->inner_domain) {
-@@ -188,7 +190,7 @@ static int altera_allocate_domains(struct altera_msi *msi)
- 		return -ENOMEM;
- 	}
- 
--	msi->msi_domain = pci_msi_create_irq_domain(msi->pdev->dev.of_node,
-+	msi->msi_domain = pci_msi_create_irq_domain(fwnode,
- 				&altera_msi_domain_info, msi->inner_domain);
- 	if (!msi->msi_domain) {
- 		dev_err(&msi->pdev->dev, "failed to create MSI domain\n");
-
+On 11/05/2015 12:12 AM, Gavin Shan wrote:
+> This adds a reference count of PE, representing the number of PCI
+> devices associated with the PE. The reference count is increased
+> or decreased when PCI devices join or leave the PE. Once it becomes
+> zero, the PE together with its used resources (IO, MMIO, DMA, PELTM,
+> PELTV) are released to support PCI hot unplug.
+
+
+The commit log suggest the patch only adds a counter, initializes it, and 
+replaces unconditional release of an object (in this case - PE) with the 
+conditional one. But it is more that that...
+
+
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 245 ++++++++++++++++++++++++++----
+>   arch/powerpc/platforms/powernv/pci.h      |   1 +
+>   2 files changed, 218 insertions(+), 28 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 0bb0056..dcffce5 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -129,6 +129,215 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
+>   		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
+>   }
+>
+> +static void pnv_pci_ioda1_release_dma_pe(struct pnv_ioda_pe *pe)
+> +{
+> +	struct pnv_phb *phb = pe->phb;
+> +	struct iommu_table *tbl;
+> +	int start, count, i;
+> +	int64_t rc;
+> +
+> +	/* Search for the used DMA32 segments */
+> +	start = -1;
+> +	count = 0;
+> +	for (i = 0; i < phb->ioda.dma32_count; i++) {
+> +		if (phb->ioda.dma32_segmap[i] != pe->pe_number)
+> +			continue;
+> +
+> +		count++;
+> +		if (start < 0)
+> +			start = i;
+> +	}
+> +
+> +	if (!count)
+> +		return;
+
+
+imho checking pe->table_group.tables[0] != NULL is shorter than the loop above.
+
+
+> +
+> +	/* Unlink IOMMU table from group */
+> +	tbl = pe->table_group.tables[0];
+> +	pnv_pci_unlink_table_and_group(tbl, &pe->table_group);
+> +	if (pe->table_group.group) {
+> +		iommu_group_put(pe->table_group.group);
+> +		WARN_ON(pe->table_group.group);
+> +	}
+> +
+> +	/* Release IOMMU table */
+> +	pnv_pci_ioda2_table_free_pages(tbl);
+
+
+This is IODA2 helper with multilevel support, does IODA1 support multilevel 
+TCE tables? If not, it should WARN_ON on levels!=1.
+
+Another thing is you should first unprogram TVEs (via 
+opal_pci_map_pe_dma_window), then invalidate the cache (if required, not 
+sure if this is needed on IODA1), only then free the actual table.
+
+
+> +	iommu_free_table(tbl, of_node_full_name(pci_bus_to_OF_node(pe->pbus)));
+> +
+> +	/* Disable TVE */
+> +	for (i = start; i < start + count; i++) {
+> +		rc = opal_pci_map_pe_dma_window(phb->opal_id, pe->pe_number,
+> +						i, 0, 0ul, 0ul, 0ul);
+> +		if (rc)
+> +			pe_warn(pe, "Error %ld unmapping DMA32 seg#%d\n",
+> +				rc, i);
+> +
+> +		phb->ioda.dma32_segmap[i] = IODA_INVALID_PE;
+> +	}
+
+
+You could implement pnv_pci_ioda1_unset_window/pnv_ioda1_table_free as 
+callbacks, change pnv_pci_ioda2_release_dma_pe() to use them (and rename it 
+to reflect that it supports IODA1 and IODA2).
+
+
+> +}
+> +
+> +static unsigned int pnv_pci_ioda_pe_dma_weight(struct pnv_ioda_pe *pe);
+> +static long pnv_pci_ioda2_unset_window(struct iommu_table_group *table_group,
+> +		int num);
+> +static void pnv_pci_ioda2_set_bypass(struct pnv_ioda_pe *pe, bool enable);
+> +
+> +static void pnv_pci_ioda2_release_dma_pe(struct pnv_ioda_pe *pe)
+
+
+You moved this function and changed it, please do one thing at once (which 
+is "change", not "move").
+
+> +{
+> +	struct iommu_table *tbl;
+> +	unsigned int weight = pnv_pci_ioda_pe_dma_weight(pe);
+> +	int64_t rc;
+> +
+> +	if (!weight)
+> +		return;
+
+
+Checking for pe->table_group.group is better because if we ever change the 
+logic of what gets included to an IOMMU group, we will have to do the 
+change where we add devices to a group but we won't have to touch releasing 
+code.
+
+
+> +
+> +	tbl = pe->table_group.tables[0];
+> +	rc = pnv_pci_ioda2_unset_window(&pe->table_group, 0);
+> +	if (rc)
+> +		pe_warn(pe, "OPAL error %ld release DMA window\n", rc);
+> +
+> +	pnv_pci_ioda2_set_bypass(pe, false);
+> +	if (pe->table_group.group) {
+> +		iommu_group_put(pe->table_group.group);
+> +		WARN_ON(pe->table_group.group);
+> +	}
+> +
+> +	pnv_pci_ioda2_table_free_pages(tbl);
+> +	iommu_free_table(tbl, "pnv");
+> +}
+> +
+> +static void pnv_ioda_release_dma_pe(struct pnv_ioda_pe *pe)
+
+Merge this into pnv_ioda_release_pe() - it is small and called just once.
+
+
+> +{
+> +	struct pnv_phb *phb = pe->phb;
+> +
+> +	switch (phb->type) {
+> +	case PNV_PHB_IODA1:
+> +		pnv_pci_ioda1_release_dma_pe(pe);
+> +		break;
+> +	case PNV_PHB_IODA2:
+> +		pnv_pci_ioda2_release_dma_pe(pe);
+> +		break;
+> +	default:
+> +		WARN_ON(1);
+> +	}
+> +}
+> +
+> +static void pnv_ioda_release_window(struct pnv_ioda_pe *pe, int win)
+> +{
+> +	struct pnv_phb *phb = pe->phb;
+> +	int index, *segmap = NULL;
+> +	int64_t rc;
+> +
+> +	switch (win) {
+> +	case OPAL_IO_WINDOW_TYPE:
+> +		segmap = phb->ioda.io_segmap;
+> +		break;
+> +	case OPAL_M32_WINDOW_TYPE:
+> +		segmap = phb->ioda.m32_segmap;
+> +		break;
+> +	case OPAL_M64_WINDOW_TYPE:
+> +		if (phb->type != PNV_PHB_IODA1)
+> +			return;
+> +		segmap = phb->ioda.m64_segmap;
+> +		break;
+> +	default:
+> +		return;
+
+Unnecessary return.
+
+
+> +	}
+> +
+> +	for (index = 0; index < phb->ioda.total_pe_num; index++) {
+> +		if (segmap[index] != pe->pe_number)
+> +			continue;
+> +
+> +		if (win == OPAL_M64_WINDOW_TYPE)
+> +			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+> +					phb->ioda.reserved_pe_idx, win,
+> +					index / PNV_IODA1_M64_SEGS,
+> +					index % PNV_IODA1_M64_SEGS);
+> +		else
+> +			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+> +					phb->ioda.reserved_pe_idx, win,
+> +					0, index);
+> +
+> +		if (rc != OPAL_SUCCESS)
+> +			pe_warn(pe, "Error %ld unmapping (%d) segment#%d\n",
+> +				rc, win, index);
+> +
+> +		segmap[index] = IODA_INVALID_PE;
+> +	}
+> +}
+> +
+> +static void pnv_ioda_release_pe_seg(struct pnv_ioda_pe *pe)
+> +{
+> +	struct pnv_phb *phb = pe->phb;
+> +	int win;
+> +
+> +	for (win = OPAL_M32_WINDOW_TYPE; win <= OPAL_IO_WINDOW_TYPE; win++) {
+> +		if (phb->type == PNV_PHB_IODA2 && win == OPAL_IO_WINDOW_TYPE)
+> +			continue;
+
+Move this check to pnv_ioda_release_window() or move case(win == 
+OPAL_M64_WINDOW_TYPE):if(phb->type != PNV_PHB_IODA1) from that function here.
+
+
+> +
+> +		pnv_ioda_release_window(pe, win);
+> +	}
+> +}
+
+This is shorter and cleaner:
+
+
+static void pnv_ioda_release_window(struct pnv_ioda_pe *pe, int win, int 
+*segmap
+{
+         struct pnv_phb *phb = pe->phb;
+         int index;
+         int64_t rc;
+
+         for (index = 0; index < phb->ioda.total_pe_num; index++) {
+                 if (segmap[index] != pe->pe_number)
+                         continue;
+
+                 if (win == OPAL_M64_WINDOW_TYPE)
+                         rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+                                         phb->ioda.reserved_pe_idx, win,
+                                         index / PNV_IODA1_M64_SEGS,
+                                         index % PNV_IODA1_M64_SEGS);
+                 else
+                         rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+                                         phb->ioda.reserved_pe_idx, win,
+                                         0, index);
+
+                 if (rc != OPAL_SUCCESS)
+                         pe_warn(pe, "Error %ld unmapping (%d) segment#%d\n",
+                                 rc, win, index);
+
+                 segmap[index] = IODA_INVALID_PE;
+         }
+}
+
+static void pnv_ioda_release_pe_seg(struct pnv_ioda_pe *pe)
+{
+         pnv_ioda_release_window(pe, OPAL_M32_WINDOW_TYPE, 
+phb->ioda.m32_segmap);
+         if (phb->type != PNV_PHB_IODA2)
+                 pnv_ioda_release_window(pe, OPAL_IO_WINDOW_TYPE,
+                                 phb->ioda.io_segmap);
+	else
+                 pnv_ioda_release_window(pe, OPAL_M64_WINDOW_TYPE,
+                                 phb->ioda.m64_segmap);
+}
+
+
+I'd actually merge pnv_ioda_release_pe_seg() into pnv_ioda_release_pe() as 
+well as it is also small and called once.
+
+
+> +
+> +static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb,
+> +				   struct pnv_ioda_pe *pe);
+> +static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe);
+> +static void pnv_ioda_release_pe(struct pnv_ioda_pe *pe)
+> +{
+> +	struct pnv_ioda_pe *tmp, *slave;
+> +
+> +	/* Release slave PEs in compound PE */
+> +	if (pe->flags & PNV_IODA_PE_MASTER) {
+> +		list_for_each_entry_safe(slave, tmp, &pe->slaves, list)
+> +			pnv_ioda_release_pe(slave);
+> +	}
+> +
+> +	/* Remove the PE from the list */
+> +	list_del(&pe->list);
+> +
+> +	/* Release resources */
+> +	pnv_ioda_release_dma_pe(pe);
+> +	pnv_ioda_release_pe_seg(pe);
+> +	pnv_ioda_deconfigure_pe(pe->phb, pe);
+> +
+> +	pnv_ioda_free_pe(pe);
+> +}
+> +
+> +static inline struct pnv_ioda_pe *pnv_ioda_pe_get(struct pnv_ioda_pe *pe)
+> +{
+> +	if (!pe)
+> +		return NULL;
+> +
+> +	pe->device_count++;
+> +	return pe;
+> +}
+> +
+> +static inline void pnv_ioda_pe_put(struct pnv_ioda_pe *pe)
+
+
+Merge this into pnv_pci_release_device() as it is small and called only once.
+
+
+> +{
+> +	if (!pe)
+> +		return;
+> +
+> +	pe->device_count--;
+> +	WARN_ON(pe->device_count < 0);
+> +	if (pe->device_count == 0)
+> +		pnv_ioda_release_pe(pe);
+> +}
+> +
+> +static void pnv_pci_release_device(struct pci_dev *pdev)
+> +{
+> +	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+> +	struct pnv_phb *phb = hose->private_data;
+> +	struct pci_dn *pdn = pci_get_pdn(pdev);
+> +	struct pnv_ioda_pe *pe;
+> +
+> +	if (pdev->is_virtfn)
+> +		return;
+> +
+> +	if (!pdn || pdn->pe_number == IODA_INVALID_PE)
+> +		return;
+> +
+> +	pe = &phb->ioda.pe_array[pdn->pe_number];
+> +	pnv_ioda_pe_put(pe);
+> +}
+> +
+>   static struct pnv_ioda_pe *pnv_ioda_init_pe(struct pnv_phb *phb, int pe_no)
+>   {
+>   	phb->ioda.pe_array[pe_no].phb = phb;
+> @@ -724,7 +933,6 @@ static int pnv_ioda_set_peltv(struct pnv_phb *phb,
+>   	return 0;
+>   }
+>
+> -#ifdef CONFIG_PCI_IOV
+>   static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>   {
+>   	struct pci_dev *parent;
+> @@ -759,9 +967,11 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>   		}
+>   		rid_end = pe->rid + (count << 8);
+>   	} else {
+> +#ifdef CONFIG_PCI_IOV
+>   		if (pe->flags & PNV_IODA_PE_VF)
+>   			parent = pe->parent_dev;
+>   		else
+> +#endif
+>   			parent = pe->pdev->bus->self;
+>   		bcomp = OpalPciBusAll;
+>   		dcomp = OPAL_COMPARE_RID_DEVICE_NUMBER;
+> @@ -799,11 +1009,12 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>
+>   	pe->pbus = NULL;
+>   	pe->pdev = NULL;
+> +#ifdef CONFIG_PCI_IOV
+>   	pe->parent_dev = NULL;
+> +#endif
+
+
+These #ifdef movements seem very much unrelated.
+
+
+>
+>   	return 0;
+>   }
+> -#endif /* CONFIG_PCI_IOV */
+>
+>   static int pnv_ioda_configure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>   {
+> @@ -985,6 +1196,7 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+>   			continue;
+>
+>   		pdn->pe_number = pe->pe_number;
+> +		pnv_ioda_pe_get(pe);
+>   		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
+>   			pnv_ioda_setup_same_PE(dev->subordinate, pe);
+>   	}
+> @@ -1047,9 +1259,8 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>   			bus->busn_res.start, pe->pe_number);
+>
+>   	if (pnv_ioda_configure_pe(phb, pe)) {
+> -		/* XXX What do we do here ? */
+> -		pnv_ioda_free_pe(pe);
+>   		pe->pbus = NULL;
+> +		pnv_ioda_release_pe(pe);
+
+
+This is unrelated unexplained change.
+
+
+
+>   		return NULL;
+>   	}
+>
+> @@ -1199,29 +1410,6 @@ m64_failed:
+>   	return -EBUSY;
+>   }
+>
+> -static long pnv_pci_ioda2_unset_window(struct iommu_table_group *table_group,
+> -		int num);
+> -static void pnv_pci_ioda2_set_bypass(struct pnv_ioda_pe *pe, bool enable);
+> -
+> -static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev, struct pnv_ioda_pe *pe)
+> -{
+> -	struct iommu_table    *tbl;
+> -	int64_t               rc;
+> -
+> -	tbl = pe->table_group.tables[0];
+> -	rc = pnv_pci_ioda2_unset_window(&pe->table_group, 0);
+> -	if (rc)
+> -		pe_warn(pe, "OPAL error %ld release DMA window\n", rc);
+> -
+> -	pnv_pci_ioda2_set_bypass(pe, false);
+> -	if (pe->table_group.group) {
+> -		iommu_group_put(pe->table_group.group);
+> -		BUG_ON(pe->table_group.group);
+> -	}
+> -	pnv_pci_ioda2_table_free_pages(tbl);
+> -	iommu_free_table(tbl, of_node_full_name(dev->dev.of_node));
+> -}
+> -
+>   static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
+>   {
+>   	struct pci_bus        *bus;
+> @@ -1242,7 +1430,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
+>   		if (pe->parent_dev != pdev)
+>   			continue;
+>
+> -		pnv_pci_ioda2_release_dma_pe(pdev, pe);
+> +		pnv_pci_ioda2_release_dma_pe(pe);
+
+
+This is unrelated change.
+
+
+>
+>   		/* Remove from list */
+>   		mutex_lock(&phb->ioda.pe_list_mutex);
+> @@ -3124,6 +3312,7 @@ static const struct pci_controller_ops pnv_pci_ioda_controller_ops = {
+>   	.teardown_msi_irqs	= pnv_teardown_msi_irqs,
+>   #endif
+>   	.enable_device_hook	= pnv_pci_enable_device_hook,
+> +	.release_device		= pnv_pci_release_device,
+>   	.window_alignment	= pnv_pci_window_alignment,
+>   	.setup_bridge		= pnv_pci_setup_bridge,
+>   	.reset_secondary_bus	= pnv_pci_reset_secondary_bus,
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index ef5271a..3bb10de 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -30,6 +30,7 @@ struct pnv_phb;
+>   struct pnv_ioda_pe {
+>   	unsigned long		flags;
+>   	struct pnv_phb		*phb;
+> +	int			device_count;
+
+Not atomic_t, no kref, no additional mutex, just "int"? Sure about it? If 
+so, put a note to the commit log about what provides a guarantee that there 
+is no race.
+
+
+>
+>   	/* A PE can be associated with a single device or an
+>   	 * entire bus (& children). In the former case, pdev
+>
+
+
+-- 
+Alexey Kardashevskiy
+IBM OzLabs, LTC Team
+
+e-mail: aik@au1.ibm.com
+notes: Alexey Kardashevskiy/Australia/IBM
 
