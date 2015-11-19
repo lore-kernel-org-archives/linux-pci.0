@@ -1,114 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp09.in.ibm.com ([122.248.162.9]:33851 "EHLO
-	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030282AbbKDNzn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:55:43 -0500
-Received: from /spool/local
-	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 19:25:41 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 17/50] powerpc/powernv: Avoid calculating DMA32 segments on PHB3
-Date: Thu,  5 Nov 2015 00:12:17 +1100
-Message-Id: <1446642770-4681-18-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:35220 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751309AbbKSQFp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 19 Nov 2015 11:05:45 -0500
+From: Andy Lutomirski <luto@kernel.org>
+To: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Andy Lutomirski <luto@kernel.org>
+Subject: [PATCH] pcie_aspm: Make link_state_store consistent with link_state_show
+Date: Thu, 19 Nov 2015 08:05:35 -0800
+Message-Id: <6ff64f0313c4e6400ef536017078e58ec3487c71.1447949082.git.luto@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In pnv_ioda_setup_dma(), it's unnecessary to calculate the DMA32
-segments for PEs on PHB3 as the whole available DMA32 space can
-be assigned to one specific PE on PHB3.
+If CONFIG_PCIEASPM_DEBUG is set, then pci devices have a link_state
+attribute.  Reading that attribute shows the state as a bit mask: 1
+means L0S upstream, 2 means L0S downstream, and 4 means L1.
 
-This splits pnv_ioda_setup_dma() to pnv_pci_ioda1_setup_dma() and
-pnv_pci_ioda2_setup_dma() in order to avoid calculating DMA32
-segments for PEs on PHB3. No logical changes introduced.
+Oddly, writing to link_state is inconsistent and gets translated,
+leading to mysterious results in which the value you store isn't
+comparable the value you load back out.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Fix it by making link_state_store match link_state_show.
+
+Signed-off-by: Andy Lutomirski <luto@kernel.org>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 41 ++++++++++++++++++-------------
- 1 file changed, 24 insertions(+), 17 deletions(-)
+ drivers/pci/pcie/aspm.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 5a08e20..4c2e023 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -2383,7 +2383,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
- 		pnv_ioda_setup_bus_dma(pe, pe->pbus);
- }
- 
--static void pnv_ioda_setup_dma(struct pnv_phb *phb)
-+static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 317e3558a35e..e543dac8e3f2 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -834,22 +834,16 @@ static ssize_t link_state_store(struct device *dev,
  {
- 	struct pci_controller *hose = phb->hose;
- 	unsigned int residual, remaining, segs, tw, base;
-@@ -2428,26 +2428,30 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
- 				segs = remaining;
- 		}
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct pcie_link_state *link, *root = pdev->link_state->root;
+-	u32 val, state = 0;
++	u32 state;
  
--		/*
--		 * For IODA2 compliant PHB3, we needn't care about the weight.
--		 * The all available 32-bits DMA space will be assigned to
--		 * the specific PE.
--		 */
--		if (phb->type == PNV_PHB_IODA1) {
--			pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
--				pe->dma_weight, segs);
--			pnv_pci_ioda1_setup_dma_pe(phb, pe, base, segs);
--		} else {
--			pe_info(pe, "Assign DMA32 space\n");
--			segs = 0;
--			pnv_pci_ioda2_setup_dma_pe(phb, pe);
--		}
-+		pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
-+			pe->dma_weight, segs);
-+		pnv_pci_ioda1_setup_dma_pe(phb, pe, base, segs);
+-	if (kstrtouint(buf, 10, &val))
++	if (kstrtouint(buf, 10, &state))
+ 		return -EINVAL;
  
- 		remaining -= segs;
- 		base += segs;
- 	}
- }
+ 	if (aspm_disabled)
+ 		return -EPERM;
+-	if (n < 1 || val > 3)
++	if ((state & ~ASPM_STATE_ALL) != 0)
+ 		return -EINVAL;
  
-+static void pnv_pci_ioda2_setup_dma(struct pnv_phb *phb)
-+{
-+	struct pnv_ioda_pe *pe;
-+
-+	pnv_pci_ioda_setup_opal_tce_kill(phb);
-+
-+	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
-+		if (!pe->dma_weight)
-+			continue;
-+
-+		pe_info(pe, "Assign DMA32 space\n");
-+		pnv_pci_ioda2_setup_dma_pe(phb, pe);
-+	}
-+}
-+
- #ifdef CONFIG_PCI_MSI
- static void pnv_ioda2_msi_eoi(struct irq_data *d)
- {
-@@ -2931,10 +2935,13 @@ static void pnv_pci_ioda_setup_DMA(void)
- 	struct pnv_phb *phb;
- 
- 	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
--		pnv_ioda_setup_dma(hose->private_data);
-+		phb = hose->private_data;
-+		if (phb->type == PNV_PHB_IODA1)
-+			pnv_pci_ioda1_setup_dma(phb);
-+		else
-+			pnv_pci_ioda2_setup_dma(phb);
- 
- 		/* Mark the PHB initialization done */
--		phb = hose->private_data;
- 		phb->initialized = 1;
- 	}
- }
+-	/* Convert requested state to ASPM state */
+-	if (val & PCIE_LINK_STATE_L0S)
+-		state |= ASPM_STATE_L0S;
+-	if (val & PCIE_LINK_STATE_L1)
+-		state |= ASPM_STATE_L1;
+-
+ 	down_read(&pci_bus_sem);
+ 	mutex_lock(&aspm_lock);
+ 	list_for_each_entry(link, &link_list, sibling) {
 -- 
-2.1.0
+2.5.0
 
