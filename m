@@ -1,37 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:49632 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751990AbbKWLjT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 06:39:19 -0500
-Date: Mon, 23 Nov 2015 11:39:02 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Jisheng Zhang <jszhang@marvell.com>
-Cc: Sekhar Nori <nsekhar@ti.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Murali Karicheri <m-karicheri2@ti.com>,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI: keystone: fix crash with deferred probe
-Message-ID: <20151123113902.GM8644@n2100.arm.linux.org.uk>
-References: <866b2f1544f9d55fa932aa9f9cb5e7d523a23d05.1448017883.git.nsekhar@ti.com>
- <20151123192209.38e2c101@xhacker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151123192209.38e2c101@xhacker>
+Received: from ozlabs.org ([103.22.144.67]:48503 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757222AbbKSLqk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 19 Nov 2015 06:46:40 -0500
+In-Reply-To: <1446939035-2617-10-git-send-email-weiyang@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com, aik@ozlabs.ru
+From: Michael Ellerman <mpe@ellerman.id.au>
+Cc: linux-pci@vger.kernel.org, Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [V13,9/9] powerpc/eeh: Support error recovery for VF PE
+Message-Id: <20151119114639.40721141498@ozlabs.org>
+Date: Thu, 19 Nov 2015 22:46:39 +1100 (AEDT)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 23, 2015 at 07:22:09PM +0800, Jisheng Zhang wrote:
-> when trying to add berlin pcie support and came up one patch
+On Sat, 2015-07-11 at 23:30:35 UTC, Wei Yang wrote:
+> PFs are enumerated on PCI bus, while VFs are created by PF's driver.
 > 
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-November/384575.html
+> In EEH recovery, it has two cases:
+> 1. Device and driver is EEH aware, error handlers are called.
+> 2. Device and driver is not EEH aware, un-plug the device and plug it again
+> by enumerating it.
 > 
-> when build testing, I also realized this issue, but keystone relies on
-> hook_fault_code() which is will be freed after boot, so your patch isn't
-> completed.
+> The special thing happens on the second case. For a PF, we could use the
+> original pci core to enumerate the bus, while for VF we need to record the
+> VFs which aer un-plugged then plug it again.
+> 
+> Also The patch caches the VF index in pci_dn, which can be used to
+> calculate VF's bus, device and function number. Those information helps to
+> locate the VF's PCI device instance when doing hotplug during EEH recovery
+> if necessary.
 
-hook_fault_code() is intentionally not callable after boot.  It's unsafe
-to try to change the fault handling for a running system.  It's even more
-unsafe to try to remove a fault handler which is located in module code.
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> index 9b365d6..533e6e9 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -211,6 +211,7 @@ struct pci_dn {
+>  #define IODA_INVALID_PE		(-1)
+>  #ifdef CONFIG_PPC_POWERNV
+>  	int	pe_number;
+> +	int     vf_index;		/* VF index in the PF */
 
--- 
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+
+> diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+> index 89eb4bc..f25428a 100644
+> --- a/arch/powerpc/kernel/eeh_driver.c
+> +++ b/arch/powerpc/kernel/eeh_driver.c
+> @@ -386,12 +396,39 @@ static void *eeh_report_failure(void *data, void *userdata)
+>  	return NULL;
+>  }
+>  
+> +static void *eeh_add_virt_device(void *data, void *userdata)
+> +{
+> +	struct pci_driver *driver;
+> +	struct eeh_dev *edev = (struct eeh_dev *)data;
+> +	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
+> +	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
+> +
+> +	if (!(edev->physfn)) {
+> +		pr_warn("%s: EEH dev %04x:%02x:%02x.%01x not for VF\n",
+> +			__func__, edev->phb->global_number, pdn->busno,
+> +			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
+> +		return NULL;
+> +	}
+> +
+> +	driver = eeh_pcid_get(dev);
+> +	if (driver) {
+> +		eeh_pcid_put(dev);
+> +		if (driver->err_handler)
+> +			return NULL;
+> +	}
+> +
+> +	pci_iov_virtfn_add(edev->physfn, pdn->vf_index, 0);
+                                              ^
+
+This is giving me:
+
+  arch/powerpc/kernel/eeh_driver.c:420:38: error: 'struct pci_dn' has no member named 'vf_index'
+
+And similarly:
+
+  arch/powerpc/kernel/eeh_driver.c:472:42: error: 'struct pci_dn' has no member named 'vf_index'
+  arch/powerpc/kernel/eeh_driver.c:479:6: error: 'struct pci_dn' has no member named 'pe_number'
+
+
+For pseries_defconfig with POWERNV=n.
+
+The reason is that those fields are #ifdef POWERNV, but eeh_driver.c is still
+built for PSERIES.
+
+More here:
+
+  http://kisskb.ellerman.id.au/kisskb/buildresult/12550871/
+
+
+cheers
