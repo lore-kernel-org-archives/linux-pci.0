@@ -1,124 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:33078 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934131AbbKSOMk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Nov 2015 09:12:40 -0500
-Received: by pabfh17 with SMTP id fh17so85150578pab.0
-        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2015 06:12:39 -0800 (PST)
-From: Tim Harvey <tharvey@gateworks.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH v2] PCI: imx6: add dt prop for link gen, default to gen1
-Date: Thu, 19 Nov 2015 06:12:45 -0800
-Message-Id: <1447942365-11662-1-git-send-email-tharvey@gateworks.com>
-In-Reply-To: <1446735481-27326-1-git-send-email-tharvey@gateworks.com>
-References: <1446735481-27326-1-git-send-email-tharvey@gateworks.com>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:35202 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934429AbbKSQ6J (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Nov 2015 11:58:09 -0500
+Received: by obbnk6 with SMTP id nk6so64878728obb.2
+        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2015 08:58:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CALCETrV-S64Vi=QLhGNe_LZ78uPp-OhcZ8nM2KjDFn8+346=Nw@mail.gmail.com>
+References: <CALCETrV-S64Vi=QLhGNe_LZ78uPp-OhcZ8nM2KjDFn8+346=Nw@mail.gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Thu, 19 Nov 2015 08:57:48 -0800
+Message-ID: <CALCETrWrq=G+sqwmZtnxL8HOe=y7CVNqX=r7nHtEdS7CtLnwBg@mail.gmail.com>
+Subject: Re: i2c_designware doesn't recover from subdevice driver unload
+To: Andy Lutomirski <luto@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
-the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
-external clock source is present and supplied back to the IMX6 PCIe core
-via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
+On Thu, Nov 19, 2015 at 7:56 AM, Andy Lutomirski <luto@kernel.org> wrote:
+> I unloaded and reloaded hid_multitouch (on a Skylake laptop where the
+> HID device is behind an integrated designware controller) and I got:
+>
+> [39545.054684] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+> [39545.061728] i2c_designware i2c_designware.1:
+> i2c_dw_handle_tx_abort: lost arbitration
+> [39545.061734] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+> [39545.061944] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+> [39545.062373] i2c_hid i2c-DLL0704:01: error in i2c_hid_init_report
+> size:6 / ret_size:4
+> [39545.062564] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+> [39545.062636] input: DLL0704:01 06CB:76AE UNKNOWN as
+> /devices/pci0000:00/0000:00:15.1/i2c_designware.1/i2c-7/i2c-DLL0704:01/0018:06CB:76AE.0005/input/input20
+> [39545.063212] hid-multitouch 0018:06CB:76AE.0005: input,hidraw1:
+> <UNKNOWN> HID v1.00 Mouse [DLL0704:01 06CB:76AE] on
+> [40178.534814] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+> [40178.541848] i2c_designware i2c_designware.1:
+> i2c_dw_handle_tx_abort: lost arbitration
+> [40178.541853] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+> [40179.542135] i2c_designware i2c_designware.1: controller timed out
+> [40179.542166] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+> [40180.542909] i2c_designware i2c_designware.1: controller timed out
+> [40180.542942] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+> [40181.543697] i2c_designware i2c_designware.1: controller timed out
+>
+> after that, I just keep seeing "controller timed out" messages.
+>
+> This is Linux 4.3.0.
 
-Add a dt property to specify gen1 vs gen2 and check this before allowing
-a Gen2 link.
+This just happened again (after a reboot) on its own without any
+rmmod.  Reloading the i2c_designware drivers didn't help, so I'm
+wondering if it's a bug lower in the stack instead.
 
-We default to Gen1 if the property is not present because at this time there
-are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
+Reloading intel-lpss-acpi after the failure says:
 
-In order to be Gen2 compliant on IMX6 you need to:
- - have a Gen2 compliant external clock generator and route that clock back
-   to either LVDS CLK1 or LVDS CLK2 as an input.
-   (see IMX6SX-SabreSD reference design)
- - specify this clock in the pcie node in the dt
-   (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
-    IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
+[  695.955911] idma64 idma64.0: Found Intel integrated DMA 64-bit
+[  695.966755] idma64 idma64.1: Found Intel integrated DMA 64-bit
+[  696.967468] i2c_designware i2c_designware.1: controller timed out
+[  696.967550] i2c_hid i2c-DLL0704:01: hid_descr_cmd failed
 
-[1] https://community.freescale.com/message/453209
 
-Signed-off-by: Tim Harvey <tharvey@gateworks.com>
----
-v2:
- - moved dt property to designware core
+This is a Dell XPS 13 9350.
 
- .../devicetree/bindings/pci/designware-pcie.txt          |  1 +
- drivers/pci/host/pci-imx6.c                              | 16 ++++++++++------
- drivers/pci/host/pcie-designware.c                       |  4 ++++
- drivers/pci/host/pcie-designware.h                       |  1 +
- 4 files changed, 16 insertions(+), 6 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index 9f4faa8..a9a94b9 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -26,3 +26,4 @@ Optional properties:
- - bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
-   specify this property, to keep backwards compatibility a range of 0x00-0xff
-   is assumed if not present)
-+- max-link-speed: Specify PCI gen for link capability (ie 2 for gen2)
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 8f3a981..6a9f310 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -392,11 +392,15 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
- 	if (ret)
- 		return ret;
- 
--	/* Allow Gen2 mode after the link is up. */
--	tmp = readl(pp->dbi_base + PCIE_RC_LCR);
--	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
--	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
--	writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-+	if (pp->link_gen == 2) {
-+		/* Allow Gen2 mode after the link is up. */
-+		tmp = readl(pp->dbi_base + PCIE_RC_LCR);
-+		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-+		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
-+		writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-+	} else {
-+		dev_info(pp->dev, "Link: Gen2 disabled\n");
-+	}
- 
- 	/*
- 	 * Start Directed Speed Change so the best possible speed both link
-@@ -420,7 +424,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
- 	}
- 
- 	tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
--	dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
-+	dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
- 	return 0;
- }
- 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 52aa6e3..7aa81ff 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -487,6 +487,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		return -EINVAL;
- 	}
- 
-+	pp->link_gen = -1;
-+	if (of_property_read_u32(np, "max-link-speed", &ret) == 0)
-+		pp->link_gen = ret;
-+
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		if (!pp->ops->msi_host_init) {
- 			pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index d0bbd27..5ce821d 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -48,6 +48,7 @@ struct pcie_port {
- 	struct resource		busn;
- 	int			irq;
- 	u32			lanes;
-+	int			link_gen;
- 	struct pcie_host_ops	*ops;
- 	int			msi_irq;
- 	struct irq_domain	*irq_domain;
--- 
-1.9.1
-
+--Andy
