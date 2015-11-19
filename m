@@ -1,65 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:50173 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932365AbbKDPPh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 10:15:37 -0500
-Date: Wed, 4 Nov 2015 16:14:50 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Keith Busch <keith.busch@intel.com>
-cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [RFC PATCHv3 3/4] x86/pci: Initial commit for new VMD device
- driver
-In-Reply-To: <20151104144905.GI13904@localhost.localdomain>
-Message-ID: <alpine.DEB.2.11.1511041614070.4032@nanos>
-References: <1445967247-24310-1-git-send-email-keith.busch@intel.com> <1445967247-24310-4-git-send-email-keith.busch@intel.com> <alpine.DEB.2.11.1511021426020.4032@nanos> <20151103001552.GE13904@localhost.localdomain> <alpine.DEB.2.11.1511031001130.4032@nanos>
- <20151104144905.GI13904@localhost.localdomain>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:36032 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758041AbbKSWAJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Nov 2015 17:00:09 -0500
+Received: by obdgf3 with SMTP id gf3so72712509obd.3
+        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2015 14:00:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <cd180d52de6dc9e217bd0a0aed32efa68d0c73f8.1447949171.git.luto@kernel.org>
+References: <cover.1447949171.git.luto@kernel.org> <cd180d52de6dc9e217bd0a0aed32efa68d0c73f8.1447949171.git.luto@kernel.org>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Thu, 19 Nov 2015 13:59:47 -0800
+Message-ID: <CALCETrUV9qbwYT4wSWGHgZ+5uteRMJTeVsJB14FqssbwZqv+nw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] acpi: Tidy up _OSC error spacing
+To: Andy Lutomirski <luto@kernel.org>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Linux ACPI <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 4 Nov 2015, Keith Busch wrote:
+Forwarding to linux-acpi.
 
-> On Tue, Nov 03, 2015 at 12:42:02PM +0100, Thomas Gleixner wrote:
-> > On Tue, 3 Nov 2015, Keith Busch wrote:
-> > > > > +	msi_irqdomain = pci_msi_create_irq_domain(NULL, &pci_chained_msi_domain_info,
-> > > > > +						  vmd_irqdomain);
-> > 
-> > But that parent limitation does not matter simply because your
-> > msi_irqdomain does not follow down the hierarchy in the allocation
-> > path.
-> > 
-> > So we can avoid the vmd_irqdomain creation completely. It's just
-> > wasting memory and has no value at all. Creating the msi domain with a
-> > NULL parent is possible.
-> 
-> I'm having trouble following the hierarchy and didn't understand the
-> connection between the parent and msi comain. It's still new to me,
-> but I don't think a NULL parent is allowable with msi domains:
-> 
->  pci_msi_setup_msi_irqs()
->   pci_msi_domain_alloc_irqs()
->    msi_domain_alloc_irqs()
->     __irq_domain_alloc_irqs()
->      irq_domain_alloc_irqs_recursive()
->       msi_domain_alloc()
->        irq_domain_alloc_irqs_parent()
-> 
-> The last call returns -ENOSYS since there parent is NULL. Was the
-> intension to allow no parent, or do I still need to allocate one to
-> achieve the desired chaining?
+On Thu, Nov 19, 2015 at 8:08 AM, Andy Lutomirski <luto@kernel.org> wrote:
+> The whitespace in _OSC error reports is weird.  Improve it.
+>
+> Signed-off-by: Andy Lutomirski <luto@kernel.org>
+> ---
+>  drivers/acpi/bus.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+> index a212cefae524..2177ef0b16e4 100644
+> --- a/drivers/acpi/bus.c
+> +++ b/drivers/acpi/bus.c
+> @@ -182,12 +182,12 @@ static void acpi_print_osc_error(acpi_handle handle,
+>         if (ACPI_FAILURE(acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer)))
+>                 printk(KERN_DEBUG "%s\n", error);
+>         else {
+> -               printk(KERN_DEBUG "%s:%s\n", (char *)buffer.pointer, error);
+> +               printk(KERN_DEBUG "%s: %s\n", (char *)buffer.pointer, error);
+>                 kfree(buffer.pointer);
+>         }
+> -       printk(KERN_DEBUG"_OSC request data:");
+> +       printk(KERN_DEBUG "_OSC request data:");
+>         for (i = 0; i < context->cap.length; i += sizeof(u32))
+> -               printk("%x ", *((u32 *)(context->cap.pointer + i)));
+> +               printk(" %x", *((u32 *)(context->cap.pointer + i)));
+>         printk("\n");
+>  }
+>
+> --
+> 2.5.0
+>
 
-Hmm, seems I missed that part. But that's a fixable problem. Jiang?
 
-Thanks,
 
-	tglx
- 
+-- 
+Andy Lutomirski
+AMA Capital Management, LLC
