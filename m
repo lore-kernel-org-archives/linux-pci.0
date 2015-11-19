@@ -1,64 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:39181 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753468AbbKDDa5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2015 22:30:57 -0500
-Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 13:30:55 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 414A72BB0054
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2015 14:30:53 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA43Ud6o33554438
-	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 14:30:47 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA43UKgq015815
-	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 14:30:20 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:36136 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756091AbbKSAKv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2015 19:10:51 -0500
+Received: by pacdm15 with SMTP id dm15so60550632pac.3
+        for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2015 16:10:50 -0800 (PST)
+Subject: Re: [PATCH v7 12/50] powerpc/powernv: Track M64 segment consumption
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-13-git-send-email-gwshan@linux.vnet.ibm.com>
+ <56498D77.2060101@ozlabs.ru> <20151117010446.GA26294@gwshan>
 Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V12 2/9] PCI: Add pcibios_bus_add_device() weak function
-Date: Wed,  4 Nov 2015 11:28:45 +0800
-Message-Id: <1446607732-4166-3-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1446607732-4166-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1446607732-4166-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <564D1382.6030504@ozlabs.ru>
+Date: Thu, 19 Nov 2015 11:10:42 +1100
+MIME-Version: 1.0
+In-Reply-To: <20151117010446.GA26294@gwshan>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a weak function pcibios_bus_add_device() for arch dependent code could
-do proper setup. For example, powerpc could setup EEH related resources.
+On 11/17/2015 12:04 PM, Gavin Shan wrote:
+> On Mon, Nov 16, 2015 at 07:01:59PM +1100, Alexey Kardashevskiy wrote:
+>> On 11/05/2015 12:12 AM, Gavin Shan wrote:
+>>> As we track M32 segment consumption, this introduces an array to
+>>> the PHB to track the mapping between M64 segment and PE number.
+>>> The information is going to be used to find M64 segment from the
+>>> PE number during PCI unplugging time in subsequent patches.
+>>
+>>
+>> It would not hurt to put a few words about how we managed to live without
+>> such a mapping for M64 before but we needed mapping for M32.
+>>
+>
+> The M32 mapping (phb->ioda.m32_segmap[]) isn't used for anything before
+> this patcheset. There're no need for M64 mapping before this patchset
+> similarly, no need to add the words.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/bus.c | 3 +++
- 1 file changed, 3 insertions(+)
+After years I learned that reviewers ask less questions about new but yet 
+unused code when I put few words in the commit log confirming that it is 
+not used now but it will be used for <here I put what it is for> later.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index d3346d2..2b8b756 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -269,6 +269,7 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
- 
- void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
- 
-+void __weak pcibios_bus_add_device(struct pci_dev *dev) { }
- /**
-  * pci_bus_add_device - start driver for a single device
-  * @dev: device to add
-@@ -279,6 +280,8 @@ void pci_bus_add_device(struct pci_dev *dev)
- {
- 	int retval;
- 
-+	pcibios_bus_add_device(dev);
-+
- 	/*
- 	 * Can not put in pci_device_add yet because resources
- 	 * are not assigned yet for some devices.
+And it is not obvious that m32_segment is not used. And m64_segmap is 
+started being used only 13 patches later in:
+
+[PATCH v7 27/50] powerpc/powernv: Dynamically release PEs
+
+which is quite far, complicates reviewing. 12/50 is better be moved there 
+(to make it 26/50) or just merged into 27/50.
+
+
 -- 
-2.5.0
-
+Alexey
