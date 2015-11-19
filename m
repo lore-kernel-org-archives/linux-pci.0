@@ -1,148 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jordan Hargrave <Jordan_Hargrave@dell.com>
-To: jharg93@gmail.com, jdelvare@suse.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: Jordan Hargrave <Jordan_Hargrave@dell.com>
-Subject: [PATCH 2/2] Create sysfs attribute 'slot' for mapping PCI device to SMBIOS slot
-Date: Wed, 18 Nov 2015 16:03:23 -0600
-Message-Id: <1447884203-31547-1-git-send-email-Jordan_Hargrave@dell.com>
-To: Jordan_Hargrave@dell.com
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:34361 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161388AbbKSUjf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Nov 2015 15:39:35 -0500
+Received: by obbbj7 with SMTP id bj7so70184476obb.1
+        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2015 12:39:34 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CALCETrWrq=G+sqwmZtnxL8HOe=y7CVNqX=r7nHtEdS7CtLnwBg@mail.gmail.com>
+References: <CALCETrV-S64Vi=QLhGNe_LZ78uPp-OhcZ8nM2KjDFn8+346=Nw@mail.gmail.com>
+ <CALCETrWrq=G+sqwmZtnxL8HOe=y7CVNqX=r7nHtEdS7CtLnwBg@mail.gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Thu, 19 Nov 2015 12:39:15 -0800
+Message-ID: <CALCETrWRa8ZOTQ8mWr0ZxLm6VWtHe3yd6RxtwrJ6Jw7=ewc_Zg@mail.gmail.com>
+Subject: Re: i2c_designware doesn't recover from subdevice driver unload
+To: Andy Lutomirski <luto@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch will use the saved SMBIOS Type 9 values to map a PCI
-device to a system slot.  This includes devices under a bridge/switch
-on an add-in card.
+On Thu, Nov 19, 2015 at 8:57 AM, Andy Lutomirski <luto@amacapital.net> wrote:
+> On Thu, Nov 19, 2015 at 7:56 AM, Andy Lutomirski <luto@kernel.org> wrote:
+>> I unloaded and reloaded hid_multitouch (on a Skylake laptop where the
+>> HID device is behind an integrated designware controller) and I got:
+>>
+>> [39545.054684] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+>> [39545.061728] i2c_designware i2c_designware.1:
+>> i2c_dw_handle_tx_abort: lost arbitration
+>> [39545.061734] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+>> [39545.061944] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+>> [39545.062373] i2c_hid i2c-DLL0704:01: error in i2c_hid_init_report
+>> size:6 / ret_size:4
+>> [39545.062564] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+>> [39545.062636] input: DLL0704:01 06CB:76AE UNKNOWN as
+>> /devices/pci0000:00/0000:00:15.1/i2c_designware.1/i2c-7/i2c-DLL0704:01/0018:06CB:76AE.0005/input/input20
+>> [39545.063212] hid-multitouch 0018:06CB:76AE.0005: input,hidraw1:
+>> <UNKNOWN> HID v1.00 Mouse [DLL0704:01 06CB:76AE] on
+>> [40178.534814] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+>> [40178.541848] i2c_designware i2c_designware.1:
+>> i2c_dw_handle_tx_abort: lost arbitration
+>> [40178.541853] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+>> [40179.542135] i2c_designware i2c_designware.1: controller timed out
+>> [40179.542166] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+>> [40180.542909] i2c_designware i2c_designware.1: controller timed out
+>> [40180.542942] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
+>> [40181.543697] i2c_designware i2c_designware.1: controller timed out
+>>
+>> after that, I just keep seeing "controller timed out" messages.
+>>
+>> This is Linux 4.3.0.
+>
+> This just happened again (after a reboot) on its own without any
+> rmmod.  Reloading the i2c_designware drivers didn't help, so I'm
+> wondering if it's a bug lower in the stack instead.
+>
+> Reloading intel-lpss-acpi after the failure says:
+>
+> [  695.955911] idma64 idma64.0: Found Intel integrated DMA 64-bit
+> [  695.966755] idma64 idma64.1: Found Intel integrated DMA 64-bit
+> [  696.967468] i2c_designware i2c_designware.1: controller timed out
+> [  696.967550] i2c_hid i2c-DLL0704:01: hid_descr_cmd failed
+>
+>
+> This is a Dell XPS 13 9350.
 
-Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
----
- drivers/pci/pci-label.c | 93 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h     |  2 ++
- 2 files changed, 95 insertions(+)
+I think the docs for all of this stuff are here:
 
-diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-index 024b5c1..0b0954b 100644
---- a/drivers/pci/pci-label.c
-+++ b/drivers/pci/pci-label.c
-@@ -125,14 +125,107 @@ static struct attribute_group smbios_attr_group = {
- 	.is_visible = smbios_instance_string_exist,
- };
- 
-+int pci_get_smbios_slot(struct pci_dev *pdev)
-+{
-+	struct pci_dev *sdev;
-+	struct dmi_dev_onboard *dslot;
-+	const struct dmi_device *dmi;
-+	u8 bus, found;
-+
-+	dmi = NULL;
-+	pdev = pci_physfn(pdev);
-+	bus = pdev->bus->number;
-+	for(;;) {
-+		found = 0;
-+		dmi = dmi_find_device(DMI_DEV_TYPE_SYSTEM_SLOT, NULL, dmi);
-+		if (dmi == NULL)
-+			break;
-+		dslot = dmi->device_data;
-+		if (pci_domain_nr(pdev->bus) != dslot->segment)
-+			continue;
-+		sdev = pci_get_domain_bus_and_slot(dslot->segment, dslot->bus,
-+						   dslot->devfn);
-+		if (sdev == NULL)
-+			continue;
-+
-+		if (sdev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
-+		     bus >= sdev->subordinate->busn_res.start &&
-+		     bus <= sdev->subordinate->busn_res.end) {
-+			/* device is child of bridge */
-+			found = 1;
-+		}
-+		if (sdev->bus->number == bus &&
-+		    PCI_SLOT(sdev->devfn) == PCI_SLOT(pdev->devfn)) {
-+			/* If slot points to PCIE root on a multifunction device,
-+			 * match exact Bus:Dev:Func.  Otherwise match Bus:Dev */
-+			if (pci_pcie_type(sdev) != PCI_EXP_TYPE_ROOT_PORT ||
-+			    PCI_FUNC(sdev->devfn) == PCI_FUNC(pdev->devfn)) {
-+				found = 1;
-+			}
-+		}
-+		pci_dev_put(sdev);
-+		if (found)
-+			return dslot->instance;
-+	}
-+	return -ENODEV;
-+}
-+EXPORT_SYMBOL(pci_get_smbios_slot);
-+
-+static ssize_t smbiosslot_show(struct device *dev,
-+			       struct device_attribute *attr, char *buf)
-+{
-+	struct pci_dev *pdev;
-+	int slot;
-+
-+	pdev = to_pci_dev(dev);
-+	slot = pci_get_smbios_slot(pdev);
-+	if (slot > 0) {
-+		return scnprintf(buf, PAGE_SIZE, "%d\n", slot);
-+	}
-+	return 0;
-+}
-+
-+static umode_t smbios_slot_exist(struct kobject *kobj, struct attribute *attr,
-+				 int n)
-+{
-+	struct device *dev;
-+	struct pci_dev *pdev;
-+
-+	dev = container_of(kobj, struct device, kobj);
-+	pdev = to_pci_dev(dev);
-+
-+	return (pci_get_smbios_slot(pdev) > 0) ? S_IRUGO : 0;
-+}
-+
-+static struct device_attribute smbios_attr_slot = {
-+	.attr = {.name = "slot", .mode = 0444},
-+	.show = smbiosslot_show,
-+};
-+
-+static struct attribute *smbios_slot_attributes[] = {
-+	&smbios_attr_slot.attr,
-+	NULL,
-+};
-+
-+static struct attribute_group smbios_slot_attr_group = {
-+	.attrs = smbios_slot_attributes,
-+	.is_visible = smbios_slot_exist,
-+};
-+
- static int pci_create_smbiosname_file(struct pci_dev *pdev)
- {
-+	int rc;
-+
-+	rc = sysfs_create_group(&pdev->dev.kobj, &smbios_slot_attr_group);
-+	if (rc != 0)
-+		return rc;
- 	return sysfs_create_group(&pdev->dev.kobj, &smbios_attr_group);
- }
- 
- static void pci_remove_smbiosname_file(struct pci_dev *pdev)
- {
- 	sysfs_remove_group(&pdev->dev.kobj, &smbios_attr_group);
-+	sysfs_remove_group(&pdev->dev.kobj, &smbios_slot_attr_group);
- }
- #else
- static inline int pci_create_smbiosname_file(struct pci_dev *pdev)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e828e7b..b4c26cb 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1972,4 +1972,6 @@ static inline bool pci_ari_enabled(struct pci_bus *bus)
- {
- 	return bus->self && bus->self->ari_enabled;
- }
-+
-+int pci_get_smbios_slot(struct pci_dev *pdev);
- #endif /* LINUX_PCI_H */
--- 
-2.5.0
+https://download.01.org/future-platform-configuration-hub/skylake/register-definitions/332219-002.pdf
 
+There's a reset register at offset 0x204 in I2C MMIO space.  Should
+the driver be using it?
+
+--Andy
