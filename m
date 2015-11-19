@@ -1,216 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:51759 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965434AbbKDNN7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:59 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 23:13:57 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 49/50] drivers/of: Export OF changeset functions
-Date: Thu,  5 Nov 2015 00:12:49 +1100
-Message-Id: <1446642770-4681-50-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:34458 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755529AbbKSASz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2015 19:18:55 -0500
+Received: by padhx2 with SMTP id hx2so60742029pad.1
+        for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2015 16:18:54 -0800 (PST)
+Subject: Re: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
 References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
+ <56498D6A.7010905@ozlabs.ru> <20151117013713.GA31584@gwshan>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <564D1566.5020708@ozlabs.ru>
+Date: Thu, 19 Nov 2015 11:18:46 +1100
+MIME-Version: 1.0
+In-Reply-To: <20151117013713.GA31584@gwshan>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PowerNV PCI hotplug driver is going to use the OF changeset
-to manage the changed device sub-tree. This exports those OF
-changeset functions for that.
+On 11/17/2015 12:37 PM, Gavin Shan wrote:
+> On Mon, Nov 16, 2015 at 07:01:46PM +1100, Alexey Kardashevskiy wrote:
+>> On 11/05/2015 12:12 AM, Gavin Shan wrote:
+>>> This enables M64 window on P7IOC, which has been enabled on PHB3.
+>>> Different from PHB3 where 16 M64 BARs are supported and each of
+>>> them can be owned by one particular PE# exclusively or divided
+>>> evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
+>>> of them are divided to 8 segments. So every P7IOC PHB supports
+>>> 128 M64 segments in total. P7IOC has M64DT, which helps mapping
+>>> one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
+>>> M64DT, indicating that one M64 segment can only be pinned to the
+>>> fixed PE#. In order to have same code to support M64 on P7IOC and
+>>> PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
+>>> of them is pinned to the fixed PE# by bypassing the function of
+>>> M64DT. In turn, we just need different phb->init_m64() for P7IOC
+>>> and PHB3 to support M64.
+>>>
+>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>> ---
+>>>   arch/powerpc/platforms/powernv/pci-ioda.c | 86 +++++++++++++++++++++++++++++--
+>>>   arch/powerpc/platforms/powernv/pci.h      |  3 ++
+>>>   2 files changed, 86 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> index 1f7d985..bfe69f1 100644
+>>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> @@ -256,6 +256,64 @@ static void pnv_ioda_reserve_dev_m64_pe(struct pci_dev *pdev,
+>>>   	}
+>>>   }
+>>>
+>>> +static int pnv_ioda1_init_m64(struct pnv_phb *phb)
+>>> +{
+>>> +	struct resource *r;
+>>> +	int index;
+>>> +
+>>> +	/*
+>>> +	 * There are 16 M64 BARs, each of which has 8 segments. So
+>>> +	 * there are as many M64 segments as the maximum number of
+>>> +	 * PEs, which is 128.
+>>> +	 */
+>>> +	for (index = 0; index < PNV_IODA1_M64_NUM; index++) {
+>>> +		unsigned long base, segsz = phb->ioda.m64_segsize;
+>>> +		int64_t rc;
+>>> +
+>>> +		base = phb->ioda.m64_base +
+>>> +		       index * PNV_IODA1_M64_SEGS * segsz;
+>>> +		rc = opal_pci_set_phb_mem_window(phb->opal_id,
+>>> +				OPAL_M64_WINDOW_TYPE, index, base, 0,
+>>> +				PNV_IODA1_M64_SEGS * segsz);
+>>> +		if (rc != OPAL_SUCCESS) {
+>>> +			pr_warn("  Error %lld setting M64 PHB#%d-BAR#%d\n",
+>>> +				rc, phb->hose->global_number, index);
+>>> +			goto fail;
+>>> +		}
+>>> +
+>>> +		rc = opal_pci_phb_mmio_enable(phb->opal_id,
+>>> +				OPAL_M64_WINDOW_TYPE, index,
+>>> +				OPAL_ENABLE_M64_SPLIT);
+>>> +		if (rc != OPAL_SUCCESS) {
+>>> +			pr_warn("  Error %lld enabling M64 PHB#%d-BAR#%d\n",
+>>> +				rc, phb->hose->global_number, index);
+>>> +			goto fail;
+>>> +		}
+>>> +	}
+>>> +
+>>> +	/*
+>>> +	 * Exclude the segment used by the reserved PE, which
+>>> +	 * is expected to be 0 or last supported PE#.
+>>> +	 */
+>>> +	r = &phb->hose->mem_resources[1];
+>>> +	if (phb->ioda.reserved_pe_idx == 0)
+>>> +		r->start += phb->ioda.m64_segsize;
+>>> +	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
+>>> +		r->end -= phb->ioda.m64_segsize;
+>>> +	else
+>>> +		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
+>>> +			phb->ioda.reserved_pe_idx);
+>>> +
+>>> +	return 0;
+>>> +
+>>> +fail:
+>>> +	for ( ; index >= 0; index--)
+>>> +		opal_pci_phb_mmio_enable(phb->opal_id,
+>>> +			OPAL_M64_WINDOW_TYPE, index, OPAL_DISABLE_M64);
+>>> +
+>>> +	return -EIO;
+>>> +}
+>>> +
+>>>   static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
+>>>   				    unsigned long *pe_bitmap,
+>>>   				    bool all)
+>>> @@ -325,6 +383,26 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>>   			pe->master = master_pe;
+>>>   			list_add_tail(&pe->list, &master_pe->slaves);
+>>>   		}
+>>> +
+>>> +		/*
+>>> +		 * P7IOC supports M64DT, which helps mapping M64 segment
+>>> +		 * to one particular PE#. However, PHB3 has fixed mapping
+>>> +		 * between M64 segment and PE#. In order to have same logic
+>>> +		 * for P7IOC and PHB3, we enforce fixed mapping between M64
+>>> +		 * segment and PE# on P7IOC.
+>>> +		 */
+>>> +		if (phb->type == PNV_PHB_IODA1) {
+>>> +			int64_t rc;
+>>> +
+>>> +			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>>> +					pe->pe_number, OPAL_M64_WINDOW_TYPE,
+>>> +					pe->pe_number / PNV_IODA1_M64_SEGS,
+>>> +					pe->pe_number % PNV_IODA1_M64_SEGS);
+>>> +			if (rc != OPAL_SUCCESS)
+>>> +				pr_warn("%s: Error %lld mapping M64 for PHB#%d-PE#%d\n",
+>>> +					__func__, rc, phb->hose->global_number,
+>>> +					pe->pe_number);
+>>> +		}
+>>>   	}
+>>>
+>>>   	kfree(pe_alloc);
+>>> @@ -339,8 +417,7 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+>>>   	const u32 *r;
+>>>   	u64 pci_addr;
+>>>
+>>> -	/* FIXME: Support M64 for P7IOC */
+>>> -	if (phb->type != PNV_PHB_IODA2) {
+>>> +	if (phb->type != PNV_PHB_IODA1 && phb->type != PNV_PHB_IODA2) {
+>>>   		pr_info("  Not support M64 window\n");
+>>>   		return;
+>>>   	}
+>>> @@ -373,7 +450,10 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+>>>
+>>>   	/* Use last M64 BAR to cover M64 window */
+>>>   	phb->ioda.m64_bar_idx = 15;
+>>> -	phb->init_m64 = pnv_ioda2_init_m64;
+>>> +	if (phb->type == PNV_PHB_IODA1)
+>>> +		phb->init_m64 = pnv_ioda1_init_m64;
+>>> +	else
+>>> +		phb->init_m64 = pnv_ioda2_init_m64;
+>>>   	phb->reserve_m64_pe = pnv_ioda_reserve_m64_pe;
+>>>   	phb->pick_m64_pe = pnv_ioda_pick_m64_pe;
+>>
+>>
+>> Nit: the callbacks initialization does not seem to relate to parsing any
+>> window :) They could all go to where pnv_ioda_parse_m64_window() is called,
+>> no separate patch is needed.
+>>
+>
+> Well, what's the benifit for that? I personally prefer the way I had: initialize
+> all callbacks in one place, not in separate places.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/of/dynamic.c    | 65 ++++++++++++++++++++++++++++++++++---------------
- drivers/of/of_private.h |  2 ++
- drivers/of/overlay.c    |  8 +++---
- drivers/of/unittest.c   |  4 ---
- 4 files changed, 52 insertions(+), 27 deletions(-)
+One place is good, agree. Which should have been a single phv_phb_ops 
+instance as it is done everywhere else in the kernel. And the existing 
+pnv_phb's callbacks are already initialized in various places, not a single 
+one.
 
-diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
-index 53826b8..c647bd1 100644
---- a/drivers/of/dynamic.c
-+++ b/drivers/of/dynamic.c
-@@ -646,6 +646,7 @@ void of_changeset_init(struct of_changeset *ocs)
- 	memset(ocs, 0, sizeof(*ocs));
- 	INIT_LIST_HEAD(&ocs->entries);
- }
-+EXPORT_SYMBOL_GPL(of_changeset_init);
- 
- /**
-  * of_changeset_destroy - Destroy a changeset
-@@ -662,20 +663,9 @@ void of_changeset_destroy(struct of_changeset *ocs)
- 	list_for_each_entry_safe_reverse(ce, cen, &ocs->entries, node)
- 		__of_changeset_entry_destroy(ce);
- }
-+EXPORT_SYMBOL_GPL(of_changeset_destroy);
- 
--/**
-- * of_changeset_apply - Applies a changeset
-- *
-- * @ocs:	changeset pointer
-- *
-- * Applies a changeset to the live tree.
-- * Any side-effects of live tree state changes are applied here on
-- * sucess, like creation/destruction of devices and side-effects
-- * like creation of sysfs properties and directories.
-- * Returns 0 on success, a negative error value in case of an error.
-- * On error the partially applied effects are reverted.
-- */
--int of_changeset_apply(struct of_changeset *ocs)
-+int __of_changeset_apply(struct of_changeset *ocs)
- {
- 	struct of_changeset_entry *ce;
- 	int ret;
-@@ -704,17 +694,30 @@ int of_changeset_apply(struct of_changeset *ocs)
- }
- 
- /**
-- * of_changeset_revert - Reverts an applied changeset
-+ * of_changeset_apply - Applies a changeset
-  *
-  * @ocs:	changeset pointer
-  *
-- * Reverts a changeset returning the state of the tree to what it
-- * was before the application.
-- * Any side-effects like creation/destruction of devices and
-- * removal of sysfs properties and directories are applied.
-+ * Applies a changeset to the live tree.
-+ * Any side-effects of live tree state changes are applied here on
-+ * success, like creation/destruction of devices and side-effects
-+ * like creation of sysfs properties and directories.
-  * Returns 0 on success, a negative error value in case of an error.
-+ * On error the partially applied effects are reverted.
-  */
--int of_changeset_revert(struct of_changeset *ocs)
-+int of_changeset_apply(struct of_changeset *ocs)
-+{
-+	int ret;
-+
-+	mutex_lock(&of_mutex);
-+	ret = __of_changeset_apply(ocs);
-+	mutex_unlock(&of_mutex);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(of_changeset_apply);
-+
-+int __of_changeset_revert(struct of_changeset *ocs)
- {
- 	struct of_changeset_entry *ce;
- 	int ret;
-@@ -742,6 +745,29 @@ int of_changeset_revert(struct of_changeset *ocs)
- }
- 
- /**
-+ * of_changeset_revert - Reverts an applied changeset
-+ *
-+ * @ocs:	changeset pointer
-+ *
-+ * Reverts a changeset returning the state of the tree to what it
-+ * was before the application.
-+ * Any side-effects like creation/destruction of devices and
-+ * removal of sysfs properties and directories are applied.
-+ * Returns 0 on success, a negative error value in case of an error.
-+ */
-+int of_changeset_revert(struct of_changeset *ocs)
-+{
-+	int ret;
-+
-+	mutex_lock(&of_mutex);
-+	ret = __of_changeset_revert(ocs);
-+	mutex_unlock(&of_mutex);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(of_changeset_revert);
-+
-+/**
-  * of_changeset_action - Perform a changeset action
-  *
-  * @ocs:	changeset pointer
-@@ -779,3 +805,4 @@ int of_changeset_action(struct of_changeset *ocs, unsigned long action,
- 	list_add_tail(&ce->node, &ocs->entries);
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(of_changeset_action);
-diff --git a/drivers/of/of_private.h b/drivers/of/of_private.h
-index 8e882e7..829469f 100644
---- a/drivers/of/of_private.h
-+++ b/drivers/of/of_private.h
-@@ -45,6 +45,8 @@ static inline struct device_node *kobj_to_device_node(struct kobject *kobj)
- extern int of_property_notify(int action, struct device_node *np,
- 			      struct property *prop, struct property *old_prop);
- extern void of_node_release(struct kobject *kobj);
-+extern int __of_changeset_apply(struct of_changeset *ocs);
-+extern int __of_changeset_revert(struct of_changeset *ocs);
- #else /* CONFIG_OF_DYNAMIC */
- static inline int of_property_notify(int action, struct device_node *np,
- 				     struct property *prop, struct property *old_prop)
-diff --git a/drivers/of/overlay.c b/drivers/of/overlay.c
-index 24e025f..804ea33 100644
---- a/drivers/of/overlay.c
-+++ b/drivers/of/overlay.c
-@@ -378,9 +378,9 @@ int of_overlay_create(struct device_node *tree)
- 	}
- 
- 	/* apply the changeset */
--	err = of_changeset_apply(&ov->cset);
-+	err = __of_changeset_apply(&ov->cset);
- 	if (err) {
--		pr_err("%s: of_changeset_apply() failed for tree@%s\n",
-+		pr_err("%s: __of_changeset_apply() failed for tree@%s\n",
- 				__func__, tree->full_name);
- 		goto err_revert_overlay;
- 	}
-@@ -508,7 +508,7 @@ int of_overlay_destroy(int id)
- 
- 
- 	list_del(&ov->node);
--	of_changeset_revert(&ov->cset);
-+	__of_changeset_revert(&ov->cset);
- 	of_free_overlay_info(ov);
- 	idr_remove(&ov_idr, id);
- 	of_changeset_destroy(&ov->cset);
-@@ -539,7 +539,7 @@ int of_overlay_destroy_all(void)
- 	/* the tail of list is guaranteed to be safe to remove */
- 	list_for_each_entry_safe_reverse(ov, ovn, &ov_list, node) {
- 		list_del(&ov->node);
--		of_changeset_revert(&ov->cset);
-+		__of_changeset_revert(&ov->cset);
- 		of_free_overlay_info(ov);
- 		idr_remove(&ov_idr, ov->id);
- 		kfree(ov);
-diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
-index bafcf66..dad3fd2 100644
---- a/drivers/of/unittest.c
-+++ b/drivers/of/unittest.c
-@@ -526,18 +526,14 @@ static void __init of_unittest_changeset(void)
- 	unittest(!of_changeset_add_property(&chgset, parent, ppadd), "fail add prop\n");
- 	unittest(!of_changeset_update_property(&chgset, parent, ppupdate), "fail update prop\n");
- 	unittest(!of_changeset_remove_property(&chgset, parent, ppremove), "fail remove prop\n");
--	mutex_lock(&of_mutex);
- 	unittest(!of_changeset_apply(&chgset), "apply failed\n");
--	mutex_unlock(&of_mutex);
- 
- 	/* Make sure node names are constructed correctly */
- 	unittest((np = of_find_node_by_path("/testcase-data/changeset/n2/n21")),
- 		 "'%s' not added\n", n21->full_name);
- 	of_node_put(np);
- 
--	mutex_lock(&of_mutex);
- 	unittest(!of_changeset_revert(&chgset), "revert failed\n");
--	mutex_unlock(&of_mutex);
- 
- 	of_changeset_destroy(&chgset);
- #endif
+
+> However, if you have good
+> reason to support your suggestion, I'll change accordingly for sure.
+
+Nah, leave it as is for now, we will probably change this later.
+
+
+>
+>>
+>>>   }
+>>> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>> index 671fd13..c4019ac 100644
+>>> --- a/arch/powerpc/platforms/powernv/pci.h
+>>> +++ b/arch/powerpc/platforms/powernv/pci.h
+>>> @@ -78,6 +78,9 @@ struct pnv_ioda_pe {
+>>>   	struct list_head	list;
+>>>   };
+>>>
+>>> +#define PNV_IODA1_M64_NUM	16	/* Number of M64 BARs   */
+>>> +#define PNV_IODA1_M64_SEGS	8	/* Segments per M64 BAR */
+>>> +
+>>>   #define PNV_PHB_FLAG_EEH	(1 << 0)
+>>>
+>>>   struct pnv_phb {
+>>>
+>
+> Thanks,
+> Gavin
+>
+
+
 -- 
-2.1.0
-
+Alexey
