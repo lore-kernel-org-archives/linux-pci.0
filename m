@@ -1,127 +1,79 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 24 Nov 2015 17:43:19 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: WingMan Kwok <w-kwok2@ti.com>
-Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, kishon@ti.com,
-	rogerq@ti.com, m-karicheri2@ti.com, bhelgaas@google.com,
-	ssantosh@kernel.org, linux@arm.linux.org.uk,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] ARM: keystone: dts: add PCI serdes driver bindings
-Message-ID: <20151124234319.GG17377@localhost>
-References: <1444919230-30932-1-git-send-email-w-kwok2@ti.com>
+From: Sekhar Nori <nsekhar@ti.com>
+To: Murali Karicheri <m-karicheri2@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI: keystone: fix crash with deferred probe
+Date: Fri, 20 Nov 2015 16:47:02 +0530
+Message-ID: <866b2f1544f9d55fa932aa9f9cb5e7d523a23d05.1448017883.git.nsekhar@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1444919230-30932-1-git-send-email-w-kwok2@ti.com>
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi WingMan, 
+Drop __init annotations for functions called during
+probe of keystone PCIe host.
 
-On Thu, Oct 15, 2015 at 10:27:10AM -0400, WingMan Kwok wrote:
-> This patch adds the required PCI serdes bindings whcih can then be
-> enabled by setting the corresponding statuses to "ok" in order to
-> configure and start the PCI serdes.
-> 
-> This patch depends on the updates to the Keystone PCIe host driver
-> and common serdes driver patch series that is submitted separately.
-> 
-> Signed-off-by: WingMan Kwok <w-kwok2@ti.com>
+This fixes kernel crashes seen because of init data
+reclamation if the driver defer probes because of
+phy unavailability.
 
-Is there a reason to separate the binding update from the PCIe host
-driver update?  It would make sense to me to have them in the same
-patch to make it easier to keep them consistent.
+While at it, drop the useless __refdata annotation
+to driver structure. If its really needed, it should
+be added back with a comment explaining why.
 
-Bjorn
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+---
+ drivers/pci/host/pci-keystone-dw.c | 2 +-
+ drivers/pci/host/pci-keystone.c    | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-> ---
->  arch/arm/boot/dts/k2e.dtsi      |   21 +++++++++++++++++++++
->  arch/arm/boot/dts/keystone.dtsi |   21 +++++++++++++++++++++
->  2 files changed, 42 insertions(+)
-> 
-> diff --git a/arch/arm/boot/dts/k2e.dtsi b/arch/arm/boot/dts/k2e.dtsi
-> index 675fb8e..3b36575 100644
-> --- a/arch/arm/boot/dts/k2e.dtsi
-> +++ b/arch/arm/boot/dts/k2e.dtsi
-> @@ -86,6 +86,16 @@
->  			gpio,syscon-dev = <&devctrl 0x240>;
->  		};
->  
-> +		pcie1_phy: pciephy@2326000 {
-> +			#phy-cells = <0>;
-> +			compatible = "ti,keystone-serdes-pcie";
-> +			reg = <0x02326000 0x4000>;
-> +			reg-names = "serdes";
-> +			link-rate-kbps = <5000000>;
-> +			num-lanes = <2>;
-> +			status = "disabled";
-> +		};
-> +
->  		pcie1: pcie@21020000 {
->  			compatible = "ti,keystone-pcie","snps,dw-pcie";
->  			clocks = <&clkpcie1>;
-> @@ -130,6 +140,17 @@
->  					<GIC_SPI 375 IRQ_TYPE_EDGE_RISING>,
->  					<GIC_SPI 376 IRQ_TYPE_EDGE_RISING>;
->  			};
-> +
-> +			/* PCIE phy */
-> +			serdeses {
-> +				#address-cells = <1>;
-> +				#size-cells = <0>;
-> +				serdes@0 {
-> +					reg = <0>;
-> +					phys = <&pcie1_phy>;
-> +				};
-> +			};
-> +
->  		};
->  
->  		mdio: mdio@24200f00 {
-> diff --git a/arch/arm/boot/dts/keystone.dtsi b/arch/arm/boot/dts/keystone.dtsi
-> index 72816d6..6566cc4 100644
-> --- a/arch/arm/boot/dts/keystone.dtsi
-> +++ b/arch/arm/boot/dts/keystone.dtsi
-> @@ -275,6 +275,16 @@
->  			ti,syscon-dev = <&devctrl 0x2a0>;
->  		};
->  
-> +		pcie0_phy: pciephy@2320000 {
-> +			#phy-cells = <0>;
-> +			compatible = "ti,keystone-serdes-pcie";
-> +			reg = <0x02320000 0x4000>;
-> +			reg-names = "serdes";
-> +			link-rate-kbps = <5000000>;
-> +			num-lanes = <2>;
-> +			status = "disabled";
-> +		};
-> +
->  		pcie0: pcie@21800000 {
->  			compatible = "ti,keystone-pcie", "snps,dw-pcie";
->  			clocks = <&clkpcie>;
-> @@ -319,6 +329,17 @@
->  					<GIC_SPI 28 IRQ_TYPE_EDGE_RISING>,
->  					<GIC_SPI 29 IRQ_TYPE_EDGE_RISING>;
->  			};
-> +
-> +			/* PCIE phy */
-> +			serdeses {
-> +				#address-cells = <1>;
-> +				#size-cells = <0>;
-> +				serdes@0 {
-> +					reg = <0>;
-> +					phys = <&pcie0_phy>;
-> +				};
-> +			};
-> +
->  		};
->  	};
->  };
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index ed34c9520a02..47ddbcce53ca 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -469,7 +469,7 @@ void ks_dw_pcie_initiate_link_train(struct keystone_pcie *ks_pcie)
+  * and call dw_pcie_v3_65_host_init() API to initialize the Keystone
+  * PCI host controller.
+  */
+-int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
++int ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
+ 				struct device_node *msi_intc_np)
+ {
+ 	struct pcie_port *pp = &ks_pcie->pp;
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index 0aa81bd3de12..593a58834c7d 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -291,7 +291,7 @@ static struct pcie_host_ops keystone_pcie_host_ops = {
+ 	.scan_bus = ks_dw_pcie_v3_65_scan_bus,
+ };
+ 
+-static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
++static int ks_add_pcie_port(struct keystone_pcie *ks_pcie,
+ 			 struct platform_device *pdev)
+ {
+ 	struct pcie_port *pp = &ks_pcie->pp;
+@@ -340,7 +340,7 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int __init ks_pcie_probe(struct platform_device *pdev)
++static int ks_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct keystone_pcie *ks_pcie;
+@@ -396,7 +396,7 @@ fail_clk:
+ 	return ret;
+ }
+ 
+-static struct platform_driver ks_pcie_driver __refdata = {
++static struct platform_driver ks_pcie_driver = {
+ 	.probe  = ks_pcie_probe,
+ 	.remove = __exit_p(ks_pcie_remove),
+ 	.driver = {
+-- 
+2.4.4.408.g16da57c
+
