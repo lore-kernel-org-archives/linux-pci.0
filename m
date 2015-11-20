@@ -1,152 +1,603 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:34439 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932612AbbKDKLU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 05:11:20 -0500
-Received: by lbbwb3 with SMTP id wb3so12420308lbb.1
-        for <linux-pci@vger.kernel.org>; Wed, 04 Nov 2015 02:11:18 -0800 (PST)
-Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI
- hostbridge init
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
- <1445963922-22711-12-git-send-email-tn@semihalf.com>
- <20151103165555.GF3574@red-moon>
-Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Message-ID: <5639D9BC.8080706@linaro.org>
-Date: Wed, 4 Nov 2015 11:11:08 +0100
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:47528 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760024AbbKTRHu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Nov 2015 12:07:50 -0500
+Subject: Re: [PATCH 4/5] PCI: iproc: Add iProc PCIe MSI support
+To: Marc Zyngier <marc.zyngier@arm.com>
+References: <1447806715-30043-1-git-send-email-rjui@broadcom.com>
+ <1447806715-30043-5-git-send-email-rjui@broadcom.com>
+ <20151118084845.49ba6304@arm.com> <564D27CC.3030505@broadcom.com>
+ <564EE04D.8060204@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+Message-ID: <564F5364.3060800@broadcom.com>
+Date: Fri, 20 Nov 2015 09:07:48 -0800
 MIME-Version: 1.0
-In-Reply-To: <20151103165555.GF3574@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <564EE04D.8060204@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03.11.2015 17:55, Lorenzo Pieralisi wrote:
-> On Tue, Oct 27, 2015 at 05:38:42PM +0100, Tomasz Nowicki wrote:
->
-> [...]
->
->>   menu "Kernel Features"
->> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->> index b3d098b..66cc1ae 100644
->> --- a/arch/arm64/kernel/pci.c
->> +++ b/arch/arm64/kernel/pci.c
->> @@ -11,12 +11,15 @@
->>    */
->>
->>   #include <linux/acpi.h>
->> +#include <linux/ecam.h>
->>   #include <linux/init.h>
->>   #include <linux/io.h>
->>   #include <linux/kernel.h>
->>   #include <linux/mm.h>
->> +#include <linux/of_address.h>
->>   #include <linux/of_pci.h>
->>   #include <linux/of_platform.h>
->> +#include <linux/pci-acpi.h>
->>   #include <linux/slab.h>
->>
->>   #include <asm/pci-bridge.h>
->> @@ -52,35 +55,216 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->>   }
->>
->>   /*
->> - * Try to assign the IRQ number from DT when adding a new device
->> + * Try to assign the IRQ number from DT/ACPI when adding a new device
->>    */
->>   int pcibios_add_device(struct pci_dev *dev)
->>   {
->> -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->> +	if (acpi_disabled)
->> +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->> +#ifdef CONFIG_ACPI
->> +	else
->> +		acpi_pci_irq_enable(dev);
->> +#endif
->
-> This series:
->
-> http://www.spinics.net/lists/linux-pci/msg45950.html
->
-> will allow us to initialize the irq mapping function according to
-> the boot method, code above is getting cumbersome and it is already
-> overriden when booting with DT, so we will remove it altogether.
->
->>
->>   	return 0;
->>   }
->>
->> +#ifdef CONFIG_ACPI
->> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->> +{
->> +	struct acpi_pci_root *root = bridge->bus->sysdata;
->> +
->> +	ACPI_COMPANION_SET(&bridge->dev, root->device);
->> +	return 0;
->
-> This should be made part of core code IMO.
->
->> +}
->> +
->> +void pcibios_add_bus(struct pci_bus *bus)
->> +{
->> +	acpi_pci_add_bus(bus);
->> +}
->> +
->> +void pcibios_remove_bus(struct pci_bus *bus)
->> +{
->> +	acpi_pci_remove_bus(bus);
->> +}
->
-> Two functions above are identical for arm64, ia64 and x86, I do
-> not think they belong in arch code.
->
->> +static int __init pcibios_assign_resources(void)
->> +{
->> +	if (acpi_disabled)
->> +		return 0;
->> +
->> +	pci_assign_unassigned_resources();
->> +	return 0;
->
-> Already commented on this.
->
->> +}
->>   /*
->> - * raw_pci_read/write - Platform-specific PCI config space access.
->> + * rootfs_initcall comes after subsys_initcall and fs_initcall_sync,
->> + * so we know acpi scan and PCI_FIXUP_FINAL quirks have both run.
->>    */
->> -int raw_pci_read(unsigned int domain, unsigned int bus,
->> -		  unsigned int devfn, int reg, int len, u32 *val)
->> +rootfs_initcall(pcibios_assign_resources);
->> +
->> +static void __iomem *
->> +pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
->>   {
->> -	return -ENXIO;
->> +	struct pci_mmcfg_region *cfg;
->> +
->> +	cfg = pci_mmconfig_lookup(pci_domain_nr(bus), bus->number);
->> +	if (cfg && cfg->virt)
->> +		return cfg->virt +
->> +			(PCI_MMCFG_BUS_OFFSET(bus->number) | (devfn << 12)) +
->> +			offset;
->> +	return NULL;
->
-> Why is this code arm64 specific ?
+Hi Marc,
 
-It is not, I will move it out of here, probably to mcfg.c file where we 
-can apply quirks.
+On 11/20/2015 12:56 AM, Marc Zyngier wrote:
+> On 19/11/15 01:37, Ray Jui wrote:
+>> Hi Marc,
+>>
+>> On 11/18/2015 12:48 AM, Marc Zyngier wrote:
+>>> On Tue, 17 Nov 2015 16:31:54 -0800
+>>> Ray Jui <rjui@broadcom.com> wrote:
+>>>
+>>> Hi Ray,
+>>>
+>>> A few comments below.
+>>>
+>>>> This patch adds PCIe MSI support for both PAXB and PAXC interfaces on
+>>>> all iProc based platforms. The patch follows the latest trend in the
+>>>> kernel to use MSI domain based implementation
+>>>>
+>>>> This iProc event queue based MSI support should not be used with newer
+>>>> platforms with integrated MSI support in the GIC (e.g., giv2m or
+>>>> gicv3-its)
+>>>>
+>>>> Signed-off-by: Ray Jui <rjui@broadcom.com>
+>>>> Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+>>>> Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
+>>>> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+>>>> ---
+>>>>    drivers/pci/host/Kconfig          |   9 +
+>>>>    drivers/pci/host/Makefile         |   1 +
+>>>>    drivers/pci/host/pcie-iproc-msi.c | 434 ++++++++++++++++++++++++++++++++++++++
+>>>>    drivers/pci/host/pcie-iproc.c     |  19 ++
+>>>>    drivers/pci/host/pcie-iproc.h     |  12 ++
+>>>>    5 files changed, 475 insertions(+)
+>>>>    create mode 100644 drivers/pci/host/pcie-iproc-msi.c
+>>>>
+>>>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>>>> index f131ba9..972e906 100644
+>>>> --- a/drivers/pci/host/Kconfig
+>>>> +++ b/drivers/pci/host/Kconfig
+>>>> @@ -126,6 +126,15 @@ config PCIE_IPROC
+>>>>    	  iProc family of SoCs. An appropriate bus interface driver also needs
+>>>>    	  to be enabled
+>>>>
+>>>> +config PCIE_IPROC_MSI
+>>>> +	bool "Broadcom iProc PCIe MSI support"
+>>>> +	depends on ARCH_BCM_IPROC && PCI_MSI
+>>>> +	select PCI_MSI_IRQ_DOMAIN
+>>>> +	default ARCH_BCM_IPROC
+>>>> +	help
+>>>> +	  Say Y here if you want to enable MSI support for Broadcom's iProc
+>>>> +	  PCIe controller
+>>>> +
+>>>>    config PCIE_IPROC_PLATFORM
+>>>>    	tristate "Broadcom iProc PCIe platform bus driver"
+>>>>    	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
+>>>> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+>>>> index 9d4d3c6..0e4e95e 100644
+>>>> --- a/drivers/pci/host/Makefile
+>>>> +++ b/drivers/pci/host/Makefile
+>>>> @@ -15,6 +15,7 @@ obj-$(CONFIG_PCI_XGENE_MSI) += pci-xgene-msi.o
+>>>>    obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+>>>>    obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+>>>>    obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+>>>> +obj-$(CONFIG_PCIE_IPROC_MSI) += pcie-iproc-msi.o
+>>>>    obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+>>>>    obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+>>>>    obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+>>>> diff --git a/drivers/pci/host/pcie-iproc-msi.c b/drivers/pci/host/pcie-iproc-msi.c
+>>>> new file mode 100644
+>>>> index 0000000..a55c707
+>>>> --- /dev/null
+>>>> +++ b/drivers/pci/host/pcie-iproc-msi.c
+>>>> @@ -0,0 +1,434 @@
+>>>> +/*
+>>>> + * Copyright (C) 2015 Broadcom Corporation
+>>>> + *
+>>>> + * This program is free software; you can redistribute it and/or
+>>>> + * modify it under the terms of the GNU General Public License as
+>>>> + * published by the Free Software Foundation version 2.
+>>>> + *
+>>>> + * This program is distributed "as is" WITHOUT ANY WARRANTY of any
+>>>> + * kind, whether express or implied; without even the implied warranty
+>>>> + * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>>>> + * GNU General Public License for more details.
+>>>> + */
+>>>> +
+>>>> +#include <linux/irqchip/chained_irq.h>
+>>>> +#include <linux/irqdomain.h>
+>>>> +#include <linux/msi.h>
+>>>> +#include <linux/of_irq.h>
+>>>> +#include <linux/of_pci.h>
+>>>> +#include <linux/pci.h>
+>>>> +
+>>>> +#include "pcie-iproc.h"
+>>>> +
+>>>> +#define IPROC_MSI_INTS_EN_OFFSET       0x208
+>>>> +#define IPROC_MSI_INTR_EN_SHIFT        11
+>>>> +#define IPROC_MSI_INTR_EN              BIT(IPROC_MSI_INTR_EN_SHIFT)
+>>>> +#define IPROC_MSI_INT_N_EVENT_SHIFT    1
+>>>> +#define IPROC_MSI_INT_N_EVENT          BIT(IPROC_MSI_INT_N_EVENT_SHIFT)
+>>>> +#define IPROC_MSI_EQ_EN_SHIFT          0
+>>>> +#define IPROC_MSI_EQ_EN                BIT(IPROC_MSI_EQ_EN_SHIFT)
+>>>> +
+>>>> +#define IPROC_MSI_EQ_MASK              0x3f
+>>>> +
+>>>> +/* number of queues in each event queue */
+>>>> +#define IPROC_MSI_EQ_LEN               64
+>>>> +
+>>>> +/* size of each event queue memory region */
+>>>> +#define EQ_MEM_REGION_SIZE           SZ_4K
+>>>> +
+>>>> +/* size of each MSI message memory region */
+>>>> +#define MSI_MSG_MEM_REGION_SIZE      SZ_4K
+>>>> +
+>>>> +enum iproc_msi_reg {
+>>>> +	IPROC_MSI_EQ_PAGE = 0,
+>>>> +	IPROC_MSI_EQ_PAGE_UPPER,
+>>>> +	IPROC_MSI_PAGE,
+>>>> +	IPROC_MSI_PAGE_UPPER,
+>>>> +	IPROC_MSI_CTRL,
+>>>> +	IPROC_MSI_EQ_HEAD,
+>>>> +	IPROC_MSI_EQ_TAIL,
+>>>> +	IPROC_MSI_REG_SIZE,
+>>>> +};
+>>>> +
+>>>> +/**
+>>>> + * iProc event queue based MSI
+>>>> + *
+>>>> + * Only meant to be used on platforms without MSI support integrated into the
+>>>> + * GIC
+>>>> + *
+>>>> + * @pcie: pointer to iProc PCIe data
+>>>> + * @reg_offsets: MSI register offsets
+>>>> + * @irqs: pointer to an array that contains the interrupt IDs
+>>>> + * @nirqs: number of total interrupts
+>>>> + * @has_inten_reg: indicates the MSI interrupt enable register needs to be
+>>>> + * set explicitly (required for some legacy platforms)
+>>>> + * @used: bitmap to track usage of MSI
+>>>> + * @inner_domain: inner IRQ domain
+>>>> + * @msi_domain: MSI IRQ domain
+>>>> + * @bitmap_lock: lock to protect access to the IRQ bitmap
+>>>> + * @n_eq_region: required number of 4K aligned memory region for MSI event
+>>>> + * queues
+>>>> + * @n_msi_msg_region: required number of 4K aligned memory region for MSI
+>>>> + * posted writes
+>>>> + * @eq_base: pointer to allocated memory region for MSI event queues
+>>>> + * @msi_base: pointer to allocated memory region for MSI posted writes
+>>>> + */
+>>>> +struct iproc_msi {
+>>>> +	struct iproc_pcie *pcie;
+>>>> +	const u16 (*reg_offsets)[IPROC_MSI_REG_SIZE];
+>>>> +	int *irqs;
+>>>> +	int nirqs;
+>>>> +	bool has_inten_reg;
+>>>> +	DECLARE_BITMAP(used, IPROC_PCIE_MAX_NUM_IRQS);
+>>>> +	struct irq_domain *inner_domain;
+>>>> +	struct irq_domain *msi_domain;
+>>>> +	struct mutex bitmap_lock;
+>>>> +	unsigned int n_eq_region;
+>>>> +	unsigned int n_msi_msg_region;
+>>>> +	void *eq_base;
+>>>> +	void *msi_base;
+>>>> +};
+>>>> +
+>>>> +static const u16
+>>>> +iproc_msi_reg_paxb[IPROC_PCIE_MAX_NUM_IRQS][IPROC_MSI_REG_SIZE] = {
+>>>> +	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x210, 0x250, 0x254 },
+>>>> +	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x214, 0x258, 0x25c },
+>>>> +	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x218, 0x260, 0x264 },
+>>>> +	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x21c, 0x268, 0x26c },
+>>>> +	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x220, 0x270, 0x274 },
+>>>> +	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x224, 0x278, 0x27c },
+>>>> +};
+>>>> +
+>>>> +static const u16
+>>>> +iproc_msi_reg_paxc[IPROC_PCIE_MAX_NUM_IRQS][IPROC_MSI_REG_SIZE] = {
+>>>> +	{ 0xc00, 0xc04, 0xc08, 0xc0c, 0xc40, 0xc50, 0xc60 },
+>>>> +	{ 0xc10, 0xc14, 0xc18, 0xc1c, 0xc44, 0xc54, 0xc64 },
+>>>> +	{ 0xc20, 0xc24, 0xc28, 0xc2c, 0xc48, 0xc58, 0xc68 },
+>>>> +	{ 0xc30, 0xc34, 0xc38, 0xc3c, 0xc4c, 0xc5c, 0xc6c },
+>>>> +};
+>>>> +
+>>>> +static inline u32 iproc_msi_read_reg(struct iproc_msi *msi,
+>>>> +				     enum iproc_msi_reg reg,
+>>>> +				     unsigned int eq)
+>>>> +{
+>>>> +	struct iproc_pcie *pcie = msi->pcie;
+>>>> +
+>>>> +	return readl(pcie->base + msi->reg_offsets[eq][reg]);
+>>>
+>>> Do you need the extra barrier implied by readl? readl_relaxed should be
+>>> enough.
+>>>
+>>>> +}
+>>>> +
+>>>> +static inline void iproc_msi_write_reg(struct iproc_msi *msi,
+>>>> +				       enum iproc_msi_reg reg,
+>>>> +				       int eq, u32 val)
+>>>> +{
+>>>> +	struct iproc_pcie *pcie = msi->pcie;
+>>>> +
+>>>> +	writel(val, pcie->base + msi->reg_offsets[eq][reg]);
+>>>
+>>> Same here for writel vs writel_relaxed.
+>>>
+>>
+>> I probably do not need the barrier in most cases. But as we are dealing
+>> with MSI, I thought it's a lot safer to have the barrier in place so the
+>> CPU does not re-order the device register accesses with respect to other
+>> memory accesses?
+>>
+>>>> +}
+>>>> +
+>>>> +static struct irq_chip iproc_msi_top_irq_chip = {
+>>>> +	.name = "iProc MSI",
+>>>> +	.irq_enable = pci_msi_unmask_irq,
+>>>> +	.irq_disable = pci_msi_mask_irq,
+>>>> +	.irq_mask = pci_msi_mask_irq,
+>>>> +	.irq_unmask = pci_msi_unmask_irq,
+>>>
+>>> There is no need to provide both enable/disable and mask/unmask. And
+>>> since pci_msi_{un}mask_irq is the default, you can get rid of these
+>>> function pointers anyway.
+>>>
+>>
+>> Got it. Like you said, the mask/unmask callback are defaulted to
+>> pci_msi_{un}mask_irq in pci_msi_domain_update_chip_ops, called when the
+>> MSI irq domain is created.
+>>
+>> I'll get rid of all the callback assignments here.
+>>
+>>>> +};
+>>>> +
+>>>> +static struct msi_domain_info iproc_msi_domain_info = {
+>>>> +	.flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+>>>> +		MSI_FLAG_PCI_MSIX,
+>>>> +	.chip = &iproc_msi_top_irq_chip,
+>>>> +};
+>>>> +
+>>>> +static int iproc_msi_irq_set_affinity(struct irq_data *data,
+>>>> +				      const struct cpumask *mask, bool force)
+>>>> +{
+>>>> +	return -EINVAL;
+>>>
+>>> I wish people would stop building stupid HW that prevents proper
+>>> affinity setting for MSI...
+>>>
+>>
+>> In fact, there's no reason why the HW should prevent us from setting the
+>> MSI affinity. This is currently more of a SW issue that I have not spent
+>> enough time figuring out.
+>>
+>> Here's my understanding:
+>>
+>> In our system, each MSI is linked to a dedicated interrupt line
+>> connected to the GIC upstream (e.g., the GIC from Cortex A9 in Cygnus).
+>> Correct me if I'm wrong, to get the MSI affinity to work, all I need
+>> should be propagating the affinity setting to the GIC (the 1-to-1
+>> mapping helps simply things quite a bit here)?
+>>
+>> I tried to hook this up with irq_chip_set_affinity_parent. But it looks
+>> like the irq chip of the parent domain (i.e., the GIC) is pointing to
+>> NULL, and therefore it would crash when dereferencing it to get the
+>> irq_set_affinity callback.
+>>
+>> I thought I did everything required by figuring out and linking to the
+>> correct parent domain in the iproc_msi_init routine:
+>>
+>> parent_node = of_parse_phandle(node, "interrupt-parent", 0);
+>> if (!parent_node) {
+>>         dev_err(pcie->dev, "unable to parse MSI interrupt parent\n");
+>>         return -ENODEV;
+>> }
+>>
+>> parent_domain = irq_find_host(parent_node);
+>> if (!parent_domain) {
+>>         dev_err(pcie->dev, "unable to get MSI parent domain\n");
+>>         return -ENODEV;
+>> }
+>>
+>> ...
+>> ...
+>>
+>> msi->inner_domain = irq_domain_add_hierarchy(parent_domain, 0,
+>>                                                msi->nirqs, NULL,
+>>                                                &msi_domain_ops,
+>>                                                msi);
+>>
+>> I haven't spent too much time investigating, and am hoping to eventually
+>> enable affinity support with an incremental patch in the future when I
+>> have more time to investigate.
+>
+> It fails because you're not implementing a fully stacked system, but
+> only a partial one (see below).
+>
+>>>> +}
+>>>> +
+>>>> +static void iproc_msi_irq_compose_msi_msg(struct irq_data *data,
+>>>> +					  struct msi_msg *msg)
+>>>> +{
+>>>> +	struct iproc_msi *msi = irq_data_get_irq_chip_data(data);
+>>>> +	phys_addr_t addr;
+>>>> +
+>>>> +	addr = virt_to_phys(msi->msi_base) | (data->hwirq * 4);
+>>>> +	msg->address_lo = lower_32_bits(addr);
+>>>> +	msg->address_hi = upper_32_bits(addr);
+>>>> +	msg->data = data->hwirq;
+>>>> +}
+>>>> +
+>>>> +static struct irq_chip iproc_msi_bottom_irq_chip = {
+>>>> +	.name = "MSI",
+>>>> +	.irq_set_affinity = iproc_msi_irq_set_affinity,
+>>>> +	.irq_compose_msi_msg = iproc_msi_irq_compose_msi_msg,
+>>>> +};
+>>>> +
+>>>> +static int iproc_msi_irq_domain_alloc(struct irq_domain *domain,
+>>>> +				      unsigned int virq, unsigned int nr_irqs,
+>>>> +				      void *args)
+>>>> +{
+>>>> +	struct iproc_msi *msi = domain->host_data;
+>>>> +	int i, msi_irq;
+>>>> +
+>>>> +	mutex_lock(&msi->bitmap_lock);
+>>>> +
+>>>> +	for (i = 0; i < nr_irqs; i++) {
+>>>> +		msi_irq = find_first_zero_bit(msi->used, msi->nirqs);
+>>>
+>>> This is slightly puzzling. Do you really have at most 6 MSIs? Usually,
+>>> we end up with a larger number of MSIs (32 or 64) multiplexed on top of
+>>> a small number of wired interrupts. Here, you seem to have a 1-1
+>>> mapping. Is that really the case?
+>>
+>> Yes, based on the poorly written iProc PCIe arch doc, :), we seem to
+>> have 1-1 mapping between each wired interrupt and MSI, with each MSI
+>> handled by an event queue, that consists of 64x word entries allocated
+>> from host memory (DDR). The MSI data is stored in the low 16-bit of each
+>> entry, whereas the upper 16-bit of each entry is reserved for the iProc
+>> PCIe controller for its own use.
+>
+> Based on your description, I have a completely different interpretation
+> of how your HW works:
+>
+> You have 4 (or 6) doorbells (the location where your PCI device writes
+> its MSI), and whatever the device writes ends up in the event queue. I'm
+> pretty sure the HW doesn't interpret what the device writes at all. The
+> GIC irqs are just a way to indicate that there is something in one of
+> the queues.
 
-Thanks,
-Tomasz
+Yes, see my replies on another email, and your interpretation here is 
+absolutely correct.
+
+>
+> This means that you wouldn't be limited to 4/6 MSIs, but that you could
+> actually have a lot more (apparently 16 bits worth of MSIs), and you
+> could use the doorbell address to change your affinity (one GIC
+> interrupt per CPU, assuming you don't have more than 4 or 6).
+>
+
+Yes, you are right. It looks like the number of MSI vectors to be 
+supported by each event queue can be up to 64.
+
+Given that the max number of CPUs on any SoC that uses the iProc event 
+queue is 4 (and I'm glad that an upcoming 8-core processor can use 
+GICv3-its instead), I can evenly distribute 4 interrupts to each of the 
+CPUs.
+
+>>>
+>>> If so (and assuming the wired interrupts are always contiguous), you
+>>> shouldn't represent this as a chained interrupt (a multiplexer), but as
+>>> a stacked irqchip, similar to what GICv2m does.
+>>>
+>>
+>> Okay, I think I might be missing something here, but I thought I
+>> currently have a stacked irqdomain (chip), i.e., GIC -> inner_domain ->
+>> MSI domain?
+>
+> At the moment, you have one stacked domain (MSI -> iProc) that is used
+> for a chained irqchip that feeds into the GIC.
+>
+> What you could do is turning it into a stacked domain (MSI -> iProc ->
+> GIC), using the fact that you have a 1:1 mapping between your MSIs and
+> the GIC interrupts. But I'm now questionning that fact.
+>
+
+Indeed, should be 64 MSI vectors per GIC interrupt instead of 1:1.
+
+>> And does this imply I should expect 'nr_irqs' in this routine to be
+>> always zero and therefore I can get rid of the for loop here (same in
+>> the domain free routine)?
+>
+> It should never be zero. It is likely to be always 1, as it is the
+> number of contiguous MSIs that have to be allocated in one go, and is
+> exclusively used for multi-MSI (which you don't claim to support).
+>
+>>>> +		if (msi_irq < msi->nirqs) {
+>>>> +			set_bit(msi_irq, msi->used);
+>>>> +		} else {
+>>>> +			mutex_unlock(&msi->bitmap_lock);
+>>>> +			return -ENOSPC;
+>>>> +		}
+>>>> +
+>>>> +		irq_domain_set_info(domain, virq + i, msi_irq,
+>>>> +				    &iproc_msi_bottom_irq_chip,
+>>>> +				    domain->host_data, handle_simple_irq,
+>>>> +				    NULL, NULL);
+>>>> +	}
+>>>> +
+>>>> +	mutex_unlock(&msi->bitmap_lock);
+>>>> +	return 0;
+>>>> +}
+>>>> +
+>>>> +static void iproc_msi_irq_domain_free(struct irq_domain *domain,
+>>>> +				      unsigned int virq, unsigned int nr_irqs)
+>>>> +{
+>>>> +	struct irq_data *data = irq_domain_get_irq_data(domain, virq);
+>>>> +	struct iproc_msi *msi = irq_data_get_irq_chip_data(data);
+>>>> +	unsigned int i;
+>>>> +
+>>>> +	mutex_lock(&msi->bitmap_lock);
+>>>> +
+>>>> +	for (i = 0; i < nr_irqs; i++) {
+>>>> +		struct irq_data *data = irq_domain_get_irq_data(domain,
+>>>> +								virq + i);
+>>>> +		if (!test_bit(data->hwirq, msi->used)) {
+>>>> +			dev_warn(msi->pcie->dev, "freeing unused MSI %lu\n",
+>>>> +				 data->hwirq);
+>>>> +		} else
+>>>> +			clear_bit(data->hwirq, msi->used);
+>>>> +	}
+>>>> +
+>>>> +	mutex_unlock(&msi->bitmap_lock);
+>>>> +	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+>>>> +}
+>>>> +
+>>>> +static const struct irq_domain_ops msi_domain_ops = {
+>>>> +	.alloc = iproc_msi_irq_domain_alloc,
+>>>> +	.free = iproc_msi_irq_domain_free,
+>>>> +};
+>>>> +
+>>>> +static void iproc_msi_enable(struct iproc_msi *msi)
+>>>> +{
+>>>> +	struct iproc_pcie *pcie = msi->pcie;
+>>>> +	int i, eq;
+>>>> +	u32 val;
+>>>> +
+>>>> +	/* program memory region for each event queue */
+>>>> +	for (i = 0; i < msi->n_eq_region; i++) {
+>>>> +		phys_addr_t addr =
+>>>> +			virt_to_phys(msi->eq_base + (i * EQ_MEM_REGION_SIZE));
+>>>> +
+>>>> +		iproc_msi_write_reg(msi, IPROC_MSI_EQ_PAGE, i,
+>>>> +				    lower_32_bits(addr));
+>>>> +		iproc_msi_write_reg(msi, IPROC_MSI_EQ_PAGE_UPPER, i,
+>>>> +				    upper_32_bits(addr));
+>>>> +	}
+>>>> +
+>>>> +	/* program memory region for MSI posted writes */
+>>>> +	for (i = 0; i < msi->n_msi_msg_region; i++) {
+>>>> +		phys_addr_t addr =
+>>>> +			virt_to_phys(msi->msi_base +
+>>>> +				     (i * MSI_MSG_MEM_REGION_SIZE));
+>>>
+>>> You seem to be a victim of checkpatch. Please don't split statements
+>>> like this, it just make it harder to read. My terminal can wrap lines
+>>> very conveniently, and I don't care about the 80 character limit...
+>>>
+>>
+>> Okay will fix.
+>>
+>>>> +
+>>>> +		iproc_msi_write_reg(msi, IPROC_MSI_PAGE, i,
+>>>> +				    lower_32_bits(addr));
+>>>> +		iproc_msi_write_reg(msi, IPROC_MSI_PAGE_UPPER, i,
+>>>> +				    upper_32_bits(addr));
+>>>> +	}
+>>>> +
+>>>> +	for (eq = 0; eq < msi->nirqs; eq++) {
+>>>> +		/* enable MSI event queue */
+>>>> +		val = IPROC_MSI_INTR_EN | IPROC_MSI_INT_N_EVENT |
+>>>> +			IPROC_MSI_EQ_EN;
+>>>> +		iproc_msi_write_reg(msi, IPROC_MSI_CTRL, eq, val);
+>>>> +
+>>>> +		/*
+>>>> +		 * Some legacy platforms require the MSI interrupt enable
+>>>> +		 * register to be set explicitly
+>>>> +		 */
+>>>> +		if (msi->has_inten_reg) {
+>>>> +			val = readl(pcie->base + IPROC_MSI_INTS_EN_OFFSET);
+>>>> +			val |= BIT(eq);
+>>>> +			writel(val, pcie->base + IPROC_MSI_INTS_EN_OFFSET);
+>>>> +		}
+>>>> +	}
+>>>> +}
+>>>> +
+>>>> +static void iproc_msi_handler(struct irq_desc *desc)
+>>>> +{
+>>>> +	unsigned int irq = irq_desc_get_irq(desc);
+>>>> +	struct irq_chip *irq_chip = irq_desc_get_chip(desc);
+>>>> +	struct iproc_msi *msi;
+>>>> +	struct iproc_pcie *pcie;
+>>>> +	u32 eq, head, tail, num_events;
+>>>> +	int virq;
+>>>> +
+>>>> +	chained_irq_enter(irq_chip, desc);
+>>>> +
+>>>> +	msi = irq_get_handler_data(irq);
+>>>> +	pcie = msi->pcie;
+>>>> +
+>>>> +	eq = irq - msi->irqs[0];
+>>>> +	virq = irq_find_mapping(msi->inner_domain, eq);
+>>>> +	head = iproc_msi_read_reg(msi, IPROC_MSI_EQ_HEAD, eq) &
+>>>> +		IPROC_MSI_EQ_MASK;
+>>>> +	do {
+>>>> +		tail = iproc_msi_read_reg(msi, IPROC_MSI_EQ_TAIL, eq) &
+>>>> +			IPROC_MSI_EQ_MASK;
+>>>> +
+>>>> +		num_events = (tail < head) ?
+>>>> +			(IPROC_MSI_EQ_LEN - (head - tail)) : (tail - head);
+>>>> +		if (!num_events)
+>>>> +			break;
+>>>> +
+>>>> +		generic_handle_irq(virq);
+>>>> +
+>>>> +		head++;
+>>>> +		head %= IPROC_MSI_EQ_LEN;
+>>>> +		iproc_msi_write_reg(msi, IPROC_MSI_EQ_HEAD, eq, head);
+>>>> +	} while (true);
+>>>
+>>> That's unusual. You seem to get only one interrupt for a bunch of MSIs,
+>>> all representing the same IRQ? That feels very weird, as you can
+>>> usually collapse edge interrupts.
+>>>
+>>
+>> I think we get one GIC interrupt per MSI line (1:1 mapping), but then
+>> the MSI data message can be more than one, stored in the event queue
+>> reserved for that MSI/interrupt line.
+>
+> But can you have different messages? Buffering the same message N times
+> is pretty useless (you can coalesce MSIs), but I'd completely understand
+> the design if you could store N different messages. If that's the case,
+> then the HW design would actually be a lot saner (whoever thought that 4
+> or 6 MSIs would be enough needs a PCIe crash course...).
+>
+
+This all comes from the confusion that we thought we have 1 MSI vector 
+per GIC line. Now this starts to make much more sense after you pointed 
+it out and discussions with our ASIC engineers. Each MSI message stored 
+in the event queue can indicate a different MSI vector.
+
+>> When you mentioned chained IRQ above, do you really mean the logic here?
+>> In fact, I don't think I really need to use the chained irq APIs here,
+>> as the MSI and GIC interrupt line has a 1-to-1 mapping.
+>
+> If you definitely have a 1:1 mapping, and that you cannot store
+> arbitrary messages in memory, then yes, you can switch to a fully
+> stacked configuration.
+>
+
+I will now chain all MSI vectors on the same GIC interrupt.
+
+>>>> +
+>>>> +	chained_irq_exit(irq_chip, desc);
+>>>> +}
+>>>> +
+>>
+>> Can probably get rid of the chained_irq_enter and exit?
+>
+> You could get rid of a lot more than that, but that depends on the above
+> discussion.
+>
+> Thanks,
+>
+> 	M.
+>
+
+Thanks a lot, Marc!
+
+Ray
