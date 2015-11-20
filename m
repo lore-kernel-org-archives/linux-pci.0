@@ -1,251 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f42.google.com ([209.85.215.42]:34161 "EHLO
-	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752126AbbKMM5o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Nov 2015 07:57:44 -0500
-Received: by lffu14 with SMTP id u14so51961250lff.1
-        for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2015 04:57:42 -0800 (PST)
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
- <5640A8AA.4000806@semihalf.com> <20151109171042.GA11909@red-moon>
- <6488357.xJV65iBRHq@wuerfel> <564185B6.8040006@linux.intel.com>
- <20151111174647.GA30051@red-moon> <56445117.8090307@linux.intel.com>
- <56449246.2010308@semihalf.com> <56449C55.2090001@linux.intel.com>
- <5644A613.2010304@semihalf.com> <5644AAB9.6010700@linux.intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <5645DE3A.7040406@semihalf.com>
-Date: Fri, 13 Nov 2015 13:57:30 +0100
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:36021 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161926AbbKTDPC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Nov 2015 22:15:02 -0500
+Received: by pacdm15 with SMTP id dm15so101597003pac.3
+        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2015 19:15:01 -0800 (PST)
+From: Daniel Axtens <dja@axtens.net>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+Cc: devicetree@vger.kernel.org, aik@ozlabs.ru,
+	linux-pci@vger.kernel.org, panto@antoniou-consulting.com,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	bhelgaas@google.com, frowand.list@gmail.com
+Subject: Re: [PATCH v7 20/50] powerpc/powernv: Improve DMA32 segment calculation
+In-Reply-To: <1446642770-4681-21-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1446642770-4681-21-git-send-email-gwshan@linux.vnet.ibm.com>
+Date: Fri, 20 Nov 2015 14:14:48 +1100
+Message-ID: <877fldwedz.fsf@gamma.ozlabs.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <5644AAB9.6010700@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha512; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12.11.2015 16:05, Jiang Liu wrote:
-> On 2015/11/12 22:45, Tomasz Nowicki wrote:
->> On 12.11.2015 15:04, Jiang Liu wrote:
->>> On 2015/11/12 21:21, Tomasz Nowicki wrote:
->>>> On 12.11.2015 09:43, Jiang Liu wrote:
->>>>> On 2015/11/12 1:46, Lorenzo Pieralisi wrote:
->>>>>> On Tue, Nov 10, 2015 at 01:50:46PM +0800, Jiang Liu wrote:
->>>>>>
->>>>>> [...]
->>>>>>
->>>>>>>>> In particular, I would like to understand, for an eg DWordIO
->>>>>>>>> descriptor,
->>>>>>>>> what Range Minimum, Range Maximum and Translation Offset represent,
->>>>>>>>> they can't mean different things depending on the SW parsing them,
->>>>>>>>> this totally defeats the purpose.
->>>>>>>>
->>>>>>>> I have no clue about what those mean in ACPI though.
->>>>>>>>
->>>>>>>> Generally speaking, each PCI domain is expected to have a (normally
->>>>>>>> 64KB)
->>>>>>>> range of CPU addresses that gets translated into PCI I/O space the
->>>>>>>> same
->>>>>>>> way that config space and memory space are handled.
->>>>>>>> This is true for almost every architecture except for x86, which
->>>>>>>> uses
->>>>>>>> different CPU instructions for I/O space compared to the other
->>>>>>>> spaces.
->>>>>>>>
->>>>>>>>> By the way, ia64 ioremaps the translation_offset (ie
->>>>>>>>> new_space()), so
->>>>>>>>> basically that's the CPU physical address at which the PCI host
->>>>>>>>> bridge
->>>>>>>>> map the IO space transactions), I do not think ia64 is any
->>>>>>>>> different from
->>>>>>>>> arm64 in this respect, if it is please provide an HW description
->>>>>>>>> here from
->>>>>>>>> the PCI bus perspective here (also an example of ia64 ACPI PCI
->>>>>>>>> host bridge
->>>>>>>>> tables would help).
->>>>>>>>
->>>>>>>> The main difference between ia64 and a lot of the other
->>>>>>>> architectures (e.g.
->>>>>>>> sparc is different again) is that ia64 defines a logical address
->>>>>>>> range
->>>>>>>> in terms of having a small number for each I/O space followed by the
->>>>>>>> offset within that space as a 'port number' and uses a mapping
->>>>>>>> function
->>>>>>>> that is defined as
->>>>>>>>
->>>>>>>> static inline void *__ia64_mk_io_addr (unsigned long port)
->>>>>>>> {
->>>>>>>>            struct io_space *space = &io_space[IO_SPACE_NR(port)];
->>>>>>>>            return (space->mmio_base | IO_SPACE_PORT(port););
->>>>>>>> }
->>>>>>>> static inline unsigned int inl(unsigned long port)
->>>>>>>> {
->>>>>>>>            return *__ia64_mk_io_addr(port);
->>>>>>>> }
->>>>>>>>
->>>>>>>> Most architectures allow only one I/O port range and put it at a
->>>>>>>> fixed
->>>>>>>> virtual address so that inl() simply becomes
->>>>>>>>
->>>>>>>> static inline u32 inl(unsigned long addr)
->>>>>>>> {
->>>>>>>>            return readl(PCI_IOBASE + addr);
->>>>>>>> }
->>>>>>>>
->>>>>>>> which noticeably reduces code size.
->>>>>>>>
->>>>>>>> On some architectures (powerpc, arm, arm64), we then get the same
->>>>>>>> simplified
->>>>>>>> definition with a fixed virtual address, and use pci_ioremap_io() or
->>>>>>>> something like that to to map a physical address range into this
->>>>>>>> virtual
->>>>>>>> address window at the correct io_offset;
->>>>>>> Hi all,
->>>>>>>       Thanks for explanation, I found a way to make the ACPI resource
->>>>>>> parsing interface arch neutral, it should help to address Lorenzo's
->>>>>>> concern. Please refer to the attached patch. (It's still RFC, not
->>>>>>> tested
->>>>>>> yet).
->>>>>>
->>>>>> If we go with this approach though, you are not adding the offset to
->>>>>> the resource when parsing the memory spaces in acpi_decode_space(),
->>>>>> are we
->>>>>> sure that's what we really want ?
->>>>>>
->>>>>> In DT, a host bridge range has a:
->>>>>>
->>>>>> - CPU physical address
->>>>>> - PCI bus address
->>>>>>
->>>>>> We use that to compute the offset between primary bus (ie CPU physical
->>>>>> address) and secondary bus (ie PCI bus address).
->>>>>>
->>>>>> The value ending up in the PCI resource struct (for memory space) is
->>>>>> the CPU physical address, if you do not add the offset in
->>>>>> acpi_decode_space
->>>>>> that does not hold true on platforms where CPU<->PCI offset != 0 on
->>>>>> ACPI,
->>>>>> am I wrong ?
->>>>> Hi Lorenzo,
->>>>>       I may have found the divergence between us about the design
->>>>> here. You
->>>>> treat it as a one-stage translation but I treat it as a
->>>>> two-stage translation as below:
->>>>> stage 1: map(translate) per-PCI-domain IO port address[0, 16M) into
->>>>> system global IO port address. Here system global IO port address is
->>>>> ioport_resource[0, IO_SPACE_LIMIT).
->>>>> stage 2: map system IO port address into system memory address.
->>>>>
->>>>> We need two objects of struct resource_win to support above two-stage
->>>>> translation. One object, type of IORESOURCE_IO, is used to support
->>>>> stage one, and it will also used to allocate IO port resources
->>>>> for PCI devices. Another object, type of IORESOURCE_MMIO, is used
->>>>> to allocate resource from iomem_resource and setup MMIO mapping
->>>>> to actually access IO ports.
->>>>>
->>>>> For ARM64, it doesn't support multiple per-PCI-domain(bus local)
->>>>> IO port address space yet, so stage one seems to be optional
->>>>> becomes the offset between bus local IO port address and system
->>>>> IO port address is always 0. But we still need two objects of
->>>>> struct resource_win. The first object is
->>>>>       {
->>>>>           offset:0,
->>>>>           start:AddressMinimum,
->>>>>           end:AddressMaximum,
->>>>>           flags:IORESOURCE_IO
->>>>>       }
->>>>> Here it's type of IORESOURCE_IO and offset must be zero because
->>>>> pcibios_resource_to_bus() will access it translate system IO
->>>>> port address into bus local IO port address. With my patch,
->>>>> the struct resource_win object created by the ACPI core will
->>>>> be reused for this.
->>>>>
->>>>> The second object is:
->>>>>       {
->>>>>           offset:Translation_Offset,
->>>>>           start:AddressMinimum + Translation_Offset,
->>>>>           end:AddressMaximum + Translation_Offset,
->>>>>           flags:IORESOURCE_MMIO
->>>>>       }
->>>>> Arch code need to create the second struct resource_win object
->>>>> and actually setup the MMIO mapping.
->>>>>
->>>>> But there's really another bug need to get fixed, funciton
->>>>> acpi_dev_ioresource_flags() assumes bus local IO port address
->>>>> space is size of 64K, which is wrong for IA64 and ARM64.
->>>>>
->>>>
->>>> So what would be the Translation_Offset meaning for two cases DWordIo
->>>> (....,TypeTranslation) vs DWordIo (....,TypeStatic)? And why we did not
->>>> use TypeTranslation for IA64 so far?
->>>
->>> IA64 actually ignores the translation type flag and just assume it's
->>> TypeTranslation, so there may be some IA64 BIOS implementations
->>> accidentally using TypeStatic. That's why we parsing SparseTranslation
->>> flag without checking TranslationType flag. I feel ARM64 may face the
->>> same situation as IA64:(
->>>
->>> We may expect (TypeStatic, 0-offset) and (TypeTranslation,
->>> non-0-offset) in real word. For other two combinations, I haven't
->>> found a real usage yet, though theoretically they are possible.
->>>
->>
->> I think we should not bend the generic code for IA64 only and expose
->> other platforms to the same issue. Instead, lets interpret spec
->> correctly and create IA64 quirk for the sake of backward compatibility.
->> Thoughts?
-> I think there are at least two factors related to this issue.
->
-> First we still lack of a way/framework to fix errors in ACPI resource
-> descriptors. Recently we have refined ACPI resource parsing interfaces
-> and enforced strictly sanity check. This brings us some regressions
-> which are really BIOS flaws, but it used to work and now breaks:(
-> I'm still struggling to get those regressions fixed. So we may run
-> into the same situation if we enforce strict check for TranslationType:(
->
-> Second enforcing strict check doesn't bring us too much benifits.
-> Translation type is almost platform specific, and we haven't found a
-> platform support both TypeTranslation and TypeStatic, so arch code
-> may assume the correct translation type no matter what BIOS reports.
-> So it won't hurt us even BIOS reports wrong translation type.
->
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-That is my point, lets pass down all we need from resource range 
-descriptors to arch code, then archs with known quirks can whatever is 
-needed to make it works. However, generic code like acpi_decode_space 
-cannot play with offsets with silent IA64 assumption.
 
-To sum it up, your last patch looks ok to me modulo Lorenzo's concern:
- >>>>>> If we go with this approach though, you are not adding the offset to
- >>>>>> the resource when parsing the memory spaces in acpi_decode_space(),
- >>>>>> are we
- >>>>>> sure that's what we really want ?
- >>>>>>
- >>>>>> In DT, a host bridge range has a:
- >>>>>>
- >>>>>> - CPU physical address
- >>>>>> - PCI bus address
- >>>>>>
- >>>>>> We use that to compute the offset between primary bus (ie CPU 
-physical
- >>>>>> address) and secondary bus (ie PCI bus address).
- >>>>>>
- >>>>>> The value ending up in the PCI resource struct (for memory space) is
- >>>>>> the CPU physical address, if you do not add the offset in
- >>>>>> acpi_decode_space
- >>>>>> that does not hold true on platforms where CPU<->PCI offset != 0 on
- >>>>>> ACPI,
- >>>>>> am I wrong ?
-His concern is that your patch will cause:
-acpi_pci_root_validate_resources(&device->dev, list,
-				 IORESOURCE_MEM);
-to fail now.
+> +	total_weight =3D pnv_pci_ioda_total_dma_weight(phb);
+> +	weight =3D pnv_pci_ioda_pe_dma_weight(pe);
+> +	if (!total_weight || !weight)
+> +		return;
+> +
+> +	segs =3D (weight * phb->ioda.dma32_count) / total_weight;
+> +	if (!segs)
+> +		segs =3D 1;
+
+I'm a little bit concerned about rounding here. Having said that I've
+also lost track of dma32_count: if it's big then rounding won't
+matter. What's a typical dma32_count?
+
+> +
+> +	/*
+> +	 * Allocate continuous DMA32 segments. We begin with the expected
+Very much a nit pick, but I think you mean s/continuous/contiguous/.
+
+> +	 * number of segments. With one more attempt, the number of DMA32
+> +	 * segments to be allocated is decreased by one until one segment
+> +	 * is allocated successfully.
+> +	 */
+> +	while (segs) {
+> +		found =3D false;
+> +		for (base =3D 0; base <=3D phb->ioda.dma32_count - segs; base++) {
+> +			for (i =3D base; i < base + segs; i++) {
+> +				if (phb->ioda.dma32_segmap[i] !=3D
+> +				    IODA_INVALID_PE)
+> +					break;
+> +			}
+> +
+> +			if (i >=3D base + segs) {
+How would `i' ever be greater than base + segs? Should the test just
+be 'if (i =3D=3D base + segs) {'=20
+> +				found =3D true;
+> +				break;
+> +			}
+> +		}
 
 Regards,
-Tomasz
+Daniel
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: GPGTools - https://gpgtools.org
+
+iQIcBAEBCgAGBQJWTpAoAAoJEPC3R3P2I92FZSAP+QHwd81bGja1fkxHlgO/EZNc
+7iO8Zhi53J6iWCHZ3Kbu5D1k379l1+ouWiOBzIsxa1MbmVsWHn0xIrieGgyuS++6
+jI6V2s1kOTaAImRBFYS8Zk80K2AGbm9//FXNwI/8crX44F+O/KgfDw9XRyV/YvFp
+BRmn+M1LjDkJqne9n4+2/NweevwKk8UtlqReoZbY+WLxtHhEGTs7WusT+Ii0lkQ5
+EjFCdOysnWr7oybiaJGkMf7k1oU/H3+yrgTYKjQedEi5nqpa7y8NNBlvVUIKDPzm
+gx7tT/SPlB57rETODf62+dLIsHjNAhzGkiUb4w/3bHutXsaRTckwdPyOZs8vz6RD
+5VAsVU9McxYWLf0k+lFbwO65xQoiBJeblUjjr0c1228959oensKMQ3CL4ezWLA1r
+AY0CrKkCq+1bvFsJDWbVarnKuVenVdnekR5U2mCyV4Ns7Z53WWDmWSik1rFyF/bp
+OM4gGi8Uue9w4gXwmQJ3veBxZQ+ruFPozY6S4IM1m9nwnBUiLc5w7U/Ui5g71Vj2
+9PGGWWbDABGQzUIkQSNxZ4DUoGRnhlfFSIXHLAfKsQ160zQ72bOtPHKlQmHLvVJ9
+AkANhLLtbs6pAEr/McWIMvl/yM+4hc+bdg2gxCcoOOp/xnnWNw/40OOr5byVhWg0
+eS8k32r6Mmwch17rvnKb
+=OjyT
+-----END PGP SIGNATURE-----
+--=-=-=--
