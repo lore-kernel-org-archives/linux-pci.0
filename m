@@ -1,318 +1,122 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:48163 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754787AbbKTN7l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 20 Nov 2015 08:59:41 -0500
+From: Grygorii Strashko <grygorii.strashko@ti.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: <tony@atomide.com>, <nsekhar@ti.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [PATCH v2] PCI: dra7xx: mark dra7xx_pcie_msi irq as IRQF_NO_THREAD
+Date: Fri, 20 Nov 2015 15:59:26 +0200
+Message-ID: <1448027966-21610-1-git-send-email-grygorii.strashko@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <CAC1AzdfCuT2LHFPVZpwvSjAvVRSpsWY+eGPAt47kN5YD+5yosA@mail.gmail.com>
-References: <1436565766-21820-1-git-send-email-jordan_hargrave@dell.com>
-	<20150713093518.7e869d07@endymion.delvare>
-	<CAC1AzdfFjPrfvg2iBYXY5JDKhbVH3LPQdh5LzyjMaBFSNDBi6Q@mail.gmail.com>
-	<20150721165759.GD21967@google.com>
-	<CAC1AzddX-HQe_UQ4C=ohyWDGjE=aed5+soDzjypQjjcqFfWTNA@mail.gmail.com>
-	<20150722010950.GE3691@google.com>
-	<CAC1AzdeY19ncJVhAOGS2J=tpa2VmnXv0CqO=AYDGY-fP=DiVCw@mail.gmail.com>
-	<20150723172438.GB21967@google.com>
-	<CAC1AzdfwMxLJk9G5x7WSDO9QdaFDpVhCWdNSys5hDho9h1DhEA@mail.gmail.com>
-	<CAC1AzdfCuT2LHFPVZpwvSjAvVRSpsWY+eGPAt47kN5YD+5yosA@mail.gmail.com>
-Date: Tue, 10 Nov 2015 08:40:15 -0600
-Message-ID: <CAC1Azde5sYFgJ3nAQ1zsPhU313NV+EqPs=nAC3XEBBrja-itkg@mail.gmail.com>
-Subject: Re: [PATCH] Add support for reading SMBIOS Slot number for PCI devices
-From: Jordan Hargrave <jharg93@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jean Delvare <jdelvare@suse.de>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Matthew Wilcox <matthew.r.wilcox@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 23, 2015 at 10:11 PM, Jordan Hargrave <jharg93@gmail.com> wrote:
-> On Thu, Jul 23, 2015 at 9:31 PM, Jordan Hargrave <jharg93@gmail.com> wrote:
->> On Thu, Jul 23, 2015 at 12:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> [+cc Matthew for PCIe-SSD perspective]
->>>
->>> On Wed, Jul 22, 2015 at 03:07:46PM -0500, Jordan Hargrave wrote:
->>>> On Tue, Jul 21, 2015 at 8:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> > On Tue, Jul 21, 2015 at 12:31:35PM -0500, Jordan Hargrave wrote:
->>>> >> On Tue, Jul 21, 2015 at 11:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> >> > On Mon, Jul 13, 2015 at 09:57:32AM -0500, Jordan Hargrave wrote:
->>>> >> >> On Mon, Jul 13, 2015 at 2:35 AM, Jean Delvare <jdelvare@suse.de> wrote:
->>>> >> >>
->>>> >> >> > Hi Jordan,
->>>> >> >> >
->>>> >> >> > On Fri, 10 Jul 2015 17:02:46 -0500, Jordan Hargrave wrote:
->>>> >> >> > > From: Jordan Hargrave <Jordan_Hargrave@dell.com>
->>>> >> >> > >
->>>> >> >> > > There currently isn't an easy way to determine which PCI devices belong
->>>> >> >> > to
->>>> >> >> > > system slots.  This patch adds support to read SMBIOS Type 9 (System
->>>> >> >> > Slots).
->>>> >> >> >
->>>> >> >> > I'm wondering, can't you use dmidecode or libsmbios to retrieve the
->>>> >> >> > same information?
->>>> >> >> >
->>>> >> >> > --
->>>> >> >> > Jean Delvare
->>>> >> >> > SUSE L3 Support
->>>> >> >> >
->>>> >> >>
->>>> >> >> You can but it's as not easy to determine the slot number for leaf devices
->>>> >> >> on bridges.  Eventually planning on using this for pulling slot number for
->>>> >> >> identifying network cards and disk numbering for systemd
->>>> >> >
->>>> >> > Can you outline the problems with using dmidecode or libsmbios?
->>>> >>
->>>> >> Neither dmidecode nor libsmbios report the slot number for devices
->>>> >> behind bridges in a slot.
->>>> >
->>>> > True, but it's straightforward to walk up the PCI tree in sysfs, e.g.,
->>>> > given a path like /sys/devices/pci0000:00/0000:00:1c.5/0000:03:00.0/, it's
->>>> > easy to see what the upstream bridges are.
->>>> >
->>>> It makes it more complicated I think. You have to check all functions
->>>> on all devices as well on the walk to the root.
->>>>
->>>> Would it look something like this?
->>>> while (pdev) {
->>>>   if (pdev->bus->number == dslot->bus && PCI_SLOT(pdev->devfn) ==
->>>> PCI_SLOT(dslot->devfn) &&
->>>>      (pci_pcie_type(pdev) != PCI_ROOT_PORT || PCI_FUNC(pdev->devfn) ==
->>>> PCI_FUNC(dslot->devfn))
->>>>     return dslot->instance;
->>>>   if (!pdev->bus->parent)
->>>>     break;
->>>>   pdev = pdev->bus->parent->self;
->>>> }
->>>>
->>>> >> I'm wanting to use this sysfs variable to
->>>> >> get slot numbers for systemd, so using libsmbios and dmidecode aren't
->>>> >> very useful.
->>>> >
->>>> > If you want this in systemd, I see why you wouldn't want a command like
->>>> > dmidecode.  Help me understand the problem with libsmbios.  Is it not
->>>> > useful because (a) systemd doesn't want to link with it, or (b) libsmbios
->>>> > doesn't have the right information, or (c) something else?
->>>> >
->>>> Linking with libsmbios would be a problem, and libsmbios doesn't have
->>>> this info anyway.
->>>>
->>>> > It doesn't *look* like this is using any information that is only available
->>>> > in the kernel, so in principle it seems like this could be done in
->>>> > user-space.
->>>> >
->>>>
->>>> I actually just got an email from someone who needs to determine the
->>>> card slot number in their driver... so I've added an external callable
->>>> 'pci_get_smbios_slot' function to enable this.
->>>>
->>>> >> We already report the index for embedded devices in
->>>> >> pci-label.c, this code should have gone in at the same time.
->>>> >>
->>>> >> For example.  The SMBIOS entry for slot 3 is 40:00.0 There is a
->>>> >> quad-port NIC in the slot with a bridge at 40:00.0
->>>> >>
->>>> >> 42:00.0 Bridge (sec=43, sub=45)
->>>> >> 43:02.0 Bridge (sec=44, sub=44)
->>>> >> 43:04.0 Bridge (sec=45, sub=45)
->>>> >> 44:00.0 Ethernet
->>>> >> 44:00.1 Ethernet
->>>> >> 45:00.0 Ethernet
->>>> >> 45:00.1 Ethernet
->>>> >>
->>>> >> So dmidecode only returns the slot number for 42:00.0 but not any
->>>> >> child devices.  This code will provide a 'slot' sysfs variable that
->>>> >> reports '3' for all devices under and including the bridge.
->>>> >
->>>> > What if the card in slot 3 is an adapter leading to an external PCI
->>>> > chassis?  Wouldn't we then have a 'slot' file for every card in that
->>>> > chassis, all containing '3'?  This sounds confusing, although it is true
->>>> > that they all would be connected via the system board slot 3.
->>>> >
->>>> Yes that is correct.  Unless SMBIOS had a table of the second chassis.
->>>>
->>>> > Also, we do have the /sys/bus/pci/slots/ hierarchy already.  If we do put
->>>> > something like this in the kernel, how would it relate to that hierarchy?
->>>> > Could this SMBIOS stuff be integrated into that somehow?
->>>> >
->>>>
->>>> /sys/bus/pci/slots only map a slot to a single PCI device.  systemd
->>>> does use /sys/bus/pci/slots but it can't see the slot number on cards
->>>> with bridges as the actual slot number is a parent.  And that's not
->>>> easily to determine a parent device from the slots interface.  I'd
->>>> really like something generic here. I'm also looking for some method
->>>> for reporting bay/enclosure ID for PCIe-SSD devices.
->>>>
->>>> > We have a bit of a hodge-podge of slot names already, and I'd like to
->>>> > simplify things if we can.
->>>
->>> We aren't really converging here yet.
->>>
->>> We need to figure out exactly what has to be done in the kernel because it
->>> can't be done in user-space.  So far, your patch *looks* like it could (in
->>> principle) be done in user-space, given a sysfs PCI hierarchy and the
->>> SMBIOS information.
->>
->> It's a pain to do in user space as you have to read DMI information,
->> then traverse PCI hierarchy until you find a match.  Every utility or
->> code that wants to match a PCI device to a SMBIOS slot must reinvent
->> the wheel.  biosdevname has its own code to read the entire SMBIOS
->> table. It then reads in all pci devices and attempts to do a mapping.
->> Why do this when the kernel already has this info easily available.
->>
->>>
->>> The goal ("determine which PCI devices belong to system slots") is
->>> definitely generic and useful.  We have quite a bit of slot stuff already
->>> in the kernel, and some is already exposed via sysfs, so if we're still
->>> missing what you need, it seems like the current code is off the rails
->>> somewhere and should be fixed.
->>>
->>> Can we explore what you need in a little more detail, with some concrete
->>> examples?  I heard:
->>>
->>>   - Systemd uses /sys/bus/pci/slots but gets the wrong slot information for
->>>     cards with bridges on them.  Can you give an example including all the
->>>     PCI devices involved and the related /sys/bus/pci/slots info so we can
->>>     see exactly what's wrong?
->>
->> I created a quick and dirty module that populates /sys/bus/pci/slots:
->>
->> #include <linux/kernel.h>
->> #include <linux/module.h>
->> #include <linux/pci.h>
->> #include <linux/dmi.h>
->>
->> static int __init kslot_init(void)
->> {
->>         const struct dmi_device *dmi;
->>         struct dmi_dev_onboard *dslot;
->>         struct pci_dev *sdev;
->>
->>         dmi = NULL;
->>         while ((dmi = dmi_find_device(DMI_DEV_TYPE_SYSTEM_SLOT, NULL,
->> dmi)) != NULL) {
->>                 dslot = dmi->device_data;
->>                 sdev = pci_get_domain_bus_and_slot(dslot->segment, dslot->bus,
->>                                              dslot->devfn);
->>                 if (!sdev)
->>                         continue;
->>                 pci_create_slot(sdev->bus, dslot->instance, dslot->dev.name,
->>                                 NULL);
->>                 pci_dev_put(sdev);
->>         }
->>         return 0;
->> }
->>
->> static void __exit kslot_exit(void)
->> {
->> }
->>
->> module_init(kslot_init);
->> module_exit(kslot_exit);
->>
->> MODULE_AUTHOR("jordan_hargrave@dell.com");
->> MODULE_LICENSE("GPL");
->> ===
->>
->> # ls -l /sys/bus/pci/slots
->> total 0
->> drwxr-xr-x 2 root root 0 Jul 23 21:43 PCI1
->> drwxr-xr-x 2 root root 0 Jul 23 21:43 PCI2
->> drwxr-xr-x 2 root root 0 Jul 23 21:43 PCI3
->>
->> # for X in /sys/bus/pci/slots/* ; do echo -n "$X = "; cat $X/address; done
->> /sys/bus/pci/slots/PCI1 = 0000:41:01
->> /sys/bus/pci/slots/PCI2 = 0000:42:02
->> /sys/bus/pci/slots/PCI3 = 0000:04:03
->>
->> So one problem with this already is the string that gets output. It's
->> <domain>:<bus>:<slot>   so you still have the problem of what about
->> bus 43-45 that are children of bus 42.
->>
->> So wrote a script:
->> #!/usr/bin/bash
->> for X in /sys/bus/pci/devices/* ; do
->>     RX=$(readlink -f $X)
->>     for Z in /sys/bus/pci/slots/* ; do
->>         NAME=$(basename $Z)
->>         ADDR=$(cat $Z/address | cut -f1-2 -d:)
->>         if [[ $RX =~ $ADDR ]] ; then
->>             echo $RX,$NAME
->>         fi
->>     done
->> done
->>
->> for each PCI device you have to iterate all devices in
->> /sys/bus/pci/slots, and munge the 'address' to actually find a match
->>
->> output is:
->> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.0,PCI3 [SMBIOS entry]
->> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.1,PCI3
->> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.2,PCI3
->> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.3,PCI3
->> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.4,PCI3
->> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.5,PCI3
->> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.6,PCI3
->> /sys/devices/pci0000:00/0000:00:03.0/0000:04:00.7,PCI3
->> /sys/devices/pci0000:40/0000:40:01.0/0000:41:00.0,PCI1 [SMBIOS entry]
->> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0,PCI2 [SMBIOS entry]
->> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0/0000:43:02.0,PCI2
->> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0/0000:43:04.0,PCI2
->> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0/0000:43:02.0/0000:44:00.0,PCI2
->> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0/0000:43:02.0/0000:44:00.1,PCI2
->> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0/0000:43:04.0/0000:45:00.0,PCI2
->> /sys/devices/pci0000:40/0000:40:03.0/0000:42:00.0/0000:43:04.0/0000:45:00.1,PCI2
->>
->> And I'm not totally convinced this will work on some weird
->> configurations I've seen of SMBIOS entries.  as in the B:D:F must
->> match, not just the bus number.
->
-> Yeah just verified this won't work on this config.
->
-> I have a lspci output that defines the following bridges
-> (segment:bus:dev:func -> secondary:subordinate)
-> 0000:00:01.0 -> 01:01
-> 0000:00:02.0 -> 02:02
-> 0000:00:03.0 -> 03:03
-> 0000:00:03.2 -> 04:04
-> 0000:00:1c.0 -> 05:05
-> 0000:00:1c.4 -> 06:06
->
-> The SMBIOS table defines the following entries:
-> Descriptor: MEZZ1  ID:1 0000:00:03.0
-> Descriptor: MEZZ2  ID:2 0000:00:03.2
->
-> creating /sys/bus/pci/slots:
-> # ls -l /sys/bus/pci/slots/
-> total 0
-> drwxr-xr-x 2 root root 0 Jul 23 23:04 MEZZ1
-> drwxr-xr-x 2 root root 0 Jul 23 23:04 MEZZ2
->
-> # for X in /sys/bus/pci/slots/* ; do echo -n "$X = "; cat $X/address; done
-> /sys/bus/pci/slots/MEZZ1 = 0000:00:01
-> /sys/bus/pci/slots/MEZZ2 = 0000:00:02
->
-> Both entries are showing Bus 0 only... not 0:3.0 and 0:3.2
->>
->>>
->>>   - A driver needs the card slot number.  A slot number seems like a user
->>>     interface thing, so I'm surprised that a driver would be concerned with
->>>     it.  And of course, SMBIOS is an arch-specific thing, so the driver
->>>     would have to be able to get along without the slot number anyway.
->>>
->> pci_get_smbios_slot would just return -ENODEV or something on systems
->> without SMBIOS.
->>
->>>   - PCIe-SSD bay/enclosure IDs.  Where would these IDs come from, and what
->>>     sort of reporting mechanism are you looking for?  How are these
->>>     structured?  Is there a separate PCIe device for every bay/enclosure
->>>     ID, so there would be a 1:1 mapping from PCIe device to ID?
->>>
->> On our system the enclosure IDs actually come from IPMI commands.
->> However you must query every PCI Bus number in the system to get the
->> correct enclosure mapping.  Currently yes there is a 1:1 mapping.
->>
->>> Bjorn
+On -RT, TI DRA7 PCIe driver always produces below backtrace when the
+first PCI interrupt is triggered:
 
-The systemd maintainers are still refusing to add in code to parse
-SMBIOS directly, so we need for this to be in the kernel as a sysfs
-variable. Perferrably per-PCI device instead of /sys/bus/pci/XXX/slots
-as that only gets populated for the upstream device if a card has one
-or more levels of bridges.
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 82 at kernel/irq/handle.c:150 handle_irq_event_percpu+0x14c/0x174()
+irq 460 handler irq_default_primary_handler+0x0/0x14 enabled interrupts
+Modules linked in: ahci_platform(+) ti_vip(+) libahci_platform xhci_pci(+) c_can_platform(+)
+libahci xhci_hcd ti_vpe c_can libata v4l2_mem2mem can_dev gpio_keys leds_gpio
+snd_soc_simple_card usbcore spi_ti_qspi videobuf2_core extcon_usb_gpio omap_wdt
+ti_vpdma videobuf2_dma_contig ti_soc_thermal videobuf2_memops dwc3_omap extcon
+rtc_omap ov1063x v4l2_common videodev media snd_soc_tlv320aic3x omap_rng rng_core omap_remoteproc
+CPU: 1 PID: 82 Comm: irq/26-dra7-pci Not tainted 4.1.10-rt10-02638-g6486d7e-dirty #1
+Hardware name: Generic DRA74X (Flattened Device Tree)
+Backtrace:
+[<c0013060>] (dump_backtrace) from [<c0013280>] (show_stack+0x18/0x1c)
+ r7:c07acca0 r6:00000000 r5:c09034e4 r4:00000000
+[<c0013268>] (show_stack) from [<c061ef14>] (dump_stack+0x90/0xac)
+[<c061ee84>] (dump_stack) from [<c00436e4>] (warn_slowpath_common+0x7c/0xb8)
+ r7:c07acca0 r6:00000096 r5:00000009 r4:ee4d3e38
+[<c0043668>] (warn_slowpath_common) from [<c0043758>] (warn_slowpath_fmt+0x38/0x40)
+ r8:ee3fcc00 r7:000001cc r6:00000000 r5:00000002 r4:c07acc78
+[<c0043724>] (warn_slowpath_fmt) from [<c0085fd0>] (handle_irq_event_percpu+0x14c/0x174)
+ r3:000001cc r2:c07acc78
+ r4:ecfcdd80
+[<c0085e84>] (handle_irq_event_percpu) from [<c008607c>] (handle_irq_event+0x84/0xb8)
+ r10:00000001 r9:ee4b59c0 r8:ee1d0900 r7:00000001 r6:00000000 r5:ecfcdd80
+ r4:ee3fcc00
+[<c0085ff8>] (handle_irq_event) from [<c0089240>] (handle_simple_irq+0x90/0x118)
+ r5:ee4a9020 r4:ee3fcc00
+[<c00891b0>] (handle_simple_irq) from [<c0085514>] (generic_handle_irq+0x30/0x44)
+ r5:ee4a9020 r4:000001cc
+[<c00854e4>] (generic_handle_irq) from [<c034a7d4>] (dra7xx_pcie_msi_irq_handler+0x7c/0x8c)
+ r5:ee4a9020 r4:00000001
+[<c034a758>] (dra7xx_pcie_msi_irq_handler) from [<c0086f08>] (irq_forced_thread_fn+0x28/0x5c)
+ r5:ee1d0900 r4:ee4b59c0
+[<c0086ee0>] (irq_forced_thread_fn) from [<c00871dc>] (irq_thread+0x128/0x204)
+ r7:00000001 r6:00000000 r5:ee4d2000 r4:ee4b59e4
+[<c00870b4>] (irq_thread) from [<c005e2fc>] (kthread+0xd4/0xec)
+ r10:00000000 r9:00000000 r8:00000000 r7:c00870b4 r6:ee4b59c0 r5:ee4b5a00
+ r4:00000000
+[<c005e228>] (kthread) from [<c000faa8>] (ret_from_fork+0x14/0x2c)
+ r7:00000000 r6:00000000 r5:c005e228 r4:ee4b5a00
+---[ end trace 0000000000000002 ]---
+
+This backtrace is triggered because dra7xx_pcie_msi_irq_handler()
+forced to be threaded by default on -RT but, in the same time, it's
+IRQ dispatcher and calls generic_handle_irq(), which leads to
+handle_simple_irq() call. The handle_simple_irq() expected to be
+called with IRQ disabled.
+
+The same issue will also happen if kernel will boot with "threadirqs"
+cmdline parameter (CONFIG_IRQ_FORCED_THREADING).
+
+As discussed in [1], the current DRA7 PCIe hw configuration supports
+32 interrupts, which cannot change because it's hardwired in silicon,
+this is a single status read and assuming that only a few (most of the
+time it will be exactly ONE) of those interrupts are pending at the
+same time is pretty much a sane assumption. And recommended fix for
+this issue is to request dra7xx_pcie_msi IRQ with IRQF_NO_THREAD flag.
+
+[1] https://lkml.org/lkml/2015/11/3/660
+
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Signed-off-by: Grygorii Strashko <grygorii.strashko@ti.com>
+---
+Changes in v2:
+- comment in code truncated
+Link on v1:
+ https://lkml.org/lkml/2015/11/5/593
+ drivers/pci/host/pci-dra7xx.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 8c36880..0415192 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 		return -EINVAL;
+ 	}
+ 
++	/*
++	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
++	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
++	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
++	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
++	 * which, in turn, will be resolved to handle_simple_irq() call.
++	 * The handle_simple_irq() expected to be called with IRQ disabled, as
++	 * result kernle will display warning:
++	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
++	 */
+ 	ret = devm_request_irq(&pdev->dev, pp->irq,
+-			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
++			       dra7xx_pcie_msi_irq_handler,
++			       IRQF_SHARED | IRQF_NO_THREAD,
+ 			       "dra7-pcie-msi",	pp);
+ 	if (ret) {
+ 		dev_err(&pdev->dev, "failed to request irq\n");
+-- 
+2.6.3
+
