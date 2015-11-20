@@ -1,131 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:51710 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965429AbbKDNN5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:57 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 23:13:55 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 47/50] drivers/of: Specify parent node in of_fdt_unflatten_tree()
-Date: Thu,  5 Nov 2015 00:12:47 +1100
-Message-Id: <1446642770-4681-48-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 20 Nov 2015 10:18:40 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
+Message-ID: <20151120101840.GD15819@red-moon>
+References: <564185B6.8040006@linux.intel.com>
+ <20151111174647.GA30051@red-moon>
+ <56445117.8090307@linux.intel.com>
+ <56449246.2010308@semihalf.com>
+ <56449C55.2090001@linux.intel.com>
+ <5644A613.2010304@semihalf.com>
+ <5644AAB9.6010700@linux.intel.com>
+ <5645DE3A.7040406@semihalf.com>
+ <20151113170316.GB15253@red-moon>
+ <56462294.3060701@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56462294.3060701@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds one more argument to of_fdt_unflatten_tree() to specify
-the parent node of the FDT blob that is going to be unflattened.
-In the result, the function can be used to unflatten FDT blob that
-represents device sub-tree in PowerNV PCI hotplug driver.
+Hi Jiang,
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/of/fdt.c       | 14 ++++++++++----
- drivers/of/unittest.c  |  2 +-
- include/linux/of_fdt.h |  1 +
- 3 files changed, 12 insertions(+), 5 deletions(-)
+On Sat, Nov 14, 2015 at 01:49:08AM +0800, Jiang Liu wrote:
 
-diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-index 559ce49..8c8228e 100644
---- a/drivers/of/fdt.c
-+++ b/drivers/of/fdt.c
-@@ -443,11 +443,13 @@ static void *unflatten_dt_nodes(const void *blob,
-  * pointers of the nodes so the normal device-tree walking functions
-  * can be used.
-  * @blob: The blob to expand
-+ * @dad: Parent device node
-  * @mynodes: The device_node tree created by the call
-  * @dt_alloc: An allocator that provides a virtual address to memory
-  * for the resulting tree
-  */
- static void __unflatten_device_tree(const void *blob,
-+			     struct device_node *dad,
- 			     struct device_node **mynodes,
- 			     void * (*dt_alloc)(u64 size, u64 align))
- {
-@@ -472,7 +474,7 @@ static void __unflatten_device_tree(const void *blob,
- 	}
- 
- 	/* First pass, scan for size */
--	size = (unsigned long)unflatten_dt_nodes(blob, NULL, NULL, NULL, true);
-+	size = (unsigned long)unflatten_dt_nodes(blob, NULL, dad, NULL, true);
- 	size = ALIGN(size, 4);
- 
- 	pr_debug("  size is %lx, allocating...\n", size);
-@@ -486,7 +488,7 @@ static void __unflatten_device_tree(const void *blob,
- 	pr_debug("  unflattening %p...\n", mem);
- 
- 	/* Second pass, do actual unflattening */
--	unflatten_dt_nodes(blob, mem, NULL, mynodes, false);
-+	unflatten_dt_nodes(blob, mem, dad, mynodes, false);
- 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
- 		pr_warning("End of tree marker overwritten: %08x\n",
- 			   be32_to_cpup(mem + size));
-@@ -501,6 +503,9 @@ static void *kernel_tree_alloc(u64 size, u64 align)
- 
- /**
-  * of_fdt_unflatten_tree - create tree of device_nodes from flat blob
-+ * @blob: Flat device tree blob
-+ * @dad: Parent device node
-+ * @mynodes: The device tree created by the call
-  *
-  * unflattens the device-tree passed by the firmware, creating the
-  * tree of struct device_node. It also fills the "name" and "type"
-@@ -508,9 +513,10 @@ static void *kernel_tree_alloc(u64 size, u64 align)
-  * can be used.
-  */
- void of_fdt_unflatten_tree(const unsigned long *blob,
-+			struct device_node *dad,
- 			struct device_node **mynodes)
- {
--	__unflatten_device_tree(blob, mynodes, &kernel_tree_alloc);
-+	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
- }
- EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
- 
-@@ -1163,7 +1169,7 @@ bool __init early_init_dt_scan(void *params)
-  */
- void __init unflatten_device_tree(void)
- {
--	__unflatten_device_tree(initial_boot_params, &of_root,
-+	__unflatten_device_tree(initial_boot_params, NULL, &of_root,
- 				early_init_dt_alloc_memory_arch);
- 
- 	/* Get pointer to "/chosen" and "/aliases" nodes for use everywhere */
-diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
-index 9f71770b6..bafcf66 100644
---- a/drivers/of/unittest.c
-+++ b/drivers/of/unittest.c
-@@ -907,7 +907,7 @@ static int __init unittest_data_add(void)
- 			"not running tests\n", __func__);
- 		return -ENOMEM;
- 	}
--	of_fdt_unflatten_tree(unittest_data, &unittest_data_node);
-+	of_fdt_unflatten_tree(unittest_data, NULL, &unittest_data_node);
- 	if (!unittest_data_node) {
- 		pr_warn("%s: No tree to attach; not running tests\n", __func__);
- 		return -ENODATA;
-diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
-index df9ef38..3644960 100644
---- a/include/linux/of_fdt.h
-+++ b/include/linux/of_fdt.h
-@@ -38,6 +38,7 @@ extern bool of_fdt_is_big_endian(const void *blob,
- extern int of_fdt_match(const void *blob, unsigned long node,
- 			const char *const *compat);
- extern void of_fdt_unflatten_tree(const unsigned long *blob,
-+			       struct device_node *dad,
- 			       struct device_node **mynodes);
- 
- /* TBD: Temporary export of fdt globals - remove when code fully merged */
--- 
-2.1.0
+[...]
 
+> > Not really. My concern is that there might be platforms out there with
+> > an offset between the CPU and PCI physical address spaces, and if we
+> > remove the offset value in acpi_decode_space we can break them,
+> > because in the kernel struct resource data we have to have CPU physical
+> > addresses, not PCI ones. If offset == 0, we are home and dry, I do not
+> > understand why that's a given, which is what we would assume if Jiang's
+> > patch is merged as-is unless I am mistaken.
+> We try to exclude offset from struct resource in generic ACPI code,
+> and it's the arch's responsibility to decide how to manipulate struct
+> resource object if offset is not zero.
+> 
+> Currently offset is always zero for x86, and IA64 has arch specific
+> code to handle non-zero offset. So we should be safe without breaking
+> existing code. For ARM64, it's a little different from IA64 so it's
+> hard to share code between IA64 and ARM64.
+
+Can you drop the patch on the mailing lists please, we actually need it
+to get ACPI ARM64 PCIe support in the kernel, please let me know how
+you want to handle this and if you need any help.
+
+Thanks,
+Lorenzo
