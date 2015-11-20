@@ -1,68 +1,101 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
+Message-ID: <564EECA9.9070400@arm.com>
+Date: Fri, 20 Nov 2015 09:49:29 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
+MIME-Version: 1.0
+To: Phil Edworthy <phil.edworthy@renesas.com>
+CC: Thierry Reding <treding@nvidia.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv4 0/6] Driver for new VMD device
-Date: Fri,  6 Nov 2015 15:35:40 -0700
-Message-Id: <1446849346-8242-1-git-send-email-keith.busch@intel.com>
+	Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
+References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>	<PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>	<20151109161115.GA13870@ulmo.nvidia.com>	<PS1PR06MB1180111D6423287273B64B0FF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>	<20151110155232.GA25368@ulmo.nvidia.com>	<20151111163802.3a96080c@arm.com>	<PS1PR06MB11806B2B906CABB553B94442F5120@PS1PR06MB1180.apcprd06.prod.outlook.com> <20151112203100.2e91da2a@arm.com> <PS1PR06MB11800B547C8957B226077B83F5110@PS1PR06MB1180.apcprd06.prod.outlook.com> <564A2101.90600@arm.com> <PS1PR06MB11804FF05BBF30F2CA2083FCF51C0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+In-Reply-To: <PS1PR06MB11804FF05BBF30F2CA2083FCF51C0@PS1PR06MB1180.apcprd06.prod.outlook.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Version 4 after re-working the irq domain hierarchies.
+On 18/11/15 18:01, Phil Edworthy wrote:
+> Hi Marc,
+> 
+> On 16 November 2015 18:31, Marc Zyngier wrote:
+>> On 13/11/15 09:36, Phil Edworthy wrote:
+> <snip>
+>>> Since the stack trace doesn't help that much I added some tracing:
+>>> pci_msi_setup_msi_irqs()
+>>>   calls pci_msi_get_domain()
+>>>     calls dev_get_msi_domain(), gets a non-NULL domain.
+>>> pci_msi_setup_msi_irqs()
+>>>   calls pci_msi_domain_alloc_irqs()
+>>>     calls msi_domain_alloc_irqs()
+>>> msi_domain_alloc_irqs:273: ops=ffffffc03193a810
+>>> msi_domain_alloc_irqs:274: ops->msi_check=ffffffc031161418
+>>> systemd-udevd[1311]: undefined instruction: pc=ffffffc03116141c
+>>> That looks to me as though msi_check is off pointing to the weeds.
+>>
+>> So the next step is to find out who initializes msi_check. Assuming
+>> someone does...
+> Nothing initializes msi_check... 
+> 
+>  
+>>> By passing a NULL domain into irq_domain_add_linear() you get:
+>>> pci_msi_setup_msi_irqs()
+>>>   calls pci_msi_get_domain()
+>>>     calls dev_get_msi_domain(), gets a NULL domain.
+>>>     calls arch_setup_msi_irq()
+>>> All ok then.
+>>
+>> Yes, because you're sidestepping the issue. Any chance you could dig a
+>> bit deeper? I'd really like to nail this one down (before we convert
+>> your PCI driver to the right API... ;-).
+> The problem appears to be that when the pci host driver enables msi
+> it calls the following:
+> 	msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
+> 					    &msi_domain_ops, &msi->chip);
+> The last arg is documented as:
+> * @host_data: Controller private data pointer 
+> In _irq_domain_add() this ptr is stored in struct irq_domain's host_data.
+> 
+> However, msi_domain_alloc_irqs() expects host_data to be a ptr to a
+> struct msi_domain_info.
+> 
+> It seems that a number of other pci host drivers do the same, so I am
+> surprised that no one else has seen this.
 
-v3 -> v4:
+Can you please give this hack a go and let me know if that helps?
 
-  Patch from Jiang to allow parent-less msi irq domain.
+Thanks,
 
-  Separated kernel API dependency exports into their own patch.
+	M.
 
-  Removed the vmd irq domain hierarchy, and instead use a msi irq
-  domain. This pushed all the irq initialization and teardown handling
-  into the irq_chip implementation and reduced kernel dependencies.
-
-  Using devm_request_irq instead of an irq flow handler. This moves the
-  irq life management to the devres API which simplifies teardown.
-
-  Implemented a smarter method of selecting the VMD vector to share.
-
-  Lots style fixes/updates and additional code comments.
-
-The one review comment I have not fixed is the affinity hint. We are
-still developing a way to better handle this, so have left it as a error
-returning stub. It's less than optimal, but isn't more harmful than that.
-
-Keith Busch (5):
-  pci: skip child bus with conflicting resources
-  Export msi and irq functions for module use
-  x86-pci: allow pci domain specific dma ops
-  x86/pci: Initial commit for new VMD device driver
-  pciutils: Allow 32-bit domains
-
-Liu Jiang (1):
-  msi: Relax msi_domain_alloc() to support parentless MSI irqdomains
-
- arch/x86/Kconfig              |  13 +
- arch/x86/include/asm/device.h |  10 +
- arch/x86/include/asm/hw_irq.h |   5 +
- arch/x86/pci/Makefile         |   2 +
- arch/x86/pci/common.c         |  38 +++
- arch/x86/pci/vmd.c            | 646 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/msi.c             |   2 +
- drivers/pci/probe.c           |  10 +-
- kernel/irq/irqdomain.c        |   1 +
- kernel/irq/msi.c              |   8 +-
- 10 files changed, 730 insertions(+), 5 deletions(-)
- create mode 100644 arch/x86/pci/vmd.c
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 53e4632..7eaa4c8 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -54,7 +54,7 @@ static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 	struct irq_domain *domain;
+ 
+ 	domain = pci_msi_get_domain(dev);
+-	if (domain)
++	if (domain && irq_domain_is_hierarchy(domain))
+ 		return pci_msi_domain_alloc_irqs(domain, dev, nvec, type);
+ 
+ 	return arch_setup_msi_irqs(dev, nvec, type);
+@@ -65,7 +65,7 @@ static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
+ 	struct irq_domain *domain;
+ 
+ 	domain = pci_msi_get_domain(dev);
+-	if (domain)
++	if (domain && irq_domain_is_hierarchy(domain))
+ 		pci_msi_domain_free_irqs(domain, dev);
+ 	else
+ 		arch_teardown_msi_irqs(dev);
 
 -- 
-2.6.2.307.g37023ba
-
+Jazz is not dead. It just smells funny...
