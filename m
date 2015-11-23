@@ -1,103 +1,537 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43755 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750850AbbKJAJb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Nov 2015 19:09:31 -0500
-Subject: Re: ECRC and Max Read Request Size
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <56310B34.6000102@codeaurora.org>
- <20151106172205.GA1002@localhost> <563CE93F.5060209@codeaurora.org>
- <20151107001143.GA17842@localhost> <563D7287.1050500@codeaurora.org>
- <20151109194732.GB4789@localhost>
-Cc: linux-pci@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <564135B8.5090608@codeaurora.org>
-Date: Mon, 9 Nov 2015 19:09:28 -0500
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:53962 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754340AbbKWXHG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 18:07:06 -0500
+Received: from localhost
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 24 Nov 2015 09:07:04 +1000
+Date: Tue, 24 Nov 2015 10:06:01 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@au1.ibm.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com
+Subject: Re: [PATCH v7 27/50] powerpc/powernv: Dynamically release PEs
+Message-ID: <20151123230601.GC5375@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-28-git-send-email-gwshan@linux.vnet.ibm.com>
+ <564BE109.8000809@au1.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20151109194732.GB4789@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <564BE109.8000809@au1.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Nov 18, 2015 at 01:23:05PM +1100, Alexey Kardashevskiy wrote:
+>On 11/05/2015 12:12 AM, Gavin Shan wrote:
+>>This adds a reference count of PE, representing the number of PCI
+>>devices associated with the PE. The reference count is increased
+>>or decreased when PCI devices join or leave the PE. Once it becomes
+>>zero, the PE together with its used resources (IO, MMIO, DMA, PELTM,
+>>PELTV) are released to support PCI hot unplug.
+>
+>
+>The commit log suggest the patch only adds a counter, initializes it, and
+>replaces unconditional release of an object (in this case - PE) with the
+>conditional one. But it is more that that...
+>
 
+Yes, it's more than that as stated in the commit log.
 
-On 11/9/2015 2:47 PM, Bjorn Helgaas wrote:
-> On Fri, Nov 06, 2015 at 10:39:51PM -0500, Sinan Kaya wrote:
->> On 11/6/2015 7:11 PM, Bjorn Helgaas wrote:
->>> That should definitely be fixed.  Do we enable ECRC unconditionally,
->>> or only when we boot with "pci=ecrc=on"?  The doc
->>> (Documentation/kernel-parameters.txt) suggests the latter.
->>>
->>> It would be ideal if we could try to turn on ECRC all the time by
->>> default for paths that support it.  I suppose there's some risk that
->>> we'd trip over broken hardware.  If that's an issue, we could consider
->>> turning it on all the time on machines newer than X (that's easy on
->>> x86, where we have a DMI BIOS date, but maybe not so easy on other
->>> arches).
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c | 245 ++++++++++++++++++++++++++----
+>>  arch/powerpc/platforms/powernv/pci.h      |   1 +
+>>  2 files changed, 218 insertions(+), 28 deletions(-)
 >>
->> ecrc=on kernel option works like "force on" rather than just a simple on.
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index 0bb0056..dcffce5 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -129,6 +129,215 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
+>>  		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
+>>  }
+>>
+>>+static void pnv_pci_ioda1_release_dma_pe(struct pnv_ioda_pe *pe)
+>>+{
+>>+	struct pnv_phb *phb = pe->phb;
+>>+	struct iommu_table *tbl;
+>>+	int start, count, i;
+>>+	int64_t rc;
+>>+
+>>+	/* Search for the used DMA32 segments */
+>>+	start = -1;
+>>+	count = 0;
+>>+	for (i = 0; i < phb->ioda.dma32_count; i++) {
+>>+		if (phb->ioda.dma32_segmap[i] != pe->pe_number)
+>>+			continue;
+>>+
+>>+		count++;
+>>+		if (start < 0)
+>>+			start = i;
+>>+	}
+>>+
+>>+	if (!count)
+>>+		return;
 >
-> What do you mean by "force on" as opposed to "simple on"?
 >
->> I agree we should enable it by default.
->
-> Part of the consideration is that enabling ECRC generation does
-> increase the size of every TLP by 4 bytes, which reduces the link
-> throughput slightly, so I'm not sure we want to blindly enable it.
->
-> If I understand the current Linux code correctly, by default (booting
-> with no parameter at all, or with "pci=ecrc=bios"), we don't touch
-> ECRC at all -- we don't even look to see whether it's supported, and
-> we don't enable or disable anything.
->
-> With "pci=ecrc=on", we turn on ECRC generation (if supported) and ECRC
-> checking (if supported) for every device, including those hot-added
-> after boot.
->
-> I do like the idea of letting platform firmware decide whether ECRC
-> should be enabled by default, because then we don't have to decide on
-> a policy in Linux.  Following the lead of the firmware lets OEMs
-> decide whether ECRC is a feature they want to market and support.
->
-> I think the current strategy could be improved for hot-added devices.
-> In the default ("pci=ecrc=bios") case, we leave them alone, which
-> means they won't check ECRC because the enable bits will be zero after
-> power-up.  If the platform firmware enabled ECRC generation in the
-> upstream Root Port, we're paying the cost of lower throughput without
-> getting any benefit for it.
->
-> It doesn't look like ECRC has any dependencies or ordering
-> requirements, so we could also consider adding sysfs knobs to
-> enable/disable ECRC at run-time.  I can imagine systems where we want
-> ECRC on some paths, e.g., to a disk or network, but not on others,
-> e.g., to a display.  Sysfs would be a way to allow that, although it
-> *is* an administrative burden.
+>imho checking pe->table_group.tables[0] != NULL is shorter than the loop above.
 >
 
-I had to go back and re-read the spec. My understanding was that you can 
-always enable ECRC checking but you need to have every device ECRC check 
-enabled in order to generate the ECRC downstream direction.
+Will use it in next revision.
 
-Now, by looking at the spec section you mentioned; this turns out to be 
-not true. ECRC checking and generation can be enabled all the time.
-
-I'll enable ECRC and run it against multiple cards to confirm. I was 
-using PCIe Keysight Exerciser when I was testing ECRC. Since it is a 
-PCIE exerciser, I might have forgotten to enable something in the GUI. 
-I'll double check.
-
-BTW, ECRC has negligible performance overhead.
-
-
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>+
+>>+	/* Unlink IOMMU table from group */
+>>+	tbl = pe->table_group.tables[0];
+>>+	pnv_pci_unlink_table_and_group(tbl, &pe->table_group);
+>>+	if (pe->table_group.group) {
+>>+		iommu_group_put(pe->table_group.group);
+>>+		WARN_ON(pe->table_group.group);
+>>+	}
+>>+
+>>+	/* Release IOMMU table */
+>>+	pnv_pci_ioda2_table_free_pages(tbl);
+>
+>
+>This is IODA2 helper with multilevel support, does IODA1 support multilevel
+>TCE tables? If not, it should WARN_ON on levels!=1.
+>
+>Another thing is you should first unprogram TVEs (via
+>opal_pci_map_pe_dma_window), then invalidate the cache (if required, not sure
+>if this is needed on IODA1), only then free the actual table.
+>
+>
+>>+	iommu_free_table(tbl, of_node_full_name(pci_bus_to_OF_node(pe->pbus)));
+>>+
+>>+	/* Disable TVE */
+>>+	for (i = start; i < start + count; i++) {
+>>+		rc = opal_pci_map_pe_dma_window(phb->opal_id, pe->pe_number,
+>>+						i, 0, 0ul, 0ul, 0ul);
+>>+		if (rc)
+>>+			pe_warn(pe, "Error %ld unmapping DMA32 seg#%d\n",
+>>+				rc, i);
+>>+
+>>+		phb->ioda.dma32_segmap[i] = IODA_INVALID_PE;
+>>+	}
+>
+>
+>You could implement pnv_pci_ioda1_unset_window/pnv_ioda1_table_free as
+>callbacks, change pnv_pci_ioda2_release_dma_pe() to use them (and rename it
+>to reflect that it supports IODA1 and IODA2).
+>
+>
+>>+}
+>>+
+>>+static unsigned int pnv_pci_ioda_pe_dma_weight(struct pnv_ioda_pe *pe);
+>>+static long pnv_pci_ioda2_unset_window(struct iommu_table_group *table_group,
+>>+		int num);
+>>+static void pnv_pci_ioda2_set_bypass(struct pnv_ioda_pe *pe, bool enable);
+>>+
+>>+static void pnv_pci_ioda2_release_dma_pe(struct pnv_ioda_pe *pe)
+>
+>
+>You moved this function and changed it, please do one thing at once (which is
+>"change", not "move").
+>
+>>+{
+>>+	struct iommu_table *tbl;
+>>+	unsigned int weight = pnv_pci_ioda_pe_dma_weight(pe);
+>>+	int64_t rc;
+>>+
+>>+	if (!weight)
+>>+		return;
+>
+>
+>Checking for pe->table_group.group is better because if we ever change the
+>logic of what gets included to an IOMMU group, we will have to do the change
+>where we add devices to a group but we won't have to touch releasing code.
+>
+>
+>>+
+>>+	tbl = pe->table_group.tables[0];
+>>+	rc = pnv_pci_ioda2_unset_window(&pe->table_group, 0);
+>>+	if (rc)
+>>+		pe_warn(pe, "OPAL error %ld release DMA window\n", rc);
+>>+
+>>+	pnv_pci_ioda2_set_bypass(pe, false);
+>>+	if (pe->table_group.group) {
+>>+		iommu_group_put(pe->table_group.group);
+>>+		WARN_ON(pe->table_group.group);
+>>+	}
+>>+
+>>+	pnv_pci_ioda2_table_free_pages(tbl);
+>>+	iommu_free_table(tbl, "pnv");
+>>+}
+>>+
+>>+static void pnv_ioda_release_dma_pe(struct pnv_ioda_pe *pe)
+>
+>Merge this into pnv_ioda_release_pe() - it is small and called just once.
+>
+>
+>>+{
+>>+	struct pnv_phb *phb = pe->phb;
+>>+
+>>+	switch (phb->type) {
+>>+	case PNV_PHB_IODA1:
+>>+		pnv_pci_ioda1_release_dma_pe(pe);
+>>+		break;
+>>+	case PNV_PHB_IODA2:
+>>+		pnv_pci_ioda2_release_dma_pe(pe);
+>>+		break;
+>>+	default:
+>>+		WARN_ON(1);
+>>+	}
+>>+}
+>>+
+>>+static void pnv_ioda_release_window(struct pnv_ioda_pe *pe, int win)
+>>+{
+>>+	struct pnv_phb *phb = pe->phb;
+>>+	int index, *segmap = NULL;
+>>+	int64_t rc;
+>>+
+>>+	switch (win) {
+>>+	case OPAL_IO_WINDOW_TYPE:
+>>+		segmap = phb->ioda.io_segmap;
+>>+		break;
+>>+	case OPAL_M32_WINDOW_TYPE:
+>>+		segmap = phb->ioda.m32_segmap;
+>>+		break;
+>>+	case OPAL_M64_WINDOW_TYPE:
+>>+		if (phb->type != PNV_PHB_IODA1)
+>>+			return;
+>>+		segmap = phb->ioda.m64_segmap;
+>>+		break;
+>>+	default:
+>>+		return;
+>
+>Unnecessary return.
+>
+>
+>>+	}
+>>+
+>>+	for (index = 0; index < phb->ioda.total_pe_num; index++) {
+>>+		if (segmap[index] != pe->pe_number)
+>>+			continue;
+>>+
+>>+		if (win == OPAL_M64_WINDOW_TYPE)
+>>+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>>+					phb->ioda.reserved_pe_idx, win,
+>>+					index / PNV_IODA1_M64_SEGS,
+>>+					index % PNV_IODA1_M64_SEGS);
+>>+		else
+>>+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>>+					phb->ioda.reserved_pe_idx, win,
+>>+					0, index);
+>>+
+>>+		if (rc != OPAL_SUCCESS)
+>>+			pe_warn(pe, "Error %ld unmapping (%d) segment#%d\n",
+>>+				rc, win, index);
+>>+
+>>+		segmap[index] = IODA_INVALID_PE;
+>>+	}
+>>+}
+>>+
+>>+static void pnv_ioda_release_pe_seg(struct pnv_ioda_pe *pe)
+>>+{
+>>+	struct pnv_phb *phb = pe->phb;
+>>+	int win;
+>>+
+>>+	for (win = OPAL_M32_WINDOW_TYPE; win <= OPAL_IO_WINDOW_TYPE; win++) {
+>>+		if (phb->type == PNV_PHB_IODA2 && win == OPAL_IO_WINDOW_TYPE)
+>>+			continue;
+>
+>Move this check to pnv_ioda_release_window() or move case(win ==
+>OPAL_M64_WINDOW_TYPE):if(phb->type != PNV_PHB_IODA1) from that function here.
+>
+>
+>>+
+>>+		pnv_ioda_release_window(pe, win);
+>>+	}
+>>+}
+>
+>This is shorter and cleaner:
+>
+>
+>static void pnv_ioda_release_window(struct pnv_ioda_pe *pe, int win, int
+>*segmap
+>{
+>        struct pnv_phb *phb = pe->phb;
+>        int index;
+>        int64_t rc;
+>
+>        for (index = 0; index < phb->ioda.total_pe_num; index++) {
+>                if (segmap[index] != pe->pe_number)
+>                        continue;
+>
+>                if (win == OPAL_M64_WINDOW_TYPE)
+>                        rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>                                        phb->ioda.reserved_pe_idx, win,
+>                                        index / PNV_IODA1_M64_SEGS,
+>                                        index % PNV_IODA1_M64_SEGS);
+>                else
+>                        rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>                                        phb->ioda.reserved_pe_idx, win,
+>                                        0, index);
+>
+>                if (rc != OPAL_SUCCESS)
+>                        pe_warn(pe, "Error %ld unmapping (%d) segment#%d\n",
+>                                rc, win, index);
+>
+>                segmap[index] = IODA_INVALID_PE;
+>        }
+>}
+>
+>static void pnv_ioda_release_pe_seg(struct pnv_ioda_pe *pe)
+>{
+>        pnv_ioda_release_window(pe, OPAL_M32_WINDOW_TYPE,
+>phb->ioda.m32_segmap);
+>        if (phb->type != PNV_PHB_IODA2)
+>                pnv_ioda_release_window(pe, OPAL_IO_WINDOW_TYPE,
+>                                phb->ioda.io_segmap);
+>	else
+>                pnv_ioda_release_window(pe, OPAL_M64_WINDOW_TYPE,
+>                                phb->ioda.m64_segmap);
+>}
+>
+>
+>I'd actually merge pnv_ioda_release_pe_seg() into pnv_ioda_release_pe() as
+>well as it is also small and called once.
+>
+>
+>>+
+>>+static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb,
+>>+				   struct pnv_ioda_pe *pe);
+>>+static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe);
+>>+static void pnv_ioda_release_pe(struct pnv_ioda_pe *pe)
+>>+{
+>>+	struct pnv_ioda_pe *tmp, *slave;
+>>+
+>>+	/* Release slave PEs in compound PE */
+>>+	if (pe->flags & PNV_IODA_PE_MASTER) {
+>>+		list_for_each_entry_safe(slave, tmp, &pe->slaves, list)
+>>+			pnv_ioda_release_pe(slave);
+>>+	}
+>>+
+>>+	/* Remove the PE from the list */
+>>+	list_del(&pe->list);
+>>+
+>>+	/* Release resources */
+>>+	pnv_ioda_release_dma_pe(pe);
+>>+	pnv_ioda_release_pe_seg(pe);
+>>+	pnv_ioda_deconfigure_pe(pe->phb, pe);
+>>+
+>>+	pnv_ioda_free_pe(pe);
+>>+}
+>>+
+>>+static inline struct pnv_ioda_pe *pnv_ioda_pe_get(struct pnv_ioda_pe *pe)
+>>+{
+>>+	if (!pe)
+>>+		return NULL;
+>>+
+>>+	pe->device_count++;
+>>+	return pe;
+>>+}
+>>+
+>>+static inline void pnv_ioda_pe_put(struct pnv_ioda_pe *pe)
+>
+>
+>Merge this into pnv_pci_release_device() as it is small and called only once.
 >
 
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+I don't think so. The functions pnv_ioda_pe_{get,put}() are paired. I think it's
+good enough to have separate function for the logic included in pnv_ioda_pe_put().
+
+>>+{
+>>+	if (!pe)
+>>+		return;
+>>+
+>>+	pe->device_count--;
+>>+	WARN_ON(pe->device_count < 0);
+>>+	if (pe->device_count == 0)
+>>+		pnv_ioda_release_pe(pe);
+>>+}
+>>+
+>>+static void pnv_pci_release_device(struct pci_dev *pdev)
+>>+{
+>>+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+>>+	struct pnv_phb *phb = hose->private_data;
+>>+	struct pci_dn *pdn = pci_get_pdn(pdev);
+>>+	struct pnv_ioda_pe *pe;
+>>+
+>>+	if (pdev->is_virtfn)
+>>+		return;
+>>+
+>>+	if (!pdn || pdn->pe_number == IODA_INVALID_PE)
+>>+		return;
+>>+
+>>+	pe = &phb->ioda.pe_array[pdn->pe_number];
+>>+	pnv_ioda_pe_put(pe);
+>>+}
+>>+
+>>  static struct pnv_ioda_pe *pnv_ioda_init_pe(struct pnv_phb *phb, int pe_no)
+>>  {
+>>  	phb->ioda.pe_array[pe_no].phb = phb;
+>>@@ -724,7 +933,6 @@ static int pnv_ioda_set_peltv(struct pnv_phb *phb,
+>>  	return 0;
+>>  }
+>>
+>>-#ifdef CONFIG_PCI_IOV
+>>  static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>>  {
+>>  	struct pci_dev *parent;
+>>@@ -759,9 +967,11 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>>  		}
+>>  		rid_end = pe->rid + (count << 8);
+>>  	} else {
+>>+#ifdef CONFIG_PCI_IOV
+>>  		if (pe->flags & PNV_IODA_PE_VF)
+>>  			parent = pe->parent_dev;
+>>  		else
+>>+#endif
+>>  			parent = pe->pdev->bus->self;
+>>  		bcomp = OpalPciBusAll;
+>>  		dcomp = OPAL_COMPARE_RID_DEVICE_NUMBER;
+>>@@ -799,11 +1009,12 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>>
+>>  	pe->pbus = NULL;
+>>  	pe->pdev = NULL;
+>>+#ifdef CONFIG_PCI_IOV
+>>  	pe->parent_dev = NULL;
+>>+#endif
+>
+>
+>These #ifdef movements seem very much unrelated.
+>
+
+It's related: pnv_ioda_deconfigure_pe() was used for VF PE only. Now it's used by all
+types of PEs. pe->parent_dev is declared as below:
+
+#ifdef CONFIG_PCI_IOV
+        struct pci_dev          *parent_dev;
+#endif
+
+>
+>>
+>>  	return 0;
+>>  }
+>>-#endif /* CONFIG_PCI_IOV */
+>>
+>>  static int pnv_ioda_configure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>>  {
+>>@@ -985,6 +1196,7 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+>>  			continue;
+>>
+>>  		pdn->pe_number = pe->pe_number;
+>>+		pnv_ioda_pe_get(pe);
+>>  		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
+>>  			pnv_ioda_setup_same_PE(dev->subordinate, pe);
+>>  	}
+>>@@ -1047,9 +1259,8 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>>  			bus->busn_res.start, pe->pe_number);
+>>
+>>  	if (pnv_ioda_configure_pe(phb, pe)) {
+>>-		/* XXX What do we do here ? */
+>>-		pnv_ioda_free_pe(pe);
+>>  		pe->pbus = NULL;
+>>+		pnv_ioda_release_pe(pe);
+>
+>
+>This is unrelated unexplained change.
+>
+
+Will drop it in next revision.
+
+>>  		return NULL;
+>>  	}
+>>
+>>@@ -1199,29 +1410,6 @@ m64_failed:
+>>  	return -EBUSY;
+>>  }
+>>
+>>-static long pnv_pci_ioda2_unset_window(struct iommu_table_group *table_group,
+>>-		int num);
+>>-static void pnv_pci_ioda2_set_bypass(struct pnv_ioda_pe *pe, bool enable);
+>>-
+>>-static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev, struct pnv_ioda_pe *pe)
+>>-{
+>>-	struct iommu_table    *tbl;
+>>-	int64_t               rc;
+>>-
+>>-	tbl = pe->table_group.tables[0];
+>>-	rc = pnv_pci_ioda2_unset_window(&pe->table_group, 0);
+>>-	if (rc)
+>>-		pe_warn(pe, "OPAL error %ld release DMA window\n", rc);
+>>-
+>>-	pnv_pci_ioda2_set_bypass(pe, false);
+>>-	if (pe->table_group.group) {
+>>-		iommu_group_put(pe->table_group.group);
+>>-		BUG_ON(pe->table_group.group);
+>>-	}
+>>-	pnv_pci_ioda2_table_free_pages(tbl);
+>>-	iommu_free_table(tbl, of_node_full_name(dev->dev.of_node));
+>>-}
+>>-
+>>  static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
+>>  {
+>>  	struct pci_bus        *bus;
+>>@@ -1242,7 +1430,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
+>>  		if (pe->parent_dev != pdev)
+>>  			continue;
+>>
+>>-		pnv_pci_ioda2_release_dma_pe(pdev, pe);
+>>+		pnv_pci_ioda2_release_dma_pe(pe);
+>
+>
+>This is unrelated change.
+>
+
+
+>>
+>>  		/* Remove from list */
+>>  		mutex_lock(&phb->ioda.pe_list_mutex);
+>>@@ -3124,6 +3312,7 @@ static const struct pci_controller_ops pnv_pci_ioda_controller_ops = {
+>>  	.teardown_msi_irqs	= pnv_teardown_msi_irqs,
+>>  #endif
+>>  	.enable_device_hook	= pnv_pci_enable_device_hook,
+>>+	.release_device		= pnv_pci_release_device,
+>>  	.window_alignment	= pnv_pci_window_alignment,
+>>  	.setup_bridge		= pnv_pci_setup_bridge,
+>>  	.reset_secondary_bus	= pnv_pci_reset_secondary_bus,
+>>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>index ef5271a..3bb10de 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.h
+>>+++ b/arch/powerpc/platforms/powernv/pci.h
+>>@@ -30,6 +30,7 @@ struct pnv_phb;
+>>  struct pnv_ioda_pe {
+>>  	unsigned long		flags;
+>>  	struct pnv_phb		*phb;
+>>+	int			device_count;
+>
+>Not atomic_t, no kref, no additional mutex, just "int"? Sure about it? If so,
+>put a note to the commit log about what provides a guarantee that there is no
+>race.
+>
+>
+
+It was a kref. Something you suggested on v5 as below:
+
+| You do not need kref here. You call kref_put() in a single location and can do
+| stuff directly, without kref. Just have an "unsigned int" counter and that's
+| it (it does not even have to be atomic if you do not have races but I am not
+| sure you do not).
+|
+
+>>
+>>  	/* A PE can be associated with a single device or an
+>>  	 * entire bus (& children). In the former case, pdev
+>>
+
+Thanks,
+Gavin
+
