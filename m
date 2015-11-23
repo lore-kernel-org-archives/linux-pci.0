@@ -1,101 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:2458 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751749AbbKIQLZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Nov 2015 11:11:25 -0500
-Date: Mon, 9 Nov 2015 17:11:16 +0100
-From: Thierry Reding <treding@nvidia.com>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 23 Nov 2015 10:13:29 -0800
+From: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+To: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+CC: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
-Message-ID: <20151109161115.GA13870@ulmo.nvidia.com>
-References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>
- <PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>
+Subject: Re: [PATCH v3 3/6] DT: PCI: qcom: Document PCIe devicetree bindings
+Message-ID: <20151123181329.GN30882@usrtlx11787.corpusers.net>
+References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
+ <8fd3e7d1662f37abe549127d179c315dff3210d8.1448270813.git.stanimir.varbanov@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <PS1PR06MB11804ED428472FC1FD776F6EF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="YZ5djTAD1cGYuMQK"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <8fd3e7d1662f37abe549127d179c315dff3210d8.1448270813.git.stanimir.varbanov@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---YZ5djTAD1cGYuMQK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Mon 23 Nov 01:29 PST 2015, Stanimir Varbanov wrote:
 
-On Mon, Nov 09, 2015 at 03:20:24PM +0000, Phil Edworthy wrote:
-> cc'ing others (Tegra, Altera, Designware) who may have the same bug
->=20
-> On 03 November 2015 09:28, Phil Edworthy wrote:
-> > The OF node passed to irq_domain_add_linear() should be a
-> > pointer to interrupt controller's device tree node, or NULL,
-> > but not the PCI controller's node.
-> >=20
-> > This fixes an oops in msi_domain_alloc_irqs() when it tries
-> > to call msi_check().
-> >=20
-> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > ---
-> >  drivers/pci/host/pcie-rcar.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >=20
-> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> > index 2377bf0..c6fa562 100644
-> > --- a/drivers/pci/host/pcie-rcar.c
-> > +++ b/drivers/pci/host/pcie-rcar.c
-> > @@ -709,7 +709,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *p=
-cie)
-> >  	msi->chip.setup_irq =3D rcar_msi_setup_irq;
-> >  	msi->chip.teardown_irq =3D rcar_msi_teardown_irq;
-> >=20
-> > -	msi->domain =3D irq_domain_add_linear(pcie->dev->of_node,
-> > INT_PCI_MSI_NR,
-> > +	msi->domain =3D irq_domain_add_linear(NULL, INT_PCI_MSI_NR,
-> >  					    &msi_domain_ops, &msi->chip);
-> >  	if (!msi->domain) {
-> >  		dev_err(&pdev->dev, "failed to create IRQ domain\n");
+> From: Stanimir Varbanov <svarbanov@mm-sol.com>
+> 
+> Document Qualcomm PCIe driver devicetree bindings.
+> 
+> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+> Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+> ---
+>  .../devicetree/bindings/pci/qcom,pcie.txt          |  231 ++++++++++++++++++++
+>  1 file changed, 231 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> new file mode 100644
+> index 000000000000..d7640d45fa31
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> @@ -0,0 +1,231 @@
+> +* Qualcomm PCI express root complex
+> +
+> +- compatible:
+> +	Usage: required
+> +	Value type: <stringlist>
+> +	Definition: Value shall include
+> +		    - "qcom,pcie-v0" for apq/ipq8064
+> +		    - "qcom,pcie-v1" for apq8084
 
-On Tegra the PCI controller is in fact the interrupt controller for
-MSIs. And looking at the code here it seems like the same would apply to
-RCAR.
+Do you know if we have the same v1 of this block in 8994?
 
-I'm also slightly confused as to why this would cause ->msi_check() to
-fail. The default implementation (msi_domain_ops_check()) doesn't do
-anything.
+[..]
+> +- clock-names:
+> +	Usage: required
+> +	Value type: <stringlist>
+> +	Definition: Should contain the following entries
+> +		    * should be populated for v0 and v1
+> +		    	- "iface"      Configuration AHB clock
+> +
+> +		    * should be populated for v0
+> +		    	- "core"       Clocks the pcie hw block
+> +		    	- "phy"        Clocks the pcie PHY block
+> +
+> +		    * should be populated for v1
+> +			- "aux"        Auxiliary (AUX) clock
+> +		    	- "bus_master" Master AXI clock
+> +		    	- "bus_slave"  Slave AXI clock
 
-Also, how is passing in NULL instead of a valid struct device_node *
-going to prevent an oops? Perhaps this is one of those reference count
-imbalance bugs that have recently been showing up?
+You have white spaces among your tabs here.
 
-Thierry
+[..]
+> +- <name>-supply:
+> +	Usage: required
+> +	Value type: <phandle>
+> +	Definition: List of phandles to the power supply regulator(s)
+> +		    * should be populated for v0 and v1
+> +			- "vdda"        core analog power supply
+> +
+> +		    * should be populated for v0
+> +			- "vdda_phy"    analog power supply for PHY
+> +			- "vdda_refclk" analog power supply for IC which generate
+> +					reference clock
 
---YZ5djTAD1cGYuMQK
-Content-Type: application/pgp-signature; name="signature.asc"
+Exploding these into 3 different property descriptions would make it
+easier to read, and you can say "required for v0" for the latter
+two and simply "required" on the vdda.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+[..]
+> +- <name>-gpio:
+> +	Usage: optional
+> +	Value type: <prop-encoded-array>
+> +	Definition: List of phandle and gpio specifier pairs. Should contain
+> +		    - "perst"  PCIe endpoint reset signal line
+> +		    - "pewake" PCIe endpoint wake signal line
 
-iQIcBAABCAAGBQJWQMWgAAoJEN0jrNd/PrOhdD8QAKFkmOues/SUKXpCDYW9EQAP
-gtTaw7G9M6+DnT86teARhJsUyAbWqZhURu4D/UjVeuf8o1DjsPfwCTaFaj/8Y45X
-D3GMBV93M8NT/huLRFy9ABgxgByXRXoBYlvZ99MmKmE6Tbjlv72F/L37WURmyRSU
-WbTVVyI1Vx8ykLzaLRLboCETu0djC8hp4utubIWF5y/rK1FxqJdFqygTq0cvRXE8
-ARZUKkq6dfxh/HpHq3Fd5mHE/b5xJ4CPxtd/RWR0+1S3xHwrWmhmdnJw4NHwD0vK
-K9VE+6zJs+wOgDlULTZVloeZ8NZtyQkKoMXe57Az/WhmtV2zPP+NN8y9nXTiykDj
-5eeWu3D6XlMfXMwKHTJgWFeyG9uReGgRNVg4b2L4KDHdkpuBtuxdn6hNeEEZBtdz
-p30Gc3Tn0LlTaQrUOGR4P3D2c/4XWt6CitE/VZ5GaAnm+PkJqGwEyG3tvXd9ABIp
-3MV4SCj8F1eyU/EIdByJ50Vipdmg4cbxpl5N6+xbBbYwAoTPcLAlrc2h5sMFQ62W
-fhYN5OYG+3EnDwoHL4up2A/FaMNIFzDdp4zcT7Tm9YyBRvWKyOYIzVS1jk8x6oA4
-cpdfbxVsghQDRx4ohXbEGPSDZ8x7fKUF4CCrs5xSOeIzMMpaj9F8xzWDZCsW+3sS
-9z2h/YKt2jxDNK3v3jGa
-=OPe1
------END PGP SIGNATURE-----
+This property should be pluralized, i.e. it's <name>-gpios.
 
---YZ5djTAD1cGYuMQK--
+Are these identifiers coming from some data sheet? Or could we simply
+name them "reset" and "wakeup"?
+
+> +
+> +- pinctrl-0:
+> +	Usage: required
+> +	Value type: <phandle>
+> +	Definition: List of phandles pointing at a pin(s) configuration
+
+This is not required and as it's a property applicable to all devices we
+normally don't mention them.
+
+> +
+> +- pinctrl-names
+> +	Usage: required
+> +	Value type: <stringlist>
+> +	Definition: List of names of pinctrl-0 state
+> +
+
+dito
+
+Regards,
+Bjorn
