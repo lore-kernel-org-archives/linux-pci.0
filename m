@@ -1,150 +1,284 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:32930 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750781AbbKKSY6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 Nov 2015 13:24:58 -0500
-Date: Wed, 11 Nov 2015 18:24:56 +0000
-From: "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Will Deacon <will.deacon@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:37632 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753808AbbKWJ3m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 04:29:42 -0500
+Received: by wmww144 with SMTP id w144so95967920wmw.0
+        for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2015 01:29:40 -0800 (PST)
+From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+To: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Magnus <magnus.damm@gmail.com>
-Subject: Re: PCIe host controller behind IOMMU on ARM
-Message-ID: <20151111182456.GV963@e106497-lin.cambridge.arm.com>
-References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151104142412.GS963@e106497-lin.cambridge.arm.com>
- <PS1PR06MB11804263DD55C54C5987654EF52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151104150147.GT963@e106497-lin.cambridge.arm.com>
- <PS1PR06MB11806B65D3408BDFBEAD9D3AF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <PS1PR06MB11806B65D3408BDFBEAD9D3AF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Subject: [PATCH v3 3/6] DT: PCI: qcom: Document PCIe devicetree bindings
+Date: Mon, 23 Nov 2015 11:29:00 +0200
+Message-Id: <8fd3e7d1662f37abe549127d179c315dff3210d8.1448270813.git.stanimir.varbanov@linaro.org>
+In-Reply-To: <cover.1448270813.git.stanimir.varbanov@linaro.org>
+References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
+In-Reply-To: <cover.1448270813.git.stanimir.varbanov@linaro.org>
+References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 09, 2015 at 12:32:13PM +0000, Phil Edworthy wrote:
-> Hi Liviu, Will,
-> 
-> On 04 November 2015 15:19, Phil wrote:
-> > On 04 November 2015 15:02, Liviu wrote:
-> > > On Wed, Nov 04, 2015 at 02:48:38PM +0000, Phil Edworthy wrote:
-> > > > Hi Liviu,
-> > > >
-> > > > On 04 November 2015 14:24, Liviu wrote:
-> > > > > On Wed, Nov 04, 2015 at 01:57:48PM +0000, Phil Edworthy wrote:
-> > > > > > Hi,
-> > > > > >
-> > > > > > I am trying to hook up a PCIe host controller that sits behind an IOMMU,
-> > > > > > but having some problems.
-> > > > > >
-> > > > > > I'm using the pcie-rcar PCIe host controller and it works fine without
-> > > > > > the IOMMU, and I can attach the IOMMU to the controller such that any
-> > > calls
-> > > > > > to dma_alloc_coherent made by the controller driver uses the
-> > iommu_ops
-> > > > > > version of dma_ops.
-> > > > > >
-> > > > > > However, I can't see how to make the endpoints to utilise the dma_ops
-> > that
-> > > > > > the controller uses. Shouldn't the endpoints inherit the dma_ops from the
-> > > > > > controller?
-> > > > >
-> > > > > No, not directly.
-> > > > >
-> > > > > > Any pointers for this?
-> > > > >
-> > > > > You need to understand the process through which a driver for endpoint
-> > get
-> > > > > an address to be passed down to the device. Have a look at
-> > > > > Documentation/DMA-API-HOWTO.txt, there is a nice explanation there.
-> > > > > (Hint: EP driver needs to call dma_map_single).
-> > > > >
-> > > > > Also, you need to make sure that the bus address that ends up being set
-> > into
-> > > > > the endpoint gets translated correctly by the host controller into an address
-> > > > > that the IOMMU can then translate into physical address.
-> > > > Sure, though since this is bog standard Intel PCIe ethernet card which works
-> > > > fine when the IOMMU is effectively unused, I don’t think there is a problem
-> > > > with that.
-> > > >
-> > > > The driver for the PCIe controller sets up the IOMMU mapping ok when I
-> > > > do a test call to dma_alloc_coherent() in the controller's driver. i.e. when I
-> > > > do this, it ends up in arm_iommu_alloc_attrs(), which calls
-> > > > __iommu_alloc_buffer() and __alloc_iova().
-> > > >
-> > > > When an endpoint driver allocates and maps a dma coherent buffer it
-> > > > also needs to end up in arm_iommu_alloc_attrs(), but it doesn't.
-> > >
-> > > Why do you think that? Remember that the only thing attached to the IOMMU
-> > is
-> > > the
-> > > host controller. The endpoint is on the PCIe bus, which gets a different
-> > > translation
-> > > that the IOMMU knows nothing about. If it helps you to visualise it better, think
-> > > of the host controller as another IOMMU device. It's the ops of the host
-> > > controller
-> > > that should be invoked, not the IOMMU's.
-> > Ok, that makes sense. I'll have a think and poke it a bit more...
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
 
-Hi Phil,
+Document Qualcomm PCIe driver devicetree bindings.
 
-Not trying to ignore your email, but I thought this is more in Will's backyard.
+Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+---
+ .../devicetree/bindings/pci/qcom,pcie.txt          |  231 ++++++++++++++++++++
+ 1 file changed, 231 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
 
-> Somewhat related to this, since our PCIe controller HW is limited to
-> 32-bit AXI address range, before trying to hook up the IOMMU I have
-> tried to limit the dma_mask for PCI cards to DMA_BIT_MASK(32). The
-> reason being that Linux uses a 1 to 1 mapping between PCI addresses
-> and cpu (phys) addresses when there isn't an IOMMU involved, so I
-> think that we need to limit the PCI address space used.
-
-I think you're mixing things a bit or not explaining them very well. Having the
-PCIe controller limited to 32-bit AXI does not mean that the PCIe bus cannot
-carry 64-bit addresses. It depends on how they get translated by the host bridge
-or its associated ATS block. I can't see why you can't have a setup where
-the CPU addresses are 32-bit but the PCIe bus addresses are all 64-bit.
-You just have to be careful on how you setup your mem64 ranges so that they don't
-overlap with the 32-bit ranges when translated.
-
-And no, you should not limit at the card driver the DMA_BIT_MASK() unless the
-card is not capable of supporting more than 32-bit addresses.
-
-> 
-> Since pci_setup_device() sets up dma_mask, I added a bus notifier in the
-> PCIe controller driver so I can change the mask, if needed, on the
-> BUS_NOTIFY_BOUND_DRIVER action.
-> However, I think there is the potential for card drivers to allocate and
-> map buffers before the bus notifier get called. Additionally, I've seen
-> drivers change their behaviour based on the success or failure of
-> dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64)), so the
-> driver could, theoretically at least, operate in a way that is not
-> compatible with a more restricted dma_mask (though I can't think
-> of any way this would not work with hardware I've seen).
-> 
-> So, I think that using a bus notifier is the wrong way to go, but I don’t
-> know what other options I have. Any suggestions?
-
-I would first have a look at how the PCIe bus addresses are translated by the
-host controller. 
-
-Best regards,
-Liviu
-
-> 
-> Thanks for your help
-> Phil
-
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+new file mode 100644
+index 000000000000..d7640d45fa31
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -0,0 +1,231 @@
++* Qualcomm PCI express root complex
++
++- compatible:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Value shall include
++		    - "qcom,pcie-v0" for apq/ipq8064
++		    - "qcom,pcie-v1" for apq8084
++
++- reg:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: Register ranges as listed in the reg-names property
++
++- reg-names:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Must include the following entries
++		    - "parf"   Qualcomm specific registers
++		    - "dbi"    Designware PCIe registers
++		    - "elbi"   External local bus interface registers
++		    - "config" PCIe configuration space
++
++- device_type:
++	Usage: required
++	Value type: <string>
++	Definition: Should be "pci". As specified in designware-pcie.txt
++
++- #address-cells:
++	Usage: required
++	Value type: <u32>
++	Definition: Should be set to 3. As specified in designware-pcie.txt
++
++- #size-cells:
++	Usage: required
++	Value type: <u32>
++	Definition: Should be set 2. As specified in designware-pcie.txt
++
++- ranges:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: As specified in designware-pcie.txt
++
++- interrupts:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: MSI interrupt
++
++- interrupt-names:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Should contain "msi"
++
++- #interrupt-cells:
++	Usage: required
++	Value type: <u32>
++	Definition: Should be 1. As specified in designware-pcie.txt
++
++- interrupt-map-mask:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: As specified in designware-pcie.txt
++
++- interrupt-map:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: As specified in designware-pcie.txt
++
++- clocks:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: List of phandle and clock specifier pairs as listed
++		    in clock-names property
++
++- clock-names:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++		    * should be populated for v0 and v1
++		    	- "iface"      Configuration AHB clock
++
++		    * should be populated for v0
++		    	- "core"       Clocks the pcie hw block
++		    	- "phy"        Clocks the pcie PHY block
++
++		    * should be populated for v1
++			- "aux"        Auxiliary (AUX) clock
++		    	- "bus_master" Master AXI clock
++		    	- "bus_slave"  Slave AXI clock
++
++- resets:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: List of phandle and reset specifier pairs as listed
++		    in reset-names property
++
++- reset-names:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++		    * should be populated for v0
++			- "axi"  AXI reset
++			- "ahb"  AHB reset
++			- "por"  POR reset
++			- "pci"  PCI reset
++			- "phy"  PHY reset
++
++		    * should be populated for v1
++			- "core" Core reset
++
++- power-domains:
++	Usage: required (for v1 only)
++	Value type: <prop-encoded-array>
++	Definition: A phandle and power domain specifier pair to the
++		    power domain which is responsible for collapsing
++		    and restoring power to the peripheral
++
++- <name>-supply:
++	Usage: required
++	Value type: <phandle>
++	Definition: List of phandles to the power supply regulator(s)
++		    * should be populated for v0 and v1
++			- "vdda"        core analog power supply
++
++		    * should be populated for v0
++			- "vdda_phy"    analog power supply for PHY
++			- "vdda_refclk" analog power supply for IC which generate
++					reference clock
++
++- phys:
++	Usage: required (for v1 only)
++	Value type: <phandle>
++	Definition: List of phandle(s) as listed in phy-names property
++
++- phy-names:
++	Usage: required (for v1 only)
++	Value type: <stringlist>
++	Definition: Should contain "pciephy"
++
++- <name>-gpio:
++	Usage: optional
++	Value type: <prop-encoded-array>
++	Definition: List of phandle and gpio specifier pairs. Should contain
++		    - "perst"  PCIe endpoint reset signal line
++		    - "pewake" PCIe endpoint wake signal line
++
++- pinctrl-0:
++	Usage: required
++	Value type: <phandle>
++	Definition: List of phandles pointing at a pin(s) configuration
++
++- pinctrl-names
++	Usage: required
++	Value type: <stringlist>
++	Definition: List of names of pinctrl-0 state
++
++* Example for v0
++	pcie0: pci@1b500000 {
++		compatible = "qcom,pcie-v0", "snps,dw-pcie";
++		reg = <0x1b500000 0x1000
++		       0x1b502000 0x80
++		       0x1b600000 0x100
++		       0x0ff00000 0x100000>;
++		reg-names = "dbi", "elbi", "parf", "config";
++		device_type = "pci";
++		linux,pci-domain = <0>;
++		bus-range = <0x00 0xff>;
++		num-lanes = <1>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges = <0x81000000 0 0	  0x0fe00000 0 0x00100000   /* I/O */
++			  0x82000000 0 0x00000000 0x08000000 0 0x07e00000>; /* memory */
++		interrupts = <GIC_SPI 238 IRQ_TYPE_NONE>;
++		interrupt-names = "msi";
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0x7>;
++		interrupt-map = <0 0 0 1 &intc 0 36 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
++				<0 0 0 2 &intc 0 37 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
++				<0 0 0 3 &intc 0 38 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
++				<0 0 0 4 &intc 0 39 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
++		clocks = <&gcc PCIE_A_CLK>,
++			 <&gcc PCIE_H_CLK>,
++			 <&gcc PCIE_PHY_CLK>;
++		clock-names = "core", "iface", "phy";
++		resets = <&gcc PCIE_ACLK_RESET>,
++			 <&gcc PCIE_HCLK_RESET>,
++			 <&gcc PCIE_POR_RESET>,
++			 <&gcc PCIE_PCI_RESET>,
++			 <&gcc PCIE_PHY_RESET>;
++		reset-names = "axi", "ahb", "por", "pci", "phy";
++	};
++
++* Example for v1
++	pcie0@fc520000 {
++		compatible = "qcom,pcie-v1", "snps,dw-pcie";
++		reg = <0xfc520000 0x2000>,
++		      <0xff000000 0x1000>,
++		      <0xff001000 0x1000>,
++		      <0xff002000 0x2000>;
++		reg-names = "parf", "dbi", "elbi", "config";
++		device_type = "pci";
++		linux,pci-domain = <0>;
++		bus-range = <0x00 0xff>;
++		num-lanes = <1>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges = <0x81000000 0 0          0xff200000 0 0x00100000   /* I/O */
++			  0x82000000 0 0x00300000 0xff300000 0 0x00d00000>; /* memory */
++		interrupts = <GIC_SPI 243 IRQ_TYPE_NONE>;
++		interrupt-names = "msi";
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0x7>;
++		interrupt-map = <0 0 0 1 &intc 0 244 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
++				<0 0 0 2 &intc 0 245 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
++				<0 0 0 3 &intc 0 247 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
++				<0 0 0 4 &intc 0 248 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
++		clocks = <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
++			 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
++			 <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
++			 <&gcc GCC_PCIE_0_AUX_CLK>;
++		clock-names = "iface", "master_bus", "slave_bus", "aux";
++		resets = <&gcc GCC_PCIE_0_BCR>;
++		reset-names = "core";
++		power-domains = <&gcc PCIE0_GDSC>;
++		vdda-supply = <&pma8084_l3>;
++		phys = <&pciephy0>;
++		phy-names = "pciephy";
++		perst-gpio = <&tlmm 70 GPIO_ACTIVE_LOW>;
++		pinctrl-0 = <&pcie0_pins_default>;
++		pinctrl-names = "default";
++	};
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.9.5
+
