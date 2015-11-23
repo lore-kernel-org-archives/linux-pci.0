@@ -1,83 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56027 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753331AbbKGALu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Nov 2015 19:11:50 -0500
-Date: Fri, 6 Nov 2015 18:11:43 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: ECRC and Max Read Request Size
-Message-ID: <20151107001143.GA17842@localhost>
-References: <56310B34.6000102@codeaurora.org>
- <20151106172205.GA1002@localhost>
- <563CE93F.5060209@codeaurora.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:35096 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754082AbbKWWnc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 17:43:32 -0500
+Received: from localhost
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 24 Nov 2015 08:43:30 +1000
+Date: Tue, 24 Nov 2015 09:42:27 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com
+Subject: Re: [PATCH v7 12/50] powerpc/powernv: Track M64 segment consumption
+Message-ID: <20151123224227.GB5375@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-13-git-send-email-gwshan@linux.vnet.ibm.com>
+ <56498D77.2060101@ozlabs.ru>
+ <20151117010446.GA26294@gwshan>
+ <564D1382.6030504@ozlabs.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <563CE93F.5060209@codeaurora.org>
+In-Reply-To: <564D1382.6030504@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 06, 2015 at 12:54:07PM -0500, Sinan Kaya wrote:
-> On 11/6/2015 12:22 PM, Bjorn Helgaas wrote:
-> >On Wed, Oct 28, 2015 at 01:51:48PM -0400, Sinan Kaya wrote:
-> >>I'm seeing two problems with the current PCI framework when it comes
-> >>to end-to-end CRC (ECRC) and Max Read Request Size.
-> >>
-> >>The problem with ECRC is that it blindly enables ECRC generation on
-> >>devices without checking if it is supported by the entire bus with
-> >>ECRC=on option.
-> >>
-> >>ECRC check can be enabled on all devices but ECRC generation on the
-> >>root complex and switches needs to be set only if all devices
-> >>support ECRC checking.
-> >>
-> >>I'm thinking of making changes in this area to cover this gap with
-> >>ECRC=safe option.
-> >
-> >Sometimes they can't be avoided, but I'm generally not in favor of
-> >adding command line parameters because they require too much of our
-> >users and they introduce code paths that are rarely exercised.
-> >
-> >What specific ECRC problem are you seeing?  Do you have devices that
-> >don't operate correctly with the current code?  Or do you want to add
-> >some new functionality, e.g., to enable ECRC in cases where we don't
-> >enable it today?
-> 
-> ECRC is an optional PCIe feature. Even ECRC support has some flavors
-> 
-> - A card can support ECRC checking.
-> - A card can support ECRC checking and generation.
-> 
-> Right now, the code is enabling both without checking if they are
-> supported at all.
-> 
-> I have some legacy PCIe cards that don't support ECRC completely
-> even though the host bridge supports it. If ECRC checking and
-> generation is enabled under this situation, I have problems
-> communicating to the endpoint.
+On Thu, Nov 19, 2015 at 11:10:42AM +1100, Alexey Kardashevskiy wrote:
+>On 11/17/2015 12:04 PM, Gavin Shan wrote:
+>>On Mon, Nov 16, 2015 at 07:01:59PM +1100, Alexey Kardashevskiy wrote:
+>>>On 11/05/2015 12:12 AM, Gavin Shan wrote:
+>>>>As we track M32 segment consumption, this introduces an array to
+>>>>the PHB to track the mapping between M64 segment and PE number.
+>>>>The information is going to be used to find M64 segment from the
+>>>>PE number during PCI unplugging time in subsequent patches.
+>>>
+>>>
+>>>It would not hurt to put a few words about how we managed to live without
+>>>such a mapping for M64 before but we needed mapping for M32.
+>>>
+>>
+>>The M32 mapping (phb->ioda.m32_segmap[]) isn't used for anything before
+>>this patcheset. There're no need for M64 mapping before this patchset
+>>similarly, no need to add the words.
+>
+>After years I learned that reviewers ask less questions about new but yet
+>unused code when I put few words in the commit log confirming that it is not
+>used now but it will be used for <here I put what it is for> later.
+>
+>And it is not obvious that m32_segment is not used. And m64_segmap is started
+>being used only 13 patches later in:
+>
+>[PATCH v7 27/50] powerpc/powernv: Dynamically release PEs
+>
+>which is quite far, complicates reviewing. 12/50 is better be moved there (to
+>make it 26/50) or just merged into 27/50.
+>
 
-That should definitely be fixed.  Do we enable ECRC unconditionally,
-or only when we boot with "pci=ecrc=on"?  The doc
-(Documentation/kernel-parameters.txt) suggests the latter.
+It doesn't make sense to me. As said in PATCH[00/50], the patchset consists of
+3 separate parts: PowerNV PCI rework; Using PCI slot; Hotplug standalone driver;
+For the first part ("PowerNV PCI rework"), the patches are organized in order:
+refactor/cleanup, IO/M32/M64, DMA, PE allocation/deallocation. So I don't think
+I need move the patch around if you don't have a stronger reason.
 
-It would be ideal if we could try to turn on ECRC all the time by
-default for paths that support it.  I suppose there's some risk that
-we'd trip over broken hardware.  If that's an issue, we could consider
-turning it on all the time on machines newer than X (that's easy on
-x86, where we have a DMI BIOS date, but maybe not so easy on other
-arches).
+Thanks,
+Gavin
 
-> Another opinion is let the firmware do its magic before the OS
-> starts but there is no way to apply the same settings after a
-> hot-plug insertion.
-
-The ACPI _HPX method does allow the BIOS to specify Device Control
-register values, so it's conceivable that MPS and MRRS could be
-configured that way for hot-added devices.  But we currently
-explicitly ignore those _HPX fields (see 302328c00341) because I don't
-think it's safe to use them blindly, at least for MPS.  If the Linux
-MPS configuration stopped making assumptions about MRRS settings, I
-think it probably would be safe to use _HPX MRRS values.
-
-Bjorn
