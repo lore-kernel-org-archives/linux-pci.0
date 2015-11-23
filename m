@@ -1,57 +1,392 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34473 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932761AbbKSP4a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 19 Nov 2015 10:56:30 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id B925420681
-	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2015 15:56:29 +0000 (UTC)
-Received: from mail-ob0-f172.google.com (mail-ob0-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by mail.kernel.org (Postfix) with ESMTPSA id 0B09B20676
-	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2015 15:56:29 +0000 (UTC)
-Received: by obdgf3 with SMTP id gf3so63996804obd.3
-        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2015 07:56:28 -0800 (PST)
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:40253 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751139AbbKWXnZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 18:43:25 -0500
+Received: from localhost
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 24 Nov 2015 09:43:22 +1000
+Date: Tue, 24 Nov 2015 10:42:22 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com
+Subject: Re: [PATCH v7 34/50] powerpc/pci: Delay populating pdn
+Message-ID: <20151123234222.GB14332@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-35-git-send-email-gwshan@linux.vnet.ibm.com>
+ <564BFD83.9040408@ozlabs.ru>
 MIME-Version: 1.0
-From: Andy Lutomirski <luto@kernel.org>
-Date: Thu, 19 Nov 2015 07:56:08 -0800
-Message-ID: <CALCETrV-S64Vi=QLhGNe_LZ78uPp-OhcZ8nM2KjDFn8+346=Nw@mail.gmail.com>
-Subject: i2c_designware doesn't recover from subdevice driver unload
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <564BFD83.9040408@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I unloaded and reloaded hid_multitouch (on a Skylake laptop where the
-HID device is behind an integrated designware controller) and I got:
+On Wed, Nov 18, 2015 at 03:24:35PM +1100, Alexey Kardashevskiy wrote:
+>On 11/05/2015 12:12 AM, Gavin Shan wrote:
+>>The pdn (struct pci_dn) instances are allocated from memblock or
+>>bootmem when creating PCI controller (hoses) in setup_arch(). PCI
+>>hotplug, which will be supported by proceeding patches, release
+>>PCI device nodes and their corresponding pdn on unplugging event.
+>>The memory chunks for pdn instances allocated from memblock or
+>>bootmem are hard to reused after being released.
+>>
+>>This delays creating pdn in core_initcall_sync(eeh_dev_phb_init) so
+>>that they are allocated from slab. In turn, the memory chunks for
+>>them can be reused after being released without problem. Since the
+>>pdn and eeh_dev has same life cycle, the eeh_dev is created when
+>>pdn is populated. We needn't create eeh_dev with another initcall.
+>>The time to create PHB PEs is delayed a bit from core_initcall() to
+>>core_initcall_sync().
+>
+>Why is delayed? I mean what needs to be called before eeh_dev_phb_init()?
+>
 
-[39545.054684] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
-[39545.061728] i2c_designware i2c_designware.1:
-i2c_dw_handle_tx_abort: lost arbitration
-[39545.061734] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
-[39545.061944] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
-[39545.062373] i2c_hid i2c-DLL0704:01: error in i2c_hid_init_report
-size:6 / ret_size:4
-[39545.062564] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
-[39545.062636] input: DLL0704:01 06CB:76AE UNKNOWN as
-/devices/pci0000:00/0000:00:15.1/i2c_designware.1/i2c-7/i2c-DLL0704:01/0018:06CB:76AE.0005/input/input20
-[39545.063212] hid-multitouch 0018:06CB:76AE.0005: input,hidraw1:
-<UNKNOWN> HID v1.00 Mouse [DLL0704:01 06CB:76AE] on
-[40178.534814] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
-[40178.541848] i2c_designware i2c_designware.1:
-i2c_dw_handle_tx_abort: lost arbitration
-[40178.541853] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
-[40179.542135] i2c_designware i2c_designware.1: controller timed out
-[40179.542166] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
-[40180.542909] i2c_designware i2c_designware.1: controller timed out
-[40180.542942] i2c_hid i2c-DLL0704:01: failed to retrieve report from device.
-[40181.543697] i2c_designware i2c_designware.1: controller timed out
+I think the changelog explains the "why". eeh_dev_phb_init() creates ancestor
+PE for all other PEs. The ancestor PEs should be created before other PEs.
+eeh_dev_phb_init() depends on PHBs (struct pci_controllers) only.
 
-after that, I just keep seeing "controller timed out" messages.
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/include/asm/eeh.h         |  2 +-
+>>  arch/powerpc/include/asm/ppc-pci.h     |  2 --
+>>  arch/powerpc/kernel/eeh_dev.c          | 19 ++++-------------
+>>  arch/powerpc/kernel/pci_dn.c           | 20 ++++++++++++++++--
+>>  arch/powerpc/platforms/maple/pci.c     | 34 ++++++++++++++++++------------
+>>  arch/powerpc/platforms/pasemi/pci.c    |  3 ---
+>>  arch/powerpc/platforms/powermac/pci.c  | 38 +++++++++++++++++++++-------------
+>>  arch/powerpc/platforms/powernv/pci.c   |  3 ---
+>>  arch/powerpc/platforms/pseries/setup.c |  6 +-----
+>>  9 files changed, 69 insertions(+), 58 deletions(-)
+>>
+>>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>>index c5eb86f..27352f4 100644
+>>--- a/arch/powerpc/include/asm/eeh.h
+>>+++ b/arch/powerpc/include/asm/eeh.h
+>>@@ -268,7 +268,7 @@ void eeh_pe_restore_bars(struct eeh_pe *pe);
+>>  const char *eeh_pe_loc_get(struct eeh_pe *pe);
+>>  struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe);
+>>
+>>-void *eeh_dev_init(struct pci_dn *pdn, void *data);
+>>+struct eeh_dev *eeh_dev_init(struct pci_dn *pdn);
+>>  void eeh_dev_phb_init_dynamic(struct pci_controller *phb);
+>>  int eeh_init(void);
+>>  int __init eeh_ops_register(struct eeh_ops *ops);
+>>diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
+>>index 8753e4e..0f73de0 100644
+>>--- a/arch/powerpc/include/asm/ppc-pci.h
+>>+++ b/arch/powerpc/include/asm/ppc-pci.h
+>>@@ -39,8 +39,6 @@ void *pci_traverse_device_nodes(struct device_node *start,
+>>  void *traverse_pci_dn(struct pci_dn *root,
+>>  		      void *(*fn)(struct pci_dn *, void *),
+>>  		      void *data);
+>>-
+>>-extern void pci_devs_phb_init(void);
+>>  extern void pci_devs_phb_init_dynamic(struct pci_controller *phb);
+>>
+>>  /* From rtas_pci.h */
+>>diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
+>>index aabba94..1c4bc35 100644
+>>--- a/arch/powerpc/kernel/eeh_dev.c
+>>+++ b/arch/powerpc/kernel/eeh_dev.c
+>>@@ -44,14 +44,13 @@
+>>  /**
+>>   * eeh_dev_init - Create EEH device according to OF node
+>>   * @pdn: PCI device node
+>>- * @data: PHB
+>>   *
+>>   * It will create EEH device according to the given OF node. The function
+>>   * might be called by PCI emunation, DR, PHB hotplug.
+>>   */
+>>-void *eeh_dev_init(struct pci_dn *pdn, void *data)
+>>+struct eeh_dev *eeh_dev_init(struct pci_dn *pdn)
+>>  {
+>>-	struct pci_controller *phb = data;
+>>+	struct pci_controller *phb = pdn->phb;
+>>  	struct eeh_dev *edev;
+>>
+>>  	/* Allocate EEH device */
+>>@@ -68,7 +67,7 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
+>>  	edev->phb = phb;
+>>  	INIT_LIST_HEAD(&edev->list);
+>>
+>>-	return NULL;
+>>+	return edev;
+>>  }
+>>
+>>  /**
+>>@@ -80,16 +79,8 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
+>>   */
+>>  void eeh_dev_phb_init_dynamic(struct pci_controller *phb)
+>>  {
+>>-	struct pci_dn *root = phb->pci_data;
+>>-
+>>  	/* EEH PE for PHB */
+>>  	eeh_phb_pe_create(phb);
+>>-
+>>-	/* EEH device for PHB */
+>>-	eeh_dev_init(root, phb);
+>>-
+>>-	/* EEH devices for children OF nodes */
+>>-	traverse_pci_dn(root, eeh_dev_init, phb);
+>>  }
+>>
+>>  /**
+>>@@ -105,9 +96,7 @@ static int __init eeh_dev_phb_init(void)
+>>  	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
+>>  		eeh_dev_phb_init_dynamic(phb);
+>>
+>>-	pr_info("EEH: devices created\n");
+>>-
+>>  	return 0;
+>>  }
+>>
+>>-core_initcall(eeh_dev_phb_init);
+>>+core_initcall_sync(eeh_dev_phb_init);
+>
+>
+>May be remove core_initcall_sync and call eeh_dev_phb_init_dynamic() directly
+>from the loop in pci_devs_phb_init()?
+>
 
-This is Linux 4.3.0.
+We can't do that as eeh_dev_phb_init_dynamic() can be called for newly added PHB.
 
---Andy
+>>diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+>>index aa4110f..581612c 100644
+>>--- a/arch/powerpc/kernel/pci_dn.c
+>>+++ b/arch/powerpc/kernel/pci_dn.c
+>>@@ -272,8 +272,11 @@ struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
+>>  	const __be32 *regs;
+>>  	struct device_node *parent;
+>>  	struct pci_dn *pdn;
+>>+#ifdef CONFIG_EEH
+>>+	struct eeh_dev *edev;
+>>+#endif
+>>
+>>-	pdn = zalloc_maybe_bootmem(sizeof(*pdn), GFP_KERNEL);
+>>+	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
+>>  	if (pdn == NULL)
+>>  		return NULL;
+>>  	dn->data = pdn;
+>>@@ -302,6 +305,15 @@ struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
+>>  	/* Extended config space */
+>>  	pdn->pci_ext_config_space = (type && of_read_number(type, 1) == 1);
+>>
+>>+	/* Create EEH device */
+>>+#ifdef CONFIG_EEH
+>>+	edev = eeh_dev_init(pdn);
+>>+	if (!edev) {
+>>+		kfree(pdn);
+>>+		return NULL;
+>>+	}
+>>+#endif
+>>+
+>>  	/* Attach to parent node */
+>>  	INIT_LIST_HEAD(&pdn->child_list);
+>>  	INIT_LIST_HEAD(&pdn->list);
+>>@@ -486,15 +498,19 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+>>   * pci device found underneath.  This routine runs once,
+>>   * early in the boot sequence.
+>>   */
+>>-void __init pci_devs_phb_init(void)
+>>+static int __init pci_devs_phb_init(void)
+>>  {
+>>  	struct pci_controller *phb, *tmp;
+>>
+>>  	/* This must be done first so the device nodes have valid pci info! */
+>>  	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
+>>  		pci_devs_phb_init_dynamic(phb);
+>>+
+>>+	return 0;
+>>  }
+>>
+>>+core_initcall(pci_devs_phb_init);
+>>+
+>>  static void pci_dev_pdn_setup(struct pci_dev *pdev)
+>>  {
+>>  	struct pci_dn *pdn;
+>>diff --git a/arch/powerpc/platforms/maple/pci.c b/arch/powerpc/platforms/maple/pci.c
+>>index a923230..a2f89e6 100644
+>>--- a/arch/powerpc/platforms/maple/pci.c
+>>+++ b/arch/powerpc/platforms/maple/pci.c
+>>@@ -568,6 +568,26 @@ void maple_pci_irq_fixup(struct pci_dev *dev)
+>>  	DBG(" <- maple_pci_irq_fixup\n");
+>>  }
+>>
+>>+static int maple_pci_root_bridge_prepare(struct pci_host_bridge *bridge)
+>>+{
+>>+	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
+>>+	struct device_node *np, *child;
+>>+
+>>+	if (hose != u3_agp)
+>>+		return 0;
+>>+
+>>+	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
+>>+	 * assume there is no P2P bridge on the AGP bus, which should be a
+>>+	 * safe assumptions hopefully.
+>>+	 */
+>>+	np = hose->dn;
+>>+	PCI_DN(np)->busno = 0xf0;
+>>+	for_each_child_of_node(np, child)
+>>+		PCI_DN(child)->busno = 0xf0;
+>>+
+>>+	return 0;
+>>+}
+>>+
+>>  void __init maple_pci_init(void)
+>>  {
+>>  	struct device_node *np, *root;
+>>@@ -605,19 +625,7 @@ void __init maple_pci_init(void)
+>>  	if (ht && maple_add_bridge(ht) != 0)
+>>  		of_node_put(ht);
+>>
+>>-	/* Setup the linkage between OF nodes and PHBs */
+>>-	pci_devs_phb_init();
+>>-
+>>-	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
+>>-	 * assume there is no P2P bridge on the AGP bus, which should be a
+>>-	 * safe assumptions hopefully.
+>>-	 */
+>>-	if (u3_agp) {
+>>-		struct device_node *np = u3_agp->dn;
+>>-		PCI_DN(np)->busno = 0xf0;
+>>-		for (np = np->child; np; np = np->sibling)
+>>-			PCI_DN(np)->busno = 0xf0;
+>>-	}
+>>+	ppc_md.pcibios_root_bridge_prepare = maple_pci_root_bridge_prepare;
+>
+>
+>This seems an unrelated change.
+>
+>What is this pcibios_root_bridge_prepare()? How come you do not need one for
+>the powernv platform but do need for others? Same question about powermac.
+>
+
+The function is fixing up pdn for U3 AGP device. As the pdn creation is delayed
+to core_initcall(), the pdn isn't created when maple_pci_init() is called. So
+the pdn's fixup work is delay to ppc_md.pcibios_root_bridge_prepare().
+
+>>
+>>  	/* Tell pci.c to not change any resource allocations.  */
+>>  	pci_add_flags(PCI_PROBE_ONLY);
+>>diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
+>>index f3a68a0..10c4e8f 100644
+>>--- a/arch/powerpc/platforms/pasemi/pci.c
+>>+++ b/arch/powerpc/platforms/pasemi/pci.c
+>>@@ -229,9 +229,6 @@ void __init pas_pci_init(void)
+>>  			of_node_get(np);
+>>
+>>  	of_node_put(root);
+>>-
+>>-	/* Setup the linkage between OF nodes and PHBs */
+>>-	pci_devs_phb_init();
+>>  }
+>>
+>>  void __iomem *pasemi_pci_getcfgaddr(struct pci_dev *dev, int offset)
+>>diff --git a/arch/powerpc/platforms/powermac/pci.c b/arch/powerpc/platforms/powermac/pci.c
+>>index 59ab16f..6e06c3b 100644
+>>--- a/arch/powerpc/platforms/powermac/pci.c
+>>+++ b/arch/powerpc/platforms/powermac/pci.c
+>>@@ -878,6 +878,29 @@ void pmac_pci_irq_fixup(struct pci_dev *dev)
+>>  #endif /* CONFIG_PPC32 */
+>>  }
+>>
+>>+#ifdef CONFIG_PPC64
+>>+static int pmac_pci_root_bridge_prepare(struct pci_host_bridge *bridge)
+>>+{
+>>+	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
+>>+	struct device_node *np, *child;
+>>+
+>>+	if (hose != u3_agp)
+>>+		return 0;
+>>+
+>>+	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
+>>+	 * assume there is no P2P bridge on the AGP bus, which should be a
+>>+	 * safe assumptions for now. We should do something better in the
+>>+	 * future though
+>>+	 */
+>>+	np = hose->dn;
+>>+	PCI_DN(np)->busno = 0xf0;
+>>+	for_each_child_of_node(np, child)
+>>+		PCI_DN(child)->busno = 0xf0;
+>>+
+>>+	return 0;
+>>+}
+>>+#endif /* CONFIG_PPC64 */
+>>+
+>>  void __init pmac_pci_init(void)
+>>  {
+>>  	struct device_node *np, *root;
+>>@@ -914,20 +937,7 @@ void __init pmac_pci_init(void)
+>>  	if (ht && pmac_add_bridge(ht) != 0)
+>>  		of_node_put(ht);
+>>
+>>-	/* Setup the linkage between OF nodes and PHBs */
+>>-	pci_devs_phb_init();
+>>-
+>>-	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
+>>-	 * assume there is no P2P bridge on the AGP bus, which should be a
+>>-	 * safe assumptions for now. We should do something better in the
+>>-	 * future though
+>>-	 */
+>>-	if (u3_agp) {
+>>-		struct device_node *np = u3_agp->dn;
+>>-		PCI_DN(np)->busno = 0xf0;
+>>-		for (np = np->child; np; np = np->sibling)
+>>-			PCI_DN(np)->busno = 0xf0;
+>>-	}
+>>+	ppc_md.pcibios_root_bridge_prepare = pmac_pci_root_bridge_prepare;
+>>  	/* pmac_check_ht_link(); */
+>>
+>>  #else /* CONFIG_PPC64 */
+>>diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+>>index fa99daf..d8832ea 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.c
+>>+++ b/arch/powerpc/platforms/powernv/pci.c
+>>@@ -807,9 +807,6 @@ void __init pnv_pci_init(void)
+>>  	for_each_compatible_node(np, NULL, "ibm,ioda2-phb")
+>>  		pnv_pci_init_ioda2_phb(np);
+>>
+>>-	/* Setup the linkage between OF nodes and PHBs */
+>>-	pci_devs_phb_init();
+>>-
+>>  	/* Configure IOMMU DMA hooks */
+>>  	set_pci_dma_ops(&dma_iommu_ops);
+>>  }
+>>diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+>>index 6c274cb..bdf93a1 100644
+>>--- a/arch/powerpc/platforms/pseries/setup.c
+>>+++ b/arch/powerpc/platforms/pseries/setup.c
+>>@@ -262,11 +262,8 @@ static int pci_dn_reconfig_notifier(struct notifier_block *nb, unsigned long act
+>>  	case OF_RECONFIG_ATTACH_NODE:
+>>  		parent = of_get_parent(np);
+>>  		pdn = parent ? PCI_DN(parent) : NULL;
+>>-		if (pdn) {
+>>-			/* Create pdn and EEH device */
+>>+		if (pdn)
+>>  			pci_add_device_node_info(pdn->phb, np);
+>>-			eeh_dev_init(PCI_DN(np), pdn->phb);
+>>-		}
+>>
+>>  		of_node_put(parent);
+>>  		break;
+>>@@ -489,7 +486,6 @@ static void __init find_and_init_phbs(void)
+>>  	}
+>>
+>>  	of_node_put(root);
+>>-	pci_devs_phb_init();
+>>
+>>  	/*
+>>  	 * PCI_PROBE_ONLY and PCI_REASSIGN_ALL_BUS can be set via properties
+>>
+
+Thanks,
+Gavin
+
