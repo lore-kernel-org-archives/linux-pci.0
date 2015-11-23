@@ -1,115 +1,55 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH] x86/PCI: Fix regression caused by commit 4d6b4e69a245
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-References: <5655B392.7070701@intel.com>
- <1448593953-12364-1-git-send-email-jiang.liu@linux.intel.com>
- <8206751.4eTpiUuo7l@vostro.rjw.lan>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Keith Busch <keith.busch@intel.com>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	Hans de Bruin <jmdebruin@xmsnet.nl>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <565BA446.7080003@linux.intel.com>
-Date: Mon, 30 Nov 2015 09:20:06 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:55850 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753066AbbKWNtX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Nov 2015 08:49:23 -0500
+Date: Mon, 23 Nov 2015 13:49:21 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: [PATCH 3/3] arm/arm64: pci: remove arch specific
+ pcibios_enable_device()
+Message-ID: <20151123134921.GB4236@arm.com>
+References: <1447779838-15585-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1447779838-15585-3-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <8206751.4eTpiUuo7l@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1447779838-15585-3-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/11/28 0:06, Rafael J. Wysocki wrote:
-> On Friday, November 27, 2015 11:12:33 AM Jiang Liu wrote:
->> From: Liu Jiang <jiang.liu@linux.intel.com>
->>
->> Commit 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support
->> PCI host bridge") converted x86 to use the common interface
->> acpi_pci_root_create, but the conversion missed on code piece in
->> arch/x86/pci/bus_numa.c, which causes regression on some legacy
->> AMD platforms as reported by Arthur Marsh <arthur.marsh@internode.on.net>.
->> The root causes is that acpi_pci_root_create() fails to insert
->> host bridge resources into iomem_resource/ioport_resource because
->> x86_pci_root_bus_resources() has already inserted those resources.
->> So change x86_pci_root_bus_resources() to not insert resources into
->> iomem_resource/ioport_resource.
->>
->> Fixes: 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support PCI host bridge")
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> Reported-and-tested-by: Arthur Marsh <arthur.marsh@internode.on.net>
->> Cc: Keith Busch <keith.busch@intel.com>
->> Cc: Arthur Marsh <arthur.marsh@internode.on.net>
->> Cc: Hans de Bruin <jmdebruin@xmsnet.nl>
+On Tue, Nov 17, 2015 at 05:03:58PM +0000, Lorenzo Pieralisi wrote:
+> The arm/arm64 pcibios_enable_device() implementations exist solely
+> to prevent enabling PCI resources on PROBE_ONLY systems, since
+> on those systems the PCI resources are currently not claimed (ie
+> validated and inserted in the PCI resource tree) therefore they can
+> not be enabled since this would trigger PCI set-ups failures.
 > 
-> What exactly has changed between this version and the previous one?
-Hi Rafael,
-	I have removed following changes against the original patch
-posted at Nov 16.
- 	       bus);
+> By introducing resources claiming in the PCI host controllers set-ups
+> that have PROBE_ONLY as a probe option, there is no need for arch specific
+> pcibios_enable_device() implementations anymore in that the kernel can
+> rely on the generic pcibios_enable_device() implementation without
+> resorting to arch specific code to work around the missing resources
+> claiming enumeration step.
+> 
+> This patch removes the pcibios_enable_device() implementations from
+> the arm/arm64 arch back-ends.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> ---
+>  arch/arm/kernel/bios32.c | 12 ------------
+>  arch/arm64/kernel/pci.c  | 13 -------------
+>  2 files changed, 25 deletions(-)
 
- 	/* already added by acpi ? */
--	resource_list_for_each_entry(window, resources)
-+	resource_list_for_each_entry(window, &info->resources)
- 		if (window->res->flags & IORESOURCE_BUS) {
- 			found = true;
- 			break;
- 		}
--
- 	if (!found)
- 		pci_add_resource(resources, &info->busn);
+Acked-by: Will Deacon <will.deacon@arm.com>
 
-And I only refined the commit message based on the test patch
-I sent to Authur as an attachment at Nov 25.
-Thanks,
-Gerry
-> 
-> 
->> ---
->>  arch/x86/pci/bus_numa.c |   13 ++-----------
->>  drivers/acpi/pci_root.c |    7 +++++++
->>  2 files changed, 9 insertions(+), 11 deletions(-)
->>
->> diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
->> index 7bcf06a7cd12..6eb3c8af96e2 100644
->> --- a/arch/x86/pci/bus_numa.c
->> +++ b/arch/x86/pci/bus_numa.c
->> @@ -50,18 +50,9 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
->>  	if (!found)
->>  		pci_add_resource(resources, &info->busn);
->>  
->> -	list_for_each_entry(root_res, &info->resources, list) {
->> -		struct resource *res;
->> -		struct resource *root;
->> +	list_for_each_entry(root_res, &info->resources, list)
->> +		pci_add_resource(resources, &root_res->res);
->>  
->> -		res = &root_res->res;
->> -		pci_add_resource(resources, res);
->> -		if (res->flags & IORESOURCE_IO)
->> -			root = &ioport_resource;
->> -		else
->> -			root = &iomem_resource;
->> -		insert_resource(root, res);
->> -	}
->>  	return;
->>  
->>  default_resources:
->> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->> index 850d7bf0c873..ae3fe4e64203 100644
->> --- a/drivers/acpi/pci_root.c
->> +++ b/drivers/acpi/pci_root.c
->> @@ -768,6 +768,13 @@ static void pci_acpi_root_add_resources(struct acpi_pci_root_info *info)
->>  		else
->>  			continue;
->>  
->> +		/*
->> +		 * Some legacy x86 host bridge drivers use iomem_resource and
->> +		 * ioport_resource as default resource pool, skip it.
->> +		 */
->> +		if (res == root)
->> +			continue;
->> +
->>  		conflict = insert_resource_conflict(root, res);
->>  		if (conflict) {
->>  			dev_info(&info->bridge->dev,
->>
-> 
+Will
