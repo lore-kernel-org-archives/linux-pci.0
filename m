@@ -1,123 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:48740 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753667AbbKDDab (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2015 22:30:31 -0500
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 13:30:29 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id B1E192CE8050
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2015 14:30:26 +1100 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA43UItO65601546
-	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 14:30:26 +1100
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA43TrVx008568
-	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 14:29:54 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V12 1/9] PCI/IOV: Rename and export virtfn_add/virtfn_remove
-Date: Wed,  4 Nov 2015 11:28:44 +0800
-Message-Id: <1446607732-4166-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1446607732-4166-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1446607732-4166-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:49592 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751340AbbKWL2I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 06:28:08 -0500
+Date: Mon, 23 Nov 2015 11:27:44 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>, Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>
+Subject: Re: [PATCH v3 2/6] PCI: designware: add memory barrier after
+ enabling region
+Message-ID: <20151123112744.GL8644@n2100.arm.linux.org.uk>
+References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
+ <d38a9c1a87c4e40ad6d17fcbe0fd41b33d7d2912.1448270813.git.stanimir.varbanov@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d38a9c1a87c4e40ad6d17fcbe0fd41b33d7d2912.1448270813.git.stanimir.varbanov@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During EEH recovery, hotplug is applied to the devices which don't
-have drivers or their drivers don't support EEH. However, the hotplug,
-which was implemented based on PCI bus, can't be applied to VF directly.
+On Mon, Nov 23, 2015 at 11:28:59AM +0200, Stanimir Varbanov wrote:
+> Add 'write memory' barrier after enable region in PCIE_ATU_CR2
+> register. The barrier is needed to ensure that the region enable
+> request has been reached it's destination at time when we
+> read/write to PCI configuration space.
+> 
+> Without this barrier PCI device enumeration during kernel boot
+> is not reliable, and reading configuration space for particular
+> PCI device on the bus returns zero aka no device.
+> 
+> Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+> ---
+>  drivers/pci/host/pcie-designware.c |    5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 02a7452bdf23..e15a2ae1583f 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -164,6 +164,11 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
+>  	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
+>  	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
+>  	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+> +	/*
+> +	 * ensure that the ATU enable has been happaned before accessing
+> +	 * pci configuration/io spaces through dw_pcie_cfg_[read|write].
+> +	 */
+> +	smp_wmb();
 
-Rename virtn_{add,remove}() and export them so they can be used in PCI
-hotplug during EEH recovery.
+So, why is this a SMP barrier?
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c   | 10 +++++-----
- include/linux/pci.h |  8 ++++++++
- 2 files changed, 13 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..cc941dd 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -108,7 +108,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
- }
- 
--static int virtfn_add(struct pci_dev *dev, int id, int reset)
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
- {
- 	int i;
- 	int rc = -ENOMEM;
-@@ -183,7 +183,7 @@ failed:
- 	return rc;
- }
- 
--static void virtfn_remove(struct pci_dev *dev, int id, int reset)
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
- {
- 	char buf[VIRTFN_ID_LEN];
- 	struct pci_dev *virtfn;
-@@ -320,7 +320,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	}
- 
- 	for (i = 0; i < initial; i++) {
--		rc = virtfn_add(dev, i, 0);
-+		rc = pci_iov_virtfn_add(dev, i, 0);
- 		if (rc)
- 			goto failed;
- 	}
-@@ -332,7 +332,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 
- failed:
- 	for (j = 0; j < i; j++)
--		virtfn_remove(dev, j, 0);
-+		pci_iov_virtfn_remove(dev, j, 0);
- 
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
-@@ -361,7 +361,7 @@ static void sriov_disable(struct pci_dev *dev)
- 		return;
- 
- 	for (i = 0; i < iov->num_VFs; i++)
--		virtfn_remove(dev, i, 0);
-+		pci_iov_virtfn_remove(dev, i, 0);
- 
- 	pcibios_sriov_disable(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e90eb22..3628a09 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1719,6 +1719,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
- 
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset);
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset);
- int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
-@@ -1736,6 +1738,12 @@ static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
-+static inline int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
-+{
-+	return -ENOSYS;
-+}
-+static inline void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
-+{ }
- static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
- static inline int pci_vfs_assigned(struct pci_dev *dev)
- { return 0; }
 -- 
-2.5.0
-
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
