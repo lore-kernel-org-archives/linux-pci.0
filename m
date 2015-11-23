@@ -1,107 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:60979 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751939AbbKPWCc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 17:02:32 -0500
-Subject: Re: [PATCH v8] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<michals@xilinx.com>, <sorenb@xilinx.com>, <bhelgaas@google.com>,
-	<arnd@arndb.de>, <tinamdar@apm.com>, <treding@nvidia.com>,
-	<Minghuan.Lian@freescale.com>, <m-karicheri2@ti.com>,
-	<hauke@hauke-m.de>, <dhdang@apm.com>, <sbranden@broadcom.com>
-References: <1447223619-30945-1-git-send-email-bharatku@xilinx.com>
- <5649F2D9.7070902@arm.com>
-CC: <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-From: Ray Jui <rjui@broadcom.com>
-Message-ID: <564A5255.3020603@broadcom.com>
-Date: Mon, 16 Nov 2015 14:01:57 -0800
+Received: from comal.ext.ti.com ([198.47.26.152]:32792 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753857AbbKWQs6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Nov 2015 11:48:58 -0500
+Subject: Re: [PATCH] PCI: keystone: fix crash with deferred probe
+To: Jisheng Zhang <jszhang@marvell.com>
+References: <866b2f1544f9d55fa932aa9f9cb5e7d523a23d05.1448017883.git.nsekhar@ti.com>
+ <20151123192209.38e2c101@xhacker> <20151123192717.4d4ddf06@xhacker>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+From: Sekhar Nori <nsekhar@ti.com>
+Message-ID: <5653435A.2040400@ti.com>
+Date: Mon, 23 Nov 2015 22:18:26 +0530
 MIME-Version: 1.0
-In-Reply-To: <5649F2D9.7070902@arm.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+In-Reply-To: <20151123192717.4d4ddf06@xhacker>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 11/16/2015 7:14 AM, Marc Zyngier wrote:
-> On 11/11/15 06:33, Bharat Kumar Gogada wrote:
->> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+On Monday 23 November 2015 04:57 PM, Jisheng Zhang wrote:
+> On Mon, 23 Nov 2015 19:22:09 +0800
+> Jisheng Zhang <jszhang@marvell.com> wrote:
+> 
+>> Dear Sekhar,
 >>
->> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
->> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
->> ---
->> Added logic to allocate contiguous hwirq in nwl_irq_domain_alloc function.
->> Moved MSI functionality to separate functions.
->> Changed error return values.
->> ---
->>   .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |   68 ++
->>   drivers/pci/host/Kconfig                           |   16 +-
->>   drivers/pci/host/Makefile                          |    1 +
->>   drivers/pci/host/pcie-xilinx-nwl.c                 | 1062 ++++++++++++++++++++
->>   4 files changed, 1144 insertions(+), 3 deletions(-)
->>   create mode 100644 Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
->>   create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
+>> On Fri, 20 Nov 2015 16:47:02 +0530
+>> Sekhar Nori wrote:
 >>
->
-> [...]
->
->> +static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus *bus)
->> +{
->> +	struct platform_device *pdev = to_platform_device(pcie->dev);
->> +	struct nwl_msi *msi = &pcie->msi;
->> +	unsigned long base;
->> +	int ret;
->> +
->> +	mutex_init(&msi->lock);
->> +
->> +	/* Check for msii_present bit */
->> +	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) & MSII_PRESENT;
->> +	if (!ret) {
->> +		dev_err(pcie->dev, "MSI not present\n");
->> +		ret = -EIO;
->> +		goto err;
->> +	}
->> +
->> +	/* Enable MSII */
->> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
->> +			  MSII_ENABLE, I_MSII_CONTROL);
->> +
->> +	/* Enable MSII status */
->> +	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, I_MSII_CONTROL) |
->> +			  MSII_STATUS_ENABLE, I_MSII_CONTROL);
->> +
->> +	/* setup AFI/FPCI range */
->> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
->> +	base = virt_to_phys((void *)msi->pages);
->> +	nwl_bridge_writel(pcie, lower_32_bits(base), I_MSII_BASE_LO);
->> +	nwl_bridge_writel(pcie, upper_32_bits(base), I_MSII_BASE_HI);
->
-> BTW, you still haven't answered my question as to why you need to waste
-> a page of memory here, and why putting a device address doesn't work.
->
-> As this is (to the best of my knowledge) the only driver doing so, I'd
-> really like you to explain the rational behind this.
+>>> Drop __init annotations for functions called during
+>>> probe of keystone PCIe host.
+>>>
+>>> This fixes kernel crashes seen because of init data
+>>> reclamation if the driver defer probes because of
+>>> phy unavailability.
+>>>
+>>> While at it, drop the useless __refdata annotation
+>>> to driver structure. If its really needed, it should
+>>> be added back with a comment explaining why.
+>>>
+>>> Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+>>> ---
+>>>  drivers/pci/host/pci-keystone-dw.c | 2 +-
+>>>  drivers/pci/host/pci-keystone.c    | 6 +++---
+>>>  2 files changed, 4 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+>>> index ed34c9520a02..47ddbcce53ca 100644
+>>> --- a/drivers/pci/host/pci-keystone-dw.c
+>>> +++ b/drivers/pci/host/pci-keystone-dw.c
+>>> @@ -469,7 +469,7 @@ void ks_dw_pcie_initiate_link_train(struct keystone_pcie *ks_pcie)
+>>>   * and call dw_pcie_v3_65_host_init() API to initialize the Keystone
+>>>   * PCI host controller.
+>>>   */
+>>> -int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
+>>> +int ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
+>>>  				struct device_node *msi_intc_np)  
+>>
+>> when trying to add berlin pcie support and came up one patch
+>>
+>> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-November/384575.html
+>>
+>> when build testing, I also realized this issue, but keystone relies on
+> 
+> I mean ks_dw_pcie_host_init() calls hook_fault_code()
 
-Might not be the only driver doing so after I start sending out patches 
-for the iProc MSI support (soon), :)
+Okay, at least in v4.4-rc2, it does not call it. ks_pcie_host_init()
+calls it. But your comment is valid. The driver needs more changes to
+support probe deferral.
 
-I'm not sure how it works for the Xilinx NWL controller, which Bharat 
-should be able to help to explain. But for the iProc MSI controller, 
-there's no device I/O memory reserved for MSI posted writes in the ASIC. 
-Therefore one needs to reserve host memory for these writes.
+> 
+>> hook_fault_code() which is will be freed after boot, so your patch isn't
+>> completed.
+> 
+> And will introduce section mismatch warnings
 
-Ray
+because the annotation on ks_pcie_host_init() is intact, I did not see
+any warnings.
 
->
-> Thanks,
->
-> 	M.
->
+> 
+>>
+>> And from the keystone driver implementation, it seems assume the driver won't
+>> be defer probed.
+
+The reason I worked on this patch is because I am using an out-of-tree
+phy driver and that can be built as module and I did see ks_pcie_probe
+get deferred. But as you said, this driver is not ready for deferred
+probing even with this patch and so this patch should be discarded.
+
+Thanks for your review.
+
+Regards,
+Sekhar
