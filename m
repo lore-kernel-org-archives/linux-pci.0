@@ -1,72 +1,139 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Bugfix] x86/PCI: Fix regression caused by commit 4d6b4e69a245
-To: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>
-References: <1447648057-13644-1-git-send-email-jiang.liu@linux.intel.com>
- <20151124164907.GA24819@localhost>
- <CAJZ5v0irOUq6C9eSfCfmzyOiY1n1rUSxyUeUbvS9Nj0jNT2JrQ@mail.gmail.com>
-Cc: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	x86@kernel.org, Keith Busch <keith.busch@intel.com>,
-	Arthur Marsh <arthur.marsh@internode.on.net>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <56556D89.6020801@linux.intel.com>
-Date: Wed, 25 Nov 2015 16:12:57 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:53885 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752395AbbKWXM2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 18:12:28 -0500
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 24 Nov 2015 09:12:26 +1000
+Date: Tue, 24 Nov 2015 10:11:24 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com,
+	frowand.list@gmail.com
+Subject: Re: [PATCH v7 29/50] powerpc/pci: Rename pcibios_find_pci_bus()
+Message-ID: <20151123231124.GE5375@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-30-git-send-email-gwshan@linux.vnet.ibm.com>
+ <564BF7A4.3060105@ozlabs.ru>
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0irOUq6C9eSfCfmzyOiY1n1rUSxyUeUbvS9Nj0jNT2JrQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <564BF7A4.3060105@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/11/25 6:19, Rafael J. Wysocki wrote:
-> On Tue, Nov 24, 2015 at 5:49 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> On Mon, Nov 16, 2015 at 12:27:37PM +0800, Jiang Liu wrote:
->>> From: Liu Jiang <jiang.liu@linux.intel.com>
->>>
->>> Commit 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support
->>> PCI host bridge") converted x86 to use the common interface
->>> acpi_pci_root_create, but the conversion missed on code piece in
->>> arch/x86/pci/bus_numa.c, which causes regression on some legacy
->>> AMD platforms as reported by Arthur Marsh <arthur.marsh@internode.on.net>.
->>> The root causes is that acpi_pci_root_create() fails to insert
->>> host bridge resources into iomem_resource/ioport_resource because
->>> x86_pci_root_bus_resources() has already inserted those resources.
->>> So change x86_pci_root_bus_resources() to not insert resources into
->>> iomem_resource/ioport_resource.
->>
->> Fixes: 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support PCI host bridge")
->>
->>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>> Reported-and-tested-by: Arthur Marsh <arthur.marsh@internode.on.net>
->>
->> What's the status of this?  It looks like a regression we need to fix
->> for v4.4.
->>
->> AFAICT, Arthur did *not* test this patch (rather, his response says he
->> did test it and the test failed).
->>
->> 4d6b4e69a245 was merged by Rafael, and I assume he'll merge the fix
->> unless I hear otherwise.
-> 
-> Quite frankly, I'm more likely to revert the offending commit at this
-> point as that's not the only regression reported against it and the
-> fix only helps in one case (out of three known to me).
-Hi Rafael,
-	I got regression report from Hans de Bruin<jmdebruin@xmsnet.nl>,
-Keith Busch <keith.busch@intel.com>, and Arthur Marsh
-<arthur.marsh@internode.on.net>. Hans and Keith also reports
-the patch fixes the regression. For Arthur's case, the debug
-patch works for him, but the formal patch based on the debug
-patch fails, so I need to do more investigation about this.
-Is there any other report related to commit 4d6b4e69a245 so
-I could help to investigate?
-Thanks,
-Gerry
+On Wed, Nov 18, 2015 at 02:59:32PM +1100, Alexey Kardashevskiy wrote:
+>On 11/05/2015 12:12 AM, Gavin Shan wrote:
+>>This renames pcibios_find_pci_bus() to pci_find_bus_by_node() to
+>>avoid conflicts with those PCI subsystem weak function names, which
+>>have prefix "pcibios". No logical changes introduced.
+>
+>Could be merged into [PATCH v7 28/50] powerpc/pci: Rename
+>pcibios_{add,remove}_pci_devices()  or/and moved to the beginning of the
+>series?
+>
 
-> 
-> Thanks,
-> Rafael
-> 
+I don't think it would be merged to [PATCH 28/50]. If it needs to be merged
+to another one patch, that would be [PATCH 30/50], but I prefer to keep it
+to make the patch simple (doing one thing if possible).
+
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/include/asm/pci-bridge.h      | 2 +-
+>>  arch/powerpc/platforms/pseries/pci_dlpar.c | 5 ++---
+>>  drivers/pci/hotplug/rpadlpar_core.c        | 6 +++---
+>>  drivers/pci/hotplug/rpaphp_pci.c           | 2 +-
+>>  4 files changed, 7 insertions(+), 8 deletions(-)
+>>
+>>diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>>index c2360c8..28385cb 100644
+>>--- a/arch/powerpc/include/asm/pci-bridge.h
+>>+++ b/arch/powerpc/include/asm/pci-bridge.h
+>>@@ -257,7 +257,7 @@ static inline struct eeh_dev *pdn_to_eeh_dev(struct pci_dn *pdn)
+>>  #endif
+>>
+>>  /** Find the bus corresponding to the indicated device node */
+>>-extern struct pci_bus *pcibios_find_pci_bus(struct device_node *dn);
+>>+extern struct pci_bus *pci_find_bus_by_node(struct device_node *dn);
+>>
+>>  /** Remove all of the PCI devices under this bus */
+>>  extern void pci_remove_pci_devices(struct pci_bus *bus);
+>>diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
+>>index 5d4a3df..aee22b4 100644
+>>--- a/arch/powerpc/platforms/pseries/pci_dlpar.c
+>>+++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
+>>@@ -54,8 +54,7 @@ find_bus_among_children(struct pci_bus *bus,
+>>  	return child;
+>>  }
+>>
+>>-struct pci_bus *
+>>-pcibios_find_pci_bus(struct device_node *dn)
+>>+struct pci_bus *pci_find_bus_by_node(struct device_node *dn)
+>>  {
+>>  	struct pci_dn *pdn = dn->data;
+>>
+>>@@ -64,7 +63,7 @@ pcibios_find_pci_bus(struct device_node *dn)
+>>
+>>  	return find_bus_among_children(pdn->phb->bus, dn);
+>>  }
+>>-EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
+>>+EXPORT_SYMBOL_GPL(pci_find_bus_by_node);
+>>
+>>  struct pci_controller *init_phb_dynamic(struct device_node *dn)
+>>  {
+>>diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
+>>index ebd283b..9aa392b 100644
+>>--- a/drivers/pci/hotplug/rpadlpar_core.c
+>>+++ b/drivers/pci/hotplug/rpadlpar_core.c
+>>@@ -176,7 +176,7 @@ static int dlpar_add_pci_slot(char *drc_name, struct device_node *dn)
+>>  	struct pci_dev *dev;
+>>  	struct pci_controller *phb;
+>>
+>>-	if (pcibios_find_pci_bus(dn))
+>>+	if (pci_find_bus_by_node(dn))
+>>  		return -EINVAL;
+>>
+>>  	/* Add pci bus */
+>>@@ -213,7 +213,7 @@ static int dlpar_remove_phb(char *drc_name, struct device_node *dn)
+>>  	struct pci_dn *pdn;
+>>  	int rc = 0;
+>>
+>>-	if (!pcibios_find_pci_bus(dn))
+>>+	if (!pci_find_bus_by_node(dn))
+>>  		return -EINVAL;
+>>
+>>  	/* If pci slot is hotpluggable, use hotplug to remove it */
+>>@@ -357,7 +357,7 @@ int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
+>>
+>>  	pci_lock_rescan_remove();
+>>
+>>-	bus = pcibios_find_pci_bus(dn);
+>>+	bus = pci_find_bus_by_node(dn);
+>>  	if (!bus) {
+>>  		ret = -EINVAL;
+>>  		goto out;
+>>diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
+>>index 256066c..e7dd573 100644
+>>--- a/drivers/pci/hotplug/rpaphp_pci.c
+>>+++ b/drivers/pci/hotplug/rpaphp_pci.c
+>>@@ -93,7 +93,7 @@ int rpaphp_enable_slot(struct slot *slot)
+>>  	if (rc)
+>>  		return rc;
+>>
+>>-	bus = pcibios_find_pci_bus(slot->dn);
+>>+	bus = pci_find_bus_by_node(slot->dn);
+>>  	if (!bus) {
+>>  		err("%s: no pci_bus for dn %s\n", __func__, slot->dn->full_name);
+>>  		return -EINVAL;
+>>
+
+Thanks,
+Gavin
+
