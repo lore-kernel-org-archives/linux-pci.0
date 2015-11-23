@@ -1,97 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.66] ([119.145.14.66]:37148 "EHLO
-	szxga03-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753732AbbKDIBJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 03:01:09 -0500
-Subject: Re: [PATCH RFC 7/7] irqchip: [Example] dummy wired interrupt/MSI
- bridge driver
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-References: <1444923568-17413-1-git-send-email-marc.zyngier@arm.com>
- <1444923568-17413-8-git-send-email-marc.zyngier@arm.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: "majun (F)" <majun258@huawei.com>
-Message-ID: <5639BB10.1090108@huawei.com>
-Date: Wed, 4 Nov 2015 16:00:16 +0800
-MIME-Version: 1.0
-In-Reply-To: <1444923568-17413-8-git-send-email-marc.zyngier@arm.com>
-Content-Type: text/plain; charset="gbk"
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36213 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144AbbKWMkb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 07:40:31 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH 1/2] PCI: Add pci_ops.add_bus() callback
+Date: Mon, 23 Nov 2015 13:40:25 +0100
+Message-Id: <1448282426-2642-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marc:
+From: Thierry Reding <treding@nvidia.com>
 
-ÔÚ 2015/10/15 23:39, Marc Zyngier Ð´µÀ:
-> In order to demonstrate how to put together a wire/MSI bridge,
-> add a dummy driver that doesn't do anything at all, except
-> for allocating interrupts.
-> 
-> It comes together with an even more stupid client driver that
-> allocates an interrupt and dump the hierarchy of that interrupt.
-> 
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
-[...]
-> +
-> +static int msichip_domain_alloc(struct irq_domain *domain, unsigned int virq,
-> +				   unsigned int nr_irqs, void *arg)
-> +{
-> +	int i, err;
-> +	irq_hw_number_t hwirq;
-> +	unsigned int type;
-> +	struct irq_fwspec *fwspec = arg;
-> +	void *data;
-> +
-> +	err = msichip_domain_translate(domain, fwspec, &hwirq, &type);
-> +	if (err)
-> +		return err;
-> +
+This callback will be called on every newly created bus. Drivers can
+implement it to perform driver-specific initialization of the bus.
 
-.translate function already called once in  irq_domain_translate(),
-I think we don't need call this fucntion one more time here.
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ drivers/pci/probe.c | 8 +++++++-
+ include/linux/pci.h | 1 +
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-> +	err = platform_msi_domain_alloc(domain, virq, nr_irqs);
-> +	if (err)
-> +		return err;
-> +
-> +	data = platform_msi_get_host_data(domain);
-> +	for (i = 0; i < nr_irqs; i++)
-> +		irq_domain_set_hwirq_and_chip(domain, virq + i, hwirq + i,
-> +					      &msichip_chip, data);
-> +
-> +	return 0;
-> +}
-> +
-[...]
-> +
-> +static struct platform_driver msichip_driver = {
-> +	.driver = {
-> +		.name		= "msichip",
-> +		.of_match_table	= msichip_of_match,
-> +	},
-> +	.probe			= msichip_probe,
-> +};
-> +/* Do not define this as an irqchip */
-> +module_platform_driver(msichip_driver);
-> +
-> +
-
-I think,for a interrupt controller, msichip driver initialization maybe is too late
-for some devices which connect to this irqchip if we use module_platform_driver.
-
-So, how about use the arch_initcall to register the msichip driver?
-
-Thanks!
-Ma Jun
-
-
-
-
-
-
-
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e735c728e3b3..fbed432f8915 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -754,7 +754,13 @@ add_dev:
+ 	ret = device_register(&child->dev);
+ 	WARN_ON(ret < 0);
+ 
+-	pcibios_add_bus(child);
++	if (child->ops->add_bus) {
++		ret = child->ops->add_bus(child);
++		if (ret < 0)
++			dev_err(&child->dev, "failed to add bus: %d\n", ret);
++	} else {
++		pcibios_add_bus(child);
++	}
+ 
+ 	/* Create legacy_io and legacy_mem files for this bus */
+ 	pci_create_legacy_files(child);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e828e7b4afec..70c1228d585f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -569,6 +569,7 @@ static inline int pcibios_err_to_errno(int err)
+ /* Low-level architecture-dependent routines */
+ 
+ struct pci_ops {
++	int (*add_bus)(struct pci_bus *bus);
+ 	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
+ 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
+ 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
+-- 
+2.5.0
 
