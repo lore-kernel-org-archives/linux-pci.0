@@ -1,139 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:53885 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752395AbbKWXM2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 18:12:28 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 24 Nov 2015 09:12:26 +1000
-Date: Tue, 24 Nov 2015 10:11:24 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-Subject: Re: [PATCH v7 29/50] powerpc/pci: Rename pcibios_find_pci_bus()
-Message-ID: <20151123231124.GE5375@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-30-git-send-email-gwshan@linux.vnet.ibm.com>
- <564BF7A4.3060105@ozlabs.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <564BF7A4.3060105@ozlabs.ru>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:35986 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753934AbbKXNzi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Nov 2015 08:55:38 -0500
+Message-ID: <1448373334.3689.33.camel@pengutronix.de>
+Subject: Re: [PATCH] PCI: imx6: Fix reset-gpio to work with active low GPIO
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Petr =?UTF-8?Q?=C5=A0tetiar?= <ynezz@true.cz>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>
+Date: Tue, 24 Nov 2015 14:55:34 +0100
+In-Reply-To: <1447687147-19436-1-git-send-email-ynezz@true.cz>
+References: <1447687147-19436-1-git-send-email-ynezz@true.cz>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 18, 2015 at 02:59:32PM +1100, Alexey Kardashevskiy wrote:
->On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>This renames pcibios_find_pci_bus() to pci_find_bus_by_node() to
->>avoid conflicts with those PCI subsystem weak function names, which
->>have prefix "pcibios". No logical changes introduced.
->
->Could be merged into [PATCH v7 28/50] powerpc/pci: Rename
->pcibios_{add,remove}_pci_devices()  or/and moved to the beginning of the
->series?
->
+Hi Petr,
 
-I don't think it would be merged to [PATCH 28/50]. If it needs to be merged
-to another one patch, that would be [PATCH 30/50], but I prefer to keep it
-to make the patch simple (doing one thing if possible).
+sorry for the delay in reviewing this.
 
->>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/include/asm/pci-bridge.h      | 2 +-
->>  arch/powerpc/platforms/pseries/pci_dlpar.c | 5 ++---
->>  drivers/pci/hotplug/rpadlpar_core.c        | 6 +++---
->>  drivers/pci/hotplug/rpaphp_pci.c           | 2 +-
->>  4 files changed, 7 insertions(+), 8 deletions(-)
->>
->>diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
->>index c2360c8..28385cb 100644
->>--- a/arch/powerpc/include/asm/pci-bridge.h
->>+++ b/arch/powerpc/include/asm/pci-bridge.h
->>@@ -257,7 +257,7 @@ static inline struct eeh_dev *pdn_to_eeh_dev(struct pci_dn *pdn)
->>  #endif
->>
->>  /** Find the bus corresponding to the indicated device node */
->>-extern struct pci_bus *pcibios_find_pci_bus(struct device_node *dn);
->>+extern struct pci_bus *pci_find_bus_by_node(struct device_node *dn);
->>
->>  /** Remove all of the PCI devices under this bus */
->>  extern void pci_remove_pci_devices(struct pci_bus *bus);
->>diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
->>index 5d4a3df..aee22b4 100644
->>--- a/arch/powerpc/platforms/pseries/pci_dlpar.c
->>+++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
->>@@ -54,8 +54,7 @@ find_bus_among_children(struct pci_bus *bus,
->>  	return child;
->>  }
->>
->>-struct pci_bus *
->>-pcibios_find_pci_bus(struct device_node *dn)
->>+struct pci_bus *pci_find_bus_by_node(struct device_node *dn)
->>  {
->>  	struct pci_dn *pdn = dn->data;
->>
->>@@ -64,7 +63,7 @@ pcibios_find_pci_bus(struct device_node *dn)
->>
->>  	return find_bus_among_children(pdn->phb->bus, dn);
->>  }
->>-EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
->>+EXPORT_SYMBOL_GPL(pci_find_bus_by_node);
->>
->>  struct pci_controller *init_phb_dynamic(struct device_node *dn)
->>  {
->>diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
->>index ebd283b..9aa392b 100644
->>--- a/drivers/pci/hotplug/rpadlpar_core.c
->>+++ b/drivers/pci/hotplug/rpadlpar_core.c
->>@@ -176,7 +176,7 @@ static int dlpar_add_pci_slot(char *drc_name, struct device_node *dn)
->>  	struct pci_dev *dev;
->>  	struct pci_controller *phb;
->>
->>-	if (pcibios_find_pci_bus(dn))
->>+	if (pci_find_bus_by_node(dn))
->>  		return -EINVAL;
->>
->>  	/* Add pci bus */
->>@@ -213,7 +213,7 @@ static int dlpar_remove_phb(char *drc_name, struct device_node *dn)
->>  	struct pci_dn *pdn;
->>  	int rc = 0;
->>
->>-	if (!pcibios_find_pci_bus(dn))
->>+	if (!pci_find_bus_by_node(dn))
->>  		return -EINVAL;
->>
->>  	/* If pci slot is hotpluggable, use hotplug to remove it */
->>@@ -357,7 +357,7 @@ int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
->>
->>  	pci_lock_rescan_remove();
->>
->>-	bus = pcibios_find_pci_bus(dn);
->>+	bus = pci_find_bus_by_node(dn);
->>  	if (!bus) {
->>  		ret = -EINVAL;
->>  		goto out;
->>diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
->>index 256066c..e7dd573 100644
->>--- a/drivers/pci/hotplug/rpaphp_pci.c
->>+++ b/drivers/pci/hotplug/rpaphp_pci.c
->>@@ -93,7 +93,7 @@ int rpaphp_enable_slot(struct slot *slot)
->>  	if (rc)
->>  		return rc;
->>
->>-	bus = pcibios_find_pci_bus(slot->dn);
->>+	bus = pci_find_bus_by_node(slot->dn);
->>  	if (!bus) {
->>  		err("%s: no pci_bus for dn %s\n", __func__, slot->dn->full_name);
->>  		return -EINVAL;
->>
+Am Montag, den 16.11.2015, 16:19 +0100 schrieb Petr Štetiar:
+> It's currently not possible to use reset-gpio on board where the GPIO is
+> active low as the code incorrectly assumes, that reset-gpio will be
+> always active high.
+> 
+I see the need for this change, but I'm not completely happy with the
+implementation.
 
-Thanks,
-Gavin
+> In my case the broken behavior was observed on Toradex Apalis SoM with
+> Ixora base board.
+> 
+> Signed-off-by: Petr Štetiar <ynezz@true.cz>
+> ---
+>  drivers/pci/host/pci-imx6.c |   15 +++++++++++----
+>  1 file changed, 11 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index fdb9536..cd7ed71 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -293,9 +293,11 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+>  
+>  	/* Some boards don't have PCIe reset GPIO. */
+>  	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> -		gpio_set_value(imx6_pcie->reset_gpio, 0);
+> +		struct gpio_desc *gd = gpio_to_desc(imx6_pcie->reset_gpio);
+> +
+> +		gpiod_set_value(gd, 0);
+>  		msleep(100);
+> -		gpio_set_value(imx6_pcie->reset_gpio, 1);
+> +		gpiod_set_value(gd, 1);
+>  	}
+>  	return 0;
+>  
+> @@ -559,6 +561,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  	struct pcie_port *pp;
+>  	struct device_node *np = pdev->dev.of_node;
+>  	struct resource *dbi_base;
+> +	enum of_gpio_flags of_flags;
+> +	int flags = GPIOF_OUT_INIT_LOW;
+>  	int ret;
+>  
+>  	imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie), GFP_KERNEL);
+> @@ -578,10 +582,13 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  		return PTR_ERR(pp->dbi_base);
+>  
+>  	/* Fetch GPIOs */
+> -	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+> +	imx6_pcie->reset_gpio = of_get_named_gpio_flags(np, "reset-gpio", 0,
+> +	
+
+Rather than adding all this complexity to this function, this should
+really be switched over to the descriptor based GPIO interface as a
+whole. So the above should become a single call to
+"devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW)" and the dependent
+code changed accordingly.
+
+Regards,
+Lucas
+
+> 						&of_flags);
+>  	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> +		if (of_flags & OF_GPIO_ACTIVE_LOW)
+> +			flags |= GPIOF_ACTIVE_LOW;
+>  		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
+> -					    GPIOF_OUT_INIT_LOW, "PCIe reset");
+> +					    flags, "PCIe reset");
+>  		if (ret) {
+>  			dev_err(&pdev->dev, "unable to get reset gpio\n");
+>  			return ret;
+
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
