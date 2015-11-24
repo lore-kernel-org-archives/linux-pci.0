@@ -1,92 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51857 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.136]:50683 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751716AbbKIRJx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Nov 2015 12:09:53 -0500
-Date: Mon, 9 Nov 2015 17:10:43 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, arnd@arndb.de
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-Message-ID: <20151109171042.GA11909@red-moon>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
- <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
- <563B65EE.7000406@semihalf.com>
- <20151105181959.GA352@red-moon>
- <563C6A5F.5030500@linux.intel.com>
- <563C82FA.7050707@semihalf.com>
- <563C930F.4060206@linux.intel.com>
- <563C9FBE.2090303@semihalf.com>
- <563CA9A6.7050309@linux.intel.com>
- <5640A8AA.4000806@semihalf.com>
+	id S1752296AbbKXRJO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Nov 2015 12:09:14 -0500
+Date: Tue, 24 Nov 2015 11:09:11 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: ville.syrjala@linux.intel.com
+Cc: intel-gfx@lists.freedesktop.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 01/29] pci: Decouple quirks.c from i915_reg.h
+Message-ID: <20151124170911.GC24819@localhost>
+References: <1446672017-24497-1-git-send-email-ville.syrjala@linux.intel.com>
+ <1446672017-24497-2-git-send-email-ville.syrjala@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5640A8AA.4000806@semihalf.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1446672017-24497-2-git-send-email-ville.syrjala@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[CC'ing Arnd]
+Hi Ville,
 
-On Mon, Nov 09, 2015 at 03:07:38PM +0100, Tomasz Nowicki wrote:
-> On 06.11.2015 14:22, Jiang Liu wrote:
-> >On 2015/11/6 20:40, Tomasz Nowicki wrote:
-> >>On 06.11.2015 12:46, Jiang Liu wrote:
-> >>>On 2015/11/6 18:37, Tomasz Nowicki wrote:
-> >>>>On 06.11.2015 09:52, Jiang Liu wrote:
-> >>>>Sure, ARM64 (0-16M IO space) QEMU example:
-> >>>>DWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
-> >>>>           0x00000000,         // Granularity
-> >>>>           0x00000000,         // Range Minimum
-> >>>>           0x0000FFFF,         // Range Maximum
-> >>>>           0x3EFF0000,         // Translation Offset
-> >>>>           0x00010000,         // Length
-> >>>>           ,, , TypeStatic)
-> >>>The above DWordIO resource descriptor doesn't confirm to the ACPI spec.
-> >>>According to my understanding, ARM/ARM64 has no concept of IO port
-> >>>address space, so the PCI host bridge will map IO port on PCI side
-> >>>onto MMIO on host side. In other words, PCI host bridge on ARM64
-> >>>implement a IO Port->MMIO translation instead of a IO Port->IO Port
-> >>>translation. If that's true, it should use 'TypeTranslation' instead
-> >>>of 'TypeStatic'. And kernel ACPI resource parsing interface doesn't
-> >>>support 'TypeTranslation' yet, so we need to find a solution for it.
-> >>
-> >>I think you are right, we need TypeTranslation flag for ARM64 DWordIO
-> >>descriptors and an extra kernel patch to support it.
-> >How about the attached to patch to support TypeTranslation?
-> >It only passes compilation:)
+On Wed, Nov 04, 2015 at 11:19:49PM +0200, ville.syrjala@linux.intel.com wrote:
+> From: Ville Syrjälä <ville.syrjala@linux.intel.com>
 > 
-> Based on the further discussion, your draft patch looks good to me.
-> Lorenzo, do you agree?
+> i915 register defines are going to become type safe, so going forward
+> the register defines can't be used as straight numbers. Since quirks.c
+> needs just a few extra register defines from i915_reg.h, decouple the
+> two by defining the required registers locally in quirks.c. This was
+> already done for a few other igpu related registers.
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
 
-No, because I still do not understand the difference between ia64 and
-arm64 (they both drive IO ports cycles through MMIO so the resource
-descriptors content must be the same or better they must mean the same
-thing). On top of that, this is something that was heavily debated for DT:
+I haven't seen the rest of this series, but this patch is OK by me,
+and I assume you'll merge this along with the whole series.  Please
+adjust the subject line to be:
 
-http://www.spinics.net/lists/arm-kernel/msg345633.html
+  PCI: Decouple quirks.c from i915_reg.h
 
-and I would like to get Arnd and Bjorn opinion on this because we
-should not "interpret" ACPI specifications, we should understand
-what they are supposed to describe and write kernel code accordingly.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-In particular, I would like to understand, for an eg DWordIO descriptor,
-what Range Minimum, Range Maximum and Translation Offset represent,
-they can't mean different things depending on the SW parsing them,
-this totally defeats the purpose.
-
-By the way, ia64 ioremaps the translation_offset (ie new_space()), so
-basically that's the CPU physical address at which the PCI host bridge
-map the IO space transactions), I do not think ia64 is any different from
-arm64 in this respect, if it is please provide an HW description here from
-the PCI bus perspective here (also an example of ia64 ACPI PCI host bridge
-tables would help).
-
-Thanks,
-Lorenzo
+> ---
+>  drivers/pci/quirks.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index b03373f..78a70fb 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3404,7 +3404,9 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
+>  	return 0;
+>  }
+>  
+> -#include "../gpu/drm/i915/i915_reg.h"
+> +#define SOUTH_CHICKEN2		0xc2004
+> +#define PCH_PP_STATUS		0xc7200
+> +#define PCH_PP_CONTROL		0xc7204
+>  #define MSG_CTL			0x45010
+>  #define NSDE_PWR_STATE		0xd0100
+>  #define IGD_OPERATION_TIMEOUT	10000     /* set timeout 10 seconds */
+> -- 
+> 2.4.10
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
