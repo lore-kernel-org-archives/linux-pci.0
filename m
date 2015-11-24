@@ -1,51 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:35196 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032020AbbKFT7I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Nov 2015 14:59:08 -0500
-Received: by obctp1 with SMTP id tp1so100791238obc.2
-        for <linux-pci@vger.kernel.org>; Fri, 06 Nov 2015 11:59:08 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.136]:50272 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753152AbbKXRDh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Nov 2015 12:03:37 -0500
+Date: Tue, 24 Nov 2015 11:03:31 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vladis Dronov <vdronov@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: fix invalid ROM content detection in
+ pci_get_rom_size()
+Message-ID: <20151124170331.GB24819@localhost>
+References: <1446812196-3497-1-git-send-email-vdronov@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1446802576.3126.5.camel@pengutronix.de>
-References: <1446735481-27326-1-git-send-email-tharvey@gateworks.com>
-	<1446802576.3126.5.camel@pengutronix.de>
-Date: Fri, 6 Nov 2015 11:59:08 -0800
-Message-ID: <CAJ+vNU1ME+LgHohZv1oy9MbZ-Y+U44ihVasjEnvw2AAcr40RHg@mail.gmail.com>
-Subject: Re: [PATCH RFC] PCI: imx6: add dt prop for link gen, default to gen1
-From: Tim Harvey <tharvey@gateworks.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1446812196-3497-1-git-send-email-vdronov@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 6, 2015 at 1:36 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Am Donnerstag, den 05.11.2015, 06:58 -0800 schrieb Tim Harvey:
->> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
->> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
->> external clock source is present and supplied back to the IMX6 PCIe core
->> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
->>
->> Add a dt property to specify gen1 vs gen2 and check this before allowing
->> a Gen2 link.
->>
-> I think I already said this in the last round: there is nothing vendor
-> specific in a max-link-speed property. I would really like to have this
-> as a common DW PCIe property right from the beginning, so that we don't
-> burden us with keeping backward compatibility with vendor specific
-> properties when this moves to common code eventually.
+Hi Vladis,
 
-Hi Lucas,
+On Fri, Nov 06, 2015 at 01:16:36PM +0100, Vladis Dronov wrote:
+> Make pci_get_rom_size() to check all bytes in the PCI ROM signature
+> and issue a warning if the values are not following the standard.
 
-I did discuss this patch with you off-list but I think I misunderstood
-your meaning then.
+Can you include a reference to the spec, please?
 
-So you are asking me to simply rename the properly
-'fsl,max-link-speed' to 'max-link-speed' and the rest of the patch is
-good with you?
+Does this fix a bug?  If so, please include a reference to that as well.
 
-Regards,
+>From reading the patch, I don't think it would change the return value; it
+looks like the only change is that we'll emit a warning in some cases where
+we previously didn't.  That does seem worthwhile, but it doesn't quite
+match your changelog, which implies that we'll check more bytes.
 
-Tim
+While you're at it, maybe you could include the unexpected values in the
+error messages.
+
+Thanks,
+  Bjorn
+
+> Signed-off-by: Vladis Dronov <vdronov@redhat.com>
+> ---
+>  drivers/pci/rom.c | 17 ++++++-----------
+>  1 file changed, 6 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+> index eb0ad53..34f8b2c 100644
+> --- a/drivers/pci/rom.c
+> +++ b/drivers/pci/rom.c
+> @@ -77,22 +77,17 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
+>  	do {
+>  		void __iomem *pds;
+>  		/* Standard PCI ROMs start out with these bytes 55 AA */
+> -		if (readb(image) != 0x55) {
+> -			dev_err(&pdev->dev, "Invalid ROM contents\n");
+> +		if ((readb(image) != 0x55) || (readb(image + 1) != 0xAA)) {
+> +			dev_err(&pdev->dev, "Invalid PCI ROM signature\n");
+>  			break;
+>  		}
+> -		if (readb(image + 1) != 0xAA)
+> -			break;
+>  		/* get the PCI data structure and check its signature */
+>  		pds = image + readw(image + 24);
+> -		if (readb(pds) != 'P')
+> -			break;
+> -		if (readb(pds + 1) != 'C')
+> -			break;
+> -		if (readb(pds + 2) != 'I')
+> -			break;
+> -		if (readb(pds + 3) != 'R')
+> +		if ((readb(pds) != 'P') || (readb(pds + 1) != 'C') ||
+> +			(readb(pds + 2) != 'I') || (readb(pds + 3) != 'R')) {
+> +			dev_err(&pdev->dev, "Invalid PCI ROM data signature\n");
+>  			break;
+> +		}
+>  		last_image = readb(pds + 21) & 0x80;
+>  		length = readw(pds + 16);
+>  		image += length * 512;
+> -- 
+> 2.6.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
