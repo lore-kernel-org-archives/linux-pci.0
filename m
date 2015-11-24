@@ -1,36 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp01.br.ibm.com ([32.104.18.85]:33204 "EHLO
-	e24smtp01.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030206AbbKDMA1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 07:00:27 -0500
-Received: from /spool/local
-	by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 10:00:25 -0200
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 397A43520079
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2015 06:59:08 -0500 (EST)
-Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
-	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA4C0mOT3760142
-	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 10:00:49 -0200
-Received: from d24av01.br.ibm.com (localhost [127.0.0.1])
-	by d24av01.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA4C0GZ0010913
-	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 10:00:18 -0200
-Subject: Re: [PATCH] Enable MSI/MSI-X caps and disable MSI interrupts at PCI
- probe time - code move
-To: bhelgaas@google.com
-References: <1445437055-7017-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	mpe@ellerman.id.au, paulus@samba.org, benh@kernel.crashing.org,
-	mst@redhat.com, shangw@linux.vnet.ibm.com
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Message-ID: <5639F34F.5020402@linux.vnet.ibm.com>
-Date: Wed, 4 Nov 2015 10:00:15 -0200
+Received: from lhrrgout.huawei.com ([194.213.3.17]:55333 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751224AbbKXP5e convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Nov 2015 10:57:34 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Ramon Fried <ramon.fried@tandemg.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: PCIe endpoint generic driver
+Date: Tue, 24 Nov 2015 15:57:27 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162C9AE8@lhreml503-mbs>
+References: <AM2PR02MB06895C98FE39F8BB6D958389E8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E162C98EA@lhreml503-mbs>
+ <AM2PR02MB06897BD3549D017DCF17FE36E8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E162C9A21@lhreml503-mbs>
+ <AM2PR02MB0689D08FDBB116A8EDE4669AE8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
+In-Reply-To: <AM2PR02MB0689D08FDBB116A8EDE4669AE8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-In-Reply-To: <1445437055-7017-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, ping?
+> -----Original Message-----
+> From: Ramon Fried [mailto:ramon.fried@tandemg.com]
+> Sent: Tuesday, November 24, 2015 3:33 PM
+> To: Gabriele Paoloni
+> Cc: linux-pci@vger.kernel.org
+> Subject: RE: PCIe endpoint generic driver
+> 
+> 
+> >> -----Original Message-----
+> >> From: linux-pci-owner@vger.kernel.org
+> >> [mailto:linux-pci-owner@vger.kernel.org]
+> >> On Behalf Of Ramon Fried
+> >> Sent: 24 November 2015 15:02
+> >> To: linux-pci@vger.kernel.org
+> >> Subject: RE: PCIe endpoint generic driver
+> >>
+> >> > > Hi.
+> >> > > Sorry for the noob question :)
+> >> > > I'm currently developing a PCIe endpoint driver for a board that
+> >> > > runs Linux.
+> >> > > The board will be used as an expansion PCIe card for x86 PC's.
+> >> > > Is there any guidelines, documentation related to PCI endpoint
+> >> > > drivers for Linux kernel ?
+> >>>
+> >> > Hi Ramon
+> >> >
+> >> > Have you looked at
+> >> > http://lxr.free-electrons.com/source/Documentation/PCI/pci.txt
+> >> >?
+> >> >
+> >> > Regards
+> >> >
+> >> > Gab
+> >>
+> >> Hi Gab, you misunderstood my driver type.
+> >> This is not a host driver, that I'm writing, but the actual endpoint
+> driver.
+> >> Then Linux is on the PCIe board.
+> >
+> > Hi Ramon, I understood your driver type.
+> > I think you misunderstood the Documentation.
+> > Host Bridges are under drivers/pci/host and none of them use
+> pci_register_driver() API.
+> >
+> > pci_register_driver() is actually for endpoints. Please read the link
+> above again.
+> 
+> Hi Gab.
+> Host bridges AFAIK are supposed to connect between the host CPU, main
+> memory and the PCI itself.
+> This is not what I need as I'm not at the host side.
+> pci_register_driver() is a host driver for pci endpoints.
 
+pci_register_driver() is an API to register an endpoint PCI driver (try 
+to grep for it in the linux source tree).
+
+> 
+> On the device side, pci_register_driver() doesn't make any sense.
+> There's no root complex, no enumeration, etc.
+
+Ah, so how comes that all EP drivers at the end call it?
+
+> I need for instance a method to send a MSI/MSIx interrupt to the host.
+
+That depends on your HW and on your driver type AFAIK
+
+One of many examples you can find in the Kernel source tree can be 
+http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c#L9284
+
+You can see how the driver is structured...
+
+> I need to develop a function that does it.
+> 
+> My original question was if there's a framework/guidelines for
+> achieving that.
+> 
+> Thanks.
+> Ramon
