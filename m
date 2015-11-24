@@ -1,72 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:40000 "EHLO
-	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752478AbbKPJiI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 04:38:08 -0500
-From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
-To: Arnd Bergmann <arnd@arndb.de>, Lucas Stach <l.stach@pengutronix.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Richard.Zhu@freescale.com" <Richard.Zhu@freescale.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Mueller <dave.mueller@gmx.ch>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: RE: [PATCH] PCI: imx6:don't sleep in atomic context
-Date: Mon, 16 Nov 2015 09:36:17 +0000
-Message-ID: <FDC088D3B5555644AE135ED28A7ABDE98636E07B@EU-MBX-02.mgc.mentorg.com>
-References: <1447066080-5859-1-git-send-email-sanjeev_sharma@mentor.com>
- <4800389.dqcmlJY3HC@wuerfel> <1447148110.3142.6.camel@pengutronix.de>
- <6415545.xzR4A6SaUL@wuerfel>
-In-Reply-To: <6415545.xzR4A6SaUL@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1448314314.15591.1.camel@oracle.com>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+	<5633E570.6040906@oracle.com>
+	<CAE9FiQU5YkwFVuEiDOCT+BDrrSLGhTiDfW7GZV6qVtBRKDBpDw@mail.gmail.com>
+	<1448314314.15591.1.camel@oracle.com>
+Date: Mon, 23 Nov 2015 18:39:14 -0800
+Message-ID: <CAE9FiQWiWvOuW3gKRKSDWwPTzNAE7w=u2UiA=XSAXMscxJe2SQ@mail.gmail.com>
+Subject: Re: [PATCH v8 00/61] PCI: Resource allocation cleanup for v4.4
+From: Yinghai Lu <yinghai@kernel.org>
+To: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 10 November 2015 10:35:10 Lucas Stach wrote:
-> Am Dienstag, den 10.11.2015, 10:28 +0100 schrieb Arnd Bergmann:
-> > On Tuesday 10 November 2015 09:41:18 Lucas Stach wrote:
-> > > > diff --git a/drivers/pci/host/pci-imx6.c 
-> > > > b/drivers/pci/host/pci-imx6.c index 233a196..9769b13 100644
-> > > > --- a/drivers/pci/host/pci-imx6.c
-> > > > +++ b/drivers/pci/host/pci-imx6.c
-> > > > @@ -499,7 +499,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
-> > > >                * Wait a little bit, then re-check if the link finished
-> > > >                * the training.
-> > > >                */
-> > > > -             usleep_range(1000, 2000);
-> > > > +             mdelay(1000);
-> > > 
-> > > A mdelay(1000) is a whole different timescale than a usleep(1000). 
-> > > If this patch works for you with mdelay(1) or maybe mdelay(2) I 
-> > > would be fine with it.
-> > 
-> > mdelay(1) is still a really long time to block the CPU for, on 
-> > potentially every config space access.
-> > 
-> > Everybody else just returns the link status here, which seems to be 
-> > the better alternative. If you need to delay the startup, better 
-> > have a msleep(1) loop in the initial probe function where you are 
-> > allowed to sleep.
-> > 
-> Yes, it's somewhere on my TODO list to rework the link-up handling 
-> here, but as there are quite a few timing and ordering implications in 
-> that code, this needs a good thought and a good deal of testing. So 
-> I'm inclined to ACK the current patch to get rid of the obvious bug 
-> and sort things out properly in a follow on patchset.
+On Mon, Nov 23, 2015 at 1:31 PM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
+>> Looks like only the device BAR6 is not assigned form OF?
+>
+> Any progress on this? Do you need any more information from me?
 
-Maybe use that patch with some modifications then:
+Should be one warning about this device in that system.
 
-* add a comment to explain that this is currently called from possibly
-  atomic context through pci_config_{read,write} and that the link
-  state handling never belonged here.
+We don't need to do anything about it if the device is working with
+this patch set.
 
-* instead of looping five times for up to 2ms each, loop 100 times
-  around a udelay(20) to hopefully be done earlier. I was going to
-  suggest using time_before(timeout, jiffies) as the condition to
-  wait for, but that doesn't work if called with interrupts disabled.
+Thanks
 
-	Arnd
-Shall I go ahead by changing only current patch to mdelay(1). I will also
-Incorporate comment  #1 given by Arnd above. 
+Yinghai
