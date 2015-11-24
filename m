@@ -1,41 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:24264 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754388AbbKDN5x convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Nov 2015 08:57:53 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"gabriel.fernandez@st.com" <gabriel.fernandez@st.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"Nori, Sekhar" <nsekhar@ti.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
 	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	Magnus <magnus.damm@gmail.com>
-Subject: PCIe host controller behind IOMMU on ARM
-Date: Wed, 4 Nov 2015 13:57:48 +0000
-Message-ID: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: PCIe regression with DRA7xx in 4.4-rc1
+Date: Tue, 24 Nov 2015 12:08:17 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162C92FB@lhreml503-mbs>
+References: <56545183.8000507@ti.com>
+In-Reply-To: <56545183.8000507@ti.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-I am trying to hook up a PCIe host controller that sits behind an IOMMU,
-but having some problems.
-
-I'm using the pcie-rcar PCIe host controller and it works fine without
-the IOMMU, and I can attach the IOMMU to the controller such that any calls
-to dma_alloc_coherent made by the controller driver uses the iommu_ops
-version of dma_ops.
-
-However, I can't see how to make the endpoints to utilise the dma_ops that
-the controller uses. Shouldn't the endpoints inherit the dma_ops from the
-controller? Any pointers for this?
-
-Thanks
-Phil
-
+SGkgS2lzaG9uDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS2lzaG9u
+IFZpamF5IEFicmFoYW0gSSBbbWFpbHRvOmtpc2hvbkB0aS5jb21dDQo+IFNlbnQ6IDI0IE5vdmVt
+YmVyIDIwMTUgMTI6MDENCj4gVG86IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtl
+cm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0KPiBvbWFwQHZnZXIua2VybmVsLm9yZzsgamFt
+ZXMubW9yc2VAYXJtLmNvbTsgZ2FicmllbC5mZXJuYW5kZXpAc3QuY29tOw0KPiBNaW5naHVhbi5M
+aWFuQGZyZWVzY2FsZS5jb207IFdhbmd6aG91IChCKTsgR2FicmllbGUgUGFvbG9uaTsgYXJuZEBh
+cm5kYi5kZTsNCj4gYmhlbGdhYXNAZ29vZ2xlLmNvbTsgcHJhdHl1c2guYW5hbmRAZ21haWwuY29t
+OyBOb3JpLCBTZWtoYXI7DQo+IGppbmdvb2hhbjFAZ21haWwuY29tOyBsaW51eC1hcm0ta2VybmVs
+QGxpc3RzLmluZnJhZGVhZC5vcmcNCj4gU3ViamVjdDogUENJZSByZWdyZXNzaW9uIHdpdGggRFJB
+N3h4IGluIDQuNC1yYzENCj4gDQo+IEhpLA0KPiANCj4gSSdtIHNlZWluZyBhIHJlZ3Jlc3Npb24g
+d2l0aCA8ZDFiOWNmMzEyNTJlOTA1YWQ1NjNiOWU4NjNmZDQ0NzBmNmMzZGQxYz4oIlBDSToNCj4g
+ZGVzaWdud2FyZTogTWFrZSBkcml2ZXIgYXJjaC1hZ25vc3RpYyIpLg0KPiANCj4gTG9ncyB1c2lu
+ZyBhIFNBVEEgUENJZSBjYXJkIFsxXS4gVGhlIFBDSWUgY2FyZCBlbnVtZXJhdGVzIGZpbmUgYnV0
+IGFmdGVyIHRoYXQNCj4gSQ0KPiBvYnNlcnZlICJhdGEzLjAwOiBxYyB0aW1lb3V0IChjbWQgMHhl
+YyksIGF0YTMuMDA6IGZhaWxlZCB0byBJREVOVElGWSAoSS9PDQo+IGVycm9yLCBlcnJfbWFzaz0w
+eDQpIg0KPiANCg0KTWF5IHRoaXMgYmUgcmVsYXRlZCB0byB0aGUgYnVnIGZsYWdnZWQgaW46DQoN
+CltQQVRDSF0gUENJOiBkZXNpZ253YXJlOiByZW1vdmUgd3JvbmcgaW9fYmFzZSBhc3NpZ25tZW50
+DQoNClsuLi5dDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUu
+YyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMNCmluZGV4IDU0MGYwNzdjMzdl
+YS4uMDJhNzQ1MmJkZjIzIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2ln
+bndhcmUuYw0KKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYw0KQEAgLTQ0
+MCw3ICs0NDAsNiBAQCBpbnQgZHdfcGNpZV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHAp
+DQogCQkJCQkgcmV0LCBwcC0+aW8pOw0KIAkJCQljb250aW51ZTsNCiAJCQl9DQotCQkJcHAtPmlv
+X2Jhc2UgPSBwcC0+aW8tPnN0YXJ0Ow0KIAkJCWJyZWFrOw0KIAkJY2FzZSBJT1JFU09VUkNFX01F
+TToNCiAJCQlwcC0+bWVtID0gd2luLT5yZXM7DQotLSANCjEuNy45LjUNClsuLi5dDQoNCkNhbiB5
+b3UgdHJ5IHRvIHNlZSBpZiBhcHBseWluZyB0aGUgcGF0Y2ggYWJvdmUgc29sdmVzIHRoZSBpc3N1
+ZT8NCg0KVGhhbmtzDQoNCkdhYg0KDQo+IExvZ3MgdXNpbmcgYSBFdGhlbmV0IFBDSWUgY2FyZCBb
+Ml0uIEFnYWluIGhlcmUgdGhlIFBDSWUgY2FyZCBlbnVtZXJhdGVzIGZpbmUNCj4gYnV0IHdoZW4g
+SSBnaXZlIGlmY29uZmlnIHVwLCBpdCBmYWlscy4NCj4gDQo+IElmIEkganVzdCByZXZlcnQgY29t
+bWl0IDxkMWI5Y2YzMTI1MmU5MDVhZDU2M2I5ZTg2M2ZkNDQ3MGY2YzNkZDFjPiwgdGhlIFBDSWUN
+Cj4gY2FyZHMgc3RhcnRzIHRvIHdvcmsgZmluZSBhZ2Fpbg0KPiANCj4gTG9ncyB1c2luZyBhIFNB
+VEEgUENJZSBjYXJkIFszXS4gSGVyZSB0aGUgS0lOR1NUT04gU1NEIGdldHMgZGV0ZWN0ZWQgZmlu
+ZS4NCj4gTG9ncyB1c2luZyBhIEV0aGVybmV0IFBDSWUgY2FyZCBbNF0uIEknbSBhYmxlIHRvIGRv
+IHBpbmcgdGVzdHMgbm93Lg0KPiANCj4gQWN0dWFsbHkgSSdtIG5vdCBhYmxlIHRvIGZpbmQgYW55
+IG9idmlvdXMgcHJvYmxlbXMgd2l0aCB0aGUgcGF0Y2ggYW5kIHRoZSBpcnENCj4gbnVtYmVyIGFu
+ZCB0aGUgbWVtb3J5IHJlc291cmNlIGFsc28gbG9va3MgZmluZS4gQW55IGlkZWEgd2hhdCBjb3Vs
+ZCBiZSB0aGUNCj4gcHJvYmxlbT8NCj4gDQo+IFsxXSAtPiBodHRwOi8vcGFzdGViaW4udWJ1bnR1
+LmNvbS8xMzQ5MTQ1Ni8NCj4gWzJdIC0+IGh0dHA6Ly9wYXN0ZWJpbi51YnVudHUuY29tLzEzNDkx
+NTI2Lw0KPiANCj4gWzNdIC0+IGh0dHA6Ly9wYXN0ZWJpbi51YnVudHUuY29tLzEzNDkxNjU4Lw0K
+PiBbNF0gLT4gaHR0cDovL3Bhc3RlYmluLnVidW50dS5jb20vMTM0OTE1OTMvDQo+IA0KPiBUaGFu
+a3MNCj4gS2lzaG9uDQo=
