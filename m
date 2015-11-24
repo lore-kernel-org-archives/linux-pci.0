@@ -1,117 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-Date: Mon, 09 Nov 2015 21:09:31 +0100
-Message-ID: <6488357.xJV65iBRHq@wuerfel>
-In-Reply-To: <20151109171042.GA11909@red-moon>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com> <5640A8AA.4000806@semihalf.com> <20151109171042.GA11909@red-moon>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:44999 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932109AbbKXXEj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Nov 2015 18:04:39 -0500
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v2 0/5] Add iProc PCIe PAXC and MSI support
+Date: Tue, 24 Nov 2015 15:04:49 -0800
+Message-ID: <1448406294-732-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 09 November 2015 17:10:43 Lorenzo Pieralisi wrote:
-> On Mon, Nov 09, 2015 at 03:07:38PM +0100, Tomasz Nowicki wrote:
-> > On 06.11.2015 14:22, Jiang Liu wrote:
-> > >On 2015/11/6 20:40, Tomasz Nowicki wrote:
-> > >>On 06.11.2015 12:46, Jiang Liu wrote:
-> > >>>On 2015/11/6 18:37, Tomasz Nowicki wrote:
-> > >>>>On 06.11.2015 09:52, Jiang Liu wrote:
-> > >>>>Sure, ARM64 (0-16M IO space) QEMU example:
-> > >>>>DWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
-> > >>>>           0x00000000,         // Granularity
-> > >>>>           0x00000000,         // Range Minimum
-> > >>>>           0x0000FFFF,         // Range Maximum
-> > >>>>           0x3EFF0000,         // Translation Offset
-> > >>>>           0x00010000,         // Length
-> > >>>>           ,, , TypeStatic)
-> > >>>The above DWordIO resource descriptor doesn't confirm to the ACPI spec.
-> > >>>According to my understanding, ARM/ARM64 has no concept of IO port
-> > >>>address space, so the PCI host bridge will map IO port on PCI side
-> > >>>onto MMIO on host side. In other words, PCI host bridge on ARM64
-> > >>>implement a IO Port->MMIO translation instead of a IO Port->IO Port
-> > >>>translation. If that's true, it should use 'TypeTranslation' instead
-> > >>>of 'TypeStatic'. And kernel ACPI resource parsing interface doesn't
-> > >>>support 'TypeTranslation' yet, so we need to find a solution for it.
-> > >>
-> > >>I think you are right, we need TypeTranslation flag for ARM64 DWordIO
-> > >>descriptors and an extra kernel patch to support it.
-> > >How about the attached to patch to support TypeTranslation?
-> > >It only passes compilation:)
-> > 
-> > Based on the further discussion, your draft patch looks good to me.
-> > Lorenzo, do you agree?
-> 
-> No, because I still do not understand the difference between ia64 and
-> arm64 (they both drive IO ports cycles through MMIO so the resource
-> descriptors content must be the same or better they must mean the same
-> thing). On top of that, this is something that was heavily debated for DT:
-> 
-> http://www.spinics.net/lists/arm-kernel/msg345633.html
-> 
-> and I would like to get Arnd and Bjorn opinion on this because we
-> should not "interpret" ACPI specifications, we should understand
-> what they are supposed to describe and write kernel code accordingly.
-> 
-> In particular, I would like to understand, for an eg DWordIO descriptor,
-> what Range Minimum, Range Maximum and Translation Offset represent,
-> they can't mean different things depending on the SW parsing them,
-> this totally defeats the purpose.
+This patch series adds support for the iProc PAXC interface and support for
+event queue based MSI, integrated in the iProc PCIe core
 
-I have no clue about what those mean in ACPI though.
+This patch series is based on Linux v4.4-rc1 and is avaliable here:
+https://github.com/Broadcom/cygnus-linux/tree/iproc-msi-v2
 
-Generally speaking, each PCI domain is expected to have a (normally 64KB)
-range of CPU addresses that gets translated into PCI I/O space the same
-way that config space and memory space are handled.
-This is true for almost every architecture except for x86, which uses
-different CPU instructions for I/O space compared to the other spaces.
+This patch series is tested on the following platforms:
 
-> By the way, ia64 ioremaps the translation_offset (ie new_space()), so
-> basically that's the CPU physical address at which the PCI host bridge
-> map the IO space transactions), I do not think ia64 is any different from
-> arm64 in this respect, if it is please provide an HW description here from
-> the PCI bus perspective here (also an example of ia64 ACPI PCI host bridge
-> tables would help).
+PAXB:
+- Broadcom Cygnus wireless audio board with Intel e1000e network card
+- Broadcom NS2 SVK board with Intel e1000e network card
 
-The main difference between ia64 and a lot of the other architectures (e.g.
-sparc is different again) is that ia64 defines a logical address range
-in terms of having a small number for each I/O space followed by the
-offset within that space as a 'port number' and uses a mapping function
-that is defined as
+PAXC:
+- Broadcom NS2 SVK board with integrated dual 10 Gig Ethernet ports
 
-static inline void *__ia64_mk_io_addr (unsigned long port)
-{
-        struct io_space *space = &io_space[IO_SPACE_NR(port)];
-        return (space->mmio_base | IO_SPACE_PORT(port););
-}
-static inline unsigned int inl(unsigned long port)
-{
-        return *__ia64_mk_io_addr(port);
-}
+Changes from v1:
+- Fixed incorrect 1-to-1 mapping between MSI vector and GIC interrupt. Now the
+driver supports multiple MSI vectors per GIC interrupt
+- Added MSI IRQ affinity support by distributing GIC interrupts across
+available CPU cores and dynamically steer MSI vectors to the target CPU
+- replace readl/writel with readl_relaxed/writel_relaxed since all register
+accesses within the iProc MSI driver are to/from the same I/O block, i.e., the
+iProc PCIe core
+- Removed all redundant irq_chip callback assignments
+- Changed to use uncached host memory for both MSI posted writes and event
+queues
+- Add functions to free resources in error/exit cases
+- In pcie-iproc-platform.c, pass in interface type through OF device data
+- Moved define for max number of interrupts from pcie-iproc.h to
+pcie-iproc-msi.c
+- Other misc. changes
 
-Most architectures allow only one I/O port range and put it at a fixed
-virtual address so that inl() simply becomes 
+Ray Jui (5):
+  PCI: iproc: Update iProc PCIe device tree binding
+  PCI: iproc: Add PAXC interface support
+  PCI: iproc: Add iProc PCIe MSI device tree binding
+  PCI: iproc: Add iProc PCIe MSI support
+  ARM: dts: Enable MSI support for Broadcom Cygnus
 
-static inline u32 inl(unsigned long addr)
-{
-        return readl(PCI_IOBASE + addr);
-}
+ .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  44 +-
+ arch/arm/boot/dts/bcm-cygnus.dtsi                  |  22 +
+ drivers/pci/host/Kconfig                           |   9 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-iproc-msi.c                  | 662 +++++++++++++++++++++
+ drivers/pci/host/pcie-iproc-platform.c             |  24 +-
+ drivers/pci/host/pcie-iproc.c                      | 228 +++++--
+ drivers/pci/host/pcie-iproc.h                      |  40 +-
+ 8 files changed, 987 insertions(+), 43 deletions(-)
+ create mode 100644 drivers/pci/host/pcie-iproc-msi.c
 
-which noticeably reduces code size.
+-- 
+1.9.1
 
-On some architectures (powerpc, arm, arm64), we then get the same simplified
-definition with a fixed virtual address, and use pci_ioremap_io() or
-something like that to to map a physical address range into this virtual
-address window at the correct io_offset;
-
-	Arnd
