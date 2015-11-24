@@ -1,63 +1,78 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	bhelgaas@google.com, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
-	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org
-Subject: Re: [PATCH V1 11/11] arm64, pci, acpi: Support for ACPI based PCI hostbridge init
-Date: Tue, 03 Nov 2015 17:55:17 +0100
-Message-ID: <3736182.0iiYWufyXZ@wuerfel>
-In-Reply-To: <5638E1CE.9000805@codeaurora.org>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com> <5802577.H74A3Lg5B3@wuerfel> <5638E1CE.9000805@codeaurora.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: PCIe regression with DRA7xx in 4.4-rc1
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"gabriel.fernandez@st.com" <gabriel.fernandez@st.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"Nori, Sekhar" <nsekhar@ti.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+References: <56545183.8000507@ti.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E162C92FB@lhreml503-mbs>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <56545594.9070100@ti.com>
+Date: Tue, 24 Nov 2015 17:48:28 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E162C92FB@lhreml503-mbs>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 03 November 2015 11:33:18 Sinan Kaya wrote:
-> 
-> On 11/3/2015 10:59 AM, Arnd Bergmann wrote:
-> > On Tuesday 03 November 2015 10:10:21 Sinan Kaya wrote:
-> >>
-> >> I don't see anywhere in the SBSA spec addendum that the PCI
-> >> configuration space section that unaligned accesses *MUST* be supported.
-> >>
-> >> If this is required, please have this info added to the spec. I can work
-> >> with the designers for the next chip.
-> >>
-> >> Unaligned access on the current hardware returns incomplete values or
-> >> can cause bus faults. The behavior is undefined.
-> >
-> > Unaligned accesses are not allowed, but any PCI compliant device must
-> > support aligned 1, 2 or 4 byte accesses on its configuration space,
-> > though the byte-enable mechanism. In an ECAM host bridge, those are
-> > mapped to load/store accesses from the CPU with the respective width
-> > and natural alignment.
-> 
-> As far as I see, the endpoints do not have any problems with unaligned 
-> accesses. It is the host bridge itself (stuff that doesn't get on the 
-> PCIe bus and uses traditional AXI kind bus internally) has problems with 
-> alignment.
-> 
-> If Linux is expecting all HW vendors to implement alignment support, 
-> this needs to be put in the SBSA spec as a hard requirement.
+Hi,
 
-As I said, it's not unaligned accesses at all, just 1-byte and aligned
-2-byte accesses, and it's not Linux mandating this but the PCI
-spec. Please read Russell's email again, it is not possible for PCI
-to work according to the specification unless the host bridge allows
-sub-32-bit accesses.
+On Tuesday 24 November 2015 05:38 PM, Gabriele Paoloni wrote:
+> Hi Kishon
+> 
+>> -----Original Message-----
+>> From: Kishon Vijay Abraham I [mailto:kishon@ti.com]
+>> Sent: 24 November 2015 12:01
+>> To: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-
+>> omap@vger.kernel.org; james.morse@arm.com; gabriel.fernandez@st.com;
+>> Minghuan.Lian@freescale.com; Wangzhou (B); Gabriele Paoloni; arnd@arndb.de;
+>> bhelgaas@google.com; pratyush.anand@gmail.com; Nori, Sekhar;
+>> jingoohan1@gmail.com; linux-arm-kernel@lists.infradead.org
+>> Subject: PCIe regression with DRA7xx in 4.4-rc1
+>>
+>> Hi,
+>>
+>> I'm seeing a regression with <d1b9cf31252e905ad563b9e863fd4470f6c3dd1c>("PCI:
+>> designware: Make driver arch-agnostic").
+>>
+>> Logs using a SATA PCIe card [1]. The PCIe card enumerates fine but after that
+>> I
+>> observe "ata3.00: qc timeout (cmd 0xec), ata3.00: failed to IDENTIFY (I/O
+>> error, err_mask=0x4)"
+>>
+> 
+> May this be related to the bug flagged in:
+> 
+> [PATCH] PCI: designware: remove wrong io_base assignment
+> 
+> [...]
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 540f077c37ea..02a7452bdf23 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -440,7 +440,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  					 ret, pp->io);
+>  				continue;
+>  			}
+> -			pp->io_base = pp->io->start;
+>  			break;
+>  		case IORESOURCE_MEM:
+>  			pp->mem = win->res;
+> 
 
-You can probably work around this by using the legacy I/O port method
-rather than ECAM, if the PCI host bridge itself is functional and just
-the host bus it is connected to is buggy.
 
-	Arnd
+yes, this indeed solved the bug.
+
+Thanks
+Kishon
