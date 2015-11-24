@@ -1,126 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:34728 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbbKQCMD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 21:12:03 -0500
-Received: by padhx2 with SMTP id hx2so194188506pad.1
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 18:12:02 -0800 (PST)
-Subject: Re: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
- <56498D7B.7000307@ozlabs.ru> <20151117013813.GB31584@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <564A8CEC.4050906@ozlabs.ru>
-Date: Tue, 17 Nov 2015 13:11:56 +1100
+Received: from mail.kernel.org ([198.145.29.136]:38997 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754190AbbKXVjT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Nov 2015 16:39:19 -0500
+Date: Tue, 24 Nov 2015 15:39:14 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Jisheng Zhang <jszhang@marvell.com>, wangzhou1@hisilicon.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: hisi: fix deferred probing
+Message-ID: <20151124213914.GE17377@localhost>
+References: <1447329728-1589-1-git-send-email-jszhang@marvell.com>
+ <4417267.EzK5DAjM5p@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <20151117013813.GB31584@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4417267.EzK5DAjM5p@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/17/2015 12:38 PM, Gavin Shan wrote:
-> On Mon, Nov 16, 2015 at 07:02:03PM +1100, Alexey Kardashevskiy wrote:
->> On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>> This enables M64 window on P7IOC, which has been enabled on PHB3.
->>> Different from PHB3 where 16 M64 BARs are supported and each of
->>> them can be owned by one particular PE# exclusively or divided
->>> evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
->>> of them are divided to 8 segments. So every P7IOC PHB supports
->>> 128 M64 segments in total. P7IOC has M64DT, which helps mapping
->>> one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
->>> M64DT, indicating that one M64 segment can only be pinned to the
->>> fixed PE#. In order to have same code to support M64 on P7IOC and
->>> PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
->>> of them is pinned to the fixed PE# by bypassing the function of
->>> M64DT. In turn, we just need different phb->init_m64() for P7IOC
->>> and PHB3 to support M64.
->>>
->>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>> ---
->>>   arch/powerpc/platforms/powernv/pci-ioda.c | 86 +++++++++++++++++++++++++++++--
->>>   arch/powerpc/platforms/powernv/pci.h      |  3 ++
->>>   2 files changed, 86 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> index 1f7d985..bfe69f1 100644
->>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> @@ -256,6 +256,64 @@ static void pnv_ioda_reserve_dev_m64_pe(struct pci_dev *pdev,
->>>   	}
->>>   }
->>>
->>> +static int pnv_ioda1_init_m64(struct pnv_phb *phb)
->>> +{
->>> +	struct resource *r;
->>> +	int index;
->>> +
->>> +	/*
->>> +	 * There are 16 M64 BARs, each of which has 8 segments. So
->>> +	 * there are as many M64 segments as the maximum number of
->>> +	 * PEs, which is 128.
->>> +	 */
->>> +	for (index = 0; index < PNV_IODA1_M64_NUM; index++) {
->>> +		unsigned long base, segsz = phb->ioda.m64_segsize;
->>> +		int64_t rc;
->>> +
->>> +		base = phb->ioda.m64_base +
->>> +		       index * PNV_IODA1_M64_SEGS * segsz;
->>> +		rc = opal_pci_set_phb_mem_window(phb->opal_id,
->>> +				OPAL_M64_WINDOW_TYPE, index, base, 0,
->>> +				PNV_IODA1_M64_SEGS * segsz);
->>> +		if (rc != OPAL_SUCCESS) {
->>> +			pr_warn("  Error %lld setting M64 PHB#%d-BAR#%d\n",
->>> +				rc, phb->hose->global_number, index);
->>> +			goto fail;
->>> +		}
->>> +
->>> +		rc = opal_pci_phb_mmio_enable(phb->opal_id,
->>> +				OPAL_M64_WINDOW_TYPE, index,
->>> +				OPAL_ENABLE_M64_SPLIT);
->>> +		if (rc != OPAL_SUCCESS) {
->>> +			pr_warn("  Error %lld enabling M64 PHB#%d-BAR#%d\n",
->>> +				rc, phb->hose->global_number, index);
->>> +			goto fail;
->>> +		}
->>> +	}
->>> +
->>> +	/*
->>> +	 * Exclude the segment used by the reserved PE, which
->>> +	 * is expected to be 0 or last supported PE#.
->>> +	 */
->>> +	r = &phb->hose->mem_resources[1];
->>
->>
->> What does "1" mean here? A bridge's 64bit prefetchable window?
->>
->
-> It's PHB's M64 window.
+On Thu, Nov 12, 2015 at 01:21:37PM +0100, Arnd Bergmann wrote:
+> The hisi_pcie_probe function is incorrectly marked as __init, as Kconfig
+> tells us:
+> 
+> WARNING: drivers/pci/host/built-in.o(.data+0x7780): Section mismatch in reference from the variable hisi_pcie_driver to the function .init.text:hisi_pcie_probe()
+> 
+> If the probe for this device gets deferred past the point where __init
+> functions are removed, or the device is unbound and then reattached to
+> the driver, we branch into uninitialized memory, which is bad.
+> 
+> This removes the __init annotation.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-mem_resources[] of a hose are not windows of the root PCI bridge?
+We merged pcie-hisi.c in the v4.4 merge window, so I applied this to
+for-linus for v4.4 with ack/reviewed-by from Zhou and Hanjun, thanks!
 
-
-
->
->>
->>> +	if (phb->ioda.reserved_pe_idx == 0)
->>> +		r->start += phb->ioda.m64_segsize;
->>> +	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
->>> +		r->end -= phb->ioda.m64_segsize;
->>> +	else
->>> +		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
->>> +			phb->ioda.reserved_pe_idx);
->>> +
->
-> Thanks,
-> Gavin
->
-
-
--- 
-Alexey
+> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+> index 35457ecd8e70..163671a4f798 100644
+> --- a/drivers/pci/host/pcie-hisi.c
+> +++ b/drivers/pci/host/pcie-hisi.c
+> @@ -111,7 +111,7 @@ static struct pcie_host_ops hisi_pcie_host_ops = {
+>  	.link_up = hisi_pcie_link_up,
+>  };
+>  
+> -static int __init hisi_add_pcie_port(struct pcie_port *pp,
+> +static int hisi_add_pcie_port(struct pcie_port *pp,
+>  				     struct platform_device *pdev)
+>  {
+>  	int ret;
+> @@ -139,7 +139,7 @@ static int __init hisi_add_pcie_port(struct pcie_port *pp,
+>  	return 0;
+>  }
+>  
+> -static int __init hisi_pcie_probe(struct platform_device *pdev)
+> +static int hisi_pcie_probe(struct platform_device *pdev)
+>  {
+>  	struct hisi_pcie *hisi_pcie;
+>  	struct pcie_port *pp;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
