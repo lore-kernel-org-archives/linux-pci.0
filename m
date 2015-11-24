@@ -1,63 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:9725 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932838AbbKMRRq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 13 Nov 2015 12:17:46 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv5 2/6] pci: skip child bus with conflicting resources
-Date: Fri, 13 Nov 2015 10:17:33 -0700
-Message-Id: <1447435057-5212-3-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1447435057-5212-1-git-send-email-keith.busch@intel.com>
-References: <1447435057-5212-1-git-send-email-keith.busch@intel.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:45000 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754578AbbKXPSo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Nov 2015 10:18:44 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Ramon Fried <ramon.fried@tandemg.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: PCIe endpoint generic driver
+Date: Tue, 24 Nov 2015 15:18:32 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E162C9A21@lhreml503-mbs>
+References: <AM2PR02MB06895C98FE39F8BB6D958389E8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E162C98EA@lhreml503-mbs>
+ <AM2PR02MB06897BD3549D017DCF17FE36E8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
+In-Reply-To: <AM2PR02MB06897BD3549D017DCF17FE36E8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-And use the max bus resource from the parent rather than assume 255.
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
+> On Behalf Of Ramon Fried
+> Sent: 24 November 2015 15:02
+> To: linux-pci@vger.kernel.org
+> Subject: RE: PCIe endpoint generic driver
+> 
+> > > Hi.
+> > > Sorry for the noob question :)
+> > > I'm currently developing a PCIe endpoint driver for a board that runs
+> > > Linux.
+> > > The board will be used as an expansion PCIe card for x86 PC's.
+> > > Is there any guidelines, documentation related to PCI endpoint drivers
+> > > for Linux kernel ?
+> 
+> > Hi Ramon
+> >
+> > Have you looked at
+> > http://lxr.free-electrons.com/source/Documentation/PCI/pci.txt
+> >?
+> >
+> > Regards
+> >
+> > Gab
+> 
+> Hi Gab, you misunderstood my driver type.
+> This is not a host driver, that I'm writing, but the actual endpoint driver.
+> Then Linux is on the PCIe board.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/probe.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+Hi Ramon, I understood your driver type.
+I think you misunderstood the Documentation.
+Host Bridges are under drivers/pci/host and none of them use pci_register_driver() API.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index f14a970..ae5a4b3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -856,7 +856,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 			if (!child)
- 				goto out;
- 			child->primary = primary;
--			pci_bus_insert_busn_res(child, secondary, subordinate);
-+			if (!pci_bus_insert_busn_res(child, secondary, subordinate)) {
-+				pci_remove_bus(child);
-+				goto out;
-+			}
- 			child->bridge_ctl = bctl;
- 		}
- 
-@@ -896,7 +899,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 			child = pci_add_new_bus(bus, dev, max+1);
- 			if (!child)
- 				goto out;
--			pci_bus_insert_busn_res(child, max+1, 0xff);
-+			if (!pci_bus_insert_busn_res(child, max+1, bus->busn_res.end)) {
-+				pci_remove_bus(child);
-+				goto out;
-+			}
- 		}
- 		max++;
- 		buses = (buses & 0xff000000)
--- 
-2.6.2.307.g37023ba
+pci_register_driver() is actually for endpoints. Please read the link above again.
 
+> 
+> > > I didn't find any, and I guess that I'm left with a platform driver.
+> > >
+> > > If indeed the platform driver is the way to go, are there any
+> > > implementations upstream I can look at ?
+> > >
+> > > Thanks !
+> > > Ramon.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
