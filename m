@@ -1,454 +1,714 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:25197 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753584AbbKZWhD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Nov 2015 17:37:03 -0500
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v3 2/5] PCI: iproc: Add PAXC interface support
-Date: Thu, 26 Nov 2015 14:37:07 -0800
-Message-ID: <1448577430-16428-3-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1448577430-16428-1-git-send-email-rjui@broadcom.com>
-References: <1448577430-16428-1-git-send-email-rjui@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtprelay.synopsys.com ([198.182.60.111]:52558 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753397AbbKXOcS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Nov 2015 09:32:18 -0500
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: bhelgaas@google.com, CARLOS.PALMINHA@synopsys.com,
+	Vineet.Gupta1@synopsys.com, Alexey.Brodkin@synopsys.com,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH 2/2] PCI support added to ARC
+Date: Tue, 24 Nov 2015 14:32:06 +0000
+Message-Id: <9b80d6c1db4d7e2b5ee5dc0056a3d8284e7c2b9b.1448375184.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1448375184.git.jpinto@synopsys.com>
+References: <cover.1448375184.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1448375184.git.jpinto@synopsys.com>
+References: <cover.1448375184.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Traditionally, all iProc PCIe root complexes use PAXB based wrapper,
-with an integrated on-chip Serdes to support external endpoint devices.
-On newer iProc platforms, a PAXC based wrapper is introduced, for
-connection with internally emulated PCIe endpoint devices in the ASIC
+This patch adds PCI support to ARC and updates drivers/pci Makefile enabling
+the ARC arch to use the generic PCI setup functions.
 
-This patch adds support for PAXC based iProc PCIe root complex in the
-iProc PCIe core driver. This change fators out common logic between
-PAXB and PAXC, and use tables to store register offsets that are
-different between PAXB and PAXC. This allows the driver to be scaled to
-support subsequent PAXC revisions in the future
-
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 ---
- drivers/pci/host/pcie-iproc-platform.c |  24 +++-
- drivers/pci/host/pcie-iproc.c          | 202 +++++++++++++++++++++++++++------
- drivers/pci/host/pcie-iproc.h          |  19 ++++
- 3 files changed, 205 insertions(+), 40 deletions(-)
+ arch/arc/Kconfig                |  22 +++
+ arch/arc/include/asm/dma.h      |   5 +
+ arch/arc/include/asm/io.h       |   2 +
+ arch/arc/include/asm/mach/pci.h |  97 +++++++++++
+ arch/arc/include/asm/pci.h      |  34 ++++
+ arch/arc/kernel/Makefile        |   1 +
+ arch/arc/kernel/pcibios.c       | 360 ++++++++++++++++++++++++++++++++++++++++
+ arch/arc/mm/ioremap.c           |  29 +++-
+ arch/arc/plat-axs10x/Kconfig    |   1 +
+ drivers/pci/Makefile            |   1 +
+ 10 files changed, 551 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arc/include/asm/mach/pci.h
+ create mode 100644 arch/arc/include/asm/pci.h
+ create mode 100644 arch/arc/kernel/pcibios.c
 
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index c9550dc..e8b32d8 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -26,8 +26,21 @@
+diff --git a/arch/arc/Kconfig b/arch/arc/Kconfig
+index 2c2ac3f..5b526a3 100644
+--- a/arch/arc/Kconfig
++++ b/arch/arc/Kconfig
+@@ -19,6 +19,7 @@ config ARC
+ 	select GENERIC_FIND_FIRST_BIT
+ 	# for now, we don't need GENERIC_IRQ_PROBE, CONFIG_GENERIC_IRQ_CHIP
+ 	select GENERIC_IRQ_SHOW
++	select GENERIC_PCI_IOMAP
+ 	select GENERIC_PENDING_IRQ if SMP
+ 	select GENERIC_SMP_IDLE_THREAD
+ 	select HAVE_ARCH_KGDB
+@@ -39,6 +40,9 @@ config ARC
+ 	select PERF_USE_VMALLOC
+ 	select HAVE_DEBUG_STACKOVERFLOW
  
- #include "pcie-iproc.h"
- 
-+static const struct of_device_id iproc_pcie_of_match_table[] = {
-+	{
-+		.compatible = "brcm,iproc-pcie",
-+		.data = (int *)IPROC_PCIE_PAXB,
-+	}, {
-+		.compatible = "brcm,iproc-pcie-paxc",
-+		.data = (int *)IPROC_PCIE_PAXC,
-+	},
-+	{ /* sentinel */ }
-+};
-+MODULE_DEVICE_TABLE(of, iproc_pcie_of_match_table);
++config MIGHT_HAVE_PCI
++	bool
 +
- static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
- {
-+	const struct of_device_id *of_id;
- 	struct iproc_pcie *pcie;
- 	struct device_node *np = pdev->dev.of_node;
- 	struct resource reg;
-@@ -35,11 +48,16 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
- 	LIST_HEAD(res);
- 	int ret;
+ config TRACE_IRQFLAGS_SUPPORT
+ 	def_bool y
  
-+	of_id = of_match_device(iproc_pcie_of_match_table, &pdev->dev);
-+	if (!of_id)
-+		return -EINVAL;
+@@ -110,6 +114,24 @@ config ISA_ARCV2
+ 
+ endchoice
+ 
++menu "Bus Support"
 +
- 	pcie = devm_kzalloc(&pdev->dev, sizeof(struct iproc_pcie), GFP_KERNEL);
- 	if (!pcie)
- 		return -ENOMEM;
- 
- 	pcie->dev = &pdev->dev;
-+	pcie->type = (enum iproc_pcie_type)of_id->data;
- 	platform_set_drvdata(pdev, pcie);
- 
- 	ret = of_address_to_resource(np, 0, &reg);
-@@ -114,12 +132,6 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
- 	return iproc_pcie_remove(pcie);
- }
- 
--static const struct of_device_id iproc_pcie_of_match_table[] = {
--	{ .compatible = "brcm,iproc-pcie", },
--	{ /* sentinel */ }
--};
--MODULE_DEVICE_TABLE(of, iproc_pcie_of_match_table);
--
- static struct platform_driver iproc_pcie_pltfm_driver = {
- 	.driver = {
- 		.name = "iproc-pcie",
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index eac719a..24d5b62 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -30,20 +30,16 @@
- 
- #include "pcie-iproc.h"
- 
--#define CLK_CONTROL_OFFSET           0x000
- #define EP_PERST_SOURCE_SELECT_SHIFT 2
- #define EP_PERST_SOURCE_SELECT       BIT(EP_PERST_SOURCE_SELECT_SHIFT)
- #define EP_MODE_SURVIVE_PERST_SHIFT  1
- #define EP_MODE_SURVIVE_PERST        BIT(EP_MODE_SURVIVE_PERST_SHIFT)
- #define RC_PCIE_RST_OUTPUT_SHIFT     0
- #define RC_PCIE_RST_OUTPUT           BIT(RC_PCIE_RST_OUTPUT_SHIFT)
-+#define PAXC_RESET_MASK              0x7f
- 
--#define CFG_IND_ADDR_OFFSET          0x120
- #define CFG_IND_ADDR_MASK            0x00001ffc
- 
--#define CFG_IND_DATA_OFFSET          0x124
--
--#define CFG_ADDR_OFFSET              0x1f8
- #define CFG_ADDR_BUS_NUM_SHIFT       20
- #define CFG_ADDR_BUS_NUM_MASK        0x0ff00000
- #define CFG_ADDR_DEV_NUM_SHIFT       15
-@@ -55,12 +51,8 @@
- #define CFG_ADDR_CFG_TYPE_SHIFT      0
- #define CFG_ADDR_CFG_TYPE_MASK       0x00000003
- 
--#define CFG_DATA_OFFSET              0x1fc
--
--#define SYS_RC_INTX_EN               0x330
- #define SYS_RC_INTX_MASK             0xf
- 
--#define PCIE_LINK_STATUS_OFFSET      0xf0c
- #define PCIE_PHYLINKUP_SHIFT         3
- #define PCIE_PHYLINKUP               BIT(PCIE_PHYLINKUP_SHIFT)
- #define PCIE_DL_ACTIVE_SHIFT         2
-@@ -71,12 +63,54 @@
- #define OARR_SIZE_CFG_SHIFT          1
- #define OARR_SIZE_CFG                BIT(OARR_SIZE_CFG_SHIFT)
- 
--#define OARR_LO(window)              (0xd20 + (window) * 8)
--#define OARR_HI(window)              (0xd24 + (window) * 8)
--#define OMAP_LO(window)              (0xd40 + (window) * 8)
--#define OMAP_HI(window)              (0xd44 + (window) * 8)
--
- #define MAX_NUM_OB_WINDOWS           2
-+#define MAX_NUM_PAXC_PF              4
++config PCI
++	bool "PCI support" if MIGHT_HAVE_PCI
++	help
++	  PCI is the name of a bus system, i.e. the way the CPU talks to the other stuff inside
++	  your box.Find out if your board/platform have PCI.
++	  Note: PCIE support for Synopsys Device will be available only when
++	  HAPS DX is configured with PCIE RC bitmap. If you have PCI, say Y, otherwise N.
 +
-+#define IPROC_PCIE_REG_INVALID 0xffff
++config PCI_SYSCALL
++	def_bool PCI
 +
-+enum iproc_pcie_reg {
-+	IPROC_PCIE_CLK_CTRL = 0,
-+	IPROC_PCIE_CFG_IND_ADDR,
-+	IPROC_PCIE_CFG_IND_DATA,
-+	IPROC_PCIE_CFG_ADDR,
-+	IPROC_PCIE_CFG_DATA,
-+	IPROC_PCIE_INTX_EN,
-+	IPROC_PCIE_OARR_LO,
-+	IPROC_PCIE_OARR_HI,
-+	IPROC_PCIE_OMAP_LO,
-+	IPROC_PCIE_OMAP_HI,
-+	IPROC_PCIE_LINK_STATUS,
-+};
++source "drivers/pci/Kconfig"
++source "drivers/pci/pcie/Kconfig"
 +
-+/* iProc PCIe PAXB registers */
-+static const u16 iproc_pcie_reg_paxb[] = {
-+	[IPROC_PCIE_CLK_CTRL]     = 0x000,
-+	[IPROC_PCIE_CFG_IND_ADDR] = 0x120,
-+	[IPROC_PCIE_CFG_IND_DATA] = 0x124,
-+	[IPROC_PCIE_CFG_ADDR]     = 0x1f8,
-+	[IPROC_PCIE_CFG_DATA]     = 0x1fc,
-+	[IPROC_PCIE_INTX_EN]      = 0x330,
-+	[IPROC_PCIE_OARR_LO]      = 0xd20,
-+	[IPROC_PCIE_OARR_HI]      = 0xd24,
-+	[IPROC_PCIE_OMAP_LO]      = 0xd40,
-+	[IPROC_PCIE_OMAP_HI]      = 0xd44,
-+	[IPROC_PCIE_LINK_STATUS]  = 0xf0c,
-+};
++endmenu
 +
-+/* iProc PCIe PAXC v1 registers */
-+static const u16 iproc_pcie_reg_paxc[] = {
-+	[IPROC_PCIE_CLK_CTRL]     = 0x000,
-+	[IPROC_PCIE_CFG_IND_ADDR] = 0x1f0,
-+	[IPROC_PCIE_CFG_IND_DATA] = 0x1f4,
-+	[IPROC_PCIE_CFG_ADDR]     = 0x1f8,
-+	[IPROC_PCIE_CFG_DATA]     = 0x1fc,
-+	[IPROC_PCIE_INTX_EN]      = IPROC_PCIE_REG_INVALID,
-+	[IPROC_PCIE_OARR_LO]      = IPROC_PCIE_REG_INVALID,
-+	[IPROC_PCIE_OARR_HI]      = IPROC_PCIE_REG_INVALID,
-+	[IPROC_PCIE_OMAP_LO]      = IPROC_PCIE_REG_INVALID,
-+	[IPROC_PCIE_OMAP_HI]      = IPROC_PCIE_REG_INVALID,
-+	[IPROC_PCIE_LINK_STATUS]  = IPROC_PCIE_REG_INVALID,
-+};
+ menu "ARC CPU Configuration"
  
- static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
- {
-@@ -91,6 +125,65 @@ static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
- 	return pcie;
- }
+ choice
+diff --git a/arch/arc/include/asm/dma.h b/arch/arc/include/asm/dma.h
+index ca7c451..37942fa 100644
+--- a/arch/arc/include/asm/dma.h
++++ b/arch/arc/include/asm/dma.h
+@@ -10,5 +10,10 @@
+ #define ASM_ARC_DMA_H
  
-+static inline bool iproc_pcie_reg_is_invalid(u16 reg_offset)
-+{
-+	return !!(reg_offset == IPROC_PCIE_REG_INVALID);
-+}
-+
-+static inline u16 iproc_pcie_reg_offset(struct iproc_pcie *pcie,
-+					enum iproc_pcie_reg reg)
-+{
-+	return pcie->reg_offsets[reg];
-+}
-+
-+static inline u32 iproc_pcie_read_reg(struct iproc_pcie *pcie,
-+				      enum iproc_pcie_reg reg)
-+{
-+	u16 offset = iproc_pcie_reg_offset(pcie, reg);
-+
-+	if (iproc_pcie_reg_is_invalid(offset))
-+		return 0;
-+
-+	return readl(pcie->base + offset);
-+}
-+
-+static inline void iproc_pcie_write_reg(struct iproc_pcie *pcie,
-+					enum iproc_pcie_reg reg, u32 val)
-+{
-+	u16 offset = iproc_pcie_reg_offset(pcie, reg);
-+
-+	if (iproc_pcie_reg_is_invalid(offset))
-+		return;
-+
-+	writel(val, pcie->base + offset);
-+}
-+
-+static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
-+				       enum iproc_pcie_reg reg,
-+				       unsigned window, u32 val)
-+{
-+	u16 offset = iproc_pcie_reg_offset(pcie, reg);
-+
-+	if (iproc_pcie_reg_is_invalid(offset))
-+		return;
-+
-+	writel(val, pcie->base + offset + (window * 8));
-+}
-+
-+static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
-+					      unsigned int slot,
-+					      unsigned int fn)
-+{
-+	if (slot > 0)
-+		return false;
-+
-+	/* PAXC can only support limited number of functions */
-+	if (pcie->type == IPROC_PCIE_PAXC && fn >= MAX_NUM_PAXC_PF)
-+		return false;
-+
-+	return true;
-+}
-+
- /**
-  * Note access to the configuration registers are protected at the higher layer
-  * by 'pci_lock' in drivers/pci/access.c
-@@ -104,28 +197,34 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
- 	unsigned fn = PCI_FUNC(devfn);
- 	unsigned busno = bus->number;
- 	u32 val;
-+	u16 offset;
-+
-+	if (!iproc_pcie_device_is_valid(pcie, slot, fn))
-+		return NULL;
+ #define MAX_DMA_ADDRESS 0xC0000000
++#ifdef CONFIG_PCI
++extern int isa_dma_bridge_buggy;
++#else
++#define isa_dma_bridge_buggy    (0)
++#endif
  
- 	/* root complex access */
- 	if (busno == 0) {
--		if (slot >= 1)
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_IND_ADDR,
-+				     where & CFG_IND_ADDR_MASK);
-+		offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_IND_DATA);
-+		if (iproc_pcie_reg_is_invalid(offset))
- 			return NULL;
--		writel(where & CFG_IND_ADDR_MASK,
--		       pcie->base + CFG_IND_ADDR_OFFSET);
--		return (pcie->base + CFG_IND_DATA_OFFSET);
-+		else
-+			return (pcie->base + offset);
- 	}
+ #endif
+diff --git a/arch/arc/include/asm/io.h b/arch/arc/include/asm/io.h
+index 694ece8..d86c2e3 100644
+--- a/arch/arc/include/asm/io.h
++++ b/arch/arc/include/asm/io.h
+@@ -17,6 +17,8 @@ extern void __iomem *ioremap(unsigned long physaddr, unsigned long size);
+ extern void __iomem *ioremap_prot(phys_addr_t offset, unsigned long size,
+ 				  unsigned long flags);
+ extern void iounmap(const void __iomem *addr);
++extern void __iomem *ioport_map(unsigned long port, unsigned int size);
++extern int pci_ioremap_io(unsigned int offset, phys_addr_t phys_addr);
  
--	if (fn > 1)
--		return NULL;
--
- 	/* EP device access */
- 	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
- 		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
- 		(fn << CFG_ADDR_FUNC_NUM_SHIFT) |
- 		(where & CFG_ADDR_REG_NUM_MASK) |
- 		(1 & CFG_ADDR_CFG_TYPE_MASK);
--	writel(val, pcie->base + CFG_ADDR_OFFSET);
--
--	return (pcie->base + CFG_DATA_OFFSET);
-+	iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
-+	offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
-+	if (iproc_pcie_reg_is_invalid(offset))
-+		return NULL;
-+	else
-+		return (pcie->base + offset);
- }
- 
- static struct pci_ops iproc_pcie_ops = {
-@@ -138,18 +237,29 @@ static void iproc_pcie_reset(struct iproc_pcie *pcie)
- {
- 	u32 val;
- 
-+	if (pcie->type == IPROC_PCIE_PAXC) {
-+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-+		val &= ~PAXC_RESET_MASK;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-+		udelay(100);
-+		val |= PAXC_RESET_MASK;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-+		udelay(100);
-+		return;
-+	}
-+
- 	/*
- 	 * Select perst_b signal as reset source. Put the device into reset,
- 	 * and then bring it out of reset
- 	 */
--	val = readl(pcie->base + CLK_CONTROL_OFFSET);
-+	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
- 	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
- 		~RC_PCIE_RST_OUTPUT;
--	writel(val, pcie->base + CLK_CONTROL_OFFSET);
-+	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
- 	udelay(250);
- 
- 	val |= RC_PCIE_RST_OUTPUT;
--	writel(val, pcie->base + CLK_CONTROL_OFFSET);
-+	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
- 	msleep(100);
- }
- 
-@@ -160,7 +270,14 @@ static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
- 	u16 pos, link_status;
- 	bool link_is_active = false;
- 
--	val = readl(pcie->base + PCIE_LINK_STATUS_OFFSET);
-+	/*
-+	 * PAXC connects to emulated endpoint devices directly and does not
-+	 * have a Serdes. Therefore skip the link detection logic here
-+	 */
-+	if (pcie->type == IPROC_PCIE_PAXC)
-+		return 0;
-+
-+	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_LINK_STATUS);
- 	if (!(val & PCIE_PHYLINKUP) || !(val & PCIE_DL_ACTIVE)) {
- 		dev_err(pcie->dev, "PHY or data link is INACTIVE!\n");
- 		return -ENODEV;
-@@ -221,7 +338,7 @@ static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
- 
- static void iproc_pcie_enable(struct iproc_pcie *pcie)
- {
--	writel(SYS_RC_INTX_MASK, pcie->base + SYS_RC_INTX_EN);
-+	iproc_pcie_write_reg(pcie, IPROC_PCIE_INTX_EN, SYS_RC_INTX_MASK);
- }
- 
- /**
-@@ -272,11 +389,15 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
- 	axi_addr -= ob->axi_offset;
- 
- 	for (i = 0; i < MAX_NUM_OB_WINDOWS; i++) {
--		writel(lower_32_bits(axi_addr) | OARR_VALID |
--		       (ob->set_oarr_size ? 1 : 0), pcie->base + OARR_LO(i));
--		writel(upper_32_bits(axi_addr), pcie->base + OARR_HI(i));
--		writel(lower_32_bits(pci_addr), pcie->base + OMAP_LO(i));
--		writel(upper_32_bits(pci_addr), pcie->base + OMAP_HI(i));
-+		iproc_pcie_ob_write(pcie, IPROC_PCIE_OARR_LO, i,
-+				    lower_32_bits(axi_addr) | OARR_VALID |
-+				    (ob->set_oarr_size ? 1 : 0));
-+		iproc_pcie_ob_write(pcie, IPROC_PCIE_OARR_HI, i,
-+				    upper_32_bits(axi_addr));
-+		iproc_pcie_ob_write(pcie, IPROC_PCIE_OMAP_LO, i,
-+				    lower_32_bits(pci_addr));
-+		iproc_pcie_ob_write(pcie, IPROC_PCIE_OMAP_HI, i,
-+				    upper_32_bits(pci_addr));
- 
- 		size -= ob->window_size;
- 		if (size == 0)
-@@ -340,6 +461,19 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 		goto err_exit_phy;
- 	}
- 
-+	switch (pcie->type) {
-+	case IPROC_PCIE_PAXB:
-+		pcie->reg_offsets = iproc_pcie_reg_paxb;
-+		break;
-+	case IPROC_PCIE_PAXC:
-+		pcie->reg_offsets = iproc_pcie_reg_paxc;
-+		break;
-+	default:
-+		dev_err(pcie->dev, "incompatible iProc PCIe interface\n");
-+		ret = -EINVAL;
-+		goto err_power_off_phy;
-+	}
-+
- 	iproc_pcie_reset(pcie);
- 
- 	if (pcie->need_ob_cfg) {
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index d3dc940..051b651 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -15,6 +15,20 @@
- #define _PCIE_IPROC_H
- 
- /**
-+ * iProc PCIe interface type
+ #define ioremap_nocache(phy, sz)	ioremap(phy, sz)
+ #define ioremap_wc(phy, sz)		ioremap(phy, sz)
+diff --git a/arch/arc/include/asm/mach/pci.h b/arch/arc/include/asm/mach/pci.h
+new file mode 100644
+index 0000000..9e75277
+--- /dev/null
++++ b/arch/arc/include/asm/mach/pci.h
+@@ -0,0 +1,97 @@
++/*
++ *  arch/arc/include/asm/mach/pci.h
 + *
-+ * PAXB is the wrapper used in root complex that can be connected to an
-+ * external endpoint device
++ *  Copyright (C) 2004-2014 Synopsys, Inc. (www.synopsys.com)
 + *
-+ * PAXC is the wrapper used in root complex dedicated for internal emulated
-+ * endpoint devices
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
 + */
-+enum iproc_pcie_type {
-+	IPROC_PCIE_PAXB = 0,
-+	IPROC_PCIE_PAXC,
++
++#ifndef __ASM_MACH_PCI_H
++#define __ASM_MACH_PCI_H
++
++#include <linux/ioport.h>
++
++struct pci_sys_data;
++struct pci_ops;
++struct pci_bus;
++struct device;
++
++struct hw_pci {
++#ifdef CONFIG_PCI_DOMAINS
++	int		domain;
++#endif
++	struct pci_ops	*ops;
++	int		nr_controllers;
++	void		**private_data;
++	int		(*setup)(int nr, struct pci_sys_data *);
++	struct pci_bus *(*scan)(int nr, struct pci_sys_data *);
++	void		(*preinit)(void);
++	void		(*postinit)(void);
++	u8		(*swizzle)(struct pci_dev *dev, u8 *pin);
++	int		(*map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
++	resource_size_t (*align_resource)(struct pci_dev *dev,
++					  const struct resource *res,
++					  resource_size_t start,
++					  resource_size_t size,
++					  resource_size_t align);
++	void		(*add_bus)(struct pci_bus *bus);
++	void		(*remove_bus)(struct pci_bus *bus);
 +};
++
++/*
++ * Per-controller structure
++ */
++struct pci_sys_data {
++#ifdef CONFIG_PCI_DOMAINS
++	int		domain;
++#endif
++	struct list_head node;
++	int		busnr;		/* primary bus number		    */
++	u64		mem_offset;	/* bus->cpu memory mapping offset   */
++	unsigned long	io_offset;	/* bus->cpu IO mapping offset	    */
++	struct pci_bus	*bus;		/* PCI bus			    */
++	struct list_head resources;	/* root bus resources (apertures)   */
++	struct resource io_res;
++	char		io_res_name[12];
++					/* Bridge swizzling		    */
++	u8		(*swizzle)(struct pci_dev *, u8 *);
++					/* IRQ mapping			    */
++	int		(*map_irq)(const struct pci_dev *, u8, u8);
++					/* Resource alignement requirements */
++	resource_size_t (*align_resource)(struct pci_dev *dev,
++					  const struct resource *res,
++					  resource_size_t start,
++					  resource_size_t size,
++					  resource_size_t align);
++	void		(*add_bus)(struct pci_bus *bus);
++	void		(*remove_bus)(struct pci_bus *bus);
++	void		*private_data;	/* platform controller private data */
++};
++
++/*
++ * Call this with your hw_pci struct to initialise the PCI system.
++ */
++void pci_common_init_dev(struct device *, struct hw_pci *);
++
++/*
++ * Compatibility wrapper for older platforms that do not care about
++ * passing the parent device.
++ */
++static inline void pci_common_init(struct hw_pci *hw)
++{
++	pci_common_init_dev(NULL, hw);
++}
++
++/*
++ * Setup early fixed I/O mapping.
++ */
++#if defined(CONFIG_PCI)
++extern void pci_map_io_early(unsigned long pfn);
++#else
++static inline void pci_map_io_early(unsigned long pfn) {}
++#endif
++
++#endif /* __ASM_MACH_PCI_H */
++
+diff --git a/arch/arc/include/asm/pci.h b/arch/arc/include/asm/pci.h
+new file mode 100644
+index 0000000..085b15f
+--- /dev/null
++++ b/arch/arc/include/asm/pci.h
+@@ -0,0 +1,34 @@
++/*
++ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef _ASM_ARC_PCI_H
++#define _ASM_ARC_PCI_H
++
++#ifdef __KERNEL__
++#include <asm-generic/pci-dma-compat.h>
++#include <asm-generic/pci-bridge.h>
++
++#include <asm/mach/pci.h> /* for pci_sys_data */
++
++extern unsigned long pcibios_min_io;
++#define PCIBIOS_MIN_IO pcibios_min_io
++extern unsigned long pcibios_min_mem;
++#define PCIBIOS_MIN_MEM pcibios_min_mem
++
++#define pcibios_assign_all_busses()	1
++/*
++ * The PCI address space does equal the physical memory address space.
++ * The networking and block device layers use this boolean for bounce
++ * buffer decisions.
++ */
++#define PCI_DMA_BUS_IS_PHYS     (1)
++
++#endif /* __KERNEL__ */
++
++#endif /* _ASM_ARC_PCI_H */
++
+diff --git a/arch/arc/kernel/Makefile b/arch/arc/kernel/Makefile
+index e7f3625..1bc2036 100644
+--- a/arch/arc/kernel/Makefile
++++ b/arch/arc/kernel/Makefile
+@@ -12,6 +12,7 @@ obj-y	:= arcksyms.o setup.o irq.o time.o reset.o ptrace.o process.o devtree.o
+ obj-y	+= signal.o traps.o sys.o troubleshoot.o stacktrace.o disasm.o clk.o
+ obj-$(CONFIG_ISA_ARCOMPACT)		+= entry-compact.o intc-compact.o
+ obj-$(CONFIG_ISA_ARCV2)			+= entry-arcv2.o intc-arcv2.o
++obj-$(CONFIG_PCI)  			+= pcibios.o
+ 
+ obj-$(CONFIG_MODULES)			+= arcksyms.o module.o
+ obj-$(CONFIG_SMP) 			+= smp.o
+diff --git a/arch/arc/kernel/pcibios.c b/arch/arc/kernel/pcibios.c
+new file mode 100644
+index 0000000..a7bd76a
+--- /dev/null
++++ b/arch/arc/kernel/pcibios.c
+@@ -0,0 +1,360 @@
++/*
++ * Copyright (C) 2014-2015 Synopsys, Inc. (www.synopsys.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ */
++
++#include <linux/kernel.h>
++#include <linux/pci.h>
++#include <linux/delay.h>
++#include <linux/string.h>
++#include <linux/init.h>
++#include <linux/sched.h>
++#include <linux/errno.h>
++#include <linux/bootmem.h>
++#include <linux/sizes.h>
++#include <linux/slab.h>
++
++#include <asm/pci.h>
++#include <asm/mach/pci.h>
++
++static int pcibios_init_resources(int busnr, struct pci_sys_data *sys)
++{
++	int ret;
++	struct pci_host_bridge_window *window;
++
++	if (list_empty(&sys->resources)) {
++		pci_add_resource_offset(&sys->resources,
++			 &iomem_resource, sys->mem_offset);
++	}
++
++	list_for_each_entry(window, &sys->resources, list) {
++		if (resource_type(window->res) == IORESOURCE_IO)
++			return 0;
++	}
++
++	sys->io_res.start = (busnr * SZ_64K) ?  : pcibios_min_io;
++	sys->io_res.end = (busnr + 1) * SZ_64K - 1;
++	sys->io_res.flags = IORESOURCE_IO;
++	sys->io_res.name = sys->io_res_name;
++	sprintf(sys->io_res_name, "PCI%d I/O", busnr);
++
++	ret = request_resource(&ioport_resource, &sys->io_res);
++	if (ret) {
++		pr_err("PCI: unable to allocate I/O port region (%d)\n", ret);
++		return ret;
++	}
++	pci_add_resource_offset(&sys->resources, &sys->io_res,
++				sys->io_offset);
++
++	return 0;
++}
++
++
++static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
++			    struct list_head *head)
++{
++	struct pci_sys_data *sys = NULL;
++	int ret;
++	int nr, busnr;
++
++	for (nr = busnr = 0; nr < hw->nr_controllers; nr++) {
++		sys = kzalloc(sizeof(struct pci_sys_data), GFP_KERNEL);
++		if (!sys)
++			panic("PCI: unable to allocate sys data!");
++
++#ifdef CONFIG_PCI_DOMAINS
++		sys->domain  = hw->domain;
++#endif
++		sys->busnr   = busnr;
++		sys->swizzle = hw->swizzle;
++		sys->map_irq = hw->map_irq;
++		sys->align_resource = hw->align_resource;
++		sys->add_bus = hw->add_bus;
++		sys->remove_bus = hw->remove_bus;
++		INIT_LIST_HEAD(&sys->resources);
++
++
++		if (hw->private_data)
++			sys->private_data = hw->private_data[nr];
++
++		ret = hw->setup(nr, sys);
++
++		if (ret > 0) {
++			ret = pcibios_init_resources(nr, sys);
++			if (ret)  {
++				kfree(sys);
++				break;
++			}
++
++			if (hw->scan)
++				sys->bus = hw->scan(nr, sys);
++			else
++				sys->bus = pci_scan_root_bus(parent, sys->busnr,
++						hw->ops, sys, &sys->resources);
++
++			if (!sys->bus)
++				panic("PCI: unable to scan bus!");
++
++			busnr = sys->bus->busn_res.end + 1;
++
++			list_add(&sys->node, head);
++		} else {
++			kfree(sys);
++			if (ret < 0)
++				break;
++		}
++	}
++}
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	return 0;
++}
++
++void pcibios_add_bus(struct pci_bus *bus)
++{
++	struct pci_sys_data *sys = bus->sysdata;
++
++	if (sys->add_bus)
++		sys->add_bus(bus);
++}
++
++void pcibios_remove_bus(struct pci_bus *bus)
++{
++	struct pci_sys_data *sys = bus->sysdata;
++
++	if (sys->remove_bus)
++		sys->remove_bus(bus);
++}
++
++/*
++ * Swizzle the device pin each time we cross a bridge.  If a platform does
++ * not provide a swizzle function, we perform the standard PCI swizzling.
++ *
++ * The default swizzling walks up the bus tree one level at a time, applying
++ * the standard swizzle function at each step, stopping when it finds the PCI
++ * root bus.  This will return the slot number of the bridge device on the
++ * root bus and the interrupt pin on that device which should correspond
++ * with the downstream device interrupt.
++ *
++ * Platforms may override this, in which case the slot and pin returned
++ * depend entirely on the platform code.  However, please note that the
++ * PCI standard swizzle is implemented on plug-in cards and Cardbus based
++ * PCI extenders, so it can not be ignored.
++ */
++static u8 pcibios_swizzle(struct pci_dev *dev, u8 *pin)
++{
++	struct pci_sys_data *sys = dev->sysdata;
++	int slot, oldpin = *pin;
++
++	if (sys->swizzle)
++		slot = sys->swizzle(dev, pin);
++	else
++		slot = pci_common_swizzle(dev, pin);
++
++	return slot;
++}
++
++/*
++ * Map a slot/pin to an IRQ.
++ */
++static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++{
++	struct pci_sys_data *sys = dev->sysdata;
++	int irq = -1;
++
++	if (sys->map_irq)
++		irq = sys->map_irq(dev, slot, pin);
++
++	return irq;
++}
++
++void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
++{
++	struct pci_sys_data *sys;
++	LIST_HEAD(head);
++
++	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
++	if (hw->preinit)
++		hw->preinit();
++	pcibios_init_hw(parent, hw, &head);
++	if (hw->postinit)
++		hw->postinit();
++
++	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
++
++	list_for_each_entry(sys, &head, node) {
++		struct pci_bus *bus = sys->bus;
++
++		if (!pci_has_flag(PCI_PROBE_ONLY)) {
++			/*
++			 * Size the bridge windows.
++			 */
++			pci_bus_size_bridges(bus);
++
++			/*
++			 * Assign resources.
++			 */
++			pci_bus_assign_resources(bus);
++		}
++
++		/*
++		 * Tell drivers about devices found.
++		 */
++		pci_bus_add_devices(bus);
++	}
++}
++
++/*
++ * We don't have to worry about legacy ISA devices, so nothing to do here
++ */
++resource_size_t pcibios_align_resource(void *data, const struct resource *res,
++				resource_size_t size, resource_size_t align)
++{
++	return res->start;
++}
 +
 +/**
-  * iProc PCIe outbound mapping
-  * @set_oarr_size: indicates the OARR size bit needs to be set
-  * @axi_offset: offset from the AXI address to the internal address used by
-@@ -29,7 +43,10 @@ struct iproc_pcie_ob {
++ * pcibios_enable_device - Enable I/O and memory.
++ * @dev: PCI device to be enabled
++ */
++int pcibios_enable_device(struct pci_dev *dev, int mask)
++{
++	u16 cmd, old_cmd;
++	int idx;
++	struct resource *r;
++
++	pci_read_config_word(dev, PCI_COMMAND, &cmd);
++	old_cmd = cmd;
++	for (idx = 0; idx < 6; idx++) {
++		/* Only set up the requested stuff */
++		if (!(mask & (1 << idx)))
++			continue;
++
++		r = dev->resource + idx;
++		if (!r->start && r->end) {
++			pr_err("PCI: Device %s not available because"/
++			       " of resource collisions\n", pci_name(dev));
++			return -EINVAL;
++		}
++		if (r->flags & IORESOURCE_IO)
++			cmd |= PCI_COMMAND_IO;
++		if (r->flags & IORESOURCE_MEM)
++			cmd |= PCI_COMMAND_MEMORY;
++	}
++
++	/*
++	 * Bridges (eg, cardbus bridges) need to be fully enabled
++	 */
++	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
++		cmd |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY;
++
++	if (cmd != old_cmd) {
++		pr_info("PCI: enabling device %s (%04x -> %04x)\n",
++		       pci_name(dev), old_cmd, cmd);
++		pci_write_config_word(dev, PCI_COMMAND, cmd);
++	}
++	return 0;
++}
++
++/*
++ * If the bus contains any of these devices, then we must not turn on
++ * parity checking of any kind.  Currently this is CyberPro 20x0 only.
++ */
++static inline int pdev_bad_for_parity(struct pci_dev *dev)
++{
++	return ((dev->vendor == PCI_VENDOR_ID_INTERG &&
++		 (dev->device == PCI_DEVICE_ID_INTERG_2000 ||
++		  dev->device == PCI_DEVICE_ID_INTERG_2010)) ||
++		(dev->vendor == PCI_VENDOR_ID_ITE &&
++		 dev->device == PCI_DEVICE_ID_ITE_8152));
++
++}
++
++/*
++ * pcibios_fixup_bus - Called after each bus is probed,
++ * but before its children are examined.
++ */
++void pcibios_fixup_bus(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++	u16 features = PCI_COMMAND_SERR | PCI_COMMAND_PARITY
++			| PCI_COMMAND_FAST_BACK;
++
++	/*
++	 * Walk the devices on this bus, working out what we can
++	 * and can't support.
++	 */
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		u16 status;
++
++		pci_read_config_word(dev, PCI_STATUS, &status);
++
++		/*
++		 * If any device on this bus does not support fast back
++		 * to back transfers, then the bus as a whole is not able
++		 * to support them.  Having fast back to back transfers
++		 * on saves us one PCI cycle per transaction.
++		 */
++		if (!(status & PCI_STATUS_FAST_BACK))
++			features &= ~PCI_COMMAND_FAST_BACK;
++
++		if (pdev_bad_for_parity(dev))
++			features &= ~(PCI_COMMAND_SERR | PCI_COMMAND_PARITY);
++
++		switch (dev->class >> 8) {
++		case PCI_CLASS_BRIDGE_PCI:
++			pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &status);
++			status |= PCI_BRIDGE_CTL_PARITY
++					|PCI_BRIDGE_CTL_MASTER_ABORT;
++			status &= ~(PCI_BRIDGE_CTL_BUS_RESET
++					|PCI_BRIDGE_CTL_FAST_BACK);
++			pci_write_config_word(dev, PCI_BRIDGE_CONTROL, status);
++			break;
++
++		case PCI_CLASS_BRIDGE_CARDBUS:
++			pci_read_config_word(dev, PCI_CB_BRIDGE_CONTROL,
++						&status);
++			status |= PCI_CB_BRIDGE_CTL_PARITY
++					|PCI_CB_BRIDGE_CTL_MASTER_ABORT;
++			pci_write_config_word(dev, PCI_CB_BRIDGE_CONTROL,
++						status);
++			break;
++		}
++	}
++
++	/*
++	 * Now walk the devices again, this time setting them up.
++	 */
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		u16 cmd;
++
++		pci_read_config_word(dev, PCI_COMMAND, &cmd);
++		cmd |= features;
++		pci_write_config_word(dev, PCI_COMMAND, cmd);
++
++		pci_write_config_byte(dev, PCI_CACHE_LINE_SIZE,
++				      L1_CACHE_BYTES >> 2);
++	}
++
++	/*
++	 * Propagate the flags to the PCI bridge.
++	 */
++	if (bus->self && bus->self->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++		if (features & PCI_COMMAND_FAST_BACK)
++			bus->bridge_ctl |= PCI_BRIDGE_CTL_FAST_BACK;
++		if (features & PCI_COMMAND_PARITY)
++			bus->bridge_ctl |= PCI_BRIDGE_CTL_PARITY;
++	}
++
++	/*
++	 * Report what we did for this bus
++	 */
++	pr_info("PCI: bus%d: Fast back to back transfers %sabled\n",
++		bus->number, (features & PCI_COMMAND_FAST_BACK) ? "en" : "dis");
++}
++EXPORT_SYMBOL(pcibios_fixup_bus);
++
+diff --git a/arch/arc/mm/ioremap.c b/arch/arc/mm/ioremap.c
+index 739e65f..583c9fe 100644
+--- a/arch/arc/mm/ioremap.c
++++ b/arch/arc/mm/ioremap.c
+@@ -13,6 +13,26 @@
+ #include <linux/mm.h>
+ #include <linux/slab.h>
+ #include <linux/cache.h>
++#include <linux/sizes.h>
++
++#ifdef CONFIG_PCI
++unsigned long pcibios_min_io = 0x100;
++EXPORT_SYMBOL(pcibios_min_io);
++
++unsigned long pcibios_min_mem = 0x100000;
++EXPORT_SYMBOL(pcibios_min_mem);
++#endif
++
++inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
++{
++	return port;
++}
++EXPORT_SYMBOL(ioport_map);
++
++inline void ioport_unmap(void __iomem *addr)
++{
++}
++EXPORT_SYMBOL(ioport_unmap);
  
- /**
-  * iProc PCIe device
-+ *
-  * @dev: pointer to device data structure
-+ * @type: iProc PCIe interface type
-+ * @reg_offsets: register offsets
-  * @base: PCIe host controller I/O register base
-  * @sysdata: Per PCI controller data (ARM-specific)
-  * @root_bus: pointer to root bus
-@@ -41,6 +58,8 @@ struct iproc_pcie_ob {
-  */
- struct iproc_pcie {
- 	struct device *dev;
-+	enum iproc_pcie_type type;
-+	const u16 *reg_offsets;
- 	void __iomem *base;
- #ifdef CONFIG_ARM
- 	struct pci_sys_data sysdata;
+ void __iomem *ioremap(unsigned long paddr, unsigned long size)
+ {
+@@ -80,7 +100,6 @@ void __iomem *ioremap_prot(phys_addr_t paddr, unsigned long size,
+ }
+ EXPORT_SYMBOL(ioremap_prot);
+ 
+-
+ void iounmap(const void __iomem *addr)
+ {
+ 	if (addr >= (void __force __iomem *)ARC_UNCACHED_ADDR_SPACE)
+@@ -89,3 +108,11 @@ void iounmap(const void __iomem *addr)
+ 	vfree((void *)(PAGE_MASK & (unsigned long __force)addr));
+ }
+ EXPORT_SYMBOL(iounmap);
++
++#ifdef CONFIG_PCI
++int pci_ioremap_io(unsigned int offset, phys_addr_t phys_addr)
++{
++	return ioremap_nocache(phys_addr + offset,  SZ_64K);
++}
++EXPORT_SYMBOL_GPL(pci_ioremap_io);
++#endif
+diff --git a/arch/arc/plat-axs10x/Kconfig b/arch/arc/plat-axs10x/Kconfig
+index d475f9d..33b5db6 100644
+--- a/arch/arc/plat-axs10x/Kconfig
++++ b/arch/arc/plat-axs10x/Kconfig
+@@ -8,6 +8,7 @@
+ 
+ menuconfig ARC_PLAT_AXS10X
+ 	bool "Synopsys ARC AXS10x Software Development Platforms"
++	select MIGHT_HAVE_PCI
+ 	select DW_APB_ICTL
+ 	select GPIO_DWAPB
+ 	select OF_GPIO
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index be3f631..2154092 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -32,6 +32,7 @@ obj-$(CONFIG_PCI_IOV) += iov.o
+ # Some architectures use the generic PCI setup functions
+ #
+ obj-$(CONFIG_ALPHA) += setup-irq.o
++obj-$(CONFIG_ARC) += setup-irq.o
+ obj-$(CONFIG_ARM) += setup-irq.o
+ obj-$(CONFIG_ARM64) += setup-irq.o
+ obj-$(CONFIG_UNICORE32) += setup-irq.o
 -- 
-1.9.1
+1.8.1.5
 
