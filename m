@@ -1,119 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59709 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932686AbbKLX0y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 18:26:54 -0500
-Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 13 Nov 2015 09:26:51 +1000
-Date: Fri, 13 Nov 2015 10:25:50 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Daniel Axtens <dja@axtens.net>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, aik@ozlabs.ru, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, frowand.list@gmail.com
-Subject: Re: [PATCH v7 38/50] powerpc/powernv: Exclude root bus in
- pnv_pci_reset_secondary_bus()
-Message-ID: <20151112232550.GA14719@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-39-git-send-email-gwshan@linux.vnet.ibm.com>
- <87lha2zuwg.fsf@gamma.ozlabs.ibm.com>
+Received: from mail-db3on0123.outbound.protection.outlook.com ([157.55.234.123]:44807
+	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751811AbbKXPdI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Nov 2015 10:33:08 -0500
+From: Ramon Fried <ramon.fried@tandemg.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: PCIe endpoint generic driver
+Date: Tue, 24 Nov 2015 15:33:04 +0000
+Message-ID: <AM2PR02MB0689D08FDBB116A8EDE4669AE8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
+References: <AM2PR02MB06895C98FE39F8BB6D958389E8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E162C98EA@lhreml503-mbs>
+ <AM2PR02MB06897BD3549D017DCF17FE36E8060@AM2PR02MB0689.eurprd02.prod.outlook.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E162C9A21@lhreml503-mbs>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E162C9A21@lhreml503-mbs>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87lha2zuwg.fsf@gamma.ozlabs.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 13, 2015 at 09:59:27AM +1100, Daniel Axtens wrote:
->Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
->
->> When pnv_pci_reset_secondary_bus() is called to issue reset on
->> the indicated secondary bus, the bus can't be root bus. So we
->> needn't consider root bus in the function.
->
->It took me a while to convince myself that this is correct. For the
->record, this is why it's correct:
->
->pnv_pci_reset_secondary_bus fills the reset_secondary_bus callback in
->the pci_controller_ops structure, and isn't used elsewhere.
->
->In arch/powerpc/kernel/pci.c, that callback is called (if it exists) in 
->pcibios_reset_secondary_bus(). It's not called anywhere else.
->
->The PPC pcibios_reset_secondary_bus overrides the weak version in
->drivers/pci/pci.c. It's called from the same file by
->pci_reset_bridge_secondary_device() (and nowhere else).
->
->pci_reset_bridge_secondary_device() is nicely documented:
->
->/**
-> * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
-> * @dev: Bridge device
-> *
-> * Use the bridge control register to assert reset on the secondary bus.
-> * Devices on the secondary bus are left in power-on state.
-> */
->
->Therefore, by the definiton of pci_reset_bridge_secondary_bus,
->pnv_pci_reset_secondary_bus() can only be called with a bridge
->device. As such, a bridge reset only is appropriate. If this breaks
->anything, the caller is broken.
->
->It might be worth including a condensed version of this in the commit
->message.
->
 
-Right. I'll add more description to the changelog in next revision.
-
->Reviewed-by: Daniel Axtens <dja@axtens.net>
+>> -----Original Message-----
+>> From: linux-pci-owner@vger.kernel.org 
+>> [mailto:linux-pci-owner@vger.kernel.org]
+>> On Behalf Of Ramon Fried
+>> Sent: 24 November 2015 15:02
+>> To: linux-pci@vger.kernel.org
+>> Subject: RE: PCIe endpoint generic driver
+>> 
+>> > > Hi.
+>> > > Sorry for the noob question :)
+>> > > I'm currently developing a PCIe endpoint driver for a board that 
+>> > > runs Linux.
+>> > > The board will be used as an expansion PCIe card for x86 PC's.
+>> > > Is there any guidelines, documentation related to PCI endpoint 
+>> > > drivers for Linux kernel ?
+>>> 
+>> > Hi Ramon
+>> >
+>> > Have you looked at
+>> > http://lxr.free-electrons.com/source/Documentation/PCI/pci.txt
+>> >?
+>> >
+>> > Regards
+>> >
+>> > Gab
+>> 
+>> Hi Gab, you misunderstood my driver type.
+>> This is not a host driver, that I'm writing, but the actual endpoint driver.
+>> Then Linux is on the PCIe board.
 >
-
-Thanks,
-Gavin
-
->Regards,
->Daniel Axtens
+> Hi Ramon, I understood your driver type.
+> I think you misunderstood the Documentation.
+> Host Bridges are under drivers/pci/host and none of them use pci_register_driver() API.
 >
->>
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> ---
->>  arch/powerpc/platforms/powernv/eeh-powernv.c | 12 ++----------
->>  1 file changed, 2 insertions(+), 10 deletions(-)
->>
->> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
->> index a7d84a4..c69b6a1 100644
->> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
->> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
->> @@ -880,16 +880,8 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->>  
->>  void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
->>  {
->> -	struct pci_controller *hose;
->> -
->> -	if (pci_is_root_bus(dev->bus)) {
->> -		hose = pci_bus_to_host(dev->bus);
->> -		pnv_eeh_root_reset(hose, EEH_RESET_HOT);
->> -		pnv_eeh_root_reset(hose, EEH_RESET_DEACTIVATE);
->> -	} else {
->> -		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
->> -		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
->> -	}
->> +	pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
->> +	pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
->>  }
->>  
->>  /**
->> -- 
->> 2.1.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> pci_register_driver() is actually for endpoints. Please read the link above again.
 
+Hi Gab.
+Host bridges AFAIK are supposed to connect between the host CPU, main memory and the PCI itself.
+This is not what I need as I'm not at the host side.
+pci_register_driver() is a host driver for pci endpoints.
 
+On the device side, pci_register_driver() doesn't make any sense. There's no root complex, no enumeration, etc.
+I need for instance a method to send a MSI/MSIx interrupt to the host. I need to develop a function that does it.
+
+My original question was if there's a framework/guidelines for achieving that.
+
+Thanks.
+Ramon
