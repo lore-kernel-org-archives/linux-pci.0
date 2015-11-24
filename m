@@ -1,87 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40102 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754976AbbKXVwG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Nov 2015 16:52:06 -0500
-Date: Tue, 24 Nov 2015 15:52:01 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH] arm64/pci: Add quirks for Cavium Thunder PCI bridges.
-Message-ID: <20151124215200.GF17377@localhost>
-References: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:33778 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753626AbbKXJhH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Nov 2015 04:37:07 -0500
+Received: by wmec201 with SMTP id c201so199274510wme.0
+        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2015 01:37:06 -0800 (PST)
+From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+To: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Subject: [PATCH] PCI: designware: remove wrong io_base assignment
+Date: Tue, 24 Nov 2015 11:36:52 +0200
+Message-Id: <1448357812-23906-1-git-send-email-stanimir.varbanov@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David,
+The io_base is used to keep the cpu physical address parsed
+from ranges dt property. After issue pci_remap_iospace the
+io_base has been assigned with io->start, which is not correct
+cause io->start is a PCI bus address.
 
-On Tue, Sep 22, 2015 at 05:09:56PM -0700, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> The Cavium ThunderX SoC needs a PCI quirk for its on-chip bridges.
-> Since it is arm64, create a new quirks.c file there to contain arm64
-> related quirks.  Add the ThunderX bridge quirk, gated by a new config
-> variable, so that it can be disabled for kernels that aren't expected
-> to be used on ThunderX.
+Fixes: 0021d22b73d6 ("PCI: designware: Use of_pci_get_host_bridge_resources() to parse DT")
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+---
+ drivers/pci/host/pcie-designware.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-Is this still needed?  I've seen some follow-up Cavium stuff, but
-nothing further on this one.  If we still need it, we should figure
-out who should take it.  It's all under arch/arm64, so ordinarily I
-would leave it up to the arm64 guys.
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 540f077c37ea..02a7452bdf23 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -440,7 +440,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 					 ret, pp->io);
+ 				continue;
+ 			}
+-			pp->io_base = pp->io->start;
+ 			break;
+ 		case IORESOURCE_MEM:
+ 			pp->mem = win->res;
+-- 
+1.7.9.5
 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  arch/arm64/Kconfig         | 11 +++++++++++
->  arch/arm64/kernel/Makefile |  2 +-
->  arch/arm64/kernel/quirks.c | 36 ++++++++++++++++++++++++++++++++++++
->  3 files changed, 48 insertions(+), 1 deletion(-)
->  create mode 100644 arch/arm64/kernel/quirks.c
-
-> +#ifdef CONFIG_CAVIUM_THUNDER_PCI_QUIRKS
-> +static void thunder_bridge_fixup(struct pci_dev *dev)
-> +{
-> +	/*
-> +	 * This bridge is broken in that it doesn't have correct
-> +	 * resource ranges for the buses behind it.
-> +	 *
-> +	 * The upstream bus resources are a close enough approximation
-> +	 * to what is needed, that they can be used instead.  Copy
-> +	 * upstream root bus resources so that resource claiming for
-> +	 * downstream devices can be done.
-> +	 */
-> +	int resno;
-> +	struct pci_bus *bus = dev->subordinate;
-> +
-> +	for (resno = 0; resno < PCI_BRIDGE_RESOURCE_NUM; resno++) {
-> +		bus->resource[resno] =
-> +			pci_bus_resource_n(bus->parent,
-> +					   PCI_BRIDGE_RESOURCE_NUM + resno);
-
-I am curious about this.  Is this a standard PCI-PCI bridge, or is it
-a host bridge.  If the former, I guess it must be broken in some way
-that keeps the usual bridge window reading code from working?
-
-Copying the upstream bus resources to the downstream bus might sort of
-work sometimes, but seems fragile in general.  If the bridge has any
-peers, it seems like we're headed for a conflict between the peer's
-resources and anything downstream of the bridge.
-
-> +	}
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa002, thunder_bridge_fixup);
-> +#endif /* CONFIG_CAVIUM_THUNDER_PCI_QUIRKS */
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
