@@ -1,219 +1,74 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>, <linux-pci@vger.kernel.org>,
-	<linux-sh@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Subject: [PATCH 1/3] PCI: pcie-rcar: Convert to DT resource parsing API
-Date: Mon,  2 Nov 2015 16:36:13 +0000
-Message-Id: <1446482175-26507-2-git-send-email-phil.edworthy@renesas.com>
-In-Reply-To: <1446482175-26507-1-git-send-email-phil.edworthy@renesas.com>
-References: <1446482175-26507-1-git-send-email-phil.edworthy@renesas.com>
+Subject: Re: PCIe regression with DRA7xx in 4.4-rc1
+To: Jisheng Zhang <jszhang@marvell.com>
+References: <56545183.8000507@ti.com> <20151124201411.33463709@xhacker>
+CC: <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>, <james.morse@arm.com>,
+	<gabriel.fernandez@st.com>, <Minghuan.Lian@freescale.com>,
+	<wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
+	<arnd@arndb.de>, <bhelgaas@google.com>, <pratyush.anand@gmail.com>,
+	"Nori, Sekhar" <nsekhar@ti.com>, <jingoohan1@gmail.com>,
+	<linux-arm-kernel@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <56545F3A.6060808@ti.com>
+Date: Tue, 24 Nov 2015 18:29:38 +0530
+MIME-Version: 1.0
+In-Reply-To: <20151124201411.33463709@xhacker>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The main purpose of this change is to avoid calling pci_ioremap_io() as
-this is not available on arm64. However, instead of doing the range passing
-in this driver we can utilise of_pci_get_host_bridge_resources().
+Hi,
 
-This is similar to changes made to the generic PCI host driver in commit
-dbf9826d "PCI: generic: Convert to DT resource parsing API".
+On Tuesday 24 November 2015 05:44 PM, Jisheng Zhang wrote:
+> 
+> 
+> On Tue, 24 Nov 2015 17:31:07 +0530
+> Kishon Vijay Abraham I wrote:
+> 
+>> Hi,
+>>
+>> I'm seeing a regression with <d1b9cf31252e905ad563b9e863fd4470f6c3dd1c>("PCI:
+>> designware: Make driver arch-agnostic").
+>>
+>> Logs using a SATA PCIe card [1]. The PCIe card enumerates fine but after that I
+>> observe "ata3.00: qc timeout (cmd 0xec), ata3.00: failed to IDENTIFY (I/O
+>> error, err_mask=0x4)"
+>>
+>> Logs using a Ethenet PCIe card [2]. Again here the PCIe card enumerates fine
+>> but when I give ifconfig up, it fails.
+>>
+>> If I just revert commit <d1b9cf31252e905ad563b9e863fd4470f6c3dd1c>, the PCIe
+>> cards starts to work fine again
+> 
+> FYI, maybe the patch can fix the regression.
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-November/387362.html
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- drivers/pci/host/pcie-rcar.c | 117 +++++++++++++++++++++++++++----------------
- 1 file changed, 74 insertions(+), 43 deletions(-)
+yes, it fixed.
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index f4fa6c5..27c0521 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -108,8 +108,6 @@
- #define RCAR_PCI_MAX_RESOURCES 4
- #define MAX_NR_INBOUND_MAPS 6
- 
--static unsigned long global_io_offset;
--
- struct rcar_msi {
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
- 	struct irq_domain *domain;
-@@ -138,8 +136,7 @@ struct rcar_pcie {
- #endif
- 	struct device		*dev;
- 	void __iomem		*base;
--	struct resource		res[RCAR_PCI_MAX_RESOURCES];
--	struct resource		busn;
-+	struct list_head	resources;
- 	int			root_bus_nr;
- 	struct clk		*clk;
- 	struct clk		*bus_clk;
-@@ -323,10 +320,9 @@ static struct pci_ops rcar_pcie_ops = {
- 	.write	= rcar_pcie_write_conf,
- };
- 
--static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie)
-+static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie,
-+				   struct resource *res)
- {
--	struct resource *res = &pcie->res[win];
--
- 	/* Setup PCIe address space mappings for each resource */
- 	resource_size_t size;
- 	resource_size_t res_start;
-@@ -359,31 +355,33 @@ static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie)
- 	rcar_pci_write_reg(pcie, mask, PCIEPTCTLR(win));
- }
- 
--static int rcar_pcie_setup(struct list_head *resource, struct rcar_pcie *pcie)
-+static int rcar_pcie_setup(struct list_head *resource, struct rcar_pcie *pci)
- {
--	struct resource *res;
--	int i;
--
--	pcie->root_bus_nr = pcie->busn.start;
-+	struct resource_entry *win;
-+	int i = 0;
- 
- 	/* Setup PCI resources */
--	for (i = 0; i < RCAR_PCI_MAX_RESOURCES; i++) {
-+	resource_list_for_each_entry(win, &pci->resources) {
-+		struct resource *res = win->res;
- 
--		res = &pcie->res[i];
- 		if (!res->flags)
- 			continue;
- 
--		rcar_pcie_setup_window(i, pcie);
--
--		if (res->flags & IORESOURCE_IO) {
--			phys_addr_t io_start = pci_pio_to_address(res->start);
--			pci_ioremap_io(global_io_offset, io_start);
--			global_io_offset += SZ_64K;
-+		switch (resource_type(res)) {
-+		case IORESOURCE_IO:
-+		case IORESOURCE_MEM:
-+			rcar_pcie_setup_window(i, pci, res);
-+			i++;
-+			break;
-+		case IORESOURCE_BUS:
-+			pci->root_bus_nr = res->start;
-+			break;
-+		default:
-+			continue;
- 		}
- 
- 		pci_add_resource(resource, res);
- 	}
--	pci_add_resource(resource, &pcie->busn);
- 
- 	return 1;
- }
-@@ -923,14 +921,64 @@ static const struct of_device_id rcar_pcie_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
- 
-+static void rcar_pcie_release_of_pci_ranges(struct rcar_pcie *pci)
-+{
-+	pci_free_resource_list(&pci->resources);
-+}
-+
-+static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
-+{
-+	int err, res_valid = 0;
-+	struct device *dev = pci->dev;
-+	struct device_node *np = dev->of_node;
-+	resource_size_t iobase;
-+	struct resource_entry *win;
-+
-+	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources, &iobase);
-+	if (err)
-+		return err;
-+
-+	resource_list_for_each_entry(win, &pci->resources) {
-+		struct resource *parent, *res = win->res;
-+
-+		switch (resource_type(res)) {
-+		case IORESOURCE_IO:
-+			parent = &ioport_resource;
-+			err = pci_remap_iospace(res, iobase);
-+			if (err) {
-+				dev_warn(dev, "error %d: failed to map resource %pR\n",
-+					 err, res);
-+				continue;
-+			}
-+			break;
-+		case IORESOURCE_MEM:
-+			parent = &iomem_resource;
-+			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-+			break;
-+
-+		case IORESOURCE_BUS:
-+		default:
-+			continue;
-+		}
-+
-+		err = devm_request_resource(dev, parent, res);
-+		if (err)
-+			goto out_release_res;
-+	}
-+
-+	return 0;
-+
-+out_release_res:
-+	rcar_pcie_release_of_pci_ranges(pci);
-+	return err;
-+}
-+
- static int rcar_pcie_probe(struct platform_device *pdev)
- {
- 	struct rcar_pcie *pcie;
- 	unsigned int data;
--	struct of_pci_range range;
--	struct of_pci_range_parser parser;
- 	const struct of_device_id *of_id;
--	int err, win = 0;
-+	int err;
- 	int (*hw_init_fn)(struct rcar_pcie *);
- 
- 	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-@@ -940,16 +988,9 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	pcie->dev = &pdev->dev;
- 	platform_set_drvdata(pdev, pcie);
- 
--	/* Get the bus range */
--	if (of_pci_parse_bus_range(pdev->dev.of_node, &pcie->busn)) {
--		dev_err(&pdev->dev, "failed to parse bus-range property\n");
--		return -EINVAL;
--	}
-+	INIT_LIST_HEAD(&pcie->resources);
- 
--	if (of_pci_range_parser_init(&parser, pdev->dev.of_node)) {
--		dev_err(&pdev->dev, "missing ranges property\n");
--		return -EINVAL;
--	}
-+	rcar_pcie_parse_request_of_pci_ranges(pcie);
- 
- 	err = rcar_pcie_get_resources(pdev, pcie);
- 	if (err < 0) {
-@@ -957,16 +998,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 		return err;
- 	}
- 
--	for_each_of_pci_range(&parser, &range) {
--		err = of_pci_range_to_resource(&range, pdev->dev.of_node,
--						&pcie->res[win++]);
--		if (err < 0)
--			return err;
--
--		if (win > RCAR_PCI_MAX_RESOURCES)
--			break;
--	}
--
- 	 err = rcar_pcie_parse_map_dma_ranges(pcie, pdev->dev.of_node);
- 	 if (err)
- 		return err;
--- 
-1.9.1
+Thanks
+Kishon
 
+> 
+>>
+>> Logs using a SATA PCIe card [3]. Here the KINGSTON SSD gets detected fine.
+>> Logs using a Ethernet PCIe card [4]. I'm able to do ping tests now.
+>>
+>> Actually I'm not able to find any obvious problems with the patch and the irq
+>> number and the memory resource also looks fine. Any idea what could be the problem?
+>>
+>> [1] -> http://pastebin.ubuntu.com/13491456/
+>> [2] -> http://pastebin.ubuntu.com/13491526/
+>>
+>> [3] -> http://pastebin.ubuntu.com/13491658/
+>> [4] -> http://pastebin.ubuntu.com/13491593/
+>>
+>> Thanks
+>> Kishon
+>>
+>> _______________________________________________
+>> linux-arm-kernel mailing list
+>> linux-arm-kernel@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
