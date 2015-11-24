@@ -1,192 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:43607 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751098AbbKCLmv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2015 06:42:51 -0500
-Date: Tue, 3 Nov 2015 12:42:02 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Keith Busch <keith.busch@intel.com>
-cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [RFC PATCHv3 3/4] x86/pci: Initial commit for new VMD device
- driver
-In-Reply-To: <20151103001552.GE13904@localhost.localdomain>
-Message-ID: <alpine.DEB.2.11.1511031001130.4032@nanos>
-References: <1445967247-24310-1-git-send-email-keith.busch@intel.com> <1445967247-24310-4-git-send-email-keith.busch@intel.com> <alpine.DEB.2.11.1511021426020.4032@nanos> <20151103001552.GE13904@localhost.localdomain>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5654E422.5070604@caviumnetworks.com>
+Date: Tue, 24 Nov 2015 14:26:42 -0800
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	<linux-kernel@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH] arm64/pci: Add quirks for Cavium Thunder PCI bridges.
+References: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com> <20151124215200.GF17377@localhost>
+In-Reply-To: <20151124215200.GF17377@localhost>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Keith,
+On 11/24/2015 01:52 PM, Bjorn Helgaas wrote:
+> Hi David,
+>
+> On Tue, Sep 22, 2015 at 05:09:56PM -0700, David Daney wrote:
+>> From: David Daney <david.daney@cavium.com>
+>>
+>> The Cavium ThunderX SoC needs a PCI quirk for its on-chip bridges.
+>> Since it is arm64, create a new quirks.c file there to contain arm64
+>> related quirks.  Add the ThunderX bridge quirk, gated by a new config
+>> variable, so that it can be disabled for kernels that aren't expected
+>> to be used on ThunderX.
+>
+> Is this still needed?
 
-On Tue, 3 Nov 2015, Keith Busch wrote:
-> On Mon, Nov 02, 2015 at 07:35:15PM +0100, Thomas Gleixner wrote:
-> > On Tue, 27 Oct 2015, Keith Busch wrote:
+No.
 
-> > > +config HAVE_VMDDEV
-> > > +	bool
-> > 
-> > Why do you need a seperate config symbol here?
-> 
-> This is to split the kernel vs. module parts. "vmd_create_irq_domain"
-> needs to be in-kernel, but VMD may be compiled as a module, so can't use
-> "CONFIG_VMD_DEV".
+The EA patch set that you merged to 4.4 supersedes this.
 
-#ifdef IS_ENABLED(CONFIG_VMD_DEV)
+> I've seen some follow-up Cavium stuff, but
+> nothing further on this one.  If we still need it, we should figure
+> out who should take it.  It's all under arch/arm64, so ordinarily I
+> would leave it up to the arm64 guys.
+>
+>> Signed-off-by: David Daney <david.daney@cavium.com>
+>> ---
+>>   arch/arm64/Kconfig         | 11 +++++++++++
+>>   arch/arm64/kernel/Makefile |  2 +-
+>>   arch/arm64/kernel/quirks.c | 36 ++++++++++++++++++++++++++++++++++++
+>>   3 files changed, 48 insertions(+), 1 deletion(-)
+>>   create mode 100644 arch/arm64/kernel/quirks.c
+>
+>> +#ifdef CONFIG_CAVIUM_THUNDER_PCI_QUIRKS
+>> +static void thunder_bridge_fixup(struct pci_dev *dev)
+>> +{
+>> +	/*
+>> +	 * This bridge is broken in that it doesn't have correct
+>> +	 * resource ranges for the buses behind it.
+>> +	 *
+>> +	 * The upstream bus resources are a close enough approximation
+>> +	 * to what is needed, that they can be used instead.  Copy
+>> +	 * upstream root bus resources so that resource claiming for
+>> +	 * downstream devices can be done.
+>> +	 */
+>> +	int resno;
+>> +	struct pci_bus *bus = dev->subordinate;
+>> +
+>> +	for (resno = 0; resno < PCI_BRIDGE_RESOURCE_NUM; resno++) {
+>> +		bus->resource[resno] =
+>> +			pci_bus_resource_n(bus->parent,
+>> +					   PCI_BRIDGE_RESOURCE_NUM + resno);
+>
+> I am curious about this.  Is this a standard PCI-PCI bridge,
 
-is true for both "m" and "y"
- 
-> Alternatively we could export pci_msi_domain_ops, and no additional
-> in-kernel dependencies are required.
+Yes it is PCI-PCI
 
-That might be not the worst choice.
- 
-> > > +	int count = 0;
-> > > +	struct msi_desc *msi_desc;
-> > > +	struct irq_domain *vmd_irqdomain, *msi_irqdomain;
-> > > +
-> > > +	if (!dev->msix_enabled)
-> > > +		return NULL;
-> > > +
-> > > +	for_each_pci_msi_entry(msi_desc, dev)
-> > > +		count += msi_desc->nvec_used;
-> > 
-> > Is this the number of vectors which are available for the VMD device
-> > itself?
-> 
-> Correct, this is counting the number of the VMD vectors itself. This is
-> not the number of vectors that may be allocated in this domain, though
-> they will all need to multiplex into one of these.
+> or is it
+> a host bridge.  If the former, I guess it must be broken in some way
+> that keeps the usual bridge window reading code from working?
+>
+> Copying the upstream bus resources to the downstream bus might sort of
+> work sometimes, but seems fragile in general.  If the bridge has any
+> peers, it seems like we're headed for a conflict between the peer's
+> resources and anything downstream of the bridge.
 
-But you actually limit the number of vectors in that domain:
+The problem is that all the downstream devices require 64-bit 
+non-prefetchable addressing, which cannot be satisfied with the bridge 
+provisioning code.  EA allows this to be described.
 
-> > > +	for_each_pci_msi_entry(msi_desc, dev)
-> > > +		count += msi_desc->nvec_used;
-> > > +	vmd_irqdomain = irq_domain_add_linear(NULL, count,
-> > > +						  domain_ops, dev);
+In any event the patch is not needed now that the EA code is in place.
 
-So vmd_irqdomain can only hand out "count" vectors. 
+>
+>> +	}
+>> +}
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa002, thunder_bridge_fixup);
+>> +#endif /* CONFIG_CAVIUM_THUNDER_PCI_QUIRKS */
+>> --
+>> 1.9.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The vmd_irqdomain is the parent of the msi_irqdomain:
-
-> > > +	msi_irqdomain = pci_msi_create_irq_domain(NULL, &pci_chained_msi_domain_info,
-> > > +						  vmd_irqdomain);
-
-But that parent limitation does not matter simply because your
-msi_irqdomain does not follow down the hierarchy in the allocation
-path.
-
-So we can avoid the vmd_irqdomain creation completely. It's just
-wasting memory and has no value at all. Creating the msi domain with a
-NULL parent is possible.
-
-> > > +	vmdirq->irq = &vmd->irqs[virq % vmd->msix_count];
-> > 
-> > So that points to the underlying VMD device irq, right? And you spread
-> > the device interrupts across the available VMD irqs. So in the worst
-> > case you might end up with empty and crowded VMD irqs, right?
-> > Shouldn't you try to fill that space in a more intelligent way?
-> 
-> The domain is enabled and enumerated by pci, so I thought devices will
-> be bound to their drivers serially, creating a more-or-less incrementing
-> virtual irq that should wrap in evenly.
-> 
-> But yes, we can be smarter about this, and the above is probably flawed
-> rationale, especially if considering hot-plug.
-
-Not only hotplug. It also depends on the init ordering and the
-population of the interrupt descriptor space.
- 
-> > > +static void vmd_flow_handler(struct irq_desc *desc)
-> > > +{
-> > > +	struct irq_chip *chip = irq_desc_get_chip(desc);
-> > > +	struct vmd_irq_list *irqs = irq_desc_get_handler_data(desc);
-> > > +	struct vmd_irq *vmdirq;
-> > > +
-> > > +	chained_irq_enter(chip, desc);
-> > > +	rcu_read_lock();
-> > > +	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
-> > > +		generic_handle_irq(vmdirq->virq);
-> > > +	rcu_read_unlock();
-> > 
-> > I'm not entirely sure that the rcu protection here covers the whole
-> > virq thing when an interrupt is torn down. Can you please explain the
-> > whole protection scheme in detail?
-> 
-> This protects against device drivers manipulating the list through
-> vmd_msi_activate/deactivate. We can't spinlock the flow handler access
-> due to desc->lock taken through generic_handle_irq. The same lock is
-> held prior to vmd's msi activate/deactivate, so the lock order would be
-> opposite in those two paths.
-> 
-> I don't believe we're in danger of missing a necessary event or triggering
-> an unexpected event here. Is the concern that we need to synchronize rcu
-> instead of directly freeing the "vmdirq"? I think I see that possibility.
-
-synchronize rcu does not help. You surely need to kfree_rcu()
-"vmdirq", but that alone is not sufficient. You also need to think
-about the underlying irq descriptor, which is not freed via rcu. Lets
-look at it:
-
-CPU0					CPU1
-
-driver_exit()
- free_irq(D)
-  lock(irqdesc(D))
-  irq_shutdown(D)
-    irq_domain_deactivate_irq(D)	vmd_flow_handler()
-      vmd_msi_deactivate()		  rcu_read_lock()
-        lock()				  vmdirq = list_entry(...)
-        list_del_rcu()			---> NMI  
-	unlock()
-  unlock(irqdesc(D))
-  synchronize_irq(D)			    
- pci_misx_disable(device)
-  irq_domain_free_irqs()
-    vmd_msi_free_irqs()			  
-      kfree_rcu(vmdirq)			<--- NMI done  
-					  D = vmdirq->virq; <- Protected by RCU
-					  generic_handle_irq(D)
-					    desc = irqdesc(D)
-    irq_free_descs()
-     kfree(irqdesc(D))
-					    desc->handle_irq(desc) <-- KABOOOOM!
-
-Subtle, isn't it? It's extremly unlikely, but when it happens you have
-no chance to ever debug that.
-
-The good news for you is that this is a general issue and you can
-ignore it for now. The bad news for me is, that I have another urgent
-issue on my ever growing todo list.
-
-> > > +static void vmd_remove(struct pci_dev *dev)
-> > > +{
-> > > +	struct vmd_dev *vmd = pci_get_drvdata(dev);
-> > > +
-> > > +	pci_set_drvdata(dev, NULL);
-> > > +	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
-> > > +	pci_stop_root_bus(vmd->bus);
-> > > +	pci_remove_root_bus(vmd->bus);
-> > > +	vmd_teardown_dma_ops(vmd);
-> > > +	irq_domain_remove(vmd->irq_domain);
-> > 
-> > What tears down the chained handlers and the MSIx entries?
-> 
-> Thanks, I will fix the chained handler in both cases mentioned.
-> 
-> The entries themselves should be freed through devres_release after this
-> exits, and after MSI-x is disabled via pcim_release.
- 
-Ok.
-
-Thanks,
-
-	tglx
