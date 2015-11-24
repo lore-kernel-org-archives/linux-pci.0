@@ -1,67 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:41945 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965184AbbKDOHw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 09:07:52 -0500
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 19:37:49 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 04/50] powerpc/powernv: Cleanup on pnv_pci_ioda_controller_ops
-Date: Thu,  5 Nov 2015 00:12:04 +1100
-Message-Id: <1446642770-4681-5-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:40102 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754976AbbKXVwG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Nov 2015 16:52:06 -0500
+Date: Tue, 24 Nov 2015 15:52:01 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH] arm64/pci: Add quirks for Cavium Thunder PCI bridges.
+Message-ID: <20151124215200.GF17377@localhost>
+References: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This cleans up on pnv_pci_ioda_controller_ops struct to use tab
-instead of space indent of statement to avoid complains from
-scripts/checkpatch.pl. No logical changes introduced.
+Hi David,
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+On Tue, Sep 22, 2015 at 05:09:56PM -0700, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> The Cavium ThunderX SoC needs a PCI quirk for its on-chip bridges.
+> Since it is arm64, create a new quirks.c file there to contain arm64
+> related quirks.  Add the ThunderX bridge quirk, gated by a new config
+> variable, so that it can be disabled for kernels that aren't expected
+> to be used on ThunderX.
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 2e2bedb..aa3645c 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -3064,17 +3064,17 @@ static void pnv_pci_ioda_shutdown(struct pci_controller *hose)
- }
- 
- static const struct pci_controller_ops pnv_pci_ioda_controller_ops = {
--       .dma_dev_setup = pnv_pci_dma_dev_setup,
-+	.dma_dev_setup		= pnv_pci_dma_dev_setup,
- #ifdef CONFIG_PCI_MSI
--       .setup_msi_irqs = pnv_setup_msi_irqs,
--       .teardown_msi_irqs = pnv_teardown_msi_irqs,
-+	.setup_msi_irqs		= pnv_setup_msi_irqs,
-+	.teardown_msi_irqs	= pnv_teardown_msi_irqs,
- #endif
--       .enable_device_hook = pnv_pci_enable_device_hook,
--       .window_alignment = pnv_pci_window_alignment,
--       .reset_secondary_bus = pnv_pci_reset_secondary_bus,
--       .dma_set_mask = pnv_pci_ioda_dma_set_mask,
--       .dma_get_required_mask = pnv_pci_ioda_dma_get_required_mask,
--       .shutdown = pnv_pci_ioda_shutdown,
-+	.enable_device_hook	= pnv_pci_enable_device_hook,
-+	.window_alignment	= pnv_pci_window_alignment,
-+	.reset_secondary_bus	= pnv_pci_reset_secondary_bus,
-+	.dma_set_mask		= pnv_pci_ioda_dma_set_mask,
-+	.dma_get_required_mask	= pnv_pci_ioda_dma_get_required_mask,
-+	.shutdown		= pnv_pci_ioda_shutdown,
- };
- 
- static void __init pnv_pci_init_ioda_phb(struct device_node *np,
--- 
-2.1.0
+Is this still needed?  I've seen some follow-up Cavium stuff, but
+nothing further on this one.  If we still need it, we should figure
+out who should take it.  It's all under arch/arm64, so ordinarily I
+would leave it up to the arm64 guys.
 
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+>  arch/arm64/Kconfig         | 11 +++++++++++
+>  arch/arm64/kernel/Makefile |  2 +-
+>  arch/arm64/kernel/quirks.c | 36 ++++++++++++++++++++++++++++++++++++
+>  3 files changed, 48 insertions(+), 1 deletion(-)
+>  create mode 100644 arch/arm64/kernel/quirks.c
+
+> +#ifdef CONFIG_CAVIUM_THUNDER_PCI_QUIRKS
+> +static void thunder_bridge_fixup(struct pci_dev *dev)
+> +{
+> +	/*
+> +	 * This bridge is broken in that it doesn't have correct
+> +	 * resource ranges for the buses behind it.
+> +	 *
+> +	 * The upstream bus resources are a close enough approximation
+> +	 * to what is needed, that they can be used instead.  Copy
+> +	 * upstream root bus resources so that resource claiming for
+> +	 * downstream devices can be done.
+> +	 */
+> +	int resno;
+> +	struct pci_bus *bus = dev->subordinate;
+> +
+> +	for (resno = 0; resno < PCI_BRIDGE_RESOURCE_NUM; resno++) {
+> +		bus->resource[resno] =
+> +			pci_bus_resource_n(bus->parent,
+> +					   PCI_BRIDGE_RESOURCE_NUM + resno);
+
+I am curious about this.  Is this a standard PCI-PCI bridge, or is it
+a host bridge.  If the former, I guess it must be broken in some way
+that keeps the usual bridge window reading code from working?
+
+Copying the upstream bus resources to the downstream bus might sort of
+work sometimes, but seems fragile in general.  If the bridge has any
+peers, it seems like we're headed for a conflict between the peer's
+resources and anything downstream of the bridge.
+
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa002, thunder_bridge_fixup);
+> +#endif /* CONFIG_CAVIUM_THUNDER_PCI_QUIRKS */
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
