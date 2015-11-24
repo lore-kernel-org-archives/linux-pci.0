@@ -1,133 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:35438 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751532AbbKQBHZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 20:07:25 -0500
-Received: by pacej9 with SMTP id ej9so85566144pac.2
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 17:07:24 -0800 (PST)
-Subject: Re: [PATCH v7 17/50] powerpc/powernv: Avoid calculating DMA32
- segments on PHB3
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-18-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, frowand.list@gmail.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <564A7DC5.5060702@ozlabs.ru>
-Date: Tue, 17 Nov 2015 12:07:17 +1100
+Received: from mail.kernel.org ([198.145.29.136]:58846 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751292AbbKXSuB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Nov 2015 13:50:01 -0500
+Date: Tue, 24 Nov 2015 12:49:57 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mathias Krause <minipli@googlemail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Sasha Levin <sasha.levin@oracle.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Subject: Re: [PATCH v2] PCI: Prevent out of bounds access in numa_node
+ override - part 2
+Message-ID: <20151124184957.GB27957@localhost>
+References: <1447095627-12798-1-git-send-email-minipli@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <1446642770-4681-18-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1447095627-12798-1-git-send-email-minipli@googlemail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/05/2015 12:12 AM, Gavin Shan wrote:
-> In pnv_ioda_setup_dma(), it's unnecessary to calculate the DMA32
-> segments for PEs on PHB3 as the whole available DMA32 space can
-> be assigned to one specific PE on PHB3.
->
-> This splits pnv_ioda_setup_dma() to pnv_pci_ioda1_setup_dma() and
-> pnv_pci_ioda2_setup_dma() in order to avoid calculating DMA32
-> segments for PEs on PHB3. No logical changes introduced.
+On Mon, Nov 09, 2015 at 08:00:27PM +0100, Mathias Krause wrote:
+> Commit 1266963170f5 ("PCI: Prevent out of bounds access in numa_node
+> override") missed that the user provided node could also be negative.
+> Handle this case as well to avoid out-of-bounds accesses to the
+> node_states[] array.  However, allow the special value -1, i.e.
+> NUMA_NO_NODE, to be able to set the 'no specific node' configuration.
+> 
+> Fixes: 1266963170f5 ("PCI: Prevent out of bounds access in numa_node...")
+> Signed-off-by: Mathias Krause <minipli@googlemail.com>
+> Cc: Sasha Levin <sasha.levin@oracle.com>
+> Cc: Prarit Bhargava <prarit@redhat.com>
+> Cc: stable@vger.kernel.org	# v3.19+
 
+Applied as tweaked below to for-linus for v4.4, thanks!  As written,
+if NUMA_NO_NODE were defined as -2, we would incorrectly accept -1.
+Let me know if you disagree with my fix.
 
-This patch is not needed as
-
-[PATCH v7 20/50] powerpc/powernv: Improve DMA32 segment calculation
-
-moves this calculation to another place (which already makes this patch 
-unnecessary) and
-
-[PATCH v7 26/50] powerpc/powernv: Create PEs at PCI hot plugging time
-
-removes just introduced pnv_pci_ioda1_setup_dma() - if you remove it, then 
-there is no point in fixing it in the first place.
-
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 > ---
->   arch/powerpc/platforms/powernv/pci-ioda.c | 41 ++++++++++++++++++-------------
->   1 file changed, 24 insertions(+), 17 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 5a08e20..4c2e023 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -2383,7 +2383,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->   		pnv_ioda_setup_bus_dma(pe, pe->pbus);
->   }
->
-> -static void pnv_ioda_setup_dma(struct pnv_phb *phb)
-> +static void pnv_pci_ioda1_setup_dma(struct pnv_phb *phb)
->   {
->   	struct pci_controller *hose = phb->hose;
->   	unsigned int residual, remaining, segs, tw, base;
-> @@ -2428,26 +2428,30 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
->   				segs = remaining;
->   		}
->
-> -		/*
-> -		 * For IODA2 compliant PHB3, we needn't care about the weight.
-> -		 * The all available 32-bits DMA space will be assigned to
-> -		 * the specific PE.
-> -		 */
-> -		if (phb->type == PNV_PHB_IODA1) {
-> -			pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
-> -				pe->dma_weight, segs);
-> -			pnv_pci_ioda1_setup_dma_pe(phb, pe, base, segs);
-> -		} else {
-> -			pe_info(pe, "Assign DMA32 space\n");
-> -			segs = 0;
-> -			pnv_pci_ioda2_setup_dma_pe(phb, pe);
-> -		}
-> +		pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
-> +			pe->dma_weight, segs);
-> +		pnv_pci_ioda1_setup_dma_pe(phb, pe, base, segs);
->
->   		remaining -= segs;
->   		base += segs;
->   	}
->   }
->
-> +static void pnv_pci_ioda2_setup_dma(struct pnv_phb *phb)
-> +{
-> +	struct pnv_ioda_pe *pe;
+> v2: allow NUMA_NO_NODE
+> 
+>  drivers/pci/pci-sysfs.c |    5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 92618686604c..6e9818227b19 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -216,7 +216,10 @@ static ssize_t numa_node_store(struct device *dev,
+>  	if (ret)
+>  		return ret;
+>  
+> -	if (node >= MAX_NUMNODES || !node_online(node))
+> +	if (node < NUMA_NO_NODE || node >= MAX_NUMNODES)
+> +		return -EINVAL;
 > +
-> +	pnv_pci_ioda_setup_opal_tce_kill(phb);
-> +
-> +	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
-> +		if (!pe->dma_weight)
-> +			continue;
-> +
-> +		pe_info(pe, "Assign DMA32 space\n");
-> +		pnv_pci_ioda2_setup_dma_pe(phb, pe);
-> +	}
-> +}
-> +
->   #ifdef CONFIG_PCI_MSI
->   static void pnv_ioda2_msi_eoi(struct irq_data *d)
->   {
-> @@ -2931,10 +2935,13 @@ static void pnv_pci_ioda_setup_DMA(void)
->   	struct pnv_phb *phb;
->
->   	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
-> -		pnv_ioda_setup_dma(hose->private_data);
-> +		phb = hose->private_data;
-> +		if (phb->type == PNV_PHB_IODA1)
-> +			pnv_pci_ioda1_setup_dma(phb);
-> +		else
-> +			pnv_pci_ioda2_setup_dma(phb);
->
->   		/* Mark the PHB initialization done */
-> -		phb = hose->private_data;
->   		phb->initialized = 1;
->   	}
->   }
->
+> +	if (node != NUMA_NO_NODE && !node_online(node))
+>  		return -EINVAL;
+>  
+>  	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
 
 
--- 
-Alexey
+
+commit 2a35194c5a45fbb9ca1d88bc56804dfb51a75233
+Author: Mathias Krause <minipli@googlemail.com>
+Date:   Mon Nov 9 20:00:27 2015 +0100
+
+    PCI: Prevent out of bounds access in numa_node override
+    
+    Commit 1266963170f5 ("PCI: Prevent out of bounds access in numa_node
+    override") missed that the user-provided node could also be negative.
+    Handle this case as well to avoid out-of-bounds accesses to the
+    node_states[] array.  However, allow the special value -1, i.e.
+    NUMA_NO_NODE, to be able to set the 'no specific node' configuration.
+    
+    [bhelgaas: remove assumption that NUMA_NO_NODE == -1]
+    Fixes: 1266963170f5 ("PCI: Prevent out of bounds access in numa_node override")
+    Fixes: 63692df103e9 ("PCI: Allow numa_node override via sysfs")
+    Signed-off-by: Mathias Krause <minipli@googlemail.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: Sasha Levin <sasha.levin@oracle.com>
+    CC: Prarit Bhargava <prarit@redhat.com>
+    CC: stable@vger.kernel.org	# v3.19+
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 9261868..50f4747 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -216,7 +216,12 @@ static ssize_t numa_node_store(struct device *dev,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (node >= MAX_NUMNODES || !node_online(node))
++	if (node < 0 || node >= MAX_NUMNODES) {
++		if (node != NUMA_NO_NODE)
++			return -EINVAL;
++	}
++
++	if (node != NUMA_NO_NODE && !node_online(node))
+ 		return -EINVAL;
+ 
+ 	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
