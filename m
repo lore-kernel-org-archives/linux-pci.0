@@ -1,197 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:49568 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753996AbbKDDbJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2015 22:31:09 -0500
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 09:01:07 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 625A7394005A
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2015 09:01:05 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA43UvFU5112094
-	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 09:00:58 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA43UukJ006981
-	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 09:00:57 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V12 8/9] powerpc/powernv: Support PCI config restore for VFs
-Date: Wed,  4 Nov 2015 11:28:51 +0800
-Message-Id: <1446607732-4166-9-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1446607732-4166-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1446607732-4166-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-yk0-f174.google.com ([209.85.160.174]:34610 "EHLO
+	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754688AbbKXT1G (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Nov 2015 14:27:06 -0500
+Received: by ykfs79 with SMTP id s79so31086087ykf.1
+        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2015 11:27:04 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20151124184957.GB27957@localhost>
+References: <1447095627-12798-1-git-send-email-minipli@googlemail.com>
+	<20151124184957.GB27957@localhost>
+Date: Tue, 24 Nov 2015 20:27:04 +0100
+Message-ID: <CA+rthh_hmYqpyu-cREMtFBevPJjpUG3LE28htrtSGr3ipdzD_w@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: Prevent out of bounds access in numa_node
+ override - part 2
+From: Mathias Krause <minipli@googlemail.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Sasha Levin <sasha.levin@oracle.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After PE reset, OPAL API opal_pci_reinit() is called on all devices
-contained in the PE to reinitialize them. While skiboot is not aware of
-VFs, we have to implement the function in kernel to reinitialize VFs after
-reset on PE for VFs.
+On 24 November 2015 at 19:49, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> Applied as tweaked below to for-linus for v4.4, thanks!  As written,
+> if NUMA_NO_NODE were defined as -2, we would incorrectly accept -1.
+> Let me know if you disagree with my fix.
 
-In this patch, two functions pnv_pci_fixup_vf_mps() and
-pnv_eeh_restore_vf_config() both manipulate the MPS of the VF, since for a
-VF it has three cases.
+I don't think the value of NUMA_NO_NODE will (or even has to) ever
+change, as we're already exporting that value to userland via sysfs.
+But you're right, the code shouldn't make any assumptions about the
+concrete value of NUMA_NO_NODE and just handle it as a special
+symbolic value.
 
-1. Normal creation for a VF
-   In this case, pnv_pci_fixup_vf_mps() is called to make the MPS a proper
-   value compared with its parent.
-2. EEH recovery without VF removed
-   In this case, MPS is stored in pci_dn and pnv_eeh_restore_vf_config() is
-   called to restore it and reinitialize other part.
-3. EEH recovery with VF removed
-   In this case, VF will be removed then re-created. Both functions are
-   called. First pnv_pci_fixup_vf_mps() is called to store the proper MPS
-   to pci_dn and then pnv_eeh_restore_vf_config() is called to do proper
-   thing.
+> commit 2a35194c5a45fbb9ca1d88bc56804dfb51a75233
+> Author: Mathias Krause <minipli@googlemail.com>
+> Date:   Mon Nov 9 20:00:27 2015 +0100
+>
+>     PCI: Prevent out of bounds access in numa_node override
+>
+>     Commit 1266963170f5 ("PCI: Prevent out of bounds access in numa_node
+>     override") missed that the user-provided node could also be negative.
+>     Handle this case as well to avoid out-of-bounds accesses to the
+>     node_states[] array.  However, allow the special value -1, i.e.
+>     NUMA_NO_NODE, to be able to set the 'no specific node' configuration.
+>
+>     [bhelgaas: remove assumption that NUMA_NO_NODE == -1]
+>     Fixes: 1266963170f5 ("PCI: Prevent out of bounds access in numa_node override")
+>     Fixes: 63692df103e9 ("PCI: Allow numa_node override via sysfs")
+>     Signed-off-by: Mathias Krause <minipli@googlemail.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     CC: Sasha Levin <sasha.levin@oracle.com>
+>     CC: Prarit Bhargava <prarit@redhat.com>
+>     CC: stable@vger.kernel.org  # v3.19+
+>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 9261868..50f4747 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -216,7 +216,12 @@ static ssize_t numa_node_store(struct device *dev,
+>         if (ret)
+>                 return ret;
+>
+> -       if (node >= MAX_NUMNODES || !node_online(node))
+> +       if (node < 0 || node >= MAX_NUMNODES) {
+> +               if (node != NUMA_NO_NODE)
+> +                       return -EINVAL;
+> +       }
 
-This patch introduces two functions:
-   pnv_pci_fixup_vf_mps() to fixup the PCI device's MPS to make sure it is
-   smaller than parent's and store this value in pci_dn for future use.
-   pnv_eeh_restore_vf_config() to re-initialize on VF by restore MPS,
-   disable completion timeout, enable SERR, etc.
+I would have written something like this:
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h        |  1 +
- arch/powerpc/platforms/powernv/eeh-powernv.c | 70 +++++++++++++++++++++++++++-
- arch/powerpc/platforms/powernv/pci.c         | 18 +++++++
- 3 files changed, 88 insertions(+), 1 deletion(-)
+    if ((node < 0 && node != NUMA_NO_NODE) || node >= MAX_NUMNODES)
+        return -EINVAL;
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 843dd3a2..9b365d6 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -219,6 +219,7 @@ struct pci_dn {
- #define IODA_INVALID_M64        (-1)
- 	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
- #endif /* CONFIG_PCI_IOV */
-+	int     mps;			/* Maximum Payload Size */
- #endif
- 	struct list_head child_list;
- 	struct list_head list;
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 4de247a..9019458 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1623,6 +1623,67 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
- 	return ret;
- }
- 
-+static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	u32 devctl, cmd, cap2, aer_capctl;
-+	int old_mps;
-+
-+	/* Restore MPS */
-+	if (edev->pcie_cap) {
-+		old_mps = (ffs(pdn->mps) - 8) << 5;
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
-+		devctl |= old_mps;
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      2, devctl);
-+	}
-+
-+	/* Disable Completion Timeout */
-+	if (edev->pcie_cap) {
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
-+				     4, &cap2);
-+		if (cap2 & 0x10) {
-+			eeh_ops->read_config(pdn,
-+					edev->pcie_cap + PCI_EXP_DEVCTL2,
-+					4, &cap2);
-+			cap2 |= 0x10;
-+			eeh_ops->write_config(pdn,
-+					edev->pcie_cap + PCI_EXP_DEVCTL2,
-+					4, cap2);
-+		}
-+	}
-+
-+	/* Enable SERR and parity checking */
-+	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
-+	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
-+	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
-+
-+	/* Enable report various errors */
-+	if (edev->pcie_cap) {
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_CERE;
-+		devctl |= (PCI_EXP_DEVCTL_NFERE |
-+			   PCI_EXP_DEVCTL_FERE |
-+			   PCI_EXP_DEVCTL_URRE);
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				2, devctl);
-+	}
-+
-+	/* Enable ECRC generation and check */
-+	if (edev->pcie_cap && edev->aer_cap) {
-+		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-+				4, &aer_capctl);
-+		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
-+		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-+				4, aer_capctl);
-+	}
-+
-+	return 0;
-+}
-+
- static int pnv_eeh_restore_config(struct pci_dn *pdn)
- {
- 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-@@ -1633,7 +1694,14 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
- 		return -EEXIST;
- 
- 	phb = edev->phb->private_data;
--	ret = opal_pci_reinit(phb->opal_id,
-+	/*
-+	 * We have to restore the PCI config space after reset since the
-+	 * firmware can't see SRIOV VFs.
-+	 */
-+	if (edev->physfn)
-+		ret = pnv_eeh_restore_vf_config(pdn);
-+	else
-+		ret = opal_pci_reinit(phb->opal_id,
- 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
- 	if (ret) {
- 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index f2dd772..50794d7 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -778,6 +778,24 @@ static void pnv_p7ioc_rc_quirk(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IBM, 0x3b9, pnv_p7ioc_rc_quirk);
- 
-+#ifdef CONFIG_PCI_IOV
-+static void pnv_pci_fixup_vf_mps(struct pci_dev *pdev)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	int parent_mps;
-+
-+	if (!pdev->is_virtfn)
-+		return;
-+
-+	/* Synchronize MPS for VF and PF */
-+	parent_mps = pcie_get_mps(pdev->physfn);
-+	if ((128 << pdev->pcie_mpss) >= parent_mps)
-+		pcie_set_mps(pdev, parent_mps);
-+	pdn->mps = pcie_get_mps(pdev);
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_mps);
-+#endif /* CONFIG_PCI_IOV */
-+
- void __init pnv_pci_init(void)
- {
- 	struct device_node *np;
--- 
-2.5.0
+It's more compact, but your solution is essentially the same, so I'm
+fine with it.
 
+> +
+> +       if (node != NUMA_NO_NODE && !node_online(node))
+>                 return -EINVAL;
+>
+>         add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+
+Thanks,
+Mathias
