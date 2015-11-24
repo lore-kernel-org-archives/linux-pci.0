@@ -1,126 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:13166 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754361AbbKBVde (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2015 16:33:34 -0500
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v6 2/7] drivers:hv: Export hv_do_hypercall()
-Date: Mon,  2 Nov 2015 21:33:11 +0000
-Message-Id: <1446499996-1350-3-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1446499996-1350-1-git-send-email-jakeo@microsoft.com>
-References: <1446499996-1350-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v2 5/5] ARM: dts: Enable MSI support for Broadcom Cygnus
+Date: Tue, 24 Nov 2015 15:04:54 -0800
+Message-ID: <1448406294-732-6-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1448406294-732-1-git-send-email-rjui@broadcom.com>
+References: <1448406294-732-1-git-send-email-rjui@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+Enable MSI support for Broadcom Cygnus platforms
 
-This patch exposes the function that hv_vmbus.ko uses to make hypercalls. This
-is necessary for retargeting an interrupt when it is given a new affinity and
-vector.
-
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+Reviewed-by: Pramod KUMAR <pramodku@broadcom.com>
+Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
 ---
- drivers/hv/hv.c           | 20 ++++++++++----------
- drivers/hv/hyperv_vmbus.h |  2 +-
- include/linux/hyperv.h    |  1 +
- 3 files changed, 12 insertions(+), 11 deletions(-)
+ arch/arm/boot/dts/bcm-cygnus.dtsi | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
-index 6341be8..7a06933 100644
---- a/drivers/hv/hv.c
-+++ b/drivers/hv/hv.c
-@@ -89,9 +89,9 @@ static int query_hypervisor_info(void)
- }
+diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi b/arch/arm/boot/dts/bcm-cygnus.dtsi
+index 2778533..789b519 100644
+--- a/arch/arm/boot/dts/bcm-cygnus.dtsi
++++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
+@@ -162,6 +162,17 @@
+ 				  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
  
- /*
-- * do_hypercall- Invoke the specified hypercall
-+ * hv_do_hypercall- Invoke the specified hypercall
-  */
--static u64 do_hypercall(u64 control, void *input, void *output)
-+u64 hv_do_hypercall(u64 control, void *input, void *output)
- {
- 	u64 input_address = (input) ? virt_to_phys(input) : 0;
- 	u64 output_address = (output) ? virt_to_phys(output) : 0;
-@@ -132,6 +132,7 @@ static u64 do_hypercall(u64 control, void *input, void *output)
- 	return hv_status_lo | ((u64)hv_status_hi << 32);
- #endif /* !x86_64 */
- }
-+EXPORT_SYMBOL_GPL(hv_do_hypercall);
+ 			status = "disabled";
++
++			msi-parent = <&msi0>;
++			msi0: msi@18012000 {
++				compatible = "brcm,iproc-msi";
++				msi-controller;
++				interrupt-parent = <&gic>;
++				interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
++					     <GIC_SPI 97 IRQ_TYPE_NONE>,
++					     <GIC_SPI 98 IRQ_TYPE_NONE>,
++					     <GIC_SPI 99 IRQ_TYPE_NONE>;
++			};
+ 		};
  
- #ifdef CONFIG_X86_64
- static cycle_t read_hv_clock_tsc(struct clocksource *arg)
-@@ -315,7 +316,7 @@ int hv_post_message(union hv_connection_id connection_id,
- {
+ 		pcie1: pcie@18013000 {
+@@ -183,6 +194,17 @@
+ 				  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
  
- 	struct hv_input_post_message *aligned_msg;
--	u16 status;
-+	u64 status;
+ 			status = "disabled";
++
++			msi-parent = <&msi1>;
++			msi1: msi@18013000 {
++				compatible = "brcm,iproc-msi";
++				msi-controller;
++				interrupt-parent = <&gic>;
++				interrupts = <GIC_SPI 102 IRQ_TYPE_NONE>,
++					     <GIC_SPI 103 IRQ_TYPE_NONE>,
++					     <GIC_SPI 104 IRQ_TYPE_NONE>,
++					     <GIC_SPI 105 IRQ_TYPE_NONE>;
++			};
+ 		};
  
- 	if (payload_size > HV_MESSAGE_PAYLOAD_BYTE_COUNT)
- 		return -EMSGSIZE;
-@@ -329,11 +330,10 @@ int hv_post_message(union hv_connection_id connection_id,
- 	aligned_msg->payload_size = payload_size;
- 	memcpy((void *)aligned_msg->payload, payload, payload_size);
- 
--	status = do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL)
--		& 0xFFFF;
-+	status = hv_do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL);
- 
- 	put_cpu();
--	return status;
-+	return status & 0xFFFF;
- }
- 
- 
-@@ -343,13 +343,13 @@ int hv_post_message(union hv_connection_id connection_id,
-  *
-  * This involves a hypercall.
-  */
--u16 hv_signal_event(void *con_id)
-+int hv_signal_event(void *con_id)
- {
--	u16 status;
-+	u64 status;
- 
--	status = (do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL) & 0xFFFF);
-+	status = hv_do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL);
- 
--	return status;
-+	return status & 0xFFFF;
- }
- 
- static int hv_ce_set_next_event(unsigned long delta,
-diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
-index 3d70e36..18c66fc 100644
---- a/drivers/hv/hyperv_vmbus.h
-+++ b/drivers/hv/hyperv_vmbus.h
-@@ -587,7 +587,7 @@ extern int hv_post_message(union hv_connection_id connection_id,
- 			 enum hv_message_type message_type,
- 			 void *payload, size_t payload_size);
- 
--extern u16 hv_signal_event(void *con_id);
-+extern int hv_signal_event(void *con_id);
- 
- extern int hv_synic_alloc(void);
- 
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 02393b6..ea0a0e3 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -983,6 +983,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			bool fb_overlap_ok);
- 
- int vmbus_cpu_number_to_vp_number(int cpu_number);
-+u64 hv_do_hypercall(u64 control, void *input, void *output);
- 
- /**
-  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
+ 		uart0: serial@18020000 {
 -- 
 1.9.1
 
