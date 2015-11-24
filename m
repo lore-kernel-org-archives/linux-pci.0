@@ -1,138 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:59125 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751679AbbKQJHs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 04:07:48 -0500
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Nov 2015 19:07:45 +1000
-Date: Tue, 17 Nov 2015 20:06:53 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-Subject: Re: [PATCH v7 25/50] powerpc/powernv: Reserve PE for root bus
-Message-ID: <20151117090653.GA20134@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-26-git-send-email-gwshan@linux.vnet.ibm.com>
- <564AC37A.2060701@ozlabs.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <564AC37A.2060701@ozlabs.ru>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:49376 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751858AbbKXLod (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Nov 2015 06:44:33 -0500
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: bhelgaas@google.com, CARLOS.PALMINHA@synopsys.com,
+	Vineet.Gupta1@synopsys.com, Alexey.Brodkin@synopsys.com,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH 0/2] adding PCI support to AXS10x
+Date: Tue, 24 Nov 2015 11:44:19 +0000
+Message-Id: <cover.1448364079.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 17, 2015 at 05:04:42PM +1100, Alexey Kardashevskiy wrote:
->On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>We're going to reserve/assign PEs when pcibios_setup_bridge() is
->>called. The function won't be called for root bus as it doesn't
->>have parent bridge. However, the root bus still needs a PE to be
->>covered.
->>
->>This reserves PE numbers that are adjacent to the reserved one
->>for root buses.
->
->
->Somewhere in the patchset you need to describe why you need a separate PE for
->a root bus and why reserved_pe_idx is not enough for this.
->
+This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
+AXS10x. It includes the necessary tweaks to the ARC architecture, necessary
+tweaks to the PCI subsystem and a new driver (pcie-snpsdev).
+This new driver will be used extensively in the PCIe RC Prototyping Kit.
 
-Please confirm if it's fine to add the descrption in this patch's chagelog.
+The patches were produced against the 'next' branch of Bjorn Helgaas'
+repository. It was properly tested in an IP Prototyping Kit.
 
->
->>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/platforms/powernv/pci-ioda.c | 33 ++++++++++++++++++++++---------
->>  arch/powerpc/platforms/powernv/pci.h      |  1 +
->>  2 files changed, 25 insertions(+), 9 deletions(-)
->>
->>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>index eea1c96..5e6745f 100644
->>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>@@ -207,14 +207,14 @@ static int pnv_ioda2_init_m64(struct pnv_phb *phb)
->>  	set_bit(phb->ioda.m64_bar_idx, &phb->ioda.m64_bar_alloc);
->>
->>  	/*
->>-	 * Strip off the segment used by the reserved PE, which is
->>-	 * expected to be 0 or last one of PE capabicity.
->>+	 * Exclude the segments for reserved and root bus PE, which
->>+	 * are first or last two PEs.
->>  	 */
->>  	r = &phb->hose->mem_resources[1];
->>  	if (phb->ioda.reserved_pe_idx == 0)
->>-		r->start += phb->ioda.m64_segsize;
->>+		r->start += (2 * phb->ioda.m64_segsize);
->>  	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
->>-		r->end -= phb->ioda.m64_segsize;
->>+		r->end -= (2 * phb->ioda.m64_segsize);
->>  	else
->>  		pr_warn("  Cannot strip M64 segment for reserved PE#%d\n",
->>  			phb->ioda.reserved_pe_idx);
->>@@ -294,14 +294,14 @@ static int pnv_ioda1_init_m64(struct pnv_phb *phb)
->>  	}
->>
->>  	/*
->>-	 * Exclude the segment used by the reserved PE, which
->>-	 * is expected to be 0 or last supported PE#.
->>+	 * Exclude the segments for reserved and root bus PE, which
->>+	 * are first or last two PEs.
->>  	 */
->>  	r = &phb->hose->mem_resources[1];
->>  	if (phb->ioda.reserved_pe_idx == 0)
->>-		r->start += phb->ioda.m64_segsize;
->>+		r->start += (2 * phb->ioda.m64_segsize);
->>  	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
->>-		r->end -= phb->ioda.m64_segsize;
->>+		r->end -= (2 * phb->ioda.m64_segsize);
->>  	else
->>  		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
->>  			phb->ioda.reserved_pe_idx);
->>@@ -3231,7 +3231,22 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>  			phb->ioda.dma32_segmap[i] = IODA_INVALID_PE;
->>  	}
->>  	phb->ioda.pe_array = aux + pemap_off;
->>-	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
->>+
->>+	/*
->>+	 * Choose PE number for root bus, which shouldn't have
->>+	 * M64 resources consumed by its child devices. To pick
->>+	 * the PE number adjacent to the reserved one if possible.
->>+	 */
->>+	pnv_ioda_reserve_pe(phb, phb->ioda.reserved_pe_idx);
->>+	if (phb->ioda.reserved_pe_idx == 0) {
->>+		phb->ioda.root_pe_idx = 1;
->>+		pnv_ioda_reserve_pe(phb, phb->ioda.root_pe_idx);
->>+	} else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1)) {
->>+		phb->ioda.root_pe_idx = phb->ioda.reserved_pe_idx - 1;
->>+		pnv_ioda_reserve_pe(phb, phb->ioda.root_pe_idx);
->>+	} else {
->>+		phb->ioda.root_pe_idx = IODA_INVALID_PE;
->>+	}
->>
->>  	INIT_LIST_HEAD(&phb->ioda.pe_list);
->>  	mutex_init(&phb->ioda.pe_list_mutex);
->>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
->>index e55ab0e..a8ba97f 100644
->>--- a/arch/powerpc/platforms/powernv/pci.h
->>+++ b/arch/powerpc/platforms/powernv/pci.h
->>@@ -120,6 +120,7 @@ struct pnv_phb {
->>  			/* Global bridge info */
->>  			unsigned int		total_pe_num;
->>  			unsigned int		reserved_pe_idx;
->>+			unsigned int		root_pe_idx;
->>
->>  			/* 32-bit MMIO window */
->>  			unsigned int		m32_size;
->>
+Joao Pinto (2):
+  add new platform driver for PCI RC
+  PCI support added to ARC
 
-Thanks,
-Gavin
+ .../devicetree/bindings/pci/pcie-snpsdev.txt       |  28 ++
+ MAINTAINERS                                        |   7 +
+ arch/arc/Kconfig                                   |  22 ++
+ arch/arc/include/asm/dma.h                         |   5 +
+ arch/arc/include/asm/io.h                          |   2 +
+ arch/arc/include/asm/mach/pci.h                    |  97 ++++++
+ arch/arc/include/asm/pci.h                         |  34 ++
+ arch/arc/kernel/Makefile                           |   1 +
+ arch/arc/kernel/pcibios.c                          | 360 +++++++++++++++++++++
+ arch/arc/mm/ioremap.c                              |  29 +-
+ arch/arc/plat-axs10x/Kconfig                       |   1 +
+ drivers/pci/Makefile                               |   1 +
+ drivers/pci/host/Kconfig                           |   5 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-designware.c                 |   9 +
+ drivers/pci/host/pcie-designware.h                 |   1 +
+ drivers/pci/host/pcie-snpsdev.c                    | 342 ++++++++++++++++++++
+ 17 files changed, 944 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
+ create mode 100644 arch/arc/include/asm/mach/pci.h
+ create mode 100644 arch/arc/include/asm/pci.h
+ create mode 100644 arch/arc/kernel/pcibios.c
+ create mode 100644 drivers/pci/host/pcie-snpsdev.c
+
+-- 
+1.8.1.5
 
