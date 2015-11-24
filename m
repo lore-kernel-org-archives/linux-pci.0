@@ -1,69 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50683 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752296AbbKXRJO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Nov 2015 12:09:14 -0500
-Date: Tue, 24 Nov 2015 11:09:11 -0600
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 24 Nov 2015 10:49:07 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: ville.syrjala@linux.intel.com
-Cc: intel-gfx@lists.freedesktop.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 01/29] pci: Decouple quirks.c from i915_reg.h
-Message-ID: <20151124170911.GC24819@localhost>
-References: <1446672017-24497-1-git-send-email-ville.syrjala@linux.intel.com>
- <1446672017-24497-2-git-send-email-ville.syrjala@linux.intel.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, x86@kernel.org,
+	Keith Busch <keith.busch@intel.com>,
+	Arthur Marsh <arthur.marsh@internode.on.net>
+Subject: Re: [Bugfix] x86/PCI: Fix regression caused by commit 4d6b4e69a245
+Message-ID: <20151124164907.GA24819@localhost>
+References: <1447648057-13644-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1446672017-24497-2-git-send-email-ville.syrjala@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1447648057-13644-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ville,
-
-On Wed, Nov 04, 2015 at 11:19:49PM +0200, ville.syrjala@linux.intel.com wrote:
-> From: Ville Syrjälä <ville.syrjala@linux.intel.com>
+On Mon, Nov 16, 2015 at 12:27:37PM +0800, Jiang Liu wrote:
+> From: Liu Jiang <jiang.liu@linux.intel.com>
 > 
-> i915 register defines are going to become type safe, so going forward
-> the register defines can't be used as straight numbers. Since quirks.c
-> needs just a few extra register defines from i915_reg.h, decouple the
-> two by defining the required registers locally in quirks.c. This was
-> already done for a few other igpu related registers.
-> 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+> Commit 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support
+> PCI host bridge") converted x86 to use the common interface
+> acpi_pci_root_create, but the conversion missed on code piece in
+> arch/x86/pci/bus_numa.c, which causes regression on some legacy
+> AMD platforms as reported by Arthur Marsh <arthur.marsh@internode.on.net>.
+> The root causes is that acpi_pci_root_create() fails to insert
+> host bridge resources into iomem_resource/ioport_resource because
+> x86_pci_root_bus_resources() has already inserted those resources.
+> So change x86_pci_root_bus_resources() to not insert resources into
+> iomem_resource/ioport_resource.
 
-I haven't seen the rest of this series, but this patch is OK by me,
-and I assume you'll merge this along with the whole series.  Please
-adjust the subject line to be:
+Fixes: 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support PCI host bridge")
 
-  PCI: Decouple quirks.c from i915_reg.h
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Reported-and-tested-by: Arthur Marsh <arthur.marsh@internode.on.net>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+What's the status of this?  It looks like a regression we need to fix
+for v4.4.
 
+AFAICT, Arthur did *not* test this patch (rather, his response says he
+did test it and the test failed).
+
+4d6b4e69a245 was merged by Rafael, and I assume he'll merge the fix
+unless I hear otherwise.
+
+Bjorn
+
+> Cc: Keith Busch <keith.busch@intel.com>
+> Cc: Arthur Marsh <arthur.marsh@internode.on.net>
 > ---
->  drivers/pci/quirks.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  arch/x86/pci/bus_numa.c |   16 +++-------------
+>  drivers/acpi/pci_root.c |    7 +++++++
+>  2 files changed, 10 insertions(+), 13 deletions(-)
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index b03373f..78a70fb 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3404,7 +3404,9 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
->  	return 0;
->  }
+> diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+> index 7bcf06a7cd12..ce53b5b64f51 100644
+> --- a/arch/x86/pci/bus_numa.c
+> +++ b/arch/x86/pci/bus_numa.c
+> @@ -41,27 +41,17 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+>  	       bus);
 >  
-> -#include "../gpu/drm/i915/i915_reg.h"
-> +#define SOUTH_CHICKEN2		0xc2004
-> +#define PCH_PP_STATUS		0xc7200
-> +#define PCH_PP_CONTROL		0xc7204
->  #define MSG_CTL			0x45010
->  #define NSDE_PWR_STATE		0xd0100
->  #define IGD_OPERATION_TIMEOUT	10000     /* set timeout 10 seconds */
+>  	/* already added by acpi ? */
+> -	resource_list_for_each_entry(window, resources)
+> +	resource_list_for_each_entry(window, &info->resources)
+>  		if (window->res->flags & IORESOURCE_BUS) {
+>  			found = true;
+>  			break;
+>  		}
+> -
+>  	if (!found)
+>  		pci_add_resource(resources, &info->busn);
+>  
+> -	list_for_each_entry(root_res, &info->resources, list) {
+> -		struct resource *res;
+> -		struct resource *root;
+> +	list_for_each_entry(root_res, &info->resources, list)
+> +		pci_add_resource(resources, &root_res->res);
+>  
+> -		res = &root_res->res;
+> -		pci_add_resource(resources, res);
+> -		if (res->flags & IORESOURCE_IO)
+> -			root = &ioport_resource;
+> -		else
+> -			root = &iomem_resource;
+> -		insert_resource(root, res);
+> -	}
+>  	return;
+>  
+>  default_resources:
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 850d7bf0c873..ae3fe4e64203 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -768,6 +768,13 @@ static void pci_acpi_root_add_resources(struct acpi_pci_root_info *info)
+>  		else
+>  			continue;
+>  
+> +		/*
+> +		 * Some legacy x86 host bridge drivers use iomem_resource and
+> +		 * ioport_resource as default resource pool, skip it.
+> +		 */
+> +		if (res == root)
+> +			continue;
+> +
+>  		conflict = insert_resource_conflict(root, res);
+>  		if (conflict) {
+>  			dev_info(&info->bridge->dev,
 > -- 
-> 2.4.10
+> 1.7.10.4
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
