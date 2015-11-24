@@ -1,29 +1,30 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:37862 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752133AbbKXVXq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Nov 2015 16:23:46 -0500
+Date: Tue, 24 Nov 2015 15:23:41 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au,
+	paulus@samba.org, benh@kernel.crashing.org, mst@redhat.com,
+	shangw@linux.vnet.ibm.com
+Subject: Re: [PATCH] Enable MSI/MSI-X caps and disable MSI interrupts at PCI
+ probe time - code move
+Message-ID: <20151124212341.GC17377@localhost>
+References: <1445437055-7017-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <5639F34F.5020402@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <564CCAC2.5050600@fb.com>
-References: <1447856703-2566-1-git-send-email-jbacik@fb.com>
-	<20151118184038.GA4462@localhost>
-	<564CCAC2.5050600@fb.com>
-Date: Wed, 18 Nov 2015 11:19:02 -0800
-Message-ID: <CAPeXnHsdA0rDdSh020Yc7GUTQ_hQiEKdSOa1vcu1Ov=mJn4eDA@mail.gmail.com>
-Subject: Re: [PATCH] pci: completely disable aspm if it's unsupported
-From: Matthew Garrett <mjg59@coreos.com>
-To: Josef Bacik <jbacik@fb.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	shli@fb.com, kernel-team@fb.com
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5639F34F.5020402@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 18, 2015 at 11:00 AM, Josef Bacik <jbacik@fb.com> wrote:
-> It looks to me I'm doing what Matthew set out to do, only with a bigger
-> hammer ;).  His patch still allowed the initialization of the ASPM stuff,
-> like setting up the clocks and such, but then made it so we couldn't change
-> the ASPM state at all.  My patch goes the step further of not even doing the
-> initialization stuff.  Thanks,
+On Wed, Nov 04, 2015 at 10:00:15AM -0200, Guilherme G. Piccoli wrote:
+> Bjorn, ping?
 
-That sounds fine - if we don't gain _OSC control then we should avoid
-touching any of the ASPM register state that the firmware has set. I'm
-happy to call the current state broken.
+Sorry, Guilherme, this dropped off my radar, and I can't remember why.
+I'll take a look at it soon.
+
+Bjorn
