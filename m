@@ -1,102 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:33778 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754237AbbKDDbK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Nov 2015 22:31:10 -0500
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 09:01:08 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 5061EE0059
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2015 09:01:23 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA43UpKg12320932
-	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 09:00:52 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA43Uo0a029732
-	for <linux-pci@vger.kernel.org>; Wed, 4 Nov 2015 09:00:51 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V12 5/9] powerpc/powernv: EEH device for VF
-Date: Wed,  4 Nov 2015 11:28:48 +0800
-Message-Id: <1446607732-4166-6-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1446607732-4166-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1446607732-4166-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 24 Nov 2015 17:43:19 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: WingMan Kwok <w-kwok2@ti.com>
+Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, kishon@ti.com,
+	rogerq@ti.com, m-karicheri2@ti.com, bhelgaas@google.com,
+	ssantosh@kernel.org, linux@arm.linux.org.uk,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] ARM: keystone: dts: add PCI serdes driver bindings
+Message-ID: <20151124234319.GG17377@localhost>
+References: <1444919230-30932-1-git-send-email-w-kwok2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1444919230-30932-1-git-send-email-w-kwok2@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VFs and their corresponding pci_dn instances are created and released
-dynamically as their PF's SRIOV capability is enabled and disabled.
-The patch creates and releases EEH devices for VFs when creating and
-releasing their pci_dn instances, which means EEH devices and pci_dn
-instances have same life cycle. Also, VF's EEH device is identified
-by (struct eeh_dev::physfn).
+Hi WingMan, 
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h |  1 +
- arch/powerpc/kernel/pci_dn.c   | 13 +++++++++++++
- 2 files changed, 14 insertions(+)
+On Thu, Oct 15, 2015 at 10:27:10AM -0400, WingMan Kwok wrote:
+> This patch adds the required PCI serdes bindings whcih can then be
+> enabled by setting the corresponding statuses to "ok" in order to
+> configure and start the PCI serdes.
+> 
+> This patch depends on the updates to the Keystone PCIe host driver
+> and common serdes driver patch series that is submitted separately.
+> 
+> Signed-off-by: WingMan Kwok <w-kwok2@ti.com>
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index c5eb86f..6c383ad 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -140,6 +140,7 @@ struct eeh_dev {
- 	struct pci_controller *phb;	/* Associated PHB		*/
- 	struct pci_dn *pdn;		/* Associated PCI device node	*/
- 	struct pci_dev *pdev;		/* Associated PCI device	*/
-+	struct pci_dev *physfn;		/* Associated PF PORT		*/
- 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
- };
- 
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index b3b4df9..5091b05 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -178,7 +178,9 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
- {
- #ifdef CONFIG_PCI_IOV
-+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
- 	struct pci_dn *parent, *pdn;
-+	struct eeh_dev *edev;
- 	int i;
- 
- 	/* Only support IOV for now */
-@@ -204,6 +206,10 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
- 				 __func__, i);
- 			return NULL;
- 		}
-+		eeh_dev_init(pdn, hose);
-+		edev = pdn_to_eeh_dev(pdn);
-+		BUG_ON(!edev);
-+		edev->physfn = pdev;
- 	}
- #endif /* CONFIG_PCI_IOV */
- 
-@@ -252,10 +258,17 @@ void remove_dev_pci_data(struct pci_dev *pdev)
- 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
- 		list_for_each_entry_safe(pdn, tmp,
- 			&parent->child_list, list) {
-+			struct eeh_dev *edev;
- 			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
- 			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
- 				continue;
- 
-+			edev = pdn_to_eeh_dev(pdn);
-+			if (edev) {
-+				pdn->edev = NULL;
-+				kfree(edev);
-+			}
-+
- 			if (!list_empty(&pdn->list))
- 				list_del(&pdn->list);
- 
--- 
-2.5.0
+Is there a reason to separate the binding update from the PCIe host
+driver update?  It would make sense to me to have them in the same
+patch to make it easier to keep them consistent.
 
+Bjorn
+
+> ---
+>  arch/arm/boot/dts/k2e.dtsi      |   21 +++++++++++++++++++++
+>  arch/arm/boot/dts/keystone.dtsi |   21 +++++++++++++++++++++
+>  2 files changed, 42 insertions(+)
+> 
+> diff --git a/arch/arm/boot/dts/k2e.dtsi b/arch/arm/boot/dts/k2e.dtsi
+> index 675fb8e..3b36575 100644
+> --- a/arch/arm/boot/dts/k2e.dtsi
+> +++ b/arch/arm/boot/dts/k2e.dtsi
+> @@ -86,6 +86,16 @@
+>  			gpio,syscon-dev = <&devctrl 0x240>;
+>  		};
+>  
+> +		pcie1_phy: pciephy@2326000 {
+> +			#phy-cells = <0>;
+> +			compatible = "ti,keystone-serdes-pcie";
+> +			reg = <0x02326000 0x4000>;
+> +			reg-names = "serdes";
+> +			link-rate-kbps = <5000000>;
+> +			num-lanes = <2>;
+> +			status = "disabled";
+> +		};
+> +
+>  		pcie1: pcie@21020000 {
+>  			compatible = "ti,keystone-pcie","snps,dw-pcie";
+>  			clocks = <&clkpcie1>;
+> @@ -130,6 +140,17 @@
+>  					<GIC_SPI 375 IRQ_TYPE_EDGE_RISING>,
+>  					<GIC_SPI 376 IRQ_TYPE_EDGE_RISING>;
+>  			};
+> +
+> +			/* PCIE phy */
+> +			serdeses {
+> +				#address-cells = <1>;
+> +				#size-cells = <0>;
+> +				serdes@0 {
+> +					reg = <0>;
+> +					phys = <&pcie1_phy>;
+> +				};
+> +			};
+> +
+>  		};
+>  
+>  		mdio: mdio@24200f00 {
+> diff --git a/arch/arm/boot/dts/keystone.dtsi b/arch/arm/boot/dts/keystone.dtsi
+> index 72816d6..6566cc4 100644
+> --- a/arch/arm/boot/dts/keystone.dtsi
+> +++ b/arch/arm/boot/dts/keystone.dtsi
+> @@ -275,6 +275,16 @@
+>  			ti,syscon-dev = <&devctrl 0x2a0>;
+>  		};
+>  
+> +		pcie0_phy: pciephy@2320000 {
+> +			#phy-cells = <0>;
+> +			compatible = "ti,keystone-serdes-pcie";
+> +			reg = <0x02320000 0x4000>;
+> +			reg-names = "serdes";
+> +			link-rate-kbps = <5000000>;
+> +			num-lanes = <2>;
+> +			status = "disabled";
+> +		};
+> +
+>  		pcie0: pcie@21800000 {
+>  			compatible = "ti,keystone-pcie", "snps,dw-pcie";
+>  			clocks = <&clkpcie>;
+> @@ -319,6 +329,17 @@
+>  					<GIC_SPI 28 IRQ_TYPE_EDGE_RISING>,
+>  					<GIC_SPI 29 IRQ_TYPE_EDGE_RISING>;
+>  			};
+> +
+> +			/* PCIE phy */
+> +			serdeses {
+> +				#address-cells = <1>;
+> +				#size-cells = <0>;
+> +				serdes@0 {
+> +					reg = <0>;
+> +					phys = <&pcie0_phy>;
+> +				};
+> +			};
+> +
+>  		};
+>  	};
+>  };
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
