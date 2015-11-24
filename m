@@ -1,75 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:32457 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751341AbbKMH3b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Nov 2015 02:29:31 -0500
-Message-ID: <56459149.8090709@hisilicon.com>
-Date: Fri, 13 Nov 2015 15:29:13 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from mail.kernel.org ([198.145.29.136]:33886 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753775AbbKXUF6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Nov 2015 15:05:58 -0500
+Date: Tue, 24 Nov 2015 14:05:51 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mathias Krause <minipli@googlemail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Sasha Levin <sasha.levin@oracle.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Subject: Re: [PATCH v2] PCI: Prevent out of bounds access in numa_node
+ override - part 2
+Message-ID: <20151124200551.GA17377@localhost>
+References: <1447095627-12798-1-git-send-email-minipli@googlemail.com>
+ <20151124184957.GB27957@localhost>
+ <CA+rthh_hmYqpyu-cREMtFBevPJjpUG3LE28htrtSGr3ipdzD_w@mail.gmail.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Jisheng Zhang <jszhang@marvell.com>, <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: hisi: fix deferred probing
-References: <1447329728-1589-1-git-send-email-jszhang@marvell.com> <4417267.EzK5DAjM5p@wuerfel>
-In-Reply-To: <4417267.EzK5DAjM5p@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+rthh_hmYqpyu-cREMtFBevPJjpUG3LE28htrtSGr3ipdzD_w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/11/12 20:21, Arnd Bergmann wrote:
-> The hisi_pcie_probe function is incorrectly marked as __init, as Kconfig
-> tells us:
+On Tue, Nov 24, 2015 at 08:27:04PM +0100, Mathias Krause wrote:
+> On 24 November 2015 at 19:49, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > Applied as tweaked below to for-linus for v4.4, thanks!  As written,
+> > if NUMA_NO_NODE were defined as -2, we would incorrectly accept -1.
+> > Let me know if you disagree with my fix.
 > 
-> WARNING: drivers/pci/host/built-in.o(.data+0x7780): Section mismatch in reference from the variable hisi_pcie_driver to the function .init.text:hisi_pcie_probe()
+> I don't think the value of NUMA_NO_NODE will (or even has to) ever
+> change, as we're already exporting that value to userland via sysfs.
+> But you're right, the code shouldn't make any assumptions about the
+> concrete value of NUMA_NO_NODE and just handle it as a special
+> symbolic value.
 > 
-> If the probe for this device gets deferred past the point where __init
-> functions are removed, or the device is unbound and then reattached to
-> the driver, we branch into uninitialized memory, which is bad.
+> > commit 2a35194c5a45fbb9ca1d88bc56804dfb51a75233
+> > Author: Mathias Krause <minipli@googlemail.com>
+> > Date:   Mon Nov 9 20:00:27 2015 +0100
+> >
+> >     PCI: Prevent out of bounds access in numa_node override
+> >
+> >     Commit 1266963170f5 ("PCI: Prevent out of bounds access in numa_node
+> >     override") missed that the user-provided node could also be negative.
+> >     Handle this case as well to avoid out-of-bounds accesses to the
+> >     node_states[] array.  However, allow the special value -1, i.e.
+> >     NUMA_NO_NODE, to be able to set the 'no specific node' configuration.
+> >
+> >     [bhelgaas: remove assumption that NUMA_NO_NODE == -1]
+> >     Fixes: 1266963170f5 ("PCI: Prevent out of bounds access in numa_node override")
+> >     Fixes: 63692df103e9 ("PCI: Allow numa_node override via sysfs")
+> >     Signed-off-by: Mathias Krause <minipli@googlemail.com>
+> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >     CC: Sasha Levin <sasha.levin@oracle.com>
+> >     CC: Prarit Bhargava <prarit@redhat.com>
+> >     CC: stable@vger.kernel.org  # v3.19+
+> >
+> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > index 9261868..50f4747 100644
+> > --- a/drivers/pci/pci-sysfs.c
+> > +++ b/drivers/pci/pci-sysfs.c
+> > @@ -216,7 +216,12 @@ static ssize_t numa_node_store(struct device *dev,
+> >         if (ret)
+> >                 return ret;
+> >
+> > -       if (node >= MAX_NUMNODES || !node_online(node))
+> > +       if (node < 0 || node >= MAX_NUMNODES) {
+> > +               if (node != NUMA_NO_NODE)
+> > +                       return -EINVAL;
+> > +       }
 > 
-> This removes the __init annotation.
+> I would have written something like this:
 > 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->
+>     if ((node < 0 && node != NUMA_NO_NODE) || node >= MAX_NUMNODES)
+>         return -EINVAL;
 
-Hi Arnd,
-
-Many thanks, it looks good to me. so
-Acked-by: Zhou Wang <wangzhou1@hisilicon.com>
-
-Regards,
-Zhou
-
-> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-> index 35457ecd8e70..163671a4f798 100644
-> --- a/drivers/pci/host/pcie-hisi.c
-> +++ b/drivers/pci/host/pcie-hisi.c
-> @@ -111,7 +111,7 @@ static struct pcie_host_ops hisi_pcie_host_ops = {
->  	.link_up = hisi_pcie_link_up,
->  };
->  
-> -static int __init hisi_add_pcie_port(struct pcie_port *pp,
-> +static int hisi_add_pcie_port(struct pcie_port *pp,
->  				     struct platform_device *pdev)
->  {
->  	int ret;
-> @@ -139,7 +139,7 @@ static int __init hisi_add_pcie_port(struct pcie_port *pp,
->  	return 0;
->  }
->  
-> -static int __init hisi_pcie_probe(struct platform_device *pdev)
-> +static int hisi_pcie_probe(struct platform_device *pdev)
->  {
->  	struct hisi_pcie *hisi_pcie;
->  	struct pcie_port *pp;
-> 
-> 
-> .
-> 
-
-
-
-
-
-
+I adopted that, thanks!
