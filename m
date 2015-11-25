@@ -1,72 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:35096 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754082AbbKWWnc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 17:43:32 -0500
-Received: from localhost
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 24 Nov 2015 08:43:30 +1000
-Date: Tue, 24 Nov 2015 09:42:27 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-Subject: Re: [PATCH v7 12/50] powerpc/powernv: Track M64 segment consumption
-Message-ID: <20151123224227.GB5375@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-13-git-send-email-gwshan@linux.vnet.ibm.com>
- <56498D77.2060101@ozlabs.ru>
- <20151117010446.GA26294@gwshan>
- <564D1382.6030504@ozlabs.ru>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [Bugfix] x86/PCI: Fix regression caused by commit 4d6b4e69a245
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+References: <1447648057-13644-1-git-send-email-jiang.liu@linux.intel.com>
+ <20151124164907.GA24819@localhost>
+ <CAJZ5v0irOUq6C9eSfCfmzyOiY1n1rUSxyUeUbvS9Nj0jNT2JrQ@mail.gmail.com>
+ <56556D89.6020801@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	x86@kernel.org, Keith Busch <keith.busch@intel.com>,
+	Arthur Marsh <arthur.marsh@internode.on.net>
+From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Message-ID: <5655B392.7070701@intel.com>
+Date: Wed, 25 Nov 2015 14:11:46 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <564D1382.6030504@ozlabs.ru>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <56556D89.6020801@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 19, 2015 at 11:10:42AM +1100, Alexey Kardashevskiy wrote:
->On 11/17/2015 12:04 PM, Gavin Shan wrote:
->>On Mon, Nov 16, 2015 at 07:01:59PM +1100, Alexey Kardashevskiy wrote:
->>>On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>>>As we track M32 segment consumption, this introduces an array to
->>>>the PHB to track the mapping between M64 segment and PE number.
->>>>The information is going to be used to find M64 segment from the
->>>>PE number during PCI unplugging time in subsequent patches.
+On 11/25/2015 9:12 AM, Jiang Liu wrote:
+> On 2015/11/25 6:19, Rafael J. Wysocki wrote:
+>> On Tue, Nov 24, 2015 at 5:49 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>> On Mon, Nov 16, 2015 at 12:27:37PM +0800, Jiang Liu wrote:
+>>>> From: Liu Jiang <jiang.liu@linux.intel.com>
+>>>>
+>>>> Commit 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support
+>>>> PCI host bridge") converted x86 to use the common interface
+>>>> acpi_pci_root_create, but the conversion missed on code piece in
+>>>> arch/x86/pci/bus_numa.c, which causes regression on some legacy
+>>>> AMD platforms as reported by Arthur Marsh <arthur.marsh@internode.on.net>.
+>>>> The root causes is that acpi_pci_root_create() fails to insert
+>>>> host bridge resources into iomem_resource/ioport_resource because
+>>>> x86_pci_root_bus_resources() has already inserted those resources.
+>>>> So change x86_pci_root_bus_resources() to not insert resources into
+>>>> iomem_resource/ioport_resource.
+>>> Fixes: 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support PCI host bridge")
 >>>
+>>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>>>> Reported-and-tested-by: Arthur Marsh <arthur.marsh@internode.on.net>
+>>> What's the status of this?  It looks like a regression we need to fix
+>>> for v4.4.
 >>>
->>>It would not hurt to put a few words about how we managed to live without
->>>such a mapping for M64 before but we needed mapping for M32.
+>>> AFAICT, Arthur did *not* test this patch (rather, his response says he
+>>> did test it and the test failed).
 >>>
->>
->>The M32 mapping (phb->ioda.m32_segmap[]) isn't used for anything before
->>this patcheset. There're no need for M64 mapping before this patchset
->>similarly, no need to add the words.
->
->After years I learned that reviewers ask less questions about new but yet
->unused code when I put few words in the commit log confirming that it is not
->used now but it will be used for <here I put what it is for> later.
->
->And it is not obvious that m32_segment is not used. And m64_segmap is started
->being used only 13 patches later in:
->
->[PATCH v7 27/50] powerpc/powernv: Dynamically release PEs
->
->which is quite far, complicates reviewing. 12/50 is better be moved there (to
->make it 26/50) or just merged into 27/50.
->
+>>> 4d6b4e69a245 was merged by Rafael, and I assume he'll merge the fix
+>>> unless I hear otherwise.
+>> Quite frankly, I'm more likely to revert the offending commit at this
+>> point as that's not the only regression reported against it and the
+>> fix only helps in one case (out of three known to me).
+> Hi Rafael,
+> 	I got regression report from Hans de Bruin<jmdebruin@xmsnet.nl>,
+> Keith Busch <keith.busch@intel.com>, and Arthur Marsh
+> <arthur.marsh@internode.on.net>. Hans and Keith also reports
+> the patch fixes the regression. For Arthur's case, the debug
+> patch works for him, but the formal patch based on the debug
+> patch fails, so I need to do more investigation about this.
+> Is there any other report related to commit 4d6b4e69a245 so
+> I could help to investigate?
 
-It doesn't make sense to me. As said in PATCH[00/50], the patchset consists of
-3 separate parts: PowerNV PCI rework; Using PCI slot; Hotplug standalone driver;
-For the first part ("PowerNV PCI rework"), the patches are organized in order:
-refactor/cleanup, IO/M32/M64, DMA, PE allocation/deallocation. So I don't think
-I need move the patch around if you don't have a stronger reason.
+OK, so the proposed bug fix works for everybody, right?
+
+In that case there's no reason not to apply it.
+
+If there's anyone who can reproduce the problem and for whom that patch 
+doesn't work, please let me know.
 
 Thanks,
-Gavin
+Rafael
 
