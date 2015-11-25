@@ -1,59 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:51670 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965415AbbKDNNz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:55 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 23:13:53 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 38/50] powerpc/powernv: Exclude root bus in pnv_pci_reset_secondary_bus()
-Date: Thu,  5 Nov 2015 00:12:38 +1100
-Message-Id: <1446642770-4681-39-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-bl2on0093.outbound.protection.outlook.com ([65.55.169.93]:19850
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752659AbbKYUF4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Nov 2015 15:05:56 -0500
+Message-ID: <5656149D.50704@caviumnetworks.com>
+Date: Wed, 25 Nov 2015 12:05:49 -0800
+From: David Daney <ddaney@caviumnetworks.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	David Daney <ddaney.cavm@gmail.com>,
+	David Daney <david.daney@cavium.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	<linux-kernel@vger.kernel.org>,
+	"Sean O. Stalley" <sean.stalley@intel.com>,
+	<linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC PATCH] PCI/pci-host-generic: Add support for Cavium Thunder
+ fixed BARs.
+References: <1443488184-12633-1-git-send-email-ddaney.cavm@gmail.com> <20151125170652.GC1380@localhost> <2789794.TBZL2yW2b6@wuerfel>
+In-Reply-To: <2789794.TBZL2yW2b6@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When pnv_pci_reset_secondary_bus() is called to issue reset on
-the indicated secondary bus, the bus can't be root bus. So we
-needn't consider root bus in the function.
+On 11/25/2015 11:52 AM, Arnd Bergmann wrote:
+> On Wednesday 25 November 2015 11:06:52 Bjorn Helgaas wrote:
+>>
+>> On Mon, Sep 28, 2015 at 05:56:24PM -0700, David Daney wrote:
+>>> From: David Daney <david.daney@cavium.com>
+>>>
+>>> Early versions of the Cavium Thunder CN88XX processor are missing
+>>> Enhanced Allocation (EA) capabilities for the fixed BAR addresses used
+>>> by the on-SoC hardware blocks.
+>>>
+>>> Add config access functions that synthesize the missing EA
+>>> capabilities for versions that are missing that information.  Since
+>>> this is a little hacky, gate the inclusion of the code with a new
+>>> Kconfig variable.
+>>>
+>>> Signed-off-by: David Daney <david.daney@cavium.com>
+>>
+>> What about this one?  Do we still need it?  This version looks like it
+>> still has some debug code and it feels like a lot of hard-coding of
+>> config offsets; it'd be nice if it could be more table-driven.  But
+>> maybe this isn't needed anymore anyway.
+>
+> I still think it doesn't belong into the generic driver. We have the
+> abstraction for drivers based on the compatible string to handle
+> nonstandard PCI host bridges, and the generic driver should really
+> just handle the generic code.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/eeh-powernv.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+Somebody should make a decision about this point.
 
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index a7d84a4..c69b6a1 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -880,16 +880,8 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- 
- void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
- {
--	struct pci_controller *hose;
--
--	if (pci_is_root_bus(dev->bus)) {
--		hose = pci_bus_to_host(dev->bus);
--		pnv_eeh_root_reset(hose, EEH_RESET_HOT);
--		pnv_eeh_root_reset(hose, EEH_RESET_DEACTIVATE);
--	} else {
--		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
--		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
--	}
-+	pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
-+	pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
- }
- 
- /**
--- 
-2.1.0
+Here is what happens:
+
+  1) A driver for non-generic PCI host bridge is submitted.
+
+  2) Comments are received stating that it is just another PCI host 
+bridge and please use pci-host-generic instead.
+
+  3) Patches to pci-host-generic are submitted.
+
+  4) Comments are received stating that pci-host-generic is for generic 
+things only, and please create a device specific driver.
+
+  5) goto 1
+
+
+>
+> It's easy enough to split out the common parts if we want to reuse
+> some of this, or to move them into drivers/pci/*.c for others to
+> reuse too.
+>
+
+If we do that, do you want "pci-host-cam-generic" and 
+"pci-host-ecam-generic" split out too?
+
+They are two completely different things crammed into the single 
+pci-host-generic driver source file.  Or is there some set of config 
+access methods that are sufficiently generic that they can stay?
+
+David Daney
+
+
+> 	Arnd
+>
 
