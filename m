@@ -1,512 +1,76 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: bhelgaas@google.com, CARLOS.PALMINHA@synopsys.com,
-	Vineet.Gupta1@synopsys.com, Alexey.Brodkin@synopsys.com,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH 1/2] add new platform driver for PCI RC
-Date: Tue, 24 Nov 2015 14:32:05 +0000
-Message-Id: <cee062b7e3ad115ec3b391dfef5ef9a7334fde74.1448375184.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1448375184.git.jpinto@synopsys.com>
-References: <cover.1448375184.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1448375184.git.jpinto@synopsys.com>
-References: <cover.1448375184.git.jpinto@synopsys.com>
+Date: Wed, 25 Nov 2015 10:40:33 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [Resend: PATCH v2 0/3] Fix rcar-pcie for arm64
+Message-ID: <20151125164033.GA1380@localhost>
+References: <1448465439-2132-1-git-send-email-phil.edworthy@renesas.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1448465439-2132-1-git-send-email-phil.edworthy@renesas.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a new driver that will be the reference platform driver for all
-PCI RC IP Protoyping Kits based on ARC SDP. This patch is composed by:
+Hi Phil,
 
--Changes to pcie-designware driver add a function that enables the feature
-of starting the LTSSM (Link Train Status State) used by the new driver
--MAINTAINERS file was updated to include the new driver
--Documentation/devicetree/bindings/pci was updated to include the new driver
-documentation
--New driver called pcie-snpsdev
+On Wed, Nov 25, 2015 at 03:30:36PM +0000, Phil Edworthy wrote:
+> The first patches fixes the build problem
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
----
- .../devicetree/bindings/pci/pcie-snpsdev.txt       |  28 ++
- MAINTAINERS                                        |   7 +
- drivers/pci/host/Kconfig                           |   5 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pcie-designware.c                 |  15 +
- drivers/pci/host/pcie-designware.h                 |   1 +
- drivers/pci/host/pcie-snpsdev.c                    | 342 +++++++++++++++++++++
- 7 files changed, 399 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
- create mode 100644 drivers/pci/host/pcie-snpsdev.c
+I'm trying to figure out if v4.4 has a build problem we need to fix.
+If I understand correctly, "PCI: rcar: Convert to DT resource parsing
+API" doesn't fix a build problem in the current tree; rather, it
+removes a dependency on ARM so that we can build it on ARM64.  
 
-diff --git a/Documentation/devicetree/bindings/pci/pcie-snpsdev.txt b/Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
-new file mode 100644
-index 0000000..b833c8f
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
-@@ -0,0 +1,28 @@
-+Synopsys PCI RC IP Prototyping Kit
-+----------------------------------
-+
-+This is the reference platform driver to be used in the Synopsys PCI RC IP
-+Prototyping Kits.
-+
-+Required properties:
-+- compatible: "snps,pcie-snpsdev";
-+- reg:	A list of physical regions to access the device.
-+- interrupts: interrupt for the device.
-+- #address-cells: must be 3.
-+- #size-cells: must be 2.
-+
-+Example configuration:
-+
-+	pcie: pcie@0xdffff000 {
-+		#interrupt-cells = <1>;
-+		compatible = "snps,pcie-snpsdev";
-+		reg = <0xdffff000 0x1000>;
-+		interrupts = <25>, <24>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x00000800 0 0xd0000000 0xd0000000 0 0x00002000
-+			  0x81000000 0 0x00000000 0xde000000 0 0x00010000
-+			  0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
-+		num-lanes = <1>;
-+	};
-diff --git a/MAINTAINERS b/MAINTAINERS
-index e9caa4b..d2e4506 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8230,6 +8230,13 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
- F:	drivers/pci/host/pcie-hisi.c
- 
-+PCI DRIVER FOR SYNOPSYS PROTOTYPING DEVICE
-+M:	Joao Pinto <jpinto@synopsys.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
-+F:	drivers/pci/host/pcie-snpsdev.c
-+
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index f131ba9..a874b1e 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -172,4 +172,9 @@ config PCI_HISI
- 	help
- 	  Say Y here if you want PCIe controller support on HiSilicon HIP05 SoC
- 
-+config PCIE_SNPSDEV
-+	bool "Platform Driver for Synopsys Device"
-+	select PCIEPORTBUS
-+	select PCIE_DW
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 9d4d3c6..e422f65 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -20,3 +20,4 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
- obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
- obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
-+obj-$(CONFIG_PCIE_SNPSDEV) += pcie-snpsdev.o
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 540f077..3251695 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -22,9 +22,15 @@
- #include <linux/pci_regs.h>
- #include <linux/platform_device.h>
- #include <linux/types.h>
-+#include <linux/delay.h>
-+#include <linux/sizes.h>
- 
- #include "pcie-designware.h"
- 
-+/* Synopsys Default PCIE Control and Status Register Memory-Mapped */
-+#define LINK_CONTROL_LINK_STATUS_REG  0x80
-+#define PCIE_RETRAIN_LINK_MASK        (1<<5)
-+
- /* Synopsis specific PCIE configuration registers */
- #define PCIE_PORT_LINK_CONTROL		0x710
- #define PORT_LINK_MODE_MASK		(0x3f << 16)
-@@ -706,6 +712,15 @@ static struct pci_ops dw_pcie_ops = {
- 	.write = dw_pcie_wr_conf,
- };
- 
-+void dw_pcie_link_retrain(struct pcie_port *pp)
-+{
-+	u32 val = 0;
-+
-+	dw_pcie_readl_rc(pp, LINK_CONTROL_LINK_STATUS_REG, &val);
-+	val = val | PCIE_RETRAIN_LINK_MASK;
-+	dw_pcie_writel_rc(pp, val, LINK_CONTROL_LINK_STATUS_REG);
-+}
-+
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
- 	u32 val;
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 2356d29..249b631 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -79,5 +79,6 @@ void dw_pcie_msi_init(struct pcie_port *pp);
- int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
-+void dw_pcie_link_retrain(struct pcie_port *pp);
- 
- #endif /* _PCIE_DESIGNWARE_H */
-diff --git a/drivers/pci/host/pcie-snpsdev.c b/drivers/pci/host/pcie-snpsdev.c
-new file mode 100644
-index 0000000..5721da9
---- /dev/null
-+++ b/drivers/pci/host/pcie-snpsdev.c
-@@ -0,0 +1,342 @@
-+/*
-+ * PCIe RC driver for Synopsys Designware Core
-+ *
-+ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
-+ *
-+ * Authors: Manjunath Bettegowda <manjumb@synopsys.com>,
-+ *	    Jie Deng <jiedeng@synopsys.com>
-+ *	    Joao Pinto <jpinto@synopsys.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/gpio.h>
-+#include <linux/interrupt.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_gpio.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/resource.h>
-+#include <linux/signal.h>
-+#include <linux/types.h>
-+
-+#include "pcie-designware.h"
-+
-+#define to_snpsdev_pcie(x)	container_of(x, struct snpsdev_pcie, pp)
-+
-+struct snpsdev_pcie {
-+	void __iomem		*mem_base; /* Memory Base to access Core's [RC]
-+					    * Config Space Layout
-+					    */
-+	struct pcie_port	pp;        /* RC Root Port specific structure -
-+					    * DWC_PCIE_RC stuff
-+					    */
-+};
-+
-+#define SIZE_1GB 0x40000000
-+#define PCI_EQUAL_CONTROL_PHY 0x00000707
-+
-+/* PCIe Port Logic registers (memory-mapped) */
-+#define PLR_OFFSET 0x700
-+#define PCIE_PHY_DEBUG_R0 (PLR_OFFSET + 0x28) /* 0x728 */
-+#define PCIE_PHY_DEBUG_R1 (PLR_OFFSET + 0x2c) /* 0x72c */
-+
-+/* PCIE PHY CONTROL REGISTER: Useful for cfg_phy_control GPIO outputs */
-+#define PCIE_PHY_CTRL (PLR_OFFSET + 0x114)    /* 0x814 */
-+/* PCIE PHY STATUS REGISTER: Useful for phy_cfg_status GPIO inputs */
-+#define PCIE_PHY_STAT (PLR_OFFSET + 0x110)    /* 0x810 */
-+
-+static void snpsdev_pcie_fixup_bridge(struct pci_dev *dev)
-+{
-+	u32 slot_cap;
-+
-+	u16 caps_reg = pcie_caps_reg(dev) | PCI_EXP_FLAGS_SLOT;
-+
-+	pcie_capability_write_word(dev, PCI_EXP_FLAGS, caps_reg);
-+	dev->pcie_flags_reg = caps_reg;
-+
-+	pcie_capability_read_dword(dev, PCI_EXP_SLTCAP, &slot_cap);
-+
-+	slot_cap = slot_cap & (~PCI_EXP_SLTCAP_SPLV);
-+	slot_cap = slot_cap | (0x30 << 7);
-+
-+	pcie_capability_write_dword(dev, PCI_EXP_SLTCAP, slot_cap);
-+
-+	if (pcibios_enable_device(dev, ~0) < 0)
-+		pr_err("PCI: synopsys device enable failed\n");
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, snpsdev_pcie_fixup_bridge);
-+
-+static void snpsdev_pcie_fixup_res(struct pci_dev *dev)
-+{
-+	struct resource *res;
-+	resource_size_t size;
-+	int bar;
-+
-+	for (bar = 0; bar < 6; bar++) {
-+		res = dev->resource + bar;
-+		size = resource_size(res);
-+
-+		if (size == SIZE_1GB) {
-+			res->start = 0;
-+			res->end   = 0;
-+			res->flags = 0;
-+		}
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, snpsdev_pcie_fixup_res);
-+
-+/* This handler was created for future work */
-+static irqreturn_t snpsdev_pcie_irq_handler(int irq, void *arg)
-+{
-+	return IRQ_NONE;
-+}
-+
-+static irqreturn_t snpsdev_pcie_msi_irq_handler(int irq, void *arg)
-+{
-+	struct pcie_port *pp = arg;
-+
-+	dw_handle_msi_irq(pp);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static void snpsdev_pcie_init_phy(struct pcie_port *pp)
-+{
-+	/* write Lane 0 Equalization Control fields register */
-+	writel(PCI_EQUAL_CONTROL_PHY, pp->dbi_base + 0x154);
-+}
-+
-+static int snpsdev_pcie_deassert_core_reset(struct pcie_port *pp)
-+{
-+	return 0;
-+}
-+
-+/*
-+ * snpsdev_pcie_host_init()
-+ * Platform specific host/RC initialization
-+ *	a. Assert the core reset
-+ *	b. Assert and deassert phy reset and initialize the phy
-+ *	c. De-Assert the core reset
-+ *	d. Initializet the Root Port (BARs/Memory Or IO/ Interrupt/ Commnad Reg)
-+ *	e. Initiate Link startup procedure
-+ *
-+ */
-+static void snpsdev_pcie_host_init(struct pcie_port *pp)
-+{
-+	int count = 0;
-+
-+	/* Initialize Phy (Reset/poweron/control-inputs ) */
-+	snpsdev_pcie_init_phy(pp);
-+
-+	/* de-assert core reset */
-+	snpsdev_pcie_deassert_core_reset(pp);
-+
-+	/* We expect the PCIE Link to be up by this time */
-+	dw_pcie_setup_rc(pp);
-+
-+	/* Start LTSSM here */
-+	dw_pcie_link_retrain(pp);
-+
-+	/* Check for Link up indication */
-+	while (!dw_pcie_link_up(pp)) {
-+		usleep_range(1000, 1100);
-+		count++;
-+		if (count == 20) {
-+			dev_err(pp->dev, "phy link never came up\n");
-+			dev_dbg(pp->dev,
-+				"PL_DEBUG0: 0x%08x, DEBUG_R1: 0x%08x\n",
-+				readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
-+				readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
-+			break;
-+		}
-+	}
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		dw_pcie_msi_init(pp);
-+}
-+/**
-+ *
-+ * Let all outof band signalling be handled by cfg_phy_control[31:0]
-+ * which is selected through optional config attribute PHY_CONTROL_REG
-+ *
-+ * Monitor cxpl_debug_info as required to take necessary action
-+ * This is available in the register PCIE_PHY_DEBUG_R0 & PCIE_PHY_DEBUG_R1
-+ *
-+ */
-+static int snpsdev_pcie_link_up(struct pcie_port *pp)
-+{
-+	u32 status;
-+
-+	/* Bit number 36: reports LTSSM PHY Link UP; Available in bit 3 of
-+	 * PCIE_PHY_DEBUG_R1
-+	 */
-+	status = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1) & (0x1 << 4);
-+	if (status != 0)
-+		return 1;
-+
-+	/* TODO:Now Link is in L0;Initiate GEN2/GEN3 migration if RC Supports*/
-+	return 0;
-+}
-+
-+
-+/**
-+ * This is RC operation structure
-+ * snpsdev_pcie_link_up: the function which initiates the phy link up procedure
-+ * snpsdev_pcie_host_init: the function whihc does the host/RC Root port
-+ * initialization.
-+ */
-+static struct pcie_host_ops snpsdev_pcie_host_ops = {
-+	.link_up = snpsdev_pcie_link_up,
-+	.host_init = snpsdev_pcie_host_init,
-+};
-+
-+/**
-+ * snpsdev_add_pcie_port
-+ * This function
-+ * a. installs the interrupt handler
-+ * b. registers host operations int he pcie_port structure
-+ */
-+static int snpsdev_add_pcie_port(struct pcie_port *pp,
-+				 struct platform_device *pdev)
-+{
-+	int ret;
-+
-+	pp->irq = platform_get_irq(pdev, 1);
-+
-+	if (pp->irq < 0) {
-+		if (pp->irq != -EPROBE_DEFER)
-+			dev_err(&pdev->dev, "cannot get irq\n");
-+		return pp->irq;
-+	}
-+
-+	ret = devm_request_irq(&pdev->dev, pp->irq, snpsdev_pcie_irq_handler,
-+				IRQF_SHARED, "snpsdev-pcie", pp);
-+
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to request irq\n");
-+		return ret;
-+	}
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		pp->msi_irq = platform_get_irq(pdev, 0);
-+
-+		if (pp->msi_irq < 0) {
-+			if (pp->msi_irq != -EPROBE_DEFER)
-+				dev_err(&pdev->dev, "cannot get msi irq\n");
-+			return pp->msi_irq;
-+		}
-+
-+		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
-+					snpsdev_pcie_msi_irq_handler,
-+					IRQF_SHARED, "snpsdev-pcie-msi", pp);
-+		if (ret) {
-+			dev_err(&pdev->dev, "failed to request msi irq\n");
-+			return ret;
-+		}
-+	}
-+
-+	pp->root_bus_nr = -1;
-+	pp->ops = &snpsdev_pcie_host_ops;
-+
-+	/* Below function:
-+	 * Checks for range property from DT
-+	 * Gets the IO and MEMORY and CONFIG-Space ranges from DT
-+	 * Does IOREMAPS on the physical addresses
-+	 * Gets the num-lanes from DT
-+	 * Gets MSI capability from DT
-+	 * Calls the platform specific host initialization
-+	 * Program the correct class, BAR0, Link width, in Config space
-+	 * Then it calls pci common init routine
-+	 * Then it calls function to assign "unassigned resources"
-+	 */
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to initialize host\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * snpsdev_pcie_rc_probe()
-+ * This function gets called as part of pcie registration. if the id matches
-+ * the platform driver framework will call this function.
-+ *
-+ * @pdev: Pointer to the platform_device structure
-+ *
-+ * Returns zero on success; Negative errorno on failure
-+ */
-+static int __init snpsdev_pcie_rc_probe(struct platform_device *pdev)
-+{
-+	struct snpsdev_pcie *snpsdev_pcie;
-+	struct pcie_port *pp;
-+	struct resource *dwc_pcie_rc_res;  /* Resource from DT */
-+	int ret;
-+
-+	snpsdev_pcie = devm_kzalloc(&pdev->dev, sizeof(*snpsdev_pcie),
-+					GFP_KERNEL);
-+	if (!snpsdev_pcie)
-+		return -ENOMEM;
-+
-+	pp = &snpsdev_pcie->pp;
-+	pp->dev = &pdev->dev;
-+
-+	dwc_pcie_rc_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+
-+	if (!dwc_pcie_rc_res)
-+		return -ENODEV;
-+
-+	snpsdev_pcie->mem_base = devm_ioremap_resource(&pdev->dev,
-+							dwc_pcie_rc_res);
-+	if (IS_ERR(snpsdev_pcie->mem_base)) {
-+		ret = PTR_ERR(snpsdev_pcie->mem_base);
-+		return ret;
-+	}
-+	pp->dbi_base = snpsdev_pcie->mem_base;
-+
-+	ret = snpsdev_add_pcie_port(pp, pdev);
-+	if (ret < 0)
-+		return ret;
-+
-+	platform_set_drvdata(pdev, snpsdev_pcie);
-+
-+	return 0;
-+}
-+
-+static int __exit snpsdev_pcie_rc_remove(struct platform_device *pdev)
-+{
-+	return 0;
-+}
-+
-+static const struct of_device_id snpsdev_pcie_rc_of_match[] = {
-+	{ .compatible = "snps,pcie-snpsdev", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, snpsdev_pcie_rc_of_match);
-+
-+static struct platform_driver snpsdev_pcie_rc_driver = {
-+	.remove		= __exit_p(snpsdev_pcie_rc_remove),
-+	.driver = {
-+		.name	= "pcie-snpsdev",
-+		.owner	= THIS_MODULE,
-+		.of_match_table = snpsdev_pcie_rc_of_match,
-+	},
-+};
-+
-+static int __init snpsdev_pcie_init(void)
-+{
-+	return platform_driver_probe(&snpsdev_pcie_rc_driver,
-+					snpsdev_pcie_rc_probe);
-+}
-+subsys_initcall(snpsdev_pcie_init);
-+
-+MODULE_AUTHOR("Manjunath Bettegowda <manjumb@synopsys.com>");
-+MODULE_DESCRIPTION("Platform Driver for Synopsys Device");
-+MODULE_LICENSE("GPL v2");
--- 
-1.8.1.5
+> , and the second patch reverts the
+> patch that removed the driver from arm64 builds. The final patch add a compat
+> string for the r8a7795 (arm64) device.
+> 
+> Tested on arm Koelsch board, all ok.
+> 
+> Tested on arm64 Salvator-X board using renesas-drivers-2015-10-27-v4.3-rc7 from
+> git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-drivers.git with PCI
+> next merged. 
+> Apart from patches to add the PCIe clock and DT nodes, it also needs this fix:
+> ("PCI: MSI: Only use the generic MSI layer when domain is hierarchical")
 
+I assume you mean this one from Marc: https://lkml.org/lkml/2015/11/23/388
+(Was that posted to linux-pci?  I don't see it in patchwork or my
+linux-pci archives, so I hadn't seen it yet.)
+
+How exactly is that related to this series?  If I merge these before
+Marc's change, do we have a tree that builds for arm64 but doesn't
+work?
+
+What about the PCIe clock and DT changes you mention?  Is there a
+reason to keep them separate?  Would it be feasible to include the DT
+changes in the same patch as the driver change that uses those
+changes?
+
+Bjorn
+
+> Resent with whole series marked as v2 and acks, etc added.
+> 
+> Harunobu Kurokawa (1):
+>   PCI: pcie-rcar: Add support for R-Car H3.
+> 
+> Phil Edworthy (2):
+>   PCI: rcar: Convert to DT resource parsing API
+>   Revert "PCI: rcar: Build pcie-rcar.c only on ARM"
+> 
+>  Documentation/devicetree/bindings/pci/rcar-pci.txt |   3 +-
+>  drivers/pci/host/Kconfig                           |   3 +-
+>  drivers/pci/host/pcie-rcar.c                       | 117 +++++++++++++--------
+>  3 files changed, 77 insertions(+), 46 deletions(-)
+> 
+> -- 
+> 2.5.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
