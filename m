@@ -1,107 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:35176 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751274AbbKGL4k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Nov 2015 06:56:40 -0500
-Date: Sat, 7 Nov 2015 12:55:54 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Keith Busch <keith.busch@intel.com>
-cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv4 5/6] x86/pci: Initial commit for new VMD device
- driver
-In-Reply-To: <1446849346-8242-6-git-send-email-keith.busch@intel.com>
-Message-ID: <alpine.DEB.2.11.1511071243530.4032@nanos>
-References: <1446849346-8242-1-git-send-email-keith.busch@intel.com> <1446849346-8242-6-git-send-email-keith.busch@intel.com>
+Received: from mail.kernel.org ([198.145.29.136]:57215 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750811AbbKYRet (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Nov 2015 12:34:49 -0500
+Date: Wed, 25 Nov 2015 11:34:45 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: bhelgaas@google.com, l.stach@pengutronix.de,
+	linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: Re: [PATCH] PCI: imx6: Use gpio_set_value_cansleep()
+Message-ID: <20151125173445.GF1380@localhost>
+References: <1445989318-26461-1-git-send-email-festevam@gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445989318-26461-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Keith,
+On Tue, Oct 27, 2015 at 09:41:58PM -0200, Fabio Estevam wrote:
+> From: Fabio Estevam <fabio.estevam@freescale.com>
+> 
+> We are in a context where we can sleep, and the PCIe reset gpio may be
+> on an I2C expander.  Use the cansleep() variant when setting the GPIO
+> value.
+> 
+> Based on a patch from Russell King for pci-mvebu.c.
+> 
+> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
 
-On Fri, 6 Nov 2015, Keith Busch wrote:
-> +
-> +static DEFINE_SPINLOCK(list_lock);
+Applied with Lucas' Reviewed-by to pci/host-imx6 for v4.5, thanks!
 
-Can you please make that DEFINE_RAW_SPINLOCK as it nests into the irq
-descriptor lock.
-
-> +
-> +struct vmd_irq {
-> +	struct list_head	node;
-> +	struct rcu_head		rcu;	/* rcu callback list */
-> +	struct vmd_irq_list	*irq;	/* back pointer */
-
-Please use KernelDoc style documentation if you want to document your
-data structures.
-
-> +/**
-> + * XXX: Stubbed until a good way to not create conflicts with other devices
-> + * sharing the same vector is developed.
-> + */
-> +static int vmd_irq_set_affinity(struct irq_data *data, const struct cpumask *dest,
-> +								bool force)
-> +{
-> +	return -EINVAL;
-> +}
-
-Well, this is a hard problem for shared vectors. The question is
-whether we really want to expose that at the per device level or
-rather at the demultiplexing level.
-
-> +static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd)
-> +{
-> +	int i, best = 0;
-> +
-> +	spin_lock(&list_lock);
-> +	for (i = 1; i < vmd->msix_count; i++)
-> +		if (vmd->irqs[i].count < vmd->irqs[best].count)
-> +			best = i;
-> +	vmd->irqs[best].count++;
-> +	spin_unlock(&list_lock);
-> +
-> +	return &vmd->irqs[best];
-
-That looks smarter. Though we might need some more complex way to do
-that when interrupt affinity comes into play.
-
-> +static irqreturn_t vmd_irq(int irq, void *data)
-> +{
-> +	struct vmd_irq_list *irqs = data;
-> +	struct vmd_irq *vmdirq;
-> +
-> +	rcu_read_lock();
-> +	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
-> +		generic_handle_irq(vmdirq->virq);
-> +	rcu_read_unlock();
-> +
-> +	return IRQ_HANDLED;
-
-Please remind me, that I still need to fix that life time problem in
-the core.
-
-> +	for (i = 0; i < vmd->msix_count; i++) {
-> +		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
-> +		vmd->irqs[i].vmd_vector = vmd->msix_entries[i].vector;
-> +		vmd->irqs[i].index = i;
-> +
-> +		err = devm_request_irq(&dev->dev, vmd->irqs[i].vmd_vector,
-> +				vmd_irq, IRQF_SHARED, "vmd", &vmd->irqs[i]);
-
-This is a MSI interrupt which is never shared.
-
-Aside of the few nitpicks above I'm really happy with the interrupt
-side of that driver. Thanks for following up on all the comments!
-
-Thanks,
-
-	tglx
-
-
+> ---
+>  drivers/pci/host/pci-imx6.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 6f43086..e73b7f2 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -289,9 +289,9 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+>  
+>  	/* Some boards don't have PCIe reset GPIO. */
+>  	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> -		gpio_set_value(imx6_pcie->reset_gpio, 0);
+> +		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
+>  		msleep(100);
+> -		gpio_set_value(imx6_pcie->reset_gpio, 1);
+> +		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+>  	}
+>  	return 0;
+>  
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
