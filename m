@@ -1,88 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp05.in.ibm.com ([122.248.162.5]:58272 "EHLO
-	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965444AbbKDOYh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 09:24:37 -0500
-Received: from /spool/local
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 19:54:34 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 09/50] powerpc/powernv: Fix initial IO and M32 segmap
-Date: Thu,  5 Nov 2015 00:12:09 +1100
-Message-Id: <1446642770-4681-10-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:34677 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916AbbKYXqr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Nov 2015 18:46:47 -0500
+Received: by wmvv187 with SMTP id v187so8269951wmv.1
+        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2015 15:46:46 -0800 (PST)
+Date: Thu, 26 Nov 2015 00:46:22 +0100
+From: Bogicevic Sasa <brutallesale@gmail.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, wangyijing@huawei.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] drivers:pci:hotplug Fix all "space prohibited before
+ that ..."
+Message-ID: <20151125234622.GA2288@gmail.com>
+References: <1447590327-3496-1-git-send-email-brutallesale@gmail.com>
+ <20151125204424.GG8869@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <20151125204424.GG8869@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are two arrays for IO and M32 segment maps on every PHB.
-The index of the arrays are segment number and the value stored
-in the corresponding element is PE number, indicating the segment
-is assigned to the PE. Initially, all elements in those two arrays
-are zeroes, meaning all segments are assigned to PE#0. It's wrong.
+Sure thing, I am sending the new patch with all corrected 
 
-This fixes the initial values in the elements of those two arrays
-to IODA_INVALID_PE, meaning all segments aren't assigned to any
-PE. In order to use IODA_INVALID_PE (-1) to represent invalid PE
-number, the types of those two arrays are changed from "unsigned int"
-to "int".
+Thanks, Sasa
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 9 +++++++--
- arch/powerpc/platforms/powernv/pci.h      | 4 ++--
- 2 files changed, 9 insertions(+), 4 deletions(-)
-
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index b4932c3..7ee7cfe 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -3008,7 +3008,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	unsigned long size, m32map_off, pemap_off, iomap_off = 0;
- 	const __be64 *prop64;
- 	const __be32 *prop32;
--	int len;
-+	int i, len;
- 	u64 phb_id;
- 	void *aux;
- 	long rc;
-@@ -3101,8 +3101,13 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	aux = memblock_virt_alloc(size, 0);
- 	phb->ioda.pe_alloc = aux;
- 	phb->ioda.m32_segmap = aux + m32map_off;
--	if (phb->type == PNV_PHB_IODA1)
-+	for (i = 0; i < phb->ioda.total_pe_num; i++)
-+		phb->ioda.m32_segmap[i] = IODA_INVALID_PE;
-+	if (phb->type == PNV_PHB_IODA1) {
- 		phb->ioda.io_segmap = aux + iomap_off;
-+		for (i = 0; i < phb->ioda.total_pe_num; i++)
-+			phb->ioda.io_segmap[i] = IODA_INVALID_PE;
-+	}
- 	phb->ioda.pe_array = aux + pemap_off;
- 	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
- 
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index d11f0a5..2e01edd 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -148,8 +148,8 @@ struct pnv_phb {
- 			struct pnv_ioda_pe	*pe_array;
- 
- 			/* M32 & IO segment maps */
--			unsigned int		*m32_segmap;
--			unsigned int		*io_segmap;
-+			int			*m32_segmap;
-+			int			*io_segmap;
- 
- 			/* IRQ chip */
- 			int			irq_chip_init;
--- 
-2.1.0
-
+On 11/25, Bjorn Helgaas wrote:
+>Hi Bogicevic,
+>
+>On Sun, Nov 15, 2015 at 01:25:27PM +0100, Bogicevic Sasa wrote:
+>> This fixes all errors "space prohibited before that..." from
+>> checkpatch.pl
+>
+>I'd take this, but I'd prefer to fix everything under drivers/pci in a
+>single patch, and I see several other instances of this.  I just did this
+>to find them:
+>
+>  $ grep -r " ," drivers/pci/
+>
+>Can you expand this patch to fix them all?
+>
+>Thanks,
+>  Bjorn
+>
+>> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
+>> ---
+>>  drivers/pci/hotplug/pci_hotplug_core.c | 8 ++++----
+>>  1 file changed, 4 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+>> index d1fab97..2bac1b9 100644
+>> --- a/drivers/pci/hotplug/pci_hotplug_core.c
+>> +++ b/drivers/pci/hotplug/pci_hotplug_core.c
+>> @@ -45,10 +45,10 @@
+>>
+>>  #define MY_NAME	"pci_hotplug"
+>>
+>> -#define dbg(fmt, arg...) do { if (debug) printk(KERN_DEBUG "%s: %s: " fmt , MY_NAME , __func__ , ## arg); } while (0)
+>> -#define err(format, arg...) printk(KERN_ERR "%s: " format , MY_NAME , ## arg)
+>> -#define info(format, arg...) printk(KERN_INFO "%s: " format , MY_NAME , ## arg)
+>> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format , MY_NAME , ## arg)
+>> +#define dbg(fmt, arg...) do { if (debug) printk(KERN_DEBUG "%s: %s: " fmt, MY_NAME, __func__, ## arg); } while (0)
+>> +#define err(format, arg...) printk(KERN_ERR "%s: " format, MY_NAME, ## arg)
+>> +#define info(format, arg...) printk(KERN_INFO "%s: " format, MY_NAME, ## arg)
+>> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format, MY_NAME, ## arg)
+>>
+>>
+>>  /* local variables */
+>> --
+>> 2.1.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
