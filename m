@@ -1,291 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp09.in.ibm.com ([122.248.162.9]:40787 "EHLO
-	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965471AbbKDPPj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 10:15:39 -0500
-Received: from /spool/local
-	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 20:45:36 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 23/50] powerpc/powernv: Use PE instead of number during setup and release
-Date: Thu,  5 Nov 2015 00:12:23 +1100
-Message-Id: <1446642770-4681-24-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [Bugfix] x86/PCI: Fix regression caused by commit 4d6b4e69a245
+To: Keith Busch <keith.busch@intel.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>
+References: <1447648057-13644-1-git-send-email-jiang.liu@linux.intel.com>
+ <20151124164907.GA24819@localhost>
+ <CAJZ5v0irOUq6C9eSfCfmzyOiY1n1rUSxyUeUbvS9Nj0jNT2JrQ@mail.gmail.com>
+ <20151124230413.GA11608@localhost.localdomain>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	x86@kernel.org
+From: Arthur Marsh <arthur.marsh@internode.on.net>
+Message-ID: <5655019C.7070700@internode.on.net>
+Date: Wed, 25 Nov 2015 11:02:28 +1030
+MIME-Version: 1.0
+In-Reply-To: <20151124230413.GA11608@localhost.localdomain>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In current implementation, the PEs that are allocated or picked
-from the reserved list are identified by PE number. The PE instance
-has to be picked according to the PE number eventually. We have
-same issue when PE is released.
+Keith Busch wrote on 25/11/15 09:34:
+> On Tue, Nov 24, 2015 at 11:19:34PM +0100, Rafael J. Wysocki wrote:
+>> Quite frankly, I'm more likely to revert the offending commit at this
+>> point as that's not the only regression reported against it and the
+>> fix only helps in one case (out of three known to me).
+>
+> Using 4.4-rc1 and can confirm the patch fixes my regression report. The
+> revert also fixes it, so either way is good for me!
+>
 
-For pnv_ioda_pick_m64_pe() and pnv_ioda_alloc_pe(), this returns
-PE instance so that pnv_ioda_setup_bus_PE() can use the allocated
-or reserved PE instance directly. Also, pnv_ioda_setup_bus_PE()
-returns the reserved/allocated PE instance to be used in subsequent
-patches. On the other hand, pnv_ioda_free_pe() uses PE instance
-(not number) as its argument. No logical changes introduced.
+To re-cap, all was fine for me until:
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+4d6b4e69a245e9df4b84dba387596086cb66887d is the first bad commit
+commit 4d6b4e69a245e9df4b84dba387596086cb66887d
+Author: Jiang Liu <jiang.liu@linux.intel.com>
+Date:   Wed Oct 14 14:29:41 2015 +0800
+
+      x86/PCI/ACPI: Use common interface to support PCI host bridge
+
+      Use common interface to simplify ACPI PCI host bridge implementation.
+
+      Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+      Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+      Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+      Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+:040000 040000 a3447eea376b5a3e6f57deb35cf064c5481b45e3 
+f64d8e49fd87b776933dfa3dfefcb33509004d3f M      arch
+
+ From the boot-up I get the message as shown in the images at: 
+http://www.users.on.net/~arthur.marsh/20151107601.jpg and
+http://www.users.on.net/~arthur.marsh/20151107602.jpg
+
+The boot-up suggests trying rebooting with pci=alloc but that didn't help.
+
+The errors shown include
+"BAR 0: trying firmware assignment [io  size 0x0020]"
+"BAR 0: [io  size 0x0020] conflicts with PCI Bus #00 [io  0x0000-0xffff]
+"BAR 0: failed to assign [io  size 0x0020]
+
+Applying the following patch on top of the patch above from 14 October 
+2015 worked for me:
+
+
+ From 02818ba34bfa76d93f2a29c85660da0323b0b457 Mon Sep 17 00:00:00 2001
+From: Liu Jiang <jiang.liu@linux.intel.com>
+Date: Mon, 9 Nov 2015 13:36:48 +0800
+Subject: [PATCH]
+
+
+Signed-off-by: Liu Jiang <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 81 +++++++++++++++++--------------
- arch/powerpc/platforms/powernv/pci.h      |  2 +-
- 2 files changed, 46 insertions(+), 37 deletions(-)
+  arch/x86/pci/bus_numa.c |    3 +++
+  1 file changed, 3 insertions(+)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 488e0f8..ae82df1 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -152,7 +152,7 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
- 	pnv_ioda_init_pe(phb, pe_no);
- }
- 
--static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
-+static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
- {
- 	unsigned long pe;
- 
-@@ -160,19 +160,20 @@ static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
- 		pe = find_next_zero_bit(phb->ioda.pe_alloc,
- 					phb->ioda.total_pe_num, 0);
- 		if (pe >= phb->ioda.total_pe_num)
--			return IODA_INVALID_PE;
-+			return NULL;
- 	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
- 
--	pnv_ioda_init_pe(phb, pe);
--	return pe;
-+	return pnv_ioda_init_pe(phb, pe);
- }
- 
--static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
-+static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe)
- {
--	WARN_ON(phb->ioda.pe_array[pe].pdev);
-+	struct pnv_phb *phb = pe->phb;
-+
-+	WARN_ON(pe->pdev);
- 
--	memset(&phb->ioda.pe_array[pe], 0, sizeof(struct pnv_ioda_pe));
--	clear_bit(pe, phb->ioda.pe_alloc);
-+	memset(pe, 0, sizeof(struct pnv_ioda_pe));
-+	clear_bit(pe->pe_number, phb->ioda.pe_alloc);
- }
- 
- /* The default M64 BAR is shared by all PEs */
-@@ -332,7 +333,7 @@ static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
- 	}
- }
- 
--static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
-+static struct pnv_ioda_pe *pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- {
- 	struct pci_controller *hose = pci_bus_to_host(bus);
- 	struct pnv_phb *phb = hose->private_data;
-@@ -342,7 +343,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 
- 	/* Root bus shouldn't use M64 */
- 	if (pci_is_root_bus(bus))
--		return IODA_INVALID_PE;
-+		return NULL;
- 
- 	/* Allocate bitmap */
- 	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
-@@ -350,7 +351,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 	if (!pe_alloc) {
- 		pr_warn("%s: Out of memory !\n",
- 			__func__);
--		return IODA_INVALID_PE;
-+		return NULL;
- 	}
- 
- 	/* Figure out reserved PE numbers by the PE */
-@@ -363,7 +364,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 	 */
- 	if (bitmap_empty(pe_alloc, phb->ioda.total_pe_num)) {
- 		kfree(pe_alloc);
--		return IODA_INVALID_PE;
-+		return NULL;
- 	}
- 
- 	/*
-@@ -409,7 +410,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 	}
- 
- 	kfree(pe_alloc);
--	return master_pe->pe_number;
-+	return master_pe;
- }
- 
- static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
-@@ -988,28 +989,26 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
-  * subordinate PCI devices and buses. The second type of PE is normally
-  * orgiriated by PCIe-to-PCI bridge or PLX switch downstream ports.
-  */
--static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
-+static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- {
- 	struct pci_controller *hose = pci_bus_to_host(bus);
- 	struct pnv_phb *phb = hose->private_data;
--	struct pnv_ioda_pe *pe;
--	int pe_num = IODA_INVALID_PE;
-+	struct pnv_ioda_pe *pe = NULL;
- 
- 	/* Check if PE is determined by M64 */
- 	if (phb->pick_m64_pe)
--		pe_num = phb->pick_m64_pe(bus, all);
-+		pe = phb->pick_m64_pe(bus, all);
- 
- 	/* The PE number isn't pinned by M64 */
--	if (pe_num == IODA_INVALID_PE)
--		pe_num = pnv_ioda_alloc_pe(phb);
-+	if (!pe)
-+		pe = pnv_ioda_alloc_pe(phb);
- 
--	if (pe_num == IODA_INVALID_PE) {
-+	if (!pe) {
- 		pr_warning("%s: Not enough PE# available for PCI bus %04x:%02x\n",
- 			__func__, pci_domain_nr(bus), bus->number);
--		return;
-+		return NULL;
- 	}
- 
--	pe = &phb->ioda.pe_array[pe_num];
- 	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
- 	pe->pbus = bus;
- 	pe->pdev = NULL;
-@@ -1018,17 +1017,16 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- 
- 	if (all)
- 		pe_info(pe, "Secondary bus %d..%d associated with PE#%d\n",
--			bus->busn_res.start, bus->busn_res.end, pe_num);
-+			bus->busn_res.start, bus->busn_res.end, pe->pe_number);
- 	else
- 		pe_info(pe, "Secondary bus %d associated with PE#%d\n",
--			bus->busn_res.start, pe_num);
-+			bus->busn_res.start, pe->pe_number);
- 
- 	if (pnv_ioda_configure_pe(phb, pe)) {
- 		/* XXX What do we do here ? */
--		if (pe_num)
--			pnv_ioda_free_pe(phb, pe_num);
-+		pnv_ioda_free_pe(pe);
- 		pe->pbus = NULL;
--		return;
-+		return NULL;
- 	}
- 
- 	/* Associate it with all child devices */
-@@ -1036,6 +1034,8 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- 
- 	/* Put PE to the list */
- 	list_add_tail(&pe->list, &phb->ioda.pe_list);
-+
-+	return pe;
- }
- 
- static void pnv_ioda_setup_PEs(struct pci_bus *bus)
-@@ -1267,7 +1267,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
- 
- 		pnv_ioda_deconfigure_pe(phb, pe);
- 
--		pnv_ioda_free_pe(phb, pe->pe_number);
-+		pnv_ioda_free_pe(pe);
- 	}
- }
- 
-@@ -1276,6 +1276,7 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
- 	struct pci_bus        *bus;
- 	struct pci_controller *hose;
- 	struct pnv_phb        *phb;
-+	struct pnv_ioda_pe    *pe;
- 	struct pci_dn         *pdn;
- 	struct pci_sriov      *iov;
- 	u16                    num_vfs, i;
-@@ -1300,8 +1301,11 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
- 		/* Release PE numbers */
- 		if (pdn->m64_single_mode) {
- 			for (i = 0; i < num_vfs; i++) {
--				if (pdn->pe_num_map[i] != IODA_INVALID_PE)
--					pnv_ioda_free_pe(phb, pdn->pe_num_map[i]);
-+				if (pdn->pe_num_map[i] == IODA_INVALID_PE)
-+					continue;
-+
-+				pe = &phb->ioda.pe_array[pdn->pe_num_map[i]];
-+				pnv_ioda_free_pe(pe);
- 			}
- 		} else
- 			bitmap_clear(phb->ioda.pe_alloc, *pdn->pe_num_map, num_vfs);
-@@ -1354,9 +1358,8 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 
- 		if (pnv_ioda_configure_pe(phb, pe)) {
- 			/* XXX What do we do here ? */
--			if (pe_num)
--				pnv_ioda_free_pe(phb, pe_num);
- 			pe->pdev = NULL;
-+			pnv_ioda_free_pe(pe);
- 			continue;
- 		}
- 
-@@ -1374,6 +1377,7 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
- 	struct pci_bus        *bus;
- 	struct pci_controller *hose;
- 	struct pnv_phb        *phb;
-+	struct pnv_ioda_pe    *pe;
- 	struct pci_dn         *pdn;
- 	int                    ret;
- 	u16                    i;
-@@ -1416,11 +1420,13 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
- 		/* Calculate available PE for required VFs */
- 		if (pdn->m64_single_mode) {
- 			for (i = 0; i < num_vfs; i++) {
--				pdn->pe_num_map[i] = pnv_ioda_alloc_pe(phb);
--				if (pdn->pe_num_map[i] == IODA_INVALID_PE) {
-+				pe = pnv_ioda_alloc_pe(phb);
-+				if (!pe) {
- 					ret = -EBUSY;
- 					goto m64_failed;
- 				}
-+
-+				pdn->pe_num_map[i] = pe->pe_number;
- 			}
- 		} else {
- 			mutex_lock(&phb->ioda.pe_alloc_mutex);
-@@ -1465,8 +1471,11 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
- m64_failed:
- 	if (pdn->m64_single_mode) {
- 		for (i = 0; i < num_vfs; i++) {
--			if (pdn->pe_num_map[i] != IODA_INVALID_PE)
--				pnv_ioda_free_pe(phb, pdn->pe_num_map[i]);
-+			if (pdn->pe_num_map[i] == IODA_INVALID_PE)
-+				continue;
-+
-+			pe = &phb->ioda.pe_array[pdn->pe_num_map[i]];
-+			pnv_ioda_free_pe(pe);
- 		}
- 	} else
- 		bitmap_clear(phb->ioda.pe_alloc, *pdn->pe_num_map, num_vfs);
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 5df945f..e55ab0e 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -105,7 +105,7 @@ struct pnv_phb {
- 	int (*init_m64)(struct pnv_phb *phb);
- 	void (*reserve_m64_pe)(struct pci_bus *bus,
- 			       unsigned long *pe_bitmap, bool all);
--	int (*pick_m64_pe)(struct pci_bus *bus, bool all);
-+	struct pnv_ioda_pe *(*pick_m64_pe)(struct pci_bus *bus, bool all);
- 	int (*get_pe_state)(struct pnv_phb *phb, int pe_no);
- 	void (*freeze_pe)(struct pnv_phb *phb, int pe_no);
- 	int (*unfreeze_pe)(struct pnv_phb *phb, int pe_no, int opt);
--- 
-2.1.0
+diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+index 7bcf06a7cd12..022d83158cdb 100644
+--- a/arch/x86/pci/bus_numa.c
++++ b/arch/x86/pci/bus_numa.c
+@@ -51,6 +51,8 @@ void x86_pci_root_bus_resources(int bus, struct 
+list_head *resources)
+          pci_add_resource(resources, &info->busn);
 
+      list_for_each_entry(root_res, &info->resources, list) {
++        pci_add_resource(resources, &root_res->res);
++#if 0
+          struct resource *res;
+          struct resource *root;
+
+@@ -61,6 +63,7 @@ void x86_pci_root_bus_resources(int bus, struct 
+list_head *resources)
+          else
+              root = &iomem_resource;
+          insert_resource(root, res);
++#endif
+      }
+      return;
+
+###
+
+The patch postd by Jian Liu on 16 November 2015 "[Bugfix] x86/PCI: Fix 
+regression caused by commit 4d6b4e69a245" had *not* been seen or tested 
+by me before being posted to the linux-acpi list and when I did test it 
+(after removing the patch above from 9 November 2015), things broke:
+http://www.users.on.net/~arthur.marsh/20151116611.jpg
+
+So if "commit 4d6b4e69a245e9df4b84dba387596086cb66887d
+x86/PCI/ACPI: Use common interface to support PCI host bridge" stays, 
+then the patch "16 November 2015 [Bugfix] x86/PCI: Fix regression caused 
+by commit 4d6b4e69a245" would need to go and the patch above from 9 
+November 2015 would need to be accepted into the mainline for my machine 
+to boot from the mainline code.
+
+Arthur.
