@@ -1,70 +1,59 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 23 Nov 2015 17:17:44 -0600
-From: Rob Herring <robh@kernel.org>
-To: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>
-Subject: Re: [PATCH v3 3/6] DT: PCI: qcom: Document PCIe devicetree bindings
-Message-ID: <20151123231744.GA14078@rob-hp-laptop>
-References: <cover.1448270813.git.stanimir.varbanov@linaro.org>
- <8fd3e7d1662f37abe549127d179c315dff3210d8.1448270813.git.stanimir.varbanov@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8fd3e7d1662f37abe549127d179c315dff3210d8.1448270813.git.stanimir.varbanov@linaro.org>
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>, <linux-pci@vger.kernel.org>,
+	<linux-sh@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+Subject: [PATCH v2 3/3] PCI: pcie-rcar: Add support for R-Car H3.
+Date: Wed, 25 Nov 2015 15:30:39 +0000
+Message-Id: <1448465439-2132-4-git-send-email-phil.edworthy@renesas.com>
+In-Reply-To: <1448465439-2132-1-git-send-email-phil.edworthy@renesas.com>
+References: <1448465439-2132-1-git-send-email-phil.edworthy@renesas.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 23, 2015 at 11:29:00AM +0200, Stanimir Varbanov wrote:
-> From: Stanimir Varbanov <svarbanov@mm-sol.com>
-> 
-> Document Qualcomm PCIe driver devicetree bindings.
-> 
-> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-> Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-> ---
->  .../devicetree/bindings/pci/qcom,pcie.txt          |  231 ++++++++++++++++++++
->  1 file changed, 231 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> new file mode 100644
-> index 000000000000..d7640d45fa31
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> @@ -0,0 +1,231 @@
-> +* Qualcomm PCI express root complex
-> +
-> +- compatible:
-> +	Usage: required
-> +	Value type: <stringlist>
-> +	Definition: Value shall include
-> +		    - "qcom,pcie-v0" for apq/ipq8064
-> +		    - "qcom,pcie-v1" for apq8084
+From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
 
-Use chip part numbers, not versions.
+R-Car H3 device is r8a7795
 
-Also, shouldn't you have the Designware compatible in addition.
+Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+Acked-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+---
+v2: No changes
+---
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 3 ++-
+ drivers/pci/host/pcie-rcar.c                       | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-[...]
-
-> +
-> +- <name>-gpio:
-
-Use -gpios
-
-> +	Usage: optional
-> +	Value type: <prop-encoded-array>
-> +	Definition: List of phandle and gpio specifier pairs. Should contain
-> +		    - "perst"  PCIe endpoint reset signal line
-> +		    - "pewake" PCIe endpoint wake signal line
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+index 29d3b98..ab2e75f 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -2,7 +2,8 @@
+ 
+ Required properties:
+ - compatible: should contain one of the following
+-	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791"
++	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791",
++	"renesas,pcie-r8a7795"
+ - reg: base address and length of the pcie controller registers.
+ - #address-cells: set to <3>
+ - #size-cells: set to <2>
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index d12faf4..0c819a00 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -917,6 +917,7 @@ static const struct of_device_id rcar_pcie_of_match[] = {
+ 	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
+ 	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
+ 	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
++	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
+-- 
+2.5.0
 
