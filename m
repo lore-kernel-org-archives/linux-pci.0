@@ -1,84 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50272 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:59553 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753152AbbKXRDh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Nov 2015 12:03:37 -0500
-Date: Tue, 24 Nov 2015 11:03:31 -0600
+	id S1751566AbbKYSDq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Nov 2015 13:03:46 -0500
+Date: Wed, 25 Nov 2015 12:03:42 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vladis Dronov <vdronov@redhat.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: fix invalid ROM content detection in
- pci_get_rom_size()
-Message-ID: <20151124170331.GB24819@localhost>
-References: <1446812196-3497-1-git-send-email-vdronov@redhat.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Ley Foon Tan <lftan@altera.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	rfi@lists.rocketboards.org, linux-pci@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch] PCI: altera: fix loop in tlp_read_packet()
+Message-ID: <20151125180342.GC8869@localhost>
+References: <20151104133936.GI20966@mwanda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1446812196-3497-1-git-send-email-vdronov@redhat.com>
+In-Reply-To: <20151104133936.GI20966@mwanda>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Vladis,
-
-On Fri, Nov 06, 2015 at 01:16:36PM +0100, Vladis Dronov wrote:
-> Make pci_get_rom_size() to check all bytes in the PCI ROM signature
-> and issue a warning if the values are not following the standard.
-
-Can you include a reference to the spec, please?
-
-Does this fix a bug?  If so, please include a reference to that as well.
-
->From reading the patch, I don't think it would change the return value; it
-looks like the only change is that we'll emit a warning in some cases where
-we previously didn't.  That does seem worthwhile, but it doesn't quite
-match your changelog, which implies that we'll check more bytes.
-
-While you're at it, maybe you could include the unexpected values in the
-error messages.
-
-Thanks,
-  Bjorn
-
-> Signed-off-by: Vladis Dronov <vdronov@redhat.com>
-> ---
->  drivers/pci/rom.c | 17 ++++++-----------
->  1 file changed, 6 insertions(+), 11 deletions(-)
+On Wed, Nov 04, 2015 at 04:39:36PM +0300, Dan Carpenter wrote:
+> The problem is that TLP_LOOP is 500 and the "loop" variable was a u8 so
+> "loop < TLP_LOOP" is always true.  We only need this condition to work
+> if there is a problem so it would have been easy to miss this in
+> testing.  Anyway, lets just make it a normal for loop with "int i"
+> instead of over thinking things and making it complicated.
 > 
-> diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-> index eb0ad53..34f8b2c 100644
-> --- a/drivers/pci/rom.c
-> +++ b/drivers/pci/rom.c
-> @@ -77,22 +77,17 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
->  	do {
->  		void __iomem *pds;
->  		/* Standard PCI ROMs start out with these bytes 55 AA */
-> -		if (readb(image) != 0x55) {
-> -			dev_err(&pdev->dev, "Invalid ROM contents\n");
-> +		if ((readb(image) != 0x55) || (readb(image + 1) != 0xAA)) {
-> +			dev_err(&pdev->dev, "Invalid PCI ROM signature\n");
->  			break;
->  		}
-> -		if (readb(image + 1) != 0xAA)
-> -			break;
->  		/* get the PCI data structure and check its signature */
->  		pds = image + readw(image + 24);
-> -		if (readb(pds) != 'P')
-> -			break;
-> -		if (readb(pds + 1) != 'C')
-> -			break;
-> -		if (readb(pds + 2) != 'I')
-> -			break;
-> -		if (readb(pds + 3) != 'R')
-> +		if ((readb(pds) != 'P') || (readb(pds + 1) != 'C') ||
-> +			(readb(pds + 2) != 'I') || (readb(pds + 3) != 'R')) {
-> +			dev_err(&pdev->dev, "Invalid PCI ROM data signature\n");
->  			break;
-> +		}
->  		last_image = readb(pds + 21) & 0x80;
->  		length = readw(pds + 16);
->  		image += length * 512;
-> -- 
-> 2.6.2
+> Fixes: 6bb4dd154ae8 ('PCI: altera: Add Altera PCIe host controller driver')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+Applied with Ley Foon's ack to pci/host-altera for v4.5, thanks!
+
 > 
+> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+> index e5dda38..b05de63 100644
+> --- a/drivers/pci/host/pcie-altera.c
+> +++ b/drivers/pci/host/pcie-altera.c
+> @@ -166,16 +166,16 @@ static bool altera_pcie_valid_config(struct altera_pcie *pcie,
+>  
+>  static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
+>  {
+> -	u8 loop;
+>  	bool sop = 0;
+>  	u32 ctrl;
+>  	u32 reg0, reg1;
+> +	int i;
+>  
+>  	/*
+>  	 * Minimum 2 loops to read TLP headers and 1 loop to read data
+>  	 * payload.
+>  	 */
+> -	for (loop = 0; loop < TLP_LOOP; loop++) {
+> +	for (i = 0; i < TLP_LOOP; i++) {
+>  		ctrl = cra_readl(pcie, RP_RXCPL_STATUS);
+>  		if ((ctrl & RP_RXCPL_SOP) || (ctrl & RP_RXCPL_EOP) || sop) {
+>  			reg0 = cra_readl(pcie, RP_RXCPL_REG0);
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
