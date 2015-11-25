@@ -1,95 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:36021 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161926AbbKTDPC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Nov 2015 22:15:02 -0500
-Received: by pacdm15 with SMTP id dm15so101597003pac.3
-        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2015 19:15:01 -0800 (PST)
-From: Daniel Axtens <dja@axtens.net>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-Cc: devicetree@vger.kernel.org, aik@ozlabs.ru,
-	linux-pci@vger.kernel.org, panto@antoniou-consulting.com,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	bhelgaas@google.com, frowand.list@gmail.com
-Subject: Re: [PATCH v7 20/50] powerpc/powernv: Improve DMA32 segment calculation
-In-Reply-To: <1446642770-4681-21-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1446642770-4681-21-git-send-email-gwshan@linux.vnet.ibm.com>
-Date: Fri, 20 Nov 2015 14:14:48 +1100
-Message-ID: <877fldwedz.fsf@gamma.ozlabs.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:50260 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750811AbbKYXOj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Nov 2015 18:14:39 -0500
+Date: Wed, 25 Nov 2015 17:14:35 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tim Harvey <tharvey@gateworks.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: Re: [PATCH v2] PCI: imx6: add dt prop for link gen, default to gen1
+Message-ID: <20151125231435.GI8869@localhost>
+References: <1446735481-27326-1-git-send-email-tharvey@gateworks.com>
+ <1447942365-11662-1-git-send-email-tharvey@gateworks.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1447942365-11662-1-git-send-email-tharvey@gateworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi Tim,
 
+On Thu, Nov 19, 2015 at 06:12:45AM -0800, Tim Harvey wrote:
+> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
+> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
+> external clock source is present and supplied back to the IMX6 PCIe core
+> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
+> 
+> Add a dt property to specify gen1 vs gen2 and check this before allowing
+> a Gen2 link.
+> 
+> We default to Gen1 if the property is not present because at this time there
+> are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
+> 
+> In order to be Gen2 compliant on IMX6 you need to:
+>  - have a Gen2 compliant external clock generator and route that clock back
+>    to either LVDS CLK1 or LVDS CLK2 as an input.
+>    (see IMX6SX-SabreSD reference design)
+>  - specify this clock in the pcie node in the dt
+>    (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
+>     IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
+> 
+> [1] https://community.freescale.com/message/453209
+> 
+> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+> ---
+> v2:
+>  - moved dt property to designware core
+> 
+>  .../devicetree/bindings/pci/designware-pcie.txt          |  1 +
+>  drivers/pci/host/pci-imx6.c                              | 16 ++++++++++------
+>  drivers/pci/host/pcie-designware.c                       |  4 ++++
+>  drivers/pci/host/pcie-designware.h                       |  1 +
+>  4 files changed, 16 insertions(+), 6 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> index 9f4faa8..a9a94b9 100644
+> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> @@ -26,3 +26,4 @@ Optional properties:
+>  - bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
+>    specify this property, to keep backwards compatibility a range of 0x00-0xff
+>    is assumed if not present)
+> +- max-link-speed: Specify PCI gen for link capability (ie 2 for gen2)
 
-> +	total_weight =3D pnv_pci_ioda_total_dma_weight(phb);
-> +	weight =3D pnv_pci_ioda_pe_dma_weight(pe);
-> +	if (!total_weight || !weight)
-> +		return;
+Is there some sort of DT or OF spec that lists "max-link-speed" as a
+generic property?  I see Lucas' desire to have this be common across
+DesignWare PCIe cores.  Should it be moved up a level even from there,
+i.e., to bindings/pci/pci.txt?
+
+It might be worth mentioning in pci/fsl,imx6q-pcie.txt that we limit
+the link to gen1 unless max-link-speed is present and has the value
+"2".
+
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 8f3a981..6a9f310 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -392,11 +392,15 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+>  	if (ret)
+>  		return ret;
+>  
+> -	/* Allow Gen2 mode after the link is up. */
+> -	tmp = readl(pp->dbi_base + PCIE_RC_LCR);
+> -	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+> -	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+> -	writel(tmp, pp->dbi_base + PCIE_RC_LCR);
+> +	if (pp->link_gen == 2) {
+> +		/* Allow Gen2 mode after the link is up. */
+> +		tmp = readl(pp->dbi_base + PCIE_RC_LCR);
+> +		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+> +		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+> +		writel(tmp, pp->dbi_base + PCIE_RC_LCR);
+> +	} else {
+> +		dev_info(pp->dev, "Link: Gen2 disabled\n");
+> +	}
+>  
+>  	/*
+>  	 * Start Directed Speed Change so the best possible speed both link
+> @@ -420,7 +424,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+>  	}
+>  
+>  	tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
+> -	dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
+> +	dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
+>  	return 0;
+>  }
+>  
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 52aa6e3..7aa81ff 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -487,6 +487,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  		return -EINVAL;
+>  	}
+>  
+> +	pp->link_gen = -1;
+> +	if (of_property_read_u32(np, "max-link-speed", &ret) == 0)
+> +		pp->link_gen = ret;
 > +
-> +	segs =3D (weight * phb->ioda.dma32_count) / total_weight;
-> +	if (!segs)
-> +		segs =3D 1;
-
-I'm a little bit concerned about rounding here. Having said that I've
-also lost track of dma32_count: if it's big then rounding won't
-matter. What's a typical dma32_count?
-
-> +
-> +	/*
-> +	 * Allocate continuous DMA32 segments. We begin with the expected
-Very much a nit pick, but I think you mean s/continuous/contiguous/.
-
-> +	 * number of segments. With one more attempt, the number of DMA32
-> +	 * segments to be allocated is decreased by one until one segment
-> +	 * is allocated successfully.
-> +	 */
-> +	while (segs) {
-> +		found =3D false;
-> +		for (base =3D 0; base <=3D phb->ioda.dma32_count - segs; base++) {
-> +			for (i =3D base; i < base + segs; i++) {
-> +				if (phb->ioda.dma32_segmap[i] !=3D
-> +				    IODA_INVALID_PE)
-> +					break;
-> +			}
-> +
-> +			if (i >=3D base + segs) {
-How would `i' ever be greater than base + segs? Should the test just
-be 'if (i =3D=3D base + segs) {'=20
-> +				found =3D true;
-> +				break;
-> +			}
-> +		}
-
-Regards,
-Daniel
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: GPGTools - https://gpgtools.org
-
-iQIcBAEBCgAGBQJWTpAoAAoJEPC3R3P2I92FZSAP+QHwd81bGja1fkxHlgO/EZNc
-7iO8Zhi53J6iWCHZ3Kbu5D1k379l1+ouWiOBzIsxa1MbmVsWHn0xIrieGgyuS++6
-jI6V2s1kOTaAImRBFYS8Zk80K2AGbm9//FXNwI/8crX44F+O/KgfDw9XRyV/YvFp
-BRmn+M1LjDkJqne9n4+2/NweevwKk8UtlqReoZbY+WLxtHhEGTs7WusT+Ii0lkQ5
-EjFCdOysnWr7oybiaJGkMf7k1oU/H3+yrgTYKjQedEi5nqpa7y8NNBlvVUIKDPzm
-gx7tT/SPlB57rETODf62+dLIsHjNAhzGkiUb4w/3bHutXsaRTckwdPyOZs8vz6RD
-5VAsVU9McxYWLf0k+lFbwO65xQoiBJeblUjjr0c1228959oensKMQ3CL4ezWLA1r
-AY0CrKkCq+1bvFsJDWbVarnKuVenVdnekR5U2mCyV4Ns7Z53WWDmWSik1rFyF/bp
-OM4gGi8Uue9w4gXwmQJ3veBxZQ+ruFPozY6S4IM1m9nwnBUiLc5w7U/Ui5g71Vj2
-9PGGWWbDABGQzUIkQSNxZ4DUoGRnhlfFSIXHLAfKsQ160zQ72bOtPHKlQmHLvVJ9
-AkANhLLtbs6pAEr/McWIMvl/yM+4hc+bdg2gxCcoOOp/xnnWNw/40OOr5byVhWg0
-eS8k32r6Mmwch17rvnKb
-=OjyT
------END PGP SIGNATURE-----
---=-=-=--
+>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>  		if (!pp->ops->msi_host_init) {
+>  			pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index d0bbd27..5ce821d 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -48,6 +48,7 @@ struct pcie_port {
+>  	struct resource		busn;
+>  	int			irq;
+>  	u32			lanes;
+> +	int			link_gen;
+>  	struct pcie_host_ops	*ops;
+>  	int			msi_irq;
+>  	struct irq_domain	*irq_domain;
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
