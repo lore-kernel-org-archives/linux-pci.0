@@ -1,69 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 25 Nov 2015 09:56:14 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Amit Tomer <amittomer25@gmail.com>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	Michal Simek <michals@xilinx.com>,
-	"rjui@broadcom.com" <rjui@broadcom.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"sbranden@broadcom.com" <sbranden@broadcom.com>,
-	"dhdang@apm.com" <dhdang@apm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"galak@codeaurora.org" <galak@codeaurora.org>
-Subject: Re: [PATCH v9] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Message-ID: <20151125095614.523cd8b7@arm.com>
-In-Reply-To: <CABHD4K9PH-1tpwmxmPSBK3dW04G3XMfNtPFqtWFb7gnThe=uNQ@mail.gmail.com>
-References: <1447911323-12567-1-git-send-email-bharatku@xilinx.com>
-	<20151124173556.18aff6b5@arm.com>
-	<8520D5D51A55D047800579B0941471982586607F@XAP-PVEXMBX01.xlnx.xilinx.com>
-	<20151125075018.68e97010@arm.com>
-	<CABHD4K9PH-1tpwmxmPSBK3dW04G3XMfNtPFqtWFb7gnThe=uNQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor3.renesas.com ([210.160.252.173]:46712 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752337AbbKYPav (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Nov 2015 10:30:51 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>, <linux-pci@vger.kernel.org>,
+	<linux-sh@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+Subject: [Resend: PATCH v2 0/3] Fix rcar-pcie for arm64
+Date: Wed, 25 Nov 2015 15:30:36 +0000
+Message-Id: <1448465439-2132-1-git-send-email-phil.edworthy@renesas.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 25 Nov 2015 14:23:29 +0530
-Amit Tomer <amittomer25@gmail.com> wrote:
+The first patches fixes the build problem, and the second patch reverts the
+patch that removed the driver from arm64 builds. The final patch add a compat
+string for the r8a7795 (arm64) device.
 
-> Sorry to intervene but just trying to learn from your comments.
-> 
->  > You have plenty, and that's the whole of your device space. *All of it*. So
-> >   just take the base address of your PCIe controller, and be done with
-> >   it.
-> 
-> but isn't few of PCIe controller's registers itself are mapped
-> here(base address). So, how can we use this address for MSI?
+Tested on arm Koelsch board, all ok.
 
-You can, because the PCIe controller never writes to itself. If it
-writes to that base address, then it *is* the MSI doorbell and the
-bridge will hopefully do the right thing.
+Tested on arm64 Salvator-X board using renesas-drivers-2015-10-27-v4.3-rc7 from
+git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-drivers.git with PCI
+next merged. 
+Apart from patches to add the PCIe clock and DT nodes, it also needs this fix:
+("PCI: MSI: Only use the generic MSI layer when domain is hierarchical")
 
-> Or you said from base address of PCIe controller, find an offset that
-> can be used as MSI address?
+Resent with whole series marked as v2 and acks, etc added.
 
-That works as well. Given the description of the HW we've been given,
-any address will do, as long as it is behind the PCIe RC.
+Harunobu Kurokawa (1):
+  PCI: pcie-rcar: Add support for R-Car H3.
 
-Thanks,
+Phil Edworthy (2):
+  PCI: rcar: Convert to DT resource parsing API
+  Revert "PCI: rcar: Build pcie-rcar.c only on ARM"
 
-	M.
+ Documentation/devicetree/bindings/pci/rcar-pci.txt |   3 +-
+ drivers/pci/host/Kconfig                           |   3 +-
+ drivers/pci/host/pcie-rcar.c                       | 117 +++++++++++++--------
+ 3 files changed, 77 insertions(+), 46 deletions(-)
+
 -- 
-Jazz is not dead. It just smells funny.
+2.5.0
+
