@@ -1,224 +1,433 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [Patch v7 4/7] PCI/ACPI: Add interface acpi_pci_root_create()
-To: Jiang Liu <jiang.liu@linux.intel.com>
-References: <1444804182-6596-1-git-send-email-jiang.liu@linux.intel.com>
- <1444804182-6596-5-git-send-email-jiang.liu@linux.intel.com>
- <563B65EE.7000406@semihalf.com> <20151105181959.GA352@red-moon>
- <563C6A5F.5030500@linux.intel.com> <563C82FA.7050707@semihalf.com>
- <563C930F.4060206@linux.intel.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+Date: Wed, 25 Nov 2015 11:06:52 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <563C9FBE.2090303@semihalf.com>
-Date: Fri, 6 Nov 2015 13:40:30 +0100
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [RFC PATCH] PCI/pci-host-generic: Add support for Cavium Thunder
+ fixed BARs.
+Message-ID: <20151125170652.GC1380@localhost>
+References: <1443488184-12633-1-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <563C930F.4060206@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443488184-12633-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06.11.2015 12:46, Jiang Liu wrote:
-> On 2015/11/6 18:37, Tomasz Nowicki wrote:
->> On 06.11.2015 09:52, Jiang Liu wrote:
->>> On 2015/11/6 2:19, Lorenzo Pieralisi wrote:
->>>> On Thu, Nov 05, 2015 at 03:21:34PM +0100, Tomasz Nowicki wrote:
->>>>> On 14.10.2015 08:29, Jiang Liu wrote:
->>>>
->>>> [...]
->>>>
->>>>>> +static void acpi_pci_root_validate_resources(struct device *dev,
->>>>>> +                         struct list_head *resources,
->>>>>> +                         unsigned long type)
->>>>>> +{
->>>>>> +    LIST_HEAD(list);
->>>>>> +    struct resource *res1, *res2, *root = NULL;
->>>>>> +    struct resource_entry *tmp, *entry, *entry2;
->>>>>> +
->>>>>> +    BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
->>>>>> +    root = (type & IORESOURCE_MEM) ? &iomem_resource :
->>>>>> &ioport_resource;
->>>>>> +
->>>>>> +    list_splice_init(resources, &list);
->>>>>> +    resource_list_for_each_entry_safe(entry, tmp, &list) {
->>>>>> +        bool free = false;
->>>>>> +        resource_size_t end;
->>>>>> +
->>>>>> +        res1 = entry->res;
->>>>>> +        if (!(res1->flags & type))
->>>>>> +            goto next;
->>>>>> +
->>>>>> +        /* Exclude non-addressable range or non-addressable
->>>>>> portion */
->>>>>> +        end = min(res1->end, root->end);
->>>>>> +        if (end <= res1->start) {
->>>>>> +            dev_info(dev, "host bridge window %pR (ignored, not
->>>>>> CPU addressable)\n",
->>>>>> +                 res1);
->>>>>> +            free = true;
->>>>>> +            goto next;
->>>>>> +        } else if (res1->end != end) {
->>>>>> +            dev_info(dev, "host bridge window %pR ([%#llx-%#llx]
->>>>>> ignored, not CPU addressable)\n",
->>>>>> +                 res1, (unsigned long long)end + 1,
->>>>>> +                 (unsigned long long)res1->end);
->>>>>> +            res1->end = end;
->>>>>> +        }
->>>>>> +
->>>>>> +        resource_list_for_each_entry(entry2, resources) {
->>>>>> +            res2 = entry2->res;
->>>>>> +            if (!(res2->flags & type))
->>>>>> +                continue;
->>>>>> +
->>>>>> +            /*
->>>>>> +             * I don't like throwing away windows because then
->>>>>> +             * our resources no longer match the ACPI _CRS, but
->>>>>> +             * the kernel resource tree doesn't allow overlaps.
->>>>>> +             */
->>>>>> +            if (resource_overlaps(res1, res2)) {
->>>>>> +                res2->start = min(res1->start, res2->start);
->>>>>> +                res2->end = max(res1->end, res2->end);
->>>>>> +                dev_info(dev, "host bridge window expanded to %pR;
->>>>>> %pR ignored\n",
->>>>>> +                     res2, res1);
->>>>>> +                free = true;
->>>>>> +                goto next;
->>>>>> +            }
->>>>>> +        }
->>>>>> +
->>>>>> +next:
->>>>>> +        resource_list_del(entry);
->>>>>> +        if (free)
->>>>>> +            resource_list_free_entry(entry);
->>>>>> +        else
->>>>>> +            resource_list_add_tail(entry, resources);
->>>>>> +    }
->>>>>> +}
->>>>>> +
->>>>>> +int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
->>>>>> +{
->>>>>> +    int ret;
->>>>>> +    struct list_head *list = &info->resources;
->>>>>> +    struct acpi_device *device = info->bridge;
->>>>>> +    struct resource_entry *entry, *tmp;
->>>>>> +    unsigned long flags;
->>>>>> +
->>>>>> +    flags = IORESOURCE_IO | IORESOURCE_MEM |
->>>>>> IORESOURCE_MEM_8AND16BIT;
->>>>>> +    ret = acpi_dev_get_resources(device, list,
->>>>>> +                     acpi_dev_filter_resource_type_cb,
->>>>>> +                     (void *)flags);
->>>>>> +    if (ret < 0)
->>>>>> +        dev_warn(&device->dev,
->>>>>> +             "failed to parse _CRS method, error code %d\n", ret);
->>>>>> +    else if (ret == 0)
->>>>>> +        dev_dbg(&device->dev,
->>>>>> +            "no IO and memory resources present in _CRS\n");
->>>>>> +    else {
->>>>>> +        resource_list_for_each_entry_safe(entry, tmp, list) {
->>>>>> +            if (entry->res->flags & IORESOURCE_DISABLED)
->>>>>> +                resource_list_destroy_entry(entry);
->>>>>> +            else
->>>>>> +                entry->res->name = info->name;
->>>>>> +        }
->>>>>> +        acpi_pci_root_validate_resources(&device->dev, list,
->>>>>> +                         IORESOURCE_MEM);
->>>>>> +        acpi_pci_root_validate_resources(&device->dev, list,
->>>>>> +                         IORESOURCE_IO);
->>>>>
->>>>> It is not clear to me why we need these two calls above ^^^. We are
->>>>> using pci_acpi_root_add_resources(info) later. Is it not enough?
->>>>>
->>>>> Also, I cannot use acpi_pci_probe_root_resources() in my ARM64 PCI
->>>>> driver. It is because acpi_dev_get_resources is adding
->>>>> translation_offset to IO ranges start address and then:
->>>>> acpi_pci_root_validate_resources(&device->dev, list,
->>>>>                   IORESOURCE_IO);
->>>>> rejects that IO regions as it is out of my 0x0-SZ_16M window.
->>>>>
->>>>> Does acpi_pci_probe_root_resources meant to be x86 specific and I
->>>>> should avoid using it?
->>>>
->>>> IIUC, you _have_ to have the proper translation_offset to map the bridge
->>>> window into the IO address space:
->>>>
->>>> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-June/348708.html
->>>>
->>>>
->>>> Then, using the offset, you should do something ia64 does, namely,
->>>> retrieve the CPU address corresponding to IO space (see
->>>> arch/ia64/pci/pci.c
->>>> - add_io_space()) and map it in the physical address space by using
->>>> pci_remap_iospace(), it is similar to what we have to do with DT.
->>>>
->>>> It is extremely confusing and I am not sure I got it right myself,
->>>> I am still grokking ia64 code to understand what it really does.
->>>>
->>>> So basically, the IO bridge window coming from acpi_dev_get_resource()
->>>> should represent the IO space in 0 - 16M, IIUC.
->>>>
->>>> By using the offset (that was initialized using translation_offset) and
->>>> the resource->start, you can retrieve the cpu address that you need to
->>>> actually map the IO space, since that's what we do on ARM (ie the
->>>> IO resource is an offset into the virtual address space set aside
->>>> for IO).
->>>>
->>>> Confusing, to say the least. Jiang, did I get it right ?
->>> Hi Lorenzo and Tomasz,
->>>      With a cup of coffee, I got myself awake eventually:)
->>> Now we are going to talk about IO port on IA64, really a little
->>> complex:( Actually there are two types of translation.
->>> 1) A PCI domain has a 24-bit IO port address space, there may
->>> be multiple IO port address spaces in systems with multiple PCI
->>> domains. So the first type of translation is to translate domain
->>> specific IO port address into system global IO port address
->>> (iomem_resource) by
->>>     res->start = acpi_des->start + acpi_des->translation_offset
->>>
->>> 2) IA64 needs to map IO port address spaces into MMIO address
->>> space because it has no instructions to access IO ports directly.
->>> So IA64 has reserved a MMIO range to map IO port address spaces.
->>> This type of translation relies on architecture specific information
->>> instead of ACPI descriptors.
->>>
->>> On the other hand, ACPI specification has defined  "I/O to Memory
->>> Translation" flag and "Memory to I/O Translation" flag in
->>> ACPI Extended Address Space Descriptor,
->>
->> Based on 2) and above, does it mean IA64 should use "ACPI Extended
->> Address Space Descriptor" for its PCI bridge IO windows only?
->>
->>   but current implementation
->>> doesn't really support such a use case. So we need to find a way
->>> out here. Could you please help to provide more information about
->>> PCI host bridge resource descriptor implementation details on
->>> ARM64?
->>>
->>
->> Sure, ARM64 (0-16M IO space) QEMU example:
->> DWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
->>           0x00000000,         // Granularity
->>           0x00000000,         // Range Minimum
->>           0x0000FFFF,         // Range Maximum
->>           0x3EFF0000,         // Translation Offset
->>           0x00010000,         // Length
->>           ,, , TypeStatic)
-> The above DWordIO resource descriptor doesn't confirm to the ACPI spec.
-> According to my understanding, ARM/ARM64 has no concept of IO port
-> address space, so the PCI host bridge will map IO port on PCI side
-> onto MMIO on host side. In other words, PCI host bridge on ARM64
-> implement a IO Port->MMIO translation instead of a IO Port->IO Port
-> translation. If that's true, it should use 'TypeTranslation' instead
-> of 'TypeStatic'. And kernel ACPI resource parsing interface doesn't
-> support 'TypeTranslation' yet, so we need to find a solution for it.
+Hi David,
 
-I think you are right, we need TypeTranslation flag for ARM64 DWordIO 
-descriptors and an extra kernel patch to support it.
+On Mon, Sep 28, 2015 at 05:56:24PM -0700, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> Early versions of the Cavium Thunder CN88XX processor are missing
+> Enhanced Allocation (EA) capabilities for the fixed BAR addresses used
+> by the on-SoC hardware blocks.
+> 
+> Add config access functions that synthesize the missing EA
+> capabilities for versions that are missing that information.  Since
+> this is a little hacky, gate the inclusion of the code with a new
+> Kconfig variable.
+> 
+> Signed-off-by: David Daney <david.daney@cavium.com>
 
-Thanks,
-Tomasz
+What about this one?  Do we still need it?  This version looks like it
+still has some debug code and it feels like a lot of hard-coding of
+config offsets; it'd be nice if it could be more table-driven.  But
+maybe this isn't needed anymore anyway.
+
+Bjorn
+
+> ---
+> 
+> As suggested by Bjorn Helgaas...  It is RFC at this point, but this is
+> working well for me.
+> 
+> Depends on:
+> 
+> https://lkml.org/lkml/2015/9/28/796
+> 
+>  drivers/pci/host/Kconfig                  |   9 +
+>  drivers/pci/host/Makefile                 |   1 +
+>  drivers/pci/host/pci-host-generic.c       |  22 ++-
+>  drivers/pci/host/thunder_ecam_config_io.c | 273 ++++++++++++++++++++++++++++++
+>  4 files changed, 304 insertions(+), 1 deletion(-)
+>  create mode 100644 drivers/pci/host/thunder_ecam_config_io.c
+> 
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index d5e58ba..9f3a9cd 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -58,6 +58,15 @@ config PCI_HOST_GENERIC
+>  	  Say Y here if you want to support a simple generic PCI host
+>  	  controller, such as the one emulated by kvmtool.
+>  
+> +config PCI_HOST_THUNDER
+> +	bool "Extensions to Generic PCI host controller for Cavium Thunder"
+> +	depends on PCI_HOST_GENERIC && ARM64
+> +	help
+> +	  Say Y here to enable PCI config access methods needed by
+> +	  CN88XX Cavium Thunder SoCs.  The access is standard ECAM,
+> +	  but Enhanced Allocation (EA) capability structures are
+> +	  synthesized for on-SoC devices with fixed BARs.
+> +
+>  config PCIE_SPEAR13XX
+>  	bool "STMicroelectronics SPEAr PCIe controller"
+>  	depends on ARCH_SPEAR13XX
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index 140d66f..8b77d62 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -7,6 +7,7 @@ obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+>  obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+>  obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
+>  obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
+> +obj-$(CONFIG_PCI_HOST_THUNDER) += thunder_ecam_config_io.o
+>  obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+>  obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
+>  obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 6f12830..64558e5 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -91,6 +91,21 @@ static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
+>  	}
+>  };
+>  
+> +#ifdef CONFIG_PCI_HOST_THUNDER
+> +int thunder_ecam_config_read(struct pci_bus *bus, unsigned int devfn,
+> +			     int where, int size, u32 *val);
+> +int thunder_ecam_config_write(struct pci_bus *bus, unsigned int devfn,
+> +			     int where, int size, u32 val);
+> +static struct gen_pci_cfg_bus_ops gen_pci_cfg_thunder_ecam_bus_ops = {
+> +	.bus_shift	= 20,
+> +	.ops		= {
+> +		.map_bus	= gen_pci_map_cfg_bus_ecam,
+> +		.read		= thunder_ecam_config_read,
+> +		.write		= thunder_ecam_config_write,
+> +	}
+> +};
+> +#endif
+> +
+>  static void __iomem *gen_pci_map_cfg_bus_thunder_pem(struct pci_bus *bus,
+>  						     unsigned int devfn,
+>  						     int where)
+> @@ -108,6 +123,7 @@ static void __iomem *gen_pci_map_cfg_bus_thunder_pem(struct pci_bus *bus,
+>  	return pci->cfg.win[idx] + ((devfn << 16) | where);
+>  }
+>  
+> +#ifdef CONFIG_PCI_HOST_THUNDER
+>  static struct gen_pci_cfg_bus_ops gen_pci_cfg_thunder_pem_bus_ops = {
+>  	.bus_shift	= 24,
+>  	.ops		= {
+> @@ -116,6 +132,7 @@ static struct gen_pci_cfg_bus_ops gen_pci_cfg_thunder_pem_bus_ops = {
+>  		.write		= pci_generic_config_write,
+>  	}
+>  };
+> +#endif
+>  
+>  static const struct of_device_id gen_pci_of_match[] = {
+>  	{ .compatible = "pci-host-cam-generic",
+> @@ -126,7 +143,10 @@ static const struct of_device_id gen_pci_of_match[] = {
+>  
+>  	{ .compatible = "cavium,pci-host-thunder-pem",
+>  	  .data = &gen_pci_cfg_thunder_pem_bus_ops },
+> -
+> +#ifdef CONFIG_PCI_HOST_THUNDER
+> +	{ .compatible = "cavium,pci-host-thunder-ecam",
+> +	  .data = &gen_pci_cfg_thunder_ecam_bus_ops },
+> +#endif
+>  	{ },
+>  };
+>  MODULE_DEVICE_TABLE(of, gen_pci_of_match);
+> diff --git a/drivers/pci/host/thunder_ecam_config_io.c b/drivers/pci/host/thunder_ecam_config_io.c
+> new file mode 100644
+> index 0000000..58c3109
+> --- /dev/null
+> +++ b/drivers/pci/host/thunder_ecam_config_io.c
+> @@ -0,0 +1,273 @@
+> +/*
+> + *
+> + * This file is subject to the terms and conditions of the GNU General Public
+> + * License.  See the file "COPYING" in the main directory of this archive
+> + * for more details.
+> + *
+> + * Copyright (C) 2015 Cavium, Inc.
+> + *
+> + */
+> +
+> +#include <linux/pci.h>
+> +#include <linux/ioport.h>
+> +#include <linux/printk.h>
+> +
+> +static void set_val(u32 v, int where, int size, u32 *val)
+> +{
+> +	int shift = (where & 3) * 8;
+> +
+> +	pr_debug("set_val %04x: %08x\n", (unsigned)(where & ~3), v);
+> +	v >>= shift;
+> +	if (size == 1)
+> +		v &= 0xff;
+> +	else if (size == 2)
+> +		v &= 0xffff;
+> +	*val = v;
+> +}
+> +
+> +static int handle_ea_bar(u32 e0, int bar, struct pci_bus *bus,
+> +			 unsigned int devfn, int where, int size, u32 *val)
+> +{
+> +	void __iomem *addr;
+> +	u32 v;
+> +	/*
+> +	 * Each entry is 16-byte aligned bits[2,3] select which word
+> +	 * in the entry
+> +	 */
+> +	int where_a = where & 0xc;
+> +
+> +	if (where_a == 0) {
+> +		set_val(e0, where, size, val);
+> +		return PCIBIOS_SUCCESSFUL;
+> +	}
+> +	if (where_a == 0x4) {
+> +		addr = bus->ops->map_bus(bus, devfn, bar); /* BAR 0 */
+> +		if (!addr) {
+> +			*val = ~0;
+> +			return PCIBIOS_DEVICE_NOT_FOUND;
+> +		}
+> +		v = readl(addr);
+> +		v &= ~0xf;
+> +		v |= 2; /* EA entry-1. Base-L */
+> +		set_val(v, where, size, val);
+> +		return PCIBIOS_SUCCESSFUL;
+> +	}
+> +	if (where_a == 0x8) {
+> +		u32 barl_orig;
+> +		u32 barl_rb;
+> +
+> +		addr = bus->ops->map_bus(bus, devfn, bar); /* BAR 0 */
+> +		if (!addr) {
+> +			*val = ~0;
+> +			return PCIBIOS_DEVICE_NOT_FOUND;
+> +		}
+> +		barl_orig = readl(addr + 0);
+> +		writel(0xffffffff, addr + 0);
+> +		barl_rb = readl(addr + 0);
+> +		writel(barl_orig, addr + 0);
+> +		/* zeros in unsettable bits. */
+> +		v = ~barl_rb & ~3;
+> +		v |= 0xc; /* EA entry-2. Offset-L */
+> +		set_val(v, where, size, val);
+> +		return PCIBIOS_SUCCESSFUL;
+> +	}
+> +	if (where_a == 0xc) {
+> +		addr = bus->ops->map_bus(bus, devfn, bar + 4); /* BAR 1 */
+> +		if (!addr) {
+> +			*val = ~0;
+> +			return PCIBIOS_DEVICE_NOT_FOUND;
+> +		}
+> +		v = readl(addr); /* EA entry-3. Base-H */
+> +		set_val(v, where, size, val);
+> +		return PCIBIOS_SUCCESSFUL;
+> +	}
+> +	return PCIBIOS_DEVICE_NOT_FOUND;
+> +}
+> +int thunder_ecam_config_write(struct pci_bus *bus, unsigned int devfn,
+> +			      int where, int size, u32 val)
+> +{
+> +	/*
+> +	 * All BARs have fixed addresses, ignore BAR writes so they
+> +	 * don't get corrupted.
+> +	 */
+> +	if ((where >= 0x10 && where < 0x2c) || (where >= 0x1a4 && where < 0x1bc))
+> +		/* BAR or SRIOV BAR */
+> +		return PCIBIOS_SUCCESSFUL;
+> +
+> +	return pci_generic_config_write(bus, devfn, where, size, val);
+> +}
+> +
+> +int thunder_ecam_config_read(struct pci_bus *bus, unsigned int devfn,
+> +			     int where, int size, u32 *val)
+> +{
+> +	u32 v;
+> +	u32 vendor_device;
+> +	void __iomem *addr;
+> +	int cfg_type;
+> +	int where_a = where & ~3;
+> +
+> +	/*
+> +	 * All BARs have fixed addresses specified by the EA
+> +	 * capability, they must return zero on read.
+> +	 */
+> +	if ((where >= 0x10 && where < 0x2c) || (where >= 0x1a4 && where < 0x1bc)) {
+> +		/* BAR or SRIOV BAR */
+> +		*val = 0;
+> +		return PCIBIOS_SUCCESSFUL;
+> +	}
+> +
+> +	addr = bus->ops->map_bus(bus, devfn, 0);
+> +	if (!addr) {
+> +		*val = ~0;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	}
+> +
+> +	vendor_device = readl(addr);
+> +	if (vendor_device == 0xffffffff)
+> +		goto no_emulation;
+> +
+> +	addr = bus->ops->map_bus(bus, devfn, 8);
+> +	if (!addr) {
+> +		*val = ~0;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	}
+> +
+> +	v = readl(addr);
+> +	if (v == 0xffffffff)
+> +		goto no_emulation;
+> +
+> +	if ((v & 0xff) < 8) {
+> +		pr_debug("%04x:%04x - Fix pass#: %08x, where: %03x, devfn: %03x\n",
+> +			 vendor_device & 0xffff, vendor_device >> 16, v, (unsigned) where, devfn);
+> +		/* pass 1.x*/
+> +	} else {
+> +		pr_debug("%04x:%04x - OK pass#: %08x, devfn: %03x\n",
+> +			 vendor_device & 0xffff, vendor_device >> 16, v, devfn);
+> +		goto no_emulation;
+> +	}
+> +
+> +	addr = bus->ops->map_bus(bus, devfn, 0xc);
+> +	if (!addr) {
+> +		*val = ~0;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	}
+> +
+> +	v = readl(addr);
+> +	/* Check for non type-00 header. */
+> +	cfg_type = (v >> 16) & 0x7f;
+> +	if (cfg_type == 0) {
+> +		bool has_msix;
+> +		bool is_nic = (vendor_device == 0xa01e177d);
+> +		bool is_tns = (vendor_device == 0xa01f177d);
+> +
+> +		addr = bus->ops->map_bus(bus, devfn, 0x70);
+> +		if (!addr) {
+> +			*val = ~0;
+> +			return PCIBIOS_DEVICE_NOT_FOUND;
+> +		}
+> +		/* E_CAP */
+> +		v = readl(addr);
+> +		has_msix = (v & 0xff00) != 0;
+> +
+> +		if (!has_msix && where_a == 0x70) {
+> +			v |= 0xbc00; /* next capability is EA at 0xbc */
+> +			set_val(v, where, size, val);
+> +			return PCIBIOS_SUCCESSFUL;
+> +		}
+> +		if (where_a == 0xb0) {
+> +			addr = bus->ops->map_bus(bus, devfn, where_a);
+> +			if (!addr) {
+> +				*val = ~0;
+> +				return PCIBIOS_DEVICE_NOT_FOUND;
+> +			}
+> +			v = readl(addr);
+> +			if (v & 0xff00)
+> +				pr_err("Bad MSIX cap header: %08x\n", v);
+> +			v |= 0xbc00; /* next capability is EA at 0xbc */
+> +			set_val(v, where, size, val);
+> +			return PCIBIOS_SUCCESSFUL;
+> +		}
+> +		if (where_a == 0xbc) {
+> +			if (is_nic)
+> +				v = 0x40014; /* EA last in chain, 4 entries. */
+> +			else if (is_tns)
+> +				v = 0x40014; /* EA last in chain, 3 entries. */
+> +			else if (has_msix)
+> +				v = 0x20014; /* EA last in chain, 2 entries. */
+> +			else
+> +				v = 0x10014; /* EA last in chain, 1 entry. */
+> +			set_val(v, where, size, val);
+> +			return PCIBIOS_SUCCESSFUL;
+> +		}
+> +		if (where_a >= 0xc0 && where_a < 0xd0)
+> +			return handle_ea_bar(0x80ff0003, /* EA entry-0. PP=0, BAR0 Size:3 */
+> +					     0x10, bus, devfn, where, size, val);
+> +		if (where_a >= 0xd0 && where_a < 0xe0 && has_msix)
+> +			return handle_ea_bar(0x80ff0043, /* EA entry-1. PP=0, BAR4 Size:3 */
+> +					     0x20, bus, devfn, where, size, val);
+> +		if (where_a >= 0xe0 && where_a < 0xf0 && is_tns)
+> +			return handle_ea_bar(0x80ff0023, /* EA entry-2. PP=0, BAR2, Size:3 */
+> +					     0x18, bus, devfn, where, size, val);
+> +		if (where_a >= 0xe0 && where_a < 0xf0 && is_nic)
+> +			return handle_ea_bar(0x80ff0493, /* EA entry-2. PP=4, VF_BAR0 (9), Size:3 */
+> +					     0x1a4, bus, devfn, where, size, val);
+> +		if (where_a >= 0xf0 && where_a < 0x100 && is_nic)
+> +			return handle_ea_bar(0x80ff04d3, /* EA entry-3. PP=4, VF_BAR4 (d), Size:3 */
+> +					     0x1b4, bus, devfn, where, size, val);
+> +	} else if (cfg_type == 1) {
+> +		if (where_a == 0x70) {
+> +			addr = bus->ops->map_bus(bus, devfn, where_a);
+> +			if (!addr) {
+> +				*val = ~0;
+> +				return PCIBIOS_DEVICE_NOT_FOUND;
+> +			}
+> +			v = readl(addr);
+> +			if (v & 0xff00)
+> +				pr_err("Bad PCIe cap header: %08x\n", v);
+> +			v |= 0xbc00; /* next capability is EA at 0xbc */
+> +			set_val(v, where, size, val);
+> +			return PCIBIOS_SUCCESSFUL;
+> +		}
+> +		if (where_a == 0xbc) {
+> +			v = 0x10014; /* EA last in chain, 1 entry. */
+> +			set_val(v, where, size, val);
+> +			return PCIBIOS_SUCCESSFUL;
+> +		}
+> +		if (where_a == 0xc0) {
+> +			v = 0x0101; /* subordinate:secondary = 1:1 */
+> +			set_val(v, where, size, val);
+> +			return PCIBIOS_SUCCESSFUL;
+> +		}
+> +		if (where_a == 0xc4) {
+> +			v = 0x80ff0564; /* Enabled, not-Write, SP=ff, PP=05, BEI=6, ES=4 */
+> +			set_val(v, where, size, val);
+> +			return PCIBIOS_SUCCESSFUL;
+> +		}
+> +		if (where_a == 0xc8) {
+> +			v = 0x00000002; /* Base-L 64-bit */
+> +			set_val(v, where, size, val);
+> +			return PCIBIOS_SUCCESSFUL;
+> +		}
+> +		if (where_a == 0xcc) {
+> +			v = 0xfffffffe; /* MaxOffset-L 64-bit */
+> +			set_val(v, where, size, val);
+> +			return PCIBIOS_SUCCESSFUL;
+> +		}
+> +		if (where_a == 0xd0) {
+> +			if (devfn == 8)
+> +				v = 0x000087e0; /* RSL Base-H */
+> +			else
+> +				v = 0x00008430; /* NIC Base-H */
+> +			set_val(v, where, size, val);
+> +			return PCIBIOS_SUCCESSFUL;
+> +		}
+> +		if (where_a == 0xd4) {
+> +			v = 0x0000000f; /* MaxOffset-H */
+> +			set_val(v, where, size, val);
+> +			return PCIBIOS_SUCCESSFUL;
+> +		}
+> +
+> +	}
+> +no_emulation:
+> +	return pci_generic_config_read(bus, devfn, where, size, val);
+> +}
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
