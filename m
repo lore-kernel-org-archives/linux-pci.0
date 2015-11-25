@@ -1,376 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:46212 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965366AbbKDNNc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 08:13:32 -0500
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 18:43:30 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v7 44/50] drivers/of: Split unflatten_dt_node()
-Date: Thu,  5 Nov 2015 00:12:44 +1100
-Message-Id: <1446642770-4681-45-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:60126 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751747AbbKYSMj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Nov 2015 13:12:39 -0500
+Date: Wed, 25 Nov 2015 12:12:35 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH] drivers: pci: remove unused pci_sys_data structures
+Message-ID: <20151125181235.GD8869@localhost>
+References: <1447095459-21777-1-git-send-email-lorenzo.pieralisi@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1447095459-21777-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The function unflatten_dt_node() is called recursively to unflatten
-device nodes and properties in the FDT blob. It looks complicated
-and hard to be understood.
+On Mon, Nov 09, 2015 at 06:57:39PM +0000, Lorenzo Pieralisi wrote:
+> Commit b3a72384fe29 ("ARM/PCI: Replace pci_sys_data->align_resource
+> with global function pointer") removed the struct pci_sys_data
+> dependency from the ARM pcibios functions that are part of the
+> common ARM PCI arch back-end (eg pcibios_align_resource()), so that
+> struct pci_sys_data has now become data that is only used internally
+> by the ARM bios32 layer (ie pci_common_init_dev()) and by host
+> controllers drivers callbacks (eg pci_sys_data.setup) that rely on the
+> ARM bios32 API to probe.
+> 
+> PCI host controller drivers that do not rely on ARM bios32 calls to
+> probe do not need to have the pci_bus.sysdata pointer field pointing
+> at a struct pci_sys_data anymore, therefore it can be removed from the
+> respective drivers data structures.
+> 
+> This patch removes the pci_sys_data structures from the host
+> controller drivers that do not rely on ARM bios32 interface to
+> scan the PCI bus, completing the pci_sys_data clean-up and removing
+> the related dependency on arch/arm specific data.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Rob Herring <robh@kernel.org>
 
-This splits the function into 3 functions: populate_properties(),
-populate_node() and unflatten_dt_node(). populate_properties(),
-which is called by populate_node(), creates properties for the
-indicated device node. The later one creates the device nodes
-from FDT blob. populate_node() gets the offset in FDT blob for
-next device nodes and then calls populate_node(). No logical
-changes introduced.
+Applied with Arnd's ack to pci/host-generic for v4.5, thanks!
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/of/fdt.c | 275 ++++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 160 insertions(+), 115 deletions(-)
-
-diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-index 6e82bc42..173b036 100644
---- a/drivers/of/fdt.c
-+++ b/drivers/of/fdt.c
-@@ -160,39 +160,127 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
- 	return res;
- }
- 
--/**
-- * unflatten_dt_node - Alloc and populate a device_node from the flat tree
-- * @blob: The parent device tree blob
-- * @mem: Memory chunk to use for allocating device nodes and properties
-- * @poffset: pointer to node in flat tree
-- * @dad: Parent struct device_node
-- * @nodepp: The device_node tree created by the call
-- * @fpsize: Size of the node path up at the current depth.
-- * @dryrun: If true, do not allocate device nodes but still calculate needed
-- * memory size
-- */
--static void * unflatten_dt_node(const void *blob,
--				void *mem,
--				int *poffset,
--				struct device_node *dad,
--				struct device_node **nodepp,
--				unsigned long fpsize,
-+static void populate_properties(const void *blob,
-+				int offset,
-+				void **mem,
-+				struct device_node *np,
-+				const char *nodename,
- 				bool dryrun)
- {
--	const __be32 *p;
-+	struct property *pp, **pprev = NULL;
-+	int cur;
-+	bool has_name = false;
-+
-+	pprev = &np->properties;
-+	cur = fdt_first_property_offset(blob, offset);
-+	while (cur >= 0) {
-+		const __be32 *val;
-+		const char *pname;
-+		u32 sz;
-+
-+		val = fdt_getprop_by_offset(blob, cur, &pname, &sz);
-+		if (!val) {
-+			pr_warn("%s: Cannot locate property at 0x%x\n",
-+				__func__, cur);
-+			goto next;
-+		}
-+
-+		if (!pname) {
-+			pr_warn("%s: Cannot find property name at 0x%x\n",
-+				__func__, cur);
-+			goto next;
-+		} else if (!strcmp(pname, "name")) {
-+			has_name = true;
-+		}
-+
-+		pp = unflatten_dt_alloc(mem, sizeof(struct property),
-+					__alignof__(struct property));
-+		if (!dryrun) {
-+			/* We accept flattened tree phandles either in
-+			 * ePAPR-style "phandle" properties, or the
-+			 * legacy "linux,phandle" properties.  If both
-+			 * appear and have different values, things
-+			 * will get weird. Don't do that.
-+			 */
-+			if (!strcmp(pname, "phandle") ||
-+			    !strcmp(pname, "linux,phandle")) {
-+				if (!np->phandle)
-+					np->phandle = be32_to_cpup(val);
-+			}
-+
-+			/* And we process the "ibm,phandle" property
-+			 * used in pSeries dynamic device tree
-+			 * stuff
-+			 */
-+			if (!strcmp(pname, "ibm,phandle"))
-+				np->phandle = be32_to_cpup(val);
-+
-+			pp->name   = (char *)pname;
-+			pp->length = sz;
-+			pp->value  = (__be32 *)val;
-+			*pprev     = pp;
-+			pprev      = &pp->next;
-+		}
-+next:
-+		cur = fdt_next_property_offset(blob, cur);
-+	}
-+
-+	/* With version 0x10 we may not have the name property,
-+	 * recreate it here from the unit name if absent
-+	 */
-+	if (!has_name) {
-+		const char *p = nodename, *ps = p, *pa = NULL;
-+		int len;
-+
-+		while (*p) {
-+			if ((*p) == '@')
-+				pa = p;
-+			else if ((*p) == '/')
-+				ps = p + 1;
-+			p++;
-+		}
-+
-+		if (pa < ps)
-+			pa = p;
-+		len = (pa - ps) + 1;
-+		pp = unflatten_dt_alloc(mem, sizeof(struct property) + len,
-+					__alignof__(struct property));
-+		if (!dryrun) {
-+			pp->name   = "name";
-+			pp->length = len;
-+			pp->value  = pp + 1;
-+			*pprev     = pp;
-+			pprev      = &pp->next;
-+			memcpy(pp->value, ps, len - 1);
-+			((char *)pp->value)[len - 1] = 0;
-+			pr_debug("fixed up name for %s -> %s\n",
-+				 nodename, (char *)pp->value);
-+		}
-+	}
-+
-+	if (!dryrun)
-+		*pprev = NULL;
-+}
-+
-+static unsigned long populate_node(const void *blob,
-+				   int offset,
-+				   void **mem,
-+				   struct device_node *dad,
-+				   unsigned long fpsize,
-+				   struct device_node **pnp,
-+				   bool dryrun)
-+{
- 	struct device_node *np;
--	struct property *pp, **prev_pp = NULL;
- 	const char *pathp;
- 	unsigned int l, allocl;
--	static int depth = 0;
--	int old_depth;
--	int offset;
--	int has_name = 0;
--	int new_format = 0;
-+	bool new_format = false;
-+	char *fname;
- 
--	pathp = fdt_get_name(blob, *poffset, &l);
--	if (!pathp)
--		return mem;
-+	pathp = fdt_get_name(blob, offset, &l);
-+	if (!pathp) {
-+		*pnp = NULL;
-+		return 0;
-+	}
- 
- 	allocl = ++l;
- 
-@@ -202,7 +290,7 @@ static void * unflatten_dt_node(const void *blob,
- 	 * not '/'.
- 	 */
- 	if ((*pathp) != '/') {
--		new_format = 1;
-+		new_format = true;
- 		if (fpsize == 0) {
- 			/* root node: special case. fpsize accounts for path
- 			 * plus terminating zero. root node only has '/', so
-@@ -222,112 +310,38 @@ static void * unflatten_dt_node(const void *blob,
- 		}
- 	}
- 
--	np = unflatten_dt_alloc(&mem, sizeof(struct device_node) + allocl,
-+	np = unflatten_dt_alloc(mem, sizeof(struct device_node) + allocl,
- 				__alignof__(struct device_node));
- 	if (!dryrun) {
--		char *fn;
- 		of_node_init(np);
--		np->full_name = fn = ((char *)np) + sizeof(*np);
-+		np->full_name = fname = ((char *)np) + sizeof(*np);
- 		if (new_format) {
--			/* rebuild full path for new format */
-+			/* Rebuild full path for new format */
- 			if (dad && dad->parent) {
--				strcpy(fn, dad->full_name);
-+				strcpy(fname, dad->full_name);
- #ifdef DEBUG
--				if ((strlen(fn) + l + 1) != allocl) {
-+				if ((strlen(fname) + l + 1) != allocl) {
- 					pr_debug("%s: p: %d, l: %d, a: %d\n",
--						pathp, (int)strlen(fn),
--						l, allocl);
-+						 pathp, (int)strlen(fn),
-+						 l, allocl);
- 				}
- #endif
--				fn += strlen(fn);
-+				fname += strlen(fname);
- 			}
--			*(fn++) = '/';
-+			*(fname++) = '/';
- 		}
--		memcpy(fn, pathp, l);
-+		memcpy(fname, pathp, l);
- 
--		prev_pp = &np->properties;
--		if (dad != NULL) {
-+		if (dad) {
- 			np->parent = dad;
- 			np->sibling = dad->child;
- 			dad->child = np;
- 		}
- 	}
--	/* process properties */
--	for (offset = fdt_first_property_offset(blob, *poffset);
--	     (offset >= 0);
--	     (offset = fdt_next_property_offset(blob, offset))) {
--		const char *pname;
--		u32 sz;
- 
--		if (!(p = fdt_getprop_by_offset(blob, offset, &pname, &sz))) {
--			offset = -FDT_ERR_INTERNAL;
--			break;
--		}
--
--		if (pname == NULL) {
--			pr_info("Can't find property name in list !\n");
--			break;
--		}
--		if (strcmp(pname, "name") == 0)
--			has_name = 1;
--		pp = unflatten_dt_alloc(&mem, sizeof(struct property),
--					__alignof__(struct property));
--		if (!dryrun) {
--			/* We accept flattened tree phandles either in
--			 * ePAPR-style "phandle" properties, or the
--			 * legacy "linux,phandle" properties.  If both
--			 * appear and have different values, things
--			 * will get weird.  Don't do that. */
--			if ((strcmp(pname, "phandle") == 0) ||
--			    (strcmp(pname, "linux,phandle") == 0)) {
--				if (np->phandle == 0)
--					np->phandle = be32_to_cpup(p);
--			}
--			/* And we process the "ibm,phandle" property
--			 * used in pSeries dynamic device tree
--			 * stuff */
--			if (strcmp(pname, "ibm,phandle") == 0)
--				np->phandle = be32_to_cpup(p);
--			pp->name = (char *)pname;
--			pp->length = sz;
--			pp->value = (__be32 *)p;
--			*prev_pp = pp;
--			prev_pp = &pp->next;
--		}
--	}
--	/* with version 0x10 we may not have the name property, recreate
--	 * it here from the unit name if absent
--	 */
--	if (!has_name) {
--		const char *p1 = pathp, *ps = pathp, *pa = NULL;
--		int sz;
--
--		while (*p1) {
--			if ((*p1) == '@')
--				pa = p1;
--			if ((*p1) == '/')
--				ps = p1 + 1;
--			p1++;
--		}
--		if (pa < ps)
--			pa = p1;
--		sz = (pa - ps) + 1;
--		pp = unflatten_dt_alloc(&mem, sizeof(struct property) + sz,
--					__alignof__(struct property));
--		if (!dryrun) {
--			pp->name = "name";
--			pp->length = sz;
--			pp->value = pp + 1;
--			*prev_pp = pp;
--			prev_pp = &pp->next;
--			memcpy(pp->value, ps, sz - 1);
--			((char *)pp->value)[sz - 1] = 0;
--			pr_debug("fixed up name for %s -> %s\n", pathp,
--				(char *)pp->value);
--		}
--	}
-+	/* Populate the properties */
-+	populate_properties(blob, offset, mem, np, pathp, dryrun);
- 	if (!dryrun) {
--		*prev_pp = NULL;
- 		np->name = of_get_property(np, "name", NULL);
- 		np->type = of_get_property(np, "device_type", NULL);
- 
-@@ -337,6 +351,37 @@ static void * unflatten_dt_node(const void *blob,
- 			np->type = "<NULL>";
- 	}
- 
-+	*pnp = np;
-+	return fpsize;
-+}
-+
-+/**
-+ * unflatten_dt_node - Alloc and populate a device_node from the flat tree
-+ * @blob: The parent device tree blob
-+ * @mem: Memory chunk to use for allocating device nodes and properties
-+ * @poffset: pointer to node in flat tree
-+ * @dad: Parent struct device_node
-+ * @nodepp: The device_node tree created by the call
-+ * @fpsize: Size of the node path up at the current depth.
-+ * @dryrun: If true, do not allocate device nodes but still calculate needed
-+ * memory size
-+ */
-+static void *unflatten_dt_node(const void *blob,
-+			       void *mem,
-+			       int *poffset,
-+			       struct device_node *dad,
-+			       struct device_node **nodepp,
-+			       unsigned long fpsize,
-+			       bool dryrun)
-+{
-+	struct device_node *np;
-+	static int depth;
-+	int old_depth;
-+
-+	fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
-+	if (!fpsize)
-+		return mem;
-+
- 	old_depth = depth;
- 	*poffset = fdt_next_node(blob, *poffset, &depth);
- 	if (depth < 0)
--- 
-2.1.0
-
+> ---
+> Rob,
+> 
+> I could not test it on versatile, only compile tested, so
+> please have an additional look.
+> 
+> Tested the PCI host generic on 32-bit and 64-bit guests,
+> through kvmtool.
+> 
+> Thanks,
+> Lorenzo
+> 
+>  drivers/pci/host/pci-host-generic.c | 9 ---------
+>  drivers/pci/host/pci-versatile.c    | 5 +----
+>  2 files changed, 1 insertion(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 5434c90..1652bc7 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -38,16 +38,7 @@ struct gen_pci_cfg_windows {
+>  	struct gen_pci_cfg_bus_ops		*ops;
+>  };
+>  
+> -/*
+> - * ARM pcibios functions expect the ARM struct pci_sys_data as the PCI
+> - * sysdata.  Add pci_sys_data as the first element in struct gen_pci so
+> - * that when we use a gen_pci pointer as sysdata, it is also a pointer to
+> - * a struct pci_sys_data.
+> - */
+>  struct gen_pci {
+> -#ifdef CONFIG_ARM
+> -	struct pci_sys_data			sys;
+> -#endif
+>  	struct pci_host_bridge			host;
+>  	struct gen_pci_cfg_windows		cfg;
+>  	struct list_head			resources;
+> diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
+> index 0863d9c..f843a72 100644
+> --- a/drivers/pci/host/pci-versatile.c
+> +++ b/drivers/pci/host/pci-versatile.c
+> @@ -125,9 +125,6 @@ out_release_res:
+>  	return err;
+>  }
+>  
+> -/* Unused, temporary to satisfy ARM arch code */
+> -struct pci_sys_data sys;
+> -
+>  static int versatile_pci_probe(struct platform_device *pdev)
+>  {
+>  	struct resource *res;
+> @@ -208,7 +205,7 @@ static int versatile_pci_probe(struct platform_device *pdev)
+>  	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
+>  	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
+>  
+> -	bus = pci_scan_root_bus(&pdev->dev, 0, &pci_versatile_ops, &sys, &pci_res);
+> +	bus = pci_scan_root_bus(&pdev->dev, 0, &pci_versatile_ops, NULL, &pci_res);
+>  	if (!bus)
+>  		return -ENOMEM;
+>  
+> -- 
+> 2.5.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
