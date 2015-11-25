@@ -1,51 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:52922 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753390AbbKZWhC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Nov 2015 17:37:02 -0500
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v3 1/5] PCI: iproc: Update iProc PCIe device tree binding
-Date: Thu, 26 Nov 2015 14:37:06 -0800
-Message-ID: <1448577430-16428-2-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1448577430-16428-1-git-send-email-rjui@broadcom.com>
-References: <1448577430-16428-1-git-send-email-rjui@broadcom.com>
+Received: from mail.kernel.org ([198.145.29.136]:58241 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751309AbbKYRsW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Nov 2015 12:48:22 -0500
+Date: Wed, 25 Nov 2015 11:48:18 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Rajat Jain <rajatxjain@gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Always protect pciehp_disable_slot() with
+ hotplug mutex
+Message-ID: <20151125174818.GA8869@localhost>
+References: <1446415120-14867-1-git-send-email-linux@roeck-us.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1446415120-14867-1-git-send-email-linux@roeck-us.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a new compatible string "brcm,iproc-pcie-paxc", for PAXC based iProc
-PCIe root complex. A PAXC based PCIe root complex is connected to
-emulated endpoint devices internal to the ASIC
+On Sun, Nov 01, 2015 at 01:58:40PM -0800, Guenter Roeck wrote:
+> When called from pciehp_sysfs_disable_slot(), the call to
+> pciehp_disable_slot() was not protected by the hotplug mutex.
+> 
+> Cc: Rajat Jain <rajatxjain@gmail.com>
+> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
----
- Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Applied with Rajat's Reviewed-by to pci/hotplug for v4.5, thanks!
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-index 45c2a80..06eae0f 100644
---- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-@@ -1,7 +1,10 @@
- * Broadcom iProc PCIe controller with the platform bus interface
- 
- Required properties:
--- compatible: Must be "brcm,iproc-pcie"
-+- compatible: Must be "brcm,iproc-pcie" for PAXB, or "brcm,iproc-pcie-paxc"
-+  for PAXC. PAXB based root complex is used for external endpoint devices.
-+  PAXC based root complex is connected to emulated endpoint devices
-+  internal to the ASIC
- - reg: base address and length of the PCIe controller I/O register space
- - #interrupt-cells: set to <1>
- - interrupt-map-mask and interrupt-map, standard PCI properties to define the
--- 
-1.9.1
-
+> ---
+>  drivers/pci/hotplug/pciehp_ctrl.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+> index 4c8f4cde6854..880978b6d534 100644
+> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> @@ -511,7 +511,9 @@ int pciehp_sysfs_disable_slot(struct slot *p_slot)
+>  	case STATIC_STATE:
+>  		p_slot->state = POWEROFF_STATE;
+>  		mutex_unlock(&p_slot->lock);
+> +		mutex_lock(&p_slot->hotplug_lock);
+>  		retval = pciehp_disable_slot(p_slot);
+> +		mutex_unlock(&p_slot->hotplug_lock);
+>  		mutex_lock(&p_slot->lock);
+>  		p_slot->state = STATIC_STATE;
+>  		break;
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
