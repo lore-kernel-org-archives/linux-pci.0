@@ -1,111 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv4 4/6] x86-pci: allow pci domain specific dma ops
-Date: Fri,  6 Nov 2015 15:35:44 -0700
-Message-Id: <1446849346-8242-5-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1446849346-8242-1-git-send-email-keith.busch@intel.com>
-References: <1446849346-8242-1-git-send-email-keith.busch@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:37154 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751378AbbKYTcF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Nov 2015 14:32:05 -0500
+Date: Wed, 25 Nov 2015 13:32:01 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	lorenzo.pieralisi@arm.com, arnd@arndb.de, bhelgaas@google.com,
+	robh@kernel.org, linux@arm.linux.org.uk, wangzhou1@hisilicon.com,
+	liguozhu@hisilicon.com, xuwei5@hisilicon.com
+Subject: Re: [PATCH] ARM/PCI: move align_resource function pointer into
+ pci_host_bridge structure
+Message-ID: <20151125193201.GE8869@localhost>
+References: <1447204345-143793-1-git-send-email-gabriele.paoloni@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1447204345-143793-1-git-send-email-gabriele.paoloni@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-New x86 pci h/w will require DMA operations specific to that domain. This
-patch allows those domains to register their operations, and sets devices
-as they are discovered in that domain to use them.
+On Wed, Nov 11, 2015 at 09:12:25AM +0800, Gabriele Paoloni wrote:
+> From: gabpao01 <gabriele.paoloni@huawei.com>
+> 
+> commit b3a72384fe29 ("ARM/PCI: Replace
+> pci_sys_data->align_resource with global function pointer") has
+> introduced a global function pointer that makes the ARM specific
+> code not portable and broken in case any platform have a two
+> different HW IPs for the PCIe host bridge controller.
+> This patch moves align_resource function pointer into
+> pci_host_bridge structure so that the code is now suitable to be
+> reworked as we want to get rid of hw_pci structure (the host bridge
+> drivers can just set the align function pointer in the
+> pci_host_bridge structure) and there is no more broken code for a
+> SoC with two HW IPs.
+> 
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- arch/x86/include/asm/device.h | 10 ++++++++++
- arch/x86/pci/common.c         | 38 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 48 insertions(+)
+This looks good to me.  I merged b3a72384fe29 so maybe it would make
+sense for me to merge this follow-up as well.  I put it on my
+for-linus branch for v4.4.
 
-diff --git a/arch/x86/include/asm/device.h b/arch/x86/include/asm/device.h
-index 03dd729..3b23897 100644
---- a/arch/x86/include/asm/device.h
-+++ b/arch/x86/include/asm/device.h
-@@ -10,6 +10,16 @@ struct dev_archdata {
- #endif
- };
- 
-+#if defined(CONFIG_X86_DEV_DMA_OPS) && defined(CONFIG_PCI_DOMAINS)
-+struct dma_domain {
-+	struct list_head node;
-+	struct dma_map_ops *dma_ops;
-+	int domain_nr;
-+};
-+extern void add_dma_domain(struct dma_domain *domain);
-+extern void del_dma_domain(struct dma_domain *domain);
-+#endif
-+
- struct pdev_archdata {
- };
- 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index dc78a4a..e227ba2 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -641,6 +641,43 @@ unsigned int pcibios_assign_all_busses(void)
- 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
- }
- 
-+#if defined(CONFIG_X86_DEV_DMA_OPS) && defined(CONFIG_PCI_DOMAINS)
-+LIST_HEAD(dma_domain_list);
-+DEFINE_SPINLOCK(dma_domain_list_lock);
-+
-+void add_dma_domain(struct dma_domain *domain)
-+{
-+	spin_lock(&dma_domain_list_lock);
-+	list_add(&domain->node, &dma_domain_list);
-+	spin_unlock(&dma_domain_list_lock);
-+}
-+EXPORT_SYMBOL_GPL(add_dma_domain);
-+
-+void del_dma_domain(struct dma_domain *domain)
-+{
-+	spin_lock(&dma_domain_list_lock);
-+	list_del(&domain->node);
-+	spin_unlock(&dma_domain_list_lock);
-+}
-+EXPORT_SYMBOL_GPL(del_dma_domain);
-+
-+static void set_dma_domain_ops(struct pci_dev *pdev)
-+{
-+	struct dma_domain *domain;
-+
-+	spin_lock(&dma_domain_list_lock);
-+	list_for_each_entry(domain, &dma_domain_list, node) {
-+		if (pci_domain_nr(pdev->bus) == domain->domain_nr) {
-+			pdev->dev.archdata.dma_ops = domain->dma_ops;
-+			break;
-+		}
-+	}
-+	spin_unlock(&dma_domain_list_lock);
-+}
-+#else
-+static void set_dma_domain_ops(struct pci_dev *pdev) {}
-+#endif
-+
- int pcibios_add_device(struct pci_dev *dev)
- {
- 	struct setup_data *data;
-@@ -670,6 +707,7 @@ int pcibios_add_device(struct pci_dev *dev)
- 		pa_data = data->next;
- 		iounmap(data);
- 	}
-+	set_dma_domain_ops(dev);
- 	return 0;
- }
- 
--- 
-2.6.2.307.g37023ba
+If you'd rather merge it via an ARM tree, here's my ack:
 
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+If you want me to merge it, an ARM ack would be nice.  If you want to
+merge it, let me know and I'll drop it from my tree.
+
+> +	/* Resource alignement requirements     */
+
+s/alignement/alignment/
+
+> +	resource_size_t (*align_resource)(struct pci_dev *dev,
+> ...
