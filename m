@@ -1,149 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:59229 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753447AbbK0Oow (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 27 Nov 2015 09:44:52 -0500
-Subject: Re: [Intel-gfx] [PATCH v2] PCI / PM: tune down RPM suspend error
- message with EBUSY and EAGAIN retval
-To: Jani Nikula <jani.nikula@linux.intel.com>,
-	Daniel Vetter <daniel@ffwll.ch>,
-	Imre Deak <imre.deak@intel.com>
-References: <1447838178-15308-1-git-send-email-imre.deak@intel.com>
- <1447844188-21999-1-git-send-email-imre.deak@intel.com>
- <1447853318.14073.2.camel@intel.com>
- <20151118141943.GU20799@phenom.ffwll.local> <878u5j7jt9.fsf@intel.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>,
-	intel-gfx@lists.freedesktop.org,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Linux PM <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Message-ID: <56586C60.5050104@intel.com>
-Date: Fri, 27 Nov 2015 15:44:48 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 25 Nov 2015 07:50:18 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: "robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"rjui@broadcom.com" <rjui@broadcom.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"dhdang@apm.com" <dhdang@apm.com>,
+	"sbranden@broadcom.com" <sbranden@broadcom.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH v9] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+Message-ID: <20151125075018.68e97010@arm.com>
+In-Reply-To: <8520D5D51A55D047800579B0941471982586607F@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1447911323-12567-1-git-send-email-bharatku@xilinx.com>
+	<20151124173556.18aff6b5@arm.com>
+	<8520D5D51A55D047800579B0941471982586607F@XAP-PVEXMBX01.xlnx.xilinx.com>
 MIME-Version: 1.0
-In-Reply-To: <878u5j7jt9.fsf@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/27/2015 12:39 PM, Jani Nikula wrote:
-> On Wed, 18 Nov 2015, Daniel Vetter <daniel@ffwll.ch> wrote:
->> On Wed, Nov 18, 2015 at 03:28:38PM +0200, Imre Deak wrote:
->>> On ke, 2015-11-18 at 12:56 +0200, Imre Deak wrote:
->>>> The runtime PM core doesn't treat EBUSY and EAGAIN retvals from the driver
->>>> suspend hooks as errors, but they still show up as errors in dmesg. Tune
->>>> them down.
->>>>
->>>> One problem caused by this was noticed by Daniel: the i915 driver
->>>> returns EAGAIN to signal a temporary failure to suspend and as a request
->>>> towards the RPM core for scheduling a suspend again. This is a normal
->>>> event, but the resulting error message flags a breakage during the
->>>> driver's automated testing which parses dmesg and picks up the error.
->>>>
->>>> v2:
->>>> - fix compile breake when CONFIG_PM_SLEEP=n (0-day builder)
->>>>
->>>> Reported-by: Daniel Vetter <daniel.vetter@intel.com>
->>>> Signed-off-by: Imre Deak <imre.deak@intel.com>
->>> Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=92992
->> Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
->>
->> Rafael, can you please pick this up for 4.4? The spurious KERN_ERR noise
->> in dmesg is causing a lot fo spurious fail in our (very recently put into
->> place) i915 CI system.
-> Rafael, ping.
+On Wed, 25 Nov 2015 05:40:49 +0000
+Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
 
-Well, so I'm not sure about this one.
+> > On Thu, 19 Nov 2015 11:05:23 +0530
+> > Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
+> > 
+> > > Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+> > >
+> > > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> > > Acked-by: Rob Herring <robh@kernel.org>
+> > > ---
+> > > +
+> > > +#define MSI_ADDRESS				0xDEED0000
+> > 
+> > How did you pick this value? What if it intersect with some actual RAM?
+> > What if a device actually does DMA to that location?
+> > 
+> > Wouldn't it make sense to actually pick a real *device* address (hint:
+> > your MSI controller itself) for this purpose, as the device will never DMA
+> > there?
+> >
+> > 
+> We have already mentioned in previous patch discussion, we don't have
+> any device address on our SOC for MSI, that's the reason we are
+> allocating a page for MSI in RAM. Since our memory write is consumed
+> by bridge and doesn't write to memory, you suggested to use some
+> random address,  so using some random address.
 
-And the question is ->
+This is becoming painful.
 
->>>> ---
->>>>   drivers/base/power/main.c |  7 +++++--
->>>>   drivers/pci/pci-driver.c  |  2 +-
->>>>   include/linux/pm.h        | 11 +++++++++--
->>>>   3 files changed, 15 insertions(+), 5 deletions(-)
->>>>
->>>> diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
->>>> index 1710c26..39d2090 100644
->>>> --- a/drivers/base/power/main.c
->>>> +++ b/drivers/base/power/main.c
->>>> @@ -1679,9 +1679,12 @@ int dpm_suspend_start(pm_message_t state)
->>>>   }
->>>>   EXPORT_SYMBOL_GPL(dpm_suspend_start);
->>>>   
->>>> -void __suspend_report_result(const char *function, void *fn, int ret)
->>>> +void __suspend_report_result(const char *function, void *fn, int ret,
->>>> +			     bool runtime_pm)
->>>>   {
->>>> -	if (ret)
->>>> +	if (runtime_pm && (ret == -EBUSY || ret == -EAGAIN))
->>>> +		printk(KERN_DEBUG "%s(): %pF returns %d\n", function, fn, ret);
->>>> +	else if (ret)
->>>>   		printk(KERN_ERR "%s(): %pF returns %d\n", function, fn, ret);
->>>>   }
+- "write is consumed by bridge and doesn't write to memory": So why are
+  you using something that has a chance of actually being memory??? Are
+  you in the business of corrupting unsuspecting data?
 
--> why you are adding overhead to this function, instead of -->
+- "we don't have any device address on our SOC for MSI": You have
+  plenty, and that's the whole of your device space. *All of it*. So
+  just take the base address of your PCIe controller, and be done with
+  it. Or your UART. Anything that cannot be DMA'ed to from a PCIe
+  device, and that is downstream of your PCIe bridge.
 
->>>>   EXPORT_SYMBOL_GPL(__suspend_report_result);
->>>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->>>> index 108a311..9569572 100644
->>>> --- a/drivers/pci/pci-driver.c
->>>> +++ b/drivers/pci/pci-driver.c
->>>> @@ -1142,7 +1142,7 @@ static int pci_pm_runtime_suspend(struct device *dev)
->>>>   	pci_dev->state_saved = false;
->>>>   	pci_dev->no_d3cold = false;
->>>>   	error = pm->runtime_suspend(dev);
->>>> -	suspend_report_result(pm->runtime_suspend, error);
->>>> +	rpm_suspend_report_result(pm->runtime_suspend, error);
-
---> replacing the suspend_report_result() above with a direct printk() 
-in the if (error) block below.
-
-Surely, suspend_report_result() was not designed with runtime PM in mind 
-and it was a mistake to use it here.  It just seemed to do the right 
-thing, but it clearly doesn't.
-
->>>>   	if (error)
->>>>   		return error;
->>>>   	if (!pci_dev->d3cold_allowed)
->>>> diff --git a/include/linux/pm.h b/include/linux/pm.h
->>>> index 35d599e..54f37e3 100644
->>>> --- a/include/linux/pm.h
->>>> +++ b/include/linux/pm.h
->>>> @@ -702,11 +702,17 @@ extern int dpm_suspend_late(pm_message_t state);
->>>>   extern int dpm_suspend(pm_message_t state);
->>>>   extern int dpm_prepare(pm_message_t state);
->>>>   
->>>> -extern void __suspend_report_result(const char *function, void *fn, int ret);
->>>> +extern void __suspend_report_result(const char *function, void *fn, int ret,
->>>> +				    bool runtime_pm);
->>>>   
->>>>   #define suspend_report_result(fn, ret)					\
->>>>   	do {								\
->>>> -		__suspend_report_result(__func__, fn, ret);		\
->>>> +		__suspend_report_result(__func__, fn, ret, false);	\
->>>> +	} while (0)
->>>> +
->>>> +#define rpm_suspend_report_result(fn, ret)				\
->>>> +	do {								\
->>>> +		__suspend_report_result(__func__, fn, ret, true);	\
->>>>   	} while (0)
->>>>   
->>>>   extern int device_pm_wait_for_dev(struct device *sub, struct device *dev);
->>>> @@ -744,6 +750,7 @@ static inline int dpm_suspend_start(pm_message_t state)
->>>>   }
->>>>   
->>>>   #define suspend_report_result(fn, ret)		do {} while (0)
->>>> +#define rpm_suspend_report_result(fn, ret)	do {} while (0)
->>>>   
->>>>   static inline int device_pm_wait_for_dev(struct device *a, struct device *b)
->>>>   {
-
-BTW, if you're changing PM code, it is good to CC linux-pm too (now 
-done) and if you're changing PCI code, it is mandatory to CC linux-pci 
-and the PCI maintainer (now done too).
-
-Thanks,
-Rafael
-
+	M.
+-- 
+Jazz is not dead. It just smells funny.
