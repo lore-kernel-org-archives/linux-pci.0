@@ -1,264 +1,454 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:56896 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756228AbbKDX1K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 18:27:10 -0500
-Received: from localhost
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 5 Nov 2015 09:27:07 +1000
-Date: Thu, 5 Nov 2015 10:26:03 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Rob Herring <robherring2@gmail.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Pantelis Antoniou <panto@antoniou-consulting.com>,
-	Frank Rowand <frowand.list@gmail.com>
-Subject: Re: [PATCH v7 45/50] drivers/of: Avoid recursively calling
- unflatten_dt_node()
-Message-ID: <20151104232603.GA16994@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAL_JsqJGpV-+JYyA1g0dw_nEduhmrMEouTH03kHtuCkGSOP57Q@mail.gmail.com>
- <20151104232315.GB9287@gwshan>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:25197 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753584AbbKZWhD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Nov 2015 17:37:03 -0500
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v3 2/5] PCI: iproc: Add PAXC interface support
+Date: Thu, 26 Nov 2015 14:37:07 -0800
+Message-ID: <1448577430-16428-3-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1448577430-16428-1-git-send-email-rjui@broadcom.com>
+References: <1448577430-16428-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151104232315.GB9287@gwshan>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 05, 2015 at 10:23:15AM +1100, Gavin Shan wrote:
->On Wed, Nov 04, 2015 at 10:07:50AM -0600, Rob Herring wrote:
->>On Wed, Nov 4, 2015 at 7:12 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->>> In current implementation, unflatten_dt_node() is called recursively
->>> to unflatten device nodes in FDT blob. It's stress to limited stack
->>> capacity.
->>
->>Did you actually hit a problem?
->>
->>Now we have a max depth of 64. Seems like that should be plenty... Any
->>idea how this compares to when we run out of stack space?
->>
->
->When I rebased last revision (v6), particular below patch, to 4.3.rc6,
->the kernel won't boot in P7 and P8 boxes. On P7 boxes, the stack overruns
->according to the printed kernel messages. On P8 boxes, the /bin/init in
->initramfs image can't be loaded/executed properly and it's potentially
->caused by memory corruption. That's why I reworked it to avoid recursive
->calling to unflatten_dt_node().
->
+Traditionally, all iProc PCIe root complexes use PAXB based wrapper,
+with an integrated on-chip Serdes to support external endpoint devices.
+On newer iProc platforms, a PAXC based wrapper is introduced, for
+connection with internally emulated PCIe endpoint devices in the ASIC
 
-Missed the link to the patch here:
+This patch adds support for PAXC based iProc PCIe root complex in the
+iProc PCIe core driver. This change fators out common logic between
+PAXB and PAXC, and use tables to store register offsets that are
+different between PAXB and PAXC. This allows the driver to be scaled to
+support subsequent PAXC revisions in the future
 
-https://patchwork.ozlabs.org/patch/504512/
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
+---
+ drivers/pci/host/pcie-iproc-platform.c |  24 +++-
+ drivers/pci/host/pcie-iproc.c          | 202 +++++++++++++++++++++++++++------
+ drivers/pci/host/pcie-iproc.h          |  19 ++++
+ 3 files changed, 205 insertions(+), 40 deletions(-)
 
->The max depth "64" wasn't selected based on the stack usage. I was thinking
->the device tree is converted to friendly *.dts format and it's using TAB
->as the prefix for each line. If the device tree has 64 depth, Each line
->in *.dts for leaf nodes have to be wrapped and spanning multiple lines.
->That's why I choosed 64, maybe 32 is enough. Did you see a device-tree
->that has more than 16 depth in field? :-)
->
->>> This avoids calling the function recursively, meaning the device
->>> nodes are unflattened in one call on unflatten_dt_node(): two arrays
->>> are introduced to track the parent path size and the device node of
->>> current level of depth, which will be used by the device node on next
->>> level of depth to be unflattened. Also, the parameter "poffset" and
->>> "fpsize" are unused and dropped.
->>
->>Yay. I'm happy to see parameters removed instead of added to this function.
->>
->>>
->>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>> ---
->>>  drivers/of/fdt.c | 94 +++++++++++++++++++++++++++++++++-----------------------
->>>  1 file changed, 56 insertions(+), 38 deletions(-)
->>>
->>> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
->>> index 173b036..f4793d0 100644
->>> --- a/drivers/of/fdt.c
->>> +++ b/drivers/of/fdt.c
->>> @@ -355,61 +355,82 @@ static unsigned long populate_node(const void *blob,
->>>         return fpsize;
->>>  }
->>>
->>> +static void reverse_nodes(struct device_node *parent)
->>> +{
->>> +       struct device_node *child, *next;
->>> +
->>> +       /* In-depth first */
->>> +       child = parent->child;
->>> +       while (child) {
->>> +               reverse_nodes(child);
->>> +
->>> +               child = child->sibling;
->>> +       }
->>> +
->>> +       /* Reverse the nodes in the child list */
->>> +       child = parent->child;
->>> +       parent->child = NULL;
->>> +       while (child) {
->>> +               next = child->sibling;
->>> +
->>> +               child->sibling = parent->child;
->>> +               parent->child = child;
->>> +               child = next;
->>> +       }
->>> +}
->>> +
->>>  /**
->>>   * unflatten_dt_node - Alloc and populate a device_node from the flat tree
->>>   * @blob: The parent device tree blob
->>>   * @mem: Memory chunk to use for allocating device nodes and properties
->>> - * @poffset: pointer to node in flat tree
->>>   * @dad: Parent struct device_node
->>>   * @nodepp: The device_node tree created by the call
->>> - * @fpsize: Size of the node path up at the current depth.
->>>   * @dryrun: If true, do not allocate device nodes but still calculate needed
->>>   * memory size
->>>   */
->>>  static void *unflatten_dt_node(const void *blob,
->>>                                void *mem,
->>> -                              int *poffset,
->>>                                struct device_node *dad,
->>>                                struct device_node **nodepp,
->>> -                              unsigned long fpsize,
->>>                                bool dryrun)
->>
->>We can probably further simplify things by returning an int with
->>negative being errors and positive being the size. Also, dryrun can be
->>dropped and implied by mem and/or nodepp being NULL.
->>
->
->Yeah, I think it's reasonable to return "size" from this function. "dryrun"
->can be dropped and implied by NULL @mem. @nodepp can't be NULL. I perhaps
->have separate patch to address it in next revision.
->
->>>  {
->>> -       struct device_node *np;
->>> -       static int depth;
->>> -       int old_depth;
->>> -
->>> -       fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
->>> -       if (!fpsize)
->>> -               return mem;
->>> +       struct device_node *root;
->>> +       int offset = 0, depth = 0;
->>> +       unsigned long fpsizes[64];
->>> +       struct device_node *nps[64];
->>
->>Use a define here.
->>
->
->Fair enough, will do in next revision. I'm not good at naming. Would
->"FDT_MAX_DEPTH" is a good one?
->
->>>
->>> -       old_depth = depth;
->>> -       *poffset = fdt_next_node(blob, *poffset, &depth);
->>> -       if (depth < 0)
->>> -               depth = 0;
->>> -       while (*poffset > 0 && depth > old_depth)
->>> -               mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
->>> -                                       fpsize, dryrun);
->>> +       if (nodepp)
->>> +               *nodepp = NULL;
->>> +
->>> +       root = dad;
->>> +       fpsizes[depth] = dad ? strlen(of_node_full_name(dad)) : 0;
->>> +       nps[depth++] = dad;
->>> +       while (offset >= 0 && depth < 64) {
->>> +               fpsizes[depth] = populate_node(blob, offset, &mem,
->>> +                                              nps[depth - 1],
->>> +                                              fpsizes[depth - 1],
->>> +                                              &nps[depth], dryrun);
->>> +               if (!fpsizes[depth])
->>> +                       return mem;
->>> +
->>> +               if (!dryrun && nodepp && !*nodepp)
->>> +                       *nodepp = nps[depth];
->>> +               if (!dryrun && !root)
->>> +                       root = nps[depth];
->>> +
->>> +               offset = fdt_next_node(blob, offset, &depth);
->>> +       }
->>>
->>> -       if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
->>> -               pr_err("unflatten: error %d processing FDT\n", *poffset);
->>> +       if (offset < 0 && offset != -FDT_ERR_NOTFOUND)
->>> +               pr_err("%s: Error %d processing FDT\n",
->>> +                      __func__, offset);
->>
->>What about depth == 64 case? I think the behavior should be a WARN and
->>ignore those nodes so we at least can continue to boot and see the
->>error. Of course, if there is a phandle pointing to ignored nodes, we
->>have to handle that too.
->>
->
->Yeah, I'll have a WARN_ON(depth >= 64) in next revision. Sorry, I didn't
->get the 2nd part of your comments: When depth > 64, the system won't work.
->It might boot up. Why the phandle pointing to the ignored node has to be
->dropped? 
->
->>>
->>>         /*
->>>          * Reverse the child list. Some drivers assumes node order matches .dts
->>>          * node order
->>>          */
->>> -       if (!dryrun && np->child) {
->>> -               struct device_node *child = np->child;
->>> -               np->child = NULL;
->>> -               while (child) {
->>> -                       struct device_node *next = child->sibling;
->>> -                       child->sibling = np->child;
->>> -                       np->child = child;
->>> -                       child = next;
->>> -               }
->>> -       }
->>> -
->>> -       if (nodepp)
->>> -               *nodepp = np;
->>> +       if (!dryrun)
->>> +               reverse_nodes(root);
->>>
->>>         return mem;
->>>  }
->>> @@ -431,7 +452,6 @@ static void __unflatten_device_tree(const void *blob,
->>>                              void * (*dt_alloc)(u64 size, u64 align))
->>>  {
->>>         unsigned long size;
->>> -       int start;
->>>         void *mem;
->>>
->>>         pr_debug(" -> unflatten_device_tree()\n");
->>> @@ -452,8 +472,7 @@ static void __unflatten_device_tree(const void *blob,
->>>         }
->>>
->>>         /* First pass, scan for size */
->>> -       start = 0;
->>> -       size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
->>> +       size = (unsigned long)unflatten_dt_node(blob, NULL, NULL, NULL, true);
->>>         size = ALIGN(size, 4);
->>>
->>>         pr_debug("  size is %lx, allocating...\n", size);
->>> @@ -467,8 +486,7 @@ static void __unflatten_device_tree(const void *blob,
->>>         pr_debug("  unflattening %p...\n", mem);
->>>
->>>         /* Second pass, do actual unflattening */
->>> -       start = 0;
->>> -       unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
->>> +       unflatten_dt_node(blob, mem, NULL, mynodes, false);
->>>         if (be32_to_cpup(mem + size) != 0xdeadbeef)
->>>                 pr_warning("End of tree marker overwritten: %08x\n",
->>>                            be32_to_cpup(mem + size));
->
->Thanks,
->Gavin
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index c9550dc..e8b32d8 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -26,8 +26,21 @@
+ 
+ #include "pcie-iproc.h"
+ 
++static const struct of_device_id iproc_pcie_of_match_table[] = {
++	{
++		.compatible = "brcm,iproc-pcie",
++		.data = (int *)IPROC_PCIE_PAXB,
++	}, {
++		.compatible = "brcm,iproc-pcie-paxc",
++		.data = (int *)IPROC_PCIE_PAXC,
++	},
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, iproc_pcie_of_match_table);
++
+ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+ {
++	const struct of_device_id *of_id;
+ 	struct iproc_pcie *pcie;
+ 	struct device_node *np = pdev->dev.of_node;
+ 	struct resource reg;
+@@ -35,11 +48,16 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+ 	LIST_HEAD(res);
+ 	int ret;
+ 
++	of_id = of_match_device(iproc_pcie_of_match_table, &pdev->dev);
++	if (!of_id)
++		return -EINVAL;
++
+ 	pcie = devm_kzalloc(&pdev->dev, sizeof(struct iproc_pcie), GFP_KERNEL);
+ 	if (!pcie)
+ 		return -ENOMEM;
+ 
+ 	pcie->dev = &pdev->dev;
++	pcie->type = (enum iproc_pcie_type)of_id->data;
+ 	platform_set_drvdata(pdev, pcie);
+ 
+ 	ret = of_address_to_resource(np, 0, &reg);
+@@ -114,12 +132,6 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+ 	return iproc_pcie_remove(pcie);
+ }
+ 
+-static const struct of_device_id iproc_pcie_of_match_table[] = {
+-	{ .compatible = "brcm,iproc-pcie", },
+-	{ /* sentinel */ }
+-};
+-MODULE_DEVICE_TABLE(of, iproc_pcie_of_match_table);
+-
+ static struct platform_driver iproc_pcie_pltfm_driver = {
+ 	.driver = {
+ 		.name = "iproc-pcie",
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index eac719a..24d5b62 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -30,20 +30,16 @@
+ 
+ #include "pcie-iproc.h"
+ 
+-#define CLK_CONTROL_OFFSET           0x000
+ #define EP_PERST_SOURCE_SELECT_SHIFT 2
+ #define EP_PERST_SOURCE_SELECT       BIT(EP_PERST_SOURCE_SELECT_SHIFT)
+ #define EP_MODE_SURVIVE_PERST_SHIFT  1
+ #define EP_MODE_SURVIVE_PERST        BIT(EP_MODE_SURVIVE_PERST_SHIFT)
+ #define RC_PCIE_RST_OUTPUT_SHIFT     0
+ #define RC_PCIE_RST_OUTPUT           BIT(RC_PCIE_RST_OUTPUT_SHIFT)
++#define PAXC_RESET_MASK              0x7f
+ 
+-#define CFG_IND_ADDR_OFFSET          0x120
+ #define CFG_IND_ADDR_MASK            0x00001ffc
+ 
+-#define CFG_IND_DATA_OFFSET          0x124
+-
+-#define CFG_ADDR_OFFSET              0x1f8
+ #define CFG_ADDR_BUS_NUM_SHIFT       20
+ #define CFG_ADDR_BUS_NUM_MASK        0x0ff00000
+ #define CFG_ADDR_DEV_NUM_SHIFT       15
+@@ -55,12 +51,8 @@
+ #define CFG_ADDR_CFG_TYPE_SHIFT      0
+ #define CFG_ADDR_CFG_TYPE_MASK       0x00000003
+ 
+-#define CFG_DATA_OFFSET              0x1fc
+-
+-#define SYS_RC_INTX_EN               0x330
+ #define SYS_RC_INTX_MASK             0xf
+ 
+-#define PCIE_LINK_STATUS_OFFSET      0xf0c
+ #define PCIE_PHYLINKUP_SHIFT         3
+ #define PCIE_PHYLINKUP               BIT(PCIE_PHYLINKUP_SHIFT)
+ #define PCIE_DL_ACTIVE_SHIFT         2
+@@ -71,12 +63,54 @@
+ #define OARR_SIZE_CFG_SHIFT          1
+ #define OARR_SIZE_CFG                BIT(OARR_SIZE_CFG_SHIFT)
+ 
+-#define OARR_LO(window)              (0xd20 + (window) * 8)
+-#define OARR_HI(window)              (0xd24 + (window) * 8)
+-#define OMAP_LO(window)              (0xd40 + (window) * 8)
+-#define OMAP_HI(window)              (0xd44 + (window) * 8)
+-
+ #define MAX_NUM_OB_WINDOWS           2
++#define MAX_NUM_PAXC_PF              4
++
++#define IPROC_PCIE_REG_INVALID 0xffff
++
++enum iproc_pcie_reg {
++	IPROC_PCIE_CLK_CTRL = 0,
++	IPROC_PCIE_CFG_IND_ADDR,
++	IPROC_PCIE_CFG_IND_DATA,
++	IPROC_PCIE_CFG_ADDR,
++	IPROC_PCIE_CFG_DATA,
++	IPROC_PCIE_INTX_EN,
++	IPROC_PCIE_OARR_LO,
++	IPROC_PCIE_OARR_HI,
++	IPROC_PCIE_OMAP_LO,
++	IPROC_PCIE_OMAP_HI,
++	IPROC_PCIE_LINK_STATUS,
++};
++
++/* iProc PCIe PAXB registers */
++static const u16 iproc_pcie_reg_paxb[] = {
++	[IPROC_PCIE_CLK_CTRL]     = 0x000,
++	[IPROC_PCIE_CFG_IND_ADDR] = 0x120,
++	[IPROC_PCIE_CFG_IND_DATA] = 0x124,
++	[IPROC_PCIE_CFG_ADDR]     = 0x1f8,
++	[IPROC_PCIE_CFG_DATA]     = 0x1fc,
++	[IPROC_PCIE_INTX_EN]      = 0x330,
++	[IPROC_PCIE_OARR_LO]      = 0xd20,
++	[IPROC_PCIE_OARR_HI]      = 0xd24,
++	[IPROC_PCIE_OMAP_LO]      = 0xd40,
++	[IPROC_PCIE_OMAP_HI]      = 0xd44,
++	[IPROC_PCIE_LINK_STATUS]  = 0xf0c,
++};
++
++/* iProc PCIe PAXC v1 registers */
++static const u16 iproc_pcie_reg_paxc[] = {
++	[IPROC_PCIE_CLK_CTRL]     = 0x000,
++	[IPROC_PCIE_CFG_IND_ADDR] = 0x1f0,
++	[IPROC_PCIE_CFG_IND_DATA] = 0x1f4,
++	[IPROC_PCIE_CFG_ADDR]     = 0x1f8,
++	[IPROC_PCIE_CFG_DATA]     = 0x1fc,
++	[IPROC_PCIE_INTX_EN]      = IPROC_PCIE_REG_INVALID,
++	[IPROC_PCIE_OARR_LO]      = IPROC_PCIE_REG_INVALID,
++	[IPROC_PCIE_OARR_HI]      = IPROC_PCIE_REG_INVALID,
++	[IPROC_PCIE_OMAP_LO]      = IPROC_PCIE_REG_INVALID,
++	[IPROC_PCIE_OMAP_HI]      = IPROC_PCIE_REG_INVALID,
++	[IPROC_PCIE_LINK_STATUS]  = IPROC_PCIE_REG_INVALID,
++};
+ 
+ static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
+ {
+@@ -91,6 +125,65 @@ static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
+ 	return pcie;
+ }
+ 
++static inline bool iproc_pcie_reg_is_invalid(u16 reg_offset)
++{
++	return !!(reg_offset == IPROC_PCIE_REG_INVALID);
++}
++
++static inline u16 iproc_pcie_reg_offset(struct iproc_pcie *pcie,
++					enum iproc_pcie_reg reg)
++{
++	return pcie->reg_offsets[reg];
++}
++
++static inline u32 iproc_pcie_read_reg(struct iproc_pcie *pcie,
++				      enum iproc_pcie_reg reg)
++{
++	u16 offset = iproc_pcie_reg_offset(pcie, reg);
++
++	if (iproc_pcie_reg_is_invalid(offset))
++		return 0;
++
++	return readl(pcie->base + offset);
++}
++
++static inline void iproc_pcie_write_reg(struct iproc_pcie *pcie,
++					enum iproc_pcie_reg reg, u32 val)
++{
++	u16 offset = iproc_pcie_reg_offset(pcie, reg);
++
++	if (iproc_pcie_reg_is_invalid(offset))
++		return;
++
++	writel(val, pcie->base + offset);
++}
++
++static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
++				       enum iproc_pcie_reg reg,
++				       unsigned window, u32 val)
++{
++	u16 offset = iproc_pcie_reg_offset(pcie, reg);
++
++	if (iproc_pcie_reg_is_invalid(offset))
++		return;
++
++	writel(val, pcie->base + offset + (window * 8));
++}
++
++static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
++					      unsigned int slot,
++					      unsigned int fn)
++{
++	if (slot > 0)
++		return false;
++
++	/* PAXC can only support limited number of functions */
++	if (pcie->type == IPROC_PCIE_PAXC && fn >= MAX_NUM_PAXC_PF)
++		return false;
++
++	return true;
++}
++
+ /**
+  * Note access to the configuration registers are protected at the higher layer
+  * by 'pci_lock' in drivers/pci/access.c
+@@ -104,28 +197,34 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 	unsigned fn = PCI_FUNC(devfn);
+ 	unsigned busno = bus->number;
+ 	u32 val;
++	u16 offset;
++
++	if (!iproc_pcie_device_is_valid(pcie, slot, fn))
++		return NULL;
+ 
+ 	/* root complex access */
+ 	if (busno == 0) {
+-		if (slot >= 1)
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_IND_ADDR,
++				     where & CFG_IND_ADDR_MASK);
++		offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_IND_DATA);
++		if (iproc_pcie_reg_is_invalid(offset))
+ 			return NULL;
+-		writel(where & CFG_IND_ADDR_MASK,
+-		       pcie->base + CFG_IND_ADDR_OFFSET);
+-		return (pcie->base + CFG_IND_DATA_OFFSET);
++		else
++			return (pcie->base + offset);
+ 	}
+ 
+-	if (fn > 1)
+-		return NULL;
+-
+ 	/* EP device access */
+ 	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
+ 		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
+ 		(fn << CFG_ADDR_FUNC_NUM_SHIFT) |
+ 		(where & CFG_ADDR_REG_NUM_MASK) |
+ 		(1 & CFG_ADDR_CFG_TYPE_MASK);
+-	writel(val, pcie->base + CFG_ADDR_OFFSET);
+-
+-	return (pcie->base + CFG_DATA_OFFSET);
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
++	offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
++	if (iproc_pcie_reg_is_invalid(offset))
++		return NULL;
++	else
++		return (pcie->base + offset);
+ }
+ 
+ static struct pci_ops iproc_pcie_ops = {
+@@ -138,18 +237,29 @@ static void iproc_pcie_reset(struct iproc_pcie *pcie)
+ {
+ 	u32 val;
+ 
++	if (pcie->type == IPROC_PCIE_PAXC) {
++		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
++		val &= ~PAXC_RESET_MASK;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
++		udelay(100);
++		val |= PAXC_RESET_MASK;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
++		udelay(100);
++		return;
++	}
++
+ 	/*
+ 	 * Select perst_b signal as reset source. Put the device into reset,
+ 	 * and then bring it out of reset
+ 	 */
+-	val = readl(pcie->base + CLK_CONTROL_OFFSET);
++	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+ 	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+ 		~RC_PCIE_RST_OUTPUT;
+-	writel(val, pcie->base + CLK_CONTROL_OFFSET);
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+ 	udelay(250);
+ 
+ 	val |= RC_PCIE_RST_OUTPUT;
+-	writel(val, pcie->base + CLK_CONTROL_OFFSET);
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+ 	msleep(100);
+ }
+ 
+@@ -160,7 +270,14 @@ static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+ 	u16 pos, link_status;
+ 	bool link_is_active = false;
+ 
+-	val = readl(pcie->base + PCIE_LINK_STATUS_OFFSET);
++	/*
++	 * PAXC connects to emulated endpoint devices directly and does not
++	 * have a Serdes. Therefore skip the link detection logic here
++	 */
++	if (pcie->type == IPROC_PCIE_PAXC)
++		return 0;
++
++	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_LINK_STATUS);
+ 	if (!(val & PCIE_PHYLINKUP) || !(val & PCIE_DL_ACTIVE)) {
+ 		dev_err(pcie->dev, "PHY or data link is INACTIVE!\n");
+ 		return -ENODEV;
+@@ -221,7 +338,7 @@ static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+ 
+ static void iproc_pcie_enable(struct iproc_pcie *pcie)
+ {
+-	writel(SYS_RC_INTX_MASK, pcie->base + SYS_RC_INTX_EN);
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_INTX_EN, SYS_RC_INTX_MASK);
+ }
+ 
+ /**
+@@ -272,11 +389,15 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
+ 	axi_addr -= ob->axi_offset;
+ 
+ 	for (i = 0; i < MAX_NUM_OB_WINDOWS; i++) {
+-		writel(lower_32_bits(axi_addr) | OARR_VALID |
+-		       (ob->set_oarr_size ? 1 : 0), pcie->base + OARR_LO(i));
+-		writel(upper_32_bits(axi_addr), pcie->base + OARR_HI(i));
+-		writel(lower_32_bits(pci_addr), pcie->base + OMAP_LO(i));
+-		writel(upper_32_bits(pci_addr), pcie->base + OMAP_HI(i));
++		iproc_pcie_ob_write(pcie, IPROC_PCIE_OARR_LO, i,
++				    lower_32_bits(axi_addr) | OARR_VALID |
++				    (ob->set_oarr_size ? 1 : 0));
++		iproc_pcie_ob_write(pcie, IPROC_PCIE_OARR_HI, i,
++				    upper_32_bits(axi_addr));
++		iproc_pcie_ob_write(pcie, IPROC_PCIE_OMAP_LO, i,
++				    lower_32_bits(pci_addr));
++		iproc_pcie_ob_write(pcie, IPROC_PCIE_OMAP_HI, i,
++				    upper_32_bits(pci_addr));
+ 
+ 		size -= ob->window_size;
+ 		if (size == 0)
+@@ -340,6 +461,19 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 		goto err_exit_phy;
+ 	}
+ 
++	switch (pcie->type) {
++	case IPROC_PCIE_PAXB:
++		pcie->reg_offsets = iproc_pcie_reg_paxb;
++		break;
++	case IPROC_PCIE_PAXC:
++		pcie->reg_offsets = iproc_pcie_reg_paxc;
++		break;
++	default:
++		dev_err(pcie->dev, "incompatible iProc PCIe interface\n");
++		ret = -EINVAL;
++		goto err_power_off_phy;
++	}
++
+ 	iproc_pcie_reset(pcie);
+ 
+ 	if (pcie->need_ob_cfg) {
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index d3dc940..051b651 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -15,6 +15,20 @@
+ #define _PCIE_IPROC_H
+ 
+ /**
++ * iProc PCIe interface type
++ *
++ * PAXB is the wrapper used in root complex that can be connected to an
++ * external endpoint device
++ *
++ * PAXC is the wrapper used in root complex dedicated for internal emulated
++ * endpoint devices
++ */
++enum iproc_pcie_type {
++	IPROC_PCIE_PAXB = 0,
++	IPROC_PCIE_PAXC,
++};
++
++/**
+  * iProc PCIe outbound mapping
+  * @set_oarr_size: indicates the OARR size bit needs to be set
+  * @axi_offset: offset from the AXI address to the internal address used by
+@@ -29,7 +43,10 @@ struct iproc_pcie_ob {
+ 
+ /**
+  * iProc PCIe device
++ *
+  * @dev: pointer to device data structure
++ * @type: iProc PCIe interface type
++ * @reg_offsets: register offsets
+  * @base: PCIe host controller I/O register base
+  * @sysdata: Per PCI controller data (ARM-specific)
+  * @root_bus: pointer to root bus
+@@ -41,6 +58,8 @@ struct iproc_pcie_ob {
+  */
+ struct iproc_pcie {
+ 	struct device *dev;
++	enum iproc_pcie_type type;
++	const u16 *reg_offsets;
+ 	void __iomem *base;
+ #ifdef CONFIG_ARM
+ 	struct pci_sys_data sysdata;
+-- 
+1.9.1
 
