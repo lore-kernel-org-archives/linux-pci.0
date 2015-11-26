@@ -1,54 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0077.outbound.protection.outlook.com ([65.55.169.77]:38592
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756315AbbKSAv0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Nov 2015 19:51:26 -0500
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <rjw@rjwysocki.net>, <bhelgaas@google.com>, <robin.murphy@arm.com>
-CC: <arnd@arndb.de>, <linux-pci@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-Subject: [PATCH] PCI: Fix logic OF logic in pci_dma_configure()
-Date: Wed, 18 Nov 2015 16:49:52 -0800
-Message-ID: <1447894192-17210-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:52922 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753589AbbKZWhF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Nov 2015 17:37:05 -0500
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v3 3/5] PCI: iproc: Add iProc PCIe MSI device tree binding
+Date: Thu, 26 Nov 2015 14:37:08 -0800
+Message-ID: <1448577430-16428-4-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1448577430-16428-1-git-send-email-rjui@broadcom.com>
+References: <1448577430-16428-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch fixes a bug introduced by previous commit,
-which incorrectly checkes the of_node of the end-point device.
-Instead, it should check the of_node of the host bridge.
+This patch updates the iProc PCIe device tree bindings with added
+binding information for MSI
 
-Fixes: 50230713b639 ("PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()")
-Reported-by: Robin Murphy <robin.murphy@arm.com>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
 ---
- drivers/pci/probe.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ .../devicetree/bindings/pci/brcm,iproc-pcie.txt    | 35 ++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e735c72..edb1984 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1685,8 +1685,8 @@ static void pci_dma_configure(struct pci_dev *dev)
- {
- 	struct device *bridge = pci_get_host_bridge_device(dev);
+diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+index 06eae0f..acbdbad 100644
+--- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+@@ -35,6 +35,28 @@ Optional:
+ - brcm,pcie-ob-oarr-size: Some iProc SoCs need the OARR size bit to be set to
+ increase the outbound window size
  
--	if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
--		if (bridge->parent)
-+	if (IS_ENABLED(CONFIG_OF) &&
-+		bridge->parent && bridge->parent->of_node) {
- 			of_dma_configure(&dev->dev, bridge->parent->of_node);
- 	} else if (has_acpi_companion(bridge)) {
- 		struct acpi_device *adev = to_acpi_device_node(bridge->fwnode);
++MSI support (optional):
++
++For older platforms without MSI integrated in the GIC, iProc PCIe core provides
++an event queue based MSI support. The iProc MSI uses host memories to store
++MSI posted writes in the event queues
++
++- msi-parent: Link to the device node of the MSI controller. On newer iProc
++platforms, the MSI controller may be gicv2m or gicv3-its. On older iProc
++platforms without MSI support in its interrupt controller, one may use the
++event queue based MSI support integrated within the iProc PCIe core
++
++When the iProc event queue based MSI is used, one needs to define the
++following properties in the MSI device node:
++- compatible: Must be "brcm,iproc-msi"
++- msi-controller: claims itself as an MSI controller
++- interrupt-parent: Link to its parent interrupt device
++- interrupts: List of interrupt IDs from its parent interrupt device
++
++Optional properties:
++- brcm,pcie-msi-inten: Needs to be present for some older iProc platforms that
++require the interrupt enable registers to be set explicitly to enable MSI
++
+ Example:
+ 	pcie0: pcie@18012000 {
+ 		compatible = "brcm,iproc-pcie";
+@@ -61,6 +83,19 @@ Example:
+ 		brcm,pcie-ob-oarr-size;
+ 		brcm,pcie-ob-axi-offset = <0x00000000>;
+ 		brcm,pcie-ob-window-size = <256>;
++
++		msi-parent = <&msi0>;
++
++		/* iProc event queue based MSI */
++		msi0: msi@18012000 {
++			compatible = "brcm,iproc-msi";
++			msi-controller;
++			interrupt-parent = <&gic>;
++			interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
++				     <GIC_SPI 97 IRQ_TYPE_NONE>,
++				     <GIC_SPI 98 IRQ_TYPE_NONE>,
++				     <GIC_SPI 99 IRQ_TYPE_NONE>,
++		};
+ 	};
+ 
+ 	pcie1: pcie@18013000 {
 -- 
-2.1.0
+1.9.1
 
