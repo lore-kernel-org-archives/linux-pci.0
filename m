@@ -1,123 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp05.br.ibm.com ([32.104.18.26]:58403 "EHLO
-	e24smtp05.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754127AbbKXVGI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Nov 2015 16:06:08 -0500
-Received: from localhost
-	by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Tue, 24 Nov 2015 19:06:04 -0200
-Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
-	by d24dlp01.br.ibm.com (Postfix) with ESMTP id C55673520062
-	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2015 16:05:57 -0500 (EST)
-Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
-	by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tAOL445n11338192
-	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2015 19:04:04 -0200
-Received: from d24av01.br.ibm.com (localhost [127.0.0.1])
-	by d24av01.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tAOL5xgE023283
-	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2015 19:05:59 -0200
-Subject: Re: [PATCH] Enable MSI/MSI-X caps and disable MSI interrupts at PCI
- probe time - code move
-To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-References: <1445437055-7017-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, mpe@ellerman.id.au, mst@redhat.com
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Message-ID: <5654D134.5000302@linux.vnet.ibm.com>
-Date: Tue, 24 Nov 2015 19:05:56 -0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms@verge.net.au>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [Resend: PATCH v2 0/3] Fix rcar-pcie for arm64
+Date: Thu, 26 Nov 2015 08:32:43 +0000
+Message-ID: <PS1PR06MB118027A91BEF26FC73A6E76EF5040@PS1PR06MB1180.apcprd06.prod.outlook.com>
+References: <1448465439-2132-1-git-send-email-phil.edworthy@renesas.com>
+ <20151125164033.GA1380@localhost>
+In-Reply-To: <20151125164033.GA1380@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1445437055-7017-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/21/2015 12:17 PM, Guilherme G. Piccoli wrote:
-> Commit 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel
-> doesn't support MSI") changed the location of the code that initializes
-> dev->msi_cap/msix_cap and disables MSI/MSI-X interrupts at PCI probe
-> time in devices that have this flag set. It moved the code from
-> pci_msi_init_pci_dev() to a new function named pci_msi_setup_pci_dev(),
-> called by pci_setup_device().
->
-> In Open Firmware code path (PowerPC pSeries/SPARC archs) the function
-> pci_setup_device() is not called, so MSI capabilities are never enabled,
-> leading to error messages as:
->
-> 	bnx2x 0000:01:00.0: no msix capability found
->
-> Commit 4d9aac397a5d ("powerpc/PCI: Disable MSI/MSI-X interrupts at PCI
-> probe time in OF case") solved the issue on PowerPC pSeries arch calling
-> manually pci_msi_setup_pci_dev() on appropriate place. However, this
-> modification does not solve the general case (SPARC arch should be
-> modified too) and duplicates a lot of code, as pointed by Bjorn Helgaas.
-> As suggested by him, worth to reorganize the code to generally solve the
-> MSI caps issue and avoid too much code duplication.
->
-> This patch does exactly this: we remove both the pci_msi_setup_pci_dev()
-> call from pci_setup_device() and the same call in OF code path of PowerPC
-> pSeries arch. Then, we call pci_msi_setup_pci_dev() directly from
-> pci_init_capabilities(). So, we can initialize MSI caps and disable MSI
-> interruptions during PCI probe in general fashion, avoiding code
-> duplication.
->
-> Notice that this patch has the same practical effect of reverting
-> commit 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel
-> doesn't support MSI") and commit 4d9aac397a5d ("powerpc/PCI: Disable
-> MSI/MSI-X interrupts at PCI probe time in OF case"). Regarding the
-> former, the author called pci_msi_setup_pci_dev() from pci_setup_device()
-> because there was an early quirk used in pci_msi_off(), which depended on
-> pci_msi_setup_pci_dev(). Since pci_msi_off() was completely removed by
-> commit c6201cd8513d ("PCI/MSI: Remove unused pci_msi_off()"), we can call
-> pci_msi_setup_pci_dev() directly from pci_init_capabilities().
->
-> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/kernel/pci_of_scan.c | 3 ---
->   drivers/pci/probe.c               | 5 +++--
->   2 files changed, 3 insertions(+), 5 deletions(-)
->
-> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-> index 2e710c1..526ac67 100644
-> --- a/arch/powerpc/kernel/pci_of_scan.c
-> +++ b/arch/powerpc/kernel/pci_of_scan.c
-> @@ -187,9 +187,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
->
->   	pci_device_add(dev, bus);
->
-> -	/* Setup MSI caps & disable MSI/MSI-X interrupts */
-> -	pci_msi_setup_pci_dev(dev);
-> -
->   	return dev;
->   }
->   EXPORT_SYMBOL(of_create_pci_dev);
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 8361d27..0aac86e 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1209,8 +1209,6 @@ int pci_setup_device(struct pci_dev *dev)
->   	/* "Unknown power state" */
->   	dev->current_state = PCI_UNKNOWN;
->
-> -	pci_msi_setup_pci_dev(dev);
-> -
->   	/* Early fixups, before probing the BARs */
->   	pci_fixup_device(pci_fixup_early, dev);
->   	/* device class may be changed after fixup */
-> @@ -1600,6 +1598,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
->   	/* MSI/MSI-X list */
->   	pci_msi_init_pci_dev(dev);
->
-> +	/* Setup MSI caps & disable MSI/MSI-X interrupts */
-> +	pci_msi_setup_pci_dev(dev);
-> +
->   	/* Buffers for saving PCIe and PCI-X capabilities */
->   	pci_allocate_cap_save_buffers(dev);
->
+HI Bjorn,
 
-Michael, Bjorn: any news on this one?
+On 25 November 2015 16:41, Bjorn Helgaas wrote:
+> Hi Phil,
+> 
+> On Wed, Nov 25, 2015 at 03:30:36PM +0000, Phil Edworthy wrote:
+> > The first patches fixes the build problem
+> 
+> I'm trying to figure out if v4.4 has a build problem we need to fix.
+> If I understand correctly, "PCI: rcar: Convert to DT resource parsing
+> API" doesn't fix a build problem in the current tree; rather, it
+> removes a dependency on ARM so that we can build it on ARM64.
+v4.4 doesn't have a build problem because commit 7c537c67d2e4 ensures
+it doesn't get built on arm64. If we revert this commit, then there is a
+build failure as the pci_ioremap_io() function is not available on arm64.
+That's the build failure which "PCI: rcar: Convert to DT resource parsing API"
+fixes.
 
-Thanks,
+> > , and the second patch reverts the
+> > patch that removed the driver from arm64 builds. The final patch add a compat
+> > string for the r8a7795 (arm64) device.
+> >
+> > Tested on arm Koelsch board, all ok.
+> >
+> > Tested on arm64 Salvator-X board using renesas-drivers-2015-10-27-v4.3-rc7
+> from
+> > git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-drivers.git with
+> PCI
+> > next merged.
+> > Apart from patches to add the PCIe clock and DT nodes, it also needs this fix:
+> > ("PCI: MSI: Only use the generic MSI layer when domain is hierarchical")
+> 
+> I assume you mean this one from Marc: https://lkml.org/lkml/2015/11/23/388
+> (Was that posted to linux-pci?  I don't see it in patchwork or my
+> linux-pci archives, so I hadn't seen it yet.)
+Ok, yes that's the patch.
 
+> How exactly is that related to this series?  If I merge these before
+> Marc's change, do we have a tree that builds for arm64 but doesn't
+> work?
+Correct.
 
+> What about the PCIe clock and DT changes you mention?  Is there a
+> reason to keep them separate?  Would it be feasible to include the DT
+> changes in the same patch as the driver change that uses those
+> changes?
+The approach for all other drivers has been to keep these separate. There
+are no changes to the dt bindings, it's just adding the node to the new
+device and board, so there is no problem with ordering of these patches.
 
-Guilherme
+Thanks
+Phil
 
+> Bjorn
+> 
+> > Resent with whole series marked as v2 and acks, etc added.
+> >
+> > Harunobu Kurokawa (1):
+> >   PCI: pcie-rcar: Add support for R-Car H3.
+> >
+> > Phil Edworthy (2):
+> >   PCI: rcar: Convert to DT resource parsing API
+> >   Revert "PCI: rcar: Build pcie-rcar.c only on ARM"
+> >
+> >  Documentation/devicetree/bindings/pci/rcar-pci.txt |   3 +-
+> >  drivers/pci/host/Kconfig                           |   3 +-
+> >  drivers/pci/host/pcie-rcar.c                       | 117 +++++++++++++--------
+> >  3 files changed, 77 insertions(+), 46 deletions(-)
+> >
+> > --
+> > 2.5.0
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
