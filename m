@@ -1,156 +1,85 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Burton <paul.burton@imgtec.com>
-To: <linux-mips@linux-mips.org>
-CC: Paul Burton <paul.burton@imgtec.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	"Jiang Liu" <jiang.liu@linux.intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Russell Joyce <russell.joyce@york.ac.uk>,
-	Arnd Bergmann <arnd@arndb.de>, <linux-kernel@vger.kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH 05/28] PCI: xilinx: keep references to both IRQ domains
-Date: Mon, 30 Nov 2015 16:21:30 +0000
-Message-ID: <1448900513-20856-6-git-send-email-paul.burton@imgtec.com>
-In-Reply-To: <1448900513-20856-1-git-send-email-paul.burton@imgtec.com>
-References: <1448900513-20856-1-git-send-email-paul.burton@imgtec.com>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: "robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"rjui@broadcom.com" <rjui@broadcom.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"dhdang@apm.com" <dhdang@apm.com>,
+	"sbranden@broadcom.com" <sbranden@broadcom.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH v9] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+Date: Thu, 26 Nov 2015 05:03:20 +0000
+Message-ID: <8520D5D51A55D047800579B09414719825866301@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1447911323-12567-1-git-send-email-bharatku@xilinx.com>
+	<20151124173556.18aff6b5@arm.com>
+	<8520D5D51A55D047800579B0941471982586607F@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20151125075018.68e97010@arm.com>
+In-Reply-To: <20151125075018.68e97010@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcie-xilinx creates 2 IRQ domains when built with MSI support: one for
-MSI interrupts & one for legacy INTx interrupts. However, it only kept a
-reference to the MSI IRQ domain. This means that any INTx interrupts
-that may occur would be mapped using the wrong domain, and that only the
-MSI IRQ domain would be removed along with the driver. Track both IRQ
-domains & clean up both as appropriate.
-
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
----
-
- drivers/pci/host/pcie-xilinx.c | 58 ++++++++++++++++++++----------------------
- 1 file changed, 28 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 3c7a0d5..c412a37 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -105,6 +105,7 @@
-  * @root_busno: Root Bus number
-  * @dev: Device pointer
-  * @irq_domain: IRQ domain pointer
-+ * @msi_irq_domain: MSI IRQ domain pointer
-  * @bus_range: Bus range
-  * @resources: Bus Resources
-  */
-@@ -115,6 +116,7 @@ struct xilinx_pcie_port {
- 	u8 root_busno;
- 	struct device *dev;
- 	struct irq_domain *irq_domain;
-+	struct irq_domain *msi_irq_domain;
- 	struct resource bus_range;
- 	struct list_head resources;
- };
-@@ -291,7 +293,7 @@ static int xilinx_pcie_msi_setup_irq(struct msi_controller *chip,
- 	if (hwirq < 0)
- 		return hwirq;
- 
--	irq = irq_create_mapping(port->irq_domain, hwirq);
-+	irq = irq_create_mapping(port->msi_irq_domain, hwirq);
- 	if (!irq)
- 		return -EINVAL;
- 
-@@ -517,31 +519,21 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 
- /**
-  * xilinx_pcie_free_irq_domain - Free IRQ domain
-- * @port: PCIe port information
-+ * @domain: the IRQ domain to free
-+ * @nr: the number of IRQs in the domain
-  */
--static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
-+static void xilinx_pcie_free_irq_domain(struct irq_domain *domain, int nr)
- {
- 	int i;
--	u32 irq, num_irqs;
--
--	/* Free IRQ Domain */
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--
--		free_pages(port->msi_pages, 0);
--
--		num_irqs = XILINX_NUM_MSI_IRQS;
--	} else {
--		/* INTx */
--		num_irqs = 4;
--	}
-+	u32 irq;
- 
--	for (i = 0; i < num_irqs; i++) {
--		irq = irq_find_mapping(port->irq_domain, i);
-+	for (i = 0; i < nr; i++) {
-+		irq = irq_find_mapping(domain, i);
- 		if (irq > 0)
- 			irq_dispose_mapping(irq);
- 	}
- 
--	irq_domain_remove(port->irq_domain);
-+	irq_domain_remove(domain);
- }
- 
- /**
-@@ -571,20 +563,20 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- 		return PTR_ERR(port->irq_domain);
- 	}
- 
--	/* Setup MSI */
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		port->irq_domain = irq_domain_add_linear(node,
--							 XILINX_NUM_MSI_IRQS,
--							 &msi_domain_ops,
--							 &xilinx_pcie_msi_chip);
--		if (!port->irq_domain) {
--			dev_err(dev, "Failed to get a MSI IRQ domain\n");
--			return PTR_ERR(port->irq_domain);
--		}
-+	if (!IS_ENABLED(CONFIG_PCI_MSI))
-+		return 0;
- 
--		xilinx_pcie_enable_msi(port);
-+	/* Setup MSI */
-+	port->msi_irq_domain = irq_domain_add_linear(node,
-+						     XILINX_NUM_MSI_IRQS,
-+						     &msi_domain_ops,
-+						     &xilinx_pcie_msi_chip);
-+	if (!port->msi_irq_domain) {
-+		dev_err(dev, "Failed to get a MSI IRQ domain\n");
-+		return PTR_ERR(port->msi_irq_domain);
- 	}
- 
-+	xilinx_pcie_enable_msi(port);
- 	return 0;
- }
- 
-@@ -868,7 +860,13 @@ static int xilinx_pcie_remove(struct platform_device *pdev)
- {
- 	struct xilinx_pcie_port *port = platform_get_drvdata(pdev);
- 
--	xilinx_pcie_free_irq_domain(port);
-+	xilinx_pcie_free_irq_domain(port->irq_domain, 4);
-+
-+	if (config_enabled(CONFIG_MSI)) {
-+		free_pages(port->msi_pages, 0);
-+		xilinx_pcie_free_irq_domain(port->msi_irq_domain,
-+					    XILINX_NUM_MSI_IRQS);
-+	}
- 
- 	return 0;
- }
--- 
-2.6.2
-
+> Subject: Re: [PATCH v9] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+> PCIe Host Controller
+> 
+> On Wed, 25 Nov 2015 05:40:49 +0000
+> Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
+> 
+> > > On Thu, 19 Nov 2015 11:05:23 +0530
+> > > Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> wrote:
+> > >
+> > > > Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+> > > >
+> > > > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > > > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> > > > Acked-by: Rob Herring <robh@kernel.org>
+> > > > ---
+> > > > +
+> > > > +#define MSI_ADDRESS				0xDEED0000
+> > >
+> > > How did you pick this value? What if it intersect with some actual RAM?
+> > > What if a device actually does DMA to that location?
+> > >
+> > > Wouldn't it make sense to actually pick a real *device* address (hint:
+> > > your MSI controller itself) for this purpose, as the device will
+> > > never DMA there?
+> > >
+> > >
+> > We have already mentioned in previous patch discussion, we don't have
+> > any device address on our SOC for MSI, that's the reason we are
+> > allocating a page for MSI in RAM. Since our memory write is consumed
+> > by bridge and doesn't write to memory, you suggested to use some
+> > random address,  so using some random address.
+> 
+> This is becoming painful.
+> 
+> - "write is consumed by bridge and doesn't write to memory": So why are
+>   you using something that has a chance of actually being memory??? Are
+>   you in the business of corrupting unsuspecting data?
+> 
+> - "we don't have any device address on our SOC for MSI": You have
+>   plenty, and that's the whole of your device space. *All of it*. So
+>   just take the base address of your PCIe controller, and be done with
+>   it. Or your UART. Anything that cannot be DMA'ed to from a PCIe
+>   device, and that is downstream of your PCIe bridge.
+> 
+Yes, PCIe controller base will be fine, will send next patch addressing this.
