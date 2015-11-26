@@ -1,74 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: PCIe regression with DRA7xx in 4.4-rc1
-To: Jisheng Zhang <jszhang@marvell.com>
-References: <56545183.8000507@ti.com> <20151124201411.33463709@xhacker>
-CC: <linux-pci@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:42229 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751501AbbKZPlf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Nov 2015 10:41:35 -0500
+Subject: Re: [PATCH 2/2] PCI support added to ARC
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Vineet Gupta <Vineet.Gupta1@synopsys.com>
+References: <cover.1448375184.git.jpinto@synopsys.com>
+ <9b80d6c1db4d7e2b5ee5dc0056a3d8284e7c2b9b.1448375184.git.jpinto@synopsys.com>
+ <C2D7FE5348E1B147BCA15975FBA23075F44D3B42@IN01WEMBXA.internal.synopsys.com>
+ <20151125164636.GB1380@localhost>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>, <james.morse@arm.com>,
-	<gabriel.fernandez@st.com>, <Minghuan.Lian@freescale.com>,
-	<wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
-	<arnd@arndb.de>, <bhelgaas@google.com>, <pratyush.anand@gmail.com>,
-	"Nori, Sekhar" <nsekhar@ti.com>, <jingoohan1@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <56545F3A.6060808@ti.com>
-Date: Tue, 24 Nov 2015 18:29:38 +0530
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
+	Alexey Brodkin <Alexey.Brodkin@synopsys.com>,
+	arcml <linux-snps-arc@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56572829.4090102@synopsys.com>
+Date: Thu, 26 Nov 2015 15:41:29 +0000
 MIME-Version: 1.0
-In-Reply-To: <20151124201411.33463709@xhacker>
+In-Reply-To: <20151125164636.GB1380@localhost>
 Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Hi Bjorn,
 
-On Tuesday 24 November 2015 05:44 PM, Jisheng Zhang wrote:
+On 11/25/2015 4:46 PM, Bjorn Helgaas wrote:
+> On Wed, Nov 25, 2015 at 05:25:37AM +0000, Vineet Gupta wrote:
+>> On Tuesday 24 November 2015 08:02 PM, Joao Pinto wrote:
 > 
+>>> +			pr_err("PCI: Device %s not available because"/
+>>> +			       " of resource collisions\n", pci_name(dev));
+>>
+>> Better not to break strings - even if they sometime exceed line sz limit of 80.
+>> You could anyways reduce the string content herer.
 > 
-> On Tue, 24 Nov 2015 17:31:07 +0530
-> Kishon Vijay Abraham I wrote:
+> Also use dev_err() instead of pr_err().
 > 
->> Hi,
->>
->> I'm seeing a regression with <d1b9cf31252e905ad563b9e863fd4470f6c3dd1c>("PCI:
->> designware: Make driver arch-agnostic").
->>
->> Logs using a SATA PCIe card [1]. The PCIe card enumerates fine but after that I
->> observe "ata3.00: qc timeout (cmd 0xec), ata3.00: failed to IDENTIFY (I/O
->> error, err_mask=0x4)"
->>
->> Logs using a Ethenet PCIe card [2]. Again here the PCIe card enumerates fine
->> but when I give ifconfig up, it fails.
->>
->> If I just revert commit <d1b9cf31252e905ad563b9e863fd4470f6c3dd1c>, the PCIe
->> cards starts to work fine again
-> 
-> FYI, maybe the patch can fix the regression.
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-November/387362.html
 
-yes, it fixed.
+Thanks for the review. Could you please check PATCH 1/2 regarding the new
+platform driver? This way I would produce a v2 of the patch set.
 
-Thanks
-Kishon
+Thanks,
+Joao
 
-> 
->>
->> Logs using a SATA PCIe card [3]. Here the KINGSTON SSD gets detected fine.
->> Logs using a Ethernet PCIe card [4]. I'm able to do ping tests now.
->>
->> Actually I'm not able to find any obvious problems with the patch and the irq
->> number and the memory resource also looks fine. Any idea what could be the problem?
->>
->> [1] -> http://pastebin.ubuntu.com/13491456/
->> [2] -> http://pastebin.ubuntu.com/13491526/
->>
->> [3] -> http://pastebin.ubuntu.com/13491658/
->> [4] -> http://pastebin.ubuntu.com/13491593/
->>
->> Thanks
->> Kishon
->>
->> _______________________________________________
->> linux-arm-kernel mailing list
->> linux-arm-kernel@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> 
