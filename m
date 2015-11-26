@@ -1,90 +1,838 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu-smtp-delivery-143.mimecast.com ([207.82.80.143]:33106 "EHLO
-	eu-smtp-delivery-143.mimecast.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752988AbbKRMAg convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Nov 2015 07:00:36 -0500
-Subject: Re: [PATCH V5 8/9] PCI: OF: Move of_pci_dma_configure() to
- pci_dma_configure()
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	bhelgaas@google.com, rjw@rjwysocki.net, lenb@kernel.org,
-	catalin.marinas@arm.com, will.deacon@arm.com,
-	"arnd@arndb.de" <arnd@arndb.de>
-References: <1446072654-5608-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <1446072654-5608-9-git-send-email-Suravee.Suthikulpanit@amd.com>
- <564B4111.6010805@arm.com>
-Cc: thomas.lendacky@amd.com, herbert@gondor.apana.org.au,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, hanjun.guo@linaro.org,
-	davem@davemloft.net, linux-arm-kernel@lists.infradead.org
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <564C6860.4000002@arm.com>
-Date: Wed, 18 Nov 2015 12:00:32 +0000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 4/5] PCI: iproc: Add iProc PCIe MSI support
+To: Marc Zyngier <marc.zyngier@arm.com>
+References: <1448406294-732-1-git-send-email-rjui@broadcom.com>
+ <1448406294-732-5-git-send-email-rjui@broadcom.com>
+ <20151125173627.41b1a526@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+Message-ID: <565665E8.1080702@broadcom.com>
+Date: Wed, 25 Nov 2015 17:52:40 -0800
 MIME-Version: 1.0
-In-Reply-To: <564B4111.6010805@arm.com>
-Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20151125173627.41b1a526@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+Arnd
+Hi Marc,
 
-On 17/11/15 15:00, Robin Murphy wrote:
-> Hi Suravee,
+On 11/25/2015 9:36 AM, Marc Zyngier wrote:
+> On Tue, 24 Nov 2015 15:04:53 -0800
+> Ray Jui <rjui@broadcom.com> wrote:
 >
-> On 28/10/15 22:50, Suravee Suthikulpanit wrote:
->> This patch move of_pci_dma_configure() to a more generic
->> pci_dma_configure(), which can be extended by non-OF code (e.g. ACPI).
+>> This patch adds PCIe MSI support for both PAXB and PAXC interfaces on
+>> all iProc based platforms. The patch follows the latest trend in the
+>> kernel to use MSI domain based implementation
 >>
->> This has no functional change.
 >
-> Unfortunately, it appears that it does...
+> That's a pretty useless comment. The general trend in the kernel is to
+> use the most appropriate infrastructure.
 >
->> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> Acked-by: Rob Herring <robh+dt@kernel.org>
->> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
->> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
-[...]
->> +/**
->> + * pci_dma_configure - Setup DMA configuration
->> + * @dev: ptr to pci_dev struct of the PCI device
+>> This iProc event queue based MSI support should not be used with newer
+>> platforms with integrated MSI support in the GIC (e.g., giv2m or
+>> gicv3-its)
+>>
+>
+> I'd be more interested in some documentation explaining how the HW
+> works, how the various data structures are updated, and when.
+>
+
+Okay will try my best to describe my understanding of iProc MSI in the 
+commit message of my next iteration of patches.
+
+>> Signed-off-by: Ray Jui <rjui@broadcom.com>
+>> Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+>> Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
+>> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+>> ---
+>>   drivers/pci/host/Kconfig          |   9 +
+>>   drivers/pci/host/Makefile         |   1 +
+>>   drivers/pci/host/pcie-iproc-msi.c | 662 ++++++++++++++++++++++++++++++++++++++
+>>   drivers/pci/host/pcie-iproc.c     |  26 ++
+>>   drivers/pci/host/pcie-iproc.h     |  21 +-
+>>   5 files changed, 717 insertions(+), 2 deletions(-)
+>>   create mode 100644 drivers/pci/host/pcie-iproc-msi.c
+>>
+>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>> index f131ba9..972e906 100644
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
+>> @@ -126,6 +126,15 @@ config PCIE_IPROC
+>>   	  iProc family of SoCs. An appropriate bus interface driver also needs
+>>   	  to be enabled
+>>
+>> +config PCIE_IPROC_MSI
+>> +	bool "Broadcom iProc PCIe MSI support"
+>> +	depends on ARCH_BCM_IPROC && PCI_MSI
+>> +	select PCI_MSI_IRQ_DOMAIN
+>> +	default ARCH_BCM_IPROC
+>> +	help
+>> +	  Say Y here if you want to enable MSI support for Broadcom's iProc
+>> +	  PCIe controller
+>> +
+>>   config PCIE_IPROC_PLATFORM
+>>   	tristate "Broadcom iProc PCIe platform bus driver"
+>>   	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
+>> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+>> index 9d4d3c6..0e4e95e 100644
+>> --- a/drivers/pci/host/Makefile
+>> +++ b/drivers/pci/host/Makefile
+>> @@ -15,6 +15,7 @@ obj-$(CONFIG_PCI_XGENE_MSI) += pci-xgene-msi.o
+>>   obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+>>   obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+>>   obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+>> +obj-$(CONFIG_PCIE_IPROC_MSI) += pcie-iproc-msi.o
+>>   obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+>>   obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+>>   obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+>> diff --git a/drivers/pci/host/pcie-iproc-msi.c b/drivers/pci/host/pcie-iproc-msi.c
+>> new file mode 100644
+>> index 0000000..afc54c2
+>> --- /dev/null
+>> +++ b/drivers/pci/host/pcie-iproc-msi.c
+>> @@ -0,0 +1,662 @@
+>> +/*
+>> + * Copyright (C) 2015 Broadcom Corporation
 >> + *
->> + * Function to update PCI devices's DMA configuration using the same
->> + * info from the OF node of host bridge's parent (if any).
+>> + * This program is free software; you can redistribute it and/or
+>> + * modify it under the terms of the GNU General Public License as
+>> + * published by the Free Software Foundation version 2.
+>> + *
+>> + * This program is distributed "as is" WITHOUT ANY WARRANTY of any
+>> + * kind, whether express or implied; without even the implied warranty
+>> + * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> + * GNU General Public License for more details.
 >> + */
->> +static void pci_dma_configure(struct pci_dev *dev)
+>> +
+>> +#include <linux/interrupt.h>
+>> +#include <linux/irqchip/chained_irq.h>
+>> +#include <linux/irqdomain.h>
+>> +#include <linux/msi.h>
+>> +#include <linux/of_irq.h>
+>> +#include <linux/of_pci.h>
+>> +#include <linux/pci.h>
+>> +
+>> +#include "pcie-iproc.h"
+>> +
+>> +#define IPROC_MSI_INTR_EN_SHIFT        11
+>> +#define IPROC_MSI_INTR_EN              BIT(IPROC_MSI_INTR_EN_SHIFT)
+>> +#define IPROC_MSI_INT_N_EVENT_SHIFT    1
+>> +#define IPROC_MSI_INT_N_EVENT          BIT(IPROC_MSI_INT_N_EVENT_SHIFT)
+>> +#define IPROC_MSI_EQ_EN_SHIFT          0
+>> +#define IPROC_MSI_EQ_EN                BIT(IPROC_MSI_EQ_EN_SHIFT)
+>> +
+>> +#define IPROC_MSI_EQ_MASK              0x3f
+>> +
+>> +/* max number of GIC interrupts */
+>> +#define NR_HW_IRQS                     6
+>> +
+>> +/* number of entries in each event queue */
+>> +#define EQ_LEN                         64
+>> +
+>> +/* size of each event queue memory region */
+>> +#define EQ_MEM_REGION_SIZE             SZ_4K
+>> +
+>> +/* size of each MSI message memory region */
+>> +#define MSI_MEM_REGION_SIZE            SZ_4K
+>> +
+>> +enum iproc_msi_reg {
+>> +	IPROC_MSI_EQ_PAGE = 0,
+>> +	IPROC_MSI_EQ_PAGE_UPPER,
+>> +	IPROC_MSI_PAGE,
+>> +	IPROC_MSI_PAGE_UPPER,
+>> +	IPROC_MSI_CTRL,
+>> +	IPROC_MSI_EQ_HEAD,
+>> +	IPROC_MSI_EQ_TAIL,
+>> +	IPROC_MSI_INTS_EN,
+>> +	IPROC_MSI_REG_SIZE,
+>> +};
+>> +
+>> +struct iproc_msi;
+>> +
+>> +/**
+>> + * iProc MSI group
+>> + *
+>> + * One MSI group is allocated per GIC interrupt, serviced by one iProc MSI
+>> + * event queue
+>> + *
+>> + * @msi: pointer to iProc MSI data
+>> + * @gic_irq: GIC interrupt
+>> + * @eq: Event queue number
+>> + */
+>> +struct iproc_msi_grp {
+>> +	struct iproc_msi *msi;
+>> +	int gic_irq;
+>> +	unsigned int eq;
+>> +};
+>> +
+>> +/**
+>> + * iProc event queue based MSI
+>> + *
+>> + * Only meant to be used on platforms without MSI support integrated into the
+>> + * GIC
+>> + *
+>> + * @pcie: pointer to iProc PCIe data
+>> + * @reg_offsets: MSI register offsets
+>> + * @grps: MSI groups
+>> + * @nr_irqs: number of total interrupts connected to GIC
+>> + * @nr_cpus: number of toal CPUs
+>> + * @has_inten_reg: indicates the MSI interrupt enable register needs to be
+>> + * set explicitly (required for some legacy platforms)
+>> + * @bitmap: MSI vector bitmap
+>> + * @bitmap_lock: lock to protect access to the MSI bitmap
+>> + * @nr_msi_vecs: total number of MSI vectors
+>> + * @inner_domain: inner IRQ domain
+>> + * @msi_domain: MSI IRQ domain
+>> + * @nr_eq_region: required number of 4K aligned memory region for MSI event
+>> + * queues
+>> + * @nr_msi_region: required number of 4K aligned memory region for MSI posted
+>> + * writes
+>> + * @eq_cpu: pointer to allocated memory region for MSI event queues
+>> + * @eq_dma: DMA address of MSI event queues
+>> + * @msi_cpu: pointer to allocated memory region for MSI posted writes
+>> + * @msi_dma: DMA address of MSI posted writes
+>> + */
+>> +struct iproc_msi {
+>> +	struct iproc_pcie *pcie;
+>> +	const u16 (*reg_offsets)[IPROC_MSI_REG_SIZE];
+>> +	struct iproc_msi_grp *grps;
+>> +	int nr_irqs;
+>> +	int nr_cpus;
+>> +	bool has_inten_reg;
+>> +	unsigned long *bitmap;
+>> +	struct mutex bitmap_lock;
+>> +	unsigned int nr_msi_vecs;
+>> +	struct irq_domain *inner_domain;
+>> +	struct irq_domain *msi_domain;
+>> +	unsigned int nr_eq_region;
+>> +	unsigned int nr_msi_region;
+>> +	void *eq_cpu;
+>> +	dma_addr_t eq_dma;
+>> +	void *msi_cpu;
+>> +	dma_addr_t msi_dma;
+>> +};
+>> +
+>> +static const u16 iproc_msi_reg_paxb[NR_HW_IRQS][IPROC_MSI_REG_SIZE] = {
+>> +	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x210, 0x250, 0x254, 0x208 },
+>> +	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x214, 0x258, 0x25c, 0x208 },
+>> +	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x218, 0x260, 0x264, 0x208 },
+>> +	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x21c, 0x268, 0x26c, 0x208 },
+>> +	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x220, 0x270, 0x274, 0x208 },
+>> +	{ 0x200, 0x2c0, 0x204, 0x2c4, 0x224, 0x278, 0x27c, 0x208 },
+>> +};
+>> +
+>> +static const u16 iproc_msi_reg_paxc[NR_HW_IRQS][IPROC_MSI_REG_SIZE] = {
+>> +	{ 0xc00, 0xc04, 0xc08, 0xc0c, 0xc40, 0xc50, 0xc60 },
+>> +	{ 0xc10, 0xc14, 0xc18, 0xc1c, 0xc44, 0xc54, 0xc64 },
+>> +	{ 0xc20, 0xc24, 0xc28, 0xc2c, 0xc48, 0xc58, 0xc68 },
+>> +	{ 0xc30, 0xc34, 0xc38, 0xc3c, 0xc4c, 0xc5c, 0xc6c },
+>> +};
+>> +
+>> +static inline u32 iproc_msi_read_reg(struct iproc_msi *msi,
+>> +				     enum iproc_msi_reg reg,
+>> +				     unsigned int eq)
 >> +{
->> +    struct device *bridge = pci_get_host_bridge_device(dev);
+>> +	struct iproc_pcie *pcie = msi->pcie;
 >> +
->> +    if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
->
-> Previously I was seeing of_dma_configure, and thus of_iommu_configure,
-> called for every PCI device on Juno. The check above now prevents this
-> happening, since the PCI devices are probed directly from the bus and
-> don't have OF nodes of their own. They now get left in some
-> half-configured state where arch_setup_dma_ops isn't called either.
-
-Just to follow up on that, Arnd's patch to tidy up dma_get_ops (now 
-queued[1]) makes this even worse, since preventing arch_setup_dma_ops 
-being called means the PCI devices now get the dummy DMA ops which leave 
-the drivers failing to probe at all, IOMMU hacks or not :(
-
-Robin.
-
-[1]:https://git.kernel.org/cgit/linux/kernel/git/arm64/linux.git/commit/?h=fixes/core&id=1dccb598df549d892b6450c261da54cdd7af44b4
-
-> Should this be checking bridge->parent->of_node rather than
-> dev->dev.of_node (which seems to work), or am I missing something?
->
-> Sorry I don't really have the bandwidth to look into this in detail
-> myself, right now I'm just trying to get my magic hacks rebased ;)
->
-> Robin.
->
->> +        if (bridge->parent)
->> +            of_dma_configure(&dev->dev, bridge->parent->of_node);
->> +    }
->> +
->> +    pci_put_host_bridge_device(bridge);
+>> +	return readl_relaxed(pcie->base + msi->reg_offsets[eq][reg]);
 >> +}
+>> +
+>> +static inline void iproc_msi_write_reg(struct iproc_msi *msi,
+>> +				       enum iproc_msi_reg reg,
+>> +				       int eq, u32 val)
+>> +{
+>> +	struct iproc_pcie *pcie = msi->pcie;
+>> +
+>> +	writel_relaxed(val, pcie->base + msi->reg_offsets[eq][reg]);
+>> +}
+>> +
+>> +static inline bool iproc_msi_has_mult_regions(struct iproc_msi *msi)
+>> +{
+>> +	return ((msi->nr_msi_region > 1) ? true : false);
+>
+> 	return msi->nr_msi_region > 1;
+>
 
+Will change this function to return the multiplier according to your 
+comment below.
+
+>> +}
+>> +
+>> +static inline bool iproc_eq_has_mult_regions(struct iproc_msi *msi)
+>> +{
+>> +	return ((msi->nr_eq_region > 1) ? true : false);
+>
+> 	return msi->nr_eq_region > 1;
+>
+
+Will change this function to return the offsets directly.
+
+>> +}
+>> +
+>> +static struct irq_chip iproc_msi_irq_chip = {
+>> +	.name = "iProc-MSI",
+>> +};
+>> +
+>> +static struct msi_domain_info iproc_msi_domain_info = {
+>> +	.flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+>> +		MSI_FLAG_PCI_MSIX,
+>> +	.chip = &iproc_msi_irq_chip,
+>> +};
+>> +
+>> +/*
+>> + * In iProc PCIe core, each MSI group is serviced by a GIC interrupt and a
+>> + * dedicated event queue. Each MSI group can support up to 64 MSI vectors
+>> + *
+>> + * The number of MSI groups varies between different iProc SoCs. The total
+>> + * number of CPU cores also varies. To support MSI IRQ affinity, we
+>> + * distribute GIC interrupts across all available CPUs. MSI vector is moved
+>> + * from one GIC interrupt to another to steer to the target CPU
+>> + *
+>> + * Assuming:
+>> + * - the number of MSI groups is M
+>> + * - the number of CPU cores is N
+>> + * - M is always a multiple of N
+>
+> How do you enforce that last condition?
+>
+
+Okay I need to enforce this as soon as the number of GIC interrupts is 
+determined from DT in the init routine. I will add code to enforce this 
+condition.
+
+>> + *
+>> + * Total number of raw MSI vectors = M * 64
+>> + * Total number of supported MSI vectors = (M * 64) / N
+>> + */
+>> +static inline int hwirq_to_cpu(struct iproc_msi *msi, unsigned long hwirq)
+>> +{
+>> +	return (hwirq % msi->nr_cpus);
+>> +}
+>> +
+>> +static inline unsigned long hwirq_to_canonical_hwirq(struct iproc_msi *msi,
+>> +						     unsigned long hwirq)
+>> +{
+>> +	return (hwirq - hwirq_to_cpu(msi, hwirq));
+>> +}
+>> +
+>> +static int iproc_msi_irq_set_affinity(struct irq_data *data,
+>> +				      const struct cpumask *mask, bool force)
+>> +{
+>> +	struct iproc_msi *msi = irq_data_get_irq_chip_data(data);
+>> +	int target_cpu = cpumask_first(mask);
+>> +	int curr_cpu;
+>> +
+>> +	curr_cpu = hwirq_to_cpu(msi, data->hwirq);
+>> +	if (curr_cpu == target_cpu)
+>> +		return IRQ_SET_MASK_OK_DONE;
+>> +
+>> +	/* steer MSI to the target CPU */
+>> +	data->hwirq = hwirq_to_canonical_hwirq(msi, data->hwirq) + target_cpu;
+>> +
+>> +	return IRQ_SET_MASK_OK;
+>> +}
+>> +
+>> +static inline u32 hwirq_to_group(struct iproc_msi *msi, unsigned long hwirq)
+>> +{
+>> +	return (hwirq % msi->nr_irqs);
+>> +}
+>> +
+>> +static void iproc_msi_irq_compose_msi_msg(struct irq_data *data,
+>> +					  struct msi_msg *msg)
+>> +{
+>> +	struct iproc_msi *msi = irq_data_get_irq_chip_data(data);
+>> +	dma_addr_t addr;
+>> +	unsigned int mul;
+>> +
+>> +	if (iproc_msi_has_mult_regions(msi))
+>> +		mul = MSI_MEM_REGION_SIZE;
+>> +	else
+>> +		mul = sizeof(u32);
+>
+> Since this is the only use of that function, why don't you have it to
+> directly return the right multiplier?
+>
+
+True, that will make the above code simpler just one line. Will do!
+
+>> +
+>> +	addr = msi->msi_dma + hwirq_to_group(msi, data->hwirq) * mul;
+>> +	msg->address_lo = lower_32_bits(addr);
+>> +	msg->address_hi = upper_32_bits(addr);
+>> +	msg->data = data->hwirq;
+>> +}
+>> +
+>> +static struct irq_chip iproc_msi_bottom_irq_chip = {
+>> +	.name = "MSI",
+>> +	.irq_set_affinity = iproc_msi_irq_set_affinity,
+>> +	.irq_compose_msi_msg = iproc_msi_irq_compose_msi_msg,
+>> +};
+>> +
+>> +static int iproc_msi_irq_domain_alloc(struct irq_domain *domain,
+>> +				      unsigned int virq, unsigned int nr_irqs,
+>> +				      void *args)
+>> +{
+>> +	struct iproc_msi *msi = domain->host_data;
+>> +	int hwirq;
+>> +
+>> +	mutex_lock(&msi->bitmap_lock);
+>> +
+>> +	/* allocate 'nr_cpus' number of MSI vectors each time */
+>> +	hwirq = bitmap_find_next_zero_area(msi->bitmap, msi->nr_msi_vecs, 0,
+>> +					   msi->nr_cpus, 0);
+>> +	if (hwirq < msi->nr_msi_vecs)
+>> +		bitmap_set(msi->bitmap, hwirq, msi->nr_cpus);
+>> +	else
+>> +		return -ENOSPC;
+>
+> Deadlock, here we come...
+>
+
+Damn it. My bad. Will fix.
+
+>> +
+>> +	mutex_unlock(&msi->bitmap_lock);
+>> +
+>> +	irq_domain_set_info(domain, virq, hwirq, &iproc_msi_bottom_irq_chip,
+>> +			    domain->host_data, handle_simple_irq, NULL, NULL);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static void iproc_msi_irq_domain_free(struct irq_domain *domain,
+>> +				      unsigned int virq, unsigned int nr_irqs)
+>> +{
+>> +	struct irq_data *data = irq_domain_get_irq_data(domain, virq);
+>> +	struct iproc_msi *msi = irq_data_get_irq_chip_data(data);
+>> +	unsigned int hwirq;
+>> +
+>> +	mutex_lock(&msi->bitmap_lock);
+>> +
+>> +	hwirq = hwirq_to_canonical_hwirq(msi, data->hwirq);
+>> +	bitmap_clear(msi->bitmap, hwirq, msi->nr_cpus);
+>> +
+>> +	mutex_unlock(&msi->bitmap_lock);
+>> +
+>> +	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+>> +}
+>> +
+>> +static const struct irq_domain_ops msi_domain_ops = {
+>> +	.alloc = iproc_msi_irq_domain_alloc,
+>> +	.free = iproc_msi_irq_domain_free,
+>> +};
+>> +
+>> +static inline u32 decode_msi_hwirq(struct iproc_msi *msi, u32 eq, u32 head)
+>> +{
+>> +	u32 *msg, hwirq;
+>> +	unsigned int offs;
+>> +
+>> +	if (iproc_eq_has_mult_regions(msi))
+>> +		offs = eq * EQ_MEM_REGION_SIZE;
+>> +	else
+>> +		offs = eq * EQ_LEN * sizeof(u32);
+>
+> Same here.
+>
+
+Okay. Will change the code. Thanks.
+
+>> +
+>> +	offs += head * sizeof(u32);
+>> +	msg = (u32 *)(msi->eq_cpu + offs);
+>
+> If that's the only place where you dereference msi->eq_cpu, why doesn't
+> it have the right type?
+>
+
+Okay this really caught me, :) I actually changed msi->eq_cpu to type 
+'u32 *' and found things all of a sudden stopped working. Then I 
+realized it's a lot easier to let msi->eq_cpu stay as 'void *', so we 
+can keep the arithmetic to calcualte 'offs' as it is. If I change it to 
+'u32 *', then I would need to divide 'offs' by sizeof(u32) to get right 
+address of the pointer.
+
+>> +	hwirq = *msg & IPROC_MSI_EQ_MASK;
+>> +
+>> +	/*
+>> +	 * Since we have multiple hwirq mapped to a single MSI vector,
+>> +	 * now we need to derive the hwirq at CPU0. It can then be used to
+>> +	 * mapped back to virq
+>> +	 */
+>> +	return hwirq_to_canonical_hwirq(msi, hwirq);
+>> +}
+>> +
+>> +static void iproc_msi_handler(struct irq_desc *desc)
+>> +{
+>> +	struct irq_chip *chip = irq_desc_get_chip(desc);
+>> +	struct iproc_msi_grp *grp;
+>> +	struct iproc_msi *msi;
+>> +	struct iproc_pcie *pcie;
+>> +	u32 eq, head, tail, nr_events;
+>> +	unsigned long hwirq;
+>> +	int virq;
+>> +
+>> +	chained_irq_enter(chip, desc);
+>> +
+>> +	grp = irq_desc_get_handler_data(desc);
+>> +	msi = grp->msi;
+>> +	pcie = msi->pcie;
+>> +	eq = grp->eq;
+>> +
+>> +	/*
+>> +	 * iProc MSI event queue is tracked by head and tail pointers. Head
+>> +	 * pointer indicates the next entry to be processed by SW in the
+>> +	 * queue. Entries between head and tail pointers contain valid MSI
+>> +	 * data to be processed
+>> +	 */
+>> +	head = iproc_msi_read_reg(msi, IPROC_MSI_EQ_HEAD,
+>> +				  eq) & IPROC_MSI_EQ_MASK;
+>> +	do {
+>> +		tail = iproc_msi_read_reg(msi, IPROC_MSI_EQ_TAIL,
+>> +					  eq) & IPROC_MSI_EQ_MASK;
+>> +
+>> +		/*
+>> +		 * Figure out total number of events (MSI data) to be
+>> +		 * processed
+>> +		 */
+>> +		nr_events = (tail < head) ?
+>> +			(EQ_LEN - (head - tail)) : (tail - head);
+>> +		if (!nr_events)
+>> +			break;
+>> +
+>> +		/* process all outstanding events */
+>> +		while (nr_events--) {
+>> +			hwirq = decode_msi_hwirq(msi, eq, head);
+>> +			virq = irq_find_mapping(msi->inner_domain, hwirq);
+>> +			generic_handle_irq(virq);
+>> +
+>> +			head++;
+>> +			head %= EQ_LEN;
+>> +			iproc_msi_write_reg(msi, IPROC_MSI_EQ_HEAD, eq, head);
+>> +		}
+>
+> Wouldn't it be better to process all nr_events and only update head
+> once?
+>
+
+You are right. That will help to get rid of the overhead of repeatedly 
+writing to the event queue head register. Will make the change.
+
+>> +
+>> +		/*
+>> +		 * Now go read the tail pointer again to see if there are new
+>> +		 * oustanding events that came in during the above window
+>> +		 */
+>> +	} while (true);
+>> +
+>> +	chained_irq_exit(chip, desc);
+>> +}
+>> +
+>> +static void iproc_msi_enable(struct iproc_msi *msi)
+>> +{
+>> +	int i, eq;
+>> +	u32 val;
+>> +
+>> +	/* program memory region for each event queue */
+>> +	for (i = 0; i < msi->nr_eq_region; i++) {
+>> +		dma_addr_t addr = msi->eq_dma + (i * EQ_MEM_REGION_SIZE);
+>> +
+>> +		iproc_msi_write_reg(msi, IPROC_MSI_EQ_PAGE, i,
+>> +				    lower_32_bits(addr));
+>> +		iproc_msi_write_reg(msi, IPROC_MSI_EQ_PAGE_UPPER, i,
+>> +				    upper_32_bits(addr));
+>> +	}
+>> +
+>> +	/* program memory region for MSI posted writes */
+>> +	for (i = 0; i < msi->nr_msi_region; i++) {
+>> +		dma_addr_t addr = msi->msi_dma + (i * MSI_MEM_REGION_SIZE);
+>> +
+>> +		iproc_msi_write_reg(msi, IPROC_MSI_PAGE, i,
+>> +				    lower_32_bits(addr));
+>> +		iproc_msi_write_reg(msi, IPROC_MSI_PAGE_UPPER, i,
+>> +				    upper_32_bits(addr));
+>> +	}
+>> +
+>> +	for (eq = 0; eq < msi->nr_irqs; eq++) {
+>> +		/* enable MSI event queue */
+>> +		val = IPROC_MSI_INTR_EN | IPROC_MSI_INT_N_EVENT |
+>> +			IPROC_MSI_EQ_EN;
+>> +		iproc_msi_write_reg(msi, IPROC_MSI_CTRL, eq, val);
+>> +
+>> +		/*
+>> +		 * Some legacy platforms require the MSI interrupt enable
+>> +		 * register to be set explicitly
+>> +		 */
+>> +		if (msi->has_inten_reg) {
+>> +			val = iproc_msi_read_reg(msi, IPROC_MSI_INTS_EN, eq);
+>> +			val |= BIT(eq);
+>> +			iproc_msi_write_reg(msi, IPROC_MSI_INTS_EN, eq, val);
+>> +		}
+>> +	}
+>> +}
+>> +
+>> +static void iproc_msi_disable(struct iproc_msi *msi)
+>> +{
+>> +	u32 eq, val;
+>> +
+>> +	for (eq = 0; eq < msi->nr_irqs; eq++) {
+>> +		if (msi->has_inten_reg) {
+>> +			val = iproc_msi_read_reg(msi, IPROC_MSI_INTS_EN, eq);
+>> +			val &= ~BIT(eq);
+>> +			iproc_msi_write_reg(msi, IPROC_MSI_INTS_EN, eq, val);
+>> +		}
+>> +
+>> +		val = iproc_msi_read_reg(msi, IPROC_MSI_CTRL, eq);
+>> +		val &= ~(IPROC_MSI_INTR_EN | IPROC_MSI_INT_N_EVENT |
+>> +			 IPROC_MSI_EQ_EN);
+>> +		iproc_msi_write_reg(msi, IPROC_MSI_CTRL, eq, val);
+>> +	}
+>> +}
+>> +
+>> +static int iproc_msi_alloc_domains(struct device_node *node,
+>> +				   struct iproc_msi *msi)
+>> +{
+>> +	msi->inner_domain = irq_domain_add_linear(NULL, msi->nr_msi_vecs,
+>> +						  &msi_domain_ops, msi);
+>> +	if (!msi->inner_domain)
+>> +		return -ENOMEM;
+>> +
+>> +	msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(node),
+>> +						    &iproc_msi_domain_info,
+>> +						    msi->inner_domain);
+>> +	if (!msi->msi_domain) {
+>> +		irq_domain_remove(msi->inner_domain);
+>> +		return -ENOMEM;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static void iproc_msi_free_domains(struct iproc_msi *msi)
+>> +{
+>> +	if (msi->msi_domain)
+>> +		irq_domain_remove(msi->msi_domain);
+>> +
+>> +	if (msi->inner_domain)
+>> +		irq_domain_remove(msi->inner_domain);
+>> +}
+>> +
+>> +static int iproc_msi_irq_setup(struct iproc_msi *msi, unsigned int cpu)
+>> +{
+>> +	int i, ret;
+>> +	cpumask_var_t mask;
+>> +	struct iproc_pcie *pcie = msi->pcie;
+>> +
+>> +	for (i = cpu; i < msi->nr_irqs; i += msi->nr_cpus) {
+>> +		irq_set_chained_handler_and_data(msi->grps[i].gic_irq,
+>> +						 iproc_msi_handler,
+>> +						 &msi->grps[i]);
+>> +		/* dedicate GIC interrupt to each CPU core */
+>> +		if (alloc_cpumask_var(&mask, GFP_KERNEL)) {
+>> +			cpumask_clear(mask);
+>> +			cpumask_set_cpu(cpu, mask);
+>> +			ret = irq_set_affinity(msi->grps[i].gic_irq, mask);
+>> +			if (ret)
+>> +				dev_err(pcie->dev,
+>> +					"failed to set affinity for IRQ%d\n",
+>> +					msi->grps[i].gic_irq);
+>> +			free_cpumask_var(mask);
+>> +		} else {
+>> +			dev_err(pcie->dev, "failed to alloc CPU mask\n");
+>> +			ret = -EINVAL;
+>> +		}
+>> +
+>> +		if (ret) {
+>> +			irq_set_chained_handler_and_data(msi->grps[i].gic_irq,
+>> +							 NULL, NULL);
+>> +			return ret;
+>
+> What happens to interrupts you've already configured? I'd expect a full
+> rollback.
+>
+
+Yeah in the error case, need to roll back all previously configured irq 
+by the time we exit this function. Will fix!
+
+>> +		}
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static void iproc_msi_irq_free(struct iproc_msi *msi, unsigned int cpu)
+>> +{
+>> +	int i;
+>> +
+>> +	for (i = cpu; i < msi->nr_irqs; i += msi->nr_cpus) {
+>> +		irq_set_chained_handler_and_data(msi->grps[i].gic_irq,
+>> +						 NULL, NULL);
+>> +	}
+>> +}
+>> +
+>> +int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node)
+>> +{
+>> +	struct iproc_msi *msi;
+>> +	int i, ret;
+>> +	unsigned int cpu;
+>> +
+>> +	if (!of_device_is_compatible(node, "brcm,iproc-msi"))
+>> +		return -ENODEV;
+>> +
+>> +	if (!of_find_property(node, "msi-controller", NULL))
+>> +		return -ENODEV;
+>> +
+>> +	if (pcie->msi)
+>> +		return -EBUSY;
+>> +
+>> +	msi = devm_kzalloc(pcie->dev, sizeof(*msi), GFP_KERNEL);
+>> +	if (!msi)
+>> +		return -ENOMEM;
+>> +
+>> +	msi->pcie = pcie;
+>> +	pcie->msi = msi;
+>> +	mutex_init(&msi->bitmap_lock);
+>> +	msi->nr_cpus = num_possible_cpus();
+>> +
+>> +	switch (pcie->type) {
+>> +	case IPROC_PCIE_PAXB:
+>> +		msi->reg_offsets = iproc_msi_reg_paxb;
+>> +		break;
+>> +	case IPROC_PCIE_PAXC:
+>> +		msi->reg_offsets = iproc_msi_reg_paxc;
+>> +		break;
+>> +	default:
+>> +		dev_err(pcie->dev, "incompatible iProc PCIe interface\n");
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	if (of_find_property(node, "brcm,pcie-msi-inten", NULL))
+>> +		msi->has_inten_reg = true;
+>> +
+>> +	ret = of_property_read_u32(node, "brcm,num-eq-region",
+>> +				   &msi->nr_eq_region);
+>> +	if (ret || !msi->nr_eq_region)
+>> +		msi->nr_eq_region = 1;
+>> +
+>> +	ret = of_property_read_u32(node, "brcm,num-msi-msg-region",
+>> +				   &msi->nr_msi_region);
+>> +	if (ret || !msi->nr_msi_region)
+>> +		msi->nr_msi_region = 1;
+>> +
+>> +	msi->nr_irqs = of_irq_count(node);
+>> +	if (!msi->nr_irqs) {
+>> +		dev_err(pcie->dev, "found no MSI GIC interrupt\n");
+>> +		return -ENODEV;
+>> +	}
+>> +	if (msi->nr_irqs > NR_HW_IRQS) {
+>> +		dev_warn(pcie->dev, "too many MSI GIC interrupts defined %d\n",
+>> +			 msi->nr_irqs);
+>> +		msi->nr_irqs = NR_HW_IRQS;
+>> +	}
+>> +
+>> +	msi->nr_msi_vecs = msi->nr_irqs * EQ_LEN;
+>> +	msi->bitmap = devm_kcalloc(pcie->dev, BITS_TO_LONGS(msi->nr_msi_vecs),
+>> +				   sizeof(*msi->bitmap), GFP_KERNEL);
+>> +	if (!msi->bitmap)
+>> +		return -ENOMEM;
+>> +
+>> +	msi->grps = devm_kcalloc(pcie->dev, msi->nr_irqs, sizeof(*msi->grps),
+>> +				 GFP_KERNEL);
+>> +	if (!msi->grps)
+>> +		return -ENOMEM;
+>> +
+>> +	for (i = 0; i < msi->nr_irqs; i++) {
+>> +		unsigned int irq = irq_of_parse_and_map(node, i);
+>> +
+>> +		if (!irq) {
+>> +			dev_err(pcie->dev, "unable to parse/map interrupt\n");
+>> +			return -ENODEV;
+>> +		}
+>> +		msi->grps[i].gic_irq = irq;
+>> +		msi->grps[i].msi = msi;
+>> +		msi->grps[i].eq = i;
+>> +	}
+>> +
+>> +	/* reserve memory for MSI event queue */
+>> +	msi->eq_cpu = dma_alloc_coherent(pcie->dev,
+>> +					 msi->nr_eq_region * EQ_MEM_REGION_SIZE,
+>> +					 &msi->eq_dma, GFP_KERNEL);
+>
+> Do you need to zero that memory? Or is the HW happy with whatever will
+> be there?
+>
+
+It seems to work fine. But you are right, it's much safer to zero the 
+memory since the PCIe controller could be using the upper 16-bit of each 
+word-sized entry in the event queue.
+
+>> +	if (!msi->eq_cpu)
+>> +		return -ENOMEM;
+>> +
+>> +	/* reserve memory for MSI posted writes */
+>> +	msi->msi_cpu = dma_alloc_coherent(pcie->dev,
+>> +					  msi->nr_msi_region * MSI_MEM_REGION_SIZE,
+>> +					  &msi->msi_dma, GFP_KERNEL);
+>
+> Same here. Also, what is the exact purpose of that memory? You have a
+> coherent mapping with the CPU, but you never read from it. So what's
+> the point?
+>
+
+Yeah I guess I can change this back to kmalloc since coherent memory is 
+a scarce resource, and the CPU does not need to access the memory, so 
+there's no cache issue.
+
+I know I have not answered the first part of your question. Let me do 
+some experiments first and I'll get back to you on that, :)
+
+>> +	if (!msi->msi_cpu) {
+>> +		ret = -ENOMEM;
+>> +		goto free_eq_dma;
+>> +	}
+>> +
+>> +	ret = iproc_msi_alloc_domains(node, msi);
+>> +	if (ret) {
+>> +		dev_err(pcie->dev, "failed to create MSI domains\n");
+>> +		goto free_msi_dma;
+>> +	}
+>> +
+>> +	for_each_online_cpu(cpu) {
+>> +		ret = iproc_msi_irq_setup(msi, cpu);
+>> +		if (ret)
+>> +			goto free_msi_irq;
+>> +	}
+>> +
+>> +	iproc_msi_enable(msi);
+>> +
+>> +	return 0;
+>> +
+>> +free_msi_irq:
+>> +	for_each_online_cpu(cpu)
+>> +		iproc_msi_irq_free(msi, cpu);
+>> +	iproc_msi_free_domains(msi);
+>> +
+>> +free_msi_dma:
+>> +	dma_free_coherent(pcie->dev, msi->nr_msi_region * MSI_MEM_REGION_SIZE,
+>> +			  msi->msi_cpu, msi->msi_dma);
+>> +free_eq_dma:
+>> +	dma_free_coherent(pcie->dev, msi->nr_eq_region * EQ_MEM_REGION_SIZE,
+>> +			  msi->eq_cpu, msi->eq_dma);
+>> +	pcie->msi = NULL;
+>> +	return ret;
+>> +}
+>> +EXPORT_SYMBOL(iproc_msi_init);
+>
+> [...]
+>
+> Thanks,
+>
+> 	M.
+>
+
+Thanks, Marc!
+
+Ray
