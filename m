@@ -1,85 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:64668 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754752AbbKLPds convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Nov 2015 10:33:48 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-CC: "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Magnus <magnus.damm@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: RE: PCIe host controller behind IOMMU on ARM
-Date: Thu, 12 Nov 2015 15:33:41 +0000
-Message-ID: <PS1PR06MB11802B4278C95E3808EEBDD5F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
-References: <PS1PR06MB11807CBE8EB2AC6B0158D2B5F52A0@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151111182456.GV963@e106497-lin.cambridge.arm.com>
- <PS1PR06MB118013A957CFFDF129430C58F5120@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <6255198.JqytBn7T9E@wuerfel>
-In-Reply-To: <6255198.JqytBn7T9E@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:48180 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbbK0Kec (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Nov 2015 05:34:32 -0500
+Message-ID: <1448620464.3689.94.camel@pengutronix.de>
+Subject: Re: [PATCH v2] PCI: imx6: Fix reset-gpio to work with active low
+ GPIO
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Petr =?UTF-8?Q?=C5=A0tetiar?= <ynezz@true.cz>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>
+Date: Fri, 27 Nov 2015 11:34:24 +0100
+In-Reply-To: <1448618499-14990-1-git-send-email-ynezz@true.cz>
+References: <1448373334.3689.33.camel@pengutronix.de>
+	 <1448618499-14990-1-git-send-email-ynezz@true.cz>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
-
-On 12 November 2015 09:49, Arnd Bergmann wrote:
-> On Thursday 12 November 2015 09:26:33 Phil Edworthy wrote:
-> > On 11 November 2015 18:25, LIviu wrote:
-> > > On Mon, Nov 09, 2015 at 12:32:13PM +0000, Phil Edworthy wrote:
+Am Freitag, den 27.11.2015, 11:01 +0100 schrieb Petr Štetiar:
+> It's currently not possible to use reset-gpio on board where the GPIO is
+> active low as the code incorrectly assumes, that reset-gpio will be
+> always active high.
 > 
-> > > I think you're mixing things a bit or not explaining them very well. Having the
-> > > PCIe controller limited to 32-bit AXI does not mean that the PCIe bus cannot
-> > > carry 64-bit addresses. It depends on how they get translated by the host
-> bridge
-> > > or its associated ATS block. I can't see why you can't have a setup where
-> > > the CPU addresses are 32-bit but the PCIe bus addresses are all 64-bit.
-> > > You just have to be careful on how you setup your mem64 ranges so that
-> they
-> > > don't
-> > > overlap with the 32-bit ranges when translated.
-> > From a HW point of view I agree that we can setup the PCI host bridge such that
-> > it uses 64-bit PCI address, with 32-bit cpu addresses. Though in practice doesn't
-> > this mean that the dma ops used by card drivers has to be provided by our PCI
-> > host bridge driver so we can apply the translation to those PCI addresses?
-> > This comes back to my point below about how to do this. Adding a bus notifier
-> > to do this may be too late, and arm64 doesn't implement set_dma_ops().
-> >
-> > > And no, you should not limit at the card driver the DMA_BIT_MASK() unless
-> the
-> > > card is not capable of supporting more than 32-bit addresses.
-> > If there was infrastructure that checked all parents dma-ranges when the
-> > dma_set_mask() function is called as Arnd pointed out, this would nicely solve
-> > the problem.
+> In my case the broken behavior was observed on Toradex Apalis SoM with
+> Ixora base board.
 > 
-> of_dma_configure calls of_dma_get_range to do all this for the PCIe host,
-> and then calls arch_setup_dma_ops() so the architecture specific code can
-> enforce the limits in dma_set_mask and pick an appropriate set of dma
-> operations. The missing part is in the implementation of arch_setup_dma_ops,
-> which currently happily ignores the base and limit.
-I don't think it's as simple as that, though I could be wrong!
+> Signed-off-by: Petr Štetiar <ynezz@true.cz>
+> ---
+> 
+> Changes since v1:
+>  * reworked to use descriptor based GPIO interface
+> 
+>  drivers/pci/host/pci-imx6.c |   20 ++++++--------------
+>  1 file changed, 6 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 22e8224..c0e121d 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -32,7 +32,7 @@
+>  #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
+>  
+>  struct imx6_pcie {
+> -	int			reset_gpio;
+> +	struct gpio_desc	*reset_gpio;
+>  	struct clk		*pcie_bus;
+>  	struct clk		*pcie_phy;
+>  	struct clk		*pcie;
+> @@ -287,10 +287,10 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+>  	usleep_range(200, 500);
+>  
+>  	/* Some boards don't have PCIe reset GPIO. */
+> -	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> -		gpio_set_value(imx6_pcie->reset_gpio, 0);
+> +	if (imx6_pcie->reset_gpio) {
+> +		gpiod_set_value(imx6_pcie->reset_gpio, 0);
 
-First off, of_dma_configure() sets a default coherent_dma_mask to 4GiB.
-This default is set for the 'platform soc' device. For my own testing I increased
-this to DMA_BIT_MASK(63). Note that setting it to DMA_BIT_MASK(64) causes
-boot failure that I haven't looked into.
+This now collides with a fix from Fabio that allows this function to
+sleep. So this should use gpiod_set_value_cansleep() and be rebased to
+pci/host-imx6, or if Bjorn prefers to pull this in quickly, replace
+Fabios commit.
 
-Then pci_device_add() sets the devices coherent_dma_mask to 4GiB before
-calling of_pci_dma_configure(). I assume it does this on the basis that this is a
-good default for PCI drivers that don't call dma_set_mask().
-So if arch_setup_dma_ops() walks up the parents to limit the mask, you'll hit
-this mask.
+Regards,
+Lucas
 
-Finally, dma_set_mask_and_coherent() is called from the PCI card driver
-but it doesn't check the parents dma masks either.
+>  		msleep(100);
+> -		gpio_set_value(imx6_pcie->reset_gpio, 1);
+> +		gpiod_set_value(imx6_pcie->reset_gpio, 1);
+>  	}
+>  	return 0;
+>  
+> @@ -560,7 +560,6 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  {
+>  	struct imx6_pcie *imx6_pcie;
+>  	struct pcie_port *pp;
+> -	struct device_node *np = pdev->dev.of_node;
+>  	struct resource *dbi_base;
+>  	int ret;
+>  
+> @@ -581,15 +580,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  		return PTR_ERR(pp->dbi_base);
+>  
+>  	/* Fetch GPIOs */
+> -	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+> -	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> -		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
+> -					    GPIOF_OUT_INIT_LOW, "PCIe reset");
+> -		if (ret) {
+> -			dev_err(&pdev->dev, "unable to get reset gpio\n");
+> -			return ret;
+> -		}
+> -	}
+> +	imx6_pcie->reset_gpio = devm_gpiod_get_optional(&pdev->dev, "reset",
+> +							GPIOD_OUT_LOW);
+>  
+>  	/* Fetch clocks */
+>  	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
 
-Thanks
-Phil
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
