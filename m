@@ -1,61 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:58256 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751750AbbKJJfP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Nov 2015 04:35:15 -0500
-Message-ID: <1447148110.3142.6.camel@pengutronix.de>
-Subject: Re: [PATCH] PCI: imx6:don't sleep in atomic context
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
-	linux-pci@vger.kernel.org, Richard.Zhu@freescale.com,
-	linux-kernel@vger.kernel.org, David Mueller <dave.mueller@gmx.ch>,
-	bhelgaas@google.com
-Date: Tue, 10 Nov 2015 10:35:10 +0100
-In-Reply-To: <4800389.dqcmlJY3HC@wuerfel>
-References: <1447066080-5859-1-git-send-email-sanjeev_sharma@mentor.com>
-	 <1447144878.3142.3.camel@pengutronix.de> <4800389.dqcmlJY3HC@wuerfel>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ibawizard.net ([82.208.49.253]:50658 "EHLO
+	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbbK0K4m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Nov 2015 05:56:42 -0500
+From: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+To: linux-arm-kernel@lists.infradead.org
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	=?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+Subject: [PATCH v3] PCI: imx6: Fix reset-gpio to work with active low GPIO
+Date: Fri, 27 Nov 2015 11:56:34 +0100
+Message-Id: <1448621794-19916-1-git-send-email-ynezz@true.cz>
+In-Reply-To: <1448620464.3689.94.camel@pengutronix.de>
+References: <1448620464.3689.94.camel@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Dienstag, den 10.11.2015, 10:28 +0100 schrieb Arnd Bergmann:
-> On Tuesday 10 November 2015 09:41:18 Lucas Stach wrote:
-> > > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> > > index 233a196..9769b13 100644
-> > > --- a/drivers/pci/host/pci-imx6.c
-> > > +++ b/drivers/pci/host/pci-imx6.c
-> > > @@ -499,7 +499,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
-> > >                * Wait a little bit, then re-check if the link finished
-> > >                * the training.
-> > >                */
-> > > -             usleep_range(1000, 2000);
-> > > +             mdelay(1000);
-> > 
-> > A mdelay(1000) is a whole different timescale than a usleep(1000). If
-> > this patch works for you with mdelay(1) or maybe mdelay(2) I would be
-> > fine with it.
-> 
-> mdelay(1) is still a really long time to block the CPU for, on potentially
-> every config space access.
-> 
-> Everybody else just returns the link status here, which seems to be
-> the better alternative. If you need to delay the startup, better have
-> a msleep(1) loop in the initial probe function where you are allowed to
-> sleep.
-> 
-Yes, it's somewhere on my TODO list to rework the link-up handling here,
-but as there are quite a few timing and ordering implications in that
-code, this needs a good thought and a good deal of testing. So I'm
-inclined to ACK the current patch to get rid of the obvious bug and sort
-things out properly in a follow on patchset.
+It's currently not possible to use reset-gpio on board where the GPIO is
+active low as the code incorrectly assumes, that reset-gpio will be
+always active high.
 
-Regards,
-Lucas
+In my case the broken behavior was observed on Toradex Apalis SoM with
+Ixora base board.
 
+Signed-off-by: Petr Štetiar <ynezz@true.cz>
+---
+
+Changes since v1:                                                                                                                                                        
+ * reworked to use descriptor based GPIO interface
+
+Changes since v2:
+ * rebased on pci/host-imx6 which now uses gpio_set_value_cansleep()
+
+ drivers/pci/host/pci-imx6.c |   20 ++++++--------------
+ 1 file changed, 6 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 3c3b37f..8e9afa5 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -32,7 +32,7 @@
+ #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
+ 
+ struct imx6_pcie {
+-	int			reset_gpio;
++	struct gpio_desc	*reset_gpio;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
+ 	struct clk		*pcie;
+@@ -287,10 +287,10 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 	usleep_range(200, 500);
+ 
+ 	/* Some boards don't have PCIe reset GPIO. */
+-	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+-		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
++	if (imx6_pcie->reset_gpio) {
++		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 0);
+ 		msleep(100);
+-		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
++		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+ 	}
+ 	return 0;
+ 
+@@ -560,7 +560,6 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct imx6_pcie *imx6_pcie;
+ 	struct pcie_port *pp;
+-	struct device_node *np = pdev->dev.of_node;
+ 	struct resource *dbi_base;
+ 	int ret;
+ 
+@@ -581,15 +580,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(pp->dbi_base);
+ 
+ 	/* Fetch GPIOs */
+-	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+-	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+-		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
+-					    GPIOF_OUT_INIT_LOW, "PCIe reset");
+-		if (ret) {
+-			dev_err(&pdev->dev, "unable to get reset gpio\n");
+-			return ret;
+-		}
+-	}
++	imx6_pcie->reset_gpio = devm_gpiod_get_optional(&pdev->dev, "reset",
++							GPIOD_OUT_LOW);
+ 
+ 	/* Fetch clocks */
+ 	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.7.9.5
 
