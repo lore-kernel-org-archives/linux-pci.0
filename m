@@ -1,46 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:63382 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752252AbbKIJAf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Nov 2015 04:00:35 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Wolfram Sang <wsa@the-dreams.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] PCI: pcie-rcar: Fix OF node passed to MSI irq domain
-Date: Mon, 9 Nov 2015 09:00:29 +0000
-Message-ID: <PS1PR06MB11807448DF30AA68AC10B58BF5150@PS1PR06MB1180.apcprd06.prod.outlook.com>
-References: <1446542899-25137-1-git-send-email-phil.edworthy@renesas.com>
- <20151107135951.GD21726@katana>
-In-Reply-To: <20151107135951.GD21726@katana>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mout.kundenserver.de ([212.227.17.13]:63112 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755304AbbK0VL0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Nov 2015 16:11:26 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 2/5] PCI: iproc: Add PAXC interface support
+Date: Fri, 27 Nov 2015 22:11:15 +0100
+Message-ID: <3529525.ts0Jjxrtm5@wuerfel>
+In-Reply-To: <5658C365.5080209@broadcom.com>
+References: <1448645868-5730-1-git-send-email-rjui@broadcom.com> <2502233.oJMLi3GpfH@wuerfel> <5658C365.5080209@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Wolfram,
-
-On 07 November 2015 14:00, Wolfram wrote:
-> On Tue, Nov 03, 2015 at 09:28:19AM +0000, Phil Edworthy wrote:
-> > The OF node passed to irq_domain_add_linear() should be a
-> > pointer to interrupt controller's device tree node, or NULL,
-> > but not the PCI controller's node.
+On Friday 27 November 2015 12:56:05 Ray Jui wrote:
 > >
-> > This fixes an oops in msi_domain_alloc_irqs() when it tries
-> > to call msi_check().
-> >
-> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> > You seem to only need the identifiers in order to set a single
+> > pointer, so just point to that array directly.
 > 
-> Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
-> Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
-> 
-> Was this the MSI problem you were talking about?
-Yes, that was the one.
+> Not just a single pointer. This sets the iProc PCIe interface type, 
+> which is an enum. Based on the interface type, both the iProc PCIe core 
+> driver and the iProc PCIe MSI driver can 1) load the correct set of 
+> register offsets; 2) skip/invoke some of the link detection, controller 
+> reset related behaviors; 3) setting up the correct number of MSI event 
+> queue regions and MSI address regions.
 
-Thanks for the review & test.
-Phil
+Ok, fair enough. I had missed 2) and 3) here. It could still be done
+as a structure (rather than function pointers) with individual named
+members for each register offset along with bool flags for 2) and
+integers to describe 3).
+
+Please that suggestion some thought, and then decide for yourself,
+I won't complain if you keep the current version.
+
+	Arnd
