@@ -1,51 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:37118 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752608AbbKWXJY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Nov 2015 18:09:24 -0500
-Received: from localhost
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 24 Nov 2015 09:09:21 +1000
-Date: Tue, 24 Nov 2015 10:08:21 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-Subject: Re: [PATCH v7 28/50] powerpc/pci: Rename
- pcibios_{add,remove}_pci_devices()
-Message-ID: <20151123230821.GD5375@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-29-git-send-email-gwshan@linux.vnet.ibm.com>
- <564BE5BA.30907@ozlabs.ru>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Keith Busch <keith.busch@intel.com>,
+	Arthur Marsh <arthur.marsh@internode.on.net>,
+	Hans de Bruin <jmdebruin@xmsnet.nl>
+Subject: Re: [PATCH] x86/PCI: Fix regression caused by commit 4d6b4e69a245
+Date: Fri, 27 Nov 2015 17:06:01 +0100
+Message-ID: <8206751.4eTpiUuo7l@vostro.rjw.lan>
+In-Reply-To: <1448593953-12364-1-git-send-email-jiang.liu@linux.intel.com>
+References: <5655B392.7070701@intel.com> <1448593953-12364-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <564BE5BA.30907@ozlabs.ru>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 18, 2015 at 01:43:06PM +1100, Alexey Kardashevskiy wrote:
->On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>This renames pcibios_{add,remove}_pci_devices() to avoid conflicts
->>with names of the weak functions in PCI subsystem, which have the
->>prefix "pcibios". No logical changes introduced.
->
->
->As you mentioned before, the patchset is organized as "code refactoring,
->IO/M32/M64, DMA, PE allocation/releaseing". This patch fits into the
->refactoring category so it goes to the beginning of the series :)
->
+On Friday, November 27, 2015 11:12:33 AM Jiang Liu wrote:
+> From: Liu Jiang <jiang.liu@linux.intel.com>
+> 
+> Commit 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support
+> PCI host bridge") converted x86 to use the common interface
+> acpi_pci_root_create, but the conversion missed on code piece in
+> arch/x86/pci/bus_numa.c, which causes regression on some legacy
+> AMD platforms as reported by Arthur Marsh <arthur.marsh@internode.on.net>.
+> The root causes is that acpi_pci_root_create() fails to insert
+> host bridge resources into iomem_resource/ioport_resource because
+> x86_pci_root_bus_resources() has already inserted those resources.
+> So change x86_pci_root_bus_resources() to not insert resources into
+> iomem_resource/ioport_resource.
+> 
+> Fixes: 4d6b4e69a245 ("x86/PCI/ACPI: Use common interface to support PCI host bridge")
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Reported-and-tested-by: Arthur Marsh <arthur.marsh@internode.on.net>
+> Cc: Keith Busch <keith.busch@intel.com>
+> Cc: Arthur Marsh <arthur.marsh@internode.on.net>
+> Cc: Hans de Bruin <jmdebruin@xmsnet.nl>
 
-I don't think so. As said in PATCH[00/50], this patchset consists of 3
-separate parts: PowerNV PCI rework; Using PCI slot; Hotplug driver; this
-patch is one of the second part. So I don't think it needs to be move to
-the beginning of the series.
+What exactly has changed between this version and the previous one?
 
-Thanks,
-Gavin
 
+> ---
+>  arch/x86/pci/bus_numa.c |   13 ++-----------
+>  drivers/acpi/pci_root.c |    7 +++++++
+>  2 files changed, 9 insertions(+), 11 deletions(-)
+> 
+> diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+> index 7bcf06a7cd12..6eb3c8af96e2 100644
+> --- a/arch/x86/pci/bus_numa.c
+> +++ b/arch/x86/pci/bus_numa.c
+> @@ -50,18 +50,9 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+>  	if (!found)
+>  		pci_add_resource(resources, &info->busn);
+>  
+> -	list_for_each_entry(root_res, &info->resources, list) {
+> -		struct resource *res;
+> -		struct resource *root;
+> +	list_for_each_entry(root_res, &info->resources, list)
+> +		pci_add_resource(resources, &root_res->res);
+>  
+> -		res = &root_res->res;
+> -		pci_add_resource(resources, res);
+> -		if (res->flags & IORESOURCE_IO)
+> -			root = &ioport_resource;
+> -		else
+> -			root = &iomem_resource;
+> -		insert_resource(root, res);
+> -	}
+>  	return;
+>  
+>  default_resources:
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 850d7bf0c873..ae3fe4e64203 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -768,6 +768,13 @@ static void pci_acpi_root_add_resources(struct acpi_pci_root_info *info)
+>  		else
+>  			continue;
+>  
+> +		/*
+> +		 * Some legacy x86 host bridge drivers use iomem_resource and
+> +		 * ioport_resource as default resource pool, skip it.
+> +		 */
+> +		if (res == root)
+> +			continue;
+> +
+>  		conflict = insert_resource_conflict(root, res);
+>  		if (conflict) {
+>  			dev_info(&info->bridge->dev,
+> 
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
