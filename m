@@ -1,134 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:49713 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753060AbbKQIo7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Nov 2015 03:44:59 -0500
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Nov 2015 14:14:55 +0530
-Date: Tue, 17 Nov 2015 19:44:38 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-Subject: Re: [PATCH v7 14/50] powerpc/powernv: M64 support on P7IOC
-Message-ID: <20151117084438.GA16586@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-15-git-send-email-gwshan@linux.vnet.ibm.com>
- <56498D8A.2050505@ozlabs.ru>
- <20151117014203.GC31584@gwshan>
- <564A92E2.1040506@ozlabs.ru>
- <20151117030406.GB10142@gwshan>
- <564AB070.9040500@ozlabs.ru>
+Received: from ibawizard.net ([82.208.49.253]:43648 "EHLO
+	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754536AbbK0KBz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Nov 2015 05:01:55 -0500
+From: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+To: linux-arm-kernel@lists.infradead.org
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	=?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+Subject: [PATCH v2] PCI: imx6: Fix reset-gpio to work with active low GPIO
+Date: Fri, 27 Nov 2015 11:01:39 +0100
+Message-Id: <1448618499-14990-1-git-send-email-ynezz@true.cz>
+In-Reply-To: <1448373334.3689.33.camel@pengutronix.de>
+References: <1448373334.3689.33.camel@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <564AB070.9040500@ozlabs.ru>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 17, 2015 at 03:43:28PM +1100, Alexey Kardashevskiy wrote:
->On 11/17/2015 02:04 PM, Gavin Shan wrote:
->>On Tue, Nov 17, 2015 at 01:37:22PM +1100, Alexey Kardashevskiy wrote:
->>>On 11/17/2015 12:42 PM, Gavin Shan wrote:
->>>>On Mon, Nov 16, 2015 at 07:02:18PM +1100, Alexey Kardashevskiy wrote:
->>>>>On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>>>>>This enables M64 window on P7IOC, which has been enabled on PHB3.
->>>>>>Different from PHB3 where 16 M64 BARs are supported and each of
->>>>>>them can be owned by one particular PE# exclusively or divided
->>>>>>evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
->>>>>>of them are divided to 8 segments. So every P7IOC PHB supports
->>>>>>128 M64 segments in total. P7IOC has M64DT, which helps mapping
->>>>>>one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
->>>>>>M64DT, indicating that one M64 segment can only be pinned to the
->>>>>>fixed PE#. In order to have same code to support M64 on P7IOC and
->>>>>>PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
->>>>>>of them is pinned to the fixed PE# by bypassing the function of
->>>>>>M64DT. In turn, we just need different phb->init_m64() for P7IOC
->>>>>>and PHB3 to support M64.
->>>>>
->>>>>I thought we decided (Ben suggested?) not to push P7IOC code now (or ever) as
->>>>>there is no user for it, has this changed?
->>>>>
->>>>
->>>>Remember that the code is mixed for P7IOC/PHB3. It's not harmful to support
->>>>M64 window on P7IOC, which is much larger than M32.
->>>
->>>
->>>The patchset starts with removing dead code and then adds more dead code.
->>>This is not right...
->>>
->>
->>Sorry, you mean it's fine to break the code on P7IOC as it's going to be dead.
->
->
->I am saying that the _new_ code which implements PCI hotplug on P7IOC is
->dead, not the existing P7IOC support which needs to keep working. Reworks you
->make should keep P7IOC alive but they do not have to add hotplug.
->
->imho it is more likely that we drop P7IOC support in the mainline kernel in
->next 5 years than someone plugs a PCI device to a running P7IOC machine
->anywhere.
->
+It's currently not possible to use reset-gpio on board where the GPIO is
+active low as the code incorrectly assumes, that reset-gpio will be
+always active high.
 
-This patchset isn't supporting PCI hotplug on P7IOC. At the code is mixed
-for PHB3/P7IOC, I have to make some changes for P7IOC in order to support
-PCI hotplug on PHB3. It's one of the reason that I introduced M64 support
-for P7IOC. Another readon is M32 has limited space size (2GB) on P7IOC, one
-adapter with more than 2GB memory resource will fail to work on P7IOC. So
-it's still nice to support M64 on P7IOC.
+In my case the broken behavior was observed on Toradex Apalis SoM with
+Ixora base board.
 
->>But I'm curious when it's going happen, any idea about that?
->>
->>>>>btw please put ioda1/ioda2/p7ioc/etc to the subject line to make it easier to
->>>>>see how much work is there about particular PHB type. You rename quite many
->>>>>functions and I generally want to ask you to group all renaming patches first
->>>>>but it would also make sense to keep them close to (for example)
->>>>>p7ioc-related patches so having more descriptive subject lines may help.
->>>>>Thanks.
->>>>>
->>>>
->>>>As the code is mixed for P7IOC/PHB3, I'm not following the line (IODA1/IODA2/p7ioc/phb3)
->>>>in this patchset.
->>>
->>>But you should draw the bold line between PHB types imho.
->>>
->>>>Instead, the sequence of patchset is order related to: cod refactoring,
->>>>IO/M32/M64, DMA, PE allocation/releaseing.
->>>
->>>
->>>Some patches from this patchset are about P7IOC only. All I am asking is to
->>>say specifically in the subject line what the patch touches -
->>>IODA1/IODA2/p7ioc/phb3/all_of_them. Or I can walk through all of them, pick
->>>P7IOC's ones, evaluate the amount of code and entropy they actually add and
->>>then ask Ben what we do about it, it will just take longer rather than if you
->>>did it.
->>>
->>
->>Please give me a clear command what key words you need in the subject in next revision.
->>What I understood is you want to see one of them:
->>
->>powerpc/powernv/ioda1:
->
->Yes, looks good.
->
->>powerpc/powernv/ioda2:
->
->
->Yes.
->
->>powerpc/powernv/all:
->
->Just "powerpc/powernv".
->
+Signed-off-by: Petr Štetiar <ynezz@true.cz>
+---
 
-Thanks for confirm, I'll put them into the subject in next revision.
+Changes since v1:
+ * reworked to use descriptor based GPIO interface
 
-Thanks,
-Gavin
+ drivers/pci/host/pci-imx6.c |   20 ++++++--------------
+ 1 file changed, 6 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 22e8224..c0e121d 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -32,7 +32,7 @@
+ #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
+ 
+ struct imx6_pcie {
+-	int			reset_gpio;
++	struct gpio_desc	*reset_gpio;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
+ 	struct clk		*pcie;
+@@ -287,10 +287,10 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 	usleep_range(200, 500);
+ 
+ 	/* Some boards don't have PCIe reset GPIO. */
+-	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+-		gpio_set_value(imx6_pcie->reset_gpio, 0);
++	if (imx6_pcie->reset_gpio) {
++		gpiod_set_value(imx6_pcie->reset_gpio, 0);
+ 		msleep(100);
+-		gpio_set_value(imx6_pcie->reset_gpio, 1);
++		gpiod_set_value(imx6_pcie->reset_gpio, 1);
+ 	}
+ 	return 0;
+ 
+@@ -560,7 +560,6 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct imx6_pcie *imx6_pcie;
+ 	struct pcie_port *pp;
+-	struct device_node *np = pdev->dev.of_node;
+ 	struct resource *dbi_base;
+ 	int ret;
+ 
+@@ -581,15 +580,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(pp->dbi_base);
+ 
+ 	/* Fetch GPIOs */
+-	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+-	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+-		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
+-					    GPIOF_OUT_INIT_LOW, "PCIe reset");
+-		if (ret) {
+-			dev_err(&pdev->dev, "unable to get reset gpio\n");
+-			return ret;
+-		}
+-	}
++	imx6_pcie->reset_gpio = devm_gpiod_get_optional(&pdev->dev, "reset",
++							GPIOD_OUT_LOW);
+ 
+ 	/* Fetch clocks */
+ 	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
+-- 
+1.7.9.5
 
