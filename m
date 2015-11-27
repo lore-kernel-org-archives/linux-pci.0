@@ -1,102 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0058.outbound.protection.outlook.com ([157.56.110.58]:30809
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755368AbbKDGix convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Nov 2015 01:38:53 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"rjui@broadcom.com" <rjui@broadcom.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	"dhdang@apm.com" <dhdang@apm.com>,
-	"sbranden@broadcom.com" <sbranden@broadcom.com>
-CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH v7] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Date: Wed, 4 Nov 2015 06:38:45 +0000
-Message-ID: <8520D5D51A55D047800579B09414719801693C20@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1446564227-4704-1-git-send-email-bharatku@xilinx.com>
- <5638DE62.6050605@arm.com>
-In-Reply-To: <5638DE62.6050605@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v4 5/5] ARM: dts: Enable MSI support for Broadcom Cygnus
+Date: Fri, 27 Nov 2015 09:37:48 -0800
+Message-ID: <1448645868-5730-6-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
+References: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > +static struct msi_domain_info nwl_msi_domain_info = {
-> > +	.flags = (MSI_FLAG_USE_DEF_DOM_OPS |
-> MSI_FLAG_USE_DEF_CHIP_OPS |
-> > +		  MSI_FLAG_MULTI_PCI_MSI),
-> 
-> If you're supporting multi-MSI, how do you ensure that all hwirqs are
-> contiguous as required by the spec? Clearly, your allocator doesn't provide
-> this guarantee.
-> 
-Oh ok, then how can we know if one EP is requesting for multiple irq's, because in pci_enable_msi_range,
- it does do while loop according to msi_capability_init return value 
-which in turn requests for multiple irq's. Is there any way to find out when single EP requesting for multiple MSI?
+Enable MSI support for Broadcom Cygnus platforms
 
-> Also, you still lack support for MSI-X (which would come for free...).
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+Reviewed-by: Pramod KUMAR <pramodku@broadcom.com>
+Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
+---
+ arch/arm/boot/dts/bcm-cygnus.dtsi | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-We don't support MSI-X in root port mode.
-> 
-> > +	.chip = &nwl_msi_irq_chip,
-> > +};
-> > +#endif
-> > +
-> > +	irq_domain_remove(pcie->legacy_irq_domain);
-> > +
-> > +#ifdef CONFIG_PCI_MSI
-> > +	irq_set_chained_handler_and_data(msi->irq_msi0, NULL, NULL);
-> > +	irq_set_chained_handler_and_data(msi->irq_msi1, NULL, NULL);
-> > +
-> > +	irq_domain_remove(msi->msi_domain);
-> > +	irq_domain_remove(msi->dev_domain);
-> > +#endif
-> > +
-> > +}
-> 
-> Remove these #ifdefs. You can test the validity of these fields before calling
-> the various functions. You can also move this to a separate function.
+diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi b/arch/arm/boot/dts/bcm-cygnus.dtsi
+index 2778533..789b519 100644
+--- a/arch/arm/boot/dts/bcm-cygnus.dtsi
++++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
+@@ -162,6 +162,17 @@
+ 				  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
+ 
+ 			status = "disabled";
++
++			msi-parent = <&msi0>;
++			msi0: msi@18012000 {
++				compatible = "brcm,iproc-msi";
++				msi-controller;
++				interrupt-parent = <&gic>;
++				interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
++					     <GIC_SPI 97 IRQ_TYPE_NONE>,
++					     <GIC_SPI 98 IRQ_TYPE_NONE>,
++					     <GIC_SPI 99 IRQ_TYPE_NONE>;
++			};
+ 		};
+ 
+ 		pcie1: pcie@18013000 {
+@@ -183,6 +194,17 @@
+ 				  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
+ 
+ 			status = "disabled";
++
++			msi-parent = <&msi1>;
++			msi1: msi@18013000 {
++				compatible = "brcm,iproc-msi";
++				msi-controller;
++				interrupt-parent = <&gic>;
++				interrupts = <GIC_SPI 102 IRQ_TYPE_NONE>,
++					     <GIC_SPI 103 IRQ_TYPE_NONE>,
++					     <GIC_SPI 104 IRQ_TYPE_NONE>,
++					     <GIC_SPI 105 IRQ_TYPE_NONE>;
++			};
+ 		};
+ 
+ 		uart0: serial@18020000 {
+-- 
+1.9.1
 
-Without #ifdefs if we compile driver for legacy, MSI structures will not be available and we get compile time error.
-> 
-> > +
-> > +	/* setup AFI/FPCI range */
-> > +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-> > +	base = virt_to_phys((void *)msi->pages);
-> > +	nwl_bridge_writel(pcie, lower_32_bits(base), I_MSII_BASE_LO);
-> > +	nwl_bridge_writel(pcie, upper_32_bits(base), I_MSII_BASE_HI);
-> 
-> I just read this, and I'm puzzled. Actually, puzzled is an understatement. Why
-> on Earth do you need to give RAM to your MSI HW?
-> This should be a device, not RAM. By the look of it, this could be absolutely
-> anything. Are you sure you have to supply RAM here?
-> 
-This is required in our hardware, so that bridge identifies incoming MWr as MSI.
-> > +
-> > +	/* Disable high range msi interrupts */
-> > +	nwl_bridge_writel(pcie, (u32)~MSGF_MSI_SR_HI_MASK,
-> > +MSGF_MSI_MASK_HI);
-> > +
-> > +
-
-Bharat
