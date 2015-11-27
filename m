@@ -1,210 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:51333 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708AbbKQBeZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 20:34:25 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Nov 2015 11:34:23 +1000
-Date: Tue, 17 Nov 2015 12:33:21 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Daniel Axtens <dja@axtens.net>, linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, frowand.list@gmail.com
-Subject: Re: [PATCH v7 11/50] powerpc/powernv: IO and M32 mapping based on
- PCI device resources
-Message-ID: <20151117013321.GA30246@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-12-git-send-email-gwshan@linux.vnet.ibm.com>
- <87lha3j3n0.fsf@gamma.ozlabs.ibm.com>
- <20151112045525.GA6174@gwshan>
- <56498D67.1090600@ozlabs.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56498D67.1090600@ozlabs.ru>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:59522 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbbK0K7p (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Nov 2015 05:59:45 -0500
+Message-ID: <1448621981.3689.95.camel@pengutronix.de>
+Subject: Re: [PATCH v3] PCI: imx6: Fix reset-gpio to work with active low
+ GPIO
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Petr =?UTF-8?Q?=C5=A0tetiar?= <ynezz@true.cz>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>
+Date: Fri, 27 Nov 2015 11:59:41 +0100
+In-Reply-To: <1448621794-19916-1-git-send-email-ynezz@true.cz>
+References: <1448620464.3689.94.camel@pengutronix.de>
+	 <1448621794-19916-1-git-send-email-ynezz@true.cz>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 16, 2015 at 07:01:43PM +1100, Alexey Kardashevskiy wrote:
->On 11/12/2015 03:55 PM, Gavin Shan wrote:
->>On Thu, Nov 12, 2015 at 02:30:27PM +1100, Daniel Axtens wrote:
->>>Hi Gavin,
->>>
->>>Sorry to have taken so long to resume these reviews!
->>>
->>
->>Thanks for your review, Daniel!
->>
->>>>Currently, the IO and M32 segments are mapped to the corresponding
->>>>PE based on the windows of the parent bridge of PE's primary bus.
->>>>It's not going to work when the windows of root port or upstream
->>>>port of the PCIe switch behind root port are extended to PHB's
->>>>aperatuses in order to support hotplug in subsequent patch.
->>>I'm not _entirely_ sure I understand this.
->>>
->>>I *think* you mean PHB's apertures (i.e. s/aperatuses/apertures/)?
->>>
->>
->>I'll fix the typo in next revision.
->>
->>>>This fixes the issue by mapping IO and M32 segments based on the
->>>>resources of the PCI devices included in the PE, instead of the
->>>>windows of the parent bridge of the PE's primary bus.
->>>
->>>This solution seems to make a lot of sense, but I don't have a very good
->>>understanding of PCI yet: why was it done that way and not this way
->>>originally? Looking at the code, it looks like the old way was simple
->>>but didn't support SR-IOV?
->>>
->>
->>It's not related to SRIOV. Originally, the IO or M32 segments are mapped
->>according to the bridge's windows.
->
->
->Sorry, I do not understand what this means...
->
+Am Freitag, den 27.11.2015, 11:56 +0100 schrieb Petr Štetiar:
+> It's currently not possible to use reset-gpio on board where the GPIO is
+> active low as the code incorrectly assumes, that reset-gpio will be
+> always active high.
+> 
+> In my case the broken behavior was observed on Toradex Apalis SoM with
+> Ixora base board.
+> 
+> Signed-off-by: Petr Štetiar <ynezz@true.cz>
 
-Before this patchset, the IO or M32 segments consumed by one PE are mapped
-according to the windows of PCI bridge of the PE's primary bus if the PE
-isn't including all subordinate PCI buses orginated from the bridge. Otherwise,
-the bridge's windows should be taken into account as well.
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 
->
->>The bridge windows on root port or the
->>upstream port of the switch behind that will be extended to PHB's apertures.
->
->What does "extended" mean here and why would the windows be extended anyway?
->
+> ---
+> 
+> Changes since v1:                                                                                                                                                        
+>  * reworked to use descriptor based GPIO interface
+> 
+> Changes since v2:
+>  * rebased on pci/host-imx6 which now uses gpio_set_value_cansleep()
+> 
+>  drivers/pci/host/pci-imx6.c |   20 ++++++--------------
+>  1 file changed, 6 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 3c3b37f..8e9afa5 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -32,7 +32,7 @@
+>  #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
+>  
+>  struct imx6_pcie {
+> -	int			reset_gpio;
+> +	struct gpio_desc	*reset_gpio;
+>  	struct clk		*pcie_bus;
+>  	struct clk		*pcie_phy;
+>  	struct clk		*pcie;
+> @@ -287,10 +287,10 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+>  	usleep_range(200, 500);
+>  
+>  	/* Some boards don't have PCIe reset GPIO. */
+> -	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> -		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
+> +	if (imx6_pcie->reset_gpio) {
+> +		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 0);
+>  		msleep(100);
+> -		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+> +		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+>  	}
+>  	return 0;
+>  
+> @@ -560,7 +560,6 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  {
+>  	struct imx6_pcie *imx6_pcie;
+>  	struct pcie_port *pp;
+> -	struct device_node *np = pdev->dev.of_node;
+>  	struct resource *dbi_base;
+>  	int ret;
+>  
+> @@ -581,15 +580,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  		return PTR_ERR(pp->dbi_base);
+>  
+>  	/* Fetch GPIOs */
+> -	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+> -	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> -		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
+> -					    GPIOF_OUT_INIT_LOW, "PCIe reset");
+> -		if (ret) {
+> -			dev_err(&pdev->dev, "unable to get reset gpio\n");
+> -			return ret;
+> -		}
+> -	}
+> +	imx6_pcie->reset_gpio = devm_gpiod_get_optional(&pdev->dev, "reset",
+> +							GPIOD_OUT_LOW);
+>  
+>  	/* Fetch clocks */
+>  	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
 
-It's reserving IO or memory resource for possible plugged adapters in the future.
-
->>If we still use bridge's windows, all IO and M32 resources are mapped/assigned
->>to the PE corresponding to PCI bus#1 or PCI bus#2. That's not correct any more.
->>So the correct way is to do the mapping based on IO or M32 BARs of the devices
->>included in the PE.
->
->In this patch I see quite a lot of code movements and I fail to spot the
->actual change here...
->
->
->It used to be a single loop:
->
->pci_bus_for_each_resource(pe->pbus, res, i) {
->	/* do stuff for each @res */
->}
->
->and now it is 2 loops inside another loop:
->
->list_for_each_entry(pdev, &pe->pbus->devices, bus_list) {
->	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
->		res = &pdev->resource[i];
->		/* do stuff for each @res */
->	}
->
->	for (i = 0; i <= PCI_BRIDGE_RESOURCE_NUM; i++) {
->	        res = &pdev->resource[PCI_BRIDGE_RESOURCES + i];
->		/* do stuff for each @res */
->	}
->}
->
->
->Is that correct? If yes, why is not the patch as simple as this? If no, what
->did I miss?
->
-
-That's correct. The resource tracked by the PCI bridge windows can belonged
-to another PE instead the one tracked by @pe in the code.
-
->
->
->>
->>>There are a few comments inline as well.
->>>
->>>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>>>index 553d3f3..4ab93f8 100644
->>>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>>>@@ -2741,71 +2741,90 @@ truncate_iov:
->>>>  }
->>>>  #endif /* CONFIG_PCI_IOV */
->>>>
->>>>-/*
->>>>- * This function is supposed to be called on basis of PE from top
->>>>- * to bottom style. So the the I/O or MMIO segment assigned to
->>>>- * parent PE could be overrided by its child PEs if necessary.
->>>>- */
->>>>-static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
->>>>-				  struct pnv_ioda_pe *pe)
->>>>+static int pnv_ioda_setup_one_res(struct pnv_ioda_pe *pe,
->>>>+				  struct resource *res)
->>>>  {
->>>>-	struct pnv_phb *phb = hose->private_data;
->>>>+	struct pnv_phb *phb = pe->phb;
->>>>  	struct pci_bus_region region;
->>>>-	struct resource *res;
->>>>-	unsigned int segsize;
->>>>-	int *segmap, index, i;
->>>>+	unsigned int index, segsize;
->>>>+	int *segmap;
->>>>  	uint16_t win;
->>>>  	int64_t rc;
->>>
->>>s/int64_t/s64/;
->>>I think we might also want to change the uint16_t as well.
->>>
->>
->>As I explained before, I changed it from s64 to int64_t and I won't change it
->>back since both of them are fine. Same situation to uint16 here. If we really
->>want to clean it all at once, I can do that later, but not in this patchset.
->>
->>>>-	/*
->>>>-	 * NOTE: We only care PCI bus based PE for now. For PCI
->>>>-	 * device based PE, for example SRIOV sensitive VF should
->>>>-	 * be figured out later.
->>>>-	 */
->>>>-	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
->>>>+	if (!res->parent || !res->flags || res->start > res->end)
->>>>+		return 0;
->>>>
->>>>-	pci_bus_for_each_resource(pe->pbus, res, i) {
->>>>-		if (!res || !res->flags ||
->>>>-		    res->start > res->end)
->>>>-			continue;
->>>>+	if (res->flags & IORESOURCE_IO) {
->>>>+		region.start = res->start - phb->ioda.io_pci_base;
->>>>+		region.end   = res->end - phb->ioda.io_pci_base;
->>>>+		segsize      = phb->ioda.io_segsize;
->>>>+		segmap       = phb->ioda.io_segmap;
->>>>+		win          = OPAL_IO_WINDOW_TYPE;
->>>>+	} else if ((res->flags & IORESOURCE_MEM) &&
->>>>+		   !pnv_pci_is_mem_pref_64(res->flags)) {
->>>>+		region.start = res->start -
->>>>+			       phb->hose->mem_offset[0] -
->>>>+			       phb->ioda.m32_pci_base;
->>>>+		region.end   = res->end -
->>>>+			       phb->hose->mem_offset[0] -
->>>>+			       phb->ioda.m32_pci_base;
->>>>+		segsize      = phb->ioda.m32_segsize;
->>>>+		segmap       = phb->ioda.m32_segmap;
->>>>+		win          = OPAL_M32_WINDOW_TYPE;
->
->
->
->This code asks for a helper function
->
->pnv_ioda_do_setup_one_res(start, end, segsize, segmap, win)
->
->and then you won't need many local variables (region, segsize, segmap, win) ;)
->
-
-Sounds like a good idea. I'll change accordingly in next revision.
-
-Thanks,
-Gavin
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
