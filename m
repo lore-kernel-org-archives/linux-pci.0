@@ -1,232 +1,195 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:55605 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751163AbbKPVe1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 16:34:27 -0500
-Date: Mon, 16 Nov 2015 13:34:23 -0800
-From: Guenter Roeck <linux@roeck-us.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 1/2] PCI: pciehp: Merge hotplug work requests
-Message-ID: <20151116213423.GA23525@roeck-us.net>
-References: <1446522496-21628-1-git-send-email-linux@roeck-us.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1446522496-21628-1-git-send-email-linux@roeck-us.net>
+Received: from mga14.intel.com ([192.55.52.115]:64927 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753608AbbK0O4a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 27 Nov 2015 09:56:30 -0500
+Message-ID: <1448636162.29201.6.camel@intel.com>
+Subject: Re: [Intel-gfx] [PATCH v2] PCI / PM: tune down RPM suspend error
+ message with EBUSY and EAGAIN retval
+From: Imre Deak <imre.deak@intel.com>
+Reply-To: imre.deak@intel.com
+To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Daniel Vetter <daniel@ffwll.ch>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>,
+	intel-gfx@lists.freedesktop.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 27 Nov 2015 16:56:02 +0200
+In-Reply-To: <56586C60.5050104@intel.com>
+References: <1447838178-15308-1-git-send-email-imre.deak@intel.com>
+	 <1447844188-21999-1-git-send-email-imre.deak@intel.com>
+	 <1447853318.14073.2.camel@intel.com>
+	 <20151118141943.GU20799@phenom.ffwll.local> <878u5j7jt9.fsf@intel.com>
+	 <56586C60.5050104@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi folks,
+On pe, 2015-11-27 at 15:44 +0100, Rafael J. Wysocki wrote:
+> On 11/27/2015 12:39 PM, Jani Nikula wrote:
+> > On Wed, 18 Nov 2015, Daniel Vetter <daniel@ffwll.ch> wrote:
+> > > On Wed, Nov 18, 2015 at 03:28:38PM +0200, Imre Deak wrote:
+> > > > On ke, 2015-11-18 at 12:56 +0200, Imre Deak wrote:
+> > > > > The runtime PM core doesn't treat EBUSY and EAGAIN retvals
+> > > > > from the driver
+> > > > > suspend hooks as errors, but they still show up as errors in
+> > > > > dmesg. Tune
+> > > > > them down.
+> > > > > 
+> > > > > One problem caused by this was noticed by Daniel: the i915
+> > > > > driver
+> > > > > returns EAGAIN to signal a temporary failure to suspend and
+> > > > > as a request
+> > > > > towards the RPM core for scheduling a suspend again. This is
+> > > > > a normal
+> > > > > event, but the resulting error message flags a breakage
+> > > > > during the
+> > > > > driver's automated testing which parses dmesg and picks up
+> > > > > the error.
+> > > > > 
+> > > > > v2:
+> > > > > - fix compile breake when CONFIG_PM_SLEEP=n (0-day builder)
+> > > > > 
+> > > > > Reported-by: Daniel Vetter <daniel.vetter@intel.com>
+> > > > > Signed-off-by: Imre Deak <imre.deak@intel.com>
+> > > > Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=92992
+> > > Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+> > > 
+> > > Rafael, can you please pick this up for 4.4? The spurious
+> > > KERN_ERR noise
+> > > in dmesg is causing a lot fo spurious fail in our (very recently
+> > > put into
+> > > place) i915 CI system.
+> > Rafael, ping.
+> 
+> Well, so I'm not sure about this one.
+> 
+> And the question is ->
+> 
+> > > > > ---
+> > > > >   drivers/base/power/main.c |  7 +++++--
+> > > > >   drivers/pci/pci-driver.c  |  2 +-
+> > > > >   include/linux/pm.h        | 11 +++++++++--
+> > > > >   3 files changed, 15 insertions(+), 5 deletions(-)
+> > > > > 
+> > > > > diff --git a/drivers/base/power/main.c
+> > > > > b/drivers/base/power/main.c
+> > > > > index 1710c26..39d2090 100644
+> > > > > --- a/drivers/base/power/main.c
+> > > > > +++ b/drivers/base/power/main.c
+> > > > > @@ -1679,9 +1679,12 @@ int dpm_suspend_start(pm_message_t
+> > > > > state)
+> > > > >   }
+> > > > >   EXPORT_SYMBOL_GPL(dpm_suspend_start);
+> > > > >   
+> > > > > -void __suspend_report_result(const char *function, void *fn,
+> > > > > int ret)
+> > > > > +void __suspend_report_result(const char *function, void *fn,
+> > > > > int ret,
+> > > > > +			     bool runtime_pm)
+> > > > >   {
+> > > > > -	if (ret)
+> > > > > +	if (runtime_pm && (ret == -EBUSY || ret == -EAGAIN))
+> > > > > +		printk(KERN_DEBUG "%s(): %pF returns %d\n",
+> > > > > function, fn, ret);
+> > > > > +	else if (ret)
+> > > > >   		printk(KERN_ERR "%s(): %pF returns %d\n",
+> > > > > function, fn, ret);
+> > > > >   }
+> 
+> -> why you are adding overhead to this function, instead of -->
+> 
+> > > > >   EXPORT_SYMBOL_GPL(__suspend_report_result);
+> > > > > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-
+> > > > > driver.c
+> > > > > index 108a311..9569572 100644
+> > > > > --- a/drivers/pci/pci-driver.c
+> > > > > +++ b/drivers/pci/pci-driver.c
+> > > > > @@ -1142,7 +1142,7 @@ static int
+> > > > > pci_pm_runtime_suspend(struct device *dev)
+> > > > >   	pci_dev->state_saved = false;
+> > > > >   	pci_dev->no_d3cold = false;
+> > > > >   	error = pm->runtime_suspend(dev);
+> > > > > -	suspend_report_result(pm->runtime_suspend, error);
+> > > > > +	rpm_suspend_report_result(pm->runtime_suspend,
+> > > > > error);
+> 
+> --> replacing the suspend_report_result() above with a direct
+> printk() 
+> in the if (error) block below.
+> 
+> Surely, suspend_report_result() was not designed with runtime PM in
+> mind 
+> and it was a mistake to use it here.  It just seemed to do the right 
+> thing, but it clearly doesn't.
 
-any comments on this series ?
+Ok, a helper like rpm_suspend_report_result() seemed like a good idea,
+since handling -EBUSY and -EAGAIN error reporting will be the same for
+callers of the pm->runtime_suspend hooks not just the PCI drivers. But
+since the only user of this is the PCI core atm we can just add a
+printk locally as you suggested. I'll follow up with v2.
 
-Thanks,
-Guenter
+> > > > >   	if (error)
+> > > > >   		return error;
+> > > > >   	if (!pci_dev->d3cold_allowed)
+> > > > > diff --git a/include/linux/pm.h b/include/linux/pm.h
+> > > > > index 35d599e..54f37e3 100644
+> > > > > --- a/include/linux/pm.h
+> > > > > +++ b/include/linux/pm.h
+> > > > > @@ -702,11 +702,17 @@ extern int
+> > > > > dpm_suspend_late(pm_message_t state);
+> > > > >   extern int dpm_suspend(pm_message_t state);
+> > > > >   extern int dpm_prepare(pm_message_t state);
+> > > > >   
+> > > > > -extern void __suspend_report_result(const char *function,
+> > > > > void *fn, int ret);
+> > > > > +extern void __suspend_report_result(const char *function,
+> > > > > void *fn, int ret,
+> > > > > +				    bool runtime_pm);
+> > > > >   
+> > > > >   #define suspend_report_result(fn, ret)			
+> > > > > 		\
+> > > > >   	do {						
+> > > > > 		\
+> > > > > -		__suspend_report_result(__func__, fn, ret);	
+> > > > > 	\
+> > > > > +		__suspend_report_result(__func__, fn, ret,
+> > > > > false);	\
+> > > > > +	} while (0)
+> > > > > +
+> > > > > +#define rpm_suspend_report_result(fn, ret)			
+> > > > > 	\
+> > > > > +	do {							
+> > > > > 	\
+> > > > > +		__suspend_report_result(__func__, fn, ret,
+> > > > > true);	\
+> > > > >   	} while (0)
+> > > > >   
+> > > > >   extern int device_pm_wait_for_dev(struct device *sub,
+> > > > > struct device *dev);
+> > > > > @@ -744,6 +750,7 @@ static inline int
+> > > > > dpm_suspend_start(pm_message_t state)
+> > > > >   }
+> > > > >   
+> > > > >   #define suspend_report_result(fn, ret)		do {}
+> > > > > while (0)
+> > > > > +#define rpm_suspend_report_result(fn, ret)	do {}
+> > > > > while (0)
+> > > > >   
+> > > > >   static inline int device_pm_wait_for_dev(struct device *a,
+> > > > > struct device *b)
+> > > > >   {
+> 
+> BTW, if you're changing PM code, it is good to CC linux-pm too (now 
+> done) and if you're changing PCI code, it is mandatory to CC linux-
+> pci 
+> and the PCI maintainer (now done too).
 
-On Mon, Nov 02, 2015 at 07:48:15PM -0800, Guenter Roeck wrote:
-> Some oddball devices may experience a PCIe link flap after power-on.
-> This may result in the following sequence of events.
-> 
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24: Card present on Slot(0)
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24: slot(0): Link Up event
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24:
-> 	Link Up event ignored on slot(0): already powering on
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24: slot(0): Link Down event
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24:
-> 	Link Down event queued on slot(0): currently getting powered on
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24: slot(0): Link Up event
-> fpc0 kernel: pciehp 0000:02:08.0:pcie24:
-> 	Link Up event queued on slot(0): currently getting powered off
-> 
-> This causes the driver for affected devices to be instantiated, removed,
-> and re-instantiated.
-> 
-> An even worse problem is a device which resets itself continuously.
-> This can result in the following endless sequence of messages.
-> 
-> pciehp 0000:02:0a.0:pcie24: Card present on Slot(10)
-> pciehp 0000:02:0a.0:pcie24: Card not present on Slot(10)
-> pciehp 0000:02:0a.0:pcie24: Card present on Slot(10)
-> pciehp 0000:02:0a.0:pcie24: Card not present on Slot(10)
-> pciehp 0000:02:0a.0:pcie24: Card present on Slot(10)
-> pciehp 0000:02:0a.0:pcie24: Card not present on Slot(10)
-> 
-> The problem in the both cases is that all events are enqueued as hotplug
-> work requests and executed in sequence, which can overwhelm the system
-> and even result in "hung task" tracebacks in pciehp_power_thread().
-> 
-> This exposes an underlying limitation of the hotplug state machine: It
-> executes all received requests, even though only the most recent request
-> really needs to be handled. As a result, by the time a request is handled,
-> it may well be obsolete and have been superseded by many other enable /
-> disable requests which have been enqueued in the meantime.
-> 
-> To solve the problem, fold hotplug work requests into a single request.
-> Store the request as well as the work data structure in 'struct slot',
-> thus eliminating the need to allocate memory for each request.
-> Handle a sequence of requests by setting a 'disable' flag when needed,
-> indicating that a link needs to be disabled prior to re-enabling it.
-> 
-> With this change, requests and request sequences are handled as follows.
-> 
-> enable (single request):		enable link
-> disable (single request):		disable link
-> ... disable-enable-disable...disable:	disable link
-> ... disable-enable-disable...enable:	disable link, then enable it
-> 
-> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
-> ---
-> This is a different approach to solve the problem I tried to address
-> earlier with with "PCI: pciehp: Add support for delayed power-on" [1].
-> 
-> While the earlier patch implemented an additional state in the hotplug
-> state machine to solve the problem, the approach taken here is a bit
-> simpler and more straightfoward. By folding multiple requests into one,
-> the follow-up patch can use delayed work to implement power-on delays.
-> An additional advantage is that this patch can be applied separately
-> to simplify the state machine.
-> 
-> While working on this patch, I also tried to drop multiple "disable"
-> requests, and only disable a slot if it was already disabled, to reduce
-> overhead. Unfortunately, this did not always work. In some instances,
-> I ended up in a situation where a device could not be enabled
-> because the system thought that it already existed. I don't know
-> if this is a weakness in this patch or some state change I did not catch. 
-> This may be left for further study.
-> 
-> [1] https://lkml.org/lkml/2015/10/12/686
-> 
->  drivers/pci/hotplug/pciehp.h      |  4 +++
->  drivers/pci/hotplug/pciehp_ctrl.c | 52 ++++++++++++++++++---------------------
->  drivers/pci/hotplug/pciehp_hpc.c  |  1 +
->  3 files changed, 29 insertions(+), 28 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index 62d6fe6c3714..364b6fa32978 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -78,6 +78,9 @@ struct slot {
->  	struct mutex lock;
->  	struct mutex hotplug_lock;
->  	struct workqueue_struct *wq;
-> +	struct work_struct hotplug_work;
-> +	u32 hotplug_req;
-> +	bool disable;			/* true to disable before enable */
->  };
->  
->  struct event_info {
-> @@ -130,6 +133,7 @@ void pciehp_queue_interrupt_event(struct slot *slot, u32 event_type);
->  int pciehp_configure_device(struct slot *p_slot);
->  int pciehp_unconfigure_device(struct slot *p_slot);
->  void pciehp_queue_pushbutton_work(struct work_struct *work);
-> +void pciehp_power_thread(struct work_struct *work);
->  struct controller *pcie_init(struct pcie_device *dev);
->  int pcie_init_notification(struct controller *ctrl);
->  int pciehp_enable_slot(struct slot *p_slot);
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index 880978b6d534..ad1321e91546 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -156,13 +156,9 @@ static int remove_board(struct slot *p_slot)
->  	return 0;
->  }
->  
-> -struct power_work_info {
-> -	struct slot *p_slot;
-> -	struct work_struct work;
-> -	unsigned int req;
-> -#define DISABLE_REQ 0
-> -#define ENABLE_REQ  1
-> -};
-> +/* Hotplug work requests */
-> +#define DISABLE_REQ	0
-> +#define ENABLE_REQ	1
->  
->  /**
->   * pciehp_power_thread - handle pushbutton events
-> @@ -171,14 +167,19 @@ struct power_work_info {
->   * Scheduled procedure to handle blocking stuff for the pushbuttons.
->   * Handles all pending events and exits.
->   */
-> -static void pciehp_power_thread(struct work_struct *work)
-> +void pciehp_power_thread(struct work_struct *work)
->  {
-> -	struct power_work_info *info =
-> -		container_of(work, struct power_work_info, work);
-> -	struct slot *p_slot = info->p_slot;
-> -	int ret;
-> +	struct slot *p_slot = container_of(work, struct slot, hotplug_work);
-> +	int ret, req;
-> +	bool disable;
-> +
-> +	mutex_lock(&p_slot->lock);
-> +	req = p_slot->hotplug_req;
-> +	disable = p_slot->disable;
-> +	p_slot->disable = false;
-> +	mutex_unlock(&p_slot->lock);
->  
-> -	switch (info->req) {
-> +	switch (req) {
->  	case DISABLE_REQ:
->  		mutex_lock(&p_slot->hotplug_lock);
->  		pciehp_disable_slot(p_slot);
-> @@ -189,6 +190,8 @@ static void pciehp_power_thread(struct work_struct *work)
->  		break;
->  	case ENABLE_REQ:
->  		mutex_lock(&p_slot->hotplug_lock);
-> +		if (disable)
-> +			pciehp_disable_slot(p_slot);
->  		ret = pciehp_enable_slot(p_slot);
->  		mutex_unlock(&p_slot->hotplug_lock);
->  		if (ret)
-> @@ -200,26 +203,19 @@ static void pciehp_power_thread(struct work_struct *work)
->  	default:
->  		break;
->  	}
-> -
-> -	kfree(info);
->  }
->  
->  static void pciehp_queue_power_work(struct slot *p_slot, int req)
->  {
-> -	struct power_work_info *info;
-> -
-> -	p_slot->state = (req == ENABLE_REQ) ? POWERON_STATE : POWEROFF_STATE;
-> -
-> -	info = kmalloc(sizeof(*info), GFP_KERNEL);
-> -	if (!info) {
-> -		ctrl_err(p_slot->ctrl, "no memory to queue %s request\n",
-> -			 (req == ENABLE_REQ) ? "poweron" : "poweroff");
-> -		return;
-> +	if (req == ENABLE_REQ) {
-> +		p_slot->state = POWERON_STATE;
-> +	} else {
-> +		p_slot->state = POWEROFF_STATE;
-> +		p_slot->disable = true;
->  	}
-> -	info->p_slot = p_slot;
-> -	INIT_WORK(&info->work, pciehp_power_thread);
-> -	info->req = req;
-> -	queue_work(p_slot->wq, &info->work);
-> +	p_slot->hotplug_req = req;
-> +
-> +	queue_work(p_slot->wq, &p_slot->hotplug_work);
->  }
->  
->  void pciehp_queue_pushbutton_work(struct work_struct *work)
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 5c24e938042f..e4e6fcbe1e20 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -755,6 +755,7 @@ static int pcie_init_slot(struct controller *ctrl)
->  	mutex_init(&slot->lock);
->  	mutex_init(&slot->hotplug_lock);
->  	INIT_DELAYED_WORK(&slot->work, pciehp_queue_pushbutton_work);
-> +	INIT_WORK(&slot->hotplug_work, pciehp_power_thread);
->  	ctrl->slot = slot;
->  	return 0;
->  abort:
-> -- 
-> 2.1.4
-> 
+Sorry, I thought about it too after sending it. Will do so in the
+future.
+
+--Imre
