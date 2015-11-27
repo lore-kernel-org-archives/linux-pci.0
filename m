@@ -1,70 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:36100 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750812AbbKLGMz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Nov 2015 01:12:55 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 12 Nov 2015 16:12:52 +1000
-Date: Thu, 12 Nov 2015 17:11:48 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Daniel Axtens <dja@axtens.net>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, aik@ozlabs.ru, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, frowand.list@gmail.com
-Subject: Re: [PATCH v7 37/50] powerpc/powernv: Simplify pnv_eeh_reset()
-Message-ID: <20151112061148.GA17357@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-38-git-send-email-gwshan@linux.vnet.ibm.com>
- <877flniyz3.fsf@gamma.ozlabs.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v4 0/5] Add iProc PCIe PAXC and MSI support
+Date: Fri, 27 Nov 2015 09:37:43 -0800
+Message-ID: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <877flniyz3.fsf@gamma.ozlabs.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 12, 2015 at 04:11:12PM +1100, Daniel Axtens wrote:
->> -			rc = opal_pci_reset(phb->opal_id,
->> -					    OPAL_RESET_PHB_ERROR,
->> -					    OPAL_ASSERT_RESET);
->> -			if (rc != OPAL_SUCCESS) {
->> -				pr_warn("%s: Failure %lld clearing "
->> -					"error injection registers\n",
->> -					__func__, rc);
->
->This is very minor, but is there a good reason to change the error
->message from the one above to the one below? I just hesitate to change
->error messages that people might be grepping the source for without a
->good reason.
->
+This patch series adds support for the iProc PAXC interface and support for
+event queue based MSI, integrated in the iProc PCIe core
 
-About 3 years ago, I think the error message printed by pr_warn() can't
-exceed 80 lines each line. Otherwise, scripts/checkpatch.pl will report
-warnings. The error message spans multiple lines to avoid that. However,
-that turned to be wrong later. If people searchs the code from the error
-or warning message, it'd better to keep it in one line, not in multiple
-lines. That's the reason I merged them into one line since I have to
-refactor the function. At same time, the message is shortened as "Error"
-is shorter than "Failure" and "registers" in original message is meaningless.
+This patch series is based on Linux v4.4-rc1 and is avaliable here:
+https://github.com/Broadcom/cygnus-linux/tree/iproc-msi-v4
 
->> +		if (rc != OPAL_SUCCESS) {
->> +			pr_warn("%s: Error %lld clearing error injection\n",
->> +				__func__, rc);
->
->Apart from that this looks good, pending me actually testing it :)
->
+Between v4 and v3, changes are low risk. Sanity tested below:
+PAXB:
+- Broadcom NS2 SVK board with Intel e1000e network card
 
-Thanks :-)
+Changes from v3:
+- Detect the number of possible CPUs instead online CPUs in the driver. Note
+CPU notifier based implementation still needs to be added in the future, for
+proper support of MSI IRQ affinity when CPU is brought online/offline at
+runtime. Support in this dirver will be added when we support CPU hotplug in
+one of iProc family of SoCs so the changes can be tested
+- Use dma_zalloc_coherent for event queue host memory allocation and zeoring
 
-Gavin
+Changes from v2:
+- Improved descriptions in the iProc MSI commit message
+- Removed redundant host memory used for MSI address. The MSI posted writes
+never really hit the memory. Use iProc PCIe controller base address instead
+- Fixed deadlock when MSI vectors are used up
+- Enforced the number of MSI groups to always be multiple of the number of CPUs
+- Improved the efficiency of MSI event processing by only updating the head
+pointer after finishing processing all outstanding events
+- Fixed error handling code to make sure all configurations are rolled back
+- Added code to zero the host memory used for event queues after allocation
+- Removed redundant 'brcm,num-eq-region' and 'brcm,num-msi-msg-region' DT
+  properties. Now determine the number of regions based on interface type
+- Other misc. changes
 
->Regards,
->Daniel
->
+Changes from v1:
+- Fixed incorrect 1-to-1 mapping between MSI vector and GIC interrupt. Now the
+driver supports multiple MSI vectors per GIC interrupt
+- Added MSI IRQ affinity support by distributing GIC interrupts across
+available CPU cores and dynamically steer MSI vectors to the target CPU
+- replace readl/writel with readl_relaxed/writel_relaxed since all register
+accesses within the iProc MSI driver are to/from the same I/O block, i.e., the
+iProc PCIe core
+- Removed all redundant irq_chip callback assignments
+- Changed to use uncached host memory for both MSI posted writes and event
+queues
+- Add functions to free resources in error/exit cases
+- In pcie-iproc-platform.c, pass in interface type through OF device data
+- Moved define for max number of interrupts from pcie-iproc.h to
+pcie-iproc-msi.c
+- Other misc. changes
 
+Ray Jui (5):
+  PCI: iproc: Update iProc PCIe device tree binding
+  PCI: iproc: Add PAXC interface support
+  PCI: iproc: Add iProc PCIe MSI device tree binding
+  PCI: iproc: Add iProc PCIe MSI support
+  ARM: dts: Enable MSI support for Broadcom Cygnus
+
+ .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  40 +-
+ arch/arm/boot/dts/bcm-cygnus.dtsi                  |  22 +
+ drivers/pci/host/Kconfig                           |   9 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-iproc-bcma.c                 |   1 +
+ drivers/pci/host/pcie-iproc-msi.c                  | 675 +++++++++++++++++++++
+ drivers/pci/host/pcie-iproc-platform.c             |  25 +-
+ drivers/pci/host/pcie-iproc.c                      | 228 +++++--
+ drivers/pci/host/pcie-iproc.h                      |  42 +-
+ 9 files changed, 1000 insertions(+), 43 deletions(-)
+ create mode 100644 drivers/pci/host/pcie-iproc-msi.c
+
+-- 
+1.9.1
 
