@@ -1,103 +1,191 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] PCI: dra7xx: mark dra7xx_pcie_msi irq as IRQF_NO_THREAD
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-References: <1446748990-27722-1-git-send-email-grygorii.strashko@ti.com>
- <563C6A7D.7040503@linutronix.de> <563D06BF.5010707@ti.com>
- <5644599C.8030905@linutronix.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <tony@atomide.com>,
-	<nsekhar@ti.com>, <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Felipe Balbi <balbi@ti.com>
-From: Grygorii Strashko <grygorii.strashko@ti.com>
-Message-ID: <5646306B.9040805@ti.com>
-Date: Fri, 13 Nov 2015 20:48:11 +0200
+Message-ID: <56587410.4090004@arm.com>
+Date: Fri, 27 Nov 2015 15:17:36 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <5644599C.8030905@linutronix.de>
-Content-Type: text/plain; charset="windows-1252"
+To: Ray Jui <rjui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>
+CC: Arnd Bergmann <arnd@arndb.de>, Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 4/5] PCI: iproc: Add iProc PCIe MSI support
+References: <1448577430-16428-1-git-send-email-rjui@broadcom.com> <1448577430-16428-5-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1448577430-16428-5-git-send-email-rjui@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/12/2015 11:19 AM, Sebastian Andrzej Siewior wrote:
-> On 11/06/2015 08:59 PM, Grygorii Strashko wrote:
->> Hi Sebastian,
+On 26/11/15 22:37, Ray Jui wrote:
+> This patch adds PCIe MSI support for both PAXB and PAXC interfaces on
+> all iProc based platforms
 > 
-> Hi Grygorii,
+> The iProc PCIe MSI support deploys an event queue based implementation.
+> Each event queue is serviced by a GIC interrupt and can support up to 64
+> MSI vectors. Host memory is allocated for the event queues, and each event
+> queue consists of 64 word-sized entries. MSI data is written to the
+> lower 16-bit of each entry, whereas the upper 16-bit of the entry is
+> reserved for the controller for internal processing
 > 
->> - IRQF_NO_THREAD is the first considered option for such kind of issues.
->>    But: Now in LKML there are ~60 occurrences of IRQF_NO_THREAD - most of
->>    them are used by Arch code. And It's only used by 6 drivers (drivers/*) [Addendum 2].
->>    During past year, I've found only two threads related to IRQF_NO_THREAD
->>    and, in both cases, IRQF_NO_THREAD was added for arch specific IRQs which
->>    can't be threaded (https://lists.ozlabs.org/pipermail/linuxppc-dev/2014-November/122659.html,
->>    https://lkml.org/lkml/2015/4/21/404).
+> Each event queue is tracked by a head pointer and tail pointer. Head
+> pointer indicates the next entry in the event queue to be processed by
+> the driver and is updated by the driver after processing is done.
+> The controller uses the tail pointer as the next MSI data insertion
+> point. The controller ensures MSI data is flushed to host memory before
+> updating the tail pointer and then triggering the interrupt
 > 
-> That powerpc patch you reference is doing the same thing you are doing
-> here.
-
-Probably. I don't know this hw, so my assumption was based on commits descriptions.
-
+> MSI IRQ affinity is supported by evenly distributing the interrupts to
+> each CPU core. MSI vector is moved from one GIC interrupt to another in
+> order to steer to the target CPU
 > 
->> - ARM UP system: TI's am437xx SoCs for example.
->>     Here everything is started from /drivers/irqchip/irq-gic.c -> gic_handle_irq()
->>
+> Therefore, the actual number of supported MSI vectors is:
 > 
->> GIC IRQ handler gic_handle_irq() may process more than one IRQ without leaving HW IRQ mode
->> (during my experiments I saw up to 6 IRQs processed in one cycle).
+> M * 64 / N
 > 
-> not only GIC. But then what good does it do if it leaves and returns
-> immediately back to the routine?
+> where M denotes the number of GIC interrupts (event queues), and N
+> denotes the number of CPU cores
 > 
->> As result, It was concluded, that having such current HW/SW and all IRQs forced threaded [1],
->> it will be potentially possible to predict system behavior, because gic_handle_irq() will
->> do the same things for most of processed IRQs.
->> But, once there will be chained [2] or IRQF_NO_THREAD [3] IRQs - complete unpredictability.
+> This iProc event queue based MSI support should not be used with newer
+> platforms with integrated MSI support in the GIC (e.g., giv2m or
+> gicv3-its)
 > 
-> I would not go as far as "complete unpredictability". What you do (or
-> should do) is testing the system for longer period of time with
-> different behavior in order to estimate the worst case.
-> You can't predict the system anyway since it is way too complex. Just
-> try something that ensures that cyclictest is no longer cache hot and
-> see what happens then.
-
-I understand that. That's the current plan and work is in progress.
-The nearest target is to get rid of all -RT specific backtracks and
-ensure TI -RT kernel supports the same functionality as non-RT.
-next step - try to optimize.
-
-> 
->> So, It was selected as goal to have all PPI IRQs (forced) threaded. And if someone
->> will require faster IRQ handling - IRQF_NO_THREAD can be always added, but it will
->> be custom solution then.
->>
->> I'd be appreciated for your comments - if above problem is not a problem.
->> Good - IRQF_NO_THREAD forever!
-> 
-> Yes, we try to avoid IRQF_NO_THREAD under all circumstances. However it
-> is required for low-level arch code. This includes basically
-> everything that is using raw-locks which includes interrupt controller
-> (the "real" ones like GIC or cascading like MSI or GPIO).
-> Here it is simple - you have a cascading MSI-interrupt controller and
-> as such it should be IRQF_NO_THREAD marked.
-> The latency spikes in worst case are not huge as explained earlier: The
-> only thing your cascading controller is allowed to do is to mark
-> interrupt as pending (which is with threaded interrupts just a task
-> wakeup).
-> And this is not a -RT only problem: it is broken in vanilla linux with
-> threaded interrupts as well.
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
+> Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+> Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
+> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+> ---
+>  drivers/pci/host/Kconfig               |   9 +
+>  drivers/pci/host/Makefile              |   1 +
+>  drivers/pci/host/pcie-iproc-bcma.c     |   1 +
+>  drivers/pci/host/pcie-iproc-msi.c      | 678 +++++++++++++++++++++++++++++++++
+>  drivers/pci/host/pcie-iproc-platform.c |   1 +
+>  drivers/pci/host/pcie-iproc.c          |  26 ++
+>  drivers/pci/host/pcie-iproc.h          |  23 +-
+>  7 files changed, 737 insertions(+), 2 deletions(-)
+>  create mode 100644 drivers/pci/host/pcie-iproc-msi.c
 > 
 
-Ok. I've got it.  IRQF_NO_THREAD will be a solution for reference code and
-for issues like this. I understand, that each, -RT based, real solution is
-unique and need to be specifically tuned, so if someone will have problem
-with IRQF_NO_THREAD - it can be removed easily and replaced with any sort of
-custom hacks/improvements.
+[...]
 
-Thanks a lot for your comments.
-I'll apply your previous comments and re-send.
+> diff --git a/drivers/pci/host/pcie-iproc-msi.c b/drivers/pci/host/pcie-iproc-msi.c
+> new file mode 100644
+> index 0000000..f64399a
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-iproc-msi.c
 
+[...]
+
+> +int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node)
+> +{
+> +	struct iproc_msi *msi;
+> +	int i, ret;
+> +	unsigned int cpu;
+> +
+> +	if (!of_device_is_compatible(node, "brcm,iproc-msi"))
+> +		return -ENODEV;
+> +
+> +	if (!of_find_property(node, "msi-controller", NULL))
+> +		return -ENODEV;
+> +
+> +	if (pcie->msi)
+> +		return -EBUSY;
+> +
+> +	msi = devm_kzalloc(pcie->dev, sizeof(*msi), GFP_KERNEL);
+> +	if (!msi)
+> +		return -ENOMEM;
+> +
+> +	msi->pcie = pcie;
+> +	pcie->msi = msi;
+> +	msi->msi_addr = pcie->base_addr;
+> +	mutex_init(&msi->bitmap_lock);
+> +	msi->nr_cpus = num_online_cpus();
+
+What if some of the CPUs are offline at that time, but come back online
+later? My guess is that you need to have num_possible_cpus().
+
+> +
+> +	msi->nr_irqs = of_irq_count(node);
+> +	if (!msi->nr_irqs) {
+> +		dev_err(pcie->dev, "found no MSI GIC interrupt\n");
+> +		return -ENODEV;
+> +	}
+> +
+> +	if (msi->nr_irqs > NR_HW_IRQS) {
+> +		dev_warn(pcie->dev, "too many MSI GIC interrupts defined %d\n",
+> +			 msi->nr_irqs);
+> +		msi->nr_irqs = NR_HW_IRQS;
+> +	}
+> +
+> +	if (msi->nr_irqs < msi->nr_cpus) {
+> +		dev_err(pcie->dev,
+> +			"not enough GIC interrupts for MSI affinity\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	if (msi->nr_irqs % msi->nr_cpus != 0) {
+> +		msi->nr_irqs -= msi->nr_irqs % msi->nr_cpus;
+> +		dev_warn(pcie->dev, "Reducing number of interrupts to %d\n",
+> +			 msi->nr_irqs);
+> +	}
+> +
+> +	switch (pcie->type) {
+> +	case IPROC_PCIE_PAXB:
+> +		msi->reg_offsets = iproc_msi_reg_paxb;
+> +		msi->nr_eq_region = 1;
+> +		msi->nr_msi_region = 1;
+> +		break;
+> +	case IPROC_PCIE_PAXC:
+> +		msi->reg_offsets = iproc_msi_reg_paxc;
+> +		msi->nr_eq_region = msi->nr_irqs;
+> +		msi->nr_msi_region = msi->nr_irqs;
+> +		break;
+> +	default:
+> +		dev_err(pcie->dev, "incompatible iProc PCIe interface\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	if (of_find_property(node, "brcm,pcie-msi-inten", NULL))
+> +		msi->has_inten_reg = true;
+> +
+> +	msi->nr_msi_vecs = msi->nr_irqs * EQ_LEN;
+> +	msi->bitmap = devm_kcalloc(pcie->dev, BITS_TO_LONGS(msi->nr_msi_vecs),
+> +				   sizeof(*msi->bitmap), GFP_KERNEL);
+> +	if (!msi->bitmap)
+> +		return -ENOMEM;
+> +
+> +	msi->grps = devm_kcalloc(pcie->dev, msi->nr_irqs, sizeof(*msi->grps),
+> +				 GFP_KERNEL);
+> +	if (!msi->grps)
+> +		return -ENOMEM;
+> +
+> +	for (i = 0; i < msi->nr_irqs; i++) {
+> +		unsigned int irq = irq_of_parse_and_map(node, i);
+> +
+> +		if (!irq) {
+> +			dev_err(pcie->dev, "unable to parse/map interrupt\n");
+> +			ret = -ENODEV;
+> +			goto free_irqs;
+> +		}
+> +		msi->grps[i].gic_irq = irq;
+> +		msi->grps[i].msi = msi;
+> +		msi->grps[i].eq = i;
+> +	}
+> +
+> +	/* reserve memory for MSI event queue */
+> +	msi->eq_cpu = dma_alloc_coherent(pcie->dev,
+> +					 msi->nr_eq_region * EQ_MEM_REGION_SIZE,
+> +					 &msi->eq_dma, GFP_KERNEL);
+> +	if (!msi->eq_cpu) {
+> +		ret = -ENOMEM;
+> +		goto free_irqs;
+> +	}
+> +
+> +	/* zero out all memory contents of the MSI event queues */
+> +	memset(msi->eq_cpu, 0, msi->nr_eq_region * EQ_MEM_REGION_SIZE);
+> +
+
+Please use dma_zalloc_coherent instead of memsetting the memory.
+
+Thanks,
+
+	M.
 -- 
-regards,
--grygorii
+Jazz is not dead. It just smells funny...
