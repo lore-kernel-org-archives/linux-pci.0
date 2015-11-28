@@ -1,76 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:35995 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754756AbbKRQMq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2015 11:12:46 -0500
-Received: by wmww144 with SMTP id w144so203851867wmw.1
-        for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2015 08:12:44 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.136]:57844 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752638AbbK1UCl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 28 Nov 2015 15:02:41 -0500
+Date: Sat, 28 Nov 2015 14:02:36 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+	Mathias Krause <minipli@googlemail.com>
+Subject: [GIT PULL] PCI fixes for v4.4
+Message-ID: <20151128200236.GA9306@localhost>
 MIME-Version: 1.0
-In-Reply-To: <CALCETrUPfgPrKY4ZQcvLr8=i_dYb=FTndfVXzbCjxEMfbi0YiQ@mail.gmail.com>
-References: <CALCETrXM5w0iCKDNBZYEpk17ViCMdP_B-cO4X01EQR9H8hesTw@mail.gmail.com>
-	<20151118105907.GC4437@intel.com>
-	<CALCETrUPfgPrKY4ZQcvLr8=i_dYb=FTndfVXzbCjxEMfbi0YiQ@mail.gmail.com>
-Date: Wed, 18 Nov 2015 16:12:44 +0000
-Message-ID: <CAPj87rNj4mGtRe33k64zYMAdSKc=OwrseY0oxMGtPtzn=XGnXA@mail.gmail.com>
-Subject: Re: [Intel-gfx] i915 Skylake: "Invalid ROM contents"
-From: Daniel Stone <daniel@fooishbar.org>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: =?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Hi Linus,
 
-On 18 November 2015 at 15:59, Andy Lutomirski <luto@amacapital.net> wrote:
-> On Wed, Nov 18, 2015 at 2:59 AM, Ville Syrjälä
-> <ville.syrjala@linux.intel.com> wrote:
->> On Tue, Nov 17, 2015 at 11:43:25AM -0800, Andy Lutomirski wrote:
->>> Typing:
->>>
->>> # cat /sys/devices/pci0000:00/0000:00:02.0/rom
->>>
->>> Provokes:
->>>
->>> i915 0000:00:02.0: Invalid ROM contents
->>
->> Hmm. So there's no PCI option ROM there. I wonder what is there. I
->> get the same on my Braswell BTW. I tried to look through the UEFI
->> spec a bit, and it seems to say that even for non-legacy option ROMs
->> the 0x55aa signature should be there.
->>
->> But this being the GPU means we may be using the shadow ROM stuff,
->> which IIRC assumes that the shadow is at 0xc000. I'm not sure that
->> holds anymore with UEFI, and maybe we should be using some UEFI
->> trick instead to find out where it actually lives?
->>
->> BTW what does 'lspci -vv -s 00:02.0' say on your machine?
->>
->
-> 00:02.0 VGA compatible controller: Intel Corporation Sky Lake
-> Integrated Graphics (rev 07) (prog-if 00 [VGA controller])
->     DeviceName:  Onboard IGD
->     Subsystem: Dell Device 0704
->     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> ParErr- Stepping- SERR- FastB2B- DisINTx+
->     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
->     Latency: 0
->     Interrupt: pin A routed to IRQ 128
->     Region 0: Memory at db000000 (64-bit, non-prefetchable) [size=16M]
->     Region 2: Memory at 90000000 (64-bit, prefetchable) [size=256M]
->     Region 4: I/O ports at f000 [size=64]
->     Expansion ROM at <unassigned> [disabled]
+Here are a few fixes I'd like to have in v4.4: a generic one for sysfs and
+three for HiSilicon and DesignWare host controllers.
 
-UEFI has an option to enable option ROMs, which is disabled by
-default; I wonder if having it disabled prevents all access to the
-ROM.
+Bjorn
 
-Mind you, it doesn't seem to be fatal; I've not had any issues with
-the same machine that I can pin down to lack of ROM.
 
-Cheers,
-Daniel
+The following changes since commit 1ec218373b8ebda821aec00bb156a9c94fad9cd4:
+
+  Linux 4.4-rc2 (2015-11-22 16:45:59 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.4-fixes-1
+
+for you to fetch changes up to 7c7a0e945349a3d0d497d7f32db6ed33d4031110:
+
+  ARM/PCI: Move align_resource function pointer to pci_host_bridge structure (2015-11-25 13:23:38 -0600)
+
+----------------------------------------------------------------
+PCI updates for v4.4:
+
+  NUMA
+    Prevent out of bounds access in numa_node override (Mathias Krause)
+
+  HiSilicon host bridge driver
+    Fix deferred probing (Arnd Bergmann)
+
+  Synopsys DesignWare host bridge driver
+    Remove incorrect io_base assignment (Stanimir Varbanov)
+    Move align_resource function pointer to pci_host_bridge structure (Gabriele Paoloni)
+
+----------------------------------------------------------------
+Arnd Bergmann (1):
+      PCI: hisi: Fix deferred probing
+
+Gabriele Paoloni (1):
+      ARM/PCI: Move align_resource function pointer to pci_host_bridge structure
+
+Mathias Krause (1):
+      PCI: Prevent out of bounds access in numa_node override
+
+Stanimir Varbanov (1):
+      PCI: designware: Remove incorrect io_base assignment
+
+ arch/arm/kernel/bios32.c           | 19 +++++++++++--------
+ drivers/pci/host/pcie-designware.c |  1 -
+ drivers/pci/host/pcie-hisi.c       |  4 ++--
+ drivers/pci/pci-sysfs.c            |  5 ++++-
+ drivers/pci/pci.h                  |  2 --
+ include/linux/pci.h                |  9 +++++++++
+ 6 files changed, 26 insertions(+), 14 deletions(-)
