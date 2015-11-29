@@ -1,49 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:34207 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755806AbbKSAV4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Nov 2015 19:21:56 -0500
-Received: by padhx2 with SMTP id hx2so60817720pad.1
-        for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2015 16:21:56 -0800 (PST)
-Subject: Re: [PATCH v7 25/50] powerpc/powernv: Reserve PE for root bus
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-26-git-send-email-gwshan@linux.vnet.ibm.com>
- <564AC37A.2060701@ozlabs.ru> <20151117090653.GA20134@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <564D161C.3020603@ozlabs.ru>
-Date: Thu, 19 Nov 2015 11:21:48 +1100
-MIME-Version: 1.0
-In-Reply-To: <20151117090653.GA20134@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:36504 "EHLO
+	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751414AbbK2Ip3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Nov 2015 03:45:29 -0500
+Content-Type: text/plain; charset=US-ASCII
+Mime-Version: 1.0 (Mac OS X Mail 9.1 \(3096.5\))
+Subject: Re: [PATCH] drivers:pci:hotplug Fix space prohibited between function name and open parenthesis '('
+From: sasa bogicevic <brutallesale@gmail.com>
+In-Reply-To: <1448566598.18647.12.camel@perches.com>
+Date: Sun, 29 Nov 2015 09:45:27 +0100
+Cc: bhelgaas@google.com, lenb@kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Message-Id: <2881C4B7-AF00-42BD-A16E-6FFD3EC9A93C@gmail.com>
+References: <1448553041-18601-1-git-send-email-brutallesale@gmail.com> <1448566598.18647.12.camel@perches.com>
+To: Joe Perches <joe@perches.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/17/2015 08:06 PM, Gavin Shan wrote:
-> On Tue, Nov 17, 2015 at 05:04:42PM +1100, Alexey Kardashevskiy wrote:
->> On 11/05/2015 12:12 AM, Gavin Shan wrote:
->>> We're going to reserve/assign PEs when pcibios_setup_bridge() is
->>> called. The function won't be called for root bus as it doesn't
->>> have parent bridge. However, the root bus still needs a PE to be
->>> covered.
->>>
->>> This reserves PE numbers that are adjacent to the reserved one
->>> for root buses.
->>
->>
->> Somewhere in the patchset you need to describe why you need a separate PE for
->> a root bus and why reserved_pe_idx is not enough for this.
->>
->
-> Please confirm if it's fine to add the descrption in this patch's chagelog.
 
-Yes, it is fine. Thanks!
+> On Nov 26, 2015, at 8:36 PM, Joe Perches <joe@perches.com> wrote:
+> 
+> On Thu, 2015-11-26 at 16:50 +0100, Bogicevic Sasa wrote:
+>> This fixes all errors "space prohibited between function name and
+>> open parenthesis '(' " in all files in drivers/pci/hotplug folder
+> 
+> It's good when sending this sort of patch to add a bit of
+> description like "git diff -w shows no differences" and that
+> using scripts/objdiff also shows no difference.
+> 
+> Doing so shows that you've done a bit more than a mechanical
+> transformation using something like:
+> 
+> $ ./scripts/checkpatch -f --types=spacing --fix-inplace <files>
+> 
+> and that you have verified your changes too.
+> Ah ok, thanks for the info. Ill explore some more on what else can checkpatch.pl can do and resend all that needs to be corrected in that folder.
+  Thanks, Sasa
 
-
--- 
-Alexey
