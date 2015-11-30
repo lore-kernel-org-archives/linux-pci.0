@@ -1,48 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46516 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101AbbKJAnN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Nov 2015 19:43:13 -0500
-Subject: Re: ECRC and Max Read Request Size
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <56310B34.6000102@codeaurora.org>
- <20151106172205.GA1002@localhost> <563CE93F.5060209@codeaurora.org>
- <20151109191517.GA4789@localhost>
-Cc: linux-pci@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <56413D9F.5050902@codeaurora.org>
-Date: Mon, 9 Nov 2015 19:43:11 -0500
-MIME-Version: 1.0
-In-Reply-To: <20151109191517.GA4789@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mga14.intel.com ([192.55.52.115]:31815 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753719AbbK3TD1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 30 Nov 2015 14:03:27 -0500
+From: Imre Deak <imre.deak@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Jani Nikula <jani.nikula@intel.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	intel-gfx@lists.freedesktop.org,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH v5] PCI / PM: Tune down retryable runtime suspend error messages
+Date: Mon, 30 Nov 2015 21:02:55 +0200
+Message-Id: <1448910175-5904-1-git-send-email-imre.deak@intel.com>
+In-Reply-To: <1448699664-4178-1-git-send-email-imre.deak@intel.com>
+References: <1448699664-4178-1-git-send-email-imre.deak@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The runtime PM core doesn't treat EBUSY and EAGAIN retvals from the driver
+suspend hooks as errors, but they still show up as errors in dmesg. Tune
+them down. See rpm_suspend() for details of handling these return values.
 
+Note that we use dev_dbg() for the retryable retvals, so after this
+change you'll need either CONFIG_DYNAMIC_DEBUG or CONFIG_PCI_DEBUG
+for them to show up in the log.
 
-On 11/9/2015 2:15 PM, Bjorn Helgaas wrote:
->> I talked to our performance team. They are saying that max read
->> >request does not gain you much compared to max payload size single
->> >direction but it helps tremendously if you are moving data forth and
->> >back between the card. I don't have real numbers though.
-> I'm not enough of a hardware or performance person to visualize how
-> MRRS makes a tremendous difference in this situation.  Sample
-> timelines comparing small vs. large MRRS would help everybody
-> understand what's happening here.
->
-> Bjorn
+One problem caused by this was noticed by Daniel: the i915 driver
+returns EAGAIN to signal a temporary failure to suspend and as a request
+towards the RPM core for scheduling a suspend again. This is a normal
+event, but the resulting error message flags a breakage during the
+driver's automated testing which parses dmesg and picks up the error.
 
-The LSI SAS 9211i card supports 4k maximum read request size. I manually 
-forced this to 4k instead of the maximum payload size of the platform on 
-both the host bridge and the endpoint.
+Reported-by: Daniel Vetter <daniel.vetter@intel.com>
+Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=92992
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Imre Deak <imre.deak@intel.com>
 
-I did a quick test with:
-dd if=/dev/zero of=/dev/sda bs=1G count=1
+---
 
-It gave me %9 higher write performance.
+v2:
+- fix compile breake when CONFIG_PM_SLEEP=n (0-day builder)
+v3:
+- instead of modifying the suspend_report_result() helper to disinguish
+  between the runtime and system suspend case, inline the error
+  printing, it's not used anywhere else (Rafael)
+v4:
+- don't refer to log levels as flags in code comment (Rafael)
+- use pr_debug(), pr_err() instead of the corresponding printk() (Rafael)
+v5:
+- clarify commit message (Bjorn)
+- use dev_dbg, dev_err instead of pr_debug, pr_err (Bjorn)
+- use %pf in printk format instead of %pF (Bjorn)
+- make the debug/error messages more meaningful (Bjorn)
+---
+ drivers/pci/pci-driver.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 4446fcb..d7ffd66 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1146,9 +1146,21 @@ static int pci_pm_runtime_suspend(struct device *dev)
+ 	pci_dev->state_saved = false;
+ 	pci_dev->no_d3cold = false;
+ 	error = pm->runtime_suspend(dev);
+-	suspend_report_result(pm->runtime_suspend, error);
+-	if (error)
++	if (error) {
++		/*
++		 * -EBUSY and -EAGAIN is used to request the runtime PM core
++		 * to schedule a new suspend, so log the event only with debug
++		 * log level.
++		 */
++		if (error == -EBUSY || error == -EAGAIN)
++			dev_dbg(dev, "can't suspend now (%pf returned %d)\n",
++				pm->runtime_suspend, error);
++		else
++			dev_err(dev, "can't suspend (%pf returned %d)\n",
++				pm->runtime_suspend, error);
++
+ 		return error;
++	}
+ 	if (!pci_dev->d3cold_allowed)
+ 		pci_dev->no_d3cold = true;
+ 
 -- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+2.5.0
+
