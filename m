@@ -1,165 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:24592 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751914AbbKBONT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Nov 2015 09:13:19 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"rmk+kernel@arm.linux.org.uk" <rmk+kernel@arm.linux.org.uk>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"gabriel.fernandez@linaro.org" <gabriel.fernandez@linaro.org>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	qiujiang <qiujiang@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v13 0/6] PCI: hisi: Add PCIe host support for HiSilicon
- SoC Hip05
-Date: Mon, 2 Nov 2015 14:12:11 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E16297124@lhreml503-mbs>
-References: <1446111638-197070-1-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1446111638-197070-1-git-send-email-wangzhou1@hisilicon.com>
-Content-Type: text/plain; charset="gb2312"
+Received: from v094114.home.net.pl ([79.96.170.134]:45565 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751340AbbK3Bhk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Nov 2015 20:37:40 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Imre Deak <imre.deak@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jani Nikula <jani.nikula@intel.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	intel-gfx@lists.freedesktop.org,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH v4] PCI / PM: tune down RPM suspend error message with EBUSY and EAGAIN retval
+Date: Mon, 30 Nov 2015 03:07:26 +0100
+Message-ID: <5110079.njQQ6VzEqu@vostro.rjw.lan>
+In-Reply-To: <1448699664-4178-1-git-send-email-imre.deak@intel.com>
+References: <1448648254-12639-1-git-send-email-imre.deak@intel.com> <1448699664-4178-1-git-send-email-imre.deak@intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4NCg0KSSBzZWUgdGhpcyBwYXRjaHNldCBtZXJnZWQgaW50byB5b3VyIG5leHQgYnJh
-bmNoLg0KDQpDYW4geW91IGNvbmZpcm0/DQoNCk1hbnkgVGhhbmtzDQoNCkdhYg0KDQo+IC0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFdhbmd6aG91IChCKQ0KPiBTZW50OiBUaHVy
-c2RheSwgT2N0b2JlciAyOSwgMjAxNSA5OjQxIEFNDQo+IFRvOiBCam9ybiBIZWxnYWFzOyBqaW5n
-b29oYW4xQGdtYWlsLmNvbTsgcHJhdHl1c2guYW5hbmRAZ21haWwuY29tOyBBcm5kDQo+IEJlcmdt
-YW5uOyBybWsra2VybmVsQGFybS5saW51eC5vcmcudWs7IHRob21hcy5wZXRhenpvbmlAZnJlZS0N
-Cj4gZWxlY3Ryb25zLmNvbTsgR2FicmllbGUgUGFvbG9uaTsgbG9yZW56by5waWVyYWxpc2lAYXJt
-LmNvbTsNCj4gamFtZXMubW9yc2VAYXJtLmNvbTsgTGl2aXUuRHVkYXVAYXJtLmNvbTsgamFzb25A
-bGFrZWRhZW1vbi5uZXQ7DQo+IHJvYmhAa2VybmVsLm9yZzsgZ2FicmllbC5mZXJuYW5kZXpAbGlu
-YXJvLm9yZzsNCj4gTWluZ2h1YW4uTGlhbkBmcmVlc2NhbGUuY29tDQo+IENjOiBsaW51eC1wY2lA
-dmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7DQo+
-IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3Jn
-OyB6aGFuZ2p1a3VvOw0KPiBxaXV6aGVuZmE7IGxpdWRvbmdkb25nIChDKTsgcWl1amlhbmc7IHh1
-d2VpIChPKTsgTGlndW96aHUgKEtlbm5ldGgpOw0KPiBXYW5nemhvdSAoQikNCj4gU3ViamVjdDog
-W1BBVENIIHYxMyAwLzZdIFBDSTogaGlzaTogQWRkIFBDSWUgaG9zdCBzdXBwb3J0IGZvciBIaVNp
-bGljb24NCj4gU29DIEhpcDA1DQo+IA0KPiBUaGlzIHBhdGNoc2V0IGFkZHMgUENJZSBob3N0IHN1
-cHBvcnQgZm9yIEhpU2lsaWNvbiBTb0MgSGlwMDUuIFRoZSBQQ0llDQo+IGhvc3RzDQo+IHVzZSBQ
-Q0llIElQIGNvcmUgZnJvbSBTeW5vcHN5cywgU28gdGhpcyBkcml2ZXIgaXMgYmFzZWQgb24gZGVz
-aWdud2FyZQ0KPiBQQ0llIGRyaXZlci4NCj4gDQo+IEhpcDA1IGlzIGFuIEFSTXY4IGFyY2hpdGVj
-dHVyZSBTb0MuIEl0IHNob3VsZCBiZSBhYmxlIHRvIHVzZSBBUk02NCBQQ0llDQo+IEFQSSBpbg0K
-PiBkZXNpZ253YXJlIFBDSWUgZHJpdmVyLiBTbyB0aGlzIHBhdGNoIGFsc28gYWRkcyBBUk02NCBz
-dXBwb3J0IGZvcg0KPiBkZXNpZ253YXJlDQo+IHBjaWUuDQo+IA0KPiBUaGlzIHBhdGNoc2V0IGlz
-IGJhc2VkIG9uIHY0LjMtcmMxLg0KPiANCj4gQ2hhbmdlIGZyb20gdjEyOg0KPiAtIFJlb3JkZXIg
-cGF0Y2hzZXQgYXMgc3VnZ2VzdGlvbiBieSBCam9ybi4NCj4gLSBBZGQgUm9iJ3MgQWNrZWQtYnkg
-Zm9yIERUIGJpbmRpbmcuDQo+IC0gTWVyZ2UgSGlTaWxpY29uIFBDSWUgZHJpdmVyLCBEVCBiaW5k
-aW5nIGRvY3VtZW50IGFuZCBtYWludGFpbmVyDQo+IHVwZGF0ZSBpbnRvDQo+ICAgb25lIHBhdGNo
-Lg0KPiANCj4gQ2hhbmdlIGZyb20gdjExOg0KPiAtIFNwbGl0IDMvNiBpbiB2MTEgdG8gMy84LCA0
-LzgsIDUvOCBpbiB2MTIuDQo+IC0gQWRkIHByaW50IGluIHBjaWUtaGlzaS5jIHRvIGluZGljYXRl
-IHJlYWQvd3JpdGUgaGFyZHdhcmUgZGVmZWN0Lg0KPiAtIE1vZGlmeSBtYWNybyBpbiAxLzggcG9p
-bnRlZCBieSBCam9ybi4NCj4gDQo+IENoYW5nZSBmcm9tIHYxMDoNCj4gLSBSZW1vdmUgTVNJIHJl
-bGF0ZWQgc2V0dGluZyBhbmQgVk1JRC9BU0lEIHRhYmxlIHNldHRpbmcsIHRoZXkgd2lsbCBiZQ0K
-PiAgIGltcGxlbWVudGVkIGluIEJJT1MuDQo+IC0gVXNlIG1vZHVsZV9wbGF0Zm9ybV9kcml2ZXIg
-dG8gaW5pdCBwY2llLWhpc2kuYw0KPiAtIEFkZCBuZWNlc3NhcnkgY29tbWVudHMuDQo+IA0KPiBD
-aGFuZ2UgZnJvbSB2OToNCj4gLSBVc2Ugc3lzY29uIHRvIGdldCBzdWJjdHJsIGJhc2UgYWRkcmVz
-cy4NCj4gLSA1LzYgaXMgYmFzZWQgb24gW1BBVENIIHYzIDAvMl0gYXJtNjQ6IFN1cHBvcnQgSGlz
-aWxpY29uIEhpcDA1LUQwMg0KPiBib2FyZA0KPiAgIGZyb20gRGluZyBUaWFuaG9uZw0KPiAtIEFk
-ZCBoaXNpX3BjaWVfY2ZnX3JlYWQgaW4gcGNpZS1oaXNpLmMgdG8gbWF0Y2gNCj4gICBbUEFUQ0gg
-djYgMC8zXSBQQ0k6IGRlc2lnbndhcmU6IGNoYW5nZSBkd19wY2llX2NmZ193cml0ZSgpIGFuZA0K
-PiBkd19wY2llX2NmZ19yZWFkKCkNCj4gICBmcm9tIEdhYnJpZWxlLg0KPiANCj4gQ2hhbmdlIGZy
-b20gdjg6DQo+IC0gUmViYXNlIG9uIHY0LjMtcmMxLg0KPiAtIEFkZCBUZXN0ZWQtYnkgZnJvbSBH
-YWJyaWVsIGFuZCBNaW5naHVhbi4NCj4gLSBSZW1vdmUgSVRTIGRvbWFpbiBwYXJzaW5nIGluIG1z
-aV9ob3N0X2luaXQgaW4gcGNpZS1oaXNpLmMsIG5vIG5lZWQNCj4gdGhpcyBhcyBQQ0kNCj4gICBj
-b3JlIGRvZXMgcmVsYXRlZCBqb2IuIEFkZCBJVFMgYmFzZSBhZGRyZXNzIHBhcnNpbmcgaW4gbXNp
-X2hvc3RfaW5pdC4NCj4gLSBDaGFuZ2Ugdm1pZC9hc2lkIHRhYmxlIGNvbmZpZ3VyYXRpb24sIHBy
-ZXZpb3VzIGNvbmZpZ3VyYXRpb24gd2FzDQo+IHdyb25nLg0KPiAtIEFkZCB3cl9vd25fY29uZiBj
-YWxsYmFjayBpbiBwY2llLWhpc2kuYy4NCj4gLSBVc2Ugc3Vic3lzX2luaXRjYWxsIHRvIGluaXQg
-aGlzaSBQQ0llLg0KPiANCj4gQ2hhbmdlIGZyb20gdjc6DQo+IC0gUmVtb3ZlIHBwLT5yb290X2J1
-c19uciA9IDAgaW4gZHJhN3h4LCBleHlub3MsIGlteDYsIGtleXN0b25lLA0KPiBsYXllcnNjYXBl
-LA0KPiAgIHNwZWFyMTN4eC4gUGFzcyBwcC0+YnVzbi0+c3RhcnQgdG8gcGNpX2NyZWF0ZV9yb290
-X2J1cyBhcyByb290IGJ1cw0KPiBudW1iZXIuDQo+IC0gUmVtb3ZlIGJ1cy1yYW5nZSBwYXJzaW5n
-IGluIHBjaWUtaGlzaS5jLg0KPiANCj4gQ2hhbmdlIGZyb20gdjY6DQo+IC0gQWRkIFByYXR5dXNo
-J3MgQWNrZWQtYnkgZm9yIDEvNiBhbmQgMi82Lg0KPiAtIEFkZCBKYW1lcycgVGVzdGVkLWJ5IGZv
-ciAzLzYuDQo+IA0KPiBDaGFuZ2UgZnJvbSB2NToNCj4gLSBNZXJnZSAxLzYgaW4gdGhpcyBzZXJp
-ZXMsIGRpc2N1c3Npb24gYWJvdXQgdGhpcyBjYW4gYmUgZm91bmQgaW4gWzFdDQo+IA0KPiBDaGFu
-Z2UgZnJvbSB2NDoNCj4gLSBDaGFuZ2UgdGhlIGF1dGhvciBvZiAxLzUgdG8gR2FicmllbGUuDQo+
-IC0gTW9kaWZ5IHByb2JsZW1zIGluIDMvNSBwb2ludGVkIGJ5IEJqb3JuLg0KPiAtIE1vZGlmeSBz
-cGVsbGluZyBwcm9ibGVtcyBpbiA0LzUuDQo+IA0KPiBDaGFuZ2UgZnJvbSB2MzoNCj4gLSBDaGFu
-Z2UgMS81IHRvIHdoYXQgR2FicmllbGUgc3VnZ2VzdGVkLg0KPiAtIFVzZSB3aW4tPl9fcmVzLnN0
-YXJ0IHRvIGdldCAqX21vZF9iYXNlIGluIDIvNSwgdGhpcyBmaXggYSBidWcgaW4gdjMNCj4gc2Vy
-aWVzLg0KPiANCj4gQ2hhbmdlIGZyb20gdjI6DQo+IC0gTW92ZSBzdHJ1Y3QgcGNpX2RldiAqZGV2
-IGFuZCBzdHJ1Y3QgcGNpX3N5c19kYXRhICpzeXMgaW4NCj4gICBwY2liaW9zX2FsaWduX3Jlc291
-cmNlIGluIDEvNS4NCj4gLSBBZGQgR2FicmllbGUncyBjb2RlcyBpbiAyLzUgd2hpY2ggZGVsZXRl
-IHVubmVjZXNzYXJ5IGluZm9ybWF0aW9uDQo+IHBhcnNlIGFuZA0KPiAgIHVzZSBvZl9wY2lfZ2V0
-X2hvc3RfYnJpZGdlX3Jlc291cmNlcyBmb3IgYm90aCBBUk0zMiBhbmQgQVJNNjQuDQo+IC0gQWRk
-IG1haW50YWluZXIgcGF0Y2ggNS81Lg0KPiANCj4gQ2hhbmdlIGZyb20gUkZDIHYxOg0KPiAtIEFk
-ZCAxLzQgcGF0Y2ggYnkgQXJuZCB3aGljaCByZW1vdmVzIGFsaWduX3Jlc291cmNlIGNhbGxiYWNr
-IGluIEFSTQ0KPiAgIHBjaWJpb3NfYWxpZ25fcmVzb3VyY2UuDQo+IC0gQ2hhbmdlIGhlYWQgZmls
-ZSBpbiBwY2llLWRlc2lnbndhcmUgZnJvbSBhc20vaGFyZGlycS5oIHRvDQo+IGxpbnV4L2hhcmRp
-cnEuaC4NCj4gLSBTZXQgcHAtPnJvb3RfYnVzX25yID0gMCBpbiBkcmE3eHgsIGV4eW5vcywgaW14
-Niwga2V5c3RvbmUsIGxheWVyc2NhcGUsDQo+ICAgc3BlYXIxM3h4Lg0KPiAtIFJlbW92ZSB1bm5l
-Y2Vzc2FyeSBwYXJlbnRoZXNlcyBvZiBzb21lIG1hY3JvcyBpbiBwY2llLWhpc2kuDQo+IC0gVXNl
-IG1hY3JvIHRvIHJlcGxhY2Ugc29tZSBtYWdpYyB2YWx1ZXMuDQo+IC0gTWVyZ2UgdHdvIGxvb3Bz
-IHRvZ2V0aGVyIGFuZCBhZGQgc29tZSBjb21tZW50cyBhYm91dCBpdCBpbg0KPiBjb250ZXh0X2Nv
-bmZpZw0KPiAgIGZ1bmN0aW9uIGluIHBjaWUtaGlzaS4NCj4gLSBNb2RpZnkgc29tZSB2YWx1ZSBv
-ZiBpdGVtcyBpbiBwY2llIG5vZGUgZXhhbXBsZSBpbiBiaW5kaW5nIGRvY3VtZW50Lg0KPiANCj4g
-Q2hhbmdlIGZyb20gUkZDOg0KPiAtIGRlbGV0ZSBkd19wY2llX3NldHVwLCBkd19wY2llX3NjYW5f
-YnVzLCBkd19wY2llX21hcF9pcnEgYW5kIHN0cnVjdA0KPiBod19wY2ksDQo+ICAgbWVyZ2UgcmVs
-YXRlZCBvcGVyYXRpb25zIGludG8gZHdfcGNpZV9ob3N0X2luaXQuDQo+IA0KPiBMaW5rIG9mIHYx
-MjoNCj4gLSBodHRwczovL2xrbWwub3JnL2xrbWwvMjAxNS8xMC8yNi8xOTYNCj4gTGluayBvZiB2
-MTE6DQo+IC0gaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIwMTUvMTAvMTYvMjI4DQo+IExpbmsgb2Yg
-djEwOg0KPiAtIGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtcGNpL21zZzQ1NDkw
-Lmh0bWwNCj4gTGluayBvZiB2OToNCj4gLSBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xp
-bnV4LXBjaS9tc2c0NDU0NS5odG1sDQo+IExpbmsgb2Ygdjg6DQo+IC0gaHR0cDovL3d3dy5zcGlu
-aWNzLm5ldC9saXN0cy9saW51eC1wY2kvbXNnNDQxOTIuaHRtbA0KPiBMaW5rIG9mIHY3Og0KPiAt
-IGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvZGV2aWNldHJlZS9tc2c5MDY5MC5odG1sDQo+
-IExpbmsgb2YgdjY6DQo+IC0gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9saW51eC1wY2kv
-bXNnNDM2NjkuaHRtbA0KPiBMaW5rIG9mIHY1Og0KPiAtIGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQv
-bGlzdHMvZGV2aWNldHJlZS9tc2c4Nzk1OS5odG1sDQo+IExpbmsgb2YgdjQ6DQo+IC0gaHR0cDov
-L3d3dy5zcGluaWNzLm5ldC9saXN0cy9hcm0ta2VybmVsL21zZzQzMzA1MC5odG1sDQo+IExpbmsg
-b2YgdjM6DQo+IC0gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9saW51eC1wY2kvbXNnNDI1
-MzkuaHRtbA0KPiBMaW5rIG9mIHYyOg0KPiAtIGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMv
-bGludXgtcGNpL21zZzQxODQ0Lmh0bWwNCj4gTGluayBvZiBSRkMgdjE6DQo+IC0gaHR0cDovL3d3
-dy5zcGluaWNzLm5ldC9saXN0cy9saW51eC1wY2kvbXNnNDEzMDUuaHRtbA0KPiBMaW5rIG9mIFJG
-QzoNCj4gLSBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXBjaS9tc2c0MDQzNC5o
-dG1sDQo+IA0KPiBbMV0gaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvcGlwZXJtYWlsL2xpbnV4
-LWFybS1rZXJuZWwvMjAxNS0NCj4gSnVseS8zNTk3NDEuaHRtbA0KPiANCj4gWmhvdSBXYW5nICg0
-KToNCj4gICBQQ0k6IGRlc2lnbndhcmU6IFJlbW92ZSAqX21vZF9iYXNlDQo+ICAgUENJOiBkZXNp
-Z253YXJlOiBSZXBsYWNlIERUIFBDSSByYW5nZXMgcGFyc2Ugd2l0aA0KPiAgICAgb2ZfcGNpX2dl
-dF9ob3N0X2JyaWRnZV9yZXNvdXJjZXMNCj4gICBQQ0k6IGRlc2lnbndhcmU6IEFkZCBBUk02NCBz
-dXBwb3J0DQo+ICAgUENJOiBoaXNpOiBBZGQgUENJZSBob3N0IHN1cHBvcnQgZm9yIEhpU2lsaWNv
-biBTb0MgSGlwMDUNCj4gDQo+IGdhYnJpZWxlIHBhb2xvbmkgKDIpOg0KPiAgIFBDSTogZGVzaWdu
-d2FyZTogTW92ZSBjYWxjdWxhdGlvbiBvZiBidXMgYWRkcmVzc2VzIHRvIERSQTd4eA0KPiAgIEFS
-TS9QQ0k6IFJlcGxhY2UgcGNpX3N5c19kYXRhLT5hbGlnbl9yZXNvdXJjZSB3aXRoIGdsb2JhbCBm
-dW5jdGlvbg0KPiAgICAgcG9pbnRlcg0KPiANCj4gIC4uLi9iaW5kaW5ncy9hcm0vaGlzaWxpY29u
-L2hpc2lsaWNvbi50eHQgICAgICAgICAgIHwgIDE3ICsrDQo+ICAuLi4vZGV2aWNldHJlZS9iaW5k
-aW5ncy9wY2kvaGlzaWxpY29uLXBjaWUudHh0ICAgICB8ICA0NCArKysrDQo+ICBNQUlOVEFJTkVS
-UyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgNyArDQo+ICBhcmNo
-L2FybS9pbmNsdWRlL2FzbS9tYWNoL3BjaS5oICAgICAgICAgICAgICAgICAgICB8ICAgNiAtDQo+
-ICBhcmNoL2FybS9rZXJuZWwvYmlvczMyLmMgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAx
-MiArLQ0KPiAgZHJpdmVycy9wY2kvaG9zdC9LY29uZmlnICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgfCAgIDggKw0KPiAgZHJpdmVycy9wY2kvaG9zdC9NYWtlZmlsZSAgICAgICAgICAgICAgICAg
-ICAgICAgICAgfCAgIDEgKw0KPiAgZHJpdmVycy9wY2kvaG9zdC9wY2ktZHJhN3h4LmMgICAgICAg
-ICAgICAgICAgICAgICAgfCAgIDcgKw0KPiAgZHJpdmVycy9wY2kvaG9zdC9wY2kta2V5c3RvbmUt
-ZHcuYyAgICAgICAgICAgICAgICAgfCAgIDIgKy0NCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpZS1k
-ZXNpZ253YXJlLmMgICAgICAgICAgICAgICAgIHwgMjQ5ICsrKysrKystLS0tLS0NCj4gLS0tLS0t
-LS0NCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmggICAgICAgICAgICAgICAg
-IHwgIDE0ICstDQo+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtaGlzaS5jICAgICAgICAgICAgICAg
-ICAgICAgICB8IDE5OA0KPiArKysrKysrKysrKysrKysrDQo+ICAxMiBmaWxlcyBjaGFuZ2VkLCAz
-NzggaW5zZXJ0aW9ucygrKSwgMTg3IGRlbGV0aW9ucygtKQ0KPiAgY3JlYXRlIG1vZGUgMTAwNjQ0
-IERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvaGlzaWxpY29uLQ0KPiBwY2ll
-LnR4dA0KPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvcGNpL2hvc3QvcGNpZS1oaXNpLmMN
-Cj4gDQo+IC0tDQo+IDEuOS4xDQoNCg==
+On Saturday, November 28, 2015 10:34:24 AM Imre Deak wrote:
+> The runtime PM core doesn't treat EBUSY and EAGAIN retvals from the driver
+> suspend hooks as errors, but they still show up as errors in dmesg. Tune
+> them down.
+> 
+> One problem caused by this was noticed by Daniel: the i915 driver
+> returns EAGAIN to signal a temporary failure to suspend and as a request
+> towards the RPM core for scheduling a suspend again. This is a normal
+> event, but the resulting error message flags a breakage during the
+> driver's automated testing which parses dmesg and picks up the error.
+> 
+> v2:
+> - fix compile breake when CONFIG_PM_SLEEP=n (0-day builder)
+> v3:
+> - instead of modifying the suspend_report_result() helper to disinguish
+>   between the runtime and system suspend case, inline the error
+>   printing, it's not used anywhere else (Rafael)
+> v4:
+> - don't refer to log levels as flags in code comment (Rafael)
+> - use pr_debug(), pr_err() instead of the corresponding printk() (Rafael)
+> 
+> Reported-by: Daniel Vetter <daniel.vetter@intel.com>
+> Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=92992
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Signed-off-by: Imre Deak <imre.deak@intel.com>
+
+This is fine by me.
+
+Bjorn, any objections against applying it?  It reduces log noise quite
+a bit for i915.
+
+> ---
+>  drivers/pci/pci-driver.c | 16 ++++++++++++++--
+>  1 file changed, 14 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 4446fcb..32a9947 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1146,9 +1146,21 @@ static int pci_pm_runtime_suspend(struct device *dev)
+>  	pci_dev->state_saved = false;
+>  	pci_dev->no_d3cold = false;
+>  	error = pm->runtime_suspend(dev);
+> -	suspend_report_result(pm->runtime_suspend, error);
+> -	if (error)
+> +	if (error) {
+> +		/*
+> +		 * -EBUSY and -EAGAIN is used to request the runtime PM core
+> +		 * to schedule a new suspend, so log the event only with debug
+> +		 * log level.
+> +		 */
+> +		if (error == -EBUSY || error == -EAGAIN)
+> +			pr_debug("%s(): %pF returns %d\n", __func__,
+> +				 pm->runtime_suspend, error);
+> +		else
+> +			pr_err("%s(): %pF returns %d\n", __func__,
+> +			       pm->runtime_suspend, error);
+> +
+>  		return error;
+> +	}
+>  	if (!pci_dev->d3cold_allowed)
+>  		pci_dev->no_d3cold = true;
+>  
+> 
+
+Thanks,
+Rafael
+
