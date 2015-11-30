@@ -1,122 +1,164 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:48163 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754787AbbKTN7l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 20 Nov 2015 08:59:41 -0500
-From: Grygorii Strashko <grygorii.strashko@ti.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <tony@atomide.com>, <nsekhar@ti.com>, <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v2] PCI: dra7xx: mark dra7xx_pcie_msi irq as IRQF_NO_THREAD
-Date: Fri, 20 Nov 2015 15:59:26 +0200
-Message-ID: <1448027966-21610-1-git-send-email-grygorii.strashko@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:35888 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751691AbbK3T3n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Nov 2015 14:29:43 -0500
+From: Jordan Hargrave <jharg93@gmail.com>
+To: bhelgaas@google.com, jordan_hargrave@dell.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCHv2 2/2] Create sysfs attribute 'slot' for mapping PCI device to SMBIOS slot
+Date: Mon, 30 Nov 2015 13:29:33 -0600
+Message-Id: <1448911773-18296-1-git-send-email-jordan_hargrave@dell.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On -RT, TI DRA7 PCIe driver always produces below backtrace when the
-first PCI interrupt is triggered:
+This patch will use the saved SMBIOS Type 9 values to map a PCI
+device to a system slot.  This includes devices under a bridge/switch
+on an add-in card.  Creates a new global function to retrieve smbios
+slot for a PCI device.
 
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 82 at kernel/irq/handle.c:150 handle_irq_event_percpu+0x14c/0x174()
-irq 460 handler irq_default_primary_handler+0x0/0x14 enabled interrupts
-Modules linked in: ahci_platform(+) ti_vip(+) libahci_platform xhci_pci(+) c_can_platform(+)
-libahci xhci_hcd ti_vpe c_can libata v4l2_mem2mem can_dev gpio_keys leds_gpio
-snd_soc_simple_card usbcore spi_ti_qspi videobuf2_core extcon_usb_gpio omap_wdt
-ti_vpdma videobuf2_dma_contig ti_soc_thermal videobuf2_memops dwc3_omap extcon
-rtc_omap ov1063x v4l2_common videodev media snd_soc_tlv320aic3x omap_rng rng_core omap_remoteproc
-CPU: 1 PID: 82 Comm: irq/26-dra7-pci Not tainted 4.1.10-rt10-02638-g6486d7e-dirty #1
-Hardware name: Generic DRA74X (Flattened Device Tree)
-Backtrace:
-[<c0013060>] (dump_backtrace) from [<c0013280>] (show_stack+0x18/0x1c)
- r7:c07acca0 r6:00000000 r5:c09034e4 r4:00000000
-[<c0013268>] (show_stack) from [<c061ef14>] (dump_stack+0x90/0xac)
-[<c061ee84>] (dump_stack) from [<c00436e4>] (warn_slowpath_common+0x7c/0xb8)
- r7:c07acca0 r6:00000096 r5:00000009 r4:ee4d3e38
-[<c0043668>] (warn_slowpath_common) from [<c0043758>] (warn_slowpath_fmt+0x38/0x40)
- r8:ee3fcc00 r7:000001cc r6:00000000 r5:00000002 r4:c07acc78
-[<c0043724>] (warn_slowpath_fmt) from [<c0085fd0>] (handle_irq_event_percpu+0x14c/0x174)
- r3:000001cc r2:c07acc78
- r4:ecfcdd80
-[<c0085e84>] (handle_irq_event_percpu) from [<c008607c>] (handle_irq_event+0x84/0xb8)
- r10:00000001 r9:ee4b59c0 r8:ee1d0900 r7:00000001 r6:00000000 r5:ecfcdd80
- r4:ee3fcc00
-[<c0085ff8>] (handle_irq_event) from [<c0089240>] (handle_simple_irq+0x90/0x118)
- r5:ee4a9020 r4:ee3fcc00
-[<c00891b0>] (handle_simple_irq) from [<c0085514>] (generic_handle_irq+0x30/0x44)
- r5:ee4a9020 r4:000001cc
-[<c00854e4>] (generic_handle_irq) from [<c034a7d4>] (dra7xx_pcie_msi_irq_handler+0x7c/0x8c)
- r5:ee4a9020 r4:00000001
-[<c034a758>] (dra7xx_pcie_msi_irq_handler) from [<c0086f08>] (irq_forced_thread_fn+0x28/0x5c)
- r5:ee1d0900 r4:ee4b59c0
-[<c0086ee0>] (irq_forced_thread_fn) from [<c00871dc>] (irq_thread+0x128/0x204)
- r7:00000001 r6:00000000 r5:ee4d2000 r4:ee4b59e4
-[<c00870b4>] (irq_thread) from [<c005e2fc>] (kthread+0xd4/0xec)
- r10:00000000 r9:00000000 r8:00000000 r7:c00870b4 r6:ee4b59c0 r5:ee4b5a00
- r4:00000000
-[<c005e228>] (kthread) from [<c000faa8>] (ret_from_fork+0x14/0x2c)
- r7:00000000 r6:00000000 r5:c005e228 r4:ee4b5a00
----[ end trace 0000000000000002 ]---
+Fixed up spacing and braces.
+Fixed up enum name for slot to match related patch
 
-This backtrace is triggered because dra7xx_pcie_msi_irq_handler()
-forced to be threaded by default on -RT but, in the same time, it's
-IRQ dispatcher and calls generic_handle_irq(), which leads to
-handle_simple_irq() call. The handle_simple_irq() expected to be
-called with IRQ disabled.
-
-The same issue will also happen if kernel will boot with "threadirqs"
-cmdline parameter (CONFIG_IRQ_FORCED_THREADING).
-
-As discussed in [1], the current DRA7 PCIe hw configuration supports
-32 interrupts, which cannot change because it's hardwired in silicon,
-this is a single status read and assuming that only a few (most of the
-time it will be exactly ONE) of those interrupts are pending at the
-same time is pretty much a sane assumption. And recommended fix for
-this issue is to request dra7xx_pcie_msi IRQ with IRQF_NO_THREAD flag.
-
-[1] https://lkml.org/lkml/2015/11/3/660
-
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Signed-off-by: Grygorii Strashko <grygorii.strashko@ti.com>
+Signed-off-by: Jordan Hargrave <jordan_hargrave@dell.com>
 ---
-Changes in v2:
-- comment in code truncated
-Link on v1:
- https://lkml.org/lkml/2015/11/5/593
- drivers/pci/host/pci-dra7xx.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ drivers/pci/pci-label.c | 96 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/pci.h     |  2 ++
+ 2 files changed, 97 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 8c36880..0415192 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 		return -EINVAL;
- 	}
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index 024b5c1..45ead2a 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -54,7 +54,7 @@ static size_t find_smbios_instance_string(struct pci_dev *pdev, char *buf,
+ 				      NULL, dmi)) != NULL) {
+ 		donboard = dmi->device_data;
+ 		if (donboard && donboard->bus == bus &&
+-					donboard->devfn == devfn) {
++		    donboard->devfn == devfn) {
+ 			if (buf) {
+ 				if (attribute == SMBIOS_ATTR_INSTANCE_SHOW)
+ 					return scnprintf(buf, PAGE_SIZE,
+@@ -125,14 +125,108 @@ static struct attribute_group smbios_attr_group = {
+ 	.is_visible = smbios_instance_string_exist,
+ };
  
-+	/*
-+	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
-+	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
-+	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
-+	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
-+	 * which, in turn, will be resolved to handle_simple_irq() call.
-+	 * The handle_simple_irq() expected to be called with IRQ disabled, as
-+	 * result kernle will display warning:
-+	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
-+	 */
- 	ret = devm_request_irq(&pdev->dev, pp->irq,
--			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
-+			       dra7xx_pcie_msi_irq_handler,
-+			       IRQF_SHARED | IRQF_NO_THREAD,
- 			       "dra7-pcie-msi",	pp);
- 	if (ret) {
- 		dev_err(&pdev->dev, "failed to request irq\n");
++int pci_get_smbios_slot(struct pci_dev *pdev)
++{
++	struct pci_dev *sdev;
++	struct dmi_dev_onboard *dslot;
++	const struct dmi_device *dmi;
++	u8 bus, found;
++
++	dmi = NULL;
++	pdev = pci_physfn(pdev);
++	bus = pdev->bus->number;
++	while (1) {
++		found = 0;
++		dmi = dmi_find_device(DMI_DEV_TYPE_DEV_SLOT, NULL, dmi);
++		if (dmi == NULL)
++			break;
++		dslot = dmi->device_data;
++		if (pci_domain_nr(pdev->bus) != dslot->segment)
++			continue;
++		sdev = pci_get_domain_bus_and_slot(dslot->segment, dslot->bus,
++						   dslot->devfn);
++		if (sdev == NULL)
++			continue;
++
++		if (sdev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
++		    bus >= sdev->subordinate->busn_res.start &&
++		    bus <= sdev->subordinate->busn_res.end) {
++			/* device is child of bridge */
++			found = 1;
++		}
++		if (sdev->bus->number == bus &&
++		    PCI_SLOT(sdev->devfn) == PCI_SLOT(pdev->devfn)) {
++			/* If slot points to PCIE root on a multifunction
++			 * device, match exact Bus:Dev:Func.  Otherwise
++			 * match Bus:Dev
++			 */
++			if (pci_pcie_type(sdev) != PCI_EXP_TYPE_ROOT_PORT ||
++			    PCI_FUNC(sdev->devfn) == PCI_FUNC(pdev->devfn)) {
++				found = 1;
++			}
++		}
++		pci_dev_put(sdev);
++		if (found)
++			return dslot->instance;
++	}
++	return -ENODEV;
++}
++EXPORT_SYMBOL(pci_get_smbios_slot);
++
++static ssize_t smbiosslot_show(struct device *dev,
++			       struct device_attribute *attr, char *buf)
++{
++	struct pci_dev *pdev;
++	int slot;
++
++	pdev = to_pci_dev(dev);
++	slot = pci_get_smbios_slot(pdev);
++	if (slot > 0)
++		return scnprintf(buf, PAGE_SIZE, "%d\n", slot);
++	return 0;
++}
++
++static umode_t smbios_slot_exist(struct kobject *kobj, struct attribute *attr,
++				 int n)
++{
++	struct device *dev;
++	struct pci_dev *pdev;
++
++	dev = container_of(kobj, struct device, kobj);
++	pdev = to_pci_dev(dev);
++
++	return (pci_get_smbios_slot(pdev) > 0) ? S_IRUGO : 0;
++}
++
++static struct device_attribute smbios_attr_slot = {
++	.attr = {.name = "slot", .mode = 0444},
++	.show = smbiosslot_show,
++};
++
++static struct attribute *smbios_slot_attributes[] = {
++	&smbios_attr_slot.attr,
++	NULL,
++};
++
++static struct attribute_group smbios_slot_attr_group = {
++	.attrs = smbios_slot_attributes,
++	.is_visible = smbios_slot_exist,
++};
++
+ static int pci_create_smbiosname_file(struct pci_dev *pdev)
+ {
++	int rc;
++
++	rc = sysfs_create_group(&pdev->dev.kobj, &smbios_slot_attr_group);
++	if (rc != 0)
++		return rc;
+ 	return sysfs_create_group(&pdev->dev.kobj, &smbios_attr_group);
+ }
+ 
+ static void pci_remove_smbiosname_file(struct pci_dev *pdev)
+ {
+ 	sysfs_remove_group(&pdev->dev.kobj, &smbios_attr_group);
++	sysfs_remove_group(&pdev->dev.kobj, &smbios_slot_attr_group);
+ }
+ #else
+ static inline int pci_create_smbiosname_file(struct pci_dev *pdev)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6ae25aa..4b444e9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1981,4 +1981,6 @@ static inline bool pci_ari_enabled(struct pci_bus *bus)
+ {
+ 	return bus->self && bus->self->ari_enabled;
+ }
++
++int pci_get_smbios_slot(struct pci_dev *pdev);
+ #endif /* LINUX_PCI_H */
 -- 
-2.6.3
+1.9.1
 
