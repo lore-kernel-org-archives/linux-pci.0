@@ -1,100 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	<linux-pci@vger.kernel.org>, <linux-sh@vger.kernel.org>
-Subject: [PATCH 2/2] drivers/pci: make host/pci-rcar-gen2.c explicitly non-modular
-Date: Mon, 21 Dec 2015 19:59:09 -0500
-Message-ID: <1450745949-23882-3-git-send-email-paul.gortmaker@windriver.com>
-In-Reply-To: <1450745949-23882-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1450745949-23882-1-git-send-email-paul.gortmaker@windriver.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:34418 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755731AbbLAIlu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 03:41:50 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1448954672-27236-2-git-send-email-horms+renesas@verge.net.au>
+References: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
+	<1448954672-27236-2-git-send-email-horms+renesas@verge.net.au>
+Date: Tue, 1 Dec 2015 09:41:49 +0100
+Message-ID: <CAMuHMdVJvChiFTkeeJNBcPG2CsC3PxoEC4Lx0fHOeMMMPLew0g@mail.gmail.com>
+Subject: Re: [PATCH 1/4] PCI: rcar-gen2: Add generic compatibility string
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Simon Horman <horms+renesas@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+On Tue, Dec 1, 2015 at 8:24 AM, Simon Horman <horms+renesas@verge.net.au> wrote:
+> Add fallback compatibility string for R-Car Gen 2 Family.
+> This is in keeping with the fallback scheme being adopted wherever
+> appropriate for drivers for Renesas SoCs.
+>
+> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+> ---
+>  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 11 +++++++++--
+>  drivers/pci/host/pci-rcar-gen2.c                        |  1 +
+>  2 files changed, 10 insertions(+), 2 deletions(-)
+>
+> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> index 891463cb09c2..b19be08a8113 100644
+> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> @@ -8,7 +8,14 @@ OHCI and EHCI controllers.
+>  Required properties:
+>  - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
+>               "renesas,pci-r8a7791" for the R8A7791 SoC;
+> -             "renesas,pci-r8a7794" for the R8A7794 SoC.
+> +             "renesas,pci-r8a7794" for the R8A7794 SoC;
+> +             "renesas,pci-gen2" for a generic R-Car Gen2 compatible device.
 
-drivers/pci/host/Kconfig:config PCI_RCAR_GEN2
-drivers/pci/host/Kconfig:       bool "Renesas R-Car Gen2 Internal PCI controller"
+Shouldn't that be "renesas,pci-rcar-gen" or "renesas,pci-rcar2"?
 
-...meaning that it currently is not being built as a module by anyone.
+Else you'll be in trouble when Renesas starts focussing on airplanes
+(R-Plane Gen2), rockets (R-Rocket Gen2), or IoT (R-IoT Gen2).
 
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.
+Gr{oetje,eeting}s,
 
-We don't have to disallow a driver unbind, since that is already
-done for us in this driver.
+                        Geert
 
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-We don't replace module.h with init.h since the file already has that.
-
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-was (or is now) contained at the top of the file in the comments.
-
-Cc: Simon Horman <horms@verge.net.au>
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>
-Acked-by: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pci-rcar-gen2.c | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index 9980a4bdae7e..8df9c36458e9 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -4,6 +4,8 @@
-  * Copyright (C) 2013 Renesas Solutions Corp.
-  * Copyright (C) 2013 Cogent Embedded, Inc.
-  *
-+ * Module Author: Valentine Barshak <valentine.barshak@cogentembedded.com>
-+ *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-  * published by the Free Software Foundation.
-@@ -14,7 +16,6 @@
- #include <linux/interrupt.h>
- #include <linux/io.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
- #include <linux/pci.h>
-@@ -437,8 +438,6 @@ static struct of_device_id rcar_pci_of_match[] = {
- 	{ },
- };
- 
--MODULE_DEVICE_TABLE(of, rcar_pci_of_match);
--
- static struct platform_driver rcar_pci_driver = {
- 	.driver = {
- 		.name = "pci-rcar-gen2",
-@@ -447,9 +446,4 @@ static struct platform_driver rcar_pci_driver = {
- 	},
- 	.probe = rcar_pci_probe,
- };
--
--module_platform_driver(rcar_pci_driver);
--
--MODULE_LICENSE("GPL v2");
--MODULE_DESCRIPTION("Renesas R-Car Gen2 internal PCI");
--MODULE_AUTHOR("Valentine Barshak <valentine.barshak@cogentembedded.com>");
-+builtin_platform_driver(rcar_pci_driver);
--- 
-2.6.1
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
