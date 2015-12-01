@@ -1,66 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:55693 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751889AbbKJJqV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Nov 2015 04:46:21 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
-	linux-pci@vger.kernel.org, Richard.Zhu@freescale.com,
-	linux-kernel@vger.kernel.org, David Mueller <dave.mueller@gmx.ch>,
-	bhelgaas@google.com
-Subject: Re: [PATCH] PCI: imx6:don't sleep in atomic context
-Date: Tue, 10 Nov 2015 10:45:04 +0100
-Message-ID: <6415545.xzR4A6SaUL@wuerfel>
-In-Reply-To: <1447148110.3142.6.camel@pengutronix.de>
-References: <1447066080-5859-1-git-send-email-sanjeev_sharma@mentor.com> <4800389.dqcmlJY3HC@wuerfel> <1447148110.3142.6.camel@pengutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from kirsty.vergenet.net ([202.4.237.240]:42969 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755257AbbLAHZD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 02:25:03 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, devicetree@vger.kernel.org,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH 0/4] PCI: rcar, rcar-gen2: More Gen2 compat strings
+Date: Tue,  1 Dec 2015 16:24:28 +0900
+Message-Id: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 10 November 2015 10:35:10 Lucas Stach wrote:
-> Am Dienstag, den 10.11.2015, 10:28 +0100 schrieb Arnd Bergmann:
-> > On Tuesday 10 November 2015 09:41:18 Lucas Stach wrote:
-> > > > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> > > > index 233a196..9769b13 100644
-> > > > --- a/drivers/pci/host/pci-imx6.c
-> > > > +++ b/drivers/pci/host/pci-imx6.c
-> > > > @@ -499,7 +499,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
-> > > >                * Wait a little bit, then re-check if the link finished
-> > > >                * the training.
-> > > >                */
-> > > > -             usleep_range(1000, 2000);
-> > > > +             mdelay(1000);
-> > > 
-> > > A mdelay(1000) is a whole different timescale than a usleep(1000). If
-> > > this patch works for you with mdelay(1) or maybe mdelay(2) I would be
-> > > fine with it.
-> > 
-> > mdelay(1) is still a really long time to block the CPU for, on potentially
-> > every config space access.
-> > 
-> > Everybody else just returns the link status here, which seems to be
-> > the better alternative. If you need to delay the startup, better have
-> > a msleep(1) loop in the initial probe function where you are allowed to
-> > sleep.
-> > 
-> Yes, it's somewhere on my TODO list to rework the link-up handling here,
-> but as there are quite a few timing and ordering implications in that
-> code, this needs a good thought and a good deal of testing. So I'm
-> inclined to ACK the current patch to get rid of the obvious bug and sort
-> things out properly in a follow on patchset.
+Hi,
 
-Maybe use that patch with some modifications then:
+this short series adds generic gen2 and soc-specific r8a7793 compat strings
+to the rcar PCI and rcar-gen2 PCIE drivers. The intention is to provide
+a complete set of compat strings for known Gen2 SoCs.
 
-* add a comment to explain that this is currently called from possibly
-  atomic context through pci_config_{read,write} and that the link
-  state handling never belonged here.
+Simon Horman (4):
+  PCI: rcar-gen2: Add generic compatibility string
+  PCI: rcar-gen2: Add device tree support for r8a7793
+  PCI: rcar: Add Gen2 fallback compatibility string
+  PCI: rcar: Add device tree support for r8a7793
 
-* instead of looping five times for up to 2ms each, loop 100 times
-  around a udelay(20) to hopefully be done earlier. I was going to
-  suggest using time_before(timeout, jiffies) as the condition to
-  wait for, but that doesn't work if called with interrupts disabled.
+ Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 12 ++++++++++--
+ Documentation/devicetree/bindings/pci/rcar-pci.txt      | 14 +++++++++++---
+ drivers/pci/host/pci-rcar-gen2.c                        |  1 +
+ drivers/pci/host/pcie-rcar.c                            |  1 +
+ 4 files changed, 23 insertions(+), 5 deletions(-)
 
-	Arnd
+-- 
+2.1.4
+
