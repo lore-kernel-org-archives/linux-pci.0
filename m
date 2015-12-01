@@ -1,53 +1,183 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1451236894.1098.5.camel@perches.com>
-Subject: Re: [PATCH] drivers:pci Fix all whitespace issues
-From: Joe Perches <joe@perches.com>
-To: Bogicevic Sasa <brutallesale@gmail.com>, bhelgaas@google.com
-Cc: Richard.Zhu@freescale.com, l.stach@pengutronix.de,
-	rjw@rjwysocki.net, lenb@kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Date: Sun, 27 Dec 2015 09:21:34 -0800
-In-Reply-To: <1451234408-42250-1-git-send-email-brutallesale@gmail.com>
-References: <1451234408-42250-1-git-send-email-brutallesale@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 1 Dec 2015 12:51:57 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, jcm@redhat.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/AER: enable SERR# forwarding and role-based error
+ reporting
+Message-ID: <20151201185157.GE9306@localhost>
+References: <1445894704-28277-1-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445894704-28277-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2015-12-27 at 08:40 -0800, Bogicevic Sasa wrote:
-> This patch fixes all whitespace issues( missing or needed whitespace) in
-> all files in drivers/pci folder. Code is compiled with allyesconfig
-> before and after code changes and objects are recorded and checked with
-> objdiff and they are not changed after this commit.
-[]
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-[]
-> @@ -25,9 +25,9 @@ DEFINE_RAW_SPINLOCK(pci_lock);
->  #define PCI_word_BAD (pos & 1)
->  #define PCI_dword_BAD (pos & 3)
->  
-> -#define PCI_OP_READ(size,type,len) \
-> +#define PCI_OP_READ(size, type, len) \
->  int pci_bus_read_config_##size \
-> -	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
-> +	(struct pci_bus *bus, unsigned int devfn, int pos, type * value)	\
->  {									\
->  	int res;							\
->  	unsigned long flags;						\
-> @@ -40,7 +40,7 @@ int pci_bus_read_config_##size \
->  	return res;							\
->  }
+[+cc Taku]
 
-When the first entry I look at is improper, I wonder
-about the rest.
+Hi Sinan,
 
-Was this done with checkpatch --types=spacing --fix ?
+On Mon, Oct 26, 2015 at 05:25:02PM -0400, Sinan Kaya wrote:
+> A PCIe card behind a PCIe switch is unable to report its errors
+> when SERR# forwarding is not enabled on the PCIe switch's
+> secondary interface. This is required by the PCIe  spec. 
 
-If so, because checkpatch is brainless, you need to
-visually verify each change.
+I think enabling SERR# forwarding is only "required by the spec" in
+the sense that bridges do not forward errors upstream unless the
+SERR# Enable bit is set, right?  So I would say this is just an
+ordinary enable bit in the bridge, not a special spec requirement.
 
-This "type" use is a macro argument indicating
-what actual c90 type is being used in a function.
+The Linux AER code doesn't poll for errors; it assumes errors will be
+propagated upstream to the Root Port, where they will cause an
+interrupt, so I agree that it doesn't really make sense to enable AER
+for a device unless we also enable SERR# forwarding in all the bridges
+leading to it.
 
-The original code is nominally correct, but checkpatch
-doesn't know that "type" is not a variable.
+I assume this patch fixes a problem, e.g., errors reported by a device
+are not forwarded upstream, so AER never logs them, and with this
+patch, AER does log them?  I suppose we didn't notice this before
+because some firmware enables SERR# forwarding for us, but yours
+doesn't?
+
+> This patch
+> enables SERR# forwarding and also cleans out compatibility
+> mode so that AER reporting is enabled.
+> 
+> Tested with PEX8749-CA RDK.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/pci/pcie/aer/aerdrv_core.c | 56 +++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 55 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> index 9803e3d..acd22d7 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -37,21 +37,75 @@ module_param(nosourceid, bool, 0);
+>  
+>  int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+>  {
+> +	u8 header_type;
+> +	int pos;
+> +
+>  	if (pcie_aer_get_firmware_first(dev))
+>  		return -EIO;
+>  
+> -	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR))
+> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> +	if (!pos)
+>  		return -EIO;
+>  
+> +	pci_read_config_byte(dev, PCI_HEADER_TYPE, &header_type);
+> +
+> +	/* needs to be a bridge/switch */
+> +	if (header_type == PCI_HEADER_TYPE_BRIDGE) {
+> +		u32 status;
+> +		u16 control;
+> +
+> +		/*
+> +		 * A switch will not forward ERR_ messages coming from an
+> +		 * endpoint if SERR# forwarding is not enabled.
+> +		 * AER driver is checking the errors at the root only.
+> +		 */
+> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+> +		control |= PCI_BRIDGE_CTL_SERR;
+> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+
+Does this work for hot-added devices?  I don't see a path that calls
+pci_enable_pcie_error_reporting() for hot-added devices, so I don't
+know how the PCI_EXP_AER_FLAGS bits would get set for them.
+
+Taku, we recently merged your patch: b07461a8e45b ("PCI/AER: Clear
+error status registers during enumeration and restore").  The
+changelog mentions errors recorded by hot-added devices.  Did you test
+AER on hot-added devices, or did you just notice that they recorded
+errors?
+
+Do you think we could enable PCI_BRIDGE_CTL_SERR and set the
+PCI_EXP_AER_FLAGS bits from pci_init_capabilities()?  That path would
+work for all devices, whether present at boot or hot-added later.
+
+I know the AER driver won't attach to the Root Port and set up its
+interrupts until after enumeration, so AER would be enabled before we
+set up an ISR for the AER interrupts and turn them on in the Root
+Port.  But I think any errors in the interim should be logged and
+shouldn't cause a problem.
+
+> +		/*
+> +		 * Need to inform hardware that we support
+> +		 * Role-Based Error Reporting.
+> +		 */
+> +		pci_read_config_dword(dev, pos + PCI_ERR_COR_MASK, &status);
+> +		status &= ~PCI_ERR_COR_ADV_NFAT;
+> +		pci_write_config_dword(dev, pos + PCI_ERR_COR_MASK, status);
+
+Let's do this in a separate patch.  The SERR# thing is related to
+propagating error messages upstream.  PCI_ERR_COR_ADV_NFAT is a bit
+different.
+
+I don't understand all the implications of Role-Based Error Reporting.
+Can you include a pointer to the Linux code that comprehends it?
+It looks like the section 6.2.7 implementation note is relevant, but I
+don't understand it yet.
+
+Do we need to pay attention to the Role-Based Error Reporting bit in
+the Device Capabilities register for any reason?  I guess maybe it
+doesn't matter because Role-Base Error Reporting appeared in PCIe 1.1,
+and the PCI_ERR_COR_ADV_NFAT bit was reserved prior to that, so it
+shouldn't do anything if we clear it.
+
+Bjorn
+
+> +	}
+> +
+>  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+>  
+>  int pci_disable_pcie_error_reporting(struct pci_dev *dev)
+>  {
+> +	int pos;
+> +	u8 header_type;
+> +
+>  	if (pcie_aer_get_firmware_first(dev))
+>  		return -EIO;
+>  
+> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> +	if (!pos)
+> +		return -EIO;
+> +
+> +	pci_read_config_byte(dev, PCI_HEADER_TYPE, &header_type);
+> +
+> +	/* needs to be a bridge/switch */
+> +	if (header_type == PCI_HEADER_TYPE_BRIDGE) {
+> +		u32 status;
+> +		u16 control;
+> +
+> +		/* clear serr forwarding */
+> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+> +		control &= ~PCI_BRIDGE_CTL_SERR;
+> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+> +
+> +		/* set compatibility mode */
+> +		pci_read_config_dword(dev, pos + PCI_ERR_COR_MASK, &status);
+> +		status |= PCI_ERR_COR_ADV_NFAT;
+> +		pci_write_config_dword(dev, pos + PCI_ERR_COR_MASK, status);
+> +	}
+> +
+>  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+>  					  PCI_EXP_AER_FLAGS);
+>  }
+> -- 
+> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
