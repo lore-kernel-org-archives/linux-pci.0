@@ -1,132 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:36323 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752138AbbKQA3k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Nov 2015 19:29:40 -0500
-Received: by pacdm15 with SMTP id dm15so191216770pac.3
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2015 16:29:40 -0800 (PST)
-From: Daniel Axtens <dja@axtens.net>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com,
-	frowand.list@gmail.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: Re: [PATCH v7 21/50] powerpc/powernv: Increase PE# capacity
-In-Reply-To: <1446642770-4681-22-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1446642770-4681-22-git-send-email-gwshan@linux.vnet.ibm.com>
-Date: Tue, 17 Nov 2015 11:29:26 +1100
-Message-ID: <87y4dxbh95.fsf@gamma.ozlabs.ibm.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
+Received: from kirsty.vergenet.net ([202.4.237.240]:42978 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755157AbbLAHZI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 02:25:08 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, devicetree@vger.kernel.org,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH 3/4] PCI: rcar: Add Gen2 fallback compatibility string
+Date: Tue,  1 Dec 2015 16:24:31 +0900
+Message-Id: <1448954672-27236-4-git-send-email-horms+renesas@verge.net.au>
+In-Reply-To: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
+References: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Add fallback compatibility string for R-Car Gen 2 Family.
+This is in keeping with the fallback scheme being adopted wherever
+appropriate for drivers for Renesas SoCs.
 
-Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 13 ++++++++++---
+ drivers/pci/host/pcie-rcar.c                       |  1 +
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
-> Each PHB maintains an array helping to translate 2-bytes Request
-> ID (RID) to PE# with the assumption that PE# takes one byte, meaning
-> that we can't have more than 256 PEs. However, pci_dn->pe_number
-> already had 4-bytes for the PE#.
->
-> This extends the PE# capacity so that each of them will be 4-bytes
-> long. Then we can reuse IODA_INVALID_PE to check the PE# stored in
-> phb->pe_rmap[] is valid or not.
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+index 29d3b989d3b0..872cea085be8 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -1,8 +1,15 @@
+ * Renesas RCar PCIe interface
+ 
+ Required properties:
+-- compatible: should contain one of the following
+-	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791"
++compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
++	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
++	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
++	    "renesas,pcie-gen2" for a generic R-Car Gen2 compatible device.
++
++	    When compatible with the generic version, nodes must list the
++	    SoC-specific version corresponding to the platform first
++	    followed by the generic version.
++
+ - reg: base address and length of the pcie controller registers.
+ - #address-cells: set to <3>
+ - #size-cells: set to <2>
+@@ -25,7 +32,7 @@ Example:
+ SoC specific DT Entry:
+ 
+ 	pcie: pcie@fe000000 {
+-		compatible = "renesas,pcie-r8a7791";
++		compatible = "renesas,pcie-r8a7791", "renesas,pcie-gen2";
+ 		reg = <0 0xfe000000 0 0x80000>;
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index f4fa6c537448..17ee0422ddb1 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -917,6 +917,7 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
+ 
+ static const struct of_device_id rcar_pcie_of_match[] = {
+ 	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
++	{ .compatible = "renesas,pcie-gen2", .data = rcar_pcie_hw_init },
+ 	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
+ 	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
+ 	{},
+-- 
+2.1.4
 
-Just for clarity, could you make it clear in the commit message that
-you're increasing the PE# capacity _in the PHB_? I just found it a bit
-confusing the first time I read it.
-
-With that clarified I'll be happy to add my reviewed-by tag.
-
-Regards,
-Daniel
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  arch/powerpc/platforms/powernv/pci-ioda.c | 6 +++++-
->  arch/powerpc/platforms/powernv/pci.h      | 7 ++-----
->  2 files changed, 7 insertions(+), 6 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/pla=
-tforms/powernv/pci-ioda.c
-> index 0e66c4d..ef93a01 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -766,7 +766,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *ph=
-b, struct pnv_ioda_pe *pe)
->=20=20
->  	/* Clear the reverse map */
->  	for (rid =3D pe->rid; rid < rid_end; rid++)
-> -		phb->ioda.pe_rmap[rid] =3D 0;
-> +		phb->ioda.pe_rmap[rid] =3D IODA_INVALID_PE;
->=20=20
->  	/* Release from all parents PELT-V */
->  	while (parent) {
-> @@ -3164,6 +3164,10 @@ static void __init pnv_pci_init_ioda_phb(struct de=
-vice_node *np,
->  	if (prop32)
->  		phb->ioda.reserved_pe_idx =3D be32_to_cpup(prop32);
->=20=20
-> +	/* Invalidate RID to PE# mapping */
-> +	for (i =3D 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
-> +		phb->ioda.pe_rmap[i] =3D IODA_INVALID_PE;
-> +
->  	/* Parse 64-bit MMIO range */
->  	pnv_ioda_parse_m64_window(phb);
->=20=20
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platform=
-s/powernv/pci.h
-> index 0802fcd..5df945f 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -162,11 +162,8 @@ struct pnv_phb {
->  			struct list_head	pe_list;
->  			struct mutex            pe_list_mutex;
->=20=20
-> -			/* Reverse map of PEs, will have to extend if
-> -			 * we are to support more than 256 PEs, indexed
-> -			 * bus { bus, devfn }
-> -			 */
-> -			unsigned char		pe_rmap[0x10000];
-> +			/* Reverse map of PEs, indexed by {bus, devfn} */
-> +			int			pe_rmap[0x10000];
->=20=20
->  			/* TCE cache invalidate registers (physical and
->  			 * remapped)
-> --=20
-> 2.1.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: GPGTools - https://gpgtools.org
-
-iQIcBAEBCgAGBQJWSnTnAAoJEPC3R3P2I92FOTUQAIPGUQDll+7Uc1lau7ToBOR2
-jvP/H0wVrZGZEOBpXRaz0rFFmiUgKythKkGFCm2w8dq0cjexn02qvh4CmQEHeJRS
-D+Si7rfSNezDahJL9QMu/MOUwUaFexFRCPJQxFFLwxrvulUGhUvlv1oB83fw2IAB
-Eq1gVqW0Hs1zceSJ7ebYjJoEhj0ZRSQFx7Jp2Yj6sWKRVlvcMYECWZ83lrn4ixn1
-DPkCC3SfVle/aANMKUK4sY1FqaGSvX8s3Fe6PXpXhvfr2xoIso6dlJmFhNMTgP8r
-AmNWyaT+s3pg9tEsFKwQTJWQvK7G/ScPg01ywfiaOk1PuIA7zQcCpILtwbHloo+q
-4okga3e17nBS7HYGAKTN3JDZgI5Jr8F7Fd2K2qO/Tkgsov3DsPP0dMT+vYSAXk4y
-WZ3oQXgYzCf/4uABQ72zl2/0L8pnUHK5omcBNex/2IQRvF0D2E8t6sRaX7NpqQjg
-AKGFBXCXed9SRuKwetYurtHrHbem1roQm1tD94x23LBbYqnp5zakhEIX4riDzwbE
-MSerG1y04jlwxyy72aEFNGuRVi18R5aO+3h0hZH/PonE+nCIWvxem6mmgC8aeTll
-juv0Dg5RPfdcTAXR534EOQqz5BV7p5TjH5Ny7q7ufbBSzyyY9cudNzD8IknviA38
-z3V6mdbW9gx4H6b4FpNJ
-=WeRL
------END PGP SIGNATURE-----
---=-=-=--
