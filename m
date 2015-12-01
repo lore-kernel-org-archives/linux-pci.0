@@ -1,231 +1,202 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jcornwall.me ([50.116.27.114]:60368 "EHLO jcornwall.me"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754249AbbLDTli (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Dec 2015 14:41:38 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:60859 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750876AbbLATVv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 14:21:51 -0500
+Message-ID: <565DF34C.6030606@codeaurora.org>
+Date: Tue, 01 Dec 2015 14:21:48 -0500
+From: Christopher Covington <cov@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 04 Dec 2015 13:33:30 -0600
-From: Jay Cornwall <jay@jcornwall.me>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: Add pci_enable_atomic_request
-In-Reply-To: <20151204182540.GC20125@localhost>
-References: <1443110390-4080-1-git-send-email-jay@jcornwall.me>
- <20151204182540.GC20125@localhost>
-Message-ID: <c7259e37a065e8c7d386c806f521c46d@jcornwall.me>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+CC: linux-pci@vger.kernel.org, timur@codeaurora.org, jcm@redhat.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/AER: enable SERR# forwarding and role-based
+ error reporting
+References: <1445894704-28277-1-git-send-email-okaya@codeaurora.org> <20151201185157.GE9306@localhost>
+In-Reply-To: <20151201185157.GE9306@localhost>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015-12-04 12:25, Bjorn Helgaas wrote:
-> On Thu, Sep 24, 2015 at 10:59:50AM -0500, Jay Cornwall wrote:
->> The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions to be 
->> requested
->> by, routed through and completed by PCIe components. Routing and 
->> completion
->> do not require software support. Component support for each is 
->> detectable via
->> the DEVCAP2 register.
->> 
->> AtomicOp requests are permitted only if a component's
->> DEVCTL2.ATOMICOP_REQUESTER_ENABLE field is set. This capability cannot 
->> be
->> detected but is a no-op if set on a component with no support. These 
->> requests
->> can only be serviced if the upstream components support AtomicOp 
->> completion
->> and/or routing to a component which does.
->> 
->> A concrete example is the AMD Fiji-class GPU, which is specified to 
->> support
->> AtomicOp requests, routed through a PLX 8747 switch (advertising 
->> AtomicOp
->> routing) to a Haswell host bridge (advertising AtomicOp completion 
->> support).
->> When AtomicOp requests are disabled the GPU logs attempts to initiate 
->> requests
->> to an MMIO register for debugging.
->> 
->> Add pci_enable_atomic_request for per-device control over AtomicOp 
->> requests.
->> Upstream bridges are checked for AtomicOp routing capability and the 
->> call
->> fails if any lack this capability. The root port is checked for 
->> AtomicOp
->> completion capabilities and the call fails if it does not support any.
->> Routes to other PCIe components are not checked for AtomicOp routing 
->> and
->> completion capabilities.
->> 
->> v2: Check for AtomicOp route to root port with AtomicOp completion
->> v3: Style fixes
->> 
->> Signed-off-by: Jay Cornwall <jay@jcornwall.me>
+On 12/01/2015 01:51 PM, Bjorn Helgaas wrote:
+> [+cc Taku]
+
+It looks to me like Bjorn intended to add Taku to the distribution list,
+but accidentally left him off, so I'm adding him to the To field in this
+reply.
+
+Regards,
+Christopher Covington
+
+> Hi Sinan,
 > 
-> Hi Jay,
+> On Mon, Oct 26, 2015 at 05:25:02PM -0400, Sinan Kaya wrote:
+>> A PCIe card behind a PCIe switch is unable to report its errors
+>> when SERR# forwarding is not enabled on the PCIe switch's
+>> secondary interface. This is required by the PCIe  spec. 
 > 
-> Is there a user for this new functionality?  I don't like to add things
-> that have no apparent user.
+> I think enabling SERR# forwarding is only "required by the spec" in
+> the sense that bridges do not forward errors upstream unless the
+> SERR# Enable bit is set, right?  So I would say this is just an
+> ordinary enable bit in the bridge, not a special spec requirement.
+> 
+> The Linux AER code doesn't poll for errors; it assumes errors will be
+> propagated upstream to the Root Port, where they will cause an
+> interrupt, so I agree that it doesn't really make sense to enable AER
+> for a device unless we also enable SERR# forwarding in all the bridges
+> leading to it.
+> 
+> I assume this patch fixes a problem, e.g., errors reported by a device
+> are not forwarded upstream, so AER never logs them, and with this
+> patch, AER does log them?  I suppose we didn't notice this before
+> because some firmware enables SERR# forwarding for us, but yours
+> doesn't?
+> 
+>> This patch
+>> enables SERR# forwarding and also cleans out compatibility
+>> mode so that AER reporting is enabled.
+>>
+>> Tested with PEX8749-CA RDK.
+>>
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>> ---
+>>  drivers/pci/pcie/aer/aerdrv_core.c | 56 +++++++++++++++++++++++++++++++++++++-
+>>  1 file changed, 55 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+>> index 9803e3d..acd22d7 100644
+>> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+>> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+>> @@ -37,21 +37,75 @@ module_param(nosourceid, bool, 0);
+>>  
+>>  int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+>>  {
+>> +	u8 header_type;
+>> +	int pos;
+>> +
+>>  	if (pcie_aer_get_firmware_first(dev))
+>>  		return -EIO;
+>>  
+>> -	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR))
+>> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+>> +	if (!pos)
+>>  		return -EIO;
+>>  
+>> +	pci_read_config_byte(dev, PCI_HEADER_TYPE, &header_type);
+>> +
+>> +	/* needs to be a bridge/switch */
+>> +	if (header_type == PCI_HEADER_TYPE_BRIDGE) {
+>> +		u32 status;
+>> +		u16 control;
+>> +
+>> +		/*
+>> +		 * A switch will not forward ERR_ messages coming from an
+>> +		 * endpoint if SERR# forwarding is not enabled.
+>> +		 * AER driver is checking the errors at the root only.
+>> +		 */
+>> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+>> +		control |= PCI_BRIDGE_CTL_SERR;
+>> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+> 
+> Does this work for hot-added devices?  I don't see a path that calls
+> pci_enable_pcie_error_reporting() for hot-added devices, so I don't
+> know how the PCI_EXP_AER_FLAGS bits would get set for them.
+> 
+> Taku, we recently merged your patch: b07461a8e45b ("PCI/AER: Clear
+> error status registers during enumeration and restore").  The
+> changelog mentions errors recorded by hot-added devices.  Did you test
+> AER on hot-added devices, or did you just notice that they recorded
+> errors?
+> 
+> Do you think we could enable PCI_BRIDGE_CTL_SERR and set the
+> PCI_EXP_AER_FLAGS bits from pci_init_capabilities()?  That path would
+> work for all devices, whether present at boot or hot-added later.
+> 
+> I know the AER driver won't attach to the Root Port and set up its
+> interrupts until after enumeration, so AER would be enabled before we
+> set up an ISR for the AER interrupts and turn them on in the Root
+> Port.  But I think any errors in the interim should be logged and
+> shouldn't cause a problem.
+> 
+>> +		/*
+>> +		 * Need to inform hardware that we support
+>> +		 * Role-Based Error Reporting.
+>> +		 */
+>> +		pci_read_config_dword(dev, pos + PCI_ERR_COR_MASK, &status);
+>> +		status &= ~PCI_ERR_COR_ADV_NFAT;
+>> +		pci_write_config_dword(dev, pos + PCI_ERR_COR_MASK, status);
+> 
+> Let's do this in a separate patch.  The SERR# thing is related to
+> propagating error messages upstream.  PCI_ERR_COR_ADV_NFAT is a bit
+> different.
+> 
+> I don't understand all the implications of Role-Based Error Reporting.
+> Can you include a pointer to the Linux code that comprehends it?
+> It looks like the section 6.2.7 implementation note is relevant, but I
+> don't understand it yet.
+> 
+> Do we need to pay attention to the Role-Based Error Reporting bit in
+> the Device Capabilities register for any reason?  I guess maybe it
+> doesn't matter because Role-Base Error Reporting appeared in PCIe 1.1,
+> and the PCI_ERR_COR_ADV_NFAT bit was reserved prior to that, so it
+> shouldn't do anything if we clear it.
 > 
 > Bjorn
-
-The client for this code is scheduled to be upstreamed in drm/amdgpu, 
-but we have some internal restructuring to complete before a patchset 
-will be available.
-
-If you'd prefer, I can resubmit this patch as part of that series when 
-it is ready.
-
-
 > 
->> ---
->>  drivers/pci/pci.c             | 70 
->> +++++++++++++++++++++++++++++++++++++++++++
->>  include/linux/pci.h           |  1 +
->>  include/uapi/linux/pci_regs.h |  5 ++++
->>  3 files changed, 76 insertions(+)
->> 
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 6a9a111..edc56e4 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -2453,6 +2453,76 @@ bool pci_acs_path_enabled(struct pci_dev 
->> *start,
+>> +	}
+>> +
+>>  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
 >>  }
->> 
->>  /**
->> + * pci_enable_atomic_request - enable or disable AtomicOp requester
->> + * @dev: the PCI device
->> + *
->> + * Return 0 if the device is capable of generating AtomicOp requests,
->> + * all upstream bridges support AtomicOp routing, and the root port 
->> supports
->> + * 32-bit, 64-bit and/or 128-bit AtomicOp completion, or negative 
->> otherwise.
->> + */
->> +int pci_enable_atomic_request(struct pci_dev *dev)
->> +{
->> +	struct pci_bus *bus = dev->bus;
+>>  EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+>>  
+>>  int pci_disable_pcie_error_reporting(struct pci_dev *dev)
+>>  {
+>> +	int pos;
+>> +	u8 header_type;
 >> +
->> +	if (!pci_is_pcie(dev))
->> +		return -EINVAL;
+>>  	if (pcie_aer_get_firmware_first(dev))
+>>  		return -EIO;
+>>  
+>> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+>> +	if (!pos)
+>> +		return -EIO;
 >> +
->> +	switch (pci_pcie_type(dev)) {
->> +	/*
->> +	 * PCIe 3.0, 6.15 specifies that endpoints and root ports are 
->> permitted
->> +	 * to implement AtomicOp requester capabilities.
->> +	 */
->> +	case PCI_EXP_TYPE_ENDPOINT:
->> +	case PCI_EXP_TYPE_LEG_END:
->> +	case PCI_EXP_TYPE_RC_END:
->> +	case PCI_EXP_TYPE_ROOT_PORT:
->> +		break;
->> +	default:
->> +		return -EINVAL;
+>> +	pci_read_config_byte(dev, PCI_HEADER_TYPE, &header_type);
+>> +
+>> +	/* needs to be a bridge/switch */
+>> +	if (header_type == PCI_HEADER_TYPE_BRIDGE) {
+>> +		u32 status;
+>> +		u16 control;
+>> +
+>> +		/* clear serr forwarding */
+>> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+>> +		control &= ~PCI_BRIDGE_CTL_SERR;
+>> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+>> +
+>> +		/* set compatibility mode */
+>> +		pci_read_config_dword(dev, pos + PCI_ERR_COR_MASK, &status);
+>> +		status |= PCI_ERR_COR_ADV_NFAT;
+>> +		pci_write_config_dword(dev, pos + PCI_ERR_COR_MASK, status);
 >> +	}
 >> +
->> +	while (bus->parent) {
->> +		struct pci_dev *bridge = bus->self;
->> +		u32 cap;
->> +
->> +		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
->> +
->> +		switch (pci_pcie_type(bridge)) {
->> +		/*
->> +		 * Upstream, downstream and root ports may implement AtomicOp
->> +		 * routing capabilities. AtomicOp routing via a root port is
->> +		 * not considered.
->> +		 */
->> +		case PCI_EXP_TYPE_UPSTREAM:
->> +		case PCI_EXP_TYPE_DOWNSTREAM:
->> +			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTING))
->> +				return -EINVAL;
->> +			break;
->> +
->> +		/*
->> +		 * Root ports are permitted to implement AtomicOp completion
->> +		 * capabilities.
->> +		 */
->> +		case PCI_EXP_TYPE_ROOT_PORT:
->> +			if (!(cap & (PCI_EXP_DEVCAP2_ATOMIC_COMP32 |
->> +				     PCI_EXP_DEVCAP2_ATOMIC_COMP64 |
->> +				     PCI_EXP_DEVCAP2_ATOMIC_COMP128)))
->> +				return -EINVAL;
->> +			break;
->> +		}
->> +
->> +
->> +		bus = bus->parent;
->> +	}
->> +
->> +	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
->> +				 PCI_EXP_DEVCTL2_ATOMICOP_REQ);
->> +
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL(pci_enable_atomic_request);
->> +
->> +/**
->>   * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
->>   * @dev: the PCI device
->>   * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index e90eb22..4e50003 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1801,6 +1801,7 @@ void pci_request_acs(void);
->>  bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
->>  bool pci_acs_path_enabled(struct pci_dev *start,
->>  			  struct pci_dev *end, u16 acs_flags);
->> +int pci_enable_atomic_request(struct pci_dev *dev);
->> 
->>  #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
->>  #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
->> diff --git a/include/uapi/linux/pci_regs.h 
->> b/include/uapi/linux/pci_regs.h
->> index 413417f..013c2bd 100644
->> --- a/include/uapi/linux/pci_regs.h
->> +++ b/include/uapi/linux/pci_regs.h
->> @@ -571,6 +571,10 @@
->>   */
->>  #define PCI_EXP_DEVCAP2		36	/* Device Capabilities 2 */
->>  #define  PCI_EXP_DEVCAP2_ARI		0x00000020 /* Alternative Routing-ID */
->> +#define  PCI_EXP_DEVCAP2_ATOMIC_ROUTING	0x00000040 /* AtomicOp 
->> routing */
->> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP32	0x00000080 /* 32b AtomicOp 
->> completion */
->> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* 64b AtomicOp 
->> completion */
->> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP128	0x00000200 /* 128b AtomicOp 
->> completion*/
->>  #define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance 
->> reporting */
->>  #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support 
->> mechanism */
->>  #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling 
->> */
->> @@ -578,6 +582,7 @@
->>  #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
->>  #define  PCI_EXP_DEVCTL2_COMP_TIMEOUT	0x000f	/* Completion Timeout 
->> Value */
->>  #define  PCI_EXP_DEVCTL2_ARI		0x0020	/* Alternative Routing-ID */
->> +#define  PCI_EXP_DEVCTL2_ATOMICOP_REQ	0x0040	/* Allow AtomicOp 
->> requests */
->>  #define  PCI_EXP_DEVCTL2_IDO_REQ_EN	0x0100	/* Allow IDO for requests 
->> */
->>  #define  PCI_EXP_DEVCTL2_IDO_CMP_EN	0x0200	/* Allow IDO for 
->> completions */
->>  #define  PCI_EXP_DEVCTL2_LTR_EN		0x0400	/* Enable LTR mechanism */
+>>  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+>>  					  PCI_EXP_AER_FLAGS);
+>>  }
+>> -- 
+>> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+>>
 >> --
->> 1.9.1
->> 
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" 
->> in
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 >> the body of a message to majordomo@vger.kernel.org
 >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+
 -- 
-Jay Cornwall
+Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
