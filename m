@@ -1,57 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34319 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752295AbbKCOoJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 3 Nov 2015 09:44:09 -0500
-Date: Tue, 3 Nov 2015 08:44:01 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Ley Foon Tan <lftan@altera.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH] PCI: altera: add OF_PCI dependency
-Message-ID: <20151103144401.GA17786@localhost>
-References: <38421064.oVjju5M930@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <38421064.oVjju5M930@wuerfel>
+Received: from kirsty.vergenet.net ([202.4.237.240]:42978 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755339AbbLAHZK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 02:25:10 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, devicetree@vger.kernel.org,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH 4/4] PCI: rcar: Add device tree support for r8a7793
+Date: Tue,  1 Dec 2015 16:24:32 +0900
+Message-Id: <1448954672-27236-5-git-send-email-horms+renesas@verge.net.au>
+In-Reply-To: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
+References: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 03, 2015 at 03:08:33PM +0100, Arnd Bergmann wrote:
-> The newly added altera PCI driver fails to build when CONFIG_OF
-> is disabled:
-> 
-> drivers/pci/host/pcie-altera.c: In function 'altera_pcie_parse_request_of_pci_ranges':
-> drivers/pci/host/pcie-altera.c:420:8: error: implicit declaration of function 'of_pci_get_host_bridge_resources' [-Werror=implicit-function-declaration]
-> 
-> This adds a dependency on OF_PCI for clarity, this is the symbol
-> that guards the implementation of of_pci_get_host_bridge_resources.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 6bb4dd154ae8 ("PCI: altera: Add Altera PCIe host controller driver")
+Simply document new compat strings.
+As a previous patch adds a generic R-Car Gen2 compat string
+there appears to be no need for a driver updates.
 
-6bb4dd154ae8 hasn't been merged into mainline yet, so I folded this fix
-into it.  Thanks, Arnd!
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
-> ---
-> Found on ARM randconfig builds yesterday
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 9e24075d83f7..f131ba947dc6 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -150,6 +150,7 @@ config PCIE_IPROC_BCMA
->  config PCIE_ALTERA
->  	bool "Altera PCIe controller"
->  	depends on ARM || NIOS2
-> +	depends on OF_PCI
->  	select PCI_DOMAINS
->  	help
->  	  Say Y here if you want to enable PCIe controller support on Altera
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+* The r8a7792 and r8a7794 are omitted from this change as the
+  hardware in question does not appear to be present on those SoCs.
+---
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+index 872cea085be8..4548b9b54165 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -4,6 +4,7 @@ Required properties:
+ compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
+ 	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
+ 	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
++	    "renesas,pcie-r8a7793" for the R8A7793 SoC;
+ 	    "renesas,pcie-gen2" for a generic R-Car Gen2 compatible device.
+ 
+ 	    When compatible with the generic version, nodes must list the
+-- 
+2.1.4
+
