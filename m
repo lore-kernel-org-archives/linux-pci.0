@@ -1,40 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:37386 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752805AbbKQTdy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Nov 2015 14:33:54 -0500
-Message-ID: <564B811D.4000401@hauke-m.de>
-Date: Tue, 17 Nov 2015 20:33:49 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <565CFC7C.101@gmail.com>
+Date: Mon, 30 Nov 2015 17:48:44 -0800
+From: Florian Fainelli <f.fainelli@gmail.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Ray Jui <rjui@broadcom.com.com>,
-	zajec5@gmail.com
-Subject: Re: [PATCH] PCI: iproc: hide CONFIG_PCIE_IPROC
-References: <11420214.lrdhuUq0ZO@wuerfel>
-In-Reply-To: <11420214.lrdhuUq0ZO@wuerfel>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+To: Paul Burton <paul.burton@imgtec.com>, linux-mips@linux-mips.org
+CC: =?UTF-8?B?U8O2cmVuIEJyaW5rbWFubg==?= <soren.brinkmann@xilinx.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell Joyce <russell.joyce@york.ac.uk>,
+	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 20/28] net: pch_gbe: clear interrupt FIFO during probe
+References: <1448900513-20856-1-git-send-email-paul.burton@imgtec.com> <1448900513-20856-21-git-send-email-paul.burton@imgtec.com>
+In-Reply-To: <1448900513-20856-21-git-send-email-paul.burton@imgtec.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/17/2015 05:08 PM, Arnd Bergmann wrote:
-> PCIE_IPROC_BCMA does not require CONFIG_OF in Kconfig, but
-> CONFIG_PCIE_IPROC does, so we can get a warning when building
-> for an ARM platform without DT support:
+On 30/11/15 08:21, Paul Burton wrote:
+> xilinx_pcie_init_port clears the pending interrupts in the interrupt
+> decode register, but does not clear the interrupt FIFO. This would lead
+> to spurious interrupts if any were present in the FIFO at probe time.
+> Clear the interrupt FIFO prior to the interrupt decode register in order
+> to start with a clean slate as expected.
 > 
-> warning: (PCIE_IPROC_PLATFORM && PCIE_IPROC_BCMA) selects PCIE_IPROC which has unmet direct dependencies (PCI && OF && (ARM || ARM64))
-> 
-> It turns out that CONFIG_PCIE_IPROC never needs to be enabled
-> by a user anyway, we can simply rely on it being selected
-> implictly through either PCIE_IPROC_PLATFORM or PCIE_IPROC_BCMA.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 4785ffbdc9b5 ("PCI: iproc: Add BCMA PCIe driver")
-> 
+> Signed-off-by: Paul Burton <paul.burton@imgtec.com>
 
-Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
-
-Thanks for spotting and fixing this.
-
-hauke
+Seems like the subject should be "PCI: xilinx: ..." to be consistent
+with the changes you are making to this driver earlier in the series?
+-- 
+Florian
