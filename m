@@ -1,265 +1,168 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH v4 5/5] PCI: ACPI: Add a generic ACPI based host controller
-Date: Thu, 24 Dec 2015 17:27:32 +0530
-Message-ID: <1450958252-29892-6-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1450958252-29892-1-git-send-email-jchandra@broadcom.com>
-References: <1450958252-29892-1-git-send-email-jchandra@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e24smtp05.br.ibm.com ([32.104.18.26]:35788 "EHLO
+	e24smtp05.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751681AbbLAMlu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 07:41:50 -0500
+Received: from localhost
+	by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Tue, 1 Dec 2015 10:41:48 -0200
+Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.13.184.26])
+	by d24dlp01.br.ibm.com (Postfix) with ESMTP id A34CC3520070
+	for <linux-pci@vger.kernel.org>; Tue,  1 Dec 2015 07:41:41 -0500 (EST)
+Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
+	by d24relay02.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tB1CdUkY23527902
+	for <linux-pci@vger.kernel.org>; Tue, 1 Dec 2015 10:39:30 -0200
+Received: from d24av05.br.ibm.com (localhost [127.0.0.1])
+	by d24av05.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tB1CfhQJ020183
+	for <linux-pci@vger.kernel.org>; Tue, 1 Dec 2015 07:41:44 -0500
+Subject: Re: [PATCH] Enable MSI/MSI-X caps and disable MSI interrupts at PCI
+ probe time - code move
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1445437055-7017-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <20151201013540.GB9306@localhost>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	bhelgaas@google.com, mpe@ellerman.id.au, paulus@samba.org,
+	benh@kernel.crashing.org, mst@redhat.com, shangw@linux.vnet.ibm.com
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Message-ID: <565D9586.4050605@linux.vnet.ibm.com>
+Date: Tue, 1 Dec 2015 10:41:42 -0200
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20151201013540.GB9306@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a simple ACPI based PCI host controller. This is done by
-providing a simple implementation for pci_acpi_scan_root().
+On 11/30/2015 11:35 PM, Bjorn Helgaas wrote:
+> Thanks for your patience, Guilherme.
 
-The pci_mmcfg_list handling is done by the ACPI code, we
-keep a reference to the pci_mmcfg_region which is already
-mapped.
+Hello Bjorn, thank you for the very deep review of my patch. Much 
+appreciated!
 
-Provide implementations of raw_pci_read and raw_pci_write based
-on the pci_mmcfg_list
 
-This is enabled only for ARM64 now.
+> I applied this to pci/msi for v4.5.  I reworked the changelog and made
+> pci_msi_setup_pci_dev() static, since I think it's now only called
+> from drivers/pci/probe.c.
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
----
- drivers/acpi/Kconfig         |   8 ++
- drivers/acpi/Makefile        |   1 +
- drivers/acpi/pci_host_acpi.c | 186 +++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 195 insertions(+)
- create mode 100644 drivers/acpi/pci_host_acpi.c
+Thanks. Regarding pci_msi_setup_pci_dev(), it really should be static. I 
+changed it because PowerPC arch was calling this since my last patch, 
+but this patch remove the call from PowerPC arch, so it's great to see 
+this function static again.
 
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index 5eef4cb..c5738be 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -283,6 +283,14 @@ config ACPI_NUMA
- 	depends on (X86 || IA64)
- 	default y if IA64_GENERIC || IA64_SGI_SN2
- 
-+config ACPI_PCI_HOST_GENERIC
-+	bool "Generic ACPI PCI host controller"
-+	depends on ARM64 && ACPI
-+	help
-+	  Say Y here if you want to support a simple generic ACPI PCI host
-+	  controller.
-+
-+
- config ACPI_CUSTOM_DSDT_FILE
- 	string "Custom DSDT Table file to include"
- 	default ""
-diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-index 3f65311..9fffdf2 100644
---- a/drivers/acpi/Makefile
-+++ b/drivers/acpi/Makefile
-@@ -41,6 +41,7 @@ acpi-y				+= ec.o
- acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
- acpi-y				+= pci_root.o pci_link.o pci_irq.o
- acpi-$(CONFIG_PCI_MMCONFIG)	+= pci_mcfg.o
-+acpi-$(CONFIG_ACPI_PCI_HOST_GENERIC) += pci_host_acpi.o
- acpi-y				+= acpi_lpss.o acpi_apd.o
- acpi-y				+= acpi_platform.o
- acpi-y				+= acpi_pnp.o
-diff --git a/drivers/acpi/pci_host_acpi.c b/drivers/acpi/pci_host_acpi.c
-new file mode 100644
-index 0000000..9dbdd81
---- /dev/null
-+++ b/drivers/acpi/pci_host_acpi.c
-@@ -0,0 +1,186 @@
-+/*
-+ * Generic PCI host controller driver for ACPI based systems
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ *
-+ * Copyright (c) 2015 Broadcom Corporation
-+ *
-+ * Based on drivers/pci/host/pci-host-generic.c
-+ * Copyright (C) 2014 ARM Limited
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/acpi.h>
-+#include <linux/pci-acpi.h>
-+#include <linux/sfi_acpi.h>
-+#include <linux/slab.h>
-+
-+#define PREFIX			"pci-host-acpi:"
-+
-+/* sysdata pointer is ->root_info */
-+struct gen_acpi_root_info {
-+	struct acpi_pci_root_info	common;
-+	struct pci_mmcfg_region		*mcfg;
-+	bool				mcfg_added;
-+};
-+
-+/* find mapping of a MCFG area */
-+static void __iomem *gen_acpi_map_cfg_bus(struct pci_bus *bus,
-+			unsigned int devfn, int where)
-+{
-+	struct gen_acpi_root_info *pci = bus->sysdata;
-+	struct pci_mmcfg_region *mcfg = pci->mcfg;
-+
-+	if (bus->number < mcfg->start_bus || bus->number > mcfg->end_bus)
-+		return NULL;
-+
-+	return mcfg->virt +
-+		PCI_MMCFG_OFFSET(bus->number - mcfg->start_bus, devfn) +
-+		where;
-+}
-+
-+static struct pci_ops gen_acpi_pci_ops = {
-+	.map_bus	= gen_acpi_map_cfg_bus,
-+	.read		= pci_generic_config_read,
-+	.write		= pci_generic_config_write,
-+};
-+
-+/* Insert the ECFG area for a root bus */
-+static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
-+{
-+	struct gen_acpi_root_info *info;
-+	struct acpi_pci_root *root = ci->root;
-+	struct device *dev = &ci->bridge->dev;
-+	int err;
-+
-+	info = container_of(ci, struct gen_acpi_root_info, common);
-+	err = pci_mmconfig_insert(dev, root->segment, root->secondary.start,
-+			root->secondary.end, root->mcfg_addr);
-+	if (err && err != -EEXIST)
-+		return err;
-+
-+	info->mcfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
-+	WARN_ON(info->mcfg == NULL);
-+	info->mcfg_added = (err == -EEXIST);
-+	return 0;
-+}
-+
-+static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
-+{
-+	struct gen_acpi_root_info *info;
-+	struct acpi_pci_root *root = ci->root;
-+
-+	info = container_of(ci, struct gen_acpi_root_info, common);
-+	if (info->mcfg_added)
-+		pci_mmconfig_delete(root->segment, root->secondary.start,
-+					root->secondary.end);
-+	info->mcfg = NULL;
-+}
-+
-+static struct acpi_pci_root_ops pci_acpi_root_ops = {
-+	.pci_ops = &gen_acpi_pci_ops,
-+	.init_info = pci_acpi_root_init_info,
-+	.release_info = pci_acpi_root_release_info,
-+};
-+
-+struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
-+{
-+	struct acpi_device *device = root->device;
-+	struct gen_acpi_root_info *ri;
-+	struct pci_bus *bus, *child;
-+
-+	/* allocate acpi_info/sysdata */
-+	ri = devm_kzalloc(&device->dev, sizeof(*ri), GFP_KERNEL);
-+	if (!ri) {
-+		dev_err(&device->dev,
-+			"pci_bus %04x:%02x: ignored (out of memory)\n",
-+			root->segment, (int)root->secondary.start);
-+		return NULL;
-+	}
-+
-+	bus =  acpi_pci_root_create(root, &pci_acpi_root_ops,
-+					&ri->common, ri);
-+	if (!bus) {
-+		dev_err(&device->dev, "Scanning rootbus failed");
-+		return NULL;
-+	}
-+
-+	pci_bus_size_bridges(bus);
-+	pci_bus_assign_resources(bus);
-+	list_for_each_entry(child, &bus->children, node)
-+		pcie_bus_configure_settings(child);
-+
-+	return bus;
-+}
-+
-+int raw_pci_read(unsigned int seg, unsigned int bus,
-+		  unsigned int devfn, int reg, int len, u32 *val)
-+{
-+	struct pci_mmcfg_region *mcfg;
-+	void __iomem *addr;
-+	int err = -EINVAL;
-+
-+	rcu_read_lock();
-+	mcfg = pci_mmconfig_lookup(seg, bus);
-+	if (!mcfg || !mcfg->virt)
-+		goto err;
-+
-+	addr = mcfg->virt + PCI_MMCFG_OFFSET(bus, devfn);
-+	switch (len) {
-+	case 1:
-+		*val = readb(addr + reg);
-+		break;
-+	case 2:
-+		*val = readw(addr + reg);
-+		break;
-+	case 4:
-+		*val = readl(addr + reg);
-+		break;
-+	}
-+	err = 0;
-+err:
-+	rcu_read_unlock();
-+	return err;
-+}
-+
-+int raw_pci_write(unsigned int seg, unsigned int bus,
-+		unsigned int devfn, int reg, int len, u32 val)
-+{
-+	struct pci_mmcfg_region *mcfg;
-+	void __iomem *addr;
-+	int err = -EINVAL;
-+
-+	rcu_read_lock();
-+	mcfg = pci_mmconfig_lookup(seg, bus);
-+	if (!mcfg || !mcfg->virt)
-+		goto err;
-+
-+	addr = mcfg->virt + PCI_MMCFG_OFFSET(bus, devfn);
-+	switch (len) {
-+	case 1:
-+		writeb(val, addr + reg);
-+		break;
-+	case 2:
-+		writew(val, addr + reg);
-+		break;
-+	case 4:
-+		writel(val, addr + reg);
-+		break;
-+	}
-+	err = 0;
-+err:
-+	rcu_read_unlock();
-+	return err;
-+}
--- 
-1.9.1
+
+> I didn't quite follow the last paragraph about reverting 1851617cd2da.
+> 1851617cd2da moved the MSI init (dev->msi_cap init and MSI disable)
+> from pci/msi.c (where it was only done when CONFIG_PCI_MSI=y) to
+> pci/probe.c (where we did it for all non-OF arches, regardless of
+> CONFIG_PCI_MSI).  So I would characterize this patch as doing the MSI
+> init for *all* arches, regardless of CONFIG_PCI_MSI.
+
+Well, my English skills aren't so good, so I possibly I wrote confusing 
+text. What I meant is that, from practical viewpoint, what we did here 
+has the same effect of reverting those patches (in the sense of 
+initializing MSI caps). But you can ignore my statement, and I 
+appreciate that you removed it from the commit message if it was 
+confusing heh
+
+
+> While looking at this, I noticed that pci_msi_init_pci_dev() is now
+> always empty, so I'll remove that in a separate patch.
+>
+> Please let me know if this doesn't make sense:
+
+The patch below is great, thanks for the modifications and for removing 
+pci_msi_init_pci_dev() in a separated patch.
+
+
+> commit e80e7edc55ba711f3fe23975061b3f1c336ceb95
+> Author: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+> Date:   Wed Oct 21 12:17:35 2015 -0200
+>
+>      PCI/MSI: Initialize MSI capability for all architectures
+>
+>      1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel doesn't
+>      support MSI") moved dev->msi_cap and dev->msix_cap initialization from the
+>      pci_init_capabilities() path (used on all architectures) to the
+>      pci_setup_device() path (not used on Open Firmware architectures).
+>
+>      This broke MSI or MSI-X on Open Firmware machines.  4d9aac397a5d
+>      ("powerpc/PCI: Disable MSI/MSI-X interrupts at PCI probe time in OF case")
+>      fixed it for PowerPC but not for SPARC.
+>
+>      Set up MSI and MSI-X (initialize msi_cap and msix_cap and disable MSI and
+>      MSI-X) in pci_init_capabilities() so all architectures do it the same way.
+>
+>      This reverts 4d9aac397a5d since this patch fixes the problem generically
+>      for both PowerPC and SPARC.
+>
+>      [bhelgaas: changelog, make pci_msi_setup_pci_dev() static]
+>      Fixes: 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel doesn't support MSI")
+>      Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+> index 2e710c1..526ac67 100644
+> --- a/arch/powerpc/kernel/pci_of_scan.c
+> +++ b/arch/powerpc/kernel/pci_of_scan.c
+> @@ -187,9 +187,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+>
+>   	pci_device_add(dev, bus);
+>
+> -	/* Setup MSI caps & disable MSI/MSI-X interrupts */
+> -	pci_msi_setup_pci_dev(dev);
+> -
+>   	return dev;
+>   }
+>   EXPORT_SYMBOL(of_create_pci_dev);
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index edb1984..cd94737 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1145,7 +1145,7 @@ int pci_cfg_space_size(struct pci_dev *dev)
+>
+>   #define LEGACY_IO_RESOURCE	(IORESOURCE_IO | IORESOURCE_PCI_FIXED)
+>
+> -void pci_msi_setup_pci_dev(struct pci_dev *dev)
+> +static void pci_msi_setup_pci_dev(struct pci_dev *dev)
+>   {
+>   	/*
+>   	 * Disable the MSI hardware to avoid screaming interrupts
+> @@ -1212,8 +1212,6 @@ int pci_setup_device(struct pci_dev *dev)
+>   	/* "Unknown power state" */
+>   	dev->current_state = PCI_UNKNOWN;
+>
+> -	pci_msi_setup_pci_dev(dev);
+> -
+>   	/* Early fixups, before probing the BARs */
+>   	pci_fixup_device(pci_fixup_early, dev);
+>   	/* device class may be changed after fixup */
+> @@ -1606,6 +1604,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>   	/* MSI/MSI-X list */
+>   	pci_msi_init_pci_dev(dev);
+>
+> +	/* Setup MSI caps & disable MSI/MSI-X interrupts */
+> +	pci_msi_setup_pci_dev(dev);
+> +
+>   	/* Buffers for saving PCIe and PCI-X capabilities */
+>   	pci_allocate_cap_save_buffers(dev);
+>
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e828e7b..f9f79ad 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1248,8 +1248,6 @@ struct msix_entry {
+>   	u16	entry;	/* driver uses to specify entry, OS writes */
+>   };
+>
+> -void pci_msi_setup_pci_dev(struct pci_dev *dev);
+> -
+>   #ifdef CONFIG_PCI_MSI
+>   int pci_msi_vec_count(struct pci_dev *dev);
+>   void pci_msi_shutdown(struct pci_dev *dev);
+>
+
+Cheers,
+
+
+Guilherme Piccoli
 
