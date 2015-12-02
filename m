@@ -1,158 +1,102 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:55595 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932279AbbLBBYy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 20:24:54 -0500
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
-	bhelgaas@google.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	hanjun.guo@linaro.org, tomasz.nowicki@linaro.org,
-	graeme.gregory@linaro.org, dhdang@apm.com,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v7 1/4] acpi: pci: Setup MSI domain for ACPI based pci devices
-Date: Mon, 21 Dec 2015 04:02:34 +0100
-Message-ID: <161215641.FWtaEPFn08@vostro.rjw.lan>
-In-Reply-To: <1449766530-16935-2-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com> <1449766530-16935-2-git-send-email-Suravee.Suthikulpanit@amd.com>
+To: Imre Deak <imre.deak@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jani Nikula <jani.nikula@intel.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	intel-gfx@lists.freedesktop.org,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v5] PCI / PM: Tune down retryable runtime suspend error messages
+Date: Wed, 02 Dec 2015 02:54:45 +0100
+Message-ID: <4357316.BsOyM9M4tL@vostro.rjw.lan>
+In-Reply-To: <1448910175-5904-1-git-send-email-imre.deak@intel.com>
+References: <1448699664-4178-1-git-send-email-imre.deak@intel.com> <1448910175-5904-1-git-send-email-imre.deak@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 10, 2015 08:55:27 AM Suravee Suthikulpanit wrote:
-> This patch introduces pci_msi_register_fwnode_provider() for irqchip
-> to register a callback, to provide a way to determine appropriate MSI
-> domain for a pci device.
+On Monday, November 30, 2015 09:02:55 PM Imre Deak wrote:
+> The runtime PM core doesn't treat EBUSY and EAGAIN retvals from the driver
+> suspend hooks as errors, but they still show up as errors in dmesg. Tune
+> them down. See rpm_suspend() for details of handling these return values.
 > 
-> It also introduces pci_host_bridge_acpi_msi_domain(), which returns
-> the MSI domain of the specified PCI host bridge with DOMAIN_BUS_PCI_MSI
-> bus token. Then, it is assigned to pci device.
+> Note that we use dev_dbg() for the retryable retvals, so after this
+> change you'll need either CONFIG_DYNAMIC_DEBUG or CONFIG_PCI_DEBUG
+> for them to show up in the log.
 > 
-> Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> One problem caused by this was noticed by Daniel: the i915 driver
+> returns EAGAIN to signal a temporary failure to suspend and as a request
+> towards the RPM core for scheduling a suspend again. This is a normal
+> event, but the resulting error message flags a breakage during the
+> driver's automated testing which parses dmesg and picks up the error.
+> 
+> Reported-by: Daniel Vetter <daniel.vetter@intel.com>
+> Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=92992
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Signed-off-by: Imre Deak <imre.deak@intel.com>
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Bjorn,
+
+Are you going to handle this one or should I take care of it?
+
+Rafael
+
 
 > ---
->  drivers/pci/pci-acpi.c    | 42 ++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/probe.c       |  2 ++
->  include/linux/irqdomain.h |  5 +++++
->  include/linux/pci.h       | 10 ++++++++++
->  4 files changed, 59 insertions(+)
 > 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index a32ba75..d3f32d6 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -9,7 +9,9 @@
+> v2:
+> - fix compile breake when CONFIG_PM_SLEEP=n (0-day builder)
+> v3:
+> - instead of modifying the suspend_report_result() helper to disinguish
+>   between the runtime and system suspend case, inline the error
+>   printing, it's not used anywhere else (Rafael)
+> v4:
+> - don't refer to log levels as flags in code comment (Rafael)
+> - use pr_debug(), pr_err() instead of the corresponding printk() (Rafael)
+> v5:
+> - clarify commit message (Bjorn)
+> - use dev_dbg, dev_err instead of pr_debug, pr_err (Bjorn)
+> - use %pf in printk format instead of %pF (Bjorn)
+> - make the debug/error messages more meaningful (Bjorn)
+> ---
+>  drivers/pci/pci-driver.c | 16 ++++++++++++++--
+>  1 file changed, 14 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 4446fcb..d7ffd66 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1146,9 +1146,21 @@ static int pci_pm_runtime_suspend(struct device *dev)
+>  	pci_dev->state_saved = false;
+>  	pci_dev->no_d3cold = false;
+>  	error = pm->runtime_suspend(dev);
+> -	suspend_report_result(pm->runtime_suspend, error);
+> -	if (error)
+> +	if (error) {
+> +		/*
+> +		 * -EBUSY and -EAGAIN is used to request the runtime PM core
+> +		 * to schedule a new suspend, so log the event only with debug
+> +		 * log level.
+> +		 */
+> +		if (error == -EBUSY || error == -EAGAIN)
+> +			dev_dbg(dev, "can't suspend now (%pf returned %d)\n",
+> +				pm->runtime_suspend, error);
+> +		else
+> +			dev_err(dev, "can't suspend (%pf returned %d)\n",
+> +				pm->runtime_suspend, error);
+> +
+>  		return error;
+> +	}
+>  	if (!pci_dev->d3cold_allowed)
+>  		pci_dev->no_d3cold = true;
 >  
->  #include <linux/delay.h>
->  #include <linux/init.h>
-> +#include <linux/irqdomain.h>
->  #include <linux/pci.h>
-> +#include <linux/msi.h>
->  #include <linux/pci_hotplug.h>
->  #include <linux/module.h>
->  #include <linux/pci-aspm.h>
-> @@ -689,6 +691,46 @@ static struct acpi_bus_type acpi_pci_bus = {
->  	.cleanup = pci_acpi_cleanup,
->  };
->  
-> +
-> +static struct fwnode_handle *(*pci_msi_get_fwnode_cb)(struct device *dev);
-> +
-> +/**
-> + * pci_msi_register_fwnode_provider - Register callback to retrieve fwnode
-> + * @fn:       Callback matching a device to a fwnode that identifies a PCI
-> + *            MSI domain.
-> + *
-> + * This should be called by irqchip driver, which is the parent of
-> + * the MSI domain to provide callback interface to query fwnode.
-> + */
-> +void
-> +pci_msi_register_fwnode_provider(struct fwnode_handle *(*fn)(struct device *))
-> +{
-> +	pci_msi_get_fwnode_cb = fn;
-> +}
-> +
-> +/**
-> + * pci_host_bridge_acpi_msi_domain - Retrieve MSI domain of a PCI host bridge
-> + * @bus:      The PCI host bridge bus.
-> + *
-> + * This function uses the callback function registered by
-> + * pci_msi_register_fwnode_provider() to retrieve the irq_domain with
-> + * type DOMAIN_BUS_PCI_MSI of the specified host bridge bus.
-> + * This returns NULL on error or when the domain is not found.
-> + */
-> +struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus)
-> +{
-> +	struct fwnode_handle *fwnode;
-> +
-> +	if (!pci_msi_get_fwnode_cb)
-> +		return NULL;
-> +
-> +	fwnode = pci_msi_get_fwnode_cb(&bus->dev);
-> +	if (!fwnode)
-> +		return NULL;
-> +
-> +	return irq_find_matching_fwnode(fwnode, DOMAIN_BUS_PCI_MSI);
-> +}
-> +
->  static int __init acpi_pci_init(void)
->  {
->  	int ret;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index edb1984..553a029 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -672,6 +672,8 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
->  	 * should be called from here.
->  	 */
->  	d = pci_host_bridge_of_msi_domain(bus);
-> +	if (!d)
-> +		d = pci_host_bridge_acpi_msi_domain(bus);
->  
->  	return d;
->  }
-> diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-> index d5e5c5b..a06feda 100644
-> --- a/include/linux/irqdomain.h
-> +++ b/include/linux/irqdomain.h
-> @@ -410,6 +410,11 @@ static inline bool irq_domain_is_hierarchy(struct irq_domain *domain)
->  static inline void irq_dispose_mapping(unsigned int virq) { }
->  static inline void irq_domain_activate_irq(struct irq_data *data) { }
->  static inline void irq_domain_deactivate_irq(struct irq_data *data) { }
-> +static inline struct irq_domain *irq_find_matching_fwnode(
-> +	struct fwnode_handle *fwnode, enum irq_domain_bus_token bus_token)
-> +{
-> +	return NULL;
-> +}
->  #endif /* !CONFIG_IRQ_DOMAIN */
->  
->  #endif /* _LINUX_IRQDOMAIN_H */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 6ae25aa..d86378c 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1946,6 +1946,16 @@ static inline struct irq_domain *
->  pci_host_bridge_of_msi_domain(struct pci_bus *bus) { return NULL; }
->  #endif  /* CONFIG_OF */
->  
-> +#ifdef CONFIG_ACPI
-> +struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus);
-> +
-> +void
-> +pci_msi_register_fwnode_provider(struct fwnode_handle *(*fn)(struct device *));
-> +#else
-> +static inline struct irq_domain *
-> +pci_host_bridge_acpi_msi_domain(struct pci_bus *bus) { return NULL; }
-> +#endif
-> +
->  #ifdef CONFIG_EEH
->  static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
->  {
 > 
 
 -- 
