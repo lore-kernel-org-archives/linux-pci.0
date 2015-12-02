@@ -1,215 +1,109 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Grygorii Strashko <grygorii.strashko@ti.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	<linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-CC: <tony@atomide.com>, <nsekhar@ti.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-samsung-soc@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-	<linux-sh@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Kukjin Kim <kgene@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>
-Subject: [PATCH v3] PCI: hosts: mark pcie/pci (msi) irq cascade handler as IRQF_NO_THREAD
-Date: Thu, 10 Dec 2015 21:18:20 +0200
-Message-ID: <1449775100-30877-1-git-send-email-grygorii.strashko@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:45887 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750877AbbLBFlr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Dec 2015 00:41:47 -0500
+Received: from localhost
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 2 Dec 2015 11:11:44 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id EC1B1E0061
+	for <linux-pci@vger.kernel.org>; Wed,  2 Dec 2015 11:12:22 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay01.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tB25feIG6095138
+	for <linux-pci@vger.kernel.org>; Wed, 2 Dec 2015 11:11:41 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tB25fdba008966
+	for <linux-pci@vger.kernel.org>; Wed, 2 Dec 2015 11:11:39 +0530
+Date: Wed, 2 Dec 2015 16:41:36 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, mpe@ellerman.id.au
+Subject: Re: [PATCH] powerpc/eeh: Fix PE location code
+Message-ID: <20151202054136.GA29523@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1449033440-26213-1-git-send-email-gwshan@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449033440-26213-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On -RT and if kernel is booting with "threadirqs" cmd line parameter
-pcie/pci (msi) irq cascade handlers (like dra7xx_pcie_msi_irq_handler())
-will be forced threaded and, as result, will generate warnings like:
+On Wed, Dec 02, 2015 at 04:17:20PM +1100, Gavin Shan wrote:
 
-WARNING: CPU: 1 PID: 82 at kernel/irq/handle.c:150 handle_irq_event_percpu+0x14c/0x174()
-irq 460 handler irq_default_primary_handler+0x0/0x14 enabled interrupts
-Backtrace:
- (warn_slowpath_common) from [<c0043758>] (warn_slowpath_fmt+0x38/0x40)
- (warn_slowpath_fmt) from [<c0085fd0>] (handle_irq_event_percpu+0x14c/0x174)
- (handle_irq_event_percpu) from [<c008607c>] (handle_irq_event+0x84/0xb8)
- (handle_irq_event) from [<c0089240>] (handle_simple_irq+0x90/0x118)
- (handle_simple_irq) from [<c0085514>] (generic_handle_irq+0x30/0x44)
- (generic_handle_irq) from [<c034a7d4>] (dra7xx_pcie_msi_irq_handler+0x7c/0x8c)
- (dra7xx_pcie_msi_irq_handler) from [<c0086f08>] (irq_forced_thread_fn+0x28/0x5c)
- (irq_forced_thread_fn) from [<c00871dc>] (irq_thread+0x128/0x204)
+Please ignore the noise as it should have been sent to linux-ppc
+(not linux-pci) maillist.
 
-This happens because all of them invoke generic_handle_irq() from the
-requsted handler. generic_handle_irq grabs raw_locks and this needs to
-run in raw-irq context.
+Thanks,
+Gavin
 
-This issue was originally reproduced on TI dra7-evem, but, as was
-identified during dicussion [1], other PCI(e) hosts can also suffer
-from this issue. So let's fix all them at once and mark pcie/pci (msi)
-irq cascade handlers IRQF_NO_THREAD explicitly.
-
-[1] https://lkml.org/lkml/2015/11/20/356
-
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Kukjin Kim <kgene@kernel.org>
-Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>
-Cc: Richard Zhu <Richard.Zhu@freescale.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Alexandre Courbot <gnurou@gmail.com>
-Cc: Simon Horman <horms@verge.net.au>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Signed-off-by: Grygorii Strashko <grygorii.strashko@ti.com>
----
-Changes in v3:
- - change applied to all affected pci(e) host drivers in drivers/pci/hosts.
-   After some invsetigation I've decided to not touch arch code - it is not easy
-   to identify all places which need to be fixed. 
-   if it's still required - i can send separate patches for 
-   arch/mips/pci/msi-octeon.c and arch/sparc/kernel/pci_msi.c.
-Links
-v2: https://lkml.org/lkml/2015/11/20/356
-v1: https://lkml.org/lkml/2015/11/5/593
-ref: https://lkml.org/lkml/2015/11/3/660
-
- drivers/pci/host/pci-dra7xx.c     | 13 ++++++++++++-
- drivers/pci/host/pci-exynos.c     |  3 ++-
- drivers/pci/host/pci-imx6.c       |  3 ++-
- drivers/pci/host/pci-tegra.c      |  2 +-
- drivers/pci/host/pcie-rcar.c      |  6 ++++--
- drivers/pci/host/pcie-spear13xx.c |  3 ++-
- drivers/pci/host/pcie-xilinx.c    |  3 ++-
- 7 files changed, 25 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 8c36880..0415192 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 		return -EINVAL;
- 	}
- 
-+	/*
-+	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
-+	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
-+	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
-+	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
-+	 * which, in turn, will be resolved to handle_simple_irq() call.
-+	 * The handle_simple_irq() expected to be called with IRQ disabled, as
-+	 * result kernle will display warning:
-+	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
-+	 */
- 	ret = devm_request_irq(&pdev->dev, pp->irq,
--			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
-+			       dra7xx_pcie_msi_irq_handler,
-+			       IRQF_SHARED | IRQF_NO_THREAD,
- 			       "dra7-pcie-msi",	pp);
- 	if (ret) {
- 		dev_err(&pdev->dev, "failed to request irq\n");
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 01095e1..d997d22 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -522,7 +522,8 @@ static int __init exynos_add_pcie_port(struct pcie_port *pp,
- 
- 		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
- 					exynos_pcie_msi_irq_handler,
--					IRQF_SHARED, "exynos-pcie", pp);
-+					IRQF_SHARED | IRQF_NO_THREAD,
-+					"exynos-pcie", pp);
- 		if (ret) {
- 			dev_err(&pdev->dev, "failed to request msi irq\n");
- 			return ret;
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 22e8224..9ce7cd1 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -537,7 +537,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
- 
- 		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
- 				       imx6_pcie_msi_handler,
--				       IRQF_SHARED, "mx6-pcie-msi", pp);
-+				       IRQF_SHARED | IRQF_NO_THREAD,
-+				       "mx6-pcie-msi", pp);
- 		if (ret) {
- 			dev_err(&pdev->dev, "failed to request MSI irq\n");
- 			return ret;
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 3018ae5..3032311 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -1288,7 +1288,7 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
- 
- 	msi->irq = err;
- 
--	err = request_irq(msi->irq, tegra_pcie_msi_irq, 0,
-+	err = request_irq(msi->irq, tegra_pcie_msi_irq, IRQF_NO_THREAD,
- 			  tegra_msi_irq_chip.name, pcie);
- 	if (err < 0) {
- 		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index f4fa6c5..414c336 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -720,14 +720,16 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
- 
- 	/* Two irqs are for MSI, but they are also used for non-MSI irqs */
- 	err = devm_request_irq(&pdev->dev, msi->irq1, rcar_pcie_msi_irq,
--			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
-+			       IRQF_SHARED | IRQF_NO_THREAD,
-+			       rcar_msi_irq_chip.name, pcie);
- 	if (err < 0) {
- 		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
- 		goto err;
- 	}
- 
- 	err = devm_request_irq(&pdev->dev, msi->irq2, rcar_pcie_msi_irq,
--			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
-+			       IRQF_SHARED | IRQF_NO_THREAD,
-+			       rcar_msi_irq_chip.name, pcie);
- 	if (err < 0) {
- 		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
- 		goto err;
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index b95b756..a6cd823 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -279,7 +279,8 @@ static int spear13xx_add_pcie_port(struct pcie_port *pp,
- 		return -ENODEV;
- 	}
- 	ret = devm_request_irq(dev, pp->irq, spear13xx_pcie_irq_handler,
--			       IRQF_SHARED, "spear1340-pcie", pp);
-+			       IRQF_SHARED | IRQF_NO_THREAD,
-+			       "spear1340-pcie", pp);
- 	if (ret) {
- 		dev_err(dev, "failed to request irq %d\n", pp->irq);
- 		return ret;
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 3c7a0d5..4cfa463 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -781,7 +781,8 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
- 
- 	port->irq = irq_of_parse_and_map(node, 0);
- 	err = devm_request_irq(dev, port->irq, xilinx_pcie_intr_handler,
--			       IRQF_SHARED, "xilinx-pcie", port);
-+			       IRQF_SHARED | IRQF_NO_THREAD,
-+			       "xilinx-pcie", port);
- 	if (err) {
- 		dev_err(dev, "unable to request irq %d\n", port->irq);
- 		return err;
--- 
-2.6.4
+>In eeh_pe_loc_get(), the PE location code is retrieved from the
+>"ibm,loc-code" property of the device node for the bridge of the
+>PE's primary bus. It's not correct because the property indicates
+>the parent PE's location code.
+>
+>This reads the correct PE location code from "ibm,io-base-loc-code"
+>or "ibm,slot-location-code" property of PE parent bus's device node.
+>
+>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>---
+> arch/powerpc/kernel/eeh_pe.c | 33 +++++++++++++++------------------
+> 1 file changed, 15 insertions(+), 18 deletions(-)
+>
+>diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+>index 8654cb1..ca9e537 100644
+>--- a/arch/powerpc/kernel/eeh_pe.c
+>+++ b/arch/powerpc/kernel/eeh_pe.c
+>@@ -883,32 +883,29 @@ void eeh_pe_restore_bars(struct eeh_pe *pe)
+> const char *eeh_pe_loc_get(struct eeh_pe *pe)
+> {
+> 	struct pci_bus *bus = eeh_pe_bus_get(pe);
+>-	struct device_node *dn = pci_bus_to_OF_node(bus);
+>+	struct device_node *dn;
+> 	const char *loc = NULL;
+>
+>-	if (!dn)
+>-		goto out;
+>+	while (bus) {
+>+		dn = pci_bus_to_OF_node(bus);
+>+		if (!dn) {
+>+			bus = bus->parent;
+>+			continue;
+>+		}
+>
+>-	/* PHB PE or root PE ? */
+>-	if (pci_is_root_bus(bus)) {
+>-		loc = of_get_property(dn, "ibm,loc-code", NULL);
+>-		if (!loc)
+>+		if (pci_is_root_bus(bus))
+> 			loc = of_get_property(dn, "ibm,io-base-loc-code", NULL);
+>+		else
+>+			loc = of_get_property(dn, "ibm,slot-location-code",
+>+					      NULL);
+>+
+> 		if (loc)
+>-			goto out;
+>+			return loc;
+>
+>-		/* Check the root port */
+>-		dn = dn->child;
+>-		if (!dn)
+>-			goto out;
+>+		bus = bus->parent;
+> 	}
+>
+>-	loc = of_get_property(dn, "ibm,loc-code", NULL);
+>-	if (!loc)
+>-		loc = of_get_property(dn, "ibm,slot-location-code", NULL);
+>-
+>-out:
+>-	return loc ? loc : "N/A";
+>+	return "N/A";
+> }
+>
+> /**
+>-- 
+>2.1.0
+>
 
