@@ -1,97 +1,96 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 7 Dec 2015 10:06:49 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Julia Lawall <Julia.Lawall@lip6.fr>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Len Brown <lenb@kernel.org>
-Subject: Re: [PATCH] PCI: constify pci_platform_pm_ops structure
-Message-ID: <20151207160649.GG7994@localhost>
-References: <1449419625-29045-1-git-send-email-Julia.Lawall@lip6.fr>
- <1556686.IXJIjFBvQx@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hauke-m.de ([5.39.93.123]:60820 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758327AbbLBOaI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 2 Dec 2015 09:30:08 -0500
+Subject: Re: [PATCH v4 4/5] PCI: iproc: Add iProc PCIe MSI support
+To: Ray Jui <rjui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>
+References: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
+ <1448645868-5730-5-git-send-email-rjui@broadcom.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Message-ID: <565F006B.9010605@hauke-m.de>
+Date: Wed, 2 Dec 2015 15:30:03 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1556686.IXJIjFBvQx@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1448645868-5730-5-git-send-email-rjui@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 07, 2015 at 02:41:34AM +0100, Rafael J. Wysocki wrote:
-> On Sunday, December 06, 2015 05:33:45 PM Julia Lawall wrote:
-> > The pci_platform_pm_ops structure is never modified, so declare it as
-> > const.
-> > 
-> > Done with the help of Coccinelle.
-> > 
-> > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+On 11/27/2015 06:37 PM, Ray Jui wrote:
+> This patch adds PCIe MSI support for both PAXB and PAXC interfaces on
+> all iProc based platforms
 > 
-> OK
+> The iProc PCIe MSI support deploys an event queue based implementation.
+> Each event queue is serviced by a GIC interrupt and can support up to 64
+> MSI vectors. Host memory is allocated for the event queues, and each event
+> queue consists of 64 word-sized entries. MSI data is written to the
+> lower 16-bit of each entry, whereas the upper 16-bit of the entry is
+> reserved for the controller for internal processing
 > 
-> Bjorn, do you want me to handle this one?
-
-Sure, sounds good to me.
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> > ---
-> >  drivers/pci/pci-acpi.c |    2 +-
-> >  drivers/pci/pci.c      |    4 ++--
-> >  drivers/pci/pci.h      |    2 +-
-> >  3 files changed, 4 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> > index a32ba75..8400f80 100644
-> > --- a/drivers/pci/pci-acpi.c
-> > +++ b/drivers/pci/pci-acpi.c
-> > @@ -529,7 +529,7 @@ static bool acpi_pci_need_resume(struct pci_dev *dev)
-> >  	return !!adev->power.flags.dsw_present;
-> >  }
-> >  
-> > -static struct pci_platform_pm_ops acpi_pci_platform_pm = {
-> > +static const struct pci_platform_pm_ops acpi_pci_platform_pm = {
-> >  	.is_manageable = acpi_pci_power_manageable,
-> >  	.set_state = acpi_pci_set_power_state,
-> >  	.choose_state = acpi_pci_choose_state,
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 314db8c..d1a7105 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -527,9 +527,9 @@ static void pci_restore_bars(struct pci_dev *dev)
-> >  		pci_update_resource(dev, i);
-> >  }
-> >  
-> > -static struct pci_platform_pm_ops *pci_platform_pm;
-> > +static const struct pci_platform_pm_ops *pci_platform_pm;
-> >  
-> > -int pci_set_platform_pm(struct pci_platform_pm_ops *ops)
-> > +int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
-> >  {
-> >  	if (!ops->is_manageable || !ops->set_state || !ops->choose_state
-> >  	    || !ops->sleep_wake)
-> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> > index d390fc1..f6f151a 100644
-> > --- a/drivers/pci/pci.h
-> > +++ b/drivers/pci/pci.h
-> > @@ -68,7 +68,7 @@ struct pci_platform_pm_ops {
-> >  	bool (*need_resume)(struct pci_dev *dev);
-> >  };
-> >  
-> > -int pci_set_platform_pm(struct pci_platform_pm_ops *ops);
-> > +int pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
-> >  void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
-> >  void pci_power_up(struct pci_dev *dev);
-> >  void pci_disable_enabled_device(struct pci_dev *dev);
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Each event queue is tracked by a head pointer and tail pointer. Head
+> pointer indicates the next entry in the event queue to be processed by
+> the driver and is updated by the driver after processing is done.
+> The controller uses the tail pointer as the next MSI data insertion
+> point. The controller ensures MSI data is flushed to host memory before
+> updating the tail pointer and then triggering the interrupt
 > 
-> -- 
-> I speak only for myself.
-> Rafael J. Wysocki, Intel Open Source Technology Center.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> MSI IRQ affinity is supported by evenly distributing the interrupts to
+> each CPU core. MSI vector is moved from one GIC interrupt to another in
+> order to steer to the target CPU
+> 
+> Therefore, the actual number of supported MSI vectors is:
+> 
+> M * 64 / N
+> 
+> where M denotes the number of GIC interrupts (event queues), and N
+> denotes the number of CPU cores
+> 
+> This iProc event queue based MSI support should not be used with newer
+> platforms with integrated MSI support in the GIC (e.g., giv2m or
+> gicv3-its)
+> 
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
+> Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+> Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
+> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+> ---
+>  drivers/pci/host/Kconfig               |   9 +
+>  drivers/pci/host/Makefile              |   1 +
+>  drivers/pci/host/pcie-iproc-bcma.c     |   1 +
+>  drivers/pci/host/pcie-iproc-msi.c      | 675 +++++++++++++++++++++++++++++++++
+>  drivers/pci/host/pcie-iproc-platform.c |   1 +
+>  drivers/pci/host/pcie-iproc.c          |  26 ++
+>  drivers/pci/host/pcie-iproc.h          |  23 +-
+>  7 files changed, 734 insertions(+), 2 deletions(-)
+>  create mode 100644 drivers/pci/host/pcie-iproc-msi.c
+> 
+
+.....
+>  
+>  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+>  int iproc_pcie_remove(struct iproc_pcie *pcie);
+>  
+> +#ifdef CONFIG_PCI_MSI
+> +int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
+> +void iproc_msi_exit(struct iproc_pcie *pcie);
+> +#else
+> +static inline int iproc_msi_init(struct iproc_pcie *pcie,
+> +				 struct device_node *node)
+> +{
+> +	return -ENODEV;
+> +}
+> +static void iproc_msi_exit(struct iproc_pcie *pcie)
+
+Please use static inline here.
+
+> +{
+> +}
+> +#endif
+> +
+>  #endif /* _PCIE_IPROC_H */
+> 
+
+Hauke
