@@ -1,80 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v3 0/9] phy: use syscon framework APIs to set ctrl mod reg
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1450170968-11282-1-git-send-email-kishon@ti.com>
- <725110094.6UkMkcy8u7@wuerfel> <566FF621.2040307@ti.com>
- <11176831.mhgJlIuj0S@wuerfel>
-CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>, <robh+dt@kernel.org>,
-	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rogerq@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-	<linux-usb@vger.kernel.org>, <tony@atomide.com>, <t-kristo@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <56700BC0.7020007@ti.com>
-Date: Tue, 15 Dec 2015 18:16:56 +0530
-MIME-Version: 1.0
-In-Reply-To: <11176831.mhgJlIuj0S@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:41748 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756762AbbLBWv6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Dec 2015 17:51:58 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, devicetree@vger.kernel.org,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH v2 3/4] PCI: rcar: add gen2 fallback compatibility string
+Date: Thu,  3 Dec 2015 07:51:39 +0900
+Message-Id: <1449096700-23304-4-git-send-email-horms+renesas@verge.net.au>
+In-Reply-To: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
+References: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Add fallback compatibility string for R-Car Gen 2 family.
+This is in keeping with the fallback scheme being adopted wherever
+appropriate for drivers for Renesas SoCs.
 
-On Tuesday 15 December 2015 05:25 PM, Arnd Bergmann wrote:
-> On Tuesday 15 December 2015 16:44:41 Kishon Vijay Abraham I wrote:
->> Hi Arnd,
->>
->> On Tuesday 15 December 2015 04:26 PM, Arnd Bergmann wrote:
->>> On Tuesday 15 December 2015 14:45:59 Kishon Vijay Abraham I wrote:
->>>> This series is basically to deprecate using phy-omap-control and use
->>>> syscon APIs to program the control module registers.
->>>>
->>>> Changes from v2:
->>>> No changes.
->>>>
->>>> Changes from v1:
->>>> *) cleanup ti_pipe3_probe in multiple steps
->>>> *) other minor cleanups
->>>>
->>>> Changes from [1] in PHY patches include
->>>> *) cleanup ti_pipe3_probe
->>>> *) have mask, power_on and power_off values in usb_phy_data for
->>>>    omap-usb2 phy
->>>>
->>>> The patches have been pushed to
->>>>         git://git.ti.com/linux-phy/linux-phy.git syscon
->>>>
->>>> [1] -> https://lkml.org/lkml/2015/6/23/189
->>>>
->>>> All the testing was done both before applying the dt patches and after
->>>> applying the dt patches (dt patches will be posted shortly).
->>>>
->>>
->>> Can you explain here what the conversion is good for? Why do you
->>> prefer the syscon mapping over a high-level driver in this case?
->>
->> phy-omap-control driver was added when there was no proper
->> infrastructure for doing control module initializations. The
->> phy-omap-control driver is not an 'actual' PHY driver and it
->> was just a hack to do PHY related control module initializations.
->> phy-omap-control is also getting unmanageable with the number of
->> platforms each having number of modules (like USB, SATA, PCIe),
->> using the same driver for control module initializations.
->>
->> Now with SYSCON framework being added to the kernel, phy-omap-control
->> shouldn't be needed and it also provides a uniform API across all the
->> modules to program the control module.
-> 
-> Ok, so the "phy-control" devices were really just a few registers of
-> a system controller device that does a lot of other things as well, right?
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
-right.
-> 
-> Can you put your description above into the cover-letter for the series,
-> and the merge commit?
+---
+v2
+* Include "rcar-" in new compatibility string
+---
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 13 ++++++++++---
+ drivers/pci/host/pcie-rcar.c                       |  1 +
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
-Sure.
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+index 29d3b989d3b0..6b4d2f798386 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -1,8 +1,15 @@
+ * Renesas RCar PCIe interface
+ 
+ Required properties:
+-- compatible: should contain one of the following
+-	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791"
++compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
++	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
++	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
++	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
++
++	    When compatible with the generic version, nodes must list the
++	    SoC-specific version corresponding to the platform first
++	    followed by the generic version.
++
+ - reg: base address and length of the pcie controller registers.
+ - #address-cells: set to <3>
+ - #size-cells: set to <2>
+@@ -25,7 +32,7 @@ Example:
+ SoC specific DT Entry:
+ 
+ 	pcie: pcie@fe000000 {
+-		compatible = "renesas,pcie-r8a7791";
++		compatible = "renesas,pcie-r8a7791", "renesas,pcie-rcar-gen2";
+ 		reg = <0 0xfe000000 0 0x80000>;
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index f4fa6c537448..047279bdc3fe 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -917,6 +917,7 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
+ 
+ static const struct of_device_id rcar_pcie_of_match[] = {
+ 	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
++	{ .compatible = "renesas,pcie-rcar-gen2", .data = rcar_pcie_hw_init },
+ 	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
+ 	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
+ 	{},
+-- 
+2.1.4
 
-Thanks
-Kishon
