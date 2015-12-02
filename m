@@ -1,125 +1,100 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Jon Masters <jcm@redhat.com>, Arnd Bergmann <arnd@arndb.de>
-CC: Tomasz Nowicki <tn@semihalf.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"okaya@codeaurora.org" <okaya@codeaurora.org>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"Stefano.Stabellini@eu.citrix.com" <Stefano.Stabellini@eu.citrix.com>,
-	"robert.richter@caviumnetworks.com"
-	<robert.richter@caviumnetworks.com>,
-	"mw@semihalf.com" <mw@semihalf.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	Wangyijing <wangyijing@huawei.com>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	"jchandra@broadcom.com" <jchandra@broadcom.com>
-Subject: RE: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
- against platfrom specific quirks.
-Date: Tue, 22 Dec 2015 17:49:47 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EC18865@lhreml503-mbb>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
- <1450278993-12664-23-git-send-email-tn@semihalf.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EC14C0F@lhreml503-mbb>
- <201512211510.32029.arnd@arndb.de>
- <335CDE2E-B588-43A8-8665-6023AFD0EA04@redhat.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EC17CAC@lhreml503-mbb>
- <56797C16.2020802@redhat.com> <56797E20.2080107@redhat.com>
-In-Reply-To: <56797E20.2080107@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:17641 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964902AbbLBRXq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Dec 2015 12:23:46 -0500
+Subject: Re: [PATCH v4 0/5] Add iProc PCIe PAXC and MSI support
+To: Bjorn Helgaas <bhelgaas@google.com>
+References: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+Message-ID: <565F2920.8030400@broadcom.com>
+Date: Wed, 2 Dec 2015 09:23:44 -0800
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Bjorn,
 
-> -----Original Message-----
-> From: Jon Masters [mailto:jcm@redhat.com]
-> Sent: 22 December 2015 16:45
-> To: Gabriele Paoloni; Arnd Bergmann
-> Cc: Tomasz Nowicki; bhelgaas@google.com; will.deacon@arm.com;
-> catalin.marinas@arm.com; rjw@rjwysocki.net; hanjun.guo@linaro.org;
-> Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org;
-> jiang.liu@linux.intel.com; Stefano.Stabellini@eu.citrix.com;
-> robert.richter@caviumnetworks.com; mw@semihalf.com; Liviu.Dudau@arm.com;
-> ddaney@caviumnetworks.com; tglx@linutronix.de; Wangyijing;
-> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
-> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
-> acpi@lists.linaro.org; jchandra@broadcom.com
-> Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space
-> accessors against platfrom specific quirks.
-> 
-> On 12/22/2015 11:36 AM, Jon Masters wrote:
-> > On 12/22/2015 04:29 AM, Gabriele Paoloni wrote:
-> >> Hi Jon, thanks for replying
-> >>
-> >>> -----Original Message-----
-> >>> From: Jon Masters [mailto:jcm@redhat.com]
-> >>> Sent: 21 December 2015 23:11
-> >>> To: Arnd Bergmann
-> >>> Cc: Gabriele Paoloni; Tomasz Nowicki; bhelgaas@google.com;
-> >>> will.deacon@arm.com; catalin.marinas@arm.com; rjw@rjwysocki.net;
-> >>> hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com;
-> >>> okaya@codeaurora.org; jiang.liu@linux.intel.com;
-> >>> Stefano.Stabellini@eu.citrix.com; robert.richter@caviumnetworks.com;
-> >>> mw@semihalf.com; Liviu.Dudau@arm.com; ddaney@caviumnetworks.com;
-> >>> tglx@linutronix.de; Wangyijing; Suravee.Suthikulpanit@amd.com;
-> >>> msalter@redhat.com; linux- pci@vger.kernel.org;
-> >>> linux-arm-kernel@lists.infradead.org; linux- acpi@vger.kernel.org;
-> >>> linux-kernel@vger.kernel.org; linaro- acpi@lists.linaro.org;
-> >>> jchandra@broadcom.com
-> >>> Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space
-> >>> accessors against platfrom specific quirks.
-> >>>
-> >>> Sorry for top-posting. A quick note that SMBIOS3 is required by
-> SBBR
-> >>> so it can be presumed that compliant platforms will provide quirks
-> via DMI.
-> >>
-> >> Ok so you completely clarified my question 1). Many Thanks for this
-> >
-> > No problem. One of the (many) reasons I pushed for requiring
-> > SMBIOS/DMI in SBBR (I was lead author of one of the early drafts of
-> > that document) was to make the experience ultimately equivalent
-> across architectures.
-> > We already know how to do quirks and handle platform deviations, and
-> > the major Operating System vendors did not want to reinvent the wheel.
-> 
-> Additional: it is clear that more prescription is required to get the
-> vendors onto the bandwagon that we have with other architectures (e.g.
-> that other one). So there will be a Red Hat "ARM server whitepaper"
-> coming in the early new year that will include the kind of "server 101"
-> material we want to make sure people know. Things like making sure you
-> implement and test PCIe correctly, handle backward compatibility (you
-> will build hardware in the future that runs my existing OS release),
-> design the hardware to allow for workarounds later, etc. I expect some
-> other Operating System vendors to be involved in reviewing that.
-> 
-> Ultimately my objective is to make this whole thing dull and boring.
-> You will get RHEL(SA)/upstream kernels and it will either boot or it
-> will not. If it does not boot, vendor X screwed up their hardware. We
-> know this story, it's been this way for over a decade already, and that
-> is exactly how it is going to be with ARM servers shortly.
+Is there any more change that you want me to make from the current patch 
+set besides the inline comment from Hauke on the MSI patch?
 
-Ok got it.
+Thanks,
 
-Many Thanks
+Ray
 
-Gab
-
-> 
-> Jon.
-
+On 11/27/2015 9:37 AM, Ray Jui wrote:
+> This patch series adds support for the iProc PAXC interface and support for
+> event queue based MSI, integrated in the iProc PCIe core
+>
+> This patch series is based on Linux v4.4-rc1 and is avaliable here:
+> https://github.com/Broadcom/cygnus-linux/tree/iproc-msi-v4
+>
+> Between v4 and v3, changes are low risk. Sanity tested below:
+> PAXB:
+> - Broadcom NS2 SVK board with Intel e1000e network card
+>
+> Changes from v3:
+> - Detect the number of possible CPUs instead online CPUs in the driver. Note
+> CPU notifier based implementation still needs to be added in the future, for
+> proper support of MSI IRQ affinity when CPU is brought online/offline at
+> runtime. Support in this dirver will be added when we support CPU hotplug in
+> one of iProc family of SoCs so the changes can be tested
+> - Use dma_zalloc_coherent for event queue host memory allocation and zeoring
+>
+> Changes from v2:
+> - Improved descriptions in the iProc MSI commit message
+> - Removed redundant host memory used for MSI address. The MSI posted writes
+> never really hit the memory. Use iProc PCIe controller base address instead
+> - Fixed deadlock when MSI vectors are used up
+> - Enforced the number of MSI groups to always be multiple of the number of CPUs
+> - Improved the efficiency of MSI event processing by only updating the head
+> pointer after finishing processing all outstanding events
+> - Fixed error handling code to make sure all configurations are rolled back
+> - Added code to zero the host memory used for event queues after allocation
+> - Removed redundant 'brcm,num-eq-region' and 'brcm,num-msi-msg-region' DT
+>    properties. Now determine the number of regions based on interface type
+> - Other misc. changes
+>
+> Changes from v1:
+> - Fixed incorrect 1-to-1 mapping between MSI vector and GIC interrupt. Now the
+> driver supports multiple MSI vectors per GIC interrupt
+> - Added MSI IRQ affinity support by distributing GIC interrupts across
+> available CPU cores and dynamically steer MSI vectors to the target CPU
+> - replace readl/writel with readl_relaxed/writel_relaxed since all register
+> accesses within the iProc MSI driver are to/from the same I/O block, i.e., the
+> iProc PCIe core
+> - Removed all redundant irq_chip callback assignments
+> - Changed to use uncached host memory for both MSI posted writes and event
+> queues
+> - Add functions to free resources in error/exit cases
+> - In pcie-iproc-platform.c, pass in interface type through OF device data
+> - Moved define for max number of interrupts from pcie-iproc.h to
+> pcie-iproc-msi.c
+> - Other misc. changes
+>
+> Ray Jui (5):
+>    PCI: iproc: Update iProc PCIe device tree binding
+>    PCI: iproc: Add PAXC interface support
+>    PCI: iproc: Add iProc PCIe MSI device tree binding
+>    PCI: iproc: Add iProc PCIe MSI support
+>    ARM: dts: Enable MSI support for Broadcom Cygnus
+>
+>   .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  40 +-
+>   arch/arm/boot/dts/bcm-cygnus.dtsi                  |  22 +
+>   drivers/pci/host/Kconfig                           |   9 +
+>   drivers/pci/host/Makefile                          |   1 +
+>   drivers/pci/host/pcie-iproc-bcma.c                 |   1 +
+>   drivers/pci/host/pcie-iproc-msi.c                  | 675 +++++++++++++++++++++
+>   drivers/pci/host/pcie-iproc-platform.c             |  25 +-
+>   drivers/pci/host/pcie-iproc.c                      | 228 +++++--
+>   drivers/pci/host/pcie-iproc.h                      |  42 +-
+>   9 files changed, 1000 insertions(+), 43 deletions(-)
+>   create mode 100644 drivers/pci/host/pcie-iproc-msi.c
+>
