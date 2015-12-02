@@ -1,82 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:60734 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932262AbbLOJQb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Dec 2015 04:16:31 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <kishon@ti.com>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
-CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rogerq@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-	<linux-usb@vger.kernel.org>, <tony@atomide.com>, <t-kristo@ti.com>
-Subject: [PATCH v3 0/9] phy: use syscon framework APIs to set ctrl mod reg
-Date: Tue, 15 Dec 2015 14:45:59 +0530
-Message-ID: <1450170968-11282-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from kirsty.vergenet.net ([202.4.237.240]:41748 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756762AbbLBWwC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Dec 2015 17:52:02 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, devicetree@vger.kernel.org,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH v2 1/4] PCI: rcar-gen2: add gen2 fallback compatibility string
+Date: Thu,  3 Dec 2015 07:51:37 +0900
+Message-Id: <1449096700-23304-2-git-send-email-horms+renesas@verge.net.au>
+In-Reply-To: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
+References: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series is basically to deprecate using phy-omap-control and use
-syscon APIs to program the control module registers.
+Add fallback compatibility string for R-Car Gen 2 family.
+This is in keeping with the fallback scheme being adopted wherever
+appropriate for drivers for Renesas SoCs.
 
-Changes from v2:
-No changes.
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
-Changes from v1:
-*) cleanup ti_pipe3_probe in multiple steps
-*) other minor cleanups
+---
+v2
+* Include "rcar-" in new compatibility string
+---
+ Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 11 +++++++++--
+ drivers/pci/host/pci-rcar-gen2.c                        |  1 +
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-Changes from [1] in PHY patches include
-*) cleanup ti_pipe3_probe
-*) have mask, power_on and power_off values in usb_phy_data for
-   omap-usb2 phy
-
-The patches have been pushed to
-	git://git.ti.com/linux-phy/linux-phy.git syscon
-
-[1] -> https://lkml.org/lkml/2015/6/23/189
-
-All the testing was done both before applying the dt patches and after
-applying the dt patches (dt patches will be posted shortly).
-
-Logs with SYSCON DT
-
-DRA72 EVM : http://pastebin.ubuntu.com/14025205/
-DRA7 EVM  : http://pastebin.ubuntu.com/14025212/
-AM43XX EVM: http://pastebin.ubuntu.com/14025222/
-OMAP5 UEVM: http://pastebin.ubuntu.com/14025228/
-
-Logs without SYSCON DT
-
-DRA72 EVM : http://pastebin.ubuntu.com/14025233/
-DRA7 EVM  : http://pastebin.ubuntu.com/14025238/
-AM43XX EVM: http://pastebin.ubuntu.com/14025329/
-OMAP5 UEVM: http://pastebin.ubuntu.com/14025248/
-
-The config I used: http://pastebin.ubuntu.com/14025336/
-
-Kishon Vijay Abraham I (9):
-  phy: ti-pipe3: introduce local struct device* in probe
-  phy: ti-pipe3: move clk initialization to a separate function
-  phy: ti-pipe3: move sysctrl initialization to a separate function
-  phy: ti-pipe3: move mem resource initialization to a separate
-    function
-  phy: ti-pipe3: use ti_pipe3_power_off to power off the PHY during
-    probe
-  phy: ti-pipe3: use *syscon* framework API to power on/off the PHY
-  phy: ti-pipe3: use *syscon* framework API to set PCS value of the PHY
-  phy: omap-usb2: use omap_usb_power_off to power off the PHY during
-    probe
-  phy: omap-usb2: use *syscon* framework API to power on/off the PHY
-
- Documentation/devicetree/bindings/phy/ti-phy.txt |   20 +-
- drivers/phy/phy-omap-usb2.c                      |   96 +++++--
- drivers/phy/phy-ti-pipe3.c                       |  304 ++++++++++++++++------
- include/linux/phy/omap_usb.h                     |   23 ++
- 4 files changed, 340 insertions(+), 103 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+index 891463cb09c2..089a99dcdf10 100644
+--- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
++++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+@@ -8,7 +8,14 @@ OHCI and EHCI controllers.
+ Required properties:
+ - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
+ 	      "renesas,pci-r8a7791" for the R8A7791 SoC;
+-	      "renesas,pci-r8a7794" for the R8A7794 SoC.
++	      "renesas,pci-r8a7794" for the R8A7794 SoC;
++	      "renesas,pci-rcar-gen2" for a generic R-Car Gen2 compatible device.
++
++
++	      When compatible with the generic version, nodes must list the
++	      SoC-specific version corresponding to the platform first
++	      followed by the generic version.
++
+ - reg:	A list of physical regions to access the device: the first is
+ 	the operational registers for the OHCI/EHCI controllers and the
+ 	second is for the bridge configuration and control registers.
+@@ -32,7 +39,7 @@ Optional properties:
+ Example SoC configuration:
+ 
+ 	pci0: pci@ee090000  {
+-		compatible = "renesas,pci-r8a7790";
++		compatible = "renesas,pci-r8a7790", "renesas,pci-rcar-gen2";
+ 		clocks = <&mstp7_clks R8A7790_CLK_EHCI>;
+ 		reg = <0x0 0xee090000 0x0 0xc00>,
+ 		      <0x0 0xee080000 0x0 0x1100>;
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index 62951165dcbb..9980a4bdae7e 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -430,6 +430,7 @@ static int rcar_pci_probe(struct platform_device *pdev)
+ }
+ 
+ static struct of_device_id rcar_pci_of_match[] = {
++	{ .compatible = "renesas,pci-rcar-gen2", },
+ 	{ .compatible = "renesas,pci-r8a7790", },
+ 	{ .compatible = "renesas,pci-r8a7791", },
+ 	{ .compatible = "renesas,pci-r8a7794", },
 -- 
-1.7.9.5
+2.1.4
 
