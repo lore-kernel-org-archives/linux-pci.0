@@ -1,63 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 10 Dec 2015 11:25:08 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Michal Simek <michal.simek@xilinx.com>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	sorenb@xilinx.com, bhelgaas@google.com, arnd@arndb.de,
-	tinamdar@apm.com, treding@nvidia.com, rjui@broadcom.com,
-	Minghuan.Lian@freescale.com, m-karicheri2@ti.com, hauke@hauke-m.de,
-	marc.zyngier@arm.com, dhdang@apm.com, sbranden@broadcom.com,
-	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>,
-	Paul Burton <paul.burton@imgtec.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>
-Subject: Re: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Message-ID: <20151210172508.GA367@localhost>
-References: <1448798633-12697-1-git-send-email-bharatku@xilinx.com>
- <20151209231921.GI31930@localhost>
- <5669236D.30805@xilinx.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f65.google.com ([209.85.213.65]:36459 "EHLO
+	mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752331AbbLBE0I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 23:26:08 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5669236D.30805@xilinx.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <565E0FC6.9040209@oracle.com>
+References: <1445979353-1728-1-git-send-email-yinghai@kernel.org>
+	<5633E570.6040906@oracle.com>
+	<CAE9FiQU5YkwFVuEiDOCT+BDrrSLGhTiDfW7GZV6qVtBRKDBpDw@mail.gmail.com>
+	<1448314314.15591.1.camel@oracle.com>
+	<CAE9FiQWiWvOuW3gKRKSDWwPTzNAE7w=u2UiA=XSAXMscxJe2SQ@mail.gmail.com>
+	<565E0FC6.9040209@oracle.com>
+Date: Tue, 1 Dec 2015 20:26:06 -0800
+Message-ID: <CAE9FiQVox=6O3obs7LfFsmyAg3aamEVDp1wSOG1vSxrfLZ8CAA@mail.gmail.com>
+Subject: Re: [PATCH v8 00/61] PCI: Resource allocation cleanup for v4.4
+From: Yinghai Lu <yinghai@kernel.org>
+To: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 10, 2015 at 08:02:05AM +0100, Michal Simek wrote:
-> Hi Bjorn,
-> 
-> On 10.12.2015 00:19, Bjorn Helgaas wrote:
-> > [+cc Michal, Paul, Thierry, Stephen, Alexandre (see irq_dispose_mapping questions below)]
-> > 
-> > On Sun, Nov 29, 2015 at 05:33:53PM +0530, Bharat Kumar Gogada wrote:
-> >> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
-> >>
-> >> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> >> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> >> Acked-by: Rob Herring <robh@kernel.org>
-> > 
-> > This needs either a MAINTAINERS update or an ack from Michal (whose
-> > MAINTAINERS entry matches anything containing "xilinx").
-> 
-> We have done it in this way because driver owners are changing time to
-> time and my entry cover it that I can pass it to appropriate person who
-> is responsible for it.
-> 
-> For this Maintainers part here is my:
-> Acked-by: Michal Simek <michal.simek@xilinx.com>
+On Tue, Dec 1, 2015 at 1:23 PM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
+> The device does work with this patch.
 
-Thanks.
+Good.
 
-For things under drivers/pci/host, I ask for an ack from the
-individual maintainer before applying patches.  As-is (without a
-MAINTAINERS update) I'll be looking for acks from you, Michal, for all
-future changes to pcie-xilinx-nwl.c.  If you want something else, we
-need a MAINTAINERS change.
+> Doesn't this warning mean BAR6
+> resources could not be reserved which means the device driver may not be
+> able to get the BAR6 resource at some point if another device grabs the
+> unreserved resource?
 
-Bjorn
+Current sparc pci only have checking, does not have assign unassigned
+bar from firmware.
+
+because firmware does not assign resource to that BAR6, the driver may
+not need that bar at all.
+
+>
+> David M had pointed out an issue with how OF driver uses the same address
+> range for all ROMs enabling them only one at a time. That seems to be in
+> play here in the issue I am seeing. Does this patch series need to address
+> this?
+
+That trick may have problem when we have devices under bridge. as bridge
+window need to be setup at first.
+
+If the driver really need to use that trick, it should borrow from BAR0 (MEM)
+instead.
+
+Thanks
+
+Yinghai
