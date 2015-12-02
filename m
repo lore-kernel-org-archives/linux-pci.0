@@ -1,40 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:40010 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754316AbbLTKfM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 20 Dec 2015 05:35:12 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1aAbKT-0001t3-Hb
-	for linux-pci@vger.kernel.org; Sun, 20 Dec 2015 11:35:09 +0100
-Received: from 124.123.164.209 ([124.123.164.209])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Sun, 20 Dec 2015 11:35:05 +0100
-Received: from valmikibow by 124.123.164.209 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Sun, 20 Dec 2015 11:35:05 +0100
-To: linux-pci@vger.kernel.org
-From: Valmiki <valmikibow@gmail.com>
-Subject: What is meant by chained interrupt handlers, when to use them.
-Date: Sun, 20 Dec 2015 10:30:35 +0000 (UTC)
-Message-ID: <loom.20151220T112828-725@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from kirsty.vergenet.net ([202.4.237.240]:41741 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756559AbbLBWv5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Dec 2015 17:51:57 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, devicetree@vger.kernel.org,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH v2 0/4] PCI: rcar, rcar-gen2: More Gen2 compatibility strings
+Date: Thu,  3 Dec 2015 07:51:36 +0900
+Message-Id: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm seeing that chained_irq_enter/exit functions are being used in cained 
-irq handlers. 
+Hi,
 
-These chained_irq_enter/exit functions are doing ack, mask, unmask 
-functions from irq chip. 
-Already when an interrupt handler is being executed that IRQ line will be 
-disabled by linux, so what is the purpose of masking/unmasking them.
+this short series adds generic gen2 and SoC-specific r8a7793 compatibility
+strings to the rcar PCI and rcar-gen2 PCIE drivers. The intention is to
+provide a complete set of compatibility strings for known Gen2 SoCs.
 
-What is term chained referring to, does it mean reading interrupt status 
-register and check for bit set one after and another handle that 
-corresponding IRQ, so in a chain fashion.
+Key Changes in v2:
+* Include "rcar-" in generic bindings
 
-Valmiki
+Simon Horman (4):
+  PCI: rcar-gen2: add gen2 fallback compatibility string
+  PCI: rcar-gen2: add device tree support for r8a7793
+  PCI: rcar: add gen2 fallback compatibility string
+  PCI: rcar: add device tree support for r8a7793
+
+ Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 12 ++++++++++--
+ Documentation/devicetree/bindings/pci/rcar-pci.txt      | 14 +++++++++++---
+ drivers/pci/host/pci-rcar-gen2.c                        |  1 +
+ drivers/pci/host/pcie-rcar.c                            |  1 +
+ 4 files changed, 23 insertions(+), 5 deletions(-)
+
+-- 
+2.1.4
 
