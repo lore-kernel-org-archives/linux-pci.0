@@ -1,54 +1,104 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH 1/2] PCI/ACPI: Add ACPI support for non ECAM Host
- Bridge Controllers
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, Liviu.Dudau@arm.com, tn@semihalf.com
-References: <1449155999-220955-1-git-send-email-gabriele.paoloni@huawei.com>
- <1449155999-220955-2-git-send-email-gabriele.paoloni@huawei.com>
-Cc: linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xuwei5@hisilicon.com,
-	linux-acpi@vger.kernel.org, wangzhou1@hisilicon.com,
-	liudongdong3@huawei.com, wangyijing@huawei.com, tglx@linutronix.de,
-	liguozhu@hisilicon.com, jiang.liu@linux.intel.com,
-	linux-arm-kernel@lists.infradead.org
-From: Jeremy Linton <jeremy.linton@arm.com>
-Message-ID: <5661F9DD.7060303@arm.com>
-Date: Fri, 4 Dec 2015 14:38:53 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2on0143.outbound.protection.outlook.com ([207.46.100.143]:41268
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753212AbbLCRHQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Dec 2015 12:07:16 -0500
+From: Jake Oshins <jakeo@microsoft.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	KY Srinivasan <kys@microsoft.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>,
+	"tglx@redhat.com" <tglx@redhat.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v6 7/7] PCI: hv: New paravirtual PCI front-end for Hyper-V
+ VMs
+Date: Thu, 3 Dec 2015 17:07:14 +0000
+Message-ID: <DM2PR0301MB12325F97CE4EA5035031E5B9AB0D0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+References: <1446499996-1350-1-git-send-email-jakeo@microsoft.com>
+ <1446499996-1350-8-git-send-email-jakeo@microsoft.com>
+ <565FB2F5.6050504@linux.intel.com>
+In-Reply-To: <565FB2F5.6050504@linux.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1449155999-220955-2-git-send-email-gabriele.paoloni@huawei.com>
-Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/03/2015 09:19 AM, Gabriele Paoloni wrote:
-> This patch modifies the ARM64 architecure specific PCI framework to
-> support Host Bridge specific quirks. these quirks are need for
-> host bridge controllers that are not fully ECAM compliant.
-> The quirks array allows each vendor to define his own
-> acpi_scan_handler where its own pci_ops can be defined
-> and the global pointer "vendor_specific_ops" should be
-> set to them accordingly.
+> -----Original Message-----
+> From: Jiang Liu [mailto:jiang.liu@linux.intel.com]
+> Sent: Wednesday, December 2, 2015 7:12 PM
+> To: Jake Oshins <jakeo@microsoft.com>; gregkh@linuxfoundation.org; KY
+> Srinivasan <kys@microsoft.com>; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
+> vkuznets@redhat.com; tglx@redhat.com; Haiyang Zhang
+> <haiyangz@microsoft.com>; marc.zyngier@arm.com;
+> bhelgaas@google.com; linux-pci@vger.kernel.org
+> Subject: Re: [PATCH v6 7/7] PCI: hv: New paravirtual PCI front-end for Hyper-
+> V VMs
+> 
+> On 2015/11/3 5:33, jakeo@microsoft.com wrote:
+> > From: Jake Oshins <jakeo@microsoft.com>
+> >
+[...]
+> > +
+> > +/**
+> > + * hv_irq_unmask() - "Unmask" the IRQ by setting its current
+> > + * affinity.
+> > + * @data:	Describes the IRQ
+> > + *
+> > + * Build new a destination for the MSI and make a hypercall to
+> > + * update the Interrupt Redirection Table. "Device Logical ID"
+> > + * is built out of this PCI bus's instance GUID and the function
+> > + * number of the device.
+> > + */
+> > +void hv_irq_unmask(struct irq_data *data)
+> > +{
+> > +	struct msi_desc *msi_desc = irq_data_get_msi_desc(data);
+> > +	struct irq_cfg *cfg = irqd_cfg(data);
+> > +	struct retarget_msi_interrupt params;
+> > +	struct hv_pcibus_device *hbus;
+> > +	struct cpumask *dest;
+> > +	struct pci_bus *pbus;
+> > +	struct pci_dev *pdev;
+> > +	int cpu;
+> > +
+> > +	dest = irq_data_get_affinity_mask(data);
+> > +	pdev = msi_desc_to_pci_dev(msi_desc);
+> > +	pbus = pdev->bus;
+> > +	hbus = container_of(pbus->sysdata, struct hv_pcibus_device,
+> sysdata);
+> > +
+> > +	memset(&params, 0, sizeof(params));
+> > +	params.partition_id = HV_PARTITION_ID_SELF;
+> > +	params.source = 1; /* MSI(-X) */
+> > +	params.address = msi_desc->msg.address_lo;
+> > +	params.data = msi_desc->msg.data;
+> > +	params.device_id = (hbus->hdev->dev_instance.b[5] << 24) |
+> > +			   (hbus->hdev->dev_instance.b[4] << 16) |
+> > +			   (hbus->hdev->dev_instance.b[7] << 8) |
+> > +			   (hbus->hdev->dev_instance.b[6] & 0xf8) |
+> > +			   PCI_FUNC(pdev->devfn);
+> > +	params.vector = cfg->vector;
+> > +
+> > +	for_each_cpu_and(cpu, dest, cpu_online_mask)
+> > +		params.vp_mask |= (1 <<
+> vmbus_cpu_number_to_vp_number(cpu));
+> No knowledge about the HV implementation details, but feel some chances
+> of race here between hv_irq_unmask(), hv_set_affinity() and
+> cpu_up()/cpu_down() when accessing 'dest' and cpu_online_mask.
+> 
+ 
+Thanks.  Is there any architectural contract here?  I tried implementing this by doing this work in the set_affinity() callback, but the vector was often wrong when that callback was invoked.  (It seems to get changed just after set_affinity().)  Can you suggest a durable strategy?
 
-I have a similar set of changes working for a APM based platform. That 
-platform has the same problem, that the default config space access 
-methods don't work.
+I'll respond to all the other comments you sent (and this one, once I understand the right response) and resend.
 
-The one comment I have is that I've tried hard to set it up as a generic 
-quirk system for which the ACPI/PCI subsystem makes the decision about 
-which hardware quirk is being enabled. But its hard because the platform 
-in question claims PNP0A08 too, which IMHO is completely wrong if your 
-not actually compliant. OTOH, I don't want to base it off the DMI data 
-because I don't want it to be tied to a particular implementation.
-
-Lucky, the host bridge VID/PID _CAN_ be read with the default ECAM 
-accessor. The only gocha is that the rescan needs to be restarted once 
-the ops are replaced.
-
-So my question, is does that work for this device as well?
-
-
-
-
+Thanks for your review,
+Jake Oshins
 
