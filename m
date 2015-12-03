@@ -1,65 +1,45 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v3 0/9] phy: use syscon framework APIs to set ctrl mod reg
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1450170968-11282-1-git-send-email-kishon@ti.com>
- <725110094.6UkMkcy8u7@wuerfel>
-CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>, <robh+dt@kernel.org>,
-	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rogerq@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-	<linux-usb@vger.kernel.org>, <tony@atomide.com>, <t-kristo@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <566FF621.2040307@ti.com>
-Date: Tue, 15 Dec 2015 16:44:41 +0530
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>
+Subject: [PATCH 3/3] PCI: altera: fix error when INTX is 4
+Date: Thu, 3 Dec 2015 17:54:49 +0800
+Message-ID: <1449136489-2559-4-git-send-email-lftan@altera.com>
+In-Reply-To: <1449136489-2559-1-git-send-email-lftan@altera.com>
+References: <1449136489-2559-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-In-Reply-To: <725110094.6UkMkcy8u7@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+PCI interrupt lines start at 1, not at 0. So, change INTX_NUM to 5.
 
-On Tuesday 15 December 2015 04:26 PM, Arnd Bergmann wrote:
-> On Tuesday 15 December 2015 14:45:59 Kishon Vijay Abraham I wrote:
->> This series is basically to deprecate using phy-omap-control and use
->> syscon APIs to program the control module registers.
->>
->> Changes from v2:
->> No changes.
->>
->> Changes from v1:
->> *) cleanup ti_pipe3_probe in multiple steps
->> *) other minor cleanups
->>
->> Changes from [1] in PHY patches include
->> *) cleanup ti_pipe3_probe
->> *) have mask, power_on and power_off values in usb_phy_data for
->>    omap-usb2 phy
->>
->> The patches have been pushed to
->>         git://git.ti.com/linux-phy/linux-phy.git syscon
->>
->> [1] -> https://lkml.org/lkml/2015/6/23/189
->>
->> All the testing was done both before applying the dt patches and after
->> applying the dt patches (dt patches will be posted shortly).
->>
-> 
-> Can you explain here what the conversion is good for? Why do you
-> prefer the syscon mapping over a high-level driver in this case?
+Error when PCIe devices have 4 INTX:
+WARNING: CPU: 1 PID: 1 at kernel/irq/irqdomain.c:280
+	irq_domain_associate+0x17c/0x1cc()
+error: hwirq 0x4 is too large for dummy
 
-phy-omap-control driver was added when there was no proper
-infrastructure for doing control module initializations. The
-phy-omap-control driver is not an 'actual' PHY driver and it
-was just a hack to do PHY related control module initializations.
-phy-omap-control is also getting unmanageable with the number of
-platforms each having number of modules (like USB, SATA, PCIe),
-using the same driver for control module initializations.
+Tested on Ethernet adapter card with multi-functions.
 
-Now with SYSCON framework being added to the kernel, phy-omap-control
-shouldn't be needed and it also provides a uniform API across all the
-modules to program the control module.
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+ drivers/pci/host/pcie-altera.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks
-Kishon
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index e4176b3..8b30d4a 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -60,7 +60,7 @@
+ #define TLP_LOOP			500
+ #define RP_DEVFN			0
+ 
+-#define INTX_NUM			4
++#define INTX_NUM			5
+ 
+ #define DWORD_MASK			3
+ 
+-- 
+1.8.2.1
+
