@@ -1,33 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 19 Dec 2015 21:38:50 -0600
-From: Rob Herring <robh@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-omap@vger.kernel.org, pawel.moll@arm.com,
-	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
-	galak@codeaurora.org, rogerq@ti.com, nsekhar@ti.com,
-	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-	tony@atomide.com, t-kristo@ti.com
-Subject: Re: [PATCH v3 7/9] phy: ti-pipe3: use *syscon* framework API to set
- PCS value of the PHY
-Message-ID: <20151220033850.GH9883@rob-hp-laptop>
-References: <1450170968-11282-1-git-send-email-kishon@ti.com>
- <1450170968-11282-8-git-send-email-kishon@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <arnd@arndb.de>, <will.deacon@arm.com>,
+	<catalin.marinas@arm.com>, <hanjun.guo@linaro.org>,
+	<Lorenzo.Pieralisi@arm.com>, <Liviu.Dudau@arm.com>,
+	<tn@semihalf.com>
+CC: <jiang.liu@linux.intel.com>, <tglx@linutronix.de>,
+	<wangyijing@huawei.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linaro-acpi@lists.linaro.org>, <wangzhou1@hisilicon.com>,
+	<liudongdong3@huawei.com>, <xuwei5@hisilicon.com>,
+	<liguozhu@hisilicon.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: [RFC PATCH 0/2] PCI/ACPI: HiSi: Add ACPI support for Hip05 PCIe Host Bridge Controller
+Date: Thu, 3 Dec 2015 23:19:57 +0800
+Message-ID: <1449155999-220955-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450170968-11282-8-git-send-email-kishon@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 15, 2015 at 02:46:06PM +0530, Kishon Vijay Abraham I wrote:
-> Deprecate using phy-omap-control driver to set PCS value of the PHY
-> and start using *syscon* API to do the same.
-> 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> Acked-by: Roger Quadros <rogerq@ti.com>
-> ---
->  Documentation/devicetree/bindings/phy/ti-phy.txt |    2 ++
->  drivers/phy/phy-ti-pipe3.c                       |   34 +++++++++++++++++++++-
->  2 files changed, 35 insertions(+), 1 deletion(-)
+This patchset is based on Nowicki patchset:
+[PATCH V1 00/11] MMCONFIG refactoring and ARM64 PCI hostbridge init based on ACPI
 
-Acked-by: Rob Herring <robh@kernel.org>
+This patchset:
+1) adds ACPI support for non ECAM PCI Host Bridge Controllers
+2) adds ACPI support for Hip05 PCIe Host Bridge Controller
+
+Gabriele Paoloni (1):
+  PCI/ACPI: Add ACPI support for non ECAM Host Bridge Controllers
+
+Gabriele Paoloni (1):
+  PCI/ACPI: HiSi: Add ACPI support for HiSi PCIe Host Bridge
+
+ arch/arm64/kernel/Makefile        |   1 +
+ arch/arm64/kernel/pci.c           |  42 ++++++++
+ arch/arm64/kernel/pci_acpi_hisi.c | 198 ++++++++++++++++++++++++++++++++++++++
+ arch/arm64/kernel/pci_quirks.h    |  24 +++++
+ drivers/acpi/pci_root.c           |   4 +
+ include/acpi/acpi_drivers.h       |   6 ++
+ 6 files changed, 275 insertions(+)
+ create mode 100644 arch/arm64/kernel/pci_acpi_hisi.c
+ create mode 100644 arch/arm64/kernel/pci_quirks.h
+
+-- 
+1.9.1
+
