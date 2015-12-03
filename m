@@ -1,54 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:43127 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932199AbbLSL2Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Dec 2015 06:28:16 -0500
-Date: Sat, 19 Dec 2015 12:27:17 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: KY Srinivasan <kys@microsoft.com>
-cc: Jake Oshins <jakeo@microsoft.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"olaf@aepfle.de" <olaf@aepfle.de>,
-	"apw@canonical.com" <apw@canonical.com>,
-	"vkuznets@redhat.com" <vkuznets@redhat.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v9 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-V
- VMs
-In-Reply-To: <BY2PR0301MB16545331BCB31D708A74C583A0EE0@BY2PR0301MB1654.namprd03.prod.outlook.com>
-Message-ID: <alpine.DEB.2.11.1512191220180.28591@nanos>
-References: <1449701697-6366-1-git-send-email-jakeo@microsoft.com> <BY2PR0301MB16545331BCB31D708A74C583A0EE0@BY2PR0301MB1654.namprd03.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:38390 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760261AbbLCNgS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Dec 2015 08:36:18 -0500
+Received: by wmec201 with SMTP id c201so22437372wme.1
+        for <linux-pci@vger.kernel.org>; Thu, 03 Dec 2015 05:36:17 -0800 (PST)
+From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+To: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+	Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Subject: [PATCH v4 5/5] ARM: dts: ifc6410: enable pcie dt node for this board
+Date: Thu,  3 Dec 2015 15:35:24 +0200
+Message-Id: <1449149725-27607-6-git-send-email-stanimir.varbanov@linaro.org>
+In-Reply-To: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
+References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 15 Dec 2015, KY Srinivasan wrote:
-> 
-> Of these 7 patches, Greg has committed all of the VMBUS
-> related supporting patches (3 patches). Thomas, can you 
-> take the IRQ related patches through your tree.
+Enable pcie dt node and fill pcie dt node with regulator, pinctrl
+and reset gpio, to use the pcie on the ifc6410 board.
 
-That does not make any sense.
+Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+---
+ arch/arm/boot/dts/qcom-apq8064-ifc6410.dts |   26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-> > Jake Oshins (7):
-> >   drivers:hv: Export a function that maps Linux CPU num onto Hyper-V
-> >     proc num
-> >   drivers:hv: Export hv_do_hypercall()
-> >   PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
-> >   PCI: Add fwnode_handle to pci_sysdata
-> >   PCI: irqdomain: Look up IRQ domain by fwnode_handle
-> >   drivers:hv: Define the channel type of Hyper-V PCI Express
-> >     pass-through
-> >   PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
+diff --git a/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts b/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts
+index 11ac608b6d50..f203b94ee460 100644
+--- a/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts
++++ b/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts
+@@ -47,6 +47,18 @@
+ 					bias-disable;
+ 				};
+ 			};
++
++			pcie_pins: pcie_pinmux {
++				mux {
++					pins = "gpio27";
++					function = "gpio";
++				};
++				conf {
++					pins = "gpio27";
++					drive-strength = <12>;
++					bias-disable;
++				};
++			};
+ 		};
+ 
+ 		rpm@108000 {
+@@ -123,6 +135,10 @@
+ 				pm8921_lvs1: lvs1 {
+ 					bias-pull-down;
+ 				};
++
++				pm8921_lvs6: lvs6 {
++					bias-pull-down;
++				};
+ 			};
+ 		};
+ 
+@@ -231,6 +247,16 @@
+ 			status = "okay";
+ 		};
+ 
++		pci@1b500000 {
++			status = "ok";
++			vdda-supply = <&pm8921_s3>;
++			vdda_phy-supply = <&pm8921_lvs6>;
++			vdda_refclk-supply = <&ext_3p3v>;
++			pinctrl-0 = <&pcie_pins>;
++			pinctrl-names = "default";
++			perst-gpio = <&tlmm_pinmux 27 GPIO_ACTIVE_LOW>;
++		};
++
+ 		qcom,ssbi@500000 {
+ 			pmic@0 {
+ 				gpio@150 {
+-- 
+1.7.9.5
 
-That series cannot be ripped apart. The PCI part does not even compile
-w/o the drivers/hv part in place.
-
-Thanks,
-
-	tglx
