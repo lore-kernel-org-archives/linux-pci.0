@@ -1,161 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0079.outbound.protection.outlook.com ([157.56.110.79]:17680
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753376AbbLJQzz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Dec 2015 11:55:55 -0500
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <tglx@linutronix.de>,
-	<jason@lakedaemon.net>, <rjw@rjwysocki.net>, <bhelgaas@google.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	<hanjun.guo@linaro.org>, <tomasz.nowicki@linaro.org>,
-	<graeme.gregory@linaro.org>, <dhdang@apm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v7 1/4] acpi: pci: Setup MSI domain for ACPI based pci devices
-Date: Thu, 10 Dec 2015 08:55:27 -0800
-Message-ID: <1449766530-16935-2-git-send-email-Suravee.Suthikulpanit@amd.com>
-In-Reply-To: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>
+Subject: [PATCH 1/3] PCI: altera: fix incorrect devfn for requester ID
+Date: Thu, 3 Dec 2015 19:17:52 +0800
+Message-ID: <1449141474-3378-2-git-send-email-lftan@altera.com>
+In-Reply-To: <1449141474-3378-1-git-send-email-lftan@altera.com>
+References: <1449141474-3378-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch introduces pci_msi_register_fwnode_provider() for irqchip
-to register a callback, to provide a way to determine appropriate MSI
-domain for a pci device.
+Requester ID should use the rootport devfn and it should be always 0.
+But, devfn argument in these 2 functions can be rootport or endpoint.
+It causes the issue when accessing configuration register from
+multi-functions PCIe devices.
 
-It also introduces pci_host_bridge_acpi_msi_domain(), which returns
-the MSI domain of the specified PCI host bridge with DOMAIN_BUS_PCI_MSI
-bus token. Then, it is assigned to pci device.
+Tested on Ethernet adapter card with multi-functions.
 
-Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
 ---
- drivers/pci/pci-acpi.c    | 42 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c       |  2 ++
- include/linux/irqdomain.h |  5 +++++
- include/linux/pci.h       | 10 ++++++++++
- 4 files changed, 59 insertions(+)
+ drivers/pci/host/pcie-altera.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index a32ba75..d3f32d6 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -9,7 +9,9 @@
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index e5dda38..f05180f 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -57,6 +57,7 @@
+ #define TLP_REQ_ID(bus, devfn)		(((bus) << 8) | (devfn))
+ #define TLP_HDR_SIZE			3
+ #define TLP_LOOP			500
++#define RP_DEVFN			0
  
- #include <linux/delay.h>
- #include <linux/init.h>
-+#include <linux/irqdomain.h>
- #include <linux/pci.h>
-+#include <linux/msi.h>
- #include <linux/pci_hotplug.h>
- #include <linux/module.h>
- #include <linux/pci-aspm.h>
-@@ -689,6 +691,46 @@ static struct acpi_bus_type acpi_pci_bus = {
- 	.cleanup = pci_acpi_cleanup,
- };
+ #define INTX_NUM			4
  
-+
-+static struct fwnode_handle *(*pci_msi_get_fwnode_cb)(struct device *dev);
-+
-+/**
-+ * pci_msi_register_fwnode_provider - Register callback to retrieve fwnode
-+ * @fn:       Callback matching a device to a fwnode that identifies a PCI
-+ *            MSI domain.
-+ *
-+ * This should be called by irqchip driver, which is the parent of
-+ * the MSI domain to provide callback interface to query fwnode.
-+ */
-+void
-+pci_msi_register_fwnode_provider(struct fwnode_handle *(*fn)(struct device *))
-+{
-+	pci_msi_get_fwnode_cb = fn;
-+}
-+
-+/**
-+ * pci_host_bridge_acpi_msi_domain - Retrieve MSI domain of a PCI host bridge
-+ * @bus:      The PCI host bridge bus.
-+ *
-+ * This function uses the callback function registered by
-+ * pci_msi_register_fwnode_provider() to retrieve the irq_domain with
-+ * type DOMAIN_BUS_PCI_MSI of the specified host bridge bus.
-+ * This returns NULL on error or when the domain is not found.
-+ */
-+struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus)
-+{
-+	struct fwnode_handle *fwnode;
-+
-+	if (!pci_msi_get_fwnode_cb)
-+		return NULL;
-+
-+	fwnode = pci_msi_get_fwnode_cb(&bus->dev);
-+	if (!fwnode)
-+		return NULL;
-+
-+	return irq_find_matching_fwnode(fwnode, DOMAIN_BUS_PCI_MSI);
-+}
-+
- static int __init acpi_pci_init(void)
- {
- 	int ret;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index edb1984..553a029 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -672,6 +672,8 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
- 	 * should be called from here.
- 	 */
- 	d = pci_host_bridge_of_msi_domain(bus);
-+	if (!d)
-+		d = pci_host_bridge_acpi_msi_domain(bus);
+@@ -233,7 +234,7 @@ static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus, u32 devfn,
+ 	else
+ 		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGRD1);
  
- 	return d;
- }
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index d5e5c5b..a06feda 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -410,6 +410,11 @@ static inline bool irq_domain_is_hierarchy(struct irq_domain *domain)
- static inline void irq_dispose_mapping(unsigned int virq) { }
- static inline void irq_domain_activate_irq(struct irq_data *data) { }
- static inline void irq_domain_deactivate_irq(struct irq_data *data) { }
-+static inline struct irq_domain *irq_find_matching_fwnode(
-+	struct fwnode_handle *fwnode, enum irq_domain_bus_token bus_token)
-+{
-+	return NULL;
-+}
- #endif /* !CONFIG_IRQ_DOMAIN */
+-	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, devfn),
++	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, RP_DEVFN),
+ 					TLP_READ_TAG, byte_en);
+ 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
  
- #endif /* _LINUX_IRQDOMAIN_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6ae25aa..d86378c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1946,6 +1946,16 @@ static inline struct irq_domain *
- pci_host_bridge_of_msi_domain(struct pci_bus *bus) { return NULL; }
- #endif  /* CONFIG_OF */
+@@ -253,7 +254,7 @@ static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
+ 	else
+ 		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGWR1);
  
-+#ifdef CONFIG_ACPI
-+struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus);
-+
-+void
-+pci_msi_register_fwnode_provider(struct fwnode_handle *(*fn)(struct device *));
-+#else
-+static inline struct irq_domain *
-+pci_host_bridge_acpi_msi_domain(struct pci_bus *bus) { return NULL; }
-+#endif
-+
- #ifdef CONFIG_EEH
- static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
- {
+-	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, devfn),
++	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, RP_DEVFN),
+ 					TLP_WRITE_TAG, byte_en);
+ 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
+ 
 -- 
-2.1.0
+1.8.2.1
 
