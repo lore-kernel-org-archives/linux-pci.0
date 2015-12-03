@@ -1,110 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:33031 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751611AbbLMK6d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Dec 2015 05:58:33 -0500
+Received: from mail.kernel.org ([198.145.29.136]:49033 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753233AbbLCTyB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Dec 2015 14:54:01 -0500
+Subject: [PATCH] PCI: Check for PCI_HEADER_TYPE_BRIDGE equality, not bitmask
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Date: Thu, 03 Dec 2015 13:53:58 -0600
+Message-ID: <20151203195358.26658.3376.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1449970917-12633-8-git-send-email-paul.gortmaker@windriver.com>
-References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
-	<1449970917-12633-8-git-send-email-paul.gortmaker@windriver.com>
-Date: Sun, 13 Dec 2015 11:58:32 +0100
-Message-ID: <CAMuHMdWF+g4hwzcCRGkTYM=TpiBmxOn3GYmr+zO8c0QJUgH1fg@mail.gmail.com>
-Subject: Re: [PATCH 07/10] drivers/pci: make host/pcie-rcar.c explicitly non-modular
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CC MODULE_AUTHOR
+Bit 7 of the "Header Type" register indicates a multi-function device when
+set.  Bits 0-6 contain encoded values, where 0x1 indicates a PCI-PCI
+bridge.  It is incorrect to test this as though it were a mask.
 
-On Sun, Dec 13, 2015 at 2:41 AM, Paul Gortmaker
-<paul.gortmaker@windriver.com> wrote:
-> The Kconfig currently controlling compilation of this code is:
->
-> drivers/pci/host/Kconfig:config PCI_RCAR_GEN2_PCIE
-> drivers/pci/host/Kconfig:       bool "Renesas R-Car PCIe controller"
->
-> ...meaning that it currently is not being built as a module by anyone.
->
-> Lets remove the modular code that is essentially orphaned, so that
-> when reading the driver there is no doubt it is builtin-only.
->
-> Since module_platform_driver() uses the same init level priority as
-> builtin_platform_driver() the init ordering remains unchanged with
-> this commit.
->
-> We don't have to disallow a driver unbind, since that is already
-> done for us in this driver.
->
-> Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
->
-> We also delete the MODULE_LICENSE tag etc. since all that information
-> was (or is now) contained at the top of the file in the comments.
->
-> Cc: Simon Horman <horms@verge.net.au>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-sh@vger.kernel.org
-> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-> ---
->  drivers/pci/host/pcie-rcar.c | 11 ++++-------
->  1 file changed, 4 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index f4fa6c537448..2c619277d265 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -7,6 +7,8 @@
->   *  arch/sh/drivers/pci/ops-sh7786.c
->   *  Copyright (C) 2009 - 2011  Paul Mundt
->   *
-> + * Module Author: Phil Edworthy <phil.edworthy@renesas.com>
-> + *
->   * This file is licensed under the terms of the GNU General Public
->   * License version 2.  This program is licensed "as is" without any
->   * warranty of any kind, whether express or implied.
-> @@ -18,7 +20,7 @@
->  #include <linux/irq.h>
->  #include <linux/irqdomain.h>
->  #include <linux/kernel.h>
-> -#include <linux/module.h>
-> +#include <linux/init.h>
->  #include <linux/msi.h>
->  #include <linux/of_address.h>
->  #include <linux/of_irq.h>
-> @@ -921,7 +923,6 @@ static const struct of_device_id rcar_pcie_of_match[] = {
->         { .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
->         {},
->  };
-> -MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
->
->  static int rcar_pcie_probe(struct platform_device *pdev)
->  {
-> @@ -1007,8 +1008,4 @@ static struct platform_driver rcar_pcie_driver = {
->         },
->         .probe = rcar_pcie_probe,
->  };
-> -module_platform_driver(rcar_pcie_driver);
-> -
-> -MODULE_AUTHOR("Phil Edworthy <phil.edworthy@renesas.com>");
-> -MODULE_DESCRIPTION("Renesas R-Car PCIe driver");
-> -MODULE_LICENSE("GPL v2");
-> +builtin_platform_driver(rcar_pcie_driver);
+For example, while the PCI 3.0 spec only defines values 0x0, 0x1, and 0x2,
+it's conceivable that a future spec could define 0x3 to mean something
+else; then tests for "(hdr_type & 0x7f) & PCI_HEADER_TYPE_BRIDGE" would
+incorrectly succeed for this new 0x3 header type.
 
-Gr{oetje,eeting}s,
+Test bits 0-6 of the Header Type for equality with PCI_HEADER_TYPE_BRIDGE.
 
-                        Geert
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/powerpc/kernel/eeh_driver.c   |    2 +-
+ drivers/pci/hotplug/ibmphp_pci.c   |    2 +-
+ drivers/pci/pcie/aer/aerdrv_core.c |   10 +++++-----
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+index 80dfe89..44bca78 100644
+--- a/arch/powerpc/kernel/eeh_driver.c
++++ b/arch/powerpc/kernel/eeh_driver.c
+@@ -400,7 +400,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
+ 	 * support EEH. So we just care about PCI devices for
+ 	 * simplicity here.
+ 	 */
+-	if (!dev || (dev->hdr_type & PCI_HEADER_TYPE_BRIDGE))
++	if (!dev || (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE))
+ 		return NULL;
+ 
+ 	/*
+diff --git a/drivers/pci/hotplug/ibmphp_pci.c b/drivers/pci/hotplug/ibmphp_pci.c
+index 814cea2..5824df5 100644
+--- a/drivers/pci/hotplug/ibmphp_pci.c
++++ b/drivers/pci/hotplug/ibmphp_pci.c
+@@ -1119,7 +1119,7 @@ static struct res_needed *scan_behind_bridge (struct pci_func *func, u8 busno)
+ 				pci_bus_read_config_dword (ibmphp_pci_bus, devfn, PCI_CLASS_REVISION, &class);
+ 
+ 				debug ("hdr_type behind the bridge is %x\n", hdr_type);
+-				if (hdr_type & PCI_HEADER_TYPE_BRIDGE) {
++				if ((hdr_type & 0x7f) == PCI_HEADER_TYPE_BRIDGE) {
+ 					err ("embedded bridges not supported for hot-plugging.\n");
+ 					amount->not_correct = 1;
+ 					return amount;
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index fba785e..7123925 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -246,7 +246,7 @@ static int report_error_detected(struct pci_dev *dev, void *data)
+ 		!dev->driver->err_handler ||
+ 		!dev->driver->err_handler->error_detected) {
+ 		if (result_data->state == pci_channel_io_frozen &&
+-			!(dev->hdr_type & PCI_HEADER_TYPE_BRIDGE)) {
++			dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
+ 			/*
+ 			 * In case of fatal recovery, if one of down-
+ 			 * stream device has no driver. We might be
+@@ -269,7 +269,7 @@ static int report_error_detected(struct pci_dev *dev, void *data)
+ 		 * without recovery.
+ 		 */
+ 
+-		if (!(dev->hdr_type & PCI_HEADER_TYPE_BRIDGE))
++		if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
+ 			vote = PCI_ERS_RESULT_NO_AER_DRIVER;
+ 		else
+ 			vote = PCI_ERS_RESULT_NONE;
+@@ -369,7 +369,7 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 	else
+ 		result_data.result = PCI_ERS_RESULT_RECOVERED;
+ 
+-	if (dev->hdr_type & PCI_HEADER_TYPE_BRIDGE) {
++	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+ 		/*
+ 		 * If the error is reported by a bridge, we think this error
+ 		 * is related to the downstream link of the bridge, so we
+@@ -440,7 +440,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ 	pci_ers_result_t status;
+ 	struct pcie_port_service_driver *driver;
+ 
+-	if (dev->hdr_type & PCI_HEADER_TYPE_BRIDGE) {
++	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+ 		/* Reset this port for all subordinates */
+ 		udev = dev;
+ 	} else {
+@@ -660,7 +660,7 @@ static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+ 			&info->mask);
+ 		if (!(info->status & ~info->mask))
+ 			return 0;
+-	} else if (dev->hdr_type & PCI_HEADER_TYPE_BRIDGE ||
++	} else if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+ 		info->severity == AER_NONFATAL) {
+ 
+ 		/* Link is still healthy for IO reads */
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
