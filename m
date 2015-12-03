@@ -1,106 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:34485 "EHLO
-	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932973AbbLVVpC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Dec 2015 16:45:02 -0500
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH] PCI: aer_inject: Don't call config read/write functions with invalid ops structure.
-Date: Tue, 22 Dec 2015 13:44:51 -0800
-Message-Id: <1450820691-27588-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>
+Subject: [PATCH 1/3] PCI: altera: fix incorrect devfn for requester ID
+Date: Thu, 3 Dec 2015 17:54:47 +0800
+Message-ID: <1449136489-2559-2-git-send-email-lftan@altera.com>
+In-Reply-To: <1449136489-2559-1-git-send-email-lftan@altera.com>
+References: <1449136489-2559-1-git-send-email-lftan@altera.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+Requester ID should use the rootport devfn and it should be always 0.
+But, devfn argument in these 2 functions can be rootport or endpoint.
+It causes the issue when accessing configuration register from
+multi-functions PCIe devices.
 
-The aer_inject module, when active, replaces the pci_ops structure of
-the bus so that it can intercept config space accesses.  If the config
-space access needs to be forwarded to the original pci_ops, we must
-restore the bus's original ops, as the read()/write() functions may
-require use of the data in the pci_ops structure.  An example of such
-functions are the pci_generic_config*() functions in
-drivers/pci/access.c.  A failure to call these with a valid bus->ops
-results in dereferencing an invalid bus->ops->map_bus pointer and
-subsequent OOPs and system crash.
+Tested on Ethernet adapter card with multi-functions.
 
-So, do as suggested above.  When calling to the original
-read()/write() functions, temporarily switch back to the original
-pci_ops.  This is safe to do as the pci_lock must already be held, and
-thus no other users of the bus->ops are possible.
-
-Signed-off-by: David Daney <david.daney@cavium.com>
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
 ---
- drivers/pci/pcie/aer/aer_inject.c | 30 ++++++++++++++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
+ drivers/pci/host/pcie-altera.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index 182224a..2d60e0e 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -188,7 +188,9 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
- 	struct aer_error *err;
- 	unsigned long flags;
- 	struct pci_ops *ops;
-+	struct pci_ops *my_ops;
- 	int domain;
-+	int rv;
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index e5dda38..f05180f 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -57,6 +57,7 @@
+ #define TLP_REQ_ID(bus, devfn)		(((bus) << 8) | (devfn))
+ #define TLP_HDR_SIZE			3
+ #define TLP_LOOP			500
++#define RP_DEVFN			0
  
- 	spin_lock_irqsave(&inject_lock, flags);
- 	if (size != sizeof(u32))
-@@ -208,8 +210,19 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
- 	}
- out:
- 	ops = __find_pci_bus_ops(bus);
-+	/*
-+	 * pci_lock must already be held, so we can directly
-+	 * manipulate bus->ops.  Many config access functions,
-+	 * including pci_generic_config_read() require the original
-+	 * bus->ops be installed to function, so temporarily put them
-+	 * back.
-+	 */
-+	my_ops = bus->ops;
-+	bus->ops = ops;
-+	rv = ops->read(bus, devfn, where, size, val);
-+	bus->ops = my_ops;
- 	spin_unlock_irqrestore(&inject_lock, flags);
--	return ops->read(bus, devfn, where, size, val);
-+	return rv;
- }
+ #define INTX_NUM			4
  
- static int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where,
-@@ -220,7 +233,9 @@ static int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where,
- 	unsigned long flags;
- 	int rw1cs;
- 	struct pci_ops *ops;
-+	struct pci_ops *my_ops;
- 	int domain;
-+	int rv;
+@@ -233,7 +234,7 @@ static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus, u32 devfn,
+ 	else
+ 		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGRD1);
  
- 	spin_lock_irqsave(&inject_lock, flags);
- 	if (size != sizeof(u32))
-@@ -243,8 +258,19 @@ static int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where,
- 	}
- out:
- 	ops = __find_pci_bus_ops(bus);
-+	/*
-+	 * pci_lock must already be held, so we can directly
-+	 * manipulate bus->ops.  Many config access functions,
-+	 * including pci_generic_config_write() require the original
-+	 * bus->ops be installed to function, so temporarily put them
-+	 * back.
-+	 */
-+	my_ops = bus->ops;
-+	bus->ops = ops;
-+	rv = ops->write(bus, devfn, where, size, val);
-+	bus->ops = my_ops;
- 	spin_unlock_irqrestore(&inject_lock, flags);
--	return ops->write(bus, devfn, where, size, val);
-+	return rv;
- }
+-	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, devfn),
++	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, RP_DEVFN),
+ 					TLP_READ_TAG, byte_en);
+ 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
  
- static struct pci_ops pci_ops_aer = {
+@@ -253,7 +254,7 @@ static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
+ 	else
+ 		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGWR1);
+ 
+-	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, devfn),
++	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, RP_DEVFN),
+ 					TLP_WRITE_TAG, byte_en);
+ 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
+ 
 -- 
-1.8.3.1
+1.8.2.1
 
