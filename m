@@ -1,720 +1,398 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:36403 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753267AbbLRMj2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Dec 2015 07:39:28 -0500
-Received: by mail-wm0-f42.google.com with SMTP id p187so61873159wmp.1
-        for <linux-pci@vger.kernel.org>; Fri, 18 Dec 2015 04:39:28 -0800 (PST)
-From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-To: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Subject: [PATCH v5 3/5] PCI: qcom: Add Qualcomm PCIe controller driver
-Date: Fri, 18 Dec 2015 14:38:57 +0200
-Message-Id: <1450442339-18765-4-git-send-email-stanimir.varbanov@linaro.org>
-In-Reply-To: <1450442339-18765-1-git-send-email-stanimir.varbanov@linaro.org>
-References: <1450442339-18765-1-git-send-email-stanimir.varbanov@linaro.org>
+Received: from mga03.intel.com ([134.134.136.65]:8498 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757999AbbLCDLz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 2 Dec 2015 22:11:55 -0500
+Subject: Re: [PATCH v6 7/7] PCI: hv: New paravirtual PCI front-end for Hyper-V
+ VMs
+To: jakeo@microsoft.com, gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+References: <1446499996-1350-1-git-send-email-jakeo@microsoft.com>
+ <1446499996-1350-8-git-send-email-jakeo@microsoft.com>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <565FB2F5.6050504@linux.intel.com>
+Date: Thu, 3 Dec 2015 11:11:49 +0800
+MIME-Version: 1.0
+In-Reply-To: <1446499996-1350-8-git-send-email-jakeo@microsoft.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
+On 2015/11/3 5:33, jakeo@microsoft.com wrote:
+> From: Jake Oshins <jakeo@microsoft.com>
+> 
+> This patch introduces a new driver which exposes a root PCI bus whenever a PCI
+> Express device is passed through to a guest VM under Hyper-V. The device can
+> be single- or multi-function. The interrupts for the devices are managed by an
+> IRQ domain, implemented within the driver.
+> 
+> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+> ---
+>  MAINTAINERS                    |    1 +
+>  drivers/pci/Kconfig            |    7 +
+>  drivers/pci/host/Makefile      |    1 +
+>  drivers/pci/host/hv_pcifront.c | 2267 ++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 2276 insertions(+)
+>  create mode 100644 drivers/pci/host/hv_pcifront.c
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index a2d50fe..a1205b4 100644
+[...]
+> +/* Interrupt management hooks */
+> +
+> +/**
+> + * hv_msi_free() - Free the MSI.
+> + * @domain:	The interrupt domain pointer
+> + * @info:	Extra MSI-related context
+> + * @irq:	Identifies the IRQ.
+> + *
+> + * The Hyper-V parent partition and hypervisor are tracking the
+> + * messages that are in use, keeping the interrupt redirection
+> + * table up to date.  This callback sends a message that frees
+> + * the the IRT entry and related tracking nonsense.
+> + */
+> +static void hv_msi_free(struct irq_domain *domain, struct msi_domain_info *info,
+> +			unsigned int irq)
+> +{
+> +	struct pci_delete_interrupt *int_pkt;
+> +	struct {
+> +		struct pci_packet pkt;
+> +		u8 buffer[sizeof(struct pci_delete_interrupt) -
+> +			  sizeof(struct pci_message)];
+> +	} ctxt;
+> +	struct hv_pcibus_device *hbus;
+> +	struct hv_pci_dev *hpdev;
+> +	struct irq_desc *desc;
+> +	struct msi_desc *msi;
+> +	struct tran_int_desc *int_desc;
+> +	struct pci_dev *pdev;
+> +
+> +	desc = irq_to_desc(irq);
+> +	msi = irq_desc_get_msi_desc(desc);
+> +	pdev = msi_desc_to_pci_dev(msi);
+For safety, don't assume this HV MSI irqdomain is the top domain.
+So please use:
+struct irq_data *irq_data = irq_domain_get_irq_data(domain, irq);
+struct msi_desc *desc = irq_data_get_msi_desc(irq_data);
+struct tran_int_desc *int_desc = irq_data_get_chip_data(irq_data);
 
-The PCIe driver reuse the Designware common code for host
-and MSI initialization, and also program the Qualcomm
-application specific registers.
+> +	hbus = info->data;
+> +	hpdev = lookup_hv_dev(hbus, devfn_to_wslot(pdev->devfn));
+> +	if (!hpdev)
+> +		return;
+> +
+> +	int_desc = irq_get_chip_data(irq);
+> +	if (int_desc) {
+> +		memset(&ctxt, 0, sizeof(ctxt));
+> +		int_pkt = (struct pci_delete_interrupt *)&ctxt.pkt.message;
+> +		int_pkt->message_type.message_type =
+> +			PCI_DELETE_INTERRUPT_MESSAGE;
+> +		int_pkt->wslot.slot = hpdev->desc.win_slot.slot;
+> +		int_pkt->int_desc = *int_desc;
+> +		vmbus_sendpacket(hbus->hdev->channel, int_pkt, sizeof(*int_pkt),
+> +				 (unsigned long)&ctxt.pkt, VM_PKT_DATA_INBAND,
+> +				 0);
+> +		desc->irq_data.chip_data = NULL;
+> +		kfree(int_desc);
+> +	}
+> +
+> +	hv_pcichild_dec(hpdev, hv_pcidev_ref_by_slot);
+> +}
+> +
+> +static int hv_set_affinity(struct irq_data *data, const struct cpumask *dest,
+> +			   bool force)
+> +{
+> +	struct irq_data *parent = data->parent_data;
+> +
+> +	return parent->chip->irq_set_affinity(parent, dest, force);
+> +}
+> +
+> +void hv_irq_mask(struct irq_data *data)
+> +{
+> +	pci_msi_mask_irq(data);
+> +}
+> +
+> +/**
+> + * hv_irq_unmask() - "Unmask" the IRQ by setting its current
+> + * affinity.
+> + * @data:	Describes the IRQ
+> + *
+> + * Build new a destination for the MSI and make a hypercall to
+> + * update the Interrupt Redirection Table. "Device Logical ID"
+> + * is built out of this PCI bus's instance GUID and the function
+> + * number of the device.
+> + */
+> +void hv_irq_unmask(struct irq_data *data)
+> +{
+> +	struct msi_desc *msi_desc = irq_data_get_msi_desc(data);
+> +	struct irq_cfg *cfg = irqd_cfg(data);
+> +	struct retarget_msi_interrupt params;
+> +	struct hv_pcibus_device *hbus;
+> +	struct cpumask *dest;
+> +	struct pci_bus *pbus;
+> +	struct pci_dev *pdev;
+> +	int cpu;
+> +
+> +	dest = irq_data_get_affinity_mask(data);
+> +	pdev = msi_desc_to_pci_dev(msi_desc);
+> +	pbus = pdev->bus;
+> +	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
+> +
+> +	memset(&params, 0, sizeof(params));
+> +	params.partition_id = HV_PARTITION_ID_SELF;
+> +	params.source = 1; /* MSI(-X) */
+> +	params.address = msi_desc->msg.address_lo;
+> +	params.data = msi_desc->msg.data;
+> +	params.device_id = (hbus->hdev->dev_instance.b[5] << 24) |
+> +			   (hbus->hdev->dev_instance.b[4] << 16) |
+> +			   (hbus->hdev->dev_instance.b[7] << 8) |
+> +			   (hbus->hdev->dev_instance.b[6] & 0xf8) |
+> +			   PCI_FUNC(pdev->devfn);
+> +	params.vector = cfg->vector;
+> +
+> +	for_each_cpu_and(cpu, dest, cpu_online_mask)
+> +		params.vp_mask |= (1 << vmbus_cpu_number_to_vp_number(cpu));
+No knowledge about the HV implementation details, but feel some chances
+of race here between hv_irq_unmask(), hv_set_affinity() and
+cpu_up()/cpu_down() when accessing 'dest' and cpu_online_mask.
 
-Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
----
- MAINTAINERS                  |    7 +
- drivers/pci/host/Kconfig     |   10 +
- drivers/pci/host/Makefile    |    1 +
- drivers/pci/host/pcie-qcom.c |  617 ++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 635 insertions(+)
- create mode 100644 drivers/pci/host/pcie-qcom.c
+> +
+> +	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, &params, NULL);
+> +
+> +	pci_msi_unmask_irq(data);
+> +}
+> +
+> +struct compose_comp_ctxt {
+> +	struct hv_pci_compl comp_pkt;
+> +	struct tran_int_desc int_desc;
+> +};
+> +
+> +static void hv_pci_compose_compl(void *context, struct pci_response *resp,
+> +				 int resp_packet_size)
+> +{
+> +	struct compose_comp_ctxt *comp_pkt = context;
+> +	struct pci_create_int_response *int_resp =
+> +		(struct pci_create_int_response *)resp;
+> +
+> +	comp_pkt->comp_pkt.completion_status = resp->status;
+> +	comp_pkt->int_desc = int_resp->int_desc;
+> +	complete(&comp_pkt->comp_pkt.host_event);
+> +}
+> +
+> +/**
+> + * hv_compose_msi_msg() - Supplies a valid MSI address/data
+> + * @data:	Everything about this MSI
+> + * @msg:	Buffer that is filled in by this function
+> + *
+> + * This function unpacks the IRQ looking for target CPU set, IDT
+> + * vector and mode and sends a message to the parent partition
+> + * asking for a mapping for that tuple in this partition.  The
+> + * response supplies a data value and address to which that data
+> + * should be written to trigger that interrupt.
+> + */
+> +static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> +{
+> +	struct irq_cfg *cfg = irqd_cfg(data);
+> +	struct hv_pcibus_device *hbus;
+> +	struct hv_pci_dev *hpdev;
+> +	struct pci_bus *pbus;
+> +	struct pci_dev *pdev;
+> +	struct pci_create_interrupt *int_pkt;
+> +	struct compose_comp_ctxt comp;
+> +	struct tran_int_desc *int_desc;
+> +	struct cpumask *affinity;
+> +	struct {
+> +		struct pci_packet pkt;
+> +		u8 buffer[sizeof(struct pci_create_interrupt) -
+> +			  sizeof(struct pci_message)];
+> +	} ctxt;
+> +	int cpu;
+> +	int ret;
+> +
+> +	pdev = msi_desc_to_pci_dev(irq_data_get_msi_desc(data));
+> +	pbus = pdev->bus;
+> +	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
+> +	hpdev = lookup_hv_dev(hbus, devfn_to_wslot(pdev->devfn));
+> +
+> +	if (!hpdev)
+> +		goto return_null_message;
+> +
+> +	int_desc = kzalloc(sizeof(*int_desc), GFP_KERNEL);
+> +	if (!int_desc)
+> +		goto drop_reference;
+> +
+> +	memset(&ctxt, 0, sizeof(ctxt));
+> +	init_completion(&comp.comp_pkt.host_event);
+> +	ctxt.pkt.completion_func = hv_pci_compose_compl;
+> +	ctxt.pkt.compl_ctxt = &comp;
+> +	int_pkt = (struct pci_create_interrupt *)&ctxt.pkt.message;
+> +	int_pkt->message_type.message_type = PCI_CREATE_INTERRUPT_MESSAGE;
+> +	int_pkt->wslot.slot = hpdev->desc.win_slot.slot;
+> +	int_pkt->int_desc.vector = cfg->vector;
+> +	int_pkt->int_desc.vector_count = 1;
+> +	int_pkt->int_desc.delivery_mode =
+> +		(apic->irq_delivery_mode == dest_LowestPrio) ? 1 : 0;
+> +
+> +	/*
+> +	 * This bit doesn't have to work on machines with more than 64
+> +	 * processors because Hyper-V only supports 64 in a guest.
+> +	 */
+> +	affinity = irq_data_get_affinity_mask(data);
+> +	for_each_cpu(cpu, affinity) {
+> +		if (cpu_is_offline(cpu))
+> +			continue;
+> +		int_pkt->int_desc.cpu_mask |=
+> +			(1 << vmbus_cpu_number_to_vp_number(cpu));
+> +	}
+> +
+> +	ret = vmbus_sendpacket(hpdev->hbus->hdev->channel, int_pkt,
+> +			       sizeof(*int_pkt), (unsigned long)&ctxt.pkt,
+> +			       VM_PKT_DATA_INBAND,
+> +			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+> +	if (!ret)
+> +		wait_for_completion(&comp.comp_pkt.host_event);
+> +
+> +	if (comp.comp_pkt.completion_status < 0) {
+> +		pr_err("Request for interrupt failed: 0x%x",
+> +		       comp.comp_pkt.completion_status);
+> +		goto free_int_desc;
+> +	}
+> +
+> +	/*
+> +	 * Record the assignment so that this can be unwound later. Using
+> +	 * irq_set_chip_data() here would be appropriate, but the lock it takes
+> +	 * is already held.
+> +	 */
+> +	*int_desc = comp.int_desc;
+> +	data->chip_data = int_desc;
+hv_compose_msi_msg() may be called multiple times, so seems int_desc
+may get leaked.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 38df53f828e1..7de5d2597e2b 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8247,6 +8247,13 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
- F:	drivers/pci/host/pcie-hisi.c
- 
-+PCIE DRIVER FOR QUALCOMM MSM
-+M:     Stanimir Varbanov <svarbanov@mm-sol.com>
-+L:     linux-pci@vger.kernel.org
-+L:     linux-arm-msm@vger.kernel.org
-+S:     Maintained
-+F:     drivers/pci/host/*qcom*
-+
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index f131ba947dc6..64d33ba3e336 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -172,4 +172,14 @@ config PCI_HISI
- 	help
- 	  Say Y here if you want PCIe controller support on HiSilicon HIP05 SoC
- 
-+config PCIE_QCOM
-+	bool "Qualcomm PCIe controller"
-+	depends on ARCH_QCOM && OF || COMPILE_TEST
-+	select PCIE_DW
-+	select PCIEPORTBUS
-+	help
-+	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
-+	  PCIe controller use Designware core plus Qualcomm specific hardware
-+	  wrappers.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 9d4d3c6924a1..e523c171febf 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -20,3 +20,4 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
- obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
- obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
-+obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
-diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
-new file mode 100644
-index 000000000000..36c81973467d
---- /dev/null
-+++ b/drivers/pci/host/pcie-qcom.c
-@@ -0,0 +1,617 @@
-+/*
-+ * Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
-+ * Copyright 2015 Linaro Limited.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 and
-+ * only version 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ */
-+
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/gpio.h>
-+#include <linux/interrupt.h>
-+#include <linux/io.h>
-+#include <linux/iopoll.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_device.h>
-+#include <linux/of_gpio.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/phy/phy.h>
-+#include <linux/regulator/consumer.h>
-+#include <linux/reset.h>
-+#include <linux/slab.h>
-+#include <linux/types.h>
-+
-+#include "pcie-designware.h"
-+
-+#define PCIE20_PARF_PHY_CTRL			0x40
-+#define PCIE20_PARF_PHY_REFCLK			0x4C
-+#define PCIE20_PARF_DBI_BASE_ADDR		0x168
-+#define PCIE20_PARF_SLV_ADDR_SPACE_SIZE		0x16c
-+#define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT	0x178
-+
-+#define PCIE20_ELBI_SYS_CTRL			0x04
-+#define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
-+
-+#define PCIE20_CAP				0x70
-+
-+#define PERST_DELAY_US				1000
-+
-+struct qcom_pcie_resources_v0 {
-+	struct clk *iface_clk;
-+	struct clk *core_clk;
-+	struct clk *phy_clk;
-+	struct reset_control *pci_reset;
-+	struct reset_control *axi_reset;
-+	struct reset_control *ahb_reset;
-+	struct reset_control *por_reset;
-+	struct reset_control *phy_reset;
-+	struct regulator *vdda;
-+	struct regulator *vdda_phy;
-+	struct regulator *vdda_refclk;
-+};
-+
-+struct qcom_pcie_resources_v1 {
-+	struct clk *iface;
-+	struct clk *aux;
-+	struct clk *master_bus;
-+	struct clk *slave_bus;
-+	struct reset_control *core;
-+	struct regulator *vdda;
-+};
-+
-+union qcom_pcie_resources {
-+	struct qcom_pcie_resources_v0 v0;
-+	struct qcom_pcie_resources_v1 v1;
-+};
-+
-+struct qcom_pcie;
-+
-+struct qcom_pcie_ops {
-+	int (*get_resources)(struct qcom_pcie *pcie);
-+	int (*init)(struct qcom_pcie *pcie);
-+	void (*deinit)(struct qcom_pcie *pcie);
-+};
-+
-+struct qcom_pcie {
-+	struct pcie_port pp;
-+	struct device *dev;
-+	union qcom_pcie_resources res;
-+	void __iomem *parf;
-+	void __iomem *dbi;
-+	void __iomem *elbi;
-+	struct phy *phy;
-+	struct gpio_desc *reset;
-+	struct qcom_pcie_ops *ops;
-+};
-+
-+#define to_qcom_pcie(x)		container_of(x, struct qcom_pcie, pp)
-+
-+static void qcom_ep_reset_assert(struct qcom_pcie *pcie)
-+{
-+	gpiod_set_value(pcie->reset, 1);
-+	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
-+}
-+
-+static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
-+{
-+	gpiod_set_value(pcie->reset, 0);
-+	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
-+}
-+
-+static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
-+{
-+	struct pcie_port *pp = arg;
-+
-+	return dw_handle_msi_irq(pp);
-+}
-+
-+static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
-+{
-+	struct device *dev = pcie->dev;
-+	unsigned int retries = 0;
-+	u32 val;
-+
-+	if (dw_pcie_link_up(&pcie->pp))
-+		return 0;
-+
-+	/* enable link training */
-+	val = readl(pcie->elbi + PCIE20_ELBI_SYS_CTRL);
-+	val |= PCIE20_ELBI_SYS_CTRL_LT_ENABLE;
-+	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
-+
-+	do {
-+		if (dw_pcie_link_up(&pcie->pp))
-+			return 0;
-+		usleep_range(250, 1000);
-+	} while (retries < 200);
-+
-+	dev_warn(dev, "phy link never came up\n");
-+
-+	return -ETIMEDOUT;
-+}
-+
-+static int qcom_pcie_get_resources_v0(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
-+	struct device *dev = pcie->dev;
-+
-+	res->vdda = devm_regulator_get(dev, "vdda");
-+	if (IS_ERR(res->vdda))
-+		return PTR_ERR(res->vdda);
-+
-+	res->vdda_phy = devm_regulator_get(dev, "vdda_phy");
-+	if (IS_ERR(res->vdda_phy))
-+		return PTR_ERR(res->vdda_phy);
-+
-+	res->vdda_refclk = devm_regulator_get(dev, "vdda_refclk");
-+	if (IS_ERR(res->vdda_refclk))
-+		return PTR_ERR(res->vdda_refclk);
-+
-+	res->iface_clk = devm_clk_get(dev, "iface");
-+	if (IS_ERR(res->iface_clk))
-+		return PTR_ERR(res->iface_clk);
-+
-+	res->core_clk = devm_clk_get(dev, "core");
-+	if (IS_ERR(res->core_clk))
-+		return PTR_ERR(res->core_clk);
-+
-+	res->phy_clk = devm_clk_get(dev, "phy");
-+	if (IS_ERR(res->phy_clk))
-+		return PTR_ERR(res->phy_clk);
-+
-+	res->pci_reset = devm_reset_control_get(dev, "pci");
-+	if (IS_ERR(res->pci_reset))
-+		return PTR_ERR(res->pci_reset);
-+
-+	res->axi_reset = devm_reset_control_get(dev, "axi");
-+	if (IS_ERR(res->axi_reset))
-+		return PTR_ERR(res->axi_reset);
-+
-+	res->ahb_reset = devm_reset_control_get(dev, "ahb");
-+	if (IS_ERR(res->ahb_reset))
-+		return PTR_ERR(res->ahb_reset);
-+
-+	res->por_reset = devm_reset_control_get(dev, "por");
-+	if (IS_ERR(res->por_reset))
-+		return PTR_ERR(res->por_reset);
-+
-+	res->phy_reset = devm_reset_control_get(dev, "phy");
-+	if (IS_ERR(res->phy_reset))
-+		return PTR_ERR(res->phy_reset);
-+
-+	return 0;
-+}
-+
-+static int qcom_pcie_get_resources_v1(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
-+	struct device *dev = pcie->dev;
-+
-+	res->vdda = devm_regulator_get(dev, "vdda");
-+	if (IS_ERR(res->vdda))
-+		return PTR_ERR(res->vdda);
-+
-+	res->iface = devm_clk_get(dev, "iface");
-+	if (IS_ERR(res->iface))
-+		return PTR_ERR(res->iface);
-+
-+	res->aux = devm_clk_get(dev, "aux");
-+	if (IS_ERR(res->aux))
-+		return PTR_ERR(res->aux);
-+
-+	res->master_bus = devm_clk_get(dev, "master_bus");
-+	if (IS_ERR(res->master_bus))
-+		return PTR_ERR(res->master_bus);
-+
-+	res->slave_bus = devm_clk_get(dev, "slave_bus");
-+	if (IS_ERR(res->slave_bus))
-+		return PTR_ERR(res->slave_bus);
-+
-+	res->core = devm_reset_control_get(dev, "core");
-+	if (IS_ERR(res->core))
-+		return PTR_ERR(res->core);
-+
-+	return 0;
-+}
-+
-+static void qcom_pcie_deinit_v0(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
-+
-+	reset_control_assert(res->pci_reset);
-+	reset_control_assert(res->axi_reset);
-+	reset_control_assert(res->ahb_reset);
-+	reset_control_assert(res->por_reset);
-+	reset_control_assert(res->pci_reset);
-+	clk_disable_unprepare(res->iface_clk);
-+	clk_disable_unprepare(res->core_clk);
-+	clk_disable_unprepare(res->phy_clk);
-+	regulator_disable(res->vdda);
-+	regulator_disable(res->vdda_phy);
-+	regulator_disable(res->vdda_refclk);
-+}
-+
-+static int qcom_pcie_init_v0(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
-+	struct device *dev = pcie->dev;
-+	u32 val;
-+	int ret;
-+
-+	ret = regulator_enable(res->vdda);
-+	if (ret) {
-+		dev_err(dev, "cannot enable vdda regulator\n");
-+		return ret;
-+	}
-+
-+	ret = regulator_enable(res->vdda_refclk);
-+	if (ret) {
-+		dev_err(dev, "cannot enable vdda_refclk regulator\n");
-+		goto err_refclk;
-+	}
-+
-+	ret = regulator_enable(res->vdda_phy);
-+	if (ret) {
-+		dev_err(dev, "cannot enable vdda_phy regulator\n");
-+		goto err_vdda_phy;
-+	}
-+
-+	ret = reset_control_assert(res->ahb_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot assert ahb reset\n");
-+		goto err_assert_ahb;
-+	}
-+
-+	ret = clk_prepare_enable(res->iface_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable iface clock\n");
-+		goto err_assert_ahb;
-+	}
-+
-+	ret = clk_prepare_enable(res->phy_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable phy clock\n");
-+		goto err_clk_phy;
-+	}
-+
-+	ret = clk_prepare_enable(res->core_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable core clock\n");
-+		goto err_clk_core;
-+	}
-+
-+	ret = reset_control_deassert(res->ahb_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert ahb reset\n");
-+		goto err_deassert_ahb;
-+	}
-+
-+	/* enable PCIe clocks and resets */
-+	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
-+	val &= ~BIT(0);
-+	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+
-+	/* enable external reference clock */
-+	val = readl(pcie->parf + PCIE20_PARF_PHY_REFCLK);
-+	val |= BIT(16);
-+	writel(val, pcie->parf + PCIE20_PARF_PHY_REFCLK);
-+
-+	ret = reset_control_deassert(res->phy_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert phy reset\n");
-+		return ret;
-+	}
-+
-+	ret = reset_control_deassert(res->pci_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert pci reset\n");
-+		return ret;
-+	}
-+
-+	ret = reset_control_deassert(res->por_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert por reset\n");
-+		return ret;
-+	}
-+
-+	ret = reset_control_deassert(res->axi_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert axi reset\n");
-+		return ret;
-+	}
-+
-+	/* wait for clock acquisition */
-+	usleep_range(1000, 1500);
-+
-+	return 0;
-+
-+err_deassert_ahb:
-+	clk_disable_unprepare(res->core_clk);
-+err_clk_core:
-+	clk_disable_unprepare(res->phy_clk);
-+err_clk_phy:
-+	clk_disable_unprepare(res->iface_clk);
-+err_assert_ahb:
-+	regulator_disable(res->vdda_phy);
-+err_vdda_phy:
-+	regulator_disable(res->vdda_refclk);
-+err_refclk:
-+	regulator_disable(res->vdda);
-+
-+	return ret;
-+}
-+
-+static void qcom_pcie_deinit_v1(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
-+
-+	reset_control_assert(res->core);
-+	clk_disable_unprepare(res->slave_bus);
-+	clk_disable_unprepare(res->master_bus);
-+	clk_disable_unprepare(res->iface);
-+	clk_disable_unprepare(res->aux);
-+	regulator_disable(res->vdda);
-+}
-+
-+static int qcom_pcie_init_v1(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
-+	struct device *dev = pcie->dev;
-+	int ret;
-+
-+	ret = reset_control_deassert(res->core);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert core reset\n");
-+		return ret;
-+	}
-+
-+	ret = clk_prepare_enable(res->aux);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable aux clock\n");
-+		goto err_res;
-+	}
-+
-+	ret = clk_prepare_enable(res->iface);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable iface clock\n");
-+		goto err_aux;
-+	}
-+
-+	ret = clk_prepare_enable(res->master_bus);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable master_bus clock\n");
-+		goto err_iface;
-+	}
-+
-+	ret = clk_prepare_enable(res->slave_bus);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable slave_bus clock\n");
-+		goto err_master;
-+	}
-+
-+	ret = regulator_enable(res->vdda);
-+	if (ret) {
-+		dev_err(dev, "cannot enable vdda regulator\n");
-+		goto err_slave;
-+	}
-+
-+
-+	/* change DBI base address */
-+	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		u32 val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
-+
-+		val |= BIT(31);
-+		writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
-+	}
-+
-+	return 0;
-+err_slave:
-+	clk_disable_unprepare(res->slave_bus);
-+err_master:
-+	clk_disable_unprepare(res->master_bus);
-+err_iface:
-+	clk_disable_unprepare(res->iface);
-+err_aux:
-+	clk_disable_unprepare(res->aux);
-+err_res:
-+	reset_control_assert(res->core);
-+
-+	return ret;
-+}
-+
-+static int qcom_pcie_link_up(struct pcie_port *pp)
-+{
-+	struct qcom_pcie *pcie = to_qcom_pcie(pp);
-+	u16 val = readw(pcie->dbi + PCIE20_CAP + PCI_EXP_LNKSTA);
-+
-+	return !!(val & PCI_EXP_LNKSTA_DLLLA);
-+}
-+
-+static void qcom_pcie_host_init(struct pcie_port *pp)
-+{
-+	struct qcom_pcie *pcie = to_qcom_pcie(pp);
-+	int ret;
-+
-+	qcom_ep_reset_assert(pcie);
-+
-+	ret = pcie->ops->init(pcie);
-+	if (ret)
-+		goto err_deinit;
-+
-+	ret = phy_power_on(pcie->phy);
-+	if (ret)
-+		goto err_deinit;
-+
-+	dw_pcie_setup_rc(pp);
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		dw_pcie_msi_init(pp);
-+
-+	qcom_ep_reset_deassert(pcie);
-+
-+	ret = qcom_pcie_establish_link(pcie);
-+	if (ret)
-+		goto err;
-+
-+	return;
-+err:
-+	qcom_ep_reset_assert(pcie);
-+	phy_power_off(pcie->phy);
-+err_deinit:
-+	pcie->ops->deinit(pcie);
-+}
-+
-+static int
-+qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size, u32 *val)
-+{
-+	/* the device class is not reported correctly from the register */
-+	if (where == PCI_CLASS_REVISION && size == 4) {
-+		*val = readl(pp->dbi_base + PCI_CLASS_REVISION);
-+		*val &= 0xff;	/* keep revision id */
-+		*val |= PCI_CLASS_BRIDGE_PCI << 16;
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+
-+	return dw_pcie_cfg_read(pp->dbi_base + where, size, val);
-+}
-+
-+static struct pcie_host_ops qcom_pcie_dw_ops = {
-+	.link_up = qcom_pcie_link_up,
-+	.host_init = qcom_pcie_host_init,
-+	.rd_own_conf = qcom_pcie_rd_own_conf,
-+};
-+
-+static const struct qcom_pcie_ops ops_v0 = {
-+	.get_resources = qcom_pcie_get_resources_v0,
-+	.init = qcom_pcie_init_v0,
-+	.deinit = qcom_pcie_deinit_v0,
-+};
-+
-+static const struct qcom_pcie_ops ops_v1 = {
-+	.get_resources = qcom_pcie_get_resources_v1,
-+	.init = qcom_pcie_init_v1,
-+	.deinit = qcom_pcie_deinit_v1,
-+};
-+
-+static int qcom_pcie_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct resource *res;
-+	struct qcom_pcie *pcie;
-+	struct pcie_port *pp;
-+	int ret;
-+
-+	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	pcie->ops = (struct qcom_pcie_ops *)of_device_get_match_data(dev);
-+	pcie->dev = dev;
-+
-+	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_LOW);
-+	if (IS_ERR(pcie->reset))
-+		return PTR_ERR(pcie->reset);
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "parf");
-+	pcie->parf = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(pcie->parf))
-+		return PTR_ERR(pcie->parf);
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-+	pcie->dbi = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(pcie->dbi))
-+		return PTR_ERR(pcie->dbi);
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "elbi");
-+	pcie->elbi = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(pcie->elbi))
-+		return PTR_ERR(pcie->elbi);
-+
-+	pcie->phy = devm_phy_optional_get(dev, "pciephy");
-+	if (IS_ERR(pcie->phy))
-+		return PTR_ERR(pcie->phy);
-+
-+	ret = pcie->ops->get_resources(pcie);
-+	if (ret)
-+		return ret;
-+
-+	pp = &pcie->pp;
-+	pp->dev = dev;
-+	pp->dbi_base = pcie->dbi;
-+	pp->root_bus_nr = -1;
-+	pp->ops = &qcom_pcie_dw_ops;
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
-+		if (pp->msi_irq < 0)
-+			return pp->msi_irq;
-+
-+		ret = devm_request_irq(dev, pp->msi_irq,
-+				       qcom_pcie_msi_irq_handler,
-+				       IRQF_SHARED, "qcom-pcie-msi", pp);
-+		if (ret) {
-+			dev_err(dev, "cannot request msi irq\n");
-+			return ret;
-+		}
-+	}
-+
-+	ret = phy_init(pcie->phy);
-+	if (ret)
-+		return ret;
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(dev, "cannot initialize host\n");
-+		return ret;
-+	}
-+
-+	platform_set_drvdata(pdev, pcie);
-+
-+	return 0;
-+}
-+
-+static int qcom_pcie_remove(struct platform_device *pdev)
-+{
-+	struct qcom_pcie *pcie = platform_get_drvdata(pdev);
-+
-+	qcom_ep_reset_assert(pcie);
-+	phy_power_off(pcie->phy);
-+	phy_exit(pcie->phy);
-+	pcie->ops->deinit(pcie);
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id qcom_pcie_match[] = {
-+	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_v0 },
-+	{ .compatible = "qcom,pcie-apq8064", .data = &ops_v0 },
-+	{ .compatible = "qcom,pcie-apq8084", .data = &ops_v1 },
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(of, qcom_pcie_match);
-+
-+static struct platform_driver qcom_pcie_driver = {
-+	.probe = qcom_pcie_probe,
-+	.remove = qcom_pcie_remove,
-+	.driver = {
-+		.name = "qcom-pcie",
-+		.of_match_table = qcom_pcie_match,
-+	},
-+};
-+
-+module_platform_driver(qcom_pcie_driver);
-+
-+MODULE_AUTHOR("Stanimir Varbanov <svarbanov@mm-sol.com>");
-+MODULE_DESCRIPTION("Qualcomm PCIe root complex driver");
-+MODULE_LICENSE("GPL v2");
--- 
-1.7.9.5
+> +
+> +	/* Pass up the result. */
+> +	msg->address_hi = comp.int_desc.address >> 32;
+> +	msg->address_lo = comp.int_desc.address & 0xffffffff;
+> +	msg->data = comp.int_desc.data;
+> +
+> +	hv_pcichild_dec(hpdev, hv_pcidev_ref_by_slot);
+> +	return;
+> +
+> +free_int_desc:
+> +	kfree(int_desc);
+> +drop_reference:
+> +	hv_pcichild_dec(hpdev, hv_pcidev_ref_by_slot);
+> +return_null_message:
+> +	msg->address_hi = 0;
+> +	msg->address_lo = 0;
+> +	msg->data = 0;
+> +}
+> +
+> +/* HW Interrupt Chip Descriptor */
+> +static struct irq_chip hv_msi_irq_chip = {
+> +	.name			= "Hyper-V PCIe MSI",
+> +	.irq_compose_msi_msg	= hv_compose_msi_msg,
+> +	.irq_set_affinity	= hv_set_affinity,
+> +	.irq_ack		= irq_chip_ack_parent,
+> +	.irq_mask		= hv_irq_mask,
+> +	.irq_unmask		= hv_irq_unmask,
+> +};
+> +
+> +static irq_hw_number_t hv_msi_domain_ops_get_hwirq(struct msi_domain_info *info,
+> +						   msi_alloc_info_t *arg)
+> +{
+> +	return arg->msi_hwirq;
+> +}
+> +
+> +/**
+> + * hv_msi_set_desc() - Create a "hardware IRQ" for a message.
+> + * @arg:	Describes the device
+> + * @desc:	Describes the interrupt
+> + *
+> + * This function is derived from pci_msi_set_desc(), which
+> + * creates a "hardware IRQ" based on the segment, bus, device,
+> + * function and message numbers.  Here, the bus and device
+> + * numbers will always be zero.  So, in the interest of more
+> + * entropy, more of the bits in msi_hwirq are derived from
+> + * things which will be non-zero.
+> + */
+It's not for entropy, but for unique. We need to uniquely identify
+each MSI source because we need to look up irq number by MSI source
+id. Actually we prefer to compatch the hwirq address space as small
+as possible because irqdomain use a radix tree to lookup irq by hwirq.
+So if bus and device number is alwasy zero, just ignore them and
+compact the hwirq address space:)
 
+> +static void hv_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
+> +{
+> +	arg->msi_hwirq = (irq_hw_number_t)desc->msi_attrib.entry_nr |
+> +		(arg->msi_dev->devfn << 11) |
+> +		(pci_domain_nr(arg->msi_dev->bus) & 0xFFFFFFFF) << 19;
+> +}
+> +
+> +static struct msi_domain_ops hv_msi_ops = {
+> +	.get_hwirq	= hv_msi_domain_ops_get_hwirq,
+> +	.msi_prepare	= pci_msi_prepare,
+> +	.set_desc	= hv_msi_set_desc,
+> +	.msi_free	= hv_msi_free,
+> +};
+> +
+> +/**
+> + * hv_pcie_free_irq_domain - Free IRQ domain
+> + * @hbus:	The root PCI bus
+> + */
+> +static void hv_pcie_free_irq_domain(struct hv_pcibus_device *hbus)
+> +{
+> +	u32 irq;
+> +	int i;
+> +
+> +	for (i = 0; i < MAX_SUPPORTED_MSI_MESSAGES; i++) {
+> +		irq = irq_find_mapping(hbus->irq_domain, i);
+> +		if (irq > 0)
+> +			irq_dispose_mapping(irq);
+> +	}
+When int_desc() get called, all PCI devices, thus all PCI MSI
+IRQs, should have been destroy, so seems about code is redundant.
+Thanks,
+Gerry
+> +
+> +	irq_domain_remove(hbus->irq_domain);
+> +}
+> +
+> +/**
+> + * hv_pcie_init_irq_domain() - Initialize IRQ domain
+> + * @hbus:	The root PCI bus
+> + *
+> + * This function creates an IRQ domain which will be used for
+> + * interrupts from devices that have been passed through.  These
+> + * devices only support MSI and MSI-X, not line-based interrupts
+> + * or simulations of line-based interrupts through PCIe's
+> + * fabric-layer messages.  Because interrupts are remapped, we
+> + * can support multi-message MSI here.
+> + *
+> + * Return: '0' on success and error value on failure
+> + */
+> +static int hv_pcie_init_irq_domain(struct hv_pcibus_device *hbus)
+> +{
+> +	hbus->msi_info.chip = &hv_msi_irq_chip;
+> +	hbus->msi_info.chip_data = hbus;
+> +	hbus->msi_info.ops = &hv_msi_ops;
+> +	hbus->msi_info.flags = (MSI_FLAG_USE_DEF_DOM_OPS |
+> +		MSI_FLAG_USE_DEF_CHIP_OPS | MSI_FLAG_MULTI_PCI_MSI |
+> +		MSI_FLAG_PCI_MSIX);
+> +	hbus->msi_info.handler = handle_edge_irq;
+> +	hbus->msi_info.handler_name = "edge";
+> +	hbus->msi_info.data = hbus;
+> +	hbus->irq_domain = pci_msi_create_irq_domain(hbus->sysdata.fwnode,
+> +						     &hbus->msi_info,
+> +						     x86_vector_domain);
+> +	if (!hbus->irq_domain) {
+> +		pr_err("Failed to build an MSI IRQ domain\n");
+> +		return -ENODEV;
+> +	}
+> +
+> +	return 0;
+> +}
+[...]
