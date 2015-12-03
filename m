@@ -1,155 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 3 Dec 2015 10:40:07 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Josef Bacik <jbacik@fb.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 29/60] PCI: Reorder resources list for required/optional resources
-Date: Thu, 10 Dec 2015 21:06:25 -0800
-Message-Id: <1449810416-2950-30-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, bhelgaas@google.com, shli@fb.com,
+	kernel-team@fb.com
+Subject: Re: [PATCH] pci: completely disable aspm if it's unsupported
+Message-ID: <20151203164007.GA16669@localhost>
+References: <1447856703-2566-1-git-send-email-jbacik@fb.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1447856703-2566-1-git-send-email-jbacik@fb.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We try to allocate required+optional before allocate required only and
-expand with optional.
+On Wed, Nov 18, 2015 at 09:25:03AM -0500, Josef Bacik wrote:
+> We have some hardware that takes about 30 seconds to setup common clocks for
+> ASPM, but our bios'es don't actually allow ASPM.  It seems we had this thing in
+> place where we would disable ASPM after the pci bus probe so that we would make
+> sure that pre pcie 1.1 devices would be properly skipped during initialization.
+> This is because the mechanism to disable ASPM doesn't actually disable the
+> setting up of the link state stuff, it just keeps us from changing the link
+> state after the fact.  So instead make it so that when we call pcie_no_aspm()
+> that we disable ASPM completley, that is we skip setting up the link state and
+> everything.  This way we avoid the costly setup for a feature we cannot support
+> in the first place and we also make sure we are safe from future tampering with
+> the ASPM link state.  Thanks,
 
-At first we update size and alignment for required+optional resource.
-And after that we reorder them with new alignment, but current we only
-do that STARTALIGN ones.
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 317e355..5f84af2 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -954,6 +954,7 @@ void pcie_no_aspm(void)
+>  	if (!aspm_force) {
+>  		aspm_policy = POLICY_DEFAULT;
+>  		aspm_disabled = 1;
+> +		aspm_support_enabled = false;
 
-For SIZEALIGN type resource, after add back add_size, the alignment
-get changed, so need to do sorting like STARTALIGN type resources.
+After this patch, I think aspm_disabled and aspm_support_enabled are
+equivalent.  If that's the case, we should get rid of one of them.
 
-Also we need to reorder the sorting back after we restore
-resource to required only when required+optional fail to allocate for all.
-
-So move out the reordering code from the loop to separated function,
-and call it two times accordingly.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 62 +++++++++++++++++++++++++++++--------------------
- 1 file changed, 37 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 53014e1..885b9f8 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -286,6 +286,31 @@ static inline void reset_resource(struct resource *res)
- 	res->flags = 0;
- }
- 
-+static void sort_resources(struct list_head *head)
-+{
-+	struct pci_dev_resource *res1, *tmp_res, *res2;
-+
-+	list_for_each_entry_safe(res1, tmp_res, head, list) {
-+		resource_size_t align1, size1, align2, size2;
-+
-+		align1 = pci_resource_alignment(res1->dev, res1->res);
-+		size1 = resource_size(res1->res);
-+
-+		/* reorder it */
-+		list_for_each_entry(res2, head, list) {
-+			if (res2 == res1)
-+				break;
-+
-+			align2 = pci_resource_alignment(res2->dev, res2->res);
-+			size2 = resource_size(res2->res);
-+			if (is_before(align1, size1, align2, size2)) {
-+				list_move_tail(&res1->list, &res2->list);
-+				break;
-+			}
-+		}
-+	}
-+}
-+
- /**
-  * reassign_resources_sorted() - satisfy any additional resource requests
-  *
-@@ -454,9 +479,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
--	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
-+	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
--	resource_size_t add_align, align;
-+	resource_size_t add_align;
- 
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -471,47 +496,32 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 
- 	/* Update res in head list with add_size in realloc_head list */
--	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
-+	list_for_each_entry(dev_res, head, list) {
- 		dev_res->res->end += get_res_add_size(realloc_head,
- 							dev_res->res);
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
--		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
--		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
--		 * Here just fix the additional alignment for bridge
-+		 * 1. bridge resource with IORESOURCE_STARTALIGN
-+		 *    need to update start to change alignment
-+		 * 2. resource with IORESOURCE_SIZEALIGN
-+		 *    update size above already change alignment.
- 		 */
- 		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
- 			continue;
- 
- 		add_align = get_res_add_align(realloc_head, dev_res->res);
- 
--		/*
--		 * The "head" list is sorted by the alignment to make sure
--		 * resources with bigger alignment will be assigned first.
--		 * After we change the alignment of a dev_res in "head" list,
--		 * we need to reorder the list by alignment to make it
--		 * consistent.
--		 */
--		if (add_align > dev_res->res->start) {
-+		if (add_align) {
- 			resource_size_t r_size = resource_size(dev_res->res);
- 
- 			dev_res->res->start = add_align;
- 			dev_res->res->end = add_align + r_size - 1;
--
--			list_for_each_entry(dev_res2, head, list) {
--				align = pci_resource_alignment(dev_res2->dev,
--							       dev_res2->res);
--				if (add_align > align) {
--					list_move_tail(&dev_res->list,
--						       &dev_res2->list);
--					break;
--				}
--			}
-                }
--
- 	}
- 
-+	sort_resources(head);
-+
- 	/* Try updated head list with add_size added */
- 	assign_requested_resources_sorted(head, &local_fail_head);
- 
-@@ -553,6 +563,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	free_list(&save_head);
- 
-+	sort_resources(head);
-+
- requested_and_reassign:
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
--- 
-1.8.4.5
-
+>  	}
+>  }
+>  
+> -- 
+> 2.1.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
