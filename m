@@ -1,64 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:55926 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753931AbbLFVtg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Dec 2015 16:49:36 -0500
-Subject: Re: [PATCH v7 45/50] drivers/of: Avoid recursively calling
- unflatten_dt_node()
-To: Rob Herring <robherring2@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAL_Jsq+BnPEKkRgQX4+e0MA9dKLVLhy8rVF25Fr9yXL2jp+WLA@mail.gmail.com>
-Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Pantelis Antoniou <panto@antoniou-consulting.com>,
-	Frank Rowand <frowand.list@gmail.com>
-From: Guenter Roeck <linux@roeck-us.net>
-Message-ID: <5664AD69.6050702@roeck-us.net>
-Date: Sun, 6 Dec 2015 13:49:29 -0800
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 3 Dec 2015 23:40:13 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Josef Bacik <jbacik@fb.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, bhelgaas@google.com, shli@fb.com,
+	kernel-team@fb.com
+Subject: Re: [PATCH] pci: completely disable aspm if it's unsupported
+Message-ID: <20151203224013.GG14427@amd>
+References: <1447856703-2566-1-git-send-email-jbacik@fb.com>
 MIME-Version: 1.0
-In-Reply-To: <CAL_Jsq+BnPEKkRgQX4+e0MA9dKLVLhy8rVF25Fr9yXL2jp+WLA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1447856703-2566-1-git-send-email-jbacik@fb.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/06/2015 12:28 PM, Rob Herring wrote:
-> +Guenter
->
-> On Wed, Nov 4, 2015 at 7:12 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->> In current implementation, unflatten_dt_node() is called recursively
->> to unflatten device nodes in FDT blob. It's stress to limited stack
->> capacity.
->>
->> This avoids calling the function recursively, meaning the device
->> nodes are unflattened in one call on unflatten_dt_node(): two arrays
->> are introduced to track the parent path size and the device node of
->> current level of depth, which will be used by the device node on next
->> level of depth to be unflattened. Also, the parameter "poffset" and
->> "fpsize" are unused and dropped.
->
-> Do you plan to respin the OF parts at least soon? There's another
-> problem Guenter found that of_fdt_unflatten_tree is not re-entrant due
-> to "depth" being static and this series fixes that. So I'd rather
-> apply this and avoid adding a mutex if possible.
->
+Hi!
 
-Hi Rob,
+> We have some hardware that takes about 30 seconds to setup common clocks for
+> ASPM, but our bios'es don't actually allow ASPM.  It seems we had this thing in
+> place where we would disable ASPM after the pci bus probe so that we would make
+> sure that pre pcie 1.1 devices would be properly skipped during initialization.
+> This is because the mechanism to disable ASPM doesn't actually disable the
+> setting up of the link state stuff, it just keeps us from changing the link
+> state after the fact.  So instead make it so that when we call pcie_no_aspm()
+> that we disable ASPM completley, that is we skip setting up the link state and
+> everything.  This way we avoid the costly setup for a feature we cannot support
+> in the first place and we also make sure we are safe from future tampering with
+> the ASPM link state.  Thanks,
 
-We see this problem in 4.1, so whatever patch you accept should be
-back-ported to at least that release.
+On thinkpad x60, I have similar problem.
 
-Any idea when this patch will be accepted ? We actively see the problem
-in our kernel, so I'll need a solution soon. Otherwise I'll have to apply
-my patch to our kernel and revert it as soon as the 'real' patch has been
-back-ported.
+I'm carying this for long long time now:
 
-Thanks,
-Guenter
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index a32ba75..5eb7621 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -700,7 +700,7 @@ static int __init acpi_pci_init(void)
+ 
+ 	if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+ 		pr_info("ACPI FADT declares the system doesn't support PCIe ASPM, so disable it\n");
+-		pcie_no_aspm();
++//		pcie_no_aspm();
+ 	}
+ 
+ 	ret = register_acpi_bus_type(&acpi_pci_bus);
 
+
+
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
