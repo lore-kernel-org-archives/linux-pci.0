@@ -1,120 +1,98 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 7 Dec 2015 14:29:42 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:41068 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752660AbbLCRVb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Dec 2015 12:21:31 -0500
+Date: Thu, 3 Dec 2015 11:21:28 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
-Subject: Re: [PATCH 00/11] ARM64 PCI hostbridge init based on ACPI
-Message-ID: <20151207202942.GA14429@localhost>
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+To: Andy Lutomirski <luto@kernel.org>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pcie_aspm: Make link_state_store consistent with
+ link_state_show
+Message-ID: <20151203172128.GA17565@localhost>
+References: <6ff64f0313c4e6400ef536017078e58ec3487c71.1447949082.git.luto@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <6ff64f0313c4e6400ef536017078e58ec3487c71.1447949082.git.luto@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 26, 2015 at 08:49:13PM +0800, Hanjun Guo wrote:
-> This patch set is introducing ARM64 PCI hostbridge init based on ACPI,
-> which based on Jiang Liu's patch set "Consolidate ACPI PCI root common
-> code into ACPI core":
+On Thu, Nov 19, 2015 at 08:05:35AM -0800, Andy Lutomirski wrote:
+> If CONFIG_PCIEASPM_DEBUG is set, then pci devices have a link_state
+> attribute.  Reading that attribute shows the state as a bit mask: 1
+> means L0S upstream, 2 means L0S downstream, and 4 means L1.
 > 
-> https://lkml.org/lkml/2015/5/14/98
+> Oddly, writing to link_state is inconsistent and gets translated,
+> leading to mysterious results in which the value you store isn't
+> comparable the value you load back out.
 > 
-> This patch set including three parts:
+> Fix it by making link_state_store match link_state_show.
 > 
->   - the first part is PATCH 1, which should be merged into Jiang Liu's 
->     patch set to fix the compile error on ARM64 when ACPI enabled.
-> 
->   - the senconed part is the refactoring of mmconfig to let that mechanism
->     can be used for ARM64 too, it's Tomasz's work but he is moving to other
->     work and pretty busy for now, so I will take care of those patches, 
->     Tomasz will show up when some comments need to be addressed :)
-> 
->     In this version of mmconfig refactor patches, I removed the rename
->     of mmconfig -> ecam patch, because mmconfig is in multi places, and need
->     much more effort to convert them all to ecam, Bjorn, if you don't
->     like it, I can add them back.
-> 
->   - The third part is about the ARM64 PCI hostbridge init based on ACPI,
->     first I fixed a compile error for XEN PCI on ARM64 when PCI_MMCONFIG=y,
->     and then introduce PCI init based on Jiang Liu and Tomasz's patch set.
-> 
-> patch for ARM64 ACPI PCI still reserve the bus sysdata to get the domain
-> number, because Yijing's patch set is still under review, will be removed
-> when Yijing's patch set hits upstream.
-> 
-> This patch set was tested by Suravee on Seattle board with legacy interrupt
-> (not MSI), and it works, also tested on qemu by Graeme.
-> 
-> You can get the code from:
-> git://git.linaro.org/leg/acpi/acpi.git, devel branch
-> 
-> Comments are welcomed.
-> 
-> Thanks
-> Hanjun
-> 
-> 
-> Hanjun Guo (3):
->   ARM64 / PCI: introduce struct pci_controller for ACPI
->   XEN / PCI: Remove the dependence on arch x86 when PCI_MMCONFIG=y
->   ARM64 / PCI / ACPI: support for ACPI based PCI hostbridge init
-> 
-> Tomasz Nowicki (8):
->   x86, pci: Clean up comment about buggy MMIO config space access for
->     AMD Fam10h CPUs.
->   x86, pci: Abstract PCI config accessors and use AMD Fam10h workaround
->     exclusively.
->   x86, pci: Reorder logic of pci_mmconfig_insert() function
->   x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
->     out of arch/x86/ directory
->   pci, acpi, mcfg: Provide generic implementation of MCFG code
->     initialization.
->   x86, pci: mmconfig_{32,64}.c code refactoring - remove code
->     duplication.
->   x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
->     driver.
->   pci, acpi, mcfg: Share ACPI PCI config space accessors.
-> 
->  arch/arm64/Kconfig             |   7 +
->  arch/arm64/include/asm/pci.h   |  10 ++
->  arch/arm64/kernel/pci.c        | 245 ++++++++++++++++++++++++++--
->  arch/x86/Kconfig               |   4 +
->  arch/x86/include/asm/pci_x86.h |  34 +---
->  arch/x86/pci/Makefile          |   4 +-
->  arch/x86/pci/acpi.c            |   1 +
->  arch/x86/pci/mmconfig-shared.c | 301 +++++++++++-----------------------
->  arch/x86/pci/mmconfig_32.c     |  35 +---
->  arch/x86/pci/mmconfig_64.c     | 153 ------------------
->  arch/x86/pci/numachip.c        |  25 +--
->  drivers/acpi/Makefile          |   1 +
->  drivers/acpi/mcfg.c            | 103 ++++++++++++
->  drivers/pci/Kconfig            |  10 ++
->  drivers/pci/Makefile           |   5 +
->  drivers/pci/ecam.c             | 358 +++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/pci.c              |  26 +--
->  drivers/xen/pci.c              |   7 +-
->  include/linux/acpi.h           |   2 +
->  include/linux/ecam.h           |  56 +++++++
->  20 files changed, 923 insertions(+), 464 deletions(-)
->  delete mode 100644 arch/x86/pci/mmconfig_64.c
->  create mode 100644 drivers/acpi/mcfg.c
->  create mode 100644 drivers/pci/ecam.c
->  create mode 100644 include/linux/ecam.h
+> Signed-off-by: Andy Lutomirski <luto@kernel.org>
 
-There was a fair amount of unresolved discussion about this series,
-so I'm going to wait for an update.
+Applied to pci/aspm for v4.5, thanks!  You didn't touch the
+"aspm_disabled" check, but I moved it above the input validation code to
+make the patch look like the attached.  I think it's better to not
+even look at the input if aspm_disabled, and this also puts the
+validation code all together.
+
+Let me know if you object.
 
 Bjorn
+
+
+commit 57d86a0485a30145382ad03b9504cc03ba4641c7
+Author: Andy Lutomirski <luto@kernel.org>
+Date:   Thu Nov 19 08:05:35 2015 -0800
+
+    PCI/ASPM: Make sysfs link_state_store() consistent with link_state_show()
+    
+    If CONFIG_PCIEASPM_DEBUG is set, then PCI devices have a link_state
+    attribute.  Reading that attribute shows the state as a bit mask: 1
+    means L0S upstream, 2 means L0S downstream, and 4 means L1.
+    
+    Oddly, writing to link_state is inconsistent and gets translated, leading
+    to mysterious results in which the value you store isn't comparable the
+    value you load back out.
+    
+    Fix it by making link_state_store() match link_state_show().
+    
+    [bhelgaas: Check "aspm_disabled" *before* validating input.  When
+    "aspm_disabled" is set, this changes the error for invalid input from
+    -EINVAL to -EPERM.]
+    
+    Signed-off-by: Andy Lutomirski <luto@kernel.org>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 317e355..2dfe7fd 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -834,21 +834,15 @@ static ssize_t link_state_store(struct device *dev,
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct pcie_link_state *link, *root = pdev->link_state->root;
+-	u32 val, state = 0;
+-
+-	if (kstrtouint(buf, 10, &val))
+-		return -EINVAL;
++	u32 state;
+ 
+ 	if (aspm_disabled)
+ 		return -EPERM;
+-	if (n < 1 || val > 3)
+-		return -EINVAL;
+ 
+-	/* Convert requested state to ASPM state */
+-	if (val & PCIE_LINK_STATE_L0S)
+-		state |= ASPM_STATE_L0S;
+-	if (val & PCIE_LINK_STATE_L1)
+-		state |= ASPM_STATE_L1;
++	if (kstrtouint(buf, 10, &state))
++		return -EINVAL;
++	if ((state & ~ASPM_STATE_ALL) != 0)
++		return -EINVAL;
+ 
+ 	down_read(&pci_bus_sem);
+ 	mutex_lock(&aspm_lock);
