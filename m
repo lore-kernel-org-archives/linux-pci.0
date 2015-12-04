@@ -1,100 +1,99 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
+Date: Fri, 4 Dec 2015 11:46:21 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH 09/10] drivers/pci: make host/pci-keystone.c explicitly non-modular
-Date: Sat, 12 Dec 2015 20:41:56 -0500
-Message-ID: <1449970917-12633-10-git-send-email-paul.gortmaker@windriver.com>
-In-Reply-To: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: MSI: Only use the generic MSI layer when domain is
+ hierarchical
+Message-ID: <20151204174621.GA20125@localhost>
+References: <1448288826-19058-1-git-send-email-marc.zyngier@arm.com>
+ <PS1PR06MB11808365B312F6C3DAE2DB35F5000@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151204002758.GA10479@localhost>
+ <20151204081350.2113b7e6@why.wild-wind.fr.eu.org>
+ <20151204161735.GA13427@localhost>
+ <5661C863.3070308@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5661C863.3070308@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+On Fri, Dec 04, 2015 at 05:07:47PM +0000, Marc Zyngier wrote:
+> Hi Bjorn,
+> 
+> On 04/12/15 16:17, Bjorn Helgaas wrote:
+> > On Fri, Dec 04, 2015 at 08:13:50AM +0000, Marc Zyngier wrote:
+> >> On Thu, 3 Dec 2015 18:27:59 -0600
+> >> Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >>
+> >>> On Mon, Nov 30, 2015 at 10:25:34AM +0000, Phil Edworthy wrote:
+> >>>> Cc'd linux-pci ml
+> >>>>
+> >>>> On 23 November 2015 14:27, Marc Zyngier wrote:
+> >>>>
+> >>>> Since d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use struct
+> >>>> device::msi_domain"), we use the MSI domain associated to the PCI device.
+> >>>>
+> >>>> But finding a MSI domain doesn't mean that the domain is implemented
+> >>>> using the generic MSI domain API, and a number of MSI controllers
+> >>>> are still using the arch_setup_msi_irq/arch_teardown_msi_irqs.
+> >>>>
+> >>>> In order to avoid a firework on these systems, check that the domain
+> >>>> we just obtained is hierarchical. If not, don't use the generic MSI
+> >>>> stuff and stick with the old one. Not pretty, but reliable.
+> >>>>
+> >>>> Another insentive to rework those drivers and phase out this API.
+> >>>>
+> >>>> Reported-by: Phil Edworthy <phil.edworthy@renesas.com>
+> >>>> Tested-by: Phil Edworthy <phil.edworthy@renesas.com>
+> >>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> >>>
+> >>> Thanks, I applied this with Thomas' ack to pci/msi for v4.5.
+> >>>
+> >>> It looks like d8a1cb757550 appeared in v4.3.  Is this a fix for that
+> >>> commit?  Does this need to be backported via a stable tag?
+> >>
+> >> Hi Bjorn,
+> >>
+> >> I think this really deserves to be queued as an immediate fix for 4.4
+> >> rather than 4.5, as some systems in mainline are affected by this bug:
+> >>
+> >> http://www.spinics.net/lists/arm-kernel/msg465792.html
+> >>
+> >> It would also deserve a stable tag for 4.3.
+> > 
+> > OK, I can do that.  It would save me a lot of time to get a hint when
+> > this is the case.  I couldn't tell if this issue happened on mainline
+> > or with some still out-of-tree patches.  I'd also like to know what
+> > machines are affected.
+> 
+> Sorry, I should have been more clear. At the moment, I've had reports of
+> at least RCar, Tegra and Armada 370 being affected. Anything using the
+> Designware driver will probably also fall over.
+> 
+> > I did look at d8a1cb757550, and the connection between that and this
+> > patch is not completely obvious; would you regard this as a fix to
+> > d8a1cb757550?  Should this patch be backported to every kernel that
+> > includes d8a1cb757550?  Or is this more closely tied to some other
+> > change?
+> 
+> d8a1cb757550 is indeed the source of the problem: we assumes that
+> finding a domain identified by a given device is enough to decide that
+> we're using the generic MSI layer. Unfortunately, this is not the case,
+> and a number of ARM drivers are actually registering their own domain
+> the same way, without using the generic MSI layer. I didn't spot this on
+> arm64, as all my platforms are using this layer.
+> 
+> So it seems better to merge this in 4.4, with a backport to 4.3 (which
+> is the first kernel to contain this commit).
 
-drivers/pci/host/Kconfig:config PCI_KEYSTONE
-drivers/pci/host/Kconfig:       bool "TI Keystone PCIe controller"
+Thanks, Marc!  I moved this to for-linus for v4.4, added info about
+the machines, and added a stable tag for v4.3.
 
-...meaning that it currently is not being built as a module by anyone.
-
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.
-
-We explicitly disallow a driver unbind, since that doesn't have a
-sensible use case anyway, and it allows us to drop the ".remove"
-code for non-modular drivers.
-
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
-
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
-
-Cc: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pci-keystone.c | 21 +++------------------
- 1 file changed, 3 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index 0aa81bd3de12..0493d4257bde 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -16,7 +16,7 @@
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/irqdomain.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/msi.h>
- #include <linux/of_irq.h>
- #include <linux/of.h>
-@@ -329,16 +329,6 @@ static const struct of_device_id ks_pcie_of_match[] = {
- 	},
- 	{ },
- };
--MODULE_DEVICE_TABLE(of, ks_pcie_of_match);
--
--static int __exit ks_pcie_remove(struct platform_device *pdev)
--{
--	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
--
--	clk_disable_unprepare(ks_pcie->clk);
--
--	return 0;
--}
- 
- static int __init ks_pcie_probe(struct platform_device *pdev)
- {
-@@ -398,15 +388,10 @@ fail_clk:
- 
- static struct platform_driver ks_pcie_driver __refdata = {
- 	.probe  = ks_pcie_probe,
--	.remove = __exit_p(ks_pcie_remove),
- 	.driver = {
- 		.name	= "keystone-pcie",
- 		.of_match_table = of_match_ptr(ks_pcie_of_match),
-+		.suppress_bind_attrs = true,
- 	},
- };
--
--module_platform_driver(ks_pcie_driver);
--
--MODULE_AUTHOR("Murali Karicheri <m-karicheri2@ti.com>");
--MODULE_DESCRIPTION("Keystone PCIe host controller driver");
--MODULE_LICENSE("GPL v2");
-+builtin_platform_driver(ks_pcie_driver);
--- 
-2.6.1
-
+Bjorn
