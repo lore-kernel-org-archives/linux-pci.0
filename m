@@ -1,96 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:60820 "EHLO hauke-m.de"
+Received: from mail.kernel.org ([198.145.29.136]:56339 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758327AbbLBOaI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 Dec 2015 09:30:08 -0500
-Subject: Re: [PATCH v4 4/5] PCI: iproc: Add iProc PCIe MSI support
-To: Ray Jui <rjui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>
-References: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
- <1448645868-5730-5-git-send-email-rjui@broadcom.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
-From: Hauke Mehrtens <hauke@hauke-m.de>
-Message-ID: <565F006B.9010605@hauke-m.de>
-Date: Wed, 2 Dec 2015 15:30:03 +0100
+	id S1753460AbbLDQRj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Dec 2015 11:17:39 -0500
+Date: Fri, 4 Dec 2015 10:17:35 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: MSI: Only use the generic MSI layer when domain is
+ hierarchical
+Message-ID: <20151204161735.GA13427@localhost>
+References: <1448288826-19058-1-git-send-email-marc.zyngier@arm.com>
+ <PS1PR06MB11808365B312F6C3DAE2DB35F5000@PS1PR06MB1180.apcprd06.prod.outlook.com>
+ <20151204002758.GA10479@localhost>
+ <20151204081350.2113b7e6@why.wild-wind.fr.eu.org>
 MIME-Version: 1.0
-In-Reply-To: <1448645868-5730-5-git-send-email-rjui@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151204081350.2113b7e6@why.wild-wind.fr.eu.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/27/2015 06:37 PM, Ray Jui wrote:
-> This patch adds PCIe MSI support for both PAXB and PAXC interfaces on
-> all iProc based platforms
+On Fri, Dec 04, 2015 at 08:13:50AM +0000, Marc Zyngier wrote:
+> On Thu, 3 Dec 2015 18:27:59 -0600
+> Bjorn Helgaas <helgaas@kernel.org> wrote:
 > 
-> The iProc PCIe MSI support deploys an event queue based implementation.
-> Each event queue is serviced by a GIC interrupt and can support up to 64
-> MSI vectors. Host memory is allocated for the event queues, and each event
-> queue consists of 64 word-sized entries. MSI data is written to the
-> lower 16-bit of each entry, whereas the upper 16-bit of the entry is
-> reserved for the controller for internal processing
+> > On Mon, Nov 30, 2015 at 10:25:34AM +0000, Phil Edworthy wrote:
+> > > Cc'd linux-pci ml
+> > > 
+> > > On 23 November 2015 14:27, Marc Zyngier wrote:
+> > > 
+> > > Since d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use struct
+> > > device::msi_domain"), we use the MSI domain associated to the PCI device.
+> > > 
+> > > But finding a MSI domain doesn't mean that the domain is implemented
+> > > using the generic MSI domain API, and a number of MSI controllers
+> > > are still using the arch_setup_msi_irq/arch_teardown_msi_irqs.
+> > > 
+> > > In order to avoid a firework on these systems, check that the domain
+> > > we just obtained is hierarchical. If not, don't use the generic MSI
+> > > stuff and stick with the old one. Not pretty, but reliable.
+> > > 
+> > > Another insentive to rework those drivers and phase out this API.
+> > > 
+> > > Reported-by: Phil Edworthy <phil.edworthy@renesas.com>
+> > > Tested-by: Phil Edworthy <phil.edworthy@renesas.com>
+> > > Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> > 
+> > Thanks, I applied this with Thomas' ack to pci/msi for v4.5.
+> > 
+> > It looks like d8a1cb757550 appeared in v4.3.  Is this a fix for that
+> > commit?  Does this need to be backported via a stable tag?
 > 
-> Each event queue is tracked by a head pointer and tail pointer. Head
-> pointer indicates the next entry in the event queue to be processed by
-> the driver and is updated by the driver after processing is done.
-> The controller uses the tail pointer as the next MSI data insertion
-> point. The controller ensures MSI data is flushed to host memory before
-> updating the tail pointer and then triggering the interrupt
+> Hi Bjorn,
 > 
-> MSI IRQ affinity is supported by evenly distributing the interrupts to
-> each CPU core. MSI vector is moved from one GIC interrupt to another in
-> order to steer to the target CPU
+> I think this really deserves to be queued as an immediate fix for 4.4
+> rather than 4.5, as some systems in mainline are affected by this bug:
 > 
-> Therefore, the actual number of supported MSI vectors is:
+> http://www.spinics.net/lists/arm-kernel/msg465792.html
 > 
-> M * 64 / N
-> 
-> where M denotes the number of GIC interrupts (event queues), and N
-> denotes the number of CPU cores
-> 
-> This iProc event queue based MSI support should not be used with newer
-> platforms with integrated MSI support in the GIC (e.g., giv2m or
-> gicv3-its)
-> 
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
-> Reviewed-by: Anup Patel <anup.patel@broadcom.com>
-> Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
-> Reviewed-by: Scott Branden <sbranden@broadcom.com>
-> ---
->  drivers/pci/host/Kconfig               |   9 +
->  drivers/pci/host/Makefile              |   1 +
->  drivers/pci/host/pcie-iproc-bcma.c     |   1 +
->  drivers/pci/host/pcie-iproc-msi.c      | 675 +++++++++++++++++++++++++++++++++
->  drivers/pci/host/pcie-iproc-platform.c |   1 +
->  drivers/pci/host/pcie-iproc.c          |  26 ++
->  drivers/pci/host/pcie-iproc.h          |  23 +-
->  7 files changed, 734 insertions(+), 2 deletions(-)
->  create mode 100644 drivers/pci/host/pcie-iproc-msi.c
-> 
+> It would also deserve a stable tag for 4.3.
 
-.....
->  
->  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
->  int iproc_pcie_remove(struct iproc_pcie *pcie);
->  
-> +#ifdef CONFIG_PCI_MSI
-> +int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
-> +void iproc_msi_exit(struct iproc_pcie *pcie);
-> +#else
-> +static inline int iproc_msi_init(struct iproc_pcie *pcie,
-> +				 struct device_node *node)
-> +{
-> +	return -ENODEV;
-> +}
-> +static void iproc_msi_exit(struct iproc_pcie *pcie)
+OK, I can do that.  It would save me a lot of time to get a hint when
+this is the case.  I couldn't tell if this issue happened on mainline
+or with some still out-of-tree patches.  I'd also like to know what
+machines are affected.
 
-Please use static inline here.
+I did look at d8a1cb757550, and the connection between that and this
+patch is not completely obvious; would you regard this as a fix to
+d8a1cb757550?  Should this patch be backported to every kernel that
+includes d8a1cb757550?  Or is this more closely tied to some other
+change?
 
-> +{
-> +}
-> +#endif
-> +
->  #endif /* _PCIE_IPROC_H */
-> 
-
-Hauke
+Bjorn
