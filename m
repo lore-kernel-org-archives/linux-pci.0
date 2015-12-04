@@ -1,111 +1,116 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V2 17/23] acpi, mcfg: Implement two calls that might be used to inject/remove MCFG region.
-Date: Wed, 16 Dec 2015 16:16:27 +0100
-Message-Id: <1450278993-12664-18-git-send-email-tn@semihalf.com>
-In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+MIME-Version: 1.0
+Date: Fri, 4 Dec 2015 15:07:23 +0100
+Message-ID: <CAJZ5v0g4AfzTSr8d8O8DY1aUT1-T-fnab2=CO42HE=Xe6QkbUQ@mail.gmail.com>
+Subject: [GIT PULL] Power management and ACPI fixes for v4.4-rc4
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Lets abstract two calls which allow to inject and remove MCFG regions
-which may come from DSDT table. These calls will be used for x86 and ARM64
-PCI host bridge driver in the later patches.
+Hi Linus,
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- drivers/acpi/mcfg.c      | 38 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci-acpi.h |  9 +++++++++
- 2 files changed, 47 insertions(+)
+Please pull from
 
-diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
-index 3e1e7be..dca4c4e 100644
---- a/drivers/acpi/mcfg.c
-+++ b/drivers/acpi/mcfg.c
-@@ -10,6 +10,7 @@
- #include <linux/acpi.h>
- #include <linux/ecam.h>
- #include <linux/pci.h>
-+#include <linux/pci-acpi.h>
- 
- #define	PREFIX	"MCFG: "
- 
-@@ -77,6 +78,43 @@ int __init acpi_parse_mcfg(struct acpi_table_header *header)
- 	return 0;
- }
- 
-+int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci)
-+{
-+	struct pci_mmcfg_region *cfg;
-+	struct acpi_pci_root *root;
-+	int seg, start, end, err;
-+
-+	root = ci->root;
-+	seg = root->segment;
-+	start = root->secondary.start;
-+	end = root->secondary.end;
-+
-+	cfg = pci_mmconfig_lookup(seg, start);
-+	if (cfg)
-+		return 0;
-+
-+	cfg = pci_mmconfig_alloc(seg, start, end, root->mcfg_addr);
-+	if (!cfg)
-+		return -ENOMEM;
-+
-+	err = pci_mmconfig_inject(cfg);
-+	return err;
-+}
-+
-+void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci)
-+{
-+	struct acpi_pci_root *root = ci->root;
-+	struct pci_mmcfg_region *cfg;
-+
-+	cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
-+	if (!cfg)
-+		return;
-+
-+	if (cfg->hot_added)
-+		pci_mmconfig_delete(root->segment, root->secondary.start,
-+				    root->secondary.end);
-+}
-+
- int __init __weak acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
- 					struct acpi_mcfg_allocation *cfg)
- {
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 89ab057..c277415 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -79,6 +79,15 @@ extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- void acpi_pci_add_bus(struct pci_bus *bus);
- void acpi_pci_remove_bus(struct pci_bus *bus);
- 
-+#ifdef	CONFIG_PCI_MMCONFIG
-+int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci);
-+void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci);
-+#else
-+static inline int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci)
-+{ return 0; }
-+static inline void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci) { }
-+#endif
-+
- #ifdef	CONFIG_ACPI_PCI_SLOT
- void acpi_pci_slot_init(void);
- void acpi_pci_slot_enumerate(struct pci_bus *bus);
--- 
-1.9.1
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ pm+acpi-4.4-rc4
 
+to receive power management and ACPI fixes for v4.4-rc4 with
+top-most commit d441fe25e7de576e36a3cd96f22b737d2f15372a
+
+ Merge branches 'pm-domains' and 'pm-cpufreq'
+
+on top of commit 31ade3b83e1821da5fbb2f11b5b3d4ab2ec39db8
+
+ Linux 4.4-rc3
+
+These fix a recent regression in the ACPI PCI host bridge
+initialization code, clean up some recent changes (generic
+power domains framework, ACPI AML debugger support), fix
+three older but annoying bugs (PCI power management. generic
+power domains framework, cpufreq) and a build problem (device
+properties framework), and update a stale MAINTAINERS entry
+(ACPI backlight driver).
+
+Specifics:
+
+ - Fix a regression in the ACPI PCI host bridge initialization code
+   introduced by the recent consolidation of the host bridge handling
+   on x86 and ia64 that forgot to take one special piece of code
+   related to NUMA on x86 into account (Liu Jiang).
+
+ - Improve the Kconfig help description of the new ACPI AML debugger
+   support option to avoid possible confusion (Peter Zijlstra).
+
+ - Remove a piece of code in the generic power domains framework
+   that should have been removed by one of the recent commits
+   modifying that code (Ulf Hansson).
+
+ - Reduce the log level of a PCI PM message that generates a lot
+   of false-positive log noise for some drivers and improve the
+   message itself while at it (Imre Deak).
+
+ - Fix the OF-based domain lookup code in the generic power domains
+   framework to make it drop references to DT nodes correctly (Eric
+   Anholt).
+
+ - Prevent the cpufreq core from setting the policy back to the
+   default after a CPU offline/online cycle for cpufreq drivers
+   providing the ->setpolicy callback (Srinivas Pandruvada).
+
+ - Fix a build problem for CONFIG_ACPI unset in the device
+   properties framework (Hanjun Guo).
+
+ - Fix a stale file path in the ACPI backlight driver entry in
+   MAINTAINERS (Dan Carpenter).
+
+Thanks!
+
+
+---------------
+
+Dan Carpenter (1):
+      MAINTAINERS: ACPI / video: update a file name in drivers/acpi/
+
+Eric Anholt (1):
+      PM / Domains: Fix bad of_node_put() in failure paths of
+genpd_dev_pm_attach()
+
+Hanjun Guo (1):
+      ACPI / property: fix compile error for
+acpi_node_get_property_reference() when
+      CONFIG_ACPI=n
+
+Imre Deak (1):
+      PCI / PM: Tune down retryable runtime suspend error messages
+
+Liu Jiang (1):
+      x86/PCI/ACPI: Fix regression caused by commit 4d6b4e69a245
+
+Peter Zijlstra (1):
+      ACPI: Better describe ACPI_DEBUGGER
+
+Srinivas Pandruvada (1):
+      cpufreq: use last policy after online for drivers with ->setpolicy
+
+Ulf Hansson (1):
+      PM / Domains: Validate cases of a non-bound driver in genpd governor
+
+---------------
+
+ MAINTAINERS                          |  2 +-
+ arch/x86/pci/bus_numa.c              | 13 ++-----------
+ drivers/acpi/Kconfig                 |  4 ++--
+ drivers/acpi/pci_root.c              |  7 +++++++
+ drivers/base/power/domain.c          |  3 +--
+ drivers/base/power/domain_governor.c |  3 ---
+ drivers/cpufreq/cpufreq.c            | 14 ++++++++++----
+ drivers/pci/pci-driver.c             | 16 ++++++++++++++--
+ include/linux/acpi.h                 |  4 ++--
+ include/linux/cpufreq.h              |  1 +
+ 10 files changed, 40 insertions(+), 27 deletions(-)
