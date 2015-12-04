@@ -1,52 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:36333 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751873AbbLJXHH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 18:07:07 -0500
-Content-Type: text/plain; charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
-Subject: Re: [PATCH] drivers:pci:hotplug Fix all space prohibited before that ,
-From: sasa bogicevic <brutallesale@gmail.com>
-In-Reply-To: <20151210224700.GD367@localhost>
-Date: Fri, 11 Dec 2015 00:07:03 +0100
-Cc: rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Message-Id: <6CF18E87-8037-4BD5-82EE-5CCA2BCE8A75@gmail.com>
-References: <1449744040-76428-1-git-send-email-brutallesale@gmail.com> <20151210224700.GD367@localhost>
-To: Bjorn Helgaas <helgaas@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:50761 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754302AbbLDPFR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Dec 2015 10:05:17 -0500
+Date: Fri, 4 Dec 2015 09:05:13 -0600
+From: Rob Herring <robh@kernel.org>
+To: Simon Horman <horms+renesas@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 4/4] PCI: rcar: add device tree support for r8a7793
+Message-ID: <20151204150513.GA29345@rob-hp-laptop>
+References: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
+ <1449096700-23304-5-git-send-email-horms+renesas@verge.net.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449096700-23304-5-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I wanted to start with approach one error one folder so I did “space prohibited before ,” in just hotplug folder. I used checkpatch script to see if I nailed it and the output was fine.
-When I do grep -rl I also get the same result eventhou when I look at the, for example, drivers/pci/hotplug/shpchp_ctrl.c there is no space before comma anywhere. I double checked it. I didn’t do header files unfortunately so that errors are expected I guess.
-
-./scripts/checkpatch.pl --file --terse drivers/pci/hotplug/shpchp_ctrl.c 
-drivers/pci/hotplug/shpchp_ctrl.c:190: WARNING: Block comments use * on subsequent lines
-drivers/pci/hotplug/shpchp_ctrl.c:264: WARNING: line over 80 characters
-drivers/pci/hotplug/shpchp_ctrl.c:265: WARNING: line over 80 characters
-drivers/pci/hotplug/shpchp_ctrl.c:344: ERROR: return is not a function, parentheses are not required
-drivers/pci/hotplug/shpchp_ctrl.c:359: ERROR: return is not a function, parentheses are not required
-drivers/pci/hotplug/shpchp_ctrl.c:439: WARNING: Possible unnecessary 'out of memory' message
-drivers/pci/hotplug/shpchp_ctrl.c:463: WARNING: space prohibited between function name and open parenthesis '('
-drivers/pci/hotplug/shpchp_ctrl.c:478: WARNING: space prohibited between function name and open parenthesis '('
-drivers/pci/hotplug/shpchp_ctrl.c:569: WARNING: space prohibited between function name and open parenthesis '('
-drivers/pci/hotplug/shpchp_ctrl.c:626: WARNING: space prohibited between function name and open parenthesis ‘('
-total: 2 errors, 8 warnings, 730 lines checked
-
-I used objdiff to record and see if I didn’t change anything and I got no output so I guess all is good, don’t know why grep finds “ ,” it is a mystery to me since I am on my working branch, looking at a file and it is not there. Can you also take a look on your side ? 
-
-I wanted to do one small thing and when I see that it is good and accepted from you then do all warnings and errors one by one.
-
-Thanks, Sasa
-
-{
-	name: Bogicevic Sasa
-	phone: +381606006200
-}
-
-
-
-> On Dec 10, 2015, at 23:47, Bjorn Helgaas <helgaas@kernel.org> wrote:
+On Thu, Dec 03, 2015 at 07:51:40AM +0900, Simon Horman wrote:
+> Simply document new compatibility string.
+> As a previous patch adds a generic R-Car Gen2 compatibility string
+> there appears to be no need for a driver updates.
 > 
-> grep -rl " ," drivers/pci/
+> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
+Acked-by: Rob Herring <robh@kernel.org>
+
+> 
+> ---
+> * The r8a7792 and r8a7794 are omitted from this change as the
+>   hardware in question does not appear to be present on those SoCs.
+> 
+> v2
+> * No change
+> ---
+>  Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> index 6b4d2f798386..d529530b27d2 100644
+> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> @@ -4,6 +4,7 @@ Required properties:
+>  compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
+>  	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
+>  	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
+> +	    "renesas,pcie-r8a7793" for the R8A7793 SoC;
+>  	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
+>  
+>  	    When compatible with the generic version, nodes must list the
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
