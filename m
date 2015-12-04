@@ -1,60 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:41658 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753935AbbLIWz0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Dec 2015 17:55:26 -0500
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v9 5/7] PCI: irqdomain: Look up IRQ domain by fwnode_handle
-Date: Wed,  9 Dec 2015 22:54:55 +0000
-Message-Id: <1449701697-6366-6-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
-References: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v5 5/5] ARM: dts: Enable MSI support for Broadcom Cygnus
+Date: Fri, 4 Dec 2015 09:35:02 -0800
+Message-ID: <1449250502-10679-6-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1449250502-10679-1-git-send-email-rjui@broadcom.com>
+References: <1449250502-10679-1-git-send-email-rjui@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+Enable MSI support for Broadcom Cygnus platforms
 
-This patch adds a second way of finding an IRQ domain associated with
-a root PCI bus.  After looking to see if one can be found through
-the OF tree, it attempts to look up the IRQ domain through an
-fwnode_handle stored in the pci_sysdata struct.
-
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+Reviewed-by: Pramod KUMAR <pramodku@broadcom.com>
+Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
 ---
- drivers/pci/probe.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ arch/arm/boot/dts/bcm-cygnus.dtsi | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 750f907..c6369dd 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -674,6 +674,20 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
- 	 */
- 	d = pci_host_bridge_of_msi_domain(bus);
+diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi b/arch/arm/boot/dts/bcm-cygnus.dtsi
+index 2778533..789b519 100644
+--- a/arch/arm/boot/dts/bcm-cygnus.dtsi
++++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
+@@ -162,6 +162,17 @@
+ 				  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
  
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+	/*
-+	 * If no IRQ domain was found via the OF tree, try looking it up
-+	 * directly through the fwnode_handle.
-+	 */
-+	if (!d) {
-+		struct fwnode_handle *fwnode = pci_root_bus_fwnode(bus);
+ 			status = "disabled";
 +
-+		if (fwnode)
-+			d = irq_find_matching_fwnode(fwnode,
-+						     DOMAIN_BUS_PCI_MSI);
-+	}
-+#endif
-+
- 	return d;
- }
++			msi-parent = <&msi0>;
++			msi0: msi@18012000 {
++				compatible = "brcm,iproc-msi";
++				msi-controller;
++				interrupt-parent = <&gic>;
++				interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
++					     <GIC_SPI 97 IRQ_TYPE_NONE>,
++					     <GIC_SPI 98 IRQ_TYPE_NONE>,
++					     <GIC_SPI 99 IRQ_TYPE_NONE>;
++			};
+ 		};
  
+ 		pcie1: pcie@18013000 {
+@@ -183,6 +194,17 @@
+ 				  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
+ 
+ 			status = "disabled";
++
++			msi-parent = <&msi1>;
++			msi1: msi@18013000 {
++				compatible = "brcm,iproc-msi";
++				msi-controller;
++				interrupt-parent = <&gic>;
++				interrupts = <GIC_SPI 102 IRQ_TYPE_NONE>,
++					     <GIC_SPI 103 IRQ_TYPE_NONE>,
++					     <GIC_SPI 104 IRQ_TYPE_NONE>,
++					     <GIC_SPI 105 IRQ_TYPE_NONE>;
++			};
+ 		};
+ 
+ 		uart0: serial@18020000 {
 -- 
 1.9.1
 
