@@ -1,128 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41990 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752537AbbLKFNN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:13:13 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 42/60] PCI: Move saved required resource list out of required+optional assigning
-Date: Thu, 10 Dec 2015 21:06:38 -0800
-Message-Id: <1449810416-2950-43-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49960 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751932AbbLDPB7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Dec 2015 10:01:59 -0500
+Date: Fri, 4 Dec 2015 09:01:50 -0600
+From: Rob Herring <robh@kernel.org>
+To: Simon Horman <horms+renesas@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 2/4] PCI: rcar-gen2: add device tree support for
+ r8a7793
+Message-ID: <20151204150150.GA26773@rob-hp-laptop>
+References: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
+ <1449096700-23304-3-git-send-email-horms+renesas@verge.net.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449096700-23304-3-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We will need to share saved required list for alt_size support, so move
-it out from required+optional assigning.
+On Thu, Dec 03, 2015 at 07:51:38AM +0900, Simon Horman wrote:
+> Simply document new compatibility string.
+> As a previous patch adds a generic R-Car Gen2 compatibility string
+> there appears to be no need for a driver updates.
+> 
+> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 30 ++++++++++++++++--------------
- 1 file changed, 16 insertions(+), 14 deletions(-)
+Acked-by: Rob Herring <robh@kernel.org>
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 5a2cd66..1df6345 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -456,6 +456,9 @@ static bool has_addon(struct list_head *head,
- 	int add_count = 0;
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 
-+	if (!realloc_head)
-+		return false;
-+
- 	/* check if we have add really */
- 	list_for_each_entry(dev_res, head, list) {
- 		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
-@@ -492,9 +495,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
- }
- 
- static bool __assign_resources_required_optional_sorted(struct list_head *head,
-+				 struct list_head *save_head,
- 				 struct list_head *realloc_head)
- {
--	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res, *tmp_res;
-@@ -502,12 +505,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 	resource_size_t add_align, add_size;
- 	struct resource *res;
- 
--	if (!has_addon(head, realloc_head))
--		return false;
--
--	if (!save_resources(head, &save_head))
--		return false;
--
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
-@@ -548,7 +545,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 		/* Remove head list from realloc_head list */
- 		list_for_each_entry(dev_res, head, list)
- 			remove_from_list(realloc_head, dev_res->res);
--		free_list(&save_head);
- 		free_list(head);
- 
- 		return true;
-@@ -562,7 +558,7 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 		if (res->parent && !pci_need_to_release(fail_type, res)) {
- 			/* remove it from realloc_head list */
- 			remove_from_list(realloc_head, res);
--			remove_from_list(&save_head, res);
-+			remove_from_list(save_head, res);
- 			list_del(&dev_res->list);
- 			kfree(dev_res);
- 		}
-@@ -581,11 +577,9 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 		}
- 	}
- 	/* Restore start/end/flags from saved list */
--	list_for_each_entry(save_res, &save_head, list)
-+	list_for_each_entry(save_res, save_head, list)
- 		restore_resource(save_res, save_res->res);
- 
--	free_list(&save_head);
--
- 	return false;
- }
- 
-@@ -603,16 +597,24 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 *    then try to reassign add_size for some resources.
- 	 */
- 
-+	LIST_HEAD(save_head);
-+
- 	/* Check required+optional add */
--	if (realloc_head &&
--	    __assign_resources_required_optional_sorted(head, realloc_head))
-+	if (has_addon(head, realloc_head) &&
-+	    save_resources(head, &save_head) &&
-+	    __assign_resources_required_optional_sorted(head, &save_head,
-+					       realloc_head)) {
-+		free_list(&save_head);
- 		return;
-+	}
- 
- 	sort_resources(head);
- 
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
- 
-+	free_list(&save_head);
-+
- 	/* Try to satisfy any additional optional resource
- 		requests */
- 	if (realloc_head)
--- 
-1.8.4.5
-
+> 
+> ---
+> * The r8a7792 is omitted from this change as the hardware in question
+>   does not appear to be present on that SoC.
+> 
+> v2
+> * No change
+> ---
+>  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> index 089a99dcdf10..9c50e0c9d6da 100644
+> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> @@ -8,6 +8,7 @@ OHCI and EHCI controllers.
+>  Required properties:
+>  - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
+>  	      "renesas,pci-r8a7791" for the R8A7791 SoC;
+> +	      "renesas,pci-r8a7793" for the R8A7793 SoC;
+>  	      "renesas,pci-r8a7794" for the R8A7794 SoC;
+>  	      "renesas,pci-rcar-gen2" for a generic R-Car Gen2 compatible device.
+>  
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
