@@ -1,114 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47382 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750853AbbLKFKJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:10:09 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 40/60] PCI: Separate required+optional assigning to another function
-Date: Thu, 10 Dec 2015 21:06:36 -0800
-Message-Id: <1449810416-2950-41-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:59220 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751419AbbLDXow (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Dec 2015 18:44:52 -0500
+Date: Fri, 4 Dec 2015 17:44:47 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vladis Dronov <vdronov@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: fix missing ROM content warning in
+ pci_get_rom_size()
+Message-ID: <20151204234447.GM20125@localhost>
+References: <20151124170331.GB24819@localhost>
+ <1448644806-6506-1-git-send-email-vdronov@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1448644806-6506-1-git-send-email-vdronov@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-__assign_resources_sorted() is getting too big if we put alt_size support
-into it.  Split out required+optional assigning code to another function.
+On Fri, Nov 27, 2015 at 06:20:06PM +0100, Vladis Dronov wrote:
+> Make pci_get_rom_size() to emit a warning if any byte in a PCI ROM
+> header or data signature is not following the standard ("PCI Local
+> Bus Specification" or "PCI Firmware Specification Revision 3.x"),
+> not only the first one.
+> 
+> Signed-off-by: Vladis Dronov <vdronov@redhat.com>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
- 1 file changed, 27 insertions(+), 20 deletions(-)
+Applied as follows to pci/misc for v4.5, thanks!
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a8e3eaa..b813340 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -473,20 +473,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
- 	res->flags = save_res->flags;
- }
- 
--static void __assign_resources_sorted(struct list_head *head,
--				 struct list_head *realloc_head,
--				 struct list_head *fail_head)
-+static bool __assign_resources_required_optional_sorted(struct list_head *head,
-+				 struct list_head *realloc_head)
- {
--	/*
--	 * Should not assign requested resources at first.
--	 *   they could be adjacent, so later reassign can not reallocate
--	 *   them one by one in parent resource window.
--	 * Try to assign requested + add_size at beginning
--	 *  if could do that, could get out early.
--	 *  if could not do that, we still try to assign requested at first,
--	 *    then try to reassign add_size for some resources.
--	 */
--
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
-@@ -495,12 +484,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	resource_size_t add_align;
- 	struct resource *res;
- 
--	/* Check if optional add_size is there */
--	if (!realloc_head || list_empty(realloc_head))
--		goto requested_and_reassign;
--
- 	if (!save_resources(head, &save_head))
--		goto requested_and_reassign;
-+		return false;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -539,7 +524,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 			remove_from_list(realloc_head, dev_res->res);
- 		free_list(&save_head);
- 		free_list(head);
--		return;
-+
-+		return true;
- 	}
- 
- 	/* check failed type */
-@@ -574,7 +560,28 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	free_list(&save_head);
- 
--requested_and_reassign:
-+	return false;
-+}
-+
-+static void __assign_resources_sorted(struct list_head *head,
-+				 struct list_head *realloc_head,
-+				 struct list_head *fail_head)
-+{
-+	/*
-+	 * Should not assign required resources at first.
-+	 *   they could be adjacent, so later reassign can not reallocate
-+	 *   them one by one in parent resource window.
-+	 * Try to assign required + optional at beginning
-+	 *  if could do that, could get out early.
-+	 *  if could not do that, we still try to assign required at first,
-+	 *    then try to reassign add_size for some resources.
-+	 */
-+
-+	/* Check required+optional add */
-+	if (realloc_head && !list_empty(realloc_head) &&
-+	    __assign_resources_required_optional_sorted(head, realloc_head))
-+		return;
-+
- 	sort_resources(head);
- 
- 	/* Satisfy the must-have resource requests */
--- 
-1.8.4.5
 
+commit f3744cad60c3ecae125c4be566867517d4bac848
+Author: Vladis Dronov <vdronov@redhat.com>
+Date:   Fri Nov 27 18:20:06 2015 +0100
+
+    PCI: Print warnings for all invalid expansion ROM headers
+    
+    We've always validated that both bytes of the Expansion ROM signature and
+    all four bytes of the PCI Data Structure signature (see PCI Firmware spec
+    r3.0, sec 5.1.1), but we only printed a warning if the first byte of the
+    ROM signature was invalid.
+    
+    Print warnings if *any* of those bytes are invalid.  Note that we only look
+    at these headers if we map or read the ROM.
+    
+    [bhelgaas: changelog, tweak printk format]
+    Signed-off-by: Vladis Dronov <vdronov@redhat.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+index eb0ad53..5a1a39d 100644
+--- a/drivers/pci/rom.c
++++ b/drivers/pci/rom.c
+@@ -77,22 +77,18 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
+ 	do {
+ 		void __iomem *pds;
+ 		/* Standard PCI ROMs start out with these bytes 55 AA */
+-		if (readb(image) != 0x55) {
+-			dev_err(&pdev->dev, "Invalid ROM contents\n");
++		if (readw(image) != 0xAA55) {
++			dev_err(&pdev->dev, "Invalid PCI ROM header signature: expecting 0xaa55, got %#06x\n",
++				readw(image));
+ 			break;
+ 		}
+-		if (readb(image + 1) != 0xAA)
+-			break;
+-		/* get the PCI data structure and check its signature */
++		/* get the PCI data structure and check its "PCIR" signature */
+ 		pds = image + readw(image + 24);
+-		if (readb(pds) != 'P')
+-			break;
+-		if (readb(pds + 1) != 'C')
+-			break;
+-		if (readb(pds + 2) != 'I')
+-			break;
+-		if (readb(pds + 3) != 'R')
++		if (readl(pds) != 0x52494350) {
++			dev_err(&pdev->dev, "Invalid PCI ROM data signature: expecting 0x52494350, got %#010x\n",
++				readl(pds));
+ 			break;
++		}
+ 		last_image = readb(pds + 21) & 0x80;
+ 		length = readw(pds + 16);
+ 		image += length * 512;
