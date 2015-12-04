@@ -1,54 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:44283 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753274AbbLOQKi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Dec 2015 11:10:38 -0500
-Subject: Re: [PATCH 0/2] Minor _OSC error handling improvements
-To: Andy Lutomirski <luto@amacapital.net>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Linux API <linux-api@vger.kernel.org>
-References: <cover.1447949171.git.luto@kernel.org>
- <20151203172900.GB17565@localhost>
- <CALCETrV53ZR6Yy0m4xWzNTZJaQWrk9X7cMf3__32H+fN1ya0=g@mail.gmail.com>
-Cc: Andy Lutomirski <luto@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
-From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Message-ID: <56703B5E.7040601@intel.com>
-Date: Tue, 15 Dec 2015 17:10:06 +0100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [RFC PATCH 1/2] PCI/ACPI: Add ACPI support for non ECAM Host
+ Bridge Controllers
+To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+References: <1449155999-220955-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1449155999-220955-2-git-send-email-gabriele.paoloni@huawei.com>
+ <20151203175826.GB2935@red-moon> <5018756.5lEEeJVMod@wuerfel>
+Cc: liguozhu@hisilicon.com,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	linaro-acpi@lists.linaro.org, catalin.marinas@arm.com,
+	Liviu.Dudau@arm.com, linux-kernel@vger.kernel.org,
+	will.deacon@arm.com, linux-acpi@vger.kernel.org,
+	wangzhou1@hisilicon.com, hanjun.guo@linaro.org,
+	liudongdong3@huawei.com, linux-pci@vger.kernel.org,
+	wangyijing@huawei.com, tn@semihalf.com, tglx@linutronix.de,
+	xuwei5@hisilicon.com, bhelgaas@google.com,
+	jiang.liu@linux.intel.com
+From: Jeremy Linton <jeremy.linton@arm.com>
+Message-ID: <5661FB9B.20201@arm.com>
+Date: Fri, 4 Dec 2015 14:46:19 -0600
 MIME-Version: 1.0
-In-Reply-To: <CALCETrV53ZR6Yy0m4xWzNTZJaQWrk9X7cMf3__32H+fN1ya0=g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5018756.5lEEeJVMod@wuerfel>
+Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/15/2015 4:15 AM, Andy Lutomirski wrote:
-> [cc: linux-acpi and Rafael -- whoops]
+On 12/03/2015 02:58 PM, Arnd Bergmann wrote:
+> On Thursday 03 December 2015 17:58:26 Lorenzo Pieralisi wrote:
+>> I will put together a proposal to define the way we specify HID and
+>> related DSD properties for PCI host controllers and send it to
+>> the ACPI working group for review.
 >
-> Rafael, do you want me to resend these?
+> That also requires a change to SBSA, right? Today, SBSA assumes that
+> we have a standard PCI host that will work with any hardware independent
+> PCI implementation in an OS. We either have to give up on SBSA saying
+> much about how PCI hosts are implemented, or stop assuming that hardware
+> is SBSA compliant.
 
-Yes, please.
-
-Thanks,
-Rafael
+Which would be standardizing nonstandard hardware. It would surprise me 
+if that got much traction.
 
 
-> On Thu, Dec 3, 2015 at 9:29 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> On Thu, Nov 19, 2015 at 08:08:18AM -0800, Andy Lutomirski wrote:
->>> This doesn't fix any bugs, but it makes the debugging output a
->>> little more useful.
->>>
->>> Andy Lutomirski (2):
->>>    acpi: Tidy up _OSC error spacing
->>>    acpi: Show _OSC UUID when _OSC fails
->>>
->>>   drivers/acpi/bus.c | 8 ++++----
->>>   1 file changed, 4 insertions(+), 4 deletions(-)
->> These both look fine to me.  If you want it:
->>
->> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
->
 
