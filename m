@@ -1,46 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:19592 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752144AbbLOWbJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Dec 2015 17:31:09 -0500
-Received: from g4t3427.houston.hp.com (g4t3427.houston.hp.com [15.201.208.55])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 562F1F4E
-	for <linux-pci@vger.kernel.org>; Tue, 15 Dec 2015 22:31:09 +0000 (UTC)
-Received: from G4W9119.americas.hpqcorp.net (g4w9119.houston.hp.com [16.210.20.214])
-	(using TLSv1.2 with cipher AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by g4t3427.houston.hp.com (Postfix) with ESMTPS id 5B2A165
-	for <linux-pci@vger.kernel.org>; Tue, 15 Dec 2015 22:31:08 +0000 (UTC)
-From: "Seymour, Shane M" <shane.seymour@hpe.com>
-To: noman pouigt <variksla@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: Adding support for new amplifier on ACPI platform
-Date: Tue, 15 Dec 2015 22:29:43 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB444F74B2@G4W3219.americas.hpqcorp.net>
-References: <CAES_P+9oHnH5JzCZnO9eF-b__Vt+_dxLZ+jFWMX16JMEDXtaVA@mail.gmail.com>
-In-Reply-To: <CAES_P+9oHnH5JzCZnO9eF-b__Vt+_dxLZ+jFWMX16JMEDXtaVA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.kernel.org ([198.145.29.136]:50638 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754771AbbLDV0x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Dec 2015 16:26:53 -0500
+Date: Fri, 4 Dec 2015 15:26:50 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Simon Horman <horms+renesas@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH 2/4] PCI: rcar-gen2: Add device tree support for r8a7793
+Message-ID: <20151204212649.GJ20125@localhost>
+References: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
+ <1448954672-27236-3-git-send-email-horms+renesas@verge.net.au>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1448954672-27236-3-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBxdWVzdGlvbjogRG8gaSBuZWVkIHRvIHJlZ2lzdGVyIG91ciBkZXZpY2Ugd2l0aCB0aGlzIGRh
-dGFiYXNlPw0KPiBIb3cgY2FuIGkgZ2V0IHRoZSBhY3BpIHN0cmluZyBhcyBzaG93biBpbiB0aGlz
-IHBhdGNoPw0KDQpBIGdvb2dsZSBzZWFyY2ggZm9yICJBQ1BJIGlkIHJlZ2lzdHJhdGlvbiIgZ2l2
-ZXMgdGhpcyBhcyB0aGUgZmlyc3QgaGl0Og0KDQpodHRwOi8vd3d3LnVlZmkub3JnL1BOUF9BQ1BJ
-X1JlZ2lzdHJ5DQoNCkkgYmVsaWV2ZSBpdCBoYXMgd2hhdCB5b3Ugd2FudC4gWW91IGRpZCBsb29r
-IGRpZG4ndCB5b3U/DQoNCklmIHlvdXIgZGV2aWNlIGlzIG5vdCBhIFBDSSBkZXZpY2UgcmVxdWVz
-dCBhbiBBQ1BJIGlkIGZyb20gdGhlIEFDUEkgU3BlY2lmaWNhdGlvbg0KV29ya2dyb3VwIENoYWly
-cGVyc29uLiBGaXJzdCBjaGVjayB0aGF0IHlvdXIgdmVuZG9yIGRvZXMgbm90IGhhdmUgYW4gQUNQ
-SSBpZA0KYWxyZWFkeSByZWdpc3RlcmVkLiBJZiBpdCBpcyBhIFBDSSBkZXZpY2UgeW91IHdpbGwg
-bmVlZCBhIFBDSSB2ZW5kb3IgaWQgZnJvbQ0KdGhlIFBDSS1TSUcuIFRvIGdldCBhIFBDSSB2ZW5k
-b3IgaWQgcmVnaXN0ZXJlZCB3aXRoIHRoZSBQQ0ktU0lHIHlvdSBtdXN0IGJlIGENCm1lbWJlciAt
-IHRoYXQgaXMgbm90IGZyZWUgKHNlZSBodHRwczovL3BjaXNpZy5jb20vbWVtYmVyc2hpcCkuDQoN
-CklmIHlvdSBtYWtlIGEgcmVxdWVzdCBmb3IgYW4gQUNQSSBpZCBJJ2Qgc3Ryb25nbHkgcmVjb21t
-ZW5kIHRoYXQgeW91IG1ha2UNCnRoZSByZXF1ZXN0IGZyb20gYSB3b3JrIGJhc2VkIGVtYWlsIG5v
-dCBhIGdtYWlsIGFjY291bnQgb3IgdGhhdCB0aGUgdmVuZG9yDQp5b3UgYXJlIHdvcmtpbmcgd2l0
-aCBtYWtlcyB0aGUgcmVxdWVzdCBpbnN0ZWFkLiBJIGRvIG5vdCBrbm93IGlmIHRoZXkgd2lsbA0K
-Z3JhbnQgYSBuZXcgQUNQSSBpZCBmb3IgYSBjb21wYW55IGlmIHlvdSBjYW5ub3Qgc2hvdyBhbnkg
-Y29ubmVjdGlvbiB0byB0aGF0DQpjb21wYW55Lg0K
+Hi Simon,
+
+On Tue, Dec 01, 2015 at 04:24:30PM +0900, Simon Horman wrote:
+> Simply document new compat strings.
+> There appears to be no need for a driver updates.
+> 
+> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+> ---
+>  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> index b19be08a8113..7c231b3e5872 100644
+> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> @@ -8,6 +8,7 @@ OHCI and EHCI controllers.
+>  Required properties:
+>  - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
+>  	      "renesas,pci-r8a7791" for the R8A7791 SoC;
+> +	      "renesas,pci-r8a7793" for the R8A7793 SoC;
+
+What's the benefit of adding a string here if the driver doesn't check
+for it?  Since the driver doesn't look for it, there's no way to test
+anything.
+
+It doesn't seem like this file is an authoritative source of names, so
+if we add it here, there's the possibility the r8a7793 will be
+canceled or renamed, and then we'd have to update this if the driver
+ever did need an r8a7793-specific quirk.  If we waited until the
+driver actually needs a quirk, then we'd know exactly what name to
+look for and we could update the driver, DT, and doc all together.
+
+>  	      "renesas,pci-r8a7794" for the R8A7794 SoC;
+>  	      "renesas,pci-gen2" for a generic R-Car Gen2 compatible device.
+>  
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
