@@ -1,63 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:34903 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760193AbbLCNgH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Dec 2015 08:36:07 -0500
-Received: by wmuu63 with SMTP id u63so21386020wmu.0
-        for <linux-pci@vger.kernel.org>; Thu, 03 Dec 2015 05:36:06 -0800 (PST)
-From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-To: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Subject: [PATCH v4 1/5] PCI: designware: add memory barrier after enabling region
-Date: Thu,  3 Dec 2015 15:35:20 +0200
-Message-Id: <1449149725-27607-2-git-send-email-stanimir.varbanov@linaro.org>
-In-Reply-To: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
-References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jeremy Linton <jeremy.linton@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org, liguozhu@hisilicon.com,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	linaro-acpi@lists.linaro.org, catalin.marinas@arm.com,
+	Liviu.Dudau@arm.com, linux-kernel@vger.kernel.org,
+	will.deacon@arm.com, linux-acpi@vger.kernel.org,
+	wangzhou1@hisilicon.com, hanjun.guo@linaro.org,
+	liudongdong3@huawei.com, linux-pci@vger.kernel.org,
+	wangyijing@huawei.com, tn@semihalf.com, tglx@linutronix.de,
+	xuwei5@hisilicon.com, bhelgaas@google.com,
+	jiang.liu@linux.intel.com
+Subject: Re: [RFC PATCH 1/2] PCI/ACPI: Add ACPI support for non ECAM Host Bridge Controllers
+Date: Fri, 04 Dec 2015 22:34:31 +0100
+Message-ID: <2425021.SWJx48r3Ls@wuerfel>
+In-Reply-To: <5661FB9B.20201@arm.com>
+References: <1449155999-220955-1-git-send-email-gabriele.paoloni@huawei.com> <5018756.5lEEeJVMod@wuerfel> <5661FB9B.20201@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add 'write memory' barrier after enable region in PCIE_ATU_CR2
-register. The barrier is needed to ensure that the region enable
-request has been reached it's destination at time when we
-read/write to PCI configuration space.
+On Friday 04 December 2015 14:46:19 Jeremy Linton wrote:
+> On 12/03/2015 02:58 PM, Arnd Bergmann wrote:
+> > On Thursday 03 December 2015 17:58:26 Lorenzo Pieralisi wrote:
+> >> I will put together a proposal to define the way we specify HID and
+> >> related DSD properties for PCI host controllers and send it to
+> >> the ACPI working group for review.
+> >
+> > That also requires a change to SBSA, right? Today, SBSA assumes that
+> > we have a standard PCI host that will work with any hardware independent
+> > PCI implementation in an OS. We either have to give up on SBSA saying
+> > much about how PCI hosts are implemented, or stop assuming that hardware
+> > is SBSA compliant.
+> 
+> Which would be standardizing nonstandard hardware. It would surprise me 
+> if that got much traction.
 
-Without this barrier PCI device enumeration during kernel boot
-is not reliable, and reading configuration space for particular
-PCI device on the bus returns zero aka no device.
+What do you suggest instead?
 
-Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
----
- drivers/pci/host/pcie-designware.c |    5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 02a7452bdf23..ed4dc2e2553b 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -164,6 +164,11 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
- 	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
- 	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-+	/*
-+	 * ensure that the ATU enable has been happaned before accessing
-+	 * pci configuration/io spaces through dw_pcie_cfg_[read|write].
-+	 */
-+	wmb();
- }
- 
- static struct irq_chip dw_msi_irq_chip = {
--- 
-1.7.9.5
-
+	Arnd
