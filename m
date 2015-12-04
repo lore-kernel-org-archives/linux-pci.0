@@ -1,114 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23483 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754006AbbLKGI1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 01:08:27 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 46/60] PCI: Don't add too much optional size for hotplug bridge io
-Date: Thu, 10 Dec 2015 21:06:42 -0800
-Message-Id: <1449810416-2950-47-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:41923 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751950AbbLDSq0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Dec 2015 13:46:26 -0500
+Date: Fri, 4 Dec 2015 12:46:19 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Grygorii Strashko <grygorii.strashko@ti.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, tony@atomide.com,
+	nsekhar@ti.com, linux-omap@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: Re: [PATCH v2] PCI: dra7xx: mark dra7xx_pcie_msi irq as
+ IRQF_NO_THREAD
+Message-ID: <20151204184619.GD20125@localhost>
+References: <1448027966-21610-1-git-send-email-grygorii.strashko@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1448027966-21610-1-git-send-email-grygorii.strashko@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Same as patch for MMIO (PCI: Don't add too much optional size for hotplug
-bridge MMIO), and this one is for io port.
+Hi Grygorii,
 
-It will compare required+optional with min_sum_size to get smaller
-optional size.
+On Fri, Nov 20, 2015 at 03:59:26PM +0200, Grygorii Strashko wrote:
+> On -RT, TI DRA7 PCIe driver always produces below backtrace when the
+> first PCI interrupt is triggered:
+> 
+> ------------[ cut here ]------------
+> WARNING: CPU: 1 PID: 82 at kernel/irq/handle.c:150 handle_irq_event_percpu+0x14c/0x174()
+> irq 460 handler irq_default_primary_handler+0x0/0x14 enabled interrupts
+> Modules linked in: ahci_platform(+) ti_vip(+) libahci_platform xhci_pci(+) c_can_platform(+)
+> libahci xhci_hcd ti_vpe c_can libata v4l2_mem2mem can_dev gpio_keys leds_gpio
+> snd_soc_simple_card usbcore spi_ti_qspi videobuf2_core extcon_usb_gpio omap_wdt
+> ti_vpdma videobuf2_dma_contig ti_soc_thermal videobuf2_memops dwc3_omap extcon
+> rtc_omap ov1063x v4l2_common videodev media snd_soc_tlv320aic3x omap_rng rng_core omap_remoteproc
+> CPU: 1 PID: 82 Comm: irq/26-dra7-pci Not tainted 4.1.10-rt10-02638-g6486d7e-dirty #1
+> Hardware name: Generic DRA74X (Flattened Device Tree)
+> Backtrace:
+> [<c0013060>] (dump_backtrace) from [<c0013280>] (show_stack+0x18/0x1c)
+>  r7:c07acca0 r6:00000000 r5:c09034e4 r4:00000000
+> [<c0013268>] (show_stack) from [<c061ef14>] (dump_stack+0x90/0xac)
+> [<c061ee84>] (dump_stack) from [<c00436e4>] (warn_slowpath_common+0x7c/0xb8)
+>  r7:c07acca0 r6:00000096 r5:00000009 r4:ee4d3e38
+> [<c0043668>] (warn_slowpath_common) from [<c0043758>] (warn_slowpath_fmt+0x38/0x40)
+>  r8:ee3fcc00 r7:000001cc r6:00000000 r5:00000002 r4:c07acc78
+> [<c0043724>] (warn_slowpath_fmt) from [<c0085fd0>] (handle_irq_event_percpu+0x14c/0x174)
+>  r3:000001cc r2:c07acc78
+>  r4:ecfcdd80
+> [<c0085e84>] (handle_irq_event_percpu) from [<c008607c>] (handle_irq_event+0x84/0xb8)
+>  r10:00000001 r9:ee4b59c0 r8:ee1d0900 r7:00000001 r6:00000000 r5:ecfcdd80
+>  r4:ee3fcc00
+> [<c0085ff8>] (handle_irq_event) from [<c0089240>] (handle_simple_irq+0x90/0x118)
+>  r5:ee4a9020 r4:ee3fcc00
+> [<c00891b0>] (handle_simple_irq) from [<c0085514>] (generic_handle_irq+0x30/0x44)
+>  r5:ee4a9020 r4:000001cc
+> [<c00854e4>] (generic_handle_irq) from [<c034a7d4>] (dra7xx_pcie_msi_irq_handler+0x7c/0x8c)
+>  r5:ee4a9020 r4:00000001
+> [<c034a758>] (dra7xx_pcie_msi_irq_handler) from [<c0086f08>] (irq_forced_thread_fn+0x28/0x5c)
+>  r5:ee1d0900 r4:ee4b59c0
+> [<c0086ee0>] (irq_forced_thread_fn) from [<c00871dc>] (irq_thread+0x128/0x204)
+>  r7:00000001 r6:00000000 r5:ee4d2000 r4:ee4b59e4
+> [<c00870b4>] (irq_thread) from [<c005e2fc>] (kthread+0xd4/0xec)
+>  r10:00000000 r9:00000000 r8:00000000 r7:c00870b4 r6:ee4b59c0 r5:ee4b5a00
+>  r4:00000000
+> [<c005e228>] (kthread) from [<c000faa8>] (ret_from_fork+0x14/0x2c)
+>  r7:00000000 r6:00000000 r5:c005e228 r4:ee4b5a00
+> ---[ end trace 0000000000000002 ]---
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 26 ++++++++++++++++----------
- 1 file changed, 16 insertions(+), 10 deletions(-)
+The backtrace might be OK (maybe slightly overkill), but all the
+stack addresses are certainly irrelevant and distracting.  We only
+need enough to recognize the problem.  I don't think the modules list
+is relevant either.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index c8b3ea6..0ece6b6 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1177,7 +1177,6 @@ static resource_size_t window_alignment(struct pci_bus *bus,
-  *
-  * @bus : the bus
-  * @min_size : the minimum io window that must to be allocated
-- * @add_size : additional optional io window
-  * @realloc_head : track the additional io window on this list
-  *
-  * Sizing the IO windows of the PCI-PCI bridge is trivial,
-@@ -1186,9 +1185,11 @@ static resource_size_t window_alignment(struct pci_bus *bus,
-  * We must be careful with the ISA aliasing though.
-  */
- static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
--		resource_size_t add_size, struct list_head *realloc_head)
-+			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
-+	resource_size_t sum_add_size;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
- 							IORESOURCE_IO);
- 	resource_size_t size = 0, size0 = 0, size1 = 0;
-@@ -1198,6 +1199,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	if (!b_res)
- 		return;
- 
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
-+
- 	min_align = window_alignment(bus, IORESOURCE_IO);
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
-@@ -1227,10 +1233,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 	size0 = calculate_iosize(size, min_size, size1,
- 			resource_size(b_res), min_align);
--	if (children_add_size > add_size)
--		add_size = children_add_size;
--	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
--		calculate_iosize(size, min_size, add_size + size1,
-+	sum_add_size = children_add_size + size + size1;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
-+	size1 = !realloc_head ? size0 :
-+		calculate_iosize(size, min_size, sum_add_size - size,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
-@@ -1758,7 +1765,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t min_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, min_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1794,13 +1801,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 
- 	case PCI_CLASS_BRIDGE_PCI:
- 		if (bus->self->is_hotplug_bridge) {
--			additional_io_size  = pci_hotplug_io_size;
-+			min_io_size  = pci_hotplug_io_size;
- 			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
--		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
--			     additional_io_size, realloc_head);
-+		pbus_size_io(bus, min_io_size, realloc_head);
- 
- 		/*
- 		 * If there's a 64-bit prefetchable MMIO window, compute
--- 
-1.8.4.5
+> This backtrace is triggered because dra7xx_pcie_msi_irq_handler()
+> forced to be threaded by default on -RT but, in the same time, it's
+> IRQ dispatcher and calls generic_handle_irq(), which leads to
+> handle_simple_irq() call. The handle_simple_irq() expected to be
+> called with IRQ disabled.
+> 
+> The same issue will also happen if kernel will boot with "threadirqs"
+> cmdline parameter (CONFIG_IRQ_FORCED_THREADING).
+> 
+> As discussed in [1], the current DRA7 PCIe hw configuration supports
+> 32 interrupts, which cannot change because it's hardwired in silicon,
+> this is a single status read and assuming that only a few (most of the
+> time it will be exactly ONE) of those interrupts are pending at the
+> same time is pretty much a sane assumption. And recommended fix for
+> this issue is to request dra7xx_pcie_msi IRQ with IRQF_NO_THREAD flag.
+> 
+> [1] https://lkml.org/lkml/2015/11/3/660
+> 
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> Signed-off-by: Grygorii Strashko <grygorii.strashko@ti.com>
+> ---
+> Changes in v2:
+> - comment in code truncated
+> Link on v1:
+>  https://lkml.org/lkml/2015/11/5/593
+>  drivers/pci/host/pci-dra7xx.c | 13 ++++++++++++-
+>  1 file changed, 12 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> index 8c36880..0415192 100644
+> --- a/drivers/pci/host/pci-dra7xx.c
+> +++ b/drivers/pci/host/pci-dra7xx.c
+> @@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+>  		return -EINVAL;
+>  	}
+>  
+> +	/*
+> +	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
+> +	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
+> +	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
+> +	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
+> +	 * which, in turn, will be resolved to handle_simple_irq() call.
+> +	 * The handle_simple_irq() expected to be called with IRQ disabled, as
+> +	 * result kernle will display warning:
+> +	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
+> +	 */
+>  	ret = devm_request_irq(&pdev->dev, pp->irq,
+> -			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
+> +			       dra7xx_pcie_msi_irq_handler,
+> +			       IRQF_SHARED | IRQF_NO_THREAD,
+>  			       "dra7-pcie-msi",	pp);
 
+There's similar code in exynos_add_pcie_port(), imx6_add_pcie_port(),
+and spear13xx_add_pcie_port().  Do they need similar changes?  If not,
+why not?
+
+I see your discussion about DRA7 hardware design, but my impression is
+that this problem affects anybody who calls dw_handle_msi_irq() from a
+handler registered with IRQF_SHARED.
+
+Bjorn
+
+>  	if (ret) {
+>  		dev_err(&pdev->dev, "failed to request irq\n");
+> -- 
+> 2.6.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
