@@ -1,181 +1,191 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH V2 01/23] x86, pci: Reorder logic of pci_mmconfig_insert() function
-Date: Wed, 16 Dec 2015 16:16:11 +0100
-Message-Id: <1450278993-12664-2-git-send-email-tn@semihalf.com>
-In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40577 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754069AbbLDSR5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Dec 2015 13:17:57 -0500
+Date: Fri, 4 Dec 2015 12:17:49 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Paul Burton <paul.burton@imgtec.com>
+Cc: linux-mips@linux-mips.org,
+	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell Joyce <russell.joyce@york.ac.uk>,
+	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+	Jingoo Han <jingoohan1@gmail.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 05/28] PCI: xilinx: keep references to both IRQ domains
+Message-ID: <20151204181749.GB20125@localhost>
+References: <1448900513-20856-1-git-send-email-paul.burton@imgtec.com>
+ <1448900513-20856-6-git-send-email-paul.burton@imgtec.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1448900513-20856-6-git-send-email-paul.burton@imgtec.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is the first step for MMCONFIG refactoring process.
+Hi Paul,
 
-Code that uses pci_mmcfg_lock will be moved to common file and become
-accessible for all architectures. pci_mmconfig_insert() cannot be moved
-so easily since it is mixing generic mmconfig code with x86 specific logic
-inside of mutual exclusive block guarded by pci_mmcfg_lock.
+Please capitalize the first word of your PCI changelog subjects.
 
-To get rid of that constraint, we reorder actions as follow:
-1. sanity check for mmconfig region presence, if we already have such
-region it doesn't make snese to alloc new mmconfig list entry
-2. mmconfig entry allocation, no need to lock
-3. insertion to iomem_resource has its own lock, no need to wrap it into mutex
-4. insertion to mmconfig list can be done as the final step in separate
-function (candidate for further refactoring) and needs another mmconfig
-lookup to avoid race condition.
+On Mon, Nov 30, 2015 at 04:21:30PM +0000, Paul Burton wrote:
+> pcie-xilinx creates 2 IRQ domains when built with MSI support: one for
+> MSI interrupts & one for legacy INTx interrupts. However, it only kept a
+> reference to the MSI IRQ domain. This means that any INTx interrupts
+> that may occur would be mapped using the wrong domain, and that only the
+> MSI IRQ domain would be removed along with the driver. Track both IRQ
+> domains & clean up both as appropriate.
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- arch/x86/pci/mmconfig-shared.c | 101 +++++++++++++++++++++++------------------
- 1 file changed, 58 insertions(+), 43 deletions(-)
+It looks like this fixes a problem in the original commit 8961def56845
+("PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver"), which
+appeared in v3.18.  Does this need a stable backport tag?
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index dd30b7e..c8bb9b0 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -720,6 +720,38 @@ static int __init pci_mmcfg_late_insert_resources(void)
-  */
- late_initcall(pci_mmcfg_late_insert_resources);
- 
-+static int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
-+{
-+	struct pci_mmcfg_region *cfg_conflict;
-+	int err = 0;
-+
-+	mutex_lock(&pci_mmcfg_lock);
-+	cfg_conflict = pci_mmconfig_lookup(cfg->segment, cfg->start_bus);
-+	if (cfg_conflict) {
-+		if (cfg_conflict->end_bus < cfg->end_bus)
-+			pr_info(FW_INFO "MMCONFIG for "
-+				"domain %04x [bus %02x-%02x] "
-+				"only partially covers this bridge\n",
-+				cfg_conflict->segment, cfg_conflict->start_bus,
-+				cfg_conflict->end_bus);
-+		err = -EEXIST;
-+		goto out;
-+	}
-+
-+	if (pci_mmcfg_arch_map(cfg)) {
-+		pr_warn("fail to map MMCONFIG %pR.\n", &cfg->res);
-+		err = -ENOMEM;
-+		goto out;
-+	} else {
-+		list_add_sorted(cfg);
-+		pr_info("MMCONFIG at %pR (base %#lx)\n",
-+			&cfg->res, (unsigned long)cfg->address);
-+	}
-+out:
-+	mutex_unlock(&pci_mmcfg_lock);
-+	return err;
-+}
-+
- /* Add MMCFG information for host bridges */
- int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 			phys_addr_t addr)
-@@ -734,63 +766,46 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 	if (start > end)
- 		return -EINVAL;
- 
--	mutex_lock(&pci_mmcfg_lock);
-+	rcu_read_lock();
- 	cfg = pci_mmconfig_lookup(seg, start);
--	if (cfg) {
--		if (cfg->end_bus < end)
--			dev_info(dev, FW_INFO
--				 "MMCONFIG for "
--				 "domain %04x [bus %02x-%02x] "
--				 "only partially covers this bridge\n",
--				  cfg->segment, cfg->start_bus, cfg->end_bus);
--		mutex_unlock(&pci_mmcfg_lock);
-+	rcu_read_unlock();
-+	if (cfg)
- 		return -EEXIST;
--	}
- 
--	if (!addr) {
--		mutex_unlock(&pci_mmcfg_lock);
-+	if (!addr)
- 		return -EINVAL;
--	}
- 
--	rc = -EBUSY;
- 	cfg = pci_mmconfig_alloc(seg, start, end, addr);
--	if (cfg == NULL) {
-+	if (!cfg) {
- 		dev_warn(dev, "fail to add MMCONFIG (out of memory)\n");
--		rc = -ENOMEM;
--	} else if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
-+		return -ENOMEM;
-+	}
-+
-+	rc = -EBUSY;
-+	if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
- 		dev_warn(dev, FW_BUG "MMCONFIG %pR isn't reserved\n",
- 			 &cfg->res);
--	} else {
--		/* Insert resource if it's not in boot stage */
--		if (pci_mmcfg_running_state)
--			tmp = insert_resource_conflict(&iomem_resource,
--						       &cfg->res);
--
--		if (tmp) {
--			dev_warn(dev,
--				 "MMCONFIG %pR conflicts with "
--				 "%s %pR\n",
--				 &cfg->res, tmp->name, tmp);
--		} else if (pci_mmcfg_arch_map(cfg)) {
--			dev_warn(dev, "fail to map MMCONFIG %pR.\n",
--				 &cfg->res);
--		} else {
--			list_add_sorted(cfg);
--			dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
--				 &cfg->res, (unsigned long)addr);
--			cfg = NULL;
--			rc = 0;
--		}
-+		goto error;
- 	}
- 
--	if (cfg) {
--		if (cfg->res.parent)
--			release_resource(&cfg->res);
--		kfree(cfg);
-+	/* Insert resource if it's not in boot stage */
-+	if (pci_mmcfg_running_state)
-+		tmp = insert_resource_conflict(&iomem_resource, &cfg->res);
-+
-+	if (tmp) {
-+		dev_warn(dev, "MMCONFIG %pR conflicts with %s %pR\n",
-+			 &cfg->res, tmp->name, tmp);
-+		goto error;
- 	}
- 
--	mutex_unlock(&pci_mmcfg_lock);
-+	rc = pci_mmconfig_inject(cfg);
-+	if (!rc)
-+		return 0;
- 
-+error:
-+	if (cfg->res.parent)
-+		release_resource(&cfg->res);
-+	kfree(cfg);
- 	return rc;
- }
- 
--- 
-1.9.1
+It sounds like any device using INTx just won't work?  From later
+patches, I surmise that this series might be related to using Xilinx
+in a new MIPS Boston board.  If that's the case, and pre-v4.5 kernels
+don't support that board anyway, a stable backport might not be
+needed.  It *does* fix a leak even if you don't need INTx, but that
+seems minor and probably not worth a stable backport all by itself.
 
+I probably *would* add a 'Fixes: 8961def56845 ("PCI: xilinx: Add
+Xilinx AXI PCIe Host Bridge IP driver")' line to leave breadcrumbs for
+people backporting things.
+
+This seems to be part of a larger series -- can these PCI patches go
+through my tree, or do they all need to go together because of
+dependencies on the rest of the series?
+
+They all need acks from Michal, of course.
+
+> Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+> ---
+> 
+>  drivers/pci/host/pcie-xilinx.c | 58 ++++++++++++++++++++----------------------
+>  1 file changed, 28 insertions(+), 30 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+> index 3c7a0d5..c412a37 100644
+> --- a/drivers/pci/host/pcie-xilinx.c
+> +++ b/drivers/pci/host/pcie-xilinx.c
+> @@ -105,6 +105,7 @@
+>   * @root_busno: Root Bus number
+>   * @dev: Device pointer
+>   * @irq_domain: IRQ domain pointer
+> + * @msi_irq_domain: MSI IRQ domain pointer
+>   * @bus_range: Bus range
+>   * @resources: Bus Resources
+>   */
+> @@ -115,6 +116,7 @@ struct xilinx_pcie_port {
+>  	u8 root_busno;
+>  	struct device *dev;
+>  	struct irq_domain *irq_domain;
+> +	struct irq_domain *msi_irq_domain;
+>  	struct resource bus_range;
+>  	struct list_head resources;
+>  };
+> @@ -291,7 +293,7 @@ static int xilinx_pcie_msi_setup_irq(struct msi_controller *chip,
+>  	if (hwirq < 0)
+>  		return hwirq;
+>  
+> -	irq = irq_create_mapping(port->irq_domain, hwirq);
+> +	irq = irq_create_mapping(port->msi_irq_domain, hwirq);
+>  	if (!irq)
+>  		return -EINVAL;
+>  
+> @@ -517,31 +519,21 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+>  
+>  /**
+>   * xilinx_pcie_free_irq_domain - Free IRQ domain
+> - * @port: PCIe port information
+> + * @domain: the IRQ domain to free
+> + * @nr: the number of IRQs in the domain
+>   */
+> -static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
+> +static void xilinx_pcie_free_irq_domain(struct irq_domain *domain, int nr)
+>  {
+>  	int i;
+> -	u32 irq, num_irqs;
+> -
+> -	/* Free IRQ Domain */
+> -	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> -
+> -		free_pages(port->msi_pages, 0);
+> -
+> -		num_irqs = XILINX_NUM_MSI_IRQS;
+> -	} else {
+> -		/* INTx */
+> -		num_irqs = 4;
+> -	}
+> +	u32 irq;
+>  
+> -	for (i = 0; i < num_irqs; i++) {
+> -		irq = irq_find_mapping(port->irq_domain, i);
+> +	for (i = 0; i < nr; i++) {
+> +		irq = irq_find_mapping(domain, i);
+>  		if (irq > 0)
+>  			irq_dispose_mapping(irq);
+>  	}
+>  
+> -	irq_domain_remove(port->irq_domain);
+> +	irq_domain_remove(domain);
+>  }
+>  
+>  /**
+> @@ -571,20 +563,20 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+>  		return PTR_ERR(port->irq_domain);
+>  	}
+>  
+> -	/* Setup MSI */
+> -	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> -		port->irq_domain = irq_domain_add_linear(node,
+> -							 XILINX_NUM_MSI_IRQS,
+> -							 &msi_domain_ops,
+> -							 &xilinx_pcie_msi_chip);
+> -		if (!port->irq_domain) {
+> -			dev_err(dev, "Failed to get a MSI IRQ domain\n");
+> -			return PTR_ERR(port->irq_domain);
+> -		}
+> +	if (!IS_ENABLED(CONFIG_PCI_MSI))
+> +		return 0;
+>  
+> -		xilinx_pcie_enable_msi(port);
+> +	/* Setup MSI */
+> +	port->msi_irq_domain = irq_domain_add_linear(node,
+> +						     XILINX_NUM_MSI_IRQS,
+> +						     &msi_domain_ops,
+> +						     &xilinx_pcie_msi_chip);
+> +	if (!port->msi_irq_domain) {
+> +		dev_err(dev, "Failed to get a MSI IRQ domain\n");
+> +		return PTR_ERR(port->msi_irq_domain);
+>  	}
+>  
+> +	xilinx_pcie_enable_msi(port);
+>  	return 0;
+>  }
+>  
+> @@ -868,7 +860,13 @@ static int xilinx_pcie_remove(struct platform_device *pdev)
+>  {
+>  	struct xilinx_pcie_port *port = platform_get_drvdata(pdev);
+>  
+> -	xilinx_pcie_free_irq_domain(port);
+> +	xilinx_pcie_free_irq_domain(port->irq_domain, 4);
+> +
+> +	if (config_enabled(CONFIG_MSI)) {
+> +		free_pages(port->msi_pages, 0);
+> +		xilinx_pcie_free_irq_domain(port->msi_irq_domain,
+> +					    XILINX_NUM_MSI_IRQS);
+> +	}
+>  
+>  	return 0;
+>  }
+> -- 
+> 2.6.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
