@@ -1,207 +1,246 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:36758 "EHLO
-	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932115AbbLMV21 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Dec 2015 16:28:27 -0500
-Received: by pfbu66 with SMTP id u66so50287886pfb.3
-        for <linux-pci@vger.kernel.org>; Sun, 13 Dec 2015 13:28:26 -0800 (PST)
-Subject: [RFC PATCH 2/3] xen/swiotlb: Fold static unmap and sync calls into
- calling functions
-From: Alexander Duyck <aduyck@mirantis.com>
-To: kvm@vger.kernel.org, linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, alexander.duyck@gmail.com,
-	qemu-devel@nongnu.org
-Cc: tianyu.lan@intel.com, yang.zhang.wz@gmail.com, mst@redhat.com,
-	konrad.wilk@oracle.com, dgilbert@redhat.com, agraf@suse.de,
-	alex.williamson@redhat.com
-Date: Sun, 13 Dec 2015 13:28:24 -0800
-Message-ID: <20151213212823.5410.12367.stgit@localhost.localdomain>
-In-Reply-To: <20151213212557.5410.48577.stgit@localhost.localdomain>
-References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"tn@semihalf.com" <tn@semihalf.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Wangyijing <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [RFC PATCH 1/2] PCI/ACPI: Add ACPI support for non ECAM Host
+ Bridge Controllers
+Date: Fri, 4 Dec 2015 12:47:37 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EBE3E80@lhreml503-mbs>
+References: <1449155999-220955-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1449155999-220955-2-git-send-email-gabriele.paoloni@huawei.com>
+ <20151203175826.GB2935@red-moon>
+In-Reply-To: <20151203175826.GB2935@red-moon>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This change essentially does two things.  First it folds the swiotlb_unmap
-and swiotlb_sync calls into their callers.  The goal behind this is three
-fold.  First this helps to reduce execution time and improves performance
-since we aren't having to call into as many functions.  Second it allows us
-to split up some of the sync functionality as there is the dma_mark_clean
-portion of the sync call that is only really needed for dma_sync_for_cpu
-since we don't actually want to mark the page as clean if we are syncing
-for the device.
+Hi Lorenzo, many thanks for your review.
 
-The second change is to move dma_mark_clean inside the if statement instead
-of using a return in the case of sync and unmap.  By doing this we make it
-so that we can also add a dma_mark_dirty function later.
+> -----Original Message-----
+> From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
+> Sent: 03 December 2015 17:58
+> To: Gabriele Paoloni
+> Cc: bhelgaas@google.com; arnd@arndb.de; will.deacon@arm.com;
+> catalin.marinas@arm.com; hanjun.guo@linaro.org; Liviu.Dudau@arm.com;
+> tn@semihalf.com; jiang.liu@linux.intel.com; tglx@linutronix.de; Wangyijing;
+> linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
+> acpi@lists.linaro.org; Wangzhou (B); liudongdong (C); xuwei (O); Liguozhu
+> (Kenneth)
+> Subject: Re: [RFC PATCH 1/2] PCI/ACPI: Add ACPI support for non ECAM Host
+> Bridge Controllers
+> 
+> Hi Gab,
+> 
+> On Thu, Dec 03, 2015 at 11:19:58PM +0800, Gabriele Paoloni wrote:
+> 
+> [...]
+> 
+> > +void acpi_arm64_quirks(void)
+> > +{
+> > +	int i = 0;
+> > +
+> > +	while (quirks_array[i]) {
+> > +		acpi_scan_add_handler(quirks_array[i]);
+> > +		i++;
+> > +	}
+> > +
+> > +}
+> 
+> This code is not arm64 specific, and this is part of a wider complaint
+> I have about this patchset and PCI/ACPI code I see in general.
 
-Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
----
- drivers/xen/swiotlb-xen.c |   90 ++++++++++++++++++---------------------------
- 1 file changed, 36 insertions(+), 54 deletions(-)
+Mmmm Ok, I just followed the fashion used by pci_acpi_crs_quirks()...
+so I agree that it is not strictly related with the ARM64 ip but
+are quirks for PCI controllers integrated with ARM64 ip...
 
-diff --git a/drivers/xen/swiotlb-xen.c b/drivers/xen/swiotlb-xen.c
-index 7399782c0998..2154c70e47da 100644
---- a/drivers/xen/swiotlb-xen.c
-+++ b/drivers/xen/swiotlb-xen.c
-@@ -432,9 +432,9 @@ EXPORT_SYMBOL_GPL(xen_swiotlb_map_page);
-  * After this call, reads by the cpu to the buffer are guaranteed to see
-  * whatever the device wrote there.
-  */
--static void xen_unmap_single(struct device *hwdev, dma_addr_t dev_addr,
--			     size_t size, enum dma_data_direction dir,
--				 struct dma_attrs *attrs)
-+void xen_swiotlb_unmap_page(struct device *hwdev, dma_addr_t dev_addr,
-+			    size_t size, enum dma_data_direction dir,
-+			    struct dma_attrs *attrs)
- {
- 	phys_addr_t paddr = xen_bus_to_phys(dev_addr);
- 
-@@ -448,23 +448,14 @@ static void xen_unmap_single(struct device *hwdev, dma_addr_t dev_addr,
- 		return;
- 	}
- 
--	if (dir != DMA_FROM_DEVICE)
--		return;
--
- 	/*
- 	 * phys_to_virt doesn't work with hihgmem page but we could
- 	 * call dma_mark_clean() with hihgmem page here. However, we
- 	 * are fine since dma_mark_clean() is null on POWERPC. We can
- 	 * make dma_mark_clean() take a physical address if necessary.
- 	 */
--	dma_mark_clean(phys_to_virt(paddr), size);
--}
--
--void xen_swiotlb_unmap_page(struct device *hwdev, dma_addr_t dev_addr,
--			    size_t size, enum dma_data_direction dir,
--			    struct dma_attrs *attrs)
--{
--	xen_unmap_single(hwdev, dev_addr, size, dir, attrs);
-+	if (dir == DMA_FROM_DEVICE)
-+		dma_mark_clean(phys_to_virt(paddr), size);
- }
- EXPORT_SYMBOL_GPL(xen_swiotlb_unmap_page);
- 
-@@ -478,36 +469,22 @@ EXPORT_SYMBOL_GPL(xen_swiotlb_unmap_page);
-  * address back to the card, you must first perform a
-  * xen_swiotlb_dma_sync_for_device, and then the device again owns the buffer
-  */
--static void
--xen_swiotlb_sync_single(struct device *hwdev, dma_addr_t dev_addr,
--			size_t size, enum dma_data_direction dir,
--			enum dma_sync_target target)
-+void
-+xen_swiotlb_sync_single_for_cpu(struct device *hwdev, dma_addr_t dev_addr,
-+				size_t size, enum dma_data_direction dir)
- {
- 	phys_addr_t paddr = xen_bus_to_phys(dev_addr);
- 
- 	BUG_ON(dir == DMA_NONE);
- 
--	if (target == SYNC_FOR_CPU)
--		xen_dma_sync_single_for_cpu(hwdev, dev_addr, size, dir);
-+	xen_dma_sync_single_for_cpu(hwdev, dev_addr, size, dir);
- 
- 	/* NOTE: We use dev_addr here, not paddr! */
- 	if (is_xen_swiotlb_buffer(dev_addr))
--		swiotlb_tbl_sync_single(hwdev, paddr, size, dir, target);
--
--	if (target == SYNC_FOR_DEVICE)
--		xen_dma_sync_single_for_device(hwdev, dev_addr, size, dir);
--
--	if (dir != DMA_FROM_DEVICE)
--		return;
-+		swiotlb_tbl_sync_single(hwdev, paddr, size, dir, SYNC_FOR_CPU);
- 
--	dma_mark_clean(phys_to_virt(paddr), size);
--}
--
--void
--xen_swiotlb_sync_single_for_cpu(struct device *hwdev, dma_addr_t dev_addr,
--				size_t size, enum dma_data_direction dir)
--{
--	xen_swiotlb_sync_single(hwdev, dev_addr, size, dir, SYNC_FOR_CPU);
-+	if (dir == DMA_FROM_DEVICE)
-+		dma_mark_clean(phys_to_virt(paddr), size);
- }
- EXPORT_SYMBOL_GPL(xen_swiotlb_sync_single_for_cpu);
- 
-@@ -515,7 +492,16 @@ void
- xen_swiotlb_sync_single_for_device(struct device *hwdev, dma_addr_t dev_addr,
- 				   size_t size, enum dma_data_direction dir)
- {
--	xen_swiotlb_sync_single(hwdev, dev_addr, size, dir, SYNC_FOR_DEVICE);
-+	phys_addr_t paddr = xen_bus_to_phys(dev_addr);
-+
-+	BUG_ON(dir == DMA_NONE);
-+
-+	/* NOTE: We use dev_addr here, not paddr! */
-+	if (is_xen_swiotlb_buffer(dev_addr))
-+		swiotlb_tbl_sync_single(hwdev, paddr, size, dir,
-+					SYNC_FOR_DEVICE);
-+
-+	xen_dma_sync_single_for_device(hwdev, dev_addr, size, dir);
- }
- EXPORT_SYMBOL_GPL(xen_swiotlb_sync_single_for_device);
- 
-@@ -604,10 +590,9 @@ xen_swiotlb_unmap_sg_attrs(struct device *hwdev, struct scatterlist *sgl,
- 	struct scatterlist *sg;
- 	int i;
- 
--	BUG_ON(dir == DMA_NONE);
--
- 	for_each_sg(sgl, sg, nelems, i)
--		xen_unmap_single(hwdev, sg->dma_address, sg_dma_len(sg), dir, attrs);
-+		xen_swiotlb_unmap_page(hwdev, sg->dma_address, sg_dma_len(sg),
-+				       dir, attrs);
- 
- }
- EXPORT_SYMBOL_GPL(xen_swiotlb_unmap_sg_attrs);
-@@ -619,32 +604,29 @@ EXPORT_SYMBOL_GPL(xen_swiotlb_unmap_sg_attrs);
-  * The same as swiotlb_sync_single_* but for a scatter-gather list, same rules
-  * and usage.
-  */
--static void
--xen_swiotlb_sync_sg(struct device *hwdev, struct scatterlist *sgl,
--		    int nelems, enum dma_data_direction dir,
--		    enum dma_sync_target target)
-+void
-+xen_swiotlb_sync_sg_for_cpu(struct device *hwdev, struct scatterlist *sgl,
-+			    int nelems, enum dma_data_direction dir)
- {
- 	struct scatterlist *sg;
- 	int i;
- 
- 	for_each_sg(sgl, sg, nelems, i)
--		xen_swiotlb_sync_single(hwdev, sg->dma_address,
--					sg_dma_len(sg), dir, target);
--}
--
--void
--xen_swiotlb_sync_sg_for_cpu(struct device *hwdev, struct scatterlist *sg,
--			    int nelems, enum dma_data_direction dir)
--{
--	xen_swiotlb_sync_sg(hwdev, sg, nelems, dir, SYNC_FOR_CPU);
-+		xen_swiotlb_sync_single_for_cpu(hwdev, sg->dma_address,
-+						sg_dma_len(sg), dir);
- }
- EXPORT_SYMBOL_GPL(xen_swiotlb_sync_sg_for_cpu);
- 
- void
--xen_swiotlb_sync_sg_for_device(struct device *hwdev, struct scatterlist *sg,
-+xen_swiotlb_sync_sg_for_device(struct device *hwdev, struct scatterlist *sgl,
- 			       int nelems, enum dma_data_direction dir)
- {
--	xen_swiotlb_sync_sg(hwdev, sg, nelems, dir, SYNC_FOR_DEVICE);
-+	struct scatterlist *sg;
-+	int i;
-+
-+	for_each_sg(sgl, sg, nelems, i)
-+		xen_swiotlb_sync_single_for_device(hwdev, sg->dma_address,
-+						   sg_dma_len(sg), dir);
- }
- EXPORT_SYMBOL_GPL(xen_swiotlb_sync_sg_for_device);
- 
+However if we can spot a better place for the quirks I am happier
 
+> 
+> > +
+> > +/*
+> > + * pci_ops specified by vendors that are not
+> > + * ECAM compliant
+> > + */
+> > +struct pci_ops *vendor_specific_ops;
+> > +
+> > +/* function to set vendor specific ops */
+> > +void set_quirk_pci_ops(struct pci_ops *quirk_ops)
+> > +{
+> > +	vendor_specific_ops = quirk_ops;
+> > +}
+> > +
+> > +/* function to unset vendor specific ops */
+> > +void unset_quirk_pci_ops(void)
+> > +{
+> > +	vendor_specific_ops = NULL;
+> > +}
+> > +
+> >  /* Root bridge scanning */
+> >  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+> >  {
+> > @@ -253,6 +291,9 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root
+> *root)
+> >  		return NULL;
+> >  	}
+> >
+> > +	if (vendor_specific_ops)
+> > +		acpi_pci_root_ops.pci_ops = vendor_specific_ops;
+> 
+> You are relying on the scan handlers calling ordering here, which as far
+> as I know depends on the ACPI tables layout, this is not acceptable,
+
+Yes you're right
+
+> we need to find a more robust implementation.
+
+Can't we use the "_DEP" object to set a dependency between "Device (PCI0)" 
+and "Device (RC0)" (I am referring to the ACPI object example in patch 2/2)?
+
+> 
+> Let's first rewind a bit though, to summarize:
+> 
+> 1) we need a way to configure a "generic host controller" with host
+>    controller specific config methods (ie ECAM, even though is a PCI
+>    standard it is not standard enough for some designers)
+
+Yes
+
+> 2) we keep the generic "PNP0A03" matching to declare a host bridge and
+>    related resources (?). Maybe we can have an HID matching the
+>    "real" device (eg "HISI0081" and related DSD) and a CID set to "PNP0A03" ?
+>    I do not want to end up with two device objects in the ACPI tables.
+
+Mmmm I don't see what's wrong with our approach of having 
+"Device (RC0)" for the specific host bridge HW and "Device (PCI0)"
+for the generic one...
+
+> 
+> I think that all this code belongs in:
+> 
+> drivers/pci/host/pci-host-generic.c
+> 
+> and the quirks scan should be done _within_ the pci_acpi_scan_root()
+> that should be placed in drivers/pci/host/pci-host-generic.c (ACPI probe
+> path, to be created) so that, if quirks for config space have to be applied
+> they are applied there before calling acpi_pci_root_create() so that
+> ordering is guaranteed.
+> 
+> I will put together a proposal to define the way we specify HID and
+> related DSD properties for PCI host controllers and send it to
+> the ACPI working group for review.
+
+Mmmm...what about instead using DMI decode to know which host bridge 
+controller lives in the HW (and therefore calling the respective quirk)?
+So there would be no change to ACPI specs, am I right?
+
+> 
+> Second, I am against merging _any_ ACPI/PCI code for arm64 before we
+> define a way for the kernel to detect if resources should be reassigned
+> or just claimed as they are, as set-up by BIOS.
+> 
+> The current approach, that relies on initcalls (and that's horrible) and
+> that reassigns everything by default has to be overhauled to match
+> what x86 does, which is sensible to me (tries to claim, and for
+> resources that fail, it reassigns).
+> 
+> I will give this more thought and send a proposal to the ACPI working
+> group for review, so that we make this part of the specs before any
+> PCI/ACPI code for ARM64 gets close to the mainline kernel.
+> 
+> Comments welcome.
+> 
+> Thanks,
+> Lorenzo
+> 
+> > +
+> >  	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, info, root);
+> >
+> >  	/* After the PCI-E bus has been walked and all devices discovered,
+> > diff --git a/arch/arm64/kernel/pci_quirks.h b/arch/arm64/kernel/pci_quirks.h
+> > new file mode 100644
+> > index 0000000..27055ff
+> > --- /dev/null
+> > +++ b/arch/arm64/kernel/pci_quirks.h
+> > @@ -0,0 +1,24 @@
+> > +/*
+> > + * PCIe host controller declarations for ACPI quirks
+> > + *
+> > + * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
+> > + *
+> > + *
+> > + * This program is free software; you can redistribute it and/or modify
+> > + * it under the terms of the GNU General Public License version 2 as
+> > + * published by the Free Software Foundation.
+> > + */
+> > +
+> > +#ifndef PCI_QUIRKS_H
+> > +#define PCI_QUIRKS_H
+> > +
+> > +/* declarations of vendor specific quirks */
+> > +extern struct acpi_scan_handler pci_root_hisi_handler;
+> > +
+> > +/* function to set vendor specific ops */
+> > +void set_quirk_pci_ops(struct pci_ops *quirk_ops);
+> > +
+> > +/* function to unset vendor specific ops */
+> > +void unset_quirk_pci_ops(void);
+> > +
+> > +#endif /*PCI_QUIRKS_H*/
+> > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> > index e682dc6..ff362bb3d 100644
+> > --- a/drivers/acpi/pci_root.c
+> > +++ b/drivers/acpi/pci_root.c
+> > @@ -863,5 +863,9 @@ void __init acpi_pci_root_init(void)
+> >  		return;
+> >
+> >  	pci_acpi_crs_quirks();
+> > +
+> > +	/* Call quirks for non ECAM ARM64 Host Brdge controllers */
+> > +	acpi_arm64_quirks();
+> > +
+> >  	acpi_scan_add_handler_with_hotplug(&pci_root_handler, "pci_root");
+> >  }
+> > diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
+> > index 29c6912..17f4a37 100644
+> > --- a/include/acpi/acpi_drivers.h
+> > +++ b/include/acpi/acpi_drivers.h
+> > @@ -99,6 +99,12 @@ void pci_acpi_crs_quirks(void);
+> >  static inline void pci_acpi_crs_quirks(void) { }
+> >  #endif
+> >
+> > +#ifdef CONFIG_ARM64
+> > +void acpi_arm64_quirks(void);
+> > +#else
+> > +static inline void acpi_arm64_quirks(void) { }
+> > +#endif
+> > +
+> >  /* ------------------------------------------------------------------------
+> --
+> >                                      Processor
+> >     ------------------------------------------------------------------------
+> -- */
+> > --
+> > 1.9.1
+> >
