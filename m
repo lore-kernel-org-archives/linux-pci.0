@@ -1,99 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 4 Dec 2015 11:46:21 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: MSI: Only use the generic MSI layer when domain is
- hierarchical
-Message-ID: <20151204174621.GA20125@localhost>
-References: <1448288826-19058-1-git-send-email-marc.zyngier@arm.com>
- <PS1PR06MB11808365B312F6C3DAE2DB35F5000@PS1PR06MB1180.apcprd06.prod.outlook.com>
- <20151204002758.GA10479@localhost>
- <20151204081350.2113b7e6@why.wild-wind.fr.eu.org>
- <20151204161735.GA13427@localhost>
- <5661C863.3070308@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5661C863.3070308@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:48710 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755667AbbLEAgS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Dec 2015 19:36:18 -0500
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v7 4/7] PCI: Add fwnode_handle to pci_sysdata
+Date: Sat,  5 Dec 2015 00:36:03 +0000
+Message-Id: <1449275767-1510-5-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1449275767-1510-1-git-send-email-jakeo@microsoft.com>
+References: <1449275767-1510-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 04, 2015 at 05:07:47PM +0000, Marc Zyngier wrote:
-> Hi Bjorn,
-> 
-> On 04/12/15 16:17, Bjorn Helgaas wrote:
-> > On Fri, Dec 04, 2015 at 08:13:50AM +0000, Marc Zyngier wrote:
-> >> On Thu, 3 Dec 2015 18:27:59 -0600
-> >> Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >>
-> >>> On Mon, Nov 30, 2015 at 10:25:34AM +0000, Phil Edworthy wrote:
-> >>>> Cc'd linux-pci ml
-> >>>>
-> >>>> On 23 November 2015 14:27, Marc Zyngier wrote:
-> >>>>
-> >>>> Since d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use struct
-> >>>> device::msi_domain"), we use the MSI domain associated to the PCI device.
-> >>>>
-> >>>> But finding a MSI domain doesn't mean that the domain is implemented
-> >>>> using the generic MSI domain API, and a number of MSI controllers
-> >>>> are still using the arch_setup_msi_irq/arch_teardown_msi_irqs.
-> >>>>
-> >>>> In order to avoid a firework on these systems, check that the domain
-> >>>> we just obtained is hierarchical. If not, don't use the generic MSI
-> >>>> stuff and stick with the old one. Not pretty, but reliable.
-> >>>>
-> >>>> Another insentive to rework those drivers and phase out this API.
-> >>>>
-> >>>> Reported-by: Phil Edworthy <phil.edworthy@renesas.com>
-> >>>> Tested-by: Phil Edworthy <phil.edworthy@renesas.com>
-> >>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> >>>
-> >>> Thanks, I applied this with Thomas' ack to pci/msi for v4.5.
-> >>>
-> >>> It looks like d8a1cb757550 appeared in v4.3.  Is this a fix for that
-> >>> commit?  Does this need to be backported via a stable tag?
-> >>
-> >> Hi Bjorn,
-> >>
-> >> I think this really deserves to be queued as an immediate fix for 4.4
-> >> rather than 4.5, as some systems in mainline are affected by this bug:
-> >>
-> >> http://www.spinics.net/lists/arm-kernel/msg465792.html
-> >>
-> >> It would also deserve a stable tag for 4.3.
-> > 
-> > OK, I can do that.  It would save me a lot of time to get a hint when
-> > this is the case.  I couldn't tell if this issue happened on mainline
-> > or with some still out-of-tree patches.  I'd also like to know what
-> > machines are affected.
-> 
-> Sorry, I should have been more clear. At the moment, I've had reports of
-> at least RCar, Tegra and Armada 370 being affected. Anything using the
-> Designware driver will probably also fall over.
-> 
-> > I did look at d8a1cb757550, and the connection between that and this
-> > patch is not completely obvious; would you regard this as a fix to
-> > d8a1cb757550?  Should this patch be backported to every kernel that
-> > includes d8a1cb757550?  Or is this more closely tied to some other
-> > change?
-> 
-> d8a1cb757550 is indeed the source of the problem: we assumes that
-> finding a domain identified by a given device is enough to decide that
-> we're using the generic MSI layer. Unfortunately, this is not the case,
-> and a number of ARM drivers are actually registering their own domain
-> the same way, without using the generic MSI layer. I didn't spot this on
-> arm64, as all my platforms are using this layer.
-> 
-> So it seems better to merge this in 4.4, with a backport to 4.3 (which
-> is the first kernel to contain this commit).
+From: Jake Oshins <jakeo@microsoft.com>
 
-Thanks, Marc!  I moved this to for-linus for v4.4, added info about
-the machines, and added a stable tag for v4.3.
+This patch adds an fwnode_handle to struct pci_sysdata, which is
+used by the next patch in the series when trying to locate an
+IRQ domain associated with a root PCI bus.
 
-Bjorn
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ arch/x86/include/asm/pci.h | 15 +++++++++++++++
+ include/asm-generic/pci.h  |  4 ++++
+ 2 files changed, 19 insertions(+)
+
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4625943..6fc3c7c 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -20,6 +20,9 @@ struct pci_sysdata {
+ #ifdef CONFIG_X86_64
+ 	void		*iommu;		/* IOMMU private data */
+ #endif
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	void		*fwnode;	/* IRQ domain for MSI assignment */
++#endif
+ };
+ 
+ extern int pci_routeirq;
+@@ -32,6 +35,7 @@ extern int noioapicreroute;
+ static inline int pci_domain_nr(struct pci_bus *bus)
+ {
+ 	struct pci_sysdata *sd = bus->sysdata;
++
+ 	return sd->domain;
+ }
+ 
+@@ -41,6 +45,17 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ }
+ #endif
+ 
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
++{
++	struct pci_sysdata *sd = bus->sysdata;
++
++	return sd->fwnode;
++}
++
++#define pci_root_bus_fwnode	_pci_root_bus_fwnode
++#endif
++
+ /* Can be used to override the logic in pci_scan_bus for skipping
+    already-configured bus numbers - to be used for buggy BIOSes
+    or architectures with incomplete PCI setup by the loader */
+diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
+index f24bc51..4092886 100644
+--- a/include/asm-generic/pci.h
++++ b/include/asm-generic/pci.h
+@@ -21,4 +21,8 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ #define PCI_DMA_BUS_IS_PHYS	(1)
+ #endif
+ 
++#ifndef pci_root_bus_fwnode
++#define pci_root_bus_fwnode(bus)	((void)(bus), NULL)
++#endif
++
+ #endif /* _ASM_GENERIC_PCI_H */
+-- 
+1.9.1
+
