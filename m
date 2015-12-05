@@ -1,94 +1,258 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <tglx@linutronix.de>,
-	<jason@lakedaemon.net>, <rjw@rjwysocki.net>, <bhelgaas@google.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	<hanjun.guo@linaro.org>, <tomasz.nowicki@linaro.org>,
-	<graeme.gregory@linaro.org>, <dhdang@apm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v7 0/4] gicv2m: acpi: Add ACPI support for GICv2m MSI
-Date: Thu, 10 Dec 2015 08:55:26 -0800
-Message-ID: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bon0064.outbound.protection.outlook.com ([157.56.111.64]:65072
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751969AbbLEMnJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 5 Dec 2015 07:43:09 -0500
+To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	"Alex Deucher" <alexander.deucher@amd.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Subject: Resizeable PCI BAR support
+Message-ID: <5662C61F.50303@amd.com>
+Date: Sat, 5 Dec 2015 12:10:23 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="------------020302020006010107070102"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series has been forked from the following patch series since
-it no longer depends on the rest of the patches.
+--------------020302020006010107070102
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 
-  [PATCH v4 00/10] ACPI GIC Self-probing, GICv2m and GICv3 support
-  https://lkml.org/lkml/2015/7/29/234
+Hi Bjorn,
 
-It has been ported to use the newly introduced device fwnode_handle 
-for ACPI irqdmain introduced by Marc in the following patch series:
+reading up on the mailing list this is probably not the first time this 
+topic comes up, but this time it is not just for FPGAs but for really 
+end user hardware.
 
-  [PATCH v2 00/17] Divorcing irqdomain and device_node
+Alex and I are the maintainers of the Radeon and Amdgpu kernel drivers 
+for the AMD graphics hardware.  Now the newest hardware generation of 
+those devices started to support resizeable PCI BARs as specified here 
+https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf.
 
-The following git branch contains the submitted patches along with
-the pre-requsite patches (mainly for ARM64 PCI support for ACPI).
+That feature is rather important for graphics hardware, because the PCI 
+BARs are usually limited to 256MB while on modern cards you can easily 
+find 4GB or more VRAM. The end result is that only a fraction of that 
+VRAM is CPU accessible, causing a whole bunch of workarounds in the 
+driver stack for that hardware.
 
-  https://github.com/ssuthiku/linux.git	v2m-multiframe-v7
+We of course want to avoid that hassle and so I've attached two patches 
+created to test the functionality. The first one is just infrastructure 
+for handling the extension and the second is a hack to resize all BARs 
+to their maximum before probing them by the PCI subsystem.
 
-This has been tested on AMD Seattle (Overdrive) RevB system. 
+That resizing works astonishing fine, the only problem is that on 
+practical no system I've tested this feature actually works. The reason 
+is that the PCI root bridge doesn't get enough address space assigned by 
+the BIOS for this and the PCI subsystem in the kernel isn't able to 
+reprogram it.
 
-NOTE: I have not tested ACPI GICv2m multiframe support since
-I don't have access to such system. Any helps are appreciated.
+Any clever idea how to get this working without waiting for system BIOS 
+providers to pick up that extension? Would adding support for 
+reprogramming the root bridges be possible?
 
-Thanks,
-Suravee
+Best regards,
+Christian.
 
-Changes from V6: (https://lkml.org/lkml/2015/12/9/660)
-  - Minor logic change recommended by Marc
-  - Added Reviewed-by Marc for patch 4
-  - Added Tested-by Duc for patch 4 
+--------------020302020006010107070102
+Content-Type: text/x-patch;
+	name="0001-PCI-add-resizeable-BAR-infrastructure.patch"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment;
+	filename="0001-PCI-add-resizeable-BAR-infrastructure.patch"
 
-Changes from V5: (https://lkml.org/lkml/2015/12/08/763)
-  - Remove previous patch 3
-  - Clean up based on Marc's review (patch 1.4)
-  - Add Ackedb-by and Reviewed-by (Patch 1,2,3)
-  - Expose single gicv2m_init() function for both OF and ACPI
-    (per Marc's suggestion)
-  - Remove gicv2m name from pr_info since this is no longer useful
-    (in patch 3) (per Marc's suggestion)
+>From ea99917e1760b2a1ecd6d353d7a8a060ea24dd03 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>
+Date: Wed, 25 Nov 2015 12:46:29 +0100
+Subject: [PATCH 1/2] PCI: add resizeable BAR infrastructure
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Changes from V4: (https://lkml.org/lkml/2015/12/08/613)
-  - Fix build error when not specifying CONFIG_IRQ_DOMAIN.
+Just the defines and helper functions to read the possible sizes of a BAR and
+update it's size.
 
-Changes from V3: (https://lkml.org/lkml/2015/10/21/691)
-  - Merged patch 2 into 1, and got rid off pci_msi_get_fwnode()
-    since only ACPI will likely use this. (per Marc suggestion)
-  - Rebased to 4.4.0-rc4
+See https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf.
 
-Changes from V2: (https://lkml.org/lkml/2015/10/14/1010)
-  - Minor clean up from Tomasz review comment in patch 6/6.
+Signed-off-by: Christian König <christian.koenig@amd.com>
+---
+ drivers/pci/pci.c             | 78 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h           |  2 ++
+ include/uapi/linux/pci_regs.h |  7 ++++
+ 3 files changed, 87 insertions(+)
 
-Changes from V1: (https://lkml.org/lkml/2015/10/13/859)
-  - Rebase on top of Marc's patch to addng support for multiple MSI frames
-    (https://lkml.org/lkml/2015/10/14/271)
-  - Adding fwnode convenient functions (patch 3 and 4)
-
-Suravee Suthikulpanit (4):
-  acpi: pci: Setup MSI domain for ACPI based pci devices
-  irqdomain: introduce is_fwnode_irqchip helper
-  gicv2m: Refactor to prepare for ACPI support
-  gicv2m: acpi: Introducing GICv2m ACPI support
-
- drivers/irqchip/irq-gic-v2m.c   | 163 ++++++++++++++++++++++++++++++++++------
- drivers/irqchip/irq-gic.c       |   8 +-
- drivers/pci/pci-acpi.c          |  42 +++++++++++
- drivers/pci/probe.c             |   2 +
- include/linux/irqchip/arm-gic.h |   3 +-
- include/linux/irqdomain.h       |  10 +++
- include/linux/pci.h             |  10 +++
- kernel/irq/irqdomain.c          |   2 +-
- 8 files changed, 214 insertions(+), 26 deletions(-)
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6a9a111..862247f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2453,6 +2453,84 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+ }
+ 
+ /**
++ * pci_rbar_get_sizes - get possible sizes for BAR
++ * @dev: PCI device
++ * @bar: BAR to query
++ *
++ * Get the possible sizes of a resizeable BAR as bitmask defined in the spec
++ * (bit 0=1MB, bit 19=512GB). Returns 0 if BAR isn't resizeable.
++ */
++u32 pci_rbar_get_sizes(struct pci_dev *pdev, int bar)
++{
++	int pos, nbars;
++	u32 ctrl, cap;
++	int i;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++	if (!pos)
++		return 0x0;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++
++	for (i = 0; i < nbars; ++i, pos += 8) {
++		int bar_idx;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
++				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
++		if (bar_idx != bar)
++			continue;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
++		return (cap & PCI_REBAR_CTRL_SIZES_MASK) >>
++			PCI_REBAR_CTRL_SIZES_SHIFT;
++	}
++
++	return 0x0;
++}
++
++/**
++ * pci_rbar_set_size - set a new size for a BAR
++ * @dev: PCI device
++ * @bar: BAR to set size to
++ * @size: new size as defined in the spec.
++ *
++ * Set the new size of a BAR as defined in the spec (0=1MB, 19=512GB).
++ * Returns true if resizing was successful, false otherwise.
++ */
++bool pci_rbar_set_size(struct pci_dev *pdev, int bar, int size)
++{
++	int pos, nbars;
++	u32 ctrl;
++	int i;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++	if (!pos)
++		return false;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++
++	for (i = 0; i < nbars; ++i, pos += 8) {
++		int bar_idx;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
++				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
++		if (bar_idx != bar)
++			continue;
++
++		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE_MASK;
++		ctrl |= size << PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
++		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
++		return true;
++	}
++
++	return false;
++}
++
++/**
+  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+  * @dev: the PCI device
+  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e90eb22..fafb974 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1801,6 +1801,8 @@ void pci_request_acs(void);
+ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+ bool pci_acs_path_enabled(struct pci_dev *start,
+ 			  struct pci_dev *end, u16 acs_flags);
++u32 pci_rbar_get_sizes(struct pci_dev *pdev, int bar);
++bool pci_rbar_set_size(struct pci_dev *pdev, int bar, int size);
+ 
+ #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+ #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 413417f..b746cbb 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -886,9 +886,16 @@
+ #define PCI_SATA_SIZEOF_LONG	16
+ 
+ /* Resizable BARs */
++#define PCI_REBAR_CAP		4	/* capability register */
++#define  PCI_REBAR_CTRL_SIZES_MASK	(0xFFFFF << 4)	/* mask for sizes */
++#define  PCI_REBAR_CTRL_SIZES_SHIFT	4	/* shift for sizes */
+ #define PCI_REBAR_CTRL		8	/* control register */
++#define  PCI_REBAR_CTRL_BAR_IDX_MASK	(7 << 0)	/* mask for bar index */
++#define  PCI_REBAR_CTRL_BAR_IDX_SHIFT	0	/* shift for bar index */
+ #define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # bars */
+ #define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # bars */
++#define  PCI_REBAR_CTRL_BAR_SIZE_MASK	(0x1F << 8)	/* mask for bar size */
++#define  PCI_REBAR_CTRL_BAR_SIZE_SHIFT	8	/* shift for bar size */
+ 
+ /* Dynamic Power Allocation */
+ #define PCI_DPA_CAP		4	/* capability register */
 -- 
-2.1.0
+2.5.0
 
+
+--------------020302020006010107070102
+Content-Type: text/x-patch;
+	name="0002-PCI-WIP-hack-to-resize-all-BARs-to-their-maximum.patch"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment;
+	filename="0002-PCI-WIP-hack-to-resize-all-BARs-to-their-maximum.patch"
+
+>From b7201b6af1b3f5452549351b018a27806ee5a723 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>
+Date: Wed, 25 Nov 2015 12:51:24 +0100
+Subject: [PATCH 2/2] PCI: WIP hack to resize all BARs to their maximum
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Christian König <christian.koenig@amd.com>
+---
+ drivers/pci/probe.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8361d27..1d8fc20 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -318,6 +318,17 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
+ 
+ 	for (pos = 0; pos < howmany; pos++) {
+ 		struct resource *res = &dev->resource[pos];
++		u32 sizes = pci_rbar_get_sizes(dev, pos);
++
++		if (sizes) {
++			/* Just resize to the maximum for now */
++			int size = fls(sizes) - 1;
++
++			if (pci_rbar_set_size(dev, pos, size))
++				dev_info(&dev->dev, "Resized BAR %d to %dMB\n",
++					 pos, 1 << size);
++		}
++
+ 		reg = PCI_BASE_ADDRESS_0 + (pos << 2);
+ 		pos += __pci_read_base(dev, pci_bar_unknown, res, reg);
+ 	}
+-- 
+2.5.0
+
+
+--------------020302020006010107070102--
