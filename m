@@ -1,135 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH 08/10] drivers/pci: make host/pcie-xilinx.c explicitly non-modular
-Date: Sat, 12 Dec 2015 20:41:55 -0500
-Message-ID: <1449970917-12633-9-git-send-email-paul.gortmaker@windriver.com>
-In-Reply-To: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:38675 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754887AbbLEAgQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Dec 2015 19:36:16 -0500
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v7 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
+Date: Sat,  5 Dec 2015 00:35:59 +0000
+Message-Id: <1449275767-1510-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+From: Jake Oshins <jakeo@microsoft.com>
 
-drivers/pci/host/Kconfig:config PCIE_XILINX
-drivers/pci/host/Kconfig:       bool "Xilinx AXI PCIe host bridge support"
+This version of the patch series incorporates feedback from Gerry Liu.
 
-...meaning that it currently is not being built as a module by anyone.
+First, export functions that allow correlating Hyper-V virtual processors
+and Linux cpus, along with the means for invoking a hypercall that targets
+interrupts at chosen vectors on specific cpus.
 
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.  This
-makes xilinx_pcie_free_irq_domain orphaned so we remove it too.
+Second, mark various parts of IRQ domain related code as exported, so that
+this PCI front-end can implement an IRQ domain as part of a module.  (The
+alternative would be to pull all tyhis into the kernel, which would pull
+in a lot of other Hyper-V related code, as this IRQ domain depends on
+vmbus.ko.)
 
-We don't have to worry about disallowing a driver unbind, since this
-driver already does that.
+Third, modify PCI so that new root PCI buses can be marked with an associated
+fwnode_handle, and so that root PCI buses can look up their associated IRQ
+domain by that handle.
 
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
+Fourth, introduce a new driver, hv_pcifront, which exposes root PCI buses in
+a Hyper-V VM.  These root PCI buses expose real PCIe device, or PCI Virtual
+Functions.
 
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
+Jake Oshins (7):
+  drivers:hv: Export a function that maps Linux CPU num onto Hyper-V
+    proc num
+  drivers:hv: Export hv_do_hypercall()
+  PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
+  PCI: Add fwnode_handle to pci_sysdata
+  PCI: irqdomain: Look up IRQ domain by fwnode_handle
+  drivers:hv: Define the channel type of Hyper-V PCI Express
+    pass-through
+  PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pcie-xilinx.c | 53 ++----------------------------------------
- 1 file changed, 2 insertions(+), 51 deletions(-)
+ MAINTAINERS                    |    1 +
+ arch/x86/include/asm/msi.h     |    6 +
+ arch/x86/include/asm/pci.h     |   15 +
+ arch/x86/kernel/apic/msi.c     |    8 +-
+ arch/x86/kernel/apic/vector.c  |    2 +
+ drivers/hv/hv.c                |   20 +-
+ drivers/hv/hyperv_vmbus.h      |    2 +-
+ drivers/hv/vmbus_drv.c         |   17 +
+ drivers/pci/Kconfig            |    7 +
+ drivers/pci/host/Makefile      |    1 +
+ drivers/pci/host/hv_pcifront.c | 2241 ++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/msi.c              |    4 +
+ drivers/pci/probe.c            |   14 +
+ include/asm-generic/pci.h      |    4 +
+ include/linux/hyperv.h         |   14 +
+ kernel/irq/chip.c              |    1 +
+ kernel/irq/irqdomain.c         |    4 +
+ 17 files changed, 2347 insertions(+), 14 deletions(-)
+ create mode 100644 drivers/pci/host/hv_pcifront.c
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 3c7a0d580b1e..73b5e856f9c2 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -18,7 +18,7 @@
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -516,35 +516,6 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- }
- 
- /**
-- * xilinx_pcie_free_irq_domain - Free IRQ domain
-- * @port: PCIe port information
-- */
--static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
--{
--	int i;
--	u32 irq, num_irqs;
--
--	/* Free IRQ Domain */
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--
--		free_pages(port->msi_pages, 0);
--
--		num_irqs = XILINX_NUM_MSI_IRQS;
--	} else {
--		/* INTx */
--		num_irqs = 4;
--	}
--
--	for (i = 0; i < num_irqs; i++) {
--		irq = irq_find_mapping(port->irq_domain, i);
--		if (irq > 0)
--			irq_dispose_mapping(irq);
--	}
--
--	irq_domain_remove(port->irq_domain);
--}
--
--/**
-  * xilinx_pcie_init_irq_domain - Initialize IRQ domain
-  * @port: PCIe port information
-  *
-@@ -858,21 +829,6 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 	return 0;
- }
- 
--/**
-- * xilinx_pcie_remove - Remove function
-- * @pdev: Platform device pointer
-- *
-- * Return: '0' always
-- */
--static int xilinx_pcie_remove(struct platform_device *pdev)
--{
--	struct xilinx_pcie_port *port = platform_get_drvdata(pdev);
--
--	xilinx_pcie_free_irq_domain(port);
--
--	return 0;
--}
--
- static struct of_device_id xilinx_pcie_of_match[] = {
- 	{ .compatible = "xlnx,axi-pcie-host-1.00.a", },
- 	{}
-@@ -885,10 +841,5 @@ static struct platform_driver xilinx_pcie_driver = {
- 		.suppress_bind_attrs = true,
- 	},
- 	.probe = xilinx_pcie_probe,
--	.remove = xilinx_pcie_remove,
- };
--module_platform_driver(xilinx_pcie_driver);
--
--MODULE_AUTHOR("Xilinx Inc");
--MODULE_DESCRIPTION("Xilinx AXI PCIe driver");
--MODULE_LICENSE("GPL v2");
-+builtin_platform_driver(xilinx_pcie_driver);
 -- 
-2.6.1
+1.9.1
 
