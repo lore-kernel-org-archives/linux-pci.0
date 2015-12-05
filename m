@@ -1,44 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48203 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751681AbbLQH7d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Dec 2015 02:59:33 -0500
-From: Hannes Reinecke <hare@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	Michal Kubecek <mkubecek@suse.com>,
-	"Shane M. Seymour" <shane.seymour@hpe.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 0/2] PCI: Safe VPD access
-Date: Thu, 17 Dec 2015 08:59:27 +0100
-Message-Id: <1450339169-52542-1-git-send-email-hare@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v7 1/7] drivers:hv: Export a function that maps Linux CPU num onto Hyper-V proc num
+Date: Sat,  5 Dec 2015 00:36:00 +0000
+Message-Id: <1449275767-1510-2-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1449275767-1510-1-git-send-email-jakeo@microsoft.com>
+References: <1449275767-1510-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI VPD suffers from two problems: it has a very rudimentary interface
-and it relies on correctly formatted data. And essentially it provides
-a direct channel into the card hardware. In other words, plenty of
-chances to mess things up.
-With the original implementation we would just read the VPD space,
-blissfully ignorant of the data formatting of the VPD data. This
-would work if the VPD space happens to be properly implemented.
-However, I've had several reports where a simple 'cat' on the vpd
-attribute would return garbage (if you're lucky), trigger a timeout
-with a kernel warning (which actually triggered this patchset), or
-hang your machine (if you're really unlucky).
-So this patchset validates the VPD data, setting the VPD attribute to
-the correct size or disabling VPD access altogether if no valid data
-is found.
+From: Jake Oshins <jakeo@microsoft.com>
 
-Hannes Reinecke (2):
-  pci: Update VPD definitions
-  pci: Update VPD size with correct length
+This patch exposes the mapping between Linux CPU number and Hyper-V
+virtual processor number. This is necessary because the hypervisor needs
+to know which virtual processor to target when making a mapping in the
+Interrupt Redirection Table in the I/O MMU.
 
- drivers/pci/access.c | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  | 27 +++++++++++++++++++++++--
- 2 files changed, 82 insertions(+), 2 deletions(-)
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/vmbus_drv.c | 17 +++++++++++++++++
+ include/linux/hyperv.h |  2 ++
+ 2 files changed, 19 insertions(+)
 
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index f19b6f7..c89d0e5 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -1191,6 +1191,23 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ }
+ EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
+ 
++/**
++ * vmbus_cpu_number_to_vp_number() - Map CPU to VP.
++ * @cpu_number: CPU number in Linux terms
++ *
++ * This function returns the mapping between the Linux processor
++ * number and the hypervisor's virtual processor number, useful
++ * in making hypercalls and such that talk about specific
++ * processors.
++ *
++ * Return: Virtual processor number in Hyper-V terms
++ */
++int vmbus_cpu_number_to_vp_number(int cpu_number)
++{
++	return hv_context.vp_index[cpu_number];
++}
++EXPORT_SYMBOL_GPL(vmbus_cpu_number_to_vp_number);
++
+ static int vmbus_acpi_add(struct acpi_device *device)
+ {
+ 	acpi_status result;
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index 8fdc17b..fddb3e0 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -983,6 +983,8 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			resource_size_t size, resource_size_t align,
+ 			bool fb_overlap_ok);
+ 
++int vmbus_cpu_number_to_vp_number(int cpu_number);
++
+ /**
+  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
+  *
 -- 
-1.8.5.6
+1.9.1
 
