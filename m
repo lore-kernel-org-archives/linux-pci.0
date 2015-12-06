@@ -1,147 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41888 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754485AbbLKFMu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:12:50 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
+Received: from bh-25.webhostbox.net ([208.91.199.152]:55926 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753931AbbLFVtg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Dec 2015 16:49:36 -0500
+Subject: Re: [PATCH v7 45/50] drivers/of: Avoid recursively calling
+ unflatten_dt_node()
+To: Rob Herring <robherring2@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_Jsq+BnPEKkRgQX4+e0MA9dKLVLhy8rVF25Fr9yXL2jp+WLA@mail.gmail.com>
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 15/60] PCI: Restore pref MMIO allocation logic for host bridge without mmio64
-Date: Thu, 10 Dec 2015 21:06:11 -0800
-Message-Id: <1449810416-2950-16-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Frank Rowand <frowand.list@gmail.com>
+From: Guenter Roeck <linux@roeck-us.net>
+Message-ID: <5664AD69.6050702@roeck-us.net>
+Date: Sun, 6 Dec 2015 13:49:29 -0800
+MIME-Version: 1.0
+In-Reply-To: <CAL_Jsq+BnPEKkRgQX4+e0MA9dKLVLhy8rVF25Fr9yXL2jp+WLA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
-resources), we change the logic for pref mmio allocation:
-When bridge pref support mmio64, we will only put children pref
-that support mmio64 into it, and will put children pref mmio32
-into bridge's non-pref mmio32.
+On 12/06/2015 12:28 PM, Rob Herring wrote:
+> +Guenter
+>
+> On Wed, Nov 4, 2015 at 7:12 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>> In current implementation, unflatten_dt_node() is called recursively
+>> to unflatten device nodes in FDT blob. It's stress to limited stack
+>> capacity.
+>>
+>> This avoids calling the function recursively, meaning the device
+>> nodes are unflattened in one call on unflatten_dt_node(): two arrays
+>> are introduced to track the parent path size and the device node of
+>> current level of depth, which will be used by the device node on next
+>> level of depth to be unflattened. Also, the parameter "poffset" and
+>> "fpsize" are unused and dropped.
+>
+> Do you plan to respin the OF parts at least soon? There's another
+> problem Guenter found that of_fdt_unflatten_tree is not re-entrant due
+> to "depth" being static and this series fixes that. So I'd rather
+> apply this and avoid adding a mutex if possible.
+>
 
-That could leave bridge pref bar not used when that pref bar is mmio64,
-and children res only has mmio32.
-Also could have allocation failure when non-pref mmio32 is not big
-enough space for those children pref mmio32.
+Hi Rob,
 
-That is not rational when the host bridge does not 64bit mmio above 4g
-at all.
+We see this problem in 4.1, so whatever patch you accept should be
+back-ported to at least that release.
 
-The patch restore to old logic:
-when host bridge does not have has_mem64, put children pref mmio64 and
-pref mmio32 all under bridges pref bars.
+Any idea when this patch will be accepted ? We actively see the problem
+in our kernel, so I'll need a solution soon. Otherwise I'll have to apply
+my patch to our kernel and revert it as soon as the 'real' patch has been
+back-ported.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- drivers/pci/bus.c       |  4 +++-
- drivers/pci/setup-bus.c | 13 +++++++++----
- drivers/pci/setup-res.c |  9 ++++++---
- 3 files changed, 18 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index d3346d2..0859e77 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -202,8 +202,10 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- {
- #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
- 	int rc;
-+	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
-+				IORESOURCE_MEM_64 : 0;
- 
--	if (res->flags & IORESOURCE_MEM_64) {
-+	if (res->flags & mmio64) {
- 		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
- 					       type_mask, alignf, alignf_data,
- 					       &pci_high);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 0befb0a..86c51ef 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1312,7 +1312,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
- 		mask = IORESOURCE_MEM;
- 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
--		if (b_res[2].flags & IORESOURCE_MEM_64) {
-+		if ((b_res[2].flags & IORESOURCE_MEM_64) &&
-+		    pci_find_host_bridge(bus)->has_mem64) {
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
-@@ -1514,17 +1515,21 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 	 *	  io port.
- 	 *     2. if there is non pref mmio assign fail, release bridge
- 	 *	  nonpref mmio.
--	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
-+	 *     3. if there is pref mmio assign fail, and host bridge does
-+	 *	  have 64bit mmio, release bridge pref mmio.
-+	 *     4. if there is 64bit pref mmio assign fail, and bridge pref
- 	 *	  is 64bit, release bridge pref mmio.
--	 *     4. if there is pref mmio assign fail, and bridge pref is
-+	 *     5. if there is pref mmio assign fail, and bridge pref is
- 	 *	  32bit mmio, release bridge pref mmio
--	 *     5. if there is pref mmio assign fail, and bridge pref is not
-+	 *     6. if there is pref mmio assign fail, and bridge pref is not
- 	 *	  assigned, release bridge nonpref mmio.
- 	 */
- 	if (type & IORESOURCE_IO)
- 		idx = 0;
- 	else if (!(type & IORESOURCE_PREFETCH))
- 		idx = 1;
-+	else if (!pci_find_host_bridge(bus)->has_mem64)
-+		idx = 2;
- 	else if ((type & IORESOURCE_MEM_64) &&
- 		 (b_res[2].flags & IORESOURCE_MEM_64))
- 		idx = 2;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index d5b3970..c401cfd 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -212,6 +212,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	struct resource *res = dev->resource + resno;
- 	resource_size_t min;
- 	int ret;
-+	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
-+				IORESOURCE_MEM_64 : 0;
- 
- 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
- 
-@@ -223,7 +225,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * things differently than they were sized, not everything will fit.
- 	 */
- 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
--				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
-+				     IORESOURCE_PREFETCH | mmio64,
- 				     pcibios_align_resource, dev);
- 	if (ret == 0)
- 		return 0;
-@@ -232,7 +234,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * If the prefetchable window is only 32 bits wide, we can put
- 	 * 64-bit prefetchable resources in it.
- 	 */
--	if ((res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
-+	if (mmio64 &&
-+	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
- 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
- 					     IORESOURCE_PREFETCH,
-@@ -247,7 +250,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * non-prefetchable, the first call already tried the only possibility
- 	 * so we don't need to try again.
- 	 */
--	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
-+	if (res->flags & (IORESOURCE_PREFETCH | mmio64))
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
- 					     pcibios_align_resource, dev);
- 
--- 
-1.8.4.5
+Thanks,
+Guenter
 
