@@ -1,202 +1,205 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <kishon@ti.com>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
-CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rogerq@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-	<linux-usb@vger.kernel.org>, <tony@atomide.com>, <t-kristo@ti.com>
-Subject: [PATCH v3 6/9] phy: ti-pipe3: use *syscon* framework API to power on/off the PHY
-Date: Tue, 15 Dec 2015 14:46:05 +0530
-Message-ID: <1450170968-11282-7-git-send-email-kishon@ti.com>
-In-Reply-To: <1450170968-11282-1-git-send-email-kishon@ti.com>
-References: <1450170968-11282-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yk0-f178.google.com ([209.85.160.178]:33642 "EHLO
+	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754405AbbLFU2u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Dec 2015 15:28:50 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Sun, 6 Dec 2015 14:28:30 -0600
+Message-ID: <CAL_Jsq+BnPEKkRgQX4+e0MA9dKLVLhy8rVF25Fr9yXL2jp+WLA@mail.gmail.com>
+Subject: Re: [PATCH v7 45/50] drivers/of: Avoid recursively calling unflatten_dt_node()
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Guenter Roeck <linux@roeck-us.net>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Deprecate using phy-omap-control driver to power on/off the PHY and
-use *syscon* framework to do the same.
++Guenter
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/devicetree/bindings/phy/ti-phy.txt |   10 ++-
- drivers/phy/phy-ti-pipe3.c                       |   90 ++++++++++++++++++----
- 2 files changed, 85 insertions(+), 15 deletions(-)
+On Wed, Nov 4, 2015 at 7:12 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+> In current implementation, unflatten_dt_node() is called recursively
+> to unflatten device nodes in FDT blob. It's stress to limited stack
+> capacity.
+>
+> This avoids calling the function recursively, meaning the device
+> nodes are unflattened in one call on unflatten_dt_node(): two arrays
+> are introduced to track the parent path size and the device node of
+> current level of depth, which will be used by the device node on next
+> level of depth to be unflattened. Also, the parameter "poffset" and
+> "fpsize" are unused and dropped.
 
-diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
-index 9cf9446..e06f980 100644
---- a/Documentation/devicetree/bindings/phy/ti-phy.txt
-+++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
-@@ -77,8 +77,6 @@ Required properties:
-    * "div-clk" - apll clock
- 
- Optional properties:
-- - ctrl-module : phandle of the control module used by PHY driver to power on
--   the PHY.
-  - id: If there are multiple instance of the same type, in order to
-    differentiate between each instance "id" can be used (e.g., multi-lane PCIe
-    PHY). If "id" is not provided, it is set to default value of '1'.
-@@ -86,6 +84,14 @@ Optional properties:
-    CTRL_CORE_SMA_SW_0 register and register offset to the CTRL_CORE_SMA_SW_0
-    register that contains the SATA_PLL_SOFT_RESET bit. Only valid for sata_phy.
- 
-+Deprecated properties:
-+ - ctrl-module : phandle of the control module used by PHY driver to power on
-+   the PHY.
-+
-+Recommended properies:
-+ - syscon-phy-power : phandle/offset pair. Phandle to the system control
-+   module and the register offset to power on/off the PHY.
-+
- This is usually a subnode of ocp2scp to which it is connected.
- 
- usb3phy@4a084400 {
-diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
-index 0ce4194..bc03625 100644
---- a/drivers/phy/phy-ti-pipe3.c
-+++ b/drivers/phy/phy-ti-pipe3.c
-@@ -56,6 +56,15 @@
- 
- #define SATA_PLL_SOFT_RESET	BIT(18)
- 
-+#define PIPE3_PHY_PWRCTL_CLK_CMD_MASK	0x003FC000
-+#define PIPE3_PHY_PWRCTL_CLK_CMD_SHIFT	14
-+
-+#define PIPE3_PHY_PWRCTL_CLK_FREQ_MASK	0xFFC00000
-+#define PIPE3_PHY_PWRCTL_CLK_FREQ_SHIFT	22
-+
-+#define PIPE3_PHY_TX_RX_POWERON		0x3
-+#define PIPE3_PHY_TX_RX_POWEROFF	0x0
-+
- /*
-  * This is an Empirical value that works, need to confirm the actual
-  * value required for the PIPE3PHY_PLL_CONFIGURATION2.PLL_IDLE status
-@@ -86,8 +95,10 @@ struct ti_pipe3 {
- 	struct clk		*refclk;
- 	struct clk		*div_clk;
- 	struct pipe3_dpll_map	*dpll_map;
-+	struct regmap		*phy_power_syscon; /* ctrl. reg. acces */
- 	struct regmap		*dpll_reset_syscon; /* ctrl. reg. acces */
- 	unsigned int		dpll_reset_reg; /* reg. index within syscon */
-+	unsigned int		power_reg; /* power reg. index within syscon */
- 	bool			sata_refclk_enabled;
- };
- 
-@@ -144,18 +155,53 @@ static void ti_pipe3_disable_clocks(struct ti_pipe3 *phy);
- 
- static int ti_pipe3_power_off(struct phy *x)
- {
-+	u32 val;
-+	int ret;
- 	struct ti_pipe3 *phy = phy_get_drvdata(x);
- 
--	omap_control_phy_power(phy->control_dev, 0);
-+	if (phy->phy_power_syscon) {
-+		val = PIPE3_PHY_TX_RX_POWEROFF <<
-+			PIPE3_PHY_PWRCTL_CLK_CMD_SHIFT;
-+
-+		ret = regmap_update_bits(phy->phy_power_syscon, phy->power_reg,
-+					 PIPE3_PHY_PWRCTL_CLK_CMD_MASK, val);
-+		if (ret < 0)
-+			return ret;
-+	} else {
-+		omap_control_phy_power(phy->control_dev, 0);
-+	}
- 
- 	return 0;
- }
- 
- static int ti_pipe3_power_on(struct phy *x)
- {
-+	u32 val;
-+	u32 mask;
-+	int ret;
-+	unsigned long rate;
- 	struct ti_pipe3 *phy = phy_get_drvdata(x);
- 
--	omap_control_phy_power(phy->control_dev, 1);
-+	if (phy->phy_power_syscon) {
-+		rate = clk_get_rate(phy->sys_clk);
-+		if (!rate) {
-+			dev_err(phy->dev, "Invalid clock rate\n");
-+			return -EINVAL;
-+		}
-+		rate = rate / 1000000;
-+		mask = OMAP_CTRL_PIPE3_PHY_PWRCTL_CLK_CMD_MASK |
-+			  OMAP_CTRL_PIPE3_PHY_PWRCTL_CLK_FREQ_MASK;
-+		val = PIPE3_PHY_TX_RX_POWERON <<
-+			PIPE3_PHY_PWRCTL_CLK_CMD_SHIFT;
-+		val |= rate << OMAP_CTRL_PIPE3_PHY_PWRCTL_CLK_FREQ_SHIFT;
-+
-+		ret = regmap_update_bits(phy->phy_power_syscon, phy->power_reg,
-+					 mask, val);
-+		if (ret < 0)
-+			return ret;
-+	} else {
-+		omap_control_phy_power(phy->control_dev, 1);
-+	}
- 
- 	return 0;
- }
-@@ -334,7 +380,8 @@ static int ti_pipe3_get_clk(struct ti_pipe3 *phy)
- 		phy->wkupclk = ERR_PTR(-ENODEV);
- 	}
- 
--	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
-+	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie") ||
-+	    phy->phy_power_syscon) {
- 		phy->sys_clk = devm_clk_get(dev, "sysclk");
- 		if (IS_ERR(phy->sys_clk)) {
- 			dev_err(dev, "unable to get sysclk\n");
-@@ -383,19 +430,36 @@ static int ti_pipe3_get_sysctrl(struct ti_pipe3 *phy)
- 	struct device_node *control_node;
- 	struct platform_device *control_pdev;
- 
--	control_node = of_parse_phandle(node, "ctrl-module", 0);
--	if (!control_node) {
--		dev_err(dev, "Failed to get control device phandle\n");
--		return -EINVAL;
-+	phy->phy_power_syscon = syscon_regmap_lookup_by_phandle(node,
-+							"syscon-phy-power");
-+	if (IS_ERR(phy->phy_power_syscon)) {
-+		dev_dbg(dev,
-+			"can't get syscon-phy-power, using control device\n");
-+		phy->phy_power_syscon = NULL;
-+	} else {
-+		if (of_property_read_u32_index(node,
-+					       "syscon-phy-power", 1,
-+					       &phy->power_reg)) {
-+			dev_err(dev, "couldn't get power reg. offset\n");
-+			return -EINVAL;
-+		}
- 	}
- 
--	control_pdev = of_find_device_by_node(control_node);
--	if (!control_pdev) {
--		dev_err(dev, "Failed to get control device\n");
--		return -EINVAL;
--	}
-+	if (!phy->phy_power_syscon) {
-+		control_node = of_parse_phandle(node, "ctrl-module", 0);
-+		if (!control_node) {
-+			dev_err(dev, "Failed to get control device phandle\n");
-+			return -EINVAL;
-+		}
- 
--	phy->control_dev = &control_pdev->dev;
-+		control_pdev = of_find_device_by_node(control_node);
-+		if (!control_pdev) {
-+			dev_err(dev, "Failed to get control device\n");
-+			return -EINVAL;
-+		}
-+
-+		phy->control_dev = &control_pdev->dev;
-+	}
- 
- 	if (of_device_is_compatible(node, "ti,phy-pipe3-sata")) {
- 		phy->dpll_reset_syscon = syscon_regmap_lookup_by_phandle(node,
--- 
-1.7.9.5
+Do you plan to respin the OF parts at least soon? There's another
+problem Guenter found that of_fdt_unflatten_tree is not re-entrant due
+to "depth" being static and this series fixes that. So I'd rather
+apply this and avoid adding a mutex if possible.
 
+Rob
+
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  drivers/of/fdt.c | 94 +++++++++++++++++++++++++++++++++-----------------------
+>  1 file changed, 56 insertions(+), 38 deletions(-)
+>
+> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+> index 173b036..f4793d0 100644
+> --- a/drivers/of/fdt.c
+> +++ b/drivers/of/fdt.c
+> @@ -355,61 +355,82 @@ static unsigned long populate_node(const void *blob,
+>         return fpsize;
+>  }
+>
+> +static void reverse_nodes(struct device_node *parent)
+> +{
+> +       struct device_node *child, *next;
+> +
+> +       /* In-depth first */
+> +       child = parent->child;
+> +       while (child) {
+> +               reverse_nodes(child);
+> +
+> +               child = child->sibling;
+> +       }
+> +
+> +       /* Reverse the nodes in the child list */
+> +       child = parent->child;
+> +       parent->child = NULL;
+> +       while (child) {
+> +               next = child->sibling;
+> +
+> +               child->sibling = parent->child;
+> +               parent->child = child;
+> +               child = next;
+> +       }
+> +}
+> +
+>  /**
+>   * unflatten_dt_node - Alloc and populate a device_node from the flat tree
+>   * @blob: The parent device tree blob
+>   * @mem: Memory chunk to use for allocating device nodes and properties
+> - * @poffset: pointer to node in flat tree
+>   * @dad: Parent struct device_node
+>   * @nodepp: The device_node tree created by the call
+> - * @fpsize: Size of the node path up at the current depth.
+>   * @dryrun: If true, do not allocate device nodes but still calculate needed
+>   * memory size
+>   */
+>  static void *unflatten_dt_node(const void *blob,
+>                                void *mem,
+> -                              int *poffset,
+>                                struct device_node *dad,
+>                                struct device_node **nodepp,
+> -                              unsigned long fpsize,
+>                                bool dryrun)
+>  {
+> -       struct device_node *np;
+> -       static int depth;
+> -       int old_depth;
+> -
+> -       fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
+> -       if (!fpsize)
+> -               return mem;
+> +       struct device_node *root;
+> +       int offset = 0, depth = 0;
+> +       unsigned long fpsizes[64];
+> +       struct device_node *nps[64];
+>
+> -       old_depth = depth;
+> -       *poffset = fdt_next_node(blob, *poffset, &depth);
+> -       if (depth < 0)
+> -               depth = 0;
+> -       while (*poffset > 0 && depth > old_depth)
+> -               mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
+> -                                       fpsize, dryrun);
+> +       if (nodepp)
+> +               *nodepp = NULL;
+> +
+> +       root = dad;
+> +       fpsizes[depth] = dad ? strlen(of_node_full_name(dad)) : 0;
+> +       nps[depth++] = dad;
+> +       while (offset >= 0 && depth < 64) {
+> +               fpsizes[depth] = populate_node(blob, offset, &mem,
+> +                                              nps[depth - 1],
+> +                                              fpsizes[depth - 1],
+> +                                              &nps[depth], dryrun);
+> +               if (!fpsizes[depth])
+> +                       return mem;
+> +
+> +               if (!dryrun && nodepp && !*nodepp)
+> +                       *nodepp = nps[depth];
+> +               if (!dryrun && !root)
+> +                       root = nps[depth];
+> +
+> +               offset = fdt_next_node(blob, offset, &depth);
+> +       }
+>
+> -       if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
+> -               pr_err("unflatten: error %d processing FDT\n", *poffset);
+> +       if (offset < 0 && offset != -FDT_ERR_NOTFOUND)
+> +               pr_err("%s: Error %d processing FDT\n",
+> +                      __func__, offset);
+>
+>         /*
+>          * Reverse the child list. Some drivers assumes node order matches .dts
+>          * node order
+>          */
+> -       if (!dryrun && np->child) {
+> -               struct device_node *child = np->child;
+> -               np->child = NULL;
+> -               while (child) {
+> -                       struct device_node *next = child->sibling;
+> -                       child->sibling = np->child;
+> -                       np->child = child;
+> -                       child = next;
+> -               }
+> -       }
+> -
+> -       if (nodepp)
+> -               *nodepp = np;
+> +       if (!dryrun)
+> +               reverse_nodes(root);
+>
+>         return mem;
+>  }
+> @@ -431,7 +452,6 @@ static void __unflatten_device_tree(const void *blob,
+>                              void * (*dt_alloc)(u64 size, u64 align))
+>  {
+>         unsigned long size;
+> -       int start;
+>         void *mem;
+>
+>         pr_debug(" -> unflatten_device_tree()\n");
+> @@ -452,8 +472,7 @@ static void __unflatten_device_tree(const void *blob,
+>         }
+>
+>         /* First pass, scan for size */
+> -       start = 0;
+> -       size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
+> +       size = (unsigned long)unflatten_dt_node(blob, NULL, NULL, NULL, true);
+>         size = ALIGN(size, 4);
+>
+>         pr_debug("  size is %lx, allocating...\n", size);
+> @@ -467,8 +486,7 @@ static void __unflatten_device_tree(const void *blob,
+>         pr_debug("  unflattening %p...\n", mem);
+>
+>         /* Second pass, do actual unflattening */
+> -       start = 0;
+> -       unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
+> +       unflatten_dt_node(blob, mem, NULL, mynodes, false);
+>         if (be32_to_cpup(mem + size) != 0xdeadbeef)
+>                 pr_warning("End of tree marker overwritten: %08x\n",
+>                            be32_to_cpup(mem + size));
+> --
+> 2.1.0
+>
