@@ -1,225 +1,205 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:36088 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752022AbbLJXLZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 18:11:25 -0500
-Content-Type: text/plain; charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
-Subject: Re: [PATCH] drivers:pci:hotplug Fix all space prohibited before that ,
-From: sasa bogicevic <brutallesale@gmail.com>
-In-Reply-To: <20151210224700.GD367@localhost>
-Date: Fri, 11 Dec 2015 00:11:20 +0100
-Cc: rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Message-Id: <23CC472C-B114-4590-A677-7FDCCC9F6B93@gmail.com>
-References: <1449744040-76428-1-git-send-email-brutallesale@gmail.com> <20151210224700.GD367@localhost>
-To: Bjorn Helgaas <helgaas@kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:36974 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752686AbbLGAQ4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 6 Dec 2015 19:16:56 -0500
+Message-ID: <1449446087.21036.1.camel@kernel.crashing.org>
+Subject: Re: [PATCH v7 45/50] drivers/of: Avoid recursively calling
+ unflatten_dt_node()
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Rob Herring <robherring2@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Guenter Roeck <linux@roeck-us.net>
+Date: Mon, 07 Dec 2015 10:54:47 +1100
+In-Reply-To: <CAL_Jsq+BnPEKkRgQX4+e0MA9dKLVLhy8rVF25Fr9yXL2jp+WLA@mail.gmail.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <CAL_Jsq+BnPEKkRgQX4+e0MA9dKLVLhy8rVF25Fr9yXL2jp+WLA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ha just found the lines when I removed the -l flag
-
-drivers/pci/hotplug/shpchp_ctrl.c:	ctrl_dbg(ctrl, "%s: p_slot->device, slot_offset, hp_slot = %d, %d ,%d\n",
-drivers/pci/hotplug/cpqphp_ctrl.c:	dbg("%s: func->device, slot_offset, hp_slot = %d, %d ,%d\n",
-
-So there are spaces before that “%d” but checkpatch.pl didn’t complain 
-
-{
-	name: Bogicevic Sasa
-	phone: +381606006200
-}
-
-
-
-> On Dec 10, 2015, at 23:47, Bjorn Helgaas <helgaas@kernel.org> wrote:
+On Sun, 2015-12-06 at 14:28 -0600, Rob Herring wrote:
 > 
-> On Thu, Dec 10, 2015 at 02:40:40AM -0800, Bogicevic Sasa wrote:
->> This fixes all checkpatch errors about space prohibited
->> before comma in drivers/pci/hotplug folder
-> 
-> What happened?  I was hoping for a patch that fixed everything in
-> drivers/pci at once, but even after this patch, I see this:
-> 
->  $ grep -rl " ," drivers/pci/
->  drivers/pci/host/pci-imx6.c
->  drivers/pci/hotplug/cpqphp.h
->  drivers/pci/hotplug/ibmphp_core.c
->  drivers/pci/hotplug/shpchp.h
->  drivers/pci/hotplug/pciehp.h
->  drivers/pci/hotplug/rpaphp.h
->  drivers/pci/hotplug/cpqphp_ctrl.c
->  drivers/pci/hotplug/ibmphp.h
->  drivers/pci/hotplug/shpchp_ctrl.c
-> 
-> 
->> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
->> ---
->> drivers/pci/hotplug/acpi_pcihp.c        | 8 ++++----
->> drivers/pci/hotplug/cpci_hotplug_core.c | 8 ++++----
->> drivers/pci/hotplug/cpci_hotplug_pci.c  | 8 ++++----
->> drivers/pci/hotplug/cpcihp_generic.c    | 8 ++++----
->> drivers/pci/hotplug/cpcihp_zt5550.c     | 8 ++++----
->> drivers/pci/hotplug/ibmphp_ebda.c       | 2 +-
->> drivers/pci/hotplug/pci_hotplug_core.c  | 8 ++++----
->> drivers/pci/hotplug/pcihp_skeleton.c    | 8 ++++----
->> 8 files changed, 29 insertions(+), 29 deletions(-)
->> 
->> diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
->> index 876ccc6..80d94d2 100644
->> --- a/drivers/pci/hotplug/acpi_pcihp.c
->> +++ b/drivers/pci/hotplug/acpi_pcihp.c
->> @@ -36,10 +36,10 @@
->> 
->> #define MY_NAME	"acpi_pcihp"
->> 
->> -#define dbg(fmt, arg...) do { if (debug_acpi) printk(KERN_DEBUG "%s: %s: " fmt , MY_NAME , __func__ , ## arg); } while (0)
->> -#define err(format, arg...) printk(KERN_ERR "%s: " format , MY_NAME , ## arg)
->> -#define info(format, arg...) printk(KERN_INFO "%s: " format , MY_NAME , ## arg)
->> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format , MY_NAME , ## arg)
->> +#define dbg(fmt, arg...) do { if (debug_acpi) printk(KERN_DEBUG "%s: %s: " fmt, MY_NAME, __func__, ## arg); } while (0)
->> +#define err(format, arg...) printk(KERN_ERR "%s: " format, MY_NAME, ## arg)
->> +#define info(format, arg...) printk(KERN_INFO "%s: " format, MY_NAME, ## arg)
->> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format, MY_NAME, ## arg)
->> 
->> #define	METHOD_NAME__SUN	"_SUN"
->> #define	METHOD_NAME_OSHP	"OSHP"
->> diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
->> index 46db293..1c59e4b 100644
->> --- a/drivers/pci/hotplug/cpci_hotplug_core.c
->> +++ b/drivers/pci/hotplug/cpci_hotplug_core.c
->> @@ -46,11 +46,11 @@
->> 	do {							\
->> 		if (cpci_debug)					\
->> 			printk (KERN_DEBUG "%s: " format "\n",	\
->> -				MY_NAME , ## arg);		\
->> +				MY_NAME, ## arg);		\
->> 	} while (0)
->> -#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
->> -#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
->> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
->> +#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
->> +#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
->> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
->> 
->> /* local variables */
->> static DECLARE_RWSEM(list_rwsem);
->> diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
->> index 788db48..f2d3f4f 100644
->> --- a/drivers/pci/hotplug/cpci_hotplug_pci.c
->> +++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
->> @@ -39,11 +39,11 @@ extern int cpci_debug;
->> 	do {							\
->> 		if (cpci_debug)					\
->> 			printk (KERN_DEBUG "%s: " format "\n",	\
->> -				MY_NAME , ## arg);		\
->> +				MY_NAME, ## arg);		\
->> 	} while (0)
->> -#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
->> -#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
->> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
->> +#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
->> +#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
->> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
->> 
->> 
->> u8 cpci_get_attention_status(struct slot *slot)
->> diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
->> index 66b7bbe..d0ab4e1 100644
->> --- a/drivers/pci/hotplug/cpcihp_generic.c
->> +++ b/drivers/pci/hotplug/cpcihp_generic.c
->> @@ -55,11 +55,11 @@
->> 	do {							\
->> 		if (debug)					\
->> 			printk (KERN_DEBUG "%s: " format "\n",	\
->> -				MY_NAME , ## arg);		\
->> +				MY_NAME, ## arg);		\
->> 	} while (0)
->> -#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
->> -#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
->> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
->> +#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
->> +#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
->> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
->> 
->> /* local variables */
->> static bool debug;
->> diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
->> index 7ecf34e..80dd418 100644
->> --- a/drivers/pci/hotplug/cpcihp_zt5550.c
->> +++ b/drivers/pci/hotplug/cpcihp_zt5550.c
->> @@ -50,11 +50,11 @@
->> 	do {							\
->> 		if (debug)					\
->> 			printk (KERN_DEBUG "%s: " format "\n",	\
->> -				MY_NAME , ## arg);		\
->> +				MY_NAME, ## arg);		\
->> 	} while (0)
->> -#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
->> -#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
->> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
->> +#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
->> +#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
->> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
->> 
->> /* local variables */
->> static bool debug;
->> diff --git a/drivers/pci/hotplug/ibmphp_ebda.c b/drivers/pci/hotplug/ibmphp_ebda.c
->> index d9b197d..8a77275 100644
->> --- a/drivers/pci/hotplug/ibmphp_ebda.c
->> +++ b/drivers/pci/hotplug/ibmphp_ebda.c
->> @@ -177,7 +177,7 @@ static void __init print_ebda_pci_rsrc (void)
->> 
->> 	list_for_each_entry(ptr, &ibmphp_ebda_pci_rsrc_head, ebda_pci_rsrc_list) {
->> 		debug ("%s - rsrc type: %x bus#: %x dev_func: %x start addr: %x end addr: %x\n",
->> -			__func__, ptr->rsrc_type ,ptr->bus_num, ptr->dev_fun,ptr->start_addr, ptr->end_addr);
->> +			__func__, ptr->rsrc_type,ptr->bus_num, ptr->dev_fun,ptr->start_addr, ptr->end_addr);
->> 	}
->> }
->> 
->> diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
->> index d1fab97..2bac1b9 100644
->> --- a/drivers/pci/hotplug/pci_hotplug_core.c
->> +++ b/drivers/pci/hotplug/pci_hotplug_core.c
->> @@ -45,10 +45,10 @@
->> 
->> #define MY_NAME	"pci_hotplug"
->> 
->> -#define dbg(fmt, arg...) do { if (debug) printk(KERN_DEBUG "%s: %s: " fmt , MY_NAME , __func__ , ## arg); } while (0)
->> -#define err(format, arg...) printk(KERN_ERR "%s: " format , MY_NAME , ## arg)
->> -#define info(format, arg...) printk(KERN_INFO "%s: " format , MY_NAME , ## arg)
->> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format , MY_NAME , ## arg)
->> +#define dbg(fmt, arg...) do { if (debug) printk(KERN_DEBUG "%s: %s: " fmt, MY_NAME, __func__, ## arg); } while (0)
->> +#define err(format, arg...) printk(KERN_ERR "%s: " format, MY_NAME, ## arg)
->> +#define info(format, arg...) printk(KERN_INFO "%s: " format, MY_NAME, ## arg)
->> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format, MY_NAME, ## arg)
->> 
->> 
->> /* local variables */
->> diff --git a/drivers/pci/hotplug/pcihp_skeleton.c b/drivers/pci/hotplug/pcihp_skeleton.c
->> index d062c00..14b5d10 100644
->> --- a/drivers/pci/hotplug/pcihp_skeleton.c
->> +++ b/drivers/pci/hotplug/pcihp_skeleton.c
->> @@ -52,11 +52,11 @@ static LIST_HEAD(slot_list);
->> 	do {							\
->> 		if (debug)					\
->> 			printk(KERN_DEBUG "%s: " format "\n",	\
->> -				MY_NAME , ## arg);		\
->> +				MY_NAME, ## arg);		\
->> 	} while (0)
->> -#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
->> -#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
->> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
->> +#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
->> +#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
->> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
->> 
->> /* local variables */
->> static bool debug;
->> -- 
->> 2.5.0
->> 
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Do you plan to respin the OF parts at least soon? There's another
+> problem Guenter found that of_fdt_unflatten_tree is not re-entrant due
+> to "depth" being static and this series fixes that. So I'd rather
+> apply this and avoid adding a mutex if possible.
 
+Gavin is on vacation until next year.
+
+Cheers,
+Ben.
+
+> Rob
+> 
+> > 
+> > Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> > ---
+> >  drivers/of/fdt.c | 94 +++++++++++++++++++++++++++++++++-----------------------
+> >  1 file changed, 56 insertions(+), 38 deletions(-)
+> > 
+> > diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+> > index 173b036..f4793d0 100644
+> > --- a/drivers/of/fdt.c
+> > +++ b/drivers/of/fdt.c
+> > @@ -355,61 +355,82 @@ static unsigned long populate_node(const void *blob,
+> >         return fpsize;
+> >  }
+> > 
+> > +static void reverse_nodes(struct device_node *parent)
+> > +{
+> > +       struct device_node *child, *next;
+> > +
+> > +       /* In-depth first */
+> > +       child = parent->child;
+> > +       while (child) {
+> > +               reverse_nodes(child);
+> > +
+> > +               child = child->sibling;
+> > +       }
+> > +
+> > +       /* Reverse the nodes in the child list */
+> > +       child = parent->child;
+> > +       parent->child = NULL;
+> > +       while (child) {
+> > +               next = child->sibling;
+> > +
+> > +               child->sibling = parent->child;
+> > +               parent->child = child;
+> > +               child = next;
+> > +       }
+> > +}
+> > +
+> >  /**
+> >   * unflatten_dt_node - Alloc and populate a device_node from the flat tree
+> >   * @blob: The parent device tree blob
+> >   * @mem: Memory chunk to use for allocating device nodes and properties
+> > - * @poffset: pointer to node in flat tree
+> >   * @dad: Parent struct device_node
+> >   * @nodepp: The device_node tree created by the call
+> > - * @fpsize: Size of the node path up at the current depth.
+> >   * @dryrun: If true, do not allocate device nodes but still calculate needed
+> >   * memory size
+> >   */
+> >  static void *unflatten_dt_node(const void *blob,
+> >                                void *mem,
+> > -                              int *poffset,
+> >                                struct device_node *dad,
+> >                                struct device_node **nodepp,
+> > -                              unsigned long fpsize,
+> >                                bool dryrun)
+> >  {
+> > -       struct device_node *np;
+> > -       static int depth;
+> > -       int old_depth;
+> > -
+> > -       fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
+> > -       if (!fpsize)
+> > -               return mem;
+> > +       struct device_node *root;
+> > +       int offset = 0, depth = 0;
+> > +       unsigned long fpsizes[64];
+> > +       struct device_node *nps[64];
+> > 
+> > -       old_depth = depth;
+> > -       *poffset = fdt_next_node(blob, *poffset, &depth);
+> > -       if (depth < 0)
+> > -               depth = 0;
+> > -       while (*poffset > 0 && depth > old_depth)
+> > -               mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
+> > -                                       fpsize, dryrun);
+> > +       if (nodepp)
+> > +               *nodepp = NULL;
+> > +
+> > +       root = dad;
+> > +       fpsizes[depth] = dad ? strlen(of_node_full_name(dad)) : 0;
+> > +       nps[depth++] = dad;
+> > +       while (offset >= 0 && depth < 64) {
+> > +               fpsizes[depth] = populate_node(blob, offset, &mem,
+> > +                                              nps[depth - 1],
+> > +                                              fpsizes[depth - 1],
+> > +                                              &nps[depth], dryrun);
+> > +               if (!fpsizes[depth])
+> > +                       return mem;
+> > +
+> > +               if (!dryrun && nodepp && !*nodepp)
+> > +                       *nodepp = nps[depth];
+> > +               if (!dryrun && !root)
+> > +                       root = nps[depth];
+> > +
+> > +               offset = fdt_next_node(blob, offset, &depth);
+> > +       }
+> > 
+> > -       if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
+> > -               pr_err("unflatten: error %d processing FDT\n", *poffset);
+> > +       if (offset < 0 && offset != -FDT_ERR_NOTFOUND)
+> > +               pr_err("%s: Error %d processing FDT\n",
+> > +                      __func__, offset);
+> > 
+> >         /*
+> >          * Reverse the child list. Some drivers assumes node order matches .dts
+> >          * node order
+> >          */
+> > -       if (!dryrun && np->child) {
+> > -               struct device_node *child = np->child;
+> > -               np->child = NULL;
+> > -               while (child) {
+> > -                       struct device_node *next = child->sibling;
+> > -                       child->sibling = np->child;
+> > -                       np->child = child;
+> > -                       child = next;
+> > -               }
+> > -       }
+> > -
+> > -       if (nodepp)
+> > -               *nodepp = np;
+> > +       if (!dryrun)
+> > +               reverse_nodes(root);
+> > 
+> >         return mem;
+> >  }
+> > @@ -431,7 +452,6 @@ static void __unflatten_device_tree(const void *blob,
+> >                              void * (*dt_alloc)(u64 size, u64 align))
+> >  {
+> >         unsigned long size;
+> > -       int start;
+> >         void *mem;
+> > 
+> >         pr_debug(" -> unflatten_device_tree()\n");
+> > @@ -452,8 +472,7 @@ static void __unflatten_device_tree(const void *blob,
+> >         }
+> > 
+> >         /* First pass, scan for size */
+> > -       start = 0;
+> > -       size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
+> > +       size = (unsigned long)unflatten_dt_node(blob, NULL, NULL, NULL, true);
+> >         size = ALIGN(size, 4);
+> > 
+> >         pr_debug("  size is %lx, allocating...\n", size);
+> > @@ -467,8 +486,7 @@ static void __unflatten_device_tree(const void *blob,
+> >         pr_debug("  unflattening %p...\n", mem);
+> > 
+> >         /* Second pass, do actual unflattening */
+> > -       start = 0;
+> > -       unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
+> > +       unflatten_dt_node(blob, mem, NULL, mynodes, false);
+> >         if (be32_to_cpup(mem + size) != 0xdeadbeef)
+> >                 pr_warning("End of tree marker overwritten: %08x\n",
+> >                            be32_to_cpup(mem + size));
+> > --
+> > 2.1.0
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
