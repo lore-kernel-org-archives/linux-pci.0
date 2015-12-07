@@ -1,62 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:50794 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752770AbbLWUsH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Dec 2015 15:48:07 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] shpchp: constify hpc_ops structure
-Date: Wed, 23 Dec 2015 21:35:35 +0100
-Message-Id: <1450902935-20302-1-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 7 Dec 2015 10:06:49 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Julia Lawall <Julia.Lawall@lip6.fr>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Len Brown <lenb@kernel.org>
+Subject: Re: [PATCH] PCI: constify pci_platform_pm_ops structure
+Message-ID: <20151207160649.GG7994@localhost>
+References: <1449419625-29045-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1556686.IXJIjFBvQx@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1556686.IXJIjFBvQx@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The hpc_ops structure is never modified, so declare it as const.
+On Mon, Dec 07, 2015 at 02:41:34AM +0100, Rafael J. Wysocki wrote:
+> On Sunday, December 06, 2015 05:33:45 PM Julia Lawall wrote:
+> > The pci_platform_pm_ops structure is never modified, so declare it as
+> > const.
+> > 
+> > Done with the help of Coccinelle.
+> > 
+> > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> 
+> OK
+> 
+> Bjorn, do you want me to handle this one?
 
-Done with the help of Coccinelle.
+Sure, sounds good to me.
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
----
- drivers/pci/hotplug/shpchp.h     |    4 ++--
- drivers/pci/hotplug/shpchp_hpc.c |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/hotplug/shpchp.h b/drivers/pci/hotplug/shpchp.h
-index 5897d51..3059c34 100644
---- a/drivers/pci/hotplug/shpchp.h
-+++ b/drivers/pci/hotplug/shpchp.h
-@@ -84,7 +84,7 @@ struct slot {
- 	u8 presence_save;
- 	u8 pwr_save;
- 	struct controller *ctrl;
--	struct hpc_ops *hpc_ops;
-+	const struct hpc_ops *hpc_ops;
- 	struct hotplug_slot *hotplug_slot;
- 	struct list_head	slot_list;
- 	struct delayed_work work;	/* work for button event */
-@@ -106,7 +106,7 @@ struct controller {
- 	int slot_num_inc;		/* 1 or -1 */
- 	struct pci_dev *pci_dev;
- 	struct list_head slot_list;
--	struct hpc_ops *hpc_ops;
-+	const struct hpc_ops *hpc_ops;
- 	wait_queue_head_t queue;	/* sleep & wake process */
- 	u8 slot_device_offset;
- 	u32 pcix_misc2_reg;	/* for amd pogo errata */
-diff --git a/drivers/pci/hotplug/shpchp_hpc.c b/drivers/pci/hotplug/shpchp_hpc.c
-index 7d223e9..43e7906 100644
---- a/drivers/pci/hotplug/shpchp_hpc.c
-+++ b/drivers/pci/hotplug/shpchp_hpc.c
-@@ -910,7 +910,7 @@ static int shpc_get_max_bus_speed(struct controller *ctrl)
- 	return retval;
- }
- 
--static struct hpc_ops shpchp_hpc_ops = {
-+static const struct hpc_ops shpchp_hpc_ops = {
- 	.power_on_slot			= hpc_power_on_slot,
- 	.slot_enable			= hpc_slot_enable,
- 	.slot_disable			= hpc_slot_disable,
-
+> > ---
+> >  drivers/pci/pci-acpi.c |    2 +-
+> >  drivers/pci/pci.c      |    4 ++--
+> >  drivers/pci/pci.h      |    2 +-
+> >  3 files changed, 4 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> > index a32ba75..8400f80 100644
+> > --- a/drivers/pci/pci-acpi.c
+> > +++ b/drivers/pci/pci-acpi.c
+> > @@ -529,7 +529,7 @@ static bool acpi_pci_need_resume(struct pci_dev *dev)
+> >  	return !!adev->power.flags.dsw_present;
+> >  }
+> >  
+> > -static struct pci_platform_pm_ops acpi_pci_platform_pm = {
+> > +static const struct pci_platform_pm_ops acpi_pci_platform_pm = {
+> >  	.is_manageable = acpi_pci_power_manageable,
+> >  	.set_state = acpi_pci_set_power_state,
+> >  	.choose_state = acpi_pci_choose_state,
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 314db8c..d1a7105 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -527,9 +527,9 @@ static void pci_restore_bars(struct pci_dev *dev)
+> >  		pci_update_resource(dev, i);
+> >  }
+> >  
+> > -static struct pci_platform_pm_ops *pci_platform_pm;
+> > +static const struct pci_platform_pm_ops *pci_platform_pm;
+> >  
+> > -int pci_set_platform_pm(struct pci_platform_pm_ops *ops)
+> > +int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
+> >  {
+> >  	if (!ops->is_manageable || !ops->set_state || !ops->choose_state
+> >  	    || !ops->sleep_wake)
+> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> > index d390fc1..f6f151a 100644
+> > --- a/drivers/pci/pci.h
+> > +++ b/drivers/pci/pci.h
+> > @@ -68,7 +68,7 @@ struct pci_platform_pm_ops {
+> >  	bool (*need_resume)(struct pci_dev *dev);
+> >  };
+> >  
+> > -int pci_set_platform_pm(struct pci_platform_pm_ops *ops);
+> > +int pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
+> >  void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
+> >  void pci_power_up(struct pci_dev *dev);
+> >  void pci_disable_enabled_device(struct pci_dev *dev);
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> -- 
+> I speak only for myself.
+> Rafael J. Wysocki, Intel Open Source Technology Center.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
