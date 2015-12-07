@@ -1,93 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 49/60] PCI: Unify calculate_size() for io port and MMIO
-Date: Thu, 10 Dec 2015 21:06:45 -0800
-Message-Id: <1449810416-2950-50-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54733 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754245AbbLGQYB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Dec 2015 11:24:01 -0500
+Date: Mon, 7 Dec 2015 10:23:51 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jay Cornwall <jay@jcornwall.me>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: Add pci_enable_atomic_request
+Message-ID: <20151207162351.GH7994@localhost>
+References: <1443110390-4080-1-git-send-email-jay@jcornwall.me>
+ <20151204182540.GC20125@localhost>
+ <c7259e37a065e8c7d386c806f521c46d@jcornwall.me>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c7259e37a065e8c7d386c806f521c46d@jcornwall.me>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now calculate_memsize() and calculate_iosize() is the same.
+On Fri, Dec 04, 2015 at 01:33:30PM -0600, Jay Cornwall wrote:
+> On 2015-12-04 12:25, Bjorn Helgaas wrote:
+> >On Thu, Sep 24, 2015 at 10:59:50AM -0500, Jay Cornwall wrote:
+> >>The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions
+> >>to be requested
+> >>by, routed through and completed by PCIe components. Routing and
+> >>completion
+> >>do not require software support. Component support for each is
+> >>detectable via
+> >>the DEVCAP2 register.
+> >>
+> >>AtomicOp requests are permitted only if a component's
+> >>DEVCTL2.ATOMICOP_REQUESTER_ENABLE field is set. This capability
+> >>cannot be
+> >>detected but is a no-op if set on a component with no support.
+> >>These requests
+> >>can only be serviced if the upstream components support AtomicOp
+> >>completion
+> >>and/or routing to a component which does.
+> >>
+> >>A concrete example is the AMD Fiji-class GPU, which is specified
+> >>to support
+> >>AtomicOp requests, routed through a PLX 8747 switch (advertising
+> >>AtomicOp
+> >>routing) to a Haswell host bridge (advertising AtomicOp
+> >>completion support).
+> >>When AtomicOp requests are disabled the GPU logs attempts to
+> >>initiate requests
+> >>to an MMIO register for debugging.
+> >>
+> >>Add pci_enable_atomic_request for per-device control over
+> >>AtomicOp requests.
+> >>Upstream bridges are checked for AtomicOp routing capability and
+> >>the call
+> >>fails if any lack this capability. The root port is checked for
+> >>AtomicOp
+> >>completion capabilities and the call fails if it does not support any.
+> >>Routes to other PCIe components are not checked for AtomicOp
+> >>routing and
+> >>completion capabilities.
+> >>
+> >>v2: Check for AtomicOp route to root port with AtomicOp completion
+> >>v3: Style fixes
+> >>
+> >>Signed-off-by: Jay Cornwall <jay@jcornwall.me>
+> >
+> >Hi Jay,
+> >
+> >Is there a user for this new functionality?  I don't like to add things
+> >that have no apparent user.
+> >
+> >Bjorn
+> 
+> The client for this code is scheduled to be upstreamed in
+> drm/amdgpu, but we have some internal restructuring to complete
+> before a patchset will be available.
+> 
+> If you'd prefer, I can resubmit this patch as part of that series
+> when it is ready.
 
-Change them to calculate_size().
+Yeah, that'd be great, why don't we do that.  Thanks!
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 25 +++++--------------------
- 1 file changed, 5 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a425a47..77bbde8 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1104,22 +1104,7 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
- 	return NULL;
- }
- 
--static resource_size_t calculate_iosize(resource_size_t size,
--		resource_size_t min_size,
--		resource_size_t old_size,
--		resource_size_t align)
--{
--	if (size < min_size)
--		size = min_size;
--	if (old_size == 1)
--		old_size = 0;
--	size = ALIGN(size, align);
--	if (size < old_size)
--		size = old_size;
--	return size;
--}
--
--static resource_size_t calculate_memsize(resource_size_t size,
-+static resource_size_t calculate_size(resource_size_t size,
- 		resource_size_t min_size,
- 		resource_size_t old_size,
- 		resource_size_t align)
-@@ -1245,14 +1230,14 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 	size = size_aligned_for_isa(size);
- 	size += size1;
--	size0 = calculate_iosize(size, min_size,
-+	size0 = calculate_size(size, min_size,
- 			resource_size(b_res), min_align);
- 	sum_add_size = size_aligned_for_isa(sum_add_size);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	size1 = !realloc_head ? size0 :
--		calculate_iosize(sum_add_size, min_size,
-+		calculate_size(sum_add_size, min_size,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
-@@ -1581,7 +1566,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (size || min_size) {
- 		min_align = calculate_mem_align(&align_test_list, max_align,
- 						size, window_align);
--		size0 = calculate_memsize(size, min_size,
-+		size0 = calculate_size(size, min_size,
- 				  resource_size(b_res), min_align);
- 	}
- 	free_align_test_list(&align_test_list);
-@@ -1606,7 +1591,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
- 					window_align);
--		size1 = calculate_memsize(sum_add_size, min_size,
-+		size1 = calculate_size(sum_add_size, min_size,
- 				 resource_size(b_res), min_add_align);
- 	}
- 	free_align_test_list(&align_test_add_list);
--- 
-1.8.4.5
-
+Bjorn
