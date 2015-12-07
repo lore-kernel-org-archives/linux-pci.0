@@ -1,65 +1,29 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48426 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754114AbbLKFNS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:13:18 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 50/60] PCI: Allow bridge optional only io port resource required size to be 0
-Date: Thu, 10 Dec 2015 21:06:46 -0800
-Message-Id: <1449810416-2950-51-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <56660504.6040308@gmail.com>
+Date: Mon, 07 Dec 2015 14:15:32 -0800
+From: Florian Fainelli <f.fainelli@gmail.com>
+MIME-Version: 1.0
+To: Ray Jui <rjui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 5/5] ARM: dts: Enable MSI support for Broadcom Cygnus
+References: <1449250502-10679-1-git-send-email-rjui@broadcom.com> <1449250502-10679-6-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1449250502-10679-6-git-send-email-rjui@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When there is no child device under the non hotplug bridge,
-We can use 0 for required size, and do not use old size as required size.
+On 04/12/15 09:35, Ray Jui wrote:
+> Enable MSI support for Broadcom Cygnus platforms
+> 
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
+> Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+> Reviewed-by: Pramod KUMAR <pramodku@broadcom.com>
+> Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
+> Reviewed-by: Scott Branden <sbranden@broadcom.com>
 
-That will save some io port range for other bridges, as BIOS could do
-some partial assign, and we want to use those not used io port range.
-
-When there is child device, size will not be 0.
-when the bridge supports hotplug, min_size will not be 0.
-So they will still honor the old size as required size.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 77bbde8..855b2df 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1230,8 +1230,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 	size = size_aligned_for_isa(size);
- 	size += size1;
--	size0 = calculate_size(size, min_size,
--			resource_size(b_res), min_align);
-+	if (size || min_size)
-+		size0 = calculate_size(size, min_size,
-+					resource_size(b_res), min_align);
- 	sum_add_size = size_aligned_for_isa(sum_add_size);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
-@@ -1247,7 +1248,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		return;
- 	}
- 
--	b_res->start = min_align;
-+	b_res->start = size0 ? min_align : 0;
- 	b_res->end = b_res->start + size0 - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
+Applied to devicetree/next, thanks!
 -- 
-1.8.4.5
-
+Florian
