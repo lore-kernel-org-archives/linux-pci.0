@@ -1,185 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from m50-132.163.com ([123.125.50.132]:41733 "EHLO m50-132.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751818AbbLGNp3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Dec 2015 08:45:29 -0500
-From: Geliang Tang <geliangtang@163.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Cc: Geliang Tang <geliangtang@163.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] x86/PCI: simplify pci_bios_{read,write}
-Date: Mon,  7 Dec 2015 21:42:36 +0800
-Message-Id: <0ed29e57b699af22a8759f1b1c0d59d79664dee5.1449495573.git.geliangtang@163.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5665ECC3.9040808@gmail.com>
+Date: Mon, 07 Dec 2015 12:32:03 -0800
+From: Florian Fainelli <f.fainelli@gmail.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <helgaas@kernel.org>, Ray Jui <rjui@broadcom.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 0/5] Add iProc PCIe PAXC and MSI support
+References: <1449250502-10679-1-git-send-email-rjui@broadcom.com> <20151207170122.GI7994@localhost>
+In-Reply-To: <20151207170122.GI7994@localhost>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are some repetitive code in the switch/case statement in
-pci_bios_read() and pci_bios_write(). I drop it to simplify the
-code.
+On 07/12/15 09:01, Bjorn Helgaas wrote:
+> On Fri, Dec 04, 2015 at 09:34:57AM -0800, Ray Jui wrote:
+>> This patch series adds support for the iProc PAXC interface and support for
+>> event queue based MSI, integrated in the iProc PCIe core
+>>
+>> This patch series is based on Linux v4.4-rc1 and is avaliable here:
+>> https://github.com/Broadcom/cygnus-linux/tree/iproc-msi-v5
+>>
+>> Changes from v4:
+>> - Make 'iproc_msi_exit' inline to fix compiler warning when CONFIG_PCI_MSI
+>> is disabled
+>>
+>> Changes from v3:
+>> - Detect the number of possible CPUs instead online CPUs in the driver. Note
+>> CPU notifier based implementation still needs to be added in the future, for
+>> proper support of MSI IRQ affinity when CPU is brought online/offline at
+>> runtime. Support in this dirver will be added when we support CPU hotplug in
+>> one of iProc family of SoCs so the changes can be tested
+>> - Use dma_zalloc_coherent for event queue host memory allocation and zeoring
+>>
+>> Changes from v2:
+>> - Improved descriptions in the iProc MSI commit message
+>> - Removed redundant host memory used for MSI address. The MSI posted writes
+>> never really hit the memory. Use iProc PCIe controller base address instead
+>> - Fixed deadlock when MSI vectors are used up
+>> - Enforced the number of MSI groups to always be multiple of the number of CPUs
+>> - Improved the efficiency of MSI event processing by only updating the head
+>> pointer after finishing processing all outstanding events
+>> - Fixed error handling code to make sure all configurations are rolled back
+>> - Added code to zero the host memory used for event queues after allocation
+>> - Removed redundant 'brcm,num-eq-region' and 'brcm,num-msi-msg-region' DT
+>>   properties. Now determine the number of regions based on interface type
+>> - Other misc. changes
+>>
+>> Changes from v1:
+>> - Fixed incorrect 1-to-1 mapping between MSI vector and GIC interrupt. Now the
+>> driver supports multiple MSI vectors per GIC interrupt
+>> - Added MSI IRQ affinity support by distributing GIC interrupts across
+>> available CPU cores and dynamically steer MSI vectors to the target CPU
+>> - replace readl/writel with readl_relaxed/writel_relaxed since all register
+>> accesses within the iProc MSI driver are to/from the same I/O block, i.e., the
+>> iProc PCIe core
+>> - Removed all redundant irq_chip callback assignments
+>> - Changed to use uncached host memory for both MSI posted writes and event
+>> queues
+>> - Add functions to free resources in error/exit cases
+>> - In pcie-iproc-platform.c, pass in interface type through OF device data
+>> - Moved define for max number of interrupts from pcie-iproc.h to
+>> pcie-iproc-msi.c
+>> - Other misc. changes
+>>
+>> Ray Jui (5):
+>>   PCI: iproc: Update iProc PCIe device tree binding
+>>   PCI: iproc: Add PAXC interface support
+>>   PCI: iproc: Add iProc PCIe MSI device tree binding
+>>   PCI: iproc: Add iProc PCIe MSI support
+>>   ARM: dts: Enable MSI support for Broadcom Cygnus
+>>
+>>  .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  40 +-
+>>  arch/arm/boot/dts/bcm-cygnus.dtsi                  |  22 +
+>>  drivers/pci/host/Kconfig                           |   9 +
+>>  drivers/pci/host/Makefile                          |   1 +
+>>  drivers/pci/host/pcie-iproc-bcma.c                 |   1 +
+>>  drivers/pci/host/pcie-iproc-msi.c                  | 675 +++++++++++++++++++++
+>>  drivers/pci/host/pcie-iproc-platform.c             |  25 +-
+>>  drivers/pci/host/pcie-iproc.c                      | 228 +++++--
+>>  drivers/pci/host/pcie-iproc.h                      |  42 +-
+>>  9 files changed, 1000 insertions(+), 43 deletions(-)
+>>  create mode 100644 drivers/pci/host/pcie-iproc-msi.c
+> 
+> Applied to pci/host-iproc for v4.5, with Marc's reviewed-by on "PCI: iproc:
+> Add iProc PCIe MSI support".  Thanks!
 
-Signed-off-by: Geliang Tang <geliangtang@163.com>
----
- arch/x86/pci/pcbios.c | 108 ++++++++++++++++++--------------------------------
- 1 file changed, 38 insertions(+), 70 deletions(-)
-
-diff --git a/arch/x86/pci/pcbios.c b/arch/x86/pci/pcbios.c
-index 9b83b90..9770e55 100644
---- a/arch/x86/pci/pcbios.c
-+++ b/arch/x86/pci/pcbios.c
-@@ -180,6 +180,7 @@ static int pci_bios_read(unsigned int seg, unsigned int bus,
- 	unsigned long result = 0;
- 	unsigned long flags;
- 	unsigned long bx = (bus << 8) | devfn;
-+	u16 number = 0, mask = 0;
- 
- 	WARN_ON(seg);
- 	if (!value || (bus > 255) || (devfn > 255) || (reg > 255))
-@@ -189,53 +190,35 @@ static int pci_bios_read(unsigned int seg, unsigned int bus,
- 
- 	switch (len) {
- 	case 1:
--		__asm__("lcall *(%%esi); cld\n\t"
--			"jc 1f\n\t"
--			"xor %%ah, %%ah\n"
--			"1:"
--			: "=c" (*value),
--			  "=a" (result)
--			: "1" (PCIBIOS_READ_CONFIG_BYTE),
--			  "b" (bx),
--			  "D" ((long)reg),
--			  "S" (&pci_indirect));
--		/*
--		 * Zero-extend the result beyond 8 bits, do not trust the
--		 * BIOS having done it:
--		 */
--		*value &= 0xff;
-+		number = PCIBIOS_READ_CONFIG_BYTE;
-+		mask = 0xff;
- 		break;
- 	case 2:
--		__asm__("lcall *(%%esi); cld\n\t"
--			"jc 1f\n\t"
--			"xor %%ah, %%ah\n"
--			"1:"
--			: "=c" (*value),
--			  "=a" (result)
--			: "1" (PCIBIOS_READ_CONFIG_WORD),
--			  "b" (bx),
--			  "D" ((long)reg),
--			  "S" (&pci_indirect));
--		/*
--		 * Zero-extend the result beyond 16 bits, do not trust the
--		 * BIOS having done it:
--		 */
--		*value &= 0xffff;
-+		number = PCIBIOS_READ_CONFIG_WORD;
-+		mask = 0xffff;
- 		break;
- 	case 4:
--		__asm__("lcall *(%%esi); cld\n\t"
--			"jc 1f\n\t"
--			"xor %%ah, %%ah\n"
--			"1:"
--			: "=c" (*value),
--			  "=a" (result)
--			: "1" (PCIBIOS_READ_CONFIG_DWORD),
--			  "b" (bx),
--			  "D" ((long)reg),
--			  "S" (&pci_indirect));
-+		number = PCIBIOS_READ_CONFIG_DWORD;
- 		break;
- 	}
- 
-+	__asm__("lcall *(%%esi); cld\n\t"
-+		"jc 1f\n\t"
-+		"xor %%ah, %%ah\n"
-+		"1:"
-+		: "=c" (*value),
-+		  "=a" (result)
-+		: "1" (number),
-+		  "b" (bx),
-+		  "D" ((long)reg),
-+		  "S" (&pci_indirect));
-+	/*
-+	 * Zero-extend the result beyond 8 or 16 bits, do not trust the
-+	 * BIOS having done it:
-+	 */
-+	if (mask)
-+		*value &= mask;
-+
- 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
- 
- 	return (int)((result & 0xff00) >> 8);
-@@ -247,6 +230,7 @@ static int pci_bios_write(unsigned int seg, unsigned int bus,
- 	unsigned long result = 0;
- 	unsigned long flags;
- 	unsigned long bx = (bus << 8) | devfn;
-+	u16 number = 0;
- 
- 	WARN_ON(seg);
- 	if ((bus > 255) || (devfn > 255) || (reg > 255)) 
-@@ -256,43 +240,27 @@ static int pci_bios_write(unsigned int seg, unsigned int bus,
- 
- 	switch (len) {
- 	case 1:
--		__asm__("lcall *(%%esi); cld\n\t"
--			"jc 1f\n\t"
--			"xor %%ah, %%ah\n"
--			"1:"
--			: "=a" (result)
--			: "0" (PCIBIOS_WRITE_CONFIG_BYTE),
--			  "c" (value),
--			  "b" (bx),
--			  "D" ((long)reg),
--			  "S" (&pci_indirect));
-+		number = PCIBIOS_WRITE_CONFIG_BYTE;
- 		break;
- 	case 2:
--		__asm__("lcall *(%%esi); cld\n\t"
--			"jc 1f\n\t"
--			"xor %%ah, %%ah\n"
--			"1:"
--			: "=a" (result)
--			: "0" (PCIBIOS_WRITE_CONFIG_WORD),
--			  "c" (value),
--			  "b" (bx),
--			  "D" ((long)reg),
--			  "S" (&pci_indirect));
-+		number = PCIBIOS_WRITE_CONFIG_WORD;
- 		break;
- 	case 4:
--		__asm__("lcall *(%%esi); cld\n\t"
--			"jc 1f\n\t"
--			"xor %%ah, %%ah\n"
--			"1:"
--			: "=a" (result)
--			: "0" (PCIBIOS_WRITE_CONFIG_DWORD),
--			  "c" (value),
--			  "b" (bx),
--			  "D" ((long)reg),
--			  "S" (&pci_indirect));
-+		number = PCIBIOS_WRITE_CONFIG_DWORD;
- 		break;
- 	}
- 
-+	__asm__("lcall *(%%esi); cld\n\t"
-+		"jc 1f\n\t"
-+		"xor %%ah, %%ah\n"
-+		"1:"
-+		: "=a" (result)
-+		: "0" (number),
-+		  "c" (value),
-+		  "b" (bx),
-+		  "D" ((long)reg),
-+		  "S" (&pci_indirect));
-+
- 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
- 
- 	return (int)((result & 0xff00) >> 8);
+Including the last patch, or should I take this one via arm-soc? Thanks!
 -- 
-2.5.0
-
-
+Florian
