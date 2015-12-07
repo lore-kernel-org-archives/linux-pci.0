@@ -1,108 +1,88 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: [PATCH v9 19/60] PCI: Separate realloc list checking after allocation
-Date: Thu, 10 Dec 2015 21:06:15 -0800
-Message-Id: <1449810416-2950-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Date: Mon, 7 Dec 2015 14:31:17 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, jiang.liu@linux.intel.com,
+	robert.richter@caviumnetworks.com,
+	Narinder.Dhillon@caviumnetworks.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org
+Subject: Re: [PATCH V1 00/11] MMCONFIG refactoring and ARM64 PCI hostbridge
+ init based on ACPI
+Message-ID: <20151207203117.GB14429@localhost>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445963922-22711-1-git-send-email-tn@semihalf.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We check the realloc list, as list must be empty after allocation.
+On Tue, Oct 27, 2015 at 05:38:31PM +0100, Tomasz Nowicki wrote:
+> From the functionality point of view this series might be split into two logic parts:
+> 1. Making MMCONFIG code arch-agnostic which allows all architectures to collect
+>    PCI config regions and used when necessary.
+> 2. Using generic MMCONFIG code and introducing ACPI based PCI hostbridge
+>    initialization for ARM64
+> 
+> Patches has been built on top of:
+> [Patch v7 0/7] Consolidate ACPI PCI root common code into ACPI core
+> https://lkml.org/lkml/2015/10/14/31
+> Git branch can be found here:
+> https://git.linaro.org/leg/acpi/acpi.git/shortlog/refs/heads/pci-acpi-upstream
+> 
+> This has been tested on Cavium ThunderX 1 socket server.
+> Any help in reviewing and testing is very appreciated.
+> 
+> Hanjun Guo (1):
+>   XEN / PCI: Remove the dependence on arch x86 when PCI_MMCONFIG=y
+> 
+> Tomasz Nowicki (10):
+>   x86, pci: Reorder logic of pci_mmconfig_insert() function
+>   x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
+>     out of arch/x86/ directory
+>   pci, acpi, mcfg: Provide generic implementation of MCFG code
+>     initialization.
+>   x86, pci: mmconfig_{32,64}.c code refactoring - remove code
+>     duplication.
+>   x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
+>     driver.
+>   pci, acpi, mcfg: Provide default RAW ACPI PCI config space accessors.
+>   pci, acpi, ecam: Add flag to indicate whether ECAM region was hot
+>     added or not.
+>   x86, pci: Use previously added ECAM hot_added flag to remove ECAM
+>     regions.
+>   pci, acpi: Provide generic way to assign bus domain number.
+>   arm64, pci, acpi: Support for ACPI based PCI hostbridge init
+> 
+>  arch/arm64/Kconfig             |   6 +
+>  arch/arm64/kernel/pci.c        | 208 ++++++++++++++++++++++++++++++++--
+>  arch/x86/Kconfig               |   4 +
+>  arch/x86/include/asm/pci_x86.h |  28 +----
+>  arch/x86/pci/acpi.c            |  17 +--
+>  arch/x86/pci/mmconfig-shared.c | 250 +++++++----------------------------------
+>  arch/x86/pci/mmconfig_32.c     |  11 +-
+>  arch/x86/pci/mmconfig_64.c     |  67 +----------
+>  arch/x86/pci/numachip.c        |   1 +
+>  drivers/acpi/Makefile          |   1 +
+>  drivers/acpi/mcfg.c            | 104 +++++++++++++++++
+>  drivers/acpi/pci_root.c        |   2 +-
+>  drivers/pci/Kconfig            |  10 ++
+>  drivers/pci/Makefile           |   5 +
+>  drivers/pci/ecam.c             | 234 ++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.c              |  30 ++++-
+>  drivers/xen/pci.c              |   7 +-
+>  include/linux/acpi.h           |   2 +
+>  include/linux/ecam.h           |  44 ++++++++
+>  19 files changed, 691 insertions(+), 340 deletions(-)
+>  create mode 100644 drivers/acpi/mcfg.c
+>  create mode 100644 drivers/pci/ecam.c
+>  create mode 100644 include/linux/ecam.h
 
-Separate the realloc list checking to another function.
+Waiting for an updated version after all the discussion.
 
-Add checking that is missed in acpiphp driver.
-
--v2: change to WARN_ON according to Rafael.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/pci/hotplug/acpiphp_glue.c |  1 +
- drivers/pci/pci.h                  |  1 +
- drivers/pci/setup-bus.c            | 12 +++++++++---
- 3 files changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index ff53856..ce9fb21 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 		}
- 	}
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
-+	pci_bus_check_realloc(&add_list);
- 
- 	acpiphp_sanitize_bus(bus);
- 	pcie_bus_configure_settings(bus);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index d6e8c0c..51f38d3 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -240,6 +240,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
- void __pci_bus_assign_resources(const struct pci_bus *bus,
- 				struct list_head *realloc_head,
- 				struct list_head *fail_head);
-+void pci_bus_check_realloc(struct list_head *realloc_head);
- bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
- 
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 1ad5d8f..fcc6d62 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -280,6 +280,12 @@ out:
- 	}
- }
- 
-+void pci_bus_check_realloc(struct list_head *realloc_head)
-+{
-+	if (WARN_ON(!list_empty(realloc_head)))
-+		free_list(realloc_head);
-+}
-+
- /**
-  * assign_requested_resources_sorted() - satisfy resource requests
-  *
-@@ -1777,7 +1783,7 @@ again:
- 	/* Depth last, allocate resources and update the hardware. */
- 	__pci_bus_assign_resources(bus, add_list, &fail_head);
- 	if (add_list)
--		BUG_ON(!list_empty(add_list));
-+		pci_bus_check_realloc(add_list);
- 	tried_times++;
- 
- 	/* any device complain? */
-@@ -1852,7 +1858,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- again:
- 	__pci_bus_size_bridges(parent, &add_list);
- 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
--	BUG_ON(!list_empty(&add_list));
-+	pci_bus_check_realloc(&add_list);
- 	tried_times++;
- 
- 	if (list_empty(&fail_head))
-@@ -1911,6 +1917,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 							 &add_list);
- 	up_read(&pci_bus_sem);
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
--	BUG_ON(!list_empty(&add_list));
-+	pci_bus_check_realloc(&add_list);
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
--- 
-1.8.4.5
-
+Bjorn
