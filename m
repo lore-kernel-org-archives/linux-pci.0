@@ -1,241 +1,251 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 10 Dec 2015 14:18:17 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51583 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932827AbbLGQBG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Dec 2015 11:01:06 -0500
+Date: Mon, 7 Dec 2015 10:00:54 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: "robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"rjui@broadcom.com" <rjui@broadcom.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	"dhdang@apm.com" <dhdang@apm.com>,
-	"sbranden@broadcom.com" <sbranden@broadcom.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	Paul Burton <paul.burton@imgtec.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>
-Subject: Re: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Message-ID: <20151210201817.GB367@localhost>
-References: <1448798633-12697-1-git-send-email-bharatku@xilinx.com>
- <20151209231921.GI31930@localhost>
- <8520D5D51A55D047800579B09414719825869A85@XAP-PVEXMBX01.xlnx.xilinx.com>
+To: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Alex Deucher <alexander.deucher@amd.com>
+Subject: Re: Resizeable PCI BAR support
+Message-ID: <20151207160054.GF7994@localhost>
+References: <5662C61F.50303@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8520D5D51A55D047800579B09414719825869A85@XAP-PVEXMBX01.xlnx.xilinx.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <5662C61F.50303@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Marc for irq_dispose_mapping() question]
-
-On Thu, Dec 10, 2015 at 02:10:34PM +0000, Bharat Kumar Gogada wrote:
-> > Subject: Re: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
-> > > +static bool nwl_pcie_valid_device(struct pci_bus *bus, unsigned int
-> > > +devfn) {
-> > > +	struct nwl_pcie *pcie = bus->sysdata;
-> > > +
-> > > +	/* Check link,before accessing downstream ports */
-> > > +	if (bus->number != pcie->root_busno) {
-> > > +		if (!nwl_pcie_link_up(pcie, PCIE_USER_LINKUP))
-> > > +			return false;
-> > > +	}
-> > > +
-> > > +	/* Only one device down on each root port */
-> > > +	if (bus->number == pcie->root_busno && devfn > 0)
-> > > +		return false;
-> > > +
-> > > +	/*
-> > > +	 * Do not read more than one device on the bus directly attached
-> > > +	 * to root port.
-> > > +	 */
-> > > +	if (bus->primary == pcie->root_busno && devfn > 0)
-> > 
-> > Why is this?  Do you have some restriction on the PCIe topology below the
-> > Root Port?  If there's a spec-compliant link coming from the Root Port, it
-> > seems like any legal PCIe device could be attached, including a multifunction
-> > device.
-> > 
-> Primary refers to root port itself, this check is not for devices downstream on link. 
-
-I'm trying to figure out what the difference is between these two
-checks and why you have both of them:
-
-> +	if (bus->number == pcie->root_busno && devfn > 0)
-> +	if (bus->primary == pcie->root_busno && devfn > 0)
-
-If I understand correctly, pcie->root_busno is the bus number of the
-Root Port device (likely 00).  I think the "bus->number ==
-pcie->root_busno && devfn > 0" check means that the Root Port, e.g.,
-00:00.0, is the only device allowed on bus 00.  Often a Root Complex
-contains several Root Ports and other integrated devices that
-typically are on bus 00.  But in your case, I think you're saying
-there is only the single Root Port and no other devices.
-
-I think that first check takes care of everything on bus 00, so I'm
-trying to figure out what the second check is for.  Assume your Root
-Port is device 00:00.0 and it is a bridge to [bus 01-ff].  Then we
-have two pci_bus structs with these values:
-
-  bus->number = 00
-  bus->primary = 00
-  bus->busn_res = [bus 00-ff]
-
-  bus->number = 01
-  bus->primary = 00
-  bus->busn_res = [bus 01-ff]
-
-Because of the first check, 00:00.0 is the only possible device on bus
-00, and because of the second check, 01:00.0 is the only possible
-device on bus 01.  Therefore, you don't support a multifunction device
-connected to the Root Port.  Right?
-
-> > > +		return false;
-> > > +
-> > > +	return true;
-> > > +}
-> > > + * nwl_setup_sspl - Set Slot Power limit
-> > > + *
-> > > + * @pcie: PCIe port information
-> > > + */
-> > > +static int nwl_setup_sspl(struct nwl_pcie *pcie)
-> > 
-> > This function needs a little explanation because it doesn't really make any
-> > sense when compared with the PCIe spec.  The spec says the Slot Power
-> > Limit Value is HwInit, which means it's supposed to be initialized by firmware
-> > or hardware, and it should be read-only by the time we get here.
-> > I think the value there should reflect parameters of the hardware design; we
-> > wouldn't want a user to write an arbitrary limit that would tell a card it can
-> > pull more power than the slot can supply.
-> > 
-> > But I saw another driver recently (pcie-snpsdev.c) that's doing something
-> > similar, so there must be something else going on here.  In any case, a
-> > comment here about exactly *what* is going on would be much appreciated.
+On Sat, Dec 05, 2015 at 12:10:23PM +0100, Christian König wrote:
+> Hi Bjorn,
 > 
-> The spec says the following:
-[This is all from PCIe spec r3.0, sec 2.2.8.5]
-
-> The Set_Slot_Power_Limit Message includes a one DW data payload. The
-> data payload is copied from the Slot Capabilities register of the
-> Downstream Port and is written into the Device Capabilities register
-> of the Upstream Port on the other side of the Link. Bits 9:8 of the
-> data payload map to the Slot Power Limit Scale field and bits 7:0
-> map to the Slot Power Limit Value field. Bits 31:10 of the data
-> payload must be set to all 0's by the Transmitter and ignored by the
-> Receiver.
-
-> This Message is sent automatically by the Downstream Port (of a Root
-> Complex or a Switch) when one of the following events occurs:
-> -> On a Configuration Write to the Slot Capabilities register (see
-> Section 7.8.9) when the Data Link Layer reports DL_Up status.
-
-I interpret this as meaning "the *hardware* automatically sends a
-Set_Slot_Power_Limit Message."  There's no mention of software doing
-anything other than the configuration write.
-
-If your hardware doesn't do that, I think it's a defect.  It's fine to
-work around it, but we should have a comment to that effect so people
-don't copy the code to new drivers that don't need it.
-
-It's a little strange that 7.8.9 talks about writing to this register
-when all of its fields are HwInit and supposedly read-only.  I had
-assumed devices would use strapping or implementation-specific
-registers to set the Slot Power values, but maybe some devices use
-direct writes to Slot Capabilities instead.
-
-BTW, I noticed a related lspci bug: it didn't decode the Capture Slot
-Power Limit in Device Capabilities of Endpoints.  I posted a fix for
-that separately.
-
-The Slot Power Limit (in Slot Capabilities) indicates how much power
-the slot can supply to a downstream device.  That's a function of the
-platform design, so it seems like this is something you want to set
-via DT or some other mechanism that knows about the platform.
-Intercepting all config writes and updating it with whatever the
-caller supplies doesn't sound wise.  The value might be coming from
-setpci or some other source with no knowledge of the platform.
-
-> > > +			status = nwl_bridge_readl(pcie, TX_PCIE_MSG)
-> > > +						  & MSG_DONE_BIT;
-> > > +			if (status) {
-> > > +				status = nwl_bridge_readl(pcie,
-> > TX_PCIE_MSG)
-> > > +						  & MSG_DONE_STATUS_BIT;
-
-> > It's not clear to me whether you need to re-read TX_PCIE_MSG here.
+> reading up on the mailing list this is probably not the first time
+> this topic comes up, but this time it is not just for FPGAs but for
+> really end user hardware.
 > 
-> MSG_DONE_BIT qualifies MSG_DONE_STATUS_BIT; so value of
-> MSG_DONE_STATUS_BIT is valid only when MSG_DONE_BIT = 1
+> Alex and I are the maintainers of the Radeon and Amdgpu kernel
+> drivers for the AMD graphics hardware.  Now the newest hardware
+> generation of those devices started to support resizeable PCI BARs
+> as specified here https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf.
+> 
+> That feature is rather important for graphics hardware, because the
+> PCI BARs are usually limited to 256MB while on modern cards you can
+> easily find 4GB or more VRAM. The end result is that only a fraction
+> of that VRAM is CPU accessible, causing a whole bunch of workarounds
+> in the driver stack for that hardware.
+> 
+> We of course want to avoid that hassle and so I've attached two
+> patches created to test the functionality. The first one is just
+> infrastructure for handling the extension and the second is a hack
+> to resize all BARs to their maximum before probing them by the PCI
+> subsystem.
+> 
+> That resizing works astonishing fine, the only problem is that on
+> practical no system I've tested this feature actually works. The
+> reason is that the PCI root bridge doesn't get enough address space
+> assigned by the BIOS for this and the PCI subsystem in the kernel
+> isn't able to reprogram it.
+> 
+> Any clever idea how to get this working without waiting for system
+> BIOS providers to pick up that extension? Would adding support for
+> reprogramming the root bridges be possible?
 
-That doesn't answer the question of whether another read is required.
-In fact, I would argue that if MSG_DONE_STATUS_BIT is only valid when
-MSG_DONE_BIT = 1, you *should* only do one read, because you want to
-capture both bits simultaneously so you know they're consistent, e.g.,
+Many host bridges support programmable windows in the hardware, so in
+principle we could reprogram them at run-time.  But the CPU side of
+the bridge is out of the PCI domain, so there's no single way to do it
+-- it's all implementation-specific.  ACPI has some pieces that would
+make it more generic (_PRS tells us whether the bridge supports
+reprogramming, the Linux resource map tells us what address space is
+available, _SRS lets us actually reprogram the bridge), but I don't
+know whether any BIOSes actually support _PRS and _SRS on host
+bridges.  I don't know of any OS support that would use it.
 
-  status = nwl_bridge_readl(pcie, TX_PCIE_MSG);
-  if (status & MSG_DONE_BIT) {
-    if (status & MSG_DONE_STATUS_BIT)
-      ...
-  }
+Bottom line, I don't have any clever ideas for how to do this.
 
-If you read the register twice, you always have to worry about what
-changes MSG_DONE_BIT, and how you guarantee that the second read
-happens before MSG_DONE_BIT changes.
+> From ea99917e1760b2a1ecd6d353d7a8a060ea24dd03 Mon Sep 17 00:00:00 2001
+> From: =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>
+> Date: Wed, 25 Nov 2015 12:46:29 +0100
+> Subject: [PATCH 1/2] PCI: add resizeable BAR infrastructure
+> MIME-Version: 1.0
+> Content-Type: text/plain; charset=UTF-8
+> Content-Transfer-Encoding: 8bit
+> 
+> Just the defines and helper functions to read the possible sizes of a BAR and
+> update it's size.
+> 
+> See https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf.
+> 
+> Signed-off-by: Christian K??nig <christian.koenig@amd.com>
+> ---
+>  drivers/pci/pci.c             | 78 +++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h           |  2 ++
+>  include/uapi/linux/pci_regs.h |  7 ++++
+>  3 files changed, 87 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 6a9a111..862247f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2453,6 +2453,84 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+>  }
+>  
+>  /**
+> + * pci_rbar_get_sizes - get possible sizes for BAR
+> + * @dev: PCI device
+> + * @bar: BAR to query
+> + *
+> + * Get the possible sizes of a resizeable BAR as bitmask defined in the spec
+> + * (bit 0=1MB, bit 19=512GB). Returns 0 if BAR isn't resizeable.
+> + */
+> +u32 pci_rbar_get_sizes(struct pci_dev *pdev, int bar)
+> +{
+> +	int pos, nbars;
+> +	u32 ctrl, cap;
+> +	int i;
+> +
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
+> +	if (!pos)
+> +		return 0x0;
+> +
+> +	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+> +	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
+> +
+> +	for (i = 0; i < nbars; ++i, pos += 8) {
+> +		int bar_idx;
+> +
+> +		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+> +		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
+> +				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
+> +		if (bar_idx != bar)
+> +			continue;
+> +
+> +		pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
+> +		return (cap & PCI_REBAR_CTRL_SIZES_MASK) >>
+> +			PCI_REBAR_CTRL_SIZES_SHIFT;
+> +	}
+> +
+> +	return 0x0;
+> +}
+> +
+> +/**
+> + * pci_rbar_set_size - set a new size for a BAR
+> + * @dev: PCI device
+> + * @bar: BAR to set size to
+> + * @size: new size as defined in the spec.
+> + *
+> + * Set the new size of a BAR as defined in the spec (0=1MB, 19=512GB).
+> + * Returns true if resizing was successful, false otherwise.
+> + */
+> +bool pci_rbar_set_size(struct pci_dev *pdev, int bar, int size)
+> +{
+> +	int pos, nbars;
+> +	u32 ctrl;
+> +	int i;
+> +
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
+> +	if (!pos)
+> +		return false;
+> +
+> +	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+> +	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
+> +
+> +	for (i = 0; i < nbars; ++i, pos += 8) {
+> +		int bar_idx;
+> +
+> +		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+> +		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
+> +				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
+> +		if (bar_idx != bar)
+> +			continue;
+> +
+> +		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE_MASK;
+> +		ctrl |= size << PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
+> +		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
+> +		return true;
+> +	}
+> +
+> +	return false;
+> +}
+> +
+> +/**
+>   * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+>   * @dev: the PCI device
+>   * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e90eb22..fafb974 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1801,6 +1801,8 @@ void pci_request_acs(void);
+>  bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+>  bool pci_acs_path_enabled(struct pci_dev *start,
+>  			  struct pci_dev *end, u16 acs_flags);
+> +u32 pci_rbar_get_sizes(struct pci_dev *pdev, int bar);
+> +bool pci_rbar_set_size(struct pci_dev *pdev, int bar, int size);
+>  
+>  #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+>  #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 413417f..b746cbb 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -886,9 +886,16 @@
+>  #define PCI_SATA_SIZEOF_LONG	16
+>  
+>  /* Resizable BARs */
+> +#define PCI_REBAR_CAP		4	/* capability register */
+> +#define  PCI_REBAR_CTRL_SIZES_MASK	(0xFFFFF << 4)	/* mask for sizes */
+> +#define  PCI_REBAR_CTRL_SIZES_SHIFT	4	/* shift for sizes */
+>  #define PCI_REBAR_CTRL		8	/* control register */
+> +#define  PCI_REBAR_CTRL_BAR_IDX_MASK	(7 << 0)	/* mask for bar index */
+> +#define  PCI_REBAR_CTRL_BAR_IDX_SHIFT	0	/* shift for bar index */
+>  #define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # bars */
+>  #define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # bars */
+> +#define  PCI_REBAR_CTRL_BAR_SIZE_MASK	(0x1F << 8)	/* mask for bar size */
+> +#define  PCI_REBAR_CTRL_BAR_SIZE_SHIFT	8	/* shift for bar size */
+>  
+>  /* Dynamic Power Allocation */
+>  #define PCI_DPA_CAP		4	/* capability register */
+> -- 
+> 2.5.0
+> 
 
-> > > +		}
-> > > +	} while (status);
-> > > +
-> > > +	return retval;
-> > > 
-> > > +	for (i = 0; i < 4; i++) {
-> > > +		irq = irq_find_mapping(pcie->legacy_irq_domain, i + 1);
-> > > +		if (irq > 0)
-> > > +			irq_dispose_mapping(irq);
-> > > +	}
-> > > +	if (pcie->legacy_irq_domain)
-> > > +		irq_domain_remove(pcie->legacy_irq_domain);
-> > 
-> > Something seems wrong here.  I don't know when irq_dispose_mapping() is
-> > required, but it's not used consistently in drivers/pci, and it should be.
-> > Currently, only pci-tegra.c, pcie-xilinx.c, and this new driver use it.  Tegra uses
-> > it only for MSIs, and Xilinx seems to use it for both MSIs and INTx.  What's
-> > right?
-> Its not related to MSI or INTx, its related to domain, for freeing irq descriptor associated with irq.
+> From b7201b6af1b3f5452549351b018a27806ee5a723 Mon Sep 17 00:00:00 2001
+> From: =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>
+> Date: Wed, 25 Nov 2015 12:51:24 +0100
+> Subject: [PATCH 2/2] PCI: WIP hack to resize all BARs to their maximum
+> MIME-Version: 1.0
+> Content-Type: text/plain; charset=UTF-8
+> Content-Transfer-Encoding: 8bit
+> 
+> Signed-off-by: Christian K??nig <christian.koenig@amd.com>
+> ---
+>  drivers/pci/probe.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 8361d27..1d8fc20 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -318,6 +318,17 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
+>  
+>  	for (pos = 0; pos < howmany; pos++) {
+>  		struct resource *res = &dev->resource[pos];
+> +		u32 sizes = pci_rbar_get_sizes(dev, pos);
+> +
+> +		if (sizes) {
+> +			/* Just resize to the maximum for now */
+> +			int size = fls(sizes) - 1;
+> +
+> +			if (pci_rbar_set_size(dev, pos, size))
+> +				dev_info(&dev->dev, "Resized BAR %d to %dMB\n",
+> +					 pos, 1 << size);
+> +		}
+> +
+>  		reg = PCI_BASE_ADDRESS_0 + (pos << 2);
+>  		pos += __pci_read_base(dev, pci_bar_unknown, res, reg);
+>  	}
+> -- 
+> 2.5.0
+> 
 
-So are you saying that other drivers in drivers/pci/host should be
-using irq_dispose_mapping(), but they aren't?
-
-Marc, can you chime in here?
-
-> > > +	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-> > > +	if (!pcie)
-> > > +		return -ENOMEM;
-> > > +
-> > > +	err = nwl_pcie_parse_dt(pcie, pdev);
-> > > +	if (err) {
-> > > +		dev_err(pcie->dev, "Parsing DT failed\n");
-> > > +		return err;
-> > 
-> > This leaks the nwl_pcie struct you just allocated.  And all the subsequent
-> > error paths do too, of course.
-> > 
-> Its resource-managed kzalloc(), kernel will take care of it.
-
-Heh, devm_*() always trips me up, sorry about that.
-
-Bjorn
