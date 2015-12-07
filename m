@@ -1,34 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:37509 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756308AbbLQK6E convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Dec 2015 05:58:04 -0500
-From: "Seymour, Shane M" <shane.seymour@hpe.com>
-To: Hannes Reinecke <hare@suse.de>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Alexander Duyck <alexander.duyck@gmail.com>,
-	Michal Kubecek <mkubecek@suse.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Hannes Reinecke" <hare@suse.com>
-Subject: RE: [PATCH 1/2] pci: Update VPD definitions
-Date: Thu, 17 Dec 2015 10:57:22 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB444F9255@G4W3219.americas.hpqcorp.net>
-References: <1450339169-52542-1-git-send-email-hare@suse.de>
- <1450339169-52542-2-git-send-email-hare@suse.de>
-In-Reply-To: <1450339169-52542-2-git-send-email-hare@suse.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from foss.arm.com ([217.140.101.70]:38858 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932422AbbLGRLn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Dec 2015 12:11:43 -0500
+Message-ID: <5665BDC8.7060206@arm.com>
+Date: Mon, 07 Dec 2015 17:11:36 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	michals@xilinx.com, sorenb@xilinx.com, bhelgaas@google.com,
+	arnd@arndb.de, tinamdar@apm.com, treding@nvidia.com,
+	rjui@broadcom.com, Minghuan.Lian@freescale.com,
+	m-karicheri2@ti.com, hauke@hauke-m.de, dhdang@apm.com,
+	sbranden@broadcom.com
+CC: devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+References: <1448798633-12697-1-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1448798633-12697-1-git-send-email-bharatku@xilinx.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> The 'end' tag is actually 0x0f, it's the representation as a
-> small resource data type tag that's 0x78 (ie shifted by 3).
-> This patch also adds helper functions to extract the resource
-> data type tags for both large and small resource data types.
->
-> Cc: Alexander Duyck <alexander.duyck@gmail.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
+On 29/11/15 12:03, Bharat Kumar Gogada wrote:
+> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+> 
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> Acked-by: Rob Herring <robh@kernel.org>
 
-Tested-by: Shane Seymour <shane.seymour@hpe.com>
+I don't have much to add to this, so FWIW:
 
+Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
