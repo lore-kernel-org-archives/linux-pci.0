@@ -1,68 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Content-Type: text/plain; charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
-Subject: Re: [PATCH] drivers:pci Fix all whitespace issues
-From: sasa bogicevic <brutallesale@gmail.com>
-In-Reply-To: <1451236894.1098.5.camel@perches.com>
-Date: Sun, 27 Dec 2015 18:56:16 +0100
-Cc: bhelgaas@google.com, Richard.Zhu@freescale.com,
-	l.stach@pengutronix.de, rjw@rjwysocki.net, lenb@kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Message-Id: <E354C470-6475-40AF-B08B-22AFF8B00C93@gmail.com>
-References: <1451234408-42250-1-git-send-email-brutallesale@gmail.com> <1451236894.1098.5.camel@perches.com>
-To: Joe Perches <joe@perches.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yk0-f169.google.com ([209.85.160.169]:33804 "EHLO
+	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754739AbbLGCdd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Dec 2015 21:33:33 -0500
+MIME-Version: 1.0
+In-Reply-To: <5664ED0C.6060706@roeck-us.net>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_Jsq+BnPEKkRgQX4+e0MA9dKLVLhy8rVF25Fr9yXL2jp+WLA@mail.gmail.com>
+ <1449446087.21036.1.camel@kernel.crashing.org> <5664ED0C.6060706@roeck-us.net>
+From: Rob Herring <robherring2@gmail.com>
+Date: Sun, 6 Dec 2015 20:33:13 -0600
+Message-ID: <CAL_JsqKWtEkmdDyWKjOFdtgX5wx2f+xfJMFw4jmo05Z5Jo_ZYA@mail.gmail.com>
+Subject: Re: [PATCH v7 45/50] drivers/of: Avoid recursively calling unflatten_dt_node()
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Frank Rowand <frowand.list@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joe,
-No this is not done with checkpatch.pl I just used it to verify that my changes are correct. I was wondering why that “type” pointer threw errors since it looks fine to me the way it was declared. This “type*” is just present in few of the files I can just redo those changes and send the patch again.
+On Sun, Dec 6, 2015 at 8:21 PM, Guenter Roeck <linux@roeck-us.net> wrote:
+> On 12/06/2015 03:54 PM, Benjamin Herrenschmidt wrote:
+>>
+>> On Sun, 2015-12-06 at 14:28 -0600, Rob Herring wrote:
+>>>
+>>>
+>>> Do you plan to respin the OF parts at least soon? There's another
+>>> problem Guenter found that of_fdt_unflatten_tree is not re-entrant due
+>>> to "depth" being static and this series fixes that. So I'd rather
+>>> apply this and avoid adding a mutex if possible.
+>>
+>>
+>> Gavin is on vacation until next year.
+>>
+>
+> That is a bit more than the timeline I am looking for.
+>
+> Rob, any chance to accept my patch for now ? After all, it can be
+> reverted after the rework is complete, and it would be easier
+> to apply to earlier kernels.
 
-Thanks, Sasa
-{
-	name: Bogicevic Sasa
-	phone: +381606006200
-}
+Yes, will do. It's only 4.1 and later that it should be marked for stable?
 
-
-
-> On Dec 27, 2015, at 18:21, Joe Perches <joe@perches.com> wrote:
-> 
-> On Sun, 2015-12-27 at 08:40 -0800, Bogicevic Sasa wrote:
->> This patch fixes all whitespace issues( missing or needed whitespace) in
->> all files in drivers/pci folder. Code is compiled with allyesconfig
->> before and after code changes and objects are recorded and checked with
->> objdiff and they are not changed after this commit.
-> []
->> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> []
->> @@ -25,9 +25,9 @@ DEFINE_RAW_SPINLOCK(pci_lock);
->>  #define PCI_word_BAD (pos & 1)
->>  #define PCI_dword_BAD (pos & 3)
->>  
->> -#define PCI_OP_READ(size,type,len) \
->> +#define PCI_OP_READ(size, type, len) \
->>  int pci_bus_read_config_##size \
->> -	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
->> +	(struct pci_bus *bus, unsigned int devfn, int pos, type * value)	\
->>  {									\
->>  	int res;							\
->>  	unsigned long flags;						\
->> @@ -40,7 +40,7 @@ int pci_bus_read_config_##size \
->>  	return res;							\
->>  }
-> 
-> When the first entry I look at is improper, I wonder
-> about the rest.
-> 
-> Was this done with checkpatch --types=spacing --fix ?
-> 
-> If so, because checkpatch is brainless, you need to
-> visually verify each change.
-> 
-> This "type" use is a macro argument indicating
-> what actual c90 type is being used in a function.
-> 
-> The original code is nominally correct, but checkpatch
-> doesn't know that "type" is not a variable.
-
+Rob
