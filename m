@@ -1,60 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:39078 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752792AbbLJR4u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 12:56:50 -0500
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v10 5/7] PCI: irqdomain: Look up IRQ domain by fwnode_handle
-Date: Thu, 10 Dec 2015 17:53:01 +0000
-Message-Id: <1449769983-12948-6-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
-References: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Julia Lawall <Julia.Lawall@lip6.fr>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Len Brown <lenb@kernel.org>
+Subject: Re: [PATCH] PCI: constify pci_platform_pm_ops structure
+Date: Mon, 07 Dec 2015 02:41:34 +0100
+Message-ID: <1556686.IXJIjFBvQx@vostro.rjw.lan>
+In-Reply-To: <1449419625-29045-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1449419625-29045-1-git-send-email-Julia.Lawall@lip6.fr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On Sunday, December 06, 2015 05:33:45 PM Julia Lawall wrote:
+> The pci_platform_pm_ops structure is never modified, so declare it as
+> const.
+> 
+> Done with the help of Coccinelle.
+> 
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-This patch adds a second way of finding an IRQ domain associated with
-a root PCI bus.  After looking to see if one can be found through
-the OF tree, it attempts to look up the IRQ domain through an
-fwnode_handle stored in the pci_sysdata struct.
+OK
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/pci/probe.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+Bjorn, do you want me to handle this one?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 750f907..c6369dd 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -674,6 +674,20 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
- 	 */
- 	d = pci_host_bridge_of_msi_domain(bus);
- 
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+	/*
-+	 * If no IRQ domain was found via the OF tree, try looking it up
-+	 * directly through the fwnode_handle.
-+	 */
-+	if (!d) {
-+		struct fwnode_handle *fwnode = pci_root_bus_fwnode(bus);
-+
-+		if (fwnode)
-+			d = irq_find_matching_fwnode(fwnode,
-+						     DOMAIN_BUS_PCI_MSI);
-+	}
-+#endif
-+
- 	return d;
- }
- 
+> ---
+>  drivers/pci/pci-acpi.c |    2 +-
+>  drivers/pci/pci.c      |    4 ++--
+>  drivers/pci/pci.h      |    2 +-
+>  3 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index a32ba75..8400f80 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -529,7 +529,7 @@ static bool acpi_pci_need_resume(struct pci_dev *dev)
+>  	return !!adev->power.flags.dsw_present;
+>  }
+>  
+> -static struct pci_platform_pm_ops acpi_pci_platform_pm = {
+> +static const struct pci_platform_pm_ops acpi_pci_platform_pm = {
+>  	.is_manageable = acpi_pci_power_manageable,
+>  	.set_state = acpi_pci_set_power_state,
+>  	.choose_state = acpi_pci_choose_state,
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 314db8c..d1a7105 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -527,9 +527,9 @@ static void pci_restore_bars(struct pci_dev *dev)
+>  		pci_update_resource(dev, i);
+>  }
+>  
+> -static struct pci_platform_pm_ops *pci_platform_pm;
+> +static const struct pci_platform_pm_ops *pci_platform_pm;
+>  
+> -int pci_set_platform_pm(struct pci_platform_pm_ops *ops)
+> +int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
+>  {
+>  	if (!ops->is_manageable || !ops->set_state || !ops->choose_state
+>  	    || !ops->sleep_wake)
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index d390fc1..f6f151a 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -68,7 +68,7 @@ struct pci_platform_pm_ops {
+>  	bool (*need_resume)(struct pci_dev *dev);
+>  };
+>  
+> -int pci_set_platform_pm(struct pci_platform_pm_ops *ops);
+> +int pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
+>  void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
+>  void pci_power_up(struct pci_dev *dev);
+>  void pci_disable_enabled_device(struct pci_dev *dev);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-1.9.1
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
