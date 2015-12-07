@@ -1,68 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sauhun.de ([89.238.76.85]:55651 "EHLO pokefinder.org"
+Received: from mail.kernel.org ([198.145.29.136]:57730 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934717AbbLQNdP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Dec 2015 08:33:15 -0500
-Date: Thu, 17 Dec 2015 14:33:08 +0100
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org
-Subject: Re: [PATCH 4/4] PCI: rcar: Add Gen2 PHY setup to pcie-rcar
-Message-ID: <20151217133308.GB20372@katana>
-References: <1450358557-28376-1-git-send-email-phil.edworthy@renesas.com>
- <1450358557-28376-5-git-send-email-phil.edworthy@renesas.com>
+	id S1755691AbbLGRB3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Dec 2015 12:01:29 -0500
+Date: Mon, 7 Dec 2015 11:01:22 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 0/5] Add iProc PCIe PAXC and MSI support
+Message-ID: <20151207170122.GI7994@localhost>
+References: <1449250502-10679-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="EuxKj2iCbKjpUGkD"
-In-Reply-To: <1450358557-28376-5-git-send-email-phil.edworthy@renesas.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449250502-10679-1-git-send-email-rjui@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Dec 04, 2015 at 09:34:57AM -0800, Ray Jui wrote:
+> This patch series adds support for the iProc PAXC interface and support for
+> event queue based MSI, integrated in the iProc PCIe core
+> 
+> This patch series is based on Linux v4.4-rc1 and is avaliable here:
+> https://github.com/Broadcom/cygnus-linux/tree/iproc-msi-v5
+> 
+> Changes from v4:
+> - Make 'iproc_msi_exit' inline to fix compiler warning when CONFIG_PCI_MSI
+> is disabled
+> 
+> Changes from v3:
+> - Detect the number of possible CPUs instead online CPUs in the driver. Note
+> CPU notifier based implementation still needs to be added in the future, for
+> proper support of MSI IRQ affinity when CPU is brought online/offline at
+> runtime. Support in this dirver will be added when we support CPU hotplug in
+> one of iProc family of SoCs so the changes can be tested
+> - Use dma_zalloc_coherent for event queue host memory allocation and zeoring
+> 
+> Changes from v2:
+> - Improved descriptions in the iProc MSI commit message
+> - Removed redundant host memory used for MSI address. The MSI posted writes
+> never really hit the memory. Use iProc PCIe controller base address instead
+> - Fixed deadlock when MSI vectors are used up
+> - Enforced the number of MSI groups to always be multiple of the number of CPUs
+> - Improved the efficiency of MSI event processing by only updating the head
+> pointer after finishing processing all outstanding events
+> - Fixed error handling code to make sure all configurations are rolled back
+> - Added code to zero the host memory used for event queues after allocation
+> - Removed redundant 'brcm,num-eq-region' and 'brcm,num-msi-msg-region' DT
+>   properties. Now determine the number of regions based on interface type
+> - Other misc. changes
+> 
+> Changes from v1:
+> - Fixed incorrect 1-to-1 mapping between MSI vector and GIC interrupt. Now the
+> driver supports multiple MSI vectors per GIC interrupt
+> - Added MSI IRQ affinity support by distributing GIC interrupts across
+> available CPU cores and dynamically steer MSI vectors to the target CPU
+> - replace readl/writel with readl_relaxed/writel_relaxed since all register
+> accesses within the iProc MSI driver are to/from the same I/O block, i.e., the
+> iProc PCIe core
+> - Removed all redundant irq_chip callback assignments
+> - Changed to use uncached host memory for both MSI posted writes and event
+> queues
+> - Add functions to free resources in error/exit cases
+> - In pcie-iproc-platform.c, pass in interface type through OF device data
+> - Moved define for max number of interrupts from pcie-iproc.h to
+> pcie-iproc-msi.c
+> - Other misc. changes
+> 
+> Ray Jui (5):
+>   PCI: iproc: Update iProc PCIe device tree binding
+>   PCI: iproc: Add PAXC interface support
+>   PCI: iproc: Add iProc PCIe MSI device tree binding
+>   PCI: iproc: Add iProc PCIe MSI support
+>   ARM: dts: Enable MSI support for Broadcom Cygnus
+> 
+>  .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  40 +-
+>  arch/arm/boot/dts/bcm-cygnus.dtsi                  |  22 +
+>  drivers/pci/host/Kconfig                           |   9 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pcie-iproc-bcma.c                 |   1 +
+>  drivers/pci/host/pcie-iproc-msi.c                  | 675 +++++++++++++++++++++
+>  drivers/pci/host/pcie-iproc-platform.c             |  25 +-
+>  drivers/pci/host/pcie-iproc.c                      | 228 +++++--
+>  drivers/pci/host/pcie-iproc.h                      |  42 +-
+>  9 files changed, 1000 insertions(+), 43 deletions(-)
+>  create mode 100644 drivers/pci/host/pcie-iproc-msi.c
 
---EuxKj2iCbKjpUGkD
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Applied to pci/host-iproc for v4.5, with Marc's reviewed-by on "PCI: iproc:
+Add iProc PCIe MSI support".  Thanks!
 
-
-> +	rcar_pci_write_reg(pcie, 0x000f0030, GEN2_PCIEPHYADDR);
-> +	rcar_pci_write_reg(pcie, 0x00381203, GEN2_PCIEPHYDATA);
-> +	rcar_pci_write_reg(pcie, 0x00000001, GEN2_PCIEPHYCTRL);
-> +	rcar_pci_write_reg(pcie, 0x00000006, GEN2_PCIEPHYCTRL);
-> +
-> +	rcar_pci_write_reg(pcie, 0x000f0054, GEN2_PCIEPHYADDR);
-> +	/* The following value is for DC connection, no termination resistor */
-> +	rcar_pci_write_reg(pcie, 0x13802007, GEN2_PCIEPHYDATA);
-> +	rcar_pci_write_reg(pcie, 0x00000001, GEN2_PCIEPHYCTRL);
-> +	rcar_pci_write_reg(pcie, 0x00000006, GEN2_PCIEPHYCTRL);
-
-I'd vote for a comment saying where these magic values come from, i.e.
-which manual, which chapter, etc...
-
-
---EuxKj2iCbKjpUGkD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJWcrmUAAoJEBQN5MwUoCm2zbAQAKf6ScYmjRKEg5cPcmkU8WfB
-aB6qMRD2Dz0F//h6dja5kSRF/OCIpeUALpW8NJgL9fCG49F9gd0Syv/VfWSVn9jf
-vvVlxoLcf2YsJ7s8QXFz6twkTNi675tmvoI7JDt88OnH7U8vBK/TUy1rxMKZo+ti
-VIgVg1IJ/qJhUbPS1rzTbD4XBneaZDRkO87mYfxNTmlipWKzBtkIr30NlsOtuaEX
-V/a1tgIsEMMxzMF0/Q7Mzc4yqX3RSXMOOq7SS5ljywLfO/Dc7yQ88f6TnCZAENa4
-s3wp4GIQJXlxTAVOde4pKvcG2vPGDl9NFv1fsz0NgNw8F7lU1cyf+tIYDyZuGhXe
-65QRflJR33TMdiRpp8QLP0VPCs/IcqMO4m/JBFQpT2AA8imPHUiWaTtzGZt8cG3Y
-KzSag1lZLu3Vrdl4WjNSfHtifMtrR1sUaoiV3oWn3CPnzKMAWSLn37atq8XJIVRL
-4BQXjkCm3FxBFBxdbMPmvhjDUxIutVSBm/JhYQwcKJDS3VqdUPLd5uFOOqMG/F0w
-WmHAjFghAuSRcuna5HmHuw6AxKuJZg5JDYCgRMCHAUrA/4JXeK5OO4YT4xMELqge
-1cXsz5gHdI08tSy73yl9FD+g0LKVdy191nMd6wlDWVXx/xu9a5dToA+OgXmmRkIm
-zpW5u/8DM3Jezi14QhIJ
-=Ygd9
------END PGP SIGNATURE-----
-
---EuxKj2iCbKjpUGkD--
+Bjorn
