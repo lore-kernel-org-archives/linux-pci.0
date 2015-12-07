@@ -1,67 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:38554 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755814AbbLGRdp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Dec 2015 12:33:45 -0500
-Received: by wmec201 with SMTP id c201so160771923wme.1
-        for <linux-pci@vger.kernel.org>; Mon, 07 Dec 2015 09:33:44 -0800 (PST)
-Message-ID: <5665C2F7.9060502@linaro.org>
-Date: Mon, 07 Dec 2015 17:33:43 +0000
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:33040 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753026AbbLGBtS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Dec 2015 20:49:18 -0500
 MIME-Version: 1.0
-To: Stanimir Varbanov <stanimir.varbanov@linaro.org>,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-CC: Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Subject: Re: [PATCH v4 0/5] Qualcomm PCIe driver and designware fixes
-References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
-In-Reply-To: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20151204222840.GK20125@localhost>
+References: <1449141474-3378-1-git-send-email-lftan@altera.com>
+	<20151204222840.GK20125@localhost>
+Date: Mon, 7 Dec 2015 09:49:16 +0800
+Message-ID: <CAFiDJ5-cYbuaAa75bTEtr_ibd2G6wn17pkso23BY_eTN-pkS4A@mail.gmail.com>
+Subject: Re: [PATCH 0/3] fixes to support multi-functions device
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sat, Dec 5, 2015 at 6:28 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Dec 03, 2015 at 07:17:51PM +0800, Ley Foon Tan wrote:
+>> This series of patch fixes the issues when work with multi-functions PCIe
+>> devices. Host controller can't access to endpoint with non-zero devfn, due to
+>> incorrect rootport devfn. It also add checking for TLP status and fix issue in
+>> interrupt probing.
+>>
+>> Tested on Ethernet adapter card with multi-functions enabled.
+>>
+>> Ley Foon Tan (3):
+>>   PCI: altera: fix incorrect devfn for requester ID
+>>   PCI: altera: check TLP completion status
+>>   PCI: altera: fix error when INTX is 4
+>>
+>>  drivers/pci/host/pcie-altera.c | 25 +++++++++++++++++--------
+>>  1 file changed, 17 insertions(+), 8 deletions(-)
+>
+> We initially merged the Altera driver for v4.4-rc1, it looks like
+> it's not really useful without these changes, and there's no danger of
+> breaking anything in the field, so I put these on my for-linus branch
+> and will ask Linus to pull them before v4.4.  Thanks!
+>
+That's great!
+Thanks.
 
-
-On 03/12/15 13:35, Stanimir Varbanov wrote:
-> Hi,
->
-> Here is v4, comments from Bjorn and Rob have been addressed.
-> The previous version can be found at [1].
->
-> regards,
-> Stan
->
-> [1] https://lkml.org/lkml/2015/11/23/114
->
-> Stanimir Varbanov (5):
->    PCI: designware: add memory barrier after enabling region
->    DT: PCI: qcom: Document PCIe devicetree bindings
->    PCI: qcom: Add Qualcomm PCIe controller driver
->    ARM: dts: apq8064: add pcie devicetree node
->    ARM: dts: ifc6410: enable pcie dt node for this board
->
-Thanks for the patches, Tested on IFC6410.
-
-Tested-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-
-
->   .../devicetree/bindings/pci/qcom,pcie.txt          |  233 ++++++++
->   MAINTAINERS                                        |    7 +
->   arch/arm/boot/dts/qcom-apq8064-ifc6410.dts         |   26 +
->   arch/arm/boot/dts/qcom-apq8064.dtsi                |   36 ++
->   drivers/pci/host/Kconfig                           |   10 +
->   drivers/pci/host/Makefile                          |    1 +
->   drivers/pci/host/pcie-designware.c                 |    5 +
->   drivers/pci/host/pcie-qcom.c                       |  624 ++++++++++++++++++++
->   8 files changed, 942 insertions(+)
->   create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
->   create mode 100644 drivers/pci/host/pcie-qcom.c
->
+Regards
+Ley Foon
