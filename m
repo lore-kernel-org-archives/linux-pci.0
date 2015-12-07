@@ -1,45 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:34440 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964888AbbLQNlR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Dec 2015 08:41:17 -0500
-MIME-Version: 1.0
-In-Reply-To: <20151217133058.GA20372@katana>
-References: <1450358557-28376-1-git-send-email-phil.edworthy@renesas.com>
-	<1450358557-28376-3-git-send-email-phil.edworthy@renesas.com>
-	<20151217133058.GA20372@katana>
-Date: Thu, 17 Dec 2015 14:41:16 +0100
-Message-ID: <CAMuHMdWfOo7=g9F_qmhM65yct0P=F3QvkVkHMggBJRLA0gCPYQ@mail.gmail.com>
-Subject: Re: [PATCH 2/4] PCI: rcar: Support runtime PM link state L1 handling
- in pcie-rcar
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Wolfram Sang <wsa@the-dreams.de>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>,
-	Simon Horman <horms@verge.net.au>,
+Received: from bh-25.webhostbox.net ([208.91.199.152]:36840 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754574AbbLGCVJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Dec 2015 21:21:09 -0500
+Subject: Re: [PATCH v7 45/50] drivers/of: Avoid recursively calling
+ unflatten_dt_node()
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <robherring2@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_Jsq+BnPEKkRgQX4+e0MA9dKLVLhy8rVF25Fr9yXL2jp+WLA@mail.gmail.com>
+ <1449446087.21036.1.camel@kernel.crashing.org>
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Grant Likely <grant.likely@linaro.org>,
+	Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Frank Rowand <frowand.list@gmail.com>
+From: Guenter Roeck <linux@roeck-us.net>
+Message-ID: <5664ED0C.6060706@roeck-us.net>
+Date: Sun, 6 Dec 2015 18:21:00 -0800
+MIME-Version: 1.0
+In-Reply-To: <1449446087.21036.1.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 17, 2015 at 2:30 PM, Wolfram Sang <wsa@the-dreams.de> wrote:
->> +             /* Wait until we are in L1 */
->> +             while (!(val & L1FAEG))
->> +                     val = rcar_pci_read_reg(pcie, PMSR);
+On 12/06/2015 03:54 PM, Benjamin Herrenschmidt wrote:
+> On Sun, 2015-12-06 at 14:28 -0600, Rob Herring wrote:
+>>
+>> Do you plan to respin the OF parts at least soon? There's another
+>> problem Guenter found that of_fdt_unflatten_tree is not re-entrant due
+>> to "depth" being static and this series fixes that. So I'd rather
+>> apply this and avoid adding a mutex if possible.
 >
-> No timeout?
+> Gavin is on vacation until next year.
+>
 
-And no cpu_relax() in each iteration.
+That is a bit more than the timeline I am looking for.
 
-Gr{oetje,eeting}s,
+Rob, any chance to accept my patch for now ? After all, it can be
+reverted after the rework is complete, and it would be easier
+to apply to earlier kernels.
 
-                        Geert
+Thanks,
+Guenter
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
