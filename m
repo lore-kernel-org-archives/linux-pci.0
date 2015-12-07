@@ -1,56 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39800 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:59422 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753087AbbLIShq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Dec 2015 13:37:46 -0500
-Date: Wed, 9 Dec 2015 12:37:43 -0600
+	id S1755144AbbLGR34 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Dec 2015 12:29:56 -0500
+Date: Mon, 7 Dec 2015 11:29:41 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Simon Horman <horms+renesas@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 0/4] PCI: rcar, rcar-gen2: More Gen2 compatibility
- strings
-Message-ID: <20151209183743.GH31930@localhost>
-References: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
+To: Babu Moger <babu.moger@oracle.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4] pci: Limit VPD length for megaraid_sas adapter
+Message-ID: <20151207172941.GJ7994@localhost>
+References: <1447957102-184860-1-git-send-email-babu.moger@oracle.com>
+ <1449174319-52798-1-git-send-email-babu.moger@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
+In-Reply-To: <1449174319-52798-1-git-send-email-babu.moger@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 03, 2015 at 07:51:36AM +0900, Simon Horman wrote:
-> Hi,
-> 
-> this short series adds generic gen2 and SoC-specific r8a7793 compatibility
-> strings to the rcar PCI and rcar-gen2 PCIE drivers. The intention is to
-> provide a complete set of compatibility strings for known Gen2 SoCs.
-> 
-> Key Changes in v2:
-> * Include "rcar-" in generic bindings
-> 
-> Simon Horman (4):
->   PCI: rcar-gen2: add gen2 fallback compatibility string
->   PCI: rcar-gen2: add device tree support for r8a7793
->   PCI: rcar: add gen2 fallback compatibility string
->   PCI: rcar: add device tree support for r8a7793
-> 
->  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 12 ++++++++++--
->  Documentation/devicetree/bindings/pci/rcar-pci.txt      | 14 +++++++++++---
->  drivers/pci/host/pci-rcar-gen2.c                        |  1 +
->  drivers/pci/host/pcie-rcar.c                            |  1 +
->  4 files changed, 23 insertions(+), 5 deletions(-)
+Hi Babu,
 
-I applied these:
+On Thu, Dec 03, 2015 at 12:25:19PM -0800, Babu Moger wrote:
+> Reading or Writing of PCI VPD data causes system panic.
+> We saw this problem by running "lspci -vvv" in the beginning.
+> However this can be easily reproduced by running
+>  cat /sys/bus/devices/XX../vpd
 
->   PCI: rcar-gen2: add gen2 fallback compatibility string
->   PCI: rcar: add gen2 fallback compatibility string
+What sort of panic is this?
 
-to pci/host-rcar for v4.5, thanks!
+This seems like a defect in the megaraid hardware or firmware.  If the
+VPD ROM contains junk, there's no hope that software can read the data
+and figure out how much is safe to read.
 
-I haven't applied the R8A7793 binding documentation updates yet, but
-I'll be happy to do so given a short description of why they're
-useful (since they don't update a DT or the driver).  Or they could be
-merged via a DT tree.
+I assume VPD is useful for somebody, and I hate to silently disable
+the whole thing.  We might want to at least log a note about what
+we're doing.
 
 Bjorn
+
+> VPD length has been set as 32768 by default. Accessing vpd
+> will trigger read/write of 32k. This causes problem as we
+> could read data beyond the VPD end tag. Behaviour is un-
+> predictable when this happens. I see some other adapter doing
+> similar quirks(commit bffadffd43d4 ("PCI: fix VPD limit quirk
+> for Broadcom 5708S"))
+> 
+> I see there is an attempt to fix this right way.
+> https://patchwork.ozlabs.org/patch/534843/ or
+> https://lkml.org/lkml/2015/10/23/97
+> 
+> Tried to fix it this way, but problem is I dont see the proper
+> start/end TAGs(at least for this adapter) at all. The data is
+> mostly junk or zeros. This patch fixes the issue by setting the
+> vpd length to 0x80.
+> 
+> Signed-off-by: Babu Moger <babu.moger@oracle.com>
+> Reviewed-by: Khalid Aziz <khalid.aziz@oracle.com>
+> Tested-by: Dmitry Klochkov <dmitry.klochkov@oracle.com>
+> 
+> Orabug: 22104511
+> 
+> Changes since v3 -> v4
+> We found some options of the lspci does not work very well if
+> it cannot find the valid vpd tag(Example command "lspci -s 10:00.0 -vv").
+> It displays the error message and exits right away. Setting the length
+> back to 0 fixes the problem.
+> 
+> Changes since v2 -> v3
+> Changed the vpd length from 0 to 0x80 which leaves the
+> option open for someone to read first few bytes.
+> 
+> Changes since v1 -> v2
+> Removed the changes in pci_id.h. Kept all the vendor
+> ids in quirks.c
+> ---
+>  drivers/pci/quirks.c |   38 ++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 38 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index b03373f..f739e47 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2123,6 +2123,44 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
+>  
+>  /*
+> + * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
+> + * will dump 32k of data. The default length is set as 32768.
+> + * Reading a full 32k will cause an access beyond the VPD end tag.
+> + * The system behaviour at that point is mostly unpredictable.
+> + * Also I dont believe vendors have implemented this VPD headers properly.
+> + * Atleast I dont see it in following megaraid sas controller.
+> + * That is why adding the quirk here.
+> + */
+> +static void quirk_megaraid_sas_limit_vpd(struct pci_dev *dev)
+> +{
+> +	if (dev->vpd)
+> +		dev->vpd->len = 0;
+> +}
+> +
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
+> +		quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
+> +		quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
+> +		quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
+> +		quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
+> +		quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
+> +		quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
+> +		quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
+> +		quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
+> +		quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
+> +		quirk_megaraid_sas_limit_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
+> +		quirk_megaraid_sas_limit_vpd);
+> +
+> +/*
+>   * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
+>   * VPD end tag will hang the device.  This problem was initially
+>   * observed when a vpd entry was created in sysfs
+> -- 
+> 1.7.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
