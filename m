@@ -1,47 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:43185 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932318AbbLQLH4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Dec 2015 06:07:56 -0500
-From: "Seymour, Shane M" <shane.seymour@hpe.com>
-To: Hannes Reinecke <hare@suse.de>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Alexander Duyck <alexander.duyck@gmail.com>,
-	Michal Kubecek <mkubecek@suse.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Subject: RE: [PATCH 2/2] pci: Update VPD size with correct length
-Date: Thu, 17 Dec 2015 11:06:53 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB444F927F@G4W3219.americas.hpqcorp.net>
-References: <1450339169-52542-1-git-send-email-hare@suse.de>
- <1450339169-52542-3-git-send-email-hare@suse.de>
-In-Reply-To: <1450339169-52542-3-git-send-email-hare@suse.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from www.linutronix.de ([62.245.132.108]:44835 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756147AbbLHJGB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Dec 2015 04:06:01 -0500
+Date: Tue, 8 Dec 2015 10:05:56 +0100
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Grygorii Strashko <grygorii.strashko@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, tony@atomide.com,
+	nsekhar@ti.com, linux-omap@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH v2] PCI: dra7xx: mark dra7xx_pcie_msi irq as
+ IRQF_NO_THREAD
+Message-ID: <20151208090555.GA19438@linutronix.de>
+References: <1448027966-21610-1-git-send-email-grygorii.strashko@ti.com>
+ <20151204184619.GD20125@localhost>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20151204184619.GD20125@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tested with a HP AE311-60001 PCIe card. It used to repeat the same VPD every 4k
-for 32k now only the 154 bytes are returned and lspci -vvvv reports that the data up
-to and including the end and that the check sum is good:
+* Bjorn Helgaas | 2015-12-04 12:46:19 [-0600]:
 
-...
-        Capabilities: [74] Vital Product Data
-                Product Name: PCI-Express 4Gb Fibre Channel HBA
-                Read-only fields:
-                        [PN] Part number: AE311-60001
-                        [EC] Engineering changes: C-4830
-                        [SN] Serial number: CN80847W3U
-                        [V0] Vendor specific: PW=15W
-                        [V2] Vendor specific: 4847
-                        [MN] Manufacture ID: 50 58 32 35 31 30 34 30 31 2d 37 30 20 20 42
-                        [V1] Vendor specific: 02.22
-                        [V3] Vendor specific: 05.03.15
-                        [V4] Vendor specific: 03.13
-                        [V5] Vendor specific: 02.03
-                        [YA] Asset tag: NA
-                        [RV] Reserved: checksum good, 0 byte(s) reserved
-                End
-...
----
-Tested-by: Shane Seymour <shane.seymour@hpe.com>
+>The backtrace might be OK (maybe slightly overkill), but all the
+>stack addresses are certainly irrelevant and distracting.  We only
+>need enough to recognize the problem.  I don't think the modules list
+>is relevant either.
+
+I would shorten it to the bare minimum. Also the patch description
+itself could be truncated to the required bits…
+
+>> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+>> index 8c36880..0415192 100644
+>> --- a/drivers/pci/host/pci-dra7xx.c
+>> +++ b/drivers/pci/host/pci-dra7xx.c
+>> @@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+>>  		return -EINVAL;
+>>  	}
+>>  
+>> +	/*
+>> +	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
+>> +	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
+>> +	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
+>> +	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
+>> +	 * which, in turn, will be resolved to handle_simple_irq() call.
+>> +	 * The handle_simple_irq() expected to be called with IRQ disabled, as
+>> +	 * result kernle will display warning:
+>> +	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
+>> +	 */
+
+…not to mention this piece. d7ce4377494a ("powerpc/fsl_msi: mark the msi
+cascade handler IRQF_NO_THREAD") fixes the same bug in arch/ppc so they
+bypassed you fixing it.
+
+>>  	ret = devm_request_irq(&pdev->dev, pp->irq,
+>> -			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
+>> +			       dra7xx_pcie_msi_irq_handler,
+>> +			       IRQF_SHARED | IRQF_NO_THREAD,
+>>  			       "dra7-pcie-msi",	pp);
+>
+>There's similar code in exynos_add_pcie_port(), imx6_add_pcie_port(),
+>and spear13xx_add_pcie_port().  Do they need similar changes?  If not,
+>why not?
+
+You are right. The request for the handler exynos_pcie_msi_irq_handler(),
+imx6_pcie_msi_handler() and spear13xx_pcie_irq_handler() needs same
+treatment.
+Additionally we have:
+
+arch/mips/pci/msi-octeon.c: if (request_irq(OCTEON_IRQ_PCI_MSI0, octeon_msi_interrupt0,
+arch/sparc/kernel/pci_msi.c:    err = request_irq(irq, sparc64_msiq_interrupt, 0,
+drivers/pci/host/pci-tegra.c:   err = request_irq(msi->irq, tegra_pcie_msi_irq, 0,
+drivers/pci/host/pcie-rcar.c:   err = devm_request_irq(&pdev->dev, msi->irq1, rcar_pcie_msi_irq,
+drivers/pci/host/pcie-rcar.c:   err = devm_request_irq(&pdev->dev, msi->irq2, rcar_pcie_msi_irq,
+drivers/pci/host/pcie-xilinx.c: err = devm_request_irq(dev, port->irq, xilinx_pcie_intr_handler,
+
+which require the same kind of fix…
+
+>I see your discussion about DRA7 hardware design, but my impression is
+>that this problem affects anybody who calls dw_handle_msi_irq() from a
+>handler registered with IRQF_SHARED.
+
+… brecause all of them invoke generic_handle_irq() from the requsted
+handler. generic_handle_irq grabs raw_locks and this needs to run in
+raw-irq context.
+IRQF_SHARED could probably go away. The IRQ is mostlikely exclusive
+assigned in each SoC for MSI interrupt demux.
+
+>Bjorn
+
+Sebastian
