@@ -1,96 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:33380 "EHLO
-	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965764AbbLPPSF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Dec 2015 10:18:05 -0500
-Received: by mail-wm0-f43.google.com with SMTP id p187so5707735wmp.0
-        for <linux-pci@vger.kernel.org>; Wed, 16 Dec 2015 07:18:05 -0800 (PST)
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V2 14/23] pci, acpi: Provide generic way to assign bus domain number.
-Date: Wed, 16 Dec 2015 16:16:24 +0100
-Message-Id: <1450278993-12664-15-git-send-email-tn@semihalf.com>
-In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 7 Dec 2015 21:33:00 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Grygorii Strashko <grygorii.strashko@ti.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, tony@atomide.com,
+	nsekhar@ti.com, linux-omap@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Pratyush Anand <pratyush.anand@gmail.com>
+Subject: Re: [PATCH v2] PCI: dra7xx: mark dra7xx_pcie_msi irq as
+ IRQF_NO_THREAD
+Message-ID: <20151208033300.GA1255@localhost>
+References: <1448027966-21610-1-git-send-email-grygorii.strashko@ti.com>
+ <20151204184619.GD20125@localhost>
+ <5662042A.3090809@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5662042A.3090809@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As we now have valid PCI host bridge device reference we can
-introduce code that is going to find its bus domain number using
-ACPI _SEG method.
+[+cc Jingoo (exynos), Richard, Lucas (imx6), Pratyush (spear13xx)]
 
-Note that _SEG method is optional, therefore _SEG absence means
-that all PCI buses belong to domain 0.
+On Fri, Dec 04, 2015 at 11:22:50PM +0200, Grygorii Strashko wrote:
+> On 12/04/2015 08:46 PM, Bjorn Helgaas wrote:
+> > Hi Grygorii,
+> > 
+> > On Fri, Nov 20, 2015 at 03:59:26PM +0200, Grygorii Strashko wrote:
+> >> On -RT, TI DRA7 PCIe driver always produces below backtrace when the
+> >> first PCI interrupt is triggered:
+> >>
+> >> ------------[ cut here ]------------
+> >> WARNING: CPU: 1 PID: 82 at kernel/irq/handle.c:150 handle_irq_event_percpu+0x14c/0x174()
+> >> irq 460 handler irq_default_primary_handler+0x0/0x14 enabled interrupts
+> [...]
+> >> [<c00891b0>] (handle_simple_irq) from [<c0085514>] (generic_handle_irq+0x30/0x44)
+> >>   r5:ee4a9020 r4:000001cc
+> >> [<c00854e4>] (generic_handle_irq) from [<c034a7d4>] (dra7xx_pcie_msi_irq_handler+0x7c/0x8c)
+> >>   r5:ee4a9020 r4:00000001
+> >> [<c034a758>] (dra7xx_pcie_msi_irq_handler) from [<c0086f08>] (irq_forced_thread_fn+0x28/0x5c)
+> >>   r5:ee1d0900 r4:ee4b59c0
+> >> [<c0086ee0>] (irq_forced_thread_fn) from [<c00871dc>] (irq_thread+0x128/0x204)
+> >>   r7:00000001 r6:00000000 r5:ee4d2000 r4:ee4b59e4
+> >> [<c00870b4>] (irq_thread) from [<c005e2fc>] (kthread+0xd4/0xec)
+> >>   r10:00000000 r9:00000000 r8:00000000 r7:c00870b4 r6:ee4b59c0 r5:ee4b5a00
+> >>   r4:00000000
+> >> [<c005e228>] (kthread) from [<c000faa8>] (ret_from_fork+0x14/0x2c)
+> >>   r7:00000000 r6:00000000 r5:c005e228 r4:ee4b5a00
+> >> ---[ end trace 0000000000000002 ]---
+> > 
+> > The backtrace might be OK (maybe slightly overkill), but all the
+> > stack addresses are certainly irrelevant and distracting.  We only
+> > need enough to recognize the problem.  I don't think the modules list
+> > is relevant either.
+> 
+> I'll take this into account. Is this blocker for this patch now?
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- drivers/pci/pci.c | 29 +++++++++++++++++++++++++----
- 1 file changed, 25 insertions(+), 4 deletions(-)
+If you repost this, you can fix it then.  If I end up taking it as-is,
+I'll fix it myself.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7274006..39a985b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -25,6 +25,7 @@
- #include <linux/device.h>
- #include <linux/pm_runtime.h>
- #include <linux/pci_hotplug.h>
-+#include <linux/acpi.h>
- #include <asm-generic/pci-bridge.h>
- #include <asm/setup.h>
- #include <linux/aer.h>
-@@ -4796,14 +4797,34 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- 	 * API and update the use_dt_domains value to keep track of method we
- 	 * are using to assign domain numbers (use_dt_domains = 0).
- 	 *
-+	 * IF ACPI, we expect non-DT method (use_dt_domains == -1)
-+	 * and call _SEG method for corresponding host bridge device.
-+	 * If _SEG method does not exist, following ACPI spec (6.5.6)
-+	 * all PCI buses belong to domain 0.
-+	 *
- 	 * All other combinations imply we have a platform that is trying
--	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
--	 * which is a recipe for domain mishandling and it is prevented by
--	 * invalidating the domain value (domain = -1) and printing a
--	 * corresponding error.
-+	 * to mix domain numbers obtained from DT, ACPI and
-+	 * pci_get_new_domain_nr(), which is a recipe for domain mishandling and
-+	 * it is prevented by invalidating the domain value (domain = -1) and
-+	 * printing a corresponding error.
- 	 */
-+
- 	if (domain >= 0 && use_dt_domains) {
- 		use_dt_domains = 1;
-+#ifdef CONFIG_ACPI
-+	} else if (!acpi_disabled && use_dt_domains == -1) {
-+		struct acpi_device *acpi_dev = to_acpi_device(parent);
-+		unsigned long long segment = 0;
-+		acpi_status status;
-+
-+		status = acpi_evaluate_integer(acpi_dev->handle,
-+					       METHOD_NAME__SEG, NULL,
-+					       &segment);
-+		if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
-+			dev_err(&acpi_dev->dev,  "can't evaluate _SEG\n");
-+
-+		domain = segment;
-+#endif
- 	} else if (domain < 0 && use_dt_domains != 1) {
- 		use_dt_domains = 0;
- 		domain = pci_get_new_domain_nr();
--- 
-1.9.1
+> >> This backtrace is triggered because dra7xx_pcie_msi_irq_handler()
+> >> forced to be threaded by default on -RT but, in the same time, it's
+> >> IRQ dispatcher and calls generic_handle_irq(), which leads to
+> >> handle_simple_irq() call. The handle_simple_irq() expected to be
+> >> called with IRQ disabled.
+> >>
+> >> The same issue will also happen if kernel will boot with "threadirqs"
+> >> cmdline parameter (CONFIG_IRQ_FORCED_THREADING).
+> >>
+> >> As discussed in [1], the current DRA7 PCIe hw configuration supports
+> >> 32 interrupts, which cannot change because it's hardwired in silicon,
+> >> this is a single status read and assuming that only a few (most of the
+> >> time it will be exactly ONE) of those interrupts are pending at the
+> >> same time is pretty much a sane assumption. And recommended fix for
+> >> this issue is to request dra7xx_pcie_msi IRQ with IRQF_NO_THREAD flag.
+> >>
+> >> [1] https://lkml.org/lkml/2015/11/3/660
+> >>
+> >> Cc: Thomas Gleixner <tglx@linutronix.de>
+> >> Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> >> Signed-off-by: Grygorii Strashko <grygorii.strashko@ti.com>
+> >> ---
+> >> Changes in v2:
+> >> - comment in code truncated
+> >> Link on v1:
+> >>   https://lkml.org/lkml/2015/11/5/593
+> >>   drivers/pci/host/pci-dra7xx.c | 13 ++++++++++++-
+> >>   1 file changed, 12 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> >> index 8c36880..0415192 100644
+> >> --- a/drivers/pci/host/pci-dra7xx.c
+> >> +++ b/drivers/pci/host/pci-dra7xx.c
+> >> @@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+> >>   		return -EINVAL;
+> >>   	}
+> >>   
+> >> +	/*
+> >> +	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
+> >> +	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
+> >> +	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
+> >> +	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
+> >> +	 * which, in turn, will be resolved to handle_simple_irq() call.
+> >> +	 * The handle_simple_irq() expected to be called with IRQ disabled, as
+> >> +	 * result kernle will display warning:
+> >> +	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
+> >> +	 */
+> >>   	ret = devm_request_irq(&pdev->dev, pp->irq,
+> >> -			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
+> >> +			       dra7xx_pcie_msi_irq_handler,
+> >> +			       IRQF_SHARED | IRQF_NO_THREAD,
+> >>   			       "dra7-pcie-msi",	pp);
+> > 
+> > There's similar code in exynos_add_pcie_port(), imx6_add_pcie_port(),
+> > and spear13xx_add_pcie_port().  Do they need similar changes?  If not,
+> > why not?
+> > 
+> > I see your discussion about DRA7 hardware design, but my impression is
+> > that this problem affects anybody who calls dw_handle_msi_irq() from a
+> > handler registered with IRQF_SHARED.
+> 
+> Issue fixed by this patch is not related to IRQF_SHARED. 
+> It will happen on -RT or if kernel will boot with "threadirqs" cmd line parameter
+> - in both cases these PCI IRQ handlers will be forced to be threaded and,
+> as result, generic_handle_irq() will produce above backtrace.
+> 
+> Personally, I don't have strong opinion about "should similar change be applied
+> to other PCI drivers or not?" And I think, that owners of those driver should
+> make such decision.
 
+If the same issue affects several drivers, I'd like to see them all
+handle it the same way.  Otherwise, somebody coming along later will
+wonder why they're different, and there won't be a good answer.
+
+I cc'd the other maintainers to see what they think.
+
+Bjorn
