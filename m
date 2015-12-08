@@ -1,133 +1,294 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 14 Dec 2015 15:10:42 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: Rajat Jain <rajatja@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] kobject: Ensure child's resources get released before
- parent's resources
-Message-ID: <20151214231042.GC24613@kroah.com>
-References: <1450119766-28102-1-git-send-email-rajatja@google.com>
- <20151214214022.GA24226@kroah.com>
- <CAA93t1roq4xmeqHjTSKsrO-8VKiRN0aK4_LU1p3pQLGicWy7fw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:42084 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751475AbbLHGDK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Dec 2015 01:03:10 -0500
+Date: Tue, 8 Dec 2015 13:58:43 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <kishon@ti.com>, <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<kgene@kernel.org>, <k.kozlowski@samsung.com>,
+	<Richard.Zhu@freescale.com>, <l.stach@pengutronix.de>,
+	<m-karicheri2@ti.com>, <minghuan.Lian@freescale.com>,
+	<mingkai.hu@freescale.com>, <tie-fei.zang@freescale.com>,
+	<pratyush.anand@gmail.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-samsung-soc@vger.kernel.org>,
+	<linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH] PCI: designware: bail out if host_init failed
+Message-ID: <20151208135843.78ad8f47@xhacker>
+In-Reply-To: <20151125200103.GF8869@localhost>
+References: <1447336125-5010-1-git-send-email-jszhang@marvell.com>
+	<20151125200103.GF8869@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAA93t1roq4xmeqHjTSKsrO-8VKiRN0aK4_LU1p3pQLGicWy7fw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 14, 2015 at 02:33:46PM -0800, Rajat Jain wrote:
-> On Mon, Dec 14, 2015 at 1:40 PM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Mon, Dec 14, 2015 at 11:02:46AM -0800, Rajat Jain wrote:
-> >> If the only remaining reference to a parent, is the one taken by
-> >> the child (in kobject_add_internal()), then when the last
-> >> reference to the child goes away, both child and its parents
-> >> shall be released. However, currently the resources of parent
-> >> get released first, followed by the child's resources:
-> >>
-> >> kobject_cleanup(child)
-> >>     ....
-> >>     kobject_del(child)
-> >>         ....
-> >>         kobject_put(child->parent) -> results in parent's release()
-> >>         ...
-> >>     child->kobj_type->release() -> Child's release()
-> >>
-> >> This is a problem because the child's release() method may still
-> >> need to use parent resources or memory for its own cleanup. E.g.
-> >> child may need parent pointer for dma_free_coherent() etc.
-> >>
-> >> Signed-off-by: Rajat Jain <rajatja@google.com>
-> >> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-> >
-> > Why are you listed twice here?
+Dear Bjorn,
+
+On Wed, 25 Nov 2015 14:01:03 -0600
+Bjorn Helgaas wrote:
+
+> Hi Jisheng,
 > 
-> Ah, sorry, I'll remove that.
+> On Thu, Nov 12, 2015 at 09:48:45PM +0800, Jisheng Zhang wrote:
+> > There's no reason to continue the initialization such as configure
+> > register, scan root bus etc. if customized host_init() failed. This
+> > patch tries to check the host_init result, bail out if failed.  
 > 
-> >
-> > Where in the kernel is the parent being freed before the child that is
-> > causing this issue to happen?  We should fix that root cause first...
+> This patch changes the (*host_init) return type and adds "return 0" to
+> the host_init() implementations of ten different drivers, all to
+> support a possible error in one driver.
 > 
-> Umm, are you saying that it is a bug to reach a scenario where all
-> references to a parent, except the ones made by the child, are gone?
+> Is there any way to detect and handle the error in
+> ls1021_pcie_host_init() earlier, maybe by doing the syscon_regmap
+> lookup in ls_pcie_probe() instead of in the host_init() function?
 > 
-> Sorry, I should have given more context here. Here is the scenario
-> where I came across this situation, and I'd appreciate any suggestions
-> on how to better deal with this situation:
+> That would be even better because you wouldn't have to touch any of
+> the other drivers, and you'd detect the error even earlier, before
+> we've done any of the designware setup.
+
+Sorry for being late. Got your point. The reason I made this patch is that:
+I want to clk gate the pcie host to save power if the customized host_init()
+report link training failure etc. For example: there's no pcie device in the
+slot at all. But today, I have a different idea: the PCIE support hotplug,
+so link training failure doesn't mean we should bail out, in fact we should
+continue the initialization as current code does. So I think Jingoo made the
+correct decision when implement the pcie designware interface. I want to drop
+this patch.
+
+Only one problem need your suggestions: how to save power when there's no device
+, I.E clk gate the host, shutdown the pcie phy etc.
+
+Any suggestions are appreciated!
+
+Thanks in advance,
+Jisheng
+
+
 > 
-> I have 2 modules (random names here):
+> Bjorn
 > 
-> user_interface.ko <--- pci_driver.ko
+> > Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+> > ---
+> >  drivers/pci/host/pci-dra7xx.c      |  4 +++-
+> >  drivers/pci/host/pci-exynos.c      |  4 +++-
+> >  drivers/pci/host/pci-imx6.c        |  4 +++-
+> >  drivers/pci/host/pci-keystone.c    |  4 +++-
+> >  drivers/pci/host/pci-layerscape.c  | 25 ++++++++++++++++---------
+> >  drivers/pci/host/pcie-designware.c |  7 +++++--
+> >  drivers/pci/host/pcie-designware.h |  2 +-
+> >  drivers/pci/host/pcie-spear13xx.c  |  4 +++-
+> >  8 files changed, 37 insertions(+), 17 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> > index 8c36880..b3160a1 100644
+> > --- a/drivers/pci/host/pci-dra7xx.c
+> > +++ b/drivers/pci/host/pci-dra7xx.c
+> > @@ -149,7 +149,7 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
+> >  				   LEG_EP_INTERRUPTS);
+> >  }
+> >  
+> > -static void dra7xx_pcie_host_init(struct pcie_port *pp)
+> > +static int dra7xx_pcie_host_init(struct pcie_port *pp)
+> >  {
+> >  	dw_pcie_setup_rc(pp);
+> >  
+> > @@ -162,6 +162,8 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+> >  	if (IS_ENABLED(CONFIG_PCI_MSI))
+> >  		dw_pcie_msi_init(pp);
+> >  	dra7xx_pcie_enable_interrupts(pp);
+> > +
+> > +	return 0;
+> >  }
+> >  
+> >  static struct pcie_host_ops dra7xx_pcie_host_ops = {
+> > diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> > index 01095e1..57f370b 100644
+> > --- a/drivers/pci/host/pci-exynos.c
+> > +++ b/drivers/pci/host/pci-exynos.c
+> > @@ -481,10 +481,12 @@ static int exynos_pcie_link_up(struct pcie_port *pp)
+> >  	return 0;
+> >  }
+> >  
+> > -static void exynos_pcie_host_init(struct pcie_port *pp)
+> > +static int exynos_pcie_host_init(struct pcie_port *pp)
+> >  {
+> >  	exynos_pcie_establish_link(pp);
+> >  	exynos_pcie_enable_interrupts(pp);
+> > +
+> > +	return 0;
+> >  }
+> >  
+> >  static struct pcie_host_ops exynos_pcie_host_ops = {
+> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> > index 22e8224..9a46680 100644
+> > --- a/drivers/pci/host/pci-imx6.c
+> > +++ b/drivers/pci/host/pci-imx6.c
+> > @@ -425,7 +425,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+> >  	return 0;
+> >  }
+> >  
+> > -static void imx6_pcie_host_init(struct pcie_port *pp)
+> > +static int imx6_pcie_host_init(struct pcie_port *pp)
+> >  {
+> >  	imx6_pcie_assert_core_reset(pp);
+> >  
+> > @@ -439,6 +439,8 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+> >  
+> >  	if (IS_ENABLED(CONFIG_PCI_MSI))
+> >  		dw_pcie_msi_init(pp);
+> > +
+> > +	return 0;
+> >  }
+> >  
+> >  static void imx6_pcie_reset_phy(struct pcie_port *pp)
+> > diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> > index 0aa81bd..2604571 100644
+> > --- a/drivers/pci/host/pci-keystone.c
+> > +++ b/drivers/pci/host/pci-keystone.c
+> > @@ -250,7 +250,7 @@ static int keystone_pcie_fault(unsigned long addr, unsigned int fsr,
+> >  	return 0;
+> >  }
+> >  
+> > -static void __init ks_pcie_host_init(struct pcie_port *pp)
+> > +static int __init ks_pcie_host_init(struct pcie_port *pp)
+> >  {
+> >  	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
+> >  	u32 val;
+> > @@ -277,6 +277,8 @@ static void __init ks_pcie_host_init(struct pcie_port *pp)
+> >  	 */
+> >  	hook_fault_code(17, keystone_pcie_fault, SIGBUS, 0,
+> >  			"Asynchronous external abort");
+> > +
+> > +	return 0;
+> >  }
+> >  
+> >  static struct pcie_host_ops keystone_pcie_host_ops = {
+> > diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+> > index 3923bed..a6e9070 100644
+> > --- a/drivers/pci/host/pci-layerscape.c
+> > +++ b/drivers/pci/host/pci-layerscape.c
+> > @@ -94,8 +94,9 @@ static int ls1021_pcie_link_up(struct pcie_port *pp)
+> >  	return 1;
+> >  }
+> >  
+> > -static void ls1021_pcie_host_init(struct pcie_port *pp)
+> > +static int ls1021_pcie_host_init(struct pcie_port *pp)
+> >  {
+> > +	int ret;
+> >  	struct ls_pcie *pcie = to_ls_pcie(pp);
+> >  	u32 val, index[2];
+> >  
+> > @@ -103,15 +104,14 @@ static void ls1021_pcie_host_init(struct pcie_port *pp)
+> >  						     "fsl,pcie-scfg");
+> >  	if (IS_ERR(pcie->scfg)) {
+> >  		dev_err(pp->dev, "No syscfg phandle specified\n");
+> > -		pcie->scfg = NULL;
+> > -		return;
+> > +		ret = PTR_ERR(pcie->scfg);
+> > +		goto err;
+> >  	}
+> >  
+> > -	if (of_property_read_u32_array(pp->dev->of_node,
+> > -				       "fsl,pcie-scfg", index, 2)) {
+> > -		pcie->scfg = NULL;
+> > -		return;
+> > -	}
+> > +	ret = of_property_read_u32_array(pp->dev->of_node,
+> > +					 "fsl,pcie-scfg", index, 2);
+> > +	if (ret)
+> > +		goto err;
+> >  	pcie->index = index[1];
+> >  
+> >  	dw_pcie_setup_rc(pp);
+> > @@ -123,6 +123,11 @@ static void ls1021_pcie_host_init(struct pcie_port *pp)
+> >  	val = ioread32(pcie->dbi + PCIE_STRFMR1);
+> >  	val &= 0xffff;
+> >  	iowrite32(val, pcie->dbi + PCIE_STRFMR1);
+> > +
+> > +	return 0;
+> > +err:
+> > +	pcie->scfg = NULL;
+> > +	return ret;
+> >  }
+> >  
+> >  static int ls_pcie_link_up(struct pcie_port *pp)
+> > @@ -140,7 +145,7 @@ static int ls_pcie_link_up(struct pcie_port *pp)
+> >  	return 1;
+> >  }
+> >  
+> > -static void ls_pcie_host_init(struct pcie_port *pp)
+> > +static int ls_pcie_host_init(struct pcie_port *pp)
+> >  {
+> >  	struct ls_pcie *pcie = to_ls_pcie(pp);
+> >  
+> > @@ -148,6 +153,8 @@ static void ls_pcie_host_init(struct pcie_port *pp)
+> >  	ls_pcie_fix_class(pcie);
+> >  	ls_pcie_clear_multifunction(pcie);
+> >  	iowrite32(0, pcie->dbi + PCIE_DBI_RO_WR_EN);
+> > +
+> > +	return 0;
+> >  }
+> >  
+> >  static int ls_pcie_msi_host_init(struct pcie_port *pp,
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index 540f077..a80a9ba 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -515,8 +515,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> >  		}
+> >  	}
+> >  
+> > -	if (pp->ops->host_init)
+> > -		pp->ops->host_init(pp);
+> > +	if (pp->ops->host_init) {
+> > +		ret = pp->ops->host_init(pp);
+> > +		if (ret)
+> > +			return ret;
+> > +	}
+> >  
+> >  	if (!pp->ops->rd_other_conf)
+> >  		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+> > diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> > index 2356d29..7b5317f 100644
+> > --- a/drivers/pci/host/pcie-designware.h
+> > +++ b/drivers/pci/host/pcie-designware.h
+> > @@ -63,7 +63,7 @@ struct pcie_host_ops {
+> >  	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
+> >  			unsigned int devfn, int where, int size, u32 val);
+> >  	int (*link_up)(struct pcie_port *pp);
+> > -	void (*host_init)(struct pcie_port *pp);
+> > +	int (*host_init)(struct pcie_port *pp);
+> >  	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+> >  	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+> >  	phys_addr_t (*get_msi_addr)(struct pcie_port *pp);
+> > diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+> > index b95b756..50b3b31 100644
+> > --- a/drivers/pci/host/pcie-spear13xx.c
+> > +++ b/drivers/pci/host/pcie-spear13xx.c
+> > @@ -256,10 +256,12 @@ static int spear13xx_pcie_link_up(struct pcie_port *pp)
+> >  	return 0;
+> >  }
+> >  
+> > -static void spear13xx_pcie_host_init(struct pcie_port *pp)
+> > +static int spear13xx_pcie_host_init(struct pcie_port *pp)
+> >  {
+> >  	spear13xx_pcie_establish_link(pp);
+> >  	spear13xx_pcie_enable_interrupts(pp);
+> > +
+> > +	return 0;
+> >  }
+> >  
+> >  static struct pcie_host_ops spear13xx_pcie_host_ops = {
+> > -- 
+> > 2.6.2
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Please read the FAQ at  http://www.tux.org/lkml/  
 
-Don't use random names, use real ones of existing drivers so we can see
-what is happening here.
-
-> 1) user_interface.ko
->      - exports some interfaces (char driver etc) to the userspace,
-
-The specific type of interface is key here.
-
->      - allows low-level device drivers to register devices via some
-> API (user_interface_add() / user_interface_del())
-
-It better do so in a way that prevents itself from being unloaded...
-
->      - Userspace can issue some transactions. Each transaction results
-> in a child kobject being attached to the device's kobject.
-
-What?
-
-What "child kobject"?  What "transaction" is being attached?  That's not
-what kobjects are for.
-
-Please post the code you are doing this with please.
-
->      - Low level drivers also provide a release() function that can
-> get called AFTER user_interface_del() if there are transactions
-> in-flight.
-
-Then that's a stupid interface, fix it!  :)
-
->      - Low level drivers should allow operation of the device until
-> release() gets called.
-
-Nope, again, broken interface, fix it.
-
-> 2) Low level drivers such as pci_driver.ko:
->     - attach to the actual physical devices (PCI device in this case)
->     - create a custom device (that has an embedded "struct device")
-> and register this new custom device with the user_interface.ko.
-
-That's odd, and not normal, you shouldn't be passing your device off to
-anything else.  Where in the code does it do this?
-
->     - also attaches a release() function to the device. This release()
-> would get called when all references to the device are dropped.
-
-That release better be somewhere that is properly reference counted...
-
->     - The entities holding the reference to the device are:
->           * 1 reference by the pci_driver.ko itself (when it did
-> device_initialize())
->           * 1 reference by the user_interface.ko (During user_interface_add())
-
-Ick, no, broken interface.
-
->           * 1 reference for each transaction in-flight (a child
-> kobject under the device)
-
-Again, ick, no, broken interface, fix your code.  That's not how you
-should design things.
-
-> 3) Now, we want to allow removing (rmmod) the low level driver pci_driver.ko.
-
-No you do not, don't do that.  End of story :)
-
-Please post your example code, it's really designed poorly, we can fix
-that up.
-
-thanks,
-
-greg k-h
