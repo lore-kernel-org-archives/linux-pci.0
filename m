@@ -1,65 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sauhun.de ([89.238.76.85]:59745 "EHLO pokefinder.org"
+Received: from mail.kernel.org ([198.145.29.136]:59776 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932132AbbLROE0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Dec 2015 09:04:26 -0500
-Date: Fri, 18 Dec 2015 15:04:12 +0100
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>
-Subject: Re: [PATCH 2/4] PCI: rcar: Support runtime PM link state L1 handling
- in pcie-rcar
-Message-ID: <20151218140412.GA4595@katana>
-References: <1450358557-28376-1-git-send-email-phil.edworthy@renesas.com>
- <1450358557-28376-3-git-send-email-phil.edworthy@renesas.com>
- <20151217133058.GA20372@katana>
- <PS1PR06MB1180304088ECF5384C497E40F5E10@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	id S1755512AbbLHAqn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Dec 2015 19:46:43 -0500
+Date: Mon, 7 Dec 2015 18:46:31 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Simon Horman <simon.horman@netronome.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH repost 0/3] Support Netronome NFP6000 family quirks
+Message-ID: <20151208004631.GF14429@localhost>
+References: <1443594907-16196-1-git-send-email-simon.horman@netronome.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sm4nu43k4a2Rpi4c"
-In-Reply-To: <PS1PR06MB1180304088ECF5384C497E40F5E10@PS1PR06MB1180.apcprd06.prod.outlook.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443594907-16196-1-git-send-email-simon.horman@netronome.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Sep 30, 2015 at 03:35:04PM +0900, Simon Horman wrote:
+> Hi,
+> 
+> this short patch-set adds support for Netronome NFP6000 family quirks.
+> 
+> Base:
+> 
+> This patchset is based on the next branch of Bjorn Helgaas's PCI tree.
+> 
+> About NFP6000 Drivers (someone is bound to ask):
+> 
+> My understanding is that Netronome is actively working on preparing to
+> submit NFP6000 family drivers to mainline.  For now they can be found on
+> github at https://github.com/Netronome/nfp-drv-kmods
+> 
+> Jason S. McMullan (3):
+>   PCI: Support PCIe devices with short cfg_size
+>   PCI: Add Netronome vendor and device IDs
+>   PCI: Support Netronome NFP6000 family quirks
+> 
+>  drivers/pci/pci-sysfs.c | 18 +++++++++---------
+>  drivers/pci/quirks.c    | 11 +++++++++++
+>  include/linux/pci_ids.h |  6 ++++++
+>  3 files changed, 26 insertions(+), 9 deletions(-)
 
---sm4nu43k4a2Rpi4c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Applied to pci/misc for v4.5, thanks!
 
-
-> Since the hardware doesn't support hot plug, I believe this loop will
-> always exit very quickly. Unless someone has taken a hammer to the HW
-> of course.
-
-I know what you mean. But since readl_poll_timeout() makes it easy, we
-should better be safe than sorry.
-
-
---sm4nu43k4a2Rpi4c
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJWdBJcAAoJEBQN5MwUoCm2P98P/itXIA4IUCuSnXGY2nNkaTjG
-BypZWShL5PNzfO/jtGfFWeSDPDfJ6U20H260PBEUZYEbzpjNZZtmGwlGvHrd5Ffg
-gqHJpVXM3ItMHiWBXGaTCCOAon+1xtC/0GbhhYoo8KLNvoJDHT+I9R5+dd41aM7B
-gimySGQovxXlmReIALpZP6F6MXaMBh9H9RwGRJ631FVxCnT4bCr+GydXCuRy0CIn
-pGIyOeWf5OIlbRrXrp6dethnxTfmGhkFuSfL1pcYdyEGJCEoOgtiKyvG9QSCzCuW
-t5ND5nXtY4TI2nRhHgjBAxOSH+G3+qxm1MFrYo/whDobQ/46QFItpFvAO27dAWYU
-+JnDeKe4OtatcdWIy8EwuwvDaRG8wycVegq0oWhbMiLQz0xpz1+1VRB8XdqVFNZh
-KTO7E1sKMYru3ufwzq951UT3uDpIoRwtRq0WWbZsL1JVJ5SYyQLzqLCn3mcAfuTL
-5/TmicI5+iVm0gjMr5xF5/3WfP6O1J2K+sNe7gvbO/oEazduBz7vKDONN9Eizyvc
-pCeD++OsDvo9neWADs7Z8yZ50QOx7q/VYqxrthTd23Ke4ZGBdQRwKTl13ycyoiRy
-2ex4MkqJhSMedGizgQCVcxUbIn/RLvlnj0McqQl/NAuFPTRYnAm2QLk5/YGAlTmI
-gTa9zMiHqrE+WgVWCa61
-=A05p
------END PGP SIGNATURE-----
-
---sm4nu43k4a2Rpi4c--
+Bjorn
