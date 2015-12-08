@@ -1,181 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56432 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:49755 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752253AbbLJWhy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Dec 2015 17:37:54 -0500
-Date: Thu, 10 Dec 2015 16:37:42 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org, izumi.taku@jp.fujitsu.com, jcm@redhat.com,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI/AER: enable SERR# forwarding for bridges and
- switches
-Message-ID: <20151210223742.GC367@localhost>
-References: <1449074998-9664-1-git-send-email-okaya@codeaurora.org>
- <20151204210622.GI20125@localhost>
- <5669E073.4000801@codeaurora.org>
+	id S1752019AbbLHOuL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Dec 2015 09:50:11 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 21DBC20515
+	for <linux-pci@vger.kernel.org>; Tue,  8 Dec 2015 14:50:10 +0000 (UTC)
+Received: from localhost (173-27-161-33.client.mchsi.com [173.27.161.33])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by mail.kernel.org (Postfix) with ESMTPSA id 1F3CD204EB
+	for <linux-pci@vger.kernel.org>; Tue,  8 Dec 2015 14:50:09 +0000 (UTC)
+Subject: [PATCH] PCI: Simplify config space size computation
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 08 Dec 2015 08:50:07 -0600
+Message-ID: <20151208145007.32114.75564.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5669E073.4000801@codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 10, 2015 at 03:28:35PM -0500, Sinan Kaya wrote:
-> Hi Bjorn,
-> 
-> On 12/4/2015 4:06 PM, Bjorn Helgaas wrote:
-> > I'm sitting on this for the moment because if you have _HPP, it seems
-> > like that should be enough to get SERR# forwarding turned on, and if
-> > it's not, I'd like to understand why.  So no hurry, but I'm waiting on
-> > your investigation.
-> > 
-> > Bjorn
-> 
-> Here is the overall summary after my investigation.
-> 
-> It looks like the kernel covers the hotplug use case. This patch is
-> needed for systems without hotplug support and when the firmware is not
-> setting up the SERR.
+Restructure the logic so we return the config space size as soon as we know
+it.  This reduces indentation, removes negations, and removes gotos.
 
-Here's how I understand your results:
+No functional change.
 
-  Firmware   _HPP or     Devices      Hot-added    Hot-added
-  enables    _HPX sets   present at   root ports   endpoints
-  SERR#      SERR#       boot work    work         work
-  --------   ---------   ----------   ----------   ---------
-  no         no          no (1)       no (2)       no (4)
-  no         yes         yes          yes          yes
-  yes        no          yes          no (3)       no (5)
-  yes        yes         yes          yes          yes
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |   25 ++++++++++---------------
+ 1 file changed, 10 insertions(+), 15 deletions(-)
 
-Your patch fixes cases 1-3 above, but I don't think it fixes cases 4
-or 5.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index edb1984..0d86c82 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1107,14 +1107,11 @@ static int pci_cfg_space_size_ext(struct pci_dev *dev)
+ 	int pos = PCI_CFG_SPACE_SIZE;
+ 
+ 	if (pci_read_config_dword(dev, pos, &status) != PCIBIOS_SUCCESSFUL)
+-		goto fail;
++		return PCI_CFG_SPACE_SIZE;
+ 	if (status == 0xffffffff || pci_ext_cfg_is_aliased(dev))
+-		goto fail;
++		return PCI_CFG_SPACE_SIZE;
+ 
+ 	return PCI_CFG_SPACE_EXP_SIZE;
+-
+- fail:
+-	return PCI_CFG_SPACE_SIZE;
+ }
+ 
+ int pci_cfg_space_size(struct pci_dev *dev)
+@@ -1127,19 +1124,17 @@ int pci_cfg_space_size(struct pci_dev *dev)
+ 	if (class == PCI_CLASS_BRIDGE_HOST)
+ 		return pci_cfg_space_size_ext(dev);
+ 
+-	if (!pci_is_pcie(dev)) {
+-		pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
+-		if (!pos)
+-			goto fail;
++	if (pci_is_pcie(dev))
++		return pci_cfg_space_size_ext(dev);
+ 
+-		pci_read_config_dword(dev, pos + PCI_X_STATUS, &status);
+-		if (!(status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ)))
+-			goto fail;
+-	}
++	pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
++	if (!pos)
++		return PCI_CFG_SPACE_SIZE;
+ 
+-	return pci_cfg_space_size_ext(dev);
++	pci_read_config_dword(dev, pos + PCI_X_STATUS, &status);
++	if (status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ))
++		return pci_cfg_space_size_ext(dev);
+ 
+- fail:
+ 	return PCI_CFG_SPACE_SIZE;
+ }
+ 
 
-The difference is that in cases 2 and 3, when we hot-add a root port,
-the AER driver binds to the root port and (with your patch) enables
-SERR for anything below it.
-
-But in cases 4 and 5, the root port is already there, the AER driver
-has already bound to it.  The AER driver tried to enable SERR for the
-hierarchy below the root port, but there was nothing there.  Now we
-add the endpoint, and the AER driver isn't involved, so I don't think
-anything will enable SERR for the new endpoint.
-
-I think the best way to fix all the cases would be to do something in
-in pci_configure_device().  Then we could drop the AER bus walk in
-set_downstream_devices_error_reporting().  A bus walk like that is
-always an issue for hotplug.
-
-In principle, we should be able to just enable PCI_COMMAND_SERR and
-PCI_BRIDGE_CTL_SERR for everything, and then errors would get
-forwarded to the root port, and if/when the AER driver claimed the
-root port, it would start collecting them.
-
-But I'm a little leery of doing it unconditionally because there are a
-lot of platform- and driver-specific uses of those bits, and I'm
-afraid of breaking something.  It might be possible, but it'll take
-some care to do it safely.
-
-> after boot
-> 
-> /# dmesg | grep hpp
-> 
-> [    3.115227] pci 0004:01:00.0: program_hpp_type0:1376
-> [    3.128870] pci 0004:01:00.0: program_hpp_type0:1378 pci_cmd |=
-> PCI_COMMAND_SERR
-> [    3.149597] pci 0004:01:00.0: program_hpp_type0:1391 pci_bctl |=
-> PCI_BRIDGE_CTL_SERR
-> [    3.191601] pci 0004:02:08.0: program_hpp_type0:1376
-> [    3.191611] pci 0004:02:08.0: program_hpp_type0:1378 pci_cmd |=
-> PCI_COMMAND_SERR
-> [    3.206630] pci 0004:02:08.0: program_hpp_type0:1391 pci_bctl |=
-> PCI_BRIDGE_CTL_SERR
-> [    3.253760] pci 0004:03:00.0: program_hpp_type0:1376
-> [    3.267335] pci 0004:03:00.0: program_hpp_type0:1378 pci_cmd |=
-> PCI_COMMAND_SERR
-> [    3.288046] pci 0004:03:00.0: program_hpp_type0:1391 pci_bctl |=
-> PCI_BRIDGE_CTL_SERR
-> [    3.355296] pci 0004:04:00.0: program_hpp_type0:1376
-> [    3.355306] pci 0004:04:00.0: program_hpp_type0:1378 pci_cmd |=
-> PCI_COMMAND_SERR
-> [    3.370334] pci 0004:04:00.0: program_hpp_type0:1391 pci_bctl |=
-> PCI_BRIDGE_CTL_SERR
-> 
-> / # lspci
-> 00:00.0 Class 0604: 17cb:0400
-> 01:00.0 Class 0604: 10b5:8732
-> 02:08.0 Class 0604: 10b5:8732
-> 03:00.0 Class 0604: 10b5:8732
-> 04:00.0 Class 0604: 10b5:8732
-> / #
-> 
-> 
-> Without hpp in ACPI table, SERR is not enabled.
-> 
-> /# dmesg | grep type0
-> /#
-> 
-> Power up with HPP after boot.
-> 
-> [    3.129325]_pci_0004:01:00.0:_program_hpp_type0:1376
-> [    3.143286] pci 0004:01:00.0: program_hpp_type0:1378 pci_cmd |=
-> PCI_COMMAND_SERR
-> [    3.164016] pci 0004:01:00.0: program_hpp_type0:1391 pci_bctl |=
-> PCI_BRIDGE_CTL_SERR
-> [    3.206019] pci 0004:02:08.0: program_hpp_type0:1376
-> [    3.206028] pci 0004:02:08.0: program_hpp_type0:1378 pci_cmd |=
-> PCI_COMMAND_SERR
-> [    3.220609] pci 0004:02:08.0: program_hpp_type0:1391 pci_bctl |=
-> PCI_BRIDGE_CTL_SERR
-> [    3.267783] pci 0004:03:00.0: program_hpp_type0:1376
-> [    3.281420] pci 0004:03:00.0: program_hpp_type0:1378 pci_cmd |=
-> PCI_COMMAND_SERR
-> [    3.302197] pci 0004:03:00.0: program_hpp_type0:1391 pci_bctl |=
-> PCI_BRIDGE_CTL_SERR
-> [    3.369684] pci 0004:04:00.0: program_hpp_type0:1376
-> [    3.369694] pci 0004:04:00.0: program_hpp_type0:1378 pci_cmd |=
-> PCI_COMMAND_SERR
-> [    3.384080] pci 0004:04:00.0: program_hpp_type0:1391 pci_bctl |=
-> PCI_BRIDGE_CTL_SERR
-> 
-> hotplug eject
-> 
-> hotplug insert
-> 
-> [   98.338131] pci 0004:01:00.0: program_hpp_type0:1376
-> [   98.351813] pci 0004:01:00.0: program_hpp_type0:1378 pci_cmd |=
-> PCI_COMMAND_SERR
-> [   98.373147] pci 0004:01:00.0: program_hpp_type0:1391 pci_bctl |=
-> PCI_BRIDGE_CTL_SERR
-> [   98.452051] pci 0004:02:08.0: program_hpp_type0:1376
-> [   98.465772] pci 0004:02:08.0: program_hpp_type0:1378 pci_cmd |=
-> PCI_COMMAND_SERR
-> [   98.487142] pci 0004:02:08.0: program_hpp_type0:1391 pci_bctl |=
-> PCI_BRIDGE_CTL_SERR
-> [   98.597579] pci 0004:03:00.0: program_hpp_type0:1376
-> [   98.611290] pci 0004:03:00.0: program_hpp_type0:1378 pci_cmd |=
-> PCI_COMMAND_SERR
-> [   98.632181] pci 0004:03:00.0: program_hpp_type0:1391 pci_bctl |=
-> PCI_BRIDGE_CTL_SERR
-> [   98.736153] pci 0004:04:00.0: program_hpp_type0:1376
-> [   98.750437] pci 0004:04:00.0: program_hpp_type0:1378 pci_cmd |=
-> PCI_COMMAND_SERR
-> [   98.771202] pci 0004:04:00.0: program_hpp_type0:1391 pci_bctl |=
-> PCI_BRIDGE_CTL_SERR
-> / #
-> 
-> 
-> 
-> -- 
-> Sinan Kaya
-> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
-> Linux Foundation Collaborative Project
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
