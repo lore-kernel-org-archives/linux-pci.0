@@ -1,113 +1,50 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Hannes Reinecke <hare@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	Michal Kubecek <mkubecek@suse.com>,
-	"Shane M. Seymour" <shane.seymour@hpe.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Hannes Reinecke <hare@suse.de>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH 2/2] pci: Update VPD size with correct length
-Date: Thu, 17 Dec 2015 08:59:29 +0100
-Message-Id: <1450339169-52542-3-git-send-email-hare@suse.de>
-In-Reply-To: <1450339169-52542-1-git-send-email-hare@suse.de>
-References: <1450339169-52542-1-git-send-email-hare@suse.de>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v9 6/7] drivers:hv: Define the channel type of Hyper-V PCI Express pass-through
+Date: Wed,  9 Dec 2015 22:54:56 +0000
+Message-Id: <1449701697-6366-7-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
+References: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI-2.2 VPD entries have a maximum size of 32k, but might actually
-be smaller than that. To figure out the actual size one has to read
-the VPD area until the 'end marker' is reached.
-Trying to read VPD data beyond that marker results in 'interesting'
-effects, from simple read errors to crashing the card. And to make
-matters worse not every PCI card implements this properly, leaving
-us with no 'end' marker or even completely invalid data.
-This path modifies the size of the VPD attribute to the available
-size, and disables the VPD attribute altogether if no valid data
-could be read.
+From: Jake Oshins <jakeo@microsoft.com>
 
-Cc: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+This defines the channel type for PCI front-ends in Hyper-V VMs.
+
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- drivers/pci/access.c | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 57 insertions(+)
+ include/linux/hyperv.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 59ac36f..0a647b1 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -475,6 +475,56 @@ static const struct pci_vpd_ops pci_vpd_f0_ops = {
- 	.release = pci_vpd_pci22_release,
- };
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index 24d0b65..c9a9eed 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -1141,6 +1141,17 @@ u64 hv_do_hypercall(u64 control, void *input, void *output);
+ 		}
  
-+/**
-+ * pci_vpd_size - determine actual size of Vital Product Data
-+ * @dev:	pci device struct
-+ * @old_size:	current assumed size, also maximum allowed size
-+ *
+ /*
++ * PCI Express Pass Through
++ * {44C4F61D-4444-4400-9D52-802E27EDE19F}
 + */
-+static size_t
-+pci_vpd_pci22_size(struct pci_dev *dev)
-+{
-+	size_t off = 0;
-+	unsigned char header[1+2];	/* 1 byte tag, 2 bytes length */
 +
-+	while (off < PCI_VPD_PCI22_SIZE &&
-+	       pci_read_vpd(dev, off, 1, header) == 1) {
-+		unsigned char tag;
-+
-+		if (header[0] & PCI_VPD_LRDT) {
-+			/* Large Resource Data Type Tag */
-+			tag = pci_vpd_lrdt_tag(header);
-+			/* Only read length from known tag items */
-+			if ((tag == PCI_VPD_LTIN_ID_STRING) ||
-+			    (tag == PCI_VPD_LTIN_RO_DATA) ||
-+			    (tag == PCI_VPD_LTIN_RW_DATA)) {
-+				if (pci_read_vpd(dev, off+1, 2,
-+						 &header[1]) != 2)
-+					return off + 1;
-+				off += PCI_VPD_LRDT_TAG_SIZE +
-+					pci_vpd_lrdt_size(header);
-+			}
-+		} else {
-+			/* Short Resource Data Type Tag */
-+			off += PCI_VPD_SRDT_TAG_SIZE +
-+				pci_vpd_srdt_size(header);
-+			tag = pci_vpd_srdt_tag(header);
++#define HV_PCIE_GUID \
++	.guid = { \
++			0x1D, 0xF6, 0xC4, 0x44, 0x44, 0x44, 0x00, 0x44, \
++			0x9D, 0x52, 0x80, 0x2E, 0x27, 0xED, 0xE1, 0x9F \
 +		}
-+		if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
-+			return off;
-+		if ((tag != PCI_VPD_LTIN_ID_STRING) &&
-+		    (tag != PCI_VPD_LTIN_RO_DATA) &&
-+		    (tag != PCI_VPD_LTIN_RW_DATA)) {
-+			dev_dbg(&dev->dev,
-+				"invalid %s vpd tag %02x at offset %zu.",
-+				(header[0] & PCI_VPD_LRDT) ? "large" : "short",
-+				tag, off);
-+			break;
-+		}
-+	}
-+	return 0;
-+}
 +
- int pci_vpd_pci22_init(struct pci_dev *dev)
- {
- 	struct pci_vpd_pci22 *vpd;
-@@ -497,6 +547,13 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 	vpd->cap = cap;
- 	vpd->busy = false;
- 	dev->vpd = &vpd->base;
-+	vpd->base.len = pci_vpd_pci22_size(dev);
-+	if (vpd->base.len == 0) {
-+		dev_dbg(&dev->dev, "Disabling VPD access.");
-+		dev->vpd = NULL;
-+		kfree(vpd);
-+		return -ENXIO;
-+	}
- 	return 0;
- }
++/*
+  * Common header for Hyper-V ICs
+  */
  
 -- 
-1.8.5.6
+1.9.1
 
