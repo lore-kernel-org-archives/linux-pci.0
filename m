@@ -1,147 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:27912 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753077AbbLXLex (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Dec 2015 06:34:53 -0500
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH v4 2/5] PCI: Handle ACPI companion and domain number
-Date: Thu, 24 Dec 2015 17:27:29 +0530
-Message-ID: <1450958252-29892-3-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1450958252-29892-1-git-send-email-jchandra@broadcom.com>
-References: <1450958252-29892-1-git-send-email-jchandra@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:41658 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753935AbbLIWz0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Dec 2015 17:55:26 -0500
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v9 5/7] PCI: irqdomain: Look up IRQ domain by fwnode_handle
+Date: Wed,  9 Dec 2015 22:54:55 +0000
+Message-Id: <1449701697-6366-6-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
+References: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_create_root_bus is called with NULL as parent in ACPI. This
-ends up calling pci_bus_assign_domain_nr with a NULL parent, which
-crashes when dereferencing parent.
+From: Jake Oshins <jakeo@microsoft.com>
 
-Fix this by providing away to set the ACPI domain number, we define
-acpi_pci_sysdata_to_root_info() to get the acpi root info from
-sysdata. This is a simple cast the generic ACPI PCI implementation.
+This patch adds a second way of finding an IRQ domain associated with
+a root PCI bus.  After looking to see if one can be found through
+the OF tree, it attempts to look up the IRQ domain through an
+fwnode_handle stored in the pci_sysdata struct.
 
-Similarly, setting up the ACPI companion in case of generic ACPI PCI
-implementation is staright forward.
-
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- drivers/pci/pci.c        | 19 ++++++++++++++++++-
- drivers/pci/probe.c      |  2 ++
- include/linux/pci-acpi.h | 28 +++++++++++++++++++++++++++-
- 3 files changed, 47 insertions(+), 2 deletions(-)
+ drivers/pci/probe.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 314db8c..f578af4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -20,6 +20,7 @@
- #include <linux/string.h>
- #include <linux/log2.h>
- #include <linux/pci-aspm.h>
-+#include <linux/pci-acpi.h>
- #include <linux/pm_wakeup.h>
- #include <linux/interrupt.h>
- #include <linux/device.h>
-@@ -4772,9 +4773,25 @@ int pci_get_new_domain_nr(void)
- void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- {
- 	static int use_dt_domains = -1;
--	int domain = of_get_pci_domain_nr(parent->of_node);
-+	int domain;
- 
- 	/*
-+	 * Handle ACPI early
-+	 *
-+	 * the companion is not set at this point, and ACPI sets parent to
-+	 * NULL, we have to try to get the segment from acpi root info.
-+	 */
-+	if (!parent || !parent->of_node) {
-+		struct acpi_pci_root_info *ci;
-+
-+		ci = acpi_pci_sysdata_to_root_info(bus->sysdata);
-+		if (ci)
-+			bus->domain_nr = ci->root->segment;
-+		return;
-+	}
-+
-+	domain = of_get_pci_domain_nr(parent->of_node);
-+	/*
- 	 * Check DT domain and use_dt_domains values.
- 	 *
- 	 * If DT domain property is valid (domain >= 0) and
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index edb1984..5af66496 100644
+index 750f907..c6369dd 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -13,6 +13,7 @@
- #include <linux/module.h>
- #include <linux/cpumask.h>
- #include <linux/pci-aspm.h>
-+#include <linux/pci-acpi.h>
- #include <linux/aer.h>
- #include <linux/acpi.h>
- #include <asm-generic/pci-bridge.h>
-@@ -2105,6 +2106,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	bridge->dev.parent = parent;
- 	bridge->dev.release = pci_release_host_bridge_dev;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-+	pci_acpi_set_companion(bridge);
- 	error = pcibios_root_bridge_prepare(bridge);
- 	if (error) {
- 		kfree(bridge);
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index e9450ef..79448ce 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -138,12 +138,38 @@ extern struct list_head pci_mmcfg_list;
+@@ -674,6 +674,20 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
+ 	 */
+ 	d = pci_host_bridge_of_msi_domain(bus);
  
- #define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
- #define PCI_MMCFG_OFFSET(bus, devfn)   ((bus) << 20 | (devfn) << 12)
--
- #else	/* CONFIG_ACPI */
- static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
- static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
- #endif	/* CONFIG_ACPI */
- 
-+#if defined(CONFIG_ACPI) && defined(CONFIG_ACPI_PCI_HOST_GENERIC)
-+static inline struct acpi_pci_root_info *acpi_pci_sysdata_to_root_info(void *sd)
-+{
-+	return (struct acpi_pci_root_info *)sd;
-+}
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	/*
++	 * If no IRQ domain was found via the OF tree, try looking it up
++	 * directly through the fwnode_handle.
++	 */
++	if (!d) {
++		struct fwnode_handle *fwnode = pci_root_bus_fwnode(bus);
 +
-+static inline void pci_acpi_set_companion(struct pci_host_bridge *bridge)
-+{
-+	struct pci_bus *b = bridge->bus;
-+	struct acpi_pci_root_info *ci;
-+
-+	ci = acpi_pci_sysdata_to_root_info(b->sysdata);
-+	if (ci)
-+		ACPI_COMPANION_SET(&bridge->dev, ci->bridge);
-+}
-+#else
-+static inline struct acpi_pci_root_info *acpi_pci_sysdata_to_root_info(void *sd)
-+{
-+	return NULL;
-+}
-+
-+static inline void pci_acpi_set_companion(struct pci_host_bridge *bridge)
-+{
-+	/* leave it to the platform for now */
-+}
++		if (fwnode)
++			d = irq_find_matching_fwnode(fwnode,
++						     DOMAIN_BUS_PCI_MSI);
++	}
 +#endif
 +
- #ifdef CONFIG_ACPI_APEI
- extern bool aer_acpi_firmware_first(void);
- #else
+ 	return d;
+ }
+ 
 -- 
 1.9.1
 
