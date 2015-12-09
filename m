@@ -1,90 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43810 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750897AbbLCGxa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Dec 2015 01:53:30 -0500
-Subject: Re: [PATCH v6 4/7] PCI: Add fwnode_handle to pci_sysdata
-To: jakeo@microsoft.com, gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@redhat.com, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-References: <1446499996-1350-1-git-send-email-jakeo@microsoft.com>
- <1446499996-1350-5-git-send-email-jakeo@microsoft.com>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <565FE6E6.8000700@linux.intel.com>
-Date: Thu, 3 Dec 2015 14:53:26 +0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 9 Dec 2015 09:24:23 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Grygorii Strashko <grygorii.strashko@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, tony@atomide.com,
+	nsekhar@ti.com, linux-omap@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH v2] PCI: dra7xx: mark dra7xx_pcie_msi irq as
+ IRQF_NO_THREAD
+Message-ID: <20151209152423.GD31930@localhost>
+References: <1448027966-21610-1-git-send-email-grygorii.strashko@ti.com>
+ <20151204184619.GD20125@localhost>
+ <20151208090555.GA19438@linutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <1446499996-1350-5-git-send-email-jakeo@microsoft.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20151208090555.GA19438@linutronix.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/11/3 5:33, jakeo@microsoft.com wrote:
-> From: Jake Oshins <jakeo@microsoft.com>
+On Tue, Dec 08, 2015 at 10:05:56AM +0100, Sebastian Andrzej Siewior wrote:
+> * Bjorn Helgaas | 2015-12-04 12:46:19 [-0600]:
 > 
-> This patch adds an fwnode_handle to struct pci_sysdata, which is
-> used by the next patch in the series when trying to locate an
-> IRQ domain associated with a root PCI bus.
+> >The backtrace might be OK (maybe slightly overkill), but all the
+> >stack addresses are certainly irrelevant and distracting.  We only
+> >need enough to recognize the problem.  I don't think the modules list
+> >is relevant either.
 > 
-> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
-> ---
->  arch/x86/include/asm/pci.h | 13 +++++++++++++
->  include/asm-generic/pci.h  |  4 ++++
->  2 files changed, 17 insertions(+)
+> I would shorten it to the bare minimum. Also the patch description
+> itself could be truncated to the required bits…
 > 
-> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-> index 4625943..fb74453 100644
-> --- a/arch/x86/include/asm/pci.h
-> +++ b/arch/x86/include/asm/pci.h
-> @@ -20,6 +20,9 @@ struct pci_sysdata {
->  #ifdef CONFIG_X86_64
->  	void		*iommu;		/* IOMMU private data */
->  #endif
-> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-> +	void		*fwnode;	/* IRQ domain for MSI assignment */
-> +#endif
->  };
->  
->  extern int pci_routeirq;
-> @@ -41,6 +44,16 @@ static inline int pci_proc_domain(struct pci_bus *bus)
->  }
->  #endif
->  
-> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-> +static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
-> +{
-> +	struct pci_sysdata *sd = bus->sysdata;
-> +	return sd->fwnode;
-> +}
-> +
-> +#define pci_root_bus_fwnode	_pci_root_bus_fwnode
-> +#endif
-> +
->  /* Can be used to override the logic in pci_scan_bus for skipping
->     already-configured bus numbers - to be used for buggy BIOSes
->     or architectures with incomplete PCI setup by the loader */
-> diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
-> index f24bc51..3fde985 100644
-> --- a/include/asm-generic/pci.h
-> +++ b/include/asm-generic/pci.h
-> @@ -21,4 +21,8 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
->  #define PCI_DMA_BUS_IS_PHYS	(1)
->  #endif
->  
-> +#ifndef pci_root_bus_fwnode
-> +#define pci_root_bus_fwnode(bus)	((void)(bus),NULL)
-> +#endif
-Hi Jakeo,
-	For x86, all PCI devices share the same MSI controller. But I'm
-not sure whether it may have per-bus/per-device MSI controllers on other
-archs. If there may be multiple MSI controllers serving PCI devices
-under the same PCI root, it would be better to use some thing like
-pci_get_msi_fwnode(bus) or similar.
-Thanks,
-Gerry
+> >> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> >> index 8c36880..0415192 100644
+> >> --- a/drivers/pci/host/pci-dra7xx.c
+> >> +++ b/drivers/pci/host/pci-dra7xx.c
+> >> @@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+> >>  		return -EINVAL;
+> >>  	}
+> >>  
+> >> +	/*
+> >> +	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
+> >> +	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
+> >> +	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
+> >> +	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
+> >> +	 * which, in turn, will be resolved to handle_simple_irq() call.
+> >> +	 * The handle_simple_irq() expected to be called with IRQ disabled, as
+> >> +	 * result kernle will display warning:
+> >> +	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
+> >> +	 */
+> 
+> …not to mention this piece. d7ce4377494a ("powerpc/fsl_msi: mark the msi
+> cascade handler IRQF_NO_THREAD") fixes the same bug in arch/ppc so they
+> bypassed you fixing it.
+> 
+> >>  	ret = devm_request_irq(&pdev->dev, pp->irq,
+> >> -			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
+> >> +			       dra7xx_pcie_msi_irq_handler,
+> >> +			       IRQF_SHARED | IRQF_NO_THREAD,
+> >>  			       "dra7-pcie-msi",	pp);
+> >
+> >There's similar code in exynos_add_pcie_port(), imx6_add_pcie_port(),
+> >and spear13xx_add_pcie_port().  Do they need similar changes?  If not,
+> >why not?
+> 
+> You are right. The request for the handler exynos_pcie_msi_irq_handler(),
+> imx6_pcie_msi_handler() and spear13xx_pcie_irq_handler() needs same
+> treatment.
+> Additionally we have:
+> 
+> arch/mips/pci/msi-octeon.c: if (request_irq(OCTEON_IRQ_PCI_MSI0, octeon_msi_interrupt0,
+> arch/sparc/kernel/pci_msi.c:    err = request_irq(irq, sparc64_msiq_interrupt, 0,
+> drivers/pci/host/pci-tegra.c:   err = request_irq(msi->irq, tegra_pcie_msi_irq, 0,
+> drivers/pci/host/pcie-rcar.c:   err = devm_request_irq(&pdev->dev, msi->irq1, rcar_pcie_msi_irq,
+> drivers/pci/host/pcie-rcar.c:   err = devm_request_irq(&pdev->dev, msi->irq2, rcar_pcie_msi_irq,
+> drivers/pci/host/pcie-xilinx.c: err = devm_request_irq(dev, port->irq, xilinx_pcie_intr_handler,
+> 
+> which require the same kind of fix…
+> 
+> >I see your discussion about DRA7 hardware design, but my impression is
+> >that this problem affects anybody who calls dw_handle_msi_irq() from a
+> >handler registered with IRQF_SHARED.
+> 
+> … brecause all of them invoke generic_handle_irq() from the requsted
+> handler. generic_handle_irq grabs raw_locks and this needs to run in
+> raw-irq context.
+> IRQF_SHARED could probably go away. The IRQ is mostlikely exclusive
+> assigned in each SoC for MSI interrupt demux.
 
+It sounds like we should fix all these places at once.  If you
+(Grygorii) work up a patch that does them all, with a more generic
+changelog, then we can solicit testing and acks.
 
-> +
->  #endif /* _ASM_GENERIC_PCI_H */
-> 
+Bjorn
