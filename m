@@ -1,141 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:34877 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752791AbbLPQwM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Dec 2015 11:52:12 -0500
+Received: from foss.arm.com ([217.140.101.70]:50888 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752315AbbLIRHC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Dec 2015 12:07:02 -0500
+Message-ID: <56685FB1.8050407@arm.com>
+Date: Wed, 09 Dec 2015 17:06:57 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <1450262992-77276-1-git-send-email-hare@suse.de>
-References: <1450262992-77276-1-git-send-email-hare@suse.de>
-Date: Wed, 16 Dec 2015 08:52:10 -0800
-Message-ID: <CAKgT0Ucjv0GK02T5jeE79MnR1g57XOr0ZWhGe4ETA15Y3Cnh-g@mail.gmail.com>
-Subject: Re: [PATCHv2] pci: Update VPD size with correct length
-From: Alexander Duyck <alexander.duyck@gmail.com>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+To: Jake Oshins <jakeo@microsoft.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	KY Srinivasan <kys@microsoft.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Michal Kubecek <mkubecek@suse.com>
-Content-Type: text/plain; charset=UTF-8
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v7 4/7] PCI: Add fwnode_handle to pci_sysdata
+References: <1449275767-1510-1-git-send-email-jakeo@microsoft.com> <1449275767-1510-5-git-send-email-jakeo@microsoft.com> <56685BE5.3000909@arm.com> <DM2PR0301MB12320161CCEA8A4C097B82E6ABE80@DM2PR0301MB1232.namprd03.prod.outlook.com>
+In-Reply-To: <DM2PR0301MB12320161CCEA8A4C097B82E6ABE80@DM2PR0301MB1232.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 16, 2015 at 2:49 AM, Hannes Reinecke <hare@suse.de> wrote:
-> PCI-2.2 VPD entries have a maximum size of 32k, but might actually
-> be smaller than that. To figure out the actual size one has to read
-> the VPD area until the 'end marker' is reached.
-> Trying to read VPD data beyond that marker results in 'interesting'
-> effects, from simple read errors to crashing the card. And to make
-> matters worse not every PCI card implements this properly, leaving
-> us with no 'end' marker or even completely invalid data.
-> This path modifies the size of the VPD attribute to the available
-> size, and disables the VPD attribute altogether if no valid data
-> could be read.
->
-> Cc: Alexander Duyck <alexander.duyck@gmail.com>
-> Cc: Michal Kubecek <mkubecek@suse.com>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/pci/access.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 49 insertions(+)
->
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index 59ac36f..ab571a5 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -475,6 +475,48 @@ static const struct pci_vpd_ops pci_vpd_f0_ops = {
->         .release = pci_vpd_pci22_release,
->  };
->
-> +/**
-> + * pci_vpd_size - determine actual size of Vital Product Data
-> + * @dev:       pci device struct
-> + * @old_size:  current assumed size, also maximum allowed size
-> + *
-> + */
-> +static size_t
-> +pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
-> +{
+On 09/12/15 16:54, Jake Oshins wrote:
+>> -----Original Message-----
+>> From: Marc Zyngier [mailto:marc.zyngier@arm.com]
+>> Sent: Wednesday, December 9, 2015 8:51 AM
+>> To: Jake Oshins <jakeo@microsoft.com>; gregkh@linuxfoundation.org; KY
+>> Srinivasan <kys@microsoft.com>; linux-kernel@vger.kernel.org;
+>> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
+>> vkuznets@redhat.com; tglx@linutronix.de; Haiyang Zhang
+>> <haiyangz@microsoft.com>; bhelgaas@google.com; linux-
+>> pci@vger.kernel.org
+>> Subject: Re: [PATCH v7 4/7] PCI: Add fwnode_handle to pci_sysdata
+>>
+>> On 05/12/15 00:36, jakeo@microsoft.com wrote:
+>>> From: Jake Oshins <jakeo@microsoft.com>
+>>>
+>>> This patch adds an fwnode_handle to struct pci_sysdata, which is
+>>> used by the next patch in the series when trying to locate an
+>>> IRQ domain associated with a root PCI bus.
+>>>
+>>> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+>>> ---
+>>>  arch/x86/include/asm/pci.h | 15 +++++++++++++++
+>>>  include/asm-generic/pci.h  |  4 ++++
+>>>  2 files changed, 19 insertions(+)
+>>>
+>>
+>> [...]
+>>
+>>> diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
+>>> index f24bc51..4092886 100644
+>>> --- a/include/asm-generic/pci.h
+>>> +++ b/include/asm-generic/pci.h
+>>> @@ -21,4 +21,8 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev
+>> *dev, int channel)
+>>>  #define PCI_DMA_BUS_IS_PHYS	(1)
+>>>  #endif
+>>>
+>>> +#ifndef pci_root_bus_fwnode
+>>> +#define pci_root_bus_fwnode(bus)	((void)(bus), NULL)
+>>> +#endif
+>>> +
+>>>  #endif /* _ASM_GENERIC_PCI_H */
+>>>
+>>
+>> This breaks at least arm64 (as you can see from the reply to patch #5,
+>> because it does have its own asm/pci.h. Instead, how about moving this
+>> to linux/pci.h, just after the include of asm/pci.h? I just gave it a
+>> go, and it seems to work nicely (the first hunk fixes the rest of the
+>> arm64 compile issue):
+> 
+> Thank you.  I was just working through how to do that.  I lost a
+> couple of days trying to figure out how to cross-compile for arm64 to
+> check that any fix that I made actually worked.  (In the process,
+> I've completely messed up my development machine.  Any pointers to
+> the right strategy would be appreciated.)
 
-Instead of passing old_size you could look at just using
-PCI_VPD_PCI22_SIZE since currently your only caller will always be
-passing that value anyway.
+My own strategy is pretty simple. It involves:
+- downloading a binary toolchain ([1] for example)
+- untar this somewhere, putting the
+gcc-linaro-5.2-2015.11-x86_64_aarch64-linux-gnu/bin directory in your PATH
+- and then the usual "make ARCH=arm64 defconfig && make ARCH=arm64
+CROSS_COMPILE=aarch64-linux-gnu- all"
 
-> +       size_t off = 0;
-> +       unsigned char header[1+2];      /* 1 byte tag, 2 bytes length */
-> +
-> +       while (off < old_size && pci_read_vpd(dev, off, 1, header)) {
-> +               unsigned char tag;
-> +
+That's of course assuming you're using a Linux x86-64 box for
+cross-compiling. I also cross-compile from 32bit ARM, but I doubt you'd
+be interested... ;-)
 
-I'm not sure the use of pci_read_vpd here is correct.  Doesn't it
-return a non-zero value on error?  If so you should probably be
-checking for this being greater than 0 instead of just non-zero
-shouldn't you?
+Cheers,
 
-> +               if (header[0] == 0xff) {
-> +                       /* Invalid data from VPD read */
-> +                       tag = header[0];
-> +               } else if (header[0] & 0x80) {
-> +                       /* Large Resource Data Type Tag */
-> +                       if (pci_read_vpd(dev, off+1, 2, &header[1]) != 2)
-> +                               return off + 1;
-> +                       off += 3 + ((header[2] << 8) | header[1]);
-> +                       tag = (header[0] & 0x7f);
-> +               } else {
-> +                       /* Short Resource Data Type Tag */
-> +                       off += 1 + (header[0] & 0x07);
-> +                       tag = (header[0] & 0x78) >> 3;
-> +               }
-> +               if (tag == 0x0f)        /* End tag descriptor */
-> +                       break;
+	M.
 
-It might make sense to just use the "return off" here since this is
-the only spot that should be returning the offset.
-
-> +               if ((tag != 0x02) && (tag != 0x10) && (tag != 0x11)) {
-> +                       dev_dbg(&dev->dev,
-> +                               "invalid %s vpd tag %02x at offset %zu.",
-> +                               header[0] & 0x80 ? "large" : "short",
-> +                               tag, off);
-> +                       break;
-> +               }
-
-It might be worth while to convert some of the values used in your
-conditional checks into a human readable format by converting some of
-the magic numbers into defines or placing them in an enum.  Then it
-makes it a bit more obvious that if the tag is not a VPD identifier
-string descriptor, VPD-R descriptor, or VPD-W descriptor you should be
-reporting an error.
-
-> +       }
-> +       return off;
-> +}
-> +
-
-You could probably convert this to "return 0" since there is only one
-spot above where you would be returning the offset from.
-
->  int pci_vpd_pci22_init(struct pci_dev *dev)
->  {
->         struct pci_vpd_pci22 *vpd;
-> @@ -497,6 +539,13 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
->         vpd->cap = cap;
->         vpd->busy = false;
->         dev->vpd = &vpd->base;
-> +       vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
-> +       if (vpd->base.len == 0) {
-> +               dev_dbg(&dev->dev, "Disabling VPD access.");
-> +               dev->vpd = NULL;
-> +               kfree(vpd);
-> +               return -ENXIO;
-> +       }
->         return 0;
->  }
->
-
-You might want to incorporate the PCI_DEV_FLAGS_VPD_REF_F0 bits that
-were added a while ago in order to avoid having to reset the length
-each time.  You should only need to call this on function 0 for such a
-device so you may want to consider adding a check for that into your
-length function.  If that flag is set and we are not testing function
-zero you could just default to 0 for the base length.
+[1]
+https://releases.linaro.org/components/toolchain/binaries/5.2-2015.11/aarch64-linux-gnu/gcc-linaro-5.2-2015.11-x86_64_aarch64-linux-gnu.tar.xz
+-- 
+Jazz is not dead. It just smells funny...
