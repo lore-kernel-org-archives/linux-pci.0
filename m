@@ -1,158 +1,197 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0099.outbound.protection.outlook.com ([157.56.110.99]:39640
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754113AbbLLBag (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Dec 2015 20:30:36 -0500
-Message-ID: <566B78B6.4070109@caviumnetworks.com>
-Date: Fri, 11 Dec 2015 17:30:30 -0800
-From: David Daney <ddaney@caviumnetworks.com>
+Received: from mail.kernel.org ([198.145.29.136]:60921 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751997AbbLIQuy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Dec 2015 11:50:54 -0500
+Date: Wed, 9 Dec 2015 10:50:46 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Geliang Tang <geliangtang@163.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] x86/PCI: simplify pci_bios_{read,write}
+Message-ID: <20151209165046.GF31930@localhost>
+References: <0ed29e57b699af22a8759f1b1c0d59d79664dee5.1449495573.git.geliangtang@163.com>
 MIME-Version: 1.0
-To: "Sean O. Stalley" <sean.stalley@intel.com>
-CC: David Daney <ddaney.cavm@gmail.com>, Martin Mares <mj@ucw.cz>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH] Add lspci support for Enhanced Allocation Capability.
-References: <1449872845-3596-1-git-send-email-ddaney.cavm@gmail.com> <20151212011315.GA3924@sean.stalley.intel.com>
-In-Reply-To: <20151212011315.GA3924@sean.stalley.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0ed29e57b699af22a8759f1b1c0d59d79664dee5.1449495573.git.geliangtang@163.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/11/2015 05:13 PM, Sean O. Stalley wrote:
-> Thanks for doing this. I tried it out & everything worked well for me.
-> Only a couple things:
->
-> The memory regions described by EA also show up before the EA Capability
-> and appear as virtual, ex:
-> 	Region 0: [virtual] Memory at 80000000 ...
+On Mon, Dec 07, 2015 at 10:24:24PM +0800, Geliang Tang wrote:
+> There are some repetitive code in the switch/case statement in
+> pci_bios_read() and pci_bios_write(). I drop it to simplify the
+> code.
+> 
+> Signed-off-by: Geliang Tang <geliangtang@163.com>
 
-We are just dumping out the config space.  lspci doesn't really know 
-where the kernel gets the reported BAR values.
+Applied to pci/misc for v4.5 with Thomas' Reviewed-by, thanks!
 
-I don't think we want to suppress the dumping of the BARs, or the 
-kernel's interpretation thereof.
-
-> I don't think we want these regions to be flagged as virtual.
-> I think this happens because lspci can't read/write to the BAR region,
-> and so it assumes it's looking at a VF.
->
-> The rest of my gripes are minor syntax stuff. see inline.
->
-> Thanks again,
-> Sean
->
-> On Fri, Dec 11, 2015 at 02:27:25PM -0800, David Daney wrote:
->> From: David Daney <david.daney@cavium.com>
->>
-[...]
->> --- a/ls-caps.c
->> +++ b/ls-caps.c
->> @@ -1254,6 +1254,145 @@ cap_sata_hba(struct device *d, int where, int cap)
->>       printf(" BAR??%d\n", bar);
->>   }
->>
-[...]
->> +static void cap_ea(struct device *d, int where, int cap)
->> +{
->> +  unsigned int entry;
->> +  int entry_base = where + 4;
->> +  unsigned int num_entries = BITS((unsigned int)cap, 0, 6);
->> +  u8 htype = get_conf_byte(d, PCI_HEADER_TYPE) & 0x7f;
->> +
->> +  printf("Enhanced Allocation: Num Entries=%u", num_entries);
-> CamelCase.
-
-Those are the names from the specification, I would like to keep them in 
-some form.  As noted below, it may be desirable to squash it to "NumEntries"
-
-
->> +  if (htype == PCI_HEADER_TYPE_BRIDGE) {
->> +    byte fixed_sub, fixed_sec;
->> +
->> +    entry_base += 4;
->> +    if (!config_fetch(d, where + 4, 2)) {
->> +      printf("\n");
->> +      return;
->> +    }
->> +    fixed_sec = get_conf_byte(d, where + 4);
->> +    fixed_sub = get_conf_byte(d, where + 4);
->> +    printf(", secondary=%d, subordinate=%d", fixed_sec, fixed_sub);
->> +  }
->> +  printf("\n");
->> +  if (verbose < 2)
->> +    return;
->> +
->> +  for (entry = 0; entry < num_entries; entry++) {
->> +    int max_offset_high_pos, has_base_high, has_max_offset_high;
->> +    u32 entry_header;
->> +    u32 base, max_offset;
->> +    unsigned int es, bei, pp, sp, e, w;
->> +
->> +    if (!config_fetch(d, entry_base, 4))
->> +      return;
->> +    entry_header = get_conf_long(d, entry_base);
->> +    es = BITS(entry_header, 0, 3);
->> +    bei = BITS(entry_header, 4, 4);
->> +    pp = BITS(entry_header, 8, 8);
->> +    sp = BITS(entry_header, 16, 8);
->> +    w = BITS(entry_header, 30, 1);
->> +    e = BITS(entry_header, 31, 1);
->> +    if (!config_fetch(d, entry_base + 4, es * 4))
->> +      return;
->> +    printf("\t\tEntry-%u: Enable%c Writable%c, Entry Size=%u\n", entry,
-> I would change this line to:
-> 	printf("\t\tEntry %u: Enable%c Writable%c, EntrySize=%u\n", ...);
-
-We could do that.  I would let others decide if squashing "Entry Size" 
-to "EntrySize" is desirable.
-
-
-> 	Changes:         ^                              ^
-> 	"-" after Entry to a " " (to match the "Region %i" used for BARs)
-> 	make EntrySize CamelCase (to match the other fields in lspci)
-[...]
->> +    printf("\n");
->> +    printf("\t\t\t Primary Properties (PP): %s\n", cap_ea_property(pp));
->> +    printf("\t\t\t Secondary Properties (SP): %s\n", cap_ea_property(sp));
-> "PP" & "SP" are probably sufficient, I don't think we need to write the whole thing out.
->
-> Also, for the case where the Primary property is valid, can we hide the Secondary property if it is 0xFF?
-> My concern is that people may read the "entry unavailable for use" line as a warning and think something is wrong.
-> Maybe it would be better to make it say "Secondary Properties (SP): Not Present", or something similar.
->
-
-That is a good point.  I will try something like that.
-
->> +
->> +    base = get_conf_long(d, entry_base + 4);
->> +    has_base_high = ((base & 2) != 0);
->> +    base &= ~3;
->> +
->> +    max_offset = get_conf_long(d, entry_base + 8);
->> +    has_max_offset_high = ((max_offset & 2) != 0);
->> +    max_offset |= 3;
->> +    max_offset_high_pos = entry_base + 12;
->> +
->> +    printf("\t\t\t Base: ");
->> +    if (has_base_high) {
->> +      u32 base_high = get_conf_long(d, entry_base + 12);
->> +
->> +      printf("%x", base_high);
->> +      max_offset_high_pos += 4;
->> +    }
->> +    printf("%08x\n", base);
->> +
->> +    printf("\t\t\t Max Offset: ");
-> CamelCase.
-
-Again, I am trying to match the wording of the specification.  Although 
-in this case I think I got it wrong.  It should probably be squashed to 
-"MaxOffset'
-
-[...]
-
-Thanks for reviewing it.
-
-David Daney
-
+> ---
+>  arch/x86/pci/pcbios.c | 108 ++++++++++++++++++--------------------------------
+>  1 file changed, 38 insertions(+), 70 deletions(-)
+> 
+> diff --git a/arch/x86/pci/pcbios.c b/arch/x86/pci/pcbios.c
+> index 9b83b90..9770e55 100644
+> --- a/arch/x86/pci/pcbios.c
+> +++ b/arch/x86/pci/pcbios.c
+> @@ -180,6 +180,7 @@ static int pci_bios_read(unsigned int seg, unsigned int bus,
+>  	unsigned long result = 0;
+>  	unsigned long flags;
+>  	unsigned long bx = (bus << 8) | devfn;
+> +	u16 number = 0, mask = 0;
+>  
+>  	WARN_ON(seg);
+>  	if (!value || (bus > 255) || (devfn > 255) || (reg > 255))
+> @@ -189,53 +190,35 @@ static int pci_bios_read(unsigned int seg, unsigned int bus,
+>  
+>  	switch (len) {
+>  	case 1:
+> -		__asm__("lcall *(%%esi); cld\n\t"
+> -			"jc 1f\n\t"
+> -			"xor %%ah, %%ah\n"
+> -			"1:"
+> -			: "=c" (*value),
+> -			  "=a" (result)
+> -			: "1" (PCIBIOS_READ_CONFIG_BYTE),
+> -			  "b" (bx),
+> -			  "D" ((long)reg),
+> -			  "S" (&pci_indirect));
+> -		/*
+> -		 * Zero-extend the result beyond 8 bits, do not trust the
+> -		 * BIOS having done it:
+> -		 */
+> -		*value &= 0xff;
+> +		number = PCIBIOS_READ_CONFIG_BYTE;
+> +		mask = 0xff;
+>  		break;
+>  	case 2:
+> -		__asm__("lcall *(%%esi); cld\n\t"
+> -			"jc 1f\n\t"
+> -			"xor %%ah, %%ah\n"
+> -			"1:"
+> -			: "=c" (*value),
+> -			  "=a" (result)
+> -			: "1" (PCIBIOS_READ_CONFIG_WORD),
+> -			  "b" (bx),
+> -			  "D" ((long)reg),
+> -			  "S" (&pci_indirect));
+> -		/*
+> -		 * Zero-extend the result beyond 16 bits, do not trust the
+> -		 * BIOS having done it:
+> -		 */
+> -		*value &= 0xffff;
+> +		number = PCIBIOS_READ_CONFIG_WORD;
+> +		mask = 0xffff;
+>  		break;
+>  	case 4:
+> -		__asm__("lcall *(%%esi); cld\n\t"
+> -			"jc 1f\n\t"
+> -			"xor %%ah, %%ah\n"
+> -			"1:"
+> -			: "=c" (*value),
+> -			  "=a" (result)
+> -			: "1" (PCIBIOS_READ_CONFIG_DWORD),
+> -			  "b" (bx),
+> -			  "D" ((long)reg),
+> -			  "S" (&pci_indirect));
+> +		number = PCIBIOS_READ_CONFIG_DWORD;
+>  		break;
+>  	}
+>  
+> +	__asm__("lcall *(%%esi); cld\n\t"
+> +		"jc 1f\n\t"
+> +		"xor %%ah, %%ah\n"
+> +		"1:"
+> +		: "=c" (*value),
+> +		  "=a" (result)
+> +		: "1" (number),
+> +		  "b" (bx),
+> +		  "D" ((long)reg),
+> +		  "S" (&pci_indirect));
+> +	/*
+> +	 * Zero-extend the result beyond 8 or 16 bits, do not trust the
+> +	 * BIOS having done it:
+> +	 */
+> +	if (mask)
+> +		*value &= mask;
+> +
+>  	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
+>  
+>  	return (int)((result & 0xff00) >> 8);
+> @@ -247,6 +230,7 @@ static int pci_bios_write(unsigned int seg, unsigned int bus,
+>  	unsigned long result = 0;
+>  	unsigned long flags;
+>  	unsigned long bx = (bus << 8) | devfn;
+> +	u16 number = 0;
+>  
+>  	WARN_ON(seg);
+>  	if ((bus > 255) || (devfn > 255) || (reg > 255)) 
+> @@ -256,43 +240,27 @@ static int pci_bios_write(unsigned int seg, unsigned int bus,
+>  
+>  	switch (len) {
+>  	case 1:
+> -		__asm__("lcall *(%%esi); cld\n\t"
+> -			"jc 1f\n\t"
+> -			"xor %%ah, %%ah\n"
+> -			"1:"
+> -			: "=a" (result)
+> -			: "0" (PCIBIOS_WRITE_CONFIG_BYTE),
+> -			  "c" (value),
+> -			  "b" (bx),
+> -			  "D" ((long)reg),
+> -			  "S" (&pci_indirect));
+> +		number = PCIBIOS_WRITE_CONFIG_BYTE;
+>  		break;
+>  	case 2:
+> -		__asm__("lcall *(%%esi); cld\n\t"
+> -			"jc 1f\n\t"
+> -			"xor %%ah, %%ah\n"
+> -			"1:"
+> -			: "=a" (result)
+> -			: "0" (PCIBIOS_WRITE_CONFIG_WORD),
+> -			  "c" (value),
+> -			  "b" (bx),
+> -			  "D" ((long)reg),
+> -			  "S" (&pci_indirect));
+> +		number = PCIBIOS_WRITE_CONFIG_WORD;
+>  		break;
+>  	case 4:
+> -		__asm__("lcall *(%%esi); cld\n\t"
+> -			"jc 1f\n\t"
+> -			"xor %%ah, %%ah\n"
+> -			"1:"
+> -			: "=a" (result)
+> -			: "0" (PCIBIOS_WRITE_CONFIG_DWORD),
+> -			  "c" (value),
+> -			  "b" (bx),
+> -			  "D" ((long)reg),
+> -			  "S" (&pci_indirect));
+> +		number = PCIBIOS_WRITE_CONFIG_DWORD;
+>  		break;
+>  	}
+>  
+> +	__asm__("lcall *(%%esi); cld\n\t"
+> +		"jc 1f\n\t"
+> +		"xor %%ah, %%ah\n"
+> +		"1:"
+> +		: "=a" (result)
+> +		: "0" (number),
+> +		  "c" (value),
+> +		  "b" (bx),
+> +		  "D" ((long)reg),
+> +		  "S" (&pci_indirect));
+> +
+>  	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
+>  
+>  	return (int)((result & 0xff00) >> 8);
+> -- 
+> 2.5.0
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
