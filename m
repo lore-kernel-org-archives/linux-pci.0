@@ -1,103 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50888 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.136]:39800 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752315AbbLIRHC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Dec 2015 12:07:02 -0500
-Message-ID: <56685FB1.8050407@arm.com>
-Date: Wed, 09 Dec 2015 17:06:57 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+	id S1753087AbbLIShq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Dec 2015 13:37:46 -0500
+Date: Wed, 9 Dec 2015 12:37:43 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Simon Horman <horms+renesas@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 0/4] PCI: rcar, rcar-gen2: More Gen2 compatibility
+ strings
+Message-ID: <20151209183743.GH31930@localhost>
+References: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
 MIME-Version: 1.0
-To: Jake Oshins <jakeo@microsoft.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	KY Srinivasan <kys@microsoft.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"olaf@aepfle.de" <olaf@aepfle.de>,
-	"apw@canonical.com" <apw@canonical.com>,
-	"vkuznets@redhat.com" <vkuznets@redhat.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v7 4/7] PCI: Add fwnode_handle to pci_sysdata
-References: <1449275767-1510-1-git-send-email-jakeo@microsoft.com> <1449275767-1510-5-git-send-email-jakeo@microsoft.com> <56685BE5.3000909@arm.com> <DM2PR0301MB12320161CCEA8A4C097B82E6ABE80@DM2PR0301MB1232.namprd03.prod.outlook.com>
-In-Reply-To: <DM2PR0301MB12320161CCEA8A4C097B82E6ABE80@DM2PR0301MB1232.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/12/15 16:54, Jake Oshins wrote:
->> -----Original Message-----
->> From: Marc Zyngier [mailto:marc.zyngier@arm.com]
->> Sent: Wednesday, December 9, 2015 8:51 AM
->> To: Jake Oshins <jakeo@microsoft.com>; gregkh@linuxfoundation.org; KY
->> Srinivasan <kys@microsoft.com>; linux-kernel@vger.kernel.org;
->> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
->> vkuznets@redhat.com; tglx@linutronix.de; Haiyang Zhang
->> <haiyangz@microsoft.com>; bhelgaas@google.com; linux-
->> pci@vger.kernel.org
->> Subject: Re: [PATCH v7 4/7] PCI: Add fwnode_handle to pci_sysdata
->>
->> On 05/12/15 00:36, jakeo@microsoft.com wrote:
->>> From: Jake Oshins <jakeo@microsoft.com>
->>>
->>> This patch adds an fwnode_handle to struct pci_sysdata, which is
->>> used by the next patch in the series when trying to locate an
->>> IRQ domain associated with a root PCI bus.
->>>
->>> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
->>> ---
->>>  arch/x86/include/asm/pci.h | 15 +++++++++++++++
->>>  include/asm-generic/pci.h  |  4 ++++
->>>  2 files changed, 19 insertions(+)
->>>
->>
->> [...]
->>
->>> diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
->>> index f24bc51..4092886 100644
->>> --- a/include/asm-generic/pci.h
->>> +++ b/include/asm-generic/pci.h
->>> @@ -21,4 +21,8 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev
->> *dev, int channel)
->>>  #define PCI_DMA_BUS_IS_PHYS	(1)
->>>  #endif
->>>
->>> +#ifndef pci_root_bus_fwnode
->>> +#define pci_root_bus_fwnode(bus)	((void)(bus), NULL)
->>> +#endif
->>> +
->>>  #endif /* _ASM_GENERIC_PCI_H */
->>>
->>
->> This breaks at least arm64 (as you can see from the reply to patch #5,
->> because it does have its own asm/pci.h. Instead, how about moving this
->> to linux/pci.h, just after the include of asm/pci.h? I just gave it a
->> go, and it seems to work nicely (the first hunk fixes the rest of the
->> arm64 compile issue):
+On Thu, Dec 03, 2015 at 07:51:36AM +0900, Simon Horman wrote:
+> Hi,
 > 
-> Thank you.  I was just working through how to do that.  I lost a
-> couple of days trying to figure out how to cross-compile for arm64 to
-> check that any fix that I made actually worked.  (In the process,
-> I've completely messed up my development machine.  Any pointers to
-> the right strategy would be appreciated.)
+> this short series adds generic gen2 and SoC-specific r8a7793 compatibility
+> strings to the rcar PCI and rcar-gen2 PCIE drivers. The intention is to
+> provide a complete set of compatibility strings for known Gen2 SoCs.
+> 
+> Key Changes in v2:
+> * Include "rcar-" in generic bindings
+> 
+> Simon Horman (4):
+>   PCI: rcar-gen2: add gen2 fallback compatibility string
+>   PCI: rcar-gen2: add device tree support for r8a7793
+>   PCI: rcar: add gen2 fallback compatibility string
+>   PCI: rcar: add device tree support for r8a7793
+> 
+>  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 12 ++++++++++--
+>  Documentation/devicetree/bindings/pci/rcar-pci.txt      | 14 +++++++++++---
+>  drivers/pci/host/pci-rcar-gen2.c                        |  1 +
+>  drivers/pci/host/pcie-rcar.c                            |  1 +
+>  4 files changed, 23 insertions(+), 5 deletions(-)
 
-My own strategy is pretty simple. It involves:
-- downloading a binary toolchain ([1] for example)
-- untar this somewhere, putting the
-gcc-linaro-5.2-2015.11-x86_64_aarch64-linux-gnu/bin directory in your PATH
-- and then the usual "make ARCH=arm64 defconfig && make ARCH=arm64
-CROSS_COMPILE=aarch64-linux-gnu- all"
+I applied these:
 
-That's of course assuming you're using a Linux x86-64 box for
-cross-compiling. I also cross-compile from 32bit ARM, but I doubt you'd
-be interested... ;-)
+>   PCI: rcar-gen2: add gen2 fallback compatibility string
+>   PCI: rcar: add gen2 fallback compatibility string
 
-Cheers,
+to pci/host-rcar for v4.5, thanks!
 
-	M.
+I haven't applied the R8A7793 binding documentation updates yet, but
+I'll be happy to do so given a short description of why they're
+useful (since they don't update a DT or the driver).  Or they could be
+merged via a DT tree.
 
-[1]
-https://releases.linaro.org/components/toolchain/binaries/5.2-2015.11/aarch64-linux-gnu/gcc-linaro-5.2-2015.11-x86_64_aarch64-linux-gnu.tar.xz
--- 
-Jazz is not dead. It just smells funny...
+Bjorn
