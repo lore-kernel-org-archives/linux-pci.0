@@ -1,72 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v5 5/5] ARM: dts: Enable MSI support for Broadcom Cygnus
-Date: Fri, 4 Dec 2015 09:35:02 -0800
-Message-ID: <1449250502-10679-6-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1449250502-10679-1-git-send-email-rjui@broadcom.com>
-References: <1449250502-10679-1-git-send-email-rjui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:58714 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751418AbbLIQQs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Dec 2015 11:16:48 -0500
+Date: Wed, 9 Dec 2015 10:16:43 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: wangzhou1@hisilicon.com, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, gabriele.paoloni@huawei.com,
+	qiujiang@huawei.com, zhangjukuo@huawei.com, haifeng.wei@huawei.com,
+	yisen.zhuang@huawei.com
+Subject: Re: [PATCH] PCI: hisi: fix the hisi_pcie_cfg_read bug when size=4
+Message-ID: <20151209161643.GE31930@localhost>
+References: <1448600280-83695-1-git-send-email-liudongdong3@huawei.com>
+ <20151204224334.GL20125@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151204224334.GL20125@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable MSI support for Broadcom Cygnus platforms
+On Fri, Dec 04, 2015 at 04:43:34PM -0600, Bjorn Helgaas wrote:
+> On Fri, Nov 27, 2015 at 12:58:00PM +0800, Dongdong Liu wrote:
+> > Current hisi_pcie_cfg_read code read the RC configuration space,
+> > this has a problem that the output parameter "*val" have not been
+> > assigned when size=4, so we fix the bug by "*val = reg_val" when size=4.
+> > 
+> > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> 
+> Wow, that's a pretty egregious bug.  Was the hisi driver ever tested
+> at all?  We use dword reads in pci_bus_read_dev_vendor_id() to
+> enumerate devices, so if those didn't return valid data, nothing at
+> all should have worked.
+> 
+> I tentatively put this on my for-linus branch for v4.4, but I wonder
+> whether it might be smarter to revert the driver completely until I
+> have more confidence in it.
+> 
+> What sort of testing have you done on this driver?
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Anup Patel <anup.patel@broadcom.com>
-Reviewed-by: Pramod KUMAR <pramodku@broadcom.com>
-Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
----
- arch/arm/boot/dts/bcm-cygnus.dtsi | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+Since I haven't heard anything about whether this driver was ever
+tested, I dropped this patch from my for-linus branch and I reverted
+the entire hisi driver.
 
-diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi b/arch/arm/boot/dts/bcm-cygnus.dtsi
-index 2778533..789b519 100644
---- a/arch/arm/boot/dts/bcm-cygnus.dtsi
-+++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
-@@ -162,6 +162,17 @@
- 				  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
- 
- 			status = "disabled";
-+
-+			msi-parent = <&msi0>;
-+			msi0: msi@18012000 {
-+				compatible = "brcm,iproc-msi";
-+				msi-controller;
-+				interrupt-parent = <&gic>;
-+				interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 97 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 98 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 99 IRQ_TYPE_NONE>;
-+			};
- 		};
- 
- 		pcie1: pcie@18013000 {
-@@ -183,6 +194,17 @@
- 				  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
- 
- 			status = "disabled";
-+
-+			msi-parent = <&msi1>;
-+			msi1: msi@18013000 {
-+				compatible = "brcm,iproc-msi";
-+				msi-controller;
-+				interrupt-parent = <&gic>;
-+				interrupts = <GIC_SPI 102 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 103 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 104 IRQ_TYPE_NONE>,
-+					     <GIC_SPI 105 IRQ_TYPE_NONE>;
-+			};
- 		};
- 
- 		uart0: serial@18020000 {
--- 
-1.9.1
+Let me know when you have some testing results, and I'll take another
+look at it.
 
+Bjorn
+
+> > ---
+> >  drivers/pci/host/pcie-hisi.c | 4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+> > index 35457ec..da677b1 100644
+> > --- a/drivers/pci/host/pcie-hisi.c
+> > +++ b/drivers/pci/host/pcie-hisi.c
+> > @@ -61,7 +61,9 @@ static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
+> >  		*val = *(u8 __force *) walker;
+> >  	else if (size == 2)
+> >  		*val = *(u16 __force *) walker;
+> > -	else if (size != 4)
+> > +	else if (size == 4)
+> > +		*val = reg_val;
+> > +	else
+> >  		return PCIBIOS_BAD_REGISTER_NUMBER;
+> >  
+> >  	return PCIBIOS_SUCCESSFUL;
+> > -- 
+> > 1.9.1
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
