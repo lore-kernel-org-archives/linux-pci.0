@@ -1,83 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0087.outbound.protection.outlook.com ([65.55.169.87]:37600
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751674AbbLVKy7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Dec 2015 05:54:59 -0500
-From: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<Will.Deacon@arm.com>, <catalin.marinas@arm.com>,
-	<bhelgaas@google.com>, <hanjun.guo@linaro.org>,
-	<rrichter@cavium.com>, <Prasun.Kapoor@caviumnetworks.com>
-CC: <gpkulkarni@gmail.com>
-Subject: [PATCH] arm64, pci, numa: Adding helper functions as required by pci
-Date: Tue, 22 Dec 2015 16:08:50 +0530
-Message-ID: <1450780730-13667-1-git-send-email-gkulkarni@caviumnetworks.com>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:35246 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754552AbbLIK3o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Dec 2015 05:29:44 -0500
+Received: by wmuu63 with SMTP id u63so215773031wmu.0
+        for <linux-pci@vger.kernel.org>; Wed, 09 Dec 2015 02:29:43 -0800 (PST)
+Subject: Re: [PATCH v4 1/5] PCI: designware: add memory barrier after enabling
+ region
+To: Arnd Bergmann <arnd@arndb.de>,
+	Pratyush Anand <pratyush.anand@gmail.com>
+References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
+ <56669C50.9060700@linaro.org>
+ <CAHM4w1k_EAt+xBBYyG3B7W9Fegc4j+uRq5t_biUsxOGt+k+xUA@mail.gmail.com>
+ <1975309.Hla8QhEqf4@wuerfel>
+Cc: Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>
+From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Message-ID: <56680292.60905@linaro.org>
+Date: Wed, 9 Dec 2015 12:29:38 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1975309.Hla8QhEqf4@wuerfel>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding helper functions and necessary code to make
-pci driver(pci-host-generic) numa aware.
+On 12/09/2015 11:52 AM, Arnd Bergmann wrote:
+> On Wednesday 09 December 2015 10:10:05 Pratyush Anand wrote:
+>> On Tue, Dec 8, 2015 at 2:31 PM, Stanimir Varbanov
+>>>> Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+>>>> ---
+>>>>  drivers/pci/host/pcie-designware.c |    5 +++++
+>>>>  1 file changed, 5 insertions(+)
+>>>>
+>>>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+>>>> index 02a7452bdf23..ed4dc2e2553b 100644
+>>>> --- a/drivers/pci/host/pcie-designware.c
+>>>> +++ b/drivers/pci/host/pcie-designware.c
+>>>> @@ -164,6 +164,11 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
+>>>>       dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
+>>>>       dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
+>>>>       dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+>>>> +     /*
+>>>> +      * ensure that the ATU enable has been happaned before accessing
+>>>> +      * pci configuration/io spaces through dw_pcie_cfg_[read|write].
+>>>> +      */
+>>>> +     wmb();
+>>>>  }
+>>>>
+>>
+>>
+>> My understnading is that since writel() of dw_pcie_writel_rc() in
+>> above code and readl(), writel() of dw_pcie_cfg_[read|write]() (which
+>> will follow) goes through same device (ie PCIe host here). So, it is
+>> guaranteed that 1st writel() will be executed before later
+>> readl()/writel(). If that is true then we do not need any explicit
+>> barrier here.
+>>
+>> Arnd, Russel: whats your opinion here.
+> 
+> I think the ordering is only enforced if the two register accesses are
+> on the same device as seen from the bus, and it's possible that the
+> RC registers and the config space registers are not considered the
+> same thing here.
+> 
+> For config write, this is not a problem, because the config space write
+> has a wmb() that enforces ordering, but it's possible that the config
+> space read may hit the device in parallel with the PCIE_ATU_ENABLE
+> write.
 
-This patch is on top of arm64-numa v7.
-http://www.spinics.net/lists/arm-kernel/msg460813.html
+Hmm, just a matter of fact - as I described in the patch description
+this wmb() fixed an issue with pcie device enumeration (I came down to
+pci_bus_read_dev_vendor_id() returns zero) i.e. exactly a pci
+configuration space read.
 
-Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
----
- arch/arm64/include/asm/numa.h       | 8 +++++---
- arch/arm64/kernel/pci.c             | 8 ++++++++
- drivers/pci/host/pci-host-generic.c | 1 +
- 3 files changed, 14 insertions(+), 3 deletions(-)
-
-diff --git a/arch/arm64/include/asm/numa.h b/arch/arm64/include/asm/numa.h
-index b8c2a3f..1eca4db 100644
---- a/arch/arm64/include/asm/numa.h
-+++ b/arch/arm64/include/asm/numa.h
-@@ -15,9 +15,11 @@
- extern int __node_distance(int from, int to);
- #define node_distance(a, b) __node_distance(a, b)
- 
--/* dummy definitions for pci functions */
--#define pcibus_to_node(node)	0
--#define cpumask_of_pcibus(bus)	0
-+struct pci_bus;
-+extern int pcibus_to_node(struct pci_bus *bus);
-+#define cpumask_of_pcibus(bus)	(pcibus_to_node(bus) == -1 ?		\
-+				 cpu_all_mask :				\
-+				 cpumask_of_node(pcibus_to_node(bus)))
- 
- extern int cpu_to_node_map[NR_CPUS];
- extern nodemask_t numa_nodes_parsed __initdata;
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index b3d098b..37e2e9f 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -84,3 +84,11 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	return NULL;
- }
- #endif
-+
-+#ifdef CONFIG_NUMA
-+int pcibus_to_node(struct pci_bus *bus)
-+{
-+	return dev_to_node(&bus->dev);
-+}
-+EXPORT_SYMBOL(pcibus_to_node);
-+#endif
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 5434c90..a821e49 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -230,6 +230,7 @@ static int gen_pci_probe(struct platform_device *pdev)
- 	of_pci_check_probe_only();
- 
- 	of_id = of_match_node(gen_pci_of_match, np);
-+	set_dev_node(dev, of_node_to_nid(np));
- 	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
- 	pci->host.dev.parent = dev;
- 	INIT_LIST_HEAD(&pci->host.windows);
 -- 
-1.8.1.4
+regards,
+Stan
