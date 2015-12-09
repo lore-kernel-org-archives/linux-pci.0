@@ -1,59 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:4465 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932941AbbLGVcg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Dec 2015 16:32:36 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv6 1/7] msi: Relax msi_domain_alloc() to support parentless MSI irqdomains
-Date: Mon,  7 Dec 2015 14:32:23 -0700
-Message-Id: <1449523949-21898-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
-References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:10176 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751861AbbLIUh3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Dec 2015 15:37:29 -0500
+Subject: Re: [PATCH] PCI: hisi: fix the hisi_pcie_cfg_read bug when size=4
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Dongdong Liu <liudongdong3@huawei.com>
+References: <1448600280-83695-1-git-send-email-liudongdong3@huawei.com>
+ <20151204224334.GL20125@localhost> <20151209161643.GE31930@localhost>
+CC: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+	<gabriele.paoloni@huawei.com>, <qiujiang@huawei.com>,
+	<zhangjukuo@huawei.com>, <haifeng.wei@huawei.com>,
+	<yisen.zhuang@huawei.com>
+From: Zhou Wang <wangzhou1@hisilicon.com>
+Message-ID: <566890D5.2020007@hisilicon.com>
+Date: Thu, 10 Dec 2015 04:36:37 +0800
+MIME-Version: 1.0
+In-Reply-To: <20151209161643.GE31930@localhost>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Liu Jiang <jiang.liu@linux.intel.com>
+On 2015/12/10 0:16, Bjorn Helgaas wrote:
+> On Fri, Dec 04, 2015 at 04:43:34PM -0600, Bjorn Helgaas wrote:
+>> On Fri, Nov 27, 2015 at 12:58:00PM +0800, Dongdong Liu wrote:
+>>> Current hisi_pcie_cfg_read code read the RC configuration space,
+>>> this has a problem that the output parameter "*val" have not been
+>>> assigned when size=4, so we fix the bug by "*val = reg_val" when size=4.
+>>>
+>>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>>
+>> Wow, that's a pretty egregious bug.  Was the hisi driver ever tested
+>> at all?  We use dword reads in pci_bus_read_dev_vendor_id() to
+>> enumerate devices, so if those didn't return valid data, nothing at
+>> all should have worked.
+>>
+>> I tentatively put this on my for-linus branch for v4.4, but I wonder
+>> whether it might be smarter to revert the driver completely until I
+>> have more confidence in it.
+>>
+>> What sort of testing have you done on this driver?
+> 
+> Since I haven't heard anything about whether this driver was ever
+> tested, I dropped this patch from my for-linus branch and I reverted
+> the entire hisi driver.
+> 
+> Let me know when you have some testing results, and I'll take another
+> look at it.
+> 
+> Bjorn
+>
 
-Previously msi_domain_alloc() assumes MSI irqdomains always have parent
-irqdomains, but that's not true for the new Intel VMD devices. So relax
-msi_domain_alloc() to support parentless MSI irqdomains.
+Hi Bjorn,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- kernel/irq/msi.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Very sorry for late, I am on business trip at the moment so I have restricted
+access to emails and my replies can be late.
 
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-index 6b0c0b7..5e15cb4 100644
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -109,9 +109,11 @@ static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
- 	if (irq_find_mapping(domain, hwirq) > 0)
- 		return -EEXIST;
- 
--	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
--	if (ret < 0)
--		return ret;
-+	if (domain->parent) {
-+		ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-+		if (ret < 0)
-+			return ret;
-+	}
- 
- 	for (i = 0; i < nr_irqs; i++) {
- 		ret = ops->msi_init(domain, info, virq + i, hwirq + i, arg);
--- 
-2.6.2.307.g37023ba
+The driver has been tested extensively based on internal version, but I did this
+mistake when upstreaming :(. I will send a test log ASAP.
+
+Many Thanks,
+Zhou
+
+>>> ---
+>>>  drivers/pci/host/pcie-hisi.c | 4 +++-
+>>>  1 file changed, 3 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+>>> index 35457ec..da677b1 100644
+>>> --- a/drivers/pci/host/pcie-hisi.c
+>>> +++ b/drivers/pci/host/pcie-hisi.c
+>>> @@ -61,7 +61,9 @@ static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
+>>>  		*val = *(u8 __force *) walker;
+>>>  	else if (size == 2)
+>>>  		*val = *(u16 __force *) walker;
+>>> -	else if (size != 4)
+>>> +	else if (size == 4)
+>>> +		*val = reg_val;
+>>> +	else
+>>>  		return PCIBIOS_BAD_REGISTER_NUMBER;
+>>>  
+>>>  	return PCIBIOS_SUCCESSFUL;
+>>> -- 
+>>> 1.9.1
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
