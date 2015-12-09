@@ -1,116 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52894 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752541AbbLVKDz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Dec 2015 05:03:55 -0500
-Date: Tue, 22 Dec 2015 10:03:52 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:36796 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754318AbbLIKYX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Dec 2015 05:24:23 -0500
+Date: Wed, 9 Dec 2015 10:23:59 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>, linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
 	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
 	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 2/2] pci, pcie-thunder-pem: Add PCIe host driver for
- ThunderX processors.
-Message-ID: <20151222100352.GC32623@arm.com>
-References: <1450749222-15966-1-git-send-email-ddaney.cavm@gmail.com>
- <1450749222-15966-3-git-send-email-ddaney.cavm@gmail.com>
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>
+Subject: Re: [PATCH v4 1/5] PCI: designware: add memory barrier after
+ enabling region
+Message-ID: <20151209102359.GF8644@n2100.arm.linux.org.uk>
+References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
+ <1449149725-27607-2-git-send-email-stanimir.varbanov@linaro.org>
+ <56669C50.9060700@linaro.org>
+ <CAHM4w1k_EAt+xBBYyG3B7W9Fegc4j+uRq5t_biUsxOGt+k+xUA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450749222-15966-3-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <CAHM4w1k_EAt+xBBYyG3B7W9Fegc4j+uRq5t_biUsxOGt+k+xUA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 21, 2015 at 05:53:42PM -0800, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
+On Wed, Dec 09, 2015 at 10:10:05AM +0530, Pratyush Anand wrote:
+> On Tue, Dec 8, 2015 at 2:31 PM, Stanimir Varbanov
+> <stanimir.varbanov@linaro.org> wrote:
+> >
+> > On 12/03/2015 03:35 PM, Stanimir Varbanov wrote:
+> > > Add 'write memory' barrier after enable region in PCIE_ATU_CR2
+> > > register. The barrier is needed to ensure that the region enable
+> > > request has been reached it's destination at time when we
+> > > read/write to PCI configuration space.
+> > >
+> > > Without this barrier PCI device enumeration during kernel boot
+> > > is not reliable, and reading configuration space for particular
+> > > PCI device on the bus returns zero aka no device.
+> >
+> > Anand, Jingoo, what is your opinion?
+> >
+> > >
+> > > Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+> > > ---
+> > >  drivers/pci/host/pcie-designware.c |    5 +++++
+> > >  1 file changed, 5 insertions(+)
+> > >
+> > > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > > index 02a7452bdf23..ed4dc2e2553b 100644
+> > > --- a/drivers/pci/host/pcie-designware.c
+> > > +++ b/drivers/pci/host/pcie-designware.c
+> > > @@ -164,6 +164,11 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
+> > >       dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
+> > >       dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
+> > >       dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+> > > +     /*
+> > > +      * ensure that the ATU enable has been happaned before accessing
+> > > +      * pci configuration/io spaces through dw_pcie_cfg_[read|write].
+> > > +      */
+> > > +     wmb();
+> > >  }
+> > >
 > 
-> Some Cavium ThunderX processors require quirky access methods for the
-> config space of the PCIe bridge.  Add a driver to provide these config
-> space accessor functions.  The pci-host-generic driver code is used to
-> configure the PCI machinery.
 > 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  .../devicetree/bindings/pci/pcie-thunder-pem.txt   |  43 ++++
->  drivers/pci/host/Kconfig                           |   6 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pcie-thunder-pem.c                | 283 +++++++++++++++++++++
->  4 files changed, 333 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
->  create mode 100644 drivers/pci/host/pcie-thunder-pem.c
+> My understnading is that since writel() of dw_pcie_writel_rc() in
+> above code and readl(), writel() of dw_pcie_cfg_[read|write]() (which
+> will follow) goes through same device (ie PCIe host here). So, it is
+> guaranteed that 1st writel() will be executed before later
+> readl()/writel(). If that is true then we do not need any explicit
+> barrier here.
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt b/Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
-> new file mode 100644
-> index 0000000..66824d5
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
-> @@ -0,0 +1,43 @@
-> +* ThunderX PEM PCIe host controller
-> +
-> +Firmware-initialized PCIe host controller found on some Cavium
-> +ThunderX processors.
-> +
-> +The properties and their meanings are identical to those described in
-> +host-heneric-pci.txt except as listed below.
-> +
-> +Properties of the host controller node that differ from
-> +host-heneric-pci.txt:
+> Arnd, Russel: whats your opinion here.
+              ^l
 
-Consistently odd typo (s/heneric/generic/)!
+writel() has a barrier _before_ the access but not after.
 
-> +
-> +- compatible     : Must be "cavium,pci-host-thunder-pem"
-> +
-> +- reg            : Two entries: First the configuration space for down
-> +                   stream devices base address and size, as accessed
-> +                   from the parent bus. Second, the register bank of
-> +                   the PEM device PCIe bridge.
-> +
-> +Example:
-> +
-> +    pem2 {
-> +	compatible = "cavium,pci-host-thunder-pem";
-> +	device_type = "pci";
-> +	msi-parent = <&its>;
-> +	msi-map = <0 &its 0x10000 0x10000>;
-> +	bus-range = <0x8f 0xc7>;
-> +	#size-cells = <2>;
-> +	#address-cells = <3>;
-> +
-> +	reg = <0x8880 0x8f000000 0x0 0x39000000>,  /* Configuration space */
-> +	      <0x87e0 0xc2000000 0x0 0x00010000>; /* PEM space */
-> +	ranges = <0x01000000 0x00 0x00020000 0x88b0 0x00020000 0x00 0x00010000>, /* I/O */
-> +		 <0x03000000 0x00 0x10000000 0x8890 0x10000000 0x0f 0xf0000000>, /* mem64 */
-> +		 <0x43000000 0x10 0x00000000 0x88a0 0x00000000 0x10 0x00000000>, /* mem64-pref */
-> +		 <0x03000000 0x87e0 0xc2f00000 0x87e0 0xc2000000 0x00 0x00100000>; /* mem64 PEM BAR4 */
-> +
-> +	#interrupt-cells = <1>;
-> +	interrupt-map-mask = <0 0 0 7>;
-> +	interrupt-map = <0 0 0 1 &gic0 0 0 0 24 4>, /* INTA */
-> +			<0 0 0 2 &gic0 0 0 0 25 4>, /* INTB */
-> +			<0 0 0 3 &gic0 0 0 0 26 4>, /* INTC */
-> +			<0 0 0 4 &gic0 0 0 0 27 4>; /* INTD */
-> +    };
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index f131ba9..16ed9c3 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -172,4 +172,10 @@ config PCI_HISI
->  	help
->  	  Say Y here if you want PCIe controller support on HiSilicon HIP05 SoC
->  
-> +config PCIE_HOST_THUNDER_PEM
-> +	bool "Cavium Thunder PCIe controller to off-chip devices"
-> +	depends on PCI_HOST_GENERIC && ARM64
+The fact is that there's nothing which guarantees that the write will hit
+the hardware in a timely manner (forget any rules about PCI config space,
+the PCI ordering rules apply to the PCI bus, not to the ARM buses.)
 
-|| COMPILE_TEST ?
+If you need this write to have hit the hardware before continuing, you
+need to read back from the same register.
 
-(or does the use of writeq get you? If so, maybe COMPILE_TEST && 64BIT)
+I'm just looking at this driver, trying to decipher what it's doing.  It
+_looks_ to me like it's reprogramming one of the outbound windows (IO?)
+so that configuration space can be accessed.  Doesn't this have the
+effect of disabling access to the IO segment of the PCI bus from the
+host CPU?
 
-Will
+What protections are there against other CPUs in the system issuing a
+PCI I/O read/write while this outbound window is programmed as
+configuration space?
+
+-- 
+RMK's Patch system: http://www.arm.linux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
