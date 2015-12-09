@@ -1,41 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:13557 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751842AbbLUQp5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Dec 2015 11:45:57 -0500
-From: William Davis <wdavis@nvidia.com>
-To: "Goz, Ben" <Ben.Goz@amd.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Koenig, Christian" <Christian.Koenig@amd.com>,
-	"Bridgman, John" <John.Bridgman@amd.com>,
-	Terence Ripperda <TRipperda@nvidia.com>,
-	"John Hubbard" <jhubbard@nvidia.com>
-Subject: RE: IOMMU/DMA map_resource support for peer-to-peer
-Date: Mon, 21 Dec 2015 16:45:56 +0000
-Message-ID: <50674fe3727543e6a8a5b7731e091b75@HQMAIL106.nvidia.com>
-References: <BY2PR12MB0290C4BDC64D1614F36030CEE8E40@BY2PR12MB0290.namprd12.prod.outlook.com>
-In-Reply-To: <BY2PR12MB0290C4BDC64D1614F36030CEE8E40@BY2PR12MB0290.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v8 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
+Date: Wed,  9 Dec 2015 19:48:38 +0000
+Message-Id: <1449690525-5240-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ben,
+From: Jake Oshins <jakeo@microsoft.com>
 
-> I'm interesting on your work on this patch set to support map_resource for
-> peer to peer memory mapping, if you can please refer me to git repository
-> includes your patches.
+This version of the patch series incorporates feedback from Mark Zyngier,
+making this build on arm/arm64.
 
-The patches are not hosted in any externally-accessible repo. The last patch set was built on top of the linux-pci tree at commit bc0195aad0daa2ad5b0d76cce22b167bc3435590 (linux 4.2-rc2).
- 
-> And I want to know please if the IOMMU should be configured with pass
-> through or any other configuration, and if there is a general limitation or
-> something I should know for bringing it up.
+First, export functions that allow correlating Hyper-V virtual processors
+and Linux cpus, along with the means for invoking a hypercall that targets
+interrupts at chosen vectors on specific cpus.
 
-My testing was mostly Intel-based, but it did not require passthrough mode; the goal of the patches was to get PCI P2P working on configurations where the IOMMU is configured for full translation. It should only be limited to what the chipset is capable of, in terms of PCI P2P topologies.
+Second, mark various parts of IRQ domain related code as exported, so that
+this PCI front-end can implement an IRQ domain as part of a module.  (The
+alternative would be to pull all tyhis into the kernel, which would pull
+in a lot of other Hyper-V related code, as this IRQ domain depends on
+vmbus.ko.)
 
-Thanks,
-Will
+Third, modify PCI so that new root PCI buses can be marked with an associated
+fwnode_handle, and so that root PCI buses can look up their associated IRQ
+domain by that handle.
 
---
-nvpublic
+Fourth, introduce a new driver, hv_pcifront, which exposes root PCI buses in
+a Hyper-V VM.  These root PCI buses expose real PCIe device, or PCI Virtual
+Functions.
+
+Jake Oshins (7):
+  drivers:hv: Export a function that maps Linux CPU num onto Hyper-V
+    proc num
+  drivers:hv: Export hv_do_hypercall()
+  PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
+  PCI: Add fwnode_handle to pci_sysdata
+  PCI: irqdomain: Look up IRQ domain by fwnode_handle
+  drivers:hv: Define the channel type of Hyper-V PCI Express
+    pass-through
+  PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
+
+ MAINTAINERS                    |    1 +
+ arch/x86/include/asm/msi.h     |    6 +
+ arch/x86/include/asm/pci.h     |   15 +
+ arch/x86/kernel/apic/msi.c     |    8 +-
+ arch/x86/kernel/apic/vector.c  |    2 +
+ drivers/hv/hv.c                |   20 +-
+ drivers/hv/hyperv_vmbus.h      |    2 +-
+ drivers/hv/vmbus_drv.c         |   17 +
+ drivers/pci/Kconfig            |    7 +
+ drivers/pci/host/Makefile      |    1 +
+ drivers/pci/host/hv_pcifront.c | 2249 ++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/msi.c              |    4 +
+ drivers/pci/probe.c            |   15 +
+ include/linux/hyperv.h         |   14 +
+ include/linux/pci.h            |    4 +
+ kernel/irq/chip.c              |    1 +
+ kernel/irq/irqdomain.c         |    4 +
+ 17 files changed, 2356 insertions(+), 14 deletions(-)
+ create mode 100644 drivers/pci/host/hv_pcifront.c
+
+-- 
+1.9.1
+
