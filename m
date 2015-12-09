@@ -1,86 +1,126 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Julia Lawall <Julia.Lawall@lip6.fr>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Len Brown <lenb@kernel.org>
-Subject: Re: [PATCH] PCI: constify pci_platform_pm_ops structure
-Date: Mon, 07 Dec 2015 02:41:34 +0100
-Message-ID: <1556686.IXJIjFBvQx@vostro.rjw.lan>
-In-Reply-To: <1449419625-29045-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1449419625-29045-1-git-send-email-Julia.Lawall@lip6.fr>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:59651 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754072AbbLITtM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Dec 2015 14:49:12 -0500
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v8 2/7] drivers:hv: Export hv_do_hypercall()
+Date: Wed,  9 Dec 2015 19:48:40 +0000
+Message-Id: <1449690525-5240-3-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1449690525-5240-1-git-send-email-jakeo@microsoft.com>
+References: <1449690525-5240-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, December 06, 2015 05:33:45 PM Julia Lawall wrote:
-> The pci_platform_pm_ops structure is never modified, so declare it as
-> const.
-> 
-> Done with the help of Coccinelle.
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+From: Jake Oshins <jakeo@microsoft.com>
 
-OK
+This patch exposes the function that hv_vmbus.ko uses to make hypercalls.
+This is necessary for retargeting an interrupt when it is given a new
+affinity and vector.
 
-Bjorn, do you want me to handle this one?
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/hv.c           | 20 ++++++++++----------
+ drivers/hv/hyperv_vmbus.h |  2 +-
+ include/linux/hyperv.h    |  1 +
+ 3 files changed, 12 insertions(+), 11 deletions(-)
 
-> ---
->  drivers/pci/pci-acpi.c |    2 +-
->  drivers/pci/pci.c      |    4 ++--
->  drivers/pci/pci.h      |    2 +-
->  3 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index a32ba75..8400f80 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -529,7 +529,7 @@ static bool acpi_pci_need_resume(struct pci_dev *dev)
->  	return !!adev->power.flags.dsw_present;
->  }
->  
-> -static struct pci_platform_pm_ops acpi_pci_platform_pm = {
-> +static const struct pci_platform_pm_ops acpi_pci_platform_pm = {
->  	.is_manageable = acpi_pci_power_manageable,
->  	.set_state = acpi_pci_set_power_state,
->  	.choose_state = acpi_pci_choose_state,
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 314db8c..d1a7105 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -527,9 +527,9 @@ static void pci_restore_bars(struct pci_dev *dev)
->  		pci_update_resource(dev, i);
->  }
->  
-> -static struct pci_platform_pm_ops *pci_platform_pm;
-> +static const struct pci_platform_pm_ops *pci_platform_pm;
->  
-> -int pci_set_platform_pm(struct pci_platform_pm_ops *ops)
-> +int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
->  {
->  	if (!ops->is_manageable || !ops->set_state || !ops->choose_state
->  	    || !ops->sleep_wake)
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index d390fc1..f6f151a 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -68,7 +68,7 @@ struct pci_platform_pm_ops {
->  	bool (*need_resume)(struct pci_dev *dev);
->  };
->  
-> -int pci_set_platform_pm(struct pci_platform_pm_ops *ops);
-> +int pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
->  void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
->  void pci_power_up(struct pci_dev *dev);
->  void pci_disable_enabled_device(struct pci_dev *dev);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
+index 6341be8..7a06933 100644
+--- a/drivers/hv/hv.c
++++ b/drivers/hv/hv.c
+@@ -89,9 +89,9 @@ static int query_hypervisor_info(void)
+ }
+ 
+ /*
+- * do_hypercall- Invoke the specified hypercall
++ * hv_do_hypercall- Invoke the specified hypercall
+  */
+-static u64 do_hypercall(u64 control, void *input, void *output)
++u64 hv_do_hypercall(u64 control, void *input, void *output)
+ {
+ 	u64 input_address = (input) ? virt_to_phys(input) : 0;
+ 	u64 output_address = (output) ? virt_to_phys(output) : 0;
+@@ -132,6 +132,7 @@ static u64 do_hypercall(u64 control, void *input, void *output)
+ 	return hv_status_lo | ((u64)hv_status_hi << 32);
+ #endif /* !x86_64 */
+ }
++EXPORT_SYMBOL_GPL(hv_do_hypercall);
+ 
+ #ifdef CONFIG_X86_64
+ static cycle_t read_hv_clock_tsc(struct clocksource *arg)
+@@ -315,7 +316,7 @@ int hv_post_message(union hv_connection_id connection_id,
+ {
+ 
+ 	struct hv_input_post_message *aligned_msg;
+-	u16 status;
++	u64 status;
+ 
+ 	if (payload_size > HV_MESSAGE_PAYLOAD_BYTE_COUNT)
+ 		return -EMSGSIZE;
+@@ -329,11 +330,10 @@ int hv_post_message(union hv_connection_id connection_id,
+ 	aligned_msg->payload_size = payload_size;
+ 	memcpy((void *)aligned_msg->payload, payload, payload_size);
+ 
+-	status = do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL)
+-		& 0xFFFF;
++	status = hv_do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL);
+ 
+ 	put_cpu();
+-	return status;
++	return status & 0xFFFF;
+ }
+ 
+ 
+@@ -343,13 +343,13 @@ int hv_post_message(union hv_connection_id connection_id,
+  *
+  * This involves a hypercall.
+  */
+-u16 hv_signal_event(void *con_id)
++int hv_signal_event(void *con_id)
+ {
+-	u16 status;
++	u64 status;
+ 
+-	status = (do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL) & 0xFFFF);
++	status = hv_do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL);
+ 
+-	return status;
++	return status & 0xFFFF;
+ }
+ 
+ static int hv_ce_set_next_event(unsigned long delta,
+diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
+index 3782636..cc2fb53 100644
+--- a/drivers/hv/hyperv_vmbus.h
++++ b/drivers/hv/hyperv_vmbus.h
+@@ -582,7 +582,7 @@ extern int hv_post_message(union hv_connection_id connection_id,
+ 			 enum hv_message_type message_type,
+ 			 void *payload, size_t payload_size);
+ 
+-extern u16 hv_signal_event(void *con_id);
++extern int hv_signal_event(void *con_id);
+ 
+ extern int hv_synic_alloc(void);
+ 
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index fddb3e0..24d0b65 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -984,6 +984,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			bool fb_overlap_ok);
+ 
+ int vmbus_cpu_number_to_vp_number(int cpu_number);
++u64 hv_do_hypercall(u64 control, void *input, void *output);
+ 
+ /**
+  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.9.1
+
