@@ -1,116 +1,190 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:42080 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933146AbbLOJkL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Dec 2015 04:40:11 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>, <tony@atomide.com>
-CC: <bcousson@baylibre.com>, <kishon@ti.com>, <robh+dt@kernel.org>,
-	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<linux@arm.linux.org.uk>, <rogerq@ti.com>, <nsekhar@ti.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-	<t-kristo@ti.com>
-Subject: [PATCH v3 2/4] ARM: dts: dra7: Use "syscon-phy-power" and "syscon-pcs" in PCIe PHY node
-Date: Tue, 15 Dec 2015 15:09:04 +0530
-Message-ID: <1450172346-11890-3-git-send-email-kishon@ti.com>
-In-Reply-To: <1450172346-11890-1-git-send-email-kishon@ti.com>
-References: <1450172346-11890-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v8 3/7] PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
+Date: Wed,  9 Dec 2015 19:48:41 +0000
+Message-Id: <1449690525-5240-4-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1449690525-5240-1-git-send-email-jakeo@microsoft.com>
+References: <1449690525-5240-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add "syscon-phy-power" property and "syscon-pcs" property which can
-be used to perform the control module initializations and remove
-the deprecated "ctrl-module" property from PCIe PHY dt nodes.
+From: Jake Oshins <jakeo@microsoft.com>
 
-Phandle to "sysclk" clock node is also added to the PCIe PHY node
-since some of the syscon initializations is based on system clock
-frequency.
+The Linux kernel already has the concpet of IRQ domain, wherein a
+component can expose a set of IRQs which are managed by a particular
+interrupt controller chip or other subsystem. The PCI driver exposes
+the notion of an IRQ domain for Message-Signaled Interrupts (MSI) from
+PCI Express devices. This patch exposes the functions which are
+necessary for making an MSI IRQ domain within a module.
 
-Since "omap_control_pcie1phy" and "omap_control_pcie2phy" devicetree
-nodes are no longer used, remove it.
-
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- arch/arm/boot/dts/dra7.dtsi |   33 ++++++++++-----------------------
- 1 file changed, 10 insertions(+), 23 deletions(-)
+ arch/x86/include/asm/msi.h    | 6 ++++++
+ arch/x86/kernel/apic/msi.c    | 8 +++++---
+ arch/x86/kernel/apic/vector.c | 2 ++
+ drivers/pci/msi.c             | 4 ++++
+ kernel/irq/chip.c             | 1 +
+ kernel/irq/irqdomain.c        | 4 ++++
+ 6 files changed, 22 insertions(+), 3 deletions(-)
 
-diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
-index e38f63f..156d735 100644
---- a/arch/arm/boot/dts/dra7.dtsi
-+++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -1204,16 +1204,18 @@
- 				reg = <0x4a094000 0x80>, /* phy_rx */
- 				      <0x4a094400 0x64>; /* phy_tx */
- 				reg-names = "phy_rx", "phy_tx";
--				ctrl-module = <&omap_control_pcie1phy>;
-+				syscon-phy-power = <&scm_conf_pcie 0x1c>;
-+				syscon-pcs = <&scm_conf_pcie 0x10>;
- 				clocks = <&dpll_pcie_ref_ck>,
- 					 <&dpll_pcie_ref_m2ldo_ck>,
- 					 <&optfclk_pciephy1_32khz>,
- 					 <&optfclk_pciephy1_clk>,
- 					 <&optfclk_pciephy1_div_clk>,
--					 <&optfclk_pciephy_div>;
-+					 <&optfclk_pciephy_div>,
-+					 <&sys_clkin1>;
- 				clock-names = "dpll_ref", "dpll_ref_m2",
- 					      "wkupclk", "refclk",
--					      "div-clk", "phy-div";
-+					      "div-clk", "phy-div", "sysclk";
- 				#phy-cells = <0>;
- 			};
+diff --git a/arch/x86/include/asm/msi.h b/arch/x86/include/asm/msi.h
+index 93724cc..eb4b09b 100644
+--- a/arch/x86/include/asm/msi.h
++++ b/arch/x86/include/asm/msi.h
+@@ -1,7 +1,13 @@
+ #ifndef _ASM_X86_MSI_H
+ #define _ASM_X86_MSI_H
+ #include <asm/hw_irq.h>
++#include <asm/irqdomain.h>
  
-@@ -1222,16 +1224,18 @@
- 				reg = <0x4a095000 0x80>, /* phy_rx */
- 				      <0x4a095400 0x64>; /* phy_tx */
- 				reg-names = "phy_rx", "phy_tx";
--				ctrl-module = <&omap_control_pcie2phy>;
-+				syscon-phy-power = <&scm_conf_pcie 0x20>;
-+				syscon-pcs = <&scm_conf_pcie 0x10>;
- 				clocks = <&dpll_pcie_ref_ck>,
- 					 <&dpll_pcie_ref_m2ldo_ck>,
- 					 <&optfclk_pciephy2_32khz>,
- 					 <&optfclk_pciephy2_clk>,
- 					 <&optfclk_pciephy2_div_clk>,
--					 <&optfclk_pciephy_div>;
-+					 <&optfclk_pciephy_div>,
-+					 <&sys_clkin1>;
- 				clock-names = "dpll_ref", "dpll_ref_m2",
- 					      "wkupclk", "refclk",
--					      "div-clk", "phy-div";
-+					      "div-clk", "phy-div", "sysclk";
- 				#phy-cells = <0>;
- 				status = "disabled";
- 			};
-@@ -1247,23 +1251,6 @@
- 			ti,hwmods = "sata";
- 		};
+ typedef struct irq_alloc_info msi_alloc_info_t;
  
--		omap_control_pcie1phy: control-phy@0x4a003c40 {
--			compatible = "ti,control-phy-pcie";
--			reg = <0x4a003c40 0x4>, <0x4a003c14 0x4>, <0x4a003c34 0x4>;
--			reg-names = "power", "control_sma", "pcie_pcs";
--			clocks = <&sys_clkin1>;
--			clock-names = "sysclk";
--		};
--
--		omap_control_pcie2phy: control-pcie@0x4a003c44 {
--			compatible = "ti,control-phy-pcie";
--			reg = <0x4a003c44 0x4>, <0x4a003c14 0x4>, <0x4a003c34 0x4>;
--			reg-names = "power", "control_sma", "pcie_pcs";
--			clocks = <&sys_clkin1>;
--			clock-names = "sysclk";
--			status = "disabled";
--		};
--
- 		rtc: rtc@48838000 {
- 			compatible = "ti,am3352-rtc";
- 			reg = <0x48838000 0x100>;
++int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
++		    msi_alloc_info_t *arg);
++
++void pci_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc);
++
+ #endif /* _ASM_X86_MSI_H */
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 5f1feb6..ade2532 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -96,8 +96,8 @@ static irq_hw_number_t pci_msi_get_hwirq(struct msi_domain_info *info,
+ 	return arg->msi_hwirq;
+ }
+ 
+-static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
+-			   int nvec, msi_alloc_info_t *arg)
++int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
++		    msi_alloc_info_t *arg)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct msi_desc *desc = first_pci_msi_entry(pdev);
+@@ -113,11 +113,13 @@ static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pci_msi_prepare);
+ 
+-static void pci_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
++void pci_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
+ {
+ 	arg->msi_hwirq = pci_msi_domain_calc_hwirq(arg->msi_dev, desc);
+ }
++EXPORT_SYMBOL_GPL(pci_msi_set_desc);
+ 
+ static struct msi_domain_ops pci_msi_domain_ops = {
+ 	.get_hwirq	= pci_msi_get_hwirq,
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 861bc59..908cb37 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -29,6 +29,7 @@ struct apic_chip_data {
+ };
+ 
+ struct irq_domain *x86_vector_domain;
++EXPORT_SYMBOL_GPL(x86_vector_domain);
+ static DEFINE_RAW_SPINLOCK(vector_lock);
+ static cpumask_var_t vector_cpumask;
+ static struct irq_chip lapic_controller;
+@@ -66,6 +67,7 @@ struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
+ 
+ 	return data ? &data->cfg : NULL;
+ }
++EXPORT_SYMBOL_GPL(irqd_cfg);
+ 
+ struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 7eaa4c8..7a0df3f 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -257,6 +257,7 @@ void pci_msi_mask_irq(struct irq_data *data)
+ {
+ 	msi_set_mask_bit(data, 1);
+ }
++EXPORT_SYMBOL_GPL(pci_msi_mask_irq);
+ 
+ /**
+  * pci_msi_unmask_irq - Generic irq chip callback to unmask PCI/MSI interrupts
+@@ -266,6 +267,7 @@ void pci_msi_unmask_irq(struct irq_data *data)
+ {
+ 	msi_set_mask_bit(data, 0);
+ }
++EXPORT_SYMBOL_GPL(pci_msi_unmask_irq);
+ 
+ void default_restore_msi_irqs(struct pci_dev *dev)
+ {
+@@ -1126,6 +1128,7 @@ struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
+ {
+ 	return to_pci_dev(desc->dev);
+ }
++EXPORT_SYMBOL(msi_desc_to_pci_dev);
+ 
+ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
+ {
+@@ -1285,6 +1288,7 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
+ 	domain->bus_token = DOMAIN_BUS_PCI_MSI;
+ 	return domain;
+ }
++EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
+ 
+ /**
+  * pci_msi_domain_alloc_irqs - Allocate interrupts for @dev in @domain
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index 05e29de..5797909 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -950,6 +950,7 @@ void irq_chip_ack_parent(struct irq_data *data)
+ 	data = data->parent_data;
+ 	data->chip->irq_ack(data);
+ }
++EXPORT_SYMBOL_GPL(irq_chip_ack_parent);
+ 
+ /**
+  * irq_chip_mask_parent - Mask the parent interrupt
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 22aa961..aa6ac44 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -60,6 +60,7 @@ struct fwnode_handle *irq_domain_alloc_fwnode(void *data)
+ 	fwid->fwnode.type = FWNODE_IRQCHIP;
+ 	return &fwid->fwnode;
+ }
++EXPORT_SYMBOL_GPL(irq_domain_alloc_fwnode);
+ 
+ /**
+  * irq_domain_free_fwnode - Free a non-OF-backed fwnode_handle
+@@ -77,6 +78,7 @@ void irq_domain_free_fwnode(struct fwnode_handle *fwnode)
+ 	kfree(fwid->name);
+ 	kfree(fwid);
+ }
++EXPORT_SYMBOL_GPL(irq_domain_free_fwnode);
+ 
+ /**
+  * __irq_domain_add() - Allocate a new irq_domain data structure
+@@ -1013,6 +1015,7 @@ struct irq_data *irq_domain_get_irq_data(struct irq_domain *domain,
+ 
+ 	return NULL;
+ }
++EXPORT_SYMBOL_GPL(irq_domain_get_irq_data);
+ 
+ /**
+  * irq_domain_set_hwirq_and_chip - Set hwirq and irqchip of @virq at @domain
+@@ -1343,6 +1346,7 @@ struct irq_data *irq_domain_get_irq_data(struct irq_domain *domain,
+ 
+ 	return (irq_data && irq_data->domain == domain) ? irq_data : NULL;
+ }
++EXPORT_SYMBOL_GPL(irq_domain_get_irq_data);
+ 
+ /**
+  * irq_domain_set_info - Set the complete data for a @virq in @domain
 -- 
-1.7.9.5
+1.9.1
 
