@@ -1,130 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42024 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754555AbbLKFNQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:13:16 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 47/60] PCI: Move ISA io port align out of calculate_iosize()
-Date: Thu, 10 Dec 2015 21:06:43 -0800
-Message-Id: <1449810416-2950-48-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 9 Dec 2015 15:55:11 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "Jayachandran C." <jchandra@broadcom.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	arnd@arndb.de, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	jiang.liu@linux.intel.com, ddaney@caviumnetworks.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org
+Subject: Re: [PATCH V1 00/11] MMCONFIG refactoring and ARM64 PCI hostbridge
+ init based on ACPI
+Message-ID: <20151209155511.GB21048@red-moon>
+References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
+ <20151207203117.GB14429@localhost>
+ <20151209100125.GA12632@jayachandranc.netlogicmicro.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151209100125.GA12632@jayachandranc.netlogicmicro.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to move ISA io port align out of calculate_iosize(),
-so we could unify calculate_iosize and calculate_memsize later.
+On Wed, Dec 09, 2015 at 03:31:41PM +0530, Jayachandran C. wrote:
+> [trimmed the cc list a bit]
+> On Mon, Dec 07, 2015 at 02:31:17PM -0600, Bjorn Helgaas wrote:
+> > On Tue, Oct 27, 2015 at 05:38:31PM +0100, Tomasz Nowicki wrote:
+> [...]
+> > > 
+> > > Tomasz Nowicki (10):
+> > >   x86, pci: Reorder logic of pci_mmconfig_insert() function
+> > >   x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
+> > >     out of arch/x86/ directory
+> > >   pci, acpi, mcfg: Provide generic implementation of MCFG code
+> > >     initialization.
+> > >   x86, pci: mmconfig_{32,64}.c code refactoring - remove code
+> > >     duplication.
+> > >   x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
+> > >     driver.
+> > >   pci, acpi, mcfg: Provide default RAW ACPI PCI config space accessors.
+> > >   pci, acpi, ecam: Add flag to indicate whether ECAM region was hot
+> > >     added or not.
+> > >   x86, pci: Use previously added ECAM hot_added flag to remove ECAM
+> > >     regions.
+> [...]
+> > 
+> > Waiting for an updated version after all the discussion.
+> 
+> Hi Bjorn,
+> 
+> After looking thru the code, I don't think moving the mmconfig code out
+> of x86 and using it in ARM64 is a good idea.
+> 
+> The code maintains a list of mapping of ECAM regions which can modified
+> at run time, and ends doing this sequence for doing a config access:
+> 
+>         rcu_read_lock();
+>         addr = pci_dev_base(seg, bus, devfn);
+> 	        list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
+> 			...find mapping...
+> 	do pci operation
+> 	rcu_read_unlock();
+> 
+> A lot of the complexity in mmconfig_*.c is to maintain and validate
+> the pci_mmcfg_list which seems to be unecessary.
 
-That extra aligning or offset is to work around ISA devices:
-When one bridge have several children devices, and every device
-has several io port resources and resource size < 0x400.
-We need to check size, and add extra size to make sure bit8/9
-to be zero.
+That list is there to manage hotplug bridges, what makes you think
+it is not necessary ? Jiang (in CC) can certainly comment on that and
+how that list handling can be updated/simplified, if possible.
 
-Also need to apply same checking for optional size path.
+> The better way would be to keep the mapping of ECAM region in the PCI
+> host bridge sysdata like pci-host-generic and directly access using
+> map_bus/read/write.
+> 
+> I see that early raw_pci_read/raw_pci_write may need to be supported.
+> I am not sure if this is needed in ARM64 - and if it is, we can handle
+> this by taking an early mapping for ECAM regions until the PCI host
+> bridges are setup, and dropping the mapping at that point.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
- 1 file changed, 27 insertions(+), 12 deletions(-)
+I do not think it is needed (and if it is it can be added later, it
+should not block this series), this was already debated in previous
+threads (and in the ASWG, where basically nobody could provide a reason
+why those raw accessors in ACPICA are meant to exist, they are there for
+AML to access config space, why that has to be happen before PCI busses
+are enumerated is still a mystery to me).
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 0ece6b6..00e7f95 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1114,11 +1114,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 		size = min_size;
- 	if (old_size == 1)
- 		old_size = 0;
--	/* To be fixed in 2.5: we should have sort of HAVE_ISA
--	   flag in the struct pci_bus. */
--#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
--	size = (size & 0xff) + ((size & ~0xffUL) << 2);
--#endif
- 	size = ALIGN(size + size1, align);
- 	if (size < old_size)
- 		size = old_size;
-@@ -1172,6 +1167,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
- 	return max(align, arch_align);
- }
- 
-+static resource_size_t size_aligned_for_isa(resource_size_t size)
-+{
-+	/*
-+	 * To be fixed in 2.5: we should have sort of HAVE_ISA
-+	 *  flag in the struct pci_bus.
-+	 */
-+#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
-+	size = (size & 0xff) + ((size & ~0xffUL) << 2);
-+#endif
-+	return size;
-+}
-+
- /**
-  * pbus_size_io() - size the io window of a given bus
-  *
-@@ -1189,11 +1196,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- {
- 	struct pci_dev *dev;
- 	resource_size_t min_sum_size = 0;
--	resource_size_t sum_add_size;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
- 							IORESOURCE_IO);
- 	resource_size_t size = 0, size0 = 0, size1 = 0;
--	resource_size_t children_add_size = 0;
-+	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
- 	resource_size_t min_align, align;
- 
- 	if (!b_res)
-@@ -1210,7 +1216,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
--			unsigned long r_size;
-+			unsigned long r_size, r_add_size;
- 
- 			if (r->parent || !(r->flags & IORESOURCE_IO))
- 				continue;
-@@ -1226,18 +1232,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 			if (align > min_align)
- 				min_align = align;
- 
--			if (realloc_head)
--				children_add_size += get_res_add_size(realloc_head, r);
-+			if (realloc_head) {
-+				r_add_size = get_res_add_size(realloc_head, r);
-+				r_add_size += r_size;
-+				if (r_add_size < 0x400)
-+					/* Might be re-aligned for ISA */
-+					sum_add_size += r_add_size;
-+				else
-+					sum_add_size1 += r_add_size;
-+			}
- 		}
- 	}
- 
-+	size = size_aligned_for_isa(size);
- 	size0 = calculate_iosize(size, min_size, size1,
- 			resource_size(b_res), min_align);
--	sum_add_size = children_add_size + size + size1;
-+	sum_add_size = size_aligned_for_isa(sum_add_size);
-+	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	size1 = !realloc_head ? size0 :
--		calculate_iosize(size, min_size, sum_add_size - size,
-+		calculate_iosize(sum_add_size, min_size, 0,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
--- 
-1.8.4.5
-
+Lorenzo
