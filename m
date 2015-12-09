@@ -1,77 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:13069 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754135AbbLIWz1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Dec 2015 17:55:27 -0500
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v9 1/7] drivers:hv: Export a function that maps Linux CPU num onto Hyper-V proc num
-Date: Wed,  9 Dec 2015 22:54:51 +0000
-Message-Id: <1449701697-6366-2-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
-References: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
+Received: from mail-vk0-f47.google.com ([209.85.213.47]:35164 "EHLO
+	mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751647AbbLIEkH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Dec 2015 23:40:07 -0500
+MIME-Version: 1.0
+In-Reply-To: <56669C50.9060700@linaro.org>
+References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
+	<1449149725-27607-2-git-send-email-stanimir.varbanov@linaro.org>
+	<56669C50.9060700@linaro.org>
+Date: Wed, 9 Dec 2015 10:10:05 +0530
+Message-ID: <CAHM4w1k_EAt+xBBYyG3B7W9Fegc4j+uRq5t_biUsxOGt+k+xUA@mail.gmail.com>
+Subject: Re: [PATCH v4 1/5] PCI: designware: add memory barrier after enabling region
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On Tue, Dec 8, 2015 at 2:31 PM, Stanimir Varbanov
+<stanimir.varbanov@linaro.org> wrote:
+>
+> On 12/03/2015 03:35 PM, Stanimir Varbanov wrote:
+> > Add 'write memory' barrier after enable region in PCIE_ATU_CR2
+> > register. The barrier is needed to ensure that the region enable
+> > request has been reached it's destination at time when we
+> > read/write to PCI configuration space.
+> >
+> > Without this barrier PCI device enumeration during kernel boot
+> > is not reliable, and reading configuration space for particular
+> > PCI device on the bus returns zero aka no device.
+>
+> Anand, Jingoo, what is your opinion?
+>
+> >
+> > Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+> > ---
+> >  drivers/pci/host/pcie-designware.c |    5 +++++
+> >  1 file changed, 5 insertions(+)
+> >
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index 02a7452bdf23..ed4dc2e2553b 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -164,6 +164,11 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
+> >       dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
+> >       dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
+> >       dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+> > +     /*
+> > +      * ensure that the ATU enable has been happaned before accessing
+> > +      * pci configuration/io spaces through dw_pcie_cfg_[read|write].
+> > +      */
+> > +     wmb();
+> >  }
+> >
 
-This patch exposes the mapping between Linux CPU number and Hyper-V
-virtual processor number. This is necessary because the hypervisor needs
-to know which virtual processor to target when making a mapping in the
-Interrupt Redirection Table in the I/O MMU.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/hv/vmbus_drv.c | 17 +++++++++++++++++
- include/linux/hyperv.h |  2 ++
- 2 files changed, 19 insertions(+)
+My understnading is that since writel() of dw_pcie_writel_rc() in
+above code and readl(), writel() of dw_pcie_cfg_[read|write]() (which
+will follow) goes through same device (ie PCIe host here). So, it is
+guaranteed that 1st writel() will be executed before later
+readl()/writel(). If that is true then we do not need any explicit
+barrier here.
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index f19b6f7..c89d0e5 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -1191,6 +1191,23 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- }
- EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
- 
-+/**
-+ * vmbus_cpu_number_to_vp_number() - Map CPU to VP.
-+ * @cpu_number: CPU number in Linux terms
-+ *
-+ * This function returns the mapping between the Linux processor
-+ * number and the hypervisor's virtual processor number, useful
-+ * in making hypercalls and such that talk about specific
-+ * processors.
-+ *
-+ * Return: Virtual processor number in Hyper-V terms
-+ */
-+int vmbus_cpu_number_to_vp_number(int cpu_number)
-+{
-+	return hv_context.vp_index[cpu_number];
-+}
-+EXPORT_SYMBOL_GPL(vmbus_cpu_number_to_vp_number);
-+
- static int vmbus_acpi_add(struct acpi_device *device)
- {
- 	acpi_status result;
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 8fdc17b..fddb3e0 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -983,6 +983,8 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			resource_size_t size, resource_size_t align,
- 			bool fb_overlap_ok);
- 
-+int vmbus_cpu_number_to_vp_number(int cpu_number);
-+
- /**
-  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
-  *
--- 
-1.9.1
+Arnd, Russel: whats your opinion here.
 
+~Pratyush
