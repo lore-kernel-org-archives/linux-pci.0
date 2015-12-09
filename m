@@ -1,110 +1,44 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V2 10/23] x86, pci: Cleanup platform specific MCFG data using previously added ECAM hot_added flag.
-Date: Wed, 16 Dec 2015 16:16:20 +0100
-Message-Id: <1450278993-12664-11-git-send-email-tn@semihalf.com>
-In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:58461 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752657AbbLIAvX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Dec 2015 19:51:23 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Julia Lawall <Julia.Lawall@lip6.fr>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Len Brown <lenb@kernel.org>
+Subject: Re: [PATCH] PCI: constify pci_platform_pm_ops structure
+Date: Wed, 09 Dec 2015 02:21:21 +0100
+Message-ID: <11604085.iKre2i4LQp@vostro.rjw.lan>
+In-Reply-To: <20151207160649.GG7994@localhost>
+References: <1449419625-29045-1-git-send-email-Julia.Lawall@lip6.fr> <1556686.IXJIjFBvQx@vostro.rjw.lan> <20151207160649.GG7994@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we have hot_added flag and all information in struct acpi_pci_root
-we need, we can get rid of arch specific mcfg data from struct pci_root_info.
+On Monday, December 07, 2015 10:06:49 AM Bjorn Helgaas wrote:
+> On Mon, Dec 07, 2015 at 02:41:34AM +0100, Rafael J. Wysocki wrote:
+> > On Sunday, December 06, 2015 05:33:45 PM Julia Lawall wrote:
+> > > The pci_platform_pm_ops structure is never modified, so declare it as
+> > > const.
+> > > 
+> > > Done with the help of Coccinelle.
+> > > 
+> > > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> > 
+> > OK
+> > 
+> > Bjorn, do you want me to handle this one?
+> 
+> Sure, sounds good to me.
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- arch/x86/pci/acpi.c | 36 ++++++++++++++----------------------
- 1 file changed, 14 insertions(+), 22 deletions(-)
+OK, queued up for 4.5, thanks!
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 64caf2b..56714a9 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -12,11 +12,6 @@
- struct pci_root_info {
- 	struct acpi_pci_root_info common;
- 	struct pci_sysdata sd;
--#ifdef	CONFIG_PCI_MMCONFIG
--	bool mcfg_added;
--	u8 start_bus;
--	u8 end_bus;
--#endif
- };
- 
- static bool pci_use_crs = true;
-@@ -180,16 +175,13 @@ static int check_segment(u16 seg, struct device *dev, char *estr)
- 
- static int setup_mcfg_map(struct acpi_pci_root_info *ci)
- {
--	int result, seg;
--	struct pci_root_info *info;
-+	int result, seg, start, end;
- 	struct acpi_pci_root *root = ci->root;
- 	struct device *dev = &ci->bridge->dev;
- 
--	info = container_of(ci, struct pci_root_info, common);
--	info->start_bus = (u8)root->secondary.start;
--	info->end_bus = (u8)root->secondary.end;
--	info->mcfg_added = false;
--	seg = info->sd.domain;
-+	seg = root->segment;
-+	start = root->secondary.start;
-+	end = root->secondary.end;
- 
- 	/* return success if MMCFG is not in use */
- 	if (raw_pci_ext_ops && raw_pci_ext_ops != &pci_mmcfg)
-@@ -198,13 +190,11 @@ static int setup_mcfg_map(struct acpi_pci_root_info *ci)
- 	if (!(pci_probe & PCI_PROBE_MMCONF))
- 		return check_segment(seg, dev, "MMCONFIG is disabled,");
- 
--	result = pci_mmconfig_insert(dev, seg, info->start_bus, info->end_bus,
--				     root->mcfg_addr);
-+	result = pci_mmconfig_insert(dev, seg, start, end, root->mcfg_addr);
- 	if (result == 0) {
- 		/* enable MMCFG if it hasn't been enabled yet */
- 		if (raw_pci_ext_ops == NULL)
- 			raw_pci_ext_ops = &pci_mmcfg;
--		info->mcfg_added = true;
- 	} else if (result != -EEXIST)
- 		return check_segment(seg, dev,
- 			 "fail to add MMCONFIG information,");
-@@ -214,14 +204,16 @@ static int setup_mcfg_map(struct acpi_pci_root_info *ci)
- 
- static void teardown_mcfg_map(struct acpi_pci_root_info *ci)
- {
--	struct pci_root_info *info;
-+	struct acpi_pci_root *root = ci->root;
-+	struct pci_mmcfg_region *cfg;
- 
--	info = container_of(ci, struct pci_root_info, common);
--	if (info->mcfg_added) {
--		pci_mmconfig_delete(info->sd.domain,
--				    info->start_bus, info->end_bus);
--		info->mcfg_added = false;
--	}
-+	cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
-+	if (!cfg)
-+		return;
-+
-+	if (cfg->hot_added)
-+		pci_mmconfig_delete(root->segment, root->secondary.start,
-+				    root->secondary.end);
- }
- #else
- static int setup_mcfg_map(struct acpi_pci_root_info *ci)
--- 
-1.9.1
+Rafael
 
