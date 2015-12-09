@@ -1,105 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48465 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754694AbbLKFN1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:13:27 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 60/60] PCI: Only try to assign io port only for root bus that support it
-Date: Thu, 10 Dec 2015 21:06:56 -0800
-Message-Id: <1449810416-2950-61-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:52102 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751415AbbLIOxm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Dec 2015 09:53:42 -0500
+Date: Wed, 9 Dec 2015 08:53:36 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Jarkko Nikula <jarkko.nikula@linux.intel.com>,
+	linux-pm@vger.kernel.org, Pavel Machek <pavel@ucw.cz>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI / PM: Fix small typo in documentation
+Message-ID: <20151209145336.GB31930@localhost>
+References: <1449584245-4347-1-git-send-email-jarkko.nikula@linux.intel.com>
+ <2034538.amqQujWT52@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2034538.amqQujWT52@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI subsystem always assumes that I/O is supported on root bus and
-tries to assign an I/O window to each child bus even if that is not the
-case.
+On Wed, Dec 09, 2015 at 02:16:50AM +0100, Rafael J. Wysocki wrote:
+> On Tuesday, December 08, 2015 04:17:25 PM Jarkko Nikula wrote:
+> > cuased -> caused
+> > 
+> > Signed-off-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+> 
+> Queued up for 4.5, thanks!
+> 
+> I hope that Bjorn won't mind ...
 
-The use cases is on Intel 8 socket system that have 8 root buses,
-last two root buses would not have io port resources from _CRS.
+Looks good to me, thanks!
 
-Check if root bus supports I/O, and later during sizing and
-assigning, check that flags and skip those resources.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c     | 6 ++++++
- drivers/pci/setup-bus.c | 9 +++++++++
- include/linux/pci.h     | 1 +
- 3 files changed, 16 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 720c3d8..6268fe6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -342,6 +342,9 @@ static void pci_read_bridge_io(struct pci_bus *child)
- 	struct pci_bus_region region;
- 	struct resource *res;
- 
-+	if (!pci_find_host_bridge(child)->has_ioport)
-+		return;
-+
- 	io_mask = PCI_IO_RANGE_MASK;
- 	io_granularity = 0x1000;
- 	if (dev->io_window_1k) {
-@@ -2195,6 +2198,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 			bus_addr[0] = '\0';
- 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
- 
-+		if (resource_type(res) == IORESOURCE_IO)
-+			bridge->has_ioport = 1;
-+
- 		if (resource_type(res) == IORESOURCE_MEM) {
- 			if ((res->end - offset) > 0xffffffff)
- 				bridge->has_mem64 = 1;
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index cf55828..6e29a8f 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -226,6 +226,10 @@ static void pdev_assign_resources_prepare(struct pci_dev *dev,
- 		if (resource_disabled(r) || r->parent)
- 			continue;
- 
-+		if ((r->flags & IORESOURCE_IO) &&
-+		    !pci_find_host_bridge(dev->bus)->has_ioport)
-+			continue;
-+
- 		r_align = __pci_resource_alignment(dev, r, realloc_head);
- 		if (!r_align) {
- 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
-@@ -1189,6 +1193,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		min_size = 0;
- 	}
- 
-+	if (!pci_find_host_bridge(bus)->has_ioport) {
-+		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
-+		return;
-+	}
-+
- 	min_align = window_alignment(bus, IORESOURCE_IO);
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 32640fd..d0574b4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -414,6 +414,7 @@ struct pci_host_bridge {
- 	void *release_data;
- 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
- 	unsigned int has_mem64:1;
-+	unsigned int has_ioport:1;
- 	/* Resource alignment requirements */
- 	resource_size_t (*align_resource)(struct pci_dev *dev,
- 			const struct resource *res,
--- 
-1.8.4.5
-
+> > ---
+> >  Documentation/power/pci.txt | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/Documentation/power/pci.txt b/Documentation/power/pci.txt
+> > index b0e911e0e8f5..44558882aa60 100644
+> > --- a/Documentation/power/pci.txt
+> > +++ b/Documentation/power/pci.txt
+> > @@ -999,7 +999,7 @@ from its probe routine to make runtime PM work for the device.
+> >  
+> >  It is important to remember that the driver's runtime_suspend() callback
+> >  may be executed right after the usage counter has been decremented, because
+> > -user space may already have cuased the pm_runtime_allow() helper function
+> > +user space may already have caused the pm_runtime_allow() helper function
+> >  unblocking the runtime PM of the device to run via sysfs, so the driver must
+> >  be prepared to cope with that.
+> >  
+> > 
+> 
+> Thanks,
+> Rafael
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
