@@ -1,44 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:35731 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751296AbbLVIa0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Dec 2015 03:30:26 -0500
+Received: from foss.arm.com ([217.140.101.70]:56947 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755137AbbLJSQN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Dec 2015 13:16:13 -0500
+Message-ID: <5669C169.2070504@arm.com>
+Date: Thu, 10 Dec 2015 18:16:09 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <1450745949-23882-2-git-send-email-paul.gortmaker@windriver.com>
-References: <1450745949-23882-1-git-send-email-paul.gortmaker@windriver.com>
-	<1450745949-23882-2-git-send-email-paul.gortmaker@windriver.com>
-Date: Tue, 22 Dec 2015 09:30:25 +0100
-Message-ID: <CAMuHMdX-ek6eG9kXt1R4vVHUqe2ggpMCxQ33H512VQ66hRKrAg@mail.gmail.com>
-Subject: Re: [PATCH 1/2] drivers/pci: make host/pcie-rcar.c explicitly non-modular
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Content-Type: text/plain; charset=UTF-8
+To: jakeo@microsoft.com, gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v10 4/7] PCI: Add fwnode_handle to pci_sysdata
+References: <1449769983-12948-1-git-send-email-jakeo@microsoft.com> <1449769983-12948-5-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1449769983-12948-5-git-send-email-jakeo@microsoft.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Paul,
+On 10/12/15 17:53, jakeo@microsoft.com wrote:
+> From: Jake Oshins <jakeo@microsoft.com>
+> 
+> This patch adds an fwnode_handle to struct pci_sysdata, which is
+> used by the next patch in the series when trying to locate an
+> IRQ domain associated with a root PCI bus.
+> 
+> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+> ---
+>  arch/x86/include/asm/pci.h | 15 +++++++++++++++
+>  drivers/pci/probe.c        |  1 +
+>  include/linux/pci.h        |  4 ++++
+>  3 files changed, 20 insertions(+)
+> 
+> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+> index 4625943..6fc3c7c 100644
+> --- a/arch/x86/include/asm/pci.h
+> +++ b/arch/x86/include/asm/pci.h
+> @@ -20,6 +20,9 @@ struct pci_sysdata {
+>  #ifdef CONFIG_X86_64
+>  	void		*iommu;		/* IOMMU private data */
+>  #endif
+> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+> +	void		*fwnode;	/* IRQ domain for MSI assignment */
+> +#endif
+>  };
+>  
+>  extern int pci_routeirq;
+> @@ -32,6 +35,7 @@ extern int noioapicreroute;
+>  static inline int pci_domain_nr(struct pci_bus *bus)
+>  {
+>  	struct pci_sysdata *sd = bus->sysdata;
+> +
+>  	return sd->domain;
+>  }
+>  
+> @@ -41,6 +45,17 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+>  }
+>  #endif
+>  
+> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+> +static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
+> +{
+> +	struct pci_sysdata *sd = bus->sysdata;
+> +
+> +	return sd->fwnode;
+> +}
+> +
+> +#define pci_root_bus_fwnode	_pci_root_bus_fwnode
+> +#endif
+> +
+>  /* Can be used to override the logic in pci_scan_bus for skipping
+>     already-configured bus numbers - to be used for buggy BIOSes
+>     or architectures with incomplete PCI setup by the loader */
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index edb1984..750f907 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -15,6 +15,7 @@
+>  #include <linux/pci-aspm.h>
+>  #include <linux/aer.h>
+>  #include <linux/acpi.h>
+> +#include <linux/irqdomain.h>
 
-On Tue, Dec 22, 2015 at 1:59 AM, Paul Gortmaker
-<paul.gortmaker@windriver.com> wrote:
-> We also delete the MODULE_LICENSE tag etc. since all that information
-> was (or is now) contained at the top of the file in the comments.
+Nit: this should be with patch 5, but that doesn't hurt. I don't think
+you need to respin the series for this.
 
-The MODULE_* tags are easier to parse by automated tools.
-Do we want to make the work of e.g. the SPDX people harder?
+>  #include <asm-generic/pci-bridge.h>
+>  #include "pci.h"
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 6ae25aa..b414422 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1517,6 +1517,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+>  
+>  #include <asm/pci.h>
+>  
+> +#ifndef pci_root_bus_fwnode
+> +#define pci_root_bus_fwnode(bus)	((void)(bus), NULL)
+> +#endif
+> +
+>  /* these helpers provide future and backwards compatibility
+>   * for accessing popular PCI BAR info */
+>  #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
+> 
 
-Gr{oetje,eeting}s,
+Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
 
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+	M.
+-- 
+Jazz is not dead. It just smells funny...
