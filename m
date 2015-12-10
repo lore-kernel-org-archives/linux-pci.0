@@ -1,48 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ausxipps301.us.dell.com ([143.166.148.223]:22183 "EHLO
-	ausxipps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752743AbbL2WVH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Dec 2015 17:21:07 -0500
-From: Jordan Hargrave <Jordan_Hargrave@dell.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	helgaas@kernel.org, alexander.duyck@gmail.com,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>
-Subject: [PATCH] Limit VPD length on Atheros wifi cards
-Date: Tue, 29 Dec 2015 16:19:02 -0600
-Message-Id: <1451427542-30482-1-git-send-email-Jordan_Hargrave@dell.com>
-To: Jordan_Hargrave@dell.com
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:47175 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754912AbbLJRxd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 12:53:33 -0500
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v10 4/7] PCI: Add fwnode_handle to pci_sysdata
+Date: Thu, 10 Dec 2015 17:53:00 +0000
+Message-Id: <1449769983-12948-5-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
+References: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Attempt to read VPD on these cards causes kernel hang or delay
+From: Jake Oshins <jakeo@microsoft.com>
 
-Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
+This patch adds an fwnode_handle to struct pci_sysdata, which is
+used by the next patch in the series when trying to locate an
+IRQ domain associated with a root PCI bus.
+
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- drivers/pci/quirks.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+ arch/x86/include/asm/pci.h | 15 +++++++++++++++
+ drivers/pci/probe.c        |  1 +
+ include/linux/pci.h        |  4 ++++
+ 3 files changed, 20 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e6376f6..a72667f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2161,6 +2161,16 @@ static void quirk_brcm_570x_limit_vpd(struct pci_dev *dev)
- 	}
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4625943..6fc3c7c 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -20,6 +20,9 @@ struct pci_sysdata {
+ #ifdef CONFIG_X86_64
+ 	void		*iommu;		/* IOMMU private data */
+ #endif
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	void		*fwnode;	/* IRQ domain for MSI assignment */
++#endif
+ };
+ 
+ extern int pci_routeirq;
+@@ -32,6 +35,7 @@ extern int noioapicreroute;
+ static inline int pci_domain_nr(struct pci_bus *bus)
+ {
+ 	struct pci_sysdata *sd = bus->sysdata;
++
+ 	return sd->domain;
  }
  
-+static void quirk_atheros_vpd(struct pci_dev *dev)
+@@ -41,6 +45,17 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ }
+ #endif
+ 
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
 +{
-+	/* Atheros WiFi cards hang when reading VPD */
-+	if (dev->vpd)
-+		dev->vpd->len = 0;
++	struct pci_sysdata *sd = bus->sysdata;
++
++	return sd->fwnode;
 +}
 +
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATHEROS, PCI_ANY_ID, quirk_atheros_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID, quirk_atheros_vpd);
++#define pci_root_bus_fwnode	_pci_root_bus_fwnode
++#endif
 +
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
- 			PCI_DEVICE_ID_NX2_5706,
- 			quirk_brcm_570x_limit_vpd);
+ /* Can be used to override the logic in pci_scan_bus for skipping
+    already-configured bus numbers - to be used for buggy BIOSes
+    or architectures with incomplete PCI setup by the loader */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index edb1984..750f907 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -15,6 +15,7 @@
+ #include <linux/pci-aspm.h>
+ #include <linux/aer.h>
+ #include <linux/acpi.h>
++#include <linux/irqdomain.h>
+ #include <asm-generic/pci-bridge.h>
+ #include "pci.h"
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6ae25aa..b414422 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1517,6 +1517,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ 
+ #include <asm/pci.h>
+ 
++#ifndef pci_root_bus_fwnode
++#define pci_root_bus_fwnode(bus)	((void)(bus), NULL)
++#endif
++
+ /* these helpers provide future and backwards compatibility
+  * for accessing popular PCI BAR info */
+ #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
 -- 
-1.7.1
+1.9.1
 
