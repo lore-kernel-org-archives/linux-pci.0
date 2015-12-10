@@ -1,63 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:48533 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755165AbbLGDlC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Dec 2015 22:41:02 -0500
-Subject: Re: [PATCH v7 45/50] drivers/of: Avoid recursively calling
- unflatten_dt_node()
-To: Rob Herring <robherring2@gmail.com>
-References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAL_Jsq+BnPEKkRgQX4+e0MA9dKLVLhy8rVF25Fr9yXL2jp+WLA@mail.gmail.com>
- <1449446087.21036.1.camel@kernel.crashing.org>
- <5664ED0C.6060706@roeck-us.net>
- <CAL_JsqKWtEkmdDyWKjOFdtgX5wx2f+xfJMFw4jmo05Z5Jo_ZYA@mail.gmail.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Pantelis Antoniou <panto@antoniou-consulting.com>,
-	Frank Rowand <frowand.list@gmail.com>
-From: Guenter Roeck <linux@roeck-us.net>
-Message-ID: <5664FFC8.2060904@roeck-us.net>
-Date: Sun, 6 Dec 2015 19:40:56 -0800
+Received: from foss.arm.com ([217.140.101.70]:56904 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752567AbbLJSMt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Dec 2015 13:12:49 -0500
+Message-ID: <5669C09D.2080108@arm.com>
+Date: Thu, 10 Dec 2015 18:12:45 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAL_JsqKWtEkmdDyWKjOFdtgX5wx2f+xfJMFw4jmo05Z5Jo_ZYA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: jakeo@microsoft.com, gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v10 5/7] PCI: irqdomain: Look up IRQ domain by fwnode_handle
+References: <1449769983-12948-1-git-send-email-jakeo@microsoft.com> <1449769983-12948-6-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1449769983-12948-6-git-send-email-jakeo@microsoft.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/06/2015 06:33 PM, Rob Herring wrote:
-> On Sun, Dec 6, 2015 at 8:21 PM, Guenter Roeck <linux@roeck-us.net> wrote:
->> On 12/06/2015 03:54 PM, Benjamin Herrenschmidt wrote:
->>>
->>> On Sun, 2015-12-06 at 14:28 -0600, Rob Herring wrote:
->>>>
->>>>
->>>> Do you plan to respin the OF parts at least soon? There's another
->>>> problem Guenter found that of_fdt_unflatten_tree is not re-entrant due
->>>> to "depth" being static and this series fixes that. So I'd rather
->>>> apply this and avoid adding a mutex if possible.
->>>
->>>
->>> Gavin is on vacation until next year.
->>>
->>
->> That is a bit more than the timeline I am looking for.
->>
->> Rob, any chance to accept my patch for now ? After all, it can be
->> reverted after the rework is complete, and it would be easier
->> to apply to earlier kernels.
->
-> Yes, will do. It's only 4.1 and later that it should be marked for stable?
->
+On 10/12/15 17:53, jakeo@microsoft.com wrote:
+> From: Jake Oshins <jakeo@microsoft.com>
+> 
+> This patch adds a second way of finding an IRQ domain associated with
+> a root PCI bus.  After looking to see if one can be found through
+> the OF tree, it attempts to look up the IRQ domain through an
+> fwnode_handle stored in the pci_sysdata struct.
+> 
+> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+> ---
+>  drivers/pci/probe.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 750f907..c6369dd 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -674,6 +674,20 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
+>  	 */
+>  	d = pci_host_bridge_of_msi_domain(bus);
+>  
+> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+> +	/*
+> +	 * If no IRQ domain was found via the OF tree, try looking it up
+> +	 * directly through the fwnode_handle.
+> +	 */
+> +	if (!d) {
+> +		struct fwnode_handle *fwnode = pci_root_bus_fwnode(bus);
+> +
+> +		if (fwnode)
+> +			d = irq_find_matching_fwnode(fwnode,
+> +						     DOMAIN_BUS_PCI_MSI);
+> +	}
+> +#endif
+> +
+>  	return d;
+>  }
+>  
+> 
 
-Yes, I think so. Earlier kernels would need a manual backport.
+Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
 
-Thanks,
-Guenter
-
+	M.
+-- 
+Jazz is not dead. It just smells funny...
