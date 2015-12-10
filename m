@@ -1,89 +1,165 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:54327 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753552AbbLDRel (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Dec 2015 12:34:41 -0500
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v5 3/5] PCI: iproc: Add iProc PCIe MSI device tree binding
-Date: Fri, 4 Dec 2015 09:35:00 -0800
-Message-ID: <1449250502-10679-4-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1449250502-10679-1-git-send-email-rjui@broadcom.com>
-References: <1449250502-10679-1-git-send-email-rjui@broadcom.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <tglx@linutronix.de>,
+	<jason@lakedaemon.net>, <rjw@rjwysocki.net>, <bhelgaas@google.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	<hanjun.guo@linaro.org>, <tomasz.nowicki@linaro.org>,
+	<graeme.gregory@linaro.org>, <dhdang@apm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>,
+	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v7 3/4] gicv2m: Refactor to prepare for ACPI support
+Date: Thu, 10 Dec 2015 08:55:29 -0800
+Message-ID: <1449766530-16935-4-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch updates the iProc PCIe device tree bindings with added
-binding information for MSI
+This patch replaces the struct device_node with struct fwnode_handle
+since this structure is common between DT and ACPI.
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Anup Patel <anup.patel@broadcom.com>
-Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
+It also refactors gicv2m_init_one() to prepare for ACPI support.
+The only functional change is removing the node name from pr_info.
+
+Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 ---
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    | 35 ++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
+ drivers/irqchip/irq-gic-v2m.c | 53 ++++++++++++++++++++++++++-----------------
+ 1 file changed, 32 insertions(+), 21 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-index 06eae0f..acbdbad 100644
---- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-@@ -35,6 +35,28 @@ Optional:
- - brcm,pcie-ob-oarr-size: Some iProc SoCs need the OARR size bit to be set to
- increase the outbound window size
+diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
+index 87f8d10..779c390 100644
+--- a/drivers/irqchip/irq-gic-v2m.c
++++ b/drivers/irqchip/irq-gic-v2m.c
+@@ -55,7 +55,7 @@ static DEFINE_SPINLOCK(v2m_lock);
  
-+MSI support (optional):
-+
-+For older platforms without MSI integrated in the GIC, iProc PCIe core provides
-+an event queue based MSI support. The iProc MSI uses host memories to store
-+MSI posted writes in the event queues
-+
-+- msi-parent: Link to the device node of the MSI controller. On newer iProc
-+platforms, the MSI controller may be gicv2m or gicv3-its. On older iProc
-+platforms without MSI support in its interrupt controller, one may use the
-+event queue based MSI support integrated within the iProc PCIe core
-+
-+When the iProc event queue based MSI is used, one needs to define the
-+following properties in the MSI device node:
-+- compatible: Must be "brcm,iproc-msi"
-+- msi-controller: claims itself as an MSI controller
-+- interrupt-parent: Link to its parent interrupt device
-+- interrupts: List of interrupt IDs from its parent interrupt device
-+
-+Optional properties:
-+- brcm,pcie-msi-inten: Needs to be present for some older iProc platforms that
-+require the interrupt enable registers to be set explicitly to enable MSI
-+
- Example:
- 	pcie0: pcie@18012000 {
- 		compatible = "brcm,iproc-pcie";
-@@ -61,6 +83,19 @@ Example:
- 		brcm,pcie-ob-oarr-size;
- 		brcm,pcie-ob-axi-offset = <0x00000000>;
- 		brcm,pcie-ob-window-size = <256>;
-+
-+		msi-parent = <&msi0>;
-+
-+		/* iProc event queue based MSI */
-+		msi0: msi@18012000 {
-+			compatible = "brcm,iproc-msi";
-+			msi-controller;
-+			interrupt-parent = <&gic>;
-+			interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
-+				     <GIC_SPI 97 IRQ_TYPE_NONE>,
-+				     <GIC_SPI 98 IRQ_TYPE_NONE>,
-+				     <GIC_SPI 99 IRQ_TYPE_NONE>,
-+		};
- 	};
+ struct v2m_data {
+ 	struct list_head entry;
+-	struct device_node *node;
++	struct fwnode_handle *fwnode;
+ 	struct resource res;	/* GICv2m resource */
+ 	void __iomem *base;	/* GICv2m virt address */
+ 	u32 spi_start;		/* The SPI number that MSIs start */
+@@ -254,7 +254,7 @@ static void gicv2m_teardown(void)
+ 		list_del(&v2m->entry);
+ 		kfree(v2m->bm);
+ 		iounmap(v2m->base);
+-		of_node_put(v2m->node);
++		of_node_put(to_of_node(v2m->fwnode));
+ 		kfree(v2m);
+ 	}
+ }
+@@ -268,7 +268,7 @@ static int gicv2m_allocate_domains(struct irq_domain *parent)
+ 	if (!v2m)
+ 		return 0;
  
- 	pcie1: pcie@18013000 {
+-	inner_domain = irq_domain_create_tree(of_node_to_fwnode(v2m->node),
++	inner_domain = irq_domain_create_tree(v2m->fwnode,
+ 					      &gicv2m_domain_ops, v2m);
+ 	if (!inner_domain) {
+ 		pr_err("Failed to create GICv2m domain\n");
+@@ -277,10 +277,10 @@ static int gicv2m_allocate_domains(struct irq_domain *parent)
+ 
+ 	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+ 	inner_domain->parent = parent;
+-	pci_domain = pci_msi_create_irq_domain(of_node_to_fwnode(v2m->node),
++	pci_domain = pci_msi_create_irq_domain(v2m->fwnode,
+ 					       &gicv2m_msi_domain_info,
+ 					       inner_domain);
+-	plat_domain = platform_msi_create_irq_domain(of_node_to_fwnode(v2m->node),
++	plat_domain = platform_msi_create_irq_domain(v2m->fwnode,
+ 						     &gicv2m_pmsi_domain_info,
+ 						     inner_domain);
+ 	if (!pci_domain || !plat_domain) {
+@@ -296,8 +296,9 @@ static int gicv2m_allocate_domains(struct irq_domain *parent)
+ 	return 0;
+ }
+ 
+-static int __init gicv2m_init_one(struct device_node *node,
+-				  struct irq_domain *parent)
++static int __init gicv2m_init_one(struct fwnode_handle *fwnode,
++				  u32 spi_start, u32 nr_spis,
++				  struct resource *res)
+ {
+ 	int ret;
+ 	struct v2m_data *v2m;
+@@ -309,13 +310,9 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 	}
+ 
+ 	INIT_LIST_HEAD(&v2m->entry);
+-	v2m->node = node;
++	v2m->fwnode = fwnode;
+ 
+-	ret = of_address_to_resource(node, 0, &v2m->res);
+-	if (ret) {
+-		pr_err("Failed to allocate v2m resource.\n");
+-		goto err_free_v2m;
+-	}
++	memcpy(&v2m->res, res, sizeof(struct resource));
+ 
+ 	v2m->base = ioremap(v2m->res.start, resource_size(&v2m->res));
+ 	if (!v2m->base) {
+@@ -324,10 +321,9 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 		goto err_free_v2m;
+ 	}
+ 
+-	if (!of_property_read_u32(node, "arm,msi-base-spi", &v2m->spi_start) &&
+-	    !of_property_read_u32(node, "arm,msi-num-spis", &v2m->nr_spis)) {
+-		pr_info("Overriding V2M MSI_TYPER (base:%u, num:%u)\n",
+-			v2m->spi_start, v2m->nr_spis);
++	if (spi_start && nr_spis) {
++		v2m->spi_start = spi_start;
++		v2m->nr_spis = nr_spis;
+ 	} else {
+ 		u32 typer = readl_relaxed(v2m->base + V2M_MSI_TYPER);
+ 
+@@ -359,10 +355,10 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 	}
+ 
+ 	list_add_tail(&v2m->entry, &v2m_nodes);
+-	pr_info("Node %s: range[%#lx:%#lx], SPI[%d:%d]\n", node->name,
+-		(unsigned long)v2m->res.start, (unsigned long)v2m->res.end,
+-		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
+ 
++	pr_info("range[%#lx:%#lx], SPI[%d:%d]\n",
++		(unsigned long)res->start, (unsigned long)res->end,
++		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
+ 	return 0;
+ 
+ err_iounmap:
+@@ -384,10 +380,25 @@ int __init gicv2m_of_init(struct device_node *node, struct irq_domain *parent)
+ 
+ 	for (child = of_find_matching_node(node, gicv2m_device_id); child;
+ 	     child = of_find_matching_node(child, gicv2m_device_id)) {
++		u32 spi_start = 0, nr_spis = 0;
++		struct resource res;
++
+ 		if (!of_find_property(child, "msi-controller", NULL))
+ 			continue;
+ 
+-		ret = gicv2m_init_one(child, parent);
++		ret = of_address_to_resource(child, 0, &res);
++		if (ret) {
++			pr_err("Failed to allocate v2m resource.\n");
++			break;
++		}
++
++		if (!of_property_read_u32(child, "arm,msi-base-spi",
++					  &spi_start) &&
++		    !of_property_read_u32(child, "arm,msi-num-spis", &nr_spis))
++			pr_info("DT overriding V2M MSI_TYPER (base:%u, num:%u)\n",
++				spi_start, nr_spis);
++
++		ret = gicv2m_init_one(&child->fwnode, spi_start, nr_spis, &res);
+ 		if (ret) {
+ 			of_node_put(node);
+ 			break;
 -- 
-1.9.1
+2.1.0
 
