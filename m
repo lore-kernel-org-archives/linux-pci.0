@@ -1,133 +1,105 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Tomasz Nowicki <tn@semihalf.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"okaya@codeaurora.org" <okaya@codeaurora.org>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"Stefano.Stabellini@eu.citrix.com" <Stefano.Stabellini@eu.citrix.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>
-CC: "robert.richter@caviumnetworks.com"
-	<robert.richter@caviumnetworks.com>,
-	"mw@semihalf.com" <mw@semihalf.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	Wangyijing <wangyijing@huawei.com>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	"jchandra@broadcom.com" <jchandra@broadcom.com>,
-	"jcm@redhat.com" <jcm@redhat.com>
-Subject: RE: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
- against platfrom specific quirks.
-Date: Tue, 22 Dec 2015 14:48:05 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EC183BD@lhreml503-mbb>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
- <1450278993-12664-23-git-send-email-tn@semihalf.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EC14C0F@lhreml503-mbb>
- <567923D2.2010202@semihalf.com>
-In-Reply-To: <567923D2.2010202@semihalf.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:35547 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754550AbbLJR2h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 12:28:37 -0500
+Received: by mail-wm0-f48.google.com with SMTP id u63so33632657wmu.0
+        for <linux-pci@vger.kernel.org>; Thu, 10 Dec 2015 09:28:36 -0800 (PST)
+Message-ID: <5669B641.2080701@linaro.org>
+Date: Fri, 11 Dec 2015 01:28:33 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+	rjw@rjwysocki.net, bhelgaas@google.com
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	tomasz.nowicki@linaro.org, graeme.gregory@linaro.org,
+	dhdang@apm.com, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v7 0/4] gicv2m: acpi: Add ACPI support for GICv2m MSI
+References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz
+On 12/11/2015 12:55 AM, Suravee Suthikulpanit wrote:
+> This patch series has been forked from the following patch series since
+> it no longer depends on the rest of the patches.
+>
+>    [PATCH v4 00/10] ACPI GIC Self-probing, GICv2m and GICv3 support
+>    https://lkml.org/lkml/2015/7/29/234
+>
+> It has been ported to use the newly introduced device fwnode_handle
+> for ACPI irqdmain introduced by Marc in the following patch series:
+>
+>    [PATCH v2 00/17] Divorcing irqdomain and device_node
+>
+> The following git branch contains the submitted patches along with
+> the pre-requsite patches (mainly for ARM64 PCI support for ACPI).
+>
+>    https://github.com/ssuthiku/linux.git	v2m-multiframe-v7
+>
+> This has been tested on AMD Seattle (Overdrive) RevB system.
+>
+> NOTE: I have not tested ACPI GICv2m multiframe support since
+> I don't have access to such system. Any helps are appreciated.
+>
+> Thanks,
+> Suravee
+>
+> Changes from V6: (https://lkml.org/lkml/2015/12/9/660)
+>    - Minor logic change recommended by Marc
+>    - Added Reviewed-by Marc for patch 4
+>    - Added Tested-by Duc for patch 4
+>
+> Changes from V5: (https://lkml.org/lkml/2015/12/08/763)
+>    - Remove previous patch 3
+>    - Clean up based on Marc's review (patch 1.4)
+>    - Add Ackedb-by and Reviewed-by (Patch 1,2,3)
+>    - Expose single gicv2m_init() function for both OF and ACPI
+>      (per Marc's suggestion)
+>    - Remove gicv2m name from pr_info since this is no longer useful
+>      (in patch 3) (per Marc's suggestion)
+>
+> Changes from V4: (https://lkml.org/lkml/2015/12/08/613)
+>    - Fix build error when not specifying CONFIG_IRQ_DOMAIN.
+>
+> Changes from V3: (https://lkml.org/lkml/2015/10/21/691)
+>    - Merged patch 2 into 1, and got rid off pci_msi_get_fwnode()
+>      since only ACPI will likely use this. (per Marc suggestion)
+>    - Rebased to 4.4.0-rc4
+>
+> Changes from V2: (https://lkml.org/lkml/2015/10/14/1010)
+>    - Minor clean up from Tomasz review comment in patch 6/6.
+>
+> Changes from V1: (https://lkml.org/lkml/2015/10/13/859)
+>    - Rebase on top of Marc's patch to addng support for multiple MSI frames
+>      (https://lkml.org/lkml/2015/10/14/271)
+>    - Adding fwnode convenient functions (patch 3 and 4)
+>
+> Suravee Suthikulpanit (4):
+>    acpi: pci: Setup MSI domain for ACPI based pci devices
+>    irqdomain: introduce is_fwnode_irqchip helper
+>    gicv2m: Refactor to prepare for ACPI support
+>    gicv2m: acpi: Introducing GICv2m ACPI support
+>
+>   drivers/irqchip/irq-gic-v2m.c   | 163 ++++++++++++++++++++++++++++++++++------
+>   drivers/irqchip/irq-gic.c       |   8 +-
+>   drivers/pci/pci-acpi.c          |  42 +++++++++++
+>   drivers/pci/probe.c             |   2 +
+>   include/linux/irqchip/arm-gic.h |   3 +-
+>   include/linux/irqdomain.h       |  10 +++
+>   include/linux/pci.h             |  10 +++
+>   kernel/irq/irqdomain.c          |   2 +-
+>   8 files changed, 214 insertions(+), 26 deletions(-)
 
-> -----Original Message-----
-> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> owner@vger.kernel.org] On Behalf Of Tomasz Nowicki
-> Sent: 22 December 2015 10:20
-> To: Gabriele Paoloni; bhelgaas@google.com; arnd@arndb.de;
-> will.deacon@arm.com; catalin.marinas@arm.com; rjw@rjwysocki.net;
-> hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org;
-> jiang.liu@linux.intel.com; Stefano.Stabellini@eu.citrix.com
-> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
-> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; tglx@linutronix.de;
-> Wangyijing; Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
-> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
-> acpi@lists.linaro.org; jchandra@broadcom.com; jcm@redhat.com
-> Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space
-> accessors against platfrom specific quirks.
-> 
-> On 21.12.2015 12:47, Gabriele Paoloni wrote:
-> > 2) In the quirk mechanism you proposed, I see that the callback
-> function
-> >     allows to do some preparation work for the host bridge. For
-> example in
-> >     Hisilicon hip05 case we would need to read some values from the
-> ACPI
-> >     table (see acpi_pci_root_hisi_add() function in
-> >     https://lkml.org/lkml/2015/12/3/426).
-> >     I am quite new to ACPI and I wonder if it is OK to add such
-> "Packages"
-> >     to the  PCI host bridge ACPI device...or maybe we need to declare
-> a new
-> >     one...?
-> 
-> I may miss sth so please correct me in that case.
-> 
-> https://lkml.org/lkml/2015/12/3/426 shows that you need special
-> handling for root->secondary.start bus number only, right? So how about
-> creating special MCFG region <rc-base:rc-base+rc-size> only for
-> <segment,bus>.
-> Like that:
-> 
-> [0008]                       Base Address : <rc-base>
-> [0002]               Segment Group Number : <segment>
-> [0001]                   Start Bus Number : <root->secondary.start>
-> [0001]                     End Bus Number : <root->secondary.start>
-> [0004]                           Reserved : 00000000
-> 
-> 
-> static const struct dmi_system_id hisi_quirk[] = {
-> 	{
-> 		.ident = "HiSi...",
-> 		.matches = {
-> 			DMI_MATCH(<whatever you need to match your platform>),
-> 		},
-> 	},
-> 	{ }
-> };
-> 
-> static struct pci_ops hisi_ecam_pci_ops = {
-> 	.map_bus = pci_mcfg_dev_base,
-> 	.read = hisi_pcie_cfg_read,
-> 	.write = hisi_pcie_cfg_write,
-> };
-> 
-> DECLARE_ACPI_MCFG_FIXUP(hisi_quirk, &hisi_ecam_pci_ops,
-> 			<segment>, <bus>);
-> 
-> With above code you can use your custom PCI config accessor only for
-> that region.
-> 
-> Let me know if that is not enough for you.
+You are moving very fast :), for this patch set,
 
-In principle I think it can work...
-
-Liudongdong, Guo Hanjun what is your opinion about?
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
 Thanks
-
-Gab
-
-> 
-> Tomasz
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel"
-> in the body of a message to majordomo@vger.kernel.org More majordomo
-> info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Hanjun
