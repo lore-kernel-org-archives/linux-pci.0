@@ -1,84 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:42408 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S966642AbbLQNXm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Dec 2015 08:23:42 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-sh@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Subject: [PATCH 4/4] PCI: rcar: Add Gen2 PHY setup to pcie-rcar
-Date: Thu, 17 Dec 2015 13:22:37 +0000
-Message-Id: <1450358557-28376-5-git-send-email-phil.edworthy@renesas.com>
-In-Reply-To: <1450358557-28376-1-git-send-email-phil.edworthy@renesas.com>
-References: <1450358557-28376-1-git-send-email-phil.edworthy@renesas.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 10 Dec 2015 11:25:08 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Michal Simek <michal.simek@xilinx.com>
+Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	sorenb@xilinx.com, bhelgaas@google.com, arnd@arndb.de,
+	tinamdar@apm.com, treding@nvidia.com, rjui@broadcom.com,
+	Minghuan.Lian@freescale.com, m-karicheri2@ti.com, hauke@hauke-m.de,
+	marc.zyngier@arm.com, dhdang@apm.com, sbranden@broadcom.com,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>,
+	Paul Burton <paul.burton@imgtec.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>
+Subject: Re: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+Message-ID: <20151210172508.GA367@localhost>
+References: <1448798633-12697-1-git-send-email-bharatku@xilinx.com>
+ <20151209231921.GI31930@localhost>
+ <5669236D.30805@xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5669236D.30805@xilinx.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For PCIe compliance, the PHY registers need setting as per the
-manual.
+On Thu, Dec 10, 2015 at 08:02:05AM +0100, Michal Simek wrote:
+> Hi Bjorn,
+> 
+> On 10.12.2015 00:19, Bjorn Helgaas wrote:
+> > [+cc Michal, Paul, Thierry, Stephen, Alexandre (see irq_dispose_mapping questions below)]
+> > 
+> > On Sun, Nov 29, 2015 at 05:33:53PM +0530, Bharat Kumar Gogada wrote:
+> >> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+> >>
+> >> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> >> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> >> Acked-by: Rob Herring <robh@kernel.org>
+> > 
+> > This needs either a MAINTAINERS update or an ack from Michal (whose
+> > MAINTAINERS entry matches anything containing "xilinx").
+> 
+> We have done it in this way because driver owners are changing time to
+> time and my entry cover it that I can pass it to appropriate person who
+> is responsible for it.
+> 
+> For this Maintainers part here is my:
+> Acked-by: Michal Simek <michal.simek@xilinx.com>
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- drivers/pci/host/pcie-rcar.c | 27 ++++++++++++++++++++++++---
- 1 file changed, 24 insertions(+), 3 deletions(-)
+Thanks.
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 02a5993..61e112e 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -103,6 +103,11 @@
- #define H1_PCIEPHYDOUTR		0x040014
- #define H1_PCIEPHYSR		0x040018
- 
-+/* R-Car Gen2 PHY */
-+#define GEN2_PCIEPHYADDR	0x780
-+#define GEN2_PCIEPHYDATA	0x784
-+#define GEN2_PCIEPHYCTRL	0x78c
-+
- #define INT_PCI_MSI_NR	32
- 
- #define RCONF(x)	(PCICONF(0)+(x))
-@@ -593,6 +598,22 @@ static int rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
- 	return -ETIMEDOUT;
- }
- 
-+static int rcar_pcie_hw_init_gen2(struct rcar_pcie *pcie)
-+{
-+	rcar_pci_write_reg(pcie, 0x000f0030, GEN2_PCIEPHYADDR);
-+	rcar_pci_write_reg(pcie, 0x00381203, GEN2_PCIEPHYDATA);
-+	rcar_pci_write_reg(pcie, 0x00000001, GEN2_PCIEPHYCTRL);
-+	rcar_pci_write_reg(pcie, 0x00000006, GEN2_PCIEPHYCTRL);
-+
-+	rcar_pci_write_reg(pcie, 0x000f0054, GEN2_PCIEPHYADDR);
-+	/* The following value is for DC connection, no termination resistor */
-+	rcar_pci_write_reg(pcie, 0x13802007, GEN2_PCIEPHYDATA);
-+	rcar_pci_write_reg(pcie, 0x00000001, GEN2_PCIEPHYCTRL);
-+	rcar_pci_write_reg(pcie, 0x00000006, GEN2_PCIEPHYCTRL);
-+
-+	return rcar_pcie_hw_init(pcie);
-+}
-+
- static int rcar_msi_alloc(struct rcar_msi *chip)
- {
- 	int msi;
-@@ -932,9 +953,9 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
- 
- static const struct of_device_id rcar_pcie_of_match[] = {
- 	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
--	{ .compatible = "renesas,pcie-rcar-gen2", .data = rcar_pcie_hw_init },
--	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
--	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
-+	{ .compatible = "renesas,pcie-rcar-gen2", .data = rcar_pcie_hw_init_gen2 },
-+	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init_gen2 },
-+	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init_gen2 },
- 	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
- 	{},
- };
--- 
-2.5.0
+For things under drivers/pci/host, I ask for an ack from the
+individual maintainer before applying patches.  As-is (without a
+MAINTAINERS update) I'll be looking for acks from you, Michal, for all
+future changes to pcie-xilinx-nwl.c.  If you want something else, we
+need a MAINTAINERS change.
 
+Bjorn
