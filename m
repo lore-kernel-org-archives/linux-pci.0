@@ -1,67 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv6 0/7] Driver for new "VMD" device
-Date: Mon,  7 Dec 2015 14:32:22 -0700
-Message-Id: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:22084 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754895AbbLJRxd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 12:53:33 -0500
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v10 6/7] drivers:hv: Define the channel type of Hyper-V PCI Express pass-through
+Date: Thu, 10 Dec 2015 17:53:02 +0000
+Message-Id: <1449769983-12948-7-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
+References: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v5 -> v6:
+From: Jake Oshins <jakeo@microsoft.com>
 
-  Fixed kernel doc.
+This defines the channel type for PCI front-ends in Hyper-V VMs.
 
-  Fixed S-o-B on PATCH 1/7.
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ include/linux/hyperv.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-  Added driver power management to save and restoring VMD pci state.
-
-  Allow VMD domains to be accisble to aer_inject, which requires a minor
-  change to use 32-bit pci domains.
-
-  Changed child bus resource conflict detection on walking the pci
-  domain. If the bus resource aperture is not large enough, we can
-  enumerate only a sub-tree of the topology. A bridge device with
-  subordinate outside the range should not be allocated. Checking for the
-  conflict after the child is allocated retains pointer to the removed
-  subordinate bus. The way to fix that is to call "pci_remove_bus_device"
-  instead, but I don't think we want to remove the bridge dev since it
-  is accessible, albeit not very useful as a bridge device.
-
-Keith Busch (6):
-  pci: child bus alloc fix on constrained resource
-  Export msi and irq functions for module use
-  x86-pci: allow pci domain specific dma ops
-  x86/pci: Initial commit for new VMD device driver
-  aer_inject: Use 32 bit int type domains
-  pciutils: Allow 32-bit domains
-
-Liu Jiang (1):
-  msi: Relax msi_domain_alloc() to support parentless MSI irqdomains
-
- arch/x86/Kconfig                  |  13 +
- arch/x86/include/asm/device.h     |  10 +
- arch/x86/include/asm/hw_irq.h     |   5 +
- arch/x86/pci/Makefile             |   2 +
- arch/x86/pci/common.c             |  38 +++
- arch/x86/pci/vmd.c                | 695 ++++++++++++++++++++++++++++++++++++++
- drivers/pci/msi.c                 |   2 +
- drivers/pci/pcie/aer/aer_inject.c |  16 +-
- drivers/pci/probe.c               |   6 +
- kernel/irq/irqdomain.c            |   1 +
- kernel/irq/msi.c                  |   8 +-
- 11 files changed, 785 insertions(+), 11 deletions(-)
- create mode 100644 arch/x86/pci/vmd.c
-
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index 24d0b65..c9a9eed 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -1141,6 +1141,17 @@ u64 hv_do_hypercall(u64 control, void *input, void *output);
+ 		}
+ 
+ /*
++ * PCI Express Pass Through
++ * {44C4F61D-4444-4400-9D52-802E27EDE19F}
++ */
++
++#define HV_PCIE_GUID \
++	.guid = { \
++			0x1D, 0xF6, 0xC4, 0x44, 0x44, 0x44, 0x00, 0x44, \
++			0x9D, 0x52, 0x80, 0x2E, 0x27, 0xED, 0xE1, 0x9F \
++		}
++
++/*
+  * Common header for Hyper-V ICs
+  */
+ 
 -- 
-2.6.2.307.g37023ba
+1.9.1
 
