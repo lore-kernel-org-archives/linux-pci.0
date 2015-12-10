@@ -1,65 +1,181 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V2 21/23] pci, acpi: Support for ACPI based PCI hostbridge
- init
-To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
- <1450278993-12664-22-git-send-email-tn@semihalf.com>
- <2277339.U6fWlSIDzy@wuerfel>
-Cc: bhelgaas@google.com, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com,
-	jchandra@broadcom.com, jcm@redhat.com,
-	linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, wangyijing@huawei.com, tglx@linutronix.de,
-	mw@semihalf.com
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <5677D28E.6010803@semihalf.com>
-Date: Mon, 21 Dec 2015 11:21:02 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56432 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752253AbbLJWhy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Dec 2015 17:37:54 -0500
+Date: Thu, 10 Dec 2015 16:37:42 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, izumi.taku@jp.fujitsu.com, jcm@redhat.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/AER: enable SERR# forwarding for bridges and
+ switches
+Message-ID: <20151210223742.GC367@localhost>
+References: <1449074998-9664-1-git-send-email-okaya@codeaurora.org>
+ <20151204210622.GI20125@localhost>
+ <5669E073.4000801@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <2277339.U6fWlSIDzy@wuerfel>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5669E073.4000801@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 18.12.2015 13:40, Arnd Bergmann wrote:
-> On Wednesday 16 December 2015 16:16:31 Tomasz Nowicki wrote:
->> Because of two patch series:
->> 1. Jiang Liu's common interface to support PCI host bridge init
->> 2. MMCONFIG refactoring (part of this patch set)
->> now we can think about generic ACPI based PCI host bridge driver
->> out of arch/ directory.
->>
->> This driver use information from MCFG table (PCI config space regions)
->> and _CRS method (IO/irq resources) to initialize PCI hostbridge.
->>
->> TBD: We are still not sure whether we should reassign resources
->> after PCI bus enumeration or trust firmware to do all that work for
->> us properly.
->>
->> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
->> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> CC: Arnd Bergmann <arnd@arndb.de>
->> CC: Catalin Marinas <catalin.marinas@arm.com>
->> CC: Liviu Dudau <Liviu.Dudau@arm.com>
->> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
->> CC: Will Deacon <will.deacon@arm.com>
->> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>
->
-> I think this code could better live in drivers/acpi/pci_root.c
-> along with all the related functions. It's not really a driver
-> by itself and cannot be a loadable module or built on other
-> architectures.
->
-> You can put all the code inside an #ifdef ARCH_PCI_HOST_GENERIC_ACPI
-> there.
->
+On Thu, Dec 10, 2015 at 03:28:35PM -0500, Sinan Kaya wrote:
+> Hi Bjorn,
+> 
+> On 12/4/2015 4:06 PM, Bjorn Helgaas wrote:
+> > I'm sitting on this for the moment because if you have _HPP, it seems
+> > like that should be enough to get SERR# forwarding turned on, and if
+> > it's not, I'd like to understand why.  So no hurry, but I'm waiting on
+> > your investigation.
+> > 
+> > Bjorn
+> 
+> Here is the overall summary after my investigation.
+> 
+> It looks like the kernel covers the hotplug use case. This patch is
+> needed for systems without hotplug support and when the firmware is not
+> setting up the SERR.
 
-Makes sense to me, thanks.
+Here's how I understand your results:
 
-Tomasz
+  Firmware   _HPP or     Devices      Hot-added    Hot-added
+  enables    _HPX sets   present at   root ports   endpoints
+  SERR#      SERR#       boot work    work         work
+  --------   ---------   ----------   ----------   ---------
+  no         no          no (1)       no (2)       no (4)
+  no         yes         yes          yes          yes
+  yes        no          yes          no (3)       no (5)
+  yes        yes         yes          yes          yes
+
+Your patch fixes cases 1-3 above, but I don't think it fixes cases 4
+or 5.
+
+The difference is that in cases 2 and 3, when we hot-add a root port,
+the AER driver binds to the root port and (with your patch) enables
+SERR for anything below it.
+
+But in cases 4 and 5, the root port is already there, the AER driver
+has already bound to it.  The AER driver tried to enable SERR for the
+hierarchy below the root port, but there was nothing there.  Now we
+add the endpoint, and the AER driver isn't involved, so I don't think
+anything will enable SERR for the new endpoint.
+
+I think the best way to fix all the cases would be to do something in
+in pci_configure_device().  Then we could drop the AER bus walk in
+set_downstream_devices_error_reporting().  A bus walk like that is
+always an issue for hotplug.
+
+In principle, we should be able to just enable PCI_COMMAND_SERR and
+PCI_BRIDGE_CTL_SERR for everything, and then errors would get
+forwarded to the root port, and if/when the AER driver claimed the
+root port, it would start collecting them.
+
+But I'm a little leery of doing it unconditionally because there are a
+lot of platform- and driver-specific uses of those bits, and I'm
+afraid of breaking something.  It might be possible, but it'll take
+some care to do it safely.
+
+> after boot
+> 
+> /# dmesg | grep hpp
+> 
+> [    3.115227] pci 0004:01:00.0: program_hpp_type0:1376
+> [    3.128870] pci 0004:01:00.0: program_hpp_type0:1378 pci_cmd |=
+> PCI_COMMAND_SERR
+> [    3.149597] pci 0004:01:00.0: program_hpp_type0:1391 pci_bctl |=
+> PCI_BRIDGE_CTL_SERR
+> [    3.191601] pci 0004:02:08.0: program_hpp_type0:1376
+> [    3.191611] pci 0004:02:08.0: program_hpp_type0:1378 pci_cmd |=
+> PCI_COMMAND_SERR
+> [    3.206630] pci 0004:02:08.0: program_hpp_type0:1391 pci_bctl |=
+> PCI_BRIDGE_CTL_SERR
+> [    3.253760] pci 0004:03:00.0: program_hpp_type0:1376
+> [    3.267335] pci 0004:03:00.0: program_hpp_type0:1378 pci_cmd |=
+> PCI_COMMAND_SERR
+> [    3.288046] pci 0004:03:00.0: program_hpp_type0:1391 pci_bctl |=
+> PCI_BRIDGE_CTL_SERR
+> [    3.355296] pci 0004:04:00.0: program_hpp_type0:1376
+> [    3.355306] pci 0004:04:00.0: program_hpp_type0:1378 pci_cmd |=
+> PCI_COMMAND_SERR
+> [    3.370334] pci 0004:04:00.0: program_hpp_type0:1391 pci_bctl |=
+> PCI_BRIDGE_CTL_SERR
+> 
+> / # lspci
+> 00:00.0 Class 0604: 17cb:0400
+> 01:00.0 Class 0604: 10b5:8732
+> 02:08.0 Class 0604: 10b5:8732
+> 03:00.0 Class 0604: 10b5:8732
+> 04:00.0 Class 0604: 10b5:8732
+> / #
+> 
+> 
+> Without hpp in ACPI table, SERR is not enabled.
+> 
+> /# dmesg | grep type0
+> /#
+> 
+> Power up with HPP after boot.
+> 
+> [    3.129325]_pci_0004:01:00.0:_program_hpp_type0:1376
+> [    3.143286] pci 0004:01:00.0: program_hpp_type0:1378 pci_cmd |=
+> PCI_COMMAND_SERR
+> [    3.164016] pci 0004:01:00.0: program_hpp_type0:1391 pci_bctl |=
+> PCI_BRIDGE_CTL_SERR
+> [    3.206019] pci 0004:02:08.0: program_hpp_type0:1376
+> [    3.206028] pci 0004:02:08.0: program_hpp_type0:1378 pci_cmd |=
+> PCI_COMMAND_SERR
+> [    3.220609] pci 0004:02:08.0: program_hpp_type0:1391 pci_bctl |=
+> PCI_BRIDGE_CTL_SERR
+> [    3.267783] pci 0004:03:00.0: program_hpp_type0:1376
+> [    3.281420] pci 0004:03:00.0: program_hpp_type0:1378 pci_cmd |=
+> PCI_COMMAND_SERR
+> [    3.302197] pci 0004:03:00.0: program_hpp_type0:1391 pci_bctl |=
+> PCI_BRIDGE_CTL_SERR
+> [    3.369684] pci 0004:04:00.0: program_hpp_type0:1376
+> [    3.369694] pci 0004:04:00.0: program_hpp_type0:1378 pci_cmd |=
+> PCI_COMMAND_SERR
+> [    3.384080] pci 0004:04:00.0: program_hpp_type0:1391 pci_bctl |=
+> PCI_BRIDGE_CTL_SERR
+> 
+> hotplug eject
+> 
+> hotplug insert
+> 
+> [   98.338131] pci 0004:01:00.0: program_hpp_type0:1376
+> [   98.351813] pci 0004:01:00.0: program_hpp_type0:1378 pci_cmd |=
+> PCI_COMMAND_SERR
+> [   98.373147] pci 0004:01:00.0: program_hpp_type0:1391 pci_bctl |=
+> PCI_BRIDGE_CTL_SERR
+> [   98.452051] pci 0004:02:08.0: program_hpp_type0:1376
+> [   98.465772] pci 0004:02:08.0: program_hpp_type0:1378 pci_cmd |=
+> PCI_COMMAND_SERR
+> [   98.487142] pci 0004:02:08.0: program_hpp_type0:1391 pci_bctl |=
+> PCI_BRIDGE_CTL_SERR
+> [   98.597579] pci 0004:03:00.0: program_hpp_type0:1376
+> [   98.611290] pci 0004:03:00.0: program_hpp_type0:1378 pci_cmd |=
+> PCI_COMMAND_SERR
+> [   98.632181] pci 0004:03:00.0: program_hpp_type0:1391 pci_bctl |=
+> PCI_BRIDGE_CTL_SERR
+> [   98.736153] pci 0004:04:00.0: program_hpp_type0:1376
+> [   98.750437] pci 0004:04:00.0: program_hpp_type0:1378 pci_cmd |=
+> PCI_COMMAND_SERR
+> [   98.771202] pci 0004:04:00.0: program_hpp_type0:1391 pci_bctl |=
+> PCI_BRIDGE_CTL_SERR
+> / #
+> 
+> 
+> 
+> -- 
+> Sinan Kaya
+> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
+> Linux Foundation Collaborative Project
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
