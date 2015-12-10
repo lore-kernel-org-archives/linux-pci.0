@@ -1,228 +1,94 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <4bccc2de7668dde04436ac9c19aac25d.squirrel@www.codeaurora.org>
-In-Reply-To: <5673FB6C.80008@semihalf.com>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-    <5673281E.7020204@codeaurora.org> <5673FB6C.80008@semihalf.com>
-Date: Fri, 18 Dec 2015 18:56:39 -0000
-Subject: Re: [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-From: okaya@codeaurora.org
-To: "Tomasz Nowicki" <tn@semihalf.com>
-Cc: "Sinan Kaya" <okaya@codeaurora.org>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	lorenzo.pieralisi@arm.com, jiang.liu@linux.intel.com,
-	stefano.stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	liviu.dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, suravee.suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <tglx@linutronix.de>,
+	<jason@lakedaemon.net>, <rjw@rjwysocki.net>, <bhelgaas@google.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	<hanjun.guo@linaro.org>, <tomasz.nowicki@linaro.org>,
+	<graeme.gregory@linaro.org>, <dhdang@apm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>,
+	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v7 0/4] gicv2m: acpi: Add ACPI support for GICv2m MSI
+Date: Thu, 10 Dec 2015 08:55:26 -0800
+Message-ID: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 17.12.2015 22:24, Sinan Kaya wrote:
->> Hi Tomasz,
->>
->> On 12/16/2015 10:16 AM, Tomasz Nowicki wrote:
->>>  From the functionality point of view this series might be split into
->>> the
->>> following logic parts:
->>> 1. Make MMCONFIG code arch-agnostic which allows all architectures to
->>> collect
->>>     PCI config regions and used when necessary.
->>> 2. Move non-arch specific bits to the core code.
->>> 3. Use MMCONFIG code and implement generic ACPI based PCI host
->>>     controller driver.
->>> 4. Enable above driver on ARM64
->>>
->>> Patches has been built on top of 4.4-rc4 and can be found here:
->>> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v2)
->>>
->>> NOTE, this patch set depends on Matthew's patches:
->>> http://www.spinics.net/lists/linux-pci/msg45950.html
->>> https://github.com/Vality/linux/tree/pci-fixes
->>>
->>> This has been tested on Cavium ThunderX 1 socket server and QEMU.
->>> Any help in reviewing and testing is very appreciated.
->>>
->>> v1 -> v2
->>> - moved non-arch specific piece of code to dirver/acpi/ directory
->>> - fixed IO resource handling
->>> - introduced PCI config accessors quirks matching
->>> - moved ACPI_COMPANION_SET to generic code
->>>
->>
->> Just tested your series. I'm seeing a resource assignment problem below.
->> The bus addresses show as memory addresses and memory addresses show as
->> bus addresses and IO resource did not show up.
->>
->>
->> Tomasz V2
->>
->> [    2.520852] ACPI: PCI Interrupt Link [LN1C] (IRQs *238)
->> [    2.535472] ACPI: PCI Interrupt Link [LN1D] (IRQs *239)
->> [    2.550562] ACPI: PCI Root Bridge [PCI2] (domain 0002 [bus 00-1f])
->> [    2.567813] acpi PNP0A08:02: _OSC: OS supports [ExtendedConfig ASPM
->> ClockPM Segments MSI]
->> [    2.591270] acpi PNP0A08:02: _OSC: platform does not support
->> [PCIeHotplug]
->> [    2.611144] acpi PNP0A08:02: _OSC: OS now controls [PME AER
->> PCIeCapability]
->> [    2.630299] ACPI: IORT: can't find node related to (null) device
->> [    2.647184]_acpi_PNP0A08:02:_PCI_host_bridge_to_bus_0002:00
->> [    2.662663] pci_bus 0002:00: root bus resource [mem
->> 0x00100000-0x3fffffff window] (bus address
->> [0xfffff5ff00100000-0xfffff5ff3fffffff])
->> [    2.703561] pci_bus 0002:00: root bus resource [mem
->> 0x40000000-0x7fffffff window] (bus address
->> [0xfffff5fe80000000-0xfffff5febfffffff])
->> [    2.737737] pci_bus 0002:00: root bus resource [mem
->> 0x80000000-0xffffffff window] (bus address
->> [0xfffff5fe00000000-0xfffff5fe7fffffff])
->> [    2.794961] pci_bus 0002:00: root bus resource [bus 00-1f]
->>
->> Mark Salter's patches
->>
->> [    2.730011] ACPI: PCI Interrupt Link [LN1C] (IRQs *238)
->> [    2.744648] ACPI: PCI Interrupt Link [LN1D] (IRQs *239)
->> [    2.759330] ACPI: PCI Root Bridge [PCI2] (domain 0002 [bus 00-1f])
->> [    2.783295] acpi PNP0A08:02: _OSC: OS supports [ExtendedConfig ASPM
->> ClockPM Segments MSI]
->> [    2.806726] acpi PNP0A08:02: _OSC: platform does not support
->> [PCIeHotplug]
->> [    2.826005] acpi PNP0A08:02: _OSC: OS now controls [PME AER
->> PCIeCapability]
->> [    2.845361] PCI host bridge to bus 0002:00
->> [    2.856719]_pci_bus_0002:00:_root_bus_resource_[bus_00-1f]
->> [    2.872056] pci_bus 0002:00: root bus resource [mem
->> 0xa0100100000-0xa013fffffff] (bus address [0x00100000-0x3fffffff])
->> [    2.902008] pci_bus 0002:00: root bus resource [mem
->> 0xa0200000000-0xa023fffffff] (bus address [0x40000000-0x7fffffff])
->> [    2.932396] pci_bus 0002:00: root bus resource [mem
->> 0xa0300000000-0xa037fffffff] (bus address [0x80000000-0xffffffff])
->> [    2.983827] pci_bus 0002:00: root bus resource [io  0x0000-0xffff]
->>
->> Here is how the ACPI table looks like:
->>
->> 		QWORDMemory(			// Consumed-And-prodced resource(all of memory space)
->> 			ResourceProducer,	// bit 0 of general flags is 0
->> 			PosDecode,		// positive Decode:  		_DEC
->> 			MinFixed,		// Range is fixed:   		_MIF
->> 			MaxFixed,		// Range is fixed:   		_MAF
->> 			NonCacheable,		// 				_MEM
->> 			ReadWrite,		// 				_RW
->> 			0x00000000,		// Granularity: 	   	_GRA
->> 			0x00100000,		// Min - PCI Memory start: 	_MIN
->> 			0x3FFFFFFF,		// Max - PCI Memory end:   	_MAX
->> 			0xA0100000000,		// Translation: 		_TRA
->> 			0x3FF00000,		// Range Length: 		_LEN
->> 			,			// Optional field left blank
->> 			,			// Optional field left blank
->> 			MEM0,			// Name declaration for this descriptor
->> 			AddressRangeMemory,
->> 			TypeStatic
->> 			)
->>
->>
->> Any thoughts?
->>
->>
->
-> Yes, this is because of:
-> [PATCH V2 20/23] ACPI, PCI: Refine the way to handle translation_offset
-> for ACPI resources
-> which should have RFC tag. I posted this patch to re-trigger discussion
-> on this.
->
-> The patch does not add Translation offset to the MMIO type resource
-> start address and for acpi_pci_probe_root_resources(ci) causes problems
-> like that. Indeed MMIO has to be fixed.
+This patch series has been forked from the following patch series since
+it no longer depends on the rest of the patches.
 
-OK. I assume you'll post a patch for this soon similar to what Liu Jiang
-is doing in IA64 directory (arch/ia64/pci/pci.c) as I can't proceed with
-my testing without this bugfix.
->
-> But IO resource type is more problematic. Actually, how
-> acpi_decode_space() should parse resources and which ACPI IO descriptor
-> should be used for ARM64: QWORDIO (offset == 0 vs offset != 0), DWordIO
-> (TypeStatic vs TypeTranslation) + backward compatibility with IA64...
->
-> Please refer to:
-> https://lkml.org/lkml/2015/11/5/581
->
-> As Lorenzo pointed out, we *all* need to agree upon the IO resource ACPI
-> descriptor and its parsing method.
+  [PATCH v4 00/10] ACPI GIC Self-probing, GICv2m and GICv3 support
+  https://lkml.org/lkml/2015/7/29/234
 
-Here is what I have as an IO resource.
+It has been ported to use the newly introduced device fwnode_handle 
+for ACPI irqdmain introduced by Marc in the following patch series:
 
-		QWORDIO(			//Consumed-And-produced resource
-			ResourceProducer,	// bit 0 of general flags is 0
-			MinFixed,		// Range is fixed
-			MaxFixed,		// Range is fixed
-			PosDecode,
-			EntireRange,
-			0x0000,			// Granularity
-			0x1000,		// Min, 0 is not accepted
-			0x10FFF,		// Max
-			0x8FFFFFEF000,	// Translation
-			0x10000,		// Range Length
-			,, PI00
-		 )
+  [PATCH v2 00/17] Divorcing irqdomain and device_node
 
-I don't have any type specified.
+The following git branch contains the submitted patches along with
+the pre-requsite patches (mainly for ARM64 PCI support for ACPI).
 
-I agree with Lorenzo's assessment. The min and max values represent the
-PCI IO bus addresses. The translation offset is added to these values to
-figure out the CPU view of the PCI IO range.
+  https://github.com/ssuthiku/linux.git	v2m-multiframe-v7
 
-The endpoints BAR addresses are programmed with IO addresses ranging
-between 0x1000 and 0x10FFF for this example above.
+This has been tested on AMD Seattle (Overdrive) RevB system. 
 
-Here is another question. Chris Covington and I asked this question on a
-private email to you but we didn't hear back.
+NOTE: I have not tested ACPI GICv2m multiframe support since
+I don't have access to such system. Any helps are appreciated.
 
-We were referring to a Linaro IO hack patch as we were not sure whether
-this was a limitation of the hack or a general expectation for ARM64 PCI
-in general.
+Thanks,
+Suravee
 
-I'll repeat it here.
+Changes from V6: (https://lkml.org/lkml/2015/12/9/660)
+  - Minor logic change recommended by Marc
+  - Added Reviewed-by Marc for patch 4
+  - Added Tested-by Duc for patch 4 
 
-I have multiple root ports with the same IO port configuration in the
-current ACPI table.
+Changes from V5: (https://lkml.org/lkml/2015/12/08/763)
+  - Remove previous patch 3
+  - Clean up based on Marc's review (patch 1.4)
+  - Add Ackedb-by and Reviewed-by (Patch 1,2,3)
+  - Expose single gicv2m_init() function for both OF and ACPI
+    (per Marc's suggestion)
+  - Remove gicv2m name from pr_info since this is no longer useful
+    (in patch 3) (per Marc's suggestion)
 
-Root port 0 = IO range 0x1000-0x10FFF
-Root port 1 = IO range 0x1000-0x10FFF
-Root port 2 = IO range 0x1000-0x10FFF
+Changes from V4: (https://lkml.org/lkml/2015/12/08/613)
+  - Fix build error when not specifying CONFIG_IRQ_DOMAIN.
 
-Each root port can have the same IO address range configuration, are we
-expecting IO port numbers to be unique across the whole system for ARM64?
+Changes from V3: (https://lkml.org/lkml/2015/10/21/691)
+  - Merged patch 2 into 1, and got rid off pci_msi_get_fwnode()
+    since only ACPI will likely use this. (per Marc suggestion)
+  - Rebased to 4.4.0-rc4
 
-Something like
+Changes from V2: (https://lkml.org/lkml/2015/10/14/1010)
+  - Minor clean up from Tomasz review comment in patch 6/6.
 
-Root port 0 = IO range 0x1000-0x10FFF
-Root port 1 = IO range 0x11000-0x20FFF
-Root port 2 = IO range 0x21000-0x30FFF
+Changes from V1: (https://lkml.org/lkml/2015/10/13/859)
+  - Rebase on top of Marc's patch to addng support for multiple MSI frames
+    (https://lkml.org/lkml/2015/10/14/271)
+  - Adding fwnode convenient functions (patch 3 and 4)
 
-since the IO addresses are being remapped into PCI IO range printed during
-boot.
+Suravee Suthikulpanit (4):
+  acpi: pci: Setup MSI domain for ACPI based pci devices
+  irqdomain: introduce is_fwnode_irqchip helper
+  gicv2m: Refactor to prepare for ACPI support
+  gicv2m: acpi: Introducing GICv2m ACPI support
 
-PCI I/O : 0xffff7ffffae00000 - 0xffff7ffffbe00000   (    16 MB)
+ drivers/irqchip/irq-gic-v2m.c   | 163 ++++++++++++++++++++++++++++++++++------
+ drivers/irqchip/irq-gic.c       |   8 +-
+ drivers/pci/pci-acpi.c          |  42 +++++++++++
+ drivers/pci/probe.c             |   2 +
+ include/linux/irqchip/arm-gic.h |   3 +-
+ include/linux/irqdomain.h       |  10 +++
+ include/linux/pci.h             |  10 +++
+ kernel/irq/irqdomain.c          |   2 +-
+ 8 files changed, 214 insertions(+), 26 deletions(-)
 
-and each root port would remap to 64k of the 16MB range.
-
->
-> Any comments are very appreciated!
->
-> Tomasz
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+-- 
+2.1.0
 
