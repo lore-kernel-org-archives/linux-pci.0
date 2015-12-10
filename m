@@ -1,87 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 15 Dec 2015 10:16:24 -0500
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Thierry Reding <thierry.reding@gmail.com>,
-	Ley Foon Tan <lftan@altera.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Simon Horman <horms@verge.net.au>,
-	<linux-tegra@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Rocketboard Maillist <rfi@lists.rocketboards.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH 00/10] drivers/pci: avoid module_init in non-modular
- host/pci*
-Message-ID: <20151215151624.GB2772@windriver.com>
-References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
- <CAFiDJ5-Y8afg5kDRQLK1pain-k1kPQAn3vhWrVkB1ADPRHvx+A@mail.gmail.com>
- <20151214091940.GA15126@ulmo.nvidia.com>
- <3302340.SIljl1qYTl@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <3302340.SIljl1qYTl@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:39078 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752792AbbLJR4u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 12:56:50 -0500
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v10 5/7] PCI: irqdomain: Look up IRQ domain by fwnode_handle
+Date: Thu, 10 Dec 2015 17:53:01 +0000
+Message-Id: <1449769983-12948-6-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
+References: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Re: [PATCH 00/10] drivers/pci: avoid module_init in non-modular host/pci*] On 14/12/2015 (Mon 11:27) Arnd Bergmann wrote:
+From: Jake Oshins <jakeo@microsoft.com>
 
-> On Monday 14 December 2015 10:19:40 Thierry Reding wrote:
-> > > PCIe host driver that use fixup (DECLARE_PCI_FIXUP_*) can't use tristate.
-> > > Fixup region is in kernel region and this region if not updated when
-> > > loading a module.
-> > 
-> > Interesting, I hadn't thought about that. I suppose this means that the
-> > module will end up containing an unused section with the fixup code. It
-> > might be useful to add a way for that to trigger a warning at build
-> > time.
-> > 
-> > Perhaps to fix this a mechanism could be introduced to add a table of
-> > fixups to a host controller driver and that will get applied to all
-> > children of the bridge. It could be problematic to cover all of the
-> > different fixup stages, though.
-> > 
-> 
-> 
-> I think a lot of the fixups shouldn't really be there in the first place,
-> they are about stuff that we can fix up in the probe function, or that should
-> be fixed up in the probe function with some appropriate core support added.
+This patch adds a second way of finding an IRQ domain associated with
+a root PCI bus.  After looking to see if one can be found through
+the OF tree, it attempts to look up the IRQ domain through an
+fwnode_handle stored in the pci_sysdata struct.
 
-So, the feedback on this is a bit all over the map, leaving me unsure
-what to do next.  And is the choice we make on a per board/bsp basis or
-ideally across all platforms?  I see the choices as:
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/pci/probe.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-1) do nothing; which IMHO is least desirable as it leaves the code
-misrepresenting itself as modular; one of the key issues I wanted to fix
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 750f907..c6369dd 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -674,6 +674,20 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
+ 	 */
+ 	d = pci_host_bridge_of_msi_domain(bus);
+ 
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	/*
++	 * If no IRQ domain was found via the OF tree, try looking it up
++	 * directly through the fwnode_handle.
++	 */
++	if (!d) {
++		struct fwnode_handle *fwnode = pci_root_bus_fwnode(bus);
++
++		if (fwnode)
++			d = irq_find_matching_fwnode(fwnode,
++						     DOMAIN_BUS_PCI_MSI);
++	}
++#endif
++
+ 	return d;
+ }
+ 
+-- 
+1.9.1
 
-2) use the patches I've sent ; then as they are genuinely made modular,
-the person doing so essentially "patch -R" or reverts the change as
-step one.  This has the advantage of solving the "we'll get to it
-someday" issue if someday never comes.
-
-3) make them all tristate;  beat it with a stick until it compiles [M]
-and modposts -- leaving the fixups and functional testing to people with
-the boards and low level knowledge to make it _work_ as a module.  The
-downside here is the code is still kind of misrepresenting itself as
-modularly functional -- a ban of unloading might mitigate that some.
-
-Paul.
---
-
-> 
-> 	Arnd
