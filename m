@@ -1,123 +1,215 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:36556 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754874AbbLKP6H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 10:58:07 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Grygorii Strashko <grygorii.strashko@ti.com>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	<linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+CC: <tony@atomide.com>, <nsekhar@ti.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-samsung-soc@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
+	<linux-sh@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Kukjin Kim <kgene@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>
+Subject: [PATCH v3] PCI: hosts: mark pcie/pci (msi) irq cascade handler as IRQF_NO_THREAD
+Date: Thu, 10 Dec 2015 21:18:20 +0200
+Message-ID: <1449775100-30877-1-git-send-email-grygorii.strashko@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20151211145916.GA21907@localhost>
-References: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
-	<20151209183743.GH31930@localhost>
-	<20151211021434.GH9927@verge.net.au>
-	<20151211145916.GA21907@localhost>
-Date: Fri, 11 Dec 2015 16:58:06 +0100
-Message-ID: <CAMuHMdVN5VtZHcC9T4dzpsW-f8FpcjmJeTX_HHqRs0X5HdJCOw@mail.gmail.com>
-Subject: Re: [PATCH v2 0/4] PCI: rcar, rcar-gen2: More Gen2 compatibility strings
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On -RT and if kernel is booting with "threadirqs" cmd line parameter
+pcie/pci (msi) irq cascade handlers (like dra7xx_pcie_msi_irq_handler())
+will be forced threaded and, as result, will generate warnings like:
 
-On Fri, Dec 11, 2015 at 3:59 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Fri, Dec 11, 2015 at 11:14:34AM +0900, Simon Horman wrote:
->> On Wed, Dec 09, 2015 at 12:37:43PM -0600, Bjorn Helgaas wrote:
->> > On Thu, Dec 03, 2015 at 07:51:36AM +0900, Simon Horman wrote:
->> > > this short series adds generic gen2 and SoC-specific r8a7793 compatibility
->> > > strings to the rcar PCI and rcar-gen2 PCIE drivers. The intention is to
->> > > provide a complete set of compatibility strings for known Gen2 SoCs.
->> > >
->> > > Key Changes in v2:
->> > > * Include "rcar-" in generic bindings
->> > >
->> > > Simon Horman (4):
->> > >   PCI: rcar-gen2: add gen2 fallback compatibility string
->> > >   PCI: rcar-gen2: add device tree support for r8a7793
->> > >   PCI: rcar: add gen2 fallback compatibility string
->> > >   PCI: rcar: add device tree support for r8a7793
->> > >
->> > >  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 12 ++++++++++--
->> > >  Documentation/devicetree/bindings/pci/rcar-pci.txt      | 14 +++++++++++---
->> > >  drivers/pci/host/pci-rcar-gen2.c                        |  1 +
->> > >  drivers/pci/host/pcie-rcar.c                            |  1 +
->> > >  4 files changed, 23 insertions(+), 5 deletions(-)
->> >
->> > I applied these:
->> >
->> > >   PCI: rcar-gen2: add gen2 fallback compatibility string
->> > >   PCI: rcar: add gen2 fallback compatibility string
->> >
->> > to pci/host-rcar for v4.5, thanks!
->> >
->> > I haven't applied the R8A7793 binding documentation updates yet, but
->> > I'll be happy to do so given a short description of why they're
->> > useful (since they don't update a DT or the driver).  Or they could be
->> > merged via a DT tree.
->>
->> To clarify: you would like a description in the changelog?
->
-> Yes, please.  The email discussion so far hasn't contained what I'm
-> looking for (if it had, I would have just inserted it and been done
-> with it).
->
-> Apparently it has to do with the stable DT rules, which I don't know.
-> A concrete example would probably help clear it up.
+WARNING: CPU: 1 PID: 82 at kernel/irq/handle.c:150 handle_irq_event_percpu+0x14c/0x174()
+irq 460 handler irq_default_primary_handler+0x0/0x14 enabled interrupts
+Backtrace:
+ (warn_slowpath_common) from [<c0043758>] (warn_slowpath_fmt+0x38/0x40)
+ (warn_slowpath_fmt) from [<c0085fd0>] (handle_irq_event_percpu+0x14c/0x174)
+ (handle_irq_event_percpu) from [<c008607c>] (handle_irq_event+0x84/0xb8)
+ (handle_irq_event) from [<c0089240>] (handle_simple_irq+0x90/0x118)
+ (handle_simple_irq) from [<c0085514>] (generic_handle_irq+0x30/0x44)
+ (generic_handle_irq) from [<c034a7d4>] (dra7xx_pcie_msi_irq_handler+0x7c/0x8c)
+ (dra7xx_pcie_msi_irq_handler) from [<c0086f08>] (irq_forced_thread_fn+0x28/0x5c)
+ (irq_forced_thread_fn) from [<c00871dc>] (irq_thread+0x128/0x204)
 
-The stable DT rules mean that an old DTS should keep on working with
-newer kernels.
+This happens because all of them invoke generic_handle_irq() from the
+requsted handler. generic_handle_irq grabs raw_locks and this needs to
+run in raw-irq context.
 
-Suppose we have two SoCs, that both contain "foo" modules, which look
-identical. Hence the DTS for both declares the devices to be compatible
-with "vendor,foo".
+This issue was originally reproduced on TI dra7-evem, but, as was
+identified during dicussion [1], other PCI(e) hosts can also suffer
+from this issue. So let's fix all them at once and mark pcie/pci (msi)
+irq cascade handlers IRQF_NO_THREAD explicitly.
 
-Later, we discover a difference between the two "foo" modules in the two
-SoCs (e.g. a feature present in one of them, or worse, a bug), which we
-need to handle in the driver. But how can we distinguish between them?
-We can change the compatible value in the DTS, but that means the user
-has to update the DTS when updating the kernel. For a new feature that
-may be deemed acceptable, for a bug fix that's not acceptable.
+[1] https://lkml.org/lkml/2015/11/20/356
 
-Hence we always use an SoC-specific compatible value, which may or may
-not be accompanied by a family-specific and/or generic compatible value.
-As long as everything can be handled the same, the driver will just match
-against the most generic compatible value used. But if needed later, the
-driver can be updated to match against a more specific compatible value,
-and can have special handling for  a module in a specific SoC.
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Kukjin Kim <kgene@kernel.org>
+Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>
+Cc: Richard Zhu <Richard.Zhu@freescale.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Alexandre Courbot <gnurou@gmail.com>
+Cc: Simon Horman <horms@verge.net.au>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Signed-off-by: Grygorii Strashko <grygorii.strashko@ti.com>
+---
+Changes in v3:
+ - change applied to all affected pci(e) host drivers in drivers/pci/hosts.
+   After some invsetigation I've decided to not touch arch code - it is not easy
+   to identify all places which need to be fixed. 
+   if it's still required - i can send separate patches for 
+   arch/mips/pci/msi-octeon.c and arch/sparc/kernel/pci_msi.c.
+Links
+v2: https://lkml.org/lkml/2015/11/20/356
+v1: https://lkml.org/lkml/2015/11/5/593
+ref: https://lkml.org/lkml/2015/11/3/660
 
-So that's why we want to have compatible value in the DT bindings that
-are not necessarily used by the driver.
+ drivers/pci/host/pci-dra7xx.c     | 13 ++++++++++++-
+ drivers/pci/host/pci-exynos.c     |  3 ++-
+ drivers/pci/host/pci-imx6.c       |  3 ++-
+ drivers/pci/host/pci-tegra.c      |  2 +-
+ drivers/pci/host/pcie-rcar.c      |  6 ++++--
+ drivers/pci/host/pcie-spear13xx.c |  3 ++-
+ drivers/pci/host/pcie-xilinx.c    |  3 ++-
+ 7 files changed, 25 insertions(+), 8 deletions(-)
 
-In a perfect world, where all hardware is properly documented, or even
-Open Source, we wouldn't need this. There we could just declare a device
-compatible with what it really is, based on the module's internal version ID
-(ideally a git commit ID of its HDL source ;-).
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 8c36880..0415192 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 		return -EINVAL;
+ 	}
+ 
++	/*
++	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
++	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
++	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
++	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
++	 * which, in turn, will be resolved to handle_simple_irq() call.
++	 * The handle_simple_irq() expected to be called with IRQ disabled, as
++	 * result kernle will display warning:
++	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
++	 */
+ 	ret = devm_request_irq(&pdev->dev, pp->irq,
+-			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
++			       dra7xx_pcie_msi_irq_handler,
++			       IRQF_SHARED | IRQF_NO_THREAD,
+ 			       "dra7-pcie-msi",	pp);
+ 	if (ret) {
+ 		dev_err(&pdev->dev, "failed to request irq\n");
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 01095e1..d997d22 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -522,7 +522,8 @@ static int __init exynos_add_pcie_port(struct pcie_port *pp,
+ 
+ 		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
+ 					exynos_pcie_msi_irq_handler,
+-					IRQF_SHARED, "exynos-pcie", pp);
++					IRQF_SHARED | IRQF_NO_THREAD,
++					"exynos-pcie", pp);
+ 		if (ret) {
+ 			dev_err(&pdev->dev, "failed to request msi irq\n");
+ 			return ret;
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 22e8224..9ce7cd1 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -537,7 +537,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+ 
+ 		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
+ 				       imx6_pcie_msi_handler,
+-				       IRQF_SHARED, "mx6-pcie-msi", pp);
++				       IRQF_SHARED | IRQF_NO_THREAD,
++				       "mx6-pcie-msi", pp);
+ 		if (ret) {
+ 			dev_err(&pdev->dev, "failed to request MSI irq\n");
+ 			return ret;
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 3018ae5..3032311 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -1288,7 +1288,7 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
+ 
+ 	msi->irq = err;
+ 
+-	err = request_irq(msi->irq, tegra_pcie_msi_irq, 0,
++	err = request_irq(msi->irq, tegra_pcie_msi_irq, IRQF_NO_THREAD,
+ 			  tegra_msi_irq_chip.name, pcie);
+ 	if (err < 0) {
+ 		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index f4fa6c5..414c336 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -720,14 +720,16 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+ 
+ 	/* Two irqs are for MSI, but they are also used for non-MSI irqs */
+ 	err = devm_request_irq(&pdev->dev, msi->irq1, rcar_pcie_msi_irq,
+-			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
++			       IRQF_SHARED | IRQF_NO_THREAD,
++			       rcar_msi_irq_chip.name, pcie);
+ 	if (err < 0) {
+ 		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
+ 		goto err;
+ 	}
+ 
+ 	err = devm_request_irq(&pdev->dev, msi->irq2, rcar_pcie_msi_irq,
+-			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
++			       IRQF_SHARED | IRQF_NO_THREAD,
++			       rcar_msi_irq_chip.name, pcie);
+ 	if (err < 0) {
+ 		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
+ 		goto err;
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index b95b756..a6cd823 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -279,7 +279,8 @@ static int spear13xx_add_pcie_port(struct pcie_port *pp,
+ 		return -ENODEV;
+ 	}
+ 	ret = devm_request_irq(dev, pp->irq, spear13xx_pcie_irq_handler,
+-			       IRQF_SHARED, "spear1340-pcie", pp);
++			       IRQF_SHARED | IRQF_NO_THREAD,
++			       "spear1340-pcie", pp);
+ 	if (ret) {
+ 		dev_err(dev, "failed to request irq %d\n", pp->irq);
+ 		return ret;
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 3c7a0d5..4cfa463 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -781,7 +781,8 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
+ 
+ 	port->irq = irq_of_parse_and_map(node, 0);
+ 	err = devm_request_irq(dev, port->irq, xilinx_pcie_intr_handler,
+-			       IRQF_SHARED, "xilinx-pcie", port);
++			       IRQF_SHARED | IRQF_NO_THREAD,
++			       "xilinx-pcie", port);
+ 	if (err) {
+ 		dev_err(dev, "unable to request irq %d\n", port->irq);
+ 		return err;
+-- 
+2.6.4
 
-I hope the above explains it. If you have more questions, feel free to ask!
-
-> I've applied the parts that touch PCI.  I won't be offended if the
-> binding documentation patches go as-is via another tree.  It's just
-> that if *I'm* going to apply them, I'd like to understand better what
-> the benefit is.
-
-DT binding updates typically go through the subsystem maintainer,
-just like driver updates.
-
-Thanks!
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
