@@ -1,46 +1,56 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 16 Dec 2015 14:05:56 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: "Jayachandran C." <jchandra@broadcom.com>, tn@semihalf.com
-Cc: Bjorn Helgaas <helgaas@kernel.org>, bhelgaas@google.com,
-	arnd@arndb.de, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	jiang.liu@linux.intel.com, ddaney@caviumnetworks.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org
-Subject: Re: [PATCH V1 00/11] MMCONFIG refactoring and ARM64 PCI hostbridge
- init based on ACPI
-Message-ID: <20151216140556.GC22916@red-moon>
-References: <1445963922-22711-1-git-send-email-tn@semihalf.com>
- <20151207203117.GB14429@localhost>
- <20151209100125.GA12632@jayachandranc.netlogicmicro.com>
- <20151209155511.GB21048@red-moon>
- <20151216125136.GE5890@jayachandranc.netlogicmicro.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+References: <1448798633-12697-1-git-send-email-bharatku@xilinx.com>
+ <20151209231921.GI31930@localhost>
+CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<sorenb@xilinx.com>, <bhelgaas@google.com>, <arnd@arndb.de>,
+	<tinamdar@apm.com>, <treding@nvidia.com>, <rjui@broadcom.com>,
+	<Minghuan.Lian@freescale.com>, <m-karicheri2@ti.com>,
+	<hauke@hauke-m.de>, <marc.zyngier@arm.com>, <dhdang@apm.com>,
+	<sbranden@broadcom.com>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	"Ravi Kiran Gummaluri" <rgummal@xilinx.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Paul Burton <paul.burton@imgtec.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"Alexandre Courbot" <gnurou@gmail.com>
+From: Michal Simek <michal.simek@xilinx.com>
+Message-ID: <5669236D.30805@xilinx.com>
+Date: Thu, 10 Dec 2015 08:02:05 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151216125136.GE5890@jayachandranc.netlogicmicro.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20151209231921.GI31930@localhost>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 16, 2015 at 06:21:37PM +0530, Jayachandran C. wrote:
+Hi Bjorn,
 
-[...]
-
-> > That list is there to manage hotplug bridges, what makes you think
-> > it is not necessary ? Jiang (in CC) can certainly comment on that and
-> > how that list handling can be updated/simplified, if possible.
+On 10.12.2015 00:19, Bjorn Helgaas wrote:
+> [+cc Michal, Paul, Thierry, Stephen, Alexandre (see irq_dispose_mapping questions below)]
 > 
-> Looking thru the code, I think moving the MCFG code to common can be
-> done in a simpler way. I have posted a new patchset for this.
-> (And I don't see how the hotplug case needs the list, but that is not
->  relevant now)
+> On Sun, Nov 29, 2015 at 05:33:53PM +0530, Bharat Kumar Gogada wrote:
+>> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+>>
+>> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+>> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+>> Acked-by: Rob Herring <robh@kernel.org>
+> 
+> This needs either a MAINTAINERS update or an ack from Michal (whose
+> MAINTAINERS entry matches anything containing "xilinx").
 
-You must work with Tomasz and come up with a unified patchset that
-implements ACPI PCIe support for ARM64. We do not need more churn, we
-need a working set, period. Posting separate RFCs just adds to the
-confusion and to maintainers' review backlog, with the end result of
-confusing everyone and achieving nothing.
+We have done it in this way because driver owners are changing time to
+time and my entry cover it that I can pass it to appropriate person who
+is responsible for it.
 
-Lorenzo
+For this Maintainers part here is my:
+Acked-by: Michal Simek <michal.simek@xilinx.com>
+
+Thanks,
+Michal
