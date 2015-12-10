@@ -1,106 +1,194 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <kishon@ti.com>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
-CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rogerq@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-	<linux-usb@vger.kernel.org>, <tony@atomide.com>, <t-kristo@ti.com>
-Subject: [PATCH v3 4/9] phy: ti-pipe3: move mem resource initialization to a separate function
-Date: Tue, 15 Dec 2015 14:46:03 +0530
-Message-ID: <1450170968-11282-5-git-send-email-kishon@ti.com>
-In-Reply-To: <1450170968-11282-1-git-send-email-kishon@ti.com>
-References: <1450170968-11282-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:56449 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754889AbbLJRxc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 12:53:32 -0500
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v10 3/7] PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
+Date: Thu, 10 Dec 2015 17:52:59 +0000
+Message-Id: <1449769983-12948-4-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
+References: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional change. Moved mem resource initialization done in
-probe to a separate function as part of cleaning up
-ti_pipe3_probe.
+From: Jake Oshins <jakeo@microsoft.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+The Linux kernel already has the concpet of IRQ domain, wherein a
+component can expose a set of IRQs which are managed by a particular
+interrupt controller chip or other subsystem. The PCI driver exposes
+the notion of an IRQ domain for Message-Signaled Interrupts (MSI) from
+PCI Express devices. This patch exposes the functions which are
+necessary for making an MSI IRQ domain within a module.
+
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- drivers/phy/phy-ti-pipe3.c |   52 ++++++++++++++++++++++++++++----------------
- 1 file changed, 33 insertions(+), 19 deletions(-)
+ arch/x86/include/asm/msi.h    | 6 ++++++
+ arch/x86/kernel/apic/msi.c    | 8 +++++---
+ arch/x86/kernel/apic/vector.c | 2 ++
+ drivers/pci/msi.c             | 4 ++++
+ kernel/irq/chip.c             | 1 +
+ kernel/irq/irqdomain.c        | 4 ++++
+ 6 files changed, 22 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
-index 3154da0..1991efd 100644
---- a/drivers/phy/phy-ti-pipe3.c
-+++ b/drivers/phy/phy-ti-pipe3.c
-@@ -418,14 +418,42 @@ static int ti_pipe3_get_sysctrl(struct ti_pipe3 *phy)
- 	return 0;
+diff --git a/arch/x86/include/asm/msi.h b/arch/x86/include/asm/msi.h
+index 93724cc..eb4b09b 100644
+--- a/arch/x86/include/asm/msi.h
++++ b/arch/x86/include/asm/msi.h
+@@ -1,7 +1,13 @@
+ #ifndef _ASM_X86_MSI_H
+ #define _ASM_X86_MSI_H
+ #include <asm/hw_irq.h>
++#include <asm/irqdomain.h>
+ 
+ typedef struct irq_alloc_info msi_alloc_info_t;
+ 
++int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
++		    msi_alloc_info_t *arg);
++
++void pci_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc);
++
+ #endif /* _ASM_X86_MSI_H */
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 5f1feb6..ade2532 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -96,8 +96,8 @@ static irq_hw_number_t pci_msi_get_hwirq(struct msi_domain_info *info,
+ 	return arg->msi_hwirq;
  }
  
-+static int ti_pipe3_get_pll_base(struct ti_pipe3 *phy)
-+{
-+	struct resource *res;
-+	const struct of_device_id *match;
-+	struct device *dev = phy->dev;
-+	struct device_node *node = dev->of_node;
-+	struct platform_device *pdev = to_platform_device(dev);
-+
-+	if (of_device_is_compatible(node, "ti,phy-pipe3-pcie"))
-+		return 0;
-+
-+	match = of_match_device(ti_pipe3_id_table, dev);
-+	if (!match)
-+		return -EINVAL;
-+
-+	phy->dpll_map = (struct pipe3_dpll_map *)match->data;
-+	if (!phy->dpll_map) {
-+		dev_err(dev, "no DPLL data\n");
-+		return -EINVAL;
-+	}
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-+					   "pll_ctrl");
-+	phy->pll_ctrl_base = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(phy->pll_ctrl_base))
-+		return PTR_ERR(phy->pll_ctrl_base);
-+
-+	return 0;
-+}
-+
- static int ti_pipe3_probe(struct platform_device *pdev)
+-static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
+-			   int nvec, msi_alloc_info_t *arg)
++int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
++		    msi_alloc_info_t *arg)
  {
- 	struct ti_pipe3 *phy;
- 	struct phy *generic_phy;
- 	struct phy_provider *phy_provider;
--	struct resource *res;
- 	struct device_node *node = pdev->dev.of_node;
--	const struct of_device_id *match;
- 	struct device *dev = &pdev->dev;
- 	int ret;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct msi_desc *desc = first_pci_msi_entry(pdev);
+@@ -113,11 +113,13 @@ static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
  
-@@ -435,23 +463,9 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pci_msi_prepare);
  
- 	phy->dev		= dev;
+-static void pci_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
++void pci_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
+ {
+ 	arg->msi_hwirq = pci_msi_domain_calc_hwirq(arg->msi_dev, desc);
+ }
++EXPORT_SYMBOL_GPL(pci_msi_set_desc);
  
--	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
--		match = of_match_device(ti_pipe3_id_table, dev);
--		if (!match)
--			return -EINVAL;
--
--		phy->dpll_map = (struct pipe3_dpll_map *)match->data;
--		if (!phy->dpll_map) {
--			dev_err(dev, "no DPLL data\n");
--			return -EINVAL;
--		}
--
--		res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
--						   "pll_ctrl");
--		phy->pll_ctrl_base = devm_ioremap_resource(dev, res);
--		if (IS_ERR(phy->pll_ctrl_base))
--			return PTR_ERR(phy->pll_ctrl_base);
--	}
-+	ret = ti_pipe3_get_pll_base(phy);
-+	if (ret)
-+		return ret;
+ static struct msi_domain_ops pci_msi_domain_ops = {
+ 	.get_hwirq	= pci_msi_get_hwirq,
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 861bc59..908cb37 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -29,6 +29,7 @@ struct apic_chip_data {
+ };
  
- 	ret = ti_pipe3_get_sysctrl(phy);
- 	if (ret)
+ struct irq_domain *x86_vector_domain;
++EXPORT_SYMBOL_GPL(x86_vector_domain);
+ static DEFINE_RAW_SPINLOCK(vector_lock);
+ static cpumask_var_t vector_cpumask;
+ static struct irq_chip lapic_controller;
+@@ -66,6 +67,7 @@ struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
+ 
+ 	return data ? &data->cfg : NULL;
+ }
++EXPORT_SYMBOL_GPL(irqd_cfg);
+ 
+ struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 7eaa4c8..7a0df3f 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -257,6 +257,7 @@ void pci_msi_mask_irq(struct irq_data *data)
+ {
+ 	msi_set_mask_bit(data, 1);
+ }
++EXPORT_SYMBOL_GPL(pci_msi_mask_irq);
+ 
+ /**
+  * pci_msi_unmask_irq - Generic irq chip callback to unmask PCI/MSI interrupts
+@@ -266,6 +267,7 @@ void pci_msi_unmask_irq(struct irq_data *data)
+ {
+ 	msi_set_mask_bit(data, 0);
+ }
++EXPORT_SYMBOL_GPL(pci_msi_unmask_irq);
+ 
+ void default_restore_msi_irqs(struct pci_dev *dev)
+ {
+@@ -1126,6 +1128,7 @@ struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
+ {
+ 	return to_pci_dev(desc->dev);
+ }
++EXPORT_SYMBOL(msi_desc_to_pci_dev);
+ 
+ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
+ {
+@@ -1285,6 +1288,7 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
+ 	domain->bus_token = DOMAIN_BUS_PCI_MSI;
+ 	return domain;
+ }
++EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
+ 
+ /**
+  * pci_msi_domain_alloc_irqs - Allocate interrupts for @dev in @domain
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index 05e29de..5797909 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -950,6 +950,7 @@ void irq_chip_ack_parent(struct irq_data *data)
+ 	data = data->parent_data;
+ 	data->chip->irq_ack(data);
+ }
++EXPORT_SYMBOL_GPL(irq_chip_ack_parent);
+ 
+ /**
+  * irq_chip_mask_parent - Mask the parent interrupt
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 22aa961..aa6ac44 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -60,6 +60,7 @@ struct fwnode_handle *irq_domain_alloc_fwnode(void *data)
+ 	fwid->fwnode.type = FWNODE_IRQCHIP;
+ 	return &fwid->fwnode;
+ }
++EXPORT_SYMBOL_GPL(irq_domain_alloc_fwnode);
+ 
+ /**
+  * irq_domain_free_fwnode - Free a non-OF-backed fwnode_handle
+@@ -77,6 +78,7 @@ void irq_domain_free_fwnode(struct fwnode_handle *fwnode)
+ 	kfree(fwid->name);
+ 	kfree(fwid);
+ }
++EXPORT_SYMBOL_GPL(irq_domain_free_fwnode);
+ 
+ /**
+  * __irq_domain_add() - Allocate a new irq_domain data structure
+@@ -1013,6 +1015,7 @@ struct irq_data *irq_domain_get_irq_data(struct irq_domain *domain,
+ 
+ 	return NULL;
+ }
++EXPORT_SYMBOL_GPL(irq_domain_get_irq_data);
+ 
+ /**
+  * irq_domain_set_hwirq_and_chip - Set hwirq and irqchip of @virq at @domain
+@@ -1343,6 +1346,7 @@ struct irq_data *irq_domain_get_irq_data(struct irq_domain *domain,
+ 
+ 	return (irq_data && irq_data->domain == domain) ? irq_data : NULL;
+ }
++EXPORT_SYMBOL_GPL(irq_domain_get_irq_data);
+ 
+ /**
+  * irq_domain_set_info - Set the complete data for a @virq in @domain
 -- 
-1.7.9.5
+1.9.1
 
