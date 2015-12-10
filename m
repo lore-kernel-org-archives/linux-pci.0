@@ -1,62 +1,80 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [RFC PATCH v2 0/4] Simple ACPI based PCI support for arm64
-Date: Mon, 7 Dec 2015 22:50:25 +0530
-Message-ID: <1449508829-10797-1-git-send-email-jchandra@broadcom.com>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <tglx@linutronix.de>,
+	<jason@lakedaemon.net>, <rjw@rjwysocki.net>, <bhelgaas@google.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	<hanjun.guo@linaro.org>, <tomasz.nowicki@linaro.org>,
+	<graeme.gregory@linaro.org>, <dhdang@apm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>,
+	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v7 2/4] irqdomain: introduce is_fwnode_irqchip helper
+Date: Thu, 10 Dec 2015 08:55:28 -0800
+Message-ID: <1449766530-16935-3-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a very simple and generic implementation of a PCI host controller
-based on ACPI. This approach does not pull in the MMCONFIG and ECAM code
-from x86. The MCFG table is a simple ACPI table, and there is no need to
-move the complex code from x86 (sorted linked list with a lot of global
-vars) to acpi for parsing it.
+Since there will be several places checking if fwnode.type
+is equal FWNODE_IRQCHIP, this patch adds a convenient function
+for this purpose.
 
-The config space access is done with pci-host-generic style simple
-mapping and generic PCI config read/write.
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+---
+ drivers/irqchip/irq-gic.c | 2 +-
+ include/linux/irqdomain.h | 5 +++++
+ kernel/irq/irqdomain.c    | 2 +-
+ 3 files changed, 7 insertions(+), 2 deletions(-)
 
-This is tested with arm64 QEMU and OVMF. Comments are very welcome.
-
-I would also add that I am posting this as an option, if another
-implementation is accepted upstream, I would happily drop this.
-
-Thanks,
-JC.
-
-v1->v2:
- - use CONFIG_PCI_MMCONFIG on arm64, provide a weak implementation
-   of pci_mmcfg_late_init for arm64.
- - The real implementation of pci_mmcfg_late_init is in pci-host-acpi.c
-   and it will save the MCFG table entries to an array. Earlier this
-   was done with an arch_init call
- - remove unneeded pci_bus_add_devices call and fix MCFG saving code
- - Added a patch to ACPI pci_root.c to handle arm64 PCI IO resources
-
-Jayachandran C (4):
-  arm64: pci: Add ACPI support
-  PCI: Handle NULL parent in pci_bus_assign_domain_nr
-  PCI: ACPI: Add a generic ACPI based host controller
-  ACPI: PCI: Support platforms that need pci_remap_iospace
-
- arch/arm64/Kconfig               |   3 +
- arch/arm64/kernel/pci.c          |  50 +++++++++-
- drivers/acpi/pci_root.c          |  62 +++++++++++-
- drivers/acpi/resource.c          |   2 +
- drivers/pci/host/Kconfig         |   7 ++
- drivers/pci/host/Makefile        |   1 +
- drivers/pci/host/pci-host-acpi.c | 209 +++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.c                |   7 +-
- 8 files changed, 335 insertions(+), 6 deletions(-)
- create mode 100644 drivers/pci/host/pci-host-acpi.c
-
+diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+index abf2ffa..fcd327f 100644
+--- a/drivers/irqchip/irq-gic.c
++++ b/drivers/irqchip/irq-gic.c
+@@ -972,7 +972,7 @@ static int gic_irq_domain_translate(struct irq_domain *d,
+ 		return 0;
+ 	}
+ 
+-	if (fwspec->fwnode->type == FWNODE_IRQCHIP) {
++	if (is_fwnode_irqchip(fwspec->fwnode)) {
+ 		if(fwspec->param_count != 2)
+ 			return -EINVAL;
+ 
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index a06feda..d72fabc 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -211,6 +211,11 @@ static inline struct fwnode_handle *of_node_to_fwnode(struct device_node *node)
+ 	return node ? &node->fwnode : NULL;
+ }
+ 
++static inline bool is_fwnode_irqchip(struct fwnode_handle *fwnode)
++{
++	return fwnode && fwnode->type == FWNODE_IRQCHIP;
++}
++
+ static inline struct irq_domain *irq_find_matching_host(struct device_node *node,
+ 							enum irq_domain_bus_token bus_token)
+ {
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 22aa961..7f34d98 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -70,7 +70,7 @@ void irq_domain_free_fwnode(struct fwnode_handle *fwnode)
+ {
+ 	struct irqchip_fwid *fwid;
+ 
+-	if (WARN_ON(fwnode->type != FWNODE_IRQCHIP))
++	if (WARN_ON(!is_fwnode_irqchip(fwnode)))
+ 		return;
+ 
+ 	fwid = container_of(fwnode, struct irqchip_fwid, fwnode);
 -- 
-1.9.1
+2.1.0
 
