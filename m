@@ -1,80 +1,126 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <tglx@linutronix.de>,
-	<jason@lakedaemon.net>, <rjw@rjwysocki.net>, <bhelgaas@google.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	<hanjun.guo@linaro.org>, <tomasz.nowicki@linaro.org>,
-	<graeme.gregory@linaro.org>, <dhdang@apm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v7 2/4] irqdomain: introduce is_fwnode_irqchip helper
-Date: Thu, 10 Dec 2015 08:55:28 -0800
-Message-ID: <1449766530-16935-3-git-send-email-Suravee.Suthikulpanit@amd.com>
-In-Reply-To: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:55906 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754874AbbLJRxc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 12:53:32 -0500
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v10 2/7] drivers:hv: Export hv_do_hypercall()
+Date: Thu, 10 Dec 2015 17:52:58 +0000
+Message-Id: <1449769983-12948-3-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
+References: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since there will be several places checking if fwnode.type
-is equal FWNODE_IRQCHIP, this patch adds a convenient function
-for this purpose.
+From: Jake Oshins <jakeo@microsoft.com>
 
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+This patch exposes the function that hv_vmbus.ko uses to make hypercalls.
+This is necessary for retargeting an interrupt when it is given a new
+affinity and vector.
+
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- drivers/irqchip/irq-gic.c | 2 +-
- include/linux/irqdomain.h | 5 +++++
- kernel/irq/irqdomain.c    | 2 +-
- 3 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/hv/hv.c           | 20 ++++++++++----------
+ drivers/hv/hyperv_vmbus.h |  2 +-
+ include/linux/hyperv.h    |  1 +
+ 3 files changed, 12 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
-index abf2ffa..fcd327f 100644
---- a/drivers/irqchip/irq-gic.c
-+++ b/drivers/irqchip/irq-gic.c
-@@ -972,7 +972,7 @@ static int gic_irq_domain_translate(struct irq_domain *d,
- 		return 0;
- 	}
- 
--	if (fwspec->fwnode->type == FWNODE_IRQCHIP) {
-+	if (is_fwnode_irqchip(fwspec->fwnode)) {
- 		if(fwspec->param_count != 2)
- 			return -EINVAL;
- 
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index a06feda..d72fabc 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -211,6 +211,11 @@ static inline struct fwnode_handle *of_node_to_fwnode(struct device_node *node)
- 	return node ? &node->fwnode : NULL;
+diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
+index 6341be8..7a06933 100644
+--- a/drivers/hv/hv.c
++++ b/drivers/hv/hv.c
+@@ -89,9 +89,9 @@ static int query_hypervisor_info(void)
  }
  
-+static inline bool is_fwnode_irqchip(struct fwnode_handle *fwnode)
-+{
-+	return fwnode && fwnode->type == FWNODE_IRQCHIP;
-+}
-+
- static inline struct irq_domain *irq_find_matching_host(struct device_node *node,
- 							enum irq_domain_bus_token bus_token)
+ /*
+- * do_hypercall- Invoke the specified hypercall
++ * hv_do_hypercall- Invoke the specified hypercall
+  */
+-static u64 do_hypercall(u64 control, void *input, void *output)
++u64 hv_do_hypercall(u64 control, void *input, void *output)
  {
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 22aa961..7f34d98 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -70,7 +70,7 @@ void irq_domain_free_fwnode(struct fwnode_handle *fwnode)
+ 	u64 input_address = (input) ? virt_to_phys(input) : 0;
+ 	u64 output_address = (output) ? virt_to_phys(output) : 0;
+@@ -132,6 +132,7 @@ static u64 do_hypercall(u64 control, void *input, void *output)
+ 	return hv_status_lo | ((u64)hv_status_hi << 32);
+ #endif /* !x86_64 */
+ }
++EXPORT_SYMBOL_GPL(hv_do_hypercall);
+ 
+ #ifdef CONFIG_X86_64
+ static cycle_t read_hv_clock_tsc(struct clocksource *arg)
+@@ -315,7 +316,7 @@ int hv_post_message(union hv_connection_id connection_id,
  {
- 	struct irqchip_fwid *fwid;
  
--	if (WARN_ON(fwnode->type != FWNODE_IRQCHIP))
-+	if (WARN_ON(!is_fwnode_irqchip(fwnode)))
- 		return;
+ 	struct hv_input_post_message *aligned_msg;
+-	u16 status;
++	u64 status;
  
- 	fwid = container_of(fwnode, struct irqchip_fwid, fwnode);
+ 	if (payload_size > HV_MESSAGE_PAYLOAD_BYTE_COUNT)
+ 		return -EMSGSIZE;
+@@ -329,11 +330,10 @@ int hv_post_message(union hv_connection_id connection_id,
+ 	aligned_msg->payload_size = payload_size;
+ 	memcpy((void *)aligned_msg->payload, payload, payload_size);
+ 
+-	status = do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL)
+-		& 0xFFFF;
++	status = hv_do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL);
+ 
+ 	put_cpu();
+-	return status;
++	return status & 0xFFFF;
+ }
+ 
+ 
+@@ -343,13 +343,13 @@ int hv_post_message(union hv_connection_id connection_id,
+  *
+  * This involves a hypercall.
+  */
+-u16 hv_signal_event(void *con_id)
++int hv_signal_event(void *con_id)
+ {
+-	u16 status;
++	u64 status;
+ 
+-	status = (do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL) & 0xFFFF);
++	status = hv_do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL);
+ 
+-	return status;
++	return status & 0xFFFF;
+ }
+ 
+ static int hv_ce_set_next_event(unsigned long delta,
+diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
+index 3782636..cc2fb53 100644
+--- a/drivers/hv/hyperv_vmbus.h
++++ b/drivers/hv/hyperv_vmbus.h
+@@ -582,7 +582,7 @@ extern int hv_post_message(union hv_connection_id connection_id,
+ 			 enum hv_message_type message_type,
+ 			 void *payload, size_t payload_size);
+ 
+-extern u16 hv_signal_event(void *con_id);
++extern int hv_signal_event(void *con_id);
+ 
+ extern int hv_synic_alloc(void);
+ 
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index fddb3e0..24d0b65 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -984,6 +984,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			bool fb_overlap_ok);
+ 
+ int vmbus_cpu_number_to_vp_number(int cpu_number);
++u64 hv_do_hypercall(u64 control, void *input, void *output);
+ 
+ /**
+  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
 -- 
-2.1.0
+1.9.1
 
