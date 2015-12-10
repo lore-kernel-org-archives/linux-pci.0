@@ -1,87 +1,184 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-am1on0094.outbound.protection.outlook.com ([157.56.112.94]:19311
-	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933090AbbLXHgn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 Dec 2015 02:36:43 -0500
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	Noa Osherovich <noaos@mellanox.com>,
-	Haggai Eran <haggaie@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Liran Liss <liranl@mellanox.com>
-Subject: RE: [RFC 0/2] VFIO SRIOV support
-Date: Thu, 24 Dec 2015 07:22:30 +0000
-Message-ID: <VI1PR05MB1119DD3ED0EB74A259D157A8D4E70@VI1PR05MB1119.eurprd05.prod.outlook.com>
-References: <1450791734-3907-1-git-send-email-ilyal@mellanox.com>
-	 <1450798558.22385.7.camel@redhat.com>
-	 <VI1PR05MB1119CACA2E294B58EDB54A9AD4E60@VI1PR05MB1119.eurprd05.prod.outlook.com>
- <1450888100.2950.87.camel@redhat.com>
-In-Reply-To: <1450888100.2950.87.camel@redhat.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:38013 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751310AbbLJKkq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 05:40:46 -0500
+From: Bogicevic Sasa <brutallesale@gmail.com>
+To: rjw@rjwysocki.net
+Cc: lenb@kernel.org, bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bogicevic Sasa <brutallesale@gmail.com>
+Subject: [PATCH] drivers:pci:hotplug Fix all space prohibited before that ,
+Date: Thu, 10 Dec 2015 02:40:40 -0800
+Message-Id: <1449744040-76428-1-git-send-email-brutallesale@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbGV4IFdpbGxpYW1zb24gW21h
-aWx0bzphbGV4LndpbGxpYW1zb25AcmVkaGF0LmNvbV0NCj4gU2VudDogV2VkbmVzZGF5LCBEZWNl
-bWJlciAyMywgMjAxNSA2OjI4IFBNDQo+IFRvOiBJbHlhIExlc29raGluIDxpbHlhbEBtZWxsYW5v
-eC5jb20+OyBrdm1Admdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9y
-Zw0KPiBDYzogYmhlbGdhYXNAZ29vZ2xlLmNvbTsgTm9hIE9zaGVyb3ZpY2ggPG5vYW9zQG1lbGxh
-bm94LmNvbT47IEhhZ2dhaQ0KPiBFcmFuIDxoYWdnYWllQG1lbGxhbm94LmNvbT47IE9yIEdlcmxp
-dHogPG9nZXJsaXR6QG1lbGxhbm94LmNvbT47IExpcmFuDQo+IExpc3MgPGxpcmFubEBtZWxsYW5v
-eC5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUkZDIDAvMl0gVkZJTyBTUklPViBzdXBwb3J0DQo+IA0K
-PiBPbiBXZWQsIDIwMTUtMTItMjMgYXQgMDc6NDMgKzAwMDAsIElseWEgTGVzb2toaW4gd3JvdGU6
-DQo+ID4gSGkgQWxleCwNCj4gPiBSZWdhcmRpbmcgZHJpdmVyX292ZXJyaWRlLCBhcyBmYXIgYXMg
-SSBrbm93IHlvdSBjYW4gb25seSB1c2UgaXQgb24NCj4gPiBkZXZpY2VzIHRoYXQgd2VyZSBhbHJl
-YWR5IGRpc2NvdmVyZWQuIFNpbmNlIHRoZSBkZXZpY2VzIGRvIG5vdCBleGlzdA0KPiA+IGJlZm9y
-ZSB0aGUgY2FsbCB0byBwY2lfZW5hYmxlX3NyaW92KC4uLikgYW5kIGFyZSBhbHJlYWR5IHByb2Jl
-ZCBhZnRlcg0KPiA+IHRoZSBjYWxswqDCoGl0IHdvdWxkbid0IHJlYWxseSBoZWxwIHVzLiBJIHdv
-dWxkIGhhdmUgdG8gdW5iaW5kIHRoZW0gZnJvbQ0KPiA+IHRoZWlyIGRlZmF1bHQgZHJpdmVyIGFu
-ZCBiaW5kIHRoZW0gdG8gVkZJTyBsaWtlIHNvbHV0aW9uIGEgaW4gbXkNCj4gPiBvcmlnaW5hbCBt
-YWlsLg0KPiANCj4gSWYgeW91IGFsbG93IHRoZW0gdG8gYmUgYm91bmQgdG8gdGhlaXIgZGVmYXVs
-dCBkcml2ZXIsIHRoZW4geW91J3ZlIGFscmVhZHkNCj4gY3JlYXRlZCB0aGUgc2NlbmFyaW8gb2Yg
-YSB1c2VyIG93biBQRiBjcmVhdGluZyBob3N0IG93biBWRnMsIHdoaWNoIEkgdGhpbmsgaXMNCj4g
-dW5hY2NlcHRhYmxlLiDCoFRoZSBkcml2ZXJfb3ZlcnJpZGUgY2FuIGJlIHNldCBiZWZvcmUgZHJp
-dmVycyBhcmUgcHJvYmVkLCB0aGUNCj4gZmFjdCB0aGF0IHBjaV9lbmFibGVfc3Jpb3YoKSBkb2Vz
-bid0IGVuYWJsZSBhIGhvb2sgZm9yIHRoYXQgaXMgc29tZXRoaW5nIHRoYXQNCj4gY291bGQgYmUg
-Zml4ZWQuDQoNClRoYXTigJlzIGVzc2VudGlhbGx5IHRoZSBzYW1lIGFzIHNvbHV0aW9uIGIgaW4g
-b3JpZ2luYWwgbWFpbCB3aGljaCBJIHdhcyBob3BpbmcgdG8gYXZvaWQuDQoNCj4gPiBZb3UgYXJl
-IHJpZ2h0IGFib3V0IHRoZSBvd25lcnNoaXAgcHJvYmxlbSBhbmQgd2Ugd291bGQgbGlrZSB0byBy
-ZWNlaXZlDQo+ID4gaW5wdXQgcmVnYXJkaW5nIHdoYXQgaXMgdGhlIGNvcnJlY3Qgd2F5IG9mIHNv
-bHZpbmcgdGhpcy4NCj4gPiBCdXQgaW4gdGhlIG1lYW50aW1lIEkgdGhpbmsgb3VyIHNvbHV0aW9u
-IGlzIHF1aXRlIHVzZWZ1bCBldmVuIHRob3VnaA0KPiA+IGlmIGl0IHJlcXVpcmVzIHJvb3QgcHJp
-dmlsZWdlcy4gV2UgaGFja2VkIGxpYnZpcnQgc28gdGhhdCBpdCB3b3VsZCBydW4NCj4gPiBxZW11
-IGFzIHJvb3QgYW5kIHdpdGhvdXQgZGV2aWNlIGNncm91cC4NCj4gPg0KPiA+IEluIGFueSBjYXNl
-LCBkb24ndCB5b3UgdGhpbmsgdGhhdCBhc3NpZ25pbmcgdGhvc2UgZGV2aWNlcyB0byBWRklPDQo+
-ID4gc2hvdWxkIGJlIHNhZmU/IERvZXMgdGhlIFZGSU8gZHJpdmVyIG1ha2VzIGFueSB1bnNhZmUg
-YXNzdW1wdGlvbnMgb24NCj4gPiB0aGUgVkYncyB0aGF0IG1pZ2h0IGFsbG93IGEgZ3Vlc3QgdG8g
-Y3Jhc2ggdGhlIGh5cGVydmlzb3I/DQo+ID4NCj4gPiBJIGFtIHNvbWV3aGF0IGNvbmNlcm5lZCB0
-aGF0IHRoZSBWTcKgwqBjb3VsZCB0cmlnZ2VyIHNvbWUgYmFja2Rvb3IgcmVzZXQNCj4gPiB3aGls
-ZSB0aGUgaHlwZXJ2aXNvciBpcyBydW5uaW5nIHBjaV9lbmFibGVfc3Jpb3YoLi4uKS4gQnV0IEkn
-bSBub3QNCj4gPiByZWFsbHkgc3VyZSBob3cgdG8gc29sdmUgaXQuDQo+ID4gSSBndWVzcyB5b3Ug
-aGF2ZSB0byBlaXRoZXIgc3RvcCB0aGUgZ3Vlc3QgZW50aXJlbHkgdG8gZW5hYmxlIHNyaW92IG9y
-DQo+ID4gbWFrZSBpdCBwcml2aWxlZ2VkLg0KPiA+DQo+ID4gUmVnYXJkaW5nIGhhdmluZyB0aGUg
-UEYgY29udHJvbGxlZCBieSBvbmUgdXNlciB3aGlsZSB0aGUgb3RoZXIgVkZzIGFyZQ0KPiA+IGNv
-bnRyb2xsZWQgYnkgb3RoZXIgdXNlciwgSSBhY3R1YWxseSB0aGluayBpdCBtaWdodCBiZSBhbiBp
-bnRlcmVzdGluZw0KPiA+IHVzZSBjYXNlLg0KPiANCj4gSXQgbWF5IGJlLCBidXQgaXQgbmVlZHMg
-dG8gYmUgYW4gb3B0LWluLCBub3QgYSBzZWN1cml0eSBhY2NpZGVudC4gwqBUaGUgaW50ZXJmYWNl
-DQo+IGJldHdlZW4gYSBQRiBhbmQgYSBWRiBpcyBlc3NlbnRpYWwgZGV2aWNlIHNwZWNpZmljIGFu
-ZCB3ZSBkb24ndCBrbm93IGV4YWN0bHkNCj4gaG93IGlzb2xhdGVkIGVhY2ggVkYgaXMgZnJvbSB0
-aGUgUEYuIMKgSW4gdGhlIHR5cGljYWwgc2NlbmFyaW8gb2YgdGhlIFBGIGJlaW5nDQo+IG93bmVk
-IGJ5IHRoZSBob3N0LCB3ZSBoYXZlIGEgY2VydGFpbiBkZWdyZWUgb2YgdHJ1c3QgaW4gdGhlIGhv
-c3QsIGl0J3MgcnVubmluZw0KPiB0aGUgVk0gYWZ0ZXIgYWxsLCBpZiBpdCB3YW50ZWQgdG8gY29t
-cHJvbWlzZSBpdCwgaXQgY291bGQuIMKgV2UgaGF2ZSBubyBpbXBsaWNpdA0KPiByZWFzb24gdG8g
-dHJ1c3QgYSBQRiBydW5uaW5nIGluIGEgZ3Vlc3QgdGhvdWdoLiDCoENhbiB0aGUgc25vb3AgVkYg
-dHJhZmZpYywgY2FuDQo+IHRoZXkgZ2VuZXJhdGUgRE1BIG91dHNpZGUgb2YgdGhlIGNvbnRhaW5l
-ciBvZiB0aGUgUEYgdXNpbmcgdGhlIFZGPyDCoFdlDQo+IGNhbid0IGJlIHN1cmUuDQo+IMKgU28g
-dW5sZXNzIHlvdSBjYW4gbWFrZSB0aGUgZGVmYXVsdCBzY2VuYXJpbyBiZSB0aGF0IFZGcyBjcmVh
-dGVkIGJ5IGEgdXNlcg0KPiBvd24gUEYgYXJlIG9ubHkgYXZhaWxhYmxlIGZvciB1c2UgYnkgdGhh
-dCB1c2VyLCB3aXRob3V0IHJlbHlpbmcgb24gdXNlcnNwYWNlDQo+IHRvIGludGVydmVuZSwgaXQg
-c2VlbXMgbGlrZSBhbnkgcG90ZW50aWFsIHVzZWZ1bG5lc3MgaXMgdHJ1bXBlZCBieSBhIGdpYW50
-DQo+IHNlY3VyaXR5IGlzc3VlLiDCoFRoYW5rcywNCg0KSSBkb24ndCB1bmRlcnN0YW5kIHRoZSBz
-ZWN1cml0eSBpc3N1ZSwgZG9uJ3QgeW91IG5lZWQgcm9vdCBwZXJtaXNzaW9uIGZvciBkZXZpY2Ug
-YXNzaWdubWVudD8NCg0KPiBBbGV4DQo=
+This fixes all checkpatch errors about space prohibited
+before comma in drivers/pci/hotplug folder
+
+Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
+---
+ drivers/pci/hotplug/acpi_pcihp.c        | 8 ++++----
+ drivers/pci/hotplug/cpci_hotplug_core.c | 8 ++++----
+ drivers/pci/hotplug/cpci_hotplug_pci.c  | 8 ++++----
+ drivers/pci/hotplug/cpcihp_generic.c    | 8 ++++----
+ drivers/pci/hotplug/cpcihp_zt5550.c     | 8 ++++----
+ drivers/pci/hotplug/ibmphp_ebda.c       | 2 +-
+ drivers/pci/hotplug/pci_hotplug_core.c  | 8 ++++----
+ drivers/pci/hotplug/pcihp_skeleton.c    | 8 ++++----
+ 8 files changed, 29 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+index 876ccc6..80d94d2 100644
+--- a/drivers/pci/hotplug/acpi_pcihp.c
++++ b/drivers/pci/hotplug/acpi_pcihp.c
+@@ -36,10 +36,10 @@
+ 
+ #define MY_NAME	"acpi_pcihp"
+ 
+-#define dbg(fmt, arg...) do { if (debug_acpi) printk(KERN_DEBUG "%s: %s: " fmt , MY_NAME , __func__ , ## arg); } while (0)
+-#define err(format, arg...) printk(KERN_ERR "%s: " format , MY_NAME , ## arg)
+-#define info(format, arg...) printk(KERN_INFO "%s: " format , MY_NAME , ## arg)
+-#define warn(format, arg...) printk(KERN_WARNING "%s: " format , MY_NAME , ## arg)
++#define dbg(fmt, arg...) do { if (debug_acpi) printk(KERN_DEBUG "%s: %s: " fmt, MY_NAME, __func__, ## arg); } while (0)
++#define err(format, arg...) printk(KERN_ERR "%s: " format, MY_NAME, ## arg)
++#define info(format, arg...) printk(KERN_INFO "%s: " format, MY_NAME, ## arg)
++#define warn(format, arg...) printk(KERN_WARNING "%s: " format, MY_NAME, ## arg)
+ 
+ #define	METHOD_NAME__SUN	"_SUN"
+ #define	METHOD_NAME_OSHP	"OSHP"
+diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
+index 46db293..1c59e4b 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_core.c
++++ b/drivers/pci/hotplug/cpci_hotplug_core.c
+@@ -46,11 +46,11 @@
+ 	do {							\
+ 		if (cpci_debug)					\
+ 			printk (KERN_DEBUG "%s: " format "\n",	\
+-				MY_NAME , ## arg);		\
++				MY_NAME, ## arg);		\
+ 	} while (0)
+-#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
+-#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
+-#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
++#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
++#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
++#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
+ 
+ /* local variables */
+ static DECLARE_RWSEM(list_rwsem);
+diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
+index 788db48..f2d3f4f 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_pci.c
++++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
+@@ -39,11 +39,11 @@ extern int cpci_debug;
+ 	do {							\
+ 		if (cpci_debug)					\
+ 			printk (KERN_DEBUG "%s: " format "\n",	\
+-				MY_NAME , ## arg);		\
++				MY_NAME, ## arg);		\
+ 	} while (0)
+-#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
+-#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
+-#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
++#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
++#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
++#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
+ 
+ 
+ u8 cpci_get_attention_status(struct slot *slot)
+diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
+index 66b7bbe..d0ab4e1 100644
+--- a/drivers/pci/hotplug/cpcihp_generic.c
++++ b/drivers/pci/hotplug/cpcihp_generic.c
+@@ -55,11 +55,11 @@
+ 	do {							\
+ 		if (debug)					\
+ 			printk (KERN_DEBUG "%s: " format "\n",	\
+-				MY_NAME , ## arg);		\
++				MY_NAME, ## arg);		\
+ 	} while (0)
+-#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
+-#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
+-#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
++#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
++#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
++#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
+ 
+ /* local variables */
+ static bool debug;
+diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
+index 7ecf34e..80dd418 100644
+--- a/drivers/pci/hotplug/cpcihp_zt5550.c
++++ b/drivers/pci/hotplug/cpcihp_zt5550.c
+@@ -50,11 +50,11 @@
+ 	do {							\
+ 		if (debug)					\
+ 			printk (KERN_DEBUG "%s: " format "\n",	\
+-				MY_NAME , ## arg);		\
++				MY_NAME, ## arg);		\
+ 	} while (0)
+-#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
+-#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
+-#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
++#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
++#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
++#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
+ 
+ /* local variables */
+ static bool debug;
+diff --git a/drivers/pci/hotplug/ibmphp_ebda.c b/drivers/pci/hotplug/ibmphp_ebda.c
+index d9b197d..8a77275 100644
+--- a/drivers/pci/hotplug/ibmphp_ebda.c
++++ b/drivers/pci/hotplug/ibmphp_ebda.c
+@@ -177,7 +177,7 @@ static void __init print_ebda_pci_rsrc (void)
+ 
+ 	list_for_each_entry(ptr, &ibmphp_ebda_pci_rsrc_head, ebda_pci_rsrc_list) {
+ 		debug ("%s - rsrc type: %x bus#: %x dev_func: %x start addr: %x end addr: %x\n",
+-			__func__, ptr->rsrc_type ,ptr->bus_num, ptr->dev_fun,ptr->start_addr, ptr->end_addr);
++			__func__, ptr->rsrc_type,ptr->bus_num, ptr->dev_fun,ptr->start_addr, ptr->end_addr);
+ 	}
+ }
+ 
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index d1fab97..2bac1b9 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -45,10 +45,10 @@
+ 
+ #define MY_NAME	"pci_hotplug"
+ 
+-#define dbg(fmt, arg...) do { if (debug) printk(KERN_DEBUG "%s: %s: " fmt , MY_NAME , __func__ , ## arg); } while (0)
+-#define err(format, arg...) printk(KERN_ERR "%s: " format , MY_NAME , ## arg)
+-#define info(format, arg...) printk(KERN_INFO "%s: " format , MY_NAME , ## arg)
+-#define warn(format, arg...) printk(KERN_WARNING "%s: " format , MY_NAME , ## arg)
++#define dbg(fmt, arg...) do { if (debug) printk(KERN_DEBUG "%s: %s: " fmt, MY_NAME, __func__, ## arg); } while (0)
++#define err(format, arg...) printk(KERN_ERR "%s: " format, MY_NAME, ## arg)
++#define info(format, arg...) printk(KERN_INFO "%s: " format, MY_NAME, ## arg)
++#define warn(format, arg...) printk(KERN_WARNING "%s: " format, MY_NAME, ## arg)
+ 
+ 
+ /* local variables */
+diff --git a/drivers/pci/hotplug/pcihp_skeleton.c b/drivers/pci/hotplug/pcihp_skeleton.c
+index d062c00..14b5d10 100644
+--- a/drivers/pci/hotplug/pcihp_skeleton.c
++++ b/drivers/pci/hotplug/pcihp_skeleton.c
+@@ -52,11 +52,11 @@ static LIST_HEAD(slot_list);
+ 	do {							\
+ 		if (debug)					\
+ 			printk(KERN_DEBUG "%s: " format "\n",	\
+-				MY_NAME , ## arg);		\
++				MY_NAME, ## arg);		\
+ 	} while (0)
+-#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
+-#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
+-#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
++#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
++#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
++#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
+ 
+ /* local variables */
+ static bool debug;
+-- 
+2.5.0
+
