@@ -1,208 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35147 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752575AbbLAUIw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 15:08:52 -0500
-Subject: Re: [PATCH] PCI/AER: enable SERR# forwarding and role-based error
- reporting
-To: Christopher Covington <cov@codeaurora.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-References: <1445894704-28277-1-git-send-email-okaya@codeaurora.org>
- <20151201185157.GE9306@localhost> <565DF34C.6030606@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, jcm@redhat.com,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 11 Dec 2015 13:48:57 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Pratyush Anand <pratyush.anand@gmail.com>
+CC: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	"Arnd Bergmann" <arnd@arndb.de>, Jingoo Han <jingoohan1@gmail.com>,
+	<linux-arm-msm@vger.kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+	<linux-kernel@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <565DFE50.5030708@codeaurora.org>
-Date: Tue, 1 Dec 2015 15:08:48 -0500
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v4 1/5] PCI: designware: add memory barrier after
+ enabling region
+Message-ID: <20151211134857.03601d0e@xhacker>
+In-Reply-To: <CAHM4w1m-NiwyCLz9tikbOcNtCmVu0Vd9FhmKKSuMi5ChzfDafA@mail.gmail.com>
+References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
+	<1449149725-27607-2-git-send-email-stanimir.varbanov@linaro.org>
+	<56669C50.9060700@linaro.org>
+	<CAHM4w1k_EAt+xBBYyG3B7W9Fegc4j+uRq5t_biUsxOGt+k+xUA@mail.gmail.com>
+	<20151209102359.GF8644@n2100.arm.linux.org.uk>
+	<CAHM4w1m-NiwyCLz9tikbOcNtCmVu0Vd9FhmKKSuMi5ChzfDafA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <565DF34C.6030606@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/1/2015 2:21 PM, Christopher Covington wrote:
-> On 12/01/2015 01:51 PM, Bjorn Helgaas wrote:
->> [+cc Taku]
+On Fri, 11 Dec 2015 09:35:10 +0530 Pratyush Anand wrote:
+
+> On Wed, Dec 9, 2015 at 3:53 PM, Russell King - ARM Linux wrote:
 > 
-> It looks to me like Bjorn intended to add Taku to the distribution list,
-> but accidentally left him off, so I'm adding him to the To field in this
-> reply.
+> [...]
 > 
-> Regards,
-> Christopher Covington
+> >> > >       dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+> >> > > +     /*
+> >> > > +      * ensure that the ATU enable has been happaned before accessing
+> >> > > +      * pci configuration/io spaces through dw_pcie_cfg_[read|write].
+> >> > > +      */
+> >> > > +     wmb();
+> >> > >  }
+> >> > >  
+> >>
+> >>
+> >> My understnading is that since writel() of dw_pcie_writel_rc() in
+> >> above code and readl(), writel() of dw_pcie_cfg_[read|write]() (which
+> >> will follow) goes through same device (ie PCIe host here). So, it is
+> >> guaranteed that 1st writel() will be executed before later
+> >> readl()/writel(). If that is true then we do not need any explicit
+> >> barrier here.
+> >>
+> >> Arnd, Russel: whats your opinion here.  
+> >               ^l  
 > 
->> Hi Sinan,
->>
->> On Mon, Oct 26, 2015 at 05:25:02PM -0400, Sinan Kaya wrote:
->>> A PCIe card behind a PCIe switch is unable to report its errors
->>> when SERR# forwarding is not enabled on the PCIe switch's
->>> secondary interface. This is required by the PCIe  spec. 
->>
->> I think enabling SERR# forwarding is only "required by the spec" in
->> the sense that bridges do not forward errors upstream unless the
->> SERR# Enable bit is set, right?  So I would say this is just an
->> ordinary enable bit in the bridge, not a special spec requirement.
->>
-
-Bottom line is that AER errors won't be forwarded if this bit is not set.
-
->> The Linux AER code doesn't poll for errors; it assumes errors will be
->> propagated upstream to the Root Port, where they will cause an
->> interrupt, so I agree that it doesn't really make sense to enable AER
->> for a device unless we also enable SERR# forwarding in all the bridges
->> leading to it.
->>
->> I assume this patch fixes a problem, e.g., errors reported by a device
->> are not forwarded upstream, so AER never logs them, and with this
->> patch, AER does log them?  
-
-Correct. I'm not observing the AER errors without this patch. After this
-patch, I'm seeing the AER errors coming from the endpoints.
-
-
->> I suppose we didn't notice this before
->> because some firmware enables SERR# forwarding for us, but yours
->> doesn't?
-
-Possible..., I could have done this in the UEFI BIOS but I'm also
-worried about hotplug case. That's why, I chose to submit a patch for
-the kernel.
-
-For instance, what happens after hotplug insertion. Will anybody set
-these bits? We need some kernel support for some PCIe features to
-reconfigure the hardware.
-
->>
->>> This patch
->>> enables SERR# forwarding and also cleans out compatibility
->>> mode so that AER reporting is enabled.
->>>
->>> Tested with PEX8749-CA RDK.
->>>
->>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->>> ---
->>>  drivers/pci/pcie/aer/aerdrv_core.c | 56 +++++++++++++++++++++++++++++++++++++-
->>>  1 file changed, 55 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
->>> index 9803e3d..acd22d7 100644
->>> --- a/drivers/pci/pcie/aer/aerdrv_core.c
->>> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
->>> @@ -37,21 +37,75 @@ module_param(nosourceid, bool, 0);
->>>  
->>>  int pci_enable_pcie_error_reporting(struct pci_dev *dev)
->>>  {
->>> +	u8 header_type;
->>> +	int pos;
->>> +
->>>  	if (pcie_aer_get_firmware_first(dev))
->>>  		return -EIO;
->>>  
->>> -	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR))
->>> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
->>> +	if (!pos)
->>>  		return -EIO;
->>>  
->>> +	pci_read_config_byte(dev, PCI_HEADER_TYPE, &header_type);
->>> +
->>> +	/* needs to be a bridge/switch */
->>> +	if (header_type == PCI_HEADER_TYPE_BRIDGE) {
->>> +		u32 status;
->>> +		u16 control;
->>> +
->>> +		/*
->>> +		 * A switch will not forward ERR_ messages coming from an
->>> +		 * endpoint if SERR# forwarding is not enabled.
->>> +		 * AER driver is checking the errors at the root only.
->>> +		 */
->>> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
->>> +		control |= PCI_BRIDGE_CTL_SERR;
->>> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
->>
->> Does this work for hot-added devices?  I don't see a path that calls
->> pci_enable_pcie_error_reporting() for hot-added devices, so I don't
->> know how the PCI_EXP_AER_FLAGS bits would get set for them.
-
-Yes for me. We remove the root port along with the endpoint during
-hotplug. On the next insertion, AER driver get reprobed for the root port.
-
->> Let's do this in a separate patch.  The SERR# thing is related to
->> propagating error messages upstream.  PCI_ERR_COR_ADV_NFAT is a bit
->> different.
->>
->> I don't understand all the implications of Role-Based Error Reporting.
->> Can you include a pointer to the Linux code that comprehends it?
->> It looks like the section 6.2.7 implementation note is relevant, but I
->> don't understand it yet.
-
-My understanding of the spec is that you can't have AER enabled when
-PCI_ERR_COR_ADV_NFAT is 1.
-
->>
->> Do we need to pay attention to the Role-Based Error Reporting bit in
->> the Device Capabilities register for any reason?  I guess maybe it
->> doesn't matter because Role-Base Error Reporting appeared in PCIe 1.1,
->> and the PCI_ERR_COR_ADV_NFAT bit was reserved prior to that, so it
->> shouldn't do anything if we clear it.
->>
->> Bjorn
->>
->>> +	}
->>> +
->>>  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
->>>  }
->>>  EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
->>>  
->>>  int pci_disable_pcie_error_reporting(struct pci_dev *dev)
->>>  {
->>> +	int pos;
->>> +	u8 header_type;
->>> +
->>>  	if (pcie_aer_get_firmware_first(dev))
->>>  		return -EIO;
->>>  
->>> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
->>> +	if (!pos)
->>> +		return -EIO;
->>> +
->>> +	pci_read_config_byte(dev, PCI_HEADER_TYPE, &header_type);
->>> +
->>> +	/* needs to be a bridge/switch */
->>> +	if (header_type == PCI_HEADER_TYPE_BRIDGE) {
->>> +		u32 status;
->>> +		u16 control;
->>> +
->>> +		/* clear serr forwarding */
->>> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
->>> +		control &= ~PCI_BRIDGE_CTL_SERR;
->>> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
->>> +
->>> +		/* set compatibility mode */
->>> +		pci_read_config_dword(dev, pos + PCI_ERR_COR_MASK, &status);
->>> +		status |= PCI_ERR_COR_ADV_NFAT;
->>> +		pci_write_config_dword(dev, pos + PCI_ERR_COR_MASK, status);
->>> +	}
->>> +
->>>  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
->>>  					  PCI_EXP_AER_FLAGS);
->>>  }
->>> -- 
->>> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
->>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Sorry :(
+> 
+> >
+> > writel() has a barrier _before_ the access but not after.
+> >
+> > The fact is that there's nothing which guarantees that the write will hit
+> > the hardware in a timely manner (forget any rules about PCI config space,
+> > the PCI ordering rules apply to the PCI bus, not to the ARM buses.)
+> >
+> > If you need this write to have hit the hardware before continuing, you
+> > need to read back from the same register.  
+> 
+> OK, so better to replace wmb() with read back of control register.
+> 
+> >
+> > I'm just looking at this driver, trying to decipher what it's doing.  It
+> > _looks_ to me like it's reprogramming one of the outbound windows (IO?)
+> > so that configuration space can be accessed.  Doesn't this have the
+> > effect of disabling access to the IO segment of the PCI bus from the
+> > host CPU?
+> >
+> > What protections are there against other CPUs in the system issuing a
+> > PCI I/O read/write while this outbound window is programmed as
+> > configuration space?  
 > 
 > 
+> Yes, that is an issue with this driver. Most of the host controller
+> has 4 or more viewpoints, and it is very easy to handle for them. But
+> there are few which has only two viewpoints. Do not know how to solve
+> it, so that it works for all.
+> 
 
+The default outbound iATU number is two, this may be the reason why the driver
+is written in current style. And two outbound iATUs may be common for pcie dw
+users because ASIC people just follow the default configuration ;).
 
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
-Linux Foundation Collaborative Project
+In our case, Marvell Berlin SoCs have two outbound iATUs.
+
+Thanks,
+Jisheng
