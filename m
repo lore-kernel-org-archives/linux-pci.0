@@ -1,191 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:59859 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932262AbbLOJQl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Dec 2015 04:16:41 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <kishon@ti.com>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
-CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rogerq@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-	<linux-usb@vger.kernel.org>, <tony@atomide.com>, <t-kristo@ti.com>
-Subject: [PATCH v3 2/9] phy: ti-pipe3: move clk initialization to a separate function
-Date: Tue, 15 Dec 2015 14:46:01 +0530
-Message-ID: <1450170968-11282-3-git-send-email-kishon@ti.com>
-In-Reply-To: <1450170968-11282-1-git-send-email-kishon@ti.com>
-References: <1450170968-11282-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 12/60] PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
+Date: Thu, 10 Dec 2015 21:06:08 -0800
+Message-Id: <1449810416-2950-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional change. Moved clock initialization done in probe to a
-separate function as part of cleaning up ti_pipe3_probe.
+If any bridge up to root only have 32bit pref mmio, We don't need to
+treat device non-pref mmio64 as as pref mmio64.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+We need to move pci_bridge_check_ranges calling early.
+for parent bridges pref mmio BAR may not allocated by BIOS, res flags
+is still 0, we need to have it correct set before we check them for
+child device resources.
+
+-v2: check all bus resources instead of just res[15].
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
 ---
- drivers/phy/phy-ti-pipe3.c |  127 +++++++++++++++++++++++++-------------------
- 1 file changed, 72 insertions(+), 55 deletions(-)
+ drivers/pci/setup-bus.c | 31 +++++++++++++++++++++++++++++--
+ 1 file changed, 29 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
-index c511105..3379a4d 100644
---- a/drivers/phy/phy-ti-pipe3.c
-+++ b/drivers/phy/phy-ti-pipe3.c
-@@ -308,48 +308,11 @@ static const struct phy_ops ops = {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 198f754a..d627218 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -739,6 +739,29 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 	return -EINVAL;
+ }
  
- static const struct of_device_id ti_pipe3_id_table[];
- 
--static int ti_pipe3_probe(struct platform_device *pdev)
-+static int ti_pipe3_get_clk(struct ti_pipe3 *phy)
- {
--	struct ti_pipe3 *phy;
--	struct phy *generic_phy;
--	struct phy_provider *phy_provider;
--	struct resource *res;
--	struct device_node *node = pdev->dev.of_node;
--	struct device_node *control_node;
--	struct platform_device *control_pdev;
--	const struct of_device_id *match;
- 	struct clk *clk;
--	struct device *dev = &pdev->dev;
--
--	phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
--	if (!phy)
--		return -ENOMEM;
--
--	phy->dev		= dev;
--
--	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
--		match = of_match_device(ti_pipe3_id_table, dev);
--		if (!match)
--			return -EINVAL;
--
--		phy->dpll_map = (struct pipe3_dpll_map *)match->data;
--		if (!phy->dpll_map) {
--			dev_err(dev, "no DPLL data\n");
--			return -EINVAL;
--		}
--
--		res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
--						   "pll_ctrl");
--		phy->pll_ctrl_base = devm_ioremap_resource(dev, res);
--		if (IS_ERR(phy->pll_ctrl_base))
--			return PTR_ERR(phy->pll_ctrl_base);
--
--		phy->sys_clk = devm_clk_get(dev, "sysclk");
--		if (IS_ERR(phy->sys_clk)) {
--			dev_err(dev, "unable to get sysclk\n");
--			return -EINVAL;
--		}
--	}
-+	struct device *dev = phy->dev;
-+	struct device_node *node = dev->of_node;
- 
- 	phy->refclk = devm_clk_get(dev, "refclk");
- 	if (IS_ERR(phy->refclk)) {
-@@ -369,25 +332,17 @@ static int ti_pipe3_probe(struct platform_device *pdev)
- 		}
- 	} else {
- 		phy->wkupclk = ERR_PTR(-ENODEV);
--		phy->dpll_reset_syscon = syscon_regmap_lookup_by_phandle(node,
--							"syscon-pllreset");
--		if (IS_ERR(phy->dpll_reset_syscon)) {
--			dev_info(dev,
--				 "can't get syscon-pllreset, sata dpll won't idle\n");
--			phy->dpll_reset_syscon = NULL;
--		} else {
--			if (of_property_read_u32_index(node,
--						       "syscon-pllreset", 1,
--						       &phy->dpll_reset_reg)) {
--				dev_err(dev,
--					"couldn't get pllreset reg. offset\n");
--				return -EINVAL;
--			}
++static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
++{
++	if (pci_is_root_bus(bus))
++		return true;
++
++	if (bus->self) {
++		int i;
++		bool found = false;
++		struct resource *res;
++
++		pci_bus_for_each_resource(bus, res, i)
++			if (res->flags & IORESOURCE_MEM_64) {
++				found = true;
++				break;
++			}
++
++		if (!found)
++			return false;
 +	}
 +
-+	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
-+		phy->sys_clk = devm_clk_get(dev, "sysclk");
-+		if (IS_ERR(phy->sys_clk)) {
-+			dev_err(dev, "unable to get sysclk\n");
-+			return -EINVAL;
- 		}
- 	}
- 
- 	if (of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
--
- 		clk = devm_clk_get(dev, "dpll_ref");
- 		if (IS_ERR(clk)) {
- 			dev_err(dev, "unable to get dpll ref clk\n");
-@@ -418,6 +373,68 @@ static int ti_pipe3_probe(struct platform_device *pdev)
- 		phy->div_clk = ERR_PTR(-ENODEV);
- 	}
- 
-+	return 0;
++	return pci_up_path_over_pref_mem64(bus->parent);
 +}
 +
-+static int ti_pipe3_probe(struct platform_device *pdev)
-+{
-+	struct ti_pipe3 *phy;
-+	struct phy *generic_phy;
-+	struct phy_provider *phy_provider;
-+	struct resource *res;
-+	struct device_node *node = pdev->dev.of_node;
-+	struct device_node *control_node;
-+	struct platform_device *control_pdev;
-+	const struct of_device_id *match;
-+	struct device *dev = &pdev->dev;
-+	int ret;
+ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 				 struct resource *res)
+ {
+@@ -747,7 +770,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 
+ 	if ((res->flags & IORESOURCE_MEM) &&
+ 	    (res->flags & IORESOURCE_MEM_64) &&
+-	    dev->on_all_pcie_path)
++	    dev->on_all_pcie_path &&
++	    pci_up_path_over_pref_mem64(dev->bus))
+ 		return res->flags | IORESOURCE_PREFETCH;
+ 
+ 	return res->flags;
+@@ -1240,6 +1264,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	struct resource *b_res;
+ 	int ret;
+ 
++	if (!pci_is_root_bus(bus) &&
++	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
++		pci_bridge_check_ranges(bus);
 +
-+	phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
-+	if (!phy)
-+		return -ENOMEM;
-+
-+	phy->dev		= dev;
-+
-+	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
-+		match = of_match_device(ti_pipe3_id_table, dev);
-+		if (!match)
-+			return -EINVAL;
-+
-+		phy->dpll_map = (struct pipe3_dpll_map *)match->data;
-+		if (!phy->dpll_map) {
-+			dev_err(dev, "no DPLL data\n");
-+			return -EINVAL;
-+		}
-+
-+		res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-+						   "pll_ctrl");
-+		phy->pll_ctrl_base = devm_ioremap_resource(dev, res);
-+		if (IS_ERR(phy->pll_ctrl_base))
-+			return PTR_ERR(phy->pll_ctrl_base);
-+	}
-+
-+	if (of_device_is_compatible(node, "ti,phy-pipe3-sata")) {
-+		phy->dpll_reset_syscon = syscon_regmap_lookup_by_phandle(node,
-+							"syscon-pllreset");
-+		if (IS_ERR(phy->dpll_reset_syscon)) {
-+			dev_info(dev,
-+				 "can't get syscon-pllreset, sata dpll won't idle\n");
-+			phy->dpll_reset_syscon = NULL;
-+		} else {
-+			if (of_property_read_u32_index(node,
-+						       "syscon-pllreset", 1,
-+						       &phy->dpll_reset_reg)) {
-+				dev_err(dev,
-+					"couldn't get pllreset reg. offset\n");
-+				return -EINVAL;
-+			}
-+		}
-+	}
-+
-+	ret = ti_pipe3_get_clk(phy);
-+	if (ret)
-+		return ret;
-+
- 	control_node = of_parse_phandle(node, "ctrl-module", 0);
- 	if (!control_node) {
- 		dev_err(dev, "Failed to get control device phandle\n");
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		struct pci_bus *b = dev->subordinate;
+ 		if (!b)
+@@ -1267,7 +1295,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		break;
+ 
+ 	case PCI_CLASS_BRIDGE_PCI:
+-		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+ 			additional_io_size  = pci_hotplug_io_size;
+ 			additional_mem_size = pci_hotplug_mem_size;
 -- 
-1.7.9.5
+1.8.4.5
 
