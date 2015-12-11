@@ -1,119 +1,108 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, jiang.liu@linux.intel.com,
-	Stefano.Stabellini@eu.citrix.com
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <5673281E.7020204@codeaurora.org>
-Date: Thu, 17 Dec 2015 16:24:46 -0500
-MIME-Version: 1.0
-In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset=windows-1252
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: [PATCH v9 19/60] PCI: Separate realloc list checking after allocation
+Date: Thu, 10 Dec 2015 21:06:15 -0800
+Message-Id: <1449810416-2950-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz,
+We check the realloc list, as list must be empty after allocation.
 
-On 12/16/2015 10:16 AM, Tomasz Nowicki wrote:
-> From the functionality point of view this series might be split into the
-> following logic parts:
-> 1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
->    PCI config regions and used when necessary.
-> 2. Move non-arch specific bits to the core code.
-> 3. Use MMCONFIG code and implement generic ACPI based PCI host
->    controller driver.
-> 4. Enable above driver on ARM64
-> 
-> Patches has been built on top of 4.4-rc4 and can be found here:
-> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v2)
-> 
-> NOTE, this patch set depends on Matthew's patches:
-> http://www.spinics.net/lists/linux-pci/msg45950.html
-> https://github.com/Vality/linux/tree/pci-fixes
-> 
-> This has been tested on Cavium ThunderX 1 socket server and QEMU.
-> Any help in reviewing and testing is very appreciated.
-> 
-> v1 -> v2
-> - moved non-arch specific piece of code to dirver/acpi/ directory
-> - fixed IO resource handling
-> - introduced PCI config accessors quirks matching
-> - moved ACPI_COMPANION_SET to generic code
-> 
+Separate the realloc list checking to another function.
 
-Just tested your series. I'm seeing a resource assignment problem below. 
-The bus addresses show as memory addresses and memory addresses show as 
-bus addresses and IO resource did not show up.
+Add checking that is missed in acpiphp driver.
 
+-v2: change to WARN_ON according to Rafael.
 
-Tomasz V2
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
+---
+ drivers/pci/hotplug/acpiphp_glue.c |  1 +
+ drivers/pci/pci.h                  |  1 +
+ drivers/pci/setup-bus.c            | 12 +++++++++---
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
-[    2.520852] ACPI: PCI Interrupt Link [LN1C] (IRQs *238)
-[    2.535472] ACPI: PCI Interrupt Link [LN1D] (IRQs *239)
-[    2.550562] ACPI: PCI Root Bridge [PCI2] (domain 0002 [bus 00-1f])
-[    2.567813] acpi PNP0A08:02: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
-[    2.591270] acpi PNP0A08:02: _OSC: platform does not support [PCIeHotplug]
-[    2.611144] acpi PNP0A08:02: _OSC: OS now controls [PME AER PCIeCapability]
-[    2.630299] ACPI: IORT: can't find node related to (null) device
-[    2.647184]_acpi_PNP0A08:02:_PCI_host_bridge_to_bus_0002:00
-[    2.662663] pci_bus 0002:00: root bus resource [mem 0x00100000-0x3fffffff window] (bus address [0xfffff5ff00100000-0xfffff5ff3fffffff])
-[    2.703561] pci_bus 0002:00: root bus resource [mem 0x40000000-0x7fffffff window] (bus address [0xfffff5fe80000000-0xfffff5febfffffff])
-[    2.737737] pci_bus 0002:00: root bus resource [mem 0x80000000-0xffffffff window] (bus address [0xfffff5fe00000000-0xfffff5fe7fffffff])
-[    2.794961] pci_bus 0002:00: root bus resource [bus 00-1f]
-
-Mark Salter's patches
-
-[    2.730011] ACPI: PCI Interrupt Link [LN1C] (IRQs *238)
-[    2.744648] ACPI: PCI Interrupt Link [LN1D] (IRQs *239)
-[    2.759330] ACPI: PCI Root Bridge [PCI2] (domain 0002 [bus 00-1f])
-[    2.783295] acpi PNP0A08:02: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
-[    2.806726] acpi PNP0A08:02: _OSC: platform does not support [PCIeHotplug]
-[    2.826005] acpi PNP0A08:02: _OSC: OS now controls [PME AER PCIeCapability]
-[    2.845361] PCI host bridge to bus 0002:00
-[    2.856719]_pci_bus_0002:00:_root_bus_resource_[bus_00-1f]
-[    2.872056] pci_bus 0002:00: root bus resource [mem 0xa0100100000-0xa013fffffff] (bus address [0x00100000-0x3fffffff])
-[    2.902008] pci_bus 0002:00: root bus resource [mem 0xa0200000000-0xa023fffffff] (bus address [0x40000000-0x7fffffff])
-[    2.932396] pci_bus 0002:00: root bus resource [mem 0xa0300000000-0xa037fffffff] (bus address [0x80000000-0xffffffff])
-[    2.983827] pci_bus 0002:00: root bus resource [io  0x0000-0xffff]
-
-Here is how the ACPI table looks like:
-
-		QWORDMemory(			// Consumed-And-prodced resource(all of memory space)
-			ResourceProducer,	// bit 0 of general flags is 0
-			PosDecode,		// positive Decode:  		_DEC
-			MinFixed,		// Range is fixed:   		_MIF
-			MaxFixed,		// Range is fixed:   		_MAF
-			NonCacheable,		// 				_MEM
-			ReadWrite,		// 				_RW
-			0x00000000,		// Granularity: 	   	_GRA
-			0x00100000,		// Min - PCI Memory start: 	_MIN
-			0x3FFFFFFF,		// Max - PCI Memory end:   	_MAX
-			0xA0100000000,		// Translation: 		_TRA
-			0x3FF00000,		// Range Length: 		_LEN
-			,			// Optional field left blank
-			,			// Optional field left blank
-			MEM0,			// Name declaration for this descriptor
-			AddressRangeMemory,
-			TypeStatic
-			) 
-
-
-Any thoughts?
-
-
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index ff53856..ce9fb21 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+ 		}
+ 	}
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
++	pci_bus_check_realloc(&add_list);
+ 
+ 	acpiphp_sanitize_bus(bus);
+ 	pcie_bus_configure_settings(bus);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index d6e8c0c..51f38d3 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -240,6 +240,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
+ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 				struct list_head *realloc_head,
+ 				struct list_head *fail_head);
++void pci_bus_check_realloc(struct list_head *realloc_head);
+ bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
+ 
+ void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1ad5d8f..fcc6d62 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -280,6 +280,12 @@ out:
+ 	}
+ }
+ 
++void pci_bus_check_realloc(struct list_head *realloc_head)
++{
++	if (WARN_ON(!list_empty(realloc_head)))
++		free_list(realloc_head);
++}
++
+ /**
+  * assign_requested_resources_sorted() - satisfy resource requests
+  *
+@@ -1777,7 +1783,7 @@ again:
+ 	/* Depth last, allocate resources and update the hardware. */
+ 	__pci_bus_assign_resources(bus, add_list, &fail_head);
+ 	if (add_list)
+-		BUG_ON(!list_empty(add_list));
++		pci_bus_check_realloc(add_list);
+ 	tried_times++;
+ 
+ 	/* any device complain? */
+@@ -1852,7 +1858,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ again:
+ 	__pci_bus_size_bridges(parent, &add_list);
+ 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+-	BUG_ON(!list_empty(&add_list));
++	pci_bus_check_realloc(&add_list);
+ 	tried_times++;
+ 
+ 	if (list_empty(&fail_head))
+@@ -1911,6 +1917,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 							 &add_list);
+ 	up_read(&pci_bus_sem);
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+-	BUG_ON(!list_empty(&add_list));
++	pci_bus_check_realloc(&add_list);
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
 -- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+1.8.4.5
 
