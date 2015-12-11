@@ -1,66 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:56904 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752567AbbLJSMt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Dec 2015 13:12:49 -0500
-Message-ID: <5669C09D.2080108@arm.com>
-Date: Thu, 10 Dec 2015 18:12:45 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: jakeo@microsoft.com, gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v10 5/7] PCI: irqdomain: Look up IRQ domain by fwnode_handle
-References: <1449769983-12948-1-git-send-email-jakeo@microsoft.com> <1449769983-12948-6-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1449769983-12948-6-git-send-email-jakeo@microsoft.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from aserp1040.oracle.com ([141.146.126.69]:47382 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750853AbbLKFKJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:10:09 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 40/60] PCI: Separate required+optional assigning to another function
+Date: Thu, 10 Dec 2015 21:06:36 -0800
+Message-Id: <1449810416-2950-41-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/12/15 17:53, jakeo@microsoft.com wrote:
-> From: Jake Oshins <jakeo@microsoft.com>
-> 
-> This patch adds a second way of finding an IRQ domain associated with
-> a root PCI bus.  After looking to see if one can be found through
-> the OF tree, it attempts to look up the IRQ domain through an
-> fwnode_handle stored in the pci_sysdata struct.
-> 
-> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
-> ---
->  drivers/pci/probe.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 750f907..c6369dd 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -674,6 +674,20 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
->  	 */
->  	d = pci_host_bridge_of_msi_domain(bus);
->  
-> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-> +	/*
-> +	 * If no IRQ domain was found via the OF tree, try looking it up
-> +	 * directly through the fwnode_handle.
-> +	 */
-> +	if (!d) {
-> +		struct fwnode_handle *fwnode = pci_root_bus_fwnode(bus);
-> +
-> +		if (fwnode)
-> +			d = irq_find_matching_fwnode(fwnode,
-> +						     DOMAIN_BUS_PCI_MSI);
-> +	}
-> +#endif
-> +
->  	return d;
->  }
->  
-> 
+__assign_resources_sorted() is getting too big if we put alt_size support
+into it.  Split out required+optional assigning code to another function.
 
-Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
+ 1 file changed, 27 insertions(+), 20 deletions(-)
 
-	M.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a8e3eaa..b813340 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -473,20 +473,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
+ 	res->flags = save_res->flags;
+ }
+ 
+-static void __assign_resources_sorted(struct list_head *head,
+-				 struct list_head *realloc_head,
+-				 struct list_head *fail_head)
++static bool __assign_resources_required_optional_sorted(struct list_head *head,
++				 struct list_head *realloc_head)
+ {
+-	/*
+-	 * Should not assign requested resources at first.
+-	 *   they could be adjacent, so later reassign can not reallocate
+-	 *   them one by one in parent resource window.
+-	 * Try to assign requested + add_size at beginning
+-	 *  if could do that, could get out early.
+-	 *  if could not do that, we still try to assign requested at first,
+-	 *    then try to reassign add_size for some resources.
+-	 */
+-
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+@@ -495,12 +484,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	resource_size_t add_align;
+ 	struct resource *res;
+ 
+-	/* Check if optional add_size is there */
+-	if (!realloc_head || list_empty(realloc_head))
+-		goto requested_and_reassign;
+-
+ 	if (!save_resources(head, &save_head))
+-		goto requested_and_reassign;
++		return false;
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+@@ -539,7 +524,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 			remove_from_list(realloc_head, dev_res->res);
+ 		free_list(&save_head);
+ 		free_list(head);
+-		return;
++
++		return true;
+ 	}
+ 
+ 	/* check failed type */
+@@ -574,7 +560,28 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	free_list(&save_head);
+ 
+-requested_and_reassign:
++	return false;
++}
++
++static void __assign_resources_sorted(struct list_head *head,
++				 struct list_head *realloc_head,
++				 struct list_head *fail_head)
++{
++	/*
++	 * Should not assign required resources at first.
++	 *   they could be adjacent, so later reassign can not reallocate
++	 *   them one by one in parent resource window.
++	 * Try to assign required + optional at beginning
++	 *  if could do that, could get out early.
++	 *  if could not do that, we still try to assign required at first,
++	 *    then try to reassign add_size for some resources.
++	 */
++
++	/* Check required+optional add */
++	if (realloc_head && !list_empty(realloc_head) &&
++	    __assign_resources_required_optional_sorted(head, realloc_head))
++		return;
++
+ 	sort_resources(head);
+ 
+ 	/* Satisfy the must-have resource requests */
 -- 
-Jazz is not dead. It just smells funny...
+1.8.4.5
+
