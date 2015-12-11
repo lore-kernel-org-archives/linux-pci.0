@@ -1,117 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:59883 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933386AbbLOJRA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Dec 2015 04:17:00 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <kishon@ti.com>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
-CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rogerq@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-	<linux-usb@vger.kernel.org>, <tony@atomide.com>, <t-kristo@ti.com>
-Subject: [PATCH v3 7/9] phy: ti-pipe3: use *syscon* framework API to set PCS value of the PHY
-Date: Tue, 15 Dec 2015 14:46:06 +0530
-Message-ID: <1450170968-11282-8-git-send-email-kishon@ti.com>
-In-Reply-To: <1450170968-11282-1-git-send-email-kishon@ti.com>
-References: <1450170968-11282-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from userp1040.oracle.com ([156.151.31.81]:23435 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753869AbbLKGIQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 01:08:16 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 34/60] PCI: Simplify res reference using in __assign_resources_sorted()
+Date: Thu, 10 Dec 2015 21:06:30 -0800
+Message-Id: <1449810416-2950-35-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Deprecate using phy-omap-control driver to set PCS value of the PHY
-and start using *syscon* API to do the same.
+There are couples of dev_res->res reference, to make code more readable
+use res instead of dev_res->res directly.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Acked-by: Roger Quadros <rogerq@ti.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- Documentation/devicetree/bindings/phy/ti-phy.txt |    2 ++
- drivers/phy/phy-ti-pipe3.c                       |   34 +++++++++++++++++++++-
- 2 files changed, 35 insertions(+), 1 deletion(-)
+ drivers/pci/setup-bus.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
-index e06f980..49e5b0c 100644
---- a/Documentation/devicetree/bindings/phy/ti-phy.txt
-+++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
-@@ -83,6 +83,8 @@ Optional properties:
-  - syscon-pllreset: Handle to system control region that contains the
-    CTRL_CORE_SMA_SW_0 register and register offset to the CTRL_CORE_SMA_SW_0
-    register that contains the SATA_PLL_SOFT_RESET bit. Only valid for sata_phy.
-+ - syscon-pcs : phandle/offset pair. Phandle to the system control module and the
-+   register offset to write the PCS delay value.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 0fc9659..715e627 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -458,6 +458,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+ 	resource_size_t add_align;
++	struct resource *res;
  
- Deprecated properties:
-  - ctrl-module : phandle of the control module used by PHY driver to power on
-diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
-index bc03625..684d467 100644
---- a/drivers/phy/phy-ti-pipe3.c
-+++ b/drivers/phy/phy-ti-pipe3.c
-@@ -65,6 +65,9 @@
- #define PIPE3_PHY_TX_RX_POWERON		0x3
- #define PIPE3_PHY_TX_RX_POWEROFF	0x0
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -473,8 +474,8 @@ static void __assign_resources_sorted(struct list_head *head,
  
-+#define PCIE_PCS_MASK			0xFF0000
-+#define PCIE_PCS_DELAY_COUNT_SHIFT	0x10
-+
- /*
-  * This is an Empirical value that works, need to confirm the actual
-  * value required for the PIPE3PHY_PLL_CONFIGURATION2.PLL_IDLE status
-@@ -96,9 +99,11 @@ struct ti_pipe3 {
- 	struct clk		*div_clk;
- 	struct pipe3_dpll_map	*dpll_map;
- 	struct regmap		*phy_power_syscon; /* ctrl. reg. acces */
-+	struct regmap		*pcs_syscon; /* ctrl. reg. acces */
- 	struct regmap		*dpll_reset_syscon; /* ctrl. reg. acces */
- 	unsigned int		dpll_reset_reg; /* reg. index within syscon */
- 	unsigned int		power_reg; /* power reg. index within syscon */
-+	unsigned int		pcie_pcs_reg; /* pcs reg. index in syscon */
- 	bool			sata_refclk_enabled;
- };
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+-		dev_res->res->end += get_res_add_size(realloc_head,
+-							dev_res->res);
++		res = dev_res->res;
++		res->end += get_res_add_size(realloc_head, res);
  
-@@ -275,7 +280,16 @@ static int ti_pipe3_init(struct phy *x)
- 	 * 18-1804.
- 	 */
- 	if (of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-pcie")) {
--		omap_control_pcie_pcs(phy->control_dev, 0x96);
-+		if (phy->pcs_syscon) {
-+			val = 0x96 << OMAP_CTRL_PCIE_PCS_DELAY_COUNT_SHIFT;
-+			ret = regmap_update_bits(phy->pcs_syscon,
-+						 phy->pcie_pcs_reg,
-+						 PCIE_PCS_MASK, val);
-+			if (ret < 0)
-+				return ret;
-+		} else {
-+			omap_control_pcie_pcs(phy->control_dev, 0x96);
-+		}
- 		return 0;
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+@@ -483,16 +484,16 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		 * 2. resource with IORESOURCE_SIZEALIGN
+ 		 *    update size above already change alignment.
+ 		 */
+-		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
++		if (!(res->flags & IORESOURCE_STARTALIGN))
+ 			continue;
+ 
+-		add_align = get_res_add_align(realloc_head, dev_res->res);
++		add_align = get_res_add_align(realloc_head, res);
+ 
+ 		if (add_align) {
+-			resource_size_t r_size = resource_size(dev_res->res);
++			resource_size_t r_size = resource_size(res);
+ 
+-			dev_res->res->start = add_align;
+-			dev_res->res->end = add_align + r_size - 1;
++			res->start = add_align;
++			res->end = add_align + r_size - 1;
+                }
  	}
  
-@@ -461,6 +475,24 @@ static int ti_pipe3_get_sysctrl(struct ti_pipe3 *phy)
- 		phy->control_dev = &control_pdev->dev;
- 	}
- 
-+	if (of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
-+		phy->pcs_syscon = syscon_regmap_lookup_by_phandle(node,
-+								  "syscon-pcs");
-+		if (IS_ERR(phy->pcs_syscon)) {
-+			dev_dbg(dev,
-+				"can't get syscon-pcs, using omap control\n");
-+			phy->pcs_syscon = NULL;
-+		} else {
-+			if (of_property_read_u32_index(node,
-+						       "syscon-pcs", 1,
-+						       &phy->pcie_pcs_reg)) {
-+				dev_err(dev,
-+					"couldn't get pcie pcs reg. offset\n");
-+				return -EINVAL;
-+			}
-+		}
+@@ -514,21 +515,21 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	/* check failed type */
+ 	fail_type = pci_fail_res_type_mask(&local_fail_head);
+ 	/* remove not need to be released assigned res from head list etc */
+-	list_for_each_entry_safe(dev_res, tmp_res, head, list)
+-		if (dev_res->res->parent &&
+-		    !pci_need_to_release(fail_type, dev_res->res)) {
++	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
++		res = dev_res->res;
++		if (res->parent && !pci_need_to_release(fail_type, res)) {
+ 			/* remove it from realloc_head list */
+-			remove_from_list(realloc_head, dev_res->res);
+-			remove_from_list(&save_head, dev_res->res);
++			remove_from_list(realloc_head, res);
++			remove_from_list(&save_head, res);
+ 			list_del(&dev_res->list);
+ 			kfree(dev_res);
+ 		}
 +	}
-+
- 	if (of_device_is_compatible(node, "ti,phy-pipe3-sata")) {
- 		phy->dpll_reset_syscon = syscon_regmap_lookup_by_phandle(node,
- 							"syscon-pllreset");
+ 
+ 	free_list(&local_fail_head);
+ 	/* Release assigned resource */
+ 	list_for_each_entry(dev_res, head, list) {
+-		struct resource *res = dev_res->res;
+-
++		res = dev_res->res;
+ 		if (res->parent) {
+ 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+ 				   "BAR %d: released %pR\n",
+@@ -539,8 +540,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	/* Restore start/end/flags from saved list */
+ 	list_for_each_entry(save_res, &save_head, list) {
+-		struct resource *res = save_res->res;
+-
++		res = save_res->res;
+ 		res->start = save_res->start;
+ 		res->end = save_res->end;
+ 		res->flags = save_res->flags;
 -- 
-1.7.9.5
+1.8.4.5
 
