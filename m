@@ -1,83 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [193.47.165.129] ([193.47.165.129]:35173 "EHLO mellanox.co.il"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753220AbbLVNml (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Dec 2015 08:42:41 -0500
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com,
-	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
-	liranl@mellanox.com, ilyal@mellanox.com
-Subject: [RFC 1/2] PCI: Expose iov_set_numvfs and iov_resource_size for modules.
-Date: Tue, 22 Dec 2015 15:42:13 +0200
-Message-Id: <1450791734-3907-2-git-send-email-ilyal@mellanox.com>
-In-Reply-To: <1450791734-3907-1-git-send-email-ilyal@mellanox.com>
-References: <1450791734-3907-1-git-send-email-ilyal@mellanox.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:48451 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754679AbbLKFNU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:13:20 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 48/60] PCI: Don't add too much io port for hotplug bridge with old size
+Date: Thu, 10 Dec 2015 21:06:44 -0800
+Message-Id: <1449810416-2950-49-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Expose iov_set_numvfs and iov_resource_size to make them available
-for VFIO-PCI sriov support.
+Now we add too much for hotplug bridge io port.
+For example, when hotplug bridge has two children bridges,
+every child bridge will need 0x1000, so size1 will be 0x2000
+and size is 0. The min_size for the hotplug bridge is 0x100.
+with old version calculate_iosize, we get 0x3000 for final
+size as we are using size to compare with min_size at first.
+That is not right, we should have 0x2000.
 
-Signed-off-by: Ilya Lesokhin <ilyal@mellanox.com>
-Signed-off-by: Noa Osherovich <noaos@mellanox.com>
-Signed-off-by: Haggai Eran <haggaie@mellanox.com>
+We can check size+size1 with min_size for io port, and just add size1
+to size without passing extra size1 into calculate_iosize().
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/iov.c   | 4 +++-
- include/linux/pci.h | 4 ++++
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ drivers/pci/setup-bus.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..f296bd3 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -41,7 +41,7 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int vf_id)
-  *
-  * Update iov->offset and iov->stride when NumVFs is written.
-  */
--static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
-+inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 00e7f95..a425a47 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1106,7 +1106,6 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
+ 
+ static resource_size_t calculate_iosize(resource_size_t size,
+ 		resource_size_t min_size,
+-		resource_size_t size1,
+ 		resource_size_t old_size,
+ 		resource_size_t align)
  {
- 	struct pci_sriov *iov = dev->sriov;
+@@ -1114,7 +1113,7 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
+-	size = ALIGN(size + size1, align);
++	size = ALIGN(size, align);
+ 	if (size < old_size)
+ 		size = old_size;
+ 	return size;
+@@ -1245,14 +1244,15 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	}
  
-@@ -49,6 +49,7 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
- }
-+EXPORT_SYMBOL(pci_iov_set_numvfs);
- 
- /*
-  * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
-@@ -107,6 +108,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- 
- 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
- }
-+EXPORT_SYMBOL(pci_iov_resource_size);
- 
- static int virtfn_add(struct pci_dev *dev, int id, int reset)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e90eb22..1039e18 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1724,6 +1724,8 @@ int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
- resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
-+
-+void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn);
- #else
- static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
- {
-@@ -1745,6 +1747,8 @@ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
- { return 0; }
- static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- { return 0; }
-+
-+void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn) { }
- #endif
- 
- #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+ 	size = size_aligned_for_isa(size);
+-	size0 = calculate_iosize(size, min_size, size1,
++	size += size1;
++	size0 = calculate_iosize(size, min_size,
+ 			resource_size(b_res), min_align);
+ 	sum_add_size = size_aligned_for_isa(sum_add_size);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	size1 = !realloc_head ? size0 :
+-		calculate_iosize(sum_add_size, min_size, 0,
++		calculate_iosize(sum_add_size, min_size,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
 -- 
-1.8.3.1
+1.8.4.5
 
