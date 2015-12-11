@@ -1,63 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:2057 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752497AbbLVQS7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Dec 2015 11:18:59 -0500
-From: William Davis <wdavis@nvidia.com>
-To: "Goz, Ben" <Ben.Goz@amd.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Koenig, Christian" <Christian.Koenig@amd.com>,
-	"Bridgman, John" <John.Bridgman@amd.com>,
-	Terence Ripperda <TRipperda@nvidia.com>,
-	"John Hubbard" <jhubbard@nvidia.com>
-Subject: RE: IOMMU/DMA map_resource support for peer-to-peer
-Date: Tue, 22 Dec 2015 16:18:58 +0000
-Message-ID: <05d2feba45a84e67b63fb8f15e8bfa02@HQMAIL106.nvidia.com>
-References: <BY2PR12MB0290C4BDC64D1614F36030CEE8E40@BY2PR12MB0290.namprd12.prod.outlook.com>
- <50674fe3727543e6a8a5b7731e091b75@HQMAIL106.nvidia.com>
- <BY2PR12MB0290BA809C4EB9D64A810155E8E50@BY2PR12MB0290.namprd12.prod.outlook.com>
-In-Reply-To: <BY2PR12MB0290BA809C4EB9D64A810155E8E50@BY2PR12MB0290.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from aserp1040.oracle.com ([141.146.126.69]:48465 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754694AbbLKFN1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:13:27 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 60/60] PCI: Only try to assign io port only for root bus that support it
+Date: Thu, 10 Dec 2015 21:06:56 -0800
+Message-Id: <1449810416-2950-61-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Hi Will I can't find your commits on linux-pci git repository and the only
-> tag that I can think that you meant to say is pci-v4.2-fixes-2 and the
-> patches not found there.
-> Can you please refer me to the exact place I can find the patch set?
-> 
+The PCI subsystem always assumes that I/O is supported on root bus and
+tries to assign an I/O window to each child bus even if that is not the
+case.
 
-As I said below, the patches aren't hosted in any externally-accessible repo - that is, the only git repository to which the patches have been committed is a local development repo that is a clone of linux-pci.
+The use cases is on Intel 8 socket system that have 8 root buses,
+last two root buses would not have io port resources from _CRS.
 
-Each of the patch set versions are only available via the mailing list archives, e.g., (this is the latest version)
+Check if root bus supports I/O, and later during sizing and
+assigning, check that flags and skip those resources.
 
-http://www.spinics.net/lists/linux-pci/msg44560.html
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c     | 6 ++++++
+ drivers/pci/setup-bus.c | 9 +++++++++
+ include/linux/pci.h     | 1 +
+ 3 files changed, 16 insertions(+)
 
-You'll have to apply the patches manually.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 720c3d8..6268fe6 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -342,6 +342,9 @@ static void pci_read_bridge_io(struct pci_bus *child)
+ 	struct pci_bus_region region;
+ 	struct resource *res;
+ 
++	if (!pci_find_host_bridge(child)->has_ioport)
++		return;
++
+ 	io_mask = PCI_IO_RANGE_MASK;
+ 	io_granularity = 0x1000;
+ 	if (dev->io_window_1k) {
+@@ -2195,6 +2198,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 			bus_addr[0] = '\0';
+ 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
+ 
++		if (resource_type(res) == IORESOURCE_IO)
++			bridge->has_ioport = 1;
++
+ 		if (resource_type(res) == IORESOURCE_MEM) {
+ 			if ((res->end - offset) > 0xffffffff)
+ 				bridge->has_mem64 = 1;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index cf55828..6e29a8f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -226,6 +226,10 @@ static void pdev_assign_resources_prepare(struct pci_dev *dev,
+ 		if (resource_disabled(r) || r->parent)
+ 			continue;
+ 
++		if ((r->flags & IORESOURCE_IO) &&
++		    !pci_find_host_bridge(dev->bus)->has_ioport)
++			continue;
++
+ 		r_align = __pci_resource_alignment(dev, r, realloc_head);
+ 		if (!r_align) {
+ 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
+@@ -1189,6 +1193,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		min_size = 0;
+ 	}
+ 
++	if (!pci_find_host_bridge(bus)->has_ioport) {
++		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
++		return;
++	}
++
+ 	min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 32640fd..d0574b4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -414,6 +414,7 @@ struct pci_host_bridge {
+ 	void *release_data;
+ 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
+ 	unsigned int has_mem64:1;
++	unsigned int has_ioport:1;
+ 	/* Resource alignment requirements */
+ 	resource_size_t (*align_resource)(struct pci_dev *dev,
+ 			const struct resource *res,
+-- 
+1.8.4.5
 
-> 
-> Hi Ben,
-> 
-> > I'm interesting on your work on this patch set to support map_resource
-> > for peer to peer memory mapping, if you can please refer me to git
-> > repository includes your patches.
-> 
-> The patches are not hosted in any externally-accessible repo. The last
-> patch set was built on top of the linux-pci tree at commit
-> bc0195aad0daa2ad5b0d76cce22b167bc3435590 (linux 4.2-rc2).
-> 
-> > And I want to know please if the IOMMU should be configured with pass
-> > through or any other configuration, and if there is a general
-> > limitation or something I should know for bringing it up.
-> 
-> My testing was mostly Intel-based, but it did not require passthrough mode;
-> the goal of the patches was to get PCI P2P working on configurations where
-> the IOMMU is configured for full translation. It should only be limited to
-> what the chipset is capable of, in terms of PCI P2P topologies.
-> 
-> Thanks,
-> Will
-> 
---
-nvpublic
