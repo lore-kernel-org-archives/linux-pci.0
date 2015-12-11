@@ -1,87 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bogicevic Sasa <brutallesale@gmail.com>
-To: bhelgaas@google.com
-Cc: Richard.Zhu@freescale.com, l.stach@penguintronix.com,
-	thomas.petazzoni@free-electrons.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Bogicevic Sasa <brutallesale@gmail.com>
-Subject: [PATCH] drivers:pci:host Fix missing line after declarations
-Date: Sat, 12 Dec 2015 03:41:48 -0800
-Message-Id: <1449920508-105873-1-git-send-email-brutallesale@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:41877 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753807AbbLKFMs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:12:48 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 17/60] PCI: Claim fixed resource during remove/rescan path
+Date: Thu, 10 Dec 2015 21:06:13 -0800
+Message-Id: <1449810416-2950-18-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This fixes few warnings about missing line after declarations and one
-no whitespace is necesarry before that "("
+During driver loading kernel will check if resources get reserved.
+so we need to make sure resources get reserved before pci_bus_add().
 
-Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
+On remove/rescan path, we will leave those fixed resource
+not reserved. In that path, We don't call pcibios_resource_survery()
+before pci_assign_unassigned_bus_resources(), and that is intentional
+for us to get new resources for rescan. We do need to use rescan to make
+device get resource allocated while ignoring BIOS allocate resource.
+
+But fixed resources are not allocated via
+pci_assign_unassigned_bus_resources(), so we need to reserve them
+explicitly.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host/pci-imx6.c  | 2 +-
- drivers/pci/host/pci-mvebu.c | 3 +++
- drivers/pci/host/pcie-rcar.c | 2 ++
- 3 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/pci/quirks.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 22e8224..2dd018c 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -122,7 +122,7 @@ static int pcie_phy_wait_ack(void __iomem *dbi_base, int addr)
- }
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 3618c06..d45455f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -323,6 +323,23 @@ static void quirk_s3_64M(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
  
- /* Read from the 16-bit PCIe PHY control registers (not memory-mapped) */
--static int pcie_phy_read(void __iomem *dbi_base, int addr , int *data)
-+static int pcie_phy_read(void __iomem *dbi_base, int addr, int *data)
++/* for pci remove and rescan */
++static void quirk_allocate_fixed(struct pci_dev *dev)
++{
++	int i;
++	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
++		struct resource *r = &dev->resource[i];
++
++		if (r->parent ||
++		    !(r->flags & IORESOURCE_PCI_FIXED) ||
++		    !(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
++			continue;
++
++		pci_claim_resource(dev, i);
++	}
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID,	PCI_ANY_ID,	quirk_allocate_fixed);
++
+ static void quirk_io(struct pci_dev *dev, int pos, unsigned size,
+ 		     const char *name)
  {
- 	u32 val, phy_ctl;
- 	int ret;
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 53b79c5..d826bef 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -1011,6 +1011,7 @@ static int mvebu_pcie_suspend(struct device *dev)
- 	pcie = dev_get_drvdata(dev);
- 	for (i = 0; i < pcie->nports; i++) {
- 		struct mvebu_pcie_port *port = pcie->ports + i;
-+
- 		port->saved_pcie_stat = mvebu_readl(port, PCIE_STAT_OFF);
- 	}
- 
-@@ -1025,6 +1026,7 @@ static int mvebu_pcie_resume(struct device *dev)
- 	pcie = dev_get_drvdata(dev);
- 	for (i = 0; i < pcie->nports; i++) {
- 		struct mvebu_pcie_port *port = pcie->ports + i;
-+
- 		mvebu_writel(port, port->saved_pcie_stat, PCIE_STAT_OFF);
- 		mvebu_pcie_setup_hw(port);
- 	}
-@@ -1296,6 +1298,7 @@ static const struct of_device_id mvebu_pcie_of_match_table[] = {
- 	{ .compatible = "marvell,kirkwood-pcie", },
- 	{},
- };
-+
- MODULE_DEVICE_TABLE(of, mvebu_pcie_of_match_table);
- 
- static struct dev_pm_ops mvebu_pcie_pm_ops = {
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index f4fa6c5..58b7ac6 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -377,6 +377,7 @@ static int rcar_pcie_setup(struct list_head *resource, struct rcar_pcie *pcie)
- 
- 		if (res->flags & IORESOURCE_IO) {
- 			phys_addr_t io_start = pci_pio_to_address(res->start);
-+
- 			pci_ioremap_io(global_io_offset, io_start);
- 			global_io_offset += SZ_64K;
- 		}
-@@ -904,6 +905,7 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
- 	/* Get the dma-ranges from DT */
- 	for_each_of_pci_range(&parser, &range) {
- 		u64 end = range.cpu_addr + range.size - 1;
-+
- 		dev_dbg(pcie->dev, "0x%08x 0x%016llx..0x%016llx -> 0x%016llx\n",
- 			range.flags, range.cpu_addr, end, range.pci_addr);
- 
 -- 
-2.5.0
+1.8.4.5
 
