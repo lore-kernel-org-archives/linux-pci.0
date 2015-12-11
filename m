@@ -1,4 +1,8 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:42024 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754555AbbLKFNQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:13:16 -0500
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -7,208 +11,120 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Khalid Aziz <khalid.aziz@oracle.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Michal Simek <monstr@monstr.eu>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org,
-	linux-arch@vger.kernel.org
-Subject: [PATCH v9 51/60] PCI: Unify skip_ioresource_align()
-Date: Thu, 10 Dec 2015 21:06:47 -0800
-Message-Id: <1449810416-2950-52-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 47/60] PCI: Move ISA io port align out of calculate_iosize()
+Date: Thu, 10 Dec 2015 21:06:43 -0800
+Message-Id: <1449810416-2950-48-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are powerpc generic version and x86 local version for
-skip_ioresource_align().
+We need to move ISA io port align out of calculate_iosize(),
+so we could unify calculate_iosize and calculate_memsize later.
 
-Move the powerpc version to setup-bus.c, and kill x86 local version.
+That extra aligning or offset is to work around ISA devices:
+When one bridge have several children devices, and every device
+has several io port resources and resource size < 0x400.
+We need to check size, and add extra size to make sure bit8/9
+to be zero.
 
-Also kill dummy version in microblaze.
+Also need to apply same checking for optional size path.
 
-Cc: Michal Simek <monstr@monstr.eu>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-arch@vger.kernel.org
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
-Acked-by: Michael Ellerman <mpe@ellerman.id.au>
 ---
- arch/microblaze/pci/pci-common.c |  8 --------
- arch/powerpc/kernel/pci-common.c | 11 +----------
- arch/x86/include/asm/pci_x86.h   |  1 -
- arch/x86/pci/common.c            |  4 ++--
- arch/x86/pci/i386.c              | 12 ++----------
- drivers/pci/setup-bus.c          |  9 +++++++++
- include/asm-generic/pci-bridge.h |  2 ++
- 7 files changed, 16 insertions(+), 31 deletions(-)
+ drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
+ 1 file changed, 27 insertions(+), 12 deletions(-)
 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index ae838ed..09b1af6 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -878,11 +878,6 @@ void pcibios_fixup_bus(struct pci_bus *bus)
- }
- EXPORT_SYMBOL(pcibios_fixup_bus);
- 
--static int skip_isa_ioresource_align(struct pci_dev *dev)
--{
--	return 0;
--}
--
- /*
-  * We need to avoid collisions with `mirrored' VGA ports
-  * and other strange ISA hardware, so we always want the
-@@ -899,12 +894,9 @@ static int skip_isa_ioresource_align(struct pci_dev *dev)
- resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
- {
--	struct pci_dev *dev = data;
- 	resource_size_t start = res->start;
- 
- 	if (res->flags & IORESOURCE_IO) {
--		if (skip_isa_ioresource_align(dev))
--			return start;
- 		if (start & 0x300)
- 			start = (start + 0x3ff) & ~0x3ff;
- 	}
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 0f7a60f..2a7f4fd 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1053,15 +1053,6 @@ void pci_fixup_cardbus(struct pci_bus *bus)
- 	pcibios_setup_bus_devices(bus);
- }
- 
--
--static int skip_isa_ioresource_align(struct pci_dev *dev)
--{
--	if (pci_has_flag(PCI_CAN_SKIP_ISA_ALIGN) &&
--	    !(dev->bus->bridge_ctl & PCI_BRIDGE_CTL_ISA))
--		return 1;
--	return 0;
--}
--
- /*
-  * We need to avoid collisions with `mirrored' VGA ports
-  * and other strange ISA hardware, so we always want the
-@@ -1082,7 +1073,7 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	resource_size_t start = res->start;
- 
- 	if (res->flags & IORESOURCE_IO) {
--		if (skip_isa_ioresource_align(dev))
-+		if (skip_isa_ioresource_align(dev->bus))
- 			return start;
- 		if (start & 0x300)
- 			start = (start + 0x3ff) & ~0x3ff;
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index fa1195d..81a7abf 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -28,7 +28,6 @@ do {						\
- #define PCI_ASSIGN_ROMS		0x1000
- #define PCI_BIOS_IRQ_SCAN	0x2000
- #define PCI_ASSIGN_ALL_BUSSES	0x4000
--#define PCI_CAN_SKIP_ISA_ALIGN	0x8000
- #define PCI_USE__CRS		0x10000
- #define PCI_CHECK_ENABLE_AMD_MMCONF	0x20000
- #define PCI_HAS_IO_ECS		0x40000
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index eccd4d9..70de6d1 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -83,7 +83,7 @@ DEFINE_RAW_SPINLOCK(pci_config_lock);
- 
- static int __init can_skip_ioresource_align(const struct dmi_system_id *d)
- {
--	pci_probe |= PCI_CAN_SKIP_ISA_ALIGN;
-+	pci_add_flags(PCI_CAN_SKIP_ISA_ALIGN);
- 	printk(KERN_INFO "PCI: %s detected, can skip ISA alignment\n", d->ident);
- 	return 0;
- }
-@@ -619,7 +619,7 @@ char *__init pcibios_setup(char *str)
- 		pci_routeirq = 1;
- 		return NULL;
- 	} else if (!strcmp(str, "skip_isa_align")) {
--		pci_probe |= PCI_CAN_SKIP_ISA_ALIGN;
-+		pci_add_flags(PCI_CAN_SKIP_ISA_ALIGN);
- 		return NULL;
- 	} else if (!strcmp(str, "noioapicquirk")) {
- 		noioapicquirk = 1;
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 0a9f2ca..3f17726 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -33,6 +33,7 @@
- #include <linux/errno.h>
- #include <linux/bootmem.h>
- 
-+#include <asm-generic/pci-bridge.h>
- #include <asm/pat.h>
- #include <asm/e820.h>
- #include <asm/pci_x86.h>
-@@ -128,15 +129,6 @@ static void __init pcibios_fw_addr_list_del(void)
- 	pcibios_fw_addr_done = true;
- }
- 
--static int
--skip_isa_ioresource_align(struct pci_dev *dev) {
--
--	if ((pci_probe & PCI_CAN_SKIP_ISA_ALIGN) &&
--	    !(dev->bus->bridge_ctl & PCI_BRIDGE_CTL_ISA))
--		return 1;
--	return 0;
--}
--
- /*
-  * We need to avoid collisions with `mirrored' VGA ports
-  * and other strange ISA hardware, so we always want the
-@@ -158,7 +150,7 @@ pcibios_align_resource(void *data, const struct resource *res,
- 	resource_size_t start = res->start;
- 
- 	if (res->flags & IORESOURCE_IO) {
--		if (skip_isa_ioresource_align(dev))
-+		if (skip_isa_ioresource_align(dev->bus))
- 			return start;
- 		if (start & 0x300)
- 			start = (start + 0x3ff) & ~0x3ff;
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 855b2df..a329efe 100644
+index 0ece6b6..00e7f95 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1151,6 +1151,15 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+@@ -1114,11 +1114,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
+-	/* To be fixed in 2.5: we should have sort of HAVE_ISA
+-	   flag in the struct pci_bus. */
+-#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+-	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+-#endif
+ 	size = ALIGN(size + size1, align);
+ 	if (size < old_size)
+ 		size = old_size;
+@@ -1172,6 +1167,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
  	return max(align, arch_align);
  }
  
-+int skip_isa_ioresource_align(struct pci_bus *bus)
++static resource_size_t size_aligned_for_isa(resource_size_t size)
 +{
-+	if (pci_has_flag(PCI_CAN_SKIP_ISA_ALIGN) &&
-+	    !(bus->bridge_ctl & PCI_BRIDGE_CTL_ISA))
-+		return 1;
-+
-+	return 0;
++	/*
++	 * To be fixed in 2.5: we should have sort of HAVE_ISA
++	 *  flag in the struct pci_bus.
++	 */
++#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
++	size = (size & 0xff) + ((size & ~0xffUL) << 2);
++#endif
++	return size;
 +}
 +
- static resource_size_t size_aligned_for_isa(resource_size_t size)
+ /**
+  * pbus_size_io() - size the io window of a given bus
+  *
+@@ -1189,11 +1196,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
  {
- 	/*
-diff --git a/include/asm-generic/pci-bridge.h b/include/asm-generic/pci-bridge.h
-index 20db2e5..fab4bd0 100644
---- a/include/asm-generic/pci-bridge.h
-+++ b/include/asm-generic/pci-bridge.h
-@@ -60,6 +60,8 @@ static inline int pci_has_flag(int flag)
- {
- 	return pci_flags & flag;
- }
-+
-+int skip_isa_ioresource_align(struct pci_bus *bus);
- #else
- static inline void pci_set_flags(int flags) { }
- static inline void pci_add_flags(int flags) { }
+ 	struct pci_dev *dev;
+ 	resource_size_t min_sum_size = 0;
+-	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+-	resource_size_t children_add_size = 0;
++	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
+ 	resource_size_t min_align, align;
+ 
+ 	if (!b_res)
+@@ -1210,7 +1216,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+-			unsigned long r_size;
++			unsigned long r_size, r_add_size;
+ 
+ 			if (r->parent || !(r->flags & IORESOURCE_IO))
+ 				continue;
+@@ -1226,18 +1232,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 			if (align > min_align)
+ 				min_align = align;
+ 
+-			if (realloc_head)
+-				children_add_size += get_res_add_size(realloc_head, r);
++			if (realloc_head) {
++				r_add_size = get_res_add_size(realloc_head, r);
++				r_add_size += r_size;
++				if (r_add_size < 0x400)
++					/* Might be re-aligned for ISA */
++					sum_add_size += r_add_size;
++				else
++					sum_add_size1 += r_add_size;
++			}
+ 		}
+ 	}
+ 
++	size = size_aligned_for_isa(size);
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	sum_add_size = children_add_size + size + size1;
++	sum_add_size = size_aligned_for_isa(sum_add_size);
++	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	size1 = !realloc_head ? size0 :
+-		calculate_iosize(size, min_size, sum_add_size - size,
++		calculate_iosize(sum_add_size, min_size, 0,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
 -- 
 1.8.4.5
 
