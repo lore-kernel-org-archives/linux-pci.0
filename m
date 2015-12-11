@@ -1,72 +1,172 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v10 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
-Date: Thu, 10 Dec 2015 17:52:56 +0000
-Message-Id: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 03/60] sparc/PCI: Reserve legacy mmio after PCI mmio
+Date: Thu, 10 Dec 2015 21:05:59 -0800
+Message-Id: <1449810416-2950-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On one system found bunch of claim resource fail from pci device.
+pci_sun4v f02b894c: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
+pci_bus 0000:00: root bus resource [mem 0x2000000000000-0x200007effffff] (bus address [0x00000000-0x7effffff])
+pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x20007ffffffff] (bus address [0x100000000-0x7ffffffff])
+...
+PCI: Claiming 0000:00:02.0: Resource 14: 0002000000000000..00020000004fffff [200]
+pci 0000:00:02.0: can't claim BAR 14 [mem 0x2000000000000-0x20000004fffff]: address conflict with Video RAM area [??? 0x20000000a0000-0x20000000bffff flags 0x80000000]
+pci 0000:02:00.0: can't claim BAR 0 [mem 0x2000000000000-0x20000000fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.0: Resource 3: 0002000000100000..0002000000103fff [200]
+pci 0000:02:00.0: can't claim BAR 3 [mem 0x2000000100000-0x2000000103fff]: no compatible bridge window
+PCI: Claiming 0000:02:00.1: Resource 0: 0002000000200000..00020000002fffff [200]
+pci 0000:02:00.1: can't claim BAR 0 [mem 0x2000000200000-0x20000002fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.1: Resource 3: 0002000000104000..0002000000107fff [200]
+pci 0000:02:00.1: can't claim BAR 3 [mem 0x2000000104000-0x2000000107fff]: no compatible bridge window
+PCI: Claiming 0000:02:00.2: Resource 0: 0002000000300000..00020000003fffff [200]
+pci 0000:02:00.2: can't claim BAR 0 [mem 0x2000000300000-0x20000003fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.2: Resource 3: 0002000000108000..000200000010bfff [200]
+pci 0000:02:00.2: can't claim BAR 3 [mem 0x2000000108000-0x200000010bfff]: no compatible bridge window
+PCI: Claiming 0000:02:00.3: Resource 0: 0002000000400000..00020000004fffff [200]
+pci 0000:02:00.3: can't claim BAR 0 [mem 0x2000000400000-0x20000004fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.3: Resource 3: 000200000010c000..000200000010ffff [200]
+pci 0000:02:00.3: can't claim BAR 3 [mem 0x200000010c000-0x200000010ffff]: no compatible bridge window
 
-This version of the patch series removes warning when compiling x86
-32-bit while still making it build cleanly for x64.
+The bridge 00:02.0 resource does not get reserved as Video RAM take the position early,
+and following children all failed.
 
-First, export functions that allow correlating Hyper-V virtual processors
-and Linux cpus, along with the means for invoking a hypercall that targets
-interrupts at chosen vectors on specific cpus.
+Move down Video RAM area reservation after pci mmio get reserved,
+so we leave pci driver to use those regions.
 
-Second, mark various parts of IRQ domain related code as exported, so that
-this PCI front-end can implement an IRQ domain as part of a module.  (The
-alternative would be to pull all tyhis into the kernel, which would pull
-in a lot of other Hyper-V related code, as this IRQ domain depends on
-vmbus.ko.)
+-v5: merge simplify one and use pcibios_bus_to_resource()
+     and pci_find_root_bus_resource()
 
-Third, modify PCI so that new root PCI buses can be marked with an associated
-fwnode_handle, and so that root PCI buses can look up their associated IRQ
-domain by that handle.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+---
+ arch/sparc/kernel/pci.c        |  1 +
+ arch/sparc/kernel/pci_common.c | 59 ++++++++++++++++++++++--------------------
+ arch/sparc/kernel/pci_impl.h   |  1 +
+ 3 files changed, 33 insertions(+), 28 deletions(-)
 
-Fourth, introduce a new driver, hv_pcifront, which exposes root PCI buses in
-a Hyper-V VM.  These root PCI buses expose real PCIe device, or PCI Virtual
-Functions.
-
-
-Jake Oshins (7):
-  drivers:hv: Export a function that maps Linux CPU num onto Hyper-V
-    proc num
-  drivers:hv: Export hv_do_hypercall()
-  PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
-  PCI: Add fwnode_handle to pci_sysdata
-  PCI: irqdomain: Look up IRQ domain by fwnode_handle
-  drivers:hv: Define the channel type of Hyper-V PCI Express
-    pass-through
-  PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
-
- MAINTAINERS                    |    1 +
- arch/x86/include/asm/msi.h     |    6 +
- arch/x86/include/asm/pci.h     |   15 +
- arch/x86/kernel/apic/msi.c     |    8 +-
- arch/x86/kernel/apic/vector.c  |    2 +
- drivers/hv/hv.c                |   20 +-
- drivers/hv/hyperv_vmbus.h      |    2 +-
- drivers/hv/vmbus_drv.c         |   17 +
- drivers/pci/Kconfig            |    7 +
- drivers/pci/host/Makefile      |    1 +
- drivers/pci/host/hv_pcifront.c | 2249 ++++++++++++++++++++++++++++++++++++++++
- drivers/pci/msi.c              |    4 +
- drivers/pci/probe.c            |   15 +
- include/linux/hyperv.h         |   14 +
- include/linux/pci.h            |    4 +
- kernel/irq/chip.c              |    1 +
- kernel/irq/irqdomain.c         |    4 +
- 17 files changed, 2356 insertions(+), 14 deletions(-)
- create mode 100644 drivers/pci/host/hv_pcifront.c
-
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 269630a..0e82584 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -677,6 +677,7 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 	pci_bus_register_of_sysfs(bus);
+ 
+ 	pci_claim_bus_resources(bus);
++	pci_register_legacy_regions(bus);
+ 	pci_bus_add_devices(bus);
+ 	return bus;
+ }
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 76998f8..09380a5 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -328,41 +328,46 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm)
+ 	}
+ }
+ 
+-static void pci_register_legacy_regions(struct resource *io_res,
+-					struct resource *mem_res)
++static void pci_register_region(struct pci_bus *bus, const char *name,
++				resource_size_t rstart, resource_size_t size)
+ {
+-	struct resource *p;
++	struct resource *res, *conflict, *root_bus_res;
++	struct pci_bus_region region;
+ 
+-	/* VGA Video RAM. */
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
++	res = kzalloc(sizeof(*res), GFP_KERNEL);
++	if (!res)
+ 		return;
+ 
+-	p->name = "Video RAM area";
+-	p->start = mem_res->start + 0xa0000UL;
+-	p->end = p->start + 0x1ffffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
++	res->flags = IORESOURCE_MEM;
+ 
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
++	region.start = rstart;
++	region.end = rstart + size - 1UL;
++	pcibios_bus_to_resource(bus, res, &region);
++	root_bus_res = pci_find_root_bus_resource(bus, res);
++	if (!root_bus_res) {
++		kfree(res);
+ 		return;
++	}
++
++	res->name = name;
++	res->flags |= IORESOURCE_BUSY;
++	conflict = request_resource_conflict(root_bus_res, res);
++	if (conflict) {
++		dev_printk(KERN_DEBUG, &bus->dev,
++			" can't claim %s %pR: address conflict with %s %pR\n",
++			res->name, res, conflict->name, conflict);
++		kfree(res);
++	}
++}
+ 
+-	p->name = "System ROM";
+-	p->start = mem_res->start + 0xf0000UL;
+-	p->end = p->start + 0xffffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
++void pci_register_legacy_regions(struct pci_bus *bus)
++{
++	/* VGA Video RAM. */
++	pci_register_region(bus, "Video RAM area", 0xa0000UL, 0x20000UL);
+ 
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
+-		return;
++	pci_register_region(bus, "System ROM",     0xf0000UL, 0x10000UL);
+ 
+-	p->name = "Video ROM";
+-	p->start = mem_res->start + 0xc0000UL;
+-	p->end = p->start + 0x7fffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
++	pci_register_region(bus, "Video ROM",      0xc0000UL,  0x8000UL);
+ }
+ 
+ static void pci_register_iommu_region(struct pci_pbm_info *pbm)
+@@ -504,8 +509,6 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 	if (pbm->mem64_space.flags)
+ 		request_resource(&iomem_resource, &pbm->mem64_space);
+ 
+-	pci_register_legacy_regions(&pbm->io_space,
+-				    &pbm->mem_space);
+ 	pci_register_iommu_region(pbm);
+ }
+ 
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 2853af7..ff8f5e1 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -167,6 +167,7 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm);
+ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 				 struct device *parent);
+ void pci_determine_mem_io_space(struct pci_pbm_info *pbm);
++void pci_register_legacy_regions(struct pci_bus *bus);
+ 
+ /* Error reporting support. */
+ void pci_scan_for_target_abort(struct pci_pbm_info *, struct pci_bus *);
 -- 
-1.9.1
+1.8.4.5
 
