@@ -1,86 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0099.outbound.protection.outlook.com ([207.46.100.99]:35009
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932645AbbLCJzH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Dec 2015 04:55:07 -0500
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>
-Subject: [PATCH 2/3] PCI: altera: check TLP completion status
-Date: Thu, 3 Dec 2015 17:54:48 +0800
-Message-ID: <1449136489-2559-3-git-send-email-lftan@altera.com>
-In-Reply-To: <1449136489-2559-1-git-send-email-lftan@altera.com>
-References: <1449136489-2559-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from aserp1040.oracle.com ([141.146.126.69]:46971 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751363AbbLKFIh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:08:37 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v9 04/60] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+Date: Thu, 10 Dec 2015 21:06:00 -0800
+Message-Id: <1449810416-2950-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Check TLP packet successful completion status. This fix the issue when
-accessing multi-function devices in enumeration process, TLP will return
-error when accessing non-exist function number. Returns PCI error code
-instead of generic errno.
+For device resource PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource, so set
+IORESOUCE_MEM_64 for 64bit resource during of device resource flags
+parsing.
 
-Tested on Ethernet adapter card with multi-functions.
-
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
 ---
- drivers/pci/host/pcie-altera.c | 18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+ arch/sparc/kernel/of_device_32.c | 5 +++--
+ arch/sparc/kernel/of_device_64.c | 5 +++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index f05180f..e4176b3 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -55,6 +55,7 @@
- #define TLP_CFG_DW2(bus, devfn, offset)	\
- 				(((bus) << 24) | ((devfn) << 16) | (offset))
- #define TLP_REQ_ID(bus, devfn)		(((bus) << 8) | (devfn))
-+#define TLP_COMP_STATUS(s)		(((s) >> 12) & 7)
- #define TLP_HDR_SIZE			3
- #define TLP_LOOP			500
- #define RP_DEVFN			0
-@@ -171,6 +172,7 @@ static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
- 	bool sop = 0;
- 	u32 ctrl;
- 	u32 reg0, reg1;
-+	u32 comp_status = 1;
- 
- 	/*
- 	 * Minimum 2 loops to read TLP headers and 1 loop to read data
-@@ -182,19 +184,25 @@ static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
- 			reg0 = cra_readl(pcie, RP_RXCPL_REG0);
- 			reg1 = cra_readl(pcie, RP_RXCPL_REG1);
- 
--			if (ctrl & RP_RXCPL_SOP)
-+			if (ctrl & RP_RXCPL_SOP) {
- 				sop = true;
-+				comp_status = TLP_COMP_STATUS(reg1);
-+			}
- 
- 			if (ctrl & RP_RXCPL_EOP) {
--				if (value)
--					*value = reg0;
--				return PCIBIOS_SUCCESSFUL;
-+				if (!comp_status) {
-+					if (value)
-+						*value = reg0;
-+					return PCIBIOS_SUCCESSFUL;
-+				} else {
-+					return PCIBIOS_DEVICE_NOT_FOUND;
-+				}
- 			}
- 		}
- 		udelay(5);
+diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
+index 185aa96..3e9f273 100644
+--- a/arch/sparc/kernel/of_device_32.c
++++ b/arch/sparc/kernel/of_device_32.c
+@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
  	}
- 
--	return -ENOENT;
-+	return PCIBIOS_DEVICE_NOT_FOUND;
- }
- 
- static void tlp_write_packet(struct altera_pcie *pcie, u32 *headers,
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
+diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
+index 7bbdc26..defee61 100644
+--- a/arch/sparc/kernel/of_device_64.c
++++ b/arch/sparc/kernel/of_device_64.c
+@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
 -- 
-1.8.2.1
+1.8.4.5
 
