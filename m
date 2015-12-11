@@ -1,94 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH 01/10] drivers/pci: make host/pci-imx6.c driver explicitly non-modular
-Date: Sat, 12 Dec 2015 20:41:48 -0500
-Message-ID: <1449970917-12633-2-git-send-email-paul.gortmaker@windriver.com>
-In-Reply-To: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:48426 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754114AbbLKFNS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:13:18 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 50/60] PCI: Allow bridge optional only io port resource required size to be 0
+Date: Thu, 10 Dec 2015 21:06:46 -0800
+Message-Id: <1449810416-2950-51-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig for this option is currently:
+When there is no child device under the non hotplug bridge,
+We can use 0 for required size, and do not use old size as required size.
 
-config PCI_IMX6
-        bool "Freescale i.MX6 PCIe controller"
+That will save some io port range for other bridges, as BIOS could do
+some partial assign, and we want to use those not used io port range.
 
-...meaning that it currently is not being built as a module by anyone.
-Lets remove the couple traces of modularity, so that when reading the
-driver there is no doubt it is builtin-only.
+When there is child device, size will not be 0.
+when the bridge supports hotplug, min_size will not be 0.
+So they will still honor the old size as required size.
 
-Since module_init translates to device_initcall in the non-modular
-case, the init ordering remains unchanged with this commit.  An
-alternate init level might be worth considering at a later date.
-
-We explicitly disallow a driver unbind, since that doesn't have a
-sensible use case anyway, and there wasn't a supplied ".remove"
-function to be called either.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
-
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
-
-Cc: Richard Zhu <Richard.Zhu@freescale.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host/pci-imx6.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/pci/setup-bus.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 22e8224126fd..ddd6a752b554 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -17,7 +17,7 @@
- #include <linux/kernel.h>
- #include <linux/mfd/syscon.h>
- #include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/of_gpio.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
-@@ -641,24 +641,20 @@ static const struct of_device_id imx6_pcie_of_match[] = {
- 	{ .compatible = "fsl,imx6q-pcie", },
- 	{},
- };
--MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 77bbde8..855b2df 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1230,8 +1230,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
  
- static struct platform_driver imx6_pcie_driver = {
- 	.driver = {
- 		.name	= "imx6q-pcie",
- 		.of_match_table = imx6_pcie_of_match,
-+		.suppress_bind_attrs = true,
- 	},
- 	.shutdown = imx6_pcie_shutdown,
- };
+ 	size = size_aligned_for_isa(size);
+ 	size += size1;
+-	size0 = calculate_size(size, min_size,
+-			resource_size(b_res), min_align);
++	if (size || min_size)
++		size0 = calculate_size(size, min_size,
++					resource_size(b_res), min_align);
+ 	sum_add_size = size_aligned_for_isa(sum_add_size);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+@@ -1247,7 +1248,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		return;
+ 	}
  
--/* Freescale PCIe driver does not allow module unload */
-+/* Freescale PCIe driver does not support module configuration */
- 
- static int __init imx6_pcie_init(void)
- {
- 	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
- }
--module_init(imx6_pcie_init);
--
--MODULE_AUTHOR("Sean Cross <xobs@kosagi.com>");
--MODULE_DESCRIPTION("Freescale i.MX6 PCIe host controller driver");
--MODULE_LICENSE("GPL v2");
-+device_initcall(imx6_pcie_init);
+-	b_res->start = min_align;
++	b_res->start = size0 ? min_align : 0;
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
 -- 
-2.6.1
+1.8.4.5
 
