@@ -1,113 +1,79 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
- tracking
-To: Alexander Duyck <alexander.duyck@gmail.com>
-References: <20151213212557.5410.48577.stgit@localhost.localdomain>
- <566E2917.7050705@gmail.com>
- <CAKgT0Uf6ZFRkKFfWzDJPhKqPYD9mXEWR6jpXgVR9DpZYugDOCg@mail.gmail.com>
- <566E521F.5090103@gmail.com>
- <CAKgT0UfgmwkZpU2=6DCsPZOwhDPyZDkbrPGH-dhVfA3ZVusJyQ@mail.gmail.com>
-Cc: Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+Subject: Re: [RFC PATCH 1/2] PCI/ACPI: Add ACPI support for non ECAM Host
+ Bridge Controllers
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1449155999-220955-1-git-send-email-gabriele.paoloni@huawei.com>
+ <5018756.5lEEeJVMod@wuerfel> <20151204120404.GA3999@red-moon>
+ <724640317.IRruPaehsN@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1EBE4494@lhreml503-mbs>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	x86@kernel.org,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>, konrad.wilk@oracle.com,
-	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
-	Alexander Graf <agraf@suse.de>,
-	Alex Williamson <alex.williamson@redhat.com>
-From: Yang Zhang <yang.zhang.wz@gmail.com>
-Message-ID: <566E6DBA.4080800@gmail.com>
-Date: Mon, 14 Dec 2015 15:20:26 +0800
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	Wangyijing <wangyijing@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <566ADAEE.8020408@semihalf.com>
+Date: Fri, 11 Dec 2015 15:17:18 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAKgT0UfgmwkZpU2=6DCsPZOwhDPyZDkbrPGH-dhVfA3ZVusJyQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1EBE4494@lhreml503-mbs>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/12/14 13:46, Alexander Duyck wrote:
-> On Sun, Dec 13, 2015 at 9:22 PM, Yang Zhang <yang.zhang.wz@gmail.com> wrote:
->> On 2015/12/14 12:54, Alexander Duyck wrote:
->>>
->>> On Sun, Dec 13, 2015 at 6:27 PM, Yang Zhang <yang.zhang.wz@gmail.com>
->>> wrote:
->>>>
->>>> On 2015/12/14 5:28, Alexander Duyck wrote:
->>>>>
->>>>>
->>>>> This patch set is meant to be the guest side code for a proof of concept
->>>>> involving leaving pass-through devices in the guest during the warm-up
->>>>> phase of guest live migration.  In order to accomplish this I have added
->>>>> a
->>>>> new function called dma_mark_dirty that will mark the pages associated
->>>>> with
->>>>> the DMA transaction as dirty in the case of either an unmap or a
->>>>> sync_.*_for_cpu where the DMA direction is either DMA_FROM_DEVICE or
->>>>> DMA_BIDIRECTIONAL.  The pass-through device must still be removed before
->>>>> the stop-and-copy phase, however allowing the device to be present
->>>>> should
->>>>> significantly improve the performance of the guest during the warm-up
->>>>> period.
->>>>>
->>>>> This current implementation is very preliminary and there are number of
->>>>> items still missing.  Specifically in order to make this a more complete
->>>>> solution we need to support:
->>>>> 1.  Notifying hypervisor that drivers are dirtying DMA pages received
->>>>> 2.  Bypassing page dirtying when it is not needed.
->>>>>
->>>>
->>>> Shouldn't current log dirty mechanism already cover them?
->>>
->>>
->>> The guest has no way of currently knowing that the hypervisor is doing
->>> dirty page logging, and the log dirty mechanism currently has no way
->>> of tracking device DMA accesses.  This change is meant to bridge the
->>> two so that the guest device driver will force the SWIOTLB DMA API to
->>> mark pages written to by the device as dirty.
+On 04.12.2015 17:22, Gabriele Paoloni wrote:
+> Hi Lorenzo, Arnd (thanks to you both for looking at this)
+>
+>> -----Original Message-----
+>> From: Arnd Bergmann [mailto:arnd@arndb.de]
+>> Sent: 04 December 2015 13:57
+>> To: Lorenzo Pieralisi
+>> Cc: linux-arm-kernel@lists.infradead.org; Gabriele Paoloni; linux-
+>> acpi@vger.kernel.org; linux-pci@vger.kernel.org;
+>> catalin.marinas@arm.com; linaro-acpi@lists.linaro.org;
+>> Liviu.Dudau@arm.com; linux-kernel@vger.kernel.org; will.deacon@arm.com;
+>> Wangyijing; Wangzhou (B); hanjun.guo@linaro.org; liudongdong (C);
+>> tn@semihalf.com; bhelgaas@google.com; tglx@linutronix.de; xuwei (O);
+>> Liguozhu (Kenneth); jiang.liu@linux.intel.com
+>> Subject: Re: [RFC PATCH 1/2] PCI/ACPI: Add ACPI support for non ECAM
+>> Host Bridge Controllers
 >>
+>> On Friday 04 December 2015 12:04:04 Lorenzo Pieralisi wrote:
+>>> On Thu, Dec 03, 2015 at 09:58:14PM +0100, Arnd Bergmann wrote:
 >>
->> OK. This is what we called "dummy write mechanism". Actually, this is just a
->> workaround before iommu dirty bit ready. Eventually, we need to change to
->> use the hardware dirty bit. Besides, we may still lost the data if dma
->> happens during/just before stop and copy phase.
+>>>> pci-host-generic.c is just for standard PCI implementations, and it
+>>>> has zero code that would be shared with ACPI: Most of the
+>>>> implementation deals with parsing DT properties, and all that code
+>>>> is entirely differnet for ACPI and already exists in drivers/acpi.
+>>>> The one thing that could be shared is the ECAM config space access,
+>>>> but ACPI already needs something else here because it requires
+>>>> access to the config space at early boot time, way before we even
+>> load that driver, see raw_pci_read/raw_pci_write.
+>>>
+>>> Yes, I agree, basically ACPI has already a concept of "host generic"
+>>> layer, there is not much point in "merging" it with the
+>>> pci-host-generic.c driver. One thing is for certain: nothing in this
+>>> and Tomasz patchsets is
+>>> arm64 specific, and should not live in arch/arm64.
 >
-> Right, this is a "dummy write mechanism" in order to allow for entry
-> tracking.  This only works completely if we force the hardware to
-> quiesce via a hot-plug event before we reach the stop-and-copy phase
-> of the migration.
->
-> The IOMMU dirty bit approach is likely going to have a significant
-> number of challenges involved.  Looking over the driver and the data
-> sheet it looks like the current implementation is using a form of huge
-> pages in the IOMMU, as such we will need to tear that down and replace
-> it with 4K pages if we don't want to dirty large regions with each DMA
+> Ok so now I guess Tomasz is aware of this and probably he is reworking
+> his patchset to move his code into "drivers/acpi/pci_*",
+> Tomasz can you confirm this?
 
-Yes, we need to split the huge page into small pages to get the small 
-dirty range.
+Yes, working on it now and sorry for late response.
 
-> transaction, and I'm not sure that is something we can change while
-> DMA is active to the affected regions.  In addition the data sheet
-
-what changes do you mean?
-
-> references the fact that the page table entries are stored in a
-> translation cache and in order to sync things up you have to
-> invalidate the entries.  I'm not sure what the total overhead would be
-> for invalidating something like a half million 4K pages to migrate a
-> guest with just 2G of RAM, but I would think that might be a bit
-
-Do you mean the cost of submit the flush request or the performance 
-impaction due to IOTLB miss? For the former, we have domain-selective 
-invalidation. For the latter, it would be acceptable since live 
-migration shouldn't last too long.
-
-> expensive given the fact that IOMMU accesses aren't known for being
-> incredibly fast when invalidating DMA on the host.
->
-> - Alex
->
-
-
--- 
-best regards
-yang
+Tomasz
