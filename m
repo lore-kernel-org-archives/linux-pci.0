@@ -1,47 +1,72 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 19 Dec 2015 21:39:01 -0600
-From: Rob Herring <robh@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-omap@vger.kernel.org, pawel.moll@arm.com,
-	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
-	galak@codeaurora.org, rogerq@ti.com, nsekhar@ti.com,
-	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-	tony@atomide.com, t-kristo@ti.com
-Subject: Re: [PATCH v3 9/9] phy: omap-usb2: use *syscon* framework API to
- power on/off the PHY
-Message-ID: <20151220033901.GI9883@rob-hp-laptop>
-References: <1450170968-11282-1-git-send-email-kishon@ti.com>
- <1450170968-11282-10-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450170968-11282-10-git-send-email-kishon@ti.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 36/60] PCI: Cache window alignment value during bus sizing
+Date: Thu, 10 Dec 2015 21:06:32 -0800
+Message-Id: <1449810416-2950-37-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 15, 2015 at 02:46:08PM +0530, Kishon Vijay Abraham I wrote:
-> Deprecate using phy-omap-control driver to power on/off the PHY,
-> and use *syscon* framework to do the same. This handles
-> powering on/off the PHY for the USB2 PHYs used in various TI SoCs.
-> 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  Documentation/devicetree/bindings/phy/ti-phy.txt |    8 +-
->  drivers/phy/phy-omap-usb2.c                      |   94 ++++++++++++++++++----
->  include/linux/phy/omap_usb.h                     |   23 ++++++
->  3 files changed, 107 insertions(+), 18 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
-> index 49e5b0c..a3b3945 100644
-> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
-> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
-> @@ -31,6 +31,8 @@ OMAP USB2 PHY
->  
->  Required properties:
->   - compatible: Should be "ti,omap-usb2"
-> +	       Should be "ti,dra7x-usb2-phy2" for the 2nd instance of USB2 PHY
-> +	       in DRA7x
+There are several calling to window_alignment(), and we will have more
+for alt_size support, cache the value instead of keeping on getting it.
 
-The 2nd instance is different somehow?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Rob
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 936564f..e5b3d8c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1241,6 +1241,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	LIST_HEAD(align_test_list);
+ 	LIST_HEAD(align_test_add_list);
++	resource_size_t window_align;
+ 
+ 	if (!b_res)
+ 		return -ENOSPC;
+@@ -1250,6 +1251,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		min_size = 0;
+ 	}
+ 
++	window_align = window_alignment(bus, b_res->flags);
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+@@ -1312,10 +1315,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		}
+ 	}
+ 
+-	max_align = max(max_align, window_alignment(bus, b_res->flags));
++	max_align = max(max_align, window_align);
+ 	if (size || min_size) {
+ 		min_align = calculate_mem_align(&align_test_list, max_align,
+-				 size, window_alignment(bus, b_res->flags));
++						size, window_align);
+ 		size0 = calculate_memsize(size, min_size,
+ 				  resource_size(b_res), min_align);
+ 	}
+@@ -1326,7 +1329,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (sum_add_size > size && realloc_head) {
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+-					window_alignment(bus, b_res->flags));
++					window_align);
+ 		size1 = calculate_memsize(sum_add_size, min_size,
+ 				 resource_size(b_res), min_add_align);
+ 	}
+-- 
+1.8.4.5
+
