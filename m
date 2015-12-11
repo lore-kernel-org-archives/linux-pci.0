@@ -1,63 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:36763 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751496AbbLLNDF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Dec 2015 08:03:05 -0500
-Content-Type: text/plain; charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
-Subject: Re: [PATCH] drivers:pci:host Fix missing line after declarations
-From: sasa bogicevic <brutallesale@gmail.com>
-In-Reply-To: <20151212132316.27e10a6d@free-electrons.com>
-Date: Sat, 12 Dec 2015 14:03:01 +0100
-Cc: bhelgaas@google.com, Richard.Zhu@freescale.com,
-	l.stach@penguintronix.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Message-Id: <FA0282DC-E821-413F-AC5A-11105B4D0EDE@gmail.com>
-References: <1449920508-105873-1-git-send-email-brutallesale@gmail.com> <20151212132316.27e10a6d@free-electrons.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 08/60] powerpc/PCI: Keep resource idx order with bridge register number
+Date: Thu, 10 Dec 2015 21:06:04 -0800
+Message-Id: <1449810416-2950-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas,
-I just went with checkpatch.pl approach I hope this patch didn’t ruin your day :)
+Same as sparc version.
 
+Make resource with consistent sequence
+like other arch or directly from pci_read_bridge_bases(),
+even non-pref mmio is missing, or out of ordering in firmware reporting.
 
-{
-	name: Bogicevic Sasa
-	phone: +381606006200
-}
+So hold i = 1 for non pref mmio, and i = 2 for pref mmio.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/powerpc/kernel/pci_of_scan.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-
-> On Dec 12, 2015, at 13:23, Thomas Petazzoni <thomas.petazzoni@free-electrons.com> wrote:
-> 
-> Dear Bogicevic Sasa,
-> 
-> On Sat, 12 Dec 2015 03:41:48 -0800, Bogicevic Sasa wrote:
->> This fixes few warnings about missing line after declarations and one
->> no whitespace is necesarry before that "("
->> 
->> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
-> 
-> I am not a big fan of this struct rule that insists in having an empty
-> line after declarations, I believe when a for() loop or if() condition
-> has only one line of declaration and one line of useful code, it
-> doesn't make much sense. But oh well, that's the rule, so let's do it
-> this way.
-> 
->> ---
->> drivers/pci/host/pci-imx6.c  | 2 +-
->> drivers/pci/host/pci-mvebu.c | 3 +++
->> drivers/pci/host/pcie-rcar.c | 2 ++
->> 3 files changed, 6 insertions(+), 1 deletion(-)
-> 
-> For the pci-mvebu.c part:
-> 
-> Reviewed-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> 
-> Thomas
-> -- 
-> Thomas Petazzoni, CTO, Free Electrons
-> Embedded Linux, Kernel and Android engineering
-> http://free-electrons.com
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 2e710c1..349ed11 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -255,7 +255,7 @@ void of_scan_pci_bridge(struct pci_dev *dev)
+ 		bus->resource[i] = res;
+ 		++res;
+ 	}
+-	i = 1;
++	i = 3;
+ 	for (; len >= 32; len -= 32, ranges += 8) {
+ 		flags = pci_parse_of_flags(of_read_number(ranges, 1), 1);
+ 		size = of_read_number(&ranges[6], 2);
+@@ -268,6 +268,12 @@ void of_scan_pci_bridge(struct pci_dev *dev)
+ 				       " for bridge %s\n", node->full_name);
+ 				continue;
+ 			}
++		} else if ((flags & IORESOURCE_PREFETCH) &&
++			   !bus->resource[2]->flags) {
++			res = bus->resource[2];
++		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
++			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
++			res = bus->resource[1];
+ 		} else {
+ 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
+ 				printk(KERN_ERR "PCI: too many memory ranges"
+-- 
+1.8.4.5
 
