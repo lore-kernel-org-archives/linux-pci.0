@@ -1,258 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0064.outbound.protection.outlook.com ([157.56.111.64]:65072
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751969AbbLEMnJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 5 Dec 2015 07:43:09 -0500
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	"Alex Deucher" <alexander.deucher@amd.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Subject: Resizeable PCI BAR support
-Message-ID: <5662C61F.50303@amd.com>
-Date: Sat, 5 Dec 2015 12:10:23 +0100
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="------------020302020006010107070102"
+Received: from aserp1040.oracle.com ([141.146.126.69]:46573 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751024AbbLKFHj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:07:39 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 05/60] sparc/PCI: Keep resource idx order with bridge register number
+Date: Thu, 10 Dec 2015 21:06:01 -0800
+Message-Id: <1449810416-2950-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---------------020302020006010107070102
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+On one system found strang "no compatible bridge window" warning
 
-Hi Bjorn,
+PCI: Claiming 0000:00:01.0: Resource 14: 0002000100000000..000200010fffffff [10220c]
+PCI: Claiming 0000:01:00.0: Resource 1: 0002000100000000..000200010000ffff [100214]
+pci 0000:01:00.0: can't claim BAR 1 [mem 0x2000100000000-0x200010000ffff 64bit]: no compatible bridge window
 
-reading up on the mailing list this is probably not the first time this 
-topic comes up, but this time it is not just for FPGAs but for really 
-end user hardware.
+and we already had pref_compat support that add extra pref bit for device
+resource.
 
-Alex and I are the maintainers of the Radeon and Amdgpu kernel drivers 
-for the AMD graphics hardware.  Now the newest hardware generation of 
-those devices started to support resizeable PCI BARs as specified here 
-https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf.
+It turns out that pci_resource_compatible()/pci_up_path_over_pref_mem64()
+just check resource with bridge pref mmio register idx 15, and we have put
+resource to use mmio register idx 14 during of_scan_pci_bridge()
+as the bridge does not mmio resource.
 
-That feature is rather important for graphics hardware, because the PCI 
-BARs are usually limited to 256MB while on modern cards you can easily 
-find 4GB or more VRAM. The end result is that only a fraction of that 
-VRAM is CPU accessible, causing a whole bunch of workarounds in the 
-driver stack for that hardware.
+We already fix pci_up_path_over_pref_mem64() to check all bus resources.
 
-We of course want to avoid that hassle and so I've attached two patches 
-created to test the functionality. The first one is just infrastructure 
-for handling the extension and the second is a hack to resize all BARs 
-to their maximum before probing them by the PCI subsystem.
+And at the same time, this patch will make resource to consistent sequence
+like other arch or directly from pci_read_bridge_bases(),
+even non-pref mmio is missing, or out of ordering in firmware reporting.
 
-That resizing works astonishing fine, the only problem is that on 
-practical no system I've tested this feature actually works. The reason 
-is that the PCI root bridge doesn't get enough address space assigned by 
-the BIOS for this and the PCI subsystem in the kernel isn't able to 
-reprogram it.
+So hold i = 1 for non pref mmio, and i = 2 for pref mmio.
 
-Any clever idea how to get this working without waiting for system BIOS 
-providers to pick up that extension? Would adding support for 
-reprogramming the root bridges be possible?
-
-Best regards,
-Christian.
-
---------------020302020006010107070102
-Content-Type: text/x-patch;
-	name="0001-PCI-add-resizeable-BAR-infrastructure.patch"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment;
-	filename="0001-PCI-add-resizeable-BAR-infrastructure.patch"
-
->From ea99917e1760b2a1ecd6d353d7a8a060ea24dd03 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>
-Date: Wed, 25 Nov 2015 12:46:29 +0100
-Subject: [PATCH 1/2] PCI: add resizeable BAR infrastructure
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-
-Just the defines and helper functions to read the possible sizes of a BAR and
-update it's size.
-
-See https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf.
-
-Signed-off-by: Christian König <christian.koenig@amd.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
 ---
- drivers/pci/pci.c             | 78 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h           |  2 ++
- include/uapi/linux/pci_regs.h |  7 ++++
- 3 files changed, 87 insertions(+)
+ arch/sparc/kernel/pci.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6a9a111..862247f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2453,6 +2453,84 @@ bool pci_acs_path_enabled(struct pci_dev *start,
- }
- 
- /**
-+ * pci_rbar_get_sizes - get possible sizes for BAR
-+ * @dev: PCI device
-+ * @bar: BAR to query
-+ *
-+ * Get the possible sizes of a resizeable BAR as bitmask defined in the spec
-+ * (bit 0=1MB, bit 19=512GB). Returns 0 if BAR isn't resizeable.
-+ */
-+u32 pci_rbar_get_sizes(struct pci_dev *pdev, int bar)
-+{
-+	int pos, nbars;
-+	u32 ctrl, cap;
-+	int i;
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
-+	if (!pos)
-+		return 0x0;
-+
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
-+
-+	for (i = 0; i < nbars; ++i, pos += 8) {
-+		int bar_idx;
-+
-+		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
-+				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
-+		if (bar_idx != bar)
-+			continue;
-+
-+		pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
-+		return (cap & PCI_REBAR_CTRL_SIZES_MASK) >>
-+			PCI_REBAR_CTRL_SIZES_SHIFT;
-+	}
-+
-+	return 0x0;
-+}
-+
-+/**
-+ * pci_rbar_set_size - set a new size for a BAR
-+ * @dev: PCI device
-+ * @bar: BAR to set size to
-+ * @size: new size as defined in the spec.
-+ *
-+ * Set the new size of a BAR as defined in the spec (0=1MB, 19=512GB).
-+ * Returns true if resizing was successful, false otherwise.
-+ */
-+bool pci_rbar_set_size(struct pci_dev *pdev, int bar, int size)
-+{
-+	int pos, nbars;
-+	u32 ctrl;
-+	int i;
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
-+	if (!pos)
-+		return false;
-+
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
-+
-+	for (i = 0; i < nbars; ++i, pos += 8) {
-+		int bar_idx;
-+
-+		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
-+				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
-+		if (bar_idx != bar)
-+			continue;
-+
-+		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE_MASK;
-+		ctrl |= size << PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
-+		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
-+/**
-  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
-  * @dev: the PCI device
-  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e90eb22..fafb974 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1801,6 +1801,8 @@ void pci_request_acs(void);
- bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
- bool pci_acs_path_enabled(struct pci_dev *start,
- 			  struct pci_dev *end, u16 acs_flags);
-+u32 pci_rbar_get_sizes(struct pci_dev *pdev, int bar);
-+bool pci_rbar_set_size(struct pci_dev *pdev, int bar, int size);
- 
- #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
- #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 413417f..b746cbb 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -886,9 +886,16 @@
- #define PCI_SATA_SIZEOF_LONG	16
- 
- /* Resizable BARs */
-+#define PCI_REBAR_CAP		4	/* capability register */
-+#define  PCI_REBAR_CTRL_SIZES_MASK	(0xFFFFF << 4)	/* mask for sizes */
-+#define  PCI_REBAR_CTRL_SIZES_SHIFT	4	/* shift for sizes */
- #define PCI_REBAR_CTRL		8	/* control register */
-+#define  PCI_REBAR_CTRL_BAR_IDX_MASK	(7 << 0)	/* mask for bar index */
-+#define  PCI_REBAR_CTRL_BAR_IDX_SHIFT	0	/* shift for bar index */
- #define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # bars */
- #define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # bars */
-+#define  PCI_REBAR_CTRL_BAR_SIZE_MASK	(0x1F << 8)	/* mask for bar size */
-+#define  PCI_REBAR_CTRL_BAR_SIZE_SHIFT	8	/* shift for bar size */
- 
- /* Dynamic Power Allocation */
- #define PCI_DPA_CAP		4	/* capability register */
--- 
-2.5.0
-
-
---------------020302020006010107070102
-Content-Type: text/x-patch;
-	name="0002-PCI-WIP-hack-to-resize-all-BARs-to-their-maximum.patch"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment;
-	filename="0002-PCI-WIP-hack-to-resize-all-BARs-to-their-maximum.patch"
-
->From b7201b6af1b3f5452549351b018a27806ee5a723 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>
-Date: Wed, 25 Nov 2015 12:51:24 +0100
-Subject: [PATCH 2/2] PCI: WIP hack to resize all BARs to their maximum
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-
-Signed-off-by: Christian König <christian.koenig@amd.com>
----
- drivers/pci/probe.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8361d27..1d8fc20 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -318,6 +318,17 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
- 
- 	for (pos = 0; pos < howmany; pos++) {
- 		struct resource *res = &dev->resource[pos];
-+		u32 sizes = pci_rbar_get_sizes(dev, pos);
-+
-+		if (sizes) {
-+			/* Just resize to the maximum for now */
-+			int size = fls(sizes) - 1;
-+
-+			if (pci_rbar_set_size(dev, pos, size))
-+				dev_info(&dev->dev, "Resized BAR %d to %dMB\n",
-+					 pos, 1 << size);
-+		}
-+
- 		reg = PCI_BASE_ADDRESS_0 + (pos << 2);
- 		pos += __pci_read_base(dev, pci_bar_unknown, res, reg);
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 0e82584..36a0dfb 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -472,7 +472,7 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
+ 		pci_read_bridge_bases(bus);
+ 		goto after_ranges;
  	}
+-	i = 1;
++	i = 3;
+ 	for (; len >= 32; len -= 32, ranges += 8) {
+ 		u64 start;
+ 
+@@ -504,6 +504,12 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
+ 				       " for bridge %s\n", node->full_name);
+ 				continue;
+ 			}
++		} else if ((flags & IORESOURCE_PREFETCH) &&
++			   !bus->resource[2]->flags) {
++			res = bus->resource[2];
++		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
++			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
++			res = bus->resource[1];
+ 		} else {
+ 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
+ 				printk(KERN_ERR "PCI: too many memory ranges"
 -- 
-2.5.0
+1.8.4.5
 
-
---------------020302020006010107070102--
