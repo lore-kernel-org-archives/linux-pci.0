@@ -1,30 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:48821 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932607AbbLHMRj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Dec 2015 07:17:39 -0500
-Date: Tue, 8 Dec 2015 13:16:37 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Geliang Tang <geliangtang@163.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] x86/PCI: simplify pci_bios_{read,write}
-In-Reply-To: <0ed29e57b699af22a8759f1b1c0d59d79664dee5.1449495573.git.geliangtang@163.com>
-Message-ID: <alpine.DEB.2.11.1512081316250.3595@nanos>
-References: <0ed29e57b699af22a8759f1b1c0d59d79664dee5.1449495573.git.geliangtang@163.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from userp1040.oracle.com ([156.151.31.81]:41004 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752607AbbLKFKV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:10:21 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 52/60] PCI: Kill macro checking for bus io port sizing
+Date: Thu, 10 Dec 2015 21:06:48 -0800
+Message-Id: <1449810416-2950-53-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 7 Dec 2015, Geliang Tang wrote:
+We can use new generic version skip_isa_ioresource_align() instead
+of macro, and then kill the marco.
 
-> There are some repetitive code in the switch/case statement in
-> pci_bios_read() and pci_bios_write(). I drop it to simplify the
-> code.
-> 
-> Signed-off-by: Geliang Tang <geliangtang@163.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a329efe..cfded80 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1160,15 +1160,12 @@ int skip_isa_ioresource_align(struct pci_bus *bus)
+ 	return 0;
+ }
+ 
+-static resource_size_t size_aligned_for_isa(resource_size_t size)
++static resource_size_t size_aligned_for_isa(resource_size_t size,
++					    struct pci_bus *bus)
+ {
+-	/*
+-	 * To be fixed in 2.5: we should have sort of HAVE_ISA
+-	 *  flag in the struct pci_bus.
+-	 */
+-#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+-	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+-#endif
++	if (!skip_isa_ioresource_align(bus))
++		size = (size & 0xff) + ((size & ~0xffUL) << 2);
++
+ 	return size;
+ }
+ 
+@@ -1237,12 +1234,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		}
+ 	}
+ 
+-	size = size_aligned_for_isa(size);
++	size = size_aligned_for_isa(size, bus);
+ 	size += size1;
+ 	if (size || min_size)
+ 		size0 = calculate_size(size, min_size,
+ 					resource_size(b_res), min_align);
+-	sum_add_size = size_aligned_for_isa(sum_add_size);
++	sum_add_size = size_aligned_for_isa(sum_add_size, bus);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+-- 
+1.8.4.5
+
