@@ -1,95 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:54218 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750806AbbLBFSR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Dec 2015 00:18:17 -0500
-Received: from localhost
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 2 Dec 2015 15:18:14 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 3A0913578054
-	for <linux-pci@vger.kernel.org>; Wed,  2 Dec 2015 16:18:11 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tB25HjT110616914
-	for <linux-pci@vger.kernel.org>; Wed, 2 Dec 2015 16:17:53 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tB25HceL015675
-	for <linux-pci@vger.kernel.org>; Wed, 2 Dec 2015 16:17:38 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: mpe@ellerman.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH] powerpc/eeh: Fix PE location code
-Date: Wed,  2 Dec 2015 16:17:20 +1100
-Message-Id: <1449033440-26213-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:40118 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751759AbbLKFHo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:07:44 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, Meelis Roos <mroos@linux.ee>
+Subject: [PATCH v9 06/60] PCI: Kill wrong quirk about M7101
+Date: Thu, 10 Dec 2015 21:06:02 -0800
+Message-Id: <1449810416-2950-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In eeh_pe_loc_get(), the PE location code is retrieved from the
-"ibm,loc-code" property of the device node for the bridge of the
-PE's primary bus. It's not correct because the property indicates
-the parent PE's location code.
+Meelis reported that qla2000 driver does not get loaded on one sparc system.
 
-This reads the correct PE location code from "ibm,io-base-loc-code"
-or "ibm,slot-location-code" property of PE parent bus's device node.
+schizo f00732d0: PCI host bridge to bus 0001:00
+pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
+pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
+pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
+pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+So the quirk for M7101 claim the io range early.
+
+According to spec with M7101 in M1543 page 103/104,
+	http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
+0xe0, and 0xe2 do not include address info for acpi/smb.
+
+Kill wrong quirk about them.
+
+Link: http://kodu.ut.ee/~mroos/dm/dm.v240
+Link: http://kodu.ut.ee/~mroos/dm/dm.sb100
+Reported-by: Meelis Roos <mroos@linux.ee>
+Cc: Meelis Roos <mroos@linux.ee>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
 ---
- arch/powerpc/kernel/eeh_pe.c | 33 +++++++++++++++------------------
- 1 file changed, 15 insertions(+), 18 deletions(-)
+ drivers/pci/quirks.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
-index 8654cb1..ca9e537 100644
---- a/arch/powerpc/kernel/eeh_pe.c
-+++ b/arch/powerpc/kernel/eeh_pe.c
-@@ -883,32 +883,29 @@ void eeh_pe_restore_bars(struct eeh_pe *pe)
- const char *eeh_pe_loc_get(struct eeh_pe *pe)
- {
- 	struct pci_bus *bus = eeh_pe_bus_get(pe);
--	struct device_node *dn = pci_bus_to_OF_node(bus);
-+	struct device_node *dn;
- 	const char *loc = NULL;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7e32730..7354127 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -433,24 +433,6 @@ static void quirk_amd_nl_class(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
+ 		quirk_amd_nl_class);
  
--	if (!dn)
--		goto out;
-+	while (bus) {
-+		dn = pci_bus_to_OF_node(bus);
-+		if (!dn) {
-+			bus = bus->parent;
-+			continue;
-+		}
- 
--	/* PHB PE or root PE ? */
--	if (pci_is_root_bus(bus)) {
--		loc = of_get_property(dn, "ibm,loc-code", NULL);
--		if (!loc)
-+		if (pci_is_root_bus(bus))
- 			loc = of_get_property(dn, "ibm,io-base-loc-code", NULL);
-+		else
-+			loc = of_get_property(dn, "ibm,slot-location-code",
-+					      NULL);
-+
- 		if (loc)
--			goto out;
-+			return loc;
- 
--		/* Check the root port */
--		dn = dn->child;
--		if (!dn)
--			goto out;
-+		bus = bus->parent;
- 	}
- 
--	loc = of_get_property(dn, "ibm,loc-code", NULL);
--	if (!loc)
--		loc = of_get_property(dn, "ibm,slot-location-code", NULL);
+-/*
+- * Let's make the southbridge information explicit instead
+- * of having to worry about people probing the ACPI areas,
+- * for example.. (Yes, it happens, and if you read the wrong
+- * ACPI register it will put the machine to sleep with no
+- * way of waking it up again. Bummer).
+- *
+- * ALI M7101: Two IO regions pointed to by words at
+- *	0xE0 (64 bytes of ACPI registers)
+- *	0xE2 (32 bytes of SMB registers)
+- */
+-static void quirk_ali7101_acpi(struct pci_dev *dev)
+-{
+-	quirk_io_region(dev, 0xE0, 64, PCI_BRIDGE_RESOURCES, "ali7101 ACPI");
+-	quirk_io_region(dev, 0xE2, 32, PCI_BRIDGE_RESOURCES+1, "ali7101 SMB");
+-}
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
 -
--out:
--	return loc ? loc : "N/A";
-+	return "N/A";
- }
- 
- /**
+ static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
+ {
+ 	u32 devres;
 -- 
-2.1.0
+1.8.4.5
 
