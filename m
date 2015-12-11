@@ -1,87 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:36439 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753264AbbLRMja (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Dec 2015 07:39:30 -0500
-Received: by mail-wm0-f51.google.com with SMTP id p187so61874369wmp.1
-        for <linux-pci@vger.kernel.org>; Fri, 18 Dec 2015 04:39:30 -0800 (PST)
-From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-To: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Subject: [PATCH v5 4/5] ARM: dts: apq8064: add pcie devicetree node
-Date: Fri, 18 Dec 2015 14:38:58 +0200
-Message-Id: <1450442339-18765-5-git-send-email-stanimir.varbanov@linaro.org>
-In-Reply-To: <1450442339-18765-1-git-send-email-stanimir.varbanov@linaro.org>
-References: <1450442339-18765-1-git-send-email-stanimir.varbanov@linaro.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:43222 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752671AbbLKFSC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:18:02 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 30/60] PCI: Remove duplicated code for resource sorting
+Date: Thu, 10 Dec 2015 21:06:26 -0800
+Message-Id: <1449810416-2950-31-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the pcie dt node so that it can probe and used.
+Now sort_resources() and pdev_sort_resources() all have sorting
+code.
 
-Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+As we are going to call sort_resources() several places later for
+alt_size support, so choose to remove related code in
+pdev_sort_resources().
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/arm/boot/dts/qcom-apq8064.dtsi |   36 +++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+ drivers/pci/setup-bus.c | 22 +++-------------------
+ 1 file changed, 3 insertions(+), 19 deletions(-)
 
-diff --git a/arch/arm/boot/dts/qcom-apq8064.dtsi b/arch/arm/boot/dts/qcom-apq8064.dtsi
-index 1a57278cb818..495807eab8f3 100644
---- a/arch/arm/boot/dts/qcom-apq8064.dtsi
-+++ b/arch/arm/boot/dts/qcom-apq8064.dtsi
-@@ -705,5 +705,41 @@
- 			compatible = "qcom,tcsr-apq8064", "syscon";
- 			reg = <0x1a400000 0x100>;
- 		};
-+
-+		pcie: pci@1b500000 {
-+			compatible = "qcom,pcie-apq8064", "snps,dw-pcie";
-+			reg = <0x1b500000 0x1000
-+			       0x1b502000 0x80
-+			       0x1b600000 0x100
-+			       0x0ff00000 0x100000>;
-+			reg-names = "dbi", "elbi", "parf", "config";
-+			device_type = "pci";
-+			linux,pci-domain = <0>;
-+			bus-range = <0x00 0xff>;
-+			num-lanes = <1>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges = <0x81000000 0 0 0x0fe00000 0 0x00100000   /* I/O */
-+				  0x82000000 0 0 0x08000000 0 0x07e00000>; /* memory */
-+			interrupts = <GIC_SPI 238 IRQ_TYPE_NONE>;
-+			interrupt-names = "msi";
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &intc 0 36 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-+					<0 0 0 2 &intc 0 37 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-+					<0 0 0 3 &intc 0 38 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-+					<0 0 0 4 &intc 0 39 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-+			clocks = <&gcc PCIE_A_CLK>,
-+				 <&gcc PCIE_H_CLK>,
-+				 <&gcc PCIE_PHY_REF_CLK>;
-+			clock-names = "core", "iface", "phy";
-+			resets = <&gcc PCIE_ACLK_RESET>,
-+				 <&gcc PCIE_HCLK_RESET>,
-+				 <&gcc PCIE_POR_RESET>,
-+				 <&gcc PCIE_PCI_RESET>,
-+				 <&gcc PCIE_PHY_RESET>;
-+			reset-names = "axi", "ahb", "por", "pci", "phy";
-+			status = "disabled";
-+		};
- 	};
- };
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 885b9f8..cba7ccc 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -214,9 +214,8 @@ static void pdev_sort_resources(struct pci_dev *dev,
+ 
+ 	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 		struct resource *r;
+-		struct pci_dev_resource *dev_res, *tmp;
++		struct pci_dev_resource *tmp;
+ 		resource_size_t r_align;
+-		struct list_head *n;
+ 
+ 		r = &dev->resource[i];
+ 
+@@ -239,22 +238,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
+ 		tmp->res = r;
+ 		tmp->dev = dev;
+ 
+-		/* fallback is smallest one or list is empty*/
+-		n = head;
+-		list_for_each_entry(dev_res, head, list) {
+-			resource_size_t align;
+-
+-			align = __pci_resource_alignment(dev_res->dev,
+-							 dev_res->res,
+-							 realloc_head);
+-
+-			if (r_align > align) {
+-				n = &dev_res->list;
+-				break;
+-			}
+-		}
+-		/* Insert it just before n*/
+-		list_add_tail(&tmp->list, n);
++		list_add_tail(&tmp->list, head);
+ 	}
+ }
+ 
+@@ -563,9 +547,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	free_list(&save_head);
+ 
++requested_and_reassign:
+ 	sort_resources(head);
+ 
+-requested_and_reassign:
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
+ 
 -- 
-1.7.9.5
+1.8.4.5
 
