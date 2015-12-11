@@ -1,108 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:51900 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S966642AbbLQNX3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Dec 2015 08:23:29 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-sh@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Subject: [PATCH 3/4] PCI: rcar: Add runtime PM support to pcie-rcar
-Date: Thu, 17 Dec 2015 13:22:36 +0000
-Message-Id: <1450358557-28376-4-git-send-email-phil.edworthy@renesas.com>
-In-Reply-To: <1450358557-28376-1-git-send-email-phil.edworthy@renesas.com>
-References: <1450358557-28376-1-git-send-email-phil.edworthy@renesas.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:41990 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752537AbbLKFNN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:13:13 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 42/60] PCI: Move saved required resource list out of required+optional assigning
+Date: Thu, 10 Dec 2015 21:06:38 -0800
+Message-Id: <1449810416-2950-43-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If runtime PM is enabled in the kernel config, simply enable the
-clocks once during probe.
+We will need to share saved required list for alt_size support, so move
+it out from required+optional assigning.
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host/pcie-rcar.c | 44 ++++++++++++++++++++++++++++++++------------
- 1 file changed, 32 insertions(+), 12 deletions(-)
+ drivers/pci/setup-bus.c | 30 ++++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 4a4f8e1..02a5993 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -26,6 +26,7 @@
- #include <linux/of_platform.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
-+#include <linux/pm_runtime.h>
- #include <linux/slab.h>
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 5a2cd66..1df6345 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -456,6 +456,9 @@ static bool has_addon(struct list_head *head,
+ 	int add_count = 0;
+ 	struct pci_dev_resource *dev_res, *tmp_res;
  
- #define DRV_NAME "rcar-pcie"
-@@ -1019,32 +1020,51 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	 if (err)
- 		return err;
- 
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		err = rcar_pcie_enable_msi(pcie);
--		if (err < 0) {
--			dev_err(&pdev->dev,
--				"failed to enable MSI support: %d\n",
--				err);
--			return err;
--		}
--	}
--
- 	of_id = of_match_device(rcar_pcie_of_match, pcie->dev);
- 	if (!of_id || !of_id->data)
- 		return -EINVAL;
- 	hw_init_fn = of_id->data;
- 
-+	pm_runtime_enable(pcie->dev);
-+	err = pm_runtime_get_sync(pcie->dev);
-+	if (err < 0) {
-+		dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
-+		goto err_pm_disable;
-+	}
++	if (!realloc_head)
++		return false;
 +
- 	/* Failure to get a link might just be that no cards are inserted */
- 	err = hw_init_fn(pcie);
- 	if (err) {
- 		dev_info(&pdev->dev, "PCIe link down\n");
--		return 0;
-+		err = 0;
-+		goto err_pm_put;
- 	}
- 
- 	data = rcar_pci_read_reg(pcie, MACSR);
- 	dev_info(&pdev->dev, "PCIe x%d: link up\n", (data >> 20) & 0x3f);
- 
--	return rcar_pcie_enable(pcie);
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		err = rcar_pcie_enable_msi(pcie);
-+		if (err < 0) {
-+			dev_err(&pdev->dev,
-+				"failed to enable MSI support: %d\n",
-+				err);
-+			goto err_pm_put;
-+		}
-+	}
-+
-+	err = rcar_pcie_enable(pcie);
-+	if (err)
-+		goto err_pm_put;
-+
-+	return 0;
-+
-+err_pm_put:
-+	pm_runtime_put(pcie->dev);
-+
-+err_pm_disable:
-+	pm_runtime_disable(pcie->dev);
-+	return err;
+ 	/* check if we have add really */
+ 	list_for_each_entry(dev_res, head, list) {
+ 		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
+@@ -492,9 +495,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
  }
  
- static struct platform_driver rcar_pcie_driver = {
+ static bool __assign_resources_required_optional_sorted(struct list_head *head,
++				 struct list_head *save_head,
+ 				 struct list_head *realloc_head)
+ {
+-	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+@@ -502,12 +505,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 	resource_size_t add_align, add_size;
+ 	struct resource *res;
+ 
+-	if (!has_addon(head, realloc_head))
+-		return false;
+-
+-	if (!save_resources(head, &save_head))
+-		return false;
+-
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+ 		res = dev_res->res;
+@@ -548,7 +545,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 		/* Remove head list from realloc_head list */
+ 		list_for_each_entry(dev_res, head, list)
+ 			remove_from_list(realloc_head, dev_res->res);
+-		free_list(&save_head);
+ 		free_list(head);
+ 
+ 		return true;
+@@ -562,7 +558,7 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 		if (res->parent && !pci_need_to_release(fail_type, res)) {
+ 			/* remove it from realloc_head list */
+ 			remove_from_list(realloc_head, res);
+-			remove_from_list(&save_head, res);
++			remove_from_list(save_head, res);
+ 			list_del(&dev_res->list);
+ 			kfree(dev_res);
+ 		}
+@@ -581,11 +577,9 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 		}
+ 	}
+ 	/* Restore start/end/flags from saved list */
+-	list_for_each_entry(save_res, &save_head, list)
++	list_for_each_entry(save_res, save_head, list)
+ 		restore_resource(save_res, save_res->res);
+ 
+-	free_list(&save_head);
+-
+ 	return false;
+ }
+ 
+@@ -603,16 +597,24 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 *    then try to reassign add_size for some resources.
+ 	 */
+ 
++	LIST_HEAD(save_head);
++
+ 	/* Check required+optional add */
+-	if (realloc_head &&
+-	    __assign_resources_required_optional_sorted(head, realloc_head))
++	if (has_addon(head, realloc_head) &&
++	    save_resources(head, &save_head) &&
++	    __assign_resources_required_optional_sorted(head, &save_head,
++					       realloc_head)) {
++		free_list(&save_head);
+ 		return;
++	}
+ 
+ 	sort_resources(head);
+ 
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
+ 
++	free_list(&save_head);
++
+ 	/* Try to satisfy any additional optional resource
+ 		requests */
+ 	if (realloc_head)
 -- 
-2.5.0
+1.8.4.5
 
