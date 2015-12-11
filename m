@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:29624 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751932AbbLKGID (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 01:08:03 -0500
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -8,148 +12,230 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Khalid Aziz <khalid.aziz@oracle.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 44/60] PCI: Add support for more than two alt_size entries under same bridge
-Date: Thu, 10 Dec 2015 21:06:40 -0800
-Message-Id: <1449810416-2950-45-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v9 27/60] PCI: Optimize bus align/size calculation for optional during sizing
+Date: Thu, 10 Dec 2015 21:06:23 -0800
+Message-Id: <1449810416-2950-28-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we have two bridges under parent bridge, and each child
-bridge has alt_size, we need to increase parent alt_size to make
-sure it could fit all alt entries.
+Current add_align always use max align, that make required+optional
+to get allocated more than needed in some cases.
 
-In the patch, we first select one big size, and then keep reducing
-the size and retrying to get the minimum value for alt_size.
+Now we have new calculate_mem_align(), so we could use it for
+add_align calculation.
 
-For example, two bridges:
-  one have 8M/8M, and 1M/1M children res.
-  one have 4M/4M, and 1M/1M children res.
+Need to create separated list for required+optional align/size info.
 
-Then we have child pridges alt_align/alt_size: 8M/9M, 4M/5M.
-Before this patch, parent bridge alt_align/alt_size is 8M/14M
-that is wrong, as it can not fit two alt entries at all.
-With this patch	parent bridge alt_align/alt_size: 8M/17M.
-               8M            16M   20M   24M
-  |------------|-------------|-----|-----|
-	       8M			   25M
-	       |---------------------------|
-			       17M
-               |---9M----------|   |-5M----|
+After that we can get smaller add_align/size, and we have more chance
+to make required+optional to get allocated sucessfully.
 
+The result for bridge that have Intel 4x10g card installed:
 
-At same time, child bridges required align/size: 4M/12M, 2M/6M.
-and prarent bridge required align/size: 4M/20M.
+ pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
+	to [bus 2a-31] calculate_mem for required
+ align/size:
+   00800000/00800000, 00800000/00800000, 00800000/00800000,
+   00800000/00800000, 00008000/00008000, 00008000/00008000,
+   00008000/00008000, 00008000/00008000
+ original min_align/min_size: 00400000/02400000
+ new min_align/min_size: 00400000/02400000
 
-So at last, we use 8M/17M as parent bridge alt_align/alt_size.
+ pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
+	to [bus 2a-31] calculate_mem for required+optional
+ align/size:
+   00800000/00800000, 00800000/00800000, 00800000/00800000,
+   00800000/00800000, 00010000/00200000, 00010000/00200000,
+   00010000/00200000, 00010000/00200000, 00008000/00008000,
+   00008000/00008000, 00008000/00008000, 00008000/00008000,
+   00004000/00080000, 00004000/00080000, 00004000/00080000,
+   00004000/00080000
+ original code min_align/min_size: 00800000/03000000
+ new min_align/min_size: 00100000/02b00000
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=100451
-Reported-by: Yijing Wang <wangyijing@huawei.com>
-Tested-by: Yijing Wang <wangyijing@huawei.com>
+so required align/size: 0x400000/0x2400000, and
+new required+optional align/size: 0x100000/0x2b00000, and it is much better
+than original required+optional align/size: 0x800000/0x3000000
+and even have smaller min_align than required.
+
+-v2: remove not used size1 in calculate_memsize
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Reported-by: TJ <linux@iam.tj>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+
+ drivers/pci/setup-bus.c |   82 +++++++++++++++++++++++++++++-------------------
+ 1 file changed, 51 insertions(+), 31 deletions(-)
 ---
- drivers/pci/setup-bus.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 54 insertions(+), 2 deletions(-)
+ drivers/pci/setup-bus.c | 82 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 51 insertions(+), 31 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 51c3b3d..9c9d9de 100644
+index 6e67608..d8db9e3 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1373,6 +1373,47 @@ out:
- 	return good_align;
+@@ -944,7 +944,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 
+ static resource_size_t calculate_memsize(resource_size_t size,
+ 		resource_size_t min_size,
+-		resource_size_t size1,
+ 		resource_size_t old_size,
+ 		resource_size_t align)
+ {
+@@ -954,7 +953,7 @@ static resource_size_t calculate_memsize(resource_size_t size,
+ 		old_size = 0;
+ 	if (size < old_size)
+ 		size = old_size;
+-	size = ALIGN(size + size1, align);
++	size = ALIGN(size, align);
+ 	return size;
  }
  
-+static resource_size_t calculate_mem_alt_size(struct list_head *head,
-+				resource_size_t max_align, resource_size_t size,
-+				resource_size_t align_low)
-+{
-+	struct align_test_res *p;
-+	resource_size_t tmp;
-+	resource_size_t good_size, bad_size;
-+	int count = 0, order;
-+
-+	good_size = ALIGN(size, align_low);
-+
-+	list_for_each_entry(p, head, list)
-+		count++;
-+
-+	if (count <= 1)
-+		goto out;
-+
-+	sort_align_test(head);
-+
-+	tmp = max(size, max_align);
-+	order = __fls(count);
-+	if ((1ULL << order) < count)
-+		order++;
-+	good_size = ALIGN((tmp << order), align_low);
-+	bad_size = ALIGN(size, align_low) - align_low;
-+	size = good_size;
-+	while (size > bad_size) {
-+		/* check if align/size fit all entries */
-+		if (is_align_size_good(head, max_align, size, 0))
-+			good_size = size;
-+		else
-+			bad_size = size;
-+
-+		size = bad_size + ((good_size - bad_size) >> 1);
-+		size = round_down(size, align_low);
-+	}
-+
-+out:
-+	return good_size;
-+}
-+
- static inline bool is_optional(int i)
+@@ -1217,26 +1216,23 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			 struct list_head *realloc_head)
  {
- 
-@@ -1419,6 +1460,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	struct pci_dev *dev;
+-	resource_size_t min_align, align, size, size0, size1;
+-	resource_size_t max_align = 0;
++	resource_size_t min_align = 0, min_add_align = 0;
++	resource_size_t max_align = 0, max_add_align = 0;
++	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
+ 	struct resource *b_res = find_free_bus_resource(bus,
  					mask | IORESOURCE_PREFETCH, type);
+-	resource_size_t children_add_size = 0;
+-	resource_size_t children_add_align = 0;
+-	resource_size_t add_align = 0;
  	LIST_HEAD(align_test_list);
- 	LIST_HEAD(align_test_add_list);
-+	LIST_HEAD(align_test_alt_list);
- 	resource_size_t alt_size = 0, alt_align = 0;
- 	resource_size_t window_align;
++	LIST_HEAD(align_test_add_list);
  
-@@ -1494,10 +1536,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (!b_res)
+ 		return -ENOSPC;
  
- 				dev_res = res_to_dev_res(realloc_head, r);
- 				if (dev_res && dev_res->alt_size) {
-+					add_to_align_test_list(
-+						&align_test_alt_list,
-+						dev_res->alt_align,
-+						dev_res->alt_size);
- 					alt_size += dev_res->alt_size;
- 					if (alt_align < dev_res->alt_align)
- 						alt_align = dev_res->alt_align;
- 				} else if (r_size > 1) {
-+					add_to_align_test_list(
-+						&align_test_alt_list,
-+						align, r_size);
- 					alt_size += r_size;
- 					if (alt_align < align)
- 						alt_align = align;
-@@ -1517,14 +1566,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+-	size = 0;
+-
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
  
- 	if (size0 && realloc_head) {
- 		alt_align = max(alt_align, window_align);
--		alt_size = calculate_memsize(alt_size, min_size,
--					     0, window_align);
-+		/* need to increase size to fit more alt */
-+		alt_size = calculate_mem_alt_size(&align_test_alt_list,
-+						  alt_align, alt_size,
-+						  window_align);
- 		/* required is better ? */
- 		if (alt_size >= size0) {
- 			alt_align = 0;
- 			alt_size = 0;
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+-			resource_size_t r_size;
++			resource_size_t r_size, align;
+ 			int flags = pci_resource_pref_compatible(dev, r);
+ 
+ 			if (r->parent || (flags & IORESOURCE_PCI_FIXED) ||
+@@ -1244,19 +1240,23 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			     (flags & mask) != type2 &&
+ 			     (flags & mask) != type3))
+ 				continue;
++
+ 			r_size = resource_size(r);
++			align = pci_resource_alignment(dev, r);
+ #ifdef CONFIG_PCI_IOV
+ 			/* put SRIOV requested res to the optional list */
+ 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+ 					i <= PCI_IOV_RESOURCE_END) {
+-				add_align = max(pci_resource_alignment(dev, r), add_align);
++				add_to_align_test_list(&align_test_add_list,
++							align, r_size);
+ 				r->end = r->start - 1;
+ 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
+-				children_add_size += r_size;
++				sum_add_size += r_size;
++				if (align > max_add_align)
++					max_add_align = align;
+ 				continue;
+ 			}
+ #endif
+-			align = pci_resource_alignment(dev, r);
+ 			if (align > (1ULL<<37)) { /*128 Gb*/
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
+ 					i, r, (unsigned long long) align);
+@@ -1264,33 +1264,52 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				continue;
+ 			}
+ 
+-			if (r_size > 1)
++			if (r_size > 1) {
+ 				add_to_align_test_list(&align_test_list,
+ 							align, r_size);
+-			size += r_size;
+-			if (align > max_align)
+-				max_align = align;
++				size += r_size;
++				if (align > max_align)
++					max_align = align;
++			}
+ 
+ 			if (realloc_head) {
+-				children_add_size += get_res_add_size(realloc_head, r);
+-				children_add_align = get_res_add_align(realloc_head, r);
+-				add_align = max(add_align, children_add_align);
++				resource_size_t add_r_size, add_align;
++
++				add_r_size = get_res_add_size(realloc_head, r);
++				add_align = get_res_add_align(realloc_head, r);
++				/* no add on ? */
++				if (add_align < align)
++					add_align = align;
++				add_to_align_test_list(&align_test_add_list,
++							add_align,
++							r_size + add_r_size);
++				sum_add_size += r_size + add_r_size;
++				if (add_align > max_add_align)
++					max_add_align = add_align;
+ 			}
  		}
  	}
-+	free_align_test_list(&align_test_alt_list);
  
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
+ 	max_align = max(max_align, window_alignment(bus, b_res->flags));
+-	min_align = calculate_mem_align(&align_test_list, max_align, size,
+-					window_alignment(bus, b_res->flags));
+-	size0 = calculate_memsize(size, min_size, 0,
++	if (size || min_size) {
++		min_align = calculate_mem_align(&align_test_list, max_align,
++				 size, window_alignment(bus, b_res->flags));
++		size0 = calculate_memsize(size, min_size,
+ 				  resource_size(b_res), min_align);
++	}
+ 	free_align_test_list(&align_test_list);
+-	add_align = max(min_align, add_align);
+-	if (children_add_size > add_size)
+-		add_size = children_add_size;
+-	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+-		calculate_memsize(size, min_size, add_size,
+-				resource_size(b_res), add_align);
++
++	if ((sum_add_size - size) < add_size)
++		sum_add_size = size + add_size;
++	if (sum_add_size > size && realloc_head) {
++		min_add_align = calculate_mem_align(&align_test_add_list,
++					max_add_align, sum_add_size,
++					window_alignment(bus, b_res->flags));
++		size1 = calculate_memsize(sum_add_size, min_size,
++				 resource_size(b_res), min_add_align);
++	}
++	free_align_test_list(&align_test_add_list);
++
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+@@ -1302,11 +1321,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
++		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
++				min_add_align);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long) (size1 - size0),
+-			   (unsigned long long) add_align);
++			   (unsigned long long) min_add_align);
+ 	}
+ 	return 0;
+ }
 -- 
 1.8.4.5
 
