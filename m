@@ -1,160 +1,123 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-Subject: [PATCH V2 20/23] ACPI, PCI: Refine the way to handle translation_offset for ACPI resources
-Date: Wed, 16 Dec 2015 16:16:30 +0100
-Message-Id: <1450278993-12664-21-git-send-email-tn@semihalf.com>
-In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:36556 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754874AbbLKP6H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 10:58:07 -0500
+MIME-Version: 1.0
+In-Reply-To: <20151211145916.GA21907@localhost>
+References: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
+	<20151209183743.GH31930@localhost>
+	<20151211021434.GH9927@verge.net.au>
+	<20151211145916.GA21907@localhost>
+Date: Fri, 11 Dec 2015 16:58:06 +0100
+Message-ID: <CAMuHMdVN5VtZHcC9T4dzpsW-f8FpcjmJeTX_HHqRs0X5HdJCOw@mail.gmail.com>
+Subject: Re: [PATCH v2 0/4] PCI: rcar, rcar-gen2: More Gen2 compatibility strings
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Liu Jiang <jiang.liu@linux.intel.com>
+Hi Bjorn,
 
-Some architectures, such as IA64 and ARM64, have no instructions to
-directly access PCI IO ports, so they map PCI IO ports into PCI MMIO
-address space. Typically PCI host bridges on those architectures take
-the responsibility to map (translate) PCI IO port transactions into
-Memory-Mapped IO transactions. ACPI specification provides support
-of such a usage case by using resource translation_offset.
+On Fri, Dec 11, 2015 at 3:59 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Dec 11, 2015 at 11:14:34AM +0900, Simon Horman wrote:
+>> On Wed, Dec 09, 2015 at 12:37:43PM -0600, Bjorn Helgaas wrote:
+>> > On Thu, Dec 03, 2015 at 07:51:36AM +0900, Simon Horman wrote:
+>> > > this short series adds generic gen2 and SoC-specific r8a7793 compatibility
+>> > > strings to the rcar PCI and rcar-gen2 PCIE drivers. The intention is to
+>> > > provide a complete set of compatibility strings for known Gen2 SoCs.
+>> > >
+>> > > Key Changes in v2:
+>> > > * Include "rcar-" in generic bindings
+>> > >
+>> > > Simon Horman (4):
+>> > >   PCI: rcar-gen2: add gen2 fallback compatibility string
+>> > >   PCI: rcar-gen2: add device tree support for r8a7793
+>> > >   PCI: rcar: add gen2 fallback compatibility string
+>> > >   PCI: rcar: add device tree support for r8a7793
+>> > >
+>> > >  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 12 ++++++++++--
+>> > >  Documentation/devicetree/bindings/pci/rcar-pci.txt      | 14 +++++++++++---
+>> > >  drivers/pci/host/pci-rcar-gen2.c                        |  1 +
+>> > >  drivers/pci/host/pcie-rcar.c                            |  1 +
+>> > >  4 files changed, 23 insertions(+), 5 deletions(-)
+>> >
+>> > I applied these:
+>> >
+>> > >   PCI: rcar-gen2: add gen2 fallback compatibility string
+>> > >   PCI: rcar: add gen2 fallback compatibility string
+>> >
+>> > to pci/host-rcar for v4.5, thanks!
+>> >
+>> > I haven't applied the R8A7793 binding documentation updates yet, but
+>> > I'll be happy to do so given a short description of why they're
+>> > useful (since they don't update a DT or the driver).  Or they could be
+>> > merged via a DT tree.
+>>
+>> To clarify: you would like a description in the changelog?
+>
+> Yes, please.  The email discussion so far hasn't contained what I'm
+> looking for (if it had, I would have just inserted it and been done
+> with it).
+>
+> Apparently it has to do with the stable DT rules, which I don't know.
+> A concrete example would probably help clear it up.
 
-But current ACPI resource parsing interface isn't neutral enough,
-it still has some special logic for IA64. So refine the ACPI resource
-parsing interface and IA64 code to neutrally handle translation_offset
-by:
-1) ACPI resource parsing interface doesn't do any translation, it just
-   save the translation_offset to be used by arch code.
-2) Arch code will do the mapping(translation) based on arch specific
-   information. Typically it does:
-2.a) Translate per PCI domain IO port address space into system global
-   IO port address space.
-2.b) Setup MMIO address mapping for IO ports.
-void handle_io_resource(struct resource_entry *io_entry)
-{
-	struct resource *mmio_res;
+The stable DT rules mean that an old DTS should keep on working with
+newer kernels.
 
-	mmio_res = kzalloc(sizeof(*mmio_res), GFP_KERNEL);
-	mmio_res->flags = IORESOURCE_MEM;
-	mmio_res->start = io_entry->offset + io_entry->res->start;
-	mmio_res->end = io_entry->offset + io_entry->res->end;
-	insert_resource(&iomem_resource, mmio_res)
+Suppose we have two SoCs, that both contain "foo" modules, which look
+identical. Hence the DTS for both declares the devices to be compatible
+with "vendor,foo".
 
-	base = map_to_system_ioport_address(entry);
-	io_entry->offset = base;
-	io_entry->res->start += base;
-	io_entry->res->end += base;
-}
+Later, we discover a difference between the two "foo" modules in the two
+SoCs (e.g. a feature present in one of them, or worse, a bug), which we
+need to handle in the driver. But how can we distinguish between them?
+We can change the compatible value in the DTS, but that means the user
+has to update the DTS when updating the kernel. For a new feature that
+may be deemed acceptable, for a bug fix that's not acceptable.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/ia64/pci/pci.c     | 26 ++++++++++++++++----------
- drivers/acpi/resource.c | 12 +++++-------
- 2 files changed, 21 insertions(+), 17 deletions(-)
+Hence we always use an SoC-specific compatible value, which may or may
+not be accompanied by a family-specific and/or generic compatible value.
+As long as everything can be handled the same, the driver will just match
+against the most generic compatible value used. But if needed later, the
+driver can be updated to match against a more specific compatible value,
+and can have special handling for  a module in a specific SoC.
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index c1e8ed5..d496976 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -154,7 +154,7 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
- 	struct resource_entry *iospace;
- 	struct resource *resource, *res = entry->res;
- 	char *name;
--	unsigned long base, min, max, base_port;
-+	unsigned long base_mmio, base_port;
- 	unsigned int sparse = 0, space_nr, len;
- 
- 	len = strlen(info->common.name) + 32;
-@@ -172,12 +172,10 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
- 		goto free_resource;
- 
- 	name = (char *)(iospace + 1);
--	min = res->start - entry->offset;
--	max = res->end - entry->offset;
--	base = __pa(io_space[space_nr].mmio_base);
-+	base_mmio = __pa(io_space[space_nr].mmio_base);
- 	base_port = IO_SPACE_BASE(space_nr);
- 	snprintf(name, len, "%s I/O Ports %08lx-%08lx", info->common.name,
--		 base_port + min, base_port + max);
-+		 base_port + res->start, base_port + res->end);
- 
- 	/*
- 	 * The SDM guarantees the legacy 0-64K space is sparse, but if the
-@@ -190,19 +188,27 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
- 	resource = iospace->res;
- 	resource->name  = name;
- 	resource->flags = IORESOURCE_MEM;
--	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
--	resource->end   = base + (sparse ? IO_SPACE_SPARSE_ENCODING(max) : max);
-+	resource->start = base_mmio;
-+	resource->end = base_mmio;
-+	if (sparse) {
-+		resource->start += IO_SPACE_SPARSE_ENCODING(res->start);
-+		resource->end += IO_SPACE_SPARSE_ENCODING(res->end);
-+	} else {
-+		resource->start += res->start;
-+		resource->end += res->end;
-+	}
- 	if (insert_resource(&iomem_resource, resource)) {
- 		dev_err(dev,
- 			"can't allocate host bridge io space resource  %pR\n",
- 			resource);
- 		goto free_resource;
- 	}
-+	resource_list_add_tail(iospace, &info->io_resources);
- 
-+	/* Adjust base of original IO port resource descriptor */
- 	entry->offset = base_port;
--	res->start = min + base_port;
--	res->end = max + base_port;
--	resource_list_add_tail(iospace, &info->io_resources);
-+	res->start += base_port;
-+	res->end += base_port;
- 
- 	return 0;
- 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index cdc5c25..6578f68 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -190,8 +190,7 @@ static bool acpi_decode_space(struct resource_win *win,
- {
- 	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
- 	bool wp = addr->info.mem.write_protect;
--	u64 len = attr->address_length;
--	u64 start, end, offset = 0;
-+	u64 len = attr->address_length, offset = 0;
- 	struct resource *res = &win->res;
- 
- 	/*
-@@ -215,14 +214,13 @@ static bool acpi_decode_space(struct resource_win *win,
- 	else if (attr->translation_offset)
- 		pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
- 			 attr->translation_offset);
--	start = attr->minimum + offset;
--	end = attr->maximum + offset;
- 
- 	win->offset = offset;
--	res->start = start;
--	res->end = end;
-+	res->start = attr->minimum;
-+	res->end = attr->maximum;
- 	if (sizeof(resource_size_t) < sizeof(u64) &&
--	    (offset != win->offset || start != res->start || end != res->end)) {
-+	    (offset != win->offset || attr->minimum != res->start ||
-+	     attr->maximum != res->end)) {
- 		pr_warn("acpi resource window ([%#llx-%#llx] ignored, not CPU addressable)\n",
- 			attr->minimum, attr->maximum);
- 		return false;
--- 
-1.9.1
+So that's why we want to have compatible value in the DT bindings that
+are not necessarily used by the driver.
 
+In a perfect world, where all hardware is properly documented, or even
+Open Source, we wouldn't need this. There we could just declare a device
+compatible with what it really is, based on the module's internal version ID
+(ideally a git commit ID of its HDL source ;-).
+
+I hope the above explains it. If you have more questions, feel free to ask!
+
+> I've applied the parts that touch PCI.  I won't be offended if the
+> binding documentation patches go as-is via another tree.  It's just
+> that if *I'm* going to apply them, I'd like to understand better what
+> the benefit is.
+
+DT binding updates typically go through the subsystem maintainer,
+just like driver updates.
+
+Thanks!
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
