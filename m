@@ -1,53 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 3 Dec 2015 23:40:13 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Josef Bacik <jbacik@fb.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, bhelgaas@google.com, shli@fb.com,
-	kernel-team@fb.com
-Subject: Re: [PATCH] pci: completely disable aspm if it's unsupported
-Message-ID: <20151203224013.GG14427@amd>
-References: <1447856703-2566-1-git-send-email-jbacik@fb.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0068.outbound.protection.outlook.com ([104.47.38.68]:50848
+	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751514AbbLKHe0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Dec 2015 02:34:26 -0500
+Subject: Re: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
+ PCIe Host Controller
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Michal Simek <michal.simek@xilinx.com>
+References: <1448798633-12697-1-git-send-email-bharatku@xilinx.com>
+ <20151209231921.GI31930@localhost> <5669236D.30805@xilinx.com>
+ <20151210172508.GA367@localhost>
+CC: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<sorenb@xilinx.com>, <bhelgaas@google.com>, <arnd@arndb.de>,
+	<tinamdar@apm.com>, <treding@nvidia.com>, <rjui@broadcom.com>,
+	<Minghuan.Lian@freescale.com>, <m-karicheri2@ti.com>,
+	<hauke@hauke-m.de>, <marc.zyngier@arm.com>, <dhdang@apm.com>,
+	<sbranden@broadcom.com>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	"Ravi Kiran Gummaluri" <rgummal@xilinx.com>,
+	Paul Burton <paul.burton@imgtec.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>
+From: Michal Simek <michal.simek@xilinx.com>
+Message-ID: <566A7C6C.7020409@xilinx.com>
+Date: Fri, 11 Dec 2015 08:34:04 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1447856703-2566-1-git-send-email-jbacik@fb.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20151210172508.GA367@localhost>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
+On 10.12.2015 18:25, Bjorn Helgaas wrote:
+> On Thu, Dec 10, 2015 at 08:02:05AM +0100, Michal Simek wrote:
+>> Hi Bjorn,
+>>
+>> On 10.12.2015 00:19, Bjorn Helgaas wrote:
+>>> [+cc Michal, Paul, Thierry, Stephen, Alexandre (see irq_dispose_mapping questions below)]
+>>>
+>>> On Sun, Nov 29, 2015 at 05:33:53PM +0530, Bharat Kumar Gogada wrote:
+>>>> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+>>>>
+>>>> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+>>>> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+>>>> Acked-by: Rob Herring <robh@kernel.org>
+>>>
+>>> This needs either a MAINTAINERS update or an ack from Michal (whose
+>>> MAINTAINERS entry matches anything containing "xilinx").
+>>
+>> We have done it in this way because driver owners are changing time to
+>> time and my entry cover it that I can pass it to appropriate person who
+>> is responsible for it.
+>>
+>> For this Maintainers part here is my:
+>> Acked-by: Michal Simek <michal.simek@xilinx.com>
+> 
+> Thanks.
+> 
+> For things under drivers/pci/host, I ask for an ack from the
+> individual maintainer before applying patches.  As-is (without a
+> MAINTAINERS update) I'll be looking for acks from you, Michal, for all
+> future changes to pcie-xilinx-nwl.c.  If you want something else, we
+> need a MAINTAINERS change.
 
-> We have some hardware that takes about 30 seconds to setup common clocks for
-> ASPM, but our bios'es don't actually allow ASPM.  It seems we had this thing in
-> place where we would disable ASPM after the pci bus probe so that we would make
-> sure that pre pcie 1.1 devices would be properly skipped during initialization.
-> This is because the mechanism to disable ASPM doesn't actually disable the
-> setting up of the link state stuff, it just keeps us from changing the link
-> state after the fact.  So instead make it so that when we call pcie_no_aspm()
-> that we disable ASPM completley, that is we skip setting up the link state and
-> everything.  This way we avoid the costly setup for a feature we cannot support
-> in the first place and we also make sure we are safe from future tampering with
-> the ASPM link state.  Thanks,
+ok. No problem with it.
+I will get HW pretty soon and I will be able to do some testing my self
+when some others changes come.
 
-On thinkpad x60, I have similar problem.
-
-I'm carying this for long long time now:
-
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index a32ba75..5eb7621 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -700,7 +700,7 @@ static int __init acpi_pci_init(void)
- 
- 	if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
- 		pr_info("ACPI FADT declares the system doesn't support PCIe ASPM, so disable it\n");
--		pcie_no_aspm();
-+//		pcie_no_aspm();
- 	}
- 
- 	ret = register_acpi_bus_type(&acpi_pci_bus);
-
-
-
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Thanks,
+Michal
