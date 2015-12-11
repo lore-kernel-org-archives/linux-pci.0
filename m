@@ -1,62 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:36914 "EHLO
-	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934007AbbLPPSA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Dec 2015 10:18:00 -0500
-Received: by mail-wm0-f44.google.com with SMTP id p187so5611613wmp.0
-        for <linux-pci@vger.kernel.org>; Wed, 16 Dec 2015 07:18:00 -0800 (PST)
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V2 11/23] arm64, pci: Remove useless boot time IRQ assignment when booting with DT.
-Date: Wed, 16 Dec 2015 16:16:21 +0100
-Message-Id: <1450278993-12664-12-git-send-email-tn@semihalf.com>
-In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:40817 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754132AbbLKFJu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:09:50 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
+Subject: [PATCH v9 18/60] PCI: Set resource to FIXED for LSI devices
+Date: Thu, 10 Dec 2015 21:06:14 -0800
+Message-Id: <1449810416-2950-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to probe PCIe host controller when booting with DT,
-ARM64 is using drivers which defer IRQ assignment to device
-enable time. It means that boot time DT specific irq map initialization
-is always overridden, so lets remove that code.
+LSI HBA firmware stop responding pci read from host if pci core ever change
+pci device BAR values.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Set their resources to FIXED, so will allow realloc to skip them.
+
+Reported-by: Paul Johnson <pjay@nwtrail.com>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@vger.kernel.org
 ---
- arch/arm64/kernel/pci.c | 10 ----------
- 1 file changed, 10 deletions(-)
+ drivers/pci/pci.h       |  1 +
+ drivers/pci/quirks.c    | 20 ++++++++++++++++++++
+ drivers/pci/setup-bus.c |  4 ++++
+ 3 files changed, 25 insertions(+)
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 023b983..f7948f5 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -51,16 +51,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return pci_enable_resources(dev, mask);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index e479f3a..d6e8c0c 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -172,6 +172,7 @@ static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u
  }
  
--/*
-- * Try to assign the IRQ number from DT when adding a new device
-- */
--int pcibios_add_device(struct pci_dev *dev)
--{
--	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
--
--	return 0;
--}
--
- #ifdef CONFIG_ACPI
- /* Root bridge scanning */
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ void pci_realloc_get_opt(char *);
++bool pci_realloc_user_enabled(void);
+ 
+ static inline int pci_no_d1d2(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index d45455f..086dc23 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -323,6 +323,26 @@ static void quirk_s3_64M(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
+ 
++/*
++ * LSI devices firmware does not like BAR get changed
++ */
++static void quirk_bar_fixed(struct pci_dev *dev)
++{
++	int i;
++
++	if (pci_realloc_user_enabled())
++		return;
++
++	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
++		struct resource *r = &dev->resource[i];
++
++		if (!r->start || !r->flags)
++			continue;
++		r->flags |= IORESOURCE_PCI_FIXED;
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC,	PCI_ANY_ID,	quirk_bar_fixed);
++
+ /* for pci remove and rescan */
+ static void quirk_allocate_fixed(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index dd92c5ea..1ad5d8f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1678,6 +1678,10 @@ void __init pci_realloc_get_opt(char *str)
+ 	else if (!strncmp(str, "on", 2))
+ 		pci_realloc_enable = user_enabled;
+ }
++bool pci_realloc_user_enabled(void)
++{
++	return pci_realloc_enable == user_enabled;
++}
+ static bool pci_realloc_enabled(enum enable_type enable)
+ {
+ 	return enable >= user_enabled;
 -- 
-1.9.1
+1.8.4.5
 
