@@ -1,50 +1,211 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:37987 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750914AbbLUNNO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Dec 2015 08:13:14 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH] PCI: msi: fix typos in <linux/msi.h>
-Date: Mon, 21 Dec 2015 14:13:08 +0100
-Message-Id: <1450703588-12295-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:47441 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754360AbbLKFKW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:10:22 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 54/60] resources: Make allocate_resource() return best fit resource
+Date: Thu, 10 Dec 2015 21:06:50 -0800
+Message-Id: <1449810416-2950-55-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit fixes two typos in the <linux/msi.h> header.
+Current code just allocate from first avail window.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+We can find all suitable empty slots and pick one with smallest size, so
+we could save the big slot for needed ones later when we have several pci
+bridges under parent bridge and some bridges get assigned from bios and we
+need to assign others in kernel.
+
+For examples: we have window
+[0xc0000000, 0xd0000000), and [0xe0000000,0xe1000000)
+
+and we try allocate 0x200000 size resource.
+
+in this patch will reserve [0xc0000000, 0xd0000000) and
+[0xe0000000,0xe1000000) at first, then pick [0xe0000000,0xe1000000)
+to allocate 0x200000 size.
+
+-v2: updated after __allocate_resource change, and add field in constraint
+	instead of passing it directly.
+-v3: Use best fit instead of just fit according to Bjorn.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- include/linux/msi.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ kernel/resource.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 68 insertions(+), 13 deletions(-)
 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index f71a25e..8974b21 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -186,7 +186,7 @@ struct msi_domain_info;
-  * @msi_free:		Domain specific function to free a MSI interrupts
-  * @msi_check:		Callback for verification of the domain/info/dev data
-  * @msi_prepare:	Prepare the allocation of the interrupts in the domain
-- * @msi_finish:		Optional callbacl to finalize the allocation
-+ * @msi_finish:		Optional callback to finalize the allocation
-  * @set_desc:		Set the msi descriptor for an interrupt
-  * @handle_error:	Optional error handler if the allocation fails
-  *
-@@ -194,7 +194,7 @@ struct msi_domain_info;
-  * msi_create_irq_domain() and related interfaces
-  *
-  * @msi_check, @msi_prepare, @msi_finish, @set_desc and @handle_error
-- * are callbacks used by msi_irq_domain_alloc_irqs() and related
-+ * are callbacks used by msi_domain_alloc_irqs() and related
-  * interfaces which are based on msi_desc.
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 62321b0..c468875 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -48,6 +48,7 @@ struct resource_constraint {
+ 	resource_size_t (*alignf)(void *, const struct resource *,
+ 			resource_size_t, resource_size_t);
+ 	void *alignf_data;
++	bool fit;
+ };
+ 
+ static DEFINE_RWLOCK(resource_lock);
+@@ -589,12 +590,15 @@ static void resource_clip(struct resource *res, resource_size_t min,
+  * alignment constraints
   */
- struct msi_domain_ops {
+ static int __find_resource(struct resource *root, struct resource *old,
+-			 struct resource *new,
++			 struct resource *new, struct resource *avail,
+ 			 resource_size_t  size,
+ 			 struct resource_constraint *constraint)
+ {
+ 	struct resource *this = root->child;
+-	struct resource tmp = *new, avail, alloc;
++	struct resource tmp = *new, availx, alloc;
++
++	if (!avail || avail == new)
++		avail = &availx;
+ 
+ 	tmp.start = root->start;
+ 	/*
+@@ -618,15 +622,16 @@ static int __find_resource(struct resource *root, struct resource *old,
+ 		arch_remove_reservations(&tmp);
+ 
+ 		/* Check for overflow after ALIGN() */
+-		avail.start = ALIGN(tmp.start, constraint->align);
+-		avail.end = tmp.end;
+-		avail.flags = new->flags & ~IORESOURCE_UNSET;
+-		if (avail.start >= tmp.start) {
+-			alloc.flags = avail.flags;
+-			alloc.start = constraint->alignf(constraint->alignf_data, &avail,
++		avail->start = ALIGN(tmp.start, constraint->align);
++		avail->end = tmp.end;
++		avail->flags = new->flags & ~IORESOURCE_UNSET;
++		if (avail->start >= tmp.start) {
++			alloc.flags = avail->flags;
++			alloc.start = constraint->alignf(
++					constraint->alignf_data, avail,
+ 					size, constraint->align);
+ 			alloc.end = alloc.start + size - 1;
+-			if (resource_contains(&avail, &alloc)) {
++			if (resource_contains(avail, &alloc)) {
+ 				new->start = alloc.start;
+ 				new->end = alloc.end;
+ 				return 0;
+@@ -643,6 +648,11 @@ next:		if (!this || this->end == root->end)
+ 	return -EBUSY;
+ }
+ 
++struct good_resource {
++	struct list_head list;
++	struct resource avail;
++	struct resource new;
++};
+ /*
+  * Find empty slot in the resource tree given range and alignment.
+  */
+@@ -650,7 +660,49 @@ static int find_resource(struct resource *root, struct resource *new,
+ 			resource_size_t size,
+ 			struct resource_constraint  *constraint)
+ {
+-	return  __find_resource(root, NULL, new, size, constraint);
++	int ret = -1;
++	LIST_HEAD(head);
++	struct good_resource *good, *tmp;
++	resource_size_t avail_size = (resource_size_t)-1ULL;
++
++	if (!constraint->fit)
++		return __find_resource(root, NULL, new, NULL, size,
++					constraint);
++
++	/* find all suitable ones and add to the list */
++	for (;;) {
++		good = kzalloc(sizeof(*good), GFP_KERNEL);
++		if (!good)
++			break;
++
++		good->new.start = new->start;
++		good->new.end = new->end;
++		good->new.flags = new->flags;
++		ret = __find_resource(root, NULL, &good->new, &good->avail,
++					size, constraint);
++		if (ret || __request_resource(root, &good->avail)) {
++			ret = -EBUSY;
++			kfree(good);
++			break;
++		}
++
++		list_add(&good->list, &head);
++	}
++
++	/* pick up the smallest one and delete the list */
++	list_for_each_entry_safe(good, tmp, &head, list) {
++		if (resource_size(&good->avail) < avail_size) {
++			avail_size = resource_size(&good->avail);
++			new->start = good->new.start;
++			new->end = good->new.end;
++			ret = 0;
++		}
++		list_del(&good->list);
++		__release_resource(&good->avail);
++		kfree(good);
++	}
++
++	return ret;
+ }
+ 
+ /**
+@@ -671,7 +723,8 @@ static int __reallocate_resource(struct resource *root, struct resource *old,
+ 	struct resource new = *old;
+ 	struct resource *conflict;
+ 
+-	if ((err = __find_resource(root, old, &new, newsize, constraint)))
++	err = __find_resource(root, old, &new, NULL, newsize, constraint);
++	if (err)
+ 		goto out;
+ 
+ 	if (resource_contains(&new, old)) {
+@@ -710,6 +763,7 @@ out:
+  * @align: alignment requested, in bytes
+  * @alignf: alignment function, optional, called if not NULL
+  * @alignf_data: arbitrary data to pass to the @alignf function
++ * @fit: only allocate fit range.
+  *
+  * Caller need to hold resource_lock if needed.
+  */
+@@ -720,7 +774,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+ 						  const struct resource *,
+ 						  resource_size_t,
+ 						  resource_size_t),
+-				void *alignf_data)
++				void *alignf_data, bool fit)
+ {
+ 	int err;
+ 	struct resource_constraint constraint;
+@@ -733,6 +787,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+ 	constraint.align = align;
+ 	constraint.alignf = alignf;
+ 	constraint.alignf_data = alignf_data;
++	constraint.fit = fit;
+ 
+ 	if (new->parent) {
+ 		/* resource is already allocated, try reallocating with
+@@ -773,7 +828,7 @@ int allocate_resource(struct resource *root, struct resource *new,
+ 
+ 	write_lock(&resource_lock);
+ 	ret = __allocate_resource(root, new, size, min, max, align,
+-				   alignf, alignf_data);
++				   alignf, alignf_data, true);
+ 	write_unlock(&resource_lock);
+ 
+ 	return ret;
 -- 
-2.6.4
+1.8.4.5
 
