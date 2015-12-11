@@ -1,114 +1,254 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:13121 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756683AbbLBWDy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Dec 2015 17:03:54 -0500
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-CC: Jayachandran C <jchandra@broadcom.com>
-Subject: [PATCH 1/3] arm64: pci: Add ACPI support
-Date: Thu, 3 Dec 2015 03:54:44 +0530
-Message-ID: <1449095086-5138-2-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1449095086-5138-1-git-send-email-jchandra@broadcom.com>
-References: <1449095086-5138-1-git-send-email-jchandra@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from userp1040.oracle.com ([156.151.31.81]:41891 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330AbbLKFMv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:12:51 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 11/60] PCI: Check pref compatible bit for mem64 resource of PCIe device
+Date: Thu, 10 Dec 2015 21:06:07 -0800
+Message-Id: <1449810416-2950-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add functions needed for ACPI support.
+We still get "no compatible bridge window" warning on sparc T5-8
+after we add support for 64bit resource parsing for root bus.
 
-pci_acpi_scan_root(struct acpi_pci_root *root) is marked as weak so
-that it can be implemented by the generic acpi pci driver.
-pcibios_root_bridge_prepare assumes that the sysdata is struct
-acpi_pci_root_info and sets up the domain and ACPI companion
+ PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
+ PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
+ PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
+ PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
+ PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
+ PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
+ PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
+ pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
 
-The functions pcibios_enable_device and pcibios_disable_device have
-been update to handle ACPI irq enable and disable. And
-pcibios_add_bus and pcibios_remove_bus have been added call the
-corresponding ACPI functions.
+All the bridges 64-bit resource have pref bit, but the device resource does not
+have pref set, then we can not find parent for the device resource,
+as we can not put non-pref mem under pref mem.
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+According to pcie spec errta
+https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
+page 13, in some case it is ok to mark some as pref.
+
+Mark if the entire path from the host to the adapter is over PCI Express.
+Then set pref compatible bit for claim/sizing/assign for 64bit mem resource
+on that pcie device.
+
+-v2: set pref for mmio 64 when whole path is PCI Express, according to David Miller.
+-v3: don't set pref directly, change to UNDER_PREF, and set PREF before
+     sizing and assign resource, and cleart PREF afterwards. requested by BenH.
+-v4: use on_all_pcie_path device flag instead.
+-v5: update after pci_find_root_bus_resource() change
+
+Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+Reported-by: David Ahern <david.ahern@oracle.com>
+Tested-by: David Ahern <david.ahern@oracle.com>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Tested-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
 ---
- arch/arm64/kernel/pci.c | 47 +++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 45 insertions(+), 2 deletions(-)
+ drivers/pci/pci.c       | 10 ++++++----
+ drivers/pci/pci.h       |  2 ++
+ drivers/pci/probe.c     | 33 +++++++++++++++++++++++++++++++++
+ drivers/pci/setup-bus.c | 23 +++++++++++++++++++----
+ drivers/pci/setup-res.c |  4 ++++
+ include/linux/pci.h     |  1 +
+ 6 files changed, 65 insertions(+), 8 deletions(-)
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index b3d098b..8597624 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -17,6 +17,7 @@
- #include <linux/mm.h>
- #include <linux/of_pci.h>
- #include <linux/of_platform.h>
-+#include <linux/pci-acpi.h>
- #include <linux/slab.h>
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c8cae87..6bc3d7e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -416,7 +416,7 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
+ EXPORT_SYMBOL_GPL(pci_find_ht_capability);
  
- #include <asm/pci-bridge.h>
-@@ -48,9 +49,22 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	if (pci_has_flag(PCI_PROBE_ONLY))
- 		return 0;
- 
-+#ifdef CONFIG_ACPI
-+	if (acpi_find_root_bridge_handle(dev))
-+		acpi_pci_irq_enable(dev);
-+#endif
-+
- 	return pci_enable_resources(dev, mask);
- }
- 
-+void pcibios_disable_device(struct pci_dev *dev)
-+{
-+#ifdef CONFIG_ACPI
-+	if (acpi_find_root_bridge_handle(dev))
-+		acpi_pci_irq_disable(dev);
-+#endif
-+}
-+
- /*
-  * Try to assign the IRQ number from DT when adding a new device
-  */
-@@ -78,9 +92,38 @@ int raw_pci_write(unsigned int domain, unsigned int bus,
- 
- #ifdef CONFIG_ACPI
- /* Root bridge scanning */
--struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
-+struct pci_bus *__weak pci_acpi_scan_root(struct acpi_pci_root *root)
+ static struct resource *pci_find_bus_resource(const struct pci_bus *bus,
+-					      struct resource *res)
++					      struct resource *res, int flags)
  {
--	/* TODO: Should be revisited when implementing PCI on ACPI */
- 	return NULL;
+ 	struct resource *r;
+ 	int i;
+@@ -431,7 +431,7 @@ static struct resource *pci_find_bus_resource(const struct pci_bus *bus,
+ 			 * not, the allocator made a mistake.
+ 			 */
+ 			if (r->flags & IORESOURCE_PREFETCH &&
+-			    !(res->flags & IORESOURCE_PREFETCH))
++			    !(flags & IORESOURCE_PREFETCH))
+ 				return NULL;
+ 
+ 			/*
+@@ -459,7 +459,9 @@ static struct resource *pci_find_bus_resource(const struct pci_bus *bus,
+ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 					  struct resource *res)
+ {
+-	return pci_find_bus_resource(dev->bus, res);
++	int flags = pci_resource_pref_compatible(dev, res);
++
++	return pci_find_bus_resource(dev->bus, res, flags);
  }
-+
-+void pcibios_add_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_add_bus(bus);
-+}
-+
-+void pcibios_remove_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_remove_bus(bus);
-+}
-+
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	if (!acpi_disabled) {
-+		struct pci_bus *b = bridge->bus;
-+		struct acpi_pci_root_info *ci = b->sysdata;
-+
-+		ACPI_COMPANION_SET(&bridge->dev, ci->bridge);
-+		b->domain_nr = ci->root->segment;
-+	}
-+	return 0;
-+}
-+
-+static int __init pcibios_assign_resources(void)
-+{
-+	pci_assign_unassigned_resources();
-+	return 0;
-+}
-+
-+fs_initcall(pcibios_assign_resources);
+ EXPORT_SYMBOL(pci_find_parent_resource);
+ 
+@@ -469,7 +471,7 @@ struct resource *pci_find_root_bus_resource(struct pci_bus *bus,
+ 	while (bus->parent)
+ 		bus = bus->parent;
+ 
+-	return pci_find_bus_resource(bus, res);
++	return pci_find_bus_resource(bus, res, res->flags);
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index d390fc1..e479f3a 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -337,4 +337,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ }
  #endif
+ 
++int pci_resource_pref_compatible(const struct pci_dev *dev,
++				 struct resource *res);
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index edb1984..6faabe3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1702,6 +1702,36 @@ static void pci_dma_configure(struct pci_dev *dev)
+ 	pci_put_host_bridge_device(bridge);
+ }
+ 
++static bool pci_up_path_over_pcie(struct pci_bus *bus)
++{
++	if (pci_is_root_bus(bus))
++		return true;
++
++	if (bus->self && !pci_is_pcie(bus->self))
++		return false;
++
++	return pci_up_path_over_pcie(bus->parent);
++}
++
++/*
++ * According to
++ * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
++ * page 13, system firmware could put some 64bit non-pref under 64bit pref,
++ * on some cases.
++ * Let's mark if entire path from the host to the adapter is over PCI
++ * Express. later will use that compute pref compaitable bit.
++ */
++static void pci_set_on_all_pcie_path(struct pci_dev *dev)
++{
++	if (!pci_is_pcie(dev))
++		return;
++
++	if (!pci_up_path_over_pcie(dev->bus))
++		return;
++
++	dev->on_all_pcie_path = 1;
++}
++
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	int ret;
+@@ -1732,6 +1762,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	/* Initialize various capabilities */
+ 	pci_init_capabilities(dev);
+ 
++	/* After pcie_cap is assigned */
++	pci_set_on_all_pcie_path(dev);
++
+ 	/*
+ 	 * Add the device to our list of discovered devices
+ 	 * and the bus list for fixup functions, etc.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1723ac1..198f754a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -739,6 +739,20 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 	return -EINVAL;
+ }
+ 
++int pci_resource_pref_compatible(const struct pci_dev *dev,
++				 struct resource *res)
++{
++	if (res->flags & IORESOURCE_PREFETCH)
++		return res->flags;
++
++	if ((res->flags & IORESOURCE_MEM) &&
++	    (res->flags & IORESOURCE_MEM_64) &&
++	    dev->on_all_pcie_path)
++		return res->flags | IORESOURCE_PREFETCH;
++
++	return res->flags;
++}
++
+ /* Check whether the bridge supports optional I/O and
+    prefetchable memory ranges. If not, the respective
+    base/limit registers must be read-only and read as 0. */
+@@ -1036,11 +1050,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+ 			resource_size_t r_size;
++			int flags = pci_resource_pref_compatible(dev, r);
+ 
+-			if (r->parent || (r->flags & IORESOURCE_PCI_FIXED) ||
+-			    ((r->flags & mask) != type &&
+-			     (r->flags & mask) != type2 &&
+-			     (r->flags & mask) != type3))
++			if (r->parent || (flags & IORESOURCE_PCI_FIXED) ||
++			    ((flags & mask) != type &&
++			     (flags & mask) != type2 &&
++			     (flags & mask) != type3))
+ 				continue;
+ 			r_size = resource_size(r);
+ #ifdef CONFIG_PCI_IOV
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 604011e..d5b3970 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -257,15 +257,19 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ static int _pci_assign_resource(struct pci_dev *dev, int resno,
+ 				resource_size_t size, resource_size_t min_align)
+ {
++	struct resource *res = dev->resource + resno;
++	int old_flags = res->flags;
+ 	struct pci_bus *bus;
+ 	int ret;
+ 
++	res->flags = pci_resource_pref_compatible(dev, res);
+ 	bus = dev->bus;
+ 	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
+ 		if (!bus->parent || !bus->self->transparent)
+ 			break;
+ 		bus = bus->parent;
+ 	}
++	res->flags = old_flags;
+ 
+ 	return ret;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8b3896b..f96f86a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -311,6 +311,7 @@ struct pci_dev {
+ 						   powered on/off by the
+ 						   corresponding bridge */
+ 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
++	unsigned int	on_all_pcie_path:1;	/* up to host-bridge all pcie */
+ 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+ 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+ 
 -- 
-1.9.1
+1.8.4.5
 
