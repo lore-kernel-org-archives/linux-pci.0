@@ -1,126 +1,214 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:55906 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754874AbbLJRxc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 12:53:32 -0500
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v10 2/7] drivers:hv: Export hv_do_hypercall()
-Date: Thu, 10 Dec 2015 17:52:58 +0000
-Message-Id: <1449769983-12948-3-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
-References: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Michal Simek <monstr@monstr.eu>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org,
+	linux-arch@vger.kernel.org
+Subject: [PATCH v9 51/60] PCI: Unify skip_ioresource_align()
+Date: Thu, 10 Dec 2015 21:06:47 -0800
+Message-Id: <1449810416-2950-52-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+There are powerpc generic version and x86 local version for
+skip_ioresource_align().
 
-This patch exposes the function that hv_vmbus.ko uses to make hypercalls.
-This is necessary for retargeting an interrupt when it is given a new
-affinity and vector.
+Move the powerpc version to setup-bus.c, and kill x86 local version.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+Also kill dummy version in microblaze.
+
+Cc: Michal Simek <monstr@monstr.eu>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-arch@vger.kernel.org
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Michael Ellerman <mpe@ellerman.id.au>
 ---
- drivers/hv/hv.c           | 20 ++++++++++----------
- drivers/hv/hyperv_vmbus.h |  2 +-
- include/linux/hyperv.h    |  1 +
- 3 files changed, 12 insertions(+), 11 deletions(-)
+ arch/microblaze/pci/pci-common.c |  8 --------
+ arch/powerpc/kernel/pci-common.c | 11 +----------
+ arch/x86/include/asm/pci_x86.h   |  1 -
+ arch/x86/pci/common.c            |  4 ++--
+ arch/x86/pci/i386.c              | 12 ++----------
+ drivers/pci/setup-bus.c          |  9 +++++++++
+ include/asm-generic/pci-bridge.h |  2 ++
+ 7 files changed, 16 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
-index 6341be8..7a06933 100644
---- a/drivers/hv/hv.c
-+++ b/drivers/hv/hv.c
-@@ -89,9 +89,9 @@ static int query_hypervisor_info(void)
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index ae838ed..09b1af6 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -878,11 +878,6 @@ void pcibios_fixup_bus(struct pci_bus *bus)
  }
+ EXPORT_SYMBOL(pcibios_fixup_bus);
  
+-static int skip_isa_ioresource_align(struct pci_dev *dev)
+-{
+-	return 0;
+-}
+-
  /*
-- * do_hypercall- Invoke the specified hypercall
-+ * hv_do_hypercall- Invoke the specified hypercall
-  */
--static u64 do_hypercall(u64 control, void *input, void *output)
-+u64 hv_do_hypercall(u64 control, void *input, void *output)
+  * We need to avoid collisions with `mirrored' VGA ports
+  * and other strange ISA hardware, so we always want the
+@@ -899,12 +894,9 @@ static int skip_isa_ioresource_align(struct pci_dev *dev)
+ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 				resource_size_t size, resource_size_t align)
  {
- 	u64 input_address = (input) ? virt_to_phys(input) : 0;
- 	u64 output_address = (output) ? virt_to_phys(output) : 0;
-@@ -132,6 +132,7 @@ static u64 do_hypercall(u64 control, void *input, void *output)
- 	return hv_status_lo | ((u64)hv_status_hi << 32);
- #endif /* !x86_64 */
- }
-+EXPORT_SYMBOL_GPL(hv_do_hypercall);
+-	struct pci_dev *dev = data;
+ 	resource_size_t start = res->start;
  
- #ifdef CONFIG_X86_64
- static cycle_t read_hv_clock_tsc(struct clocksource *arg)
-@@ -315,7 +316,7 @@ int hv_post_message(union hv_connection_id connection_id,
- {
- 
- 	struct hv_input_post_message *aligned_msg;
--	u16 status;
-+	u64 status;
- 
- 	if (payload_size > HV_MESSAGE_PAYLOAD_BYTE_COUNT)
- 		return -EMSGSIZE;
-@@ -329,11 +330,10 @@ int hv_post_message(union hv_connection_id connection_id,
- 	aligned_msg->payload_size = payload_size;
- 	memcpy((void *)aligned_msg->payload, payload, payload_size);
- 
--	status = do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL)
--		& 0xFFFF;
-+	status = hv_do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL);
- 
- 	put_cpu();
--	return status;
-+	return status & 0xFFFF;
+ 	if (res->flags & IORESOURCE_IO) {
+-		if (skip_isa_ioresource_align(dev))
+-			return start;
+ 		if (start & 0x300)
+ 			start = (start + 0x3ff) & ~0x3ff;
+ 	}
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0f7a60f..2a7f4fd 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1053,15 +1053,6 @@ void pci_fixup_cardbus(struct pci_bus *bus)
+ 	pcibios_setup_bus_devices(bus);
  }
  
+-
+-static int skip_isa_ioresource_align(struct pci_dev *dev)
+-{
+-	if (pci_has_flag(PCI_CAN_SKIP_ISA_ALIGN) &&
+-	    !(dev->bus->bridge_ctl & PCI_BRIDGE_CTL_ISA))
+-		return 1;
+-	return 0;
+-}
+-
+ /*
+  * We need to avoid collisions with `mirrored' VGA ports
+  * and other strange ISA hardware, so we always want the
+@@ -1082,7 +1073,7 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	resource_size_t start = res->start;
  
-@@ -343,13 +343,13 @@ int hv_post_message(union hv_connection_id connection_id,
-  *
-  * This involves a hypercall.
-  */
--u16 hv_signal_event(void *con_id)
-+int hv_signal_event(void *con_id)
+ 	if (res->flags & IORESOURCE_IO) {
+-		if (skip_isa_ioresource_align(dev))
++		if (skip_isa_ioresource_align(dev->bus))
+ 			return start;
+ 		if (start & 0x300)
+ 			start = (start + 0x3ff) & ~0x3ff;
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index fa1195d..81a7abf 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -28,7 +28,6 @@ do {						\
+ #define PCI_ASSIGN_ROMS		0x1000
+ #define PCI_BIOS_IRQ_SCAN	0x2000
+ #define PCI_ASSIGN_ALL_BUSSES	0x4000
+-#define PCI_CAN_SKIP_ISA_ALIGN	0x8000
+ #define PCI_USE__CRS		0x10000
+ #define PCI_CHECK_ENABLE_AMD_MMCONF	0x20000
+ #define PCI_HAS_IO_ECS		0x40000
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index eccd4d9..70de6d1 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -83,7 +83,7 @@ DEFINE_RAW_SPINLOCK(pci_config_lock);
+ 
+ static int __init can_skip_ioresource_align(const struct dmi_system_id *d)
  {
--	u16 status;
-+	u64 status;
+-	pci_probe |= PCI_CAN_SKIP_ISA_ALIGN;
++	pci_add_flags(PCI_CAN_SKIP_ISA_ALIGN);
+ 	printk(KERN_INFO "PCI: %s detected, can skip ISA alignment\n", d->ident);
+ 	return 0;
+ }
+@@ -619,7 +619,7 @@ char *__init pcibios_setup(char *str)
+ 		pci_routeirq = 1;
+ 		return NULL;
+ 	} else if (!strcmp(str, "skip_isa_align")) {
+-		pci_probe |= PCI_CAN_SKIP_ISA_ALIGN;
++		pci_add_flags(PCI_CAN_SKIP_ISA_ALIGN);
+ 		return NULL;
+ 	} else if (!strcmp(str, "noioapicquirk")) {
+ 		noioapicquirk = 1;
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 0a9f2ca..3f17726 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -33,6 +33,7 @@
+ #include <linux/errno.h>
+ #include <linux/bootmem.h>
  
--	status = (do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL) & 0xFFFF);
-+	status = hv_do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL);
- 
--	return status;
-+	return status & 0xFFFF;
++#include <asm-generic/pci-bridge.h>
+ #include <asm/pat.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
+@@ -128,15 +129,6 @@ static void __init pcibios_fw_addr_list_del(void)
+ 	pcibios_fw_addr_done = true;
  }
  
- static int hv_ce_set_next_event(unsigned long delta,
-diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
-index 3782636..cc2fb53 100644
---- a/drivers/hv/hyperv_vmbus.h
-+++ b/drivers/hv/hyperv_vmbus.h
-@@ -582,7 +582,7 @@ extern int hv_post_message(union hv_connection_id connection_id,
- 			 enum hv_message_type message_type,
- 			 void *payload, size_t payload_size);
+-static int
+-skip_isa_ioresource_align(struct pci_dev *dev) {
+-
+-	if ((pci_probe & PCI_CAN_SKIP_ISA_ALIGN) &&
+-	    !(dev->bus->bridge_ctl & PCI_BRIDGE_CTL_ISA))
+-		return 1;
+-	return 0;
+-}
+-
+ /*
+  * We need to avoid collisions with `mirrored' VGA ports
+  * and other strange ISA hardware, so we always want the
+@@ -158,7 +150,7 @@ pcibios_align_resource(void *data, const struct resource *res,
+ 	resource_size_t start = res->start;
  
--extern u16 hv_signal_event(void *con_id);
-+extern int hv_signal_event(void *con_id);
+ 	if (res->flags & IORESOURCE_IO) {
+-		if (skip_isa_ioresource_align(dev))
++		if (skip_isa_ioresource_align(dev->bus))
+ 			return start;
+ 		if (start & 0x300)
+ 			start = (start + 0x3ff) & ~0x3ff;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 855b2df..a329efe 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1151,6 +1151,15 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+ 	return max(align, arch_align);
+ }
  
- extern int hv_synic_alloc(void);
- 
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index fddb3e0..24d0b65 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -984,6 +984,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			bool fb_overlap_ok);
- 
- int vmbus_cpu_number_to_vp_number(int cpu_number);
-+u64 hv_do_hypercall(u64 control, void *input, void *output);
- 
- /**
-  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
++int skip_isa_ioresource_align(struct pci_bus *bus)
++{
++	if (pci_has_flag(PCI_CAN_SKIP_ISA_ALIGN) &&
++	    !(bus->bridge_ctl & PCI_BRIDGE_CTL_ISA))
++		return 1;
++
++	return 0;
++}
++
+ static resource_size_t size_aligned_for_isa(resource_size_t size)
+ {
+ 	/*
+diff --git a/include/asm-generic/pci-bridge.h b/include/asm-generic/pci-bridge.h
+index 20db2e5..fab4bd0 100644
+--- a/include/asm-generic/pci-bridge.h
++++ b/include/asm-generic/pci-bridge.h
+@@ -60,6 +60,8 @@ static inline int pci_has_flag(int flag)
+ {
+ 	return pci_flags & flag;
+ }
++
++int skip_isa_ioresource_align(struct pci_bus *bus);
+ #else
+ static inline void pci_set_flags(int flags) { }
+ static inline void pci_add_flags(int flags) { }
 -- 
-1.9.1
+1.8.4.5
 
