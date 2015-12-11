@@ -1,173 +1,272 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Hannes Reinecke <hare@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	Michal Kubecek <mkubecek@suse.com>,
-	"Shane M. Seymour" <shane.seymour@hpe.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Hannes Reinecke <hare@suse.de>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH 2/2] pci: Update VPD size with correct length
-Date: Fri, 18 Dec 2015 09:35:19 +0100
-Message-Id: <1450427719-29619-3-git-send-email-hare@suse.de>
-In-Reply-To: <1450427719-29619-1-git-send-email-hare@suse.de>
-References: <1450427719-29619-1-git-send-email-hare@suse.de>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 55/60] PCI, x86: Allocate from high in available window for MMIO
+Date: Thu, 10 Dec 2015 21:06:51 -0800
+Message-Id: <1449810416-2950-56-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI-2.2 VPD entries have a maximum size of 32k, but might actually
-be smaller than that. To figure out the actual size one has to read
-the VPD area until the 'end marker' is reached.
-Trying to read VPD data beyond that marker results in 'interesting'
-effects, from simple read errors to crashing the card. And to make
-matters worse not every PCI card implements this properly, leaving
-us with no 'end' marker or even completely invalid data.
-This path modifies the size of the VPD attribute to the available
-size, or set it to '0' if no valid data could be read.
+Current code just use aligned start from avialable window, that could waste
+big alignment from start.
 
-Cc: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+We can align to the end from avialable window, so will save
+start with big align to others: like second try for pref mmio
+after first try already have non-pref assigned.
+
+pci tree:
+-[0000:00]-+-00.0
+           +-1c.0-[01-10]--+-00.0-[02-10]--+-01.0-[03]----00.0  PLX Technology, Inc. Device 87b1
+           |               |               +-02.0-[04-09]--+-00.0-[05-09]--+-01.0-[06]----00.0  PLX Technology, Inc. Device 87b1
+           |               |               |               |               +-02.0-[07]----00.0  Broadcom Corporation Device 8650
+           |               |               |               |               +-03.0-[08]--
+           |               |               |               |               \-04.0-[09]----00.0  Altera Corporation Device 0201
+           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
+           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
+           |               |               +-03.0-[0a-0f]--+-00.0-[0b-0f]--+-01.0-[0c]----00.0  PLX Technology, Inc. Device 87b1
+           |               |               |               |               +-02.0-[0d]----00.0  Broadcom Corporation Device 8650
+           |               |               |               |               +-03.0-[0e]--
+           |               |               |               |               \-04.0-[0f]----00.0  Altera Corporation Device 0201
+           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
+           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
+           |               |               \-04.0-[10]--
+           |               +-00.1  PLX Technology, Inc. Device 87d0
+           |               +-00.2  PLX Technology, Inc. Device 87d0
+           |               +-00.3  PLX Technology, Inc. Device 87d0
+           |               \-00.4  PLX Technology, Inc. Device 87d0
+           +-1c.3-[11]----00.0
+
+hotplug device under 0000:02:03.0
+
+before the patch:
+
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 8: assigned [mem 0xb0000000-0xb01fffff]  **************
+pci 0000:0a:00.0: BAR 0: assigned [mem 0xb0200000-0xb023ffff]
+pci 0000:0a:00.1: BAR 0: assigned [mem 0xb0240000-0xb0241fff]
+pci 0000:0a:00.2: BAR 0: assigned [mem 0xb0242000-0xb0243fff]
+pci 0000:0a:00.3: BAR 0: assigned [mem 0xb0244000-0xb0245fff]
+pci 0000:0a:00.4: BAR 0: assigned [mem 0xb0246000-0xb0247fff]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:01.0: BAR 8: assigned [mem 0xb0000000-0xb00fffff]
+pci 0000:0b:02.0: BAR 8: assigned [mem 0xb0100000-0xb01fffff]
+pci 0000:0c:00.0: BAR 0: assigned [mem 0xb0000000-0xb003ffff]
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
+pci 0000:0d:00.0: BAR 0: assigned [mem 0xb0100000-0xb013ffff 64bit]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
+pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+pcieport 0000:02:03.0:   bridge window [mem 0x80200000-0x803fffff 64bit pref]
+PCI: No. 2 try to assign unassigned res
+pcieport 0000:02:03.0: resource 9 [mem 0x80200000-0x803fffff 64bit pref] released
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
+pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+
+
+after the patch:
+
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 8: assigned [mem 0xb2300000-0xb24fffff]   *************
+pci 0000:0a:00.0: BAR 0: assigned [mem 0xb22c0000-0xb22fffff]
+pci 0000:0a:00.1: BAR 0: assigned [mem 0xb22be000-0xb22bffff]
+pci 0000:0a:00.2: BAR 0: assigned [mem 0xb22bc000-0xb22bdfff]
+pci 0000:0a:00.3: BAR 0: assigned [mem 0xb22ba000-0xb22bbfff]
+pci 0000:0a:00.4: BAR 0: assigned [mem 0xb22b8000-0xb22b9fff]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:01.0: BAR 8: assigned [mem 0xb2400000-0xb24fffff]
+pci 0000:0b:02.0: BAR 8: assigned [mem 0xb2300000-0xb23fffff]
+pci 0000:0c:00.0: BAR 0: assigned [mem 0xb24c0000-0xb24fffff]
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
+pci 0000:0d:00.0: BAR 0: assigned [mem 0xb23c0000-0xb23fffff 64bit]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
+pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+pcieport 0000:02:03.0:   bridge window [mem 0x9fc00000-0x9fdfffff 64bit pref]
+PCI: No. 2 try to assign unassigned res
+pcieport 0000:02:03.0: resource 9 [mem 0x9fc00000-0x9fdfffff 64bit pref] released
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: assigned [mem 0xb0000000-0xb1ffffff 64bit pref]   ********
+pci 0000:0f:00.0: BAR 2: assigned [mem 0xb20f0000-0xb20fffff 64bit pref]   ********
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0b:04.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
+pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+
+So we allocate high for 0a:00.0 and etc, and leave low range like 0xb0000000 to
+0b:04.0 and 0f:00.0
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/access.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h    |  1 +
- 2 files changed, 82 insertions(+)
+ arch/x86/pci/i386.c     | 20 ++++++++++++++++++++
+ drivers/pci/setup-bus.c | 11 ++++++++++-
+ include/linux/pci.h     |  3 +++
+ 3 files changed, 33 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 59ac36f..2e23fc7 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -206,6 +206,18 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 3f17726..21f3e3e 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -129,6 +129,24 @@ static void __init pcibios_fw_addr_list_del(void)
+ 	pcibios_fw_addr_done = true;
  }
- EXPORT_SYMBOL(pci_write_vpd);
  
-+/**
-+ * pci_vpd_size - Determine the size of the Vital Product Data
-+ * @dev:	pci device struct
-+ *
-+ */
-+size_t pci_vpd_size(struct pci_dev *dev)
++resource_size_t
++pcibios_align_end_resource(void *data, const struct resource *res,
++			resource_size_t size, resource_size_t align)
 +{
-+	if (!dev->vpd || !dev->vpd->ops)
-+		return 0;
-+	return dev->vpd->ops->size(dev);
++	resource_size_t start = res->start;
++
++	/* Take near end */
++	if (res->end + 1 > size) {
++		resource_size_t new_start;
++
++		new_start = round_down(res->end + 1 - size, align);
++		if (new_start > start)
++			start = new_start;
++	}
++
++	return start;
 +}
 +
  /*
-  * The following routines are to prevent the user from accessing PCI config
-  * space when it's unsafe to do so.  Some devices require this during BIST and
-@@ -428,6 +440,53 @@ out:
- 	return ret ? ret : count;
+  * We need to avoid collisions with `mirrored' VGA ports
+  * and other strange ISA hardware, so we always want the
+@@ -155,6 +173,8 @@ pcibios_align_resource(void *data, const struct resource *res,
+ 		if (start & 0x300)
+ 			start = (start + 0x3ff) & ~0x3ff;
+ 	} else if (res->flags & IORESOURCE_MEM) {
++		start = pcibios_align_end_resource(data, res, size, align);
++
+ 		/* The low 1MB range is reserved for ISA cards */
+ 		if (start < BIOS_END)
+ 			start = BIOS_END;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index cfded80..081eb08 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1319,6 +1319,15 @@ static void sort_align_test(struct list_head *head)
+ 	}
  }
  
-+/**
-+ * pci_vpd_size - determine actual size of Vital Product Data
-+ * @dev:	pci device struct
-+ *
-+ */
-+static size_t pci_vpd_pci22_size(struct pci_dev *dev)
++resource_size_t __weak pcibios_align_end_resource(void *data,
++					  const struct resource *res,
++					  resource_size_t size,
++					  resource_size_t align)
 +{
-+	ssize_t off = 0;
-+	unsigned char header[1+2];	/* 1 byte tag, 2 bytes length */
-+
-+	while (pci_read_vpd(dev, off, 1, header) == 1) {
-+		unsigned char tag;
-+
-+		if (header[0] & PCI_VPD_LRDT) {
-+			/* Large Resource Data Type Tag */
-+			tag = pci_vpd_lrdt_tag(header);
-+			/* Only read length from known tag items */
-+			if ((tag == PCI_VPD_LTIN_ID_STRING) ||
-+			    (tag == PCI_VPD_LTIN_RO_DATA) ||
-+			    (tag == PCI_VPD_LTIN_RW_DATA)) {
-+				if (pci_read_vpd(dev, off+1, 2,
-+						 &header[1]) != 2)
-+					return off + 1;
-+				off += PCI_VPD_LRDT_TAG_SIZE +
-+					pci_vpd_lrdt_size(header);
-+			}
-+		} else {
-+			/* Short Resource Data Type Tag */
-+			off += PCI_VPD_SRDT_TAG_SIZE +
-+				pci_vpd_srdt_size(header);
-+			tag = pci_vpd_srdt_tag(header);
-+		}
-+		if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
-+			return off;
-+		if ((tag != PCI_VPD_LTIN_ID_STRING) &&
-+		    (tag != PCI_VPD_LTIN_RO_DATA) &&
-+		    (tag != PCI_VPD_LTIN_RW_DATA)) {
-+			dev_dbg(&dev->dev,
-+				"invalid %s vpd tag %02x at offset %zu.",
-+				(header[0] & PCI_VPD_LRDT) ? "large" : "short",
-+				tag, off);
-+			break;
-+		}
-+	}
-+	return 0;
++	/* default is not aligned to end */
++	return res->start;
 +}
 +
- static void pci_vpd_pci22_release(struct pci_dev *dev)
- {
- 	kfree(container_of(dev->vpd, struct pci_vpd_pci22, base));
-@@ -436,6 +495,7 @@ static void pci_vpd_pci22_release(struct pci_dev *dev)
- static const struct pci_vpd_ops pci_vpd_pci22_ops = {
- 	.read = pci_vpd_pci22_read,
- 	.write = pci_vpd_pci22_write,
-+	.size = pci_vpd_pci22_size,
- 	.release = pci_vpd_pci22_release,
- };
+ static bool is_align_size_good(struct list_head *head,
+ 			resource_size_t min_align, resource_size_t size,
+ 			resource_size_t start)
+@@ -1336,7 +1345,7 @@ static bool is_align_size_good(struct list_head *head,
+ 	list_for_each_entry(p, head, list)
+ 		if (allocate_resource(&root, &p->res, p->size,
+ 				0, (resource_size_t)-1ULL,
+-				p->align, NULL, NULL))
++				p->align, pcibios_align_end_resource, NULL))
+ 			return false;
  
-@@ -469,9 +529,29 @@ static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
- 	return ret;
- }
+ 	return true;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c135edc..32640fd 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -783,6 +783,9 @@ char *pcibios_setup(char *str);
+ resource_size_t pcibios_align_resource(void *, const struct resource *,
+ 				resource_size_t,
+ 				resource_size_t);
++resource_size_t pcibios_align_end_resource(void *, const struct resource *,
++				resource_size_t,
++				resource_size_t);
+ void pcibios_update_irq(struct pci_dev *, int irq);
  
-+static size_t pci_vpd_f0_size(struct pci_dev *dev)
-+{
-+	struct pci_dev *tdev = pci_get_slot(dev->bus,
-+					    PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
-+	ssize_t len = 0;
-+
-+	if (!tdev)
-+		return 0;
-+
-+	if (tdev->vpd) {
-+		struct pci_vpd_pci22 *vpd =
-+			container_of(dev->vpd, struct pci_vpd_pci22, base);
-+
-+		len = vpd->base.len;
-+	}
-+	pci_dev_put(tdev);
-+	return len;
-+}
-+
- static const struct pci_vpd_ops pci_vpd_f0_ops = {
- 	.read = pci_vpd_f0_read,
- 	.write = pci_vpd_f0_write,
-+	.size = pci_vpd_f0_size,
- 	.release = pci_vpd_pci22_release,
- };
- 
-@@ -497,6 +577,7 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 	vpd->cap = cap;
- 	vpd->busy = false;
- 	dev->vpd = &vpd->base;
-+	vpd->base.len = pci_vpd_size(dev);
- 	return 0;
- }
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index fd2f03f..33dfc7c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -97,6 +97,7 @@ static inline bool pci_has_subordinate(struct pci_dev *pci_dev)
- struct pci_vpd_ops {
- 	ssize_t (*read)(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
- 	ssize_t (*write)(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
-+	size_t (*size)(struct pci_dev *dev);
- 	void (*release)(struct pci_dev *dev);
- };
- 
+ /* Weak but can be overriden by arch */
 -- 
-1.8.5.6
+1.8.4.5
 
