@@ -1,46 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>
-Subject: [PATCH 3/3] PCI: altera: fix error when INTX is 4
-Date: Thu, 3 Dec 2015 19:17:54 +0800
-Message-ID: <1449141474-3378-4-git-send-email-lftan@altera.com>
-In-Reply-To: <1449141474-3378-1-git-send-email-lftan@altera.com>
-References: <1449141474-3378-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:40191 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940AbbLKFHy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:07:54 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 20/60] PCI: Treat optional as required in first try for bridge rescan
+Date: Thu, 10 Dec 2015 21:06:16 -0800
+Message-Id: <1449810416-2950-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI interrupt lines start at 1, not at 0. So, creates additional one
-interrupt when register for irq domain.
+For rescan bridge/bus that children are removed before, we should treat
+optional as required just like root bus the boot time in 19aa7ee432ce
+(PCI: make re-allocation try harder by reassigning ranges higher in
+the heirarchy).
 
-Error when PCIe devices have 4 INTX:
-WARNING: CPU: 1 PID: 1 at kernel/irq/irqdomain.c:280
-	irq_domain_associate+0x17c/0x1cc()
-error: hwirq 0x4 is too large for dummy
+The reason: allocate required and expand to optional path do not
+put failed resource to fail list, so will lose required info before
+next try.
 
-Tested on Ethernet adapter card with multi-functions.
+So we are using following way:
+1. First and following try before last try:
+   We don't keep realloc list so treat every optional as required.
+   allocate for required+optional and put failed in the fail list.
+   then size info (include must and optonal separatedly) will be kept
+   for next try.
+2. last try:
+   a: try to allocate required+optional to see if all get allocated.
+   b: try to allocate required then expand to optional.
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host/pcie-altera.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/setup-bus.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index e4176b3..1a2d4a6 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -467,7 +467,7 @@ static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
- 	struct device_node *node = dev->of_node;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index fcc6d62..e4972f5 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1846,25 +1846,34 @@ void __init pci_assign_unassigned_resources(void)
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ {
+ 	struct pci_bus *parent = bridge->subordinate;
+-	LIST_HEAD(add_list); /* list of resources that
++	LIST_HEAD(realloc_head); /* list of resources that
+ 					want additional resources */
++	struct list_head *add_list = NULL;
+ 	int tried_times = 0;
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+ 	int retval;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
++	int pci_try_num = 2;
  
- 	/* Setup INTx */
--	pcie->irq_domain = irq_domain_add_linear(node, INTX_NUM,
-+	pcie->irq_domain = irq_domain_add_linear(node, INTX_NUM + 1,
- 					&intx_domain_ops, pcie);
- 	if (!pcie->irq_domain) {
- 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+ again:
+-	__pci_bus_size_bridges(parent, &add_list);
+-	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+-	pci_bus_check_realloc(&add_list);
++	/*
++	 * last try will use add_list, otherwise will try good to have as
++	 * must have, so can realloc parent bridge resource
++	 */
++	if (tried_times + 1 == pci_try_num)
++		add_list = &realloc_head;
++	__pci_bus_size_bridges(parent, add_list);
++	__pci_bridge_assign_resources(bridge, add_list, &fail_head);
++	if (add_list)
++		pci_bus_check_realloc(add_list);
+ 	tried_times++;
+ 
+ 	if (list_empty(&fail_head))
+ 		goto enable_all;
+ 
+-	if (tried_times >= 2) {
++	if (tried_times >= pci_try_num) {
+ 		/* still fail, don't need to try more */
+ 		free_list(&fail_head);
+ 		goto enable_all;
 -- 
-1.8.2.1
+1.8.4.5
 
