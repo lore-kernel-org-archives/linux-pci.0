@@ -1,99 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:59488 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932280AbbLVA7q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Dec 2015 19:59:46 -0500
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-sh@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Subject: [PATCH 1/2] drivers/pci: make host/pcie-rcar.c explicitly non-modular
-Date: Mon, 21 Dec 2015 19:59:08 -0500
-Message-ID: <1450745949-23882-2-git-send-email-paul.gortmaker@windriver.com>
-In-Reply-To: <1450745949-23882-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1450745949-23882-1-git-send-email-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bogicevic Sasa <brutallesale@gmail.com>
+To: bhelgaas@google.com
+Cc: Richard.Zhu@freescale.com, l.stach@penguintronix.com,
+	thomas.petazzoni@free-electrons.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bogicevic Sasa <brutallesale@gmail.com>
+Subject: [PATCH] drivers:pci:host Fix missing line after declarations
+Date: Sat, 12 Dec 2015 03:41:48 -0800
+Message-Id: <1449920508-105873-1-git-send-email-brutallesale@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+This fixes few warnings about missing line after declarations and one
+no whitespace is necesarry before that "("
 
-drivers/pci/host/Kconfig:config PCI_RCAR_GEN2_PCIE
-drivers/pci/host/Kconfig:       bool "Renesas R-Car PCIe controller"
-
-...meaning that it currently is not being built as a module by anyone.
-
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.
-
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
-
-We don't have to disallow a driver unbind, since that is already
-done for us in this driver.
-
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-was (or is now) contained at the top of the file in the comments.
-
-Cc: Simon Horman <horms@verge.net.au>
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Acked-by: Phil Edworthy <phil.edworthy@renesas.com>
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
 ---
- drivers/pci/host/pcie-rcar.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+ drivers/pci/host/pci-imx6.c  | 2 +-
+ drivers/pci/host/pci-mvebu.c | 3 +++
+ drivers/pci/host/pcie-rcar.c | 2 ++
+ 3 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 5c2962646b17..a8ff4a7383e0 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -7,6 +7,8 @@
-  *  arch/sh/drivers/pci/ops-sh7786.c
-  *  Copyright (C) 2009 - 2011  Paul Mundt
-  *
-+ * Module Author: Phil Edworthy <phil.edworthy@renesas.com>
-+ *
-  * This file is licensed under the terms of the GNU General Public
-  * License version 2.  This program is licensed "as is" without any
-  * warranty of any kind, whether express or implied.
-@@ -18,7 +20,7 @@
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
-@@ -921,7 +923,6 @@ static const struct of_device_id rcar_pcie_of_match[] = {
- 	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 22e8224..2dd018c 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -122,7 +122,7 @@ static int pcie_phy_wait_ack(void __iomem *dbi_base, int addr)
+ }
+ 
+ /* Read from the 16-bit PCIe PHY control registers (not memory-mapped) */
+-static int pcie_phy_read(void __iomem *dbi_base, int addr , int *data)
++static int pcie_phy_read(void __iomem *dbi_base, int addr, int *data)
+ {
+ 	u32 val, phy_ctl;
+ 	int ret;
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 53b79c5..d826bef 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -1011,6 +1011,7 @@ static int mvebu_pcie_suspend(struct device *dev)
+ 	pcie = dev_get_drvdata(dev);
+ 	for (i = 0; i < pcie->nports; i++) {
+ 		struct mvebu_pcie_port *port = pcie->ports + i;
++
+ 		port->saved_pcie_stat = mvebu_readl(port, PCIE_STAT_OFF);
+ 	}
+ 
+@@ -1025,6 +1026,7 @@ static int mvebu_pcie_resume(struct device *dev)
+ 	pcie = dev_get_drvdata(dev);
+ 	for (i = 0; i < pcie->nports; i++) {
+ 		struct mvebu_pcie_port *port = pcie->ports + i;
++
+ 		mvebu_writel(port, port->saved_pcie_stat, PCIE_STAT_OFF);
+ 		mvebu_pcie_setup_hw(port);
+ 	}
+@@ -1296,6 +1298,7 @@ static const struct of_device_id mvebu_pcie_of_match_table[] = {
+ 	{ .compatible = "marvell,kirkwood-pcie", },
  	{},
  };
--MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
++
+ MODULE_DEVICE_TABLE(of, mvebu_pcie_of_match_table);
  
- static void rcar_pcie_release_of_pci_ranges(struct rcar_pcie *pci)
- {
-@@ -1039,8 +1040,4 @@ static struct platform_driver rcar_pcie_driver = {
- 	},
- 	.probe = rcar_pcie_probe,
- };
--module_platform_driver(rcar_pcie_driver);
--
--MODULE_AUTHOR("Phil Edworthy <phil.edworthy@renesas.com>");
--MODULE_DESCRIPTION("Renesas R-Car PCIe driver");
--MODULE_LICENSE("GPL v2");
-+builtin_platform_driver(rcar_pcie_driver);
+ static struct dev_pm_ops mvebu_pcie_pm_ops = {
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index f4fa6c5..58b7ac6 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -377,6 +377,7 @@ static int rcar_pcie_setup(struct list_head *resource, struct rcar_pcie *pcie)
+ 
+ 		if (res->flags & IORESOURCE_IO) {
+ 			phys_addr_t io_start = pci_pio_to_address(res->start);
++
+ 			pci_ioremap_io(global_io_offset, io_start);
+ 			global_io_offset += SZ_64K;
+ 		}
+@@ -904,6 +905,7 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
+ 	/* Get the dma-ranges from DT */
+ 	for_each_of_pci_range(&parser, &range) {
+ 		u64 end = range.cpu_addr + range.size - 1;
++
+ 		dev_dbg(pcie->dev, "0x%08x 0x%016llx..0x%016llx -> 0x%016llx\n",
+ 			range.flags, range.cpu_addr, end, range.pci_addr);
+ 
 -- 
-2.6.1
+2.5.0
 
