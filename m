@@ -1,59 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <201512182111.1GLn2hxy%fengguang.wu@intel.com>
-References: <1450442339-18765-4-git-send-email-stanimir.varbanov@linaro.org>
-	<201512182111.1GLn2hxy%fengguang.wu@intel.com>
-Date: Sun, 20 Dec 2015 15:10:49 -0800
-Message-ID: <CAJAp7Ohgr7j7i=73R6Y_+GDa_4QZnhuPgB7AFdJGxNVJ_cVFsA@mail.gmail.com>
-Subject: Re: [PATCH v5 3/5] PCI: qcom: Add Qualcomm PCIe controller driver
-From: Bjorn Andersson <bjorn@kryo.se>
-To: kbuild test robot <lkp@intel.com>
-Cc: Stanimir Varbanov <stanimir.varbanov@linaro.org>,
-	kbuild-all@01.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:36395 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751404AbbLLNdK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Dec 2015 08:33:10 -0500
+From: Bogicevic Sasa <brutallesale@gmail.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bogicevic Sasa <brutallesale@gmail.com>
+Subject: [PATCH] drivers:pci Fix small spacing warnings
+Date: Sat, 12 Dec 2015 05:33:05 -0800
+Message-Id: <1449927185-109665-1-git-send-email-brutallesale@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 18, 2015 at 5:44 AM, kbuild test robot <lkp@intel.com> wrote:
-> Hi Stanimir,
->
-> [auto build test WARNING on next-20151218]
-> [also build test WARNING on v4.4-rc5]
-> [cannot apply to pci/next robh/for-next v4.4-rc5 v4.4-rc4 v4.4-rc3]
->
-> url:    https://github.com/0day-ci/linux/commits/Stanimir-Varbanov/Qualcomm-PCIe-driver-and-designware-fixes/20151218-205427
->
->
-> coccinelle warnings: (new ones prefixed by >>)
->
->>> drivers/pci/host/pcie-qcom.c:188:1-3: WARNING: PTR_ERR_OR_ZERO can be used
->    drivers/pci/host/pcie-qcom.c:220:1-3: WARNING: PTR_ERR_OR_ZERO can be used
->
-> Please review and possibly fold the followup patch.
->
+This patch fixes a few spacing warnings like "missing space after..."
+"space prohibited at the start of the line" etc. I recorded objects with
+objdiff and diff didn't give no output between my working branch and
+staging-testing so all is good
 
-I disagree with this "recommendation" as it's only outcome will be asymmetry.
+Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
+---
+ drivers/pci/access.c    | 12 ++++++------
+ drivers/pci/pci.c       |  2 +-
+ drivers/pci/setup-bus.c |  2 +-
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-I think this script should be changed to only warn if there's a single
-IS_ERR/PTR_ERR at the end of the function, not if there's a list of
-them and this would replace the last one.
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 59ac36f..69b4572 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -25,9 +25,9 @@ DEFINE_RAW_SPINLOCK(pci_lock);
+ #define PCI_word_BAD (pos & 1)
+ #define PCI_dword_BAD (pos & 3)
+ 
+-#define PCI_OP_READ(size,type,len) \
++#define PCI_OP_READ(size, type, len) \
+ int pci_bus_read_config_##size \
+-	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
++	(struct pci_bus *bus, unsigned int devfn, int pos, type * value)	\
+ {									\
+ 	int res;							\
+ 	unsigned long flags;						\
+@@ -40,7 +40,7 @@ int pci_bus_read_config_##size \
+ 	return res;							\
+ }
+ 
+-#define PCI_OP_WRITE(size,type,len) \
++#define PCI_OP_WRITE(size, type, len) \
+ int pci_bus_write_config_##size \
+ 	(struct pci_bus *bus, unsigned int devfn, int pos, type value)	\
+ {									\
+@@ -231,9 +231,9 @@ static noinline void pci_wait_cfg(struct pci_dev *dev)
+ }
+ 
+ /* Returns 0 on success, negative values indicate error. */
+-#define PCI_USER_READ_CONFIG(size,type)					\
++#define PCI_USER_READ_CONFIG(size, type)					\
+ int pci_user_read_config_##size						\
+-	(struct pci_dev *dev, int pos, type *val)			\
++	(struct pci_dev *dev, int pos, type * val)			\
+ {									\
+ 	int ret = PCIBIOS_SUCCESSFUL;					\
+ 	u32 data = -1;							\
+@@ -251,7 +251,7 @@ int pci_user_read_config_##size						\
+ EXPORT_SYMBOL_GPL(pci_user_read_config_##size);
+ 
+ /* Returns 0 on success, negative values indicate error. */
+-#define PCI_USER_WRITE_CONFIG(size,type)				\
++#define PCI_USER_WRITE_CONFIG(size, type)				\
+ int pci_user_write_config_##size					\
+ 	(struct pci_dev *dev, int pos, type val)			\
+ {									\
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 314db8c..db2e227 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1534,7 +1534,7 @@ void __weak pcibios_release_device(struct pci_dev *dev) {}
+  * is the default implementation. Architecture implementations can
+  * override this.
+  */
+-void __weak pcibios_disable_device (struct pci_dev *dev) {}
++void __weak pcibios_disable_device(struct pci_dev *dev) {}
+ 
+ /**
+  * pcibios_penalize_isa_irq - penalize an ISA IRQ
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1723ac1..7796d0a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -442,7 +442,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 					break;
+ 				}
+ 			}
+-               }
++		}
+ 
+ 	}
+ 
+-- 
+2.5.0
 
-Regards,
-Bjorn
