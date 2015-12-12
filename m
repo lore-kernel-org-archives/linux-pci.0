@@ -1,95 +1,225 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:63506 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751216AbbLMBo6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Dec 2015 20:44:58 -0500
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Ley Foon Tan <lftan@altera.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<rfi@lists.rocketboards.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH 10/10] drivers/pci: make host/pcie-altera.c explicitly non-modular
-Date: Sat, 12 Dec 2015 20:41:57 -0500
-Message-ID: <1449970917-12633-11-git-send-email-paul.gortmaker@windriver.com>
-In-Reply-To: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
+Received: from mail-io0-f169.google.com ([209.85.223.169]:36278 "EHLO
+	mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752351AbbLLBSn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 20:18:43 -0500
+Received: by iojd73 with SMTP id d73so26159846ioj.3
+        for <linux-pci@vger.kernel.org>; Fri, 11 Dec 2015 17:18:43 -0800 (PST)
+Message-ID: <566B75F0.5060801@gmail.com>
+Date: Fri, 11 Dec 2015 17:18:40 -0800
+From: David Daney <ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Martin Mares <mj@ucw.cz>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH] Add lspci support for Enhanced Allocation Capability.
+References: <1449872845-3596-1-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1449872845-3596-1-git-send-email-ddaney.cavm@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+I sent a new v2 of the patch.  This version has a the wrong offset for 
+the subordinate bus, and could make better use of the FLAG() macro etc.
 
-drivers/pci/host/Kconfig:config PCIE_ALTERA
-drivers/pci/host/Kconfig:       bool "Altera PCIe controller"
+David Daney
 
-...meaning that it currently is not being built as a module by anyone.
 
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.
-
-We don't have to disallow a driver unbind, since that is already
-done for us in this driver.
-
-Since module_init translates to device_initcall in the non-modular
-case, the init ordering remains unchanged with this commit.
-
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-was (or is now) contained at the top of the file in the comments.
-
-Cc: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: rfi@lists.rocketboards.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pcie-altera.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index 99da549d5d06..ba55885d508f 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -1,6 +1,9 @@
- /*
-  * Copyright Altera Corporation (C) 2013-2015. All rights reserved
-  *
-+ * Author: Ley Foon Tan <lftan@altera.com>
-+ * Description: Altera PCIe host controller driver
-+ *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms and conditions of the GNU General Public License,
-  * version 2, as published by the Free Software Foundation.
-@@ -17,7 +20,7 @@
- #include <linux/delay.h>
- #include <linux/interrupt.h>
- #include <linux/irqchip/chained_irq.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
- #include <linux/of_pci.h>
-@@ -566,7 +569,6 @@ static const struct of_device_id altera_pcie_of_match[] = {
- 	{ .compatible = "altr,pcie-root-port-1.0", },
- 	{},
- };
--MODULE_DEVICE_TABLE(of, altera_pcie_of_match);
- 
- static struct platform_driver altera_pcie_driver = {
- 	.probe		= altera_pcie_probe,
-@@ -581,8 +583,4 @@ static int altera_pcie_init(void)
- {
- 	return platform_driver_register(&altera_pcie_driver);
- }
--module_init(altera_pcie_init);
--
--MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
--MODULE_DESCRIPTION("Altera PCIe host controller driver");
--MODULE_LICENSE("GPL v2");
-+device_initcall(altera_pcie_init);
--- 
-2.6.1
+On 12/11/2015 02:27 PM, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+>
+> The PCISIG recently added the Enhanced Allocation Capability.  Decode
+> it in lspci.
+>
+> ---
+> The specification is currently located here:
+>
+> https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_Allocation_23_Oct_2014_Final.pdf
+>
+> Bjorn Helgaas recently merged Linux kernel support for EA, and Cavium
+> ThunderX processors have implemented it.  This patch gives us a pretty
+> view of the capability structure.
+>
+> Thanks,
+> David Daney
+>
+>
+>   lib/header.h |   1 +
+>   ls-caps.c    | 142 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>   2 files changed, 143 insertions(+)
+>
+> diff --git a/lib/header.h b/lib/header.h
+> index f7cdee7..8c80e45 100644
+> --- a/lib/header.h
+> +++ b/lib/header.h
+> @@ -203,6 +203,7 @@
+>   #define  PCI_CAP_ID_MSIX	0x11	/* MSI-X */
+>   #define  PCI_CAP_ID_SATA	0x12	/* Serial-ATA HBA */
+>   #define  PCI_CAP_ID_AF		0x13	/* Advanced features of PCI devices integrated in PCIe root cplx */
+> +#define  PCI_CAP_ID_EA		0x14	/* Enhanced Allocation */
+>   #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
+>   #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
+>   #define PCI_CAP_SIZEOF		4
+> diff --git a/ls-caps.c b/ls-caps.c
+> index c145ed6..dec47f4 100644
+> --- a/ls-caps.c
+> +++ b/ls-caps.c
+> @@ -1254,6 +1254,145 @@ cap_sata_hba(struct device *d, int where, int cap)
+>       printf(" BAR??%d\n", bar);
+>   }
+>
+> +static const char *cap_ea_property(unsigned p)
+> +{
+> +  switch (p) {
+> +  case 0x00:
+> +    return "memory space, non-prefetchable";
+> +  case 0x01:
+> +    return "memory space, prefetchable";
+> +  case 0x02:
+> +    return "I/O space";
+> +  case 0x03:
+> +    return "VF memory space, prefetchable";
+> +  case 0x04:
+> +    return "VF memory space, non-prefetchable";
+> +  case 0x05:
+> +    return "allocation behind bridge, non-prefetchable memory";
+> +  case 0x06:
+> +    return "allocation behind bridge, prefetchable memory";
+> +  case 0x07:
+> +    return "allocation behind bridge, I/O space";
+> +  case 0xfd:
+> +    return "memory space resource unavailable for use";
+> +  case 0xfe:
+> +    return "I/O space resource unavailable for use";
+> +  case 0xff:
+> +    return "entry unavailable for use";
+> +  default:
+> +    return "reserved";
+> +  }
+> +}
+> +
+> +static void cap_ea(struct device *d, int where, int cap)
+> +{
+> +  unsigned int entry;
+> +  int entry_base = where + 4;
+> +  unsigned int num_entries = BITS((unsigned int)cap, 0, 6);
+> +  u8 htype = get_conf_byte(d, PCI_HEADER_TYPE) & 0x7f;
+> +
+> +  printf("Enhanced Allocation: Num Entries=%u", num_entries);
+> +  if (htype == PCI_HEADER_TYPE_BRIDGE) {
+> +    byte fixed_sub, fixed_sec;
+> +
+> +    entry_base += 4;
+> +    if (!config_fetch(d, where + 4, 2)) {
+> +      printf("\n");
+> +      return;
+> +    }
+> +    fixed_sec = get_conf_byte(d, where + 4);
+> +    fixed_sub = get_conf_byte(d, where + 4);
+> +    printf(", secondary=%d, subordinate=%d", fixed_sec, fixed_sub);
+> +  }
+> +  printf("\n");
+> +  if (verbose < 2)
+> +    return;
+> +
+> +  for (entry = 0; entry < num_entries; entry++) {
+> +    int max_offset_high_pos, has_base_high, has_max_offset_high;
+> +    u32 entry_header;
+> +    u32 base, max_offset;
+> +    unsigned int es, bei, pp, sp, e, w;
+> +
+> +    if (!config_fetch(d, entry_base, 4))
+> +      return;
+> +    entry_header = get_conf_long(d, entry_base);
+> +    es = BITS(entry_header, 0, 3);
+> +    bei = BITS(entry_header, 4, 4);
+> +    pp = BITS(entry_header, 8, 8);
+> +    sp = BITS(entry_header, 16, 8);
+> +    w = BITS(entry_header, 30, 1);
+> +    e = BITS(entry_header, 31, 1);
+> +    if (!config_fetch(d, entry_base + 4, es * 4))
+> +      return;
+> +    printf("\t\tEntry-%u: Enable%c Writable%c, Entry Size=%u\n", entry,
+> +	   e ? '+': '-',
+> +	   w ? '+': '-', es);
+> +    printf("\t\t\t BAR Equivalent Indicator (BEI): ");
+> +    switch (bei) {
+> +    case 0:
+> +    case 1:
+> +    case 2:
+> +    case 3:
+> +    case 4:
+> +    case 5:
+> +      printf("BAR%u", bei);
+> +      break;
+> +    case 6:
+> +      printf("Resource behind function");
+> +      break;
+> +    case 7:
+> +      printf("Not Indicated");
+> +      break;
+> +    case 8:
+> +      printf("Expansion ROM");
+> +      break;
+> +    case 9:
+> +    case 10:
+> +    case 11:
+> +    case 12:
+> +    case 13:
+> +    case 14:
+> +      printf("VF-BAR%u", bei - 9);
+> +      break;
+> +    default:
+> +      printf("Reserved");
+> +      break;
+> +    }
+> +    printf("\n");
+> +    printf("\t\t\t Primary Properties (PP): %s\n", cap_ea_property(pp));
+> +    printf("\t\t\t Secondary Properties (SP): %s\n", cap_ea_property(sp));
+> +
+> +    base = get_conf_long(d, entry_base + 4);
+> +    has_base_high = ((base & 2) != 0);
+> +    base &= ~3;
+> +
+> +    max_offset = get_conf_long(d, entry_base + 8);
+> +    has_max_offset_high = ((max_offset & 2) != 0);
+> +    max_offset |= 3;
+> +    max_offset_high_pos = entry_base + 12;
+> +
+> +    printf("\t\t\t Base: ");
+> +    if (has_base_high) {
+> +      u32 base_high = get_conf_long(d, entry_base + 12);
+> +
+> +      printf("%x", base_high);
+> +      max_offset_high_pos += 4;
+> +    }
+> +    printf("%08x\n", base);
+> +
+> +    printf("\t\t\t Max Offset: ");
+> +    if (has_max_offset_high) {
+> +      u32 max_offset_high = get_conf_long(d, max_offset_high_pos);
+> +
+> +      printf("%x", max_offset_high);
+> +    }
+> +    printf("%08x\n", max_offset);
+> +
+> +    entry_base += 4 + 4 * es;
+> +  }
+> +}
+> +
+>   void
+>   show_caps(struct device *d, int where)
+>   {
+> @@ -1348,6 +1487,9 @@ show_caps(struct device *d, int where)
+>   	    case PCI_CAP_ID_AF:
+>   	      cap_af(d, where);
+>   	      break;
+> +	    case PCI_CAP_ID_EA:
+> +	      cap_ea(d, where, cap);
+> +	      break;
+>   	    default:
+>   	      printf("#%02x [%04x]\n", id, cap);
+>   	    }
+>
 
