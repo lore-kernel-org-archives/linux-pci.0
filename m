@@ -1,121 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34852 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751063AbbLQRqS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Dec 2015 12:46:18 -0500
-Date: Thu, 17 Dec 2015 11:46:15 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv6 6/7] aer_inject: Use 32 bit int type domains
-Message-ID: <20151217174615.GE23549@localhost>
-References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
- <1449523949-21898-7-git-send-email-keith.busch@intel.com>
+Received: from mail-bn1on0099.outbound.protection.outlook.com ([157.56.110.99]:39640
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754113AbbLLBag (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Dec 2015 20:30:36 -0500
+Message-ID: <566B78B6.4070109@caviumnetworks.com>
+Date: Fri, 11 Dec 2015 17:30:30 -0800
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449523949-21898-7-git-send-email-keith.busch@intel.com>
+To: "Sean O. Stalley" <sean.stalley@intel.com>
+CC: David Daney <ddaney.cavm@gmail.com>, Martin Mares <mj@ucw.cz>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH] Add lspci support for Enhanced Allocation Capability.
+References: <1449872845-3596-1-git-send-email-ddaney.cavm@gmail.com> <20151212011315.GA3924@sean.stalley.intel.com>
+In-Reply-To: <20151212011315.GA3924@sean.stalley.intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI/AER: Increase domain type from 16 to 32 bits
+On 12/11/2015 05:13 PM, Sean O. Stalley wrote:
+> Thanks for doing this. I tried it out & everything worked well for me.
+> Only a couple things:
+>
+> The memory regions described by EA also show up before the EA Capability
+> and appear as virtual, ex:
+> 	Region 0: [virtual] Memory at 80000000 ...
 
-On Mon, Dec 07, 2015 at 02:32:28PM -0700, Keith Busch wrote:
-> New pci device provides additional pci domains that start above what 16
-> bits can address.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/pcie/aer/aer_inject.c | 16 ++++++++--------
->  1 file changed, 8 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-> index 182224a..24b191e 100644
-> --- a/drivers/pci/pcie/aer/aer_inject.c
-> +++ b/drivers/pci/pcie/aer/aer_inject.c
-> @@ -41,12 +41,12 @@ struct aer_error_inj {
->  	u32 header_log1;
->  	u32 header_log2;
->  	u32 header_log3;
-> -	u16 domain;
-> +	int domain;
+We are just dumping out the config space.  lspci doesn't really know 
+where the kernel gets the reported BAR values.
 
-If you want 32 bits explicitly, why don't you use u32 here?
+I don't think we want to suppress the dumping of the BARs, or the 
+kernel's interpretation thereof.
 
->  };
->  
->  struct aer_error {
->  	struct list_head list;
-> -	u16 domain;
-> +	int domain;
->  	unsigned int bus;
->  	unsigned int devfn;
->  	int pos_cap_err;
-> @@ -74,7 +74,7 @@ static LIST_HEAD(pci_bus_ops_list);
->  /* Protect einjected and pci_bus_ops_list */
->  static DEFINE_SPINLOCK(inject_lock);
->  
-> -static void aer_error_init(struct aer_error *err, u16 domain,
-> +static void aer_error_init(struct aer_error *err, int domain,
->  			   unsigned int bus, unsigned int devfn,
->  			   int pos_cap_err)
->  {
-> @@ -86,7 +86,7 @@ static void aer_error_init(struct aer_error *err, u16 domain,
->  }
->  
->  /* inject_lock must be held before calling */
-> -static struct aer_error *__find_aer_error(u16 domain, unsigned int bus,
-> +static struct aer_error *__find_aer_error(int domain, unsigned int bus,
->  					  unsigned int devfn)
->  {
->  	struct aer_error *err;
-> @@ -106,7 +106,7 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
->  	int domain = pci_domain_nr(dev->bus);
->  	if (domain < 0)
->  		return NULL;
-> -	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
-> +	return __find_aer_error(domain, dev->bus->number, dev->devfn);
->  }
->  
->  /* inject_lock must be held before calling */
-> @@ -196,7 +196,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
->  	domain = pci_domain_nr(bus);
->  	if (domain < 0)
->  		goto out;
-> -	err = __find_aer_error((u16)domain, bus->number, devfn);
-> +	err = __find_aer_error(domain, bus->number, devfn);
->  	if (!err)
->  		goto out;
->  
-> @@ -228,7 +228,7 @@ static int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where,
->  	domain = pci_domain_nr(bus);
->  	if (domain < 0)
->  		goto out;
-> -	err = __find_aer_error((u16)domain, bus->number, devfn);
-> +	err = __find_aer_error(domain, bus->number, devfn);
->  	if (!err)
->  		goto out;
->  
-> @@ -329,7 +329,7 @@ static int aer_inject(struct aer_error_inj *einj)
->  	u32 sever, cor_mask, uncor_mask, cor_mask_orig = 0, uncor_mask_orig = 0;
->  	int ret = 0;
->  
-> -	dev = pci_get_domain_bus_and_slot((int)einj->domain, einj->bus, devfn);
-> +	dev = pci_get_domain_bus_and_slot(einj->domain, einj->bus, devfn);
->  	if (!dev)
->  		return -ENODEV;
->  	rpdev = pcie_find_root_port(dev);
-> -- 
-> 2.6.2.307.g37023ba
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I don't think we want these regions to be flagged as virtual.
+> I think this happens because lspci can't read/write to the BAR region,
+> and so it assumes it's looking at a VF.
+>
+> The rest of my gripes are minor syntax stuff. see inline.
+>
+> Thanks again,
+> Sean
+>
+> On Fri, Dec 11, 2015 at 02:27:25PM -0800, David Daney wrote:
+>> From: David Daney <david.daney@cavium.com>
+>>
+[...]
+>> --- a/ls-caps.c
+>> +++ b/ls-caps.c
+>> @@ -1254,6 +1254,145 @@ cap_sata_hba(struct device *d, int where, int cap)
+>>       printf(" BAR??%d\n", bar);
+>>   }
+>>
+[...]
+>> +static void cap_ea(struct device *d, int where, int cap)
+>> +{
+>> +  unsigned int entry;
+>> +  int entry_base = where + 4;
+>> +  unsigned int num_entries = BITS((unsigned int)cap, 0, 6);
+>> +  u8 htype = get_conf_byte(d, PCI_HEADER_TYPE) & 0x7f;
+>> +
+>> +  printf("Enhanced Allocation: Num Entries=%u", num_entries);
+> CamelCase.
+
+Those are the names from the specification, I would like to keep them in 
+some form.  As noted below, it may be desirable to squash it to "NumEntries"
+
+
+>> +  if (htype == PCI_HEADER_TYPE_BRIDGE) {
+>> +    byte fixed_sub, fixed_sec;
+>> +
+>> +    entry_base += 4;
+>> +    if (!config_fetch(d, where + 4, 2)) {
+>> +      printf("\n");
+>> +      return;
+>> +    }
+>> +    fixed_sec = get_conf_byte(d, where + 4);
+>> +    fixed_sub = get_conf_byte(d, where + 4);
+>> +    printf(", secondary=%d, subordinate=%d", fixed_sec, fixed_sub);
+>> +  }
+>> +  printf("\n");
+>> +  if (verbose < 2)
+>> +    return;
+>> +
+>> +  for (entry = 0; entry < num_entries; entry++) {
+>> +    int max_offset_high_pos, has_base_high, has_max_offset_high;
+>> +    u32 entry_header;
+>> +    u32 base, max_offset;
+>> +    unsigned int es, bei, pp, sp, e, w;
+>> +
+>> +    if (!config_fetch(d, entry_base, 4))
+>> +      return;
+>> +    entry_header = get_conf_long(d, entry_base);
+>> +    es = BITS(entry_header, 0, 3);
+>> +    bei = BITS(entry_header, 4, 4);
+>> +    pp = BITS(entry_header, 8, 8);
+>> +    sp = BITS(entry_header, 16, 8);
+>> +    w = BITS(entry_header, 30, 1);
+>> +    e = BITS(entry_header, 31, 1);
+>> +    if (!config_fetch(d, entry_base + 4, es * 4))
+>> +      return;
+>> +    printf("\t\tEntry-%u: Enable%c Writable%c, Entry Size=%u\n", entry,
+> I would change this line to:
+> 	printf("\t\tEntry %u: Enable%c Writable%c, EntrySize=%u\n", ...);
+
+We could do that.  I would let others decide if squashing "Entry Size" 
+to "EntrySize" is desirable.
+
+
+> 	Changes:         ^                              ^
+> 	"-" after Entry to a " " (to match the "Region %i" used for BARs)
+> 	make EntrySize CamelCase (to match the other fields in lspci)
+[...]
+>> +    printf("\n");
+>> +    printf("\t\t\t Primary Properties (PP): %s\n", cap_ea_property(pp));
+>> +    printf("\t\t\t Secondary Properties (SP): %s\n", cap_ea_property(sp));
+> "PP" & "SP" are probably sufficient, I don't think we need to write the whole thing out.
+>
+> Also, for the case where the Primary property is valid, can we hide the Secondary property if it is 0xFF?
+> My concern is that people may read the "entry unavailable for use" line as a warning and think something is wrong.
+> Maybe it would be better to make it say "Secondary Properties (SP): Not Present", or something similar.
+>
+
+That is a good point.  I will try something like that.
+
+>> +
+>> +    base = get_conf_long(d, entry_base + 4);
+>> +    has_base_high = ((base & 2) != 0);
+>> +    base &= ~3;
+>> +
+>> +    max_offset = get_conf_long(d, entry_base + 8);
+>> +    has_max_offset_high = ((max_offset & 2) != 0);
+>> +    max_offset |= 3;
+>> +    max_offset_high_pos = entry_base + 12;
+>> +
+>> +    printf("\t\t\t Base: ");
+>> +    if (has_base_high) {
+>> +      u32 base_high = get_conf_long(d, entry_base + 12);
+>> +
+>> +      printf("%x", base_high);
+>> +      max_offset_high_pos += 4;
+>> +    }
+>> +    printf("%08x\n", base);
+>> +
+>> +    printf("\t\t\t Max Offset: ");
+> CamelCase.
+
+Again, I am trying to match the wording of the specification.  Although 
+in this case I think I got it wrong.  It should probably be squashed to 
+"MaxOffset'
+
+[...]
+
+Thanks for reviewing it.
+
+David Daney
+
