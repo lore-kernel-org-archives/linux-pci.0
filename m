@@ -1,99 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42045 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754694AbbLKFNU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:13:20 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 45/60] PCI: Fix size calculation with old_size on rescan path
-Date: Thu, 10 Dec 2015 21:06:41 -0800
-Message-Id: <1449810416-2950-46-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:35093 "EHLO
+	mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751271AbbLLXAR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Dec 2015 18:00:17 -0500
+MIME-Version: 1.0
+In-Reply-To: <1449523949-21898-8-git-send-email-keith.busch@intel.com>
+References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
+	<1449523949-21898-8-git-send-email-keith.busch@intel.com>
+Date: Sun, 13 Dec 2015 01:00:16 +0200
+Message-ID: <CAHp75VcJwHk=Bo0jUTN8LpVv+i=gT5qvw_KhAyq6hAHgiNGzyw@mail.gmail.com>
+Subject: Re: [PATCHv5 7/7] pciutils: Allow 32-bit domains
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On booting path, we don't pass realloc at first, and treat all optional
-just as required, in some case we can have smaller size/align with optional
-than required only.
+On Mon, Dec 7, 2015 at 11:32 PM, Keith Busch <keith.busch@intel.com> wrote:
+> PCI-e segments will continue to use the lower 16 bits as required by
+> ACPI. Special domains may use the full 32-bits.
+>
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  lib/filter.c |    2 +-
+>  lib/pci.h    |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/lib/filter.c b/lib/filter.c
+> index d4254a0..075dc2f 100644
+> --- a/lib/filter.c
+> +++ b/lib/filter.c
+> @@ -45,7 +45,7 @@ pci_filter_parse_slot_v33(struct pci_filter *f, char *str)
+>           if (str[0] && strcmp(str, "*"))
+>             {
+>               long int x = strtol(str, &e, 16);
+> -             if ((e && *e) || (x < 0 || x > 0xffff))
+> +             if ((e && *e) || (x < 0))
+>                 return "Invalid domain number";
+>               f->domain = x;
+>             }
+> diff --git a/lib/pci.h b/lib/pci.h
+> index 10ba831..7e42765 100644
+> --- a/lib/pci.h
+> +++ b/lib/pci.h
+> @@ -119,7 +119,7 @@ struct pci_param *pci_walk_params(struct pci_access *acc, struct pci_param *prev
+>
+>  struct pci_dev {
+>    struct pci_dev *next;                        /* Next device in the chain */
+> -  u16 domain;                          /* PCI domain (host bridge) */
 
-  04:00.0 has children bridges: 05:03.0, 05:04.0
-pref layout after booting path like followings:
+> +  int32_t domain;                      /* PCI domain (host bridge) */
 
-pci 0000:04:00.0: BAR 9: assigned [mem 0x84000000-0x9fffffff 64bit pref]
-pci 0000:05:04.0: BAR 9: assigned [mem 0x88000000-0x9fffffff 64bit pref]
-pci 0000:05:03.0: BAR 9: assigned [mem 0x84000000-0x841fffff 64bit pref]
-pci 0000:05:03.0: PCI bridge to [bus 08-0f]
-pci 0000:05:03.0:   bridge window [mem 0x84000000-0x841fffff 64bit pref]
-pci 0000:05:04.0: PCI bridge to [bus 10]
-pci 0000:05:04.0:   bridge window [mem 0x88000000-0x9fffffff 64bit pref]
-pci 0000:04:00.0: PCI bridge to [bus 05-10]
-pci 0000:04:00.0:   bridge window [mem 0x84000000-0x9fffffff 64bit pref]
+Why not u32 ?
 
-so the old size in rescan for 04:00.0 would be 0x1c000000, and align is 0x4000000
+>    u8 bus, dev, func;                   /* Bus inside domain, device and function */
+>
+>    /* These fields are set by pci_fill_info() */
+> --
+> 1.7.10.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-during remove and rescan:
 
-pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff 64bit pref] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
-pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
-pci 0000:05:04.0: bridge window [mem 0x08000000-0x1fffffff 64bit pref] to [bus 10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 18000000 must_align 8000000
-pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_size add_size   200000
-pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_align min_align 100000
-pci 0000:04:00.0: bridge window [mem 0x08000000-0x27ffffff 64bit pref] to [bus 05-10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 20000000 must_align 8000000
 
-align old size 0x1c000000 to 0x2000000 as size0, 0x1c000000 as size1.
-so for 04:00.0 will have big must and no optional size anymore.
-
-So don't align old size, then we will have same size0 and size1,
-and use smaller add_align as must align.
-
-After the patch, rescan works properly.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 9c9d9de..c8b3ea6 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1134,9 +1134,9 @@ static resource_size_t calculate_memsize(resource_size_t size,
- 		size = min_size;
- 	if (old_size == 1)
- 		old_size = 0;
-+	size = ALIGN(size, align);
- 	if (size < old_size)
- 		size = old_size;
--	size = ALIGN(size, align);
- 	return size;
- }
- 
-@@ -1596,6 +1596,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		b_res->flags = 0;
- 		return 0;
- 	}
-+
-+	/*
-+	 * It happens when boot path is not passing realloc
-+	 * and later rescan is passing realloc.
-+	 * The old value from boot path is bigger, and calculate_size will
-+	 * use old value as size0 and size1, and also have
-+	 * chance optional align is smaller than must only align.
-+	 */
-+	if(size0 == size1 && min_align > min_add_align)
-+		min_align = min_add_align;
-+
- 	b_res->start = min_align;
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
 -- 
-1.8.4.5
-
+With Best Regards,
+Andy Shevchenko
