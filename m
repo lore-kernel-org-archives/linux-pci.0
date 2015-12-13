@@ -1,106 +1,98 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Jisheng Zhang'" <jszhang@marvell.com>,
-	"'Pratyush Anand'" <pratyush.anand@gmail.com>
-Cc: "'Russell King - ARM Linux'" <linux@arm.linux.org.uk>,
-	"'Mark Rutland'" <mark.rutland@arm.com>,
-	<devicetree@vger.kernel.org>, "'Pawel Moll'" <pawel.moll@arm.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>, <linux-arm-msm@vger.kernel.org>,
-	"'Ian Campbell'" <ijc+devicetree@hellion.org.uk>,
-	"'Stanimir Varbanov'" <stanimir.varbanov@linaro.org>,
-	<linux-kernel@vger.kernel.org>,
-	"'Rob Herring'" <robh+dt@kernel.org>,
-	"'Srinivas Kandagatla'" <srinivas.kandagatla@linaro.org>,
-	"'Bjorn Andersson'" <bjorn.andersson@sonymobile.com>,
-	<linux-pci@vger.kernel.org>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"'Jingoo Han'" <jingoohan1@gmail.com>
-References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>	<1449149725-27607-2-git-send-email-stanimir.varbanov@linaro.org>	<56669C50.9060700@linaro.org>	<CAHM4w1k_EAt+xBBYyG3B7W9Fegc4j+uRq5t_biUsxOGt+k+xUA@mail.gmail.com>	<20151209102359.GF8644@n2100.arm.linux.org.uk>	<CAHM4w1m-NiwyCLz9tikbOcNtCmVu0Vd9FhmKKSuMi5ChzfDafA@mail.gmail.com> <20151211134857.03601d0e@xhacker>
-In-Reply-To: <20151211134857.03601d0e@xhacker>
-Subject: Re: [PATCH v4 1/5] PCI: designware: add memory barrier after enabling region
-Date: Tue, 22 Dec 2015 21:36:10 +0900
-Message-ID: <000b01d13cb5$5bb6d170$13247450$@com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail5.windriver.com ([192.103.53.11]:37927 "EHLO mail5.wrs.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751478AbbLMBmt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 12 Dec 2015 20:42:49 -0500
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-sh@vger.kernel.org>
+Subject: [PATCH 05/10] drivers/pci: make host/pci-rcar-gen2.c explicitly non-modular
+Date: Sat, 12 Dec 2015 20:41:52 -0500
+Message-ID: <1449970917-12633-6-git-send-email-paul.gortmaker@windriver.com>
+In-Reply-To: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
+References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, December 11, 2015 2:49 PM, Jisheng Zhang wrote:
-> 
-> On Fri, 11 Dec 2015 09:35:10 +0530 Pratyush Anand wrote:
-> 
-> > On Wed, Dec 9, 2015 at 3:53 PM, Russell King - ARM Linux wrote:
-> >
-> > [...]
-> >
-> > >> > >       dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-> > >> > > +     /*
-> > >> > > +      * ensure that the ATU enable has been happaned before accessing
-> > >> > > +      * pci configuration/io spaces through dw_pcie_cfg_[read|write].
-> > >> > > +      */
-> > >> > > +     wmb();
-> > >> > >  }
-> > >> > >
-> > >>
-> > >>
-> > >> My understnading is that since writel() of dw_pcie_writel_rc() in
-> > >> above code and readl(), writel() of dw_pcie_cfg_[read|write]() (which
-> > >> will follow) goes through same device (ie PCIe host here). So, it is
-> > >> guaranteed that 1st writel() will be executed before later
-> > >> readl()/writel(). If that is true then we do not need any explicit
-> > >> barrier here.
-> > >>
-> > >> Arnd, Russel: whats your opinion here.
-> > >               ^l
-> >
-> > Sorry :(
-> >
-> > >
-> > > writel() has a barrier _before_ the access but not after.
-> > >
-> > > The fact is that there's nothing which guarantees that the write will hit
-> > > the hardware in a timely manner (forget any rules about PCI config space,
-> > > the PCI ordering rules apply to the PCI bus, not to the ARM buses.)
-> > >
-> > > If you need this write to have hit the hardware before continuing, you
-> > > need to read back from the same register.
-> >
-> > OK, so better to replace wmb() with read back of control register.
-> >
-> > >
-> > > I'm just looking at this driver, trying to decipher what it's doing.  It
-> > > _looks_ to me like it's reprogramming one of the outbound windows (IO?)
-> > > so that configuration space can be accessed.  Doesn't this have the
-> > > effect of disabling access to the IO segment of the PCI bus from the
-> > > host CPU?
-> > >
-> > > What protections are there against other CPUs in the system issuing a
-> > > PCI I/O read/write while this outbound window is programmed as
-> > > configuration space?
-> >
-> >
-> > Yes, that is an issue with this driver. Most of the host controller
-> > has 4 or more viewpoints, and it is very easy to handle for them. But
-> > there are few which has only two viewpoints. Do not know how to solve
-> > it, so that it works for all.
-> >
-> 
-> The default outbound iATU number is two, this may be the reason why the driver
-> is written in current style. And two outbound iATUs may be common for pcie dw
-> users because ASIC people just follow the default configuration ;).
-> 
-> In our case, Marvell Berlin SoCs have two outbound iATUs.
+The Kconfig currently controlling compilation of this code is:
 
-Hmm, we need to add new DT property to handle the number of outbound iATUs.
-Then, 'pcie-designware.c' should configure registers according to the number.
-Anyway, we should add this agenda to ToDo list.
+drivers/pci/host/Kconfig:config PCI_RCAR_GEN2
+drivers/pci/host/Kconfig:       bool "Renesas R-Car Gen2 Internal PCI controller"
 
-Best regards,
-Jingoo Han
+...meaning that it currently is not being built as a module by anyone.
 
-> 
-> Thanks,
-> Jisheng
+Lets remove the modular code that is essentially orphaned, so that
+when reading the driver there is no doubt it is builtin-only.
+
+We don't have to disallow a driver unbind, since that is already
+done for us in this driver.
+
+Since module_platform_driver() uses the same init level priority as
+builtin_platform_driver() the init ordering remains unchanged with
+this commit.
+
+We don't replace module.h with init.h since the file already has that.
+
+Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+
+We also delete the MODULE_LICENSE tag etc. since all that information
+was (or is now) contained at the top of the file in the comments.
+
+Cc: Simon Horman <horms@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ drivers/pci/host/pci-rcar-gen2.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index c4f64bfee551..81dda40c7a9f 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -4,6 +4,8 @@
+  * Copyright (C) 2013 Renesas Solutions Corp.
+  * Copyright (C) 2013 Cogent Embedded, Inc.
+  *
++ * Module Author: Valentine Barshak <valentine.barshak@cogentembedded.com>
++ *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+@@ -14,7 +16,6 @@
+ #include <linux/interrupt.h>
+ #include <linux/io.h>
+ #include <linux/kernel.h>
+-#include <linux/module.h>
+ #include <linux/of_pci.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+@@ -366,8 +367,6 @@ static struct of_device_id rcar_pci_of_match[] = {
+ 	{ },
+ };
+ 
+-MODULE_DEVICE_TABLE(of, rcar_pci_of_match);
+-
+ static struct platform_driver rcar_pci_driver = {
+ 	.driver = {
+ 		.name = "pci-rcar-gen2",
+@@ -376,9 +375,4 @@ static struct platform_driver rcar_pci_driver = {
+ 	},
+ 	.probe = rcar_pci_probe,
+ };
+-
+-module_platform_driver(rcar_pci_driver);
+-
+-MODULE_LICENSE("GPL v2");
+-MODULE_DESCRIPTION("Renesas R-Car Gen2 internal PCI");
+-MODULE_AUTHOR("Valentine Barshak <valentine.barshak@cogentembedded.com>");
++builtin_platform_driver(rcar_pci_driver);
+-- 
+2.6.1
 
