@@ -1,209 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56825 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752998AbbLJWrF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Dec 2015 17:47:05 -0500
-Date: Thu, 10 Dec 2015 16:47:00 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bogicevic Sasa <brutallesale@gmail.com>
-Cc: rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] drivers:pci:hotplug Fix all space prohibited before that
- ,
-Message-ID: <20151210224700.GD367@localhost>
-References: <1449744040-76428-1-git-send-email-brutallesale@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	<linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: [PATCH 06/10] drivers/pci: make host/pci-tegra.c explicitly non-modular
+Date: Sat, 12 Dec 2015 20:41:53 -0500
+Message-ID: <1449970917-12633-7-git-send-email-paul.gortmaker@windriver.com>
+In-Reply-To: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
+References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449744040-76428-1-git-send-email-brutallesale@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 10, 2015 at 02:40:40AM -0800, Bogicevic Sasa wrote:
-> This fixes all checkpatch errors about space prohibited
-> before comma in drivers/pci/hotplug folder
+The Kconfig currently controlling compilation of this code is:
 
-What happened?  I was hoping for a patch that fixed everything in
-drivers/pci at once, but even after this patch, I see this:
+drivers/pci/host/Kconfig:config PCI_TEGRA
+drivers/pci/host/Kconfig:       bool "NVIDIA Tegra PCIe controller"
 
-  $ grep -rl " ," drivers/pci/
-  drivers/pci/host/pci-imx6.c
-  drivers/pci/hotplug/cpqphp.h
-  drivers/pci/hotplug/ibmphp_core.c
-  drivers/pci/hotplug/shpchp.h
-  drivers/pci/hotplug/pciehp.h
-  drivers/pci/hotplug/rpaphp.h
-  drivers/pci/hotplug/cpqphp_ctrl.c
-  drivers/pci/hotplug/ibmphp.h
-  drivers/pci/hotplug/shpchp_ctrl.c
+...meaning that it currently is not being built as a module by anyone.
 
+Lets remove the modular code that is essentially orphaned, so that
+when reading the driver there is no doubt it is builtin-only.
 
-> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
-> ---
->  drivers/pci/hotplug/acpi_pcihp.c        | 8 ++++----
->  drivers/pci/hotplug/cpci_hotplug_core.c | 8 ++++----
->  drivers/pci/hotplug/cpci_hotplug_pci.c  | 8 ++++----
->  drivers/pci/hotplug/cpcihp_generic.c    | 8 ++++----
->  drivers/pci/hotplug/cpcihp_zt5550.c     | 8 ++++----
->  drivers/pci/hotplug/ibmphp_ebda.c       | 2 +-
->  drivers/pci/hotplug/pci_hotplug_core.c  | 8 ++++----
->  drivers/pci/hotplug/pcihp_skeleton.c    | 8 ++++----
->  8 files changed, 29 insertions(+), 29 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-> index 876ccc6..80d94d2 100644
-> --- a/drivers/pci/hotplug/acpi_pcihp.c
-> +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> @@ -36,10 +36,10 @@
->  
->  #define MY_NAME	"acpi_pcihp"
->  
-> -#define dbg(fmt, arg...) do { if (debug_acpi) printk(KERN_DEBUG "%s: %s: " fmt , MY_NAME , __func__ , ## arg); } while (0)
-> -#define err(format, arg...) printk(KERN_ERR "%s: " format , MY_NAME , ## arg)
-> -#define info(format, arg...) printk(KERN_INFO "%s: " format , MY_NAME , ## arg)
-> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format , MY_NAME , ## arg)
-> +#define dbg(fmt, arg...) do { if (debug_acpi) printk(KERN_DEBUG "%s: %s: " fmt, MY_NAME, __func__, ## arg); } while (0)
-> +#define err(format, arg...) printk(KERN_ERR "%s: " format, MY_NAME, ## arg)
-> +#define info(format, arg...) printk(KERN_INFO "%s: " format, MY_NAME, ## arg)
-> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format, MY_NAME, ## arg)
->  
->  #define	METHOD_NAME__SUN	"_SUN"
->  #define	METHOD_NAME_OSHP	"OSHP"
-> diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
-> index 46db293..1c59e4b 100644
-> --- a/drivers/pci/hotplug/cpci_hotplug_core.c
-> +++ b/drivers/pci/hotplug/cpci_hotplug_core.c
-> @@ -46,11 +46,11 @@
->  	do {							\
->  		if (cpci_debug)					\
->  			printk (KERN_DEBUG "%s: " format "\n",	\
-> -				MY_NAME , ## arg);		\
-> +				MY_NAME, ## arg);		\
->  	} while (0)
-> -#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
-> -#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
-> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
-> +#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
-> +#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
-> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
->  
->  /* local variables */
->  static DECLARE_RWSEM(list_rwsem);
-> diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
-> index 788db48..f2d3f4f 100644
-> --- a/drivers/pci/hotplug/cpci_hotplug_pci.c
-> +++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
-> @@ -39,11 +39,11 @@ extern int cpci_debug;
->  	do {							\
->  		if (cpci_debug)					\
->  			printk (KERN_DEBUG "%s: " format "\n",	\
-> -				MY_NAME , ## arg);		\
-> +				MY_NAME, ## arg);		\
->  	} while (0)
-> -#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
-> -#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
-> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
-> +#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
-> +#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
-> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
->  
->  
->  u8 cpci_get_attention_status(struct slot *slot)
-> diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
-> index 66b7bbe..d0ab4e1 100644
-> --- a/drivers/pci/hotplug/cpcihp_generic.c
-> +++ b/drivers/pci/hotplug/cpcihp_generic.c
-> @@ -55,11 +55,11 @@
->  	do {							\
->  		if (debug)					\
->  			printk (KERN_DEBUG "%s: " format "\n",	\
-> -				MY_NAME , ## arg);		\
-> +				MY_NAME, ## arg);		\
->  	} while (0)
-> -#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
-> -#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
-> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
-> +#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
-> +#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
-> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
->  
->  /* local variables */
->  static bool debug;
-> diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
-> index 7ecf34e..80dd418 100644
-> --- a/drivers/pci/hotplug/cpcihp_zt5550.c
-> +++ b/drivers/pci/hotplug/cpcihp_zt5550.c
-> @@ -50,11 +50,11 @@
->  	do {							\
->  		if (debug)					\
->  			printk (KERN_DEBUG "%s: " format "\n",	\
-> -				MY_NAME , ## arg);		\
-> +				MY_NAME, ## arg);		\
->  	} while (0)
-> -#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
-> -#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
-> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
-> +#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
-> +#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
-> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
->  
->  /* local variables */
->  static bool debug;
-> diff --git a/drivers/pci/hotplug/ibmphp_ebda.c b/drivers/pci/hotplug/ibmphp_ebda.c
-> index d9b197d..8a77275 100644
-> --- a/drivers/pci/hotplug/ibmphp_ebda.c
-> +++ b/drivers/pci/hotplug/ibmphp_ebda.c
-> @@ -177,7 +177,7 @@ static void __init print_ebda_pci_rsrc (void)
->  
->  	list_for_each_entry(ptr, &ibmphp_ebda_pci_rsrc_head, ebda_pci_rsrc_list) {
->  		debug ("%s - rsrc type: %x bus#: %x dev_func: %x start addr: %x end addr: %x\n",
-> -			__func__, ptr->rsrc_type ,ptr->bus_num, ptr->dev_fun,ptr->start_addr, ptr->end_addr);
-> +			__func__, ptr->rsrc_type,ptr->bus_num, ptr->dev_fun,ptr->start_addr, ptr->end_addr);
->  	}
->  }
->  
-> diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
-> index d1fab97..2bac1b9 100644
-> --- a/drivers/pci/hotplug/pci_hotplug_core.c
-> +++ b/drivers/pci/hotplug/pci_hotplug_core.c
-> @@ -45,10 +45,10 @@
->  
->  #define MY_NAME	"pci_hotplug"
->  
-> -#define dbg(fmt, arg...) do { if (debug) printk(KERN_DEBUG "%s: %s: " fmt , MY_NAME , __func__ , ## arg); } while (0)
-> -#define err(format, arg...) printk(KERN_ERR "%s: " format , MY_NAME , ## arg)
-> -#define info(format, arg...) printk(KERN_INFO "%s: " format , MY_NAME , ## arg)
-> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format , MY_NAME , ## arg)
-> +#define dbg(fmt, arg...) do { if (debug) printk(KERN_DEBUG "%s: %s: " fmt, MY_NAME, __func__, ## arg); } while (0)
-> +#define err(format, arg...) printk(KERN_ERR "%s: " format, MY_NAME, ## arg)
-> +#define info(format, arg...) printk(KERN_INFO "%s: " format, MY_NAME, ## arg)
-> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format, MY_NAME, ## arg)
->  
->  
->  /* local variables */
-> diff --git a/drivers/pci/hotplug/pcihp_skeleton.c b/drivers/pci/hotplug/pcihp_skeleton.c
-> index d062c00..14b5d10 100644
-> --- a/drivers/pci/hotplug/pcihp_skeleton.c
-> +++ b/drivers/pci/hotplug/pcihp_skeleton.c
-> @@ -52,11 +52,11 @@ static LIST_HEAD(slot_list);
->  	do {							\
->  		if (debug)					\
->  			printk(KERN_DEBUG "%s: " format "\n",	\
-> -				MY_NAME , ## arg);		\
-> +				MY_NAME, ## arg);		\
->  	} while (0)
-> -#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME , ## arg)
-> -#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME , ## arg)
-> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME , ## arg)
-> +#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
-> +#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
-> +#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
->  
->  /* local variables */
->  static bool debug;
-> -- 
-> 2.5.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+We don't have to disallow a driver unbind, since that is already
+done for us in this driver.
+
+Since module_platform_driver() uses the same init level priority as
+builtin_platform_driver() the init ordering remains unchanged with
+this commit.
+
+Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+
+We also delete the MODULE_LICENSE tag etc. since all that information
+was (or is now) contained at the top of the file in the comments.
+
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Alexandre Courbot <gnurou@gmail.com>
+Cc: linux-tegra@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ drivers/pci/host/pci-tegra.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 3018ae52e092..b49ea58787c1 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -9,6 +9,8 @@
+  *
+  * Bits taken from arch/arm/mach-dove/pcie.c
+  *
++ * Module Author: Thierry Reding <treding@nvidia.com>
++ *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation; either version 2 of the License, or
+@@ -32,7 +34,7 @@
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+-#include <linux/module.h>
++#include <linux/init.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+@@ -1864,7 +1866,6 @@ static const struct of_device_id tegra_pcie_of_match[] = {
+ 	{ .compatible = "nvidia,tegra20-pcie", .data = &tegra20_pcie_data },
+ 	{ },
+ };
+-MODULE_DEVICE_TABLE(of, tegra_pcie_of_match);
+ 
+ static void *tegra_pcie_ports_seq_start(struct seq_file *s, loff_t *pos)
+ {
+@@ -2055,8 +2056,4 @@ static struct platform_driver tegra_pcie_driver = {
+ 	},
+ 	.probe = tegra_pcie_probe,
+ };
+-module_platform_driver(tegra_pcie_driver);
+-
+-MODULE_AUTHOR("Thierry Reding <treding@nvidia.com>");
+-MODULE_DESCRIPTION("NVIDIA Tegra PCIe driver");
+-MODULE_LICENSE("GPL v2");
++builtin_platform_driver(tegra_pcie_driver);
+-- 
+2.6.1
+
