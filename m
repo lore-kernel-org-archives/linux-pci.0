@@ -1,95 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:36743 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967054AbbLQPJI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Dec 2015 10:09:08 -0500
-Received: by mail-ig0-f181.google.com with SMTP id ph11so14017486igc.1
-        for <linux-pci@vger.kernel.org>; Thu, 17 Dec 2015 07:09:08 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH 08/10] drivers/pci: make host/pcie-xilinx.c explicitly non-modular
+Date: Sat, 12 Dec 2015 20:41:55 -0500
+Message-ID: <1449970917-12633-9-git-send-email-paul.gortmaker@windriver.com>
+In-Reply-To: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
+References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJ+vNU0ar_d=2n4Yz3QX4qidSkH6PBLyfB8-w-ErLOYzwqj7rw@mail.gmail.com>
-References: <1446735481-27326-1-git-send-email-tharvey@gateworks.com>
-	<1447942365-11662-1-git-send-email-tharvey@gateworks.com>
-	<20151125231435.GI8869@localhost>
-	<CAJ+vNU0ar_d=2n4Yz3QX4qidSkH6PBLyfB8-w-ErLOYzwqj7rw@mail.gmail.com>
-Date: Thu, 17 Dec 2015 07:09:07 -0800
-Message-ID: <CAJ+vNU399O0uskuAQGaqPQUhFdNYktZY4bm-=JCmdEgQF-HgYg@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: imx6: add dt prop for link gen, default to gen1
-From: Tim Harvey <tharvey@gateworks.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 2, 2015 at 8:35 AM, Tim Harvey <tharvey@gateworks.com> wrote:
-> On Wed, Nov 25, 2015 at 3:14 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> Hi Tim,
->>
->> On Thu, Nov 19, 2015 at 06:12:45AM -0800, Tim Harvey wrote:
->>> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
->>> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
->>> external clock source is present and supplied back to the IMX6 PCIe core
->>> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
->>>
->>> Add a dt property to specify gen1 vs gen2 and check this before allowing
->>> a Gen2 link.
->>>
->>> We default to Gen1 if the property is not present because at this time there
->>> are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
->>>
->>> In order to be Gen2 compliant on IMX6 you need to:
->>>  - have a Gen2 compliant external clock generator and route that clock back
->>>    to either LVDS CLK1 or LVDS CLK2 as an input.
->>>    (see IMX6SX-SabreSD reference design)
->>>  - specify this clock in the pcie node in the dt
->>>    (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
->>>     IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
->>>
->>> [1] https://community.freescale.com/message/453209
->>>
->>> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
->>> ---
->>> v2:
->>>  - moved dt property to designware core
->>>
->>>  .../devicetree/bindings/pci/designware-pcie.txt          |  1 +
->>>  drivers/pci/host/pci-imx6.c                              | 16 ++++++++++------
->>>  drivers/pci/host/pcie-designware.c                       |  4 ++++
->>>  drivers/pci/host/pcie-designware.h                       |  1 +
->>>  4 files changed, 16 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>> index 9f4faa8..a9a94b9 100644
->>> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>> @@ -26,3 +26,4 @@ Optional properties:
->>>  - bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
->>>    specify this property, to keep backwards compatibility a range of 0x00-0xff
->>>    is assumed if not present)
->>> +- max-link-speed: Specify PCI gen for link capability (ie 2 for gen2)
->>
->> Is there some sort of DT or OF spec that lists "max-link-speed" as a
->> generic property?  I see Lucas' desire to have this be common across
->> DesignWare PCIe cores.  Should it be moved up a level even from there,
->> i.e., to bindings/pci/pci.txt?
->
-> Bjorn,
->
-> I don't know what the general consensus is here. As your the PCI
-> maintainer I would leave that up to you. Are there other platforms
-> that need to link at a lesser capability than the host controller is
-> capable of? I am only aware of the IMX6 and SPEAr13XX [1]
->
-> I can make that change and re-submit if you feel that is necessary.
->
+The Kconfig currently controlling compilation of this code is:
 
-Bjorn,
+drivers/pci/host/Kconfig:config PCIE_XILINX
+drivers/pci/host/Kconfig:       bool "Xilinx AXI PCIe host bridge support"
 
-Any thoughts here? I would really like to see this get picked up
-sooner rather than later.
+...meaning that it currently is not being built as a module by anyone.
 
-Regards,
+Lets remove the modular code that is essentially orphaned, so that
+when reading the driver there is no doubt it is builtin-only.  This
+makes xilinx_pcie_free_irq_domain orphaned so we remove it too.
 
-Tim
+We don't have to worry about disallowing a driver unbind, since this
+driver already does that.
+
+Since module_platform_driver() uses the same init level priority as
+builtin_platform_driver() the init ordering remains unchanged with
+this commit.
+
+We also delete the MODULE_LICENSE tag etc. since all that information
+is already contained at the top of the file in the comments.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ drivers/pci/host/pcie-xilinx.c | 53 ++----------------------------------------
+ 1 file changed, 2 insertions(+), 51 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 3c7a0d580b1e..73b5e856f9c2 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -18,7 +18,7 @@
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+-#include <linux/module.h>
++#include <linux/init.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+@@ -516,35 +516,6 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ }
+ 
+ /**
+- * xilinx_pcie_free_irq_domain - Free IRQ domain
+- * @port: PCIe port information
+- */
+-static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
+-{
+-	int i;
+-	u32 irq, num_irqs;
+-
+-	/* Free IRQ Domain */
+-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-
+-		free_pages(port->msi_pages, 0);
+-
+-		num_irqs = XILINX_NUM_MSI_IRQS;
+-	} else {
+-		/* INTx */
+-		num_irqs = 4;
+-	}
+-
+-	for (i = 0; i < num_irqs; i++) {
+-		irq = irq_find_mapping(port->irq_domain, i);
+-		if (irq > 0)
+-			irq_dispose_mapping(irq);
+-	}
+-
+-	irq_domain_remove(port->irq_domain);
+-}
+-
+-/**
+  * xilinx_pcie_init_irq_domain - Initialize IRQ domain
+  * @port: PCIe port information
+  *
+@@ -858,21 +829,6 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-/**
+- * xilinx_pcie_remove - Remove function
+- * @pdev: Platform device pointer
+- *
+- * Return: '0' always
+- */
+-static int xilinx_pcie_remove(struct platform_device *pdev)
+-{
+-	struct xilinx_pcie_port *port = platform_get_drvdata(pdev);
+-
+-	xilinx_pcie_free_irq_domain(port);
+-
+-	return 0;
+-}
+-
+ static struct of_device_id xilinx_pcie_of_match[] = {
+ 	{ .compatible = "xlnx,axi-pcie-host-1.00.a", },
+ 	{}
+@@ -885,10 +841,5 @@ static struct platform_driver xilinx_pcie_driver = {
+ 		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = xilinx_pcie_probe,
+-	.remove = xilinx_pcie_remove,
+ };
+-module_platform_driver(xilinx_pcie_driver);
+-
+-MODULE_AUTHOR("Xilinx Inc");
+-MODULE_DESCRIPTION("Xilinx AXI PCIe driver");
+-MODULE_LICENSE("GPL v2");
++builtin_platform_driver(xilinx_pcie_driver);
+-- 
+2.6.1
+
