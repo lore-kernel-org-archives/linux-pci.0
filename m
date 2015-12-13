@@ -1,51 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47566 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750962AbbLJTuE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Dec 2015 14:50:04 -0500
-Subject: [PATCH] lspci: Decode DevCap SlotPowerLimit for all components with
- Upstream Ports
-To: Martin Mares <mj@ucw.cz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Thu, 10 Dec 2015 13:50:01 -0600
-Message-ID: <20151210195001.8111.55134.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1450039022.20678.3.camel@perches.com>
+Subject: Re: [PATCH 05/10] drivers/pci: make host/pci-rcar-gen2.c explicitly
+ non-modular
+From: Joe Perches <joe@perches.com>
+To: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>
+Date: Sun, 13 Dec 2015 12:37:02 -0800
+In-Reply-To: <20151213181517.GB32362@windriver.com>
+References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
+	 <1449970917-12633-6-git-send-email-paul.gortmaker@windriver.com>
+	 <CAMuHMdUJzRMaRosLSUhH=_1Li+u4eWeqjee6iUoeWfac_2G3wA@mail.gmail.com>
+	 <20151213181517.GB32362@windriver.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The SlotPowerLimit in the Slot Capability indicates how much power the slot
-can supply to a downstream device.  A Root Port or Switch Downstream Port
-communicates the limit via a Set_Slot_Power_Limit Message on the link.  The
-component on the other end of the link copies the limit from the message to
-the Captured Slot Power Limit in its Device Capability [see PCIe r3.0, sec
-2.2.8.5].
+On Sun, 2015-12-13 at 13:15 -0500, Paul Gortmaker wrote:
+> [Re: [PATCH 05/10] drivers/pci: make host/pci-rcar-gen2.c explicitly
+> non-modular] On 13/12/2015 (Sun 11:59) Geert Uytterhoeven wrote:
+> 
+> > CC MODULE_AUTHOR
+> 
+> Thanks, I just assumed get-maintainer.pl would have automatically
+> collected that up with the other names it emits.  Apparently not.
+> 
+> Joe: is there a reason it doesn't use the module author field?
 
-The Captured SlotPowerLimit is relevant for all devices on the downstream
-end of a Link.  This includes Endpoints and Bridges as well as
-Switch Upstream Ports.
+Because it's frequently out-of-date and the
+MAINTAINERS entry is generally enough.
 
-Decode the DevCap Captured SlotPowerLimit for Endpoints and Bridges as well
-as Switch Upstream Ports.
+If you want to add it, there's an option for it
+	--file-emails
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- ls-caps.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> Paul
 
-diff --git a/ls-caps.c b/ls-caps.c
-index c145ed6..639f931 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -678,7 +678,8 @@ static void cap_express_dev(struct device *d, int where, int type)
-   if ((type == PCI_EXP_TYPE_ENDPOINT) || (type == PCI_EXP_TYPE_LEG_END))
-     printf(" FLReset%c",
- 	FLAG(t, PCI_EXP_DEVCAP_FLRESET));
--  if (type == PCI_EXP_TYPE_UPSTREAM)
-+  if ((type == PCI_EXP_TYPE_ENDPOINT) || (type == PCI_EXP_TYPE_UPSTREAM) ||
-+      (type == PCI_EXP_TYPE_PCI_BRIDGE))
-     printf(" SlotPowerLimit %.3fW",
- 	power_limit((t & PCI_EXP_DEVCAP_PWR_VAL) >> 18,
- 		    (t & PCI_EXP_DEVCAP_PWR_SCL) >> 26));
+cheers, Joe
 
