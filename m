@@ -1,86 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [193.47.165.129] ([193.47.165.129]:35176 "EHLO mellanox.co.il"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751299AbbLVNml (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Dec 2015 08:42:41 -0500
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com,
-	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
-	liranl@mellanox.com, ilyal@mellanox.com
-Subject: [RFC 0/2] VFIO SRIOV support
-Date: Tue, 22 Dec 2015 15:42:12 +0200
-Message-Id: <1450791734-3907-1-git-send-email-ilyal@mellanox.com>
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:33031 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751611AbbLMK6d (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Dec 2015 05:58:33 -0500
+MIME-Version: 1.0
+In-Reply-To: <1449970917-12633-8-git-send-email-paul.gortmaker@windriver.com>
+References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
+	<1449970917-12633-8-git-send-email-paul.gortmaker@windriver.com>
+Date: Sun, 13 Dec 2015 11:58:32 +0100
+Message-ID: <CAMuHMdWF+g4hwzcCRGkTYM=TpiBmxOn3GYmr+zO8c0QJUgH1fg@mail.gmail.com>
+Subject: Re: [PATCH 07/10] drivers/pci: make host/pcie-rcar.c explicitly non-modular
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Today the QEMU hypervisor allows assigning a physical device to a VM,
-facilitating driver development. However, it does not support enabling
-SR-IOV by the VM kernel driver. Our goal is to implement such support,
-allowing developers working on SR-IOV physical function drivers to work
-inside VMs as well.
+CC MODULE_AUTHOR
 
-This patch series implements the kernel side of our solution.  It extends
-the VFIO driver to support the PCIE SRIOV extended capability with
-following features:
-1. The ability to probe SRIOV BAR sizes.
-2. The ability to enable and disable sriov.
+On Sun, Dec 13, 2015 at 2:41 AM, Paul Gortmaker
+<paul.gortmaker@windriver.com> wrote:
+> The Kconfig currently controlling compilation of this code is:
+>
+> drivers/pci/host/Kconfig:config PCI_RCAR_GEN2_PCIE
+> drivers/pci/host/Kconfig:       bool "Renesas R-Car PCIe controller"
+>
+> ...meaning that it currently is not being built as a module by anyone.
+>
+> Lets remove the modular code that is essentially orphaned, so that
+> when reading the driver there is no doubt it is builtin-only.
+>
+> Since module_platform_driver() uses the same init level priority as
+> builtin_platform_driver() the init ordering remains unchanged with
+> this commit.
+>
+> We don't have to disallow a driver unbind, since that is already
+> done for us in this driver.
+>
+> Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+>
+> We also delete the MODULE_LICENSE tag etc. since all that information
+> was (or is now) contained at the top of the file in the comments.
+>
+> Cc: Simon Horman <horms@verge.net.au>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-sh@vger.kernel.org
+> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+> ---
+>  drivers/pci/host/pcie-rcar.c | 11 ++++-------
+>  1 file changed, 4 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index f4fa6c537448..2c619277d265 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -7,6 +7,8 @@
+>   *  arch/sh/drivers/pci/ops-sh7786.c
+>   *  Copyright (C) 2009 - 2011  Paul Mundt
+>   *
+> + * Module Author: Phil Edworthy <phil.edworthy@renesas.com>
+> + *
+>   * This file is licensed under the terms of the GNU General Public
+>   * License version 2.  This program is licensed "as is" without any
+>   * warranty of any kind, whether express or implied.
+> @@ -18,7 +20,7 @@
+>  #include <linux/irq.h>
+>  #include <linux/irqdomain.h>
+>  #include <linux/kernel.h>
+> -#include <linux/module.h>
+> +#include <linux/init.h>
+>  #include <linux/msi.h>
+>  #include <linux/of_address.h>
+>  #include <linux/of_irq.h>
+> @@ -921,7 +923,6 @@ static const struct of_device_id rcar_pcie_of_match[] = {
+>         { .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
+>         {},
+>  };
+> -MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
+>
+>  static int rcar_pcie_probe(struct platform_device *pdev)
+>  {
+> @@ -1007,8 +1008,4 @@ static struct platform_driver rcar_pcie_driver = {
+>         },
+>         .probe = rcar_pcie_probe,
+>  };
+> -module_platform_driver(rcar_pcie_driver);
+> -
+> -MODULE_AUTHOR("Phil Edworthy <phil.edworthy@renesas.com>");
+> -MODULE_DESCRIPTION("Renesas R-Car PCIe driver");
+> -MODULE_LICENSE("GPL v2");
+> +builtin_platform_driver(rcar_pcie_driver);
 
-This patch series is going to be used by QEMU to expose sriov capabilities
-to VM. We already have an early prototype based on Knut Omang's patches for
-SRIOV[1]. 
+Gr{oetje,eeting}s,
 
-Open issues:
-1. Binding the new VFs to VFIO driver.
-Once the VM enables sriov it expects the new VFs to appear inside the VM.
-To this end we need to bind the new vfs to the VFIO driver and have QEMU
-grab them. We are currently achieve this goal using:
-echo $vendor $device > /sys/bus/pci/drivers/vfio-pci/new_id
-but we are not happy about this solution as a system might have another
-device with the same id that is unrelated to our VM.
-Other solution we've considered are:
- a. Having user space unbind and then bind the VFs to VFIO.
-     Typically resulting in an unnecessary probing of the device.
- b. Adding a driver argument to pci_enable_sriov(...) and have
-    vfio call pci_enable_sriov with the vfio driver as argument.
-    This solution avoids the unnecessary but is more intrusive.
+                        Geert
 
-2. How to tell if it is safe to disable SRIOV?
-In the current implementation, a userspace can enable sriov, grab one of
-the VFs and then call disable sriov without releasing the device.  This
-will result in a deadlock where the user process is stuck inside disable
-sriov waiting for itself to release the device. Killing the process leaves
-it in a zombie state.
-We also get a strange warning saying:
-[  181.668492] WARNING: CPU: 22 PID: 3684 at kernel/sched/core.c:7497 __might_sleep+0x77/0x80() 
-[  181.668502] do not call blocking ops when !TASK_RUNNING; state=1 set at [<ffffffff810aa193>] prepare_to_wait_event+0x63/0xf0
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-3. How to expose the Supported Page Sizes and System Page Size registers in
-the SRIOV capability? 
-Presently the hypervisor initializes Supported Page Sizes once and assumes
-it doesn't change therefore we cannot allow user space to change this
-register at will. The first solution that comes to mind is to expose a
-device that only supports the page size selected by the hypervisor.
-Unfourtently, Per SR-IOV spec section 3.3.12, PFs are required to support
-4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB page sizes. We currently map both
-registers as virtualized and read only and leave user space to worry about
-this problem.
-
-4. Other SRIOV capabilities.
-Do we want to hide capabilities we do not support in the SR-IOV
-Capabilities register? or leave it to the userspace application?
-
-[1] https://github.com/knuto/qemu/tree/sriov_patches_v6
-
-Ilya Lesokhin (2):
-  PCI: Expose iov_set_numvfs and iov_resource_size for modules.
-  VFIO: Add support for SRIOV extended capablity
-
- drivers/pci/iov.c                  |   4 +-
- drivers/vfio/pci/vfio_pci_config.c | 169 +++++++++++++++++++++++++++++++++----
- include/linux/pci.h                |   4 +
- 3 files changed, 159 insertions(+), 18 deletions(-)
-
--- 
-1.8.3.1
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
