@@ -1,117 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33589 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751874AbbLIQ76 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Dec 2015 11:59:58 -0500
-Date: Wed, 9 Dec 2015 10:59:54 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms@verge.net.au>,
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:35221 "EHLO
+	mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750754AbbLNFWp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Dec 2015 00:22:45 -0500
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
+ tracking
+To: Alexander Duyck <alexander.duyck@gmail.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <566E2917.7050705@gmail.com>
+ <CAKgT0Uf6ZFRkKFfWzDJPhKqPYD9mXEWR6jpXgVR9DpZYugDOCg@mail.gmail.com>
+Cc: Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [Resend: PATCH v2 0/3] Fix rcar-pcie for arm64
-Message-ID: <20151209165954.GG31930@localhost>
-References: <1448465439-2132-1-git-send-email-phil.edworthy@renesas.com>
- <20151125164033.GA1380@localhost>
- <PS1PR06MB118027A91BEF26FC73A6E76EF5040@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>, konrad.wilk@oracle.com,
+	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+From: Yang Zhang <yang.zhang.wz@gmail.com>
+Message-ID: <566E521F.5090103@gmail.com>
+Date: Mon, 14 Dec 2015 13:22:39 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <PS1PR06MB118027A91BEF26FC73A6E76EF5040@PS1PR06MB1180.apcprd06.prod.outlook.com>
+In-Reply-To: <CAKgT0Uf6ZFRkKFfWzDJPhKqPYD9mXEWR6jpXgVR9DpZYugDOCg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 26, 2015 at 08:32:43AM +0000, Phil Edworthy wrote:
-> HI Bjorn,
-> 
-> On 25 November 2015 16:41, Bjorn Helgaas wrote:
-> > Hi Phil,
-> > 
-> > On Wed, Nov 25, 2015 at 03:30:36PM +0000, Phil Edworthy wrote:
-> > > The first patches fixes the build problem
-> > 
-> > I'm trying to figure out if v4.4 has a build problem we need to fix.
-> > If I understand correctly, "PCI: rcar: Convert to DT resource parsing
-> > API" doesn't fix a build problem in the current tree; rather, it
-> > removes a dependency on ARM so that we can build it on ARM64.
-> v4.4 doesn't have a build problem because commit 7c537c67d2e4 ensures
-> it doesn't get built on arm64. If we revert this commit, then there is a
-> build failure as the pci_ioremap_io() function is not available on arm64.
-> That's the build failure which "PCI: rcar: Convert to DT resource parsing API"
-> fixes.
-> 
-> > > , and the second patch reverts the
-> > > patch that removed the driver from arm64 builds. The final patch add a compat
-> > > string for the r8a7795 (arm64) device.
-> > >
-> > > Tested on arm Koelsch board, all ok.
-> > >
-> > > Tested on arm64 Salvator-X board using renesas-drivers-2015-10-27-v4.3-rc7
-> > from
-> > > git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-drivers.git with
-> > PCI
-> > > next merged.
-> > > Apart from patches to add the PCIe clock and DT nodes, it also needs this fix:
-> > > ("PCI: MSI: Only use the generic MSI layer when domain is hierarchical")
-> > 
-> > I assume you mean this one from Marc: https://lkml.org/lkml/2015/11/23/388
-> > (Was that posted to linux-pci?  I don't see it in patchwork or my
-> > linux-pci archives, so I hadn't seen it yet.)
-> Ok, yes that's the patch.
-> 
-> > How exactly is that related to this series?  If I merge these before
-> > Marc's change, do we have a tree that builds for arm64 but doesn't
-> > work?
-> Correct.
+On 2015/12/14 12:54, Alexander Duyck wrote:
+> On Sun, Dec 13, 2015 at 6:27 PM, Yang Zhang <yang.zhang.wz@gmail.com> wrote:
+>> On 2015/12/14 5:28, Alexander Duyck wrote:
+>>>
+>>> This patch set is meant to be the guest side code for a proof of concept
+>>> involving leaving pass-through devices in the guest during the warm-up
+>>> phase of guest live migration.  In order to accomplish this I have added a
+>>> new function called dma_mark_dirty that will mark the pages associated
+>>> with
+>>> the DMA transaction as dirty in the case of either an unmap or a
+>>> sync_.*_for_cpu where the DMA direction is either DMA_FROM_DEVICE or
+>>> DMA_BIDIRECTIONAL.  The pass-through device must still be removed before
+>>> the stop-and-copy phase, however allowing the device to be present should
+>>> significantly improve the performance of the guest during the warm-up
+>>> period.
+>>>
+>>> This current implementation is very preliminary and there are number of
+>>> items still missing.  Specifically in order to make this a more complete
+>>> solution we need to support:
+>>> 1.  Notifying hypervisor that drivers are dirtying DMA pages received
+>>> 2.  Bypassing page dirtying when it is not needed.
+>>>
+>>
+>> Shouldn't current log dirty mechanism already cover them?
+>
+> The guest has no way of currently knowing that the hypervisor is doing
+> dirty page logging, and the log dirty mechanism currently has no way
+> of tracking device DMA accesses.  This change is meant to bridge the
+> two so that the guest device driver will force the SWIOTLB DMA API to
+> mark pages written to by the device as dirty.
 
-OK, great!  I just asked Linus to pull that patch (3845d2953aac ("PCI/MSI:
-Only use the generic MSI layer when domain is hierarchical")) for v4.4, so
-these changes will be merged after that one.
+OK. This is what we called "dummy write mechanism". Actually, this is 
+just a workaround before iommu dirty bit ready. Eventually, we need to 
+change to use the hardware dirty bit. Besides, we may still lost the 
+data if dma happens during/just before stop and copy phase.
 
-I put all three of these on pci/host-rcar for v4.5.
+>
+>>> The two mechanisms referenced above would likely require coordination with
+>>> QEMU and as such are open to discussion.  I haven't attempted to address
+>>> them as I am not sure there is a consensus as of yet.  My personal
+>>> preference would be to add a vendor-specific configuration block to the
+>>> emulated pci-bridge interfaces created by QEMU that would allow us to
+>>> essentially extend shpc to support guest live migration with pass-through
+>>> devices.
+>>>
+>>> The functionality in this patch set is currently disabled by default.  To
+>>> enable it you can select "SWIOTLB page dirtying" from the "Processor type
+>>> and features" menu.
+>>
+>>
+>> Only SWIOTLB is supported?
+>
+> Yes.  For right now this only supports SWIOTLB.  The assumption here
+> is that SWIOTLB is in use for most cases where an IOMMU is not
+> present.  If an IOMMU is present in a virtualized guest then most
+> likely the IOMMU might be able to provide a separate mechanism for
+> dirty page tracking.
+>
+> - Alex
+>
 
-Simon, I only see your explicit ack on the first one, but I assume you're
-OK with all three.  Let me know if otherwise.
 
-> > What about the PCIe clock and DT changes you mention?  Is there a
-> > reason to keep them separate?  Would it be feasible to include the DT
-> > changes in the same patch as the driver change that uses those
-> > changes?
-> The approach for all other drivers has been to keep these separate. There
-> are no changes to the dt bindings, it's just adding the node to the new
-> device and board, so there is no problem with ordering of these patches.
-> 
-> Thanks
-> Phil
-> 
-> > Bjorn
-> > 
-> > > Resent with whole series marked as v2 and acks, etc added.
-> > >
-> > > Harunobu Kurokawa (1):
-> > >   PCI: pcie-rcar: Add support for R-Car H3.
-> > >
-> > > Phil Edworthy (2):
-> > >   PCI: rcar: Convert to DT resource parsing API
-> > >   Revert "PCI: rcar: Build pcie-rcar.c only on ARM"
-> > >
-> > >  Documentation/devicetree/bindings/pci/rcar-pci.txt |   3 +-
-> > >  drivers/pci/host/Kconfig                           |   3 +-
-> > >  drivers/pci/host/pcie-rcar.c                       | 117 +++++++++++++--------
-> > >  3 files changed, 77 insertions(+), 46 deletions(-)
-> > >
-> > > --
-> > > 2.5.0
-> > >
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+-- 
+best regards
+yang
