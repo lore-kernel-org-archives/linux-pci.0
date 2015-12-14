@@ -1,56 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:54799 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932335AbbLBA0y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 19:26:54 -0500
-Date: Wed, 2 Dec 2015 09:26:50 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 1/4] PCI: rcar-gen2: Add generic compatibility string
-Message-ID: <20151202002650.GI27457@verge.net.au>
-References: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
- <1448954672-27236-2-git-send-email-horms+renesas@verge.net.au>
- <CAMuHMdVJvChiFTkeeJNBcPG2CsC3PxoEC4Lx0fHOeMMMPLew0g@mail.gmail.com>
+Received: from mout.kundenserver.de ([212.227.126.135]:61475 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752578AbbLNIyq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Dec 2015 03:54:46 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	linux-kernel@vger.kernel.org,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 03/10] drivers/pci: make host/pci-mvebu.c explicitly non-modular
+Date: Mon, 14 Dec 2015 09:54:12 +0100
+Message-ID: <3739759.V0MRsvH5Tk@wuerfel>
+In-Reply-To: <1449970917-12633-4-git-send-email-paul.gortmaker@windriver.com>
+References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com> <1449970917-12633-4-git-send-email-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMuHMdVJvChiFTkeeJNBcPG2CsC3PxoEC4Lx0fHOeMMMPLew0g@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 01, 2015 at 09:41:49AM +0100, Geert Uytterhoeven wrote:
-> On Tue, Dec 1, 2015 at 8:24 AM, Simon Horman <horms+renesas@verge.net.au> wrote:
-> > Add fallback compatibility string for R-Car Gen 2 Family.
-> > This is in keeping with the fallback scheme being adopted wherever
-> > appropriate for drivers for Renesas SoCs.
-> >
-> > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-> > ---
-> >  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 11 +++++++++--
-> >  drivers/pci/host/pci-rcar-gen2.c                        |  1 +
-> >  2 files changed, 10 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> > index 891463cb09c2..b19be08a8113 100644
-> > --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> > +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> > @@ -8,7 +8,14 @@ OHCI and EHCI controllers.
-> >  Required properties:
-> >  - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
-> >               "renesas,pci-r8a7791" for the R8A7791 SoC;
-> > -             "renesas,pci-r8a7794" for the R8A7794 SoC.
-> > +             "renesas,pci-r8a7794" for the R8A7794 SoC;
-> > +             "renesas,pci-gen2" for a generic R-Car Gen2 compatible device.
+On Saturday 12 December 2015 20:41:50 Paul Gortmaker wrote:
+> The Kconfig currently controlling compilation of this code is:
 > 
-> Shouldn't that be "renesas,pci-rcar-gen" or "renesas,pci-rcar2"?
+> drivers/pci/host/Kconfig:config PCI_MVEBU
+> drivers/pci/host/Kconfig:       bool "Marvell EBU PCIe controller"
 > 
-> Else you'll be in trouble when Renesas starts focussing on airplanes
-> (R-Plane Gen2), rockets (R-Rocket Gen2), or IoT (R-IoT Gen2).
+> ...meaning that it currently is not being built as a module by anyone.
 
-Point taken.
+Here too. I think we should really try to let all PCI host drivers be
+loadable modules if possible. The module unload path is currently
+a bit iffy because of the way it interacts with the arch/arm PCI
+infrastructure, but we are in the process of fixing it.
 
-I think renesas,pci-rcar-gen2 should work well enough.
+For now, I think allowing all PCIe host drivers for ARM to be
+loadable but non-removably modules would be ideal.
+
+	Arnd
