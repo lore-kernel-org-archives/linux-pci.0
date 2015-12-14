@@ -1,82 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:32964 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752909AbbLQRPs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Dec 2015 12:15:48 -0500
-Date: Thu, 17 Dec 2015 11:15:45 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv5 7/7] pciutils: Allow 32-bit domains
-Message-ID: <20151217171545.GB23549@localhost>
-References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
- <1449523949-21898-8-git-send-email-keith.busch@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449523949-21898-8-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <566E521F.5090103@gmail.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+	<566E2917.7050705@gmail.com>
+	<CAKgT0Uf6ZFRkKFfWzDJPhKqPYD9mXEWR6jpXgVR9DpZYugDOCg@mail.gmail.com>
+	<566E521F.5090103@gmail.com>
+Date: Sun, 13 Dec 2015 21:46:46 -0800
+Message-ID: <CAKgT0UfgmwkZpU2=6DCsPZOwhDPyZDkbrPGH-dhVfA3ZVusJyQ@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page tracking
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: Yang Zhang <yang.zhang.wz@gmail.com>
+Cc: Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>, konrad.wilk@oracle.com,
+	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith,
+On Sun, Dec 13, 2015 at 9:22 PM, Yang Zhang <yang.zhang.wz@gmail.com> wrote:
+> On 2015/12/14 12:54, Alexander Duyck wrote:
+>>
+>> On Sun, Dec 13, 2015 at 6:27 PM, Yang Zhang <yang.zhang.wz@gmail.com>
+>> wrote:
+>>>
+>>> On 2015/12/14 5:28, Alexander Duyck wrote:
+>>>>
+>>>>
+>>>> This patch set is meant to be the guest side code for a proof of concept
+>>>> involving leaving pass-through devices in the guest during the warm-up
+>>>> phase of guest live migration.  In order to accomplish this I have added
+>>>> a
+>>>> new function called dma_mark_dirty that will mark the pages associated
+>>>> with
+>>>> the DMA transaction as dirty in the case of either an unmap or a
+>>>> sync_.*_for_cpu where the DMA direction is either DMA_FROM_DEVICE or
+>>>> DMA_BIDIRECTIONAL.  The pass-through device must still be removed before
+>>>> the stop-and-copy phase, however allowing the device to be present
+>>>> should
+>>>> significantly improve the performance of the guest during the warm-up
+>>>> period.
+>>>>
+>>>> This current implementation is very preliminary and there are number of
+>>>> items still missing.  Specifically in order to make this a more complete
+>>>> solution we need to support:
+>>>> 1.  Notifying hypervisor that drivers are dirtying DMA pages received
+>>>> 2.  Bypassing page dirtying when it is not needed.
+>>>>
+>>>
+>>> Shouldn't current log dirty mechanism already cover them?
+>>
+>>
+>> The guest has no way of currently knowing that the hypervisor is doing
+>> dirty page logging, and the log dirty mechanism currently has no way
+>> of tracking device DMA accesses.  This change is meant to bridge the
+>> two so that the guest device driver will force the SWIOTLB DMA API to
+>> mark pages written to by the device as dirty.
+>
+>
+> OK. This is what we called "dummy write mechanism". Actually, this is just a
+> workaround before iommu dirty bit ready. Eventually, we need to change to
+> use the hardware dirty bit. Besides, we may still lost the data if dma
+> happens during/just before stop and copy phase.
 
-On Mon, Dec 07, 2015 at 02:32:29PM -0700, Keith Busch wrote:
-> PCI-e segments will continue to use the lower 16 bits as required by
-> ACPI. Special domains may use the full 32-bits.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  lib/filter.c |    2 +-
->  lib/pci.h    |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/lib/filter.c b/lib/filter.c
-> index d4254a0..075dc2f 100644
-> --- a/lib/filter.c
-> +++ b/lib/filter.c
-> @@ -45,7 +45,7 @@ pci_filter_parse_slot_v33(struct pci_filter *f, char *str)
->  	  if (str[0] && strcmp(str, "*"))
->  	    {
->  	      long int x = strtol(str, &e, 16);
-> -	      if ((e && *e) || (x < 0 || x > 0xffff))
-> +	      if ((e && *e) || (x < 0))
+Right, this is a "dummy write mechanism" in order to allow for entry
+tracking.  This only works completely if we force the hardware to
+quiesce via a hot-plug event before we reach the stop-and-copy phase
+of the migration.
 
-Just out of curiosity (I don't maintain pciutils; Martin would apply
-this one), is there some part of the PCI or PCI firmware spec that is
-relevant to this change?  Maybe this is connected to parsing things
-exported by the kernel and not directly tied to PCI at the spec level.
+The IOMMU dirty bit approach is likely going to have a significant
+number of challenges involved.  Looking over the driver and the data
+sheet it looks like the current implementation is using a form of huge
+pages in the IOMMU, as such we will need to tear that down and replace
+it with 4K pages if we don't want to dirty large regions with each DMA
+transaction, and I'm not sure that is something we can change while
+DMA is active to the affected regions.  In addition the data sheet
+references the fact that the page table entries are stored in a
+translation cache and in order to sync things up you have to
+invalidate the entries.  I'm not sure what the total overhead would be
+for invalidating something like a half million 4K pages to migrate a
+guest with just 2G of RAM, but I would think that might be a bit
+expensive given the fact that IOMMU accesses aren't known for being
+incredibly fast when invalidating DMA on the host.
 
-Whatever it is, a pointer to the producer of the information you're
-consuming here would help us understand and review the patch.
-
->  		return "Invalid domain number";
->  	      f->domain = x;
->  	    }
-> diff --git a/lib/pci.h b/lib/pci.h
-> index 10ba831..7e42765 100644
-> --- a/lib/pci.h
-> +++ b/lib/pci.h
-> @@ -119,7 +119,7 @@ struct pci_param *pci_walk_params(struct pci_access *acc, struct pci_param *prev
->  
->  struct pci_dev {
->    struct pci_dev *next;			/* Next device in the chain */
-> -  u16 domain;				/* PCI domain (host bridge) */
-> +  int32_t domain;			/* PCI domain (host bridge) */
->    u8 bus, dev, func;			/* Bus inside domain, device and function */
->  
->    /* These fields are set by pci_fill_info() */
-> -- 
-> 1.7.10.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+- Alex
