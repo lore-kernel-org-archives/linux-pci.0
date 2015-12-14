@@ -1,113 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0129.outbound.protection.outlook.com ([65.55.169.129]:30336
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933492AbbLORgQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Dec 2015 12:36:16 -0500
-From: KY Srinivasan <kys@microsoft.com>
-To: Jake Oshins <jakeo@microsoft.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 14 Dec 2015 16:02:59 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Yang Zhang <yang.zhang.wz@gmail.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"olaf@aepfle.de" <olaf@aepfle.de>,
-	"apw@canonical.com" <apw@canonical.com>,
-	"vkuznets@redhat.com" <vkuznets@redhat.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"Haiyang Zhang" <haiyangz@microsoft.com>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Jake Oshins <jakeo@microsoft.com>
-Subject: RE: [PATCH v9 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-V
- VMs
-Date: Tue, 15 Dec 2015 17:36:12 +0000
-Message-ID: <BY2PR0301MB16545331BCB31D708A74C583A0EE0@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
-Content-Type: text/plain; charset="us-ascii"
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	konrad.wilk@oracle.com,
+	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
+ tracking
+Message-ID: <20151214160139-mutt-send-email-mst@redhat.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <566E2917.7050705@gmail.com>
+ <CAKgT0Uf6ZFRkKFfWzDJPhKqPYD9mXEWR6jpXgVR9DpZYugDOCg@mail.gmail.com>
+ <566E521F.5090103@gmail.com>
+ <CAKgT0UfgmwkZpU2=6DCsPZOwhDPyZDkbrPGH-dhVfA3ZVusJyQ@mail.gmail.com>
+ <566E6DBA.4080800@gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <566E6DBA.4080800@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Dec 14, 2015 at 03:20:26PM +0800, Yang Zhang wrote:
+> On 2015/12/14 13:46, Alexander Duyck wrote:
+> >On Sun, Dec 13, 2015 at 9:22 PM, Yang Zhang <yang.zhang.wz@gmail.com> wrote:
+> >>On 2015/12/14 12:54, Alexander Duyck wrote:
+> >>>
+> >>>On Sun, Dec 13, 2015 at 6:27 PM, Yang Zhang <yang.zhang.wz@gmail.com>
+> >>>wrote:
+> >>>>
+> >>>>On 2015/12/14 5:28, Alexander Duyck wrote:
+> >>>>>
+> >>>>>
+> >>>>>This patch set is meant to be the guest side code for a proof of concept
+> >>>>>involving leaving pass-through devices in the guest during the warm-up
+> >>>>>phase of guest live migration.  In order to accomplish this I have added
+> >>>>>a
+> >>>>>new function called dma_mark_dirty that will mark the pages associated
+> >>>>>with
+> >>>>>the DMA transaction as dirty in the case of either an unmap or a
+> >>>>>sync_.*_for_cpu where the DMA direction is either DMA_FROM_DEVICE or
+> >>>>>DMA_BIDIRECTIONAL.  The pass-through device must still be removed before
+> >>>>>the stop-and-copy phase, however allowing the device to be present
+> >>>>>should
+> >>>>>significantly improve the performance of the guest during the warm-up
+> >>>>>period.
+> >>>>>
+> >>>>>This current implementation is very preliminary and there are number of
+> >>>>>items still missing.  Specifically in order to make this a more complete
+> >>>>>solution we need to support:
+> >>>>>1.  Notifying hypervisor that drivers are dirtying DMA pages received
+> >>>>>2.  Bypassing page dirtying when it is not needed.
+> >>>>>
+> >>>>
+> >>>>Shouldn't current log dirty mechanism already cover them?
+> >>>
+> >>>
+> >>>The guest has no way of currently knowing that the hypervisor is doing
+> >>>dirty page logging, and the log dirty mechanism currently has no way
+> >>>of tracking device DMA accesses.  This change is meant to bridge the
+> >>>two so that the guest device driver will force the SWIOTLB DMA API to
+> >>>mark pages written to by the device as dirty.
+> >>
+> >>
+> >>OK. This is what we called "dummy write mechanism". Actually, this is just a
+> >>workaround before iommu dirty bit ready. Eventually, we need to change to
+> >>use the hardware dirty bit. Besides, we may still lost the data if dma
+> >>happens during/just before stop and copy phase.
+> >
+> >Right, this is a "dummy write mechanism" in order to allow for entry
+> >tracking.  This only works completely if we force the hardware to
+> >quiesce via a hot-plug event before we reach the stop-and-copy phase
+> >of the migration.
+> >
+> >The IOMMU dirty bit approach is likely going to have a significant
+> >number of challenges involved.  Looking over the driver and the data
+> >sheet it looks like the current implementation is using a form of huge
+> >pages in the IOMMU, as such we will need to tear that down and replace
+> >it with 4K pages if we don't want to dirty large regions with each DMA
+> 
+> Yes, we need to split the huge page into small pages to get the small dirty
+> range.
+> 
+> >transaction, and I'm not sure that is something we can change while
+> >DMA is active to the affected regions.  In addition the data sheet
+> 
+> what changes do you mean?
+> 
+> >references the fact that the page table entries are stored in a
+> >translation cache and in order to sync things up you have to
+> >invalidate the entries.  I'm not sure what the total overhead would be
+> >for invalidating something like a half million 4K pages to migrate a
+> >guest with just 2G of RAM, but I would think that might be a bit
+> 
+> Do you mean the cost of submit the flush request or the performance
+> impaction due to IOTLB miss? For the former, we have domain-selective
+> invalidation. For the latter, it would be acceptable since live migration
+> shouldn't last too long.
 
+That's pretty weak - if migration time is short and speed does not
+matter during migration, then all this work is useless, temporarily
+switching to a virtual card would be preferable.
 
-> -----Original Message-----
-> From: jakeo@microsoft.com [mailto:jakeo@microsoft.com]
-> Sent: Wednesday, December 9, 2015 2:55 PM
-> To: gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>; linux-
-> kernel@vger.kernel.org; devel@linuxdriverproject.org; olaf@aepfle.de;
-> apw@canonical.com; vkuznets@redhat.com; tglx@linutronix.de; Haiyang
-> Zhang <haiyangz@microsoft.com>; marc.zyngier@arm.com;
-> bhelgaas@google.com; linux-pci@vger.kernel.org
-> Cc: Jake Oshins <jakeo@microsoft.com>
-> Subject: [PATCH v9 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-V
-> VMs
-> 
-> From: Jake Oshins <jakeo@microsoft.com>
-> 
-> This version of the patch series removes warning when compiling x86
-> 32-bit.
-> 
-> First, export functions that allow correlating Hyper-V virtual processors
-> and Linux cpus, along with the means for invoking a hypercall that targets
-> interrupts at chosen vectors on specific cpus.
-> 
-> Second, mark various parts of IRQ domain related code as exported, so that
-> this PCI front-end can implement an IRQ domain as part of a module.  (The
-> alternative would be to pull all tyhis into the kernel, which would pull
-> in a lot of other Hyper-V related code, as this IRQ domain depends on
-> vmbus.ko.)
-> 
-> Third, modify PCI so that new root PCI buses can be marked with an
-> associated
-> fwnode_handle, and so that root PCI buses can look up their associated IRQ
-> domain by that handle.
-> 
-> Fourth, introduce a new driver, hv_pcifront, which exposes root PCI buses in
-> a Hyper-V VM.  These root PCI buses expose real PCIe device, or PCI Virtual
-> Functions.
+> >expensive given the fact that IOMMU accesses aren't known for being
+> >incredibly fast when invalidating DMA on the host.
+> >
+> >- Alex
+> >
 > 
 > 
-> Jake Oshins (7):
->   drivers:hv: Export a function that maps Linux CPU num onto Hyper-V
->     proc num
->   drivers:hv: Export hv_do_hypercall()
->   PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
->   PCI: Add fwnode_handle to pci_sysdata
->   PCI: irqdomain: Look up IRQ domain by fwnode_handle
->   drivers:hv: Define the channel type of Hyper-V PCI Express
->     pass-through
->   PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
-> 
->  MAINTAINERS                    |    1 +
->  arch/x86/include/asm/msi.h     |    6 +
->  arch/x86/include/asm/pci.h     |   15 +
->  arch/x86/kernel/apic/msi.c     |    8 +-
->  arch/x86/kernel/apic/vector.c  |    2 +
->  drivers/hv/hv.c                |   20 +-
->  drivers/hv/hyperv_vmbus.h      |    2 +-
->  drivers/hv/vmbus_drv.c         |   17 +
->  drivers/pci/Kconfig            |    7 +
->  drivers/pci/host/Makefile      |    1 +
->  drivers/pci/host/hv_pcifront.c | 2250
-> ++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/msi.c              |    4 +
->  drivers/pci/probe.c            |   15 +
->  include/linux/hyperv.h         |   14 +
->  include/linux/pci.h            |    4 +
->  kernel/irq/chip.c              |    1 +
->  kernel/irq/irqdomain.c         |    4 +
->  17 files changed, 2357 insertions(+), 14 deletions(-)
->  create mode 100644 drivers/pci/host/hv_pcifront.c
-> 
-> --
-> 1.9.1
-
-Of these 7 patches, Greg has committed all of the VMBUS
-related supporting patches (3 patches). Thomas, can you 
-take the IRQ related patches through your tree.
-
-Regards,
-
-K. Y
-
+> -- 
+> best regards
+> yang
