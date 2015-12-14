@@ -1,45 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Andersson <bjorn@kryo.se>
-Subject: Re: [PATCH v5 3/5] PCI: qcom: Add Qualcomm PCIe controller driver
-Date: Tue, 22 Dec 2015 00:04:22 +0100
-Cc: kbuild test robot <lkp@intel.com>,
-	Stanimir Varbanov <stanimir.varbanov@linaro.org>,
-	kbuild-all@01.org, "linux-arm-msm" <linux-arm-msm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>
-References: <1450442339-18765-4-git-send-email-stanimir.varbanov@linaro.org> <201512182111.1GLn2hxy%fengguang.wu@intel.com> <CAJAp7Ohgr7j7i=73R6Y_+GDa_4QZnhuPgB7AFdJGxNVJ_cVFsA@mail.gmail.com>
-In-Reply-To: <CAJAp7Ohgr7j7i=73R6Y_+GDa_4QZnhuPgB7AFdJGxNVJ_cVFsA@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	tglx@linutronix.de, jason@lakedaemon.net, bhelgaas@google.com,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	hanjun.guo@linaro.org, tomasz.nowicki@linaro.org,
+	graeme.gregory@linaro.org, dhdang@apm.com,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v7 1/4] acpi: pci: Setup MSI domain for ACPI based pci devices
+Date: Mon, 14 Dec 2015 22:29:43 +0100
+Message-ID: <2013286.NCRgLU1HGi@vostro.rjw.lan>
+In-Reply-To: <566EDCAC.1080401@arm.com>
+References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com> <1449766530-16935-2-git-send-email-Suravee.Suthikulpanit@amd.com> <566EDCAC.1080401@arm.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201512220004.22548.arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 21 December 2015, Bjorn Andersson wrote:
-> I disagree with this "recommendation" as it's only outcome will be asymmetry.
+On Monday, December 14, 2015 03:13:48 PM Marc Zyngier wrote:
+> On 10/12/15 16:55, Suravee Suthikulpanit wrote:
+> > This patch introduces pci_msi_register_fwnode_provider() for irqchip
+> > to register a callback, to provide a way to determine appropriate MSI
+> > domain for a pci device.
+> > 
+> > It also introduces pci_host_bridge_acpi_msi_domain(), which returns
+> > the MSI domain of the specified PCI host bridge with DOMAIN_BUS_PCI_MSI
+> > bus token. Then, it is assigned to pci device.
+> > 
+> > Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+> > Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 > 
-> I think this script should be changed to only warn if there's a single
-> IS_ERR/PTR_ERR at the end of the function, not if there's a list of
-> them and this would replace the last one.
+> Bjorn, Rafael,
 > 
+> Do you have any comment on this?
+> 
+> I was hoping to queue this work (and the 3 patches that depend on it)
+> for 4.5, but if you don't have the bandwidth to review it, I'll postpone
+> it to the following merge window.
 
-Agreed, looks like a false positive, and I think it's best to ignore the
-warning here, but not change the script that seems reasonable in general.
+How much time do we have to look at it before it is postponed?
 
-	Arnd
+Thanks,
+Rafael
+
