@@ -1,85 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V2 08/23] arm64, acpi: Use empty PCI config space accessors from mcfg.c file.
-Date: Wed, 16 Dec 2015 16:16:18 +0100
-Message-Id: <1450278993-12664-9-git-send-email-tn@semihalf.com>
-In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:36651 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751814AbbLNC1u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Dec 2015 21:27:50 -0500
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
+ tracking
+To: Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, alexander.duyck@gmail.com,
+	qemu-devel@nongnu.org
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+Cc: tianyu.lan@intel.com, mst@redhat.com, konrad.wilk@oracle.com,
+	dgilbert@redhat.com, agraf@suse.de, alex.williamson@redhat.com
+From: Yang Zhang <yang.zhang.wz@gmail.com>
+Message-ID: <566E2917.7050705@gmail.com>
+Date: Mon, 14 Dec 2015 10:27:35 +0800
+MIME-Version: 1.0
+In-Reply-To: <20151213212557.5410.48577.stgit@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can now use previously prepared empty ACPI RAW accessors
-and cleanup a bit before adding full support for PCI host bridge driver.
+On 2015/12/14 5:28, Alexander Duyck wrote:
+> This patch set is meant to be the guest side code for a proof of concept
+> involving leaving pass-through devices in the guest during the warm-up
+> phase of guest live migration.  In order to accomplish this I have added a
+> new function called dma_mark_dirty that will mark the pages associated with
+> the DMA transaction as dirty in the case of either an unmap or a
+> sync_.*_for_cpu where the DMA direction is either DMA_FROM_DEVICE or
+> DMA_BIDIRECTIONAL.  The pass-through device must still be removed before
+> the stop-and-copy phase, however allowing the device to be present should
+> significantly improve the performance of the guest during the warm-up
+> period.
+>
+> This current implementation is very preliminary and there are number of
+> items still missing.  Specifically in order to make this a more complete
+> solution we need to support:
+> 1.  Notifying hypervisor that drivers are dirtying DMA pages received
+> 2.  Bypassing page dirtying when it is not needed.
+>
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- arch/arm64/Kconfig      |  6 ++++++
- arch/arm64/kernel/pci.c | 15 ---------------
- 2 files changed, 6 insertions(+), 15 deletions(-)
+Shouldn't current log dirty mechanism already cover them?
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 871f217..d65d315 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -92,6 +92,7 @@ config ARM64
- 	select SPARSE_IRQ
- 	select SYSCTL_EXCEPTION_TRACE
- 	select HAVE_CONTEXT_TRACKING
-+	select HAVE_PCI_ECAM
- 	help
- 	  ARM 64-bit (AArch64) Linux support.
- 
-@@ -207,6 +208,11 @@ source "drivers/pci/Kconfig"
- source "drivers/pci/pcie/Kconfig"
- source "drivers/pci/hotplug/Kconfig"
- 
-+config PCI_MMCONFIG
-+	def_bool y
-+	select PCI_ECAM
-+	depends on ACPI
-+
- endmenu
- 
- menu "Kernel Features"
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index b3d098b..023b983 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -61,21 +61,6 @@ int pcibios_add_device(struct pci_dev *dev)
- 	return 0;
- }
- 
--/*
-- * raw_pci_read/write - Platform-specific PCI config space access.
-- */
--int raw_pci_read(unsigned int domain, unsigned int bus,
--		  unsigned int devfn, int reg, int len, u32 *val)
--{
--	return -ENXIO;
--}
--
--int raw_pci_write(unsigned int domain, unsigned int bus,
--		unsigned int devfn, int reg, int len, u32 val)
--{
--	return -ENXIO;
--}
--
- #ifdef CONFIG_ACPI
- /* Root bridge scanning */
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+
+> The two mechanisms referenced above would likely require coordination with
+> QEMU and as such are open to discussion.  I haven't attempted to address
+> them as I am not sure there is a consensus as of yet.  My personal
+> preference would be to add a vendor-specific configuration block to the
+> emulated pci-bridge interfaces created by QEMU that would allow us to
+> essentially extend shpc to support guest live migration with pass-through
+> devices.
+>
+> The functionality in this patch set is currently disabled by default.  To
+> enable it you can select "SWIOTLB page dirtying" from the "Processor type
+> and features" menu.
+
+Only SWIOTLB is supported?
+
+>
+> ---
+>
+> Alexander Duyck (3):
+>        swiotlb: Fold static unmap and sync calls into calling functions
+>        xen/swiotlb: Fold static unmap and sync calls into calling functions
+>        x86: Create dma_mark_dirty to dirty pages used for DMA by VM guest
+>
+>
+>   arch/arm/include/asm/dma-mapping.h       |    3 +
+>   arch/arm64/include/asm/dma-mapping.h     |    5 +-
+>   arch/ia64/include/asm/dma.h              |    1
+>   arch/mips/include/asm/dma-mapping.h      |    1
+>   arch/powerpc/include/asm/swiotlb.h       |    1
+>   arch/tile/include/asm/dma-mapping.h      |    1
+>   arch/unicore32/include/asm/dma-mapping.h |    1
+>   arch/x86/Kconfig                         |   11 ++++
+>   arch/x86/include/asm/swiotlb.h           |   26 ++++++++
+>   drivers/xen/swiotlb-xen.c                |   92 +++++++++++++-----------------
+>   lib/swiotlb.c                            |   83 ++++++++++++---------------
+>   11 files changed, 123 insertions(+), 102 deletions(-)
+>
+> --
+>
+
+
 -- 
-1.9.1
-
+best regards
+yang
