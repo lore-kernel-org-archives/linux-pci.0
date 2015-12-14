@@ -1,86 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V2 23/23] arm64, pci, acpi: Start using ACPI based PCI host bridge driver for ARM64.
-Date: Wed, 16 Dec 2015 16:16:33 +0100
-Message-Id: <1450278993-12664-24-git-send-email-tn@semihalf.com>
-In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <566E2917.7050705@gmail.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+	<566E2917.7050705@gmail.com>
+Date: Sun, 13 Dec 2015 20:54:09 -0800
+Message-ID: <CAKgT0Uf6ZFRkKFfWzDJPhKqPYD9mXEWR6jpXgVR9DpZYugDOCg@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page tracking
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: Yang Zhang <yang.zhang.wz@gmail.com>
+Cc: Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>, konrad.wilk@oracle.com,
+	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Lets get rid of empty PCI init stub, related ACPI header and
-go with full-blown PCI host bridge driver.
+On Sun, Dec 13, 2015 at 6:27 PM, Yang Zhang <yang.zhang.wz@gmail.com> wrote:
+> On 2015/12/14 5:28, Alexander Duyck wrote:
+>>
+>> This patch set is meant to be the guest side code for a proof of concept
+>> involving leaving pass-through devices in the guest during the warm-up
+>> phase of guest live migration.  In order to accomplish this I have added a
+>> new function called dma_mark_dirty that will mark the pages associated
+>> with
+>> the DMA transaction as dirty in the case of either an unmap or a
+>> sync_.*_for_cpu where the DMA direction is either DMA_FROM_DEVICE or
+>> DMA_BIDIRECTIONAL.  The pass-through device must still be removed before
+>> the stop-and-copy phase, however allowing the device to be present should
+>> significantly improve the performance of the guest during the warm-up
+>> period.
+>>
+>> This current implementation is very preliminary and there are number of
+>> items still missing.  Specifically in order to make this a more complete
+>> solution we need to support:
+>> 1.  Notifying hypervisor that drivers are dirtying DMA pages received
+>> 2.  Bypassing page dirtying when it is not needed.
+>>
+>
+> Shouldn't current log dirty mechanism already cover them?
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Catalin Marinas <catalin.marinas@arm.com>
-CC: Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-CC: Will Deacon <will.deacon@arm.com>
----
- arch/arm64/Kconfig      |  4 ++++
- arch/arm64/kernel/pci.c | 10 ----------
- 2 files changed, 4 insertions(+), 10 deletions(-)
+The guest has no way of currently knowing that the hypervisor is doing
+dirty page logging, and the log dirty mechanism currently has no way
+of tracking device DMA accesses.  This change is meant to bridge the
+two so that the guest device driver will force the SWIOTLB DMA API to
+mark pages written to by the device as dirty.
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index d65d315..71032ed 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -86,6 +86,7 @@ config ARM64
- 	select OF_EARLY_FLATTREE
- 	select OF_RESERVED_MEM
- 	select PERF_USE_VMALLOC
-+	select PCI_HOST_GENERIC_ACPI if ACPI
- 	select POWER_RESET
- 	select POWER_SUPPLY
- 	select RTC_LIB
-@@ -213,6 +214,9 @@ config PCI_MMCONFIG
- 	select PCI_ECAM
- 	depends on ACPI
- 
-+config ARCH_PCI_HOST_GENERIC_ACPI
-+	def_bool ACPI
-+
- endmenu
- 
- menu "Kernel Features"
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index f7948f5..e9cf58b 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -10,7 +10,6 @@
-  *
-  */
- 
--#include <linux/acpi.h>
- #include <linux/init.h>
- #include <linux/io.h>
- #include <linux/kernel.h>
-@@ -50,12 +49,3 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 
- 	return pci_enable_resources(dev, mask);
- }
--
--#ifdef CONFIG_ACPI
--/* Root bridge scanning */
--struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
--{
--	/* TODO: Should be revisited when implementing PCI on ACPI */
--	return NULL;
--}
--#endif
--- 
-1.9.1
+>> The two mechanisms referenced above would likely require coordination with
+>> QEMU and as such are open to discussion.  I haven't attempted to address
+>> them as I am not sure there is a consensus as of yet.  My personal
+>> preference would be to add a vendor-specific configuration block to the
+>> emulated pci-bridge interfaces created by QEMU that would allow us to
+>> essentially extend shpc to support guest live migration with pass-through
+>> devices.
+>>
+>> The functionality in this patch set is currently disabled by default.  To
+>> enable it you can select "SWIOTLB page dirtying" from the "Processor type
+>> and features" menu.
+>
+>
+> Only SWIOTLB is supported?
 
+Yes.  For right now this only supports SWIOTLB.  The assumption here
+is that SWIOTLB is in use for most cases where an IOMMU is not
+present.  If an IOMMU is present in a virtualized guest then most
+likely the IOMMU might be able to provide a separate mechanism for
+dirty page tracking.
+
+- Alex
