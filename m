@@ -1,41 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:44370 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932469AbbLRNoJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Dec 2015 08:44:09 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Wolfram Sang <wsa@the-dreams.de>
-CC: Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>
-Subject: RE: [PATCH 2/4] PCI: rcar: Support runtime PM link state L1 handling
- in pcie-rcar
-Date: Fri, 18 Dec 2015 13:44:04 +0000
-Message-ID: <PS1PR06MB1180C86CD41FE69F44387D59F5E10@PS1PR06MB1180.apcprd06.prod.outlook.com>
-References: <1450358557-28376-1-git-send-email-phil.edworthy@renesas.com>
-	<1450358557-28376-3-git-send-email-phil.edworthy@renesas.com>
-	<20151217133058.GA20372@katana>
- <CAMuHMdWfOo7=g9F_qmhM65yct0P=F3QvkVkHMggBJRLA0gCPYQ@mail.gmail.com>
-In-Reply-To: <CAMuHMdWfOo7=g9F_qmhM65yct0P=F3QvkVkHMggBJRLA0gCPYQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>, <tony@atomide.com>
+CC: <bcousson@baylibre.com>, <kishon@ti.com>, <robh+dt@kernel.org>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<linux@arm.linux.org.uk>, <rogerq@ti.com>, <nsekhar@ti.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+	<t-kristo@ti.com>
+Subject: [PATCH v3 1/4] ARM: dts: dra7: Add dt node for the sycon pcie
+Date: Tue, 15 Dec 2015 15:09:03 +0530
+Message-ID: <1450172346-11890-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1450172346-11890-1-git-send-email-kishon@ti.com>
+References: <1450172346-11890-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gMTcgRGVjZW1iZXIgMjAxNSAxMzo0MSwgR2VlcnQgVXl0dGVyaG9ldmVuIHdyb3RlOg0KPiBP
-biBUaHUsIERlYyAxNywgMjAxNSBhdCAyOjMwIFBNLCBXb2xmcmFtIFNhbmcgPHdzYUB0aGUtZHJl
-YW1zLmRlPiB3cm90ZToNCj4gPj4gKyAgICAgICAgICAgICAvKiBXYWl0IHVudGlsIHdlIGFyZSBp
-biBMMSAqLw0KPiA+PiArICAgICAgICAgICAgIHdoaWxlICghKHZhbCAmIEwxRkFFRykpDQo+ID4+
-ICsgICAgICAgICAgICAgICAgICAgICB2YWwgPSByY2FyX3BjaV9yZWFkX3JlZyhwY2llLCBQTVNS
-KTsNCj4gPg0KPiA+IE5vIHRpbWVvdXQ/DQo+IA0KPiBBbmQgbm8gY3B1X3JlbGF4KCkgaW4gZWFj
-aCBpdGVyYXRpb24uDQpTdXJlLCBJJ2xsIGZpeCB0aGF0Lg0KDQpUaGFua3MNClBoaWwNCg0KIA0K
-PiBHcntvZXRqZSxlZXRpbmd9cywNCj4gDQo+ICAgICAgICAgICAgICAgICAgICAgICAgIEdlZXJ0
-DQo+IA0KPiAtLQ0KPiBHZWVydCBVeXR0ZXJob2V2ZW4gLS0gVGhlcmUncyBsb3RzIG9mIExpbnV4
-IGJleW9uZCBpYTMyIC0tIGdlZXJ0QGxpbnV4LW02OGsub3JnDQo+IA0KPiBJbiBwZXJzb25hbCBj
-b252ZXJzYXRpb25zIHdpdGggdGVjaG5pY2FsIHBlb3BsZSwgSSBjYWxsIG15c2VsZiBhIGhhY2tl
-ci4gQnV0DQo+IHdoZW4gSSdtIHRhbGtpbmcgdG8gam91cm5hbGlzdHMgSSBqdXN0IHNheSAicHJv
-Z3JhbW1lciIgb3Igc29tZXRoaW5nIGxpa2UgdGhhdC4NCj4gICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAtLSBMaW51cyBUb3J2YWxkcw0K
+Add new device tree node for the control module register space where
+PCIe registers are present.
+
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/dra7.dtsi |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+index fe99231..e38f63f 100644
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -155,6 +155,11 @@
+ 					compatible = "syscon";
+ 					reg = <0x1c04 0x0020>;
+ 				};
++
++				scm_conf_pcie: tisyscon@1c24 {
++					compatible = "syscon";
++					reg = <0x1c24 0x0024>;
++				};
+ 			};
+ 
+ 			cm_core_aon: cm_core_aon@5000 {
+-- 
+1.7.9.5
+
