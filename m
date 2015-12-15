@@ -1,46 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 37/60] PCI: Check if resource is allocated before trying to assign one
-Date: Thu, 10 Dec 2015 21:06:33 -0800
-Message-Id: <1449810416-2950-38-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from muru.com ([72.249.23.125]:49248 "EHLO muru.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965217AbbLOP1E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Dec 2015 10:27:04 -0500
+Date: Tue, 15 Dec 2015 07:26:59 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, rogerq@ti.com,
+	nsekhar@ti.com, linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org, t-kristo@ti.com
+Subject: Re: [PATCH v3 0/9] phy: use syscon framework APIs to set ctrl mod reg
+Message-ID: <20151215152659.GQ23396@atomide.com>
+References: <1450170968-11282-1-git-send-email-kishon@ti.com>
+ <725110094.6UkMkcy8u7@wuerfel>
+ <566FF621.2040307@ti.com>
+ <11176831.mhgJlIuj0S@wuerfel>
+ <56700BC0.7020007@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56700BC0.7020007@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In following alt_size support, we will call pci_assign_resource() several
-times on one resource list, and some resources could have been assigned
-already.
+* Kishon Vijay Abraham I <kishon@ti.com> [151215 04:47]:
+> On Tuesday 15 December 2015 05:25 PM, Arnd Bergmann wrote:
+> >>>
+> >>> Can you explain here what the conversion is good for? Why do you
+> >>> prefer the syscon mapping over a high-level driver in this case?
+> >>
+> >> phy-omap-control driver was added when there was no proper
+> >> infrastructure for doing control module initializations. The
+> >> phy-omap-control driver is not an 'actual' PHY driver and it
+> >> was just a hack to do PHY related control module initializations.
+> >> phy-omap-control is also getting unmanageable with the number of
+> >> platforms each having number of modules (like USB, SATA, PCIe),
+> >> using the same driver for control module initializations.
+> >>
+> >> Now with SYSCON framework being added to the kernel, phy-omap-control
+> >> shouldn't be needed and it also provides a uniform API across all the
+> >> modules to program the control module.
+> > 
+> > Ok, so the "phy-control" devices were really just a few registers of
+> > a system controller device that does a lot of other things as well, right?
+> 
+> right.
+> > 
+> > Can you put your description above into the cover-letter for the series,
+> > and the merge commit?
 
-Skip allocated resource in the list, as pci_assign_resource()
-only can handle not assigned resource.
+Just to confirm.. Seems like this series keeps USB working and the dts
+changes can be done later after the driver changes have been merged?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Regards,
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e5b3d8c..2cc8a1e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -386,7 +386,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
- 		idx = res - &dev_res->dev->resource[0];
--		if (resource_size(res) &&
-+		if (!res->parent && resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
- 				add_to_list(fail_head, dev_res->dev, res);
--- 
-1.8.4.5
-
+Tony
