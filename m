@@ -1,100 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:17641 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964902AbbLBRXq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Dec 2015 12:23:46 -0500
-Subject: Re: [PATCH v4 0/5] Add iProc PCIe PAXC and MSI support
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-Message-ID: <565F2920.8030400@broadcom.com>
-Date: Wed, 2 Dec 2015 09:23:44 -0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <kishon@ti.com>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
+CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rogerq@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
+	<linux-usb@vger.kernel.org>, <tony@atomide.com>, <t-kristo@ti.com>
+Subject: [PATCH v3 4/9] phy: ti-pipe3: move mem resource initialization to a separate function
+Date: Tue, 15 Dec 2015 14:46:03 +0530
+Message-ID: <1450170968-11282-5-git-send-email-kishon@ti.com>
+In-Reply-To: <1450170968-11282-1-git-send-email-kishon@ti.com>
+References: <1450170968-11282-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1448645868-5730-1-git-send-email-rjui@broadcom.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+No functional change. Moved mem resource initialization done in
+probe to a separate function as part of cleaning up
+ti_pipe3_probe.
 
-Is there any more change that you want me to make from the current patch 
-set besides the inline comment from Hauke on the MSI patch?
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/phy/phy-ti-pipe3.c |   52 ++++++++++++++++++++++++++++----------------
+ 1 file changed, 33 insertions(+), 19 deletions(-)
 
-Thanks,
+diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
+index 3154da0..1991efd 100644
+--- a/drivers/phy/phy-ti-pipe3.c
++++ b/drivers/phy/phy-ti-pipe3.c
+@@ -418,14 +418,42 @@ static int ti_pipe3_get_sysctrl(struct ti_pipe3 *phy)
+ 	return 0;
+ }
+ 
++static int ti_pipe3_get_pll_base(struct ti_pipe3 *phy)
++{
++	struct resource *res;
++	const struct of_device_id *match;
++	struct device *dev = phy->dev;
++	struct device_node *node = dev->of_node;
++	struct platform_device *pdev = to_platform_device(dev);
++
++	if (of_device_is_compatible(node, "ti,phy-pipe3-pcie"))
++		return 0;
++
++	match = of_match_device(ti_pipe3_id_table, dev);
++	if (!match)
++		return -EINVAL;
++
++	phy->dpll_map = (struct pipe3_dpll_map *)match->data;
++	if (!phy->dpll_map) {
++		dev_err(dev, "no DPLL data\n");
++		return -EINVAL;
++	}
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++					   "pll_ctrl");
++	phy->pll_ctrl_base = devm_ioremap_resource(dev, res);
++	if (IS_ERR(phy->pll_ctrl_base))
++		return PTR_ERR(phy->pll_ctrl_base);
++
++	return 0;
++}
++
+ static int ti_pipe3_probe(struct platform_device *pdev)
+ {
+ 	struct ti_pipe3 *phy;
+ 	struct phy *generic_phy;
+ 	struct phy_provider *phy_provider;
+-	struct resource *res;
+ 	struct device_node *node = pdev->dev.of_node;
+-	const struct of_device_id *match;
+ 	struct device *dev = &pdev->dev;
+ 	int ret;
+ 
+@@ -435,23 +463,9 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+ 
+ 	phy->dev		= dev;
+ 
+-	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
+-		match = of_match_device(ti_pipe3_id_table, dev);
+-		if (!match)
+-			return -EINVAL;
+-
+-		phy->dpll_map = (struct pipe3_dpll_map *)match->data;
+-		if (!phy->dpll_map) {
+-			dev_err(dev, "no DPLL data\n");
+-			return -EINVAL;
+-		}
+-
+-		res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+-						   "pll_ctrl");
+-		phy->pll_ctrl_base = devm_ioremap_resource(dev, res);
+-		if (IS_ERR(phy->pll_ctrl_base))
+-			return PTR_ERR(phy->pll_ctrl_base);
+-	}
++	ret = ti_pipe3_get_pll_base(phy);
++	if (ret)
++		return ret;
+ 
+ 	ret = ti_pipe3_get_sysctrl(phy);
+ 	if (ret)
+-- 
+1.7.9.5
 
-Ray
-
-On 11/27/2015 9:37 AM, Ray Jui wrote:
-> This patch series adds support for the iProc PAXC interface and support for
-> event queue based MSI, integrated in the iProc PCIe core
->
-> This patch series is based on Linux v4.4-rc1 and is avaliable here:
-> https://github.com/Broadcom/cygnus-linux/tree/iproc-msi-v4
->
-> Between v4 and v3, changes are low risk. Sanity tested below:
-> PAXB:
-> - Broadcom NS2 SVK board with Intel e1000e network card
->
-> Changes from v3:
-> - Detect the number of possible CPUs instead online CPUs in the driver. Note
-> CPU notifier based implementation still needs to be added in the future, for
-> proper support of MSI IRQ affinity when CPU is brought online/offline at
-> runtime. Support in this dirver will be added when we support CPU hotplug in
-> one of iProc family of SoCs so the changes can be tested
-> - Use dma_zalloc_coherent for event queue host memory allocation and zeoring
->
-> Changes from v2:
-> - Improved descriptions in the iProc MSI commit message
-> - Removed redundant host memory used for MSI address. The MSI posted writes
-> never really hit the memory. Use iProc PCIe controller base address instead
-> - Fixed deadlock when MSI vectors are used up
-> - Enforced the number of MSI groups to always be multiple of the number of CPUs
-> - Improved the efficiency of MSI event processing by only updating the head
-> pointer after finishing processing all outstanding events
-> - Fixed error handling code to make sure all configurations are rolled back
-> - Added code to zero the host memory used for event queues after allocation
-> - Removed redundant 'brcm,num-eq-region' and 'brcm,num-msi-msg-region' DT
->    properties. Now determine the number of regions based on interface type
-> - Other misc. changes
->
-> Changes from v1:
-> - Fixed incorrect 1-to-1 mapping between MSI vector and GIC interrupt. Now the
-> driver supports multiple MSI vectors per GIC interrupt
-> - Added MSI IRQ affinity support by distributing GIC interrupts across
-> available CPU cores and dynamically steer MSI vectors to the target CPU
-> - replace readl/writel with readl_relaxed/writel_relaxed since all register
-> accesses within the iProc MSI driver are to/from the same I/O block, i.e., the
-> iProc PCIe core
-> - Removed all redundant irq_chip callback assignments
-> - Changed to use uncached host memory for both MSI posted writes and event
-> queues
-> - Add functions to free resources in error/exit cases
-> - In pcie-iproc-platform.c, pass in interface type through OF device data
-> - Moved define for max number of interrupts from pcie-iproc.h to
-> pcie-iproc-msi.c
-> - Other misc. changes
->
-> Ray Jui (5):
->    PCI: iproc: Update iProc PCIe device tree binding
->    PCI: iproc: Add PAXC interface support
->    PCI: iproc: Add iProc PCIe MSI device tree binding
->    PCI: iproc: Add iProc PCIe MSI support
->    ARM: dts: Enable MSI support for Broadcom Cygnus
->
->   .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  40 +-
->   arch/arm/boot/dts/bcm-cygnus.dtsi                  |  22 +
->   drivers/pci/host/Kconfig                           |   9 +
->   drivers/pci/host/Makefile                          |   1 +
->   drivers/pci/host/pcie-iproc-bcma.c                 |   1 +
->   drivers/pci/host/pcie-iproc-msi.c                  | 675 +++++++++++++++++++++
->   drivers/pci/host/pcie-iproc-platform.c             |  25 +-
->   drivers/pci/host/pcie-iproc.c                      | 228 +++++--
->   drivers/pci/host/pcie-iproc.h                      |  42 +-
->   9 files changed, 1000 insertions(+), 43 deletions(-)
->   create mode 100644 drivers/pci/host/pcie-iproc-msi.c
->
