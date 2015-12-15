@@ -1,83 +1,202 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:35093 "EHLO
-	mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271AbbLLXAR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Dec 2015 18:00:17 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <kishon@ti.com>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
+CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rogerq@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
+	<linux-usb@vger.kernel.org>, <tony@atomide.com>, <t-kristo@ti.com>
+Subject: [PATCH v3 6/9] phy: ti-pipe3: use *syscon* framework API to power on/off the PHY
+Date: Tue, 15 Dec 2015 14:46:05 +0530
+Message-ID: <1450170968-11282-7-git-send-email-kishon@ti.com>
+In-Reply-To: <1450170968-11282-1-git-send-email-kishon@ti.com>
+References: <1450170968-11282-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1449523949-21898-8-git-send-email-keith.busch@intel.com>
-References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
-	<1449523949-21898-8-git-send-email-keith.busch@intel.com>
-Date: Sun, 13 Dec 2015 01:00:16 +0200
-Message-ID: <CAHp75VcJwHk=Bo0jUTN8LpVv+i=gT5qvw_KhAyq6hAHgiNGzyw@mail.gmail.com>
-Subject: Re: [PATCHv5 7/7] pciutils: Allow 32-bit domains
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: Keith Busch <keith.busch@intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 7, 2015 at 11:32 PM, Keith Busch <keith.busch@intel.com> wrote:
-> PCI-e segments will continue to use the lower 16 bits as required by
-> ACPI. Special domains may use the full 32-bits.
->
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  lib/filter.c |    2 +-
->  lib/pci.h    |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/lib/filter.c b/lib/filter.c
-> index d4254a0..075dc2f 100644
-> --- a/lib/filter.c
-> +++ b/lib/filter.c
-> @@ -45,7 +45,7 @@ pci_filter_parse_slot_v33(struct pci_filter *f, char *str)
->           if (str[0] && strcmp(str, "*"))
->             {
->               long int x = strtol(str, &e, 16);
-> -             if ((e && *e) || (x < 0 || x > 0xffff))
-> +             if ((e && *e) || (x < 0))
->                 return "Invalid domain number";
->               f->domain = x;
->             }
-> diff --git a/lib/pci.h b/lib/pci.h
-> index 10ba831..7e42765 100644
-> --- a/lib/pci.h
-> +++ b/lib/pci.h
-> @@ -119,7 +119,7 @@ struct pci_param *pci_walk_params(struct pci_access *acc, struct pci_param *prev
->
->  struct pci_dev {
->    struct pci_dev *next;                        /* Next device in the chain */
-> -  u16 domain;                          /* PCI domain (host bridge) */
+Deprecate using phy-omap-control driver to power on/off the PHY and
+use *syscon* framework to do the same.
 
-> +  int32_t domain;                      /* PCI domain (host bridge) */
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/devicetree/bindings/phy/ti-phy.txt |   10 ++-
+ drivers/phy/phy-ti-pipe3.c                       |   90 ++++++++++++++++++----
+ 2 files changed, 85 insertions(+), 15 deletions(-)
 
-Why not u32 ?
-
->    u8 bus, dev, func;                   /* Bus inside domain, device and function */
->
->    /* These fields are set by pci_fill_info() */
-> --
-> 1.7.10.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-
-
-
+diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+index 9cf9446..e06f980 100644
+--- a/Documentation/devicetree/bindings/phy/ti-phy.txt
++++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+@@ -77,8 +77,6 @@ Required properties:
+    * "div-clk" - apll clock
+ 
+ Optional properties:
+- - ctrl-module : phandle of the control module used by PHY driver to power on
+-   the PHY.
+  - id: If there are multiple instance of the same type, in order to
+    differentiate between each instance "id" can be used (e.g., multi-lane PCIe
+    PHY). If "id" is not provided, it is set to default value of '1'.
+@@ -86,6 +84,14 @@ Optional properties:
+    CTRL_CORE_SMA_SW_0 register and register offset to the CTRL_CORE_SMA_SW_0
+    register that contains the SATA_PLL_SOFT_RESET bit. Only valid for sata_phy.
+ 
++Deprecated properties:
++ - ctrl-module : phandle of the control module used by PHY driver to power on
++   the PHY.
++
++Recommended properies:
++ - syscon-phy-power : phandle/offset pair. Phandle to the system control
++   module and the register offset to power on/off the PHY.
++
+ This is usually a subnode of ocp2scp to which it is connected.
+ 
+ usb3phy@4a084400 {
+diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
+index 0ce4194..bc03625 100644
+--- a/drivers/phy/phy-ti-pipe3.c
++++ b/drivers/phy/phy-ti-pipe3.c
+@@ -56,6 +56,15 @@
+ 
+ #define SATA_PLL_SOFT_RESET	BIT(18)
+ 
++#define PIPE3_PHY_PWRCTL_CLK_CMD_MASK	0x003FC000
++#define PIPE3_PHY_PWRCTL_CLK_CMD_SHIFT	14
++
++#define PIPE3_PHY_PWRCTL_CLK_FREQ_MASK	0xFFC00000
++#define PIPE3_PHY_PWRCTL_CLK_FREQ_SHIFT	22
++
++#define PIPE3_PHY_TX_RX_POWERON		0x3
++#define PIPE3_PHY_TX_RX_POWEROFF	0x0
++
+ /*
+  * This is an Empirical value that works, need to confirm the actual
+  * value required for the PIPE3PHY_PLL_CONFIGURATION2.PLL_IDLE status
+@@ -86,8 +95,10 @@ struct ti_pipe3 {
+ 	struct clk		*refclk;
+ 	struct clk		*div_clk;
+ 	struct pipe3_dpll_map	*dpll_map;
++	struct regmap		*phy_power_syscon; /* ctrl. reg. acces */
+ 	struct regmap		*dpll_reset_syscon; /* ctrl. reg. acces */
+ 	unsigned int		dpll_reset_reg; /* reg. index within syscon */
++	unsigned int		power_reg; /* power reg. index within syscon */
+ 	bool			sata_refclk_enabled;
+ };
+ 
+@@ -144,18 +155,53 @@ static void ti_pipe3_disable_clocks(struct ti_pipe3 *phy);
+ 
+ static int ti_pipe3_power_off(struct phy *x)
+ {
++	u32 val;
++	int ret;
+ 	struct ti_pipe3 *phy = phy_get_drvdata(x);
+ 
+-	omap_control_phy_power(phy->control_dev, 0);
++	if (phy->phy_power_syscon) {
++		val = PIPE3_PHY_TX_RX_POWEROFF <<
++			PIPE3_PHY_PWRCTL_CLK_CMD_SHIFT;
++
++		ret = regmap_update_bits(phy->phy_power_syscon, phy->power_reg,
++					 PIPE3_PHY_PWRCTL_CLK_CMD_MASK, val);
++		if (ret < 0)
++			return ret;
++	} else {
++		omap_control_phy_power(phy->control_dev, 0);
++	}
+ 
+ 	return 0;
+ }
+ 
+ static int ti_pipe3_power_on(struct phy *x)
+ {
++	u32 val;
++	u32 mask;
++	int ret;
++	unsigned long rate;
+ 	struct ti_pipe3 *phy = phy_get_drvdata(x);
+ 
+-	omap_control_phy_power(phy->control_dev, 1);
++	if (phy->phy_power_syscon) {
++		rate = clk_get_rate(phy->sys_clk);
++		if (!rate) {
++			dev_err(phy->dev, "Invalid clock rate\n");
++			return -EINVAL;
++		}
++		rate = rate / 1000000;
++		mask = OMAP_CTRL_PIPE3_PHY_PWRCTL_CLK_CMD_MASK |
++			  OMAP_CTRL_PIPE3_PHY_PWRCTL_CLK_FREQ_MASK;
++		val = PIPE3_PHY_TX_RX_POWERON <<
++			PIPE3_PHY_PWRCTL_CLK_CMD_SHIFT;
++		val |= rate << OMAP_CTRL_PIPE3_PHY_PWRCTL_CLK_FREQ_SHIFT;
++
++		ret = regmap_update_bits(phy->phy_power_syscon, phy->power_reg,
++					 mask, val);
++		if (ret < 0)
++			return ret;
++	} else {
++		omap_control_phy_power(phy->control_dev, 1);
++	}
+ 
+ 	return 0;
+ }
+@@ -334,7 +380,8 @@ static int ti_pipe3_get_clk(struct ti_pipe3 *phy)
+ 		phy->wkupclk = ERR_PTR(-ENODEV);
+ 	}
+ 
+-	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
++	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie") ||
++	    phy->phy_power_syscon) {
+ 		phy->sys_clk = devm_clk_get(dev, "sysclk");
+ 		if (IS_ERR(phy->sys_clk)) {
+ 			dev_err(dev, "unable to get sysclk\n");
+@@ -383,19 +430,36 @@ static int ti_pipe3_get_sysctrl(struct ti_pipe3 *phy)
+ 	struct device_node *control_node;
+ 	struct platform_device *control_pdev;
+ 
+-	control_node = of_parse_phandle(node, "ctrl-module", 0);
+-	if (!control_node) {
+-		dev_err(dev, "Failed to get control device phandle\n");
+-		return -EINVAL;
++	phy->phy_power_syscon = syscon_regmap_lookup_by_phandle(node,
++							"syscon-phy-power");
++	if (IS_ERR(phy->phy_power_syscon)) {
++		dev_dbg(dev,
++			"can't get syscon-phy-power, using control device\n");
++		phy->phy_power_syscon = NULL;
++	} else {
++		if (of_property_read_u32_index(node,
++					       "syscon-phy-power", 1,
++					       &phy->power_reg)) {
++			dev_err(dev, "couldn't get power reg. offset\n");
++			return -EINVAL;
++		}
+ 	}
+ 
+-	control_pdev = of_find_device_by_node(control_node);
+-	if (!control_pdev) {
+-		dev_err(dev, "Failed to get control device\n");
+-		return -EINVAL;
+-	}
++	if (!phy->phy_power_syscon) {
++		control_node = of_parse_phandle(node, "ctrl-module", 0);
++		if (!control_node) {
++			dev_err(dev, "Failed to get control device phandle\n");
++			return -EINVAL;
++		}
+ 
+-	phy->control_dev = &control_pdev->dev;
++		control_pdev = of_find_device_by_node(control_node);
++		if (!control_pdev) {
++			dev_err(dev, "Failed to get control device\n");
++			return -EINVAL;
++		}
++
++		phy->control_dev = &control_pdev->dev;
++	}
+ 
+ 	if (of_device_is_compatible(node, "ti,phy-pipe3-sata")) {
+ 		phy->dpll_reset_syscon = syscon_regmap_lookup_by_phandle(node,
 -- 
-With Best Regards,
-Andy Shevchenko
+1.7.9.5
+
