@@ -1,275 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51140 "EHLO mail.kernel.org"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:42080 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753638AbbLWXEi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 Dec 2015 18:04:38 -0500
-Date: Wed, 23 Dec 2015 17:04:33 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Matthew Minter <matt@masarand.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	lorenzo.pieralisi@arm.com, Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH V4 08/29] x86/pci: Defer IRQ assignment to device enable
- time
-Message-ID: <20151223230433.GA27708@localhost>
-References: <1445576642-29624-1-git-send-email-matt@masarand.com>
- <1445576642-29624-9-git-send-email-matt@masarand.com>
+	id S933146AbbLOJkL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Dec 2015 04:40:11 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>, <tony@atomide.com>
+CC: <bcousson@baylibre.com>, <kishon@ti.com>, <robh+dt@kernel.org>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<linux@arm.linux.org.uk>, <rogerq@ti.com>, <nsekhar@ti.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+	<t-kristo@ti.com>
+Subject: [PATCH v3 2/4] ARM: dts: dra7: Use "syscon-phy-power" and "syscon-pcs" in PCIe PHY node
+Date: Tue, 15 Dec 2015 15:09:04 +0530
+Message-ID: <1450172346-11890-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1450172346-11890-1-git-send-email-kishon@ti.com>
+References: <1450172346-11890-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445576642-29624-9-git-send-email-matt@masarand.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Thomas]
+Add "syscon-phy-power" property and "syscon-pcs" property which can
+be used to perform the control module initializations and remove
+the deprecated "ctrl-module" property from PCIe PHY dt nodes.
 
-Hi Matthew,
+Phandle to "sysclk" clock node is also added to the PCIe PHY node
+since some of the syscon initializations is based on system clock
+frequency.
 
-On Fri, Oct 23, 2015 at 06:03:41AM +0100, Matthew Minter wrote:
-> The x86 architecture boot code currently traverses the PCI buses with
-> an extra pass in order to initialise the PCI device IRQs at boot, this
-> patch avoids this pass and defers the IRQ assignment untill device
-> enable time which also has the benefit that hot-plugged devices are
-> assigned IRQs without additional code.
+Since "omap_control_pcie1phy" and "omap_control_pcie2phy" devicetree
+nodes are no longer used, remove it.
 
-I think the outline of this patch (doing the IRQ init at device
-enable-time instead of at boot-time) is good, but I am concerned about
-two things:
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/dra7.dtsi |   33 ++++++++++-----------------------
+ 1 file changed, 10 insertions(+), 23 deletions(-)
 
-1) pcibios_lookup_irq() contains a for_each_pci_dev() loop that
-updates dev->irq for all devices with the same pirq value.  Previously
-we ran that loop at boot-time via this path:
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+index e38f63f..156d735 100644
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -1204,16 +1204,18 @@
+ 				reg = <0x4a094000 0x80>, /* phy_rx */
+ 				      <0x4a094400 0x64>; /* phy_tx */
+ 				reg-names = "phy_rx", "phy_tx";
+-				ctrl-module = <&omap_control_pcie1phy>;
++				syscon-phy-power = <&scm_conf_pcie 0x1c>;
++				syscon-pcs = <&scm_conf_pcie 0x10>;
+ 				clocks = <&dpll_pcie_ref_ck>,
+ 					 <&dpll_pcie_ref_m2ldo_ck>,
+ 					 <&optfclk_pciephy1_32khz>,
+ 					 <&optfclk_pciephy1_clk>,
+ 					 <&optfclk_pciephy1_div_clk>,
+-					 <&optfclk_pciephy_div>;
++					 <&optfclk_pciephy_div>,
++					 <&sys_clkin1>;
+ 				clock-names = "dpll_ref", "dpll_ref_m2",
+ 					      "wkupclk", "refclk",
+-					      "div-clk", "phy-div";
++					      "div-clk", "phy-div", "sysclk";
+ 				#phy-cells = <0>;
+ 			};
+ 
+@@ -1222,16 +1224,18 @@
+ 				reg = <0x4a095000 0x80>, /* phy_rx */
+ 				      <0x4a095400 0x64>; /* phy_tx */
+ 				reg-names = "phy_rx", "phy_tx";
+-				ctrl-module = <&omap_control_pcie2phy>;
++				syscon-phy-power = <&scm_conf_pcie 0x20>;
++				syscon-pcs = <&scm_conf_pcie 0x10>;
+ 				clocks = <&dpll_pcie_ref_ck>,
+ 					 <&dpll_pcie_ref_m2ldo_ck>,
+ 					 <&optfclk_pciephy2_32khz>,
+ 					 <&optfclk_pciephy2_clk>,
+ 					 <&optfclk_pciephy2_div_clk>,
+-					 <&optfclk_pciephy_div>;
++					 <&optfclk_pciephy_div>,
++					 <&sys_clkin1>;
+ 				clock-names = "dpll_ref", "dpll_ref_m2",
+ 					      "wkupclk", "refclk",
+-					      "div-clk", "phy-div";
++					      "div-clk", "phy-div", "sysclk";
+ 				#phy-cells = <0>;
+ 				status = "disabled";
+ 			};
+@@ -1247,23 +1251,6 @@
+ 			ti,hwmods = "sata";
+ 		};
+ 
+-		omap_control_pcie1phy: control-phy@0x4a003c40 {
+-			compatible = "ti,control-phy-pcie";
+-			reg = <0x4a003c40 0x4>, <0x4a003c14 0x4>, <0x4a003c34 0x4>;
+-			reg-names = "power", "control_sma", "pcie_pcs";
+-			clocks = <&sys_clkin1>;
+-			clock-names = "sysclk";
+-		};
+-
+-		omap_control_pcie2phy: control-pcie@0x4a003c44 {
+-			compatible = "ti,control-phy-pcie";
+-			reg = <0x4a003c44 0x4>, <0x4a003c14 0x4>, <0x4a003c34 0x4>;
+-			reg-names = "power", "control_sma", "pcie_pcs";
+-			clocks = <&sys_clkin1>;
+-			clock-names = "sysclk";
+-			status = "disabled";
+-		};
+-
+ 		rtc: rtc@48838000 {
+ 			compatible = "ti,am3352-rtc";
+ 			reg = <0x48838000 0x100>;
+-- 
+1.7.9.5
 
-  pci_subsys_init                   # subsys_initcall
-    x86_init.pci.init_irq           # .init_irq = x86_default_pci_init_irq
-    x86_default_pci_init_irq        # x86_default_pci_init_irq = pcibios_irq_init
-    pcibios_irq_init
-      x86_init.pci.fixup_irqs       # .fixup_irqs = x86_default_pci_fixup_irqs
-      x86_default_pci_fixup_irqs    # x86_default_pci_fixup_irqs = pcibios_fixup_irqs
-      pcibios_fixup_irqs
-        for_each_pci_dev
-          pcibios_lookup_irq
-
-Now we'll run it later, in this path:
-
-  pci_enable_device
-    pci_enable_device_flags
-      do_pci_enable_device
-        pci_assign_irq
-          pci_map_irq                   # bridge->map_irq
-            pcibios_fixup_irq
-              pcibios_lookup_irq
-                for_each_pci_dev(dev2)
-                  dev2->irq = irq       # <-- potential problem
-
-The problem is that dev2 is an unrelated device and may already have a
-driver bound to it, and we shouldn't change dev->irq after a driver
-binds to a device.
-
-I don't know enough about interrupts and PIRQ to know whether this is
-really a problem in practice or not.  I added Thomas in case he knows.
-
-2) I'm also worried about the fact that we don't do the IRQ init until
-a driver calls pci_enable_device().  We've been doing some IRQ init in
-pcibios_alloc_irq() in this path for a long time:
-
-  pci_subsys_init
-    ...
-      pcibios_fixup_irqs                # <-- moved from here ...
-        for_each_pci_dev
-  ...
-  pci_device_probe
-    pcibios_alloc_irq
-      pcibios_enable_irq                # pcibios_enable_irq = acpi_pci_irq_enable
-                                        # (or pirq_enable_irq, x86_of_pci_irq_enable, lguest_enable_irq, etc)
-      acpi_pci_irq_enable
-    __pci_device_probe
-      ...
-	pci_drv->probe                  # driver .probe routine
-	  ...
-	    pci_enable_device
-              ...
-                pci_fixup_irq           # <-- ... to here
-
-I think there are two problems here:
-
-2.1) We changed the order of pcibios_enable_irq() and pci_fixup_irq().
-Both update dev->irq, and I doubt it's safe to reverse the order.
-
-2.2) It's conceivable that a driver may use interrupts without ever
-calling pci_enable_device().  That driver would be broken by this
-change.
-
-I think we could probably fix both of these worries by calling
-pci_assign_irq() from pci_device_probe() instead of from
-do_pci_enable_device().
-
-I'm not so sure about the pcibios_lookup_irq() problem.  That's a
-little farther outside my area, so I'll have to look at that some
-more.
-
-I really want to merge this stuff because it's a major cleanup, so I'm
-going to push on this more myself.  I'm just writing this as a
-heads-up in case anybody else has ideas.
-
-Bjorn
-
-> Signed-off-by: Matthew Minter <matt@masarand.com>
-> ---
->  arch/x86/include/asm/pci_x86.h |  7 +++--
->  arch/x86/kernel/x86_init.c     |  1 -
->  arch/x86/pci/irq.c             | 70 +++++++++++++++++++++---------------------
->  3 files changed, 39 insertions(+), 39 deletions(-)
-> 
-> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-> index fa1195d..16fd8e9 100644
-> --- a/arch/x86/include/asm/pci_x86.h
-> +++ b/arch/x86/include/asm/pci_x86.h
-> @@ -90,6 +90,7 @@ extern unsigned int pcibios_irq_mask;
->  
->  extern raw_spinlock_t pci_config_lock;
->  
-> +extern int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin);
->  extern int (*pcibios_enable_irq)(struct pci_dev *dev);
->  extern void (*pcibios_disable_irq)(struct pci_dev *dev);
->  
-> @@ -119,7 +120,7 @@ extern int __init pci_acpi_init(void);
->  extern void __init pcibios_irq_init(void);
->  extern int __init pcibios_init(void);
->  extern int pci_legacy_init(void);
-> -extern void pcibios_fixup_irqs(void);
-> +extern int pcibios_fixup_irq(struct pci_dev *dev, u8 pin);
->  
->  /* pci-mmconfig.c */
->  
-> @@ -200,9 +201,9 @@ static inline void mmio_config_writel(void __iomem *pos, u32 val)
->  #  define x86_default_pci_init		pci_legacy_init
->  # endif
->  # define x86_default_pci_init_irq	pcibios_irq_init
-> -# define x86_default_pci_fixup_irqs	pcibios_fixup_irqs
-> +# define x86_default_pci_fixup_irq	pcibios_fixup_irq
->  #else
->  # define x86_default_pci_init		NULL
->  # define x86_default_pci_init_irq	NULL
-> -# define x86_default_pci_fixup_irqs	NULL
-> +# define x86_default_pci_fixup_irq	NULL
->  #endif
-> diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-> index 3839628..810f1dd 100644
-> --- a/arch/x86/kernel/x86_init.c
-> +++ b/arch/x86/kernel/x86_init.c
-> @@ -80,7 +80,6 @@ struct x86_init_ops x86_init __initdata = {
->  	.pci = {
->  		.init			= x86_default_pci_init,
->  		.init_irq		= x86_default_pci_init_irq,
-> -		.fixup_irqs		= x86_default_pci_fixup_irqs,
->  	},
->  };
->  
-> diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-> index 350e785..15c507b 100644
-> --- a/arch/x86/pci/irq.c
-> +++ b/arch/x86/pci/irq.c
-> @@ -1021,47 +1021,38 @@ static int pcibios_lookup_irq(struct pci_dev *dev, int assign)
->  	return 1;
->  }
->  
-> -void __init pcibios_fixup_irqs(void)
-> +int pcibios_fixup_irq(struct pci_dev *dev, u8 pin)
->  {
-> -	struct pci_dev *dev = NULL;
-> -	u8 pin;
-> -
-> +	int irq = dev->irq;
->  	DBG(KERN_DEBUG "PCI: IRQ fixup\n");
-> -	for_each_pci_dev(dev) {
-> -		/*
-> -		 * If the BIOS has set an out of range IRQ number, just
-> -		 * ignore it.  Also keep track of which IRQ's are
-> -		 * already in use.
-> -		 */
-> -		if (dev->irq >= 16) {
-> -			dev_dbg(&dev->dev, "ignoring bogus IRQ %d\n", dev->irq);
-> -			dev->irq = 0;
-> -		}
-> -		/*
-> -		 * If the IRQ is already assigned to a PCI device,
-> -		 * ignore its ISA use penalty
-> -		 */
-> -		if (pirq_penalty[dev->irq] >= 100 &&
-> -				pirq_penalty[dev->irq] < 100000)
-> -			pirq_penalty[dev->irq] = 0;
-> -		pirq_penalty[dev->irq]++;
-> +	/*
-> +	 * If the BIOS has set an out of range IRQ number, just
-> +	 * ignore it.  Also keep track of which IRQ's are
-> +	 * already in use.
-> +	 */
-> +	if (irq >= 16) {
-> +		dev_dbg(&dev->dev, "ignoring bogus IRQ %d\n", irq);
-> +		irq = 0;
->  	}
-> +	/*
-> +	 * If the IRQ is already assigned to a PCI device,
-> +	 * ignore its ISA use penalty
-> +	 */
-> +	if (pirq_penalty[irq] >= 100 &&
-> +			pirq_penalty[irq] < 100000)
-> +		pirq_penalty[irq] = 0;
-> +	pirq_penalty[irq]++;
->  
-> -	if (io_apic_assign_pci_irqs)
-> -		return;
-> +	if (io_apic_assign_pci_irqs || !pin)
-> +		return irq;
->  
-> -	dev = NULL;
-> -	for_each_pci_dev(dev) {
-> -		pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
-> -		if (!pin)
-> -			continue;
-> +	/*
-> +	 * Still no IRQ? Try to lookup one...
-> +	 */
-> +	if (!irq && pcibios_lookup_irq(dev, 0))
-> +		irq = dev->irq;
->  
-> -		/*
-> -		 * Still no IRQ? Try to lookup one...
-> -		 */
-> -		if (!dev->irq)
-> -			pcibios_lookup_irq(dev, 0);
-> -	}
-> +	return irq;
->  }
->  
->  /*
-> @@ -1174,6 +1165,7 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->  		struct pci_sysdata *sd = bridge->bus->sysdata;
->  		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
->  	}
-> +	bridge->map_irq = pci_map_irq;
->  	return 0;
->  }
->  
-> @@ -1201,6 +1193,14 @@ void pcibios_penalize_isa_irq(int irq, int active)
->  		pirq_penalize_isa_irq(irq, active);
->  }
->  
-> +int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
-> +{
-> +	dev->irq = pcibios_fixup_irq(dev, pin);
-> +	if (pcibios_enable_irq(dev))
-> +		return -1;
-> +	return dev->irq;
-> +}
-> +
->  static int pirq_enable_irq(struct pci_dev *dev)
->  {
->  	u8 pin = 0;
-> -- 
-> 2.6.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
