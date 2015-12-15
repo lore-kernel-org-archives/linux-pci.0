@@ -1,58 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:36621 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753225AbbLROCU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Dec 2015 09:02:20 -0500
+Received: from mout.kundenserver.de ([212.227.17.10]:62936 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964922AbbLOLzz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Dec 2015 06:55:55 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-omap@vger.kernel.org, robh+dt@kernel.org, pawel.moll@arm.com,
+	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
+	galak@codeaurora.org, rogerq@ti.com, nsekhar@ti.com,
+	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+	tony@atomide.com, t-kristo@ti.com
+Subject: Re: [PATCH v3 0/9] phy: use syscon framework APIs to set ctrl mod reg
+Date: Tue, 15 Dec 2015 12:55:37 +0100
+Message-ID: <11176831.mhgJlIuj0S@wuerfel>
+In-Reply-To: <566FF621.2040307@ti.com>
+References: <1450170968-11282-1-git-send-email-kishon@ti.com> <725110094.6UkMkcy8u7@wuerfel> <566FF621.2040307@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <567410D3.7030909@suse.de>
-References: <1450427719-29619-1-git-send-email-hare@suse.de>
-	<1450427719-29619-3-git-send-email-hare@suse.de>
-	<CAKgT0Uceg2CmiXu926nfAWg25pSb24UhbmNBw2noNKRNHwDMow@mail.gmail.com>
-	<567410D3.7030909@suse.de>
-Date: Fri, 18 Dec 2015 06:02:19 -0800
-Message-ID: <CAKgT0Uc9vZGHvtUuzv4EkE2d4-U5F=22-YeSAOWBH=vGa4yJ5Q@mail.gmail.com>
-Subject: Re: [PATCH 2/2] pci: Update VPD size with correct length
-From: Alexander Duyck <alexander.duyck@gmail.com>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Michal Kubecek <mkubecek@suse.com>,
-	"Shane M. Seymour" <shane.seymour@hpe.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 18, 2015 at 5:57 AM, Hannes Reinecke <hare@suse.de> wrote:
-> On 12/18/2015 02:49 PM, Alexander Duyck wrote:
->>
->> On Fri, Dec 18, 2015 at 12:35 AM, Hannes Reinecke <hare@suse.de> wrote:
->>>
->>> PCI-2.2 VPD entries have a maximum size of 32k, but might actually
->>> be smaller than that. To figure out the actual size one has to read
->>> the VPD area until the 'end marker' is reached.
->>> Trying to read VPD data beyond that marker results in 'interesting'
->>> effects, from simple read errors to crashing the card. And to make
->>> matters worse not every PCI card implements this properly, leaving
->>> us with no 'end' marker or even completely invalid data.
->>> This path modifies the size of the VPD attribute to the available
->>> size, or set it to '0' if no valid data could be read.
->>
->>
->> This isn't what I had in mind.  There is no need to add an f0 version
->> of the size function.  The size for all functions other than function
->> 0 when the F0 flag is set is 0.  We aren't going to be reading their
->> VPD, we only read the VPD region of function 0.
->>
-> Ah. (I'm a bit confused about the proposed action for VPD other than
-> function 0).
-> So the idea here is to _disallow_ access to VPDs from functions other than
-> '0' unless these functions have different PCI IDs?
+On Tuesday 15 December 2015 16:44:41 Kishon Vijay Abraham I wrote:
+> Hi Arnd,
+> 
+> On Tuesday 15 December 2015 04:26 PM, Arnd Bergmann wrote:
+> > On Tuesday 15 December 2015 14:45:59 Kishon Vijay Abraham I wrote:
+> >> This series is basically to deprecate using phy-omap-control and use
+> >> syscon APIs to program the control module registers.
+> >>
+> >> Changes from v2:
+> >> No changes.
+> >>
+> >> Changes from v1:
+> >> *) cleanup ti_pipe3_probe in multiple steps
+> >> *) other minor cleanups
+> >>
+> >> Changes from [1] in PHY patches include
+> >> *) cleanup ti_pipe3_probe
+> >> *) have mask, power_on and power_off values in usb_phy_data for
+> >>    omap-usb2 phy
+> >>
+> >> The patches have been pushed to
+> >>         git://git.ti.com/linux-phy/linux-phy.git syscon
+> >>
+> >> [1] -> https://lkml.org/lkml/2015/6/23/189
+> >>
+> >> All the testing was done both before applying the dt patches and after
+> >> applying the dt patches (dt patches will be posted shortly).
+> >>
+> > 
+> > Can you explain here what the conversion is good for? Why do you
+> > prefer the syscon mapping over a high-level driver in this case?
+> 
+> phy-omap-control driver was added when there was no proper
+> infrastructure for doing control module initializations. The
+> phy-omap-control driver is not an 'actual' PHY driver and it
+> was just a hack to do PHY related control module initializations.
+> phy-omap-control is also getting unmanageable with the number of
+> platforms each having number of modules (like USB, SATA, PCIe),
+> using the same driver for control module initializations.
+> 
+> Now with SYSCON framework being added to the kernel, phy-omap-control
+> shouldn't be needed and it also provides a uniform API across all the
+> modules to program the control module.
 
-If you take a look at the F0 functions what they do is bypass the VPD
-of the functions other than function 0.  As such setting the size to 0
-should really have no effect since the VPD of the function isn't
-actually read if the F0 flag is set.
+Ok, so the "phy-control" devices were really just a few registers of
+a system controller device that does a lot of other things as well, right?
 
-- Alex
+Can you put your description above into the cover-letter for the series,
+and the merge commit?
+
+	Arnd
