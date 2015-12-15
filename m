@@ -1,54 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:22084 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754895AbbLJRxd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 12:53:33 -0500
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v10 6/7] drivers:hv: Define the channel type of Hyper-V PCI Express pass-through
-Date: Thu, 10 Dec 2015 17:53:02 +0000
-Message-Id: <1449769983-12948-7-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
-References: <1449769983-12948-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andy Lutomirski <luto@kernel.org>
+To: linux-acpi@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Andy Lutomirski <luto@kernel.org>
+Subject: [PATCH v2 2/2] acpi: Show _OSC UUID when _OSC fails
+Date: Tue, 15 Dec 2015 08:37:40 -0800
+Message-Id: <bee26622c19d06b6f59f8bd994fadde2dc95a906.1450197207.git.luto@kernel.org>
+In-Reply-To: <cover.1450197207.git.luto@kernel.org>
+References: <cover.1450197207.git.luto@kernel.org>
+In-Reply-To: <cover.1450197207.git.luto@kernel.org>
+References: <cover.1450197207.git.luto@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+When _OSC fails and especially when it fails due to an invalid UUID,
+it's helpful to show the UUID that we tried.
 
-This defines the channel type for PCI front-ends in Hyper-V VMs.
-
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Andy Lutomirski <luto@kernel.org>
 ---
- include/linux/hyperv.h | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/acpi/bus.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 24d0b65..c9a9eed 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -1141,6 +1141,17 @@ u64 hv_do_hypercall(u64 control, void *input, void *output);
- 		}
+diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+index 2177ef0b16e4..fcfdf6cbc6a8 100644
+--- a/drivers/acpi/bus.c
++++ b/drivers/acpi/bus.c
+@@ -180,9 +180,10 @@ static void acpi_print_osc_error(acpi_handle handle,
+ 	int i;
  
- /*
-+ * PCI Express Pass Through
-+ * {44C4F61D-4444-4400-9D52-802E27EDE19F}
-+ */
-+
-+#define HV_PCIE_GUID \
-+	.guid = { \
-+			0x1D, 0xF6, 0xC4, 0x44, 0x44, 0x44, 0x00, 0x44, \
-+			0x9D, 0x52, 0x80, 0x2E, 0x27, 0xED, 0xE1, 0x9F \
-+		}
-+
-+/*
-  * Common header for Hyper-V ICs
-  */
- 
+ 	if (ACPI_FAILURE(acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer)))
+-		printk(KERN_DEBUG "%s\n", error);
++		printk(KERN_DEBUG "%s: %s\n", context->uuid_str, error);
+ 	else {
+-		printk(KERN_DEBUG "%s: %s\n", (char *)buffer.pointer, error);
++		printk(KERN_DEBUG "%s (%s): %s\n",
++		       (char *)buffer.pointer, context->uuid_str, error);
+ 		kfree(buffer.pointer);
+ 	}
+ 	printk(KERN_DEBUG "_OSC request data:");
 -- 
-1.9.1
+2.5.0
 
