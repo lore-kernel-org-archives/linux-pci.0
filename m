@@ -1,67 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57184 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752103AbbLIQCO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Dec 2015 11:02:14 -0500
-Date: Wed, 9 Dec 2015 10:02:05 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Ley Foon Tan <lftan@altera.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Subject: [GIT PULL] PCI fixes for v4.4
-Message-ID: <20151209160205.GA29844@localhost>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <566FE2DD.6080308@arm.com>
+Date: Tue, 15 Dec 2015 09:52:29 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	tglx@linutronix.de, jason@lakedaemon.net, bhelgaas@google.com,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	hanjun.guo@linaro.org, tomasz.nowicki@linaro.org,
+	graeme.gregory@linaro.org, dhdang@apm.com,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v7 1/4] acpi: pci: Setup MSI domain for ACPI based pci
+ devices
+References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com> <1449766530-16935-2-git-send-email-Suravee.Suthikulpanit@amd.com> <566EDCAC.1080401@arm.com> <2013286.NCRgLU1HGi@vostro.rjw.lan>
+In-Reply-To: <2013286.NCRgLU1HGi@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On 14/12/15 21:29, Rafael J. Wysocki wrote:
+> On Monday, December 14, 2015 03:13:48 PM Marc Zyngier wrote:
+>> On 10/12/15 16:55, Suravee Suthikulpanit wrote:
+>>> This patch introduces pci_msi_register_fwnode_provider() for irqchip
+>>> to register a callback, to provide a way to determine appropriate MSI
+>>> domain for a pci device.
+>>>
+>>> It also introduces pci_host_bridge_acpi_msi_domain(), which returns
+>>> the MSI domain of the specified PCI host bridge with DOMAIN_BUS_PCI_MSI
+>>> bus token. Then, it is assigned to pci device.
+>>>
+>>> Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+>>> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>>
+>> Bjorn, Rafael,
+>>
+>> Do you have any comment on this?
+>>
+>> I was hoping to queue this work (and the 3 patches that depend on it)
+>> for 4.5, but if you don't have the bandwidth to review it, I'll postpone
+>> it to the following merge window.
+> 
+> How much time do we have to look at it before it is postponed?
 
-These are more fixes I'd like to have in v4.4.  Several for the Altera
-driver added for v4.4, and one for an MSI domain problem that affects
-several arm64 platforms.
+Realistically, I'm going to stop queuing stuff Wednesday next week (I'll
+be travelling, and without access to enough HW to follow up on potential
+regressions), and I'd expect Thomas to stop pulling stuff even earlier
+than that.
 
-Bjorn
+So we basically have a week to decide whether or not we want this for
+the next merge window. I appreciate this is a busy time for everyone and
+that this series took a long time to reach that stage, so any way is
+fine by me.
 
+Thanks,
 
-The following changes since commit 7c7a0e945349a3d0d497d7f32db6ed33d4031110:
-
-  ARM/PCI: Move align_resource function pointer to pci_host_bridge structure (2015-11-25 13:23:38 -0600)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.4-fixes-2
-
-for you to fetch changes up to 99496bd2971fc378226ad4413e5b72c4545714bd:
-
-  PCI: altera: Fix error when INTx is 4 (2015-12-04 16:21:21 -0600)
-
-----------------------------------------------------------------
-PCI updates for v4.4:
-
-  MSI
-    Only use the generic MSI layer when domain is hierarchical (Marc Zyngier)
-
-  Altera host bridge driver
-    Fix loop in tlp_read_packet() (Dan Carpenter)
-    Fix Requester ID for config accesses (Ley Foon Tan)
-    Check TLP completion status (Ley Foon Tan)
-    Fix error when INTx is 4 (Ley Foon Tan)
-
-----------------------------------------------------------------
-Dan Carpenter (1):
-      PCI: altera: Fix loop in tlp_read_packet()
-
-Ley Foon Tan (3):
-      PCI: altera: Fix Requester ID for config accesses
-      PCI: altera: Check TLP completion status
-      PCI: altera: Fix error when INTx is 4
-
-Marc Zyngier (1):
-      PCI/MSI: Only use the generic MSI layer when domain is hierarchical
-
- drivers/pci/host/pcie-altera.c | 23 ++++++++++++++++-------
- drivers/pci/msi.c              |  4 ++--
- 2 files changed, 18 insertions(+), 9 deletions(-)
+	M.
+-- 
+Jazz is not dead. It just smells funny...
