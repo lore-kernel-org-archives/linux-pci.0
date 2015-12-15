@@ -1,115 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:34350 "EHLO mga01.intel.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:60734 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933377AbbLGVci (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Dec 2015 16:32:38 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv6 4/7] x86-pci: allow pci domain specific dma ops
-Date: Mon,  7 Dec 2015 14:32:26 -0700
-Message-Id: <1449523949-21898-5-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
-References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
+	id S932262AbbLOJQb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Dec 2015 04:16:31 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <kishon@ti.com>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
+CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rogerq@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
+	<linux-usb@vger.kernel.org>, <tony@atomide.com>, <t-kristo@ti.com>
+Subject: [PATCH v3 0/9] phy: use syscon framework APIs to set ctrl mod reg
+Date: Tue, 15 Dec 2015 14:45:59 +0530
+Message-ID: <1450170968-11282-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-New x86 pci h/w will require dma operations specific to that domain. This
-patch allows those domains to register their operations, and sets devices
-as they are discovere3d in that domain to use them.
+This series is basically to deprecate using phy-omap-control and use
+syscon APIs to program the control module registers.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- arch/x86/include/asm/device.h | 10 ++++++++++
- arch/x86/pci/common.c         | 38 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 48 insertions(+)
+Changes from v2:
+No changes.
 
-diff --git a/arch/x86/include/asm/device.h b/arch/x86/include/asm/device.h
-index 03dd729..3b23897 100644
---- a/arch/x86/include/asm/device.h
-+++ b/arch/x86/include/asm/device.h
-@@ -10,6 +10,16 @@ struct dev_archdata {
- #endif
- };
- 
-+#if defined(CONFIG_X86_DEV_DMA_OPS) && defined(CONFIG_PCI_DOMAINS)
-+struct dma_domain {
-+	struct list_head node;
-+	struct dma_map_ops *dma_ops;
-+	int domain_nr;
-+};
-+extern void add_dma_domain(struct dma_domain *domain);
-+extern void del_dma_domain(struct dma_domain *domain);
-+#endif
-+
- struct pdev_archdata {
- };
- 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index eccd4d9..106fd13 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -641,6 +641,43 @@ unsigned int pcibios_assign_all_busses(void)
- 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
- }
- 
-+#if defined(CONFIG_X86_DEV_DMA_OPS) && defined(CONFIG_PCI_DOMAINS)
-+LIST_HEAD(dma_domain_list);
-+DEFINE_SPINLOCK(dma_domain_list_lock);
-+
-+void add_dma_domain(struct dma_domain *domain)
-+{
-+	spin_lock(&dma_domain_list_lock);
-+	list_add(&domain->node, &dma_domain_list);
-+	spin_unlock(&dma_domain_list_lock);
-+}
-+EXPORT_SYMBOL_GPL(add_dma_domain);
-+
-+void del_dma_domain(struct dma_domain *domain)
-+{
-+	spin_lock(&dma_domain_list_lock);
-+	list_del(&domain->node);
-+	spin_unlock(&dma_domain_list_lock);
-+}
-+EXPORT_SYMBOL_GPL(del_dma_domain);
-+
-+static void set_dma_domain_ops(struct pci_dev *pdev)
-+{
-+	struct dma_domain *domain;
-+
-+	spin_lock(&dma_domain_list_lock);
-+	list_for_each_entry(domain, &dma_domain_list, node) {
-+		if (pci_domain_nr(pdev->bus) == domain->domain_nr) {
-+			pdev->dev.archdata.dma_ops = domain->dma_ops;
-+			break;
-+		}
-+	}
-+	spin_unlock(&dma_domain_list_lock);
-+}
-+#else
-+static void set_dma_domain_ops(struct pci_dev *pdev) {}
-+#endif
-+
- int pcibios_add_device(struct pci_dev *dev)
- {
- 	struct setup_data *data;
-@@ -670,6 +707,7 @@ int pcibios_add_device(struct pci_dev *dev)
- 		pa_data = data->next;
- 		iounmap(data);
- 	}
-+	set_dma_domain_ops(dev);
- 	return 0;
- }
- 
+Changes from v1:
+*) cleanup ti_pipe3_probe in multiple steps
+*) other minor cleanups
+
+Changes from [1] in PHY patches include
+*) cleanup ti_pipe3_probe
+*) have mask, power_on and power_off values in usb_phy_data for
+   omap-usb2 phy
+
+The patches have been pushed to
+	git://git.ti.com/linux-phy/linux-phy.git syscon
+
+[1] -> https://lkml.org/lkml/2015/6/23/189
+
+All the testing was done both before applying the dt patches and after
+applying the dt patches (dt patches will be posted shortly).
+
+Logs with SYSCON DT
+
+DRA72 EVM : http://pastebin.ubuntu.com/14025205/
+DRA7 EVM  : http://pastebin.ubuntu.com/14025212/
+AM43XX EVM: http://pastebin.ubuntu.com/14025222/
+OMAP5 UEVM: http://pastebin.ubuntu.com/14025228/
+
+Logs without SYSCON DT
+
+DRA72 EVM : http://pastebin.ubuntu.com/14025233/
+DRA7 EVM  : http://pastebin.ubuntu.com/14025238/
+AM43XX EVM: http://pastebin.ubuntu.com/14025329/
+OMAP5 UEVM: http://pastebin.ubuntu.com/14025248/
+
+The config I used: http://pastebin.ubuntu.com/14025336/
+
+Kishon Vijay Abraham I (9):
+  phy: ti-pipe3: introduce local struct device* in probe
+  phy: ti-pipe3: move clk initialization to a separate function
+  phy: ti-pipe3: move sysctrl initialization to a separate function
+  phy: ti-pipe3: move mem resource initialization to a separate
+    function
+  phy: ti-pipe3: use ti_pipe3_power_off to power off the PHY during
+    probe
+  phy: ti-pipe3: use *syscon* framework API to power on/off the PHY
+  phy: ti-pipe3: use *syscon* framework API to set PCS value of the PHY
+  phy: omap-usb2: use omap_usb_power_off to power off the PHY during
+    probe
+  phy: omap-usb2: use *syscon* framework API to power on/off the PHY
+
+ Documentation/devicetree/bindings/phy/ti-phy.txt |   20 +-
+ drivers/phy/phy-omap-usb2.c                      |   96 +++++--
+ drivers/phy/phy-ti-pipe3.c                       |  304 ++++++++++++++++------
+ include/linux/phy/omap_usb.h                     |   23 ++
+ 4 files changed, 340 insertions(+), 103 deletions(-)
+
 -- 
-2.6.2.307.g37023ba
+1.7.9.5
 
