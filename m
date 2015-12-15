@@ -1,80 +1,49 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 19 Dec 2015 21:38:37 -0600
-From: Rob Herring <robh@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-omap@vger.kernel.org, pawel.moll@arm.com,
-	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
-	galak@codeaurora.org, rogerq@ti.com, nsekhar@ti.com,
-	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-	tony@atomide.com, t-kristo@ti.com
-Subject: Re: [PATCH v3 6/9] phy: ti-pipe3: use *syscon* framework API to
- power on/off the PHY
-Message-ID: <20151220033836.GG9883@rob-hp-laptop>
-References: <1450170968-11282-1-git-send-email-kishon@ti.com>
- <1450170968-11282-7-git-send-email-kishon@ti.com>
+Subject: Re: [PATCH v4 3/5] PCI: qcom: Add Qualcomm PCIe controller driver
+To: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
+ <1449149725-27607-4-git-send-email-stanimir.varbanov@linaro.org>
+Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <566FCE27.2050705@mm-sol.com>
+Date: Tue, 15 Dec 2015 10:24:07 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450170968-11282-7-git-send-email-kishon@ti.com>
+In-Reply-To: <1449149725-27607-4-git-send-email-stanimir.varbanov@linaro.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 15, 2015 at 02:46:05PM +0530, Kishon Vijay Abraham I wrote:
-> Deprecate using phy-omap-control driver to power on/off the PHY and
-> use *syscon* framework to do the same.
+On 12/03/2015 03:35 PM, Stanimir Varbanov wrote:
+> From: Stanimir Varbanov <svarbanov@mm-sol.com>
 > 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> The PCIe driver reuse the Designware common code for host
+> and MSI initialization, and also program the Qualcomm
+> application specific registers.
+> 
+> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+> Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
 > ---
->  Documentation/devicetree/bindings/phy/ti-phy.txt |   10 ++-
->  drivers/phy/phy-ti-pipe3.c                       |   90 ++++++++++++++++++----
->  2 files changed, 85 insertions(+), 15 deletions(-)
+>  MAINTAINERS                  |    7 +
+>  drivers/pci/host/Kconfig     |   10 +
+>  drivers/pci/host/Makefile    |    1 +
+>  drivers/pci/host/pcie-qcom.c |  624 ++++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 642 insertions(+)
+>  create mode 100644 drivers/pci/host/pcie-qcom.c
 
-For the binding:
-
-Acked-by: Rob Herring <robh@kernel.org>
-
-One comment on the driver though.
-
-[...]
-
-> --- a/drivers/phy/phy-ti-pipe3.c
-> +++ b/drivers/phy/phy-ti-pipe3.c
-
-[...]
-
-> @@ -144,18 +155,53 @@ static void ti_pipe3_disable_clocks(struct ti_pipe3 *phy);
->  
->  static int ti_pipe3_power_off(struct phy *x)
->  {
-> +	u32 val;
-> +	int ret;
->  	struct ti_pipe3 *phy = phy_get_drvdata(x);
->  
-> -	omap_control_phy_power(phy->control_dev, 0);
-> +	if (phy->phy_power_syscon) {
-
-Writing this as:
-
-if (!phy->phy_power_syscon) {
-	...
-	return 0;
-}
-
-//regmap code
+Hi Bjorn, any chance to get this merged in 4.5 ?
 
 
-will make it simpler to remove the deprecated code later.
-
-
-> +		val = PIPE3_PHY_TX_RX_POWEROFF <<
-> +			PIPE3_PHY_PWRCTL_CLK_CMD_SHIFT;
-> +
-> +		ret = regmap_update_bits(phy->phy_power_syscon, phy->power_reg,
-> +					 PIPE3_PHY_PWRCTL_CLK_CMD_MASK, val);
-> +		if (ret < 0)
-> +			return ret;
-> +	} else {
-> +		omap_control_phy_power(phy->control_dev, 0);
-> +	}
->  
->  	return 0;
+-- 
+regards,
+Stan
