@@ -1,113 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:56947 "EHLO foss.arm.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:60762 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755137AbbLJSQN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Dec 2015 13:16:13 -0500
-Message-ID: <5669C169.2070504@arm.com>
-Date: Thu, 10 Dec 2015 18:16:09 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+	id S933402AbbLOJRC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Dec 2015 04:17:02 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <kishon@ti.com>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
+CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rogerq@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
+	<linux-usb@vger.kernel.org>, <tony@atomide.com>, <t-kristo@ti.com>
+Subject: [PATCH v3 8/9] phy: omap-usb2: use omap_usb_power_off to power off the PHY during probe
+Date: Tue, 15 Dec 2015 14:46:07 +0530
+Message-ID: <1450170968-11282-9-git-send-email-kishon@ti.com>
+In-Reply-To: <1450170968-11282-1-git-send-email-kishon@ti.com>
+References: <1450170968-11282-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-To: jakeo@microsoft.com, gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v10 4/7] PCI: Add fwnode_handle to pci_sysdata
-References: <1449769983-12948-1-git-send-email-jakeo@microsoft.com> <1449769983-12948-5-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1449769983-12948-5-git-send-email-jakeo@microsoft.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/12/15 17:53, jakeo@microsoft.com wrote:
-> From: Jake Oshins <jakeo@microsoft.com>
-> 
-> This patch adds an fwnode_handle to struct pci_sysdata, which is
-> used by the next patch in the series when trying to locate an
-> IRQ domain associated with a root PCI bus.
-> 
-> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
-> ---
->  arch/x86/include/asm/pci.h | 15 +++++++++++++++
->  drivers/pci/probe.c        |  1 +
->  include/linux/pci.h        |  4 ++++
->  3 files changed, 20 insertions(+)
-> 
-> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-> index 4625943..6fc3c7c 100644
-> --- a/arch/x86/include/asm/pci.h
-> +++ b/arch/x86/include/asm/pci.h
-> @@ -20,6 +20,9 @@ struct pci_sysdata {
->  #ifdef CONFIG_X86_64
->  	void		*iommu;		/* IOMMU private data */
->  #endif
-> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-> +	void		*fwnode;	/* IRQ domain for MSI assignment */
-> +#endif
->  };
->  
->  extern int pci_routeirq;
-> @@ -32,6 +35,7 @@ extern int noioapicreroute;
->  static inline int pci_domain_nr(struct pci_bus *bus)
->  {
->  	struct pci_sysdata *sd = bus->sysdata;
-> +
->  	return sd->domain;
->  }
->  
-> @@ -41,6 +45,17 @@ static inline int pci_proc_domain(struct pci_bus *bus)
->  }
->  #endif
->  
-> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-> +static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
-> +{
-> +	struct pci_sysdata *sd = bus->sysdata;
-> +
-> +	return sd->fwnode;
-> +}
-> +
-> +#define pci_root_bus_fwnode	_pci_root_bus_fwnode
-> +#endif
-> +
->  /* Can be used to override the logic in pci_scan_bus for skipping
->     already-configured bus numbers - to be used for buggy BIOSes
->     or architectures with incomplete PCI setup by the loader */
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index edb1984..750f907 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -15,6 +15,7 @@
->  #include <linux/pci-aspm.h>
->  #include <linux/aer.h>
->  #include <linux/acpi.h>
-> +#include <linux/irqdomain.h>
+No functional change. Previously omap_control_phy_power() was used to power
+off the PHY during probe. But once phy-omap-usb2 driver is adapted to
+use syscon, omap_control_phy_power() cannot be used. Hence used
+omap_usb_power_off to power off the PHY.
 
-Nit: this should be with patch 5, but that doesn't hurt. I don't think
-you need to respin the series for this.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Acked-by: Roger Quadros <rogerq@ti.com>
+---
+ drivers/phy/phy-omap-usb2.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->  #include <asm-generic/pci-bridge.h>
->  #include "pci.h"
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 6ae25aa..b414422 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1517,6 +1517,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
->  
->  #include <asm/pci.h>
->  
-> +#ifndef pci_root_bus_fwnode
-> +#define pci_root_bus_fwnode(bus)	((void)(bus), NULL)
-> +#endif
-> +
->  /* these helpers provide future and backwards compatibility
->   * for accessing popular PCI BAR info */
->  #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
-> 
-
-Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
-
-	M.
+diff --git a/drivers/phy/phy-omap-usb2.c b/drivers/phy/phy-omap-usb2.c
+index 0fe8058..c79633e 100644
+--- a/drivers/phy/phy-omap-usb2.c
++++ b/drivers/phy/phy-omap-usb2.c
+@@ -241,7 +241,6 @@ static int omap_usb2_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	phy->control_dev = &control_pdev->dev;
+-	omap_control_phy_power(phy->control_dev, 0);
+ 
+ 	otg->set_host		= omap_usb_set_host;
+ 	otg->set_peripheral	= omap_usb_set_peripheral;
+@@ -261,6 +260,7 @@ static int omap_usb2_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	phy_set_drvdata(generic_phy, phy);
++	omap_usb_power_off(generic_phy);
+ 
+ 	phy_provider = devm_of_phy_provider_register(phy->dev,
+ 			of_phy_simple_xlate);
 -- 
-Jazz is not dead. It just smells funny...
+1.7.9.5
+
