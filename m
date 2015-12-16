@@ -1,100 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 11 Dec 2015 13:48:57 +0800
-From: Jisheng Zhang <jszhang@marvell.com>
-To: Pratyush Anand <pratyush.anand@gmail.com>
-CC: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	"Arnd Bergmann" <arnd@arndb.de>, Jingoo Han <jingoohan1@gmail.com>,
-	<linux-arm-msm@vger.kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Stanimir Varbanov <stanimir.varbanov@linaro.org>,
-	<linux-kernel@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v4 1/5] PCI: designware: add memory barrier after
- enabling region
-Message-ID: <20151211134857.03601d0e@xhacker>
-In-Reply-To: <CAHM4w1m-NiwyCLz9tikbOcNtCmVu0Vd9FhmKKSuMi5ChzfDafA@mail.gmail.com>
-References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
-	<1449149725-27607-2-git-send-email-stanimir.varbanov@linaro.org>
-	<56669C50.9060700@linaro.org>
-	<CAHM4w1k_EAt+xBBYyG3B7W9Fegc4j+uRq5t_biUsxOGt+k+xUA@mail.gmail.com>
-	<20151209102359.GF8644@n2100.arm.linux.org.uk>
-	<CAHM4w1m-NiwyCLz9tikbOcNtCmVu0Vd9FhmKKSuMi5ChzfDafA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V2 18/23] x86, acpi, pci: Use equivalent function introduced in previous patch.
+Date: Wed, 16 Dec 2015 16:16:28 +0100
+Message-Id: <1450278993-12664-19-git-send-email-tn@semihalf.com>
+In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 11 Dec 2015 09:35:10 +0530 Pratyush Anand wrote:
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ arch/x86/pci/acpi.c | 20 +-------------------
+ 1 file changed, 1 insertion(+), 19 deletions(-)
 
-> On Wed, Dec 9, 2015 at 3:53 PM, Russell King - ARM Linux wrote:
-> 
-> [...]
-> 
-> >> > >       dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-> >> > > +     /*
-> >> > > +      * ensure that the ATU enable has been happaned before accessing
-> >> > > +      * pci configuration/io spaces through dw_pcie_cfg_[read|write].
-> >> > > +      */
-> >> > > +     wmb();
-> >> > >  }
-> >> > >  
-> >>
-> >>
-> >> My understnading is that since writel() of dw_pcie_writel_rc() in
-> >> above code and readl(), writel() of dw_pcie_cfg_[read|write]() (which
-> >> will follow) goes through same device (ie PCIe host here). So, it is
-> >> guaranteed that 1st writel() will be executed before later
-> >> readl()/writel(). If that is true then we do not need any explicit
-> >> barrier here.
-> >>
-> >> Arnd, Russel: whats your opinion here.  
-> >               ^l  
-> 
-> Sorry :(
-> 
-> >
-> > writel() has a barrier _before_ the access but not after.
-> >
-> > The fact is that there's nothing which guarantees that the write will hit
-> > the hardware in a timely manner (forget any rules about PCI config space,
-> > the PCI ordering rules apply to the PCI bus, not to the ARM buses.)
-> >
-> > If you need this write to have hit the hardware before continuing, you
-> > need to read back from the same register.  
-> 
-> OK, so better to replace wmb() with read back of control register.
-> 
-> >
-> > I'm just looking at this driver, trying to decipher what it's doing.  It
-> > _looks_ to me like it's reprogramming one of the outbound windows (IO?)
-> > so that configuration space can be accessed.  Doesn't this have the
-> > effect of disabling access to the IO segment of the PCI bus from the
-> > host CPU?
-> >
-> > What protections are there against other CPUs in the system issuing a
-> > PCI I/O read/write while this outbound window is programmed as
-> > configuration space?  
-> 
-> 
-> Yes, that is an issue with this driver. Most of the host controller
-> has 4 or more viewpoints, and it is very easy to handle for them. But
-> there are few which has only two viewpoints. Do not know how to solve
-> it, so that it works for all.
-> 
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 5f78595..33233a7 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -201,29 +201,11 @@ static int setup_mcfg_map(struct acpi_pci_root_info *ci)
+ 
+ 	return 0;
+ }
+-
+-static void teardown_mcfg_map(struct acpi_pci_root_info *ci)
+-{
+-	struct acpi_pci_root *root = ci->root;
+-	struct pci_mmcfg_region *cfg;
+-
+-	cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
+-	if (!cfg)
+-		return;
+-
+-	if (cfg->hot_added)
+-		pci_mmconfig_delete(root->segment, root->secondary.start,
+-				    root->secondary.end);
+-}
+ #else
+ static int setup_mcfg_map(struct acpi_pci_root_info *ci)
+ {
+ 	return 0;
+ }
+-
+-static void teardown_mcfg_map(struct acpi_pci_root_info *ci)
+-{
+-}
+ #endif
+ 
+ static int pci_acpi_root_get_node(struct acpi_pci_root *root)
+@@ -251,7 +233,7 @@ static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
+ 
+ static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
+ {
+-	teardown_mcfg_map(ci);
++	pci_mmcfg_teardown_map(ci);
+ 	kfree(container_of(ci, struct pci_root_info, common));
+ }
+ 
+-- 
+1.9.1
 
-The default outbound iATU number is two, this may be the reason why the driver
-is written in current style. And two outbound iATUs may be common for pcie dw
-users because ASIC people just follow the default configuration ;).
-
-In our case, Marvell Berlin SoCs have two outbound iATUs.
-
-Thanks,
-Jisheng
