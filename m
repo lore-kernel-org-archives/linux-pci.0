@@ -1,64 +1,267 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:56408 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754932AbbLQOcp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Dec 2015 09:32:45 -0500
-Date: Thu, 17 Dec 2015 15:32:43 +0100
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH] pci: aer: wait till the workqueue completes before free
- memory
-Message-ID: <20151217143243.GA9654@linutronix.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jayachandran C <jchandra@broadcom.com>
+To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: Jayachandran C <jchandra@broadcom.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [RFC PATCH v3 5/5] PCI: ACPI: Add a generic ACPI based host controller
+Date: Wed, 16 Dec 2015 18:12:35 +0530
+Message-ID: <1450269755-21420-6-git-send-email-jchandra@broadcom.com>
+In-Reply-To: <1450269755-21420-1-git-send-email-jchandra@broadcom.com>
+References: <1450269755-21420-1-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I start a binary which should flash the FPGA and re-enumare the PCI-BUS
-and find a new device. It works most of the time. With SLUB debug it
-crashes on each iteration with something like this (compressed output):
+Add a simple ACPI based PCI host controller. This is done by
+providing a simple implementation for pci_acpi_scan_root().
 
-| pcieport 0000:00:00.0: AER: Multiple Corrected error received: id=0000
-| Unable to handle kernel paging request for data at address 0x27ef9e3e
-| Faulting instruction address: 0x602f5328
-| Oops: Kernel access of bad area, sig: 11 [#1]
-| Workqueue: events aer_isr
-| GPR24: dd6aa000 6b6b6b6b 605f8378 605f8360 d99b12c0 604fc674 606b1704 d99b12c0
-| NIP [602f5328] pci_walk_bus+0xd4/0x104
+The pci_mmcfg_list handling is done by the ACPI code, we
+keep a reference to the pci_mmcfg_region which is already
+mapped.
 
-Register 25 has the user-after magic. As it turns out, the old PCIe
-device is leaving, generates an error before it left, aer_irq() is fired,
-it schedules a work item. What happens now is that free_irq() is
-invoked, all resources are gone *before* the aes_isr() work item is
-completed.
-So to fix this, I flush the workqueue to ensure that there is no more
-work pending.
+This is enabled only for ARM64 now.
 
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
 ---
-Bjorn, this could deserve a stable tag. However it seems to have been
-like that even in v2.6.20.
+ drivers/pci/host/Kconfig         |   7 ++
+ drivers/pci/host/Makefile        |   1 +
+ drivers/pci/host/pci-host-acpi.c | 193 +++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 201 insertions(+)
+ create mode 100644 drivers/pci/host/pci-host-acpi.c
 
- drivers/pci/pcie/aer/aerdrv.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index 0bf82a20a0fb..7acd27348098 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -282,8 +282,10 @@ static void aer_remove(struct pcie_device *dev)
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index f131ba9..8321efc 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -53,6 +53,13 @@ config PCI_RCAR_GEN2_PCIE
+ 	help
+ 	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
  
- 	if (rpc) {
- 		/* If register interrupt service, it must be free. */
--		if (rpc->isr)
-+		if (rpc->isr) {
- 			free_irq(dev->irq, dev);
-+			flush_work(&rpc->dpc_handler);
-+		}
- 
- 		wait_event(rpc->wait_release, rpc->prod_idx == rpc->cons_idx);
- 
++config PCI_HOST_GENERIC_ACPI
++	bool "Generic ACPI PCI host controller"
++	depends on ARM64 && ACPI
++	help
++	  Say Y here if you want to support a simple generic ACPI PCI host
++	  controller.
++
+ config PCI_HOST_GENERIC
+ 	bool "Generic PCI host controller"
+ 	depends on (ARM || ARM64) && OF
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 9d4d3c6..bc31852 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -6,6 +6,7 @@ obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+ obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+ obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
++obj-$(CONFIG_PCI_HOST_GENERIC_ACPI) += pci-host-acpi.o
+ obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
+ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+ obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
+diff --git a/drivers/pci/host/pci-host-acpi.c b/drivers/pci/host/pci-host-acpi.c
+new file mode 100644
+index 00000000..cdc259e
+--- /dev/null
++++ b/drivers/pci/host/pci-host-acpi.c
+@@ -0,0 +1,193 @@
++/*
++ * Generic PCI host controller driver for ACPI based systems
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ *
++ * Copyright (c) 2015 Broadcom Corporation
++ *
++ * Based on drivers/pci/host/pci-host-generic.c
++ * Copyright (C) 2014 ARM Limited
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/acpi.h>
++#include <linux/pci-acpi.h>
++#include <linux/sfi_acpi.h>
++#include <linux/slab.h>
++
++#define PREFIX			"pci-host-acpi:"
++
++/* sysdata pointer is ->root_info */
++struct gen_acpi_root_info {
++	struct acpi_pci_root_info	common;
++	struct pci_mmcfg_region		*mcfg;
++	bool				mcfg_added;
++};
++
++/* find mapping of a MCFG area */
++static void __iomem *gen_acpi_map_cfg_bus(struct pci_bus *bus,
++			unsigned int devfn, int where)
++{
++	struct gen_acpi_root_info *pci = bus->sysdata;
++	struct pci_mmcfg_region *mcfg = pci->mcfg;
++
++	if (bus->number < mcfg->start_bus || bus->number > mcfg->end_bus)
++		return NULL;
++
++	return mcfg->virt +
++		PCI_MMCFG_OFFSET(bus->number - mcfg->start_bus, devfn) +
++		where;
++}
++
++static struct pci_ops gen_acpi_pci_ops = {
++	.map_bus	= gen_acpi_map_cfg_bus,
++	.read		= pci_generic_config_read,
++	.write		= pci_generic_config_write,
++};
++
++/* Insert the ECFG area for a root bus */
++static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
++{
++	struct gen_acpi_root_info *info;
++	struct acpi_pci_root *root = ci->root;
++	struct device *dev = &ci->bridge->dev;
++	int err;
++
++	info = container_of(ci, struct gen_acpi_root_info, common);
++	err = pci_mmconfig_insert(dev, root->segment, root->secondary.start,
++			root->secondary.end, root->mcfg_addr);
++	if (err && err != -EEXIST)
++		return err;
++
++	info->mcfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
++	WARN_ON(info->mcfg == NULL);
++	info->mcfg_added = (err == -EEXIST);
++	return 0;
++}
++
++static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
++{
++	struct gen_acpi_root_info *info;
++	struct acpi_pci_root *root = ci->root;
++
++	info = container_of(ci, struct gen_acpi_root_info, common);
++	if (info->mcfg_added)
++		pci_mmconfig_delete(root->segment, root->secondary.start,
++					root->secondary.end);
++	info->mcfg = NULL;
++}
++
++static struct acpi_pci_root_ops pci_acpi_root_ops = {
++	.pci_ops = &gen_acpi_pci_ops,
++	.init_info = pci_acpi_root_init_info,
++	.release_info = pci_acpi_root_release_info,
++};
++
++struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
++{
++	struct acpi_device *device = root->device;
++	struct gen_acpi_root_info *ri;
++	struct pci_bus *bus, *child;
++
++	/* allocate acpi_info/sysdata */
++	ri = devm_kzalloc(&device->dev, sizeof(*ri), GFP_KERNEL);
++	if (!ri) {
++		dev_err(&device->dev,
++			"pci_bus %04x:%02x: ignored (out of memory)\n",
++			root->segment, (int)root->secondary.start);
++		return NULL;
++	}
++
++	bus =  acpi_pci_root_create(root, &pci_acpi_root_ops,
++					&ri->common, ri);
++	if (!bus) {
++		dev_err(&device->dev, "Scanning rootbus failed");
++		return NULL;
++	}
++
++	list_for_each_entry(child, &bus->children, node)
++		pcie_bus_configure_settings(child);
++
++	return bus;
++}
++
++void __init pci_mmcfg_late_init(void)
++{
++	int err;
++
++	err = pci_mmconfig_parse_table();
++	if (err)
++		pr_err(PREFIX " Failed to parse MCFG (%d)\n", err);
++}
++
++int raw_pci_read(unsigned int seg, unsigned int bus,
++		  unsigned int devfn, int reg, int len, u32 *val)
++{
++	struct pci_mmcfg_region *mcfg;
++	void __iomem *addr;
++	int err = -EINVAL;
++
++	rcu_read_lock();
++	mcfg = pci_mmconfig_lookup(seg, bus);
++	if (!mcfg || !mcfg->virt)
++		goto err;
++
++	addr = mcfg->virt + PCI_MMCFG_OFFSET(bus, devfn);
++	switch (len) {
++	case 1:
++		*val = readb(addr + reg);
++		break;
++	case 2:
++		*val = readw(addr + reg);
++		break;
++	case 4:
++		*val = readl(addr + reg);
++		break;
++	}
++	err = 0;
++err:
++	rcu_read_unlock();
++	return err;
++}
++
++int raw_pci_write(unsigned int seg, unsigned int bus,
++		unsigned int devfn, int reg, int len, u32 val)
++{
++	struct pci_mmcfg_region *mcfg;
++	void __iomem *addr;
++	int err = -EINVAL;
++
++	rcu_read_lock();
++	mcfg = pci_mmconfig_lookup(seg, bus);
++	if (!mcfg || !mcfg->virt)
++		goto err;
++
++	addr = mcfg->virt + PCI_MMCFG_OFFSET(bus, devfn);
++	switch (len) {
++	case 1:
++		writeb(val, addr + reg);
++		break;
++	case 2:
++		writew(val, addr + reg);
++		break;
++	case 4:
++		writel(val, addr + reg);
++		break;
++	}
++	err = 0;
++err:
++	rcu_read_unlock();
++	return err;
++}
 -- 
-2.6.4
+1.9.1
 
