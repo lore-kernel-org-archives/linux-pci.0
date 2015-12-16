@@ -1,135 +1,160 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:35805 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755126AbbLWJjo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Dec 2015 04:39:44 -0500
-Received: by mail-pa0-f50.google.com with SMTP id jx14so103494453pad.2
-        for <linux-pci@vger.kernel.org>; Wed, 23 Dec 2015 01:39:43 -0800 (PST)
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
- against platfrom specific quirks.
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"okaya@codeaurora.org" <okaya@codeaurora.org>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"Stefano.Stabellini@eu.citrix.com" <Stefano.Stabellini@eu.citrix.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+Subject: [PATCH V2 20/23] ACPI, PCI: Refine the way to handle translation_offset for ACPI resources
+Date: Wed, 16 Dec 2015 16:16:30 +0100
+Message-Id: <1450278993-12664-21-git-send-email-tn@semihalf.com>
+In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
 References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
- <1450278993-12664-23-git-send-email-tn@semihalf.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EC14C0F@lhreml503-mbb>
- <567923D2.2010202@semihalf.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EC183BD@lhreml503-mbb>
-Cc: "robert.richter@caviumnetworks.com"
-	<robert.richter@caviumnetworks.com>,
-	"mw@semihalf.com" <mw@semihalf.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	Wangyijing <wangyijing@huawei.com>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	"jchandra@broadcom.com" <jchandra@broadcom.com>,
-	"jcm@redhat.com" <jcm@redhat.com>
-Message-ID: <567A6BA5.1030408@linaro.org>
-Date: Wed, 23 Dec 2015 17:38:45 +0800
-MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1EC183BD@lhreml503-mbb>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/22/2015 10:48 PM, Gabriele Paoloni wrote:
-> Hi Tomasz
->
->> -----Original Message-----
->> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
->> owner@vger.kernel.org] On Behalf Of Tomasz Nowicki
->> Sent: 22 December 2015 10:20
->> To: Gabriele Paoloni; bhelgaas@google.com; arnd@arndb.de;
->> will.deacon@arm.com; catalin.marinas@arm.com; rjw@rjwysocki.net;
->> hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org;
->> jiang.liu@linux.intel.com; Stefano.Stabellini@eu.citrix.com
->> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
->> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; tglx@linutronix.de;
->> Wangyijing; Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
->> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
->> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
->> acpi@lists.linaro.org; jchandra@broadcom.com; jcm@redhat.com
->> Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space
->> accessors against platfrom specific quirks.
->>
->> On 21.12.2015 12:47, Gabriele Paoloni wrote:
->>> 2) In the quirk mechanism you proposed, I see that the callback
->> function
->>>      allows to do some preparation work for the host bridge. For
->> example in
->>>      Hisilicon hip05 case we would need to read some values from the
->> ACPI
->>>      table (see acpi_pci_root_hisi_add() function in
->>>      https://lkml.org/lkml/2015/12/3/426).
->>>      I am quite new to ACPI and I wonder if it is OK to add such
->> "Packages"
->>>      to the  PCI host bridge ACPI device...or maybe we need to declare
->> a new
->>>      one...?
->>
->> I may miss sth so please correct me in that case.
->>
->> https://lkml.org/lkml/2015/12/3/426 shows that you need special
->> handling for root->secondary.start bus number only, right? So how about
->> creating special MCFG region <rc-base:rc-base+rc-size> only for
->> <segment,bus>.
->> Like that:
->>
->> [0008]                       Base Address : <rc-base>
->> [0002]               Segment Group Number : <segment>
->> [0001]                   Start Bus Number : <root->secondary.start>
->> [0001]                     End Bus Number : <root->secondary.start>
->> [0004]                           Reserved : 00000000
->>
->>
->> static const struct dmi_system_id hisi_quirk[] = {
->> 	{
->> 		.ident = "HiSi...",
->> 		.matches = {
->> 			DMI_MATCH(<whatever you need to match your platform>),
->> 		},
->> 	},
->> 	{ }
->> };
->>
->> static struct pci_ops hisi_ecam_pci_ops = {
->> 	.map_bus = pci_mcfg_dev_base,
->> 	.read = hisi_pcie_cfg_read,
->> 	.write = hisi_pcie_cfg_write,
->> };
->>
->> DECLARE_ACPI_MCFG_FIXUP(hisi_quirk, &hisi_ecam_pci_ops,
->> 			<segment>, <bus>);
->>
->> With above code you can use your custom PCI config accessor only for
->> that region.
->>
->> Let me know if that is not enough for you.
->
-> In principle I think it can work...
->
-> Liudongdong, Guo Hanjun what is your opinion about?
+From: Liu Jiang <jiang.liu@linux.intel.com>
 
-Let me and Dongdong prepare a patch for Hip05 and then will
-back to this discussion to see if we met some problems.
+Some architectures, such as IA64 and ARM64, have no instructions to
+directly access PCI IO ports, so they map PCI IO ports into PCI MMIO
+address space. Typically PCI host bridges on those architectures take
+the responsibility to map (translate) PCI IO port transactions into
+Memory-Mapped IO transactions. ACPI specification provides support
+of such a usage case by using resource translation_offset.
 
-Thanks
-Hanjun
+But current ACPI resource parsing interface isn't neutral enough,
+it still has some special logic for IA64. So refine the ACPI resource
+parsing interface and IA64 code to neutrally handle translation_offset
+by:
+1) ACPI resource parsing interface doesn't do any translation, it just
+   save the translation_offset to be used by arch code.
+2) Arch code will do the mapping(translation) based on arch specific
+   information. Typically it does:
+2.a) Translate per PCI domain IO port address space into system global
+   IO port address space.
+2.b) Setup MMIO address mapping for IO ports.
+void handle_io_resource(struct resource_entry *io_entry)
+{
+	struct resource *mmio_res;
+
+	mmio_res = kzalloc(sizeof(*mmio_res), GFP_KERNEL);
+	mmio_res->flags = IORESOURCE_MEM;
+	mmio_res->start = io_entry->offset + io_entry->res->start;
+	mmio_res->end = io_entry->offset + io_entry->res->end;
+	insert_resource(&iomem_resource, mmio_res)
+
+	base = map_to_system_ioport_address(entry);
+	io_entry->offset = base;
+	io_entry->res->start += base;
+	io_entry->res->end += base;
+}
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/ia64/pci/pci.c     | 26 ++++++++++++++++----------
+ drivers/acpi/resource.c | 12 +++++-------
+ 2 files changed, 21 insertions(+), 17 deletions(-)
+
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index c1e8ed5..d496976 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -154,7 +154,7 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 	struct resource_entry *iospace;
+ 	struct resource *resource, *res = entry->res;
+ 	char *name;
+-	unsigned long base, min, max, base_port;
++	unsigned long base_mmio, base_port;
+ 	unsigned int sparse = 0, space_nr, len;
+ 
+ 	len = strlen(info->common.name) + 32;
+@@ -172,12 +172,10 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 		goto free_resource;
+ 
+ 	name = (char *)(iospace + 1);
+-	min = res->start - entry->offset;
+-	max = res->end - entry->offset;
+-	base = __pa(io_space[space_nr].mmio_base);
++	base_mmio = __pa(io_space[space_nr].mmio_base);
+ 	base_port = IO_SPACE_BASE(space_nr);
+ 	snprintf(name, len, "%s I/O Ports %08lx-%08lx", info->common.name,
+-		 base_port + min, base_port + max);
++		 base_port + res->start, base_port + res->end);
+ 
+ 	/*
+ 	 * The SDM guarantees the legacy 0-64K space is sparse, but if the
+@@ -190,19 +188,27 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 	resource = iospace->res;
+ 	resource->name  = name;
+ 	resource->flags = IORESOURCE_MEM;
+-	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
+-	resource->end   = base + (sparse ? IO_SPACE_SPARSE_ENCODING(max) : max);
++	resource->start = base_mmio;
++	resource->end = base_mmio;
++	if (sparse) {
++		resource->start += IO_SPACE_SPARSE_ENCODING(res->start);
++		resource->end += IO_SPACE_SPARSE_ENCODING(res->end);
++	} else {
++		resource->start += res->start;
++		resource->end += res->end;
++	}
+ 	if (insert_resource(&iomem_resource, resource)) {
+ 		dev_err(dev,
+ 			"can't allocate host bridge io space resource  %pR\n",
+ 			resource);
+ 		goto free_resource;
+ 	}
++	resource_list_add_tail(iospace, &info->io_resources);
+ 
++	/* Adjust base of original IO port resource descriptor */
+ 	entry->offset = base_port;
+-	res->start = min + base_port;
+-	res->end = max + base_port;
+-	resource_list_add_tail(iospace, &info->io_resources);
++	res->start += base_port;
++	res->end += base_port;
+ 
+ 	return 0;
+ 
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index cdc5c25..6578f68 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -190,8 +190,7 @@ static bool acpi_decode_space(struct resource_win *win,
+ {
+ 	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
+ 	bool wp = addr->info.mem.write_protect;
+-	u64 len = attr->address_length;
+-	u64 start, end, offset = 0;
++	u64 len = attr->address_length, offset = 0;
+ 	struct resource *res = &win->res;
+ 
+ 	/*
+@@ -215,14 +214,13 @@ static bool acpi_decode_space(struct resource_win *win,
+ 	else if (attr->translation_offset)
+ 		pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
+ 			 attr->translation_offset);
+-	start = attr->minimum + offset;
+-	end = attr->maximum + offset;
+ 
+ 	win->offset = offset;
+-	res->start = start;
+-	res->end = end;
++	res->start = attr->minimum;
++	res->end = attr->maximum;
+ 	if (sizeof(resource_size_t) < sizeof(u64) &&
+-	    (offset != win->offset || start != res->start || end != res->end)) {
++	    (offset != win->offset || attr->minimum != res->start ||
++	     attr->maximum != res->end)) {
+ 		pr_warn("acpi resource window ([%#llx-%#llx] ignored, not CPU addressable)\n",
+ 			attr->minimum, attr->maximum);
+ 		return false;
+-- 
+1.9.1
+
