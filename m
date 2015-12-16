@@ -1,103 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:13515 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753989AbbLIWz0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Dec 2015 17:55:26 -0500
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v9 4/7] PCI: Add fwnode_handle to pci_sysdata
-Date: Wed,  9 Dec 2015 22:54:54 +0000
-Message-Id: <1449701697-6366-5-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
-References: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 16 Dec 2015 15:17:25 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>
+Subject: Re: [PATCH v4 3/5] PCI: qcom: Add Qualcomm PCIe controller driver
+Message-ID: <20151216211725.GA27791@localhost>
+References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
+ <1449149725-27607-4-git-send-email-stanimir.varbanov@linaro.org>
+ <566FCE27.2050705@mm-sol.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <566FCE27.2050705@mm-sol.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+Hi Stan,
 
-This patch adds an fwnode_handle to struct pci_sysdata, which is
-used by the next patch in the series when trying to locate an
-IRQ domain associated with a root PCI bus.
+On Tue, Dec 15, 2015 at 10:24:07AM +0200, Stanimir Varbanov wrote:
+> On 12/03/2015 03:35 PM, Stanimir Varbanov wrote:
+> > From: Stanimir Varbanov <svarbanov@mm-sol.com>
+> > 
+> > The PCIe driver reuse the Designware common code for host
+> > and MSI initialization, and also program the Qualcomm
+> > application specific registers.
+> > 
+> > Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+> > Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+> > ---
+> >  MAINTAINERS                  |    7 +
+> >  drivers/pci/host/Kconfig     |   10 +
+> >  drivers/pci/host/Makefile    |    1 +
+> >  drivers/pci/host/pcie-qcom.c |  624 ++++++++++++++++++++++++++++++++++++++++++
+> >  4 files changed, 642 insertions(+)
+> >  create mode 100644 drivers/pci/host/pcie-qcom.c
+> 
+> Hi Bjorn, any chance to get this merged in 4.5 ?
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- arch/x86/include/asm/pci.h | 15 +++++++++++++++
- drivers/pci/probe.c        |  1 +
- include/linux/pci.h        |  4 ++++
- 3 files changed, 20 insertions(+)
+The driver looks good overall, so I think 4.5 is very possible.  It
+doesn't look like there's really a consensus on the memory barrier
+thing yet, and I assume the testing reports include that first patch,
+so it'd be good to get that resolved first.
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4625943..6fc3c7c 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -20,6 +20,9 @@ struct pci_sysdata {
- #ifdef CONFIG_X86_64
- 	void		*iommu;		/* IOMMU private data */
- #endif
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+	void		*fwnode;	/* IRQ domain for MSI assignment */
-+#endif
- };
- 
- extern int pci_routeirq;
-@@ -32,6 +35,7 @@ extern int noioapicreroute;
- static inline int pci_domain_nr(struct pci_bus *bus)
- {
- 	struct pci_sysdata *sd = bus->sysdata;
-+
- 	return sd->domain;
- }
- 
-@@ -41,6 +45,17 @@ static inline int pci_proc_domain(struct pci_bus *bus)
- }
- #endif
- 
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
-+{
-+	struct pci_sysdata *sd = bus->sysdata;
-+
-+	return sd->fwnode;
-+}
-+
-+#define pci_root_bus_fwnode	_pci_root_bus_fwnode
-+#endif
-+
- /* Can be used to override the logic in pci_scan_bus for skipping
-    already-configured bus numbers - to be used for buggy BIOSes
-    or architectures with incomplete PCI setup by the loader */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index edb1984..750f907 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -15,6 +15,7 @@
- #include <linux/pci-aspm.h>
- #include <linux/aer.h>
- #include <linux/acpi.h>
-+#include <linux/irqdomain.h>
- #include <asm-generic/pci-bridge.h>
- #include "pci.h"
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6ae25aa..b414422 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1517,6 +1517,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- 
- #include <asm/pci.h>
- 
-+#ifndef pci_root_bus_fwnode
-+#define pci_root_bus_fwnode(bus)	((void)(bus), NULL)
-+#endif
-+
- /* these helpers provide future and backwards compatibility
-  * for accessing popular PCI BAR info */
- #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
--- 
-1.9.1
-
+Bjorn
