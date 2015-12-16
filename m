@@ -1,83 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49755 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752019AbbLHOuL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Dec 2015 09:50:11 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 21DBC20515
-	for <linux-pci@vger.kernel.org>; Tue,  8 Dec 2015 14:50:10 +0000 (UTC)
-Received: from localhost (173-27-161-33.client.mchsi.com [173.27.161.33])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by mail.kernel.org (Postfix) with ESMTPSA id 1F3CD204EB
-	for <linux-pci@vger.kernel.org>; Tue,  8 Dec 2015 14:50:09 +0000 (UTC)
-Subject: [PATCH] PCI: Simplify config space size computation
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 08 Dec 2015 08:50:07 -0600
-Message-ID: <20151208145007.32114.75564.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V2 23/23] arm64, pci, acpi: Start using ACPI based PCI host bridge driver for ARM64.
+Date: Wed, 16 Dec 2015 16:16:33 +0100
+Message-Id: <1450278993-12664-24-git-send-email-tn@semihalf.com>
+In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Restructure the logic so we return the config space size as soon as we know
-it.  This reduces indentation, removes negations, and removes gotos.
+Lets get rid of empty PCI init stub, related ACPI header and
+go with full-blown PCI host bridge driver.
 
-No functional change.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Catalin Marinas <catalin.marinas@arm.com>
+CC: Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+CC: Will Deacon <will.deacon@arm.com>
 ---
- drivers/pci/probe.c |   25 ++++++++++---------------
- 1 file changed, 10 insertions(+), 15 deletions(-)
+ arch/arm64/Kconfig      |  4 ++++
+ arch/arm64/kernel/pci.c | 10 ----------
+ 2 files changed, 4 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index edb1984..0d86c82 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1107,14 +1107,11 @@ static int pci_cfg_space_size_ext(struct pci_dev *dev)
- 	int pos = PCI_CFG_SPACE_SIZE;
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index d65d315..71032ed 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -86,6 +86,7 @@ config ARM64
+ 	select OF_EARLY_FLATTREE
+ 	select OF_RESERVED_MEM
+ 	select PERF_USE_VMALLOC
++	select PCI_HOST_GENERIC_ACPI if ACPI
+ 	select POWER_RESET
+ 	select POWER_SUPPLY
+ 	select RTC_LIB
+@@ -213,6 +214,9 @@ config PCI_MMCONFIG
+ 	select PCI_ECAM
+ 	depends on ACPI
  
- 	if (pci_read_config_dword(dev, pos, &status) != PCIBIOS_SUCCESSFUL)
--		goto fail;
-+		return PCI_CFG_SPACE_SIZE;
- 	if (status == 0xffffffff || pci_ext_cfg_is_aliased(dev))
--		goto fail;
-+		return PCI_CFG_SPACE_SIZE;
++config ARCH_PCI_HOST_GENERIC_ACPI
++	def_bool ACPI
++
+ endmenu
  
- 	return PCI_CFG_SPACE_EXP_SIZE;
+ menu "Kernel Features"
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index f7948f5..e9cf58b 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -10,7 +10,6 @@
+  *
+  */
+ 
+-#include <linux/acpi.h>
+ #include <linux/init.h>
+ #include <linux/io.h>
+ #include <linux/kernel.h>
+@@ -50,12 +49,3 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 
+ 	return pci_enable_resources(dev, mask);
+ }
 -
-- fail:
--	return PCI_CFG_SPACE_SIZE;
- }
- 
- int pci_cfg_space_size(struct pci_dev *dev)
-@@ -1127,19 +1124,17 @@ int pci_cfg_space_size(struct pci_dev *dev)
- 	if (class == PCI_CLASS_BRIDGE_HOST)
- 		return pci_cfg_space_size_ext(dev);
- 
--	if (!pci_is_pcie(dev)) {
--		pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
--		if (!pos)
--			goto fail;
-+	if (pci_is_pcie(dev))
-+		return pci_cfg_space_size_ext(dev);
- 
--		pci_read_config_dword(dev, pos + PCI_X_STATUS, &status);
--		if (!(status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ)))
--			goto fail;
--	}
-+	pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
-+	if (!pos)
-+		return PCI_CFG_SPACE_SIZE;
- 
--	return pci_cfg_space_size_ext(dev);
-+	pci_read_config_dword(dev, pos + PCI_X_STATUS, &status);
-+	if (status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ))
-+		return pci_cfg_space_size_ext(dev);
- 
-- fail:
- 	return PCI_CFG_SPACE_SIZE;
- }
- 
+-#ifdef CONFIG_ACPI
+-/* Root bridge scanning */
+-struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+-{
+-	/* TODO: Should be revisited when implementing PCI on ACPI */
+-	return NULL;
+-}
+-#endif
+-- 
+1.9.1
 
