@@ -1,49 +1,101 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, David Daney <david.daney@cavium.com>
-Subject: [PATCH 0/2] pci: Add host controller driver for Cavium ThunderX PCIe
-Date: Mon, 21 Dec 2015 17:53:40 -0800
-Message-Id: <1450749222-15966-1-git-send-email-ddaney.cavm@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Hannes Reinecke <hare@suse.de>,
+	Alexander Duyck <alexander.h.duyck@redhat.com>,
+	Michal Kubecek <mkubecek@suse.com>
+Subject: [PATCH] pci: Update VPD size with correct length
+Date: Wed, 16 Dec 2015 11:28:43 +0100
+Message-Id: <1450261723-43658-1-git-send-email-hare@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+PCI-2.2 VPD entries have a maximum size of 32k, but might actually
+be smaller than that. To figure out the actual size one has to read
+the VPD area until the 'end marker' is reached.
+Trying to read VPD data beyond that marker results in 'interesting'
+effects, from simple read errors to crashing the card. And to make
+matters worse not every PCI card implements this properly, leaving
+us with no 'end' marker or even completely invalid data.
+This path modifies the size of the VPD attribute to the available
+size, and disables the VPD attribute altogether if no valid data
+could be read.
 
-Some Cavium ThunderX processors require quirky access methods for the
-config space of the PCIe bridge.
+Cc: Alexander Duyck <alexander.h.duyck@redhat.com>
+Cc: Michal Kubecek <mkubecek@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/pci/access.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
 
-There are two patches:
-
-1) Refactor code in pci-host-generic so that it can more easily be
-   used by other drivers.
-
-2) Add the ThunderX PCIe driver, which leverages the code in
-   pci-host-generic
-
-David Daney (2):
-  PCI: generic: Refactor code to enable reuse by other drivers.
-  pci, pcie-thunder-pem: Add PCIe host driver for ThunderX processors.
-
- .../devicetree/bindings/pci/pcie-thunder-pem.txt   |  43 ++++
- drivers/pci/host/Kconfig                           |   6 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-host-generic.c                |  53 ++--
- drivers/pci/host/pci-host-generic.h                |  56 ++++
- drivers/pci/host/pcie-thunder-pem.c                | 283 +++++++++++++++++++++
- 6 files changed, 407 insertions(+), 35 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
- create mode 100644 drivers/pci/host/pci-host-generic.h
- create mode 100644 drivers/pci/host/pcie-thunder-pem.c
-
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 59ac36f..afa86d6 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -475,6 +475,48 @@ static const struct pci_vpd_ops pci_vpd_f0_ops = {
+ 	.release = pci_vpd_pci22_release,
+ };
+ 
++/**
++ * pci_vpd_size - determine actual size of Vital Product Data
++ * @dev:	pci device struct
++ * @old_size:	current assumed size, also maximum allowed size
++ *
++ */
++static size_t
++pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
++{
++	size_t off = 0;
++	unsigned char header[1+2];	/* 1 byte tag, 2 bytes length */
++
++	while (off < old_size && pci_read_vpd(dev, off, 1, header)) {
++		unsigned char tag;
++
++		if (header[0] == 0xff) {
++			/* Invalid data from VPD read */
++			tag = header[0];
++		} else if (header[0] & 0x80) {
++			/* Large Resource Data Type Tag */
++			if (pci_read_vpd(dev, off+1, 2, &header[1]) != 2)
++				return off + 1;
++			off += 3 + ((header[2] << 8) | header[1]);
++			tag = (header[0] & 0x7f);
++		} else {
++			/* Short Resource Data Type Tag */
++			off += 1 + (header[0] & 0x07);
++			tag = (header[0] & 0x78) >> 3;
++		}
++		if (tag == 0x0f)	/* End tag descriptor */
++			break;
++		if ((tag != 0x02) && (tag != 0x10) && (tag != 0x11)) {
++			dev_debug(&dev->dev,
++				   "invalid %s vpd tag %02x at offset %zu.",
++				   header[0] & 0x80 ? "large" : "short",
++				   tag, off);
++			break;
++		}
++	}
++	return off;
++}
++
+ int pci_vpd_pci22_init(struct pci_dev *dev)
+ {
+ 	struct pci_vpd_pci22 *vpd;
+@@ -497,6 +539,13 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+ 	vpd->cap = cap;
+ 	vpd->busy = false;
+ 	dev->vpd = &vpd->base;
++	vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
++	if (vpd->base.len == 0) {
++		dev_debug(&dev->dev, "Disabling VPD access.");
++		dev->vpd = NULL;
++		kfree(vpd);
++		return -ENXIO;
++	}
+ 	return 0;
+ }
+ 
 -- 
-1.8.3.1
+1.8.5.6
 
