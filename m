@@ -1,104 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:55595 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932279AbbLBBYy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 20:24:54 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Imre Deak <imre.deak@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jani Nikula <jani.nikula@intel.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Linux PM <linux-pm@vger.kernel.org>,
-	intel-gfx@lists.freedesktop.org,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v5] PCI / PM: Tune down retryable runtime suspend error messages
-Date: Wed, 02 Dec 2015 02:54:45 +0100
-Message-ID: <4357316.BsOyM9M4tL@vostro.rjw.lan>
-In-Reply-To: <1448910175-5904-1-git-send-email-imre.deak@intel.com>
-References: <1448699664-4178-1-git-send-email-imre.deak@intel.com> <1448910175-5904-1-git-send-email-imre.deak@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI hostbridge init based on ACPI
+Date: Wed, 16 Dec 2015 16:16:10 +0100
+Message-Id: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, November 30, 2015 09:02:55 PM Imre Deak wrote:
-> The runtime PM core doesn't treat EBUSY and EAGAIN retvals from the driver
-> suspend hooks as errors, but they still show up as errors in dmesg. Tune
-> them down. See rpm_suspend() for details of handling these return values.
-> 
-> Note that we use dev_dbg() for the retryable retvals, so after this
-> change you'll need either CONFIG_DYNAMIC_DEBUG or CONFIG_PCI_DEBUG
-> for them to show up in the log.
-> 
-> One problem caused by this was noticed by Daniel: the i915 driver
-> returns EAGAIN to signal a temporary failure to suspend and as a request
-> towards the RPM core for scheduling a suspend again. This is a normal
-> event, but the resulting error message flags a breakage during the
-> driver's automated testing which parses dmesg and picks up the error.
-> 
-> Reported-by: Daniel Vetter <daniel.vetter@intel.com>
-> Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=92992
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Signed-off-by: Imre Deak <imre.deak@intel.com>
+>From the functionality point of view this series might be split into the
+following logic parts:
+1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
+   PCI config regions and used when necessary.
+2. Move non-arch specific bits to the core code.
+3. Use MMCONFIG code and implement generic ACPI based PCI host
+   controller driver.
+4. Enable above driver on ARM64
 
-Hi Bjorn,
+Patches has been built on top of 4.4-rc4 and can be found here:
+git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v2)
 
-Are you going to handle this one or should I take care of it?
+NOTE, this patch set depends on Matthew's patches:
+http://www.spinics.net/lists/linux-pci/msg45950.html
+https://github.com/Vality/linux/tree/pci-fixes
 
-Rafael
+This has been tested on Cavium ThunderX 1 socket server and QEMU.
+Any help in reviewing and testing is very appreciated.
 
+v1 -> v2
+- moved non-arch specific piece of code to dirver/acpi/ directory
+- fixed IO resource handling
+- introduced PCI config accessors quirks matching
+- moved ACPI_COMPANION_SET to generic code
 
-> ---
-> 
-> v2:
-> - fix compile breake when CONFIG_PM_SLEEP=n (0-day builder)
-> v3:
-> - instead of modifying the suspend_report_result() helper to disinguish
->   between the runtime and system suspend case, inline the error
->   printing, it's not used anywhere else (Rafael)
-> v4:
-> - don't refer to log levels as flags in code comment (Rafael)
-> - use pr_debug(), pr_err() instead of the corresponding printk() (Rafael)
-> v5:
-> - clarify commit message (Bjorn)
-> - use dev_dbg, dev_err instead of pr_debug, pr_err (Bjorn)
-> - use %pf in printk format instead of %pF (Bjorn)
-> - make the debug/error messages more meaningful (Bjorn)
-> ---
->  drivers/pci/pci-driver.c | 16 ++++++++++++++--
->  1 file changed, 14 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 4446fcb..d7ffd66 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -1146,9 +1146,21 @@ static int pci_pm_runtime_suspend(struct device *dev)
->  	pci_dev->state_saved = false;
->  	pci_dev->no_d3cold = false;
->  	error = pm->runtime_suspend(dev);
-> -	suspend_report_result(pm->runtime_suspend, error);
-> -	if (error)
-> +	if (error) {
-> +		/*
-> +		 * -EBUSY and -EAGAIN is used to request the runtime PM core
-> +		 * to schedule a new suspend, so log the event only with debug
-> +		 * log level.
-> +		 */
-> +		if (error == -EBUSY || error == -EAGAIN)
-> +			dev_dbg(dev, "can't suspend now (%pf returned %d)\n",
-> +				pm->runtime_suspend, error);
-> +		else
-> +			dev_err(dev, "can't suspend (%pf returned %d)\n",
-> +				pm->runtime_suspend, error);
-> +
->  		return error;
-> +	}
->  	if (!pci_dev->d3cold_allowed)
->  		pci_dev->no_d3cold = true;
->  
-> 
+Liu Jiang (1):
+  ACPI, PCI: Refine the way to handle translation_offset for ACPI
+    resources
+
+Tomasz Nowicki (22):
+  x86, pci: Reorder logic of pci_mmconfig_insert() function
+  x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
+    out of arch/x86/ directory
+  pci, acpi, mcfg: Provide generic implementation of MCFG code
+    initialization.
+  x86, pci: mmconfig_{32,64}.c code refactoring - remove code
+    duplication.
+  x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
+    driver.
+  XEN / PCI: Remove the dependence on arch x86 when PCI_MMCONFIG=y
+  pci, acpi, mcfg: Provide default RAW ACPI PCI config space accessors.
+  arm64, acpi: Use empty PCI config space accessors from mcfg.c file.
+  pci, acpi, ecam: Add flag to indicate whether ECAM region was hot
+    added or not.
+  x86, pci: Cleanup platform specific MCFG data using previously added
+    ECAM hot_added flag.
+  arm64, pci: Remove useless boot time IRQ assignment when booting with
+    DT.
+  pci, acpi: Move ACPI host bridge device companion assignment to core
+    code.
+  x86, ia64, pci: Remove ACPI companion device from platform specific
+    data.
+  pci, acpi: Provide generic way to assign bus domain number.
+  x86, ia64, pci: Convert arches to use PCI_DOMAINS_GENERIC.
+  x86, ia64: Include acpi_pci_{add|remove}_bus to the default
+    pcibios_{add|remove}_bus implementation.
+  acpi, mcfg: Implement two calls that might be used to inject/remove
+    MCFG region.
+  x86, acpi, pci: Use equivalent function introduced in previous patch.
+  acpi, mcfg: Add default PCI config accessors implementation and
+    initial support for related quirks.
+  pci, acpi: Support for ACPI based PCI hostbridge init
+  pci, acpi: Match PCI config space accessors against platfrom specific
+    quirks.
+  arm64, pci, acpi: Start using ACPI based PCI host bridge driver for
+    ARM64.
+
+ arch/arm64/Kconfig                |  10 ++
+ arch/arm64/kernel/pci.c           |  35 ------
+ arch/ia64/Kconfig                 |   3 +
+ arch/ia64/include/asm/pci.h       |   3 -
+ arch/ia64/pci/pci.c               |  53 +++-----
+ arch/x86/Kconfig                  |   7 ++
+ arch/x86/include/asm/pci.h        |  10 --
+ arch/x86/include/asm/pci_x86.h    |  28 +----
+ arch/x86/pci/acpi.c               |  43 ++-----
+ arch/x86/pci/common.c             |  10 --
+ arch/x86/pci/irq.c                |  10 --
+ arch/x86/pci/mmconfig-shared.c    | 250 ++++++--------------------------------
+ arch/x86/pci/mmconfig_32.c        |  11 +-
+ arch/x86/pci/mmconfig_64.c        |  67 +---------
+ arch/x86/pci/numachip.c           |   1 +
+ drivers/acpi/Makefile             |   1 +
+ drivers/acpi/mcfg.c               | 203 +++++++++++++++++++++++++++++++
+ drivers/acpi/pci_root.c           |   5 +-
+ drivers/acpi/resource.c           |  12 +-
+ drivers/pci/Kconfig               |  10 ++
+ drivers/pci/Makefile              |   5 +
+ drivers/pci/ecam.c                | 234 +++++++++++++++++++++++++++++++++++
+ drivers/pci/host/Kconfig          |   6 +
+ drivers/pci/host/Makefile         |   1 +
+ drivers/pci/host/pci-host-acpi.c  | 138 +++++++++++++++++++++
+ drivers/pci/pci.c                 |  29 ++++-
+ drivers/pci/probe.c               |   5 +
+ drivers/xen/pci.c                 |   7 +-
+ include/asm-generic/vmlinux.lds.h |   7 ++
+ include/linux/acpi.h              |   2 +
+ include/linux/ecam.h              |  61 ++++++++++
+ include/linux/pci-acpi.h          |  17 +++
+ 32 files changed, 817 insertions(+), 467 deletions(-)
+ create mode 100644 drivers/acpi/mcfg.c
+ create mode 100644 drivers/pci/ecam.c
+ create mode 100644 drivers/pci/host/pci-host-acpi.c
+ create mode 100644 include/linux/ecam.h
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.9.1
+
