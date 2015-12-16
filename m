@@ -1,73 +1,139 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v7 1/7] drivers:hv: Export a function that maps Linux CPU num onto Hyper-V proc num
-Date: Sat,  5 Dec 2015 00:36:00 +0000
-Message-Id: <1449275767-1510-2-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1449275767-1510-1-git-send-email-jakeo@microsoft.com>
-References: <1449275767-1510-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V2 13/23] x86, ia64, pci: Remove ACPI companion device from platform specific data.
+Date: Wed, 16 Dec 2015 16:16:23 +0100
+Message-Id: <1450278993-12664-14-git-send-email-tn@semihalf.com>
+In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+Since PCI core code is setting ACPI companion device for us now,
+platform specific ACPI companion device setting turns out to be dead now.
+Therefore we can get rid of it, including related companion reference
+from PCI sysdata structure.
 
-This patch exposes the mapping between Linux CPU number and Hyper-V
-virtual processor number. This is necessary because the hypervisor needs
-to know which virtual processor to target when making a mapping in the
-Interrupt Redirection Table in the I/O MMU.
-
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 ---
- drivers/hv/vmbus_drv.c | 17 +++++++++++++++++
- include/linux/hyperv.h |  2 ++
- 2 files changed, 19 insertions(+)
+ arch/ia64/include/asm/pci.h |  1 -
+ arch/ia64/pci/pci.c         | 16 ----------------
+ arch/x86/include/asm/pci.h  |  3 ---
+ arch/x86/pci/acpi.c         |  2 --
+ arch/x86/pci/irq.c          | 10 ----------
+ 5 files changed, 32 deletions(-)
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index f19b6f7..c89d0e5 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -1191,6 +1191,23 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 07039d1..5050748 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -65,7 +65,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ #define pci_legacy_write platform_pci_legacy_write
+ 
+ struct pci_controller {
+-	struct acpi_device *companion;
+ 	void *iommu;
+ 	int segment;
+ 	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 8f6ac2f..978d6af 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -301,28 +301,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	}
+ 
+ 	info->controller.segment = root->segment;
+-	info->controller.companion = device;
+ 	info->controller.node = acpi_get_node(device->handle);
+ 	INIT_LIST_HEAD(&info->io_resources);
+ 	return acpi_pci_root_create(root, &pci_acpi_root_ops,
+ 				    &info->common, &info->controller);
  }
- EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
  
-+/**
-+ * vmbus_cpu_number_to_vp_number() - Map CPU to VP.
-+ * @cpu_number: CPU number in Linux terms
-+ *
-+ * This function returns the mapping between the Linux processor
-+ * number and the hypervisor's virtual processor number, useful
-+ * in making hypercalls and such that talk about specific
-+ * processors.
-+ *
-+ * Return: Virtual processor number in Hyper-V terms
-+ */
-+int vmbus_cpu_number_to_vp_number(int cpu_number)
-+{
-+	return hv_context.vp_index[cpu_number];
-+}
-+EXPORT_SYMBOL_GPL(vmbus_cpu_number_to_vp_number);
-+
- static int vmbus_acpi_add(struct acpi_device *device)
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	/*
+-	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
+-	 * here, pci_create_root_bus() has been called by someone else and
+-	 * sysdata is likely to be different from what we expect.  Let it go in
+-	 * that case.
+-	 */
+-	if (!bridge->dev.parent) {
+-		struct pci_controller *controller = bridge->bus->sysdata;
+-		ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+-	}
+-	return 0;
+-}
+-
+ void pcibios_fixup_device_resources(struct pci_dev *dev)
  {
- 	acpi_status result;
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 8fdc17b..fddb3e0 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -983,6 +983,8 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			resource_size_t size, resource_size_t align,
- 			bool fb_overlap_ok);
+ 	int idx;
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4625943..a98c022 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -14,9 +14,6 @@
+ struct pci_sysdata {
+ 	int		domain;		/* PCI domain */
+ 	int		node;		/* NUMA node */
+-#ifdef CONFIG_ACPI
+-	struct acpi_device *companion;	/* ACPI companion device */
+-#endif
+ #ifdef CONFIG_X86_64
+ 	void		*iommu;		/* IOMMU private data */
+ #endif
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 56714a9..286e0f5 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -333,7 +333,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		struct pci_sysdata sd = {
+ 			.domain = domain,
+ 			.node = node,
+-			.companion = root->device
+ 		};
  
-+int vmbus_cpu_number_to_vp_number(int cpu_number);
-+
- /**
-  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
-  *
+ 		memcpy(bus->sysdata, &sd, sizeof(sd));
+@@ -348,7 +347,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		else {
+ 			info->sd.domain = domain;
+ 			info->sd.node = node;
+-			info->sd.companion = root->device;
+ 			bus = acpi_pci_root_create(root, &acpi_pci_root_ops,
+ 						   &info->common, &info->sd);
+ 		}
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 7032798..cc62226 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1153,16 +1153,6 @@ void __init pcibios_irq_init(void)
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ {
+-	/*
+-	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
+-	 * here, pci_create_root_bus() has been called by someone else and
+-	 * sysdata is likely to be different from what we expect.  Let it go in
+-	 * that case.
+-	 */
+-	if (!bridge->dev.parent) {
+-		struct pci_sysdata *sd = bridge->bus->sysdata;
+-		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+-	}
+ 	bridge->map_irq = pci_map_irq;
+ 	return 0;
+ }
 -- 
 1.9.1
 
