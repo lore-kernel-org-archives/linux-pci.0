@@ -1,54 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-To: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Subject: [PATCH v4 0/5] Qualcomm PCIe driver and designware fixes
-Date: Thu,  3 Dec 2015 15:35:19 +0200
-Message-Id: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:36914 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934007AbbLPPSA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Dec 2015 10:18:00 -0500
+Received: by mail-wm0-f44.google.com with SMTP id p187so5611613wmp.0
+        for <linux-pci@vger.kernel.org>; Wed, 16 Dec 2015 07:18:00 -0800 (PST)
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V2 11/23] arm64, pci: Remove useless boot time IRQ assignment when booting with DT.
+Date: Wed, 16 Dec 2015 16:16:21 +0100
+Message-Id: <1450278993-12664-12-git-send-email-tn@semihalf.com>
+In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+In order to probe PCIe host controller when booting with DT,
+ARM64 is using drivers which defer IRQ assignment to device
+enable time. It means that boot time DT specific irq map initialization
+is always overridden, so lets remove that code.
 
-Here is v4, comments from Bjorn and Rob have been addressed.
-The previous version can be found at [1].
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ arch/arm64/kernel/pci.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-regards,
-Stan
-
-[1] https://lkml.org/lkml/2015/11/23/114
-
-Stanimir Varbanov (5):
-  PCI: designware: add memory barrier after enabling region
-  DT: PCI: qcom: Document PCIe devicetree bindings
-  PCI: qcom: Add Qualcomm PCIe controller driver
-  ARM: dts: apq8064: add pcie devicetree node
-  ARM: dts: ifc6410: enable pcie dt node for this board
-
- .../devicetree/bindings/pci/qcom,pcie.txt          |  233 ++++++++
- MAINTAINERS                                        |    7 +
- arch/arm/boot/dts/qcom-apq8064-ifc6410.dts         |   26 +
- arch/arm/boot/dts/qcom-apq8064.dtsi                |   36 ++
- drivers/pci/host/Kconfig                           |   10 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pcie-designware.c                 |    5 +
- drivers/pci/host/pcie-qcom.c                       |  624 ++++++++++++++++++++
- 8 files changed, 942 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
- create mode 100644 drivers/pci/host/pcie-qcom.c
-
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 023b983..f7948f5 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -51,16 +51,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	return pci_enable_resources(dev, mask);
+ }
+ 
+-/*
+- * Try to assign the IRQ number from DT when adding a new device
+- */
+-int pcibios_add_device(struct pci_dev *dev)
+-{
+-	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+-
+-	return 0;
+-}
+-
+ #ifdef CONFIG_ACPI
+ /* Root bridge scanning */
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
 -- 
-1.7.9.5
+1.9.1
 
