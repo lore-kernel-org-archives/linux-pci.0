@@ -1,122 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v9 2/7] drivers:hv: Export hv_do_hypercall()
-Date: Wed,  9 Dec 2015 22:54:52 +0000
-Message-Id: <1449701697-6366-3-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
-References: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 16 Dec 2015 16:12:08 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+	rjw@rjwysocki.net, bhelgaas@google.com,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	hanjun.guo@linaro.org, tomasz.nowicki@linaro.org,
+	graeme.gregory@linaro.org, dhdang@apm.com,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v7 3/4] gicv2m: Refactor to prepare for ACPI support
+Message-ID: <20151216221208.GC27791@localhost>
+References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+ <1449766530-16935-4-git-send-email-Suravee.Suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449766530-16935-4-git-send-email-Suravee.Suthikulpanit@amd.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On Thu, Dec 10, 2015 at 08:55:29AM -0800, Suravee Suthikulpanit wrote:
+> This patch replaces the struct device_node with struct fwnode_handle
+> since this structure is common between DT and ACPI.
+> 
+> It also refactors gicv2m_init_one() to prepare for ACPI support.
+> The only functional change is removing the node name from pr_info.
+> 
+> Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-This patch exposes the function that hv_vmbus.ko uses to make hypercalls.
-This is necessary for retargeting an interrupt when it is given a new
-affinity and vector.
+> @@ -359,10 +355,10 @@ static int __init gicv2m_init_one(struct device_node *node,
+>  	}
+>  
+>  	list_add_tail(&v2m->entry, &v2m_nodes);
+> -	pr_info("Node %s: range[%#lx:%#lx], SPI[%d:%d]\n", node->name,
+> -		(unsigned long)v2m->res.start, (unsigned long)v2m->res.end,
+> -		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
+>  
+> +	pr_info("range[%#lx:%#lx], SPI[%d:%d]\n",
+> +		(unsigned long)res->start, (unsigned long)res->end,
+> +		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/hv/hv.c           | 20 ++++++++++----------
- drivers/hv/hyperv_vmbus.h |  2 +-
- include/linux/hyperv.h    |  1 +
- 3 files changed, 12 insertions(+), 11 deletions(-)
+You didn't change this, but I don't think this message has enough
+context.  It's pretty cryptic all by itself.  It'd be nice if it could
+at least include a device name, e.g., if you could use dev_info().
 
-diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
-index 6341be8..7a06933 100644
---- a/drivers/hv/hv.c
-+++ b/drivers/hv/hv.c
-@@ -89,9 +89,9 @@ static int query_hypervisor_info(void)
- }
- 
- /*
-- * do_hypercall- Invoke the specified hypercall
-+ * hv_do_hypercall- Invoke the specified hypercall
-  */
--static u64 do_hypercall(u64 control, void *input, void *output)
-+u64 hv_do_hypercall(u64 control, void *input, void *output)
- {
- 	u64 input_address = (input) ? virt_to_phys(input) : 0;
- 	u64 output_address = (output) ? virt_to_phys(output) : 0;
-@@ -132,6 +132,7 @@ static u64 do_hypercall(u64 control, void *input, void *output)
- 	return hv_status_lo | ((u64)hv_status_hi << 32);
- #endif /* !x86_64 */
- }
-+EXPORT_SYMBOL_GPL(hv_do_hypercall);
- 
- #ifdef CONFIG_X86_64
- static cycle_t read_hv_clock_tsc(struct clocksource *arg)
-@@ -315,7 +316,7 @@ int hv_post_message(union hv_connection_id connection_id,
- {
- 
- 	struct hv_input_post_message *aligned_msg;
--	u16 status;
-+	u64 status;
- 
- 	if (payload_size > HV_MESSAGE_PAYLOAD_BYTE_COUNT)
- 		return -EMSGSIZE;
-@@ -329,11 +330,10 @@ int hv_post_message(union hv_connection_id connection_id,
- 	aligned_msg->payload_size = payload_size;
- 	memcpy((void *)aligned_msg->payload, payload, payload_size);
- 
--	status = do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL)
--		& 0xFFFF;
-+	status = hv_do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL);
- 
- 	put_cpu();
--	return status;
-+	return status & 0xFFFF;
- }
- 
- 
-@@ -343,13 +343,13 @@ int hv_post_message(union hv_connection_id connection_id,
-  *
-  * This involves a hypercall.
-  */
--u16 hv_signal_event(void *con_id)
-+int hv_signal_event(void *con_id)
- {
--	u16 status;
-+	u64 status;
- 
--	status = (do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL) & 0xFFFF);
-+	status = hv_do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL);
- 
--	return status;
-+	return status & 0xFFFF;
- }
- 
- static int hv_ce_set_next_event(unsigned long delta,
-diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
-index 3782636..cc2fb53 100644
---- a/drivers/hv/hyperv_vmbus.h
-+++ b/drivers/hv/hyperv_vmbus.h
-@@ -582,7 +582,7 @@ extern int hv_post_message(union hv_connection_id connection_id,
- 			 enum hv_message_type message_type,
- 			 void *payload, size_t payload_size);
- 
--extern u16 hv_signal_event(void *con_id);
-+extern int hv_signal_event(void *con_id);
- 
- extern int hv_synic_alloc(void);
- 
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index fddb3e0..24d0b65 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -984,6 +984,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			bool fb_overlap_ok);
- 
- int vmbus_cpu_number_to_vp_number(int cpu_number);
-+u64 hv_do_hypercall(u64 control, void *input, void *output);
- 
- /**
-  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
--- 
-1.9.1
+If that's possible, I guess a separate patch would be appropriate,
+since there are other similar things in this file.
 
+Bjorn
