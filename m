@@ -1,119 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:63498 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055AbbLMBmr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Dec 2015 20:42:47 -0500
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH 04/10] drivers/pci: make host/pci-dra7xx.c explicitly non-modular
-Date: Sat, 12 Dec 2015 20:41:51 -0500
-Message-ID: <1449970917-12633-5-git-send-email-paul.gortmaker@windriver.com>
-In-Reply-To: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:40648 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933085AbbLPMUl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Dec 2015 07:20:41 -0500
+From: Jayachandran C <jchandra@broadcom.com>
+To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: Jayachandran C <jchandra@broadcom.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [RFC PATCH v3 4/5] ACPI: PCI: Support platforms that need pci_remap_iospace
+Date: Wed, 16 Dec 2015 18:12:34 +0530
+Message-ID: <1450269755-21420-5-git-send-email-jchandra@broadcom.com>
+In-Reply-To: <1450269755-21420-1-git-send-email-jchandra@broadcom.com>
+References: <1450269755-21420-1-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+On some platforms (in this case ARM64), the PCI iospace needs to
+be mapped with pci_remap_iospace and the resources have to be
+adjusted for the iospace physical address.
 
-drivers/pci/host/Kconfig:config PCI_DRA7XX
-drivers/pci/host/Kconfig:       bool "TI DRA7xx PCIe controller"
+This has to be done before acpi_pci_root_validate_resources()
+checks and removes resource windows. Handle this by adding
+a function acpi_pci_root_remap_iospace that is called in
+acpi_pci_probe_root_resources(), before the validate call.
 
-...meaning that it currently is not being built as a module by anyone.
+Also fix the address check in acpi_dev_ioresource_flags for
+similar platforms.
 
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.
-
-We explicitly disallow a driver unbind, since that doesn't have a
-sensible use case anyway, and it allows us to drop the ".remove"
-code for non-modular drivers.
-
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
-
-We don't replace module.h with init.h since the file already has that.
-
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
-
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-omap@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
 ---
- drivers/pci/host/pci-dra7xx.c | 31 +++----------------------------
- 1 file changed, 3 insertions(+), 28 deletions(-)
+ drivers/acpi/pci_root.c | 62 +++++++++++++++++++++++++++++++++++++++++++++++--
+ drivers/acpi/resource.c |  2 ++
+ 2 files changed, 62 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 8c3688046c02..3769b7654c5d 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -16,7 +16,7 @@
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/of_gpio.h>
- #include <linux/pci.h>
- #include <linux/phy/phy.h>
-@@ -451,25 +451,6 @@ err_phy:
- 	return ret;
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index ae3fe4e..fcaa484 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -720,6 +720,61 @@ next:
+ 	}
  }
  
--static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
--{
--	struct dra7xx_pcie *dra7xx = platform_get_drvdata(pdev);
--	struct pcie_port *pp = &dra7xx->pp;
--	struct device *dev = &pdev->dev;
--	int count = dra7xx->phy_count;
--
--	if (pp->irq_domain)
--		irq_domain_remove(pp->irq_domain);
--	pm_runtime_put(dev);
--	pm_runtime_disable(dev);
--	while (count--) {
--		phy_power_off(dra7xx->phy[count]);
--		phy_exit(dra7xx->phy[count]);
--	}
--
--	return 0;
--}
--
- #ifdef CONFIG_PM_SLEEP
- static int dra7xx_pcie_suspend(struct device *dev)
++#ifdef PCI_IOBASE
++/*
++ * The IO ports are mapped to a memory range, fixup IO resources to
++ * handle that
++ */
++static int acpi_pci_root_remap_iospace(struct acpi_pci_root_info *ci)
++{
++	struct resource_entry *entry;
++	struct resource iores;
++	resource_size_t iostart;
++	int err;
++
++	iores.flags = IORESOURCE_IO;
++	iores.start = (resource_size_t)-1;
++	iores.end = 0;
++	resource_list_for_each_entry(entry, &ci->resources) {
++		if (entry->res->flags & IORESOURCE_IO) {
++			iores.start = min(entry->res->start, iores.start);
++			iores.end = max(entry->res->end, iores.end);
++		}
++	}
++	if (iores.end == 0)
++		return 0;
++	iostart = iores.start;
++
++	resource_list_for_each_entry(entry, &ci->resources) {
++		if (entry->res->flags & IORESOURCE_IO) {
++			entry->res->start -= iostart;
++			entry->res->end -= iostart;
++			entry->offset -= iostart;
++		}
++	}
++	iores.start -= iostart;
++	iores.end -= iostart;
++
++	err = pci_remap_iospace(&iores, iostart);
++	if (err) {
++		pr_err("PCI: ACPI: err %d mapping IO %pR\n", err, &iores);
++		return -ENODEV;
++	}
++	pr_info(PREFIX "Mapped %pR at %#lx for IO.\n",
++			&iores, (unsigned long)iostart);
++	return 0;
++}
++#else
++/*
++ * The IO ports are mapped to a memory range, fixup IO resources to
++ * handle that
++ */
++static int acpi_pci_root_remap_iospace(struct acpi_pci_root_info *ci)
++{
++	return 0;
++}
++#endif /* PCI_IOBASE */
++
+ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
  {
-@@ -553,19 +534,13 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
- 	{ .compatible = "ti,dra7-pcie", },
- 	{},
- };
--MODULE_DEVICE_TABLE(of, of_dra7xx_pcie_match);
+ 	int ret;
+@@ -745,10 +800,13 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+ 			else
+ 				entry->res->name = info->name;
+ 		}
+-		acpi_pci_root_validate_resources(&device->dev, list,
++		ret = acpi_pci_root_remap_iospace(info);
++		if (ret >= 0) {
++			acpi_pci_root_validate_resources(&device->dev, list,
+ 						 IORESOURCE_MEM);
+-		acpi_pci_root_validate_resources(&device->dev, list,
++			acpi_pci_root_validate_resources(&device->dev, list,
+ 						 IORESOURCE_IO);
++		}
+ 	}
  
- static struct platform_driver dra7xx_pcie_driver = {
--	.remove		= __exit_p(dra7xx_pcie_remove),
- 	.driver = {
- 		.name	= "dra7-pcie",
- 		.of_match_table = of_dra7xx_pcie_match,
-+		.suppress_bind_attrs = true,
- 		.pm	= &dra7xx_pcie_pm_ops,
- 	},
- };
--
--module_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
--
--MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
--MODULE_DESCRIPTION("TI PCIe controller driver");
--MODULE_LICENSE("GPL v2");
-+builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
+ 	return ret;
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index cdc5c25..530cad4 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -126,8 +126,10 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+ 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
+ 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+ 
++#ifndef PCI_IOBASE
+ 	if (res->end >= 0x10003)
+ 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
++#endif
+ 
+ 	if (io_decode == ACPI_DECODE_16)
+ 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
 -- 
-2.6.1
+1.9.1
 
