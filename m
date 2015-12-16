@@ -1,71 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52720 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751519AbbLDIH7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Dec 2015 03:07:59 -0500
-Date: Fri, 4 Dec 2015 08:13:50 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Jayachandran C <jchandra@broadcom.com>, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: MSI: Only use the generic MSI layer when domain is
- hierarchical
-Message-ID: <20151204081350.2113b7e6@why.wild-wind.fr.eu.org>
-In-Reply-To: <20151204002758.GA10479@localhost>
-References: <1448288826-19058-1-git-send-email-marc.zyngier@arm.com>
-	<PS1PR06MB11808365B312F6C3DAE2DB35F5000@PS1PR06MB1180.apcprd06.prod.outlook.com>
-	<20151204002758.GA10479@localhost>
+	linux-acpi@vger.kernel.org, Tomasz Nowicki <tn@semihalf.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [RFC PATCH v3 2/5] arm64: pci: Add ACPI support
+Date: Wed, 16 Dec 2015 15:24:12 +0100
+Message-ID: <3216037.gpgqE0G0oj@wuerfel>
+In-Reply-To: <1450269755-21420-3-git-send-email-jchandra@broadcom.com>
+References: <1450269755-21420-1-git-send-email-jchandra@broadcom.com> <1450269755-21420-3-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 3 Dec 2015 18:27:59 -0600
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+On Wednesday 16 December 2015 18:12:32 Jayachandran C wrote:
+> @@ -48,9 +49,22 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+>         if (pci_has_flag(PCI_PROBE_ONLY))
+>                 return 0;
+>  
+> +#ifdef CONFIG_ACPI
+> +       if (acpi_find_root_bridge_handle(dev))
+> +               acpi_pci_irq_enable(dev);
+> +#endif
+> +
+>         return pci_enable_resources(dev, mask);
+>  }
+>  
+> +void pcibios_disable_device(struct pci_dev *dev)
+> +{
+> +#ifdef CONFIG_ACPI
+> +       if (acpi_find_root_bridge_handle(dev))
+> +               acpi_pci_irq_disable(dev);
+> +#endif
+> +}
+> +
 
-> On Mon, Nov 30, 2015 at 10:25:34AM +0000, Phil Edworthy wrote:
-> > Cc'd linux-pci ml
-> > 
-> > On 23 November 2015 14:27, Marc Zyngier wrote:
-> > 
-> > Since d8a1cb757550 ("PCI/MSI: Let pci_msi_get_domain use struct
-> > device::msi_domain"), we use the MSI domain associated to the PCI device.
-> > 
-> > But finding a MSI domain doesn't mean that the domain is implemented
-> > using the generic MSI domain API, and a number of MSI controllers
-> > are still using the arch_setup_msi_irq/arch_teardown_msi_irqs.
-> > 
-> > In order to avoid a firework on these systems, check that the domain
-> > we just obtained is hierarchical. If not, don't use the generic MSI
-> > stuff and stick with the old one. Not pretty, but reliable.
-> > 
-> > Another insentive to rework those drivers and phase out this API.
-> > 
-> > Reported-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > Tested-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> 
-> Thanks, I applied this with Thomas' ack to pci/msi for v4.5.
-> 
-> It looks like d8a1cb757550 appeared in v4.3.  Is this a fix for that
-> commit?  Does this need to be backported via a stable tag?
+Can you just move this into the PCI core code? Adding more stuff here
+just makes it harder to kill off the existing functions.
 
-Hi Bjorn,
+>  #ifdef CONFIG_ACPI
+> -/* Root bridge scanning */
+> -struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+> +
+> +void pcibios_add_bus(struct pci_bus *bus)
+> +{
+> +       acpi_pci_add_bus(bus);
+> +}
+> +
+> +void pcibios_remove_bus(struct pci_bus *bus)
+> +{
+> +       acpi_pci_remove_bus(bus);
+> +}
+> +
+> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+> +{
+> +       /* ACPI root bus is created with NULL parent */
+> +       if (!acpi_disabled && bridge->dev.parent == NULL) {
+> +               struct pci_bus *b = bridge->bus;
+> +               struct acpi_pci_root_info *ci = b->sysdata;
+> +
+> +               ACPI_COMPANION_SET(&bridge->dev, ci->bridge);
+> +               b->domain_nr = ci->root->segment;
+> +       }
+> +       return 0;
+> +}
+> +
 
-I think this really deserves to be queued as an immediate fix for 4.4
-rather than 4.5, as some systems in mainline are affected by this bug:
+Same here: these functions are identical for all architectures
+that use ACPI, so just move the code into PCI core and be done with
+it. This means we can even kill off all pcibios_add_bus and
+pcibios_remove_bus completely, and pcibios_root_bridge_prepare
+will only be needed for powerpc/pseries.
 
-http://www.spinics.net/lists/arm-kernel/msg465792.html
+>  /*
+> - * raw_pci_read/write - Platform-specific PCI config space access.
+> + * ACPI uses these - leave it to the generic ACPI PCI driver
+>   */
+> -int raw_pci_read(unsigned int domain, unsigned int bus,
+> +int __weak raw_pci_read(unsigned int domain, unsigned int bus,
+>                   unsigned int devfn, int reg, int len, u32 *val)
+>  {
+>         return -ENXIO;
+>  }
+>  
+> -int raw_pci_write(unsigned int domain, unsigned int bus,
+> +int __weak raw_pci_write(unsigned int domain, unsigned int bus,
+>                 unsigned int devfn, int reg, int len, u32 val)
+>  {
+>         return -ENXIO;
+>  }
+>  
+> +/*
+> + * Provide weak implementations of ACPI PCI hooks needed.
+> + * Leave it to the ACPI PCI driver implementation to do it
+> + */
+> +struct pci_bus *__weak pci_acpi_scan_root(struct acpi_pci_root *root)
+>  {
+> -       /* TODO: Should be revisited when implementing PCI on ACPI */
+>         return NULL;
+>  }
+> +
+> +void __init __weak pci_mmcfg_late_init(void)
+> +{
+> +}
 
-It would also deserve a stable tag for 4.3.
+Please don't add __weak functions in architecture code that you expect
+a driver to override. Just call it directly if it's configured and
+make sure that it doesn't get called if it's not there. If both the
+caller and the callee are in generic code, you can leave the architecture
+out of this.
 
-Thanks,
+> +static int __init pcibios_assign_resources(void)
+> +{
+> +       pci_assign_unassigned_resources();
+> +       return 0;
+> +}
+> +
+> +fs_initcall(pcibios_assign_resources);
 
-	M.
--- 
-Without deviation from the norm, progress is not possible.
+This doesn't work for PCI host drivers in loadable modules.
+
+	Arnd
