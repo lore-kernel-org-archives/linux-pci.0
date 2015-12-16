@@ -1,81 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 17 Dec 2015 13:55:53 -0800
-From: Bjorn Andersson <bjorn.andersson@sonymobile.com>
-To: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-CC: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>
-Subject: Re: [PATCH v4 5/5] ARM: dts: ifc6410: enable pcie dt node for this
- board
-Message-ID: <20151217215553.GA4000@usrtlx11787.corpusers.net>
-References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
- <1449149725-27607-6-git-send-email-stanimir.varbanov@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1449149725-27607-6-git-send-email-stanimir.varbanov@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V2 17/23] acpi, mcfg: Implement two calls that might be used to inject/remove MCFG region.
+Date: Wed, 16 Dec 2015 16:16:27 +0100
+Message-Id: <1450278993-12664-18-git-send-email-tn@semihalf.com>
+In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu 03 Dec 05:35 PST 2015, Stanimir Varbanov wrote:
+Lets abstract two calls which allow to inject and remove MCFG regions
+which may come from DSDT table. These calls will be used for x86 and ARM64
+PCI host bridge driver in the later patches.
 
-> Enable pcie dt node and fill pcie dt node with regulator, pinctrl
-> and reset gpio, to use the pcie on the ifc6410 board.
-> 
-> Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-> ---
->  arch/arm/boot/dts/qcom-apq8064-ifc6410.dts |   26 ++++++++++++++++++++++++++
->  1 file changed, 26 insertions(+)
-> 
-> diff --git a/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts b/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts
-> index 11ac608b6d50..f203b94ee460 100644
-> --- a/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts
-> +++ b/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts
-> @@ -47,6 +47,18 @@
->  					bias-disable;
->  				};
->  			};
-> +
-> +			pcie_pins: pcie_pinmux {
-> +				mux {
-> +					pins = "gpio27";
-> +					function = "gpio";
-> +				};
-> +				conf {
-> +					pins = "gpio27";
-> +					drive-strength = <12>;
-> +					bias-disable;
-> +				};
-> +			};
->  		};
->  
->  		rpm@108000 {
-> @@ -123,6 +135,10 @@
->  				pm8921_lvs1: lvs1 {
->  					bias-pull-down;
->  				};
-> +
-> +				pm8921_lvs6: lvs6 {
-> +					bias-pull-down;
-> +				};
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/acpi/mcfg.c      | 38 ++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-acpi.h |  9 +++++++++
+ 2 files changed, 47 insertions(+)
 
-Please don't duplicate the labels in the dts files.
+diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
+index 3e1e7be..dca4c4e 100644
+--- a/drivers/acpi/mcfg.c
++++ b/drivers/acpi/mcfg.c
+@@ -10,6 +10,7 @@
+ #include <linux/acpi.h>
+ #include <linux/ecam.h>
+ #include <linux/pci.h>
++#include <linux/pci-acpi.h>
+ 
+ #define	PREFIX	"MCFG: "
+ 
+@@ -77,6 +78,43 @@ int __init acpi_parse_mcfg(struct acpi_table_header *header)
+ 	return 0;
+ }
+ 
++int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci)
++{
++	struct pci_mmcfg_region *cfg;
++	struct acpi_pci_root *root;
++	int seg, start, end, err;
++
++	root = ci->root;
++	seg = root->segment;
++	start = root->secondary.start;
++	end = root->secondary.end;
++
++	cfg = pci_mmconfig_lookup(seg, start);
++	if (cfg)
++		return 0;
++
++	cfg = pci_mmconfig_alloc(seg, start, end, root->mcfg_addr);
++	if (!cfg)
++		return -ENOMEM;
++
++	err = pci_mmconfig_inject(cfg);
++	return err;
++}
++
++void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci)
++{
++	struct acpi_pci_root *root = ci->root;
++	struct pci_mmcfg_region *cfg;
++
++	cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
++	if (!cfg)
++		return;
++
++	if (cfg->hot_added)
++		pci_mmconfig_delete(root->segment, root->secondary.start,
++				    root->secondary.end);
++}
++
+ int __init __weak acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
+ 					struct acpi_mcfg_allocation *cfg)
+ {
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 89ab057..c277415 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -79,6 +79,15 @@ extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ void acpi_pci_add_bus(struct pci_bus *bus);
+ void acpi_pci_remove_bus(struct pci_bus *bus);
+ 
++#ifdef	CONFIG_PCI_MMCONFIG
++int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci);
++void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci);
++#else
++static inline int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci)
++{ return 0; }
++static inline void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci) { }
++#endif
++
+ #ifdef	CONFIG_ACPI_PCI_SLOT
+ void acpi_pci_slot_init(void);
+ void acpi_pci_slot_enumerate(struct pci_bus *bus);
+-- 
+1.9.1
 
->  			};
->  		};
->  
-
-Regards,
-Bjorn
