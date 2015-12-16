@@ -1,197 +1,172 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60921 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751997AbbLIQuy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Dec 2015 11:50:54 -0500
-Date: Wed, 9 Dec 2015 10:50:46 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Geliang Tang <geliangtang@163.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] x86/PCI: simplify pci_bios_{read,write}
-Message-ID: <20151209165046.GF31930@localhost>
-References: <0ed29e57b699af22a8759f1b1c0d59d79664dee5.1449495573.git.geliangtang@163.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0ed29e57b699af22a8759f1b1c0d59d79664dee5.1449495573.git.geliangtang@163.com>
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:33934 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965618AbbLPPRr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Dec 2015 10:17:47 -0500
+Received: by mail-wm0-f53.google.com with SMTP id l126so44164776wml.1
+        for <linux-pci@vger.kernel.org>; Wed, 16 Dec 2015 07:17:46 -0800 (PST)
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V2 04/23] x86, pci: mmconfig_{32,64}.c code refactoring - remove code duplication.
+Date: Wed, 16 Dec 2015 16:16:14 +0100
+Message-Id: <1450278993-12664-5-git-send-email-tn@semihalf.com>
+In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 07, 2015 at 10:24:24PM +0800, Geliang Tang wrote:
-> There are some repetitive code in the switch/case statement in
-> pci_bios_read() and pci_bios_write(). I drop it to simplify the
-> code.
-> 
-> Signed-off-by: Geliang Tang <geliangtang@163.com>
+mmconfig_64.c version is going to be default implementation for low-level
+operation on mmconfig regions. However, now it initializes raw_pci_ext_ops pointer which is specific for
+x86 only. Moreover, mmconfig_32.c is doing the same thing at the same time.
+So lets move it to mmconfig_shared.c so it becomes common for both and
+mmconfig_64.c turns out to be purely arch agnostic.
 
-Applied to pci/misc for v4.5 with Thomas' Reviewed-by, thanks!
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+---
+ arch/x86/include/asm/pci_x86.h |  5 +++++
+ arch/x86/pci/mmconfig-shared.c | 10 ++++++++--
+ arch/x86/pci/mmconfig_32.c     | 10 ++--------
+ arch/x86/pci/mmconfig_64.c     | 11 ++---------
+ 4 files changed, 17 insertions(+), 19 deletions(-)
 
-> ---
->  arch/x86/pci/pcbios.c | 108 ++++++++++++++++++--------------------------------
->  1 file changed, 38 insertions(+), 70 deletions(-)
-> 
-> diff --git a/arch/x86/pci/pcbios.c b/arch/x86/pci/pcbios.c
-> index 9b83b90..9770e55 100644
-> --- a/arch/x86/pci/pcbios.c
-> +++ b/arch/x86/pci/pcbios.c
-> @@ -180,6 +180,7 @@ static int pci_bios_read(unsigned int seg, unsigned int bus,
->  	unsigned long result = 0;
->  	unsigned long flags;
->  	unsigned long bx = (bus << 8) | devfn;
-> +	u16 number = 0, mask = 0;
->  
->  	WARN_ON(seg);
->  	if (!value || (bus > 255) || (devfn > 255) || (reg > 255))
-> @@ -189,53 +190,35 @@ static int pci_bios_read(unsigned int seg, unsigned int bus,
->  
->  	switch (len) {
->  	case 1:
-> -		__asm__("lcall *(%%esi); cld\n\t"
-> -			"jc 1f\n\t"
-> -			"xor %%ah, %%ah\n"
-> -			"1:"
-> -			: "=c" (*value),
-> -			  "=a" (result)
-> -			: "1" (PCIBIOS_READ_CONFIG_BYTE),
-> -			  "b" (bx),
-> -			  "D" ((long)reg),
-> -			  "S" (&pci_indirect));
-> -		/*
-> -		 * Zero-extend the result beyond 8 bits, do not trust the
-> -		 * BIOS having done it:
-> -		 */
-> -		*value &= 0xff;
-> +		number = PCIBIOS_READ_CONFIG_BYTE;
-> +		mask = 0xff;
->  		break;
->  	case 2:
-> -		__asm__("lcall *(%%esi); cld\n\t"
-> -			"jc 1f\n\t"
-> -			"xor %%ah, %%ah\n"
-> -			"1:"
-> -			: "=c" (*value),
-> -			  "=a" (result)
-> -			: "1" (PCIBIOS_READ_CONFIG_WORD),
-> -			  "b" (bx),
-> -			  "D" ((long)reg),
-> -			  "S" (&pci_indirect));
-> -		/*
-> -		 * Zero-extend the result beyond 16 bits, do not trust the
-> -		 * BIOS having done it:
-> -		 */
-> -		*value &= 0xffff;
-> +		number = PCIBIOS_READ_CONFIG_WORD;
-> +		mask = 0xffff;
->  		break;
->  	case 4:
-> -		__asm__("lcall *(%%esi); cld\n\t"
-> -			"jc 1f\n\t"
-> -			"xor %%ah, %%ah\n"
-> -			"1:"
-> -			: "=c" (*value),
-> -			  "=a" (result)
-> -			: "1" (PCIBIOS_READ_CONFIG_DWORD),
-> -			  "b" (bx),
-> -			  "D" ((long)reg),
-> -			  "S" (&pci_indirect));
-> +		number = PCIBIOS_READ_CONFIG_DWORD;
->  		break;
->  	}
->  
-> +	__asm__("lcall *(%%esi); cld\n\t"
-> +		"jc 1f\n\t"
-> +		"xor %%ah, %%ah\n"
-> +		"1:"
-> +		: "=c" (*value),
-> +		  "=a" (result)
-> +		: "1" (number),
-> +		  "b" (bx),
-> +		  "D" ((long)reg),
-> +		  "S" (&pci_indirect));
-> +	/*
-> +	 * Zero-extend the result beyond 8 or 16 bits, do not trust the
-> +	 * BIOS having done it:
-> +	 */
-> +	if (mask)
-> +		*value &= mask;
-> +
->  	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
->  
->  	return (int)((result & 0xff00) >> 8);
-> @@ -247,6 +230,7 @@ static int pci_bios_write(unsigned int seg, unsigned int bus,
->  	unsigned long result = 0;
->  	unsigned long flags;
->  	unsigned long bx = (bus << 8) | devfn;
-> +	u16 number = 0;
->  
->  	WARN_ON(seg);
->  	if ((bus > 255) || (devfn > 255) || (reg > 255)) 
-> @@ -256,43 +240,27 @@ static int pci_bios_write(unsigned int seg, unsigned int bus,
->  
->  	switch (len) {
->  	case 1:
-> -		__asm__("lcall *(%%esi); cld\n\t"
-> -			"jc 1f\n\t"
-> -			"xor %%ah, %%ah\n"
-> -			"1:"
-> -			: "=a" (result)
-> -			: "0" (PCIBIOS_WRITE_CONFIG_BYTE),
-> -			  "c" (value),
-> -			  "b" (bx),
-> -			  "D" ((long)reg),
-> -			  "S" (&pci_indirect));
-> +		number = PCIBIOS_WRITE_CONFIG_BYTE;
->  		break;
->  	case 2:
-> -		__asm__("lcall *(%%esi); cld\n\t"
-> -			"jc 1f\n\t"
-> -			"xor %%ah, %%ah\n"
-> -			"1:"
-> -			: "=a" (result)
-> -			: "0" (PCIBIOS_WRITE_CONFIG_WORD),
-> -			  "c" (value),
-> -			  "b" (bx),
-> -			  "D" ((long)reg),
-> -			  "S" (&pci_indirect));
-> +		number = PCIBIOS_WRITE_CONFIG_WORD;
->  		break;
->  	case 4:
-> -		__asm__("lcall *(%%esi); cld\n\t"
-> -			"jc 1f\n\t"
-> -			"xor %%ah, %%ah\n"
-> -			"1:"
-> -			: "=a" (result)
-> -			: "0" (PCIBIOS_WRITE_CONFIG_DWORD),
-> -			  "c" (value),
-> -			  "b" (bx),
-> -			  "D" ((long)reg),
-> -			  "S" (&pci_indirect));
-> +		number = PCIBIOS_WRITE_CONFIG_DWORD;
->  		break;
->  	}
->  
-> +	__asm__("lcall *(%%esi); cld\n\t"
-> +		"jc 1f\n\t"
-> +		"xor %%ah, %%ah\n"
-> +		"1:"
-> +		: "=a" (result)
-> +		: "0" (number),
-> +		  "c" (value),
-> +		  "b" (bx),
-> +		  "D" ((long)reg),
-> +		  "S" (&pci_indirect));
-> +
->  	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
->  
->  	return (int)((result & 0xff00) >> 8);
-> -- 
-> 2.5.0
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index c1c0f37..0482807 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -130,6 +130,11 @@ extern void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
+ extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 			       phys_addr_t addr);
+ 
++int pci_mmcfg_read(unsigned int seg, unsigned int bus, unsigned int devfn,
++		   int reg, int len, u32 *value);
++int pci_mmcfg_write(unsigned int seg, unsigned int bus, unsigned int devfn,
++		    int reg, int len, u32 value);
++
+ /*
+  * AMD Fam10h CPUs are buggy, and cannot access MMIO config space
+  * on their northbrige except through the * %eax register. As such, you MUST
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index ce2c2e4..980f304 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -29,6 +29,11 @@
+ static bool pci_mmcfg_running_state;
+ static bool pci_mmcfg_arch_init_failed;
+ 
++const struct pci_raw_ops pci_mmcfg = {
++	.read =		pci_mmcfg_read,
++	.write =	pci_mmcfg_write,
++};
++
+ static const char *__init pci_mmcfg_e7520(void)
+ {
+ 	u32 win;
+@@ -512,9 +517,10 @@ static void __init __pci_mmcfg_init(int early)
+ 		}
+ 	}
+ 
+-	if (pci_mmcfg_arch_init())
++	if (pci_mmcfg_arch_init()) {
++		raw_pci_ext_ops = &pci_mmcfg;
+ 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
+-	else {
++	} else {
+ 		free_all_mmcfg();
+ 		pci_mmcfg_arch_init_failed = true;
+ 	}
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 246f135..2ded56f 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -50,7 +50,7 @@ static void pci_exp_set_dev_base(unsigned int base, int bus, int devfn)
+ 	}
+ }
+ 
+-static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+ 			  unsigned int devfn, int reg, int len, u32 *value)
+ {
+ 	unsigned long flags;
+@@ -89,7 +89,7 @@ err:		*value = -1;
+ 	return 0;
+ }
+ 
+-static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 			   unsigned int devfn, int reg, int len, u32 value)
+ {
+ 	unsigned long flags;
+@@ -126,15 +126,9 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	return 0;
+ }
+ 
+-const struct pci_raw_ops pci_mmcfg = {
+-	.read =		pci_mmcfg_read,
+-	.write =	pci_mmcfg_write,
+-};
+-
+ int __init pci_mmcfg_arch_init(void)
+ {
+ 	printk(KERN_INFO "PCI: Using MMCONFIG for extended config space\n");
+-	raw_pci_ext_ops = &pci_mmcfg;
+ 	return 1;
+ }
+ 
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index b14fcd3..d0c48eb 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -25,7 +25,7 @@ static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned i
+ 	return NULL;
+ }
+ 
+-static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+ 			  unsigned int devfn, int reg, int len, u32 *value)
+ {
+ 	char __iomem *addr;
+@@ -59,7 +59,7 @@ err:		*value = -1;
+ 	return 0;
+ }
+ 
+-static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 			   unsigned int devfn, int reg, int len, u32 value)
+ {
+ 	char __iomem *addr;
+@@ -91,11 +91,6 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	return 0;
+ }
+ 
+-const struct pci_raw_ops pci_mmcfg = {
+-	.read =		pci_mmcfg_read,
+-	.write =	pci_mmcfg_write,
+-};
+-
+ static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
+ {
+ 	void __iomem *addr;
+@@ -121,8 +116,6 @@ int __init pci_mmcfg_arch_init(void)
+ 			return 0;
+ 		}
+ 
+-	raw_pci_ext_ops = &pci_mmcfg;
+-
+ 	return 1;
+ }
+ 
+-- 
+1.9.1
+
