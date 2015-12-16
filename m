@@ -1,73 +1,96 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V2 06/23] XEN / PCI: Remove the dependence on arch x86
- when PCI_MMCONFIG=y
-To: Stefano.Stabellini@eu.citrix.com
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
- <1450278993-12664-7-git-send-email-tn@semihalf.com>
-Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:33380 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965764AbbLPPSF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Dec 2015 10:18:05 -0500
+Received: by mail-wm0-f43.google.com with SMTP id p187so5707735wmp.0
+        for <linux-pci@vger.kernel.org>; Wed, 16 Dec 2015 07:18:05 -0800 (PST)
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
 	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
 	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
-	mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	tglx@linutronix.de, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, jchandra@broadcom.com,
-	jcm@redhat.com, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <56728DB0.2080800@semihalf.com>
-Date: Thu, 17 Dec 2015 11:25:52 +0100
-MIME-Version: 1.0
-In-Reply-To: <1450278993-12664-7-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V2 14/23] pci, acpi: Provide generic way to assign bus domain number.
+Date: Wed, 16 Dec 2015 16:16:24 +0100
+Message-Id: <1450278993-12664-15-git-send-email-tn@semihalf.com>
+In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16.12.2015 16:16, Tomasz Nowicki wrote:
-> In drivers/xen/pci.c, there are arch x86 dependent codes when
-> CONFIG_PCI_MMCONFIG is enabled, since CONFIG_PCI_MMCONFIG
-> depends on ACPI, so this will prevent XEN PCI running on other
-> architectures using ACPI with PCI_MMCONFIG enabled (such as ARM64).
->
-> Fortunatly, it can be sloved in a simple way. In drivers/xen/pci.c,
-> the only x86 dependent code is if ((pci_probe & PCI_PROBE_MMCONF) == 0),
-> and it's defined in asm/pci_x86.h, the code means that
-> if the PCI resource is not probed in PCI_PROBE_MMCONF way, just
-> ingnore the xen mcfg init. Actually this is duplicate, because
-> if PCI resource is not probed in PCI_PROBE_MMCONF way, the
-> pci_mmconfig_list will be empty, and the if (list_empty())
-> after it will do the same job.
->
-> So just remove the arch related code and the head file, this
-> will be no functional change for x86, and also makes xen/pci.c
-> usable for other architectures.
->
-> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-> Cc: Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>
-> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> ---
->   drivers/xen/pci.c | 6 ------
->   1 file changed, 6 deletions(-)
->
-> diff --git a/drivers/xen/pci.c b/drivers/xen/pci.c
-> index 6785ebb..9a8dbe3 100644
-> --- a/drivers/xen/pci.c
-> +++ b/drivers/xen/pci.c
-> @@ -28,9 +28,6 @@
->   #include <asm/xen/hypervisor.h>
->   #include <asm/xen/hypercall.h>
->   #include "../pci/pci.h"
-> -#ifdef CONFIG_PCI_MMCONFIG
-> -#include <asm/pci_x86.h>
-> -#endif
+As we now have valid PCI host bridge device reference we can
+introduce code that is going to find its bus domain number using
+ACPI _SEG method.
 
-I noticed that I forgot about:
-+#include <linux/ecam.h>
+Note that _SEG method is optional, therefore _SEG absence means
+that all PCI buses belong to domain 0.
 
-Sorry.
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+---
+ drivers/pci/pci.c | 29 +++++++++++++++++++++++++----
+ 1 file changed, 25 insertions(+), 4 deletions(-)
 
-Tomasz
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7274006..39a985b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -25,6 +25,7 @@
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/pci_hotplug.h>
++#include <linux/acpi.h>
+ #include <asm-generic/pci-bridge.h>
+ #include <asm/setup.h>
+ #include <linux/aer.h>
+@@ -4796,14 +4797,34 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 	 * API and update the use_dt_domains value to keep track of method we
+ 	 * are using to assign domain numbers (use_dt_domains = 0).
+ 	 *
++	 * IF ACPI, we expect non-DT method (use_dt_domains == -1)
++	 * and call _SEG method for corresponding host bridge device.
++	 * If _SEG method does not exist, following ACPI spec (6.5.6)
++	 * all PCI buses belong to domain 0.
++	 *
+ 	 * All other combinations imply we have a platform that is trying
+-	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+-	 * which is a recipe for domain mishandling and it is prevented by
+-	 * invalidating the domain value (domain = -1) and printing a
+-	 * corresponding error.
++	 * to mix domain numbers obtained from DT, ACPI and
++	 * pci_get_new_domain_nr(), which is a recipe for domain mishandling and
++	 * it is prevented by invalidating the domain value (domain = -1) and
++	 * printing a corresponding error.
+ 	 */
++
+ 	if (domain >= 0 && use_dt_domains) {
+ 		use_dt_domains = 1;
++#ifdef CONFIG_ACPI
++	} else if (!acpi_disabled && use_dt_domains == -1) {
++		struct acpi_device *acpi_dev = to_acpi_device(parent);
++		unsigned long long segment = 0;
++		acpi_status status;
++
++		status = acpi_evaluate_integer(acpi_dev->handle,
++					       METHOD_NAME__SEG, NULL,
++					       &segment);
++		if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
++			dev_err(&acpi_dev->dev,  "can't evaluate _SEG\n");
++
++		domain = segment;
++#endif
+ 	} else if (domain < 0 && use_dt_domains != 1) {
+ 		use_dt_domains = 0;
+ 		domain = pci_get_new_domain_nr();
+-- 
+1.9.1
+
