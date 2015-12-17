@@ -1,73 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:36467 "EHLO
-	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754512AbbLDVMx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Dec 2015 16:12:53 -0500
-Received: by iofh3 with SMTP id h3so129563755iof.3
-        for <linux-pci@vger.kernel.org>; Fri, 04 Dec 2015 13:12:52 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.136]:34631 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751520AbbLQRld (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Dec 2015 12:41:33 -0500
+Date: Thu, 17 Dec 2015 11:41:29 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv6 2/7] pci: child bus alloc fix on constrained resource
+Message-ID: <20151217174129.GD23549@localhost>
+References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
+ <1449523949-21898-3-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-Date: Fri, 4 Dec 2015 19:12:52 -0200
-Message-ID: <CAOMZO5AxaAr57pYpBEEgk5sm56ey3b60F2E0z2PgD1Z2g7Y_Sg@mail.gmail.com>
-Subject: mx6: No bus range found
-From: Fabio Estevam <festevam@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449523949-21898-3-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Mon, Dec 07, 2015 at 02:32:24PM -0700, Keith Busch wrote:
+> Does not allocate a child bus if the new bus number does not fit in the
+> parent's bus resource window.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 
-Booting linux-next 20151202 on a mx6qsabresd board with an Intel 7260
-Wifi PCI card connected I see:
+Other nits: please make this similar to previous changelogs in
+capitalization, sentence structure, etc.  If we figure out that this
+is safe, and I end up applying it, I can just tweak it myself, but if
+you post it again, something like this is what I'm looking for:
 
-[    0.255013] PCI host bridge /soc/pcie@0x01000000 ranges:
-[    0.255033]   No bus range found for /soc/pcie@0x01000000, using [bus 00-ff]
-[    0.255085]   err 0x01f00000..0x01f7ffff -> 0x01f00000
-[    0.255123]    IO 0x01f80000..0x01f8ffff -> 0x00000000
-[    0.255202]   MEM 0x01000000..0x01efffff -> 0x01000000
-[    0.370288] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
-[    0.370314] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    0.370333] pci_bus 0000:00: root bus resource [???
-0x01f00000-0x01f7ffff flags 0x0]
-[    0.370349] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-[    0.370365] pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
-[    0.370488] pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
-[    0.370553] pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
-[    0.370590] pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
-[    0.370780] pci 0000:00:00.0: supports D1
-[    0.370797] pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
-[    0.371570] PCI: bus0: Fast back to back transfers disabled
-[    0.371989] pci 0000:01:00.0: [8086:08b1] type 00 class 0x028000
-[    0.372214] pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00001fff 64bit]
-[    0.372747] pci 0000:01:00.0: PME# supported from D0 D3hot D3cold
-[    0.386266] PCI: bus1: Fast back to back transfers disabled
-[    0.386498] pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
-[    0.386528] pci 0000:00:00.0: BAR 8: assigned [mem 0x01100000-0x011fffff]
-[    0.386548] pci 0000:00:00.0: BAR 6: assigned [mem
-0x01200000-0x0120ffff pref]
-[    0.386573] pci 0000:01:00.0: BAR 0: assigned [mem
-0x01100000-0x01101fff 64bit]
-[    0.386650] pci 0000:00:00.0: PCI bridge to [bus 01]
-[    0.386672] pci 0000:00:00.0:   bridge window [mem 0x01100000-0x011fffff]
-[    0.387370] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
-[    0.387390] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
-[    0.387413] pcie_pme 0000:00:00.0:pcie01: service driver pcie_pme loaded
+  PCI: Don't allocate child bus outside parent bus number range
 
-Is there anything we should do to avoid the following messages?
+  Don't allocate a child bus if the new bus number does not fit in the
+  parent's bus resource window.
 
-[    0.255033]   No bus range found for /soc/pcie@0x01000000, using [bus 00-ff]
+The next patch is missing a subject line:
 
-and
+  PCI/MSI: Export MSI and IRQ functions for use by modules
 
-[    0.370333] pci_bus 0000:00: root bus resource [???
-0x01f00000-0x01f7ffff flags 0x0
+  Export the following functions for use by modules:
+  
+    msi_desc_to_pci_dev()
+    pci_msi_create_irq_domain()
+    irq_domain_set_info()
 
-or is this all OK?
+And the following:
 
-Please advise.
+  x86/PCI: Allow PCI domain-specific DMA ops
 
-Thanks,
+I know this seems pedantic, but try to use "x86/PCI" consistently
+because I think it's distracting to have the boiler-plate be different
+in non-useful ways, e.g.,
 
-Fabio Estevam
+  510fb6779eed x86/pci: Initial commit for new VMD device driver
+  510fb6779eed x86/pci: Initial commit for new VMD device driver
+  b7a48e92f508 x86-pci: allow pci domain specific dma ops
+  8affb487d4a4 x86/PCI: Don't alloc pcibios-irq when MSI is enabled
+  991de2e59090 PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()
+
+Bjorn
+
+> ---
+>  drivers/pci/probe.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index edb1984..6e29f7a 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -704,6 +704,12 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  	int i;
+>  	int ret;
+>  
+> +	if (busnr > parent->busn_res.end) {
+> +		dev_printk(KERN_DEBUG, &parent->dev,
+> +			  "can not alloc bus:%d under %pR\n", busnr,
+> +			  &parent->busn_res);
+> +		return NULL;
+> +	}
+>  	/*
+>  	 * Allocate a new bus, and inherit stuff from the parent..
+>  	 */
+> -- 
+> 2.6.2.307.g37023ba
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
