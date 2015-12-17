@@ -1,230 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <tglx@linutronix.de>,
-	<jason@lakedaemon.net>, <rjw@rjwysocki.net>, <bhelgaas@google.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	<hanjun.guo@linaro.org>, <tomasz.nowicki@linaro.org>,
-	<graeme.gregory@linaro.org>, <dhdang@apm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v7 4/4] gicv2m: acpi: Introducing GICv2m ACPI support
-Date: Thu, 10 Dec 2015 08:55:30 -0800
-Message-ID: <1449766530-16935-5-git-send-email-Suravee.Suthikulpanit@amd.com>
-In-Reply-To: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:33589 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750961AbbLQR1W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Dec 2015 12:27:22 -0500
+Date: Thu, 17 Dec 2015 11:27:18 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv6 2/7] pci: child bus alloc fix on constrained resource
+Message-ID: <20151217172718.GC23549@localhost>
+References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
+ <1449523949-21898-3-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449523949-21898-3-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch introduces gicv2m_acpi_init(), which uses information
-in MADT GIC MSI frames structure to initialize GICv2m driver.
-It also exposes gicv2m_init() function, which simplifies callers
-to a single GICv2m init function.
+Hi Keith,
 
-Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
----
- drivers/irqchip/irq-gic-v2m.c   | 110 +++++++++++++++++++++++++++++++++++++++-
- drivers/irqchip/irq-gic.c       |   6 ++-
- include/linux/irqchip/arm-gic.h |   3 +-
- 3 files changed, 116 insertions(+), 3 deletions(-)
+On Mon, Dec 07, 2015 at 02:32:24PM -0700, Keith Busch wrote:
+> Does not allocate a child bus if the new bus number does not fit in the
+> parent's bus resource window.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  drivers/pci/probe.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index edb1984..6e29f7a 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -704,6 +704,12 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  	int i;
+>  	int ret;
+>  
+> +	if (busnr > parent->busn_res.end) {
+> +		dev_printk(KERN_DEBUG, &parent->dev,
+> +			  "can not alloc bus:%d under %pR\n", busnr,
+> +			  &parent->busn_res);
+> +		return NULL;
 
-diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
-index 779c390..7e2975d 100644
---- a/drivers/irqchip/irq-gic-v2m.c
-+++ b/drivers/irqchip/irq-gic-v2m.c
-@@ -15,9 +15,11 @@
- 
- #define pr_fmt(fmt) "GICv2m: " fmt
- 
-+#include <linux/acpi.h>
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
-+#include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
- #include <linux/slab.h>
-@@ -138,6 +140,11 @@ static int gicv2m_irq_gic_domain_alloc(struct irq_domain *domain,
- 		fwspec.param[0] = 0;
- 		fwspec.param[1] = hwirq - 32;
- 		fwspec.param[2] = IRQ_TYPE_EDGE_RISING;
-+	} else if (is_fwnode_irqchip(domain->parent->fwnode)) {
-+		fwspec.fwnode = domain->parent->fwnode;
-+		fwspec.param_count = 2;
-+		fwspec.param[0] = hwirq;
-+		fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
- 	} else {
- 		return -EINVAL;
- 	}
-@@ -255,6 +262,8 @@ static void gicv2m_teardown(void)
- 		kfree(v2m->bm);
- 		iounmap(v2m->base);
- 		of_node_put(to_of_node(v2m->fwnode));
-+		if (is_fwnode_irqchip(v2m->fwnode))
-+			irq_domain_free_fwnode(v2m->fwnode);
- 		kfree(v2m);
- 	}
- }
-@@ -373,9 +382,11 @@ static struct of_device_id gicv2m_device_id[] = {
- 	{},
- };
- 
--int __init gicv2m_of_init(struct device_node *node, struct irq_domain *parent)
-+static int __init gicv2m_of_init(struct fwnode_handle *parent_handle,
-+				 struct irq_domain *parent)
- {
- 	int ret = 0;
-+	struct device_node *node = to_of_node(parent_handle);
- 	struct device_node *child;
- 
- 	for (child = of_find_matching_node(node, gicv2m_device_id); child;
-@@ -411,3 +422,100 @@ int __init gicv2m_of_init(struct device_node *node, struct irq_domain *parent)
- 		gicv2m_teardown();
- 	return ret;
- }
-+
-+#ifdef CONFIG_ACPI
-+static int acpi_num_msi;
-+
-+static struct fwnode_handle *gicv2m_get_fwnode(struct device *dev)
-+{
-+	struct v2m_data *data;
-+
-+	if (WARN_ON(acpi_num_msi <= 0))
-+		return NULL;
-+
-+	/* We only return the fwnode of the first MSI frame. */
-+	data = list_first_entry_or_null(&v2m_nodes, struct v2m_data, entry);
-+	if (!data)
-+		return NULL;
-+
-+	return data->fwnode;
-+}
-+
-+static int __init
-+acpi_parse_madt_msi(struct acpi_subtable_header *header,
-+		    const unsigned long end)
-+{
-+	int ret;
-+	struct resource res;
-+	u32 spi_start = 0, nr_spis = 0;
-+	struct acpi_madt_generic_msi_frame *m;
-+	struct fwnode_handle *fwnode;
-+
-+	m = (struct acpi_madt_generic_msi_frame *)header;
-+	if (BAD_MADT_ENTRY(m, end))
-+		return -EINVAL;
-+
-+	res.start = m->base_address;
-+	res.end = m->base_address + SZ_4K;
-+
-+	if (m->flags & ACPI_MADT_OVERRIDE_SPI_VALUES) {
-+		spi_start = m->spi_base;
-+		nr_spis = m->spi_count;
-+
-+		pr_info("ACPI overriding V2M MSI_TYPER (base:%u, num:%u)\n",
-+			spi_start, nr_spis);
-+	}
-+
-+	fwnode = irq_domain_alloc_fwnode((void *)m->base_address);
-+	if (!fwnode) {
-+		pr_err("Unable to allocate GICv2m domain token\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = gicv2m_init_one(fwnode, spi_start, nr_spis, &res);
-+	if (ret)
-+		irq_domain_free_fwnode(fwnode);
-+
-+	return ret;
-+}
-+
-+static int __init gicv2m_acpi_init(struct irq_domain *parent)
-+{
-+	int ret;
-+
-+	if (acpi_num_msi > 0)
-+		return 0;
-+
-+	acpi_num_msi = acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_MSI_FRAME,
-+				      acpi_parse_madt_msi, 0);
-+
-+	if (acpi_num_msi <= 0)
-+		goto err_out;
-+
-+	ret = gicv2m_allocate_domains(parent);
-+	if (ret)
-+		goto err_out;
-+
-+	pci_msi_register_fwnode_provider(&gicv2m_get_fwnode);
-+
-+	return 0;
-+
-+err_out:
-+	gicv2m_teardown();
-+	return -EINVAL;
-+}
-+#else /* CONFIG_ACPI */
-+static int __init gicv2m_acpi_init(struct irq_domain *parent)
-+{
-+	return -EINVAL;
-+}
-+#endif /* CONFIG_ACPI */
-+
-+int __init gicv2m_init(struct fwnode_handle *parent_handle,
-+		       struct irq_domain *parent)
-+{
-+	if (is_of_node(parent_handle))
-+		return gicv2m_of_init(parent_handle, parent);
-+
-+	return gicv2m_acpi_init(parent);
-+}
-diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
-index fcd327f..644e8bb 100644
---- a/drivers/irqchip/irq-gic.c
-+++ b/drivers/irqchip/irq-gic.c
-@@ -1234,7 +1234,7 @@ gic_of_init(struct device_node *node, struct device_node *parent)
- 	}
- 
- 	if (IS_ENABLED(CONFIG_ARM_GIC_V2M))
--		gicv2m_of_init(node, gic_data[gic_cnt].domain);
-+		gicv2m_init(&node->fwnode, gic_data[gic_cnt].domain);
- 
- 	gic_cnt++;
- 	return 0;
-@@ -1359,6 +1359,10 @@ static int __init gic_v2_acpi_init(struct acpi_subtable_header *header,
- 	__gic_init_bases(0, -1, dist_base, cpu_base, 0, domain_handle);
- 
- 	acpi_set_irq_model(ACPI_IRQ_MODEL_GIC, domain_handle);
-+
-+	if (IS_ENABLED(CONFIG_ARM_GIC_V2M))
-+		gicv2m_init(NULL, gic_data[0].domain);
-+
- 	return 0;
- }
- IRQCHIP_ACPI_DECLARE(gic_v2, ACPI_MADT_TYPE_GENERIC_DISTRIBUTOR,
-diff --git a/include/linux/irqchip/arm-gic.h b/include/linux/irqchip/arm-gic.h
-index bae69e5..febc6c3 100644
---- a/include/linux/irqchip/arm-gic.h
-+++ b/include/linux/irqchip/arm-gic.h
-@@ -106,7 +106,8 @@ int gic_cpu_if_down(unsigned int gic_nr);
- void gic_init(unsigned int nr, int start,
- 	      void __iomem *dist , void __iomem *cpu);
- 
--int gicv2m_of_init(struct device_node *node, struct irq_domain *parent);
-+int gicv2m_init(struct fwnode_handle *parent_handle,
-+		struct irq_domain *parent);
- 
- void gic_send_sgi(unsigned int cpu_id, unsigned int irq);
- int gic_get_cpu_id(unsigned int cpu);
--- 
-2.1.0
+Can you take a look at 1820ffdccb9b ("PCI: Make sure bus number resources
+stay within their parents bounds") and 12d8706963f0 ("Revert "PCI: Make
+sure bus number resources stay within their parents bounds"")?
 
+This is implemented differently, but it seems like it might expose the same
+problem we found with 1820ffdccb9b.
+
+If you could take a look and confirm that "no, this does something
+differently than 1820ffdccb9b did" or "yes, this might expose that problem
+again," that would help.
+
+Bjorn
+
+> +	}
+>  	/*
+>  	 * Allocate a new bus, and inherit stuff from the parent..
+>  	 */
+> -- 
+> 2.6.2.307.g37023ba
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
