@@ -1,93 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:33874 "EHLO
-	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752864AbbLNIPu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Dec 2015 03:15:50 -0500
-Date: Mon, 14 Dec 2015 09:15:45 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 06/10] drivers/pci: make host/pci-tegra.c explicitly
- non-modular
-Message-ID: <20151214081545.GB10055@ulmo.nvidia.com>
-References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
- <1449970917-12633-7-git-send-email-paul.gortmaker@windriver.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, jiang.liu@linux.intel.com,
+	Stefano.Stabellini@eu.citrix.com
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5673281E.7020204@codeaurora.org>
+Date: Thu, 17 Dec 2015 16:24:46 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="4SFOXa2GPu3tIq4H"
-In-Reply-To: <1449970917-12633-7-git-send-email-paul.gortmaker@windriver.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Tomasz,
 
---4SFOXa2GPu3tIq4H
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 12/16/2015 10:16 AM, Tomasz Nowicki wrote:
+> From the functionality point of view this series might be split into the
+> following logic parts:
+> 1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
+>    PCI config regions and used when necessary.
+> 2. Move non-arch specific bits to the core code.
+> 3. Use MMCONFIG code and implement generic ACPI based PCI host
+>    controller driver.
+> 4. Enable above driver on ARM64
+> 
+> Patches has been built on top of 4.4-rc4 and can be found here:
+> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v2)
+> 
+> NOTE, this patch set depends on Matthew's patches:
+> http://www.spinics.net/lists/linux-pci/msg45950.html
+> https://github.com/Vality/linux/tree/pci-fixes
+> 
+> This has been tested on Cavium ThunderX 1 socket server and QEMU.
+> Any help in reviewing and testing is very appreciated.
+> 
+> v1 -> v2
+> - moved non-arch specific piece of code to dirver/acpi/ directory
+> - fixed IO resource handling
+> - introduced PCI config accessors quirks matching
+> - moved ACPI_COMPANION_SET to generic code
+> 
 
-On Sat, Dec 12, 2015 at 08:41:53PM -0500, Paul Gortmaker wrote:
-> The Kconfig currently controlling compilation of this code is:
->=20
-> drivers/pci/host/Kconfig:config PCI_TEGRA
-> drivers/pci/host/Kconfig:       bool "NVIDIA Tegra PCIe controller"
->=20
-> ...meaning that it currently is not being built as a module by anyone.
->=20
-> Lets remove the modular code that is essentially orphaned, so that
-> when reading the driver there is no doubt it is builtin-only.
->=20
-> We don't have to disallow a driver unbind, since that is already
-> done for us in this driver.
->=20
-> Since module_platform_driver() uses the same init level priority as
-> builtin_platform_driver() the init ordering remains unchanged with
-> this commit.
->=20
-> Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
->=20
-> We also delete the MODULE_LICENSE tag etc. since all that information
-> was (or is now) contained at the top of the file in the comments.
->=20
-> Cc: Thierry Reding <thierry.reding@gmail.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Stephen Warren <swarren@wwwdotorg.org>
-> Cc: Alexandre Courbot <gnurou@gmail.com>
-> Cc: linux-tegra@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-> ---
->  drivers/pci/host/pci-tegra.c | 11 ++++-------
->  1 file changed, 4 insertions(+), 7 deletions(-)
+Just tested your series. I'm seeing a resource assignment problem below. 
+The bus addresses show as memory addresses and memory addresses show as 
+bus addresses and IO resource did not show up.
 
-I'd rather not do this. There is work underway to make it possible to
-turn PCI host drivers into modules. I have a local tree with the
-necessary changes and, though I suspect it might take a few releases to
-get everything merged, I think we'll get there eventually.
 
-Thierry
+Tomasz V2
 
---4SFOXa2GPu3tIq4H
-Content-Type: application/pgp-signature; name="signature.asc"
+[    2.520852] ACPI: PCI Interrupt Link [LN1C] (IRQs *238)
+[    2.535472] ACPI: PCI Interrupt Link [LN1D] (IRQs *239)
+[    2.550562] ACPI: PCI Root Bridge [PCI2] (domain 0002 [bus 00-1f])
+[    2.567813] acpi PNP0A08:02: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+[    2.591270] acpi PNP0A08:02: _OSC: platform does not support [PCIeHotplug]
+[    2.611144] acpi PNP0A08:02: _OSC: OS now controls [PME AER PCIeCapability]
+[    2.630299] ACPI: IORT: can't find node related to (null) device
+[    2.647184]_acpi_PNP0A08:02:_PCI_host_bridge_to_bus_0002:00
+[    2.662663] pci_bus 0002:00: root bus resource [mem 0x00100000-0x3fffffff window] (bus address [0xfffff5ff00100000-0xfffff5ff3fffffff])
+[    2.703561] pci_bus 0002:00: root bus resource [mem 0x40000000-0x7fffffff window] (bus address [0xfffff5fe80000000-0xfffff5febfffffff])
+[    2.737737] pci_bus 0002:00: root bus resource [mem 0x80000000-0xffffffff window] (bus address [0xfffff5fe00000000-0xfffff5fe7fffffff])
+[    2.794961] pci_bus 0002:00: root bus resource [bus 00-1f]
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Mark Salter's patches
 
-iQIcBAABCAAGBQJWbnqxAAoJEN0jrNd/PrOhRQQP/jJM5GR+zJ2XfllEyito5A1H
-NH4ZkqIkEe5EQSgxWBw+Ijh4I9wOsvsJ6I2tc2AkypYtqhzW3gYO235+dY5J70+H
-YhK5Xw0HhMGadAZBO9N1nnV76hCGGdev4rU2PE7c/l6+DsgrEfVNW996mhUtHMG9
-sByIDu41+yK0dKaIFLEAJQ6TkYCi7wnN5miIgvO5eshUXlMBxk8o0PwUTWP/mPFx
-bOF9EXVmtJcprumuvdTUYrsD7/YWv3f8hlLpJ1IdKyyVxsW2g05F+dRgeUrhibkh
-8WFIn+JC3sQIa2rFo+kEAkzSp+zbp93pHYFkPGs0hwqQoLFFAhDmcd3y0XESbPNa
-JTGWFxWkQzIgVG1NvEKj+ZVoWUXwP+Oid7YvdHuMoLq0TW6wjpV22M2FKPNS4NHE
-Jh6jrF1MHloLL4TJQutTuMiRRx2LguUA5tlXGo2rdFhtY80ivmXfAUGMmyRR2gYQ
-QMeAX8Qi2q2176sIs5o+8G3J7uI6pVzBdyVU2hKLUnpuvSxVWxC5MrY9EPnq2aWm
-7Ox1zrrdwMzwPQTbPeZ8LUbWKbSK6Y/ZKWg8Teo77YowzrnwvlbkSm9NuaKhwQ7s
-3oOioG1iwKzlb02eFg9RFDToKRfJAcXlfj05zEeGLzpnUkcQ4ozU+YT6xfWZmr4L
-93tc7AF6CQj2MY3wsLHy
-=/vf4
------END PGP SIGNATURE-----
+[    2.730011] ACPI: PCI Interrupt Link [LN1C] (IRQs *238)
+[    2.744648] ACPI: PCI Interrupt Link [LN1D] (IRQs *239)
+[    2.759330] ACPI: PCI Root Bridge [PCI2] (domain 0002 [bus 00-1f])
+[    2.783295] acpi PNP0A08:02: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+[    2.806726] acpi PNP0A08:02: _OSC: platform does not support [PCIeHotplug]
+[    2.826005] acpi PNP0A08:02: _OSC: OS now controls [PME AER PCIeCapability]
+[    2.845361] PCI host bridge to bus 0002:00
+[    2.856719]_pci_bus_0002:00:_root_bus_resource_[bus_00-1f]
+[    2.872056] pci_bus 0002:00: root bus resource [mem 0xa0100100000-0xa013fffffff] (bus address [0x00100000-0x3fffffff])
+[    2.902008] pci_bus 0002:00: root bus resource [mem 0xa0200000000-0xa023fffffff] (bus address [0x40000000-0x7fffffff])
+[    2.932396] pci_bus 0002:00: root bus resource [mem 0xa0300000000-0xa037fffffff] (bus address [0x80000000-0xffffffff])
+[    2.983827] pci_bus 0002:00: root bus resource [io  0x0000-0xffff]
 
---4SFOXa2GPu3tIq4H--
+Here is how the ACPI table looks like:
+
+		QWORDMemory(			// Consumed-And-prodced resource(all of memory space)
+			ResourceProducer,	// bit 0 of general flags is 0
+			PosDecode,		// positive Decode:  		_DEC
+			MinFixed,		// Range is fixed:   		_MIF
+			MaxFixed,		// Range is fixed:   		_MAF
+			NonCacheable,		// 				_MEM
+			ReadWrite,		// 				_RW
+			0x00000000,		// Granularity: 	   	_GRA
+			0x00100000,		// Min - PCI Memory start: 	_MIN
+			0x3FFFFFFF,		// Max - PCI Memory end:   	_MAX
+			0xA0100000000,		// Translation: 		_TRA
+			0x3FF00000,		// Range Length: 		_LEN
+			,			// Optional field left blank
+			,			// Optional field left blank
+			MEM0,			// Name declaration for this descriptor
+			AddressRangeMemory,
+			TypeStatic
+			) 
+
+
+Any thoughts?
+
+
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+
