@@ -1,104 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50740 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752366AbbLIQut (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Dec 2015 11:50:49 -0500
-Message-ID: <56685BE5.3000909@arm.com>
-Date: Wed, 09 Dec 2015 16:50:45 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: jakeo@microsoft.com, gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v7 4/7] PCI: Add fwnode_handle to pci_sysdata
-References: <1449275767-1510-1-git-send-email-jakeo@microsoft.com> <1449275767-1510-5-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1449275767-1510-5-git-send-email-jakeo@microsoft.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from relmlor3.renesas.com ([210.160.252.173]:42408 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S966642AbbLQNXm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Dec 2015 08:23:42 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-sh@vger.kernel.org>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+Subject: [PATCH 4/4] PCI: rcar: Add Gen2 PHY setup to pcie-rcar
+Date: Thu, 17 Dec 2015 13:22:37 +0000
+Message-Id: <1450358557-28376-5-git-send-email-phil.edworthy@renesas.com>
+In-Reply-To: <1450358557-28376-1-git-send-email-phil.edworthy@renesas.com>
+References: <1450358557-28376-1-git-send-email-phil.edworthy@renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/12/15 00:36, jakeo@microsoft.com wrote:
-> From: Jake Oshins <jakeo@microsoft.com>
-> 
-> This patch adds an fwnode_handle to struct pci_sysdata, which is
-> used by the next patch in the series when trying to locate an
-> IRQ domain associated with a root PCI bus.
-> 
-> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
-> ---
->  arch/x86/include/asm/pci.h | 15 +++++++++++++++
->  include/asm-generic/pci.h  |  4 ++++
->  2 files changed, 19 insertions(+)
-> 
+For PCIe compliance, the PHY registers need setting as per the
+manual.
 
-[...]
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ drivers/pci/host/pcie-rcar.c | 27 ++++++++++++++++++++++++---
+ 1 file changed, 24 insertions(+), 3 deletions(-)
 
-> diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
-> index f24bc51..4092886 100644
-> --- a/include/asm-generic/pci.h
-> +++ b/include/asm-generic/pci.h
-> @@ -21,4 +21,8 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
->  #define PCI_DMA_BUS_IS_PHYS	(1)
->  #endif
->  
-> +#ifndef pci_root_bus_fwnode
-> +#define pci_root_bus_fwnode(bus)	((void)(bus), NULL)
-> +#endif
-> +
->  #endif /* _ASM_GENERIC_PCI_H */
-> 
-
-This breaks at least arm64 (as you can see from the reply to patch #5, 
-because it does have its own asm/pci.h. Instead, how about moving this 
-to linux/pci.h, just after the include of asm/pci.h? I just gave it a 
-go, and it seems to work nicely (the first hunk fixes the rest of the
-arm64 compile issue):
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8f3d056..c6369dd 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -15,6 +15,7 @@
- #include <linux/pci-aspm.h>
- #include <linux/aer.h>
- #include <linux/acpi.h>
-+#include <linux/irqdomain.h>
- #include <asm-generic/pci-bridge.h>
- #include "pci.h"
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 02a5993..61e112e 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -103,6 +103,11 @@
+ #define H1_PCIEPHYDOUTR		0x040014
+ #define H1_PCIEPHYSR		0x040018
  
-diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
-index 4092886..f24bc51 100644
---- a/include/asm-generic/pci.h
-+++ b/include/asm-generic/pci.h
-@@ -21,8 +21,4 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- #define PCI_DMA_BUS_IS_PHYS	(1)
- #endif
- 
--#ifndef pci_root_bus_fwnode
--#define pci_root_bus_fwnode(bus)	((void)(bus), NULL)
--#endif
--
- #endif /* _ASM_GENERIC_PCI_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6ae25aa..b4144228 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1517,6 +1517,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- 
- #include <asm/pci.h>
- 
-+#ifndef pci_root_bus_fwnode
-+#define pci_root_bus_fwnode(bus)	((void)(bus), NULL)
-+#endif
++/* R-Car Gen2 PHY */
++#define GEN2_PCIEPHYADDR	0x780
++#define GEN2_PCIEPHYDATA	0x784
++#define GEN2_PCIEPHYCTRL	0x78c
 +
- /* these helpers provide future and backwards compatibility
-  * for accessing popular PCI BAR info */
- #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
-
-Thanks,
-
-	M.
+ #define INT_PCI_MSI_NR	32
+ 
+ #define RCONF(x)	(PCICONF(0)+(x))
+@@ -593,6 +598,22 @@ static int rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
+ 	return -ETIMEDOUT;
+ }
+ 
++static int rcar_pcie_hw_init_gen2(struct rcar_pcie *pcie)
++{
++	rcar_pci_write_reg(pcie, 0x000f0030, GEN2_PCIEPHYADDR);
++	rcar_pci_write_reg(pcie, 0x00381203, GEN2_PCIEPHYDATA);
++	rcar_pci_write_reg(pcie, 0x00000001, GEN2_PCIEPHYCTRL);
++	rcar_pci_write_reg(pcie, 0x00000006, GEN2_PCIEPHYCTRL);
++
++	rcar_pci_write_reg(pcie, 0x000f0054, GEN2_PCIEPHYADDR);
++	/* The following value is for DC connection, no termination resistor */
++	rcar_pci_write_reg(pcie, 0x13802007, GEN2_PCIEPHYDATA);
++	rcar_pci_write_reg(pcie, 0x00000001, GEN2_PCIEPHYCTRL);
++	rcar_pci_write_reg(pcie, 0x00000006, GEN2_PCIEPHYCTRL);
++
++	return rcar_pcie_hw_init(pcie);
++}
++
+ static int rcar_msi_alloc(struct rcar_msi *chip)
+ {
+ 	int msi;
+@@ -932,9 +953,9 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
+ 
+ static const struct of_device_id rcar_pcie_of_match[] = {
+ 	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
+-	{ .compatible = "renesas,pcie-rcar-gen2", .data = rcar_pcie_hw_init },
+-	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
+-	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
++	{ .compatible = "renesas,pcie-rcar-gen2", .data = rcar_pcie_hw_init_gen2 },
++	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init_gen2 },
++	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init_gen2 },
+ 	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
+ 	{},
+ };
 -- 
-Jazz is not dead. It just smells funny...
+2.5.0
+
