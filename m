@@ -1,142 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 7 Dec 2015 21:33:00 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Grygorii Strashko <grygorii.strashko@ti.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, tony@atomide.com,
-	nsekhar@ti.com, linux-omap@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:38671 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933316AbbLQPpp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Dec 2015 10:45:45 -0500
+Received: by mail-wm0-f46.google.com with SMTP id l126so27558956wml.1
+        for <linux-pci@vger.kernel.org>; Thu, 17 Dec 2015 07:45:44 -0800 (PST)
+Subject: Re: [PATCH v4 1/5] PCI: designware: add memory barrier after enabling
+ region
+To: Pratyush Anand <pratyush.anand@gmail.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
+ <1449149725-27607-2-git-send-email-stanimir.varbanov@linaro.org>
+ <56669C50.9060700@linaro.org>
+ <CAHM4w1k_EAt+xBBYyG3B7W9Fegc4j+uRq5t_biUsxOGt+k+xUA@mail.gmail.com>
+ <20151209102359.GF8644@n2100.arm.linux.org.uk>
+ <CAHM4w1m-NiwyCLz9tikbOcNtCmVu0Vd9FhmKKSuMi5ChzfDafA@mail.gmail.com>
+Cc: Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>, linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Jingoo Han <jingoohan1@gmail.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Pratyush Anand <pratyush.anand@gmail.com>
-Subject: Re: [PATCH v2] PCI: dra7xx: mark dra7xx_pcie_msi irq as
- IRQF_NO_THREAD
-Message-ID: <20151208033300.GA1255@localhost>
-References: <1448027966-21610-1-git-send-email-grygorii.strashko@ti.com>
- <20151204184619.GD20125@localhost>
- <5662042A.3090809@ti.com>
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>
+From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Message-ID: <5672D8A1.2080407@linaro.org>
+Date: Thu, 17 Dec 2015 17:45:37 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5662042A.3090809@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAHM4w1m-NiwyCLz9tikbOcNtCmVu0Vd9FhmKKSuMi5ChzfDafA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jingoo (exynos), Richard, Lucas (imx6), Pratyush (spear13xx)]
-
-On Fri, Dec 04, 2015 at 11:22:50PM +0200, Grygorii Strashko wrote:
-> On 12/04/2015 08:46 PM, Bjorn Helgaas wrote:
-> > Hi Grygorii,
-> > 
-> > On Fri, Nov 20, 2015 at 03:59:26PM +0200, Grygorii Strashko wrote:
-> >> On -RT, TI DRA7 PCIe driver always produces below backtrace when the
-> >> first PCI interrupt is triggered:
-> >>
-> >> ------------[ cut here ]------------
-> >> WARNING: CPU: 1 PID: 82 at kernel/irq/handle.c:150 handle_irq_event_percpu+0x14c/0x174()
-> >> irq 460 handler irq_default_primary_handler+0x0/0x14 enabled interrupts
+On 12/11/2015 06:05 AM, Pratyush Anand wrote:
+> On Wed, Dec 9, 2015 at 3:53 PM, Russell King - ARM Linux
+> <linux@arm.linux.org.uk> wrote:
+> 
 > [...]
-> >> [<c00891b0>] (handle_simple_irq) from [<c0085514>] (generic_handle_irq+0x30/0x44)
-> >>   r5:ee4a9020 r4:000001cc
-> >> [<c00854e4>] (generic_handle_irq) from [<c034a7d4>] (dra7xx_pcie_msi_irq_handler+0x7c/0x8c)
-> >>   r5:ee4a9020 r4:00000001
-> >> [<c034a758>] (dra7xx_pcie_msi_irq_handler) from [<c0086f08>] (irq_forced_thread_fn+0x28/0x5c)
-> >>   r5:ee1d0900 r4:ee4b59c0
-> >> [<c0086ee0>] (irq_forced_thread_fn) from [<c00871dc>] (irq_thread+0x128/0x204)
-> >>   r7:00000001 r6:00000000 r5:ee4d2000 r4:ee4b59e4
-> >> [<c00870b4>] (irq_thread) from [<c005e2fc>] (kthread+0xd4/0xec)
-> >>   r10:00000000 r9:00000000 r8:00000000 r7:c00870b4 r6:ee4b59c0 r5:ee4b5a00
-> >>   r4:00000000
-> >> [<c005e228>] (kthread) from [<c000faa8>] (ret_from_fork+0x14/0x2c)
-> >>   r7:00000000 r6:00000000 r5:c005e228 r4:ee4b5a00
-> >> ---[ end trace 0000000000000002 ]---
-> > 
-> > The backtrace might be OK (maybe slightly overkill), but all the
-> > stack addresses are certainly irrelevant and distracting.  We only
-> > need enough to recognize the problem.  I don't think the modules list
-> > is relevant either.
 > 
-> I'll take this into account. Is this blocker for this patch now?
-
-If you repost this, you can fix it then.  If I end up taking it as-is,
-I'll fix it myself.
-
-> >> This backtrace is triggered because dra7xx_pcie_msi_irq_handler()
-> >> forced to be threaded by default on -RT but, in the same time, it's
-> >> IRQ dispatcher and calls generic_handle_irq(), which leads to
-> >> handle_simple_irq() call. The handle_simple_irq() expected to be
-> >> called with IRQ disabled.
-> >>
-> >> The same issue will also happen if kernel will boot with "threadirqs"
-> >> cmdline parameter (CONFIG_IRQ_FORCED_THREADING).
-> >>
-> >> As discussed in [1], the current DRA7 PCIe hw configuration supports
-> >> 32 interrupts, which cannot change because it's hardwired in silicon,
-> >> this is a single status read and assuming that only a few (most of the
-> >> time it will be exactly ONE) of those interrupts are pending at the
-> >> same time is pretty much a sane assumption. And recommended fix for
-> >> this issue is to request dra7xx_pcie_msi IRQ with IRQF_NO_THREAD flag.
-> >>
-> >> [1] https://lkml.org/lkml/2015/11/3/660
-> >>
-> >> Cc: Thomas Gleixner <tglx@linutronix.de>
-> >> Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-> >> Signed-off-by: Grygorii Strashko <grygorii.strashko@ti.com>
-> >> ---
-> >> Changes in v2:
-> >> - comment in code truncated
-> >> Link on v1:
-> >>   https://lkml.org/lkml/2015/11/5/593
-> >>   drivers/pci/host/pci-dra7xx.c | 13 ++++++++++++-
-> >>   1 file changed, 12 insertions(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> >> index 8c36880..0415192 100644
-> >> --- a/drivers/pci/host/pci-dra7xx.c
-> >> +++ b/drivers/pci/host/pci-dra7xx.c
-> >> @@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
-> >>   		return -EINVAL;
-> >>   	}
-> >>   
-> >> +	/*
-> >> +	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
-> >> +	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
-> >> +	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
-> >> +	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
-> >> +	 * which, in turn, will be resolved to handle_simple_irq() call.
-> >> +	 * The handle_simple_irq() expected to be called with IRQ disabled, as
-> >> +	 * result kernle will display warning:
-> >> +	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
-> >> +	 */
-> >>   	ret = devm_request_irq(&pdev->dev, pp->irq,
-> >> -			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
-> >> +			       dra7xx_pcie_msi_irq_handler,
-> >> +			       IRQF_SHARED | IRQF_NO_THREAD,
-> >>   			       "dra7-pcie-msi",	pp);
-> > 
-> > There's similar code in exynos_add_pcie_port(), imx6_add_pcie_port(),
-> > and spear13xx_add_pcie_port().  Do they need similar changes?  If not,
-> > why not?
-> > 
-> > I see your discussion about DRA7 hardware design, but my impression is
-> > that this problem affects anybody who calls dw_handle_msi_irq() from a
-> > handler registered with IRQF_SHARED.
+>>>>>       dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+>>>>> +     /*
+>>>>> +      * ensure that the ATU enable has been happaned before accessing
+>>>>> +      * pci configuration/io spaces through dw_pcie_cfg_[read|write].
+>>>>> +      */
+>>>>> +     wmb();
+>>>>>  }
+>>>>>
+>>>
+>>>
+>>> My understnading is that since writel() of dw_pcie_writel_rc() in
+>>> above code and readl(), writel() of dw_pcie_cfg_[read|write]() (which
+>>> will follow) goes through same device (ie PCIe host here). So, it is
+>>> guaranteed that 1st writel() will be executed before later
+>>> readl()/writel(). If that is true then we do not need any explicit
+>>> barrier here.
+>>>
+>>> Arnd, Russel: whats your opinion here.
+>>               ^l
 > 
-> Issue fixed by this patch is not related to IRQF_SHARED. 
-> It will happen on -RT or if kernel will boot with "threadirqs" cmd line parameter
-> - in both cases these PCI IRQ handlers will be forced to be threaded and,
-> as result, generic_handle_irq() will produce above backtrace.
+> Sorry :(
 > 
-> Personally, I don't have strong opinion about "should similar change be applied
-> to other PCI drivers or not?" And I think, that owners of those driver should
-> make such decision.
+>>
+>> writel() has a barrier _before_ the access but not after.
+>>
+>> The fact is that there's nothing which guarantees that the write will hit
+>> the hardware in a timely manner (forget any rules about PCI config space,
+>> the PCI ordering rules apply to the PCI bus, not to the ARM buses.)
+>>
+>> If you need this write to have hit the hardware before continuing, you
+>> need to read back from the same register.
+> 
+> OK, so better to replace wmb() with read back of control register.
 
-If the same issue affects several drivers, I'd like to see them all
-handle it the same way.  Otherwise, somebody coming along later will
-wonder why they're different, and there won't be a good answer.
+Would the patch be acceptable if I replace wmb with read?
 
-I cc'd the other maintainers to see what they think.
-
-Bjorn
+-- 
+regards,
+Stan
