@@ -1,76 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0068.outbound.protection.outlook.com ([104.47.38.68]:50848
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751514AbbLKHe0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Dec 2015 02:34:26 -0500
-Subject: Re: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Michal Simek <michal.simek@xilinx.com>
-References: <1448798633-12697-1-git-send-email-bharatku@xilinx.com>
- <20151209231921.GI31930@localhost> <5669236D.30805@xilinx.com>
- <20151210172508.GA367@localhost>
-CC: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<sorenb@xilinx.com>, <bhelgaas@google.com>, <arnd@arndb.de>,
-	<tinamdar@apm.com>, <treding@nvidia.com>, <rjui@broadcom.com>,
-	<Minghuan.Lian@freescale.com>, <m-karicheri2@ti.com>,
-	<hauke@hauke-m.de>, <marc.zyngier@arm.com>, <dhdang@apm.com>,
-	<sbranden@broadcom.com>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	"Ravi Kiran Gummaluri" <rgummal@xilinx.com>,
-	Paul Burton <paul.burton@imgtec.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>
-From: Michal Simek <michal.simek@xilinx.com>
-Message-ID: <566A7C6C.7020409@xilinx.com>
-Date: Fri, 11 Dec 2015 08:34:04 +0100
+Received: from www.linutronix.de ([62.245.132.108]:56408 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754932AbbLQOcp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Dec 2015 09:32:45 -0500
+Date: Thu, 17 Dec 2015 15:32:43 +0100
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [PATCH] pci: aer: wait till the workqueue completes before free
+ memory
+Message-ID: <20151217143243.GA9654@linutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <20151210172508.GA367@localhost>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10.12.2015 18:25, Bjorn Helgaas wrote:
-> On Thu, Dec 10, 2015 at 08:02:05AM +0100, Michal Simek wrote:
->> Hi Bjorn,
->>
->> On 10.12.2015 00:19, Bjorn Helgaas wrote:
->>> [+cc Michal, Paul, Thierry, Stephen, Alexandre (see irq_dispose_mapping questions below)]
->>>
->>> On Sun, Nov 29, 2015 at 05:33:53PM +0530, Bharat Kumar Gogada wrote:
->>>> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
->>>>
->>>> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
->>>> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
->>>> Acked-by: Rob Herring <robh@kernel.org>
->>>
->>> This needs either a MAINTAINERS update or an ack from Michal (whose
->>> MAINTAINERS entry matches anything containing "xilinx").
->>
->> We have done it in this way because driver owners are changing time to
->> time and my entry cover it that I can pass it to appropriate person who
->> is responsible for it.
->>
->> For this Maintainers part here is my:
->> Acked-by: Michal Simek <michal.simek@xilinx.com>
-> 
-> Thanks.
-> 
-> For things under drivers/pci/host, I ask for an ack from the
-> individual maintainer before applying patches.  As-is (without a
-> MAINTAINERS update) I'll be looking for acks from you, Michal, for all
-> future changes to pcie-xilinx-nwl.c.  If you want something else, we
-> need a MAINTAINERS change.
+I start a binary which should flash the FPGA and re-enumare the PCI-BUS
+and find a new device. It works most of the time. With SLUB debug it
+crashes on each iteration with something like this (compressed output):
 
-ok. No problem with it.
-I will get HW pretty soon and I will be able to do some testing my self
-when some others changes come.
+| pcieport 0000:00:00.0: AER: Multiple Corrected error received: id=0000
+| Unable to handle kernel paging request for data at address 0x27ef9e3e
+| Faulting instruction address: 0x602f5328
+| Oops: Kernel access of bad area, sig: 11 [#1]
+| Workqueue: events aer_isr
+| GPR24: dd6aa000 6b6b6b6b 605f8378 605f8360 d99b12c0 604fc674 606b1704 d99b12c0
+| NIP [602f5328] pci_walk_bus+0xd4/0x104
 
-Thanks,
-Michal
+Register 25 has the user-after magic. As it turns out, the old PCIe
+device is leaving, generates an error before it left, aer_irq() is fired,
+it schedules a work item. What happens now is that free_irq() is
+invoked, all resources are gone *before* the aes_isr() work item is
+completed.
+So to fix this, I flush the workqueue to ensure that there is no more
+work pending.
+
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+Bjorn, this could deserve a stable tag. However it seems to have been
+like that even in v2.6.20.
+
+ drivers/pci/pcie/aer/aerdrv.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index 0bf82a20a0fb..7acd27348098 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -282,8 +282,10 @@ static void aer_remove(struct pcie_device *dev)
+ 
+ 	if (rpc) {
+ 		/* If register interrupt service, it must be free. */
+-		if (rpc->isr)
++		if (rpc->isr) {
+ 			free_irq(dev->irq, dev);
++			flush_work(&rpc->dpc_handler);
++		}
+ 
+ 		wait_event(rpc->wait_release, rpc->prod_idx == rpc->cons_idx);
+ 
+-- 
+2.6.4
+
