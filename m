@@ -1,144 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V2 15/23] x86, ia64, pci: Convert arches to use PCI_DOMAINS_GENERIC.
-Date: Wed, 16 Dec 2015 16:16:25 +0100
-Message-Id: <1450278993-12664-16-git-send-email-tn@semihalf.com>
-In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:37257 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964803AbbLQNSr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Dec 2015 08:18:47 -0500
+Received: by mail-wm0-f41.google.com with SMTP id p187so21052095wmp.0
+        for <linux-pci@vger.kernel.org>; Thu, 17 Dec 2015 05:18:47 -0800 (PST)
+Subject: Re: [PATCH v4 3/5] PCI: qcom: Add Qualcomm PCIe controller driver
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Stanimir Varbanov <stanimir.varbanov@linaro.org>
+References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
+ <1449149725-27607-4-git-send-email-stanimir.varbanov@linaro.org>
+ <20151216215304.GB27791@localhost>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>
+From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Message-ID: <5672B633.6030503@linaro.org>
+Date: Thu, 17 Dec 2015 15:18:43 +0200
+MIME-Version: 1.0
+In-Reply-To: <20151216215304.GB27791@localhost>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since we have now generic way to retrieve domain number using _SEG method,
-x86 and ia64 can take advantage of it and forget about another
-platform specific data from pci_sysdata.
+Bjorn, thanks for the comments!
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- arch/ia64/Kconfig           | 3 +++
- arch/ia64/include/asm/pci.h | 2 --
- arch/ia64/pci/pci.c         | 1 -
- arch/x86/Kconfig            | 3 +++
- arch/x86/include/asm/pci.h  | 7 -------
- arch/x86/pci/acpi.c         | 2 --
- 6 files changed, 6 insertions(+), 12 deletions(-)
+On 12/16/2015 11:53 PM, Bjorn Helgaas wrote:
+> On Thu, Dec 03, 2015 at 03:35:22PM +0200, Stanimir Varbanov wrote:
+>> From: Stanimir Varbanov <svarbanov@mm-sol.com>
+>>
+>> The PCIe driver reuse the Designware common code for host
+>> and MSI initialization, and also program the Qualcomm
+>> application specific registers.
+>>
+>> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+>> Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+>> ---
+>>  MAINTAINERS                  |    7 +
+>>  drivers/pci/host/Kconfig     |   10 +
+>>  drivers/pci/host/Makefile    |    1 +
+>>  drivers/pci/host/pcie-qcom.c |  624 ++++++++++++++++++++++++++++++++++++++++++
+> 
+>> +#define PCIE20_CAP				0x70
+>> +#define PCIE20_CAP_LINKCTRLSTATUS		(PCIE20_CAP + 0x10)
+>> +#define PCIE20_CAP_LINKCTRLSTATUS_LINK_UP	BIT(29)
+> 
+> This looks like it could be referring to a standard PCIe Capability;
+> could you use the existing PCI_EXP_LNKSTA and PCI_EXP_LNKSTA_DLLLA
+> symbols here?  And readw() instead of readl()?
 
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index eb0249e..6fecd04 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -572,6 +572,9 @@ config PCI
- config PCI_DOMAINS
- 	def_bool PCI
- 
-+config PCI_DOMAINS_GENERIC
-+	def_bool PCI
-+
- config PCI_SYSCALL
- 	def_bool PCI
- 
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 5050748..4214be1 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -66,7 +66,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- 
- struct pci_controller {
- 	void *iommu;
--	int segment;
- 	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
- 
- 	void *platform_data;
-@@ -74,7 +73,6 @@ struct pci_controller {
- 
- 
- #define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
--#define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
- 
- extern struct pci_ops pci_root_ops;
- 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 978d6af..fe96bc9 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -300,7 +300,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		return NULL;
- 	}
- 
--	info->controller.segment = root->segment;
- 	info->controller.node = acpi_get_node(device->handle);
- 	INIT_LIST_HEAD(&info->io_resources);
- 	return acpi_pci_root_create(root, &pci_acpi_root_ops,
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 102d7d1..63cc4b7 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2383,6 +2383,9 @@ config PCI_DOMAINS
- 	def_bool y
- 	depends on PCI
- 
-+config PCI_DOMAINS_GENERIC
-+	def_bool PCI
-+
- config PCI_MMCONFIG
- 	bool "Support mmconfig PCI config space access"
- 	select PCI_ECAM
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index a98c022..1dc1ba1 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -12,7 +12,6 @@
- #ifdef __KERNEL__
- 
- struct pci_sysdata {
--	int		domain;		/* PCI domain */
- 	int		node;		/* NUMA node */
- #ifdef CONFIG_X86_64
- 	void		*iommu;		/* IOMMU private data */
-@@ -26,12 +25,6 @@ extern int noioapicreroute;
- #ifdef CONFIG_PCI
- 
- #ifdef CONFIG_PCI_DOMAINS
--static inline int pci_domain_nr(struct pci_bus *bus)
--{
--	struct pci_sysdata *sd = bus->sysdata;
--	return sd->domain;
--}
--
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
- 	return pci_domain_nr(bus);
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 286e0f5..5f78595 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -331,7 +331,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		 * its bus->sysdata.
- 		 */
- 		struct pci_sysdata sd = {
--			.domain = domain,
- 			.node = node,
- 		};
- 
-@@ -345,7 +344,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 				"pci_bus %04x:%02x: ignored (out of memory)\n",
- 				domain, busnum);
- 		else {
--			info->sd.domain = domain;
- 			info->sd.node = node;
- 			bus = acpi_pci_root_create(root, &acpi_pci_root_ops,
- 						   &info->common, &info->sd);
+Yes, that is possible but I still need to keep PCIE20_CAP capabilities
+offset.
+
+> 
+>> +static int qcom_pcie_enable_link_training(struct qcom_pcie *pcie)
+>> +{
+>> +	struct device *dev = pcie->dev;
+>> +	u32 val;
+>> +	int ret;
+>> +
+>> +	/* enable link training */
+>> +	val = readl(pcie->elbi + PCIE20_ELBI_SYS_CTRL);
+>> +	val |= PCIE20_ELBI_SYS_CTRL_LT_ENABLE;
+>> +	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
+>> +
+>> +	/* wait for up to 100ms for the link to come up */
+>> +	ret = readl_poll_timeout(pcie->elbi + PCIE20_ELBI_SYS_STTS, val,
+>> +				 val & XMLH_LINK_UP, LINKUP_DELAY_US,
+>> +				 LINKUP_TIMEOUT_US);
+>> +
+>> +	if (ret < 0 || !dw_pcie_link_up(&pcie->pp)) {
+>> +		dev_err(dev, "link initialization failed\n");
+>> +		return -ETIMEDOUT;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+> 
+> This looks a lot like the *_establish_link() functions in other
+> DesignWare-based drivers.  Can you make it look even more similar,
+> e.g., by renaming it to qcom_pcie_establish_link() and maybe moving
+> some of the PHY functionality here?
+> 
+> readl_poll_timeout() is nice and avoids the hand-coded timeout loop
+> the other drivers use.  But is there benefit in checking for
+> XMLH_LINK_UP, or could you simply poll dw_pcie_link_up() like the
+> others do?  If it's sufficient, I'd prefer using dw_pcie_link_up()
+> by itself because it's a little more generic.
+
+OK I will modify the code to use dw_pcie_link_up() and ensure that this
+check is sufficient.
+
 -- 
-1.9.1
-
+regards,
+Stan
