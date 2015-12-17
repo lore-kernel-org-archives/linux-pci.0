@@ -1,116 +1,86 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:58983 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750791AbbLQQ5R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Dec 2015 11:57:17 -0500
+Date: Thu, 17 Dec 2015 10:57:14 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+	rjw@rjwysocki.net, bhelgaas@google.com,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	hanjun.guo@linaro.org, tomasz.nowicki@linaro.org,
+	graeme.gregory@linaro.org, dhdang@apm.com,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v7 3/4] gicv2m: Refactor to prepare for ACPI support
+Message-ID: <20151217165713.GA23549@localhost>
+References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+ <1449766530-16935-4-git-send-email-Suravee.Suthikulpanit@amd.com>
+ <20151216221208.GC27791@localhost>
+ <56720095.70004@amd.com>
 MIME-Version: 1.0
-Date: Fri, 4 Dec 2015 15:07:23 +0100
-Message-ID: <CAJZ5v0g4AfzTSr8d8O8DY1aUT1-T-fnab2=CO42HE=Xe6QkbUQ@mail.gmail.com>
-Subject: [GIT PULL] Power management and ACPI fixes for v4.4-rc4
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56720095.70004@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On Wed, Dec 16, 2015 at 06:23:49PM -0600, Suravee Suthikulanit wrote:
+> Hi Bjorn,
+> 
+> Thanks for your review. Please see my comments below.
+> 
+> On 12/16/2015 4:12 PM, Bjorn Helgaas wrote:
+> >On Thu, Dec 10, 2015 at 08:55:29AM -0800, Suravee Suthikulpanit wrote:
+> >>This patch replaces the struct device_node with struct fwnode_handle
+> >>since this structure is common between DT and ACPI.
+> >>
+> >>It also refactors gicv2m_init_one() to prepare for ACPI support.
+> >>The only functional change is removing the node name from pr_info.
+> >>
+> >>Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+> >>Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> >
+> >>@@ -359,10 +355,10 @@ static int __init gicv2m_init_one(struct device_node *node,
+> >>  	}
+> >>
+> >>  	list_add_tail(&v2m->entry, &v2m_nodes);
+> >>-	pr_info("Node %s: range[%#lx:%#lx], SPI[%d:%d]\n", node->name,
+> >>-		(unsigned long)v2m->res.start, (unsigned long)v2m->res.end,
+> >>-		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
+> >>
+> >>+	pr_info("range[%#lx:%#lx], SPI[%d:%d]\n",
+> >>+		(unsigned long)res->start, (unsigned long)res->end,
+> >>+		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
+> >
+> >You didn't change this, but I don't think this message has enough
+> >context.  It's pretty cryptic all by itself.  It'd be nice if it could
+> >at least include a device name, e.g., if you could use dev_info().
+> 
+> Here is the example of the information printed:
+> [    0.000000] GICv2m: range[0xe1180000:0xe1181000], SPI[64:320]
+> 
+> Basically, the v2m is just an extension of the GIC. Here, we are
+> printing the memory range that it is covering, which can be used to
+> identify different V2m frame and the associate interrupt range
+> (SPI). The node name is not really providing any values. So, we are
+> removing it.
 
-Please pull from
+I noticed the pr_fmt definition later; that adds some useful context I
+didn't know about.  I guess there's no struct device for the GIC?  I
+don't see one in struct device_node.  Seems like this piece of
+hardware that apparently responds to a memory range *could* have a
+struct device, but I'm a little fuzzy on how we handle ACPI and OF
+device descriptions in that regard.
 
- git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
- pm+acpi-4.4-rc4
+I hadn't noticed the memory range part; maybe you could use %pR there?
 
-to receive power management and ACPI fixes for v4.4-rc4 with
-top-most commit d441fe25e7de576e36a3cd96f22b737d2f15372a
+Just to double-check, there's no off-by-one error in the SPI range, is
+there?  The pattern I usually expect is "start, start + nr_items - 1".
 
- Merge branches 'pm-domains' and 'pm-cpufreq'
+I'm just kibbitzing here; this isn't PCI code, and you don't need my
+ack, so just consider these as random observations.
 
-on top of commit 31ade3b83e1821da5fbb2f11b5b3d4ab2ec39db8
-
- Linux 4.4-rc3
-
-These fix a recent regression in the ACPI PCI host bridge
-initialization code, clean up some recent changes (generic
-power domains framework, ACPI AML debugger support), fix
-three older but annoying bugs (PCI power management. generic
-power domains framework, cpufreq) and a build problem (device
-properties framework), and update a stale MAINTAINERS entry
-(ACPI backlight driver).
-
-Specifics:
-
- - Fix a regression in the ACPI PCI host bridge initialization code
-   introduced by the recent consolidation of the host bridge handling
-   on x86 and ia64 that forgot to take one special piece of code
-   related to NUMA on x86 into account (Liu Jiang).
-
- - Improve the Kconfig help description of the new ACPI AML debugger
-   support option to avoid possible confusion (Peter Zijlstra).
-
- - Remove a piece of code in the generic power domains framework
-   that should have been removed by one of the recent commits
-   modifying that code (Ulf Hansson).
-
- - Reduce the log level of a PCI PM message that generates a lot
-   of false-positive log noise for some drivers and improve the
-   message itself while at it (Imre Deak).
-
- - Fix the OF-based domain lookup code in the generic power domains
-   framework to make it drop references to DT nodes correctly (Eric
-   Anholt).
-
- - Prevent the cpufreq core from setting the policy back to the
-   default after a CPU offline/online cycle for cpufreq drivers
-   providing the ->setpolicy callback (Srinivas Pandruvada).
-
- - Fix a build problem for CONFIG_ACPI unset in the device
-   properties framework (Hanjun Guo).
-
- - Fix a stale file path in the ACPI backlight driver entry in
-   MAINTAINERS (Dan Carpenter).
-
-Thanks!
-
-
----------------
-
-Dan Carpenter (1):
-      MAINTAINERS: ACPI / video: update a file name in drivers/acpi/
-
-Eric Anholt (1):
-      PM / Domains: Fix bad of_node_put() in failure paths of
-genpd_dev_pm_attach()
-
-Hanjun Guo (1):
-      ACPI / property: fix compile error for
-acpi_node_get_property_reference() when
-      CONFIG_ACPI=n
-
-Imre Deak (1):
-      PCI / PM: Tune down retryable runtime suspend error messages
-
-Liu Jiang (1):
-      x86/PCI/ACPI: Fix regression caused by commit 4d6b4e69a245
-
-Peter Zijlstra (1):
-      ACPI: Better describe ACPI_DEBUGGER
-
-Srinivas Pandruvada (1):
-      cpufreq: use last policy after online for drivers with ->setpolicy
-
-Ulf Hansson (1):
-      PM / Domains: Validate cases of a non-bound driver in genpd governor
-
----------------
-
- MAINTAINERS                          |  2 +-
- arch/x86/pci/bus_numa.c              | 13 ++-----------
- drivers/acpi/Kconfig                 |  4 ++--
- drivers/acpi/pci_root.c              |  7 +++++++
- drivers/base/power/domain.c          |  3 +--
- drivers/base/power/domain_governor.c |  3 ---
- drivers/cpufreq/cpufreq.c            | 14 ++++++++++----
- drivers/pci/pci-driver.c             | 16 ++++++++++++++--
- include/linux/acpi.h                 |  4 ++--
- include/linux/cpufreq.h              |  1 +
- 10 files changed, 40 insertions(+), 27 deletions(-)
+Bjorn
