@@ -1,105 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50781 "EHLO mx2.suse.de"
+Received: from mail5.windriver.com ([192.103.53.11]:51933 "EHLO mail5.wrs.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751091AbbLPKt4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Dec 2015 05:49:56 -0500
-From: Hannes Reinecke <hare@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Hannes Reinecke <hare@suse.de>,
-	Alexander Duyck <alexander.duyck@gmail.com>,
-	Michal Kubecek <mkubecek@suse.com>
-Subject: [PATCHv2] pci: Update VPD size with correct length
-Date: Wed, 16 Dec 2015 11:49:52 +0100
-Message-Id: <1450262992-77276-1-git-send-email-hare@suse.de>
+	id S935043AbbLQQGt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Dec 2015 11:06:49 -0500
+Date: Thu, 17 Dec 2015 11:06:31 -0500
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 07/10] drivers/pci: make host/pcie-rcar.c explicitly
+ non-modular
+Message-ID: <20151217160631.GA2772@windriver.com>
+References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
+ <1449970917-12633-8-git-send-email-paul.gortmaker@windriver.com>
+ <CAMuHMdWF+g4hwzcCRGkTYM=TpiBmxOn3GYmr+zO8c0QJUgH1fg@mail.gmail.com>
+ <PS1PR06MB11800C425B2DB1CD08A635B7F5E00@PS1PR06MB1180.apcprd06.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <PS1PR06MB11800C425B2DB1CD08A635B7F5E00@PS1PR06MB1180.apcprd06.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI-2.2 VPD entries have a maximum size of 32k, but might actually
-be smaller than that. To figure out the actual size one has to read
-the VPD area until the 'end marker' is reached.
-Trying to read VPD data beyond that marker results in 'interesting'
-effects, from simple read errors to crashing the card. And to make
-matters worse not every PCI card implements this properly, leaving
-us with no 'end' marker or even completely invalid data.
-This path modifies the size of the VPD attribute to the available
-size, and disables the VPD attribute altogether if no valid data
-could be read.
+[RE: [PATCH 07/10] drivers/pci: make host/pcie-rcar.c explicitly non-modular] On 17/12/2015 (Thu 11:32) Phil Edworthy wrote:
 
-Cc: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Michal Kubecek <mkubecek@suse.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/pci/access.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
+> Hi Paul,
+> 
+> On 13 December 2015 10:59, Geert Uytterhoeven wrote:
+> > 
+> > CC MODULE_AUTHOR
+> > 
+> > On Sun, Dec 13, 2015 at 2:41 AM, Paul Gortmaker
+> > <paul.gortmaker@windriver.com> wrote:
+> > > The Kconfig currently controlling compilation of this code is:
+> > >
+> > > drivers/pci/host/Kconfig:config PCI_RCAR_GEN2_PCIE
+> > > drivers/pci/host/Kconfig:       bool "Renesas R-Car PCIe controller"
+> > >
+> > > ...meaning that it currently is not being built as a module by anyone.
+> > >
+> > > Lets remove the modular code that is essentially orphaned, so that
+> > > when reading the driver there is no doubt it is builtin-only.
+> > >
+> > > Since module_platform_driver() uses the same init level priority as
+> > > builtin_platform_driver() the init ordering remains unchanged with
+> > > this commit.
+> > >
+> > > We don't have to disallow a driver unbind, since that is already
+> > > done for us in this driver.
+> > >
+> > > Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+> > >
+> > > We also delete the MODULE_LICENSE tag etc. since all that information
+> > > was (or is now) contained at the top of the file in the comments.
+> > >
+> > > Cc: Simon Horman <horms@verge.net.au>
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > Cc: linux-pci@vger.kernel.org
+> > > Cc: linux-sh@vger.kernel.org
+> > > Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+> 
+> It doesn't apply, would you mind rebasing onto:
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=next
+> 
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 59ac36f..ab571a5 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -475,6 +475,48 @@ static const struct pci_vpd_ops pci_vpd_f0_ops = {
- 	.release = pci_vpd_pci22_release,
- };
- 
-+/**
-+ * pci_vpd_size - determine actual size of Vital Product Data
-+ * @dev:	pci device struct
-+ * @old_size:	current assumed size, also maximum allowed size
-+ *
-+ */
-+static size_t
-+pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
-+{
-+	size_t off = 0;
-+	unsigned char header[1+2];	/* 1 byte tag, 2 bytes length */
-+
-+	while (off < old_size && pci_read_vpd(dev, off, 1, header)) {
-+		unsigned char tag;
-+
-+		if (header[0] == 0xff) {
-+			/* Invalid data from VPD read */
-+			tag = header[0];
-+		} else if (header[0] & 0x80) {
-+			/* Large Resource Data Type Tag */
-+			if (pci_read_vpd(dev, off+1, 2, &header[1]) != 2)
-+				return off + 1;
-+			off += 3 + ((header[2] << 8) | header[1]);
-+			tag = (header[0] & 0x7f);
-+		} else {
-+			/* Short Resource Data Type Tag */
-+			off += 1 + (header[0] & 0x07);
-+			tag = (header[0] & 0x78) >> 3;
-+		}
-+		if (tag == 0x0f)	/* End tag descriptor */
-+			break;
-+		if ((tag != 0x02) && (tag != 0x10) && (tag != 0x11)) {
-+			dev_dbg(&dev->dev,
-+				"invalid %s vpd tag %02x at offset %zu.",
-+				header[0] & 0x80 ? "large" : "short",
-+				tag, off);
-+			break;
-+		}
-+	}
-+	return off;
-+}
-+
- int pci_vpd_pci22_init(struct pci_dev *dev)
- {
- 	struct pci_vpd_pci22 *vpd;
-@@ -497,6 +539,13 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 	vpd->cap = cap;
- 	vpd->busy = false;
- 	dev->vpd = &vpd->base;
-+	vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
-+	if (vpd->base.len == 0) {
-+		dev_dbg(&dev->dev, "Disabling VPD access.");
-+		dev->vpd = NULL;
-+		kfree(vpd);
-+		return -ENXIO;
-+	}
- 	return 0;
- }
- 
--- 
-1.8.5.6
+Sure I can do that and just resend the 2 renesas commits if there is no
+interest in tristate conversions for them.  As for the others, I'm still
+awaiting feedback on what approach people want to take;  I listed what I
+figured our possible options are.
 
+Paul.
+--
+
+> As for the changes themselves,
+> Acked-by: Phil Edworthy <phil.edworthy@renesas.com>
+> 
+> Thanks
+> Phil
+> 
+> > > ---
+> > >  drivers/pci/host/pcie-rcar.c | 11 ++++-------
+> > >  1 file changed, 4 insertions(+), 7 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> > > index f4fa6c537448..2c619277d265 100644
+> > > --- a/drivers/pci/host/pcie-rcar.c
+> > > +++ b/drivers/pci/host/pcie-rcar.c
+> > > @@ -7,6 +7,8 @@
+> > >   *  arch/sh/drivers/pci/ops-sh7786.c
+> > >   *  Copyright (C) 2009 - 2011  Paul Mundt
+> > >   *
+> > > + * Module Author: Phil Edworthy <phil.edworthy@renesas.com>
+> > > + *
+> > >   * This file is licensed under the terms of the GNU General Public
+> > >   * License version 2.  This program is licensed "as is" without any
+> > >   * warranty of any kind, whether express or implied.
+> > > @@ -18,7 +20,7 @@
+> > >  #include <linux/irq.h>
+> > >  #include <linux/irqdomain.h>
+> > >  #include <linux/kernel.h>
+> > > -#include <linux/module.h>
+> > > +#include <linux/init.h>
+> > >  #include <linux/msi.h>
+> > >  #include <linux/of_address.h>
+> > >  #include <linux/of_irq.h>
+> > > @@ -921,7 +923,6 @@ static const struct of_device_id rcar_pcie_of_match[] = {
+> > >         { .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
+> > >         {},
+> > >  };
+> > > -MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
+> > >
+> > >  static int rcar_pcie_probe(struct platform_device *pdev)
+> > >  {
+> > > @@ -1007,8 +1008,4 @@ static struct platform_driver rcar_pcie_driver = {
+> > >         },
+> > >         .probe = rcar_pcie_probe,
+> > >  };
+> > > -module_platform_driver(rcar_pcie_driver);
+> > > -
+> > > -MODULE_AUTHOR("Phil Edworthy <phil.edworthy@renesas.com>");
+> > > -MODULE_DESCRIPTION("Renesas R-Car PCIe driver");
+> > > -MODULE_LICENSE("GPL v2");
+> > > +builtin_platform_driver(rcar_pcie_driver);
+> > 
+> > Gr{oetje,eeting}s,
+> > 
+> >                         Geert
+> > 
+> > --
+> > Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+> > 
+> > In personal conversations with technical people, I call myself a hacker. But
+> > when I'm talking to journalists I just say "programmer" or something like that.
+> >                                 -- Linus Torvalds
