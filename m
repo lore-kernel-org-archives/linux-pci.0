@@ -1,95 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:63501 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491AbbLMBmv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Dec 2015 20:42:51 -0500
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-sh@vger.kernel.org>
-Subject: [PATCH 07/10] drivers/pci: make host/pcie-rcar.c explicitly non-modular
-Date: Sat, 12 Dec 2015 20:41:54 -0500
-Message-ID: <1449970917-12633-8-git-send-email-paul.gortmaker@windriver.com>
-In-Reply-To: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v7 3/4] gicv2m: Refactor to prepare for ACPI support
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+ <1449766530-16935-4-git-send-email-Suravee.Suthikulpanit@amd.com>
+ <20151216221208.GC27791@localhost>
+CC: <marc.zyngier@arm.com>, <tglx@linutronix.de>,
+	<jason@lakedaemon.net>, <rjw@rjwysocki.net>, <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	<hanjun.guo@linaro.org>, <tomasz.nowicki@linaro.org>,
+	<graeme.gregory@linaro.org>, <dhdang@apm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Message-ID: <56720095.70004@amd.com>
+Date: Wed, 16 Dec 2015 18:23:49 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20151216221208.GC27791@localhost>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+Hi Bjorn,
 
-drivers/pci/host/Kconfig:config PCI_RCAR_GEN2_PCIE
-drivers/pci/host/Kconfig:       bool "Renesas R-Car PCIe controller"
+Thanks for your review. Please see my comments below.
 
-...meaning that it currently is not being built as a module by anyone.
+On 12/16/2015 4:12 PM, Bjorn Helgaas wrote:
+> On Thu, Dec 10, 2015 at 08:55:29AM -0800, Suravee Suthikulpanit wrote:
+>> This patch replaces the struct device_node with struct fwnode_handle
+>> since this structure is common between DT and ACPI.
+>>
+>> It also refactors gicv2m_init_one() to prepare for ACPI support.
+>> The only functional change is removing the node name from pr_info.
+>>
+>> Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+>> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>
+>> @@ -359,10 +355,10 @@ static int __init gicv2m_init_one(struct device_node *node,
+>>   	}
+>>
+>>   	list_add_tail(&v2m->entry, &v2m_nodes);
+>> -	pr_info("Node %s: range[%#lx:%#lx], SPI[%d:%d]\n", node->name,
+>> -		(unsigned long)v2m->res.start, (unsigned long)v2m->res.end,
+>> -		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
+>>
+>> +	pr_info("range[%#lx:%#lx], SPI[%d:%d]\n",
+>> +		(unsigned long)res->start, (unsigned long)res->end,
+>> +		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
+>
+> You didn't change this, but I don't think this message has enough
+> context.  It's pretty cryptic all by itself.  It'd be nice if it could
+> at least include a device name, e.g., if you could use dev_info().
 
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.
+Here is the example of the information printed:
+[    0.000000] GICv2m: range[0xe1180000:0xe1181000], SPI[64:320]
 
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
+Basically, the v2m is just an extension of the GIC. Here, we are 
+printing the memory range that it is covering, which can be used to 
+identify different V2m frame and the associate interrupt range (SPI). 
+The node name is not really providing any values. So, we are removing it.
 
-We don't have to disallow a driver unbind, since that is already
-done for us in this driver.
+Thanks,
+Suravee
 
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+> If that's possible, I guess a separate patch would be appropriate,
+> since there are other similar things in this file.
+> j
+> Bjorn
 
-We also delete the MODULE_LICENSE tag etc. since all that information
-was (or is now) contained at the top of the file in the comments.
 
-Cc: Simon Horman <horms@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pcie-rcar.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index f4fa6c537448..2c619277d265 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -7,6 +7,8 @@
-  *  arch/sh/drivers/pci/ops-sh7786.c
-  *  Copyright (C) 2009 - 2011  Paul Mundt
-  *
-+ * Module Author: Phil Edworthy <phil.edworthy@renesas.com>
-+ *
-  * This file is licensed under the terms of the GNU General Public
-  * License version 2.  This program is licensed "as is" without any
-  * warranty of any kind, whether express or implied.
-@@ -18,7 +20,7 @@
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
-@@ -921,7 +923,6 @@ static const struct of_device_id rcar_pcie_of_match[] = {
- 	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
- 	{},
- };
--MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
- 
- static int rcar_pcie_probe(struct platform_device *pdev)
- {
-@@ -1007,8 +1008,4 @@ static struct platform_driver rcar_pcie_driver = {
- 	},
- 	.probe = rcar_pcie_probe,
- };
--module_platform_driver(rcar_pcie_driver);
--
--MODULE_AUTHOR("Phil Edworthy <phil.edworthy@renesas.com>");
--MODULE_DESCRIPTION("Renesas R-Car PCIe driver");
--MODULE_LICENSE("GPL v2");
-+builtin_platform_driver(rcar_pcie_driver);
--- 
-2.6.1
 
