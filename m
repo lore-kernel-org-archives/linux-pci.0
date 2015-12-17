@@ -1,83 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V2 06/23] XEN / PCI: Remove the dependence on arch x86
+ when PCI_MMCONFIG=y
+To: Stefano.Stabellini@eu.citrix.com
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <1450278993-12664-7-git-send-email-tn@semihalf.com>
+ <56728DB0.2080800@semihalf.com>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jchandra@broadcom.com,
+	jcm@redhat.com, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <56729100.6080606@semihalf.com>
+Date: Thu, 17 Dec 2015 11:40:00 +0100
 MIME-Version: 1.0
-In-Reply-To: <5672D8A1.2080407@linaro.org>
-References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
-	<1449149725-27607-2-git-send-email-stanimir.varbanov@linaro.org>
-	<56669C50.9060700@linaro.org>
-	<CAHM4w1k_EAt+xBBYyG3B7W9Fegc4j+uRq5t_biUsxOGt+k+xUA@mail.gmail.com>
-	<20151209102359.GF8644@n2100.arm.linux.org.uk>
-	<CAHM4w1m-NiwyCLz9tikbOcNtCmVu0Vd9FhmKKSuMi5ChzfDafA@mail.gmail.com>
-	<5672D8A1.2080407@linaro.org>
-Date: Thu, 17 Dec 2015 21:21:12 +0530
-Message-ID: <CAHM4w1mjTqrXC_XFTXoAB_3w3L8R=Xg-cXrTUfTuMO9sgctoFw@mail.gmail.com>
-Subject: Re: [PATCH v4 1/5] PCI: designware: add memory barrier after enabling region
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <56728DB0.2080800@semihalf.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 17, 2015 at 9:15 PM, Stanimir Varbanov
-<stanimir.varbanov@linaro.org> wrote:
+On 17.12.2015 11:25, Tomasz Nowicki wrote:
+> On 16.12.2015 16:16, Tomasz Nowicki wrote:
+>> In drivers/xen/pci.c, there are arch x86 dependent codes when
+>> CONFIG_PCI_MMCONFIG is enabled, since CONFIG_PCI_MMCONFIG
+>> depends on ACPI, so this will prevent XEN PCI running on other
+>> architectures using ACPI with PCI_MMCONFIG enabled (such as ARM64).
+>>
+>> Fortunatly, it can be sloved in a simple way. In drivers/xen/pci.c,
+>> the only x86 dependent code is if ((pci_probe & PCI_PROBE_MMCONF) == 0),
+>> and it's defined in asm/pci_x86.h, the code means that
+>> if the PCI resource is not probed in PCI_PROBE_MMCONF way, just
+>> ingnore the xen mcfg init. Actually this is duplicate, because
+>> if PCI resource is not probed in PCI_PROBE_MMCONF way, the
+>> pci_mmconfig_list will be empty, and the if (list_empty())
+>> after it will do the same job.
+>>
+>> So just remove the arch related code and the head file, this
+>> will be no functional change for x86, and also makes xen/pci.c
+>> usable for other architectures.
+>>
+>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+>> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+>> CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+>> Cc: Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>
+>> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>> ---
+>>   drivers/xen/pci.c | 6 ------
+>>   1 file changed, 6 deletions(-)
+>>
+>> diff --git a/drivers/xen/pci.c b/drivers/xen/pci.c
+>> index 6785ebb..9a8dbe3 100644
+>> --- a/drivers/xen/pci.c
+>> +++ b/drivers/xen/pci.c
+>> @@ -28,9 +28,6 @@
+>>   #include <asm/xen/hypervisor.h>
+>>   #include <asm/xen/hypercall.h>
+>>   #include "../pci/pci.h"
+>> -#ifdef CONFIG_PCI_MMCONFIG
+>> -#include <asm/pci_x86.h>
+>> -#endif
 >
-> On 12/11/2015 06:05 AM, Pratyush Anand wrote:
-> > On Wed, Dec 9, 2015 at 3:53 PM, Russell King - ARM Linux
-> > <linux@arm.linux.org.uk> wrote:
-> >
-> > [...]
-> >
-> >>>>>       dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-> >>>>> +     /*
-> >>>>> +      * ensure that the ATU enable has been happaned before accessing
-> >>>>> +      * pci configuration/io spaces through dw_pcie_cfg_[read|write].
-> >>>>> +      */
-> >>>>> +     wmb();
-> >>>>>  }
-> >>>>>
-> >>>
-> >>>
-> >>> My understnading is that since writel() of dw_pcie_writel_rc() in
-> >>> above code and readl(), writel() of dw_pcie_cfg_[read|write]() (which
-> >>> will follow) goes through same device (ie PCIe host here). So, it is
-> >>> guaranteed that 1st writel() will be executed before later
-> >>> readl()/writel(). If that is true then we do not need any explicit
-> >>> barrier here.
-> >>>
-> >>> Arnd, Russel: whats your opinion here.
-> >>               ^l
-> >
-> > Sorry :(
-> >
-> >>
-> >> writel() has a barrier _before_ the access but not after.
-> >>
-> >> The fact is that there's nothing which guarantees that the write will hit
-> >> the hardware in a timely manner (forget any rules about PCI config space,
-> >> the PCI ordering rules apply to the PCI bus, not to the ARM buses.)
-> >>
-> >> If you need this write to have hit the hardware before continuing, you
-> >> need to read back from the same register.
-> >
-> > OK, so better to replace wmb() with read back of control register.
+> I noticed that I forgot about:
+> +#include <linux/ecam.h>
 >
-> Would the patch be acceptable if I replace wmb with read?
 
-For me it would be fine.
+I did not forget, I added it in patch [PATCH V2 02/23]. Sorry for noise.
 
-~Pratyush
+Tomasz
