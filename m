@@ -1,75 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>, <tony@atomide.com>
-CC: <bcousson@baylibre.com>, <kishon@ti.com>, <robh+dt@kernel.org>,
-	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<linux@arm.linux.org.uk>, <rogerq@ti.com>, <nsekhar@ti.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-	<t-kristo@ti.com>
-Subject: [PATCH v3 0/4] ARM: dts: use syscon property instead of ctrl-module
-Date: Tue, 15 Dec 2015 15:09:02 +0530
-Message-ID: <1450172346-11890-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:20769 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752000AbbLQRet (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Dec 2015 12:34:49 -0500
+Date: Thu, 17 Dec 2015 17:34:46 +0000
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv5 7/7] pciutils: Allow 32-bit domains
+Message-ID: <20151217173446.GA31031@localhost.localdomain>
+References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
+ <1449523949-21898-8-git-send-email-keith.busch@intel.com>
+ <20151217171545.GB23549@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20151217171545.GB23549@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series is basically to deprecate using ctrl-module property and use
-corresponding syscon properties to program the control module registers.
+On Thu, Dec 17, 2015 at 11:15:45AM -0600, Bjorn Helgaas wrote:
+> > @@ -45,7 +45,7 @@ pci_filter_parse_slot_v33(struct pci_filter *f, char *str)
+> >  	  if (str[0] && strcmp(str, "*"))
+> >  	    {
+> >  	      long int x = strtol(str, &e, 16);
+> > -	      if ((e && *e) || (x < 0 || x > 0xffff))
+> > +	      if ((e && *e) || (x < 0))
+> 
+> Just out of curiosity (I don't maintain pciutils; Martin would apply
+> this one), is there some part of the PCI or PCI firmware spec that is
+> relevant to this change?  Maybe this is connected to parsing things
+> exported by the kernel and not directly tied to PCI at the spec level.
+>
+> Whatever it is, a pointer to the producer of the information you're
+> consuming here would help us understand and review the patch.
 
-Changes from v2:
-No changes.
+Hi Bjorn,
 
-Changes from v1:
-*) Squashed the patches that replaces "ctrl-module" with
-   "syscon-phy-power"
-*) Added "syscon-phy-power" for SATA dt node in OMAP5 which was missed
-   earlier
-*) removed _ARM: dts: omap4: Use "syscon-otghs" instead of "ctrl-module"
-   in USB node_. It will be done later.
+This is not tied to anything defined in PCI spec. Domain numbers being
+a software construct (ACPI6, §6.5.6), we don't need to constrain the
+representation. ACPI defines 16-bit segments, and domains provided by
+this new host bridge do not define _SEG, so this series proposes domain
+numbers outside the ACPI reachable range to avoid potential clashes.
 
-Changes from [1] in PHY patches include
-*) cleanup ti_pipe3_probe
-*) have mask, power_on and power_off values in usb_phy_data for
-   omap-usb2 phy
-
-This series should be merged only after [2]
-
-[2] -> http://www.spinics.net/lists/kernel/msg2144510.html
-
-Logs with SYSCON DT
-
-DRA72 EVM : http://pastebin.ubuntu.com/14025205/
-DRA7 EVM  : http://pastebin.ubuntu.com/14025212/
-AM43XX EVM: http://pastebin.ubuntu.com/14025222/
-OMAP5 UEVM: http://pastebin.ubuntu.com/14025228/
-
-Logs without SYSCON DT
-
-DRA72 EVM : http://pastebin.ubuntu.com/14025233/
-DRA7 EVM  : http://pastebin.ubuntu.com/14025238/
-AM43XX EVM: http://pastebin.ubuntu.com/14025329/
-OMAP5 UEVM: http://pastebin.ubuntu.com/14025248/
-
-The config I used: http://pastebin.ubuntu.com/14025336/
-
-Kishon Vijay Abraham I (4):
-  ARM: dts: dra7: Add dt node for the sycon pcie
-  ARM: dts: dra7: Use "syscon-phy-power" and "syscon-pcs" in PCIe PHY
-    node
-  ARM: dts: dra7: Use "ti,dra7x-usb2-phy2" compatible string for USB2
-    PHY2
-  ARM: dts: <am4372/dra7/omap5>: Use "syscon-phy-power" instead of
-    "ctrl-module"
-
- arch/arm/boot/dts/am4372.dtsi |   16 ++-------
- arch/arm/boot/dts/dra7.dtsi   |   75 ++++++++++++-----------------------------
- arch/arm/boot/dts/omap5.dtsi  |   26 ++------------
- 3 files changed, 26 insertions(+), 91 deletions(-)
-
--- 
-1.7.9.5
-
+The pciutils patch just synchronizes the essential tooling software with
+the kernel software's new representation.
