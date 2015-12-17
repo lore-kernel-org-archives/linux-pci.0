@@ -1,80 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40118 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751759AbbLKFHo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:07:44 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, Meelis Roos <mroos@linux.ee>
-Subject: [PATCH v9 06/60] PCI: Kill wrong quirk about M7101
-Date: Thu, 10 Dec 2015 21:06:02 -0800
-Message-Id: <1449810416-2950-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:36743 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967054AbbLQPJI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Dec 2015 10:09:08 -0500
+Received: by mail-ig0-f181.google.com with SMTP id ph11so14017486igc.1
+        for <linux-pci@vger.kernel.org>; Thu, 17 Dec 2015 07:09:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAJ+vNU0ar_d=2n4Yz3QX4qidSkH6PBLyfB8-w-ErLOYzwqj7rw@mail.gmail.com>
+References: <1446735481-27326-1-git-send-email-tharvey@gateworks.com>
+	<1447942365-11662-1-git-send-email-tharvey@gateworks.com>
+	<20151125231435.GI8869@localhost>
+	<CAJ+vNU0ar_d=2n4Yz3QX4qidSkH6PBLyfB8-w-ErLOYzwqj7rw@mail.gmail.com>
+Date: Thu, 17 Dec 2015 07:09:07 -0800
+Message-ID: <CAJ+vNU399O0uskuAQGaqPQUhFdNYktZY4bm-=JCmdEgQF-HgYg@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: imx6: add dt prop for link gen, default to gen1
+From: Tim Harvey <tharvey@gateworks.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Meelis reported that qla2000 driver does not get loaded on one sparc system.
+On Wed, Dec 2, 2015 at 8:35 AM, Tim Harvey <tharvey@gateworks.com> wrote:
+> On Wed, Nov 25, 2015 at 3:14 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> Hi Tim,
+>>
+>> On Thu, Nov 19, 2015 at 06:12:45AM -0800, Tim Harvey wrote:
+>>> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
+>>> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
+>>> external clock source is present and supplied back to the IMX6 PCIe core
+>>> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
+>>>
+>>> Add a dt property to specify gen1 vs gen2 and check this before allowing
+>>> a Gen2 link.
+>>>
+>>> We default to Gen1 if the property is not present because at this time there
+>>> are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
+>>>
+>>> In order to be Gen2 compliant on IMX6 you need to:
+>>>  - have a Gen2 compliant external clock generator and route that clock back
+>>>    to either LVDS CLK1 or LVDS CLK2 as an input.
+>>>    (see IMX6SX-SabreSD reference design)
+>>>  - specify this clock in the pcie node in the dt
+>>>    (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
+>>>     IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
+>>>
+>>> [1] https://community.freescale.com/message/453209
+>>>
+>>> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+>>> ---
+>>> v2:
+>>>  - moved dt property to designware core
+>>>
+>>>  .../devicetree/bindings/pci/designware-pcie.txt          |  1 +
+>>>  drivers/pci/host/pci-imx6.c                              | 16 ++++++++++------
+>>>  drivers/pci/host/pcie-designware.c                       |  4 ++++
+>>>  drivers/pci/host/pcie-designware.h                       |  1 +
+>>>  4 files changed, 16 insertions(+), 6 deletions(-)
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>>> index 9f4faa8..a9a94b9 100644
+>>> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>>> @@ -26,3 +26,4 @@ Optional properties:
+>>>  - bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
+>>>    specify this property, to keep backwards compatibility a range of 0x00-0xff
+>>>    is assumed if not present)
+>>> +- max-link-speed: Specify PCI gen for link capability (ie 2 for gen2)
+>>
+>> Is there some sort of DT or OF spec that lists "max-link-speed" as a
+>> generic property?  I see Lucas' desire to have this be common across
+>> DesignWare PCIe cores.  Should it be moved up a level even from there,
+>> i.e., to bindings/pci/pci.txt?
+>
+> Bjorn,
+>
+> I don't know what the general consensus is here. As your the PCI
+> maintainer I would leave that up to you. Are there other platforms
+> that need to link at a lesser capability than the host controller is
+> capable of? I am only aware of the IMX6 and SPEAr13XX [1]
+>
+> I can make that change and re-submit if you feel that is necessary.
+>
 
-schizo f00732d0: PCI host bridge to bus 0001:00
-pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
-pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
-pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
-pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
+Bjorn,
 
-So the quirk for M7101 claim the io range early.
+Any thoughts here? I would really like to see this get picked up
+sooner rather than later.
 
-According to spec with M7101 in M1543 page 103/104,
-	http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
-0xe0, and 0xe2 do not include address info for acpi/smb.
+Regards,
 
-Kill wrong quirk about them.
-
-Link: http://kodu.ut.ee/~mroos/dm/dm.v240
-Link: http://kodu.ut.ee/~mroos/dm/dm.sb100
-Reported-by: Meelis Roos <mroos@linux.ee>
-Cc: Meelis Roos <mroos@linux.ee>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- drivers/pci/quirks.c | 18 ------------------
- 1 file changed, 18 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7e32730..7354127 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -433,24 +433,6 @@ static void quirk_amd_nl_class(struct pci_dev *pdev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
- 		quirk_amd_nl_class);
- 
--/*
-- * Let's make the southbridge information explicit instead
-- * of having to worry about people probing the ACPI areas,
-- * for example.. (Yes, it happens, and if you read the wrong
-- * ACPI register it will put the machine to sleep with no
-- * way of waking it up again. Bummer).
-- *
-- * ALI M7101: Two IO regions pointed to by words at
-- *	0xE0 (64 bytes of ACPI registers)
-- *	0xE2 (32 bytes of SMB registers)
-- */
--static void quirk_ali7101_acpi(struct pci_dev *dev)
--{
--	quirk_io_region(dev, 0xE0, 64, PCI_BRIDGE_RESOURCES, "ali7101 ACPI");
--	quirk_io_region(dev, 0xE2, 32, PCI_BRIDGE_RESOURCES+1, "ali7101 SMB");
--}
--DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
--
- static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
- {
- 	u32 devres;
--- 
-1.8.4.5
-
+Tim
