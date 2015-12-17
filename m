@@ -1,91 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:63779 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751019AbbLRO6G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Dec 2015 09:58:06 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Ray Jui <rjui@broadcom.com>,
-	Vikram Prakash <vikramp@broadcom.com>,
-	Anup Patel <anup.patel@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH] PCI: iproc: fix msi driver selection
-Date: Fri, 18 Dec 2015 15:57:53 +0100
-Message-ID: <1541985.1Jq5kHC7MS@wuerfel>
+Received: from mail.kernel.org ([198.145.29.136]:34852 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751063AbbLQRqS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Dec 2015 12:46:18 -0500
+Date: Thu, 17 Dec 2015 11:46:15 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv6 6/7] aer_inject: Use 32 bit int type domains
+Message-ID: <20151217174615.GE23549@localhost>
+References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
+ <1449523949-21898-7-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449523949-21898-7-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The newly added MSI support for iproc causes a link error when its
-Kconfig option is disabled:
+PCI/AER: Increase domain type from 16 to 32 bits
 
-ERROR: "iproc_msi_exit" [drivers/pci/host/pcie-iproc.ko] undefined!
-ERROR: "iproc_msi_init" [drivers/pci/host/pcie-iproc.ko] undefined!
+On Mon, Dec 07, 2015 at 02:32:28PM -0700, Keith Busch wrote:
+> New pci device provides additional pci domains that start above what 16
+> bits can address.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  drivers/pci/pcie/aer/aer_inject.c | 16 ++++++++--------
+>  1 file changed, 8 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+> index 182224a..24b191e 100644
+> --- a/drivers/pci/pcie/aer/aer_inject.c
+> +++ b/drivers/pci/pcie/aer/aer_inject.c
+> @@ -41,12 +41,12 @@ struct aer_error_inj {
+>  	u32 header_log1;
+>  	u32 header_log2;
+>  	u32 header_log3;
+> -	u16 domain;
+> +	int domain;
 
-This changes the header file so we use stub functions whenever
-the driver is not built, even when CONFIG_MSI is enabled.
+If you want 32 bits explicitly, why don't you use u32 here?
 
-As the Kconfig logic for the driver is a bit off, I'm rectifying
-that as well, by making it depend on the specific drivers that
-call into the driver, and moving the option behind those instead
-of before them.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 610894347cbf ("PCI: iproc: Add iProc PCIe MSI support")
----
-Found on ARM randconfig builds a couple of days ago
-
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 490476e172fd..d7c05894af70 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -124,15 +124,6 @@ config PCIE_IPROC
- 	  iProc family of SoCs. An appropriate bus interface driver needs
- 	  to be enabled to select this.
- 
--config PCIE_IPROC_MSI
--	bool "Broadcom iProc PCIe MSI support"
--	depends on ARCH_BCM_IPROC && PCI_MSI
--	select PCI_MSI_IRQ_DOMAIN
--	default ARCH_BCM_IPROC
--	help
--	  Say Y here if you want to enable MSI support for Broadcom's iProc
--	  PCIe controller
--
- config PCIE_IPROC_PLATFORM
- 	tristate "Broadcom iProc PCIe platform bus driver"
- 	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
-@@ -154,6 +145,16 @@ config PCIE_IPROC_BCMA
- 	  Say Y here if you want to use the Broadcom iProc PCIe controller
- 	  through the BCMA bus interface
- 
-+config PCIE_IPROC_MSI
-+	bool "Broadcom iProc PCIe MSI support"
-+	depends on PCIE_IPROC_PLATFORM || PCIE_IPROC_BCMA
-+	depends on PCI_MSI
-+	select PCI_MSI_IRQ_DOMAIN
-+	default ARCH_BCM_IPROC
-+	help
-+	  Say Y here if you want to enable MSI support for Broadcom's iProc
-+	  PCIe controller
-+
- config PCIE_ALTERA
- 	bool "Altera PCIe controller"
- 	depends on ARM || NIOS2
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index 6def23a7eb54..e84d93c53c7b 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -79,7 +79,7 @@ struct iproc_pcie {
- int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
- int iproc_pcie_remove(struct iproc_pcie *pcie);
- 
--#ifdef CONFIG_PCI_MSI
-+#ifdef CONFIG_PCIE_IPROC_MSI
- int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
- void iproc_msi_exit(struct iproc_pcie *pcie);
- #else
-
+>  };
+>  
+>  struct aer_error {
+>  	struct list_head list;
+> -	u16 domain;
+> +	int domain;
+>  	unsigned int bus;
+>  	unsigned int devfn;
+>  	int pos_cap_err;
+> @@ -74,7 +74,7 @@ static LIST_HEAD(pci_bus_ops_list);
+>  /* Protect einjected and pci_bus_ops_list */
+>  static DEFINE_SPINLOCK(inject_lock);
+>  
+> -static void aer_error_init(struct aer_error *err, u16 domain,
+> +static void aer_error_init(struct aer_error *err, int domain,
+>  			   unsigned int bus, unsigned int devfn,
+>  			   int pos_cap_err)
+>  {
+> @@ -86,7 +86,7 @@ static void aer_error_init(struct aer_error *err, u16 domain,
+>  }
+>  
+>  /* inject_lock must be held before calling */
+> -static struct aer_error *__find_aer_error(u16 domain, unsigned int bus,
+> +static struct aer_error *__find_aer_error(int domain, unsigned int bus,
+>  					  unsigned int devfn)
+>  {
+>  	struct aer_error *err;
+> @@ -106,7 +106,7 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
+>  	int domain = pci_domain_nr(dev->bus);
+>  	if (domain < 0)
+>  		return NULL;
+> -	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
+> +	return __find_aer_error(domain, dev->bus->number, dev->devfn);
+>  }
+>  
+>  /* inject_lock must be held before calling */
+> @@ -196,7 +196,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
+>  	domain = pci_domain_nr(bus);
+>  	if (domain < 0)
+>  		goto out;
+> -	err = __find_aer_error((u16)domain, bus->number, devfn);
+> +	err = __find_aer_error(domain, bus->number, devfn);
+>  	if (!err)
+>  		goto out;
+>  
+> @@ -228,7 +228,7 @@ static int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where,
+>  	domain = pci_domain_nr(bus);
+>  	if (domain < 0)
+>  		goto out;
+> -	err = __find_aer_error((u16)domain, bus->number, devfn);
+> +	err = __find_aer_error(domain, bus->number, devfn);
+>  	if (!err)
+>  		goto out;
+>  
+> @@ -329,7 +329,7 @@ static int aer_inject(struct aer_error_inj *einj)
+>  	u32 sever, cor_mask, uncor_mask, cor_mask_orig = 0, uncor_mask_orig = 0;
+>  	int ret = 0;
+>  
+> -	dev = pci_get_domain_bus_and_slot((int)einj->domain, einj->bus, devfn);
+> +	dev = pci_get_domain_bus_and_slot(einj->domain, einj->bus, devfn);
+>  	if (!dev)
+>  		return -ENODEV;
+>  	rpdev = pcie_find_root_port(dev);
+> -- 
+> 2.6.2.307.g37023ba
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
