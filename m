@@ -1,63 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51700 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949AbbLKFZ7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:25:59 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 22/60] PCI: Don't release sibling bridge resources during hotplug
-Date: Thu, 10 Dec 2015 21:06:18 -0800
-Message-Id: <1449810416-2950-23-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:34394 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932168AbbLRMjd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Dec 2015 07:39:33 -0500
+Received: by mail-wm0-f48.google.com with SMTP id l126so63925220wml.1
+        for <linux-pci@vger.kernel.org>; Fri, 18 Dec 2015 04:39:32 -0800 (PST)
+From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+To: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+	Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Subject: [PATCH v5 5/5] ARM: dts: ifc6410: enable pcie dt node for this board
+Date: Fri, 18 Dec 2015 14:38:59 +0200
+Message-Id: <1450442339-18765-6-git-send-email-stanimir.varbanov@linaro.org>
+In-Reply-To: <1450442339-18765-1-git-send-email-stanimir.varbanov@linaro.org>
+References: <1450442339-18765-1-git-send-email-stanimir.varbanov@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On hotplug path, we can not touch sibling bridges that is outside
-of the slot.
+Enable pcie dt node and fill pcie dt node with regulator, pinctrl
+and reset gpio, to use the pcie on the ifc6410 board.
 
-That could happen when BIOS does not assign some bridge BARs and
-later kernel can not assign resource to them in first try.
-
-Check if fail dev is the parent bridge, then just use subordinate
-bus instead use parent bus.
-
-Reported-by: Andreas Noever <andreas.noever@gmail.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
 ---
- drivers/pci/setup-bus.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ arch/arm/boot/dts/qcom-apq8064-ifc6410.dts |   26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index c2e3999..7f7f46c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1902,10 +1902,16 @@ again:
- 	 * Try to release leaf bridge's resources that doesn't fit resource of
- 	 * child device under that bridge
- 	 */
--	list_for_each_entry(fail_res, &fail_head, list)
--		pci_bus_release_bridge_resources(fail_res->dev->bus,
-+	list_for_each_entry(fail_res, &fail_head, list) {
-+		struct pci_bus *bus = fail_res->dev->bus;
+diff --git a/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts b/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts
+index f40e93f09673..4584850add62 100644
+--- a/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts
++++ b/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts
+@@ -47,6 +47,18 @@
+ 					bias-disable;
+ 				};
+ 			};
 +
-+		if (fail_res->dev == bridge)
-+			bus = bridge->subordinate;
-+
-+		pci_bus_release_bridge_resources(bus,
- 						 fail_res->flags & type_mask,
- 						 whole_subtree);
-+	}
++			pcie_pins: pcie_pinmux {
++				mux {
++					pins = "gpio27";
++					function = "gpio";
++				};
++				conf {
++					pins = "gpio27";
++					drive-strength = <12>;
++					bias-disable;
++				};
++			};
+ 		};
  
- 	/* restore size and flags */
- 	list_for_each_entry(fail_res, &fail_head, list) {
+ 		rpm@108000 {
+@@ -123,6 +135,10 @@
+ 				lvs1 {
+ 					bias-pull-down;
+ 				};
++
++				lvs6 {
++					bias-pull-down;
++				};
+ 			};
+ 		};
+ 
+@@ -231,6 +247,16 @@
+ 			status = "okay";
+ 		};
+ 
++		pci@1b500000 {
++			status = "ok";
++			vdda-supply = <&pm8921_s3>;
++			vdda_phy-supply = <&pm8921_lvs6>;
++			vdda_refclk-supply = <&ext_3p3v>;
++			pinctrl-0 = <&pcie_pins>;
++			pinctrl-names = "default";
++			perst-gpio = <&tlmm_pinmux 27 GPIO_ACTIVE_LOW>;
++		};
++
+ 		qcom,ssbi@500000 {
+ 			pmic@0 {
+ 				gpio@150 {
 -- 
-1.8.4.5
+1.7.9.5
 
