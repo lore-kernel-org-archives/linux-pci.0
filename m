@@ -1,76 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Content-Type: text/plain;
-	charset=us-ascii
-From: Jon Masters <jcm@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:49585 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932065AbbLRNpy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Dec 2015 08:45:54 -0500
+Date: Fri, 18 Dec 2015 21:44:15 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Cc: kbuild-all@01.org, linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Subject: [PATCH] PCI: qcom: fix ptr_ret.cocci warnings
+Message-ID: <20151218134415.GA31877@lkp-hsx03>
+References: <201512182111.1GLn2hxy%fengguang.wu@intel.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors against platfrom specific quirks.
-Message-Id: <335CDE2E-B588-43A8-8665-6023AFD0EA04@redhat.com>
-Date: Mon, 21 Dec 2015 18:10:58 -0500 (EST)
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com> <1450278993-12664-23-git-send-email-tn@semihalf.com> <EE11001F9E5DDD47B7634E2F8A612F2E1EC14C0F@lhreml503-mbb> <201512211510.32029.arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-In-Reply-To: <201512211510.32029.arnd@arndb.de>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"okaya@codeaurora.org" <okaya@codeaurora.org>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"Stefano.Stabellini@eu.citrix.com" <Stefano.Stabellini@eu.citrix.com>,
-	"robert.richter@caviumnetworks.com"
-	<robert.richter@caviumnetworks.com>,
-	"mw@semihalf.com" <mw@semihalf.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	Wangyijing <wangyijing@huawei.com>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	"jchandra@broadcom.com" <jchandra@broadcom.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1450442339-18765-4-git-send-email-stanimir.varbanov@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry for top-posting. A quick note that SMBIOS3 is required by SBBR so it can be presumed that compliant platforms will provide quirks via DMI.
+drivers/pci/host/pcie-qcom.c:188:1-3: WARNING: PTR_ERR_OR_ZERO can be used
+drivers/pci/host/pcie-qcom.c:220:1-3: WARNING: PTR_ERR_OR_ZERO can be used
 
--- 
-Computer Architect | Sent from my 64-bit #ARM Powered phone
 
-> On Dec 21, 2015, at 09:11, Arnd Bergmann <arnd@arndb.de> wrote:
-> 
-> On Monday 21 December 2015, Gabriele Paoloni wrote:
->>> -----Original Message-----
->>> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
->>> owner@vger.kernel.org] On Behalf Of Tomasz Nowicki
-> 
->>> Some platforms may not be fully compliant with generic set of PCI
->>> config accessors. For these cases we implement the way to overwrite
->>> accessors set before PCI buses enumeration. Algorithm that overwrite
->>> accessors matches against platform ID (DMI), domain and bus number,
->>> hopefully enough for all cases. All quirks can be defined using:
->>> DECLARE_ACPI_MCFG_FIXUP() and keep self contained.
->> 
->> I've got a couple of comments/questions about this patch..
->> 
->> 1) So according to this mechanism quirks would be supported only by 
->>   vendors whose BIOS are SMBIOS compliant. Now personally I am ok
->>   with this but I don't know if this is OK in general as it would 
->>   narrow down the number of platforms that would be able to define
->>   the quirks...
->>   Lorenzo, Arnd what is your opinion here?
-> 
-> I'd rather not see the quirks in mainline at all, and only support
-> SBSA compliant machines, or require the BIOS to work around the hardware
-> quirks differently (e.g. by trapping config space access through secure
-> firmware, or going through an AML method to be defined). I'm certainly
-> ok with making it depend on SMBIOS if we are going to use something like this.
-> 
->    Arnd
+ Use PTR_ERR_OR_ZERO rather than if(IS_ERR(...)) + PTR_ERR
+
+Generated by: scripts/coccinelle/api/ptr_ret.cocci
+
+CC: Stanimir Varbanov <svarbanov@mm-sol.com>
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+---
+
+ pcie-qcom.c |   10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+--- a/drivers/pci/host/pcie-qcom.c
++++ b/drivers/pci/host/pcie-qcom.c
+@@ -185,10 +185,7 @@ static int qcom_pcie_get_resources_v0(st
+ 		return PTR_ERR(res->por_reset);
+ 
+ 	res->phy_reset = devm_reset_control_get(dev, "phy");
+-	if (IS_ERR(res->phy_reset))
+-		return PTR_ERR(res->phy_reset);
+-
+-	return 0;
++	return PTR_ERR_OR_ZERO(res->phy_reset);
+ }
+ 
+ static int qcom_pcie_get_resources_v1(struct qcom_pcie *pcie)
+@@ -217,10 +214,7 @@ static int qcom_pcie_get_resources_v1(st
+ 		return PTR_ERR(res->slave_bus);
+ 
+ 	res->core = devm_reset_control_get(dev, "core");
+-	if (IS_ERR(res->core))
+-		return PTR_ERR(res->core);
+-
+-	return 0;
++	return PTR_ERR_OR_ZERO(res->core);
+ }
+ 
+ static void qcom_pcie_deinit_v0(struct qcom_pcie *pcie)
