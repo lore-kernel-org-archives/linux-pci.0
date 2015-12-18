@@ -1,121 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41980 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754555AbbLKFNJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:13:09 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 38/60] PCI: Separate out save_resources()/restore_resources()
-Date: Thu, 10 Dec 2015 21:06:34 -0800
-Message-Id: <1449810416-2950-39-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] PCI: iproc: fix msi driver selection
+To: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
+References: <1541985.1Jq5kHC7MS@wuerfel>
+CC: <linux-pci@vger.kernel.org>, Vikram Prakash <vikramp@broadcom.com>,
+	"Anup Patel" <anup.patel@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+From: Ray Jui <rjui@broadcom.com>
+Message-ID: <56744127.5060106@broadcom.com>
+Date: Fri, 18 Dec 2015 09:23:51 -0800
+MIME-Version: 1.0
+In-Reply-To: <1541985.1Jq5kHC7MS@wuerfel>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to save/restore resources several times for alt_size support,
-separate the save_resources()/resources() to save some lines later.
+Hi Arnd,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 30 insertions(+), 19 deletions(-)
+On 12/18/2015 6:57 AM, Arnd Bergmann wrote:
+> The newly added MSI support for iproc causes a link error when its
+> Kconfig option is disabled:
+>
+> ERROR: "iproc_msi_exit" [drivers/pci/host/pcie-iproc.ko] undefined!
+> ERROR: "iproc_msi_init" [drivers/pci/host/pcie-iproc.ko] undefined!
+>
+> This changes the header file so we use stub functions whenever
+> the driver is not built, even when CONFIG_MSI is enabled.
+>
+> As the Kconfig logic for the driver is a bit off, I'm rectifying
+> that as well, by making it depend on the specific drivers that
+> call into the driver, and moving the option behind those instead
+> of before them.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 610894347cbf ("PCI: iproc: Add iProc PCIe MSI support")
+> ---
+> Found on ARM randconfig builds a couple of days ago
+>
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 490476e172fd..d7c05894af70 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -124,15 +124,6 @@ config PCIE_IPROC
+>   	  iProc family of SoCs. An appropriate bus interface driver needs
+>   	  to be enabled to select this.
+>
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 2cc8a1e..9485b03 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -436,6 +436,29 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
- 	return false;	/* should not get here */
- }
- 
-+static bool save_resources(struct list_head *head,
-+			   struct list_head *save_head)
-+{
-+	struct pci_dev_resource *dev_res;
-+
-+	/* Save original start, end, flags etc at first */
-+	list_for_each_entry(dev_res, head, list)
-+		if (add_to_list(save_head, dev_res->dev, dev_res->res)) {
-+			free_list(save_head);
-+			return false;
-+		}
-+
-+	return true;
-+}
-+
-+static void restore_resource(struct pci_dev_resource *save_res,
-+			     struct resource *res)
-+{
-+	res->start = save_res->start;
-+	res->end = save_res->end;
-+	res->flags = save_res->flags;
-+}
-+
- static void __assign_resources_sorted(struct list_head *head,
- 				 struct list_head *realloc_head,
- 				 struct list_head *fail_head)
-@@ -473,13 +496,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	if (!realloc_head || list_empty(realloc_head))
- 		goto requested_and_reassign;
- 
--	/* Save original start, end, flags etc at first */
--	list_for_each_entry(dev_res, head, list) {
--		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
--			free_list(&save_head);
--			goto requested_and_reassign;
--		}
--	}
-+	if (!save_resources(head, &save_head))
-+		goto requested_and_reassign;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -548,12 +566,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 		}
- 	}
- 	/* Restore start/end/flags from saved list */
--	list_for_each_entry(save_res, &save_head, list) {
--		res = save_res->res;
--		res->start = save_res->start;
--		res->end = save_res->end;
--		res->flags = save_res->flags;
--	}
-+	list_for_each_entry(save_res, &save_head, list)
-+		restore_resource(save_res, save_res->res);
-+
- 	free_list(&save_head);
- 
- requested_and_reassign:
-@@ -2025,9 +2040,7 @@ again:
- 	list_for_each_entry(fail_res, &fail_head, list) {
- 		struct resource *res = fail_res->res;
- 
--		res->start = fail_res->start;
--		res->end = fail_res->end;
--		res->flags = fail_res->flags;
-+		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
- 			/* last or third times and later */
-@@ -2111,9 +2124,7 @@ again:
- 	list_for_each_entry(fail_res, &fail_head, list) {
- 		struct resource *res = fail_res->res;
- 
--		res->start = fail_res->start;
--		res->end = fail_res->end;
--		res->flags = fail_res->flags;
-+		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
- 			/* last time */
--- 
-1.8.4.5
+I was actually not aware of the change that makes PCIE_IPROC hidden and 
+selected by the bus drivers. But I know, :)
 
+> -config PCIE_IPROC_MSI
+> -	bool "Broadcom iProc PCIe MSI support"
+> -	depends on ARCH_BCM_IPROC && PCI_MSI
+> -	select PCI_MSI_IRQ_DOMAIN
+> -	default ARCH_BCM_IPROC
+> -	help
+> -	  Say Y here if you want to enable MSI support for Broadcom's iProc
+> -	  PCIe controller
+> -
+>   config PCIE_IPROC_PLATFORM
+>   	tristate "Broadcom iProc PCIe platform bus driver"
+>   	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
+> @@ -154,6 +145,16 @@ config PCIE_IPROC_BCMA
+>   	  Say Y here if you want to use the Broadcom iProc PCIe controller
+>   	  through the BCMA bus interface
+>
+> +config PCIE_IPROC_MSI
+> +	bool "Broadcom iProc PCIe MSI support"
+> +	depends on PCIE_IPROC_PLATFORM || PCIE_IPROC_BCMA
+> +	depends on PCI_MSI
+> +	select PCI_MSI_IRQ_DOMAIN
+> +	default ARCH_BCM_IPROC
+> +	help
+> +	  Say Y here if you want to enable MSI support for Broadcom's iProc
+> +	  PCIe controller
+> +
+>   config PCIE_ALTERA
+>   	bool "Altera PCIe controller"
+>   	depends on ARM || NIOS2
+> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+> index 6def23a7eb54..e84d93c53c7b 100644
+> --- a/drivers/pci/host/pcie-iproc.h
+> +++ b/drivers/pci/host/pcie-iproc.h
+> @@ -79,7 +79,7 @@ struct iproc_pcie {
+>   int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+>   int iproc_pcie_remove(struct iproc_pcie *pcie);
+>
+> -#ifdef CONFIG_PCI_MSI
+> +#ifdef CONFIG_PCIE_IPROC_MSI
+>   int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
+>   void iproc_msi_exit(struct iproc_pcie *pcie);
+>   #else
+>
+>
+
+This fix looks good to me. Thanks!
+
+Reviewed-by: Ray Jui <rjui@broadcom.com>
+
+Ray
