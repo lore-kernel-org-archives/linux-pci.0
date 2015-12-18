@@ -1,27 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:36600 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753386AbbL0VYG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Dec 2015 16:24:06 -0500
-From: sasa bogicevic <brutallesale@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Fix whitespace issues
-Message-Id: <31021D87-D0F9-4F64-8927-F0AF5EB7D5D1@gmail.com>
-Date: Sun, 27 Dec 2015 22:24:03 +0100
-To: Bjorn Helgaas <helgaas@kernel.org>, Joe Perches <joe@perches.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
+Received: from mx2.suse.de ([195.135.220.15]:60736 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932485AbbLROOY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Dec 2015 09:14:24 -0500
+Subject: Re: [PATCH 2/2] pci: Update VPD size with correct length
+To: Alexander Duyck <alexander.duyck@gmail.com>
+References: <1450427719-29619-1-git-send-email-hare@suse.de>
+ <1450427719-29619-3-git-send-email-hare@suse.de>
+ <CAKgT0Uceg2CmiXu926nfAWg25pSb24UhbmNBw2noNKRNHwDMow@mail.gmail.com>
+ <567410D3.7030909@suse.de>
+ <CAKgT0Uc9vZGHvtUuzv4EkE2d4-U5F=22-YeSAOWBH=vGa4yJ5Q@mail.gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Michal Kubecek <mkubecek@suse.com>,
+	"Shane M. Seymour" <shane.seymour@hpe.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <567414BE.5090800@suse.de>
+Date: Fri, 18 Dec 2015 15:14:22 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAKgT0Uc9vZGHvtUuzv4EkE2d4-U5F=22-YeSAOWBH=vGa4yJ5Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As Joe suggested I changed the “type * “ function params which I screwed up along the way and amended and resend the patch
-related to whitespace issues in drivers/pci.
+On 12/18/2015 03:02 PM, Alexander Duyck wrote:
+> On Fri, Dec 18, 2015 at 5:57 AM, Hannes Reinecke <hare@suse.de> wrote:
+>> On 12/18/2015 02:49 PM, Alexander Duyck wrote:
+>>>
+>>> On Fri, Dec 18, 2015 at 12:35 AM, Hannes Reinecke <hare@suse.de> wrote:
+>>>>
+>>>> PCI-2.2 VPD entries have a maximum size of 32k, but might actually
+>>>> be smaller than that. To figure out the actual size one has to read
+>>>> the VPD area until the 'end marker' is reached.
+>>>> Trying to read VPD data beyond that marker results in 'interesting'
+>>>> effects, from simple read errors to crashing the card. And to make
+>>>> matters worse not every PCI card implements this properly, leaving
+>>>> us with no 'end' marker or even completely invalid data.
+>>>> This path modifies the size of the VPD attribute to the available
+>>>> size, or set it to '0' if no valid data could be read.
+>>>
+>>>
+>>> This isn't what I had in mind.  There is no need to add an f0 version
+>>> of the size function.  The size for all functions other than function
+>>> 0 when the F0 flag is set is 0.  We aren't going to be reading their
+>>> VPD, we only read the VPD region of function 0.
+>>>
+>> Ah. (I'm a bit confused about the proposed action for VPD other than
+>> function 0).
+>> So the idea here is to _disallow_ access to VPDs from functions other than
+>> '0' unless these functions have different PCI IDs?
+>
+> If you take a look at the F0 functions what they do is bypass the VPD
+> of the functions other than function 0.  As such setting the size to 0
+> should really have no effect since the VPD of the function isn't
+> actually read if the F0 flag is set.
+>
+Setting the size to '0' effectively inhibits you to read the VPD 
+data. So if we were to return '0' for PCI devices with the F0 bit 
+set we will never ever to be able to read (or write) _any_ VPD data 
+for that PCI device/function.
+Which would be rendering all these F0 accessors pointless, and we 
+might as well remove them.
 
-Thanks, Sasa
-{
-	name: Bogicevic Sasa
-	phone: +381606006200
-}
+Hence my confusion.
 
+Cheers,
 
-
+Hannes
+-- 
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
