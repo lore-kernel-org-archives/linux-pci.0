@@ -1,57 +1,58 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, David Daney <david.daney@cavium.com>
-Subject: [PATCH v2 0/2] pci: Add host controller driver for Cavium ThunderX PCIe
-Date: Tue, 22 Dec 2015 15:43:50 -0800
-Message-Id: <1450827832-3294-1-git-send-email-ddaney.cavm@gmail.com>
+Subject: Re: [PATCH v3 1/4] ARM: dts: dra7: Add dt node for the sycon pcie
+To: Kishon Vijay Abraham I <kishon@ti.com>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	tony@atomide.com
+References: <1450172346-11890-1-git-send-email-kishon@ti.com>
+ <1450172346-11890-2-git-send-email-kishon@ti.com>
+ <5670140C.7010906@cogentembedded.com> <5673DE42.9080407@ti.com>
+Cc: bcousson@baylibre.com, robh+dt@kernel.org, pawel.moll@arm.com,
+	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
+	galak@codeaurora.org, linux@arm.linux.org.uk, rogerq@ti.com,
+	nsekhar@ti.com, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+	t-kristo@ti.com
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <5673EEE6.7080706@cogentembedded.com>
+Date: Fri, 18 Dec 2015 14:32:54 +0300
+MIME-Version: 1.0
+In-Reply-To: <5673DE42.9080407@ti.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+Hello.
 
-Some Cavium ThunderX processors require quirky access methods for the
-config space of the PCIe bridge.
+On 12/18/2015 1:21 PM, Kishon Vijay Abraham I wrote:
 
-There are two patches:
+>>> Add new device tree node for the control module register space where
+>>> PCIe registers are present.
+>>>
+>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>> ---
+>>>    arch/arm/boot/dts/dra7.dtsi |    5 +++++
+>>>    1 file changed, 5 insertions(+)
+>>>
+>>> diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+>>> index fe99231..e38f63f 100644
+>>> --- a/arch/arm/boot/dts/dra7.dtsi
+>>> +++ b/arch/arm/boot/dts/dra7.dtsi
+>>> @@ -155,6 +155,11 @@
+>>>                        compatible = "syscon";
+>>>                        reg = <0x1c04 0x0020>;
+>>>                    };
+>>> +
+>>> +                scm_conf_pcie: tisyscon@1c24 {
+>>
+>>     Please use the generic node names as the ePAPR standard says.
+>
+> something like  scm_conf_pcie: syscon@1c24??
 
-1) Refactor code in pci-host-generic so that it can more easily be
-   used by other drivers.  This splits the driver for CAM and ECAM
-   access methods to a separate file from the common host driver code.
+    Yes, though "system-controller" would be probably more in line with what 
+ePAPR has standardized.
 
-2) Add the ThunderX PCIe driver, which leverages the code in
-   pci-host-generic
+> Thanks
+> Kishon
 
-
-Changes from v1: Split CAM and ECAM code from common driver code as
-suggested by Arnd Bergmann.  Fix spelling errors in
-pcie-thunder-pem.txt
-
-David Daney (2):
-  PCI: generic: Refactor code to enable reuse by other drivers.
-  pci, pcie-thunder-pem: Add PCIe host driver for ThunderX processors.
-
- .../devicetree/bindings/pci/pcie-thunder-pem.txt   |  43 ++++
- drivers/pci/host/Kconfig                           |  11 +
- drivers/pci/host/Makefile                          |   2 +
- drivers/pci/host/pci-host-common.c                 | 194 ++++++++++++++
- drivers/pci/host/pci-host-common.h                 |  56 ++++
- drivers/pci/host/pci-host-generic.c                | 190 +-------------
- drivers/pci/host/pcie-thunder-pem.c                | 283 +++++++++++++++++++++
- 7 files changed, 593 insertions(+), 186 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
- create mode 100644 drivers/pci/host/pci-host-common.c
- create mode 100644 drivers/pci/host/pci-host-common.h
- create mode 100644 drivers/pci/host/pcie-thunder-pem.c
-
--- 
-1.8.3.1
+MBR, Sergei
 
