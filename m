@@ -1,187 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48335 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419AbbLKFND (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:13:03 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 35/60] PCI: Add __add_to_list()
-Date: Thu, 10 Dec 2015 21:06:31 -0800
-Message-Id: <1449810416-2950-36-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:40160 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932129AbbLRNij (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Dec 2015 08:38:39 -0500
+Date: Fri, 18 Dec 2015 13:38:21 +0000
+From: Mark Rutland <mark.rutland@arm.com>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: helgaas@kernel.org, Vineet.Gupta1@synopsys.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	CARLOS.PALMINHA@synopsys.com, Alexey.Brodkin@synopsys.com,
+	robh+dt@kernel.org, pawel.moll@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
+Subject: Re: [PATCH v2 2/2] add new platform driver for PCI RC
+Message-ID: <20151218133820.GA30229@leverpostej>
+References: <cover.1450274797.git.jpinto@synopsys.com>
+ <33586809f80ef3104608a4e49390e382edfc3347.1450274797.git.jpinto@synopsys.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <33586809f80ef3104608a4e49390e382edfc3347.1450274797.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For alt_size support, we will add more entries to realloc list.
+On Wed, Dec 16, 2015 at 02:14:56PM +0000, Joao Pinto wrote:
+> This patch adds a new driver that will be the reference platform driver for all
+> PCI RC IP Protoyping Kits based on ARC SDP. This patch is composed by:
+> 
+> -Changes to pcie-designware driver add a function that enables the feature of
+> starting the LTSSM (Link Train Status State) used by the new driver
+> -MAINTAINERS file was updated to include the new driver
+> -Documentation/devicetree/bindings/pci was updated to include the new driver
+> documentation
+> -New driver called pcie-snpsdev
+> 
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> ---
+> Changes v1 -> v2 (Bjorn Helgaas):
+> - Fixups snpsdev_pcie_fixup_bridge() and snpsdev_pcie_fixup_res() were removed
+> from the driver (these functions were for specific tests only and not usefull
+> in mainline)
+> - Driver' comments were reviewed (fix Typos and excessive comments removal)
+> - Removed unnecessary definitions in the driver source (PCIE_PHY_CTRL and
+> PCIE_PHY_STAT)
+> 
+>  .../devicetree/bindings/pci/pcie-snpsdev.txt       |  28 ++
+>  MAINTAINERS                                        |   7 +
+>  drivers/pci/host/Kconfig                           |   5 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pcie-designware.c                 |  15 ++
+>  drivers/pci/host/pcie-designware.h                 |   1 +
+>  drivers/pci/host/pcie-snpsdev.c                    | 288 +++++++++++++++++++++
+>  7 files changed, 345 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
+>  create mode 100644 drivers/pci/host/pcie-snpsdev.c
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/pcie-snpsdev.txt b/Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
+> new file mode 100644
+> index 0000000..b833c8f
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
+> @@ -0,0 +1,28 @@
+> +Synopsys PCI RC IP Prototyping Kit
+> +----------------------------------
+> +
+> +This is the reference platform driver to be used in the Synopsys PCI RC IP
+> +Prototyping Kits.
+> +
+> +Required properties:
+> +- compatible: "snps,pcie-snpsdev";
 
-Add new __add_to_list() to take alt_size, alt_align.
+Is there not a momre specific name for this RC IP?
 
-And simplify add_to_list() not to take add/alt input.
+> +- reg:	A list of physical regions to access the device.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 51 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 31 insertions(+), 20 deletions(-)
+How many, in which order?
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 715e627..936564f 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -66,6 +66,8 @@ struct pci_dev_resource {
- 	resource_size_t end;
- 	resource_size_t add_size;
- 	resource_size_t min_align;
-+	resource_size_t alt_size;
-+	resource_size_t alt_align;
- 	unsigned long flags;
- };
- 
-@@ -88,15 +90,16 @@ static void free_list(struct list_head *head)
-  * @add_size:	additional size to be optionally added
-  *              to the resource
-  */
--static int add_to_list(struct list_head *head,
-+static int __add_to_list(struct list_head *head,
- 		 struct pci_dev *dev, struct resource *res,
--		 resource_size_t add_size, resource_size_t min_align)
-+		 resource_size_t add_size, resource_size_t min_align,
-+		 resource_size_t alt_size, resource_size_t alt_align)
- {
- 	struct pci_dev_resource *tmp;
- 
- 	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
- 	if (!tmp) {
--		pr_warn("add_to_list: kmalloc() failed!\n");
-+		pr_warn("__add_to_list: kmalloc() failed!\n");
- 		return -ENOMEM;
- 	}
- 
-@@ -107,12 +110,20 @@ static int add_to_list(struct list_head *head,
- 	tmp->flags = res->flags;
- 	tmp->add_size = add_size;
- 	tmp->min_align = min_align;
-+	tmp->alt_size = alt_size;
-+	tmp->alt_align = alt_align;
- 
- 	list_add(&tmp->list, head);
- 
- 	return 0;
- }
- 
-+static int add_to_list(struct list_head *head,
-+		 struct pci_dev *dev, struct resource *res)
-+{
-+	return __add_to_list(head, dev, res, 0, 0, 0, 0);
-+}
-+
- static void remove_from_list(struct list_head *head,
- 				 struct resource *res)
- {
-@@ -378,9 +389,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
--				add_to_list(fail_head, dev_res->dev, res,
--					    0 /* don't care */,
--					    0 /* don't care */);
-+				add_to_list(fail_head, dev_res->dev, res);
- 			reset_resource(res);
- 		}
- 	}
-@@ -466,7 +475,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	/* Save original start, end, flags etc at first */
- 	list_for_each_entry(dev_res, head, list) {
--		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
-+		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
- 			free_list(&save_head);
- 			goto requested_and_reassign;
- 		}
-@@ -1057,8 +1066,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	b_res->end = b_res->start + size0 - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1-size0,
--			    min_align);
-+		__add_to_list(realloc_head, bus->self, b_res,
-+			      size1 - size0, min_align, 0, 0);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
- 			   b_res, &bus->busn_res,
- 			   (unsigned long long)size1-size0);
-@@ -1262,7 +1271,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				add_to_align_test_list(&align_test_add_list,
- 							align, r_size);
- 				r->end = r->start - 1;
--				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
-+				__add_to_list(realloc_head, dev, r,
-+					      r_size, align, 0, 0);
- 				sum_add_size += r_size;
- 				if (align > max_add_align)
- 					max_add_align = align;
-@@ -1333,8 +1343,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
--				min_add_align);
-+		__add_to_list(realloc_head, bus->self, b_res, size1 - size0,
-+				min_add_align, 0, 0);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
- 			   b_res, &bus->busn_res,
- 			   (unsigned long long) (size1 - size0),
-@@ -1371,8 +1381,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[0].end -= pci_cardbus_io_size;
--		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
--				pci_cardbus_io_size);
-+		__add_to_list(realloc_head, bridge, b_res,
-+			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
- 	}
- 
- handle_b_res_1:
-@@ -1383,8 +1393,8 @@ handle_b_res_1:
- 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[1].end -= pci_cardbus_io_size;
--		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
--				 pci_cardbus_io_size);
-+		__add_to_list(realloc_head, bridge, b_res + 1,
-+			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
- 	}
- 
- handle_b_res_2:
-@@ -1421,8 +1431,9 @@ handle_b_res_2:
- 				  IORESOURCE_STARTALIGN;
- 		if (realloc_head) {
- 			b_res[2].end -= pci_cardbus_mem_size;
--			add_to_list(realloc_head, bridge, b_res+2,
--				 pci_cardbus_mem_size, pci_cardbus_mem_size);
-+			__add_to_list(realloc_head, bridge, b_res + 2,
-+				pci_cardbus_mem_size, pci_cardbus_mem_size,
-+				0, 0);
- 		}
- 
- 		/* reduce that to half */
-@@ -1437,8 +1448,8 @@ handle_b_res_3:
- 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[3].end -= b_res_3_size;
--		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
--				 pci_cardbus_mem_size);
-+		__add_to_list(realloc_head, bridge, b_res + 3,
-+				b_res_3_size, pci_cardbus_mem_size, 0, 0);
- 	}
- 
- handle_done:
--- 
-1.8.4.5
+> +- interrupts: interrupt for the device.
 
+How many, in which order?
+
+> +Example configuration:
+> +
+> +	pcie: pcie@0xdffff000 {
+> +		#interrupt-cells = <1>;
+> +		compatible = "snps,pcie-snpsdev";
+> +		reg = <0xdffff000 0x1000>;
+> +		interrupts = <25>, <24>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		ranges = <0x00000800 0 0xd0000000 0xd0000000 0 0x00002000
+> +			  0x81000000 0 0x00000000 0xde000000 0 0x00010000
+> +			  0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
+
+Nit: please bracket list entries individually.
+
+> +		num-lanes = <1>;
+> +	};
+
+Please refer to more generic bindings for properties you have not defined here
+(e.g. device_type, ranges, num-lanes).
+
+[...]
+
+> +#define SIZE_1GB 0x40000000
+
+Use SZ_1G from linux/sizes.h.
+
+Thanks,
+Mark.
