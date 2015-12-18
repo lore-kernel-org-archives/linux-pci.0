@@ -1,79 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:34136 "EHLO
-	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965722AbbLPPR4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Dec 2015 10:17:56 -0500
-Received: by mail-wm0-f44.google.com with SMTP id l126so44171604wml.1
-        for <linux-pci@vger.kernel.org>; Wed, 16 Dec 2015 07:17:56 -0800 (PST)
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V2 09/23] pci, acpi, ecam: Add flag to indicate whether ECAM region was hot added or not.
-Date: Wed, 16 Dec 2015 16:16:19 +0100
-Message-Id: <1450278993-12664-10-git-send-email-tn@semihalf.com>
-In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	Michal Kubecek <mkubecek@suse.com>,
+	"Shane M. Seymour" <shane.seymour@hpe.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Subject: [PATCH 1/2] pci: Update VPD definitions
+Date: Fri, 18 Dec 2015 09:35:18 +0100
+Message-Id: <1450427719-29619-2-git-send-email-hare@suse.de>
+In-Reply-To: <1450427719-29619-1-git-send-email-hare@suse.de>
+References: <1450427719-29619-1-git-send-email-hare@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are two ways we can get ECAM (aka MCFG) regions using ACPI,
-from MCFG static table and from _CBA method. We cannot remove static
-regions, however regions coming from _CBA should be removed while removing
-bridge device.
+The 'end' tag is actually 0x0f, it's the representation as a
+small resource data type tag that's 0x78 (ie shifted by 3).
+This patch also adds helper functions to extract the resource
+data type tags for both large and small resource data types.
 
-In the light of above we need flag to mark hot added ECAM entries
-so that user should use pci_mmconfig_inject while adding regions from
-_CBA method.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/pci/ecam.c   | 2 ++
- include/linux/ecam.h | 1 +
- 2 files changed, 3 insertions(+)
+ include/linux/pci.h | 27 +++++++++++++++++++++++++--
+ 1 file changed, 25 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-index 8a5eef7..da35b4c 100644
---- a/drivers/pci/ecam.c
-+++ b/drivers/pci/ecam.c
-@@ -131,6 +131,7 @@ struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
- 	new->segment = segment;
- 	new->start_bus = start;
- 	new->end_bus = end;
-+	new->hot_added = false;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e828e7b..1e6856d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1827,12 +1827,13 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+ #define PCI_VPD_LRDT_RW_DATA		PCI_VPD_LRDT_ID(PCI_VPD_LTIN_RW_DATA)
  
- 	res = &new->res;
- 	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
-@@ -221,6 +222,7 @@ int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
- 		err = -ENOMEM;
- 		goto out;
- 	} else {
-+		cfg->hot_added = true;
- 		list_add_sorted(cfg);
- 		pr_info("MMCONFIG at %pR (base %#lx)\n",
- 			&cfg->res, (unsigned long)cfg->address);
-diff --git a/include/linux/ecam.h b/include/linux/ecam.h
-index 813acd1..e0f322e 100644
---- a/include/linux/ecam.h
-+++ b/include/linux/ecam.h
-@@ -17,6 +17,7 @@ struct pci_mmcfg_region {
- 	u8 start_bus;
- 	u8 end_bus;
- 	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
-+	bool hot_added;
- };
+ /* Small Resource Data Type Tag Item Names */
+-#define PCI_VPD_STIN_END		0x78	/* End */
++#define PCI_VPD_STIN_END		0x0f	/* End */
  
- struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
+-#define PCI_VPD_SRDT_END		PCI_VPD_STIN_END
++#define PCI_VPD_SRDT_END		(PCI_VPD_STIN_END << 3)
+ 
+ #define PCI_VPD_SRDT_TIN_MASK		0x78
+ #define PCI_VPD_SRDT_LEN_MASK		0x07
++#define PCI_VPD_LRDT_TIN_MASK		0x7f
+ 
+ #define PCI_VPD_LRDT_TAG_SIZE		3
+ #define PCI_VPD_SRDT_TAG_SIZE		1
+@@ -1856,6 +1857,17 @@ static inline u16 pci_vpd_lrdt_size(const u8 *lrdt)
+ }
+ 
+ /**
++ * pci_vpd_lrdt_tag - Extracts the Large Resource Data Type Tag Item
++ * @lrdt: Pointer to the beginning of the Large Resource Data Type tag
++ *
++ * Returns the extracted Large Resource Data Type Tag item.
++ */
++static inline u16 pci_vpd_lrdt_tag(const u8 *lrdt)
++{
++    return (u16)(lrdt[0] & PCI_VPD_LRDT_TIN_MASK);
++}
++
++/**
+  * pci_vpd_srdt_size - Extracts the Small Resource Data Type length
+  * @lrdt: Pointer to the beginning of the Small Resource Data Type tag
+  *
+@@ -1867,6 +1879,17 @@ static inline u8 pci_vpd_srdt_size(const u8 *srdt)
+ }
+ 
+ /**
++ * pci_vpd_srdt_tag - Extracts the Small Resource Data Type Tag Item
++ * @lrdt: Pointer to the beginning of the Small Resource Data Type tag
++ *
++ * Returns the extracted Small Resource Data Type Tag Item.
++ */
++static inline u8 pci_vpd_srdt_tag(const u8 *srdt)
++{
++	return ((*srdt) & PCI_VPD_SRDT_TIN_MASK) >> 3;
++}
++
++/**
+  * pci_vpd_info_field_size - Extracts the information field length
+  * @lrdt: Pointer to the beginning of an information field header
+  *
 -- 
-1.9.1
+1.8.5.6
 
