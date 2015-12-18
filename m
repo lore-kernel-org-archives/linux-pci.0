@@ -1,52 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:65232 "EHLO
+Received: from mout.kundenserver.de ([212.227.126.131]:62093 "EHLO
 	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753515AbbLOK4z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Dec 2015 05:56:55 -0500
+	with ESMTP id S1753503AbbLRMmP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Dec 2015 07:42:15 -0500
 From: Arnd Bergmann <arnd@arndb.de>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-omap@vger.kernel.org, robh+dt@kernel.org, pawel.moll@arm.com,
-	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
-	galak@codeaurora.org, rogerq@ti.com, nsekhar@ti.com,
-	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-	tony@atomide.com, t-kristo@ti.com
-Subject: Re: [PATCH v3 0/9] phy: use syscon framework APIs to set ctrl mod reg
-Date: Tue, 15 Dec 2015 11:56:34 +0100
-Message-ID: <725110094.6UkMkcy8u7@wuerfel>
-In-Reply-To: <1450170968-11282-1-git-send-email-kishon@ti.com>
-References: <1450170968-11282-1-git-send-email-kishon@ti.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	will.deacon@arm.com, catalin.marinas@arm.com, rjw@rjwysocki.net,
+	hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Stefano.Stabellini@eu.citrix.com, jchandra@broadcom.com,
+	jcm@redhat.com, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	wangyijing@huawei.com, tglx@linutronix.de, mw@semihalf.com
+Subject: Re: [PATCH V2 21/23] pci, acpi: Support for ACPI based PCI hostbridge init
+Date: Fri, 18 Dec 2015 13:40:50 +0100
+Message-ID: <2277339.U6fWlSIDzy@wuerfel>
+In-Reply-To: <1450278993-12664-22-git-send-email-tn@semihalf.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com> <1450278993-12664-22-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 15 December 2015 14:45:59 Kishon Vijay Abraham I wrote:
-> This series is basically to deprecate using phy-omap-control and use
-> syscon APIs to program the control module registers.
+On Wednesday 16 December 2015 16:16:31 Tomasz Nowicki wrote:
+> Because of two patch series:
+> 1. Jiang Liu's common interface to support PCI host bridge init
+> 2. MMCONFIG refactoring (part of this patch set)
+> now we can think about generic ACPI based PCI host bridge driver
+> out of arch/ directory.
 > 
-> Changes from v2:
-> No changes.
+> This driver use information from MCFG table (PCI config space regions)
+> and _CRS method (IO/irq resources) to initialize PCI hostbridge.
 > 
-> Changes from v1:
-> *) cleanup ti_pipe3_probe in multiple steps
-> *) other minor cleanups
+> TBD: We are still not sure whether we should reassign resources
+> after PCI bus enumeration or trust firmware to do all that work for
+> us properly.
 > 
-> Changes from [1] in PHY patches include
-> *) cleanup ti_pipe3_probe
-> *) have mask, power_on and power_off values in usb_phy_data for
->    omap-usb2 phy
-> 
-> The patches have been pushed to
->         git://git.ti.com/linux-phy/linux-phy.git syscon
-> 
-> [1] -> https://lkml.org/lkml/2015/6/23/189
-> 
-> All the testing was done both before applying the dt patches and after
-> applying the dt patches (dt patches will be posted shortly).
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> CC: Arnd Bergmann <arnd@arndb.de>
+> CC: Catalin Marinas <catalin.marinas@arm.com>
+> CC: Liviu Dudau <Liviu.Dudau@arm.com>
+> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+> CC: Will Deacon <will.deacon@arm.com>
+> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 > 
 
-Can you explain here what the conversion is good for? Why do you
-prefer the syscon mapping over a high-level driver in this case?
+I think this code could better live in drivers/acpi/pci_root.c
+along with all the related functions. It's not really a driver
+by itself and cannot be a loadable module or built on other
+architectures.
+
+You can put all the code inside an #ifdef ARCH_PCI_HOST_GENERIC_ACPI
+there.
 
 	Arnd
