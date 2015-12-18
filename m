@@ -1,127 +1,91 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:36133 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751794AbbLRJ5c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Dec 2015 04:57:32 -0500
+Received: by mail-wm0-f50.google.com with SMTP id p187so56247419wmp.1
+        for <linux-pci@vger.kernel.org>; Fri, 18 Dec 2015 01:57:31 -0800 (PST)
+Subject: Re: [PATCH v4 5/5] ARM: dts: ifc6410: enable pcie dt node for this
+ board
+To: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
+ <1449149725-27607-6-git-send-email-stanimir.varbanov@linaro.org>
+ <20151217215553.GA4000@usrtlx11787.corpusers.net>
+Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH v4 4/5] arm64: pci: Add ACPI support
-Date: Thu, 24 Dec 2015 17:27:31 +0530
-Message-ID: <1450958252-29892-5-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1450958252-29892-1-git-send-email-jchandra@broadcom.com>
-References: <1450958252-29892-1-git-send-email-jchandra@broadcom.com>
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>
+From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Message-ID: <5673D885.30803@linaro.org>
+Date: Fri, 18 Dec 2015 11:57:25 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20151217215553.GA4000@usrtlx11787.corpusers.net>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add functions needed for ACPI support.
+On 12/17/2015 11:55 PM, Bjorn Andersson wrote:
+> On Thu 03 Dec 05:35 PST 2015, Stanimir Varbanov wrote:
+> 
+>> Enable pcie dt node and fill pcie dt node with regulator, pinctrl
+>> and reset gpio, to use the pcie on the ifc6410 board.
+>>
+>> Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+>> ---
+>>  arch/arm/boot/dts/qcom-apq8064-ifc6410.dts |   26 ++++++++++++++++++++++++++
+>>  1 file changed, 26 insertions(+)
+>>
+>> diff --git a/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts b/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts
+>> index 11ac608b6d50..f203b94ee460 100644
+>> --- a/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts
+>> +++ b/arch/arm/boot/dts/qcom-apq8064-ifc6410.dts
+>> @@ -47,6 +47,18 @@
+>>  					bias-disable;
+>>  				};
+>>  			};
+>> +
+>> +			pcie_pins: pcie_pinmux {
+>> +				mux {
+>> +					pins = "gpio27";
+>> +					function = "gpio";
+>> +				};
+>> +				conf {
+>> +					pins = "gpio27";
+>> +					drive-strength = <12>;
+>> +					bias-disable;
+>> +				};
+>> +			};
+>>  		};
+>>  
+>>  		rpm@108000 {
+>> @@ -123,6 +135,10 @@
+>>  				pm8921_lvs1: lvs1 {
+>>  					bias-pull-down;
+>>  				};
+>> +
+>> +				pm8921_lvs6: lvs6 {
+>> +					bias-pull-down;
+>> +				};
+> 
+> Please don't duplicate the labels in the dts files.
 
-pci_acpi_scan_root(), raw_pci_read and raw_pci_write are marked as
-weak so that it can be implemented by the generic ACPI PCI driver.
+Sorry, I based those dts patches before [1] has been applied in -next. I
+will rebase this patch on top of [1]. Thanks!
 
-pcibios_enable_device and pcibios_disable_device handle acpi irq enable
-and disable. And, pcibios_add_bus and pcibios_remove_bus have been
-added call the corresponding ACPI functions.
+[1] "ARM: dts: qcom: apq8064: Declare all pm8921 regulators"
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
----
- arch/arm64/Kconfig      |  3 +++
- arch/arm64/kernel/pci.c | 34 +++++++++++++++++++++++++++++-----
- 2 files changed, 32 insertions(+), 5 deletions(-)
-
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 871f217..8c93af2 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -203,6 +203,9 @@ config PCI_DOMAINS_GENERIC
- config PCI_SYSCALL
- 	def_bool PCI
- 
-+config PCI_MMCONFIG
-+	def_bool PCI && ACPI
-+
- source "drivers/pci/Kconfig"
- source "drivers/pci/pcie/Kconfig"
- source "drivers/pci/hotplug/Kconfig"
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index b3d098b..db0a6a9 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -17,6 +17,7 @@
- #include <linux/mm.h>
- #include <linux/of_pci.h>
- #include <linux/of_platform.h>
-+#include <linux/pci-acpi.h>
- #include <linux/slab.h>
- 
- #include <asm/pci-bridge.h>
-@@ -48,9 +49,22 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	if (pci_has_flag(PCI_PROBE_ONLY))
- 		return 0;
- 
-+#ifdef CONFIG_ACPI
-+	if (acpi_find_root_bridge_handle(dev))
-+		acpi_pci_irq_enable(dev);
-+#endif
-+
- 	return pci_enable_resources(dev, mask);
- }
- 
-+void pcibios_disable_device(struct pci_dev *dev)
-+{
-+#ifdef CONFIG_ACPI
-+	if (acpi_find_root_bridge_handle(dev))
-+		acpi_pci_irq_disable(dev);
-+#endif
-+}
-+
- /*
-  * Try to assign the IRQ number from DT when adding a new device
-  */
-@@ -62,15 +76,15 @@ int pcibios_add_device(struct pci_dev *dev)
- }
- 
- /*
-- * raw_pci_read/write - Platform-specific PCI config space access.
-+ * ACPI uses these - leave it to the generic ACPI PCI driver
-  */
--int raw_pci_read(unsigned int domain, unsigned int bus,
-+int __weak raw_pci_read(unsigned int domain, unsigned int bus,
- 		  unsigned int devfn, int reg, int len, u32 *val)
- {
- 	return -ENXIO;
- }
- 
--int raw_pci_write(unsigned int domain, unsigned int bus,
-+int __weak raw_pci_write(unsigned int domain, unsigned int bus,
- 		unsigned int devfn, int reg, int len, u32 val)
- {
- 	return -ENXIO;
-@@ -78,9 +92,19 @@ int raw_pci_write(unsigned int domain, unsigned int bus,
- 
- #ifdef CONFIG_ACPI
- /* Root bridge scanning */
--struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
-+struct pci_bus * __weak pci_acpi_scan_root(struct acpi_pci_root *root)
- {
--	/* TODO: Should be revisited when implementing PCI on ACPI */
- 	return NULL;
- }
-+
-+void pcibios_add_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_add_bus(bus);
-+}
-+
-+void pcibios_remove_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_remove_bus(bus);
-+}
-+
- #endif
 -- 
-1.9.1
-
+regards,
+Stan
