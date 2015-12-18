@@ -1,45 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH part3 v12 00/10] Cleanup platform pci_domain_nr()
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
- <20151207215356.GD14429@localhost>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<linux-xtensa@linux-xtensa.org>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	<linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	<linux-alpha@vger.kernel.org>, <linux-m68k@lists.linux-m68k.org>,
-	<linux-am33-list@redhat.com>, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-From: wangyijing <wangyijing@huawei.com>
-Message-ID: <56662FCE.40807@huawei.com>
-Date: Tue, 8 Dec 2015 09:18:06 +0800
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Jayachandran C <jchandra@broadcom.com>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-acpi@vger.kernel.org, Tomasz Nowicki <tn@semihalf.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [RFC PATCH v3 5/5] PCI: ACPI: Add a generic ACPI based host controller
+Date: Fri, 18 Dec 2015 11:35:03 +0100
+Message-ID: <2016693.gtbtd8TMEz@wuerfel>
+In-Reply-To: <1450269755-21420-6-git-send-email-jchandra@broadcom.com>
+References: <1450269755-21420-1-git-send-email-jchandra@broadcom.com> <1450269755-21420-6-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20151207215356.GD14429@localhost>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wednesday 16 December 2015 18:12:35 Jayachandran C wrote:
+> Add a simple ACPI based PCI host controller. This is done by
+> providing a simple implementation for pci_acpi_scan_root().
 > 
-> Doesn't apply to v4.4-rc2.  Please refresh and repost if this is still
-> relevant.
-
-Hi Bjorn, this is still relevant, I will refresh it and post the new version soon.
-
-Thanks!
-Yijing.
-
-
+> The pci_mmcfg_list handling is done by the ACPI code, we
+> keep a reference to the pci_mmcfg_region which is already
+> mapped.
 > 
-> .
+> This is enabled only for ARM64 now.
 > 
+> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> ---
+>  drivers/pci/host/Kconfig         |   7 ++
+>  drivers/pci/host/Makefile        |   1 +
+>  drivers/pci/host/pci-host-acpi.c | 193 +++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 201 insertions(+)
+>  create mode 100644 drivers/pci/host/pci-host-acpi.c
 
+(just noticed this got stuck in my outbox, sending it late)
+
+I think this would be better put into drivers/acpi/pci_root.c, it directly
+interacts with the code that is already there, and it's by no means
+a standalone driver.
+
+Also, there is no need for a Kconfig symbol that way.
+
+You can put it into #if !(defined(CONFIG_X86) || defined(CONFIG_IA64))
+if the code cannot be shared with the other architectures at the moment.
+
+	Arnd
