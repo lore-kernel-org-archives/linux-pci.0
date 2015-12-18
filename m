@@ -1,58 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:58675 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752096AbbLKCOh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 21:14:37 -0500
-Date: Fri, 11 Dec 2015 11:14:34 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 0/4] PCI: rcar, rcar-gen2: More Gen2 compatibility
- strings
-Message-ID: <20151211021434.GH9927@verge.net.au>
-References: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
- <20151209183743.GH31930@localhost>
+Received: from comal.ext.ti.com ([198.47.26.152]:49784 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750990AbbLRKWu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Dec 2015 05:22:50 -0500
+Subject: Re: [PATCH v3 1/4] ARM: dts: dra7: Add dt node for the sycon pcie
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>, <tony@atomide.com>
+References: <1450172346-11890-1-git-send-email-kishon@ti.com>
+ <1450172346-11890-2-git-send-email-kishon@ti.com>
+ <5670140C.7010906@cogentembedded.com>
+CC: <bcousson@baylibre.com>, <robh+dt@kernel.org>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<linux@arm.linux.org.uk>, <rogerq@ti.com>, <nsekhar@ti.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+	<t-kristo@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <5673DE42.9080407@ti.com>
+Date: Fri, 18 Dec 2015 15:51:54 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151209183743.GH31930@localhost>
+In-Reply-To: <5670140C.7010906@cogentembedded.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 09, 2015 at 12:37:43PM -0600, Bjorn Helgaas wrote:
-> On Thu, Dec 03, 2015 at 07:51:36AM +0900, Simon Horman wrote:
-> > Hi,
-> > 
-> > this short series adds generic gen2 and SoC-specific r8a7793 compatibility
-> > strings to the rcar PCI and rcar-gen2 PCIE drivers. The intention is to
-> > provide a complete set of compatibility strings for known Gen2 SoCs.
-> > 
-> > Key Changes in v2:
-> > * Include "rcar-" in generic bindings
-> > 
-> > Simon Horman (4):
-> >   PCI: rcar-gen2: add gen2 fallback compatibility string
-> >   PCI: rcar-gen2: add device tree support for r8a7793
-> >   PCI: rcar: add gen2 fallback compatibility string
-> >   PCI: rcar: add device tree support for r8a7793
-> > 
-> >  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 12 ++++++++++--
-> >  Documentation/devicetree/bindings/pci/rcar-pci.txt      | 14 +++++++++++---
-> >  drivers/pci/host/pci-rcar-gen2.c                        |  1 +
-> >  drivers/pci/host/pcie-rcar.c                            |  1 +
-> >  4 files changed, 23 insertions(+), 5 deletions(-)
-> 
-> I applied these:
-> 
-> >   PCI: rcar-gen2: add gen2 fallback compatibility string
-> >   PCI: rcar: add gen2 fallback compatibility string
-> 
-> to pci/host-rcar for v4.5, thanks!
-> 
-> I haven't applied the R8A7793 binding documentation updates yet, but
-> I'll be happy to do so given a short description of why they're
-> useful (since they don't update a DT or the driver).  Or they could be
-> merged via a DT tree.
+Hi,
 
-To clarify: you would like a description in the changelog?
+On Tuesday 15 December 2015 06:52 PM, Sergei Shtylyov wrote:
+> Hello.
+> 
+> On 12/15/2015 12:39 PM, Kishon Vijay Abraham I wrote:
+> 
+>> Add new device tree node for the control module register space where
+>> PCIe registers are present.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>   arch/arm/boot/dts/dra7.dtsi |    5 +++++
+>>   1 file changed, 5 insertions(+)
+>>
+>> diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+>> index fe99231..e38f63f 100644
+>> --- a/arch/arm/boot/dts/dra7.dtsi
+>> +++ b/arch/arm/boot/dts/dra7.dtsi
+>> @@ -155,6 +155,11 @@
+>>                       compatible = "syscon";
+>>                       reg = <0x1c04 0x0020>;
+>>                   };
+>> +
+>> +                scm_conf_pcie: tisyscon@1c24 {
+> 
+>    Please use the generic node names as the ePAPR standard says.
+
+something like  scm_conf_pcie: syscon@1c24??
+
+Thanks
+Kishon
