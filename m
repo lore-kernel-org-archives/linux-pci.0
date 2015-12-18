@@ -1,208 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47218 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754037AbbLKFJj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:09:39 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 00/60] PCI: Resource allocation cleanup for v4.5
-Date: Thu, 10 Dec 2015 21:05:56 -0800
-Message-Id: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:36439 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753264AbbLRMja (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Dec 2015 07:39:30 -0500
+Received: by mail-wm0-f51.google.com with SMTP id p187so61874369wmp.1
+        for <linux-pci@vger.kernel.org>; Fri, 18 Dec 2015 04:39:30 -0800 (PST)
+From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+To: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+	Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Subject: [PATCH v5 4/5] ARM: dts: apq8064: add pcie devicetree node
+Date: Fri, 18 Dec 2015 14:38:58 +0200
+Message-Id: <1450442339-18765-5-git-send-email-stanimir.varbanov@linaro.org>
+In-Reply-To: <1450442339-18765-1-git-send-email-stanimir.varbanov@linaro.org>
+References: <1450442339-18765-1-git-send-email-stanimir.varbanov@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Add the pcie dt node so that it can probe and used.
 
-After 5b28541552ef (PCI: Restrict 64-bit prefetchable bridge windows
-to 64-bit resources), we have several reports on resource allocation
-failure, and we try to fix the problem with resource clip, and find
-more problems.
+Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+---
+ arch/arm/boot/dts/qcom-apq8064.dtsi |   36 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
-One is realloc fail with two graphics cards above 4G.
-One is from sparc that have problem with clip as we don't parse
-mem64 for it.
-
-Other report is about pci remove/rescan does not work on some setup
-when BIOS tend to allocate small bus size.
-
-This patchset enhance resource allocation to address those problems.
-
-patch 1-10: parse MEM64 for sparc and other system with OF
-patch 11-15: MMIO64 allocation enhancement
-	treat non-pref mmio64 if parent bridges are all pcie.
-	restore old pref allocation logic if hostbridge does not support mmio64.
-patch 16-18: FIXED resource handling during realloc
-	don't realloc resource if device firmware does not support bar change.
-patch 19-22: bridge MMIO allocation with hotplug and last try.
-	treat optional as required on first try when hotplug.
-	MMIO size set to 0 for last try during realloc
-patch 23-56: enhancement for mmio resource allocation:
-	optimize bus mmio alignment calculation.
-	optimize bus mmio optional alignment calculation.
-	add support for alt size to prefer small bus size to small bus alignment.
-	treat ROM bar as optional resource.
-	during allocation, will pick up best fit resource, and allocate near end.
-patch 57: add pci=assign_pref_bars to clear and assign pref bars.
-patch 58-59: don't clear resource when allocation fails
-patch 60: don't try io port allocation if root bus does not have io port.
-
-I put latest copy at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-v4.5-next
-
-That is based on v4.4-rc4.
-
-Yijing and Wei Yang both tested the branch, and the patchset fixs rescan
-problem, and is working well on powerpc setup.
-
-Khalid Aziz tested on some sparc platforms that have different offset to
-mem space start or support 64bit mmio.
-
-Thanks
-
-Yinghai
-
-v2:
-    - fix resource_disabled allocation from powerpc.
-    - other warnings that were found by Fengguang's build robot.
-    - io port alignment clean up.
-    - rebased to v4.2-rc2.
-    - better for two alt_size support.
-
-v3:
-    - fix reset bridge resource on last try: only with bridge resources.
-    - remove/rescan path checking with old_size.
-
-v4:
-    - Update changelog according to Bjorn.
-    - split calculate_size patch to two.
-    - use required instead of must.
-
-v5:
-    - update changelog.
-    - add one debug patch.
-    - add one patch that get resource allocation near end of avialable window.
-
-v6:
-    - reorder patches according to Bjorn.
-
-v7:
-    - add some patches that fix problems on sparc that Khalid Aziz found.
-
-v8:
-    - update patch 2, 3 to remove the assumpation about mem64_offset == mem_offset.
-    - add one patch for pci_find_root_bus_resource() to support above change.
-    - update pref_compatible flags handling after pci_find_root_bus_resource().
-    - add patch for quirk that ignore BAR for M1533 PCI-ISA bridge.
-
-v9: rebased for v4.5
-
-
-Yinghai Lu (60):
-  PCI: Add pci_find_root_bus_resource()
-  sparc/PCI: Use correct bus address to resource offset
-  sparc/PCI: Reserve legacy mmio after PCI mmio
-  sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-  sparc/PCI: Keep resource idx order with bridge register number
-  PCI: Kill wrong quirk about M7101
-  PCI: Ignore BAR for ALi M1533 PCI-ISA bridge
-  powerpc/PCI: Keep resource idx order with bridge register number
-  powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-  OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
-  PCI: Check pref compatible bit for mem64 resource of PCIe device
-  PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
-  PCI: Add has_mem64 for struct host_bridge
-  PCI: Only treat non-pref mmio64 as pref if host bridge has mmio64
-  PCI: Restore pref MMIO allocation logic for host bridge without mmio64
-  PCI: Don't release fixed resource for realloc
-  PCI: Claim fixed resource during remove/rescan path
-  PCI: Set resource to FIXED for LSI devices
-  PCI: Separate realloc list checking after allocation
-  PCI: Treat optional as required in first try for bridge rescan
-  PCI: Get new realloc size for bridge for last try
-  PCI: Don't release sibling bridge resources during hotplug
-  PCI: Cleanup res_to_dev_res() printout
-  PCI: Reuse res_to_dev_res() in reassign_resources_sorted()
-  PCI: Use correct align for optional only resources during sorting
-  PCI: Optimize bus min_align/size calculation during sizing
-  PCI: Optimize bus align/size calculation for optional during sizing
-  PCI: Don't add too much optional size for hotplug bridge MMIO
-  PCI: Reorder resources list for required/optional resources
-  PCI: Remove duplicated code for resource sorting
-  PCI: Rename pdev_sort_resources() to pdev_assign_resources_prepare()
-  PCI: Treat ROM resource as optional during realloc
-  PCI: Add debug printout during releasing partial assigned resources
-  PCI: Simplify res reference using in __assign_resources_sorted()
-  PCI: Add __add_to_list()
-  PCI: Cache window alignment value during bus sizing
-  PCI: Check if resource is allocated before trying to assign one
-  PCI: Separate out save_resources()/restore_resources()
-  PCI: Move comment to pci_need_to_release()
-  PCI: Separate required+optional assigning to another function
-  PCI: Skip required+optional if there is no optional
-  PCI: Move saved required resource list out of required+optional assigning
-  PCI: Add alt_size ressource allocation support
-  PCI: Add support for more than two alt_size entries under same bridge
-  PCI: Fix size calculation with old_size on rescan path
-  PCI: Don't add too much optional size for hotplug bridge io
-  PCI: Move ISA io port align out of calculate_iosize()
-  PCI: Don't add too much io port for hotplug bridge with old size
-  PCI: Unify calculate_size() for io port and MMIO
-  PCI: Allow bridge optional only io port resource required size to be 0
-  PCI: Unify skip_ioresource_align()
-  PCI: Kill macro checking for bus io port sizing
-  resources: Split out __allocate_resource()
-  resources: Make allocate_resource() return best fit resource
-  PCI, x86: Allocate from high in available window for MMIO
-  PCI: Add debug print out for min_align and alt_size
-  PCI, x86: Add pci=assign_pref_bars to reallocate pref BARs
-  PCI: Introduce resource_disabled()
-  PCI: Don't set flags to 0 when assign resource fail
-  PCI: Only try to assign io port only for root bus that support it
-
- arch/alpha/kernel/pci.c                   |    2 +-
- arch/ia64/pci/pci.c                       |    4 +-
- arch/microblaze/pci/pci-common.c          |   23 +-
- arch/mn10300/unit-asb2305/pci-asb2305.c   |    4 +-
- arch/mn10300/unit-asb2305/pci.c           |    4 +-
- arch/powerpc/kernel/pci-common.c          |   27 +-
- arch/powerpc/kernel/pci_of_scan.c         |   12 +-
- arch/powerpc/platforms/powernv/pci-ioda.c |   12 +-
- arch/s390/pci/pci.c                       |    2 +-
- arch/sparc/kernel/of_device_32.c          |    5 +-
- arch/sparc/kernel/of_device_64.c          |    5 +-
- arch/sparc/kernel/pci.c                   |   61 +-
- arch/sparc/kernel/pci_common.c            |   91 +-
- arch/sparc/kernel/pci_impl.h              |    5 +
- arch/x86/include/asm/pci_x86.h            |    2 +-
- arch/x86/pci/common.c                     |    7 +-
- arch/x86/pci/i386.c                       |   86 +-
- arch/xtensa/kernel/pci.c                  |    4 +-
- drivers/iommu/intel-iommu.c               |    3 +-
- drivers/of/address.c                      |    4 +-
- drivers/pci/bus.c                         |    6 +-
- drivers/pci/host/pcie-rcar.c              |    2 +-
- drivers/pci/hotplug/acpiphp_glue.c        |    1 +
- drivers/pci/iov.c                         |    2 +-
- drivers/pci/pci.c                         |   40 +-
- drivers/pci/pci.h                         |    4 +
- drivers/pci/probe.c                       |   48 +-
- drivers/pci/quirks.c                      |   60 +-
- drivers/pci/rom.c                         |    2 +-
- drivers/pci/setup-bus.c                   | 1316 +++++++++++++++++++++--------
- drivers/pci/setup-res.c                   |   18 +-
- include/asm-generic/pci-bridge.h          |    2 +
- include/linux/ioport.h                    |    6 +-
- include/linux/pci.h                       |    8 +
- kernel/resource.c                         |  175 +++-
- 35 files changed, 1493 insertions(+), 560 deletions(-)
-
+diff --git a/arch/arm/boot/dts/qcom-apq8064.dtsi b/arch/arm/boot/dts/qcom-apq8064.dtsi
+index 1a57278cb818..495807eab8f3 100644
+--- a/arch/arm/boot/dts/qcom-apq8064.dtsi
++++ b/arch/arm/boot/dts/qcom-apq8064.dtsi
+@@ -705,5 +705,41 @@
+ 			compatible = "qcom,tcsr-apq8064", "syscon";
+ 			reg = <0x1a400000 0x100>;
+ 		};
++
++		pcie: pci@1b500000 {
++			compatible = "qcom,pcie-apq8064", "snps,dw-pcie";
++			reg = <0x1b500000 0x1000
++			       0x1b502000 0x80
++			       0x1b600000 0x100
++			       0x0ff00000 0x100000>;
++			reg-names = "dbi", "elbi", "parf", "config";
++			device_type = "pci";
++			linux,pci-domain = <0>;
++			bus-range = <0x00 0xff>;
++			num-lanes = <1>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges = <0x81000000 0 0 0x0fe00000 0 0x00100000   /* I/O */
++				  0x82000000 0 0 0x08000000 0 0x07e00000>; /* memory */
++			interrupts = <GIC_SPI 238 IRQ_TYPE_NONE>;
++			interrupt-names = "msi";
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0x7>;
++			interrupt-map = <0 0 0 1 &intc 0 36 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
++					<0 0 0 2 &intc 0 37 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
++					<0 0 0 3 &intc 0 38 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
++					<0 0 0 4 &intc 0 39 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
++			clocks = <&gcc PCIE_A_CLK>,
++				 <&gcc PCIE_H_CLK>,
++				 <&gcc PCIE_PHY_REF_CLK>;
++			clock-names = "core", "iface", "phy";
++			resets = <&gcc PCIE_ACLK_RESET>,
++				 <&gcc PCIE_HCLK_RESET>,
++				 <&gcc PCIE_POR_RESET>,
++				 <&gcc PCIE_PCI_RESET>,
++				 <&gcc PCIE_PHY_RESET>;
++			reset-names = "axi", "ahb", "por", "pci", "phy";
++			status = "disabled";
++		};
+ 	};
+ };
 -- 
-1.8.4.5
+1.7.9.5
 
