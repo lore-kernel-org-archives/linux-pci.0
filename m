@@ -1,158 +1,66 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [RFC PATCH v3 2/5] arm64: pci: Add ACPI support
-Date: Wed, 16 Dec 2015 18:12:32 +0530
-Message-ID: <1450269755-21420-3-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1450269755-21420-1-git-send-email-jchandra@broadcom.com>
-References: <1450269755-21420-1-git-send-email-jchandra@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from www.linutronix.de ([62.245.132.108]:43926 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932724AbbLSUWR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Dec 2015 15:22:17 -0500
+Date: Sat, 19 Dec 2015 21:21:21 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: KY Srinivasan <kys@microsoft.com>
+cc: Jake Oshins <jakeo@microsoft.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v9 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-V
+ VMs
+In-Reply-To: <BY2PR0301MB1654386EBABB31E51CC6E55BA0E20@BY2PR0301MB1654.namprd03.prod.outlook.com>
+Message-ID: <alpine.DEB.2.11.1512192119060.28591@nanos>
+References: <1449701697-6366-1-git-send-email-jakeo@microsoft.com> <BY2PR0301MB16545331BCB31D708A74C583A0EE0@BY2PR0301MB1654.namprd03.prod.outlook.com> <alpine.DEB.2.11.1512191220180.28591@nanos>
+ <BY2PR0301MB1654386EBABB31E51CC6E55BA0E20@BY2PR0301MB1654.namprd03.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add functions needed for ACPI support.
+On Sat, 19 Dec 2015, KY Srinivasan wrote:
+> > From: Thomas Gleixner [mailto:tglx@linutronix.de]
+> > On Tue, 15 Dec 2015, KY Srinivasan wrote:
+> > >
+> > > Of these 7 patches, Greg has committed all of the VMBUS
+> > > related supporting patches (3 patches). Thomas, can you
+> > > take the IRQ related patches through your tree.
+> > 
+> > That does not make any sense.
+> > 
+> > > > Jake Oshins (7):
+> > > >   drivers:hv: Export a function that maps Linux CPU num onto Hyper-V
+> > > >     proc num
+> > > >   drivers:hv: Export hv_do_hypercall()
+> > > >   PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
+> > > >   PCI: Add fwnode_handle to pci_sysdata
+> > > >   PCI: irqdomain: Look up IRQ domain by fwnode_handle
+> > > >   drivers:hv: Define the channel type of Hyper-V PCI Express
+> > > >     pass-through
+> > > >   PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
+> > 
+> > That series cannot be ripped apart. The PCI part does not even compile
+> > w/o the drivers/hv part in place.
+> 
+> What I was proposing was that after you pick up the hv related patches in
+> Greg's tree in the next cycle, would you be willing to take the IRQ related
+> patches through your tree. Sorry for the confusion.
 
-pci_acpi_scan_root(struct acpi_pci_root *root) is marked as weak so
-that it can be implemented by the generic acpi pci driver.
-pcibios_root_bridge_prepare is defined and it assumes that the
-sysdata is struct acpi_pci_root_info.
+You mean: PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
 
-pcibios_enable_device and pcibios_disable_device handle acpi irq enable
-and disable. And, pcibios_add_bus and pcibios_remove_bus have been
-added call the corresponding ACPI functions.
+Right? Aside from the misleading subject line, I can pick that one
+up. The rest wants to go through the PCI tree.
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
----
- arch/arm64/Kconfig      |  3 +++
- arch/arm64/kernel/pci.c | 65 ++++++++++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 62 insertions(+), 6 deletions(-)
+Thanks,
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 871f217..8c93af2 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -203,6 +203,9 @@ config PCI_DOMAINS_GENERIC
- config PCI_SYSCALL
- 	def_bool PCI
- 
-+config PCI_MMCONFIG
-+	def_bool PCI && ACPI
-+
- source "drivers/pci/Kconfig"
- source "drivers/pci/pcie/Kconfig"
- source "drivers/pci/hotplug/Kconfig"
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index b3d098b..403c804 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -17,6 +17,7 @@
- #include <linux/mm.h>
- #include <linux/of_pci.h>
- #include <linux/of_platform.h>
-+#include <linux/pci-acpi.h>
- #include <linux/slab.h>
- 
- #include <asm/pci-bridge.h>
-@@ -48,9 +49,22 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	if (pci_has_flag(PCI_PROBE_ONLY))
- 		return 0;
- 
-+#ifdef CONFIG_ACPI
-+	if (acpi_find_root_bridge_handle(dev))
-+		acpi_pci_irq_enable(dev);
-+#endif
-+
- 	return pci_enable_resources(dev, mask);
- }
- 
-+void pcibios_disable_device(struct pci_dev *dev)
-+{
-+#ifdef CONFIG_ACPI
-+	if (acpi_find_root_bridge_handle(dev))
-+		acpi_pci_irq_disable(dev);
-+#endif
-+}
-+
- /*
-  * Try to assign the IRQ number from DT when adding a new device
-  */
-@@ -62,25 +76,64 @@ int pcibios_add_device(struct pci_dev *dev)
- }
- 
- /*
-- * raw_pci_read/write - Platform-specific PCI config space access.
-+ * ACPI uses these - leave it to the generic ACPI PCI driver
-  */
--int raw_pci_read(unsigned int domain, unsigned int bus,
-+int __weak raw_pci_read(unsigned int domain, unsigned int bus,
- 		  unsigned int devfn, int reg, int len, u32 *val)
- {
- 	return -ENXIO;
- }
- 
--int raw_pci_write(unsigned int domain, unsigned int bus,
-+int __weak raw_pci_write(unsigned int domain, unsigned int bus,
- 		unsigned int devfn, int reg, int len, u32 val)
- {
- 	return -ENXIO;
- }
- 
- #ifdef CONFIG_ACPI
--/* Root bridge scanning */
--struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
-+
-+void pcibios_add_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_add_bus(bus);
-+}
-+
-+void pcibios_remove_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_remove_bus(bus);
-+}
-+
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	/* ACPI root bus is created with NULL parent */
-+	if (!acpi_disabled && bridge->dev.parent == NULL) {
-+		struct pci_bus *b = bridge->bus;
-+		struct acpi_pci_root_info *ci = b->sysdata;
-+
-+		ACPI_COMPANION_SET(&bridge->dev, ci->bridge);
-+		b->domain_nr = ci->root->segment;
-+	}
-+	return 0;
-+}
-+
-+/*
-+ * Provide weak implementations of ACPI PCI hooks needed.
-+ * Leave it to the ACPI PCI driver implementation to do it
-+ */
-+struct pci_bus *__weak pci_acpi_scan_root(struct acpi_pci_root *root)
- {
--	/* TODO: Should be revisited when implementing PCI on ACPI */
- 	return NULL;
- }
-+
-+void __init __weak pci_mmcfg_late_init(void)
-+{
-+}
-+
-+static int __init pcibios_assign_resources(void)
-+{
-+	pci_assign_unassigned_resources();
-+	return 0;
-+}
-+
-+fs_initcall(pcibios_assign_resources);
-+
- #endif
--- 
-1.9.1
-
+	tglx
