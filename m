@@ -1,85 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48653 "EHLO mail.kernel.org"
+Received: from foo.masarand.uk ([104.200.29.153]:52287 "EHLO foo.masarand.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964996AbbLGPjq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Dec 2015 10:39:46 -0500
-Date: Mon, 7 Dec 2015 09:39:36 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Simon Horman <horms+renesas@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH 3/4] PCI: rcar: Add Gen2 fallback compatibility string
-Message-ID: <20151207153936.GC7994@localhost>
-References: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
- <1448954672-27236-4-git-send-email-horms+renesas@verge.net.au>
+	id S932252AbbLSL7u convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Dec 2015 06:59:50 -0500
+From: Matthew Minter <matt@masarand.com>
+To: Christopher Covington <cov@codeaurora.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	lorenzo.pieralisi@arm.com, tn@semihalf.com
+Subject: Re: [PATCH V4] Delay allocation of PCI device IRQs from boot time until bus scan time to fix PCI hotplugging
+Date: Sat, 19 Dec 2015 11:50:13 +0000
+Message-ID: <1805407.y7ysQr2Hbr@shredder>
+In-Reply-To: <56748094.2040405@codeaurora.org>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com> <20151207173251.GK7994@localhost> <56748094.2040405@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1448954672-27236-4-git-send-email-horms+renesas@verge.net.au>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 01, 2015 at 04:24:31PM +0900, Simon Horman wrote:
-> Add fallback compatibility string for R-Car Gen 2 Family.
-> This is in keeping with the fallback scheme being adopted wherever
-> appropriate for drivers for Renesas SoCs.
-> 
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Hi, Christopher, Bjorn,
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Apologies for leaving these issues in. I don’t currently have resources to 
+easily test compiling, yet alone running on most architectures.
 
-> ---
->  Documentation/devicetree/bindings/pci/rcar-pci.txt | 13 ++++++++++---
->  drivers/pci/host/pcie-rcar.c                       |  1 +
->  2 files changed, 11 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> index 29d3b989d3b0..872cea085be8 100644
-> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> @@ -1,8 +1,15 @@
->  * Renesas RCar PCIe interface
->  
->  Required properties:
-> -- compatible: should contain one of the following
-> -	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791"
-> +compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
-> +	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
-> +	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
-> +	    "renesas,pcie-gen2" for a generic R-Car Gen2 compatible device.
-> +
-> +	    When compatible with the generic version, nodes must list the
-> +	    SoC-specific version corresponding to the platform first
-> +	    followed by the generic version.
-> +
->  - reg: base address and length of the pcie controller registers.
->  - #address-cells: set to <3>
->  - #size-cells: set to <2>
-> @@ -25,7 +32,7 @@ Example:
->  SoC specific DT Entry:
->  
->  	pcie: pcie@fe000000 {
-> -		compatible = "renesas,pcie-r8a7791";
-> +		compatible = "renesas,pcie-r8a7791", "renesas,pcie-gen2";
->  		reg = <0 0xfe000000 0 0x80000>;
->  		#address-cells = <3>;
->  		#size-cells = <2>;
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index f4fa6c537448..17ee0422ddb1 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -917,6 +917,7 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
->  
->  static const struct of_device_id rcar_pcie_of_match[] = {
->  	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
-> +	{ .compatible = "renesas,pcie-gen2", .data = rcar_pcie_hw_init },
->  	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
->  	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
->  	{},
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I did not receive the buildbot warnings but have now had a look at them on the 
+web archive since my attention was brought to them.
+
+Attempting to remove constness from the pointer to map_irq functions was 
+tricky as I was nervous to blindly change a bunch of functions for hardware I 
+cannot easily compile for and cannot test on as it is hard for me to be 100% 
+sure I have not broken behaviour without trying the code even if visually the 
+changes look fine. I did not understand all the arch specific code well enough 
+to verify for sure what behaviour was ok to change so ended up making the 
+minimum changes to functionality of arch code possible.
+
+I expect the ideal thing to do is to fix all of those pointers to be non const 
+even where the buildbot did not give warnings as removing constness as far as 
+I know should never break anything that isn't already broken but leaving it in 
+incorrectly could cause hard to find issues. If it later becomes clear that it 
+should be there it can always be re-added in another patch-set.
+
+However a second opinion on this would be greatly appreciated as I dont know 
+if some architecture code has non obvious restrictions here.
+
+Also please note I will not have much time to spend developing and working on 
+this over the next couple of weeks due to Christmas related events but will 
+try and keep up to date on emails. But thanks everyone so far for the 
+feedback.
+
+Many thanks,
+Matthew Minter
