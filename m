@@ -1,47 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:33040 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753026AbbLGBtS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Dec 2015 20:49:18 -0500
+Received: from www.linutronix.de ([62.245.132.108]:43127 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932199AbbLSL2Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Dec 2015 06:28:16 -0500
+Date: Sat, 19 Dec 2015 12:27:17 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: KY Srinivasan <kys@microsoft.com>
+cc: Jake Oshins <jakeo@microsoft.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v9 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-V
+ VMs
+In-Reply-To: <BY2PR0301MB16545331BCB31D708A74C583A0EE0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+Message-ID: <alpine.DEB.2.11.1512191220180.28591@nanos>
+References: <1449701697-6366-1-git-send-email-jakeo@microsoft.com> <BY2PR0301MB16545331BCB31D708A74C583A0EE0@BY2PR0301MB1654.namprd03.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <20151204222840.GK20125@localhost>
-References: <1449141474-3378-1-git-send-email-lftan@altera.com>
-	<20151204222840.GK20125@localhost>
-Date: Mon, 7 Dec 2015 09:49:16 +0800
-Message-ID: <CAFiDJ5-cYbuaAa75bTEtr_ibd2G6wn17pkso23BY_eTN-pkS4A@mail.gmail.com>
-Subject: Re: [PATCH 0/3] fixes to support multi-functions device
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 5, 2015 at 6:28 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Dec 03, 2015 at 07:17:51PM +0800, Ley Foon Tan wrote:
->> This series of patch fixes the issues when work with multi-functions PCIe
->> devices. Host controller can't access to endpoint with non-zero devfn, due to
->> incorrect rootport devfn. It also add checking for TLP status and fix issue in
->> interrupt probing.
->>
->> Tested on Ethernet adapter card with multi-functions enabled.
->>
->> Ley Foon Tan (3):
->>   PCI: altera: fix incorrect devfn for requester ID
->>   PCI: altera: check TLP completion status
->>   PCI: altera: fix error when INTX is 4
->>
->>  drivers/pci/host/pcie-altera.c | 25 +++++++++++++++++--------
->>  1 file changed, 17 insertions(+), 8 deletions(-)
->
-> We initially merged the Altera driver for v4.4-rc1, it looks like
-> it's not really useful without these changes, and there's no danger of
-> breaking anything in the field, so I put these on my for-linus branch
-> and will ask Linus to pull them before v4.4.  Thanks!
->
-That's great!
-Thanks.
+On Tue, 15 Dec 2015, KY Srinivasan wrote:
+> 
+> Of these 7 patches, Greg has committed all of the VMBUS
+> related supporting patches (3 patches). Thomas, can you 
+> take the IRQ related patches through your tree.
 
-Regards
-Ley Foon
+That does not make any sense.
+
+> > Jake Oshins (7):
+> >   drivers:hv: Export a function that maps Linux CPU num onto Hyper-V
+> >     proc num
+> >   drivers:hv: Export hv_do_hypercall()
+> >   PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
+> >   PCI: Add fwnode_handle to pci_sysdata
+> >   PCI: irqdomain: Look up IRQ domain by fwnode_handle
+> >   drivers:hv: Define the channel type of Hyper-V PCI Express
+> >     pass-through
+> >   PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
+
+That series cannot be ripped apart. The PCI part does not even compile
+w/o the drivers/hv part in place.
+
+Thanks,
+
+	tglx
