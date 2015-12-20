@@ -1,90 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail5.windriver.com ([192.103.53.11]:37923 "EHLO mail5.wrs.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751055AbbLMBmn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 12 Dec 2015 20:42:43 -0500
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH 02/10] drivers/pci: make host/pcie-spear13xx.c driver explicitly non-modular
-Date: Sat, 12 Dec 2015 20:41:49 -0500
-Message-ID: <1449970917-12633-3-git-send-email-paul.gortmaker@windriver.com>
-In-Reply-To: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 19 Dec 2015 21:38:37 -0600
+From: Rob Herring <robh@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-omap@vger.kernel.org, pawel.moll@arm.com,
+	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
+	galak@codeaurora.org, rogerq@ti.com, nsekhar@ti.com,
+	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+	tony@atomide.com, t-kristo@ti.com
+Subject: Re: [PATCH v3 6/9] phy: ti-pipe3: use *syscon* framework API to
+ power on/off the PHY
+Message-ID: <20151220033836.GG9883@rob-hp-laptop>
+References: <1450170968-11282-1-git-send-email-kishon@ti.com>
+ <1450170968-11282-7-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1450170968-11282-7-git-send-email-kishon@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig for this option is currently:
+On Tue, Dec 15, 2015 at 02:46:05PM +0530, Kishon Vijay Abraham I wrote:
+> Deprecate using phy-omap-control driver to power on/off the PHY and
+> use *syscon* framework to do the same.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  Documentation/devicetree/bindings/phy/ti-phy.txt |   10 ++-
+>  drivers/phy/phy-ti-pipe3.c                       |   90 ++++++++++++++++++----
+>  2 files changed, 85 insertions(+), 15 deletions(-)
 
-config PCIE_SPEAR13XX
-        bool "STMicroelectronics SPEAr PCIe controller"
+For the binding:
 
-...meaning that it currently is not being built as a module by anyone.
-Lets remove the couple traces of modularity, so that when reading the
-driver there is no doubt it is builtin-only.
+Acked-by: Rob Herring <robh@kernel.org>
 
-Since module_init translates to device_initcall in the non-modular
-case, the init ordering remains unchanged with this commit.  An
-alternate init level might be worth considering at a later date.
+One comment on the driver though.
 
-We explicitly disallow a driver unbind, since that doesn't have a
-sensible use case anyway, and this driver had not populated ".remove"
-with any function to be called either.
+[...]
 
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
+> --- a/drivers/phy/phy-ti-pipe3.c
+> +++ b/drivers/phy/phy-ti-pipe3.c
 
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pcie-spear13xx.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+[...]
 
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index b95b7563c052..8248faa45f6f 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -16,7 +16,7 @@
- #include <linux/delay.h>
- #include <linux/interrupt.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/of.h>
- #include <linux/pci.h>
- #include <linux/phy/phy.h>
-@@ -366,13 +366,13 @@ static const struct of_device_id spear13xx_pcie_of_match[] = {
- 	{ .compatible = "st,spear1340-pcie", },
- 	{},
- };
--MODULE_DEVICE_TABLE(of, spear13xx_pcie_of_match);
- 
- static struct platform_driver spear13xx_pcie_driver = {
- 	.probe		= spear13xx_pcie_probe,
- 	.driver = {
- 		.name	= "spear-pcie",
- 		.of_match_table = of_match_ptr(spear13xx_pcie_of_match),
-+		.suppress_bind_attrs = true,
- 	},
- };
- 
-@@ -382,8 +382,4 @@ static int __init spear13xx_pcie_init(void)
- {
- 	return platform_driver_register(&spear13xx_pcie_driver);
- }
--module_init(spear13xx_pcie_init);
--
--MODULE_DESCRIPTION("ST Microelectronics SPEAr13xx PCIe host controller driver");
--MODULE_AUTHOR("Pratyush Anand <pratyush.anand@gmail.com>");
--MODULE_LICENSE("GPL v2");
-+device_initcall(spear13xx_pcie_init);
--- 
-2.6.1
+> @@ -144,18 +155,53 @@ static void ti_pipe3_disable_clocks(struct ti_pipe3 *phy);
+>  
+>  static int ti_pipe3_power_off(struct phy *x)
+>  {
+> +	u32 val;
+> +	int ret;
+>  	struct ti_pipe3 *phy = phy_get_drvdata(x);
+>  
+> -	omap_control_phy_power(phy->control_dev, 0);
+> +	if (phy->phy_power_syscon) {
 
+Writing this as:
+
+if (!phy->phy_power_syscon) {
+	...
+	return 0;
+}
+
+//regmap code
+
+
+will make it simpler to remove the deprecated code later.
+
+
+> +		val = PIPE3_PHY_TX_RX_POWEROFF <<
+> +			PIPE3_PHY_PWRCTL_CLK_CMD_SHIFT;
+> +
+> +		ret = regmap_update_bits(phy->phy_power_syscon, phy->power_reg,
+> +					 PIPE3_PHY_PWRCTL_CLK_CMD_MASK, val);
+> +		if (ret < 0)
+> +			return ret;
+> +	} else {
+> +		omap_control_phy_power(phy->control_dev, 0);
+> +	}
+>  
+>  	return 0;
