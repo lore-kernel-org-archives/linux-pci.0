@@ -1,96 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57730 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755691AbbLGRB3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Dec 2015 12:01:29 -0500
-Date: Mon, 7 Dec 2015 11:01:22 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 0/5] Add iProc PCIe PAXC and MSI support
-Message-ID: <20151207170122.GI7994@localhost>
-References: <1449250502-10679-1-git-send-email-rjui@broadcom.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449250502-10679-1-git-send-email-rjui@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <201512182111.1GLn2hxy%fengguang.wu@intel.com>
+References: <1450442339-18765-4-git-send-email-stanimir.varbanov@linaro.org>
+	<201512182111.1GLn2hxy%fengguang.wu@intel.com>
+Date: Sun, 20 Dec 2015 15:10:49 -0800
+Message-ID: <CAJAp7Ohgr7j7i=73R6Y_+GDa_4QZnhuPgB7AFdJGxNVJ_cVFsA@mail.gmail.com>
+Subject: Re: [PATCH v5 3/5] PCI: qcom: Add Qualcomm PCIe controller driver
+From: Bjorn Andersson <bjorn@kryo.se>
+To: kbuild test robot <lkp@intel.com>
+Cc: Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+	kbuild-all@01.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 04, 2015 at 09:34:57AM -0800, Ray Jui wrote:
-> This patch series adds support for the iProc PAXC interface and support for
-> event queue based MSI, integrated in the iProc PCIe core
-> 
-> This patch series is based on Linux v4.4-rc1 and is avaliable here:
-> https://github.com/Broadcom/cygnus-linux/tree/iproc-msi-v5
-> 
-> Changes from v4:
-> - Make 'iproc_msi_exit' inline to fix compiler warning when CONFIG_PCI_MSI
-> is disabled
-> 
-> Changes from v3:
-> - Detect the number of possible CPUs instead online CPUs in the driver. Note
-> CPU notifier based implementation still needs to be added in the future, for
-> proper support of MSI IRQ affinity when CPU is brought online/offline at
-> runtime. Support in this dirver will be added when we support CPU hotplug in
-> one of iProc family of SoCs so the changes can be tested
-> - Use dma_zalloc_coherent for event queue host memory allocation and zeoring
-> 
-> Changes from v2:
-> - Improved descriptions in the iProc MSI commit message
-> - Removed redundant host memory used for MSI address. The MSI posted writes
-> never really hit the memory. Use iProc PCIe controller base address instead
-> - Fixed deadlock when MSI vectors are used up
-> - Enforced the number of MSI groups to always be multiple of the number of CPUs
-> - Improved the efficiency of MSI event processing by only updating the head
-> pointer after finishing processing all outstanding events
-> - Fixed error handling code to make sure all configurations are rolled back
-> - Added code to zero the host memory used for event queues after allocation
-> - Removed redundant 'brcm,num-eq-region' and 'brcm,num-msi-msg-region' DT
->   properties. Now determine the number of regions based on interface type
-> - Other misc. changes
-> 
-> Changes from v1:
-> - Fixed incorrect 1-to-1 mapping between MSI vector and GIC interrupt. Now the
-> driver supports multiple MSI vectors per GIC interrupt
-> - Added MSI IRQ affinity support by distributing GIC interrupts across
-> available CPU cores and dynamically steer MSI vectors to the target CPU
-> - replace readl/writel with readl_relaxed/writel_relaxed since all register
-> accesses within the iProc MSI driver are to/from the same I/O block, i.e., the
-> iProc PCIe core
-> - Removed all redundant irq_chip callback assignments
-> - Changed to use uncached host memory for both MSI posted writes and event
-> queues
-> - Add functions to free resources in error/exit cases
-> - In pcie-iproc-platform.c, pass in interface type through OF device data
-> - Moved define for max number of interrupts from pcie-iproc.h to
-> pcie-iproc-msi.c
-> - Other misc. changes
-> 
-> Ray Jui (5):
->   PCI: iproc: Update iProc PCIe device tree binding
->   PCI: iproc: Add PAXC interface support
->   PCI: iproc: Add iProc PCIe MSI device tree binding
->   PCI: iproc: Add iProc PCIe MSI support
->   ARM: dts: Enable MSI support for Broadcom Cygnus
-> 
->  .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  40 +-
->  arch/arm/boot/dts/bcm-cygnus.dtsi                  |  22 +
->  drivers/pci/host/Kconfig                           |   9 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pcie-iproc-bcma.c                 |   1 +
->  drivers/pci/host/pcie-iproc-msi.c                  | 675 +++++++++++++++++++++
->  drivers/pci/host/pcie-iproc-platform.c             |  25 +-
->  drivers/pci/host/pcie-iproc.c                      | 228 +++++--
->  drivers/pci/host/pcie-iproc.h                      |  42 +-
->  9 files changed, 1000 insertions(+), 43 deletions(-)
->  create mode 100644 drivers/pci/host/pcie-iproc-msi.c
+On Fri, Dec 18, 2015 at 5:44 AM, kbuild test robot <lkp@intel.com> wrote:
+> Hi Stanimir,
+>
+> [auto build test WARNING on next-20151218]
+> [also build test WARNING on v4.4-rc5]
+> [cannot apply to pci/next robh/for-next v4.4-rc5 v4.4-rc4 v4.4-rc3]
+>
+> url:    https://github.com/0day-ci/linux/commits/Stanimir-Varbanov/Qualcomm-PCIe-driver-and-designware-fixes/20151218-205427
+>
+>
+> coccinelle warnings: (new ones prefixed by >>)
+>
+>>> drivers/pci/host/pcie-qcom.c:188:1-3: WARNING: PTR_ERR_OR_ZERO can be used
+>    drivers/pci/host/pcie-qcom.c:220:1-3: WARNING: PTR_ERR_OR_ZERO can be used
+>
+> Please review and possibly fold the followup patch.
+>
 
-Applied to pci/host-iproc for v4.5, with Marc's reviewed-by on "PCI: iproc:
-Add iProc PCIe MSI support".  Thanks!
+I disagree with this "recommendation" as it's only outcome will be asymmetry.
 
+I think this script should be changed to only warn if there's a single
+IS_ERR/PTR_ERR at the end of the function, not if there's a list of
+them and this would replace the last one.
+
+Regards,
 Bjorn
