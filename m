@@ -1,76 +1,33 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:6491 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754103AbbLIWz1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Dec 2015 17:55:27 -0500
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v9 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
-Date: Wed,  9 Dec 2015 22:54:50 +0000
-Message-Id: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 19 Dec 2015 21:38:50 -0600
+From: Rob Herring <robh@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-omap@vger.kernel.org, pawel.moll@arm.com,
+	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
+	galak@codeaurora.org, rogerq@ti.com, nsekhar@ti.com,
+	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+	tony@atomide.com, t-kristo@ti.com
+Subject: Re: [PATCH v3 7/9] phy: ti-pipe3: use *syscon* framework API to set
+ PCS value of the PHY
+Message-ID: <20151220033850.GH9883@rob-hp-laptop>
+References: <1450170968-11282-1-git-send-email-kishon@ti.com>
+ <1450170968-11282-8-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1450170968-11282-8-git-send-email-kishon@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On Tue, Dec 15, 2015 at 02:46:06PM +0530, Kishon Vijay Abraham I wrote:
+> Deprecate using phy-omap-control driver to set PCS value of the PHY
+> and start using *syscon* API to do the same.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> Acked-by: Roger Quadros <rogerq@ti.com>
+> ---
+>  Documentation/devicetree/bindings/phy/ti-phy.txt |    2 ++
+>  drivers/phy/phy-ti-pipe3.c                       |   34 +++++++++++++++++++++-
+>  2 files changed, 35 insertions(+), 1 deletion(-)
 
-This version of the patch series removes warning when compiling x86
-32-bit.
-
-First, export functions that allow correlating Hyper-V virtual processors
-and Linux cpus, along with the means for invoking a hypercall that targets
-interrupts at chosen vectors on specific cpus.
-
-Second, mark various parts of IRQ domain related code as exported, so that
-this PCI front-end can implement an IRQ domain as part of a module.  (The
-alternative would be to pull all tyhis into the kernel, which would pull
-in a lot of other Hyper-V related code, as this IRQ domain depends on
-vmbus.ko.)
-
-Third, modify PCI so that new root PCI buses can be marked with an associated
-fwnode_handle, and so that root PCI buses can look up their associated IRQ
-domain by that handle.
-
-Fourth, introduce a new driver, hv_pcifront, which exposes root PCI buses in
-a Hyper-V VM.  These root PCI buses expose real PCIe device, or PCI Virtual
-Functions.
-
-
-Jake Oshins (7):
-  drivers:hv: Export a function that maps Linux CPU num onto Hyper-V
-    proc num
-  drivers:hv: Export hv_do_hypercall()
-  PCI: Make it possible to implement a PCI MSI IRQ Domain in a module.
-  PCI: Add fwnode_handle to pci_sysdata
-  PCI: irqdomain: Look up IRQ domain by fwnode_handle
-  drivers:hv: Define the channel type of Hyper-V PCI Express
-    pass-through
-  PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
-
- MAINTAINERS                    |    1 +
- arch/x86/include/asm/msi.h     |    6 +
- arch/x86/include/asm/pci.h     |   15 +
- arch/x86/kernel/apic/msi.c     |    8 +-
- arch/x86/kernel/apic/vector.c  |    2 +
- drivers/hv/hv.c                |   20 +-
- drivers/hv/hyperv_vmbus.h      |    2 +-
- drivers/hv/vmbus_drv.c         |   17 +
- drivers/pci/Kconfig            |    7 +
- drivers/pci/host/Makefile      |    1 +
- drivers/pci/host/hv_pcifront.c | 2250 ++++++++++++++++++++++++++++++++++++++++
- drivers/pci/msi.c              |    4 +
- drivers/pci/probe.c            |   15 +
- include/linux/hyperv.h         |   14 +
- include/linux/pci.h            |    4 +
- kernel/irq/chip.c              |    1 +
- kernel/irq/irqdomain.c         |    4 +
- 17 files changed, 2357 insertions(+), 14 deletions(-)
- create mode 100644 drivers/pci/host/hv_pcifront.c
-
--- 
-1.9.1
-
+Acked-by: Rob Herring <robh@kernel.org>
