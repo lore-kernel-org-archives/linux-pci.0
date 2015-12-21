@@ -1,113 +1,245 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
-Subject: [PATCH v9 16/60] PCI: Don't release fixed resource for realloc
-Date: Thu, 10 Dec 2015 21:06:12 -0800
-Message-Id: <1449810416-2950-17-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Tomasz Nowicki <tn@semihalf.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"okaya@codeaurora.org" <okaya@codeaurora.org>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"Stefano.Stabellini@eu.citrix.com" <Stefano.Stabellini@eu.citrix.com>
+CC: "robert.richter@caviumnetworks.com"
+	<robert.richter@caviumnetworks.com>,
+	"mw@semihalf.com" <mw@semihalf.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Wangyijing <wangyijing@huawei.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	"jchandra@broadcom.com" <jchandra@broadcom.com>,
+	"jcm@redhat.com" <jcm@redhat.com>
+Subject: RE: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
+ against platfrom specific quirks.
+Date: Mon, 21 Dec 2015 11:47:48 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EC14C0F@lhreml503-mbb>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <1450278993-12664-23-git-send-email-tn@semihalf.com>
+In-Reply-To: <1450278993-12664-23-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should not release bridge resource if there is fixed resources
-under it, otherwise the children firmware would stop working.
+Hi Tomasz
 
-Reported-by: Paul Johnson <pjay@nwtrail.com>
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@vger.kernel.org
----
- drivers/pci/setup-bus.c |  6 ++++--
- include/linux/ioport.h  |  2 +-
- kernel/resource.c       | 28 ++++++++++++++++++++++++++--
- 3 files changed, 31 insertions(+), 5 deletions(-)
+> -----Original Message-----
+> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+> owner@vger.kernel.org] On Behalf Of Tomasz Nowicki
+> Sent: 16 December 2015 15:17
+> To: bhelgaas@google.com; arnd@arndb.de; will.deacon@arm.com;
+> catalin.marinas@arm.com; rjw@rjwysocki.net; hanjun.guo@linaro.org;
+> Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org;
+> jiang.liu@linux.intel.com; Stefano.Stabellini@eu.citrix.com
+> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
+> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; tglx@linutronix.de;
+> Wangyijing; Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
+> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
+> acpi@lists.linaro.org; jchandra@broadcom.com; jcm@redhat.com; Tomasz
+> Nowicki
+> Subject: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
+> against platfrom specific quirks.
+> 
+> Some platforms may not be fully compliant with generic set of PCI
+> config accessors. For these cases we implement the way to overwrite
+> accessors set before PCI buses enumeration. Algorithm that overwrite
+> accessors matches against platform ID (DMI), domain and bus number,
+> hopefully enough for all cases. All quirks can be defined using:
+> DECLARE_ACPI_MCFG_FIXUP() and keep self contained.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 86c51ef..dd92c5ea 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1541,14 +1541,16 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 
- 	r = &b_res[idx];
- 
--	if (!r->parent)
-+	if (!r->parent || r->flags & IORESOURCE_PCI_FIXED)
- 		return;
- 
- 	/*
- 	 * if there are children under that, we should release them
- 	 *  all
- 	 */
--	release_child_resources(r);
-+	if (!release_child_resources(r))
-+		return;
-+
- 	if (!release_resource(r)) {
- 		type = old_flags = r->flags & type_mask;
- 		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 24bea08..26b0a08 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -142,7 +142,7 @@ extern struct resource iomem_resource;
- extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
- extern int request_resource(struct resource *root, struct resource *new);
- extern int release_resource(struct resource *new);
--void release_child_resources(struct resource *new);
-+bool release_child_resources(struct resource *new);
- extern void reserve_region_with_split(struct resource *root,
- 			     resource_size_t start, resource_size_t end,
- 			     const char *name);
-diff --git a/kernel/resource.c b/kernel/resource.c
-index f150dbb..6927298 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -275,11 +275,35 @@ static void __release_child_resources(struct resource *r)
- 	}
- }
- 
--void release_child_resources(struct resource *r)
-+static bool __has_fixed_child_resources(struct resource *r)
- {
-+	struct resource *p;
-+
-+	p = r->child;
-+	while (p) {
-+		if (p->flags & IORESOURCE_PCI_FIXED)
-+			return true;
-+
-+		if (__has_fixed_child_resources(p))
-+			return true;
-+
-+		p = p->sibling;
-+	}
-+
-+	return false;
-+}
-+
-+bool release_child_resources(struct resource *r)
-+{
-+	bool fixed;
-+
- 	write_lock(&resource_lock);
--	__release_child_resources(r);
-+	fixed = __has_fixed_child_resources(r);
-+	if (!fixed)
-+		__release_child_resources(r);
- 	write_unlock(&resource_lock);
-+
-+	return !fixed;
- }
- 
- /**
--- 
-1.8.4.5
+I've got a couple of comments/questions about this patch..
 
+1) So according to this mechanism quirks would be supported only by 
+   vendors whose BIOS are SMBIOS compliant. Now personally I am ok
+   with this but I don't know if this is OK in general as it would 
+   narrow down the number of platforms that would be able to define
+   the quirks...
+   Lorenzo, Arnd what is your opinion here?
+
+2) In the quirk mechanism you proposed, I see that the callback function
+   allows to do some preparation work for the host bridge. For example in
+   Hisilicon hip05 case we would need to read some values from the ACPI 
+   table (see acpi_pci_root_hisi_add() function in 
+   https://lkml.org/lkml/2015/12/3/426). 
+   I am quite new to ACPI and I wonder if it is OK to add such "Packages"
+   to the  PCI host bridge ACPI device...or maybe we need to declare a new
+   one...?
+
+Many Thanks
+
+Gab
+
+> 
+> example:
+> 
+> static const struct dmi_system_id yyy[] = {
+> 	{
+> 		.ident = "<Platform ident string>",
+> 		.callback = <handler>,
+> 		.matches = {
+> 			DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
+> 			DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
+> 			DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
+> 		},
+> 	},
+> 	{ }
+> };
+> 
+> static struct pci_ops ecam_pci_ops = {
+> 	.map_bus = pci_mcfg_dev_base,
+> 	.read = xxxx_ecam_config_read,
+> 	.write = xxxx_ecam_config_write,
+> };
+> DECLARE_ACPI_MCFG_FIXUP(yyy, &ecam_pci_ops, <domain_nr>, <bus_nr>);
+> 
+> Note, that more custom actions can be done via DMI callback hook.
+> 
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> ---
+>  drivers/acpi/mcfg.c               | 35
+> +++++++++++++++++++++++++++++++++--
+>  include/asm-generic/vmlinux.lds.h |  7 +++++++
+>  include/linux/ecam.h              | 17 +++++++++++++++++
+>  3 files changed, 57 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c index
+> a9b2231..6d0194d 100644
+> --- a/drivers/acpi/mcfg.c
+> +++ b/drivers/acpi/mcfg.c
+> @@ -8,6 +8,7 @@
+>   */
+> 
+>  #include <linux/acpi.h>
+> +#include <linux/dmi.h>
+>  #include <linux/ecam.h>
+>  #include <linux/pci.h>
+>  #include <linux/pci-acpi.h>
+> @@ -34,6 +35,31 @@ int __weak raw_pci_write(unsigned int domain,
+> unsigned int bus,
+>  	return PCIBIOS_DEVICE_NOT_FOUND;
+>  }
+> 
+> +extern struct pci_mcfg_fixup __start_acpi_mcfg_fixups[]; extern struct
+> +pci_mcfg_fixup __end_acpi_mcfg_fixups[];
+> +
+> +static struct pci_ops *pci_mcfg_check_quirks(int domain, int
+> +bus_number) {
+> +	struct pci_mcfg_fixup *fixup;
+> +
+> +	fixup = __start_acpi_mcfg_fixups;
+> +	while (fixup < __end_acpi_mcfg_fixups) {
+> +		if (dmi_check_system(fixup->system) &&
+> +		    (fixup->domain == domain ||
+> +		     fixup->domain == PCI_MCFG_DOMAIN_ANY) &&
+> +		    (fixup->bus_number == bus_number ||
+> +		     fixup->bus_number == PCI_MCFG_BUS_ANY)) {
+> +			pr_info(PREFIX "Fixup applied: Platform [%s] domain
+> [%d] bus number [%d]\n",
+> +				fixup->system->ident, fixup->domain,
+> +				fixup->bus_number);
+> +			return fixup->ops;
+> +		}
+> +		++fixup;
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+>  void __iomem *
+>  pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
+> { @@ -56,10 +82,15 @@ static struct pci_ops default_pci_mcfg_ops = {
+> 
+>  struct pci_ops *pci_mcfg_get_ops(int domain, int bus)  {
+> +	struct pci_ops *pci_mcfg_ops_quirk;
+> +
+>  	/*
+> -	 * TODO: Match against platform specific quirks and return
+> -	 * corresponding PCI config space accessor set.
+> +	 * Match against platform specific quirks and return
+> corresponding
+> +	 * PCI config space accessor set.
+>  	 */
+> +	pci_mcfg_ops_quirk = pci_mcfg_check_quirks(domain, bus);
+> +	if (pci_mcfg_ops_quirk)
+> +		return pci_mcfg_ops_quirk;
+> 
+>  	return &default_pci_mcfg_ops;
+>  }
+> diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-
+> generic/vmlinux.lds.h
+> index c4bd0e2..c93fc97 100644
+> --- a/include/asm-generic/vmlinux.lds.h
+> +++ b/include/asm-generic/vmlinux.lds.h
+> @@ -298,6 +298,13 @@
+>  		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
+>  	}								\
+>  									\
+> +	/* ACPI MCFG quirks */						\
+> +	.acpi_fixup        : AT(ADDR(.acpi_fixup) - LOAD_OFFSET) {	\
+> +		VMLINUX_SYMBOL(__start_acpi_mcfg_fixups) = .;		\
+> +		*(.acpi_fixup_mcfg)					\
+> +		VMLINUX_SYMBOL(__end_acpi_mcfg_fixups) = .;		\
+> +	}								\
+> +									\
+>  	/* Built-in firmware blobs */					\
+>  	.builtin_fw        : AT(ADDR(.builtin_fw) - LOAD_OFFSET) {	\
+>  		VMLINUX_SYMBOL(__start_builtin_fw) = .;			\
+> diff --git a/include/linux/ecam.h b/include/linux/ecam.h index
+> e0f322e..1319fa8 100644
+> --- a/include/linux/ecam.h
+> +++ b/include/linux/ecam.h
+> @@ -20,6 +20,23 @@ struct pci_mmcfg_region {
+>  	bool hot_added;
+>  };
+> 
+> +struct pci_mcfg_fixup {
+> +	const struct dmi_system_id *system;
+> +	struct pci_ops *ops;
+> +	int domain;
+> +	int bus_number;
+> +};
+> +
+> +#define PCI_MCFG_DOMAIN_ANY	-1
+> +#define PCI_MCFG_BUS_ANY	-1
+> +
+> +/* Designate a routine to fix up buggy MCFG */
+> +#define DECLARE_ACPI_MCFG_FIXUP(system, ops, dom, bus)
+> 	\
+> +	static const struct pci_mcfg_fixup
+> __mcfg_fixup_##system##dom##bus\
+> +	 __used	__attribute__((__section__(".acpi_fixup_mcfg"),
+> 	\
+> +				aligned((sizeof(void *))))) =		\
+> +	{ system, ops, dom, bus };
+> +
+>  struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
+> struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
+>  						   int end, u64 addr);
+> --
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel"
+> in the body of a message to majordomo@vger.kernel.org More majordomo
+> info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
