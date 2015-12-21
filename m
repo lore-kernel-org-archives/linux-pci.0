@@ -1,122 +1,235 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v7 2/7] drivers:hv: Export hv_do_hypercall()
-Date: Sat,  5 Dec 2015 00:36:01 +0000
-Message-Id: <1449275767-1510-3-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1449275767-1510-1-git-send-email-jakeo@microsoft.com>
-References: <1449275767-1510-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+	bhelgaas@google.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	hanjun.guo@linaro.org, tomasz.nowicki@linaro.org,
+	graeme.gregory@linaro.org, dhdang@apm.com,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v7 4/4] gicv2m: acpi: Introducing GICv2m ACPI support
+Date: Mon, 21 Dec 2015 04:04:13 +0100
+Message-ID: <27927867.pbQ7Vf8UQe@vostro.rjw.lan>
+In-Reply-To: <1449766530-16935-5-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com> <1449766530-16935-5-git-send-email-Suravee.Suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On Thursday, December 10, 2015 08:55:30 AM Suravee Suthikulpanit wrote:
+> This patch introduces gicv2m_acpi_init(), which uses information
+> in MADT GIC MSI frames structure to initialize GICv2m driver.
+> It also exposes gicv2m_init() function, which simplifies callers
+> to a single GICv2m init function.
+> 
+> Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+> Tested-by: Duc Dang <dhdang@apm.com>
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-This patch exposes the function that hv_vmbus.ko uses to make hypercalls.
-This is necessary for retargeting an interrupt when it is given a new
-affinity and vector.
+I don't see anything objectionable here, so please feel free to add my ACK
+for the ACPI part to this.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/hv/hv.c           | 20 ++++++++++----------
- drivers/hv/hyperv_vmbus.h |  2 +-
- include/linux/hyperv.h    |  1 +
- 3 files changed, 12 insertions(+), 11 deletions(-)
+> ---
+>  drivers/irqchip/irq-gic-v2m.c   | 110 +++++++++++++++++++++++++++++++++++++++-
+>  drivers/irqchip/irq-gic.c       |   6 ++-
+>  include/linux/irqchip/arm-gic.h |   3 +-
+>  3 files changed, 116 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
+> index 779c390..7e2975d 100644
+> --- a/drivers/irqchip/irq-gic-v2m.c
+> +++ b/drivers/irqchip/irq-gic-v2m.c
+> @@ -15,9 +15,11 @@
+>  
+>  #define pr_fmt(fmt) "GICv2m: " fmt
+>  
+> +#include <linux/acpi.h>
+>  #include <linux/irq.h>
+>  #include <linux/irqdomain.h>
+>  #include <linux/kernel.h>
+> +#include <linux/msi.h>
+>  #include <linux/of_address.h>
+>  #include <linux/of_pci.h>
+>  #include <linux/slab.h>
+> @@ -138,6 +140,11 @@ static int gicv2m_irq_gic_domain_alloc(struct irq_domain *domain,
+>  		fwspec.param[0] = 0;
+>  		fwspec.param[1] = hwirq - 32;
+>  		fwspec.param[2] = IRQ_TYPE_EDGE_RISING;
+> +	} else if (is_fwnode_irqchip(domain->parent->fwnode)) {
+> +		fwspec.fwnode = domain->parent->fwnode;
+> +		fwspec.param_count = 2;
+> +		fwspec.param[0] = hwirq;
+> +		fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
+>  	} else {
+>  		return -EINVAL;
+>  	}
+> @@ -255,6 +262,8 @@ static void gicv2m_teardown(void)
+>  		kfree(v2m->bm);
+>  		iounmap(v2m->base);
+>  		of_node_put(to_of_node(v2m->fwnode));
+> +		if (is_fwnode_irqchip(v2m->fwnode))
+> +			irq_domain_free_fwnode(v2m->fwnode);
+>  		kfree(v2m);
+>  	}
+>  }
+> @@ -373,9 +382,11 @@ static struct of_device_id gicv2m_device_id[] = {
+>  	{},
+>  };
+>  
+> -int __init gicv2m_of_init(struct device_node *node, struct irq_domain *parent)
+> +static int __init gicv2m_of_init(struct fwnode_handle *parent_handle,
+> +				 struct irq_domain *parent)
+>  {
+>  	int ret = 0;
+> +	struct device_node *node = to_of_node(parent_handle);
+>  	struct device_node *child;
+>  
+>  	for (child = of_find_matching_node(node, gicv2m_device_id); child;
+> @@ -411,3 +422,100 @@ int __init gicv2m_of_init(struct device_node *node, struct irq_domain *parent)
+>  		gicv2m_teardown();
+>  	return ret;
+>  }
+> +
+> +#ifdef CONFIG_ACPI
+> +static int acpi_num_msi;
+> +
+> +static struct fwnode_handle *gicv2m_get_fwnode(struct device *dev)
+> +{
+> +	struct v2m_data *data;
+> +
+> +	if (WARN_ON(acpi_num_msi <= 0))
+> +		return NULL;
+> +
+> +	/* We only return the fwnode of the first MSI frame. */
+> +	data = list_first_entry_or_null(&v2m_nodes, struct v2m_data, entry);
+> +	if (!data)
+> +		return NULL;
+> +
+> +	return data->fwnode;
+> +}
+> +
+> +static int __init
+> +acpi_parse_madt_msi(struct acpi_subtable_header *header,
+> +		    const unsigned long end)
+> +{
+> +	int ret;
+> +	struct resource res;
+> +	u32 spi_start = 0, nr_spis = 0;
+> +	struct acpi_madt_generic_msi_frame *m;
+> +	struct fwnode_handle *fwnode;
+> +
+> +	m = (struct acpi_madt_generic_msi_frame *)header;
+> +	if (BAD_MADT_ENTRY(m, end))
+> +		return -EINVAL;
+> +
+> +	res.start = m->base_address;
+> +	res.end = m->base_address + SZ_4K;
+> +
+> +	if (m->flags & ACPI_MADT_OVERRIDE_SPI_VALUES) {
+> +		spi_start = m->spi_base;
+> +		nr_spis = m->spi_count;
+> +
+> +		pr_info("ACPI overriding V2M MSI_TYPER (base:%u, num:%u)\n",
+> +			spi_start, nr_spis);
+> +	}
+> +
+> +	fwnode = irq_domain_alloc_fwnode((void *)m->base_address);
+> +	if (!fwnode) {
+> +		pr_err("Unable to allocate GICv2m domain token\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	ret = gicv2m_init_one(fwnode, spi_start, nr_spis, &res);
+> +	if (ret)
+> +		irq_domain_free_fwnode(fwnode);
+> +
+> +	return ret;
+> +}
+> +
+> +static int __init gicv2m_acpi_init(struct irq_domain *parent)
+> +{
+> +	int ret;
+> +
+> +	if (acpi_num_msi > 0)
+> +		return 0;
+> +
+> +	acpi_num_msi = acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_MSI_FRAME,
+> +				      acpi_parse_madt_msi, 0);
+> +
+> +	if (acpi_num_msi <= 0)
+> +		goto err_out;
+> +
+> +	ret = gicv2m_allocate_domains(parent);
+> +	if (ret)
+> +		goto err_out;
+> +
+> +	pci_msi_register_fwnode_provider(&gicv2m_get_fwnode);
+> +
+> +	return 0;
+> +
+> +err_out:
+> +	gicv2m_teardown();
+> +	return -EINVAL;
+> +}
+> +#else /* CONFIG_ACPI */
+> +static int __init gicv2m_acpi_init(struct irq_domain *parent)
+> +{
+> +	return -EINVAL;
+> +}
+> +#endif /* CONFIG_ACPI */
+> +
+> +int __init gicv2m_init(struct fwnode_handle *parent_handle,
+> +		       struct irq_domain *parent)
+> +{
+> +	if (is_of_node(parent_handle))
+> +		return gicv2m_of_init(parent_handle, parent);
+> +
+> +	return gicv2m_acpi_init(parent);
+> +}
+> diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+> index fcd327f..644e8bb 100644
+> --- a/drivers/irqchip/irq-gic.c
+> +++ b/drivers/irqchip/irq-gic.c
+> @@ -1234,7 +1234,7 @@ gic_of_init(struct device_node *node, struct device_node *parent)
+>  	}
+>  
+>  	if (IS_ENABLED(CONFIG_ARM_GIC_V2M))
+> -		gicv2m_of_init(node, gic_data[gic_cnt].domain);
+> +		gicv2m_init(&node->fwnode, gic_data[gic_cnt].domain);
+>  
+>  	gic_cnt++;
+>  	return 0;
+> @@ -1359,6 +1359,10 @@ static int __init gic_v2_acpi_init(struct acpi_subtable_header *header,
+>  	__gic_init_bases(0, -1, dist_base, cpu_base, 0, domain_handle);
+>  
+>  	acpi_set_irq_model(ACPI_IRQ_MODEL_GIC, domain_handle);
+> +
+> +	if (IS_ENABLED(CONFIG_ARM_GIC_V2M))
+> +		gicv2m_init(NULL, gic_data[0].domain);
+> +
+>  	return 0;
+>  }
+>  IRQCHIP_ACPI_DECLARE(gic_v2, ACPI_MADT_TYPE_GENERIC_DISTRIBUTOR,
+> diff --git a/include/linux/irqchip/arm-gic.h b/include/linux/irqchip/arm-gic.h
+> index bae69e5..febc6c3 100644
+> --- a/include/linux/irqchip/arm-gic.h
+> +++ b/include/linux/irqchip/arm-gic.h
+> @@ -106,7 +106,8 @@ int gic_cpu_if_down(unsigned int gic_nr);
+>  void gic_init(unsigned int nr, int start,
+>  	      void __iomem *dist , void __iomem *cpu);
+>  
+> -int gicv2m_of_init(struct device_node *node, struct irq_domain *parent);
+> +int gicv2m_init(struct fwnode_handle *parent_handle,
+> +		struct irq_domain *parent);
+>  
+>  void gic_send_sgi(unsigned int cpu_id, unsigned int irq);
+>  int gic_get_cpu_id(unsigned int cpu);
+> 
 
-diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
-index 6341be8..7a06933 100644
---- a/drivers/hv/hv.c
-+++ b/drivers/hv/hv.c
-@@ -89,9 +89,9 @@ static int query_hypervisor_info(void)
- }
- 
- /*
-- * do_hypercall- Invoke the specified hypercall
-+ * hv_do_hypercall- Invoke the specified hypercall
-  */
--static u64 do_hypercall(u64 control, void *input, void *output)
-+u64 hv_do_hypercall(u64 control, void *input, void *output)
- {
- 	u64 input_address = (input) ? virt_to_phys(input) : 0;
- 	u64 output_address = (output) ? virt_to_phys(output) : 0;
-@@ -132,6 +132,7 @@ static u64 do_hypercall(u64 control, void *input, void *output)
- 	return hv_status_lo | ((u64)hv_status_hi << 32);
- #endif /* !x86_64 */
- }
-+EXPORT_SYMBOL_GPL(hv_do_hypercall);
- 
- #ifdef CONFIG_X86_64
- static cycle_t read_hv_clock_tsc(struct clocksource *arg)
-@@ -315,7 +316,7 @@ int hv_post_message(union hv_connection_id connection_id,
- {
- 
- 	struct hv_input_post_message *aligned_msg;
--	u16 status;
-+	u64 status;
- 
- 	if (payload_size > HV_MESSAGE_PAYLOAD_BYTE_COUNT)
- 		return -EMSGSIZE;
-@@ -329,11 +330,10 @@ int hv_post_message(union hv_connection_id connection_id,
- 	aligned_msg->payload_size = payload_size;
- 	memcpy((void *)aligned_msg->payload, payload, payload_size);
- 
--	status = do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL)
--		& 0xFFFF;
-+	status = hv_do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL);
- 
- 	put_cpu();
--	return status;
-+	return status & 0xFFFF;
- }
- 
- 
-@@ -343,13 +343,13 @@ int hv_post_message(union hv_connection_id connection_id,
-  *
-  * This involves a hypercall.
-  */
--u16 hv_signal_event(void *con_id)
-+int hv_signal_event(void *con_id)
- {
--	u16 status;
-+	u64 status;
- 
--	status = (do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL) & 0xFFFF);
-+	status = hv_do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL);
- 
--	return status;
-+	return status & 0xFFFF;
- }
- 
- static int hv_ce_set_next_event(unsigned long delta,
-diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
-index 3782636..cc2fb53 100644
---- a/drivers/hv/hyperv_vmbus.h
-+++ b/drivers/hv/hyperv_vmbus.h
-@@ -582,7 +582,7 @@ extern int hv_post_message(union hv_connection_id connection_id,
- 			 enum hv_message_type message_type,
- 			 void *payload, size_t payload_size);
- 
--extern u16 hv_signal_event(void *con_id);
-+extern int hv_signal_event(void *con_id);
- 
- extern int hv_synic_alloc(void);
- 
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index fddb3e0..24d0b65 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -984,6 +984,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			bool fb_overlap_ok);
- 
- int vmbus_cpu_number_to_vp_number(int cpu_number);
-+u64 hv_do_hypercall(u64 control, void *input, void *output);
- 
- /**
-  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
 -- 
-1.9.1
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
