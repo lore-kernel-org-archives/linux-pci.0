@@ -1,40 +1,26 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:64134 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751191AbbLQSQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Dec 2015 13:16:03 -0500
-Date: Thu, 17 Dec 2015 18:16:00 +0000
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv6 6/7] aer_inject: Use 32 bit int type domains
-Message-ID: <20151217181600.GC31031@localhost.localdomain>
-References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
- <1449523949-21898-7-git-send-email-keith.busch@intel.com>
- <20151217174615.GE23549@localhost>
+Received: from mail-by2on0061.outbound.protection.outlook.com ([207.46.100.61]:21679
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750965AbbLUPsW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Dec 2015 10:48:22 -0500
+From: "Goz, Ben" <Ben.Goz@amd.com>
+To: "wdavis@nvidia.com" <wdavis@nvidia.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Koenig, Christian" <Christian.Koenig@amd.com>,
+	"Bridgman, John" <John.Bridgman@amd.com>
+Subject: RE: IOMMU/DMA map_resource support for peer-to-peer
+Date: Mon, 21 Dec 2015 15:32:30 +0000
+Message-ID: <BY2PR12MB0290C4BDC64D1614F36030CEE8E40@BY2PR12MB0290.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151217174615.GE23549@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 17, 2015 at 11:46:15AM -0600, Bjorn Helgaas wrote:
-> On Mon, Dec 07, 2015 at 02:32:28PM -0700, Keith Busch wrote:
-> > -	u16 domain;
-> > +	int domain;
-> 
-> If you want 32 bits explicitly, why don't you use u32 here?
+Hi Will,
+I'm interesting on your work on this patch set to support map_resource for peer to peer memory mapping, if you can please refer me to git repository includes your patches.
+And I want to know please if the IOMMU should be configured with pass through or any other configuration, and if there is a general limitation or something I should know for bringing it up.
 
-It matches the types already defined in struct pci_dev and the
-pci_domain_nr return value.
+Regards,
+Ben
 
-Would you prefer changing all of them to u32, just aer_inject's, or
-leave as-is?
