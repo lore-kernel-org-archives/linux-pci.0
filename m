@@ -1,88 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48846 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933655AbbLGPlD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Dec 2015 10:41:03 -0500
-Date: Mon, 7 Dec 2015 09:40:59 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Simon Horman <horms+renesas@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 1/4] PCI: rcar-gen2: add gen2 fallback compatibility
- string
-Message-ID: <20151207154059.GD7994@localhost>
-References: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
- <1449096700-23304-2-git-send-email-horms+renesas@verge.net.au>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors against platfrom specific quirks.
+Date: Mon, 21 Dec 2015 15:10:31 +0100
+Cc: Tomasz Nowicki <tn@semihalf.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"okaya@codeaurora.org" <okaya@codeaurora.org>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"Stefano.Stabellini@eu.citrix.com" <Stefano.Stabellini@eu.citrix.com>,
+	"robert.richter@caviumnetworks.com"
+	<robert.richter@caviumnetworks.com>,
+	"mw@semihalf.com" <mw@semihalf.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Wangyijing <wangyijing@huawei.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	"jchandra@broadcom.com" <jchandra@broadcom.com>,
+	"jcm@redhat.com" <jcm@redhat.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com> <1450278993-12664-23-git-send-email-tn@semihalf.com> <EE11001F9E5DDD47B7634E2F8A612F2E1EC14C0F@lhreml503-mbb>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1EC14C0F@lhreml503-mbb>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449096700-23304-2-git-send-email-horms+renesas@verge.net.au>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201512211510.32029.arnd@arndb.de>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 03, 2015 at 07:51:37AM +0900, Simon Horman wrote:
-> Add fallback compatibility string for R-Car Gen 2 family.
-> This is in keeping with the fallback scheme being adopted wherever
-> appropriate for drivers for Renesas SoCs.
-> 
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+On Monday 21 December 2015, Gabriele Paoloni wrote:
+> > -----Original Message-----
+> > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+> > owner@vger.kernel.org] On Behalf Of Tomasz Nowicki
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> > Some platforms may not be fully compliant with generic set of PCI
+> > config accessors. For these cases we implement the way to overwrite
+> > accessors set before PCI buses enumeration. Algorithm that overwrite
+> > accessors matches against platform ID (DMI), domain and bus number,
+> > hopefully enough for all cases. All quirks can be defined using:
+> > DECLARE_ACPI_MCFG_FIXUP() and keep self contained.
+> 
+> I've got a couple of comments/questions about this patch..
+> 
+> 1) So according to this mechanism quirks would be supported only by 
+>    vendors whose BIOS are SMBIOS compliant. Now personally I am ok
+>    with this but I don't know if this is OK in general as it would 
+>    narrow down the number of platforms that would be able to define
+>    the quirks...
+>    Lorenzo, Arnd what is your opinion here?
 
-> 
-> ---
-> v2
-> * Include "rcar-" in new compatibility string
-> ---
->  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 11 +++++++++--
->  drivers/pci/host/pci-rcar-gen2.c                        |  1 +
->  2 files changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> index 891463cb09c2..089a99dcdf10 100644
-> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> @@ -8,7 +8,14 @@ OHCI and EHCI controllers.
->  Required properties:
->  - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
->  	      "renesas,pci-r8a7791" for the R8A7791 SoC;
-> -	      "renesas,pci-r8a7794" for the R8A7794 SoC.
-> +	      "renesas,pci-r8a7794" for the R8A7794 SoC;
-> +	      "renesas,pci-rcar-gen2" for a generic R-Car Gen2 compatible device.
-> +
-> +
-> +	      When compatible with the generic version, nodes must list the
-> +	      SoC-specific version corresponding to the platform first
-> +	      followed by the generic version.
-> +
->  - reg:	A list of physical regions to access the device: the first is
->  	the operational registers for the OHCI/EHCI controllers and the
->  	second is for the bridge configuration and control registers.
-> @@ -32,7 +39,7 @@ Optional properties:
->  Example SoC configuration:
->  
->  	pci0: pci@ee090000  {
-> -		compatible = "renesas,pci-r8a7790";
-> +		compatible = "renesas,pci-r8a7790", "renesas,pci-rcar-gen2";
->  		clocks = <&mstp7_clks R8A7790_CLK_EHCI>;
->  		reg = <0x0 0xee090000 0x0 0xc00>,
->  		      <0x0 0xee080000 0x0 0x1100>;
-> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-> index 62951165dcbb..9980a4bdae7e 100644
-> --- a/drivers/pci/host/pci-rcar-gen2.c
-> +++ b/drivers/pci/host/pci-rcar-gen2.c
-> @@ -430,6 +430,7 @@ static int rcar_pci_probe(struct platform_device *pdev)
->  }
->  
->  static struct of_device_id rcar_pci_of_match[] = {
-> +	{ .compatible = "renesas,pci-rcar-gen2", },
->  	{ .compatible = "renesas,pci-r8a7790", },
->  	{ .compatible = "renesas,pci-r8a7791", },
->  	{ .compatible = "renesas,pci-r8a7794", },
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'd rather not see the quirks in mainline at all, and only support
+SBSA compliant machines, or require the BIOS to work around the hardware
+quirks differently (e.g. by trapping config space access through secure
+firmware, or going through an AML method to be defined). I'm certainly
+ok with making it depend on SMBIOS if we are going to use something like this.
+
+	Arnd
