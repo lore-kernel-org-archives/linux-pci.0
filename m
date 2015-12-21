@@ -1,72 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:40791 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751887AbbLWIF7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Dec 2015 03:05:59 -0500
-Subject: Re: Dmesg filled with "AER: Corrected error received"
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <5673E049.2010704@canonical.com>
- <20151222215758.GA17235@localhost>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
-From: David Henningsson <david.henningsson@canonical.com>
-Message-ID: <567A55E9.6030608@canonical.com>
-Date: Wed, 23 Dec 2015 09:06:01 +0100
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:33011 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751134AbbLUNQh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Dec 2015 08:16:37 -0500
 MIME-Version: 1.0
-In-Reply-To: <20151222215758.GA17235@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <KL1PR06MB1174165C6112327548CD29DDF5E40@KL1PR06MB1174.apcprd06.prod.outlook.com>
+References: <1450358557-28376-1-git-send-email-phil.edworthy@renesas.com>
+	<1450358557-28376-3-git-send-email-phil.edworthy@renesas.com>
+	<20151217133058.GA20372@katana>
+	<PS1PR06MB1180304088ECF5384C497E40F5E10@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	<20151218140412.GA4595@katana>
+	<KL1PR06MB1174165C6112327548CD29DDF5E40@KL1PR06MB1174.apcprd06.prod.outlook.com>
+Date: Mon, 21 Dec 2015 14:16:36 +0100
+Message-ID: <CAMuHMdUKHO50n_OAhx-OcZX9FwN+dUbZCHnjP4HaPqgt3j=MzQ@mail.gmail.com>
+Subject: Re: [PATCH 2/4] PCI: rcar: Support runtime PM link state L1 handling
+ in pcie-rcar
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Wolfram Sang <wsa@the-dreams.de>,
+	Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Phil,
 
+(this time with full CC list)
 
-On 2015-12-22 22:57, Bjorn Helgaas wrote:
-> Hi David,
->
-> On Fri, Dec 18, 2015 at 11:30:33AM +0100, David Henningsson wrote:
->> Hi Linux PCI maintainers,
+On Mon, Dec 21, 2015 at 11:52 AM, Phil Edworthy
+<phil.edworthy@renesas.com> wrote:
+> On 18 December 2015 14:04, Wolfram Sang wrote:
+>> > Since the hardware doesn't support hot plug, I believe this loop will
+>> > always exit very quickly. Unless someone has taken a hammer to the HW
+>> > of course.
 >>
->> My dmesg gets filled with a few lines repeated over and over again:
->>
->> pcieport 0000:00:1c.0: AER: Corrected error received: id=00e0
->> pcieport 0000:00:1c.0: can't find device of ID00e0
->> pcieport 0000:00:1c.0: AER: Corrected error received: id=00e0
->> pcieport 0000:00:1c.0: PCIe Bus Error: severity=Corrected,
->> type=Physical Layer, id=00e0(Receiver ID)
->> pcieport 0000:00:1c.0:   device [8086:9d14] error
->> status/mask=00000001/00002000
->> pcieport 0000:00:1c.0:    [ 0] Receiver Error
->>
->> This happens 10-30 times per second (!), so dmesg fills up quickly.
->> The bug is present in both vanilla and Ubuntu kernels.
->>
->> I'm happy to try to help by providing more info as requested, and
->> I'm also able to build kernels to test patches (although that might
->> take some time, especially during the upcoming holidays).
->>
->> Computer: Dell Inspiron 13-7359
->> Kernel version: Linux version 4.4.0-040400rc5-generic (kernel@gloin)
->> (gcc version 5.2.1 20151010 (Ubuntu 5.2.1-22ubuntu2) ) #201512140221
->> SMP Mon Dec 14 02:23:36 UTC 2015
->> CPU: Skylake i3-6100U
->> Lspci: attached
->> Dmesg: I'm attaching an extract from kern.log which shows the most
->> recent boot and a few seconds thereafter.
->> Downstream bug report:
->> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1521173
->
-> Thanks a lot for the report and logs.  Do you happen to know whether this
-> is a regression, and if so, when it first appeared?
+>> I know what you mean. But since readl_poll_timeout() makes it easy, we
+>> should better be safe than sorry.
+> Hmm, I changed the code, but now it doesn't come out of suspend unless
+> sleep_us passed to readl_poll_timeout is 0. Any reason you can think of?
 
-Hi Bjorn and thanks for looking at it,
+Timers or interrupts disabled?
 
-I'm not sure how far back I can go and still have Skylake working (this 
-is a new laptop), but I just tried booting a 4.0.9 vanilla kernel and 
-the problem is present there as well.
+Does the might_sleep_if() scream if CONFIG_DEBUG_ATOMIC_SLEEP=y?
 
-If anything, it seems to be at an even higher rate in 4.0.9, because in 
-4.0.9, I get reports about "printk messages dropped", which I don't get 
-in 4.4.0-rc5.
+Gr{oetje,eeting}s,
 
--- 
-David Henningsson, Canonical Ltd.
-https://launchpad.net/~diwic
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
