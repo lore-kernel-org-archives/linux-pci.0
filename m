@@ -1,113 +1,55 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 21 Dec 2015 12:10:50 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: okaya@codeaurora.org
-Cc: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	jiang.liu@linux.intel.com, stefano.stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	liviu.dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, suravee.suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-Subject: Re: [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-Message-ID: <20151221121050.GB11145@red-moon>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
- <5673281E.7020204@codeaurora.org>
- <5673FB6C.80008@semihalf.com>
- <4bccc2de7668dde04436ac9c19aac25d.squirrel@www.codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:33742 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751274AbbLUVFL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Dec 2015 16:05:11 -0500
+Received: by mail-ob0-f173.google.com with SMTP id bx1so14100371obb.0
+        for <linux-pci@vger.kernel.org>; Mon, 21 Dec 2015 13:05:11 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4bccc2de7668dde04436ac9c19aac25d.squirrel@www.codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Date: Mon, 21 Dec 2015 13:05:10 -0800
+Message-ID: <CAJ+vNU1RhaJrrwznkfpPdmu8BSLifvRXt=5yK3C=WqqT-G1BoQ@mail.gmail.com>
+Subject: IMX6 PCIe - use LVDS2 clock as input instead of LVDS1 as an ouput
+From: Tim Harvey <tharvey@gateworks.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Shawn Guo <shawn.guo@linaro.org>, Sean Cross <xobs@kosagi.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 18, 2015 at 06:56:39PM +0000, okaya@codeaurora.org wrote:
+Lucas / Shawn / Sean,
 
-[...]
+Do any of you know what should be done in order to use the LVDS2 clock
+as an 'input' for IMX6 PCIe?
 
-> Here is what I have as an IO resource.
-> 
-> 		QWORDIO(			//Consumed-And-produced resource
-> 			ResourceProducer,	// bit 0 of general flags is 0
-> 			MinFixed,		// Range is fixed
-> 			MaxFixed,		// Range is fixed
-> 			PosDecode,
-> 			EntireRange,
-> 			0x0000,			// Granularity
-> 			0x1000,		// Min, 0 is not accepted
-> 			0x10FFF,		// Max
-> 			0x8FFFFFEF000,	// Translation
-> 			0x10000,		// Range Length
-> 			,, PI00
-> 		 )
-> 
-> I don't have any type specified.
-> 
-> I agree with Lorenzo's assessment. The min and max values represent the
-> PCI IO bus addresses. The translation offset is added to these values to
-> figure out the CPU view of the PCI IO range.
-> 
-> The endpoints BAR addresses are programmed with IO addresses ranging
-> between 0x1000 and 0x10FFF for this example above.
-> 
-> Here is another question. Chris Covington and I asked this question on a
-> private email to you but we didn't hear back.
-> 
-> We were referring to a Linaro IO hack patch as we were not sure whether
-> this was a limitation of the hack or a general expectation for ARM64 PCI
-> in general.
-> 
-> I'll repeat it here.
-> 
-> I have multiple root ports with the same IO port configuration in the
-> current ACPI table.
-> 
-> Root port 0 = IO range 0x1000-0x10FFF
-> Root port 1 = IO range 0x1000-0x10FFF
-> Root port 2 = IO range 0x1000-0x10FFF
+Due to the fact that Freescale's internal clock does not pass Gen2
+jitter tests, we have designed an IMX6 based board that follows
+Freescale's recommendation to use an external Gen2 compliant clockgen
+running to one of the LVDS clocks and now need to configure the kernel
+to use this as an input. I had this run to LVDS2 because LVDS1 is
+configured by the kernel as a clock output for all IMX6 (see
+74b8031307c5d33d36742c26dd0921991bd5a255).
 
-It is fine. You end up mapping for each of those a 4k window of the
-virtual address space allocated to IO and that's what you will have in
-the kernel PCI resources (not in the HW BARs though). If that was a problem
-it would be even for the current DT host controllers eg:
+My understanding is that if nothing is changed the host controller
+would use its internal reference clock, and the PCIe socket would use
+the external clkgen and all would be well and fine for Gen1 because
+they don't need to have synchronized clocks, but if Gen2 is needed we
+must change the clock routing such that LVDS2 is an input and that it
+is routed to the PCIe host controller reference clock.
 
-arch/arm64/boot/dts/apm/apm-storm.dtsi
+I know that I can use IMX6QDL_CLK_LVDS2_IN instead of
+IMX6QDL_CLK_LVDS1_GATE in the clocks property of the PCIe node in the
+device-tree to configure LVDS2 as an input instead of LVDS1 as an
+output, but I'm not sure what to do with the rest of the clock tree
+and how to handle this dynamically at runtime.
 
-it should not be (again I will let Arnd comment on this since he may be
-aware of issues encountered on other arches/platforms).
+Any ideas would be greatly appreciated.
 
-Lorenzo
+Regards,
 
-> 
-> Each root port can have the same IO address range configuration, are we
-> expecting IO port numbers to be unique across the whole system for ARM64?
-> 
-> Something like
-> 
-> Root port 0 = IO range 0x1000-0x10FFF
-> Root port 1 = IO range 0x11000-0x20FFF
-> Root port 2 = IO range 0x21000-0x30FFF
-> 
-> since the IO addresses are being remapped into PCI IO range printed during
-> boot.
-> 
-> PCI I/O : 0xffff7ffffae00000 - 0xffff7ffffbe00000   (    16 MB)
-> 
-> and each root port would remap to 64k of the 16MB range.
-> 
-> >
-> > Any comments are very appreciated!
-> >
-> > Tomasz
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> 
-> 
+Tim
+
+Tim Harvey - Principal Software Engineer
+Gateworks Corporation - http://www.gateworks.com/
+3026 S. Higuera St. San Luis Obispo CA 93401
+805-781-2000
