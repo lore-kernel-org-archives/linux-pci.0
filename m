@@ -1,561 +1,321 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:36735 "EHLO
-	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754678AbbLVXoA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Dec 2015 18:44:00 -0500
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, David Daney <david.daney@cavium.com>
-Subject: [PATCH v2 1/2] PCI: generic: Refactor code to enable reuse by other drivers.
-Date: Tue, 22 Dec 2015 15:43:51 -0800
-Message-Id: <1450827832-3294-2-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1450827832-3294-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1450827832-3294-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: Vineet.Gupta1@synopsys.com, helgaas@kernel.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
+	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v3 1/2] PCI support added to ARC
+Date: Mon, 21 Dec 2015 15:44:15 +0000
+Message-Id: <8f605456b30bf94a28cececab99d3f5c6d8e4f8b.1450694884.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1450694884.git.jpinto@synopsys.com>
+References: <cover.1450694884.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1450694884.git.jpinto@synopsys.com>
+References: <cover.1450694884.git.jpinto@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+This patch adds PCI support to ARC and updates drivers/pci Makefile enabling
+the ARC arch to use the generic PCI setup functions.
 
-No change in functionality.
-
-Move structure definitions into a separate header file.  Move common
-code to new file with Kconfig machinery to build it.  Split probe
-function in to two parts:
-
-   - a small driver specific probe function (gen_pci_probe)
-
-   - a common probe that can be used by other drivers
-     (pci_host_common_probe)
-
-Signed-off-by: David Daney <david.daney@cavium.com>
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 ---
- drivers/pci/host/Kconfig            |   4 +
- drivers/pci/host/Makefile           |   1 +
- drivers/pci/host/pci-host-common.c  | 194 ++++++++++++++++++++++++++++++++++++
- drivers/pci/host/pci-host-common.h  |  56 +++++++++++
- drivers/pci/host/pci-host-generic.c | 190 +----------------------------------
- 5 files changed, 259 insertions(+), 186 deletions(-)
- create mode 100644 drivers/pci/host/pci-host-common.c
- create mode 100644 drivers/pci/host/pci-host-common.h
+Change v2 -> v3 (Bjorn Helgaas):
+- arch/arc/kernel/pcibios.c unused functions were removed and also the
+arch/arc/include/asm/mach/pci.h was removed because was no longer necessary
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index f131ba9..f171459 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -53,9 +53,13 @@ config PCI_RCAR_GEN2_PCIE
- 	help
- 	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
+Change v1 -> v2:
+- In arch/arc/Kconfig, the new menu entry (Bus Configuration) was moved to the
+slot between sourcing of drivers/Kconfig and fs/Kconfig (Vineet Gupta)
+- In arch/arc/plat-axs10x/Kconfig the "select MIGHT_HAVE_PCI" option was placed
+in order as suggested (Vineet Gupta)
+- ioport_map() and ioport_unmap() were static inlined and included in
+the io.h (Vineet Gupta)
+- pcibios_min_io and pcibios_min_mem declaration moved to
+pcibios.c (Vineet Gupta)
+- pr_err() replaced by dev_err() in pcibios_enable_device() (Bjorn Helgaas)
+- string simplified in pcibios_enable_device() (Vineet Gupta)
+- pci_host_bridge_window structure was replaced by resource_entry structure, and
+list_for_each_entry() for resource_list_for_each_entry() in pcibios.c
+
+ arch/arc/Kconfig             | 23 ++++++++++++++++++
+ arch/arc/include/asm/dma.h   |  5 ++++
+ arch/arc/include/asm/io.h    | 10 ++++++++
+ arch/arc/include/asm/pci.h   | 43 ++++++++++++++++++++++++++++++++++
+ arch/arc/kernel/Makefile     |  1 +
+ arch/arc/kernel/pcibios.c    | 55 ++++++++++++++++++++++++++++++++++++++++++++
+ arch/arc/mm/ioremap.c        | 10 +++++++-
+ arch/arc/plat-axs10x/Kconfig |  1 +
+ drivers/pci/Makefile         |  1 +
+ 9 files changed, 148 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arc/include/asm/pci.h
+ create mode 100644 arch/arc/kernel/pcibios.c
+
+diff --git a/arch/arc/Kconfig b/arch/arc/Kconfig
+index 2c2ac3f..98b32c1 100644
+--- a/arch/arc/Kconfig
++++ b/arch/arc/Kconfig
+@@ -19,6 +19,7 @@ config ARC
+ 	select GENERIC_FIND_FIRST_BIT
+ 	# for now, we don't need GENERIC_IRQ_PROBE, CONFIG_GENERIC_IRQ_CHIP
+ 	select GENERIC_IRQ_SHOW
++	select GENERIC_PCI_IOMAP
+ 	select GENERIC_PENDING_IRQ if SMP
+ 	select GENERIC_SMP_IDLE_THREAD
+ 	select HAVE_ARCH_KGDB
+@@ -39,6 +40,9 @@ config ARC
+ 	select PERF_USE_VMALLOC
+ 	select HAVE_DEBUG_STACKOVERFLOW
  
-+config PCI_HOST_COMMON
++config MIGHT_HAVE_PCI
 +	bool
 +
- config PCI_HOST_GENERIC
- 	bool "Generic PCI host controller"
- 	depends on (ARM || ARM64) && OF
-+	select PCI_HOST_COMMON
- 	help
- 	  Say Y here if you want to support a simple generic PCI host
- 	  controller, such as the one emulated by kvmtool.
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 9d4d3c6..ba2c51f 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -6,6 +6,7 @@ obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
- obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
- obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
- obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
-+obj-$(CONFIG_PCI_HOST_COMMON) += pci-host-common.o
- obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
- obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
- obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
-diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-new file mode 100644
-index 0000000..e9f850f
---- /dev/null
-+++ b/drivers/pci/host/pci-host-common.c
-@@ -0,0 +1,194 @@
-+/*
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ *
-+ * Copyright (C) 2014 ARM Limited
-+ *
-+ * Author: Will Deacon <will.deacon@arm.com>
-+ */
+ config TRACE_IRQFLAGS_SUPPORT
+ 	def_bool y
+ 
+@@ -570,6 +574,25 @@ endmenu	 # "ARC Architecture Configuration"
+ source "mm/Kconfig"
+ source "net/Kconfig"
+ source "drivers/Kconfig"
 +
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_address.h>
-+#include <linux/of_pci.h>
-+#include <linux/platform_device.h>
++menu "Bus Support"
 +
-+#include "pci-host-common.h"
++config PCI
++	bool "PCI support" if MIGHT_HAVE_PCI
++	help
++	  PCI is the name of a bus system, i.e. the way the CPU talks to the other stuff inside
++	  your box.Find out if your board/platform have PCI.
++	  Note: PCIE support for Synopsys Device will be available only when
++	  HAPS DX is configured with PCIE RC bitmap. If you have PCI, say Y, otherwise N.
 +
-+static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
-+{
-+	pci_free_resource_list(&pci->resources);
-+}
++config PCI_SYSCALL
++	def_bool PCI
 +
-+static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
-+{
-+	int err, res_valid = 0;
-+	struct device *dev = pci->host.dev.parent;
-+	struct device_node *np = dev->of_node;
-+	resource_size_t iobase;
-+	struct resource_entry *win;
++source "drivers/pci/Kconfig"
++source "drivers/pci/pcie/Kconfig"
 +
-+	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
-+					       &iobase);
-+	if (err)
-+		return err;
++endmenu
 +
-+	resource_list_for_each_entry(win, &pci->resources) {
-+		struct resource *parent, *res = win->res;
-+
-+		switch (resource_type(res)) {
-+		case IORESOURCE_IO:
-+			parent = &ioport_resource;
-+			err = pci_remap_iospace(res, iobase);
-+			if (err) {
-+				dev_warn(dev, "error %d: failed to map resource %pR\n",
-+					 err, res);
-+				continue;
-+			}
-+			break;
-+		case IORESOURCE_MEM:
-+			parent = &iomem_resource;
-+			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-+			break;
-+		case IORESOURCE_BUS:
-+			pci->cfg.bus_range = res;
-+		default:
-+			continue;
-+		}
-+
-+		err = devm_request_resource(dev, parent, res);
-+		if (err)
-+			goto out_release_res;
-+	}
-+
-+	if (!res_valid) {
-+		dev_err(dev, "non-prefetchable memory resource required\n");
-+		err = -EINVAL;
-+		goto out_release_res;
-+	}
-+
-+	return 0;
-+
-+out_release_res:
-+	gen_pci_release_of_pci_ranges(pci);
-+	return err;
-+}
-+
-+static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
-+{
-+	int err;
-+	u8 bus_max;
-+	resource_size_t busn;
-+	struct resource *bus_range;
-+	struct device *dev = pci->host.dev.parent;
-+	struct device_node *np = dev->of_node;
-+	u32 sz = 1 << pci->cfg.ops->bus_shift;
-+
-+	err = of_address_to_resource(np, 0, &pci->cfg.res);
-+	if (err) {
-+		dev_err(dev, "missing \"reg\" property\n");
-+		return err;
-+	}
-+
-+	/* Limit the bus-range to fit within reg */
-+	bus_max = pci->cfg.bus_range->start +
-+		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
-+	pci->cfg.bus_range->end = min_t(resource_size_t,
-+					pci->cfg.bus_range->end, bus_max);
-+
-+	pci->cfg.win = devm_kcalloc(dev, resource_size(pci->cfg.bus_range),
-+				    sizeof(*pci->cfg.win), GFP_KERNEL);
-+	if (!pci->cfg.win)
-+		return -ENOMEM;
-+
-+	/* Map our Configuration Space windows */
-+	if (!devm_request_mem_region(dev, pci->cfg.res.start,
-+				     resource_size(&pci->cfg.res),
-+				     "Configuration Space"))
-+		return -ENOMEM;
-+
-+	bus_range = pci->cfg.bus_range;
-+	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
-+		u32 idx = busn - bus_range->start;
-+
-+		pci->cfg.win[idx] = devm_ioremap(dev,
-+						 pci->cfg.res.start + idx * sz,
-+						 sz);
-+		if (!pci->cfg.win[idx])
-+			return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+int pci_host_common_probe(struct platform_device *pdev,
-+			  struct gen_pci *pci)
-+{
-+	int err;
-+	const char *type;
-+	struct device *dev = &pdev->dev;
-+	struct device_node *np = dev->of_node;
-+	struct pci_bus *bus, *child;
-+
-+	type = of_get_property(np, "device_type", NULL);
-+	if (!type || strcmp(type, "pci")) {
-+		dev_err(dev, "invalid \"device_type\" %s\n", type);
-+		return -EINVAL;
-+	}
-+
-+	of_pci_check_probe_only();
-+
-+	pci->host.dev.parent = dev;
-+	INIT_LIST_HEAD(&pci->host.windows);
-+	INIT_LIST_HEAD(&pci->resources);
-+
-+	/* Parse our PCI ranges and request their resources */
-+	err = gen_pci_parse_request_of_pci_ranges(pci);
-+	if (err)
-+		return err;
-+
-+	/* Parse and map our Configuration Space windows */
-+	err = gen_pci_parse_map_cfg_windows(pci);
-+	if (err) {
-+		gen_pci_release_of_pci_ranges(pci);
-+		return err;
-+	}
-+
-+	/* Do not reassign resources if probe only */
-+	if (!pci_has_flag(PCI_PROBE_ONLY))
-+		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
-+
-+
-+	bus = pci_scan_root_bus(dev, pci->cfg.bus_range->start,
-+				&pci->cfg.ops->ops, pci, &pci->resources);
-+	if (!bus) {
-+		dev_err(dev, "Scanning rootbus failed");
-+		return -ENODEV;
-+	}
-+
-+	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-+
-+	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-+		pci_bus_size_bridges(bus);
-+		pci_bus_assign_resources(bus);
-+
-+		list_for_each_entry(child, &bus->children, node)
-+			pcie_bus_configure_settings(child);
-+	}
-+
-+	pci_bus_add_devices(bus);
-+	return 0;
-+}
-+
-+MODULE_DESCRIPTION("Generic PCI host driver common code");
-+MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/host/pci-host-common.h b/drivers/pci/host/pci-host-common.h
-new file mode 100644
-index 0000000..9423808
---- /dev/null
-+++ b/drivers/pci/host/pci-host-common.h
-@@ -0,0 +1,56 @@
-+/*
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ *
-+ * Copyright (C) 2014 ARM Limited
-+ *
-+ * Author: Will Deacon <will.deacon@arm.com>
-+ */
-+
-+#ifndef _PCI_HOST_COMMON_H
-+#define _PCI_HOST_COMMON_H
-+
-+#include <linux/kernel.h>
-+#include <linux/platform_device.h>
-+
-+struct gen_pci_cfg_bus_ops {
-+	u32 bus_shift;
-+	struct pci_ops ops;
-+};
-+
-+struct gen_pci_cfg_windows {
-+	struct resource				res;
-+	struct resource				*bus_range;
-+	void __iomem				**win;
-+
-+	struct gen_pci_cfg_bus_ops		*ops;
-+};
-+
-+/*
-+ * ARM pcibios functions expect the ARM struct pci_sys_data as the PCI
-+ * sysdata.  Add pci_sys_data as the first element in struct gen_pci so
-+ * that when we use a gen_pci pointer as sysdata, it is also a pointer to
-+ * a struct pci_sys_data.
-+ */
-+struct gen_pci {
-+#ifdef CONFIG_ARM
-+	struct pci_sys_data			sys;
+ source "fs/Kconfig"
+ source "arch/arc/Kconfig.debug"
+ source "security/Kconfig"
+diff --git a/arch/arc/include/asm/dma.h b/arch/arc/include/asm/dma.h
+index ca7c451..37942fa 100644
+--- a/arch/arc/include/asm/dma.h
++++ b/arch/arc/include/asm/dma.h
+@@ -10,5 +10,10 @@
+ #define ASM_ARC_DMA_H
+ 
+ #define MAX_DMA_ADDRESS 0xC0000000
++#ifdef CONFIG_PCI
++extern int isa_dma_bridge_buggy;
++#else
++#define isa_dma_bridge_buggy    (0)
 +#endif
-+	struct pci_host_bridge			host;
-+	struct gen_pci_cfg_windows		cfg;
-+	struct list_head			resources;
-+};
+ 
+ #endif
+diff --git a/arch/arc/include/asm/io.h b/arch/arc/include/asm/io.h
+index 694ece8..2ec3cf4 100644
+--- a/arch/arc/include/asm/io.h
++++ b/arch/arc/include/asm/io.h
+@@ -16,7 +16,17 @@
+ extern void __iomem *ioremap(unsigned long physaddr, unsigned long size);
+ extern void __iomem *ioremap_prot(phys_addr_t offset, unsigned long size,
+ 				  unsigned long flags);
++static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
++{
++	return (void __iomem *)port;
++}
 +
-+int pci_host_common_probe(struct platform_device *pdev,
-+			  struct gen_pci *pci);
++static inline void ioport_unmap(void __iomem *addr)
++{
++}
 +
-+#endif /* _PCI_HOST_COMMON_H */
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 5434c90..e8aa78f 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -25,33 +25,7 @@
- #include <linux/of_pci.h>
- #include <linux/platform_device.h>
+ extern void iounmap(const void __iomem *addr);
++extern int pci_ioremap_io(unsigned int offset, phys_addr_t phys_addr);
  
--struct gen_pci_cfg_bus_ops {
--	u32 bus_shift;
--	struct pci_ops ops;
--};
--
--struct gen_pci_cfg_windows {
--	struct resource				res;
--	struct resource				*bus_range;
--	void __iomem				**win;
--
--	struct gen_pci_cfg_bus_ops		*ops;
--};
--
--/*
-- * ARM pcibios functions expect the ARM struct pci_sys_data as the PCI
-- * sysdata.  Add pci_sys_data as the first element in struct gen_pci so
-- * that when we use a gen_pci pointer as sysdata, it is also a pointer to
-- * a struct pci_sys_data.
-- */
--struct gen_pci {
--#ifdef CONFIG_ARM
--	struct pci_sys_data			sys;
--#endif
--	struct pci_host_bridge			host;
--	struct gen_pci_cfg_windows		cfg;
--	struct list_head			resources;
--};
-+#include "pci-host-common.h"
+ #define ioremap_nocache(phy, sz)	ioremap(phy, sz)
+ #define ioremap_wc(phy, sz)		ioremap(phy, sz)
+diff --git a/arch/arc/include/asm/pci.h b/arch/arc/include/asm/pci.h
+new file mode 100644
+index 0000000..a0a0fa5
+--- /dev/null
++++ b/arch/arc/include/asm/pci.h
+@@ -0,0 +1,43 @@
++/*
++ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef _ASM_ARC_PCI_H
++#define _ASM_ARC_PCI_H
++
++#ifdef __KERNEL__
++#include <asm-generic/pci-dma-compat.h>
++#include <asm-generic/pci-bridge.h>
++
++#include <linux/ioport.h>
++
++extern unsigned long pcibios_min_io;
++#define PCIBIOS_MIN_IO pcibios_min_io
++extern unsigned long pcibios_min_mem;
++#define PCIBIOS_MIN_MEM pcibios_min_mem
++
++#define pcibios_assign_all_busses()	1
++/*
++ * The PCI address space does equal the physical memory address space.
++ * The networking and block device layers use this boolean for bounce
++ * buffer decisions.
++ */
++#define PCI_DMA_BUS_IS_PHYS     (1)
++
++/*
++ * Setup early fixed I/O mapping.
++ */
++#if defined(CONFIG_PCI)
++extern void pci_map_io_early(unsigned long pfn);
++#else
++static inline void pci_map_io_early(unsigned long pfn) {}
++#endif
++
++#endif /* __KERNEL__ */
++
++#endif /* _ASM_ARC_PCI_H */
++
+diff --git a/arch/arc/kernel/Makefile b/arch/arc/kernel/Makefile
+index e7f3625..1bc2036 100644
+--- a/arch/arc/kernel/Makefile
++++ b/arch/arc/kernel/Makefile
+@@ -12,6 +12,7 @@ obj-y	:= arcksyms.o setup.o irq.o time.o reset.o ptrace.o process.o devtree.o
+ obj-y	+= signal.o traps.o sys.o troubleshoot.o stacktrace.o disasm.o clk.o
+ obj-$(CONFIG_ISA_ARCOMPACT)		+= entry-compact.o intc-compact.o
+ obj-$(CONFIG_ISA_ARCV2)			+= entry-arcv2.o intc-arcv2.o
++obj-$(CONFIG_PCI)  			+= pcibios.o
  
- static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
- 					     unsigned int devfn,
-@@ -102,175 +76,19 @@ static const struct of_device_id gen_pci_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, gen_pci_of_match);
+ obj-$(CONFIG_MODULES)			+= arcksyms.o module.o
+ obj-$(CONFIG_SMP) 			+= smp.o
+diff --git a/arch/arc/kernel/pcibios.c b/arch/arc/kernel/pcibios.c
+new file mode 100644
+index 0000000..99ee329
+--- /dev/null
++++ b/arch/arc/kernel/pcibios.c
+@@ -0,0 +1,55 @@
++/*
++ * Copyright (C) 2014-2015 Synopsys, Inc. (www.synopsys.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ */
++
++#include <linux/kernel.h>
++#include <linux/pci.h>
++#include <linux/delay.h>
++#include <linux/string.h>
++#include <linux/init.h>
++#include <linux/sched.h>
++#include <linux/errno.h>
++#include <linux/bootmem.h>
++#include <linux/sizes.h>
++#include <linux/slab.h>
++
++#include <asm/pci.h>
++
++unsigned long pcibios_min_io = 0x100;
++EXPORT_SYMBOL(pcibios_min_io);
++
++unsigned long pcibios_min_mem = 0x100000;
++EXPORT_SYMBOL(pcibios_min_mem);
++
++/*
++ * We don't have to worry about legacy ISA devices, so nothing to do here
++ */
++resource_size_t pcibios_align_resource(void *data, const struct resource *res,
++				resource_size_t size, resource_size_t align)
++{
++	return res->start;
++}
++
++/*
++ * If the bus contains any of these devices, then we must not turn on
++ * parity checking of any kind.  Currently this is CyberPro 20x0 only.
++ */
++static inline int pdev_bad_for_parity(struct pci_dev *dev)
++{
++	return ((dev->vendor == PCI_VENDOR_ID_INTERG &&
++		 (dev->device == PCI_DEVICE_ID_INTERG_2000 ||
++		  dev->device == PCI_DEVICE_ID_INTERG_2010)) ||
++		(dev->vendor == PCI_VENDOR_ID_ITE &&
++		 dev->device == PCI_DEVICE_ID_ITE_8152));
++
++}
++
++void pcibios_fixup_bus(struct pci_bus *bus)
++{
++}
++EXPORT_SYMBOL(pcibios_fixup_bus);
+diff --git a/arch/arc/mm/ioremap.c b/arch/arc/mm/ioremap.c
+index 739e65f..fe807b0 100644
+--- a/arch/arc/mm/ioremap.c
++++ b/arch/arc/mm/ioremap.c
+@@ -13,6 +13,7 @@
+ #include <linux/mm.h>
+ #include <linux/slab.h>
+ #include <linux/cache.h>
++#include <linux/sizes.h>
  
--static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
--{
--	pci_free_resource_list(&pci->resources);
--}
--
--static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
--{
--	int err, res_valid = 0;
--	struct device *dev = pci->host.dev.parent;
--	struct device_node *np = dev->of_node;
--	resource_size_t iobase;
--	struct resource_entry *win;
--
--	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
--					       &iobase);
--	if (err)
--		return err;
--
--	resource_list_for_each_entry(win, &pci->resources) {
--		struct resource *parent, *res = win->res;
--
--		switch (resource_type(res)) {
--		case IORESOURCE_IO:
--			parent = &ioport_resource;
--			err = pci_remap_iospace(res, iobase);
--			if (err) {
--				dev_warn(dev, "error %d: failed to map resource %pR\n",
--					 err, res);
--				continue;
--			}
--			break;
--		case IORESOURCE_MEM:
--			parent = &iomem_resource;
--			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
--			break;
--		case IORESOURCE_BUS:
--			pci->cfg.bus_range = res;
--		default:
--			continue;
--		}
--
--		err = devm_request_resource(dev, parent, res);
--		if (err)
--			goto out_release_res;
--	}
--
--	if (!res_valid) {
--		dev_err(dev, "non-prefetchable memory resource required\n");
--		err = -EINVAL;
--		goto out_release_res;
--	}
--
--	return 0;
--
--out_release_res:
--	gen_pci_release_of_pci_ranges(pci);
--	return err;
--}
--
--static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
--{
--	int err;
--	u8 bus_max;
--	resource_size_t busn;
--	struct resource *bus_range;
--	struct device *dev = pci->host.dev.parent;
--	struct device_node *np = dev->of_node;
--	u32 sz = 1 << pci->cfg.ops->bus_shift;
--
--	err = of_address_to_resource(np, 0, &pci->cfg.res);
--	if (err) {
--		dev_err(dev, "missing \"reg\" property\n");
--		return err;
--	}
--
--	/* Limit the bus-range to fit within reg */
--	bus_max = pci->cfg.bus_range->start +
--		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
--	pci->cfg.bus_range->end = min_t(resource_size_t,
--					pci->cfg.bus_range->end, bus_max);
--
--	pci->cfg.win = devm_kcalloc(dev, resource_size(pci->cfg.bus_range),
--				    sizeof(*pci->cfg.win), GFP_KERNEL);
--	if (!pci->cfg.win)
--		return -ENOMEM;
--
--	/* Map our Configuration Space windows */
--	if (!devm_request_mem_region(dev, pci->cfg.res.start,
--				     resource_size(&pci->cfg.res),
--				     "Configuration Space"))
--		return -ENOMEM;
--
--	bus_range = pci->cfg.bus_range;
--	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
--		u32 idx = busn - bus_range->start;
--
--		pci->cfg.win[idx] = devm_ioremap(dev,
--						 pci->cfg.res.start + idx * sz,
--						 sz);
--		if (!pci->cfg.win[idx])
--			return -ENOMEM;
--	}
--
--	return 0;
--}
--
- static int gen_pci_probe(struct platform_device *pdev)
+ void __iomem *ioremap(unsigned long paddr, unsigned long size)
  {
--	int err;
--	const char *type;
--	const struct of_device_id *of_id;
- 	struct device *dev = &pdev->dev;
--	struct device_node *np = dev->of_node;
-+	const struct of_device_id *of_id;
- 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
--	struct pci_bus *bus, *child;
- 
- 	if (!pci)
- 		return -ENOMEM;
- 
--	type = of_get_property(np, "device_type", NULL);
--	if (!type || strcmp(type, "pci")) {
--		dev_err(dev, "invalid \"device_type\" %s\n", type);
--		return -EINVAL;
--	}
--
--	of_pci_check_probe_only();
--
--	of_id = of_match_node(gen_pci_of_match, np);
-+	of_id = of_match_node(gen_pci_of_match, dev->of_node);
- 	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
--	pci->host.dev.parent = dev;
--	INIT_LIST_HEAD(&pci->host.windows);
--	INIT_LIST_HEAD(&pci->resources);
--
--	/* Parse our PCI ranges and request their resources */
--	err = gen_pci_parse_request_of_pci_ranges(pci);
--	if (err)
--		return err;
--
--	/* Parse and map our Configuration Space windows */
--	err = gen_pci_parse_map_cfg_windows(pci);
--	if (err) {
--		gen_pci_release_of_pci_ranges(pci);
--		return err;
--	}
--
--	/* Do not reassign resources if probe only */
--	if (!pci_has_flag(PCI_PROBE_ONLY))
--		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
--
--
--	bus = pci_scan_root_bus(dev, pci->cfg.bus_range->start,
--				&pci->cfg.ops->ops, pci, &pci->resources);
--	if (!bus) {
--		dev_err(dev, "Scanning rootbus failed");
--		return -ENODEV;
--	}
--
--	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
--
--	if (!pci_has_flag(PCI_PROBE_ONLY)) {
--		pci_bus_size_bridges(bus);
--		pci_bus_assign_resources(bus);
--
--		list_for_each_entry(child, &bus->children, node)
--			pcie_bus_configure_settings(child);
--	}
- 
--	pci_bus_add_devices(bus);
--	return 0;
-+	return pci_host_common_probe(pdev, pci);
+@@ -80,7 +81,6 @@ void __iomem *ioremap_prot(phys_addr_t paddr, unsigned long size,
  }
+ EXPORT_SYMBOL(ioremap_prot);
  
- static struct platform_driver gen_pci_driver = {
+-
+ void iounmap(const void __iomem *addr)
+ {
+ 	if (addr >= (void __force __iomem *)ARC_UNCACHED_ADDR_SPACE)
+@@ -89,3 +89,11 @@ void iounmap(const void __iomem *addr)
+ 	vfree((void *)(PAGE_MASK & (unsigned long __force)addr));
+ }
+ EXPORT_SYMBOL(iounmap);
++
++#ifdef CONFIG_PCI
++int pci_ioremap_io(unsigned int offset, phys_addr_t phys_addr)
++{
++	return ioremap_nocache(phys_addr + offset,  SZ_64K);
++}
++EXPORT_SYMBOL_GPL(pci_ioremap_io);
++#endif
+diff --git a/arch/arc/plat-axs10x/Kconfig b/arch/arc/plat-axs10x/Kconfig
+index d475f9d..426ac4b 100644
+--- a/arch/arc/plat-axs10x/Kconfig
++++ b/arch/arc/plat-axs10x/Kconfig
+@@ -11,6 +11,7 @@ menuconfig ARC_PLAT_AXS10X
+ 	select DW_APB_ICTL
+ 	select GPIO_DWAPB
+ 	select OF_GPIO
++	select MIGHT_HAVE_PCI
+ 	select GENERIC_IRQ_CHIP
+ 	select ARCH_REQUIRE_GPIOLIB
+ 	help
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index be3f631..2154092 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -32,6 +32,7 @@ obj-$(CONFIG_PCI_IOV) += iov.o
+ # Some architectures use the generic PCI setup functions
+ #
+ obj-$(CONFIG_ALPHA) += setup-irq.o
++obj-$(CONFIG_ARC) += setup-irq.o
+ obj-$(CONFIG_ARM) += setup-irq.o
+ obj-$(CONFIG_ARM64) += setup-irq.o
+ obj-$(CONFIG_UNICORE32) += setup-irq.o
 -- 
-1.8.3.1
+1.8.1.5
 
