@@ -1,83 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f47.google.com ([209.85.213.47]:35164 "EHLO
-	mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751647AbbLIEkH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Dec 2015 23:40:07 -0500
-MIME-Version: 1.0
-In-Reply-To: <56669C50.9060700@linaro.org>
-References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
-	<1449149725-27607-2-git-send-email-stanimir.varbanov@linaro.org>
-	<56669C50.9060700@linaro.org>
-Date: Wed, 9 Dec 2015 10:10:05 +0530
-Message-ID: <CAHM4w1k_EAt+xBBYyG3B7W9Fegc4j+uRq5t_biUsxOGt+k+xUA@mail.gmail.com>
-Subject: Re: [PATCH v4 1/5] PCI: designware: add memory barrier after enabling region
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Stanimir Varbanov <stanimir.varbanov@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Keith Busch <keith.busch@intel.com>
+To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv7 6/6] PCI/AER: Use 32 bit int type domains
+Date: Mon, 21 Dec 2015 10:45:00 -0700
+Message-Id: <1450719900-2824-7-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1450719900-2824-1-git-send-email-keith.busch@intel.com>
+References: <1450719900-2824-1-git-send-email-keith.busch@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 8, 2015 at 2:31 PM, Stanimir Varbanov
-<stanimir.varbanov@linaro.org> wrote:
->
-> On 12/03/2015 03:35 PM, Stanimir Varbanov wrote:
-> > Add 'write memory' barrier after enable region in PCIE_ATU_CR2
-> > register. The barrier is needed to ensure that the region enable
-> > request has been reached it's destination at time when we
-> > read/write to PCI configuration space.
-> >
-> > Without this barrier PCI device enumeration during kernel boot
-> > is not reliable, and reading configuration space for particular
-> > PCI device on the bus returns zero aka no device.
->
-> Anand, Jingoo, what is your opinion?
->
-> >
-> > Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-> > ---
-> >  drivers/pci/host/pcie-designware.c |    5 +++++
-> >  1 file changed, 5 insertions(+)
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index 02a7452bdf23..ed4dc2e2553b 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -164,6 +164,11 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
-> >       dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
-> >       dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
-> >       dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-> > +     /*
-> > +      * ensure that the ATU enable has been happaned before accessing
-> > +      * pci configuration/io spaces through dw_pcie_cfg_[read|write].
-> > +      */
-> > +     wmb();
-> >  }
-> >
+New pci device provides additional pci domains that start above what 16
+bits can address.
 
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-My understnading is that since writel() of dw_pcie_writel_rc() in
-above code and readl(), writel() of dw_pcie_cfg_[read|write]() (which
-will follow) goes through same device (ie PCIe host here). So, it is
-guaranteed that 1st writel() will be executed before later
-readl()/writel(). If that is true then we do not need any explicit
-barrier here.
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index 182224a..20db790 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -41,12 +41,12 @@ struct aer_error_inj {
+ 	u32 header_log1;
+ 	u32 header_log2;
+ 	u32 header_log3;
+-	u16 domain;
++	u32 domain;
+ };
+ 
+ struct aer_error {
+ 	struct list_head list;
+-	u16 domain;
++	u32 domain;
+ 	unsigned int bus;
+ 	unsigned int devfn;
+ 	int pos_cap_err;
+@@ -74,7 +74,7 @@ static LIST_HEAD(pci_bus_ops_list);
+ /* Protect einjected and pci_bus_ops_list */
+ static DEFINE_SPINLOCK(inject_lock);
+ 
+-static void aer_error_init(struct aer_error *err, u16 domain,
++static void aer_error_init(struct aer_error *err, u32 domain,
+ 			   unsigned int bus, unsigned int devfn,
+ 			   int pos_cap_err)
+ {
+@@ -86,7 +86,7 @@ static void aer_error_init(struct aer_error *err, u16 domain,
+ }
+ 
+ /* inject_lock must be held before calling */
+-static struct aer_error *__find_aer_error(u16 domain, unsigned int bus,
++static struct aer_error *__find_aer_error(u32 domain, unsigned int bus,
+ 					  unsigned int devfn)
+ {
+ 	struct aer_error *err;
+@@ -106,7 +106,7 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
+ 	int domain = pci_domain_nr(dev->bus);
+ 	if (domain < 0)
+ 		return NULL;
+-	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
++	return __find_aer_error(domain, dev->bus->number, dev->devfn);
+ }
+ 
+ /* inject_lock must be held before calling */
+@@ -196,7 +196,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
+ 	domain = pci_domain_nr(bus);
+ 	if (domain < 0)
+ 		goto out;
+-	err = __find_aer_error((u16)domain, bus->number, devfn);
++	err = __find_aer_error(domain, bus->number, devfn);
+ 	if (!err)
+ 		goto out;
+ 
+@@ -228,7 +228,7 @@ static int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where,
+ 	domain = pci_domain_nr(bus);
+ 	if (domain < 0)
+ 		goto out;
+-	err = __find_aer_error((u16)domain, bus->number, devfn);
++	err = __find_aer_error(domain, bus->number, devfn);
+ 	if (!err)
+ 		goto out;
+ 
+@@ -329,7 +329,7 @@ static int aer_inject(struct aer_error_inj *einj)
+ 	u32 sever, cor_mask, uncor_mask, cor_mask_orig = 0, uncor_mask_orig = 0;
+ 	int ret = 0;
+ 
+-	dev = pci_get_domain_bus_and_slot((int)einj->domain, einj->bus, devfn);
++	dev = pci_get_domain_bus_and_slot(einj->domain, einj->bus, devfn);
+ 	if (!dev)
+ 		return -ENODEV;
+ 	rpdev = pcie_find_root_port(dev);
+-- 
+2.6.2.307.g37023ba
 
-Arnd, Russel: whats your opinion here.
-
-~Pratyush
