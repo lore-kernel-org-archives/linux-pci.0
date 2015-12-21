@@ -1,242 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43334 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752571AbbLKFSc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:18:32 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 59/60] PCI: Don't set flags to 0 when assign resource fail
-Date: Thu, 10 Dec 2015 21:06:55 -0800
-Message-Id: <1449810416-2950-60-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 21 Dec 2015 18:12:14 +0000
+From: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+CC: <bhelgaas@google.com>, <arnd@arndb.de>, <will.deacon@arm.com>,
+	<catalin.marinas@arm.com>, <rjw@rjwysocki.net>,
+	<hanjun.guo@linaro.org>, <Lorenzo.Pieralisi@arm.com>,
+	<okaya@codeaurora.org>, <jiang.liu@linux.intel.com>,
+	<Stefano.Stabellini@eu.citrix.com>,
+	<robert.richter@caviumnetworks.com>, <mw@semihalf.com>,
+	<Liviu.Dudau@arm.com>, <ddaney@caviumnetworks.com>,
+	<tglx@linutronix.de>, <wangyijing@huawei.com>,
+	<Suravee.Suthikulpanit@amd.com>, <msalter@redhat.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linaro-acpi@lists.linaro.org>, <jchandra@broadcom.com>,
+	<jcm@redhat.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Subject: Re: [PATCH V2 06/23] XEN / PCI: Remove the dependence on arch x86
+ when PCI_MMCONFIG=y
+In-Reply-To: <1450278993-12664-7-git-send-email-tn@semihalf.com>
+Message-ID: <alpine.DEB.2.02.1512211811550.3096@kaball.uk.xensource.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <1450278993-12664-7-git-send-email-tn@semihalf.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We want to keep resource flags instead of clearing it after resource
-allocation fails.
+On Wed, 16 Dec 2015, Tomasz Nowicki wrote:
+> In drivers/xen/pci.c, there are arch x86 dependent codes when
+> CONFIG_PCI_MMCONFIG is enabled, since CONFIG_PCI_MMCONFIG
+> depends on ACPI, so this will prevent XEN PCI running on other
+> architectures using ACPI with PCI_MMCONFIG enabled (such as ARM64).
+> 
+> Fortunatly, it can be sloved in a simple way. In drivers/xen/pci.c,
+> the only x86 dependent code is if ((pci_probe & PCI_PROBE_MMCONF) == 0),
+> and it's defined in asm/pci_x86.h, the code means that
+> if the PCI resource is not probed in PCI_PROBE_MMCONF way, just
+> ingnore the xen mcfg init. Actually this is duplicate, because
+> if PCI resource is not probed in PCI_PROBE_MMCONF way, the
+> pci_mmconfig_list will be empty, and the if (list_empty())
+> after it will do the same job.
+> 
+> So just remove the arch related code and the head file, this
+> will be no functional change for x86, and also makes xen/pci.c
+> usable for other architectures.
+> 
+> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+> Cc: Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>
+> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Make flags take IORESOURCE_UNSET | IORESOURCE_DISABLED instead.
+Acked-by: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/bus.c       |  2 +-
- drivers/pci/setup-bus.c | 45 +++++++++++++++++++++++----------------------
- drivers/pci/setup-res.c |  3 ++-
- 3 files changed, 26 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 0859e77..69f1b5e 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -140,7 +140,7 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
- 	type_mask |= IORESOURCE_TYPE_BITS;
- 
- 	pci_bus_for_each_resource(bus, r, i) {
--		if (!r)
-+		if (!r || resource_disabled(r))
- 			continue;
- 
- 		/* type_mask must match */
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 5868806..cf55828 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -264,13 +264,6 @@ static void __dev_assign_resources_prepare(struct pci_dev *dev,
- 	pdev_assign_resources_prepare(dev, realloc_head, head);
- }
- 
--static inline void reset_resource(struct resource *res)
--{
--	res->start = 0;
--	res->end = 0;
--	res->flags = 0;
--}
--
- static void sort_resources(struct list_head *head)
- {
- 	struct pci_dev_resource *res1, *tmp_res, *res2;
-@@ -337,7 +330,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 			res->start = align;
- 			res->end = res->start + add_size - 1;
- 			if (pci_assign_resource(add_res->dev, idx))
--				reset_resource(res);
-+				res->flags |= IORESOURCE_DISABLED;
- 		} else {
- 			/* could just assigned with alt, add difference ? */
- 			resource_size_t size;
-@@ -391,7 +384,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
- 				add_to_list(fail_head, dev_res->dev, res);
--			reset_resource(res);
-+			res->flags |= IORESOURCE_DISABLED;
- 		}
- 	}
- }
-@@ -677,7 +670,7 @@ static void __assign_resources_alt_sorted(struct list_head *head,
- 
- 		if (!res_to_dev_res(local_fail_head, res))
- 			add_to_list(local_fail_head, fail_res->dev, res);
--		reset_resource(res);
-+		res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 	}
- 	free_list(&local_alt_fail_head);
- }
-@@ -843,7 +836,7 @@ static void pci_setup_bridge_io(struct pci_dev *bridge)
- 	/* Set up the top and bottom of the PCI I/O segment for this bus. */
- 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 0];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
--	if (res->flags & IORESOURCE_IO) {
-+	if ((res->flags & IORESOURCE_IO) && !(res->flags & IORESOURCE_UNSET)) {
- 		pci_read_config_word(bridge, PCI_IO_BASE, &l);
- 		io_base_lo = (region.start >> 8) & io_mask;
- 		io_limit_lo = (region.end >> 8) & io_mask;
-@@ -873,7 +866,8 @@ static void pci_setup_bridge_mmio(struct pci_dev *bridge)
- 	/* Set up the top and bottom of the PCI Memory segment for this bus. */
- 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 1];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
--	if (res->flags & IORESOURCE_MEM) {
-+	if ((res->flags & IORESOURCE_MEM) &&
-+	    !(res->flags & IORESOURCE_UNSET)) {
- 		l = (region.start >> 16) & 0xfff0;
- 		l |= region.end & 0xfff00000;
- 		dev_info(&bridge->dev, "  bridge window %pR\n", res);
-@@ -898,7 +892,8 @@ static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
- 	bu = lu = 0;
- 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
--	if (res->flags & IORESOURCE_PREFETCH) {
-+	if ((res->flags & IORESOURCE_PREFETCH) &&
-+	    !(res->flags & IORESOURCE_UNSET)) {
- 		l = (region.start >> 16) & 0xfff0;
- 		l |= region.end & 0xfff00000;
- 		if (res->flags & IORESOURCE_MEM_64) {
-@@ -1028,6 +1023,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 
- 	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
- 	b_res[1].flags |= IORESOURCE_MEM;
-+	b_res[1].flags &= ~IORESOURCE_DISABLED;
- 
- 	pci_read_config_word(bridge, PCI_IO_BASE, &io);
- 	if (!io) {
-@@ -1035,8 +1031,10 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 		pci_read_config_word(bridge, PCI_IO_BASE, &io);
- 		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
- 	}
--	if (io)
-+	if (io) {
- 		b_res[0].flags |= IORESOURCE_IO;
-+		b_res[0].flags &= ~IORESOURCE_DISABLED;
-+	}
- 
- 	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
- 	    disconnect boundary by one PCI data phase.
-@@ -1053,6 +1051,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 	}
- 	if (pmem) {
- 		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
-+		b_res[2].flags &= ~IORESOURCE_DISABLED;
- 		if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
- 		    PCI_PREF_RANGE_TYPE_64) {
- 			b_res[2].flags |= IORESOURCE_MEM_64;
-@@ -1198,8 +1197,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 			struct resource *r = &dev->resource[i];
- 			unsigned long r_size, r_add_size;
- 
--			if (r->parent || !(r->flags & IORESOURCE_IO))
-+			if (r->parent || !(r->flags & IORESOURCE_IO) ||
-+			    resource_disabled(r))
- 				continue;
-+
- 			r_size = resource_size(r);
- 
- 			if (r_size < 0x400)
-@@ -1240,7 +1241,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
- 				 b_res, &bus->busn_res);
--		b_res->flags = 0;
-+		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 		return;
- 	}
- 
-@@ -1533,7 +1534,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			if (r->parent || (flags & IORESOURCE_PCI_FIXED) ||
- 			    ((flags & mask) != type &&
- 			     (flags & mask) != type2 &&
--			     (flags & mask) != type3))
-+			     (flags & mask) != type3) ||
-+			    resource_disabled(r))
- 				continue;
- 
- 			r_size = resource_size(r);
-@@ -1554,7 +1556,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
- 					i, r, (unsigned long long) align);
--				r->flags = 0;
-+				r->flags |= IORESOURCE_UNSET |
-+					    IORESOURCE_DISABLED;
- 				continue;
- 			}
- 
-@@ -1651,7 +1654,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
- 				 b_res, &bus->busn_res);
--		b_res->flags = 0;
-+		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 		return 0;
- 	}
- 
-@@ -2111,7 +2114,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 		/* keep the old size */
- 		r->end = resource_size(r) - 1;
- 		r->start = 0;
--		r->flags = 0;
-+		r->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 
- 		/* avoiding touch the one without PREF */
- 		if (type & IORESOURCE_PREFETCH)
-@@ -2380,7 +2383,6 @@ again:
- 
- 		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
--			res->flags = 0;
- 			/* last or third times and later */
- 			if (tried_times + 1 == pci_try_num ||
- 			    tried_times + 1 > 2)
-@@ -2464,7 +2466,6 @@ again:
- 
- 		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
--			res->flags = 0;
- 			/* last time */
- 			reset_bridge_resource_size(fail_res->dev, res);
- 		}
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index b196fcd..2a07e39 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -371,7 +371,8 @@ int pci_enable_resources(struct pci_dev *dev, int mask)
- 
- 		r = &dev->resource[i];
- 
--		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
-+		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)) ||
-+		    resource_disabled(r))
- 			continue;
- 		if ((i == PCI_ROM_RESOURCE) &&
- 				(!(r->flags & IORESOURCE_ROM_ENABLE)))
--- 
-1.8.4.5
-
+>  drivers/xen/pci.c | 6 ------
+>  1 file changed, 6 deletions(-)
+> 
+> diff --git a/drivers/xen/pci.c b/drivers/xen/pci.c
+> index 6785ebb..9a8dbe3 100644
+> --- a/drivers/xen/pci.c
+> +++ b/drivers/xen/pci.c
+> @@ -28,9 +28,6 @@
+>  #include <asm/xen/hypervisor.h>
+>  #include <asm/xen/hypercall.h>
+>  #include "../pci/pci.h"
+> -#ifdef CONFIG_PCI_MMCONFIG
+> -#include <asm/pci_x86.h>
+> -#endif
+>  
+>  static bool __read_mostly pci_seg_supported = true;
+>  
+> @@ -222,9 +219,6 @@ static int __init xen_mcfg_late(void)
+>  	if (!xen_initial_domain())
+>  		return 0;
+>  
+> -	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
+> -		return 0;
+> -
+>  	if (list_empty(&pci_mmcfg_list))
+>  		return 0;
+>  
+> -- 
+> 1.9.1
+> 
