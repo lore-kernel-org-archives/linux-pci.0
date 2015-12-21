@@ -1,65 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45017 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751024AbbLKFZD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:25:03 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Anton Blanchard <anton@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v9 09/60] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-Date: Thu, 10 Dec 2015 21:06:05 -0800
-Message-Id: <1449810416-2950-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v3 6/9] phy: ti-pipe3: use *syscon* framework API to power
+ on/off the PHY
+To: Rob Herring <robh@kernel.org>
+References: <1450170968-11282-1-git-send-email-kishon@ti.com>
+ <1450170968-11282-7-git-send-email-kishon@ti.com>
+ <20151220033836.GG9883@rob-hp-laptop>
+CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>, <rogerq@ti.com>, <nsekhar@ti.com>,
+	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+	<tony@atomide.com>, <t-kristo@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <5677BA0B.4090002@ti.com>
+Date: Mon, 21 Dec 2015 14:06:27 +0530
+MIME-Version: 1.0
+In-Reply-To: <20151220033836.GG9883@rob-hp-laptop>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource, so set
-IORESOUCE_MEM_64 for 64bit resource during of device resource flags
-parsing.
+Hi
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Yijing Wang <wangyijing@huawei.com>
-Cc: Anton Blanchard <anton@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/kernel/pci_of_scan.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+On Sunday 20 December 2015 09:08 AM, Rob Herring wrote:
+> On Tue, Dec 15, 2015 at 02:46:05PM +0530, Kishon Vijay Abraham I wrote:
+>> Deprecate using phy-omap-control driver to power on/off the PHY and
+>> use *syscon* framework to do the same.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  Documentation/devicetree/bindings/phy/ti-phy.txt |   10 ++-
+>>  drivers/phy/phy-ti-pipe3.c                       |   90 ++++++++++++++++++----
+>>  2 files changed, 85 insertions(+), 15 deletions(-)
+> 
+> For the binding:
+> 
+> Acked-by: Rob Herring <robh@kernel.org>
+> 
+> One comment on the driver though.
+> 
+> [...]
+> 
+>> --- a/drivers/phy/phy-ti-pipe3.c
+>> +++ b/drivers/phy/phy-ti-pipe3.c
+> 
+> [...]
+> 
+>> @@ -144,18 +155,53 @@ static void ti_pipe3_disable_clocks(struct ti_pipe3 *phy);
+>>  
+>>  static int ti_pipe3_power_off(struct phy *x)
+>>  {
+>> +	u32 val;
+>> +	int ret;
+>>  	struct ti_pipe3 *phy = phy_get_drvdata(x);
+>>  
+>> -	omap_control_phy_power(phy->control_dev, 0);
+>> +	if (phy->phy_power_syscon) {
+> 
+> Writing this as:
+> 
+> if (!phy->phy_power_syscon) {
+> 	...
+> 	return 0;
+> }
+> 
+> //regmap code
+> 
+> 
+> will make it simpler to remove the deprecated code later.
 
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 349ed11..d7305d7 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -44,8 +44,10 @@ static unsigned int pci_parse_of_flags(u32 addr0, int bridge)
- 
- 	if (addr0 & 0x02000000) {
- 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
--		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
-+		if (addr0 & 0x01000000)
-+			flags |= IORESOURCE_MEM_64
-+				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		if (addr0 & 0x40000000)
- 			flags |= IORESOURCE_PREFETCH
- 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
--- 
-1.8.4.5
+hmm.. I will make this change in all the applicable patches.
 
+Thanks
+Kishon
+> 
+> 
+>> +		val = PIPE3_PHY_TX_RX_POWEROFF <<
+>> +			PIPE3_PHY_PWRCTL_CLK_CMD_SHIFT;
+>> +
+>> +		ret = regmap_update_bits(phy->phy_power_syscon, phy->power_reg,
+>> +					 PIPE3_PHY_PWRCTL_CLK_CMD_MASK, val);
+>> +		if (ret < 0)
+>> +			return ret;
+>> +	} else {
+>> +		omap_control_phy_power(phy->control_dev, 0);
+>> +	}
+>>  
+>>  	return 0;
