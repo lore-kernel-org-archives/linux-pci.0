@@ -1,167 +1,92 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 16 Dec 2015 16:15:41 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
-	rjw@rjwysocki.net, bhelgaas@google.com,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	hanjun.guo@linaro.org, tomasz.nowicki@linaro.org,
-	graeme.gregory@linaro.org, dhdang@apm.com,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v7 1/4] acpi: pci: Setup MSI domain for ACPI based pci
- devices
-Message-ID: <20151216221541.GA31633@localhost>
-References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <1449766530-16935-2-git-send-email-Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, okaya@codeaurora.org
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <5673281E.7020204@codeaurora.org> <5673FB6C.80008@semihalf.com>
+ <4bccc2de7668dde04436ac9c19aac25d.squirrel@www.codeaurora.org>
+ <20151221121050.GB11145@red-moon>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	jiang.liu@linux.intel.com, stefano.stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	liviu.dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, suravee.suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5677F3C8.8040200@semihalf.com>
+Date: Mon, 21 Dec 2015 13:42:48 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449766530-16935-2-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <20151221121050.GB11145@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 10, 2015 at 08:55:27AM -0800, Suravee Suthikulpanit wrote:
-> This patch introduces pci_msi_register_fwnode_provider() for irqchip
-> to register a callback, to provide a way to determine appropriate MSI
-> domain for a pci device.
-> 
-> It also introduces pci_host_bridge_acpi_msi_domain(), which returns
-> the MSI domain of the specified PCI host bridge with DOMAIN_BUS_PCI_MSI
-> bus token. Then, it is assigned to pci device.
-> 
-> Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On 21.12.2015 13:10, Lorenzo Pieralisi wrote:
+> On Fri, Dec 18, 2015 at 06:56:39PM +0000, okaya@codeaurora.org wrote:
+>
+> [...]
+>
+>> Here is what I have as an IO resource.
+>>
+>> 		QWORDIO(			//Consumed-And-produced resource
+>> 			ResourceProducer,	// bit 0 of general flags is 0
+>> 			MinFixed,		// Range is fixed
+>> 			MaxFixed,		// Range is fixed
+>> 			PosDecode,
+>> 			EntireRange,
+>> 			0x0000,			// Granularity
+>> 			0x1000,		// Min, 0 is not accepted
+>> 			0x10FFF,		// Max
+>> 			0x8FFFFFEF000,	// Translation
+>> 			0x10000,		// Range Length
+>> 			,, PI00
+>> 		 )
+>>
+>> I don't have any type specified.
+>>
+>> I agree with Lorenzo's assessment. The min and max values represent the
+>> PCI IO bus addresses. The translation offset is added to these values to
+>> figure out the CPU view of the PCI IO range.
+>>
+>> The endpoints BAR addresses are programmed with IO addresses ranging
+>> between 0x1000 and 0x10FFF for this example above.
+>>
+>> Here is another question. Chris Covington and I asked this question on a
+>> private email to you but we didn't hear back.
+>>
+>> We were referring to a Linaro IO hack patch as we were not sure whether
+>> this was a limitation of the hack or a general expectation for ARM64 PCI
+>> in general.
+>>
+>> I'll repeat it here.
+>>
+>> I have multiple root ports with the same IO port configuration in the
+>> current ACPI table.
+>>
+>> Root port 0 = IO range 0x1000-0x10FFF
+>> Root port 1 = IO range 0x1000-0x10FFF
+>> Root port 2 = IO range 0x1000-0x10FFF
+>
+> It is fine. You end up mapping for each of those a 4k window of the
+> virtual address space allocated to IO and that's what you will have in
+> the kernel PCI resources (not in the HW BARs though). If that was a problem
+> it would be even for the current DT host controllers eg:
+>
+> arch/arm64/boot/dts/apm/apm-storm.dtsi
+>
+> it should not be (again I will let Arnd comment on this since he may be
+> aware of issues encountered on other arches/platforms).
+>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Root port 0 = IO range 0x1000-0x10FFF
+Root port 1 = IO range 0x1000-0x10FFF
+Root port 2 = IO range 0x1000-0x10FFF
 
-I assume the whole series will be queued via a non-PCI tree.
+If above ranges are mapped into different CPU windows, then yes, it is fine.
 
-> ---
->  drivers/pci/pci-acpi.c    | 42 ++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/probe.c       |  2 ++
->  include/linux/irqdomain.h |  5 +++++
->  include/linux/pci.h       | 10 ++++++++++
->  4 files changed, 59 insertions(+)
-> 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index a32ba75..d3f32d6 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -9,7 +9,9 @@
->  
->  #include <linux/delay.h>
->  #include <linux/init.h>
-> +#include <linux/irqdomain.h>
->  #include <linux/pci.h>
-> +#include <linux/msi.h>
->  #include <linux/pci_hotplug.h>
->  #include <linux/module.h>
->  #include <linux/pci-aspm.h>
-> @@ -689,6 +691,46 @@ static struct acpi_bus_type acpi_pci_bus = {
->  	.cleanup = pci_acpi_cleanup,
->  };
->  
-> +
-> +static struct fwnode_handle *(*pci_msi_get_fwnode_cb)(struct device *dev);
-> +
-> +/**
-> + * pci_msi_register_fwnode_provider - Register callback to retrieve fwnode
-> + * @fn:       Callback matching a device to a fwnode that identifies a PCI
-> + *            MSI domain.
-> + *
-> + * This should be called by irqchip driver, which is the parent of
-> + * the MSI domain to provide callback interface to query fwnode.
-> + */
-> +void
-> +pci_msi_register_fwnode_provider(struct fwnode_handle *(*fn)(struct device *))
-> +{
-> +	pci_msi_get_fwnode_cb = fn;
-> +}
-> +
-> +/**
-> + * pci_host_bridge_acpi_msi_domain - Retrieve MSI domain of a PCI host bridge
-> + * @bus:      The PCI host bridge bus.
-> + *
-> + * This function uses the callback function registered by
-> + * pci_msi_register_fwnode_provider() to retrieve the irq_domain with
-> + * type DOMAIN_BUS_PCI_MSI of the specified host bridge bus.
-> + * This returns NULL on error or when the domain is not found.
-> + */
-> +struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus)
-> +{
-> +	struct fwnode_handle *fwnode;
-> +
-> +	if (!pci_msi_get_fwnode_cb)
-> +		return NULL;
-> +
-> +	fwnode = pci_msi_get_fwnode_cb(&bus->dev);
-> +	if (!fwnode)
-> +		return NULL;
-> +
-> +	return irq_find_matching_fwnode(fwnode, DOMAIN_BUS_PCI_MSI);
-> +}
-> +
->  static int __init acpi_pci_init(void)
->  {
->  	int ret;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index edb1984..553a029 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -672,6 +672,8 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
->  	 * should be called from here.
->  	 */
->  	d = pci_host_bridge_of_msi_domain(bus);
-> +	if (!d)
-> +		d = pci_host_bridge_acpi_msi_domain(bus);
->  
->  	return d;
->  }
-> diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-> index d5e5c5b..a06feda 100644
-> --- a/include/linux/irqdomain.h
-> +++ b/include/linux/irqdomain.h
-> @@ -410,6 +410,11 @@ static inline bool irq_domain_is_hierarchy(struct irq_domain *domain)
->  static inline void irq_dispose_mapping(unsigned int virq) { }
->  static inline void irq_domain_activate_irq(struct irq_data *data) { }
->  static inline void irq_domain_deactivate_irq(struct irq_data *data) { }
-> +static inline struct irq_domain *irq_find_matching_fwnode(
-> +	struct fwnode_handle *fwnode, enum irq_domain_bus_token bus_token)
-> +{
-> +	return NULL;
-> +}
->  #endif /* !CONFIG_IRQ_DOMAIN */
->  
->  #endif /* _LINUX_IRQDOMAIN_H */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 6ae25aa..d86378c 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1946,6 +1946,16 @@ static inline struct irq_domain *
->  pci_host_bridge_of_msi_domain(struct pci_bus *bus) { return NULL; }
->  #endif  /* CONFIG_OF */
->  
-> +#ifdef CONFIG_ACPI
-> +struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus);
-> +
-> +void
-> +pci_msi_register_fwnode_provider(struct fwnode_handle *(*fn)(struct device *));
-> +#else
-> +static inline struct irq_domain *
-> +pci_host_bridge_acpi_msi_domain(struct pci_bus *bus) { return NULL; }
-> +#endif
-> +
->  #ifdef CONFIG_EEH
->  static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
->  {
-> -- 
-> 2.1.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tomasz
+
