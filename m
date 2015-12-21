@@ -1,192 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [RFC PATCH 1/3] swiotlb: Fold static unmap and sync calls into
- calling functions
-From: Alexander Duyck <aduyck@mirantis.com>
-To: kvm@vger.kernel.org, linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, alexander.duyck@gmail.com,
-	qemu-devel@nongnu.org
-Cc: tianyu.lan@intel.com, yang.zhang.wz@gmail.com, mst@redhat.com,
-	konrad.wilk@oracle.com, dgilbert@redhat.com, agraf@suse.de,
-	alex.williamson@redhat.com
-Date: Sun, 13 Dec 2015 13:28:16 -0800
-Message-ID: <20151213212816.5410.19754.stgit@localhost.localdomain>
-In-Reply-To: <20151213212557.5410.48577.stgit@localhost.localdomain>
-References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <b3750d7918712f6035ea875d90c25471.squirrel@www.codeaurora.org>
+In-Reply-To: <201512211515.55447.arnd@arndb.de>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+    <20151221121050.GB11145@red-moon> <5677F3C8.8040200@semihalf.com>
+    <201512211515.55447.arnd@arndb.de>
+Date: Mon, 21 Dec 2015 15:26:14 -0000
+Subject: Re: [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+From: Okaya@codeaurora.org
+To: "Arnd Bergmann" <arnd@arndb.de>
+Cc: "Tomasz Nowicki" <tn@semihalf.com>,
+	"Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
+	okaya@codeaurora.org, bhelgaas@google.com, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	jiang.liu@linux.intel.com, stefano.stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	liviu.dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, suravee.suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This change essentially does two things.  First it folds the swiotlb_unmap
-and swiotlb_sync calls into their callers.  The goal behind this is three
-fold.  First this helps to reduce execution time and improves performance
-since we aren't having to call into as many functions.  Second it allows us
-to split up some of the sync functionality as there is the dma_mark_clean
-portion of the sync call that is only really needed for dma_sync_for_cpu
-since we don't actually want to mark the page as clean if we are syncing
-for the device.
+> On Monday 21 December 2015, Tomasz Nowicki wrote:
+>> On 21.12.2015 13:10, Lorenzo Pieralisi wrote:
+>> > On Fri, Dec 18, 2015 at 06:56:39PM +0000, okaya@codeaurora.org wrote:
+>
+>> >> I have multiple root ports with the same IO port configuration in the
+>> >> current ACPI table.
+>> >>
+>> >> Root port 0 = IO range 0x1000-0x10FFF
+>> >> Root port 1 = IO range 0x1000-0x10FFF
+>> >> Root port 2 = IO range 0x1000-0x10FFF
+>> >
+>> > It is fine. You end up mapping for each of those a 4k window of the
+>> > virtual address space allocated to IO and that's what you will have in
+>> > the kernel PCI resources (not in the HW BARs though). If that was a
+>> problem
+>> > it would be even for the current DT host controllers eg:
+>> >
+>> > arch/arm64/boot/dts/apm/apm-storm.dtsi
+>> >
+>> > it should not be (again I will let Arnd comment on this since he may
+>> be
+>> > aware of issues encountered on other arches/platforms).
+>> >
+>>
+>> Root port 0 = IO range 0x1000-0x10FFF
+>> Root port 1 = IO range 0x1000-0x10FFF
+>> Root port 2 = IO range 0x1000-0x10FFF
+>>
+>> If above ranges are mapped into different CPU windows, then yes, it is
+>> fine.
+>
+> Ideally, they should all be the same CPU address so we only have to map
+> the window
+> once, each device gets an address below 64K, and you can have legacy port
+> numbers
+> (below 4K) on any bus, which is required to make certain GPUs work.
+>
+> I haven't actually seen anyone do that on ARM though, every implementation
+> so
+> far has a separate mapping per host bridge, and we can cope with that too,
+> and we can live with either overlapping bus addresses or unique bus
+> addresses,
+> any of them can be expressed by the PCI core in Linux, we just have to
+> make sure
+> that we correctly translate the firmware tables into our internal
+> structures.
+>
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-The second change is to move dma_mark_clean inside the if statement instead
-of using a return in the case of sync and unmap.  By doing this we make it
-so that we can also add a dma_mark_dirty function later.
+Thanks, I won't be touching the acpi tables then and I will assume the
+hack had a problem. It was trying to remap the io range of the second root
+port  to the first port io address map.
 
-Signed-off-by: Alexander Duyck <aduyck@mirantis.com>
----
- lib/swiotlb.c |   81 +++++++++++++++++++++++----------------------------------
- 1 file changed, 33 insertions(+), 48 deletions(-)
+I was getting a warning from resource.c
 
-diff --git a/lib/swiotlb.c b/lib/swiotlb.c
-index 76f29ecba8f4..384ac06217b2 100644
---- a/lib/swiotlb.c
-+++ b/lib/swiotlb.c
-@@ -781,8 +781,9 @@ EXPORT_SYMBOL_GPL(swiotlb_map_page);
-  * After this call, reads by the cpu to the buffer are guaranteed to see
-  * whatever the device wrote there.
-  */
--static void unmap_single(struct device *hwdev, dma_addr_t dev_addr,
--			 size_t size, enum dma_data_direction dir)
-+void swiotlb_unmap_page(struct device *hwdev, dma_addr_t dev_addr,
-+			size_t size, enum dma_data_direction dir,
-+			struct dma_attrs *attrs)
- {
- 	phys_addr_t paddr = dma_to_phys(hwdev, dev_addr);
- 
-@@ -793,23 +794,14 @@ static void unmap_single(struct device *hwdev, dma_addr_t dev_addr,
- 		return;
- 	}
- 
--	if (dir != DMA_FROM_DEVICE)
--		return;
--
- 	/*
- 	 * phys_to_virt doesn't work with hihgmem page but we could
- 	 * call dma_mark_clean() with hihgmem page here. However, we
- 	 * are fine since dma_mark_clean() is null on POWERPC. We can
- 	 * make dma_mark_clean() take a physical address if necessary.
- 	 */
--	dma_mark_clean(phys_to_virt(paddr), size);
--}
--
--void swiotlb_unmap_page(struct device *hwdev, dma_addr_t dev_addr,
--			size_t size, enum dma_data_direction dir,
--			struct dma_attrs *attrs)
--{
--	unmap_single(hwdev, dev_addr, size, dir);
-+	if (dir == DMA_FROM_DEVICE)
-+		dma_mark_clean(phys_to_virt(paddr), size);
- }
- EXPORT_SYMBOL_GPL(swiotlb_unmap_page);
- 
-@@ -823,31 +815,21 @@ EXPORT_SYMBOL_GPL(swiotlb_unmap_page);
-  * address back to the card, you must first perform a
-  * swiotlb_dma_sync_for_device, and then the device again owns the buffer
-  */
--static void
--swiotlb_sync_single(struct device *hwdev, dma_addr_t dev_addr,
--		    size_t size, enum dma_data_direction dir,
--		    enum dma_sync_target target)
-+void
-+swiotlb_sync_single_for_cpu(struct device *hwdev, dma_addr_t dev_addr,
-+			    size_t size, enum dma_data_direction dir)
- {
- 	phys_addr_t paddr = dma_to_phys(hwdev, dev_addr);
- 
- 	BUG_ON(dir == DMA_NONE);
- 
- 	if (is_swiotlb_buffer(paddr)) {
--		swiotlb_tbl_sync_single(hwdev, paddr, size, dir, target);
-+		swiotlb_tbl_sync_single(hwdev, paddr, size, dir, SYNC_FOR_CPU);
- 		return;
- 	}
- 
--	if (dir != DMA_FROM_DEVICE)
--		return;
--
--	dma_mark_clean(phys_to_virt(paddr), size);
--}
--
--void
--swiotlb_sync_single_for_cpu(struct device *hwdev, dma_addr_t dev_addr,
--			    size_t size, enum dma_data_direction dir)
--{
--	swiotlb_sync_single(hwdev, dev_addr, size, dir, SYNC_FOR_CPU);
-+	if (dir == DMA_FROM_DEVICE)
-+		dma_mark_clean(phys_to_virt(paddr), size);
- }
- EXPORT_SYMBOL(swiotlb_sync_single_for_cpu);
- 
-@@ -855,7 +837,14 @@ void
- swiotlb_sync_single_for_device(struct device *hwdev, dma_addr_t dev_addr,
- 			       size_t size, enum dma_data_direction dir)
- {
--	swiotlb_sync_single(hwdev, dev_addr, size, dir, SYNC_FOR_DEVICE);
-+	phys_addr_t paddr = dma_to_phys(hwdev, dev_addr);
-+
-+	BUG_ON(dir == DMA_NONE);
-+
-+	if (!is_swiotlb_buffer(paddr))
-+		return;
-+
-+	swiotlb_tbl_sync_single(hwdev, paddr, size, dir, SYNC_FOR_DEVICE);
- }
- EXPORT_SYMBOL(swiotlb_sync_single_for_device);
- 
-@@ -929,10 +918,9 @@ swiotlb_unmap_sg_attrs(struct device *hwdev, struct scatterlist *sgl,
- 	struct scatterlist *sg;
- 	int i;
- 
--	BUG_ON(dir == DMA_NONE);
--
- 	for_each_sg(sgl, sg, nelems, i)
--		unmap_single(hwdev, sg->dma_address, sg_dma_len(sg), dir);
-+		swiotlb_unmap_page(hwdev, sg->dma_address, sg_dma_len(sg),
-+				   dir, attrs);
- 
- }
- EXPORT_SYMBOL(swiotlb_unmap_sg_attrs);
-@@ -952,32 +940,29 @@ EXPORT_SYMBOL(swiotlb_unmap_sg);
-  * The same as swiotlb_sync_single_* but for a scatter-gather list, same rules
-  * and usage.
-  */
--static void
--swiotlb_sync_sg(struct device *hwdev, struct scatterlist *sgl,
--		int nelems, enum dma_data_direction dir,
--		enum dma_sync_target target)
-+void
-+swiotlb_sync_sg_for_cpu(struct device *hwdev, struct scatterlist *sgl,
-+			int nelems, enum dma_data_direction dir)
- {
- 	struct scatterlist *sg;
- 	int i;
- 
- 	for_each_sg(sgl, sg, nelems, i)
--		swiotlb_sync_single(hwdev, sg->dma_address,
--				    sg_dma_len(sg), dir, target);
--}
--
--void
--swiotlb_sync_sg_for_cpu(struct device *hwdev, struct scatterlist *sg,
--			int nelems, enum dma_data_direction dir)
--{
--	swiotlb_sync_sg(hwdev, sg, nelems, dir, SYNC_FOR_CPU);
-+		swiotlb_sync_single_for_cpu(hwdev, sg->dma_address,
-+					    sg_dma_len(sg), dir);
- }
- EXPORT_SYMBOL(swiotlb_sync_sg_for_cpu);
- 
- void
--swiotlb_sync_sg_for_device(struct device *hwdev, struct scatterlist *sg,
-+swiotlb_sync_sg_for_device(struct device *hwdev, struct scatterlist *sgl,
- 			   int nelems, enum dma_data_direction dir)
- {
--	swiotlb_sync_sg(hwdev, sg, nelems, dir, SYNC_FOR_DEVICE);
-+	struct scatterlist *sg;
-+	int i;
-+
-+	for_each_sg(sgl, sg, nelems, i)
-+		swiotlb_sync_single_for_device(hwdev, sg->dma_address,
-+					       sg_dma_len(sg), dir);
- }
- EXPORT_SYMBOL(swiotlb_sync_sg_for_device);
- 
+Btw, when I tested the io ranges before, kernel didn't accept anything
+below 1k like 0. That is why my range starts at 1k.
 
