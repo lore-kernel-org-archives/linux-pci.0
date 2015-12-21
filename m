@@ -1,125 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42040 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751150AbbLXNvo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 Dec 2015 08:51:44 -0500
-Message-ID: <1450965103.2950.92.camel@redhat.com>
-Subject: Re: [RFC 0/2] VFIO SRIOV support
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Ilya Lesokhin <ilyal@mellanox.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	Noa Osherovich <noaos@mellanox.com>,
-	Haggai Eran <haggaie@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Liran Liss <liranl@mellanox.com>
-Date: Thu, 24 Dec 2015 06:51:43 -0700
-In-Reply-To: <VI1PR05MB1119DD3ED0EB74A259D157A8D4E70@VI1PR05MB1119.eurprd05.prod.outlook.com>
-References: <1450791734-3907-1-git-send-email-ilyal@mellanox.com>
-	 <1450798558.22385.7.camel@redhat.com>
-	 <VI1PR05MB1119CACA2E294B58EDB54A9AD4E60@VI1PR05MB1119.eurprd05.prod.outlook.com>
-	 <1450888100.2950.87.camel@redhat.com>
-	 <VI1PR05MB1119DD3ED0EB74A259D157A8D4E70@VI1PR05MB1119.eurprd05.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:13557 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751842AbbLUQp5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Dec 2015 11:45:57 -0500
+From: William Davis <wdavis@nvidia.com>
+To: "Goz, Ben" <Ben.Goz@amd.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Koenig, Christian" <Christian.Koenig@amd.com>,
+	"Bridgman, John" <John.Bridgman@amd.com>,
+	Terence Ripperda <TRipperda@nvidia.com>,
+	"John Hubbard" <jhubbard@nvidia.com>
+Subject: RE: IOMMU/DMA map_resource support for peer-to-peer
+Date: Mon, 21 Dec 2015 16:45:56 +0000
+Message-ID: <50674fe3727543e6a8a5b7731e091b75@HQMAIL106.nvidia.com>
+References: <BY2PR12MB0290C4BDC64D1614F36030CEE8E40@BY2PR12MB0290.namprd12.prod.outlook.com>
+In-Reply-To: <BY2PR12MB0290C4BDC64D1614F36030CEE8E40@BY2PR12MB0290.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-12-24 at 07:22 +0000, Ilya Lesokhin wrote:
-> > -----Original Message-----
-> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > Sent: Wednesday, December 23, 2015 6:28 PM
-> > To: Ilya Lesokhin <ilyal@mellanox.com>; kvm@vger.kernel.org; linux-
-> > pci@vger.kernel.org
-> > Cc: bhelgaas@google.com; Noa Osherovich <noaos@mellanox.com>;
-> > Haggai
-> > Eran <haggaie@mellanox.com>; Or Gerlitz <ogerlitz@mellanox.com>;
-> > Liran
-> > Liss <liranl@mellanox.com>
-> > Subject: Re: [RFC 0/2] VFIO SRIOV support
-> > 
-> > On Wed, 2015-12-23 at 07:43 +0000, Ilya Lesokhin wrote:
-> > > Hi Alex,
-> > > Regarding driver_override, as far as I know you can only use it
-> > > on
-> > > devices that were already discovered. Since the devices do not
-> > > exist
-> > > before the call to pci_enable_sriov(...) and are already probed
-> > > after
-> > > the call  it wouldn't really help us. I would have to unbind them
-> > > from
-> > > their default driver and bind them to VFIO like solution a in my
-> > > original mail.
-> > 
-> > If you allow them to be bound to their default driver, then you've
-> > already
-> > created the scenario of a user own PF creating host own VFs, which
-> > I think is
-> > unacceptable.  The driver_override can be set before drivers are
-> > probed, the
-> > fact that pci_enable_sriov() doesn't enable a hook for that is
-> > something that
-> > could be fixed.
-> 
-> That’s essentially the same as solution b in original mail which I
-> was hoping to avoid.
-> 
-> > > You are right about the ownership problem and we would like to
-> > > receive
-> > > input regarding what is the correct way of solving this.
-> > > But in the meantime I think our solution is quite useful even
-> > > though
-> > > if it requires root privileges. We hacked libvirt so that it
-> > > would run
-> > > qemu as root and without device cgroup.
-> > > 
-> > > In any case, don't you think that assigning those devices to VFIO
-> > > should be safe? Does the VFIO driver makes any unsafe assumptions
-> > > on
-> > > the VF's that might allow a guest to crash the hypervisor?
-> > > 
-> > > I am somewhat concerned that the VM  could trigger some backdoor
-> > > reset
-> > > while the hypervisor is running pci_enable_sriov(...). But I'm
-> > > not
-> > > really sure how to solve it.
-> > > I guess you have to either stop the guest entirely to enable
-> > > sriov or
-> > > make it privileged.
-> > > 
-> > > Regarding having the PF controlled by one user while the other
-> > > VFs are
-> > > controlled by other user, I actually think it might be an
-> > > interesting
-> > > use case.
-> > 
-> > It may be, but it needs to be an opt-in, not a security accident.
-> >  The interface
-> > between a PF and a VF is essential device specific and we don't
-> > know exactly
-> > how isolated each VF is from the PF.  In the typical scenario of
-> > the PF being
-> > owned by the host, we have a certain degree of trust in the host,
-> > it's running
-> > the VM after all, if it wanted to compromise it, it could.  We have
-> > no implicit
-> > reason to trust a PF running in a guest though.  Can the snoop VF
-> > traffic, can
-> > they generate DMA outside of the container of the PF using the VF?
-> >  We
-> > can't be sure.
-> >  So unless you can make the default scenario be that VFs created by
-> > a user
-> > own PF are only available for use by that user, without relying on
-> > userspace
-> > to intervene, it seems like any potential usefulness is trumped by
-> > a giant
-> > security issue.  Thanks,
-> 
-> I don't understand the security issue, don't you need root permission
-> for device assignment?
+Hi Ben,
 
-No.  A privileged entity needs to grant a user ownership of a group and
-sufficient locked memory limits to make it useful, but then use of the
-group does not require root permission.
+> I'm interesting on your work on this patch set to support map_resource for
+> peer to peer memory mapping, if you can please refer me to git repository
+> includes your patches.
+
+The patches are not hosted in any externally-accessible repo. The last patch set was built on top of the linux-pci tree at commit bc0195aad0daa2ad5b0d76cce22b167bc3435590 (linux 4.2-rc2).
+ 
+> And I want to know please if the IOMMU should be configured with pass
+> through or any other configuration, and if there is a general limitation or
+> something I should know for bringing it up.
+
+My testing was mostly Intel-based, but it did not require passthrough mode; the goal of the patches was to get PCI P2P working on configurations where the IOMMU is configured for full translation. It should only be limited to what the chipset is capable of, in terms of PCI P2P topologies.
+
+Thanks,
+Will
+
+--
+nvpublic
