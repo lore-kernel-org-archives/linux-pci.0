@@ -1,88 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48906 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755543AbbLGPl1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Dec 2015 10:41:27 -0500
-Date: Mon, 7 Dec 2015 09:41:23 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Simon Horman <horms+renesas@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 3/4] PCI: rcar: add gen2 fallback compatibility string
-Message-ID: <20151207154123.GE7994@localhost>
-References: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
- <1449096700-23304-4-git-send-email-horms+renesas@verge.net.au>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V2 21/23] pci, acpi: Support for ACPI based PCI hostbridge
+ init
+To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <1450278993-12664-22-git-send-email-tn@semihalf.com>
+ <2277339.U6fWlSIDzy@wuerfel>
+Cc: bhelgaas@google.com, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com,
+	jchandra@broadcom.com, jcm@redhat.com,
+	linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, wangyijing@huawei.com, tglx@linutronix.de,
+	mw@semihalf.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5677D28E.6010803@semihalf.com>
+Date: Mon, 21 Dec 2015 11:21:02 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449096700-23304-4-git-send-email-horms+renesas@verge.net.au>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2277339.U6fWlSIDzy@wuerfel>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 03, 2015 at 07:51:39AM +0900, Simon Horman wrote:
-> Add fallback compatibility string for R-Car Gen 2 family.
-> This is in keeping with the fallback scheme being adopted wherever
-> appropriate for drivers for Renesas SoCs.
-> 
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+On 18.12.2015 13:40, Arnd Bergmann wrote:
+> On Wednesday 16 December 2015 16:16:31 Tomasz Nowicki wrote:
+>> Because of two patch series:
+>> 1. Jiang Liu's common interface to support PCI host bridge init
+>> 2. MMCONFIG refactoring (part of this patch set)
+>> now we can think about generic ACPI based PCI host bridge driver
+>> out of arch/ directory.
+>>
+>> This driver use information from MCFG table (PCI config space regions)
+>> and _CRS method (IO/irq resources) to initialize PCI hostbridge.
+>>
+>> TBD: We are still not sure whether we should reassign resources
+>> after PCI bus enumeration or trust firmware to do all that work for
+>> us properly.
+>>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+>> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>> CC: Arnd Bergmann <arnd@arndb.de>
+>> CC: Catalin Marinas <catalin.marinas@arm.com>
+>> CC: Liviu Dudau <Liviu.Dudau@arm.com>
+>> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+>> CC: Will Deacon <will.deacon@arm.com>
+>> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>>
+>
+> I think this code could better live in drivers/acpi/pci_root.c
+> along with all the related functions. It's not really a driver
+> by itself and cannot be a loadable module or built on other
+> architectures.
+>
+> You can put all the code inside an #ifdef ARCH_PCI_HOST_GENERIC_ACPI
+> there.
+>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Makes sense to me, thanks.
 
-> ---
-> v2
-> * Include "rcar-" in new compatibility string
-> ---
->  Documentation/devicetree/bindings/pci/rcar-pci.txt | 13 ++++++++++---
->  drivers/pci/host/pcie-rcar.c                       |  1 +
->  2 files changed, 11 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> index 29d3b989d3b0..6b4d2f798386 100644
-> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> @@ -1,8 +1,15 @@
->  * Renesas RCar PCIe interface
->  
->  Required properties:
-> -- compatible: should contain one of the following
-> -	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791"
-> +compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
-> +	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
-> +	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
-> +	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
-> +
-> +	    When compatible with the generic version, nodes must list the
-> +	    SoC-specific version corresponding to the platform first
-> +	    followed by the generic version.
-> +
->  - reg: base address and length of the pcie controller registers.
->  - #address-cells: set to <3>
->  - #size-cells: set to <2>
-> @@ -25,7 +32,7 @@ Example:
->  SoC specific DT Entry:
->  
->  	pcie: pcie@fe000000 {
-> -		compatible = "renesas,pcie-r8a7791";
-> +		compatible = "renesas,pcie-r8a7791", "renesas,pcie-rcar-gen2";
->  		reg = <0 0xfe000000 0 0x80000>;
->  		#address-cells = <3>;
->  		#size-cells = <2>;
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index f4fa6c537448..047279bdc3fe 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -917,6 +917,7 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
->  
->  static const struct of_device_id rcar_pcie_of_match[] = {
->  	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
-> +	{ .compatible = "renesas,pcie-rcar-gen2", .data = rcar_pcie_hw_init },
->  	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
->  	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
->  	{},
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tomasz
