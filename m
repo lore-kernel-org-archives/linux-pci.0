@@ -1,100 +1,111 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 12/60] PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
-Date: Thu, 10 Dec 2015 21:06:08 -0800
-Message-Id: <1449810416-2950-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+From: Keith Busch <keith.busch@intel.com>
+To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv7 4/6] x86/PCI: Allow PCI domain specific dma ops
+Date: Mon, 21 Dec 2015 10:44:58 -0700
+Message-Id: <1450719900-2824-5-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1450719900-2824-1-git-send-email-keith.busch@intel.com>
+References: <1450719900-2824-1-git-send-email-keith.busch@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If any bridge up to root only have 32bit pref mmio, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
+New x86 pci h/w will require dma operations specific to that domain. This
+patch allows those domains to register their operations, and sets devices
+as they are discovered in that domain to use them.
 
-We need to move pci_bridge_check_ranges calling early.
-for parent bridges pref mmio BAR may not allocated by BIOS, res flags
-is still 0, we need to have it correct set before we check them for
-child device resources.
-
--v2: check all bus resources instead of just res[15].
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- drivers/pci/setup-bus.c | 31 +++++++++++++++++++++++++++++--
- 1 file changed, 29 insertions(+), 2 deletions(-)
+ arch/x86/include/asm/device.h | 10 ++++++++++
+ arch/x86/pci/common.c         | 38 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 48 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 198f754a..d627218 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -739,6 +739,29 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
+diff --git a/arch/x86/include/asm/device.h b/arch/x86/include/asm/device.h
+index 03dd729..3b23897 100644
+--- a/arch/x86/include/asm/device.h
++++ b/arch/x86/include/asm/device.h
+@@ -10,6 +10,16 @@ struct dev_archdata {
+ #endif
+ };
+ 
++#if defined(CONFIG_X86_DEV_DMA_OPS) && defined(CONFIG_PCI_DOMAINS)
++struct dma_domain {
++	struct list_head node;
++	struct dma_map_ops *dma_ops;
++	int domain_nr;
++};
++extern void add_dma_domain(struct dma_domain *domain);
++extern void del_dma_domain(struct dma_domain *domain);
++#endif
++
+ struct pdev_archdata {
+ };
+ 
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index eccd4d9..106fd13 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -641,6 +641,43 @@ unsigned int pcibios_assign_all_busses(void)
+ 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
  }
  
-+static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
++#if defined(CONFIG_X86_DEV_DMA_OPS) && defined(CONFIG_PCI_DOMAINS)
++LIST_HEAD(dma_domain_list);
++DEFINE_SPINLOCK(dma_domain_list_lock);
++
++void add_dma_domain(struct dma_domain *domain)
 +{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self) {
-+		int i;
-+		bool found = false;
-+		struct resource *res;
-+
-+		pci_bus_for_each_resource(bus, res, i)
-+			if (res->flags & IORESOURCE_MEM_64) {
-+				found = true;
-+				break;
-+			}
-+
-+		if (!found)
-+			return false;
-+	}
-+
-+	return pci_up_path_over_pref_mem64(bus->parent);
++	spin_lock(&dma_domain_list_lock);
++	list_add(&domain->node, &dma_domain_list);
++	spin_unlock(&dma_domain_list_lock);
 +}
++EXPORT_SYMBOL_GPL(add_dma_domain);
 +
- int pci_resource_pref_compatible(const struct pci_dev *dev,
- 				 struct resource *res)
++void del_dma_domain(struct dma_domain *domain)
++{
++	spin_lock(&dma_domain_list_lock);
++	list_del(&domain->node);
++	spin_unlock(&dma_domain_list_lock);
++}
++EXPORT_SYMBOL_GPL(del_dma_domain);
++
++static void set_dma_domain_ops(struct pci_dev *pdev)
++{
++	struct dma_domain *domain;
++
++	spin_lock(&dma_domain_list_lock);
++	list_for_each_entry(domain, &dma_domain_list, node) {
++		if (pci_domain_nr(pdev->bus) == domain->domain_nr) {
++			pdev->dev.archdata.dma_ops = domain->dma_ops;
++			break;
++		}
++	}
++	spin_unlock(&dma_domain_list_lock);
++}
++#else
++static void set_dma_domain_ops(struct pci_dev *pdev) {}
++#endif
++
+ int pcibios_add_device(struct pci_dev *dev)
  {
-@@ -747,7 +770,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 	struct setup_data *data;
+@@ -670,6 +707,7 @@ int pcibios_add_device(struct pci_dev *dev)
+ 		pa_data = data->next;
+ 		iounmap(data);
+ 	}
++	set_dma_domain_ops(dev);
+ 	return 0;
+ }
  
- 	if ((res->flags & IORESOURCE_MEM) &&
- 	    (res->flags & IORESOURCE_MEM_64) &&
--	    dev->on_all_pcie_path)
-+	    dev->on_all_pcie_path &&
-+	    pci_up_path_over_pref_mem64(dev->bus))
- 		return res->flags | IORESOURCE_PREFETCH;
- 
- 	return res->flags;
-@@ -1240,6 +1264,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	struct resource *b_res;
- 	int ret;
- 
-+	if (!pci_is_root_bus(bus) &&
-+	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
-+		pci_bridge_check_ranges(bus);
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		struct pci_bus *b = dev->subordinate;
- 		if (!b)
-@@ -1267,7 +1295,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		break;
- 
- 	case PCI_CLASS_BRIDGE_PCI:
--		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
- 			additional_mem_size = pci_hotplug_mem_size;
 -- 
-1.8.4.5
+2.6.2.307.g37023ba
 
