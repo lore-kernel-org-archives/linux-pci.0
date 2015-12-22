@@ -1,88 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0096.outbound.protection.outlook.com ([65.55.169.96]:28725
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934187AbbLWAYy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Dec 2015 19:24:54 -0500
-Message-ID: <5679E9CE.9080508@caviumnetworks.com>
-Date: Tue, 22 Dec 2015 16:24:46 -0800
-From: David Daney <ddaney@caviumnetworks.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V2 06/23] XEN / PCI: Remove the dependence on arch x86
+ when PCI_MMCONFIG=y
+To: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <1450278993-12664-7-git-send-email-tn@semihalf.com>
+ <alpine.DEB.2.02.1512211811550.3096@kaball.uk.xensource.com>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+	mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jchandra@broadcom.com,
+	jcm@redhat.com, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <56790AF8.9080807@semihalf.com>
+Date: Tue, 22 Dec 2015 09:34:00 +0100
 MIME-Version: 1.0
-To: "Sean O. Stalley" <sean.stalley@intel.com>
-CC: David Daney <ddaney.cavm@gmail.com>, Martin Mares <mj@ucw.cz>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v3] Add lspci support for Enhanced Allocation Capability.
-References: <1450217759-22063-1-git-send-email-ddaney.cavm@gmail.com> <20151217005517.GA3765@sean.stalley.intel.com>
-In-Reply-To: <20151217005517.GA3765@sean.stalley.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <alpine.DEB.2.02.1512211811550.3096@kaball.uk.xensource.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sean,
-
-I think this is a good addition.
-
-I don't plan on merging it into my patch, but instead think it should be 
-applied separately
-
-Thanks,
-David Daney
-
-
-On 12/16/2015 04:55 PM, Sean O. Stalley wrote:
->  From 484344fef7e5c96c54576586ce81e6209a48b92c Mon Sep 17 00:00:00 2001
-> From: "Sean O. Stalley" <sean.stalley@intel.com>
-> Date: Wed, 16 Dec 2015 10:31:51 -0800
-> Subject: [PATCH 1/1] Support region sizes that are not power-of-2
+On 21.12.2015 19:12, Stefano Stabellini wrote:
+> On Wed, 16 Dec 2015, Tomasz Nowicki wrote:
+>> In drivers/xen/pci.c, there are arch x86 dependent codes when
+>> CONFIG_PCI_MMCONFIG is enabled, since CONFIG_PCI_MMCONFIG
+>> depends on ACPI, so this will prevent XEN PCI running on other
+>> architectures using ACPI with PCI_MMCONFIG enabled (such as ARM64).
+>>
+>> Fortunatly, it can be sloved in a simple way. In drivers/xen/pci.c,
+>> the only x86 dependent code is if ((pci_probe & PCI_PROBE_MMCONF) == 0),
+>> and it's defined in asm/pci_x86.h, the code means that
+>> if the PCI resource is not probed in PCI_PROBE_MMCONF way, just
+>> ingnore the xen mcfg init. Actually this is duplicate, because
+>> if PCI resource is not probed in PCI_PROBE_MMCONF way, the
+>> pci_mmconfig_list will be empty, and the if (list_empty())
+>> after it will do the same job.
+>>
+>> So just remove the arch related code and the head file, this
+>> will be no functional change for x86, and also makes xen/pci.c
+>> usable for other architectures.
+>>
+>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+>> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+>> CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+>> Cc: Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>
+>> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 >
-> Enhanced Allocation allows PCI devices to reserve regions with DWORD
-> granularity. Make sure lspci doesn't tuncate least significant bits
-> of the region size.
->
-> ex: a 2000 byte region should display [size=2000] instead of [size=1K]
-> Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
-> ---
->
-> Hi David,
->
-> Here are some additional changes I think we should make to lspci in order to support EA.
->
-> The truncation problem was a simple fix.
->
-> Regions described by EA are being mislabeled as [virtual].
-> I spent some time today trying to write a patch that fixes this issue.
-> I couldn't come up with a clean solution, so I just added a comment.
->
-> Let me know if you have any questions.
->
-> Thanks,
-> Sean
->
->   lspci.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/lspci.c b/lspci.c
-> index fe7b7fe..d483f3a 100644
-> --- a/lspci.c
-> +++ b/lspci.c
-> @@ -336,7 +336,7 @@ show_size(pciaddr_t x)
->     if (!x)
->       return;
->     for (i = 0; i < (sizeof(suffix) / sizeof(*suffix) - 1); i++) {
-> -    if (x < 1024)
-> +    if (x % 1024)
->         break;
->       x /= 1024;
->     }
-> @@ -366,7 +366,7 @@ show_bases(struct device *d, int cnt)
->   	putchar('\t');
->         if (pos && !flg)			/* Reported by the OS, but not by the device */
->   	{
-> -	  printf("[virtual] ");
-> +	  printf("[virtual] ");		/* could also be enhanced */
->   	  flg = pos;
->   	  virtual = 1;
->   	}
+> Acked-by: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
 >
 
+Thanks Stefano.
+
+Tomasz
