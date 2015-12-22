@@ -1,60 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>
-Subject: [PATCH 1/3] PCI: altera: fix incorrect devfn for requester ID
-Date: Thu, 3 Dec 2015 19:17:52 +0800
-Message-ID: <1449141474-3378-2-git-send-email-lftan@altera.com>
-In-Reply-To: <1449141474-3378-1-git-send-email-lftan@altera.com>
-References: <1449141474-3378-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from [193.47.165.129] ([193.47.165.129]:35176 "EHLO mellanox.co.il"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751299AbbLVNml (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Dec 2015 08:42:41 -0500
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com,
+	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
+	liranl@mellanox.com, ilyal@mellanox.com
+Subject: [RFC 0/2] VFIO SRIOV support
+Date: Tue, 22 Dec 2015 15:42:12 +0200
+Message-Id: <1450791734-3907-1-git-send-email-ilyal@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Requester ID should use the rootport devfn and it should be always 0.
-But, devfn argument in these 2 functions can be rootport or endpoint.
-It causes the issue when accessing configuration register from
-multi-functions PCIe devices.
+Today the QEMU hypervisor allows assigning a physical device to a VM,
+facilitating driver development. However, it does not support enabling
+SR-IOV by the VM kernel driver. Our goal is to implement such support,
+allowing developers working on SR-IOV physical function drivers to work
+inside VMs as well.
 
-Tested on Ethernet adapter card with multi-functions.
+This patch series implements the kernel side of our solution.  It extends
+the VFIO driver to support the PCIE SRIOV extended capability with
+following features:
+1. The ability to probe SRIOV BAR sizes.
+2. The ability to enable and disable sriov.
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- drivers/pci/host/pcie-altera.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+This patch series is going to be used by QEMU to expose sriov capabilities
+to VM. We already have an early prototype based on Knut Omang's patches for
+SRIOV[1]. 
 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index e5dda38..f05180f 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -57,6 +57,7 @@
- #define TLP_REQ_ID(bus, devfn)		(((bus) << 8) | (devfn))
- #define TLP_HDR_SIZE			3
- #define TLP_LOOP			500
-+#define RP_DEVFN			0
- 
- #define INTX_NUM			4
- 
-@@ -233,7 +234,7 @@ static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus, u32 devfn,
- 	else
- 		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGRD1);
- 
--	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, devfn),
-+	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, RP_DEVFN),
- 					TLP_READ_TAG, byte_en);
- 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
- 
-@@ -253,7 +254,7 @@ static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
- 	else
- 		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGWR1);
- 
--	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, devfn),
-+	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, RP_DEVFN),
- 					TLP_WRITE_TAG, byte_en);
- 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
- 
+Open issues:
+1. Binding the new VFs to VFIO driver.
+Once the VM enables sriov it expects the new VFs to appear inside the VM.
+To this end we need to bind the new vfs to the VFIO driver and have QEMU
+grab them. We are currently achieve this goal using:
+echo $vendor $device > /sys/bus/pci/drivers/vfio-pci/new_id
+but we are not happy about this solution as a system might have another
+device with the same id that is unrelated to our VM.
+Other solution we've considered are:
+ a. Having user space unbind and then bind the VFs to VFIO.
+     Typically resulting in an unnecessary probing of the device.
+ b. Adding a driver argument to pci_enable_sriov(...) and have
+    vfio call pci_enable_sriov with the vfio driver as argument.
+    This solution avoids the unnecessary but is more intrusive.
+
+2. How to tell if it is safe to disable SRIOV?
+In the current implementation, a userspace can enable sriov, grab one of
+the VFs and then call disable sriov without releasing the device.  This
+will result in a deadlock where the user process is stuck inside disable
+sriov waiting for itself to release the device. Killing the process leaves
+it in a zombie state.
+We also get a strange warning saying:
+[  181.668492] WARNING: CPU: 22 PID: 3684 at kernel/sched/core.c:7497 __might_sleep+0x77/0x80() 
+[  181.668502] do not call blocking ops when !TASK_RUNNING; state=1 set at [<ffffffff810aa193>] prepare_to_wait_event+0x63/0xf0
+
+3. How to expose the Supported Page Sizes and System Page Size registers in
+the SRIOV capability? 
+Presently the hypervisor initializes Supported Page Sizes once and assumes
+it doesn't change therefore we cannot allow user space to change this
+register at will. The first solution that comes to mind is to expose a
+device that only supports the page size selected by the hypervisor.
+Unfourtently, Per SR-IOV spec section 3.3.12, PFs are required to support
+4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB page sizes. We currently map both
+registers as virtualized and read only and leave user space to worry about
+this problem.
+
+4. Other SRIOV capabilities.
+Do we want to hide capabilities we do not support in the SR-IOV
+Capabilities register? or leave it to the userspace application?
+
+[1] https://github.com/knuto/qemu/tree/sriov_patches_v6
+
+Ilya Lesokhin (2):
+  PCI: Expose iov_set_numvfs and iov_resource_size for modules.
+  VFIO: Add support for SRIOV extended capablity
+
+ drivers/pci/iov.c                  |   4 +-
+ drivers/vfio/pci/vfio_pci_config.c | 169 +++++++++++++++++++++++++++++++++----
+ include/linux/pci.h                |   4 +
+ 3 files changed, 159 insertions(+), 18 deletions(-)
+
 -- 
-1.8.2.1
+1.8.3.1
 
