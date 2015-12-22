@@ -1,44 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:58461 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752657AbbLIAvX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Dec 2015 19:51:23 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Julia Lawall <Julia.Lawall@lip6.fr>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Len Brown <lenb@kernel.org>
-Subject: Re: [PATCH] PCI: constify pci_platform_pm_ops structure
-Date: Wed, 09 Dec 2015 02:21:21 +0100
-Message-ID: <11604085.iKre2i4LQp@vostro.rjw.lan>
-In-Reply-To: <20151207160649.GG7994@localhost>
-References: <1449419625-29045-1-git-send-email-Julia.Lawall@lip6.fr> <1556686.IXJIjFBvQx@vostro.rjw.lan> <20151207160649.GG7994@localhost>
+Received: from mail-bl2on0087.outbound.protection.outlook.com ([65.55.169.87]:37600
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751674AbbLVKy7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Dec 2015 05:54:59 -0500
+From: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<Will.Deacon@arm.com>, <catalin.marinas@arm.com>,
+	<bhelgaas@google.com>, <hanjun.guo@linaro.org>,
+	<rrichter@cavium.com>, <Prasun.Kapoor@caviumnetworks.com>
+CC: <gpkulkarni@gmail.com>
+Subject: [PATCH] arm64, pci, numa: Adding helper functions as required by pci
+Date: Tue, 22 Dec 2015 16:08:50 +0530
+Message-ID: <1450780730-13667-1-git-send-email-gkulkarni@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, December 07, 2015 10:06:49 AM Bjorn Helgaas wrote:
-> On Mon, Dec 07, 2015 at 02:41:34AM +0100, Rafael J. Wysocki wrote:
-> > On Sunday, December 06, 2015 05:33:45 PM Julia Lawall wrote:
-> > > The pci_platform_pm_ops structure is never modified, so declare it as
-> > > const.
-> > > 
-> > > Done with the help of Coccinelle.
-> > > 
-> > > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> > 
-> > OK
-> > 
-> > Bjorn, do you want me to handle this one?
-> 
-> Sure, sounds good to me.
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Adding helper functions and necessary code to make
+pci driver(pci-host-generic) numa aware.
 
-OK, queued up for 4.5, thanks!
+This patch is on top of arm64-numa v7.
+http://www.spinics.net/lists/arm-kernel/msg460813.html
 
-Rafael
+Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+---
+ arch/arm64/include/asm/numa.h       | 8 +++++---
+ arch/arm64/kernel/pci.c             | 8 ++++++++
+ drivers/pci/host/pci-host-generic.c | 1 +
+ 3 files changed, 14 insertions(+), 3 deletions(-)
 
+diff --git a/arch/arm64/include/asm/numa.h b/arch/arm64/include/asm/numa.h
+index b8c2a3f..1eca4db 100644
+--- a/arch/arm64/include/asm/numa.h
++++ b/arch/arm64/include/asm/numa.h
+@@ -15,9 +15,11 @@
+ extern int __node_distance(int from, int to);
+ #define node_distance(a, b) __node_distance(a, b)
+ 
+-/* dummy definitions for pci functions */
+-#define pcibus_to_node(node)	0
+-#define cpumask_of_pcibus(bus)	0
++struct pci_bus;
++extern int pcibus_to_node(struct pci_bus *bus);
++#define cpumask_of_pcibus(bus)	(pcibus_to_node(bus) == -1 ?		\
++				 cpu_all_mask :				\
++				 cpumask_of_node(pcibus_to_node(bus)))
+ 
+ extern int cpu_to_node_map[NR_CPUS];
+ extern nodemask_t numa_nodes_parsed __initdata;
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index b3d098b..37e2e9f 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -84,3 +84,11 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	return NULL;
+ }
+ #endif
++
++#ifdef CONFIG_NUMA
++int pcibus_to_node(struct pci_bus *bus)
++{
++	return dev_to_node(&bus->dev);
++}
++EXPORT_SYMBOL(pcibus_to_node);
++#endif
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 5434c90..a821e49 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -230,6 +230,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 	of_pci_check_probe_only();
+ 
+ 	of_id = of_match_node(gen_pci_of_match, np);
++	set_dev_node(dev, of_node_to_nid(np));
+ 	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
+ 	pci->host.dev.parent = dev;
+ 	INIT_LIST_HEAD(&pci->host.windows);
+-- 
+1.8.1.4
