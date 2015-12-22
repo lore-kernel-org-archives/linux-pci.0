@@ -1,60 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:49784 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750990AbbLRKWu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Dec 2015 05:22:50 -0500
-Subject: Re: [PATCH v3 1/4] ARM: dts: dra7: Add dt node for the sycon pcie
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>, <tony@atomide.com>
-References: <1450172346-11890-1-git-send-email-kishon@ti.com>
- <1450172346-11890-2-git-send-email-kishon@ti.com>
- <5670140C.7010906@cogentembedded.com>
-CC: <bcousson@baylibre.com>, <robh+dt@kernel.org>,
-	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<linux@arm.linux.org.uk>, <rogerq@ti.com>, <nsekhar@ti.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-	<t-kristo@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <5673DE42.9080407@ti.com>
-Date: Fri, 18 Dec 2015 15:51:54 +0530
-MIME-Version: 1.0
-In-Reply-To: <5670140C.7010906@cogentembedded.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from mail-io0-f174.google.com ([209.85.223.174]:34485 "EHLO
+	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932973AbbLVVpC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Dec 2015 16:45:02 -0500
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH] PCI: aer_inject: Don't call config read/write functions with invalid ops structure.
+Date: Tue, 22 Dec 2015 13:44:51 -0800
+Message-Id: <1450820691-27588-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: David Daney <david.daney@cavium.com>
 
-On Tuesday 15 December 2015 06:52 PM, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 12/15/2015 12:39 PM, Kishon Vijay Abraham I wrote:
-> 
->> Add new device tree node for the control module register space where
->> PCIe registers are present.
->>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>   arch/arm/boot/dts/dra7.dtsi |    5 +++++
->>   1 file changed, 5 insertions(+)
->>
->> diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
->> index fe99231..e38f63f 100644
->> --- a/arch/arm/boot/dts/dra7.dtsi
->> +++ b/arch/arm/boot/dts/dra7.dtsi
->> @@ -155,6 +155,11 @@
->>                       compatible = "syscon";
->>                       reg = <0x1c04 0x0020>;
->>                   };
->> +
->> +                scm_conf_pcie: tisyscon@1c24 {
-> 
->    Please use the generic node names as the ePAPR standard says.
+The aer_inject module, when active, replaces the pci_ops structure of
+the bus so that it can intercept config space accesses.  If the config
+space access needs to be forwarded to the original pci_ops, we must
+restore the bus's original ops, as the read()/write() functions may
+require use of the data in the pci_ops structure.  An example of such
+functions are the pci_generic_config*() functions in
+drivers/pci/access.c.  A failure to call these with a valid bus->ops
+results in dereferencing an invalid bus->ops->map_bus pointer and
+subsequent OOPs and system crash.
 
-something like  scm_conf_pcie: syscon@1c24??
+So, do as suggested above.  When calling to the original
+read()/write() functions, temporarily switch back to the original
+pci_ops.  This is safe to do as the pci_lock must already be held, and
+thus no other users of the bus->ops are possible.
 
-Thanks
-Kishon
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c | 30 ++++++++++++++++++++++++++++--
+ 1 file changed, 28 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index 182224a..2d60e0e 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -188,7 +188,9 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
+ 	struct aer_error *err;
+ 	unsigned long flags;
+ 	struct pci_ops *ops;
++	struct pci_ops *my_ops;
+ 	int domain;
++	int rv;
+ 
+ 	spin_lock_irqsave(&inject_lock, flags);
+ 	if (size != sizeof(u32))
+@@ -208,8 +210,19 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
+ 	}
+ out:
+ 	ops = __find_pci_bus_ops(bus);
++	/*
++	 * pci_lock must already be held, so we can directly
++	 * manipulate bus->ops.  Many config access functions,
++	 * including pci_generic_config_read() require the original
++	 * bus->ops be installed to function, so temporarily put them
++	 * back.
++	 */
++	my_ops = bus->ops;
++	bus->ops = ops;
++	rv = ops->read(bus, devfn, where, size, val);
++	bus->ops = my_ops;
+ 	spin_unlock_irqrestore(&inject_lock, flags);
+-	return ops->read(bus, devfn, where, size, val);
++	return rv;
+ }
+ 
+ static int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where,
+@@ -220,7 +233,9 @@ static int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where,
+ 	unsigned long flags;
+ 	int rw1cs;
+ 	struct pci_ops *ops;
++	struct pci_ops *my_ops;
+ 	int domain;
++	int rv;
+ 
+ 	spin_lock_irqsave(&inject_lock, flags);
+ 	if (size != sizeof(u32))
+@@ -243,8 +258,19 @@ static int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where,
+ 	}
+ out:
+ 	ops = __find_pci_bus_ops(bus);
++	/*
++	 * pci_lock must already be held, so we can directly
++	 * manipulate bus->ops.  Many config access functions,
++	 * including pci_generic_config_write() require the original
++	 * bus->ops be installed to function, so temporarily put them
++	 * back.
++	 */
++	my_ops = bus->ops;
++	bus->ops = ops;
++	rv = ops->write(bus, devfn, where, size, val);
++	bus->ops = my_ops;
+ 	spin_unlock_irqrestore(&inject_lock, flags);
+-	return ops->write(bus, devfn, where, size, val);
++	return rv;
+ }
+ 
+ static struct pci_ops pci_ops_aer = {
+-- 
+1.8.3.1
+
