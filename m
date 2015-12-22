@@ -1,147 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57237 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755963AbbLBQN3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Dec 2015 11:13:29 -0500
-Subject: Re: [PATCH] PCI/AER: enable SERR# forwarding and role-based error
- reporting
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1445894704-28277-1-git-send-email-okaya@codeaurora.org>
- <20151201185157.GE9306@localhost> <565DF34C.6030606@codeaurora.org>
- <565DFE50.5030708@codeaurora.org> <20151201230710.GA32381@localhost>
- <565E76E9.1020307@codeaurora.org>
-Cc: Christopher Covington <cov@codeaurora.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, timur@codeaurora.org, jcm@redhat.com,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <565F18A5.1080204@codeaurora.org>
-Date: Wed, 2 Dec 2015 11:13:25 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5679DCB0.4040700@caviumnetworks.com>
+Date: Tue, 22 Dec 2015 15:28:48 -0800
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-In-Reply-To: <565E76E9.1020307@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+To: Will Deacon <will.deacon@arm.com>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	<linux-kernel@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 2/2] pci, pcie-thunder-pem: Add PCIe host driver for ThunderX
+ processors.
+References: <1450749222-15966-1-git-send-email-ddaney.cavm@gmail.com> <1450749222-15966-3-git-send-email-ddaney.cavm@gmail.com> <20151222100352.GC32623@arm.com> <5679A1E9.3050902@caviumnetworks.com>
+In-Reply-To: <5679A1E9.3050902@caviumnetworks.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/1/2015 11:43 PM, Sinan Kaya wrote:
-> Setting the SERR# forwarding must have made the trick. This part was
-> just an additional clearing of the errors.
-> 
+On 12/22/2015 11:18 AM, David Daney wrote:
+> On 12/22/2015 02:03 AM, Will Deacon wrote:
+>> On Mon, Dec 21, 2015 at 05:53:42PM -0800, David Daney wrote:
+>>> From: David Daney <david.daney@cavium.com>
+[...]
+>>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>>> index f131ba9..16ed9c3 100644
+>>> --- a/drivers/pci/host/Kconfig
+>>> +++ b/drivers/pci/host/Kconfig
+>>> @@ -172,4 +172,10 @@ config PCI_HISI
+>>>       help
+>>>         Say Y here if you want PCIe controller support on HiSilicon
+>>> HIP05 SoC
+>>>
+>>> +config PCIE_HOST_THUNDER_PEM
+>>> +    bool "Cavium Thunder PCIe controller to off-chip devices"
+>>> +    depends on PCI_HOST_GENERIC && ARM64
+>>
+>> || COMPILE_TEST ?
+>>
+>> (or does the use of writeq get you? If so, maybe COMPILE_TEST && 64BIT)
+>
+> Yes, we must use writeq in the driver, I will change it to
+> ||(COMPILE_TEST && 64BIT)
+>
 
-Nope, I was just enabling non-advisory fatal error from the mask
-register. Not clearing it.
+Actually, it turns out that this is not easily done.
 
-> I'll retest without this bit.
+For x86, it appears difficult to include asm-generic/pci-bridge.h which 
+includes the needed definition of PCI_PROBE_ONLY.  So I think it is not 
+worth supporting COMPILE_TEST
 
-Here we go.
-
-/#lspci
-00:00.0 Class 0604: 17cb:0400
-01:00.0 Class 0604: 10b5:8732
-02:08.0 Class 0604: 10b5:8732
-03:00.0 Class 0604: 10b5:8732
-04:00.0 Class 0604: 10b5:8732
-05:00.0 Class 0604: 10b5:8749
-05:00.1 Class 0880: 10b5:87d0
-05:00.2 Class 0880: 10b5:87d0
-05:00.3 Class 0880: 10b5:87d0
-05:00.4 Class 0880: 10b5:87d0
-06:08.0 Class 0604: 10b5:8749
-06:09.0 Class 0604: 10b5:8749
-06:10.0 Class 0604: 10b5:8749
-06:11.0 Class 0604: 10b5:8749
-06:12.0 Class 0604: 10b5:8749
-07:00.0 Class ff00: 1172:e001
-
-
-This is after removing the PCI_ERR_COR_ADV_NFAT setting which looks much
-better to me. I'll post a new patch without PCI_ERR_COR_ADV_NFAT.
-
-/#[24.358445]pcieport_0006:00:00.0:_AER:_Multiple_Corrected_error_received:_id=0640
-[   24.358559] pcieport 0006:06:08.0: PCIe Bus Error:
-severity=Corrected, type=Physical Layer, id=06
-[   24.358571] pcieport 0006:06:08.0:   device [10b5:8749] error
-status/mask=00002081/0000e000
-[   24.358583] pcieport 0006:06:08.0:    [ 0] Receiver Error         (First)
-[   24.358593] pcieport 0006:06:08.0:    [ 7] Bad DLLP
-[   24.358616] pcieport 0006:00:00.0: AER: Multiple Corrected error
-received: id=0640
-[   24.358708] pcieport 0006:00:00.0: AER: Multiple Corrected error
-received: id=0640
-[   24.358800] pcieport 0006:00:00.0: AER: Multiple Corrected error
-received: id=0640
-[   24.358892] pcieport 0006:00:00.0: AER: Multiple Corrected error
-received: id=0640
+David Daney
 
 
-
-
-Below is the test result with the original code.
-<remove card>
-
-pcieport_0006:00:00.0:_AER:_Multiple_Corrected_error_received:_id=0640
-pcieport 0006:01:00.0: PCIe Bus Error: severity=Corrected,
-type=Transaction Layer, id=0100(Receiver ID)
-pcieport 0006:01:00.0:   device [10b5:8732] error
-status/mask=00002000/0000c000
-pcieport 0006:01:00.0:    [13] Advisory Non-Fatal
-pcieport 0006:02:08.0: PCIe Bus Error: severity=Corrected,
-type=Transaction Layer, id=0240(Receiver ID)
-pcieport 0006:02:08.0:   device [10b5:8732] error
-status/mask=00002000/0000c000
-pcieport 0006:02:08.0:    [13] Advisory Non-Fatal
-pcieport 0006:03:00.0: PCIe Bus Error: severity=Corrected,
-type=Transaction Layer, id=0300(Receiver ID)
-pcieport 0006:03:00.0:   device [10b5:8732] error
-status/mask=00002000/0000c000
-pcieport 0006:03:00.0:    [13] Advisory Non-Fatal
-pcieport 0006:04:00.0: PCIe Bus Error: severity=Corrected,
-type=Transaction Layer, id=0400(Receiver ID)
-pcieport 0006:04:00.0:   device [10b5:8732] error
-status/mask=00002000/0000c000
-pcieport 0006:04:00.0:    [13] Advisory Non-Fatal
-pcieport 0006:06:08.0: PCIe Bus Error: severity=Corrected, type=Physical
-Layer, id=0640(Receiver ID)
-pcieport 0006:06:08.0:   device [10b5:8749] error
-status/mask=00002001/0000c000
-pcieport 0006:06:08.0:    [ 0] Receiver Error
-pcieport 0006:06:08.0:    [13] Advisory Non-Fatal
-pcieport 0006:06:08.0:   Error of this Agent(0640) is reported first
-pcieport 0006:00:00.0: AER: Multiple Corrected error received: id=0640
-pcieport 0006:06:09.0: PCIe Bus Error: severity=Corrected,
-type=Transaction Layer, id=0648(Receiver ID)
-pcieport 0006:06:09.0:   device [10b5:8749] error
-status/mask=00002000/00008000
-pcieport 0006:06:09.0:    [13] Advisory Non-Fatal
-pcieport 0006:06:10.0: PCIe Bus Error: severity=Corrected,
-type=Transaction Layer, id=0680(Receiver ID)
-pcieport 0006:06:10.0:   device [10b5:8749] error
-status/mask=00002000/0000c000
-pcieport 0006:06:10.0:    [13] Advisory Non-Fatal
-pcieport 0006:06:11.0: PCIe Bus Error: severity=Corrected,
-type=Transaction Layer, id=0688(Receiver ID)
-pcieport 0006:06:11.0:   device [10b5:8749] error
-status/mask=00002000/00008000
-pcieport 0006:06:11.0:    [13] Advisory Non-Fatal
-pcieport 0006:06:12.0: PCIe Bus Error: severity=Corrected,
-type=Transaction Layer, id=0690(Receiver ID)
-pcieport 0006:06:12.0:   device [10b5:8749] error
-status/mask=00002000/00008000
-pcieport 0006:06:12.0:    [13] Advisory Non-Fatal
-pcieport 0006:00:00.0: AER: Multiple Corrected error received: id=0640
-pcieport 0006:00:00.0: AER: Multiple Corrected error received: id=0640
-pcieport 0006:00:00.0: AER: Multiple Corrected error received: id=0640
-pcieport 0006:00:00.0: AER: Multiple Corrected error received: id=0640
-/ #
-
-
-
-
-
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
-Linux Foundation Collaborative Project
