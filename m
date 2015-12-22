@@ -1,110 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:40160 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932129AbbLRNij (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Dec 2015 08:38:39 -0500
-Date: Fri, 18 Dec 2015 13:38:21 +0000
-From: Mark Rutland <mark.rutland@arm.com>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: helgaas@kernel.org, Vineet.Gupta1@synopsys.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	CARLOS.PALMINHA@synopsys.com, Alexey.Brodkin@synopsys.com,
-	robh+dt@kernel.org, pawel.moll@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Subject: Re: [PATCH v2 2/2] add new platform driver for PCI RC
-Message-ID: <20151218133820.GA30229@leverpostej>
-References: <cover.1450274797.git.jpinto@synopsys.com>
- <33586809f80ef3104608a4e49390e382edfc3347.1450274797.git.jpinto@synopsys.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Jisheng Zhang'" <jszhang@marvell.com>,
+	"'Pratyush Anand'" <pratyush.anand@gmail.com>
+Cc: "'Russell King - ARM Linux'" <linux@arm.linux.org.uk>,
+	"'Mark Rutland'" <mark.rutland@arm.com>,
+	<devicetree@vger.kernel.org>, "'Pawel Moll'" <pawel.moll@arm.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>, <linux-arm-msm@vger.kernel.org>,
+	"'Ian Campbell'" <ijc+devicetree@hellion.org.uk>,
+	"'Stanimir Varbanov'" <stanimir.varbanov@linaro.org>,
+	<linux-kernel@vger.kernel.org>,
+	"'Rob Herring'" <robh+dt@kernel.org>,
+	"'Srinivas Kandagatla'" <srinivas.kandagatla@linaro.org>,
+	"'Bjorn Andersson'" <bjorn.andersson@sonymobile.com>,
+	<linux-pci@vger.kernel.org>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"'Jingoo Han'" <jingoohan1@gmail.com>
+References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>	<1449149725-27607-2-git-send-email-stanimir.varbanov@linaro.org>	<56669C50.9060700@linaro.org>	<CAHM4w1k_EAt+xBBYyG3B7W9Fegc4j+uRq5t_biUsxOGt+k+xUA@mail.gmail.com>	<20151209102359.GF8644@n2100.arm.linux.org.uk>	<CAHM4w1m-NiwyCLz9tikbOcNtCmVu0Vd9FhmKKSuMi5ChzfDafA@mail.gmail.com> <20151211134857.03601d0e@xhacker>
+In-Reply-To: <20151211134857.03601d0e@xhacker>
+Subject: Re: [PATCH v4 1/5] PCI: designware: add memory barrier after enabling region
+Date: Tue, 22 Dec 2015 21:36:10 +0900
+Message-ID: <000b01d13cb5$5bb6d170$13247450$@com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <33586809f80ef3104608a4e49390e382edfc3347.1450274797.git.jpinto@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 16, 2015 at 02:14:56PM +0000, Joao Pinto wrote:
-> This patch adds a new driver that will be the reference platform driver for all
-> PCI RC IP Protoyping Kits based on ARC SDP. This patch is composed by:
+On Friday, December 11, 2015 2:49 PM, Jisheng Zhang wrote:
 > 
-> -Changes to pcie-designware driver add a function that enables the feature of
-> starting the LTSSM (Link Train Status State) used by the new driver
-> -MAINTAINERS file was updated to include the new driver
-> -Documentation/devicetree/bindings/pci was updated to include the new driver
-> documentation
-> -New driver called pcie-snpsdev
+> On Fri, 11 Dec 2015 09:35:10 +0530 Pratyush Anand wrote:
 > 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> ---
-> Changes v1 -> v2 (Bjorn Helgaas):
-> - Fixups snpsdev_pcie_fixup_bridge() and snpsdev_pcie_fixup_res() were removed
-> from the driver (these functions were for specific tests only and not usefull
-> in mainline)
-> - Driver' comments were reviewed (fix Typos and excessive comments removal)
-> - Removed unnecessary definitions in the driver source (PCIE_PHY_CTRL and
-> PCIE_PHY_STAT)
+> > On Wed, Dec 9, 2015 at 3:53 PM, Russell King - ARM Linux wrote:
+> >
+> > [...]
+> >
+> > >> > >       dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+> > >> > > +     /*
+> > >> > > +      * ensure that the ATU enable has been happaned before accessing
+> > >> > > +      * pci configuration/io spaces through dw_pcie_cfg_[read|write].
+> > >> > > +      */
+> > >> > > +     wmb();
+> > >> > >  }
+> > >> > >
+> > >>
+> > >>
+> > >> My understnading is that since writel() of dw_pcie_writel_rc() in
+> > >> above code and readl(), writel() of dw_pcie_cfg_[read|write]() (which
+> > >> will follow) goes through same device (ie PCIe host here). So, it is
+> > >> guaranteed that 1st writel() will be executed before later
+> > >> readl()/writel(). If that is true then we do not need any explicit
+> > >> barrier here.
+> > >>
+> > >> Arnd, Russel: whats your opinion here.
+> > >               ^l
+> >
+> > Sorry :(
+> >
+> > >
+> > > writel() has a barrier _before_ the access but not after.
+> > >
+> > > The fact is that there's nothing which guarantees that the write will hit
+> > > the hardware in a timely manner (forget any rules about PCI config space,
+> > > the PCI ordering rules apply to the PCI bus, not to the ARM buses.)
+> > >
+> > > If you need this write to have hit the hardware before continuing, you
+> > > need to read back from the same register.
+> >
+> > OK, so better to replace wmb() with read back of control register.
+> >
+> > >
+> > > I'm just looking at this driver, trying to decipher what it's doing.  It
+> > > _looks_ to me like it's reprogramming one of the outbound windows (IO?)
+> > > so that configuration space can be accessed.  Doesn't this have the
+> > > effect of disabling access to the IO segment of the PCI bus from the
+> > > host CPU?
+> > >
+> > > What protections are there against other CPUs in the system issuing a
+> > > PCI I/O read/write while this outbound window is programmed as
+> > > configuration space?
+> >
+> >
+> > Yes, that is an issue with this driver. Most of the host controller
+> > has 4 or more viewpoints, and it is very easy to handle for them. But
+> > there are few which has only two viewpoints. Do not know how to solve
+> > it, so that it works for all.
+> >
 > 
->  .../devicetree/bindings/pci/pcie-snpsdev.txt       |  28 ++
->  MAINTAINERS                                        |   7 +
->  drivers/pci/host/Kconfig                           |   5 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pcie-designware.c                 |  15 ++
->  drivers/pci/host/pcie-designware.h                 |   1 +
->  drivers/pci/host/pcie-snpsdev.c                    | 288 +++++++++++++++++++++
->  7 files changed, 345 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
->  create mode 100644 drivers/pci/host/pcie-snpsdev.c
+> The default outbound iATU number is two, this may be the reason why the driver
+> is written in current style. And two outbound iATUs may be common for pcie dw
+> users because ASIC people just follow the default configuration ;).
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/pcie-snpsdev.txt b/Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
-> new file mode 100644
-> index 0000000..b833c8f
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
-> @@ -0,0 +1,28 @@
-> +Synopsys PCI RC IP Prototyping Kit
-> +----------------------------------
-> +
-> +This is the reference platform driver to be used in the Synopsys PCI RC IP
-> +Prototyping Kits.
-> +
-> +Required properties:
-> +- compatible: "snps,pcie-snpsdev";
+> In our case, Marvell Berlin SoCs have two outbound iATUs.
 
-Is there not a momre specific name for this RC IP?
+Hmm, we need to add new DT property to handle the number of outbound iATUs.
+Then, 'pcie-designware.c' should configure registers according to the number.
+Anyway, we should add this agenda to ToDo list.
 
-> +- reg:	A list of physical regions to access the device.
+Best regards,
+Jingoo Han
 
-How many, in which order?
+> 
+> Thanks,
+> Jisheng
 
-> +- interrupts: interrupt for the device.
-
-How many, in which order?
-
-> +Example configuration:
-> +
-> +	pcie: pcie@0xdffff000 {
-> +		#interrupt-cells = <1>;
-> +		compatible = "snps,pcie-snpsdev";
-> +		reg = <0xdffff000 0x1000>;
-> +		interrupts = <25>, <24>;
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		ranges = <0x00000800 0 0xd0000000 0xd0000000 0 0x00002000
-> +			  0x81000000 0 0x00000000 0xde000000 0 0x00010000
-> +			  0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
-
-Nit: please bracket list entries individually.
-
-> +		num-lanes = <1>;
-> +	};
-
-Please refer to more generic bindings for properties you have not defined here
-(e.g. device_type, ranges, num-lanes).
-
-[...]
-
-> +#define SIZE_1GB 0x40000000
-
-Use SZ_1G from linux/sizes.h.
-
-Thanks,
-Mark.
