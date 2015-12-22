@@ -1,72 +1,97 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V2 12/23] pci, acpi: Move ACPI host bridge device companion assignment to core code.
-Date: Wed, 16 Dec 2015 16:16:22 +0100
-Message-Id: <1450278993-12664-13-git-send-email-tn@semihalf.com>
-In-Reply-To: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+From: Arnd Bergmann <arnd@arndb.de>
+To: David Daney <ddaney@caviumnetworks.com>
+Subject: Re: [PATCH 1/2] PCI: generic: Refactor code to enable reuse by other drivers.
+Date: Tue, 22 Dec 2015 22:13:21 +0100
+Cc: Will Deacon <will.deacon@arm.com>,
+	David Daney <ddaney.cavm@gmail.com>,
+	linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	David Daney <david.daney@cavium.com>
+References: <1450749222-15966-1-git-send-email-ddaney.cavm@gmail.com> <20151222100732.GD32623@arm.com> <5679968B.4090908@caviumnetworks.com>
+In-Reply-To: <5679968B.4090908@caviumnetworks.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201512222213.21744.arnd@arndb.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we have two platforms (x86 & ia64) capable of PCI ACPI host
-bridge initialization. They both use sysdata pill to pass down parent
-device reference and both relay on NULL parent in pci_create_root_bus()
-to validate sysdata content.
+On Tuesday 22 December 2015, David Daney wrote:
+> On 12/22/2015 02:07 AM, Will Deacon wrote:
+> > On Mon, Dec 21, 2015 at 05:53:41PM -0800, David Daney wrote:
+> >> From: David Daney <david.daney@cavium.com>
+> >> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> >> index 5434c90..e83cec7 100644
+> >> --- a/drivers/pci/host/pci-host-generic.c
+> >> +++ b/drivers/pci/host/pci-host-generic.c
+> [...]
+> >> -static int gen_pci_probe(struct platform_device *pdev)
+> >> +int gen_pci_common_probe(struct platform_device *pdev,
+> >> +			 struct gen_pci *pci)
+> >
+> > Whilst I'm fine with this patch, I don't know how Bjorn will feel about
+> > exposing this function outside of the generic host driver. We could avoid
+> > it by turning things upside-down and having the generic driver probe
+> > the other drivers by matching a compatible string with a probe function
+> > pointer, but I'd be interested to see what others think.
+> >
+> 
+> Note: I know that pci-host-generic is not built as a loadable module, but...
+> 
+> struct of_device_id, MODULE_DEVICE_TABLE, struct platform_driver and the 
+> registering of platform drivers is fairly well standardized in the 
+> kernel, and module loading userpace tools.
 
-It looks hacky and prevent us from getting some frimware specific
-info for PCI host controller e.g. bus domain number.
-However, it seems we can overcome that blocker by passing down parent
-device via pci_create_root_bus parameter (as the ACPI device type)
-and using ACPI_COMPANION_SET in core code for ACPI boot method.
-ACPI_COMPANION_SET is safe to run for all cases DT, ACPI and DT&ACPI.
+Agreed, this is the correct way to do the abstraction if we want one, the way
+that Will describes is generally not a good idea, and we've converted a
+number of drivers that did it like that to the way you do it here.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- drivers/acpi/pci_root.c | 5 ++++-
- drivers/pci/probe.c     | 2 ++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+> The struct of_device_id, MODULE_DEVICE_TABLE must really reside in the 
+> same module as the driver for the device.   We are creating a separate 
+> driver precisely because we don't want to mix all this ThunderX specific 
+> code into the pci-host-generic driver when it is used by arm-32bit and 
+> others.  This means that, at a minimum, we would have to export the 
+> pci-host-generic probe function so that it could be referenced by struct 
+> platform_driver in other modules.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index ae3fe4e..a65c8c2 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -846,7 +846,10 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 
- 	pci_acpi_root_add_resources(info);
- 	pci_add_resource(&info->resources, &root->secondary);
--	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
-+
-+	/* Root bridge device needs to be sure of parent ACPI type */
-+	ACPI_COMPANION_SET(&device->dev, device);
-+	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
- 				  sysdata, &info->resources);
- 	if (!bus)
- 		goto out_release_info;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 553a029..cad836f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2107,6 +2107,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	bridge->dev.parent = parent;
- 	bridge->dev.release = pci_release_host_bridge_dev;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-+	ACPI_COMPANION_SET(&bridge->dev,
-+			   parent ? to_acpi_device_node(parent->fwnode) : NULL);
- 	error = pcibios_root_bridge_prepare(bridge);
- 	if (error) {
- 		kfree(bridge);
--- 
-1.9.1
+Right.
 
+> This brings up the next problem.  How to attach driver specific data to 
+> the generic driver structures?  At first I tried augmenting  struct 
+> gen_pci_cfg_bus_ops with a callback .init() function to be called by the 
+> generic driver, but this would also require adding an an element to 
+> struct gen_pci to point to a driver specific data object.  It felt a 
+> little convoluted and complex.
+> 
+> This led me to the current design where struct gen_pci is embedded in 
+> the driver specific structure, and the allocation of this is done in the 
+> driver specific probe function.  No more callbacks, no additions to the 
+> pci-host-generic structures.  I think it is a little cleaner this way.
+> 
+> If there are suggestions as to how it can be made cleaner yet, I would 
+> be happy to implement and test them.
+
+My idea of the long-term direction for the pci-host-generic driver
+would be to move more parts into the PCI core code as library functions
+that can be used by other drivers as well. This would also address my
+other concern that I'd like to see the generic host driver remain the
+simplest example that we have, and only require any additional code in
+other drivers to add functionality or workarounds.
+
+Adding an abstraction layer within the driver to some degree goes in the
+opposite direction of that.
+
+One approach that might work would be to split the existing driver into
+three files: one for CAM, one for ECAM and one for the common parts,
+with an interface similar to what you have here. Then you can add your
+driver as a third front-end, and we can keep working on integrating the
+common parts further into the PCI core.
+
+	Arnd
