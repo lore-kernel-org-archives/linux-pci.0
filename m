@@ -1,86 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0127.outbound.protection.outlook.com ([207.46.100.127]:1340
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932104AbbLTFRh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Dec 2015 00:17:37 -0500
-From: KY Srinivasan <kys@microsoft.com>
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Jake Oshins <jakeo@microsoft.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"olaf@aepfle.de" <olaf@aepfle.de>,
-	"apw@canonical.com" <apw@canonical.com>,
-	"vkuznets@redhat.com" <vkuznets@redhat.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v9 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-V
- VMs
-Date: Sun, 20 Dec 2015 05:03:14 +0000
-Message-ID: <SN1PR0301MB1662C3B88AFAB732813B2626A0E30@SN1PR0301MB1662.namprd03.prod.outlook.com>
-References: <1449701697-6366-1-git-send-email-jakeo@microsoft.com>
- <BY2PR0301MB16545331BCB31D708A74C583A0EE0@BY2PR0301MB1654.namprd03.prod.outlook.com>
- <alpine.DEB.2.11.1512191220180.28591@nanos>
- <BY2PR0301MB1654386EBABB31E51CC6E55BA0E20@BY2PR0301MB1654.namprd03.prod.outlook.com>
- <alpine.DEB.2.11.1512192119060.28591@nanos>
-In-Reply-To: <alpine.DEB.2.11.1512192119060.28591@nanos>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:54030 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752555AbbLVPgA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Dec 2015 10:36:00 -0500
+Message-ID: <1450798558.22385.7.camel@redhat.com>
+Subject: Re: [RFC 0/2] VFIO SRIOV support
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Ilya Lesokhin <ilyal@mellanox.com>, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, noaos@mellanox.com, haggaie@mellanox.com,
+	ogerlitz@mellanox.com, liranl@mellanox.com
+Date: Tue, 22 Dec 2015 08:35:58 -0700
+In-Reply-To: <1450791734-3907-1-git-send-email-ilyal@mellanox.com>
+References: <1450791734-3907-1-git-send-email-ilyal@mellanox.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: Thomas Gleixner [mailto:tglx@linutronix.de]
-> Sent: Saturday, December 19, 2015 12:21 PM
-> To: KY Srinivasan <kys@microsoft.com>
-> Cc: Jake Oshins <jakeo@microsoft.com>; gregkh@linuxfoundation.org; linux-
-> kernel@vger.kernel.org; devel@linuxdriverproject.org; olaf@aepfle.de;
-> apw@canonical.com; vkuznets@redhat.com; Haiyang Zhang
-> <haiyangz@microsoft.com>; marc.zyngier@arm.com;
-> bhelgaas@google.com; linux-pci@vger.kernel.org
-> Subject: RE: [PATCH v9 0/7] PCI: hv: New paravirtual PCI front-end for Hyper-
-> V VMs
+On Tue, 2015-12-22 at 15:42 +0200, Ilya Lesokhin wrote:
+> Today the QEMU hypervisor allows assigning a physical device to a VM,
+> facilitating driver development. However, it does not support
+> enabling
+> SR-IOV by the VM kernel driver. Our goal is to implement such
+> support,
+> allowing developers working on SR-IOV physical function drivers to
+> work
+> inside VMs as well.
 > 
-> On Sat, 19 Dec 2015, KY Srinivasan wrote:
-> > > From: Thomas Gleixner [mailto:tglx@linutronix.de]
-> > > On Tue, 15 Dec 2015, KY Srinivasan wrote:
-> > > >
-> > > > Of these 7 patches, Greg has committed all of the VMBUS
-> > > > related supporting patches (3 patches). Thomas, can you
-> > > > take the IRQ related patches through your tree.
-> > >
-> > > That does not make any sense.
-> > >
-> > > > > Jake Oshins (7):
-> > > > >   drivers:hv: Export a function that maps Linux CPU num onto Hyper-V
-> > > > >     proc num
-> > > > >   drivers:hv: Export hv_do_hypercall()
-> > > > >   PCI: Make it possible to implement a PCI MSI IRQ Domain in a
-> module.
-> > > > >   PCI: Add fwnode_handle to pci_sysdata
-> > > > >   PCI: irqdomain: Look up IRQ domain by fwnode_handle
-> > > > >   drivers:hv: Define the channel type of Hyper-V PCI Express
-> > > > >     pass-through
-> > > > >   PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
-> > >
-> > > That series cannot be ripped apart. The PCI part does not even compile
-> > > w/o the drivers/hv part in place.
-> >
-> > What I was proposing was that after you pick up the hv related patches in
-> > Greg's tree in the next cycle, would you be willing to take the IRQ related
-> > patches through your tree. Sorry for the confusion.
+> This patch series implements the kernel side of our solution.  It
+> extends
+> the VFIO driver to support the PCIE SRIOV extended capability with
+> following features:
+> 1. The ability to probe SRIOV BAR sizes.
+> 2. The ability to enable and disable sriov.
 > 
-> You mean: PCI: Make it possible to implement a PCI MSI IRQ Domain in a
-> module.
+> This patch series is going to be used by QEMU to expose sriov
+> capabilities
+> to VM. We already have an early prototype based on Knut Omang's
+> patches for
+> SRIOV[1]. 
 > 
-> Right? Aside from the misleading subject line, I can pick that one
-> up. The rest wants to go through the PCI tree.
+> Open issues:
+> 1. Binding the new VFs to VFIO driver.
+> Once the VM enables sriov it expects the new VFs to appear inside the
+> VM.
+> To this end we need to bind the new vfs to the VFIO driver and have
+> QEMU
+> grab them. We are currently achieve this goal using:
+> echo $vendor $device > /sys/bus/pci/drivers/vfio-pci/new_id
+> but we are not happy about this solution as a system might have
+> another
+> device with the same id that is unrelated to our VM.
+> Other solution we've considered are:
+>  a. Having user space unbind and then bind the VFs to VFIO.
+>      Typically resulting in an unnecessary probing of the device.
+>  b. Adding a driver argument to pci_enable_sriov(...) and have
+>     vfio call pci_enable_sriov with the vfio driver as argument.
+>     This solution avoids the unnecessary but is more intrusive.
 
-That is what I meant. Thanks Thomas.
+You could use driver_override for this, but the open issue you haven't
+listed is the ownership problem, VFs will be in separate iommu groups
+and therefore create separate vfio groups.  How do those get associated
+with the user so that we don't have one user controlling the VFs for
+another user, or worse for the host kernel.  Whatever solution you come
+up with needs to protect the host kernel, first and foremost.  It's not
+sufficient to rely on userspace to grab the VFs and sequester them for
+use only by that user, the host kernel needs to provide that security
+automatically.  Thanks,
 
-K. Y
+Alex
+
+> 2. How to tell if it is safe to disable SRIOV?
+> In the current implementation, a userspace can enable sriov, grab one
+> of
+> the VFs and then call disable sriov without releasing the
+> device.  This
+> will result in a deadlock where the user process is stuck inside
+> disable
+> sriov waiting for itself to release the device. Killing the process
+> leaves
+> it in a zombie state.
+> We also get a strange warning saying:
+> [  181.668492] WARNING: CPU: 22 PID: 3684 at kernel/sched/core.c:7497
+> __might_sleep+0x77/0x80() 
+> [  181.668502] do not call blocking ops when !TASK_RUNNING; state=1
+> set at [<ffffffff810aa193>] prepare_to_wait_event+0x63/0xf0
+> 
+> 3. How to expose the Supported Page Sizes and System Page Size
+> registers in
+> the SRIOV capability? 
+> Presently the hypervisor initializes Supported Page Sizes once and
+> assumes
+> it doesn't change therefore we cannot allow user space to change this
+> register at will. The first solution that comes to mind is to expose
+> a
+> device that only supports the page size selected by the hypervisor.
+> Unfourtently, Per SR-IOV spec section 3.3.12, PFs are required to
+> support
+> 4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB page sizes. We currently
+> map both
+> registers as virtualized and read only and leave user space to worry
+> about
+> this problem.
+> 
+> 4. Other SRIOV capabilities.
+> Do we want to hide capabilities we do not support in the SR-IOV
+> Capabilities register? or leave it to the userspace application?
+> 
+> [1] https://github.com/knuto/qemu/tree/sriov_patches_v6
+> 
+> Ilya Lesokhin (2):
+>   PCI: Expose iov_set_numvfs and iov_resource_size for modules.
+>   VFIO: Add support for SRIOV extended capablity
+> 
+>  drivers/pci/iov.c                  |   4 +-
+>  drivers/vfio/pci/vfio_pci_config.c | 169
+> +++++++++++++++++++++++++++++++++----
+>  include/linux/pci.h                |   4 +
+>  3 files changed, 159 insertions(+), 18 deletions(-)
+> 
+
