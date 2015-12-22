@@ -1,61 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:34418 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755731AbbLAIlu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Dec 2015 03:41:50 -0500
+Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:42584 "EHLO
+	nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932712AbbLVPeT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Dec 2015 10:34:19 -0500
+Date: Tue, 22 Dec 2015 16:26:02 +0100
+From: Martin Mares <mj@ucw.cz>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	"Sean O. Stalley" <sean.stalley@intel.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v3] Add lspci support for Enhanced Allocation Capability.
+Message-ID: <mj+md-20151222.152501.98524.nikam@ucw.cz>
+References: <1450217759-22063-1-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1448954672-27236-2-git-send-email-horms+renesas@verge.net.au>
-References: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
-	<1448954672-27236-2-git-send-email-horms+renesas@verge.net.au>
-Date: Tue, 1 Dec 2015 09:41:49 +0100
-Message-ID: <CAMuHMdVJvChiFTkeeJNBcPG2CsC3PxoEC4Lx0fHOeMMMPLew0g@mail.gmail.com>
-Subject: Re: [PATCH 1/4] PCI: rcar-gen2: Add generic compatibility string
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Simon Horman <horms+renesas@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1450217759-22063-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 1, 2015 at 8:24 AM, Simon Horman <horms+renesas@verge.net.au> wrote:
-> Add fallback compatibility string for R-Car Gen 2 Family.
-> This is in keeping with the fallback scheme being adopted wherever
-> appropriate for drivers for Renesas SoCs.
->
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Hi!
+
+> From: David Daney <david.daney@cavium.com>
+> 
+> The PCISIG recently added the Enhanced Allocation Capability.  Decode
+> it in lspci.
 > ---
->  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 11 +++++++++--
->  drivers/pci/host/pci-rcar-gen2.c                        |  1 +
->  2 files changed, 10 insertions(+), 2 deletions(-)
->
-> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> index 891463cb09c2..b19be08a8113 100644
-> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> @@ -8,7 +8,14 @@ OHCI and EHCI controllers.
->  Required properties:
->  - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
->               "renesas,pci-r8a7791" for the R8A7791 SoC;
-> -             "renesas,pci-r8a7794" for the R8A7794 SoC.
-> +             "renesas,pci-r8a7794" for the R8A7794 SoC;
-> +             "renesas,pci-gen2" for a generic R-Car Gen2 compatible device.
+> The specification is currently located here:
+> 
+> https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_Allocation_23_Oct_2014_Final.pdf
+> 
+> Bjorn Helgaas recently merged Linux kernel support for EA, and Cavium
+> ThunderX processors have implemented it.  This patch gives us a pretty
+> view of the capability structure.
 
-Shouldn't that be "renesas,pci-rcar-gen" or "renesas,pci-rcar2"?
+I will merge this soon.
 
-Else you'll be in trouble when Renesas starts focussing on airplanes
-(R-Plane Gen2), rockets (R-Rocket Gen2), or IoT (R-IoT Gen2).
+Could you please provide a hex dump of a config space with this
+capability? (See the test cases in pciutils/tests/.)
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+Q: How many Prolog programmers does it take to change a light bulb?  A: No.
