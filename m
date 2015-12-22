@@ -1,120 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47891 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756201AbbLGVyH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Dec 2015 16:54:07 -0500
-Date: Mon, 7 Dec 2015 15:53:56 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, dja@axtens.net,
-	linux-xtensa@linux-xtensa.org, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-mips@linux-mips.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, linux-am33-list@redhat.com,
-	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH part3 v12 00/10] Cleanup platform pci_domain_nr()
-Message-ID: <20151207215356.GD14429@localhost>
-References: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
+ against platfrom specific quirks.
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"okaya@codeaurora.org" <okaya@codeaurora.org>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"Stefano.Stabellini@eu.citrix.com" <Stefano.Stabellini@eu.citrix.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <1450278993-12664-23-git-send-email-tn@semihalf.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1EC14C0F@lhreml503-mbb>
+Cc: "robert.richter@caviumnetworks.com"
+	<robert.richter@caviumnetworks.com>,
+	"mw@semihalf.com" <mw@semihalf.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Wangyijing <wangyijing@huawei.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	"jchandra@broadcom.com" <jchandra@broadcom.com>,
+	"jcm@redhat.com" <jcm@redhat.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <567923D2.2010202@semihalf.com>
+Date: Tue, 22 Dec 2015 11:20:02 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1EC14C0F@lhreml503-mbb>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 20, 2015 at 08:01:08PM +0800, Yijing Wang wrote:
-> This series is splitted out from previous patchset
-> "Refine PCI scan interfaces and make generic pci host bridge".
-> It try to clean up all platform pci_domain_nr(), save domain
-> in pci_host_bridge, so we could get domain number from the
-> common interface. 
-> 
-> v11->v12:
->   Introduce wrap function pci_create_root_bus_generic()
->   and pci_create_root_bus_generic() for arm/arm64 which
->   enable CONFIG_PCI_DOMAINS_GENERIC.
->   Rebased this series based 4.2-rc1
-> 
-> Yijing Wang (10):
->   PCI: Save domain in pci_host_bridge
->   PCI: Move pci_bus_assign_domain_nr() declaration into
->     drivers/pci/pci.h
->   PCI: Remove declaration for pci_get_new_domain_nr()
->   PCI: Introduce pci_host_assign_domain_nr() to assign domain
->   powerpc/PCI: Rename pcibios_root_bridge_prepare() to
->     pcibios_root_bus_prepare()
->   PCI: Make pci_host_bridge hold sysdata in drvdata
->   PCI: Create pci host bridge prior to root bus
->   PCI: Introduce common pci_domain_nr() and remove platform specific
->     code
->   PCI: Remove pci_bus_assign_domain_nr()
->   IA64/PCI: Fix build warning found by kbuild test
-> 
->  arch/alpha/include/asm/pci.h             |    2 -
->  arch/alpha/kernel/pci.c                  |    4 +-
->  arch/alpha/kernel/sys_nautilus.c         |    2 +-
->  arch/arm/kernel/bios32.c                 |    2 +-
->  arch/arm/mach-dove/pcie.c                |    2 +-
->  arch/arm/mach-iop13xx/pci.c              |    4 +-
->  arch/arm/mach-mv78xx0/pcie.c             |    2 +-
->  arch/arm/mach-orion5x/pci.c              |    4 +-
->  arch/frv/mb93090-mb00/pci-vdk.c          |    3 +-
->  arch/ia64/include/asm/pci.h              |    1 -
->  arch/ia64/pci/pci.c                      |    6 +-
->  arch/ia64/sn/kernel/io_acpi_init.c       |    6 +-
->  arch/ia64/sn/kernel/io_init.c            |    6 +-
->  arch/m68k/coldfire/pci.c                 |    2 +-
->  arch/microblaze/include/asm/pci.h        |    2 -
->  arch/microblaze/pci/pci-common.c         |   15 +----
->  arch/mips/include/asm/pci.h              |    2 -
->  arch/mips/pci/pci.c                      |    4 +-
->  arch/mn10300/unit-asb2305/pci.c          |    3 +-
->  arch/powerpc/include/asm/machdep.h       |    2 +-
->  arch/powerpc/include/asm/pci.h           |    2 -
->  arch/powerpc/kernel/pci-common.c         |   21 ++-----
->  arch/powerpc/platforms/pseries/pci.c     |    2 +-
->  arch/powerpc/platforms/pseries/pseries.h |    2 +-
->  arch/powerpc/platforms/pseries/setup.c   |    2 +-
->  arch/s390/include/asm/pci.h              |    1 -
->  arch/s390/pci/pci.c                      |   10 +---
->  arch/sh/drivers/pci/pci.c                |    4 +-
->  arch/sh/include/asm/pci.h                |    2 -
->  arch/sparc/include/asm/pci_64.h          |    1 -
->  arch/sparc/kernel/leon_pci.c             |    2 +-
->  arch/sparc/kernel/pci.c                  |   21 +------
->  arch/sparc/kernel/pcic.c                 |    2 +-
->  arch/tile/include/asm/pci.h              |    2 -
->  arch/tile/kernel/pci.c                   |    4 +-
->  arch/tile/kernel/pci_gx.c                |    4 +-
->  arch/unicore32/kernel/pci.c              |    2 +-
->  arch/x86/include/asm/pci.h               |    6 --
->  arch/x86/pci/acpi.c                      |    6 +-
->  arch/x86/pci/common.c                    |    2 +-
->  arch/xtensa/kernel/pci.c                 |    2 +-
->  drivers/parisc/dino.c                    |    2 +-
->  drivers/parisc/lba_pci.c                 |    2 +-
->  drivers/pci/host/pci-versatile.c         |    3 +-
->  drivers/pci/host/pci-xgene.c             |    2 +-
->  drivers/pci/host/pcie-designware.c       |    2 +-
->  drivers/pci/host/pcie-iproc.c            |    2 +-
->  drivers/pci/host/pcie-xilinx.c           |    2 +-
->  drivers/pci/hotplug/ibmphp_core.c        |    2 +-
->  drivers/pci/pci.c                        |   31 ++++++++--
->  drivers/pci/pci.h                        |    1 +
->  drivers/pci/probe.c                      |   92 +++++++++++++++++-------------
->  drivers/pci/xen-pcifront.c               |    2 +-
->  include/linux/pci.h                      |   39 ++++++-------
->  54 files changed, 161 insertions(+), 195 deletions(-)
+On 21.12.2015 12:47, Gabriele Paoloni wrote:
+> 2) In the quirk mechanism you proposed, I see that the callback function
+>     allows to do some preparation work for the host bridge. For example in
+>     Hisilicon hip05 case we would need to read some values from the ACPI
+>     table (see acpi_pci_root_hisi_add() function in
+>     https://lkml.org/lkml/2015/12/3/426).
+>     I am quite new to ACPI and I wonder if it is OK to add such "Packages"
+>     to the  PCI host bridge ACPI device...or maybe we need to declare a new
+>     one...?
 
-Doesn't apply to v4.4-rc2.  Please refresh and repost if this is still
-relevant.
+I may miss sth so please correct me in that case.
 
-Bjorn
+https://lkml.org/lkml/2015/12/3/426 shows that you need special handling 
+for root->secondary.start bus number only, right? So how about creating 
+special MCFG region <rc-base:rc-base+rc-size> only for <segment,bus>. 
+Like that:
+
+[0008]                       Base Address : <rc-base>
+[0002]               Segment Group Number : <segment>
+[0001]                   Start Bus Number : <root->secondary.start>
+[0001]                     End Bus Number : <root->secondary.start>
+[0004]                           Reserved : 00000000
+
+
+static const struct dmi_system_id hisi_quirk[] = {
+	{
+		.ident = "HiSi...",
+		.matches = {
+			DMI_MATCH(<whatever you need to match your platform>),
+		},
+	},
+	{ }
+};
+
+static struct pci_ops hisi_ecam_pci_ops = {
+	.map_bus = pci_mcfg_dev_base,
+	.read = hisi_pcie_cfg_read,
+	.write = hisi_pcie_cfg_write,
+};
+
+DECLARE_ACPI_MCFG_FIXUP(hisi_quirk, &hisi_ecam_pci_ops,
+			<segment>, <bus>);
+
+With above code you can use your custom PCI config accessor only for 
+that region.
+
+Let me know if that is not enough for you.
+
+Tomasz
