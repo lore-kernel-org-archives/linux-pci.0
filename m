@@ -1,267 +1,56 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [RFC PATCH v3 5/5] PCI: ACPI: Add a generic ACPI based host controller
-Date: Wed, 16 Dec 2015 18:12:35 +0530
-Message-ID: <1450269755-21420-6-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1450269755-21420-1-git-send-email-jchandra@broadcom.com>
-References: <1450269755-21420-1-git-send-email-jchandra@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:43376 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752433AbbLVV6D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Dec 2015 16:58:03 -0500
+Date: Tue, 22 Dec 2015 15:57:58 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Henningsson <david.henningsson@canonical.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: Dmesg filled with "AER: Corrected error received"
+Message-ID: <20151222215758.GA17235@localhost>
+References: <5673E049.2010704@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5673E049.2010704@canonical.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a simple ACPI based PCI host controller. This is done by
-providing a simple implementation for pci_acpi_scan_root().
+Hi David,
 
-The pci_mmcfg_list handling is done by the ACPI code, we
-keep a reference to the pci_mmcfg_region which is already
-mapped.
+On Fri, Dec 18, 2015 at 11:30:33AM +0100, David Henningsson wrote:
+> Hi Linux PCI maintainers,
+> 
+> My dmesg gets filled with a few lines repeated over and over again:
+> 
+> pcieport 0000:00:1c.0: AER: Corrected error received: id=00e0
+> pcieport 0000:00:1c.0: can't find device of ID00e0
+> pcieport 0000:00:1c.0: AER: Corrected error received: id=00e0
+> pcieport 0000:00:1c.0: PCIe Bus Error: severity=Corrected,
+> type=Physical Layer, id=00e0(Receiver ID)
+> pcieport 0000:00:1c.0:   device [8086:9d14] error
+> status/mask=00000001/00002000
+> pcieport 0000:00:1c.0:    [ 0] Receiver Error
+> 
+> This happens 10-30 times per second (!), so dmesg fills up quickly.
+> The bug is present in both vanilla and Ubuntu kernels.
+> 
+> I'm happy to try to help by providing more info as requested, and
+> I'm also able to build kernels to test patches (although that might
+> take some time, especially during the upcoming holidays).
+> 
+> Computer: Dell Inspiron 13-7359
+> Kernel version: Linux version 4.4.0-040400rc5-generic (kernel@gloin)
+> (gcc version 5.2.1 20151010 (Ubuntu 5.2.1-22ubuntu2) ) #201512140221
+> SMP Mon Dec 14 02:23:36 UTC 2015
+> CPU: Skylake i3-6100U
+> Lspci: attached
+> Dmesg: I'm attaching an extract from kern.log which shows the most
+> recent boot and a few seconds thereafter.
+> Downstream bug report:
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1521173
 
-This is enabled only for ARM64 now.
+Thanks a lot for the report and logs.  Do you happen to know whether this
+is a regression, and if so, when it first appeared?
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
----
- drivers/pci/host/Kconfig         |   7 ++
- drivers/pci/host/Makefile        |   1 +
- drivers/pci/host/pci-host-acpi.c | 193 +++++++++++++++++++++++++++++++++++++++
- 3 files changed, 201 insertions(+)
- create mode 100644 drivers/pci/host/pci-host-acpi.c
-
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index f131ba9..8321efc 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -53,6 +53,13 @@ config PCI_RCAR_GEN2_PCIE
- 	help
- 	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
- 
-+config PCI_HOST_GENERIC_ACPI
-+	bool "Generic ACPI PCI host controller"
-+	depends on ARM64 && ACPI
-+	help
-+	  Say Y here if you want to support a simple generic ACPI PCI host
-+	  controller.
-+
- config PCI_HOST_GENERIC
- 	bool "Generic PCI host controller"
- 	depends on (ARM || ARM64) && OF
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 9d4d3c6..bc31852 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -6,6 +6,7 @@ obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
- obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
- obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
- obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
-+obj-$(CONFIG_PCI_HOST_GENERIC_ACPI) += pci-host-acpi.o
- obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
- obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
- obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
-diff --git a/drivers/pci/host/pci-host-acpi.c b/drivers/pci/host/pci-host-acpi.c
-new file mode 100644
-index 00000000..cdc259e
---- /dev/null
-+++ b/drivers/pci/host/pci-host-acpi.c
-@@ -0,0 +1,193 @@
-+/*
-+ * Generic PCI host controller driver for ACPI based systems
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ *
-+ * Copyright (c) 2015 Broadcom Corporation
-+ *
-+ * Based on drivers/pci/host/pci-host-generic.c
-+ * Copyright (C) 2014 ARM Limited
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/acpi.h>
-+#include <linux/pci-acpi.h>
-+#include <linux/sfi_acpi.h>
-+#include <linux/slab.h>
-+
-+#define PREFIX			"pci-host-acpi:"
-+
-+/* sysdata pointer is ->root_info */
-+struct gen_acpi_root_info {
-+	struct acpi_pci_root_info	common;
-+	struct pci_mmcfg_region		*mcfg;
-+	bool				mcfg_added;
-+};
-+
-+/* find mapping of a MCFG area */
-+static void __iomem *gen_acpi_map_cfg_bus(struct pci_bus *bus,
-+			unsigned int devfn, int where)
-+{
-+	struct gen_acpi_root_info *pci = bus->sysdata;
-+	struct pci_mmcfg_region *mcfg = pci->mcfg;
-+
-+	if (bus->number < mcfg->start_bus || bus->number > mcfg->end_bus)
-+		return NULL;
-+
-+	return mcfg->virt +
-+		PCI_MMCFG_OFFSET(bus->number - mcfg->start_bus, devfn) +
-+		where;
-+}
-+
-+static struct pci_ops gen_acpi_pci_ops = {
-+	.map_bus	= gen_acpi_map_cfg_bus,
-+	.read		= pci_generic_config_read,
-+	.write		= pci_generic_config_write,
-+};
-+
-+/* Insert the ECFG area for a root bus */
-+static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
-+{
-+	struct gen_acpi_root_info *info;
-+	struct acpi_pci_root *root = ci->root;
-+	struct device *dev = &ci->bridge->dev;
-+	int err;
-+
-+	info = container_of(ci, struct gen_acpi_root_info, common);
-+	err = pci_mmconfig_insert(dev, root->segment, root->secondary.start,
-+			root->secondary.end, root->mcfg_addr);
-+	if (err && err != -EEXIST)
-+		return err;
-+
-+	info->mcfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
-+	WARN_ON(info->mcfg == NULL);
-+	info->mcfg_added = (err == -EEXIST);
-+	return 0;
-+}
-+
-+static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
-+{
-+	struct gen_acpi_root_info *info;
-+	struct acpi_pci_root *root = ci->root;
-+
-+	info = container_of(ci, struct gen_acpi_root_info, common);
-+	if (info->mcfg_added)
-+		pci_mmconfig_delete(root->segment, root->secondary.start,
-+					root->secondary.end);
-+	info->mcfg = NULL;
-+}
-+
-+static struct acpi_pci_root_ops pci_acpi_root_ops = {
-+	.pci_ops = &gen_acpi_pci_ops,
-+	.init_info = pci_acpi_root_init_info,
-+	.release_info = pci_acpi_root_release_info,
-+};
-+
-+struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
-+{
-+	struct acpi_device *device = root->device;
-+	struct gen_acpi_root_info *ri;
-+	struct pci_bus *bus, *child;
-+
-+	/* allocate acpi_info/sysdata */
-+	ri = devm_kzalloc(&device->dev, sizeof(*ri), GFP_KERNEL);
-+	if (!ri) {
-+		dev_err(&device->dev,
-+			"pci_bus %04x:%02x: ignored (out of memory)\n",
-+			root->segment, (int)root->secondary.start);
-+		return NULL;
-+	}
-+
-+	bus =  acpi_pci_root_create(root, &pci_acpi_root_ops,
-+					&ri->common, ri);
-+	if (!bus) {
-+		dev_err(&device->dev, "Scanning rootbus failed");
-+		return NULL;
-+	}
-+
-+	list_for_each_entry(child, &bus->children, node)
-+		pcie_bus_configure_settings(child);
-+
-+	return bus;
-+}
-+
-+void __init pci_mmcfg_late_init(void)
-+{
-+	int err;
-+
-+	err = pci_mmconfig_parse_table();
-+	if (err)
-+		pr_err(PREFIX " Failed to parse MCFG (%d)\n", err);
-+}
-+
-+int raw_pci_read(unsigned int seg, unsigned int bus,
-+		  unsigned int devfn, int reg, int len, u32 *val)
-+{
-+	struct pci_mmcfg_region *mcfg;
-+	void __iomem *addr;
-+	int err = -EINVAL;
-+
-+	rcu_read_lock();
-+	mcfg = pci_mmconfig_lookup(seg, bus);
-+	if (!mcfg || !mcfg->virt)
-+		goto err;
-+
-+	addr = mcfg->virt + PCI_MMCFG_OFFSET(bus, devfn);
-+	switch (len) {
-+	case 1:
-+		*val = readb(addr + reg);
-+		break;
-+	case 2:
-+		*val = readw(addr + reg);
-+		break;
-+	case 4:
-+		*val = readl(addr + reg);
-+		break;
-+	}
-+	err = 0;
-+err:
-+	rcu_read_unlock();
-+	return err;
-+}
-+
-+int raw_pci_write(unsigned int seg, unsigned int bus,
-+		unsigned int devfn, int reg, int len, u32 val)
-+{
-+	struct pci_mmcfg_region *mcfg;
-+	void __iomem *addr;
-+	int err = -EINVAL;
-+
-+	rcu_read_lock();
-+	mcfg = pci_mmconfig_lookup(seg, bus);
-+	if (!mcfg || !mcfg->virt)
-+		goto err;
-+
-+	addr = mcfg->virt + PCI_MMCFG_OFFSET(bus, devfn);
-+	switch (len) {
-+	case 1:
-+		writeb(val, addr + reg);
-+		break;
-+	case 2:
-+		writew(val, addr + reg);
-+		break;
-+	case 4:
-+		writel(val, addr + reg);
-+		break;
-+	}
-+	err = 0;
-+err:
-+	rcu_read_unlock();
-+	return err;
-+}
--- 
-1.9.1
-
+Bjorn
