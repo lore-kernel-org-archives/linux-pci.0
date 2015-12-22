@@ -1,235 +1,74 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
-	bhelgaas@google.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	hanjun.guo@linaro.org, tomasz.nowicki@linaro.org,
-	graeme.gregory@linaro.org, dhdang@apm.com,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v7 4/4] gicv2m: acpi: Introducing GICv2m ACPI support
-Date: Mon, 21 Dec 2015 04:04:13 +0100
-Message-ID: <27927867.pbQ7Vf8UQe@vostro.rjw.lan>
-In-Reply-To: <1449766530-16935-5-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1449766530-16935-1-git-send-email-Suravee.Suthikulpanit@amd.com> <1449766530-16935-5-git-send-email-Suravee.Suthikulpanit@amd.com>
+Message-ID: <56797C16.2020802@redhat.com>
+Date: Tue, 22 Dec 2015 11:36:38 -0500
+From: Jon Masters <jcm@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Arnd Bergmann <arnd@arndb.de>
+CC: Tomasz Nowicki <tn@semihalf.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"okaya@codeaurora.org" <okaya@codeaurora.org>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"Stefano.Stabellini@eu.citrix.com" <Stefano.Stabellini@eu.citrix.com>,
+	"robert.richter@caviumnetworks.com"
+	<robert.richter@caviumnetworks.com>,
+	"mw@semihalf.com" <mw@semihalf.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Wangyijing <wangyijing@huawei.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	"jchandra@broadcom.com" <jchandra@broadcom.com>
+Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
+ against platfrom specific quirks.
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com> <1450278993-12664-23-git-send-email-tn@semihalf.com> <EE11001F9E5DDD47B7634E2F8A612F2E1EC14C0F@lhreml503-mbb> <201512211510.32029.arnd@arndb.de> <335CDE2E-B588-43A8-8665-6023AFD0EA04@redhat.com> <EE11001F9E5DDD47B7634E2F8A612F2E1EC17CAC@lhreml503-mbb>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1EC17CAC@lhreml503-mbb>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 10, 2015 08:55:30 AM Suravee Suthikulpanit wrote:
-> This patch introduces gicv2m_acpi_init(), which uses information
-> in MADT GIC MSI frames structure to initialize GICv2m driver.
-> It also exposes gicv2m_init() function, which simplifies callers
-> to a single GICv2m init function.
+On 12/22/2015 04:29 AM, Gabriele Paoloni wrote:
+> Hi Jon, thanks for replying
 > 
-> Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
-> Tested-by: Duc Dang <dhdang@apm.com>
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-
-I don't see anything objectionable here, so please feel free to add my ACK
-for the ACPI part to this.
-
-> ---
->  drivers/irqchip/irq-gic-v2m.c   | 110 +++++++++++++++++++++++++++++++++++++++-
->  drivers/irqchip/irq-gic.c       |   6 ++-
->  include/linux/irqchip/arm-gic.h |   3 +-
->  3 files changed, 116 insertions(+), 3 deletions(-)
+>> -----Original Message-----
+>> From: Jon Masters [mailto:jcm@redhat.com]
+>> Sent: 21 December 2015 23:11
+>> To: Arnd Bergmann
+>> Cc: Gabriele Paoloni; Tomasz Nowicki; bhelgaas@google.com;
+>> will.deacon@arm.com; catalin.marinas@arm.com; rjw@rjwysocki.net;
+>> hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org;
+>> jiang.liu@linux.intel.com; Stefano.Stabellini@eu.citrix.com;
+>> robert.richter@caviumnetworks.com; mw@semihalf.com; Liviu.Dudau@arm.com;
+>> ddaney@caviumnetworks.com; tglx@linutronix.de; Wangyijing;
+>> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
+>> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+>> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
+>> acpi@lists.linaro.org; jchandra@broadcom.com
+>> Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space
+>> accessors against platfrom specific quirks.
+>>
+>> Sorry for top-posting. A quick note that SMBIOS3 is required by SBBR so
+>> it can be presumed that compliant platforms will provide quirks via DMI.
 > 
-> diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
-> index 779c390..7e2975d 100644
-> --- a/drivers/irqchip/irq-gic-v2m.c
-> +++ b/drivers/irqchip/irq-gic-v2m.c
-> @@ -15,9 +15,11 @@
->  
->  #define pr_fmt(fmt) "GICv2m: " fmt
->  
-> +#include <linux/acpi.h>
->  #include <linux/irq.h>
->  #include <linux/irqdomain.h>
->  #include <linux/kernel.h>
-> +#include <linux/msi.h>
->  #include <linux/of_address.h>
->  #include <linux/of_pci.h>
->  #include <linux/slab.h>
-> @@ -138,6 +140,11 @@ static int gicv2m_irq_gic_domain_alloc(struct irq_domain *domain,
->  		fwspec.param[0] = 0;
->  		fwspec.param[1] = hwirq - 32;
->  		fwspec.param[2] = IRQ_TYPE_EDGE_RISING;
-> +	} else if (is_fwnode_irqchip(domain->parent->fwnode)) {
-> +		fwspec.fwnode = domain->parent->fwnode;
-> +		fwspec.param_count = 2;
-> +		fwspec.param[0] = hwirq;
-> +		fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
->  	} else {
->  		return -EINVAL;
->  	}
-> @@ -255,6 +262,8 @@ static void gicv2m_teardown(void)
->  		kfree(v2m->bm);
->  		iounmap(v2m->base);
->  		of_node_put(to_of_node(v2m->fwnode));
-> +		if (is_fwnode_irqchip(v2m->fwnode))
-> +			irq_domain_free_fwnode(v2m->fwnode);
->  		kfree(v2m);
->  	}
->  }
-> @@ -373,9 +382,11 @@ static struct of_device_id gicv2m_device_id[] = {
->  	{},
->  };
->  
-> -int __init gicv2m_of_init(struct device_node *node, struct irq_domain *parent)
-> +static int __init gicv2m_of_init(struct fwnode_handle *parent_handle,
-> +				 struct irq_domain *parent)
->  {
->  	int ret = 0;
-> +	struct device_node *node = to_of_node(parent_handle);
->  	struct device_node *child;
->  
->  	for (child = of_find_matching_node(node, gicv2m_device_id); child;
-> @@ -411,3 +422,100 @@ int __init gicv2m_of_init(struct device_node *node, struct irq_domain *parent)
->  		gicv2m_teardown();
->  	return ret;
->  }
-> +
-> +#ifdef CONFIG_ACPI
-> +static int acpi_num_msi;
-> +
-> +static struct fwnode_handle *gicv2m_get_fwnode(struct device *dev)
-> +{
-> +	struct v2m_data *data;
-> +
-> +	if (WARN_ON(acpi_num_msi <= 0))
-> +		return NULL;
-> +
-> +	/* We only return the fwnode of the first MSI frame. */
-> +	data = list_first_entry_or_null(&v2m_nodes, struct v2m_data, entry);
-> +	if (!data)
-> +		return NULL;
-> +
-> +	return data->fwnode;
-> +}
-> +
-> +static int __init
-> +acpi_parse_madt_msi(struct acpi_subtable_header *header,
-> +		    const unsigned long end)
-> +{
-> +	int ret;
-> +	struct resource res;
-> +	u32 spi_start = 0, nr_spis = 0;
-> +	struct acpi_madt_generic_msi_frame *m;
-> +	struct fwnode_handle *fwnode;
-> +
-> +	m = (struct acpi_madt_generic_msi_frame *)header;
-> +	if (BAD_MADT_ENTRY(m, end))
-> +		return -EINVAL;
-> +
-> +	res.start = m->base_address;
-> +	res.end = m->base_address + SZ_4K;
-> +
-> +	if (m->flags & ACPI_MADT_OVERRIDE_SPI_VALUES) {
-> +		spi_start = m->spi_base;
-> +		nr_spis = m->spi_count;
-> +
-> +		pr_info("ACPI overriding V2M MSI_TYPER (base:%u, num:%u)\n",
-> +			spi_start, nr_spis);
-> +	}
-> +
-> +	fwnode = irq_domain_alloc_fwnode((void *)m->base_address);
-> +	if (!fwnode) {
-> +		pr_err("Unable to allocate GICv2m domain token\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	ret = gicv2m_init_one(fwnode, spi_start, nr_spis, &res);
-> +	if (ret)
-> +		irq_domain_free_fwnode(fwnode);
-> +
-> +	return ret;
-> +}
-> +
-> +static int __init gicv2m_acpi_init(struct irq_domain *parent)
-> +{
-> +	int ret;
-> +
-> +	if (acpi_num_msi > 0)
-> +		return 0;
-> +
-> +	acpi_num_msi = acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_MSI_FRAME,
-> +				      acpi_parse_madt_msi, 0);
-> +
-> +	if (acpi_num_msi <= 0)
-> +		goto err_out;
-> +
-> +	ret = gicv2m_allocate_domains(parent);
-> +	if (ret)
-> +		goto err_out;
-> +
-> +	pci_msi_register_fwnode_provider(&gicv2m_get_fwnode);
-> +
-> +	return 0;
-> +
-> +err_out:
-> +	gicv2m_teardown();
-> +	return -EINVAL;
-> +}
-> +#else /* CONFIG_ACPI */
-> +static int __init gicv2m_acpi_init(struct irq_domain *parent)
-> +{
-> +	return -EINVAL;
-> +}
-> +#endif /* CONFIG_ACPI */
-> +
-> +int __init gicv2m_init(struct fwnode_handle *parent_handle,
-> +		       struct irq_domain *parent)
-> +{
-> +	if (is_of_node(parent_handle))
-> +		return gicv2m_of_init(parent_handle, parent);
-> +
-> +	return gicv2m_acpi_init(parent);
-> +}
-> diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
-> index fcd327f..644e8bb 100644
-> --- a/drivers/irqchip/irq-gic.c
-> +++ b/drivers/irqchip/irq-gic.c
-> @@ -1234,7 +1234,7 @@ gic_of_init(struct device_node *node, struct device_node *parent)
->  	}
->  
->  	if (IS_ENABLED(CONFIG_ARM_GIC_V2M))
-> -		gicv2m_of_init(node, gic_data[gic_cnt].domain);
-> +		gicv2m_init(&node->fwnode, gic_data[gic_cnt].domain);
->  
->  	gic_cnt++;
->  	return 0;
-> @@ -1359,6 +1359,10 @@ static int __init gic_v2_acpi_init(struct acpi_subtable_header *header,
->  	__gic_init_bases(0, -1, dist_base, cpu_base, 0, domain_handle);
->  
->  	acpi_set_irq_model(ACPI_IRQ_MODEL_GIC, domain_handle);
-> +
-> +	if (IS_ENABLED(CONFIG_ARM_GIC_V2M))
-> +		gicv2m_init(NULL, gic_data[0].domain);
-> +
->  	return 0;
->  }
->  IRQCHIP_ACPI_DECLARE(gic_v2, ACPI_MADT_TYPE_GENERIC_DISTRIBUTOR,
-> diff --git a/include/linux/irqchip/arm-gic.h b/include/linux/irqchip/arm-gic.h
-> index bae69e5..febc6c3 100644
-> --- a/include/linux/irqchip/arm-gic.h
-> +++ b/include/linux/irqchip/arm-gic.h
-> @@ -106,7 +106,8 @@ int gic_cpu_if_down(unsigned int gic_nr);
->  void gic_init(unsigned int nr, int start,
->  	      void __iomem *dist , void __iomem *cpu);
->  
-> -int gicv2m_of_init(struct device_node *node, struct irq_domain *parent);
-> +int gicv2m_init(struct fwnode_handle *parent_handle,
-> +		struct irq_domain *parent);
->  
->  void gic_send_sgi(unsigned int cpu_id, unsigned int irq);
->  int gic_get_cpu_id(unsigned int cpu);
-> 
+> Ok so you completely clarified my question 1). Many Thanks for this
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+No problem. One of the (many) reasons I pushed for requiring SMBIOS/DMI
+in SBBR (I was lead author of one of the early drafts of that document)
+was to make the experience ultimately equivalent across architectures.
+We already know how to do quirks and handle platform deviations, and the
+major Operating System vendors did not want to reinvent the wheel.
+
+Jon.
+
