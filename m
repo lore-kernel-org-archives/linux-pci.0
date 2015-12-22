@@ -1,56 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:27525 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752120AbbLQS0A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Dec 2015 13:26:00 -0500
-Date: Thu, 17 Dec 2015 18:25:57 +0000
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv6 5/7] x86/pci: Initial commit for new VMD device driver
-Message-ID: <20151217182557.GA32327@localhost.localdomain>
-References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
- <1449523949-21898-6-git-send-email-keith.busch@intel.com>
- <20151217181448.GF23549@localhost>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Jon Masters <jcm@redhat.com>, Arnd Bergmann <arnd@arndb.de>
+CC: Tomasz Nowicki <tn@semihalf.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"okaya@codeaurora.org" <okaya@codeaurora.org>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"Stefano.Stabellini@eu.citrix.com" <Stefano.Stabellini@eu.citrix.com>,
+	"robert.richter@caviumnetworks.com"
+	<robert.richter@caviumnetworks.com>,
+	"mw@semihalf.com" <mw@semihalf.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Wangyijing <wangyijing@huawei.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	"jchandra@broadcom.com" <jchandra@broadcom.com>
+Subject: RE: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
+ against platfrom specific quirks.
+Date: Tue, 22 Dec 2015 09:29:02 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EC17CAC@lhreml503-mbb>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <1450278993-12664-23-git-send-email-tn@semihalf.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1EC14C0F@lhreml503-mbb>
+ <201512211510.32029.arnd@arndb.de>
+ <335CDE2E-B588-43A8-8665-6023AFD0EA04@redhat.com>
+In-Reply-To: <335CDE2E-B588-43A8-8665-6023AFD0EA04@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151217181448.GF23549@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 17, 2015 at 12:14:48PM -0600, Bjorn Helgaas wrote:
-> On Mon, Dec 07, 2015 at 02:32:27PM -0700, Keith Busch wrote:
-> > +/*
-> > + * VMD h/w converts posted config writes to non-posted. The read-back in this
-> > + * function forces the completion so it returns only after the config space was
-> > + * written, as expected.
-> 
-> This comment sounds backwards:
-> 
->   posted writes don't wait for completion
->   non-posted writes do wait for completion
-> 
-> If the hardware converts to non-posted writes, you shouldn't need a
-> read-back.  It seems like you would need the read-back if the hardware
-> converted non-posted to posted.
+Hi Jon, thanks for replying
 
-Oops, the comment has it backwards. Non-posted config writes become
-posted memory write requests with this h/w.
- 
-> Seems like it might be nice to have something in dmesg that would connect
-> this PCI device to the new PCI domain.  It's a new, unusual topology and a
-> hint might help everybody understand what's going on.
+> -----Original Message-----
+> From: Jon Masters [mailto:jcm@redhat.com]
+> Sent: 21 December 2015 23:11
+> To: Arnd Bergmann
+> Cc: Gabriele Paoloni; Tomasz Nowicki; bhelgaas@google.com;
+> will.deacon@arm.com; catalin.marinas@arm.com; rjw@rjwysocki.net;
+> hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org;
+> jiang.liu@linux.intel.com; Stefano.Stabellini@eu.citrix.com;
+> robert.richter@caviumnetworks.com; mw@semihalf.com; Liviu.Dudau@arm.com;
+> ddaney@caviumnetworks.com; tglx@linutronix.de; Wangyijing;
+> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
+> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
+> acpi@lists.linaro.org; jchandra@broadcom.com
+> Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space
+> accessors against platfrom specific quirks.
+> 
+> Sorry for top-posting. A quick note that SMBIOS3 is required by SBBR so
+> it can be presumed that compliant platforms will provide quirks via DMI.
 
-Sounds good, will add.
+Ok so you completely clarified my question 1). Many Thanks for this
 
-In addition that, I'd like to mention this patch links a new domain's
-root bus kobject under the VMD end-point's so the sysfs hierarchy captures
-this as well.
+Gab
+
+> 
+> --
+> Computer Architect | Sent from my 64-bit #ARM Powered phone
+> 
+> > On Dec 21, 2015, at 09:11, Arnd Bergmann <arnd@arndb.de> wrote:
+> >
+> > On Monday 21 December 2015, Gabriele Paoloni wrote:
+> >>> -----Original Message-----
+> >>> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+> >>> owner@vger.kernel.org] On Behalf Of Tomasz Nowicki
+> >
+> >>> Some platforms may not be fully compliant with generic set of PCI
+> >>> config accessors. For these cases we implement the way to overwrite
+> >>> accessors set before PCI buses enumeration. Algorithm that
+> overwrite
+> >>> accessors matches against platform ID (DMI), domain and bus number,
+> >>> hopefully enough for all cases. All quirks can be defined using:
+> >>> DECLARE_ACPI_MCFG_FIXUP() and keep self contained.
+> >>
+> >> I've got a couple of comments/questions about this patch..
+> >>
+> >> 1) So according to this mechanism quirks would be supported only by
+> >>   vendors whose BIOS are SMBIOS compliant. Now personally I am ok
+> >>   with this but I don't know if this is OK in general as it would
+> >>   narrow down the number of platforms that would be able to define
+> >>   the quirks...
+> >>   Lorenzo, Arnd what is your opinion here?
+> >
+> > I'd rather not see the quirks in mainline at all, and only support
+> > SBSA compliant machines, or require the BIOS to work around the
+> > hardware quirks differently (e.g. by trapping config space access
+> > through secure firmware, or going through an AML method to be
+> > defined). I'm certainly ok with making it depend on SMBIOS if we are
+> going to use something like this.
+> >
+> >    Arnd
