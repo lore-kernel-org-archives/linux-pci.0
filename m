@@ -1,196 +1,561 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58582 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932080AbbLNUwu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Dec 2015 15:52:50 -0500
-Date: Mon, 14 Dec 2015 22:52:44 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
-	Yang Zhang <yang.zhang.wz@gmail.com>, konrad.wilk@oracle.com,
-	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
-	Alexander Graf <agraf@suse.de>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [RFC PATCH 3/3] x86: Create dma_mark_dirty to dirty pages used
- for DMA by VM guest
-Message-ID: <20151214221919-mutt-send-email-mst@redhat.com>
-References: <20151213212557.5410.48577.stgit@localhost.localdomain>
- <20151213212831.5410.84365.stgit@localhost.localdomain>
- <20151214113016-mutt-send-email-mst@redhat.com>
- <CAKgT0UdtY5stCPVA=-NoM+1C8Z3b+VXLL1OdrNth=dxvz0A9sQ@mail.gmail.com>
- <20151214191303-mutt-send-email-mst@redhat.com>
- <CAKgT0Uem+7p9mJDq117XAHktSdeZaWFpyMtbhj87g=XvG0vE-g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKgT0Uem+7p9mJDq117XAHktSdeZaWFpyMtbhj87g=XvG0vE-g@mail.gmail.com>
+Received: from mail-io0-f173.google.com ([209.85.223.173]:36735 "EHLO
+	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754678AbbLVXoA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Dec 2015 18:44:00 -0500
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, David Daney <david.daney@cavium.com>
+Subject: [PATCH v2 1/2] PCI: generic: Refactor code to enable reuse by other drivers.
+Date: Tue, 22 Dec 2015 15:43:51 -0800
+Message-Id: <1450827832-3294-2-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1450827832-3294-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1450827832-3294-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 14, 2015 at 09:59:13AM -0800, Alexander Duyck wrote:
-> On Mon, Dec 14, 2015 at 9:20 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
-> > On Mon, Dec 14, 2015 at 08:34:00AM -0800, Alexander Duyck wrote:
-> >> > This way distro can use a guest agent to disable
-> >> > dirtying until before migration starts.
-> >>
-> >> Right.  For a v2 version I would definitely want to have some way to
-> >> limit the scope of this.  My main reason for putting this out here is
-> >> to start altering the course of discussions since it seems like were
-> >> weren't getting anywhere with the ixgbevf migration changes that were
-> >> being proposed.
-> >
-> > Absolutely, thanks for working on this.
-> >
-> >> >> +     unsigned long pg_addr, start;
-> >> >> +
-> >> >> +     start = (unsigned long)addr;
-> >> >> +     pg_addr = PAGE_ALIGN(start + size);
-> >> >> +     start &= ~(sizeof(atomic_t) - 1);
-> >> >> +
-> >> >> +     /* trigger a write fault on each page, excluding first page */
-> >> >> +     while ((pg_addr -= PAGE_SIZE) > start)
-> >> >> +             atomic_add(0, (atomic_t *)pg_addr);
-> >> >> +
-> >> >> +     /* trigger a write fault on first word of DMA */
-> >> >> +     atomic_add(0, (atomic_t *)start);
+From: David Daney <david.daney@cavium.com>
 
-Actually, I have second thoughts about using atomic_add here,
-especially for _sync.
+No change in functionality.
 
-Many architectures do
+Move structure definitions into a separate header file.  Move common
+code to new file with Kconfig machinery to build it.  Split probe
+function in to two parts:
 
-#define ATOMIC_OP_RETURN(op, c_op)                                      \
-static inline int atomic_##op##_return(int i, atomic_t *v)              \
-{                                                                       \
-        unsigned long flags;                                            \
-        int ret;                                                        \
-                                                                        \
-        raw_local_irq_save(flags);                                      \
-        ret = (v->counter = v->counter c_op i);                         \
-        raw_local_irq_restore(flags);                                   \
-                                                                        \
-        return ret;                                                     \
-}
+   - a small driver specific probe function (gen_pci_probe)
 
-and this is not safe if device is still doing DMA to/from
-this memory.
+   - a common probe that can be used by other drivers
+     (pci_host_common_probe)
 
-Generally, atomic_t is there for SMP effects, not for sync
-with devices.
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ drivers/pci/host/Kconfig            |   4 +
+ drivers/pci/host/Makefile           |   1 +
+ drivers/pci/host/pci-host-common.c  | 194 ++++++++++++++++++++++++++++++++++++
+ drivers/pci/host/pci-host-common.h  |  56 +++++++++++
+ drivers/pci/host/pci-host-generic.c | 190 +----------------------------------
+ 5 files changed, 259 insertions(+), 186 deletions(-)
+ create mode 100644 drivers/pci/host/pci-host-common.c
+ create mode 100644 drivers/pci/host/pci-host-common.h
 
-This is why I said you should do
-	cmpxchg(pg_addr, 0xdead, 0xdead); 
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index f131ba9..f171459 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -53,9 +53,13 @@ config PCI_RCAR_GEN2_PCIE
+ 	help
+ 	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
+ 
++config PCI_HOST_COMMON
++	bool
++
+ config PCI_HOST_GENERIC
+ 	bool "Generic PCI host controller"
+ 	depends on (ARM || ARM64) && OF
++	select PCI_HOST_COMMON
+ 	help
+ 	  Say Y here if you want to support a simple generic PCI host
+ 	  controller, such as the one emulated by kvmtool.
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 9d4d3c6..ba2c51f 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -6,6 +6,7 @@ obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+ obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+ obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
++obj-$(CONFIG_PCI_HOST_COMMON) += pci-host-common.o
+ obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
+ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+ obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+new file mode 100644
+index 0000000..e9f850f
+--- /dev/null
++++ b/drivers/pci/host/pci-host-common.c
+@@ -0,0 +1,194 @@
++/*
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ *
++ * Copyright (C) 2014 ARM Limited
++ *
++ * Author: Will Deacon <will.deacon@arm.com>
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
++#include <linux/platform_device.h>
++
++#include "pci-host-common.h"
++
++static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
++{
++	pci_free_resource_list(&pci->resources);
++}
++
++static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
++{
++	int err, res_valid = 0;
++	struct device *dev = pci->host.dev.parent;
++	struct device_node *np = dev->of_node;
++	resource_size_t iobase;
++	struct resource_entry *win;
++
++	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
++					       &iobase);
++	if (err)
++		return err;
++
++	resource_list_for_each_entry(win, &pci->resources) {
++		struct resource *parent, *res = win->res;
++
++		switch (resource_type(res)) {
++		case IORESOURCE_IO:
++			parent = &ioport_resource;
++			err = pci_remap_iospace(res, iobase);
++			if (err) {
++				dev_warn(dev, "error %d: failed to map resource %pR\n",
++					 err, res);
++				continue;
++			}
++			break;
++		case IORESOURCE_MEM:
++			parent = &iomem_resource;
++			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
++			break;
++		case IORESOURCE_BUS:
++			pci->cfg.bus_range = res;
++		default:
++			continue;
++		}
++
++		err = devm_request_resource(dev, parent, res);
++		if (err)
++			goto out_release_res;
++	}
++
++	if (!res_valid) {
++		dev_err(dev, "non-prefetchable memory resource required\n");
++		err = -EINVAL;
++		goto out_release_res;
++	}
++
++	return 0;
++
++out_release_res:
++	gen_pci_release_of_pci_ranges(pci);
++	return err;
++}
++
++static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
++{
++	int err;
++	u8 bus_max;
++	resource_size_t busn;
++	struct resource *bus_range;
++	struct device *dev = pci->host.dev.parent;
++	struct device_node *np = dev->of_node;
++	u32 sz = 1 << pci->cfg.ops->bus_shift;
++
++	err = of_address_to_resource(np, 0, &pci->cfg.res);
++	if (err) {
++		dev_err(dev, "missing \"reg\" property\n");
++		return err;
++	}
++
++	/* Limit the bus-range to fit within reg */
++	bus_max = pci->cfg.bus_range->start +
++		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
++	pci->cfg.bus_range->end = min_t(resource_size_t,
++					pci->cfg.bus_range->end, bus_max);
++
++	pci->cfg.win = devm_kcalloc(dev, resource_size(pci->cfg.bus_range),
++				    sizeof(*pci->cfg.win), GFP_KERNEL);
++	if (!pci->cfg.win)
++		return -ENOMEM;
++
++	/* Map our Configuration Space windows */
++	if (!devm_request_mem_region(dev, pci->cfg.res.start,
++				     resource_size(&pci->cfg.res),
++				     "Configuration Space"))
++		return -ENOMEM;
++
++	bus_range = pci->cfg.bus_range;
++	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
++		u32 idx = busn - bus_range->start;
++
++		pci->cfg.win[idx] = devm_ioremap(dev,
++						 pci->cfg.res.start + idx * sz,
++						 sz);
++		if (!pci->cfg.win[idx])
++			return -ENOMEM;
++	}
++
++	return 0;
++}
++
++int pci_host_common_probe(struct platform_device *pdev,
++			  struct gen_pci *pci)
++{
++	int err;
++	const char *type;
++	struct device *dev = &pdev->dev;
++	struct device_node *np = dev->of_node;
++	struct pci_bus *bus, *child;
++
++	type = of_get_property(np, "device_type", NULL);
++	if (!type || strcmp(type, "pci")) {
++		dev_err(dev, "invalid \"device_type\" %s\n", type);
++		return -EINVAL;
++	}
++
++	of_pci_check_probe_only();
++
++	pci->host.dev.parent = dev;
++	INIT_LIST_HEAD(&pci->host.windows);
++	INIT_LIST_HEAD(&pci->resources);
++
++	/* Parse our PCI ranges and request their resources */
++	err = gen_pci_parse_request_of_pci_ranges(pci);
++	if (err)
++		return err;
++
++	/* Parse and map our Configuration Space windows */
++	err = gen_pci_parse_map_cfg_windows(pci);
++	if (err) {
++		gen_pci_release_of_pci_ranges(pci);
++		return err;
++	}
++
++	/* Do not reassign resources if probe only */
++	if (!pci_has_flag(PCI_PROBE_ONLY))
++		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
++
++
++	bus = pci_scan_root_bus(dev, pci->cfg.bus_range->start,
++				&pci->cfg.ops->ops, pci, &pci->resources);
++	if (!bus) {
++		dev_err(dev, "Scanning rootbus failed");
++		return -ENODEV;
++	}
++
++	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++		pci_bus_size_bridges(bus);
++		pci_bus_assign_resources(bus);
++
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
++	}
++
++	pci_bus_add_devices(bus);
++	return 0;
++}
++
++MODULE_DESCRIPTION("Generic PCI host driver common code");
++MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/pci/host/pci-host-common.h b/drivers/pci/host/pci-host-common.h
+new file mode 100644
+index 0000000..9423808
+--- /dev/null
++++ b/drivers/pci/host/pci-host-common.h
+@@ -0,0 +1,56 @@
++/*
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ *
++ * Copyright (C) 2014 ARM Limited
++ *
++ * Author: Will Deacon <will.deacon@arm.com>
++ */
++
++#ifndef _PCI_HOST_COMMON_H
++#define _PCI_HOST_COMMON_H
++
++#include <linux/kernel.h>
++#include <linux/platform_device.h>
++
++struct gen_pci_cfg_bus_ops {
++	u32 bus_shift;
++	struct pci_ops ops;
++};
++
++struct gen_pci_cfg_windows {
++	struct resource				res;
++	struct resource				*bus_range;
++	void __iomem				**win;
++
++	struct gen_pci_cfg_bus_ops		*ops;
++};
++
++/*
++ * ARM pcibios functions expect the ARM struct pci_sys_data as the PCI
++ * sysdata.  Add pci_sys_data as the first element in struct gen_pci so
++ * that when we use a gen_pci pointer as sysdata, it is also a pointer to
++ * a struct pci_sys_data.
++ */
++struct gen_pci {
++#ifdef CONFIG_ARM
++	struct pci_sys_data			sys;
++#endif
++	struct pci_host_bridge			host;
++	struct gen_pci_cfg_windows		cfg;
++	struct list_head			resources;
++};
++
++int pci_host_common_probe(struct platform_device *pdev,
++			  struct gen_pci *pci);
++
++#endif /* _PCI_HOST_COMMON_H */
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 5434c90..e8aa78f 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -25,33 +25,7 @@
+ #include <linux/of_pci.h>
+ #include <linux/platform_device.h>
+ 
+-struct gen_pci_cfg_bus_ops {
+-	u32 bus_shift;
+-	struct pci_ops ops;
+-};
+-
+-struct gen_pci_cfg_windows {
+-	struct resource				res;
+-	struct resource				*bus_range;
+-	void __iomem				**win;
+-
+-	struct gen_pci_cfg_bus_ops		*ops;
+-};
+-
+-/*
+- * ARM pcibios functions expect the ARM struct pci_sys_data as the PCI
+- * sysdata.  Add pci_sys_data as the first element in struct gen_pci so
+- * that when we use a gen_pci pointer as sysdata, it is also a pointer to
+- * a struct pci_sys_data.
+- */
+-struct gen_pci {
+-#ifdef CONFIG_ARM
+-	struct pci_sys_data			sys;
+-#endif
+-	struct pci_host_bridge			host;
+-	struct gen_pci_cfg_windows		cfg;
+-	struct list_head			resources;
+-};
++#include "pci-host-common.h"
+ 
+ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+ 					     unsigned int devfn,
+@@ -102,175 +76,19 @@ static const struct of_device_id gen_pci_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, gen_pci_of_match);
+ 
+-static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
+-{
+-	pci_free_resource_list(&pci->resources);
+-}
+-
+-static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
+-{
+-	int err, res_valid = 0;
+-	struct device *dev = pci->host.dev.parent;
+-	struct device_node *np = dev->of_node;
+-	resource_size_t iobase;
+-	struct resource_entry *win;
+-
+-	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
+-					       &iobase);
+-	if (err)
+-		return err;
+-
+-	resource_list_for_each_entry(win, &pci->resources) {
+-		struct resource *parent, *res = win->res;
+-
+-		switch (resource_type(res)) {
+-		case IORESOURCE_IO:
+-			parent = &ioport_resource;
+-			err = pci_remap_iospace(res, iobase);
+-			if (err) {
+-				dev_warn(dev, "error %d: failed to map resource %pR\n",
+-					 err, res);
+-				continue;
+-			}
+-			break;
+-		case IORESOURCE_MEM:
+-			parent = &iomem_resource;
+-			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+-			break;
+-		case IORESOURCE_BUS:
+-			pci->cfg.bus_range = res;
+-		default:
+-			continue;
+-		}
+-
+-		err = devm_request_resource(dev, parent, res);
+-		if (err)
+-			goto out_release_res;
+-	}
+-
+-	if (!res_valid) {
+-		dev_err(dev, "non-prefetchable memory resource required\n");
+-		err = -EINVAL;
+-		goto out_release_res;
+-	}
+-
+-	return 0;
+-
+-out_release_res:
+-	gen_pci_release_of_pci_ranges(pci);
+-	return err;
+-}
+-
+-static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+-{
+-	int err;
+-	u8 bus_max;
+-	resource_size_t busn;
+-	struct resource *bus_range;
+-	struct device *dev = pci->host.dev.parent;
+-	struct device_node *np = dev->of_node;
+-	u32 sz = 1 << pci->cfg.ops->bus_shift;
+-
+-	err = of_address_to_resource(np, 0, &pci->cfg.res);
+-	if (err) {
+-		dev_err(dev, "missing \"reg\" property\n");
+-		return err;
+-	}
+-
+-	/* Limit the bus-range to fit within reg */
+-	bus_max = pci->cfg.bus_range->start +
+-		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
+-	pci->cfg.bus_range->end = min_t(resource_size_t,
+-					pci->cfg.bus_range->end, bus_max);
+-
+-	pci->cfg.win = devm_kcalloc(dev, resource_size(pci->cfg.bus_range),
+-				    sizeof(*pci->cfg.win), GFP_KERNEL);
+-	if (!pci->cfg.win)
+-		return -ENOMEM;
+-
+-	/* Map our Configuration Space windows */
+-	if (!devm_request_mem_region(dev, pci->cfg.res.start,
+-				     resource_size(&pci->cfg.res),
+-				     "Configuration Space"))
+-		return -ENOMEM;
+-
+-	bus_range = pci->cfg.bus_range;
+-	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+-		u32 idx = busn - bus_range->start;
+-
+-		pci->cfg.win[idx] = devm_ioremap(dev,
+-						 pci->cfg.res.start + idx * sz,
+-						 sz);
+-		if (!pci->cfg.win[idx])
+-			return -ENOMEM;
+-	}
+-
+-	return 0;
+-}
+-
+ static int gen_pci_probe(struct platform_device *pdev)
+ {
+-	int err;
+-	const char *type;
+-	const struct of_device_id *of_id;
+ 	struct device *dev = &pdev->dev;
+-	struct device_node *np = dev->of_node;
++	const struct of_device_id *of_id;
+ 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+-	struct pci_bus *bus, *child;
+ 
+ 	if (!pci)
+ 		return -ENOMEM;
+ 
+-	type = of_get_property(np, "device_type", NULL);
+-	if (!type || strcmp(type, "pci")) {
+-		dev_err(dev, "invalid \"device_type\" %s\n", type);
+-		return -EINVAL;
+-	}
+-
+-	of_pci_check_probe_only();
+-
+-	of_id = of_match_node(gen_pci_of_match, np);
++	of_id = of_match_node(gen_pci_of_match, dev->of_node);
+ 	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
+-	pci->host.dev.parent = dev;
+-	INIT_LIST_HEAD(&pci->host.windows);
+-	INIT_LIST_HEAD(&pci->resources);
+-
+-	/* Parse our PCI ranges and request their resources */
+-	err = gen_pci_parse_request_of_pci_ranges(pci);
+-	if (err)
+-		return err;
+-
+-	/* Parse and map our Configuration Space windows */
+-	err = gen_pci_parse_map_cfg_windows(pci);
+-	if (err) {
+-		gen_pci_release_of_pci_ranges(pci);
+-		return err;
+-	}
+-
+-	/* Do not reassign resources if probe only */
+-	if (!pci_has_flag(PCI_PROBE_ONLY))
+-		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+-
+-
+-	bus = pci_scan_root_bus(dev, pci->cfg.bus_range->start,
+-				&pci->cfg.ops->ops, pci, &pci->resources);
+-	if (!bus) {
+-		dev_err(dev, "Scanning rootbus failed");
+-		return -ENODEV;
+-	}
+-
+-	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+-
+-	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+-		pci_bus_size_bridges(bus);
+-		pci_bus_assign_resources(bus);
+-
+-		list_for_each_entry(child, &bus->children, node)
+-			pcie_bus_configure_settings(child);
+-	}
+ 
+-	pci_bus_add_devices(bus);
+-	return 0;
++	return pci_host_common_probe(pdev, pci);
+ }
+ 
+ static struct platform_driver gen_pci_driver = {
+-- 
+1.8.3.1
 
-Yes, we probably never actually want to run m68k within a VM,
-but let's not misuse interfaces like this.
-
-
-> >> >
-> >> > start might not be aligned correctly for a cast to atomic_t.
-> >> > It's harmless to do this for any memory, so I think you should
-> >> > just do this for 1st byte of all pages including the first one.
-> >>
-> >> You may not have noticed it but I actually aligned start in the line
-> >> after pg_addr.
-> >
-> > Yes you did. alignof would make it a bit more noticeable.
-> >
-> >>  However instead of aligning to the start of the next
-> >> atomic_t I just masked off the lower bits so that we start at the
-> >> DWORD that contains the first byte of the starting address.  The
-> >> assumption here is that I cannot trigger any sort of fault since if I
-> >> have access to a given byte within a DWORD I will have access to the
-> >> entire DWORD.
-> >
-> > I'm curious where does this come from.  Isn't it true that access is
-> > controlled at page granularity normally, so you can touch beginning of
-> > page just as well?
-> 
-> Yeah, I am pretty sure it probably is page granularity.  However my
-> thought was to try and stick to the start of the DMA as the last
-> access.  That way we don't pull in any more cache lines than we need
-> to in order to dirty the pages.  Usually the start of the DMA region
-> will contain some sort of headers or something that needs to be
-> accessed with the highest priority so I wanted to make certain that we
-> were forcing usable data into the L1 cache rather than just the first
-> cache line of the page where the DMA started.  If however the start of
-> a DMA was the start of the page there is nothing there to prevent
-> that.
-
-OK, maybe this helps. You should document all these tricks
-in code comments.
-
-> >>  I coded this up so that the spots where we touch the
-> >> memory should match up with addresses provided by the hardware to
-> >> perform the DMA over the PCI bus.
-> >
-> > Yes but there's no requirement to do it like this from
-> > virt POV. You just need to touch each page.
-> 
-> I know, but at the same time if we match up with the DMA then it is
-> more likely that we avoid grabbing unneeded cache lines.  In the case
-> of most drivers the data for headers and start is at the start of the
-> DMA.  So if we dirty the cache line associated with the start of the
-> DMA it will be pulled into the L1 cache and there is a greater chance
-> that it may already be prefetched as well.
-> 
-> >> Also I intentionally ran from highest address to lowest since that way
-> >> we don't risk pushing the first cache line of the DMA buffer out of
-> >> the L1 cache due to the PAGE_SIZE stride.
-> >
-> > Interesting. How does order of access help with this?
-> 
-> If you use a PAGE_SIZE stride you will start evicting things from L1
-> cache after something like 8 accesses on an x86 processor as most of
-> the recent ones have a 32K 8 way associative L1 cache.  So if I go
-> from back to front then I evict the stuff that would likely be in the
-> data portion of a buffer instead of headers which are usually located
-> at the front.
-
-I see, interesting.
-
-> > By the way, if you are into these micro-optimizations you might want to
-> > limit prefetch, to this end you want to access the last line of the
-> > page.  And it's probably worth benchmarking a bit and not doing it all just
-> > based on theory, keep code simple in v1 otherwise.
-> 
-> My main goal for now is functional code over high performance code.
-> That is why I have kept this code fairly simple.  I might have done
-> some optimization but it was as much about the optimization as keeping
-> the code simple.
-
-Well you were trying to avoid putting extra stress on
-the cache, and it seems clear to me that prefetch
-is not your friend here. So
--             atomic_add(0, (atomic_t *)pg_addr);
-+             atomic_add(0, (atomic_t *)(pg_addr + PAGE_SIZE - sizeof(atomic_t));
-(or whatever we change atomic_t to) is probably a win.
-
->  For example by using the start of the page instead
-> of the end I could easily do the comparison against start and avoid
-> doing more than one write per page.
-
-That's probably worth fixing, we don't want two atomics
-if we can help it.
-
--     while ((pg_addr -= PAGE_SIZE) > start)
-+     while ((pg_addr -= PAGE_SIZE) >= PAGE_ALIGN(start + PAGE_SIZE))
-
-will do it with no fuss.
-
-> The issue for me doing performance testing is that I don't have
-> anything that uses DMA blocks that are actually big enough to make use
-> of the PAGE_SIZE stride.  That is why the PAGE_SIZE stride portion is
-> mostly just theoretical.  I just have a few NICs and most of them only
-> allocate 1 page or so for DMA buffers.  What little benchmarking I
-> have done with netperf only showed a ~1% CPU penalty for the page
-> dirtying code.  For setups where we did more with the DMA such as
-> small packet handling I would expect that value to increase, but I
-> still wouldn't expect to see a penalty of much more than ~5% most
-> likely since there are still a number of other items that are calling
-> atomic operations as well such as the code for releasing pages.
-> 
-> - Alex
