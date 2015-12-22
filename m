@@ -1,58 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v3 1/4] ARM: dts: dra7: Add dt node for the sycon pcie
-To: Kishon Vijay Abraham I <kishon@ti.com>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	tony@atomide.com
-References: <1450172346-11890-1-git-send-email-kishon@ti.com>
- <1450172346-11890-2-git-send-email-kishon@ti.com>
- <5670140C.7010906@cogentembedded.com> <5673DE42.9080407@ti.com>
-Cc: bcousson@baylibre.com, robh+dt@kernel.org, pawel.moll@arm.com,
-	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
-	galak@codeaurora.org, linux@arm.linux.org.uk, rogerq@ti.com,
-	nsekhar@ti.com, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-	t-kristo@ti.com
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <5673EEE6.7080706@cogentembedded.com>
-Date: Fri, 18 Dec 2015 14:32:54 +0300
-MIME-Version: 1.0
-In-Reply-To: <5673DE42.9080407@ti.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:43571 "EHLO
+	metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755191AbbLVM23 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Dec 2015 07:28:29 -0500
+Message-ID: <1450787306.2637.3.camel@pengutronix.de>
+Subject: Re: IMX6 PCIe - use LVDS2 clock as input instead of LVDS1 as an
+ ouput
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Tim Harvey <tharvey@gateworks.com>,
+	Shawn Guo <shawn.guo@linaro.org>, Sean Cross <xobs@kosagi.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Tue, 22 Dec 2015 13:28:26 +0100
+In-Reply-To: <CAJ+vNU1RhaJrrwznkfpPdmu8BSLifvRXt=5yK3C=WqqT-G1BoQ@mail.gmail.com>
+References: <CAJ+vNU1RhaJrrwznkfpPdmu8BSLifvRXt=5yK3C=WqqT-G1BoQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+Hi Tim,
 
-On 12/18/2015 1:21 PM, Kishon Vijay Abraham I wrote:
+Am Montag, den 21.12.2015, 13:05 -0800 schrieb Tim Harvey:
+> Lucas / Shawn / Sean,
+> 
+> Do any of you know what should be done in order to use the LVDS2
+> clock
+> as an 'input' for IMX6 PCIe?
+> 
+> Due to the fact that Freescale's internal clock does not pass Gen2
+> jitter tests, we have designed an IMX6 based board that follows
+> Freescale's recommendation to use an external Gen2 compliant clockgen
+> running to one of the LVDS clocks and now need to configure the
+> kernel
+> to use this as an input. I had this run to LVDS2 because LVDS1 is
+> configured by the kernel as a clock output for all IMX6 (see
+> 74b8031307c5d33d36742c26dd0921991bd5a255).
+> 
+> My understanding is that if nothing is changed the host controller
+> would use its internal reference clock, and the PCIe socket would use
+> the external clkgen and all would be well and fine for Gen1 because
+> they don't need to have synchronized clocks, but if Gen2 is needed we
+> must change the clock routing such that LVDS2 is an input and that it
+> is routed to the PCIe host controller reference clock.
+> 
+> I know that I can use IMX6QDL_CLK_LVDS2_IN instead of
+> IMX6QDL_CLK_LVDS1_GATE in the clocks property of the PCIe node in the
+> device-tree to configure LVDS2 as an input instead of LVDS1 as an
+> output, but I'm not sure what to do with the rest of the clock tree
+> and how to handle this dynamically at runtime.
+> 
+> Any ideas would be greatly appreciated.
+> 
+What you would need to do is the following, I think:
 
->>> Add new device tree node for the control module register space where
->>> PCIe registers are present.
->>>
->>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->>> ---
->>>    arch/arm/boot/dts/dra7.dtsi |    5 +++++
->>>    1 file changed, 5 insertions(+)
->>>
->>> diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
->>> index fe99231..e38f63f 100644
->>> --- a/arch/arm/boot/dts/dra7.dtsi
->>> +++ b/arch/arm/boot/dts/dra7.dtsi
->>> @@ -155,6 +155,11 @@
->>>                        compatible = "syscon";
->>>                        reg = <0x1c04 0x0020>;
->>>                    };
->>> +
->>> +                scm_conf_pcie: tisyscon@1c24 {
->>
->>     Please use the generic node names as the ePAPR standard says.
->
-> something like  scm_conf_pcie: syscon@1c24??
+1. Overwrite the PCIe node clocks property in your board as described
+above.
 
-    Yes, though "system-controller" would be probably more in line with what 
-ePAPR has standardized.
+2. Set up the right connections in the clock tree by using the
+"assigned-clocks" property attached to the PCIe node. This might need
+some additions to the imx6 clock controller so you can attach the
+external clockgen (abstracted as fixed-clock) as a parent to
+the IMX6QDL_CLK_LVDS2_IN.
 
-> Thanks
-> Kishon
-
-MBR, Sergei
-
+Regards,
+Lucas
