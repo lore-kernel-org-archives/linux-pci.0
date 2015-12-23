@@ -1,138 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail5.windriver.com ([192.103.53.11]:51933 "EHLO mail5.wrs.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935043AbbLQQGt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Dec 2015 11:06:49 -0500
-Date: Thu, 17 Dec 2015 11:06:31 -0500
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 07/10] drivers/pci: make host/pcie-rcar.c explicitly
- non-modular
-Message-ID: <20151217160631.GA2772@windriver.com>
-References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
- <1449970917-12633-8-git-send-email-paul.gortmaker@windriver.com>
- <CAMuHMdWF+g4hwzcCRGkTYM=TpiBmxOn3GYmr+zO8c0QJUgH1fg@mail.gmail.com>
- <PS1PR06MB11800C425B2DB1CD08A635B7F5E00@PS1PR06MB1180.apcprd06.prod.outlook.com>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:35805 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755126AbbLWJjo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Dec 2015 04:39:44 -0500
+Received: by mail-pa0-f50.google.com with SMTP id jx14so103494453pad.2
+        for <linux-pci@vger.kernel.org>; Wed, 23 Dec 2015 01:39:43 -0800 (PST)
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
+ against platfrom specific quirks.
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"okaya@codeaurora.org" <okaya@codeaurora.org>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"Stefano.Stabellini@eu.citrix.com" <Stefano.Stabellini@eu.citrix.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <1450278993-12664-23-git-send-email-tn@semihalf.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1EC14C0F@lhreml503-mbb>
+ <567923D2.2010202@semihalf.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1EC183BD@lhreml503-mbb>
+Cc: "robert.richter@caviumnetworks.com"
+	<robert.richter@caviumnetworks.com>,
+	"mw@semihalf.com" <mw@semihalf.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Wangyijing <wangyijing@huawei.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	"jchandra@broadcom.com" <jchandra@broadcom.com>,
+	"jcm@redhat.com" <jcm@redhat.com>
+Message-ID: <567A6BA5.1030408@linaro.org>
+Date: Wed, 23 Dec 2015 17:38:45 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <PS1PR06MB11800C425B2DB1CD08A635B7F5E00@PS1PR06MB1180.apcprd06.prod.outlook.com>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1EC183BD@lhreml503-mbb>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[RE: [PATCH 07/10] drivers/pci: make host/pcie-rcar.c explicitly non-modular] On 17/12/2015 (Thu 11:32) Phil Edworthy wrote:
+On 12/22/2015 10:48 PM, Gabriele Paoloni wrote:
+> Hi Tomasz
+>
+>> -----Original Message-----
+>> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+>> owner@vger.kernel.org] On Behalf Of Tomasz Nowicki
+>> Sent: 22 December 2015 10:20
+>> To: Gabriele Paoloni; bhelgaas@google.com; arnd@arndb.de;
+>> will.deacon@arm.com; catalin.marinas@arm.com; rjw@rjwysocki.net;
+>> hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org;
+>> jiang.liu@linux.intel.com; Stefano.Stabellini@eu.citrix.com
+>> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
+>> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; tglx@linutronix.de;
+>> Wangyijing; Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
+>> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+>> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
+>> acpi@lists.linaro.org; jchandra@broadcom.com; jcm@redhat.com
+>> Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space
+>> accessors against platfrom specific quirks.
+>>
+>> On 21.12.2015 12:47, Gabriele Paoloni wrote:
+>>> 2) In the quirk mechanism you proposed, I see that the callback
+>> function
+>>>      allows to do some preparation work for the host bridge. For
+>> example in
+>>>      Hisilicon hip05 case we would need to read some values from the
+>> ACPI
+>>>      table (see acpi_pci_root_hisi_add() function in
+>>>      https://lkml.org/lkml/2015/12/3/426).
+>>>      I am quite new to ACPI and I wonder if it is OK to add such
+>> "Packages"
+>>>      to the  PCI host bridge ACPI device...or maybe we need to declare
+>> a new
+>>>      one...?
+>>
+>> I may miss sth so please correct me in that case.
+>>
+>> https://lkml.org/lkml/2015/12/3/426 shows that you need special
+>> handling for root->secondary.start bus number only, right? So how about
+>> creating special MCFG region <rc-base:rc-base+rc-size> only for
+>> <segment,bus>.
+>> Like that:
+>>
+>> [0008]                       Base Address : <rc-base>
+>> [0002]               Segment Group Number : <segment>
+>> [0001]                   Start Bus Number : <root->secondary.start>
+>> [0001]                     End Bus Number : <root->secondary.start>
+>> [0004]                           Reserved : 00000000
+>>
+>>
+>> static const struct dmi_system_id hisi_quirk[] = {
+>> 	{
+>> 		.ident = "HiSi...",
+>> 		.matches = {
+>> 			DMI_MATCH(<whatever you need to match your platform>),
+>> 		},
+>> 	},
+>> 	{ }
+>> };
+>>
+>> static struct pci_ops hisi_ecam_pci_ops = {
+>> 	.map_bus = pci_mcfg_dev_base,
+>> 	.read = hisi_pcie_cfg_read,
+>> 	.write = hisi_pcie_cfg_write,
+>> };
+>>
+>> DECLARE_ACPI_MCFG_FIXUP(hisi_quirk, &hisi_ecam_pci_ops,
+>> 			<segment>, <bus>);
+>>
+>> With above code you can use your custom PCI config accessor only for
+>> that region.
+>>
+>> Let me know if that is not enough for you.
+>
+> In principle I think it can work...
+>
+> Liudongdong, Guo Hanjun what is your opinion about?
 
-> Hi Paul,
-> 
-> On 13 December 2015 10:59, Geert Uytterhoeven wrote:
-> > 
-> > CC MODULE_AUTHOR
-> > 
-> > On Sun, Dec 13, 2015 at 2:41 AM, Paul Gortmaker
-> > <paul.gortmaker@windriver.com> wrote:
-> > > The Kconfig currently controlling compilation of this code is:
-> > >
-> > > drivers/pci/host/Kconfig:config PCI_RCAR_GEN2_PCIE
-> > > drivers/pci/host/Kconfig:       bool "Renesas R-Car PCIe controller"
-> > >
-> > > ...meaning that it currently is not being built as a module by anyone.
-> > >
-> > > Lets remove the modular code that is essentially orphaned, so that
-> > > when reading the driver there is no doubt it is builtin-only.
-> > >
-> > > Since module_platform_driver() uses the same init level priority as
-> > > builtin_platform_driver() the init ordering remains unchanged with
-> > > this commit.
-> > >
-> > > We don't have to disallow a driver unbind, since that is already
-> > > done for us in this driver.
-> > >
-> > > Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
-> > >
-> > > We also delete the MODULE_LICENSE tag etc. since all that information
-> > > was (or is now) contained at the top of the file in the comments.
-> > >
-> > > Cc: Simon Horman <horms@verge.net.au>
-> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > Cc: linux-pci@vger.kernel.org
-> > > Cc: linux-sh@vger.kernel.org
-> > > Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-> 
-> It doesn't apply, would you mind rebasing onto:
-> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=next
-> 
+Let me and Dongdong prepare a patch for Hip05 and then will
+back to this discussion to see if we met some problems.
 
-Sure I can do that and just resend the 2 renesas commits if there is no
-interest in tristate conversions for them.  As for the others, I'm still
-awaiting feedback on what approach people want to take;  I listed what I
-figured our possible options are.
-
-Paul.
---
-
-> As for the changes themselves,
-> Acked-by: Phil Edworthy <phil.edworthy@renesas.com>
-> 
-> Thanks
-> Phil
-> 
-> > > ---
-> > >  drivers/pci/host/pcie-rcar.c | 11 ++++-------
-> > >  1 file changed, 4 insertions(+), 7 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> > > index f4fa6c537448..2c619277d265 100644
-> > > --- a/drivers/pci/host/pcie-rcar.c
-> > > +++ b/drivers/pci/host/pcie-rcar.c
-> > > @@ -7,6 +7,8 @@
-> > >   *  arch/sh/drivers/pci/ops-sh7786.c
-> > >   *  Copyright (C) 2009 - 2011  Paul Mundt
-> > >   *
-> > > + * Module Author: Phil Edworthy <phil.edworthy@renesas.com>
-> > > + *
-> > >   * This file is licensed under the terms of the GNU General Public
-> > >   * License version 2.  This program is licensed "as is" without any
-> > >   * warranty of any kind, whether express or implied.
-> > > @@ -18,7 +20,7 @@
-> > >  #include <linux/irq.h>
-> > >  #include <linux/irqdomain.h>
-> > >  #include <linux/kernel.h>
-> > > -#include <linux/module.h>
-> > > +#include <linux/init.h>
-> > >  #include <linux/msi.h>
-> > >  #include <linux/of_address.h>
-> > >  #include <linux/of_irq.h>
-> > > @@ -921,7 +923,6 @@ static const struct of_device_id rcar_pcie_of_match[] = {
-> > >         { .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
-> > >         {},
-> > >  };
-> > > -MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
-> > >
-> > >  static int rcar_pcie_probe(struct platform_device *pdev)
-> > >  {
-> > > @@ -1007,8 +1008,4 @@ static struct platform_driver rcar_pcie_driver = {
-> > >         },
-> > >         .probe = rcar_pcie_probe,
-> > >  };
-> > > -module_platform_driver(rcar_pcie_driver);
-> > > -
-> > > -MODULE_AUTHOR("Phil Edworthy <phil.edworthy@renesas.com>");
-> > > -MODULE_DESCRIPTION("Renesas R-Car PCIe driver");
-> > > -MODULE_LICENSE("GPL v2");
-> > > +builtin_platform_driver(rcar_pcie_driver);
-> > 
-> > Gr{oetje,eeting}s,
-> > 
-> >                         Geert
-> > 
-> > --
-> > Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-> > 
-> > In personal conversations with technical people, I call myself a hacker. But
-> > when I'm talking to journalists I just say "programmer" or something like that.
-> >                                 -- Linus Torvalds
+Thanks
+Hanjun
