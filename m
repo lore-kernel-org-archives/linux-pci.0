@@ -1,229 +1,202 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:33295 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751029AbbLLBP2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 20:15:28 -0500
-Received: by mail-ig0-f179.google.com with SMTP id mv3so51279040igc.0
-        for <linux-pci@vger.kernel.org>; Fri, 11 Dec 2015 17:15:28 -0800 (PST)
-From: David Daney <ddaney.cavm@gmail.com>
-To: Martin Mares <mj@ucw.cz>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	"Sean O. Stalley" <sean.stalley@intel.com>,
-	David Daney <david.daney@cavium.com>
-Subject: [PATCH v2] Add lspci support for Enhanced Allocation Capability.
-Date: Fri, 11 Dec 2015 17:15:21 -0800
-Message-Id: <1449882921-5165-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from m50-138.163.com ([123.125.50.138]:47756 "EHLO m50-138.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934342AbbLWM2a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Dec 2015 07:28:30 -0500
+From: Geliang Tang <geliangtang@163.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Geliang Tang <geliangtang@163.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] PCI: label, sysfs: use kobj_to_dev
+Date: Wed, 23 Dec 2015 20:28:13 +0800
+Message-Id: <0b790bbf7f015e5eb970e5433a8b6197a780e56c.1450873511.git.geliangtang@163.com>
+In-Reply-To: <8ab09476f7fb0283031b973808740f40522bebe1.1450873511.git.geliangtang@163.com>
+References: <8ab09476f7fb0283031b973808740f40522bebe1.1450873511.git.geliangtang@163.com>
+In-Reply-To: <8ab09476f7fb0283031b973808740f40522bebe1.1450873511.git.geliangtang@163.com>
+References: <8ab09476f7fb0283031b973808740f40522bebe1.1450873511.git.geliangtang@163.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+Use kobj_to_dev() instead of open-coding it.
 
-The PCISIG recently added the Enhanced Allocation Capability.  Decode
-it in lspci.
-
+Signed-off-by: Geliang Tang <geliangtang@163.com>
 ---
-The specification is currently located here:
+ drivers/pci/pci-label.c |  4 ++--
+ drivers/pci/pci-sysfs.c | 40 +++++++++++++++-------------------------
+ 2 files changed, 17 insertions(+), 27 deletions(-)
 
-https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_Allocation_23_Oct_2014_Final.pdf
-
-Bjorn Helgaas recently merged Linux kernel support for EA, and Cavium
-ThunderX processors have implemented it.  This patch gives us a pretty
-view of the capability structure.
-
-Changes from v1: Add and use more symbolic names.  Use FLAG() macro
-where appropiate.  Read subordinate bus number from proper offset.
-
-Thanks,
-David Daney
-
- lib/header.h |   8 ++++
- ls-caps.c    | 140 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 148 insertions(+)
-
-diff --git a/lib/header.h b/lib/header.h
-index f7cdee7..b8f7dc1 100644
---- a/lib/header.h
-+++ b/lib/header.h
-@@ -203,6 +203,7 @@
- #define  PCI_CAP_ID_MSIX	0x11	/* MSI-X */
- #define  PCI_CAP_ID_SATA	0x12	/* Serial-ATA HBA */
- #define  PCI_CAP_ID_AF		0x13	/* Advanced features of PCI devices integrated in PCIe root cplx */
-+#define  PCI_CAP_ID_EA		0x14	/* Enhanced Allocation */
- #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
- #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
- #define PCI_CAP_SIZEOF		4
-@@ -906,6 +907,13 @@
- #define PCI_SATA_HBA_BARS	4
- #define PCI_SATA_HBA_REG0	8
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index 024b5c1..0ae74d9 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -77,7 +77,7 @@ static umode_t smbios_instance_string_exist(struct kobject *kobj,
+ 	struct device *dev;
+ 	struct pci_dev *pdev;
  
-+/* Enhanced Allocation (EA) */
-+#define PCI_EA_CAP_TYPE1_SECONDARY	4
-+#define PCI_EA_CAP_TYPE1_SUBORDINATE	5
-+/* EA Entry header */
-+#define PCI_EA_CAP_ENT_WRITABLE	0x40000000	/* Writable: 1 = RW, 0 = HwInit */
-+#define PCI_EA_CAP_ENT_ENABLE	0x80000000	/* Enable for this entry */
-+
- /*** Definitions of extended capabilities ***/
+-	dev = container_of(kobj, struct device, kobj);
++	dev = kobj_to_dev(kobj);
+ 	pdev = to_pci_dev(dev);
  
- /* Advanced Error Reporting */
-diff --git a/ls-caps.c b/ls-caps.c
-index c145ed6..f66b3e6 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -1254,6 +1254,143 @@ cap_sata_hba(struct device *d, int where, int cap)
-     printf(" BAR??%d\n", bar);
- }
- 
-+static const char *cap_ea_property(int p)
-+{
-+  switch (p) {
-+  case 0x00:
-+    return "memory space, non-prefetchable";
-+  case 0x01:
-+    return "memory space, prefetchable";
-+  case 0x02:
-+    return "I/O space";
-+  case 0x03:
-+    return "VF memory space, prefetchable";
-+  case 0x04:
-+    return "VF memory space, non-prefetchable";
-+  case 0x05:
-+    return "allocation behind bridge, non-prefetchable memory";
-+  case 0x06:
-+    return "allocation behind bridge, prefetchable memory";
-+  case 0x07:
-+    return "allocation behind bridge, I/O space";
-+  case 0xfd:
-+    return "memory space resource unavailable for use";
-+  case 0xfe:
-+    return "I/O space resource unavailable for use";
-+  case 0xff:
-+    return "entry unavailable for use";
-+  default:
-+    return "reserved";
-+  }
-+}
-+
-+static void cap_ea(struct device *d, int where, int cap)
-+{
-+  int entry;
-+  int entry_base = where + 4;
-+  int num_entries = BITS(cap, 0, 6);
-+  u8 htype = get_conf_byte(d, PCI_HEADER_TYPE) & 0x7f;
-+
-+  printf("Enhanced Allocation: Num Entries=%u", num_entries);
-+  if (htype == PCI_HEADER_TYPE_BRIDGE) {
-+    byte fixed_sub, fixed_sec;
-+
-+    entry_base += 4;
-+    if (!config_fetch(d, where + 4, 2)) {
-+      printf("\n");
-+      return;
-+    }
-+    fixed_sec = get_conf_byte(d, where + PCI_EA_CAP_TYPE1_SECONDARY);
-+    fixed_sub = get_conf_byte(d, where + PCI_EA_CAP_TYPE1_SUBORDINATE);
-+    printf(", secondary=%d, subordinate=%d", fixed_sec, fixed_sub);
-+  }
-+  printf("\n");
-+  if (verbose < 2)
-+    return;
-+
-+  for (entry = 0; entry < num_entries; entry++) {
-+    int max_offset_high_pos, has_base_high, has_max_offset_high;
-+    u32 entry_header;
-+    u32 base, max_offset;
-+    int es, bei, pp, sp;
-+
-+    if (!config_fetch(d, entry_base, 4))
-+      return;
-+    entry_header = get_conf_long(d, entry_base);
-+    es = BITS(entry_header, 0, 3);
-+    bei = BITS(entry_header, 4, 4);
-+    pp = BITS(entry_header, 8, 8);
-+    sp = BITS(entry_header, 16, 8);
-+    if (!config_fetch(d, entry_base + 4, es * 4))
-+      return;
-+    printf("\t\tEntry-%u: Enable%c Writable%c Entry Size: %u\n", entry,
-+	   FLAG(entry_header, PCI_EA_CAP_ENT_ENABLE),
-+	   FLAG(entry_header, PCI_EA_CAP_ENT_WRITABLE), es);
-+    printf("\t\t\t BAR Equivalent Indicator (BEI): ");
-+    switch (bei) {
-+    case 0:
-+    case 1:
-+    case 2:
-+    case 3:
-+    case 4:
-+    case 5:
-+      printf("BAR%u", bei);
-+      break;
-+    case 6:
-+      printf("Resource behind function");
-+      break;
-+    case 7:
-+      printf("Not Indicated");
-+      break;
-+    case 8:
-+      printf("Expansion ROM");
-+      break;
-+    case 9:
-+    case 10:
-+    case 11:
-+    case 12:
-+    case 13:
-+    case 14:
-+      printf("VF-BAR%u", bei - 9);
-+      break;
-+    default:
-+      printf("Reserved");
-+      break;
-+    }
-+    printf("\n");
-+    printf("\t\t\t Primary Properties (PP): %s\n", cap_ea_property(pp));
-+    printf("\t\t\t Secondary Properties (SP): %s\n", cap_ea_property(sp));
-+
-+    base = get_conf_long(d, entry_base + 4);
-+    has_base_high = ((base & 2) != 0);
-+    base &= ~3;
-+
-+    max_offset = get_conf_long(d, entry_base + 8);
-+    has_max_offset_high = ((max_offset & 2) != 0);
-+    max_offset |= 3;
-+    max_offset_high_pos = entry_base + 12;
-+
-+    printf("\t\t\t Base: ");
-+    if (has_base_high) {
-+      u32 base_high = get_conf_long(d, entry_base + 12);
-+
-+      printf("%x", base_high);
-+      max_offset_high_pos += 4;
-+    }
-+    printf("%08x\n", base);
-+
-+    printf("\t\t\t Max Offset: ");
-+    if (has_max_offset_high) {
-+      u32 max_offset_high = get_conf_long(d, max_offset_high_pos);
-+
-+      printf("%x", max_offset_high);
-+    }
-+    printf("%08x\n", max_offset);
-+
-+    entry_base += 4 + 4 * es;
-+  }
-+}
-+
- void
- show_caps(struct device *d, int where)
+ 	return find_smbios_instance_string(pdev, NULL, SMBIOS_ATTR_NONE) ?
+@@ -221,7 +221,7 @@ static umode_t acpi_index_string_exist(struct kobject *kobj,
  {
-@@ -1348,6 +1485,9 @@ show_caps(struct device *d, int where)
- 	    case PCI_CAP_ID_AF:
- 	      cap_af(d, where);
- 	      break;
-+	    case PCI_CAP_ID_EA:
-+	      cap_ea(d, where, cap);
-+	      break;
- 	    default:
- 	      printf("#%02x [%04x]\n", id, cap);
- 	    }
+ 	struct device *dev;
+ 
+-	dev = container_of(kobj, struct device, kobj);
++	dev = kobj_to_dev(kobj);
+ 
+ 	if (device_has_dsm(dev))
+ 		return S_IRUGO;
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d750870..95d9e7b 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -630,8 +630,7 @@ static ssize_t pci_read_config(struct file *filp, struct kobject *kobj,
+ 			       struct bin_attribute *bin_attr, char *buf,
+ 			       loff_t off, size_t count)
+ {
+-	struct pci_dev *dev = to_pci_dev(container_of(kobj, struct device,
+-						      kobj));
++	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
+ 	unsigned int size = 64;
+ 	loff_t init_off = off;
+ 	u8 *data = (u8 *) buf;
+@@ -707,8 +706,7 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
+ 				struct bin_attribute *bin_attr, char *buf,
+ 				loff_t off, size_t count)
+ {
+-	struct pci_dev *dev = to_pci_dev(container_of(kobj, struct device,
+-						      kobj));
++	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
+ 	unsigned int size = count;
+ 	loff_t init_off = off;
+ 	u8 *data = (u8 *) buf;
+@@ -769,8 +767,7 @@ static ssize_t read_vpd_attr(struct file *filp, struct kobject *kobj,
+ 			     struct bin_attribute *bin_attr, char *buf,
+ 			     loff_t off, size_t count)
+ {
+-	struct pci_dev *dev =
+-		to_pci_dev(container_of(kobj, struct device, kobj));
++	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
+ 
+ 	if (off > bin_attr->size)
+ 		count = 0;
+@@ -784,8 +781,7 @@ static ssize_t write_vpd_attr(struct file *filp, struct kobject *kobj,
+ 			      struct bin_attribute *bin_attr, char *buf,
+ 			      loff_t off, size_t count)
+ {
+-	struct pci_dev *dev =
+-		to_pci_dev(container_of(kobj, struct device, kobj));
++	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
+ 
+ 	if (off > bin_attr->size)
+ 		count = 0;
+@@ -812,8 +808,7 @@ static ssize_t pci_read_legacy_io(struct file *filp, struct kobject *kobj,
+ 				  struct bin_attribute *bin_attr, char *buf,
+ 				  loff_t off, size_t count)
+ {
+-	struct pci_bus *bus = to_pci_bus(container_of(kobj, struct device,
+-						      kobj));
++	struct pci_bus *bus = to_pci_bus(kobj_to_dev(kobj));
+ 
+ 	/* Only support 1, 2 or 4 byte accesses */
+ 	if (count != 1 && count != 2 && count != 4)
+@@ -838,8 +833,7 @@ static ssize_t pci_write_legacy_io(struct file *filp, struct kobject *kobj,
+ 				   struct bin_attribute *bin_attr, char *buf,
+ 				   loff_t off, size_t count)
+ {
+-	struct pci_bus *bus = to_pci_bus(container_of(kobj, struct device,
+-						      kobj));
++	struct pci_bus *bus = to_pci_bus(kobj_to_dev(kobj));
+ 
+ 	/* Only support 1, 2 or 4 byte accesses */
+ 	if (count != 1 && count != 2 && count != 4)
+@@ -863,8 +857,7 @@ static int pci_mmap_legacy_mem(struct file *filp, struct kobject *kobj,
+ 			       struct bin_attribute *attr,
+ 			       struct vm_area_struct *vma)
+ {
+-	struct pci_bus *bus = to_pci_bus(container_of(kobj, struct device,
+-						      kobj));
++	struct pci_bus *bus = to_pci_bus(kobj_to_dev(kobj));
+ 
+ 	return pci_mmap_legacy_page_range(bus, vma, pci_mmap_mem);
+ }
+@@ -884,8 +877,7 @@ static int pci_mmap_legacy_io(struct file *filp, struct kobject *kobj,
+ 			      struct bin_attribute *attr,
+ 			      struct vm_area_struct *vma)
+ {
+-	struct pci_bus *bus = to_pci_bus(container_of(kobj, struct device,
+-						      kobj));
++	struct pci_bus *bus = to_pci_bus(kobj_to_dev(kobj));
+ 
+ 	return pci_mmap_legacy_page_range(bus, vma, pci_mmap_io);
+ }
+@@ -1000,8 +992,7 @@ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
+ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 			     struct vm_area_struct *vma, int write_combine)
+ {
+-	struct pci_dev *pdev = to_pci_dev(container_of(kobj,
+-						       struct device, kobj));
++	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+ 	struct resource *res = attr->private;
+ 	enum pci_mmap_state mmap_type;
+ 	resource_size_t start, end;
+@@ -1054,8 +1045,7 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+ 			       struct bin_attribute *attr, char *buf,
+ 			       loff_t off, size_t count, bool write)
+ {
+-	struct pci_dev *pdev = to_pci_dev(container_of(kobj,
+-						       struct device, kobj));
++	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+ 	struct resource *res = attr->private;
+ 	unsigned long port = off;
+ 	int i;
+@@ -1225,7 +1215,7 @@ static ssize_t pci_write_rom(struct file *filp, struct kobject *kobj,
+ 			     struct bin_attribute *bin_attr, char *buf,
+ 			     loff_t off, size_t count)
+ {
+-	struct pci_dev *pdev = to_pci_dev(container_of(kobj, struct device, kobj));
++	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+ 
+ 	if ((off ==  0) && (*buf == '0') && (count == 2))
+ 		pdev->rom_attr_enabled = 0;
+@@ -1251,7 +1241,7 @@ static ssize_t pci_read_rom(struct file *filp, struct kobject *kobj,
+ 			    struct bin_attribute *bin_attr, char *buf,
+ 			    loff_t off, size_t count)
+ {
+-	struct pci_dev *pdev = to_pci_dev(container_of(kobj, struct device, kobj));
++	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+ 	void __iomem *rom;
+ 	size_t size;
+ 
+@@ -1511,7 +1501,7 @@ static struct attribute *pci_dev_dev_attrs[] = {
+ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
+ 					 struct attribute *a, int n)
+ {
+-	struct device *dev = container_of(kobj, struct device, kobj);
++	struct device *dev = kobj_to_dev(kobj);
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	if (a == &vga_attr.attr)
+@@ -1530,7 +1520,7 @@ static struct attribute *pci_dev_hp_attrs[] = {
+ static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
+ 					    struct attribute *a, int n)
+ {
+-	struct device *dev = container_of(kobj, struct device, kobj);
++	struct device *dev = kobj_to_dev(kobj);
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	if (pdev->is_virtfn)
+@@ -1554,7 +1544,7 @@ static struct attribute *sriov_dev_attrs[] = {
+ static umode_t sriov_attrs_are_visible(struct kobject *kobj,
+ 				       struct attribute *a, int n)
+ {
+-	struct device *dev = container_of(kobj, struct device, kobj);
++	struct device *dev = kobj_to_dev(kobj);
+ 
+ 	if (!dev_is_pf(dev))
+ 		return 0;
 -- 
-1.8.3.1
+2.5.0
+
 
