@@ -1,46 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Hannes Reinecke <hare@suse.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from m50-132.163.com ([123.125.50.132]:46425 "EHLO m50-132.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932824AbbLWM23 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Dec 2015 07:28:29 -0500
+From: Geliang Tang <geliangtang@163.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	Michal Kubecek <mkubecek@suse.com>,
-	"Shane M. Seymour" <shane.seymour@hpe.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv4 0/2] PCI: Safe VPD access
-Date: Fri, 18 Dec 2015 09:35:17 +0100
-Message-Id: <1450427719-29619-1-git-send-email-hare@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Geliang Tang <geliangtang@163.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] PCI: use to_pci_dev
+Date: Wed, 23 Dec 2015 20:28:12 +0800
+Message-Id: <8ab09476f7fb0283031b973808740f40522bebe1.1450873511.git.geliangtang@163.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI VPD suffers from two problems: it has a very rudimentary interface
-and it relies on correctly formatted data. And essentially it provides
-a direct channel into the card hardware. In other words, plenty of
-chances to mess things up.
-With the original implementation we would just read the VPD space,
-blissfully ignorant of the data formatting of the VPD data. This
-would work if the VPD space happens to be properly implemented.
-However, I've had several reports where a simple 'cat' on the vpd
-attribute would return garbage (if you're lucky), trigger a timeout
-with a kernel warning (which actually triggered this patchset), or
-hang your machine (if you're really unlucky).
-So this patchset validates the VPD data, setting the VPD attribute to
-the correct size or disabling VPD access altogether if no valid data
-is found.
+Use to_pci_dev() instead of open-coding it.
 
-Changes to v3:
-- Do not calculate size for pci function devices
-- Do not disable the attribute on error
-- move size calculation into the pci_vpd_ops structure
+Signed-off-by: Geliang Tang <geliangtang@163.com>
+---
+ drivers/pci/hotplug/shpchp_sysfs.c | 2 +-
+ drivers/pci/pci.c                  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Hannes Reinecke (2):
-  pci: Update VPD definitions
-  pci: Update VPD size with correct length
-
- drivers/pci/access.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h    |  1 +
- include/linux/pci.h  | 27 ++++++++++++++++--
- 3 files changed, 107 insertions(+), 2 deletions(-)
-
+diff --git a/drivers/pci/hotplug/shpchp_sysfs.c b/drivers/pci/hotplug/shpchp_sysfs.c
+index 52875b3..392a40b 100644
+--- a/drivers/pci/hotplug/shpchp_sysfs.c
++++ b/drivers/pci/hotplug/shpchp_sysfs.c
+@@ -43,7 +43,7 @@ static ssize_t show_ctrl (struct device *dev, struct device_attribute *attr, cha
+ 	struct resource *res;
+ 	struct pci_bus *bus;
+ 
+-	pdev = container_of (dev, struct pci_dev, dev);
++	pdev = to_pci_dev(dev);
+ 	bus = pdev->subordinate;
+ 
+ 	out += sprintf(buf, "Free resources: memory\n");
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d1a7105..9356f90 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1417,7 +1417,7 @@ struct pci_devres {
+ 
+ static void pcim_release(struct device *gendev, void *res)
+ {
+-	struct pci_dev *dev = container_of(gendev, struct pci_dev, dev);
++	struct pci_dev *dev = to_pci_dev(gendev);
+ 	struct pci_devres *this = res;
+ 	int i;
+ 
 -- 
-1.8.5.6
+2.5.0
+
 
