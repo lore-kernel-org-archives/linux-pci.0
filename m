@@ -1,56 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 16 Dec 2015 15:17:25 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Subject: Re: [PATCH v4 3/5] PCI: qcom: Add Qualcomm PCIe controller driver
-Message-ID: <20151216211725.GA27791@localhost>
-References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
- <1449149725-27607-4-git-send-email-stanimir.varbanov@linaro.org>
- <566FCE27.2050705@mm-sol.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-am1on0118.outbound.protection.outlook.com ([157.56.112.118]:34064
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933188AbbLWKSm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Dec 2015 05:18:42 -0500
+From: Daniel J Blueman <daniel@numascale.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Shannon Nelson <shannon.nelson@intel.com>,
+	Carolyn Wyborny <carolyn.wyborny@intel.com>,
+	Don Skidmore <donald.c.skidmore@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Mitch Williams <mitch.a.williams@intel.com>
+CC: Daniel J Blueman <daniel@numascale.com>,
+	<intel-wired-lan@lists.osuosl.org>, <netdev@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Steffen Persvold <sp@numascale.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: [PATCH 2/2] ixgbe: Use core to device locality interface
+Date: Wed, 23 Dec 2015 18:01:41 +0800
+Message-ID: <1450864901-16712-2-git-send-email-daniel@numascale.com>
+In-Reply-To: <1450864901-16712-1-git-send-email-daniel@numascale.com>
+References: <1450864901-16712-1-git-send-email-daniel@numascale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <566FCE27.2050705@mm-sol.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Stan,
+Rather than assuming cores starting from 0 are local to the ethernet
+device, use the introduced interface to find near cores.
 
-On Tue, Dec 15, 2015 at 10:24:07AM +0200, Stanimir Varbanov wrote:
-> On 12/03/2015 03:35 PM, Stanimir Varbanov wrote:
-> > From: Stanimir Varbanov <svarbanov@mm-sol.com>
-> > 
-> > The PCIe driver reuse the Designware common code for host
-> > and MSI initialization, and also program the Qualcomm
-> > application specific registers.
-> > 
-> > Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-> > Signed-off-by: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-> > ---
-> >  MAINTAINERS                  |    7 +
-> >  drivers/pci/host/Kconfig     |   10 +
-> >  drivers/pci/host/Makefile    |    1 +
-> >  drivers/pci/host/pcie-qcom.c |  624 ++++++++++++++++++++++++++++++++++++++++++
-> >  4 files changed, 642 insertions(+)
-> >  create mode 100644 drivers/pci/host/pcie-qcom.c
-> 
-> Hi Bjorn, any chance to get this merged in 4.5 ?
+Not only does this improve performance due to spreading interrupts via near
+NUMA nodes, it prevents assigning cores on distant NUMA nodes, which aren't
+reachable by device interrupts due to the 8-bit APIC ID limitation.
 
-The driver looks good overall, so I think 4.5 is very possible.  It
-doesn't look like there's really a consensus on the memory barrier
-thing yet, and I assume the testing reports include that first patch,
-so it'd be good to get that resolved first.
+With Numascale NumaConnect2 systems with Intel ixgbe cards on
+non-primary PCI domains, all ixgbe NICs would previously revector
+interrupts to cores 0 to 63 (cores 0 to 47 would be considered
+near the primary PCI domain). Now, cores 48 to 95 are used, increasing
+performance and addressing interrupt delivery issues:
 
-Bjorn
+do_IRQ: 79.180 No irq handler for vector (irq -1)
+do_IRQ: 78.42 No irq handler for vector (irq -1)
+do_IRQ: 71.172 No irq handler for vector (irq -1)
+do_IRQ: 70.236 No irq handler for vector (irq -1)
+do_IRQ: 69.109 No irq handler for vector (irq -1)
+do_IRQ: 68.189 No irq handler for vector (irq -1)
+do_IRQ: 72.92 No irq handler for vector (irq -1)
+do_IRQ: 73.235 No irq handler for vector (irq -1)
+do_IRQ: 66.185 No irq handler for vector (irq -1)
+do_IRQ: 67.62 No irq handler for vector (irq -1)
+do_IRQ: 197 callbacks suppressed
+
+Signed-off-by: Daniel J Blueman <daniel@numascale.com>
+---
+ drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
+index f3168bc..12c4ce1 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
+@@ -817,10 +817,8 @@ static int ixgbe_alloc_q_vector(struct ixgbe_adapter *adapter,
+ 	if ((tcs <= 1) && !(adapter->flags & IXGBE_FLAG_SRIOV_ENABLED)) {
+ 		u16 rss_i = adapter->ring_feature[RING_F_RSS].indices;
+ 		if (rss_i > 1 && adapter->atr_sample_rate) {
+-			if (cpu_online(v_idx)) {
+-				cpu = v_idx;
+-				node = cpu_to_node(cpu);
+-			}
++			cpu = cpu_near_dev(adapter->pdev, v_idx);
++			node = cpu_to_node(cpu);
+ 		}
+ 	}
+
+--
+2.5.0
+
