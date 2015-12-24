@@ -1,82 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp05.in.ibm.com ([125.16.236.5]:45060 "EHLO
-	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755317AbbLaIwQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Dec 2015 03:52:16 -0500
-Received: from localhost
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Thu, 31 Dec 2015 14:22:11 +0530
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	alex.williamson@redhat.com, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC PATCH v2 0/3] vfio-pci: Allow to mmap sub-page MMIO BARs and MSI-X table on PPC64 platform
-Date: Thu, 31 Dec 2015 16:50:41 +0800
-Message-Id: <1451551844-11732-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:62593 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752965AbbLXLes (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Dec 2015 06:34:48 -0500
+From: Jayachandran C <jchandra@broadcom.com>
+To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Jayachandran C <jchandra@broadcom.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH v4 0/5] ACPI based PCI support for arm64
+Date: Thu, 24 Dec 2015 17:27:27 +0530
+Message-ID: <1450958252-29892-1-git-send-email-jchandra@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current vfio-pci implementation disallows to mmap
-sub-page(size < PAGE_SIZE) MMIO BARs and MSI-X table. This is because
-sub-page BARs' mmio page may be shared with other BARs and MSI-X table
-should not be accessed directly from the guest for security reasons.
+This patchset provides a generic ACPI based PCI host controller
+implementation and uses it on arm64.
 
-But these will easily cause some performance issues for mmio accesses
-in guest when vfio passthrough sub-page BARs or BARs containing MSI-X
-table on PPC64 platform. This is because PAGE_SIZE is 64KB by default
-on PPC64 platform and the big page may easily hit the sub-page MMIO
-BARs' unmmapping and cause the unmmaping of the mmio page which
-MSI-X table locate in, which lead to mmio emulation in host.
+The first patch moves the common code to handle MCFG ACPI table from
+arch/x86 to drivers/acpi/pci_mcfg.c. The last patch in the patchset
+provides the generic implementation of an ACPI based PCI host
+controller with a new file drivers/acpi/pci_host_acpi.c. The other
+patches are to fix up arm64 and ACPI code to work with these two
+patches.
 
-For sub-page MMIO BARs' unmmapping, this patchset adds a kernel
-parameter for PCI resource allocator to enforce the alignment of all
-MMIO BARs to be at least PAGE_SZIE and make it enabled by default on
-PPC64 platform so that sub-page BAR's mmio page will not be shared
-with other BARs. Then we can mmap sub-page MMIO BARs in vfio-pci driver
-with this parameter enabled.
+The pci host controller implementation keeps a reference to
+pci_mmcfg_region entry so that config space access is done with a
+simple mapping and generic PCI config read/write. There is also an
+implementation of raw_pci_read/raw_pci_write provided by walking the
+pci_mmcfg_list
 
-For MSI-X table's unmmapping, we think MSI-X table is safe to access
-directly from userspace with EEH mechanism enabled which can ensure that
-a given pci device can only shoot the MSIs assigned for its PE. So
-we add a Kconfig option to support for mmapping MSI-X table in vfio-pci
-driver if EEH is supported.
+The patchset is against 4.4-rc6, but it can be applied to pci/next
+with a very minor fixup.  This is tested with arm64 QEMU and OVMF
+and on x86 with qemu.
 
-With this patchset applied, we can get almost 100% improvement on
-performance for mmio accesses when we passthrough sub-page BARs to guest
-in our test.
+More testing or comments are welcome. The idea is to provide a
+simpler alternative for ACPI PCI support in arm64, any feedback
+from PCI or ACPI maintainers would be appreciated on this front.
 
-The last two patches are based on the proposed patchset[1].
+Thanks,
+JC.
 
-Changelog v2:
-- Rebase on v4.4-rc6 with the patchset[1] applied.
-- Use kernel parameter to enforce all MMIO BARs to be page aligned
-  on PCI core code instead of doing it on PPC64 arch code.
-- Remove flags: VFIO_DEVICE_FLAGS_PCI_PAGE_ALIGNED
-                VFIO_DEVICE_FLAGS_PCI_MSIX_MMAP
-- Add a Kconfig option to support for mmapping MSI-X table.
+v3->v4:
+ - Handle suggestions from Arnd Bergmann <arnd@arndb.de>
+    * move the implementation of host controller to drivers/acpi
+      under config option CONFIG_ACPI_PCI_HOST_GENERIC
+    * remove unnecessary arch hooks (this done as much as possible
+      without affecting the scope of the patch, will need another
+      separate patchset for the rest).
+    * remove pcibios_assign_resources fs_initcall that was added
+ - fixup domain_nr assignment code, and move ACPI companion set
+   to PCI code.
+ - Call map resource correctly in setup code
+ - fix kbuild robot report
+ - More testing
 
-[1] https://lkml.org/lkml/2015/11/23/748
+v2->v3:
+ - Move maintenance of the pci_mmcfg_list to drivers/acpi/pci_mcfg.c
+   without changing x86 logic
+ - use the pci_mmcfg_list in ARM64 implementation
+ - provide raw_pci_read/raw_pci_write
 
-Yongji Xie (3):
-  PCI: Add support for enforcing all MMIO BARs to be page aligned
-  vfio-pci: Allow to mmap sub-page MMIO BARs if all MMIO BARs are page aligned
-  vfio-pci: Allow to mmap MSI-X table if EEH is supported
+v1->v2:
+ - use CONFIG_PCI_MMCONFIG on arm64, provide a weak implementation
+   of pci_mmcfg_late_init for arm64.
+ - The real implementation of pci_mmcfg_late_init is in pci-host-acpi.c
+   and it will save the MCFG table entries to an array. Earlier this
+   was done with an arch_init call
+ - remove unneeded pci_bus_add_devices call and fix MCFG saving code
+ - Added a patch to ACPI pci_root.c to handle arm64 PCI IO resources
 
- Documentation/kernel-parameters.txt |    4 ++++
- arch/powerpc/include/asm/pci.h      |   11 +++++++++++
- drivers/pci/pci.c                   |   17 +++++++++++++++++
- drivers/pci/pci.h                   |    7 ++++++-
- drivers/vfio/pci/Kconfig            |    4 ++++
- drivers/vfio/pci/vfio_pci.c         |   13 ++++++++++---
- include/linux/pci.h                 |    2 ++
- 7 files changed, 54 insertions(+), 4 deletions(-)
+Jayachandran C (5):
+  APCI: MCFG: Move mmcfg_list management to drivers/acpi
+  PCI: Handle NULL parent in pci_bus_assign_domain_nr
+  ACPI: PCI: Support platforms that need pci_remap_iospace
+  arm64: pci: Add ACPI support
+  PCI: ACPI: Add a generic ACPI based host controller
+
+ arch/arm64/Kconfig             |   3 +
+ arch/arm64/kernel/pci.c        |  34 ++++-
+ arch/x86/include/asm/pci_x86.h |  24 +---
+ arch/x86/pci/mmconfig-shared.c | 269 +++++-----------------------------
+ arch/x86/pci/mmconfig_32.c     |   1 +
+ arch/x86/pci/mmconfig_64.c     |   1 +
+ drivers/acpi/Kconfig           |   8 ++
+ drivers/acpi/Makefile          |   2 +
+ drivers/acpi/pci_host_acpi.c   | 186 ++++++++++++++++++++++++
+ drivers/acpi/pci_mcfg.c        | 317 +++++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/pci_root.c        |  62 +++++++-
+ drivers/acpi/resource.c        |   2 +
+ drivers/pci/pci.c              |  19 ++-
+ drivers/pci/probe.c            |   2 +
+ include/linux/pci-acpi.h       |  59 ++++++++
+ 15 files changed, 724 insertions(+), 265 deletions(-)
+ create mode 100644 drivers/acpi/pci_host_acpi.c
+ create mode 100644 drivers/acpi/pci_mcfg.c
 
 -- 
-1.7.9.5
+1.9.1
 
