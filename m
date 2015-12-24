@@ -1,56 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43376 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752433AbbLVV6D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Dec 2015 16:58:03 -0500
-Date: Tue, 22 Dec 2015 15:57:58 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Henningsson <david.henningsson@canonical.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: Dmesg filled with "AER: Corrected error received"
-Message-ID: <20151222215758.GA17235@localhost>
-References: <5673E049.2010704@canonical.com>
+Received: from mail-am1on0094.outbound.protection.outlook.com ([157.56.112.94]:19311
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933090AbbLXHgn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Dec 2015 02:36:43 -0500
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	Noa Osherovich <noaos@mellanox.com>,
+	Haggai Eran <haggaie@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Liran Liss <liranl@mellanox.com>
+Subject: RE: [RFC 0/2] VFIO SRIOV support
+Date: Thu, 24 Dec 2015 07:22:30 +0000
+Message-ID: <VI1PR05MB1119DD3ED0EB74A259D157A8D4E70@VI1PR05MB1119.eurprd05.prod.outlook.com>
+References: <1450791734-3907-1-git-send-email-ilyal@mellanox.com>
+	 <1450798558.22385.7.camel@redhat.com>
+	 <VI1PR05MB1119CACA2E294B58EDB54A9AD4E60@VI1PR05MB1119.eurprd05.prod.outlook.com>
+ <1450888100.2950.87.camel@redhat.com>
+In-Reply-To: <1450888100.2950.87.camel@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5673E049.2010704@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David,
-
-On Fri, Dec 18, 2015 at 11:30:33AM +0100, David Henningsson wrote:
-> Hi Linux PCI maintainers,
-> 
-> My dmesg gets filled with a few lines repeated over and over again:
-> 
-> pcieport 0000:00:1c.0: AER: Corrected error received: id=00e0
-> pcieport 0000:00:1c.0: can't find device of ID00e0
-> pcieport 0000:00:1c.0: AER: Corrected error received: id=00e0
-> pcieport 0000:00:1c.0: PCIe Bus Error: severity=Corrected,
-> type=Physical Layer, id=00e0(Receiver ID)
-> pcieport 0000:00:1c.0:   device [8086:9d14] error
-> status/mask=00000001/00002000
-> pcieport 0000:00:1c.0:    [ 0] Receiver Error
-> 
-> This happens 10-30 times per second (!), so dmesg fills up quickly.
-> The bug is present in both vanilla and Ubuntu kernels.
-> 
-> I'm happy to try to help by providing more info as requested, and
-> I'm also able to build kernels to test patches (although that might
-> take some time, especially during the upcoming holidays).
-> 
-> Computer: Dell Inspiron 13-7359
-> Kernel version: Linux version 4.4.0-040400rc5-generic (kernel@gloin)
-> (gcc version 5.2.1 20151010 (Ubuntu 5.2.1-22ubuntu2) ) #201512140221
-> SMP Mon Dec 14 02:23:36 UTC 2015
-> CPU: Skylake i3-6100U
-> Lspci: attached
-> Dmesg: I'm attaching an extract from kern.log which shows the most
-> recent boot and a few seconds thereafter.
-> Downstream bug report:
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1521173
-
-Thanks a lot for the report and logs.  Do you happen to know whether this
-is a regression, and if so, when it first appeared?
-
-Bjorn
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbGV4IFdpbGxpYW1zb24gW21h
+aWx0bzphbGV4LndpbGxpYW1zb25AcmVkaGF0LmNvbV0NCj4gU2VudDogV2VkbmVzZGF5LCBEZWNl
+bWJlciAyMywgMjAxNSA2OjI4IFBNDQo+IFRvOiBJbHlhIExlc29raGluIDxpbHlhbEBtZWxsYW5v
+eC5jb20+OyBrdm1Admdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9y
+Zw0KPiBDYzogYmhlbGdhYXNAZ29vZ2xlLmNvbTsgTm9hIE9zaGVyb3ZpY2ggPG5vYW9zQG1lbGxh
+bm94LmNvbT47IEhhZ2dhaQ0KPiBFcmFuIDxoYWdnYWllQG1lbGxhbm94LmNvbT47IE9yIEdlcmxp
+dHogPG9nZXJsaXR6QG1lbGxhbm94LmNvbT47IExpcmFuDQo+IExpc3MgPGxpcmFubEBtZWxsYW5v
+eC5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUkZDIDAvMl0gVkZJTyBTUklPViBzdXBwb3J0DQo+IA0K
+PiBPbiBXZWQsIDIwMTUtMTItMjMgYXQgMDc6NDMgKzAwMDAsIElseWEgTGVzb2toaW4gd3JvdGU6
+DQo+ID4gSGkgQWxleCwNCj4gPiBSZWdhcmRpbmcgZHJpdmVyX292ZXJyaWRlLCBhcyBmYXIgYXMg
+SSBrbm93IHlvdSBjYW4gb25seSB1c2UgaXQgb24NCj4gPiBkZXZpY2VzIHRoYXQgd2VyZSBhbHJl
+YWR5IGRpc2NvdmVyZWQuIFNpbmNlIHRoZSBkZXZpY2VzIGRvIG5vdCBleGlzdA0KPiA+IGJlZm9y
+ZSB0aGUgY2FsbCB0byBwY2lfZW5hYmxlX3NyaW92KC4uLikgYW5kIGFyZSBhbHJlYWR5IHByb2Jl
+ZCBhZnRlcg0KPiA+IHRoZSBjYWxswqDCoGl0IHdvdWxkbid0IHJlYWxseSBoZWxwIHVzLiBJIHdv
+dWxkIGhhdmUgdG8gdW5iaW5kIHRoZW0gZnJvbQ0KPiA+IHRoZWlyIGRlZmF1bHQgZHJpdmVyIGFu
+ZCBiaW5kIHRoZW0gdG8gVkZJTyBsaWtlIHNvbHV0aW9uIGEgaW4gbXkNCj4gPiBvcmlnaW5hbCBt
+YWlsLg0KPiANCj4gSWYgeW91IGFsbG93IHRoZW0gdG8gYmUgYm91bmQgdG8gdGhlaXIgZGVmYXVs
+dCBkcml2ZXIsIHRoZW4geW91J3ZlIGFscmVhZHkNCj4gY3JlYXRlZCB0aGUgc2NlbmFyaW8gb2Yg
+YSB1c2VyIG93biBQRiBjcmVhdGluZyBob3N0IG93biBWRnMsIHdoaWNoIEkgdGhpbmsgaXMNCj4g
+dW5hY2NlcHRhYmxlLiDCoFRoZSBkcml2ZXJfb3ZlcnJpZGUgY2FuIGJlIHNldCBiZWZvcmUgZHJp
+dmVycyBhcmUgcHJvYmVkLCB0aGUNCj4gZmFjdCB0aGF0IHBjaV9lbmFibGVfc3Jpb3YoKSBkb2Vz
+bid0IGVuYWJsZSBhIGhvb2sgZm9yIHRoYXQgaXMgc29tZXRoaW5nIHRoYXQNCj4gY291bGQgYmUg
+Zml4ZWQuDQoNClRoYXTigJlzIGVzc2VudGlhbGx5IHRoZSBzYW1lIGFzIHNvbHV0aW9uIGIgaW4g
+b3JpZ2luYWwgbWFpbCB3aGljaCBJIHdhcyBob3BpbmcgdG8gYXZvaWQuDQoNCj4gPiBZb3UgYXJl
+IHJpZ2h0IGFib3V0IHRoZSBvd25lcnNoaXAgcHJvYmxlbSBhbmQgd2Ugd291bGQgbGlrZSB0byBy
+ZWNlaXZlDQo+ID4gaW5wdXQgcmVnYXJkaW5nIHdoYXQgaXMgdGhlIGNvcnJlY3Qgd2F5IG9mIHNv
+bHZpbmcgdGhpcy4NCj4gPiBCdXQgaW4gdGhlIG1lYW50aW1lIEkgdGhpbmsgb3VyIHNvbHV0aW9u
+IGlzIHF1aXRlIHVzZWZ1bCBldmVuIHRob3VnaA0KPiA+IGlmIGl0IHJlcXVpcmVzIHJvb3QgcHJp
+dmlsZWdlcy4gV2UgaGFja2VkIGxpYnZpcnQgc28gdGhhdCBpdCB3b3VsZCBydW4NCj4gPiBxZW11
+IGFzIHJvb3QgYW5kIHdpdGhvdXQgZGV2aWNlIGNncm91cC4NCj4gPg0KPiA+IEluIGFueSBjYXNl
+LCBkb24ndCB5b3UgdGhpbmsgdGhhdCBhc3NpZ25pbmcgdGhvc2UgZGV2aWNlcyB0byBWRklPDQo+
+ID4gc2hvdWxkIGJlIHNhZmU/IERvZXMgdGhlIFZGSU8gZHJpdmVyIG1ha2VzIGFueSB1bnNhZmUg
+YXNzdW1wdGlvbnMgb24NCj4gPiB0aGUgVkYncyB0aGF0IG1pZ2h0IGFsbG93IGEgZ3Vlc3QgdG8g
+Y3Jhc2ggdGhlIGh5cGVydmlzb3I/DQo+ID4NCj4gPiBJIGFtIHNvbWV3aGF0IGNvbmNlcm5lZCB0
+aGF0IHRoZSBWTcKgwqBjb3VsZCB0cmlnZ2VyIHNvbWUgYmFja2Rvb3IgcmVzZXQNCj4gPiB3aGls
+ZSB0aGUgaHlwZXJ2aXNvciBpcyBydW5uaW5nIHBjaV9lbmFibGVfc3Jpb3YoLi4uKS4gQnV0IEkn
+bSBub3QNCj4gPiByZWFsbHkgc3VyZSBob3cgdG8gc29sdmUgaXQuDQo+ID4gSSBndWVzcyB5b3Ug
+aGF2ZSB0byBlaXRoZXIgc3RvcCB0aGUgZ3Vlc3QgZW50aXJlbHkgdG8gZW5hYmxlIHNyaW92IG9y
+DQo+ID4gbWFrZSBpdCBwcml2aWxlZ2VkLg0KPiA+DQo+ID4gUmVnYXJkaW5nIGhhdmluZyB0aGUg
+UEYgY29udHJvbGxlZCBieSBvbmUgdXNlciB3aGlsZSB0aGUgb3RoZXIgVkZzIGFyZQ0KPiA+IGNv
+bnRyb2xsZWQgYnkgb3RoZXIgdXNlciwgSSBhY3R1YWxseSB0aGluayBpdCBtaWdodCBiZSBhbiBp
+bnRlcmVzdGluZw0KPiA+IHVzZSBjYXNlLg0KPiANCj4gSXQgbWF5IGJlLCBidXQgaXQgbmVlZHMg
+dG8gYmUgYW4gb3B0LWluLCBub3QgYSBzZWN1cml0eSBhY2NpZGVudC4gwqBUaGUgaW50ZXJmYWNl
+DQo+IGJldHdlZW4gYSBQRiBhbmQgYSBWRiBpcyBlc3NlbnRpYWwgZGV2aWNlIHNwZWNpZmljIGFu
+ZCB3ZSBkb24ndCBrbm93IGV4YWN0bHkNCj4gaG93IGlzb2xhdGVkIGVhY2ggVkYgaXMgZnJvbSB0
+aGUgUEYuIMKgSW4gdGhlIHR5cGljYWwgc2NlbmFyaW8gb2YgdGhlIFBGIGJlaW5nDQo+IG93bmVk
+IGJ5IHRoZSBob3N0LCB3ZSBoYXZlIGEgY2VydGFpbiBkZWdyZWUgb2YgdHJ1c3QgaW4gdGhlIGhv
+c3QsIGl0J3MgcnVubmluZw0KPiB0aGUgVk0gYWZ0ZXIgYWxsLCBpZiBpdCB3YW50ZWQgdG8gY29t
+cHJvbWlzZSBpdCwgaXQgY291bGQuIMKgV2UgaGF2ZSBubyBpbXBsaWNpdA0KPiByZWFzb24gdG8g
+dHJ1c3QgYSBQRiBydW5uaW5nIGluIGEgZ3Vlc3QgdGhvdWdoLiDCoENhbiB0aGUgc25vb3AgVkYg
+dHJhZmZpYywgY2FuDQo+IHRoZXkgZ2VuZXJhdGUgRE1BIG91dHNpZGUgb2YgdGhlIGNvbnRhaW5l
+ciBvZiB0aGUgUEYgdXNpbmcgdGhlIFZGPyDCoFdlDQo+IGNhbid0IGJlIHN1cmUuDQo+IMKgU28g
+dW5sZXNzIHlvdSBjYW4gbWFrZSB0aGUgZGVmYXVsdCBzY2VuYXJpbyBiZSB0aGF0IFZGcyBjcmVh
+dGVkIGJ5IGEgdXNlcg0KPiBvd24gUEYgYXJlIG9ubHkgYXZhaWxhYmxlIGZvciB1c2UgYnkgdGhh
+dCB1c2VyLCB3aXRob3V0IHJlbHlpbmcgb24gdXNlcnNwYWNlDQo+IHRvIGludGVydmVuZSwgaXQg
+c2VlbXMgbGlrZSBhbnkgcG90ZW50aWFsIHVzZWZ1bG5lc3MgaXMgdHJ1bXBlZCBieSBhIGdpYW50
+DQo+IHNlY3VyaXR5IGlzc3VlLiDCoFRoYW5rcywNCg0KSSBkb24ndCB1bmRlcnN0YW5kIHRoZSBz
+ZWN1cml0eSBpc3N1ZSwgZG9uJ3QgeW91IG5lZWQgcm9vdCBwZXJtaXNzaW9uIGZvciBkZXZpY2Ug
+YXNzaWdubWVudD8NCg0KPiBBbGV4DQo=
