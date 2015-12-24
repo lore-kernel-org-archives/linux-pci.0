@@ -1,79 +1,265 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH 1/2] PCI/ACPI: Add ACPI support for non ECAM Host
- Bridge Controllers
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1449155999-220955-1-git-send-email-gabriele.paoloni@huawei.com>
- <5018756.5lEEeJVMod@wuerfel> <20151204120404.GA3999@red-moon>
- <724640317.IRruPaehsN@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EBE4494@lhreml503-mbs>
-Cc: "linux-arm-kernel@lists.infradead.org"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jayachandran C <jchandra@broadcom.com>
+To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	Wangyijing <wangyijing@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <566ADAEE.8020408@semihalf.com>
-Date: Fri, 11 Dec 2015 15:17:18 +0100
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Jayachandran C <jchandra@broadcom.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH v4 5/5] PCI: ACPI: Add a generic ACPI based host controller
+Date: Thu, 24 Dec 2015 17:27:32 +0530
+Message-ID: <1450958252-29892-6-git-send-email-jchandra@broadcom.com>
+In-Reply-To: <1450958252-29892-1-git-send-email-jchandra@broadcom.com>
+References: <1450958252-29892-1-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1EBE4494@lhreml503-mbs>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04.12.2015 17:22, Gabriele Paoloni wrote:
-> Hi Lorenzo, Arnd (thanks to you both for looking at this)
->
->> -----Original Message-----
->> From: Arnd Bergmann [mailto:arnd@arndb.de]
->> Sent: 04 December 2015 13:57
->> To: Lorenzo Pieralisi
->> Cc: linux-arm-kernel@lists.infradead.org; Gabriele Paoloni; linux-
->> acpi@vger.kernel.org; linux-pci@vger.kernel.org;
->> catalin.marinas@arm.com; linaro-acpi@lists.linaro.org;
->> Liviu.Dudau@arm.com; linux-kernel@vger.kernel.org; will.deacon@arm.com;
->> Wangyijing; Wangzhou (B); hanjun.guo@linaro.org; liudongdong (C);
->> tn@semihalf.com; bhelgaas@google.com; tglx@linutronix.de; xuwei (O);
->> Liguozhu (Kenneth); jiang.liu@linux.intel.com
->> Subject: Re: [RFC PATCH 1/2] PCI/ACPI: Add ACPI support for non ECAM
->> Host Bridge Controllers
->>
->> On Friday 04 December 2015 12:04:04 Lorenzo Pieralisi wrote:
->>> On Thu, Dec 03, 2015 at 09:58:14PM +0100, Arnd Bergmann wrote:
->>
->>>> pci-host-generic.c is just for standard PCI implementations, and it
->>>> has zero code that would be shared with ACPI: Most of the
->>>> implementation deals with parsing DT properties, and all that code
->>>> is entirely differnet for ACPI and already exists in drivers/acpi.
->>>> The one thing that could be shared is the ECAM config space access,
->>>> but ACPI already needs something else here because it requires
->>>> access to the config space at early boot time, way before we even
->> load that driver, see raw_pci_read/raw_pci_write.
->>>
->>> Yes, I agree, basically ACPI has already a concept of "host generic"
->>> layer, there is not much point in "merging" it with the
->>> pci-host-generic.c driver. One thing is for certain: nothing in this
->>> and Tomasz patchsets is
->>> arm64 specific, and should not live in arch/arm64.
->
-> Ok so now I guess Tomasz is aware of this and probably he is reworking
-> his patchset to move his code into "drivers/acpi/pci_*",
-> Tomasz can you confirm this?
+Add a simple ACPI based PCI host controller. This is done by
+providing a simple implementation for pci_acpi_scan_root().
 
-Yes, working on it now and sorry for late response.
+The pci_mmcfg_list handling is done by the ACPI code, we
+keep a reference to the pci_mmcfg_region which is already
+mapped.
 
-Tomasz
+Provide implementations of raw_pci_read and raw_pci_write based
+on the pci_mmcfg_list
+
+This is enabled only for ARM64 now.
+
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+---
+ drivers/acpi/Kconfig         |   8 ++
+ drivers/acpi/Makefile        |   1 +
+ drivers/acpi/pci_host_acpi.c | 186 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 195 insertions(+)
+ create mode 100644 drivers/acpi/pci_host_acpi.c
+
+diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+index 5eef4cb..c5738be 100644
+--- a/drivers/acpi/Kconfig
++++ b/drivers/acpi/Kconfig
+@@ -283,6 +283,14 @@ config ACPI_NUMA
+ 	depends on (X86 || IA64)
+ 	default y if IA64_GENERIC || IA64_SGI_SN2
+ 
++config ACPI_PCI_HOST_GENERIC
++	bool "Generic ACPI PCI host controller"
++	depends on ARM64 && ACPI
++	help
++	  Say Y here if you want to support a simple generic ACPI PCI host
++	  controller.
++
++
+ config ACPI_CUSTOM_DSDT_FILE
+ 	string "Custom DSDT Table file to include"
+ 	default ""
+diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+index 3f65311..9fffdf2 100644
+--- a/drivers/acpi/Makefile
++++ b/drivers/acpi/Makefile
+@@ -41,6 +41,7 @@ acpi-y				+= ec.o
+ acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
+ acpi-y				+= pci_root.o pci_link.o pci_irq.o
+ acpi-$(CONFIG_PCI_MMCONFIG)	+= pci_mcfg.o
++acpi-$(CONFIG_ACPI_PCI_HOST_GENERIC) += pci_host_acpi.o
+ acpi-y				+= acpi_lpss.o acpi_apd.o
+ acpi-y				+= acpi_platform.o
+ acpi-y				+= acpi_pnp.o
+diff --git a/drivers/acpi/pci_host_acpi.c b/drivers/acpi/pci_host_acpi.c
+new file mode 100644
+index 0000000..9dbdd81
+--- /dev/null
++++ b/drivers/acpi/pci_host_acpi.c
+@@ -0,0 +1,186 @@
++/*
++ * Generic PCI host controller driver for ACPI based systems
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ *
++ * Copyright (c) 2015 Broadcom Corporation
++ *
++ * Based on drivers/pci/host/pci-host-generic.c
++ * Copyright (C) 2014 ARM Limited
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/acpi.h>
++#include <linux/pci-acpi.h>
++#include <linux/sfi_acpi.h>
++#include <linux/slab.h>
++
++#define PREFIX			"pci-host-acpi:"
++
++/* sysdata pointer is ->root_info */
++struct gen_acpi_root_info {
++	struct acpi_pci_root_info	common;
++	struct pci_mmcfg_region		*mcfg;
++	bool				mcfg_added;
++};
++
++/* find mapping of a MCFG area */
++static void __iomem *gen_acpi_map_cfg_bus(struct pci_bus *bus,
++			unsigned int devfn, int where)
++{
++	struct gen_acpi_root_info *pci = bus->sysdata;
++	struct pci_mmcfg_region *mcfg = pci->mcfg;
++
++	if (bus->number < mcfg->start_bus || bus->number > mcfg->end_bus)
++		return NULL;
++
++	return mcfg->virt +
++		PCI_MMCFG_OFFSET(bus->number - mcfg->start_bus, devfn) +
++		where;
++}
++
++static struct pci_ops gen_acpi_pci_ops = {
++	.map_bus	= gen_acpi_map_cfg_bus,
++	.read		= pci_generic_config_read,
++	.write		= pci_generic_config_write,
++};
++
++/* Insert the ECFG area for a root bus */
++static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
++{
++	struct gen_acpi_root_info *info;
++	struct acpi_pci_root *root = ci->root;
++	struct device *dev = &ci->bridge->dev;
++	int err;
++
++	info = container_of(ci, struct gen_acpi_root_info, common);
++	err = pci_mmconfig_insert(dev, root->segment, root->secondary.start,
++			root->secondary.end, root->mcfg_addr);
++	if (err && err != -EEXIST)
++		return err;
++
++	info->mcfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
++	WARN_ON(info->mcfg == NULL);
++	info->mcfg_added = (err == -EEXIST);
++	return 0;
++}
++
++static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
++{
++	struct gen_acpi_root_info *info;
++	struct acpi_pci_root *root = ci->root;
++
++	info = container_of(ci, struct gen_acpi_root_info, common);
++	if (info->mcfg_added)
++		pci_mmconfig_delete(root->segment, root->secondary.start,
++					root->secondary.end);
++	info->mcfg = NULL;
++}
++
++static struct acpi_pci_root_ops pci_acpi_root_ops = {
++	.pci_ops = &gen_acpi_pci_ops,
++	.init_info = pci_acpi_root_init_info,
++	.release_info = pci_acpi_root_release_info,
++};
++
++struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
++{
++	struct acpi_device *device = root->device;
++	struct gen_acpi_root_info *ri;
++	struct pci_bus *bus, *child;
++
++	/* allocate acpi_info/sysdata */
++	ri = devm_kzalloc(&device->dev, sizeof(*ri), GFP_KERNEL);
++	if (!ri) {
++		dev_err(&device->dev,
++			"pci_bus %04x:%02x: ignored (out of memory)\n",
++			root->segment, (int)root->secondary.start);
++		return NULL;
++	}
++
++	bus =  acpi_pci_root_create(root, &pci_acpi_root_ops,
++					&ri->common, ri);
++	if (!bus) {
++		dev_err(&device->dev, "Scanning rootbus failed");
++		return NULL;
++	}
++
++	pci_bus_size_bridges(bus);
++	pci_bus_assign_resources(bus);
++	list_for_each_entry(child, &bus->children, node)
++		pcie_bus_configure_settings(child);
++
++	return bus;
++}
++
++int raw_pci_read(unsigned int seg, unsigned int bus,
++		  unsigned int devfn, int reg, int len, u32 *val)
++{
++	struct pci_mmcfg_region *mcfg;
++	void __iomem *addr;
++	int err = -EINVAL;
++
++	rcu_read_lock();
++	mcfg = pci_mmconfig_lookup(seg, bus);
++	if (!mcfg || !mcfg->virt)
++		goto err;
++
++	addr = mcfg->virt + PCI_MMCFG_OFFSET(bus, devfn);
++	switch (len) {
++	case 1:
++		*val = readb(addr + reg);
++		break;
++	case 2:
++		*val = readw(addr + reg);
++		break;
++	case 4:
++		*val = readl(addr + reg);
++		break;
++	}
++	err = 0;
++err:
++	rcu_read_unlock();
++	return err;
++}
++
++int raw_pci_write(unsigned int seg, unsigned int bus,
++		unsigned int devfn, int reg, int len, u32 val)
++{
++	struct pci_mmcfg_region *mcfg;
++	void __iomem *addr;
++	int err = -EINVAL;
++
++	rcu_read_lock();
++	mcfg = pci_mmconfig_lookup(seg, bus);
++	if (!mcfg || !mcfg->virt)
++		goto err;
++
++	addr = mcfg->virt + PCI_MMCFG_OFFSET(bus, devfn);
++	switch (len) {
++	case 1:
++		writeb(val, addr + reg);
++		break;
++	case 2:
++		writew(val, addr + reg);
++		break;
++	case 4:
++		writel(val, addr + reg);
++		break;
++	}
++	err = 0;
++err:
++	rcu_read_unlock();
++	return err;
++}
+-- 
+1.9.1
+
