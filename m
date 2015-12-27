@@ -1,94 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:47164 "EHLO
-	metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932522AbbLHJYA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Dec 2015 04:24:00 -0500
-Message-ID: <1449566630.3118.10.camel@pengutronix.de>
-Subject: Re: [PATCH v2] PCI: dra7xx: mark dra7xx_pcie_msi irq as
- IRQF_NO_THREAD
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Grygorii Strashko <grygorii.strashko@ti.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, tony@atomide.com,
-	nsekhar@ti.com, linux-omap@vger.kernel.org,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
+Subject: Re: [PATCH] drivers:pci Fix all whitespace issues
+From: sasa bogicevic <brutallesale@gmail.com>
+In-Reply-To: <1451236894.1098.5.camel@perches.com>
+Date: Sun, 27 Dec 2015 18:56:16 +0100
+Cc: bhelgaas@google.com, Richard.Zhu@freescale.com,
+	l.stach@pengutronix.de, rjw@rjwysocki.net, lenb@kernel.org,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>
-Date: Tue, 08 Dec 2015 10:23:50 +0100
-In-Reply-To: <20151208033300.GA1255@localhost>
-References: <1448027966-21610-1-git-send-email-grygorii.strashko@ti.com>
-	 <20151204184619.GD20125@localhost> <5662042A.3090809@ti.com>
-	 <20151208033300.GA1255@localhost>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org
+Message-Id: <E354C470-6475-40AF-B08B-22AFF8B00C93@gmail.com>
+References: <1451234408-42250-1-git-send-email-brutallesale@gmail.com> <1451236894.1098.5.camel@perches.com>
+To: Joe Perches <joe@perches.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hi Joe,
+No this is not done with checkpatch.pl I just used it to verify that my changes are correct. I was wondering why that “type” pointer threw errors since it looks fine to me the way it was declared. This “type*” is just present in few of the files I can just redo those changes and send the patch again.
 
-Am Montag, den 07.12.2015, 21:33 -0600 schrieb Bjorn Helgaas:
-> [+cc Jingoo (exynos), Richard, Lucas (imx6), Pratyush (spear13xx)]
-> 
-> On Fri, Dec 04, 2015 at 11:22:50PM +0200, Grygorii Strashko wrote:
-> > On 12/04/2015 08:46 PM, Bjorn Helgaas wrote:
-> > > Hi Grygorii,
-[...]
-> > >>   
-> > >> +	/*
-> > >> +	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
-> > >> +	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
-> > >> +	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
-> > >> +	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
-> > >> +	 * which, in turn, will be resolved to handle_simple_irq() call.
-> > >> +	 * The handle_simple_irq() expected to be called with IRQ disabled, as
-> > >> +	 * result kernle will display warning:
-> > >> +	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
-> > >> +	 */
-> > >>   	ret = devm_request_irq(&pdev->dev, pp->irq,
-> > >> -			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
-> > >> +			       dra7xx_pcie_msi_irq_handler,
-> > >> +			       IRQF_SHARED | IRQF_NO_THREAD,
-> > >>   			       "dra7-pcie-msi",	pp);
-> > > 
-> > > There's similar code in exynos_add_pcie_port(), imx6_add_pcie_port(),
-> > > and spear13xx_add_pcie_port().  Do they need similar changes?  If not,
-> > > why not?
-> > > 
-> > > I see your discussion about DRA7 hardware design, but my impression is
-> > > that this problem affects anybody who calls dw_handle_msi_irq() from a
-> > > handler registered with IRQF_SHARED.
-> > 
-> > Issue fixed by this patch is not related to IRQF_SHARED. 
-> > It will happen on -RT or if kernel will boot with "threadirqs" cmd line parameter
-> > - in both cases these PCI IRQ handlers will be forced to be threaded and,
-> > as result, generic_handle_irq() will produce above backtrace.
-> > 
-> > Personally, I don't have strong opinion about "should similar change be applied
-> > to other PCI drivers or not?" And I think, that owners of those driver should
-> > make such decision.
-> 
-> If the same issue affects several drivers, I'd like to see them all
-> handle it the same way.  Otherwise, somebody coming along later will
-> wonder why they're different, and there won't be a good answer.
-> 
-> I cc'd the other maintainers to see what they think.
-> 
-Yes, this should absolutely be changed in all drivers, based on the DW
-core. There were some patches for this already, but apparently they have
-not been applied, because some review feedback wasn't taken care of.
+Thanks, Sasa
+{
+	name: Bogicevic Sasa
+	phone: +381606006200
+}
 
-I have a patch titled "PCI: designware: Mark the msi cascade handler
-IRQF_NO_THREAD" in my inbox that did this, and I still think it's the
-right thing to do.
 
-Regards,
-Lucas
 
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+> On Dec 27, 2015, at 18:21, Joe Perches <joe@perches.com> wrote:
+> 
+> On Sun, 2015-12-27 at 08:40 -0800, Bogicevic Sasa wrote:
+>> This patch fixes all whitespace issues( missing or needed whitespace) in
+>> all files in drivers/pci folder. Code is compiled with allyesconfig
+>> before and after code changes and objects are recorded and checked with
+>> objdiff and they are not changed after this commit.
+> []
+>> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> []
+>> @@ -25,9 +25,9 @@ DEFINE_RAW_SPINLOCK(pci_lock);
+>>  #define PCI_word_BAD (pos & 1)
+>>  #define PCI_dword_BAD (pos & 3)
+>>  
+>> -#define PCI_OP_READ(size,type,len) \
+>> +#define PCI_OP_READ(size, type, len) \
+>>  int pci_bus_read_config_##size \
+>> -	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
+>> +	(struct pci_bus *bus, unsigned int devfn, int pos, type * value)	\
+>>  {									\
+>>  	int res;							\
+>>  	unsigned long flags;						\
+>> @@ -40,7 +40,7 @@ int pci_bus_read_config_##size \
+>>  	return res;							\
+>>  }
+> 
+> When the first entry I look at is improper, I wonder
+> about the rest.
+> 
+> Was this done with checkpatch --types=spacing --fix ?
+> 
+> If so, because checkpatch is brainless, you need to
+> visually verify each change.
+> 
+> This "type" use is a macro argument indicating
+> what actual c90 type is being used in a function.
+> 
+> The original code is nominally correct, but checkpatch
+> doesn't know that "type" is not a variable.
 
