@@ -1,141 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:18149 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753077AbbLXLe4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Dec 2015 06:34:56 -0500
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH v4 3/5] ACPI: PCI: Support platforms that need pci_remap_iospace
-Date: Thu, 24 Dec 2015 17:27:30 +0530
-Message-ID: <1450958252-29892-4-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1450958252-29892-1-git-send-email-jchandra@broadcom.com>
-References: <1450958252-29892-1-git-send-email-jchandra@broadcom.com>
+Received: from mail.kernel.org ([198.145.29.136]:41026 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752566AbbL1W3b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 28 Dec 2015 17:29:31 -0500
+Date: Mon, 28 Dec 2015 16:29:28 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, izumi.taku@jp.fujitsu.com, jcm@redhat.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/AER: enable SERR# forwarding for bridges and
+ switches
+Message-ID: <20151228222927.GA15808@localhost>
+References: <1449074998-9664-1-git-send-email-okaya@codeaurora.org>
+ <20151204210622.GI20125@localhost>
+ <5669E073.4000801@codeaurora.org>
+ <20151210223742.GC367@localhost>
+ <566B5CA1.1010306@codeaurora.org>
+ <566F08EF.5010904@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <566F08EF.5010904@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms (in this case ARM64), the PCI iospace needs to
-be mapped with pci_remap_iospace and the resources have to be
-adjusted for the iospace physical address.
+Hi Sinan,
 
-This has to be done before acpi_pci_root_validate_resources()
-checks and removes resource windows. Handle this by adding
-a function acpi_pci_root_remap_iospace that is called in
-acpi_pci_probe_root_resources(), before the validate call.
+Sorry for the delay in responding; I was on vacation when you sent
+this, and I missed it when I returned.
 
-Also fix the address check in acpi_dev_ioresource_flags for
-similar platforms.
+On Mon, Dec 14, 2015 at 01:22:39PM -0500, Sinan Kaya wrote:
+> On 12/11/2015 6:30 PM, Sinan Kaya wrote:
+> >> I think the best way to fix all the cases would be to do something in
+> >> > in pci_configure_device().  Then we could drop the AER bus walk in
+> >> > set_downstream_devices_error_reporting().  A bus walk like that is
+> >> > always an issue for hotplug.
+> >> > 
+> > Let me read some code.
+> 
+> OK, If I understand it right; pci_configure_device is where
+> program_hpp_type0 called. You also want to enable AER in this function.
+> 
+> Move the contents of set_device_error_reporting into
+> pci_configure_device like this below ?
+> 
+> ...
+> + int type = pci_pcie_type(dev);
+> 
+> pci_configure_mps(dev);
+> 
+> +	if ((type == PCI_EXP_TYPE_ROOT_PORT) ||
+> +	    (type == PCI_EXP_TYPE_UPSTREAM) ||
+> +	    (type == PCI_EXP_TYPE_DOWNSTREAM)) {
+> +		pci_enable_pcie_error_reporting(dev);
+> +	}
+> 
+> +	pcie_set_ecrc_checking(dev);
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
----
- drivers/acpi/pci_root.c | 62 +++++++++++++++++++++++++++++++++++++++++++++++--
- drivers/acpi/resource.c |  2 ++
- 2 files changed, 62 insertions(+), 2 deletions(-)
+Yep, that's the sort of thing I'm thinking.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index ae3fe4e..fcaa484 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -720,6 +720,61 @@ next:
- 	}
- }
- 
-+#ifdef PCI_IOBASE
-+/*
-+ * The IO ports are mapped to a memory range, fixup IO resources to
-+ * handle that
-+ */
-+static int acpi_pci_root_remap_iospace(struct acpi_pci_root_info *ci)
-+{
-+	struct resource_entry *entry;
-+	struct resource iores;
-+	resource_size_t iostart;
-+	int err;
-+
-+	iores.flags = IORESOURCE_IO;
-+	iores.start = (resource_size_t)-1;
-+	iores.end = 0;
-+	resource_list_for_each_entry(entry, &ci->resources) {
-+		if (entry->res->flags & IORESOURCE_IO) {
-+			iores.start = min(entry->res->start, iores.start);
-+			iores.end = max(entry->res->end, iores.end);
-+		}
-+	}
-+	if (iores.end == 0)
-+		return 0;
-+	iostart = iores.start;
-+
-+	resource_list_for_each_entry(entry, &ci->resources) {
-+		if (entry->res->flags & IORESOURCE_IO) {
-+			entry->res->start -= iostart;
-+			entry->res->end -= iostart;
-+			entry->offset -= iostart;
-+		}
-+	}
-+	iores.start -= iostart;
-+	iores.end -= iostart;
-+
-+	err = pci_remap_iospace(&iores, iostart);
-+	if (err) {
-+		pr_err("PCI: ACPI: err %d mapping IO %pR\n", err, &iores);
-+		return -ENODEV;
-+	}
-+	pr_info(PREFIX "Mapped %pR at %#lx for IO.\n",
-+			&iores, (unsigned long)iostart);
-+	return 0;
-+}
-+#else
-+/*
-+ * The IO ports are mapped to a memory range, fixup IO resources to
-+ * handle that
-+ */
-+static int acpi_pci_root_remap_iospace(struct acpi_pci_root_info *ci)
-+{
-+	return 0;
-+}
-+#endif /* PCI_IOBASE */
-+
- int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- {
- 	int ret;
-@@ -745,10 +800,13 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- 			else
- 				entry->res->name = info->name;
- 		}
--		acpi_pci_root_validate_resources(&device->dev, list,
-+		ret = acpi_pci_root_remap_iospace(info);
-+		if (ret >= 0) {
-+			acpi_pci_root_validate_resources(&device->dev, list,
- 						 IORESOURCE_MEM);
--		acpi_pci_root_validate_resources(&device->dev, list,
-+			acpi_pci_root_validate_resources(&device->dev, list,
- 						 IORESOURCE_IO);
-+		}
- 	}
- 
- 	return ret;
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index cdc5c25..530cad4 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -126,8 +126,10 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
- 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
- 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
- 
-+#ifndef PCI_IOBASE
- 	if (res->end >= 0x10003)
- 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
-+#endif
- 
- 	if (io_decode == ACPI_DECODE_16)
- 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
--- 
-1.9.1
+I think there are some subtleties to consider.
 
+_HPP/_HPX can twiddle some of the same bits.  Should we allow _HPP to
+clear a bit that pci_enable_pcie_error_reporting() would set?  What
+about the reverse?
+
+There are a ridiculous number of places that call
+pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR).  We should
+do it once and cache the result in struct pci_dev.
+
+Bjorn
