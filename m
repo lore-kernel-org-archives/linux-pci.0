@@ -1,73 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41004 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752607AbbLKFKV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2015 00:10:21 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 52/60] PCI: Kill macro checking for bus io port sizing
-Date: Thu, 10 Dec 2015 21:06:48 -0800
-Message-Id: <1449810416-2950-53-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
-References: <1449810416-2950-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:46672 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753713AbbL2UhW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Dec 2015 15:37:22 -0500
+Date: Tue, 29 Dec 2015 14:37:17 -0600
+From: Rob Herring <robh@kernel.org>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v2 2/2] pci, pcie-thunder-pem: Add PCIe host driver for
+ ThunderX processors.
+Message-ID: <20151229203717.GA21072@rob-hp-laptop>
+References: <1450827832-3294-1-git-send-email-ddaney.cavm@gmail.com>
+ <1450827832-3294-3-git-send-email-ddaney.cavm@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1450827832-3294-3-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can use new generic version skip_isa_ioresource_align() instead
-of macro, and then kill the marco.
+On Tue, Dec 22, 2015 at 03:43:52PM -0800, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> Some Cavium ThunderX processors require quirky access methods for the
+> config space of the PCIe bridge.  Add a driver to provide these config
+> space accessor functions.  The pci-host-common code is used to
+> configure the PCI machinery.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+Same comments again...
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a329efe..cfded80 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1160,15 +1160,12 @@ int skip_isa_ioresource_align(struct pci_bus *bus)
- 	return 0;
- }
- 
--static resource_size_t size_aligned_for_isa(resource_size_t size)
-+static resource_size_t size_aligned_for_isa(resource_size_t size,
-+					    struct pci_bus *bus)
- {
--	/*
--	 * To be fixed in 2.5: we should have sort of HAVE_ISA
--	 *  flag in the struct pci_bus.
--	 */
--#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
--	size = (size & 0xff) + ((size & ~0xffUL) << 2);
--#endif
-+	if (!skip_isa_ioresource_align(bus))
-+		size = (size & 0xff) + ((size & ~0xffUL) << 2);
-+
- 	return size;
- }
- 
-@@ -1237,12 +1234,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		}
- 	}
- 
--	size = size_aligned_for_isa(size);
-+	size = size_aligned_for_isa(size, bus);
- 	size += size1;
- 	if (size || min_size)
- 		size0 = calculate_size(size, min_size,
- 					resource_size(b_res), min_align);
--	sum_add_size = size_aligned_for_isa(sum_add_size);
-+	sum_add_size = size_aligned_for_isa(sum_add_size, bus);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
--- 
-1.8.4.5
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+>  .../devicetree/bindings/pci/pcie-thunder-pem.txt   |  43 ++++
+>  drivers/pci/host/Kconfig                           |   7 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pcie-thunder-pem.c                | 283 +++++++++++++++++++++
+>  4 files changed, 334 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
+>  create mode 100644 drivers/pci/host/pcie-thunder-pem.c
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt b/Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
+> new file mode 100644
+> index 0000000..52f56b3
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
+> @@ -0,0 +1,43 @@
+> +* ThunderX PEM PCIe host controller
+> +
+> +Firmware-initialized PCIe host controller found on some Cavium
+> +ThunderX processors.
+> +
+> +The properties and their meanings are identical to those described in
+> +host-generic-pci.txt except as listed below.
+> +
+> +Properties of the host controller node that differ from
+> +host-generic-pci.txt:
+> +
+> +- compatible     : Must be "cavium,pci-host-thunder-pem"
 
+pcie rather than pci?
+
+> +
+> +- reg            : Two entries: First the configuration space for down
+> +                   stream devices base address and size, as accessed
+> +                   from the parent bus. Second, the register bank of
+> +                   the PEM device PCIe bridge.
+> +
+> +Example:
+> +
+> +    pem2 {
+
+pcie-controller@... instead of pem2.
+
+> +	compatible = "cavium,pci-host-thunder-pem";
+> +	device_type = "pci";
+> +	msi-parent = <&its>;
+> +	msi-map = <0 &its 0x10000 0x10000>;
+> +	bus-range = <0x8f 0xc7>;
+> +	#size-cells = <2>;
+> +	#address-cells = <3>;
+> +
+> +	reg = <0x8880 0x8f000000 0x0 0x39000000>,  /* Configuration space */
+> +	      <0x87e0 0xc2000000 0x0 0x00010000>; /* PEM space */
+> +	ranges = <0x01000000 0x00 0x00020000 0x88b0 0x00020000 0x00 0x00010000>, /* I/O */
+> +		 <0x03000000 0x00 0x10000000 0x8890 0x10000000 0x0f 0xf0000000>, /* mem64 */
+> +		 <0x43000000 0x10 0x00000000 0x88a0 0x00000000 0x10 0x00000000>, /* mem64-pref */
+> +		 <0x03000000 0x87e0 0xc2f00000 0x87e0 0xc2000000 0x00 0x00100000>; /* mem64 PEM BAR4 */
+> +
+> +	#interrupt-cells = <1>;
+> +	interrupt-map-mask = <0 0 0 7>;
+> +	interrupt-map = <0 0 0 1 &gic0 0 0 0 24 4>, /* INTA */
+> +			<0 0 0 2 &gic0 0 0 0 25 4>, /* INTB */
+> +			<0 0 0 3 &gic0 0 0 0 26 4>, /* INTC */
+> +			<0 0 0 4 &gic0 0 0 0 27 4>; /* INTD */
+> +    };
