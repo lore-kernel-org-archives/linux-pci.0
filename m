@@ -1,131 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0093.outbound.protection.outlook.com ([157.56.110.93]:63392
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752144AbbLVTSL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Dec 2015 14:18:11 -0500
-Message-ID: <5679A1E9.3050902@caviumnetworks.com>
-Date: Tue, 22 Dec 2015 11:18:01 -0800
-From: David Daney <ddaney@caviumnetworks.com>
-MIME-Version: 1.0
-To: Will Deacon <will.deacon@arm.com>
-CC: David Daney <ddaney.cavm@gmail.com>,
-	<linux-kernel@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 2/2] pci, pcie-thunder-pem: Add PCIe host driver for ThunderX
- processors.
-References: <1450749222-15966-1-git-send-email-ddaney.cavm@gmail.com> <1450749222-15966-3-git-send-email-ddaney.cavm@gmail.com> <20151222100352.GC32623@arm.com>
-In-Reply-To: <20151222100352.GC32623@arm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from ausxipps301.us.dell.com ([143.166.148.223]:22183 "EHLO
+	ausxipps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752743AbbL2WVH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Dec 2015 17:21:07 -0500
+From: Jordan Hargrave <Jordan_Hargrave@dell.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	helgaas@kernel.org, alexander.duyck@gmail.com,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>
+Subject: [PATCH] Limit VPD length on Atheros wifi cards
+Date: Tue, 29 Dec 2015 16:19:02 -0600
+Message-Id: <1451427542-30482-1-git-send-email-Jordan_Hargrave@dell.com>
+To: Jordan_Hargrave@dell.com
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/22/2015 02:03 AM, Will Deacon wrote:
-> On Mon, Dec 21, 2015 at 05:53:42PM -0800, David Daney wrote:
->> From: David Daney <david.daney@cavium.com>
->>
->> Some Cavium ThunderX processors require quirky access methods for the
->> config space of the PCIe bridge.  Add a driver to provide these config
->> space accessor functions.  The pci-host-generic driver code is used to
->> configure the PCI machinery.
->>
->> Signed-off-by: David Daney <david.daney@cavium.com>
->> ---
->>   .../devicetree/bindings/pci/pcie-thunder-pem.txt   |  43 ++++
->>   drivers/pci/host/Kconfig                           |   6 +
->>   drivers/pci/host/Makefile                          |   1 +
->>   drivers/pci/host/pcie-thunder-pem.c                | 283 +++++++++++++++++++++
->>   4 files changed, 333 insertions(+)
->>   create mode 100644 Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
->>   create mode 100644 drivers/pci/host/pcie-thunder-pem.c
->>
->> diff --git a/Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt b/Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
->> new file mode 100644
->> index 0000000..66824d5
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
->> @@ -0,0 +1,43 @@
->> +* ThunderX PEM PCIe host controller
->> +
->> +Firmware-initialized PCIe host controller found on some Cavium
->> +ThunderX processors.
->> +
->> +The properties and their meanings are identical to those described in
->> +host-heneric-pci.txt except as listed below.
->> +
->> +Properties of the host controller node that differ from
->> +host-heneric-pci.txt:
->
-> Consistently odd typo (s/heneric/generic/)!
->
+Attempt to read VPD on these cards causes kernel hang or delay
 
-I'm not sure how I managed to do that.  I will fix these and resend.
+Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
+---
+ drivers/pci/quirks.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
->> +
->> +- compatible     : Must be "cavium,pci-host-thunder-pem"
->> +
->> +- reg            : Two entries: First the configuration space for down
->> +                   stream devices base address and size, as accessed
->> +                   from the parent bus. Second, the register bank of
->> +                   the PEM device PCIe bridge.
->> +
->> +Example:
->> +
->> +    pem2 {
->> +	compatible = "cavium,pci-host-thunder-pem";
->> +	device_type = "pci";
->> +	msi-parent = <&its>;
->> +	msi-map = <0 &its 0x10000 0x10000>;
->> +	bus-range = <0x8f 0xc7>;
->> +	#size-cells = <2>;
->> +	#address-cells = <3>;
->> +
->> +	reg = <0x8880 0x8f000000 0x0 0x39000000>,  /* Configuration space */
->> +	      <0x87e0 0xc2000000 0x0 0x00010000>; /* PEM space */
->> +	ranges = <0x01000000 0x00 0x00020000 0x88b0 0x00020000 0x00 0x00010000>, /* I/O */
->> +		 <0x03000000 0x00 0x10000000 0x8890 0x10000000 0x0f 0xf0000000>, /* mem64 */
->> +		 <0x43000000 0x10 0x00000000 0x88a0 0x00000000 0x10 0x00000000>, /* mem64-pref */
->> +		 <0x03000000 0x87e0 0xc2f00000 0x87e0 0xc2000000 0x00 0x00100000>; /* mem64 PEM BAR4 */
->> +
->> +	#interrupt-cells = <1>;
->> +	interrupt-map-mask = <0 0 0 7>;
->> +	interrupt-map = <0 0 0 1 &gic0 0 0 0 24 4>, /* INTA */
->> +			<0 0 0 2 &gic0 0 0 0 25 4>, /* INTB */
->> +			<0 0 0 3 &gic0 0 0 0 26 4>, /* INTC */
->> +			<0 0 0 4 &gic0 0 0 0 27 4>; /* INTD */
->> +    };
->> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->> index f131ba9..16ed9c3 100644
->> --- a/drivers/pci/host/Kconfig
->> +++ b/drivers/pci/host/Kconfig
->> @@ -172,4 +172,10 @@ config PCI_HISI
->>   	help
->>   	  Say Y here if you want PCIe controller support on HiSilicon HIP05 SoC
->>
->> +config PCIE_HOST_THUNDER_PEM
->> +	bool "Cavium Thunder PCIe controller to off-chip devices"
->> +	depends on PCI_HOST_GENERIC && ARM64
->
-> || COMPILE_TEST ?
->
-> (or does the use of writeq get you? If so, maybe COMPILE_TEST && 64BIT)
-
-Yes, we must use writeq in the driver, I will change it to 
-||(COMPILE_TEST && 64BIT)
-
-Thanks,
-David Daney
-
-
->
-> Will
->
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e6376f6..a72667f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2161,6 +2161,16 @@ static void quirk_brcm_570x_limit_vpd(struct pci_dev *dev)
+ 	}
+ }
+ 
++static void quirk_atheros_vpd(struct pci_dev *dev)
++{
++	/* Atheros WiFi cards hang when reading VPD */
++	if (dev->vpd)
++		dev->vpd->len = 0;
++}
++
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATHEROS, PCI_ANY_ID, quirk_atheros_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID, quirk_atheros_vpd);
++
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
+ 			PCI_DEVICE_ID_NX2_5706,
+ 			quirk_brcm_570x_limit_vpd);
+-- 
+1.7.1
 
