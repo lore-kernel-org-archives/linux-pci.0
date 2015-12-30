@@ -1,55 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58966 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750810AbbLJXYu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Dec 2015 18:24:50 -0500
-Date: Thu, 10 Dec 2015 17:24:46 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: sasa bogicevic <brutallesale@gmail.com>
-Cc: rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] drivers:pci:hotplug Fix all space prohibited before that
- ,
-Message-ID: <20151210232446.GA17458@localhost>
-References: <1449744040-76428-1-git-send-email-brutallesale@gmail.com>
- <20151210224700.GD367@localhost>
- <6CF18E87-8037-4BD5-82EE-5CCA2BCE8A75@gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:35259 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755136AbbL3NZ7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Dec 2015 08:25:59 -0500
+Subject: Re: [PATCH v2] PCI/AER: enable SERR# forwarding for bridges and
+ switches
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1449074998-9664-1-git-send-email-okaya@codeaurora.org>
+ <20151204210622.GI20125@localhost> <5669E073.4000801@codeaurora.org>
+ <20151210223742.GC367@localhost> <566B5CA1.1010306@codeaurora.org>
+ <566F08EF.5010904@codeaurora.org> <20151228222927.GA15808@localhost>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, izumi.taku@jp.fujitsu.com, jcm@redhat.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5683DB75.4050604@codeaurora.org>
+Date: Wed, 30 Dec 2015 08:26:13 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <6CF18E87-8037-4BD5-82EE-5CCA2BCE8A75@gmail.com>
+In-Reply-To: <20151228222927.GA15808@localhost>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 11, 2015 at 12:07:03AM +0100, sasa bogicevic wrote:
-> I wanted to start with approach one error one folder so I did “space prohibited before ,” in just hotplug folder. I used checkpatch script to see if I nailed it and the output was fine.
-> When I do grep -rl I also get the same result eventhou when I look at the, for example, drivers/pci/hotplug/shpchp_ctrl.c there is no space before comma anywhere. I double checked it. I didn’t do header files unfortunately so that errors are expected I guess.
+On 12/28/2015 5:29 PM, Bjorn Helgaas wrote:
+> Hi Sinan,
 > 
-> ./scripts/checkpatch.pl --file --terse drivers/pci/hotplug/shpchp_ctrl.c 
-> drivers/pci/hotplug/shpchp_ctrl.c:190: WARNING: Block comments use * on subsequent lines
-> drivers/pci/hotplug/shpchp_ctrl.c:264: WARNING: line over 80 characters
-> drivers/pci/hotplug/shpchp_ctrl.c:265: WARNING: line over 80 characters
-> drivers/pci/hotplug/shpchp_ctrl.c:344: ERROR: return is not a function, parentheses are not required
-> drivers/pci/hotplug/shpchp_ctrl.c:359: ERROR: return is not a function, parentheses are not required
-> drivers/pci/hotplug/shpchp_ctrl.c:439: WARNING: Possible unnecessary 'out of memory' message
-> drivers/pci/hotplug/shpchp_ctrl.c:463: WARNING: space prohibited between function name and open parenthesis '('
-> drivers/pci/hotplug/shpchp_ctrl.c:478: WARNING: space prohibited between function name and open parenthesis '('
-> drivers/pci/hotplug/shpchp_ctrl.c:569: WARNING: space prohibited between function name and open parenthesis '('
-> drivers/pci/hotplug/shpchp_ctrl.c:626: WARNING: space prohibited between function name and open parenthesis ‘('
-> total: 2 errors, 8 warnings, 730 lines checked
+> Sorry for the delay in responding; I was on vacation when you sent
+> this, and I missed it when I returned.
 > 
-> I used objdiff to record and see if I didn’t change anything and I got no output so I guess all is good, don’t know why grep finds “ ,” it is a mystery to me since I am on my working branch, looking at a file and it is not there. Can you also take a look on your side ? 
+> On Mon, Dec 14, 2015 at 01:22:39PM -0500, Sinan Kaya wrote:
+>> On 12/11/2015 6:30 PM, Sinan Kaya wrote:
+>>>> I think the best way to fix all the cases would be to do something in
+>>>>> in pci_configure_device().  Then we could drop the AER bus walk in
+>>>>> set_downstream_devices_error_reporting().  A bus walk like that is
+>>>>> always an issue for hotplug.
+>>>>>
+>>> Let me read some code.
+>>
+>> OK, If I understand it right; pci_configure_device is where
+>> program_hpp_type0 called. You also want to enable AER in this function.
+>>
+>> Move the contents of set_device_error_reporting into
+>> pci_configure_device like this below ?
+>>
+>> ...
+>> + int type = pci_pcie_type(dev);
+>>
+>> pci_configure_mps(dev);
+>>
+>> +	if ((type == PCI_EXP_TYPE_ROOT_PORT) ||
+>> +	    (type == PCI_EXP_TYPE_UPSTREAM) ||
+>> +	    (type == PCI_EXP_TYPE_DOWNSTREAM)) {
+>> +		pci_enable_pcie_error_reporting(dev);
+>> +	}
+>>
+>> +	pcie_set_ecrc_checking(dev);
 > 
-> I wanted to do one small thing and when I see that it is good and accepted from you then do all warnings and errors one by one.
+> Yep, that's the sort of thing I'm thinking.
+> 
+> I think there are some subtleties to consider.
+> 
+> _HPP/_HPX can twiddle some of the same bits.  Should we allow _HPP to
+> clear a bit that pci_enable_pcie_error_reporting() would set?  What
+> about the reverse?
+> 
+> There are a ridiculous number of places that call
+> pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR).  We should
+> do it once and cache the result in struct pci_dev.
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-OK, makes sense.  I think you're on the right track, and if you extend
-this patch to all of drivers/pci, I'll apply it.
+Thanks for the heads up. I had another pending question to you on another patch.
+I just sent a ping. 
 
-I see you found the lines that checkpatch didn't complain about.
-Maybe checkpatch doesn't look at things inside quoted strings?  That's
-just a guess; I don't use checkpatch regularly.
+I'll start working on this patch after the holidays.
 
-If you plan to do other things, e.g., removing spaces between the
-function name and open parenthesis, I'd like to have all the "white
-space-only" changes in a single patch.
 
-Bjorn
+
+
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
