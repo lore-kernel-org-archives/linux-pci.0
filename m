@@ -1,48 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 18 Dec 2015 21:44:15 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Cc: kbuild-all@01.org, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Subject: Re: [PATCH v5 3/5] PCI: qcom: Add Qualcomm PCIe controller driver
-Message-ID: <201512182111.1GLn2hxy%fengguang.wu@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:54855 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754712AbbL3Mw7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Dec 2015 07:52:59 -0500
+Subject: Re: Dmesg filled with "AER: Corrected error received"
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <5673E049.2010704@canonical.com>
+ <20151229155822.GA17321@localhost>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
+From: David Henningsson <david.henningsson@canonical.com>
+Message-ID: <5683D3AB.1000609@canonical.com>
+Date: Wed, 30 Dec 2015 13:52:59 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450442339-18765-4-git-send-email-stanimir.varbanov@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20151229155822.GA17321@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Stanimir,
+Hi,
 
-[auto build test WARNING on next-20151218]
-[also build test WARNING on v4.4-rc5]
-[cannot apply to pci/next robh/for-next v4.4-rc5 v4.4-rc4 v4.4-rc3]
+Indeed booting with pci=noaer (as suggested in the other bug) works 
+around this issue as well. I'll use that for the time being.
 
-url:    https://github.com/0day-ci/linux/commits/Stanimir-Varbanov/Qualcomm-PCIe-driver-and-designware-fixes/20151218-205427
+Thanks for working on it!
 
+// David
 
-coccinelle warnings: (new ones prefixed by >>)
+On 2015-12-29 16:58, Bjorn Helgaas wrote:
+> On Fri, Dec 18, 2015 at 11:30:33AM +0100, David Henningsson wrote:
+>> Hi Linux PCI maintainers,
+>>
+>> My dmesg gets filled with a few lines repeated over and over again:
+>>
+>> pcieport 0000:00:1c.0: AER: Corrected error received: id=00e0
+>> pcieport 0000:00:1c.0: can't find device of ID00e0
+>> pcieport 0000:00:1c.0: AER: Corrected error received: id=00e0
+>> pcieport 0000:00:1c.0: PCIe Bus Error: severity=Corrected,
+>> type=Physical Layer, id=00e0(Receiver ID)
+>> pcieport 0000:00:1c.0:   device [8086:9d14] error
+>> status/mask=00000001/00002000
+>> pcieport 0000:00:1c.0:    [ 0] Receiver Error
+>>
+>> This happens 10-30 times per second (!), so dmesg fills up quickly.
+>> The bug is present in both vanilla and Ubuntu kernels.
+>
+> This is a pretty obvious bug in our AER code.  We normally clear
+> correctable errors by writing the PCI_ERR_COR_STATUS register in
+> handle_error_source().  The execution path looks like this:
+>
+>    aer_isr_one_error
+>      aer_print_port_info
+>      if (find_source_device())
+>        aer_process_err_devices
+>          handle_error_source
+>            pci_write_config_dword(dev, PCI_ERR_COR_STATUS, ...)
+>
+> In this case, find_source_device() printed "can't find device of
+> ID00e0" [sic] and returned false, so we don't call
+> aer_process_err_devices().  The error is never cleared, so
+> we discover it again and again.
+>
+> I'll work on fixing this.  Incidentally, there's another report
+> with similar symptoms here:
+>
+>    https://bugzilla.kernel.org/show_bug.cgi?id=109691
+>
+> Bjorn
+>
 
->> drivers/pci/host/pcie-qcom.c:188:1-3: WARNING: PTR_ERR_OR_ZERO can be used
-   drivers/pci/host/pcie-qcom.c:220:1-3: WARNING: PTR_ERR_OR_ZERO can be used
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+-- 
+David Henningsson, Canonical Ltd.
+https://launchpad.net/~diwic
