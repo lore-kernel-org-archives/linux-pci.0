@@ -1,140 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:40648 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933085AbbLPMUl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Dec 2015 07:20:41 -0500
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [RFC PATCH v3 4/5] ACPI: PCI: Support platforms that need pci_remap_iospace
-Date: Wed, 16 Dec 2015 18:12:34 +0530
-Message-ID: <1450269755-21420-5-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1450269755-21420-1-git-send-email-jchandra@broadcom.com>
-References: <1450269755-21420-1-git-send-email-jchandra@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	alex.williamson@redhat.com, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC PATCH v2 3/3] vfio-pci: Allow to mmap MSI-X table if EEH is supported
+Date: Thu, 31 Dec 2015 16:50:44 +0800
+Message-Id: <1451551844-11732-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1451551844-11732-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1451551844-11732-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms (in this case ARM64), the PCI iospace needs to
-be mapped with pci_remap_iospace and the resources have to be
-adjusted for the iospace physical address.
+Current vfio-pci implementation disallows to mmap MSI-X
+table in case that user get to touch this directly.
 
-This has to be done before acpi_pci_root_validate_resources()
-checks and removes resource windows. Handle this by adding
-a function acpi_pci_root_remap_iospace that is called in
-acpi_pci_probe_root_resources(), before the validate call.
+However, EEH mechanism can ensure that a given pci device
+can only shoot the MSIs assigned for its PE. So we think
+it's safe to expose the MSI-X table to userspace because
+the exposed MSI-X table can't be used to do harm to other
+memory space.
 
-Also fix the address check in acpi_dev_ioresource_flags for
-similar platforms.
+And with MSI-X table mmapped, some performance issues which
+are caused when PCI adapters have critical registers in the
+same page as the MSI-X table also can be resolved.
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+So this patch adds a Kconfig option, VFIO_PCI_MMAP_MSIX,
+to support for mmapping MSI-X table.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- drivers/acpi/pci_root.c | 62 +++++++++++++++++++++++++++++++++++++++++++++++--
- drivers/acpi/resource.c |  2 ++
- 2 files changed, 62 insertions(+), 2 deletions(-)
+ drivers/vfio/pci/Kconfig    |    4 ++++
+ drivers/vfio/pci/vfio_pci.c |    6 ++++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index ae3fe4e..fcaa484 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -720,6 +720,61 @@ next:
- 	}
- }
+diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
+index 02912f1..67b0a2c 100644
+--- a/drivers/vfio/pci/Kconfig
++++ b/drivers/vfio/pci/Kconfig
+@@ -23,6 +23,10 @@ config VFIO_PCI_MMAP
+ 	depends on VFIO_PCI
+ 	def_bool y if !S390
  
-+#ifdef PCI_IOBASE
-+/*
-+ * The IO ports are mapped to a memory range, fixup IO resources to
-+ * handle that
-+ */
-+static int acpi_pci_root_remap_iospace(struct acpi_pci_root_info *ci)
-+{
-+	struct resource_entry *entry;
-+	struct resource iores;
-+	resource_size_t iostart;
-+	int err;
++config VFIO_PCI_MMAP_MSIX
++	depends on VFIO_PCI_MMAP
++	def_bool y if EEH
 +
-+	iores.flags = IORESOURCE_IO;
-+	iores.start = (resource_size_t)-1;
-+	iores.end = 0;
-+	resource_list_for_each_entry(entry, &ci->resources) {
-+		if (entry->res->flags & IORESOURCE_IO) {
-+			iores.start = min(entry->res->start, iores.start);
-+			iores.end = max(entry->res->end, iores.end);
-+		}
-+	}
-+	if (iores.end == 0)
-+		return 0;
-+	iostart = iores.start;
-+
-+	resource_list_for_each_entry(entry, &ci->resources) {
-+		if (entry->res->flags & IORESOURCE_IO) {
-+			entry->res->start -= iostart;
-+			entry->res->end -= iostart;
-+			entry->offset -= iostart;
-+		}
-+	}
-+	iores.start -= iostart;
-+	iores.end -= iostart;
-+
-+	err = pci_remap_iospace(&iores, iostart);
-+	if (err) {
-+		pr_err("PCI: ACPI: err %d mapping IO %pR\n", err, &iores);
-+		return -ENODEV;
-+	}
-+	pr_info(PREFIX "Mapped %pR at %#lx for IO.\n",
-+			&iores, (unsigned long)iostart);
-+	return 0;
-+}
-+#else
-+/*
-+ * The IO ports are mapped to a memory range, fixup IO resources to
-+ * handle that
-+ */
-+static int acpi_pci_root_remap_iospace(struct acpi_pci_root_info *ci)
-+{
-+	return 0;
-+}
-+#endif /* PCI_IOBASE */
-+
- int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- {
- 	int ret;
-@@ -745,10 +800,13 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- 			else
- 				entry->res->name = info->name;
- 		}
--		acpi_pci_root_validate_resources(&device->dev, list,
-+		ret = acpi_pci_root_remap_iospace(info);
-+		if (ret >= 0) {
-+			acpi_pci_root_validate_resources(&device->dev, list,
- 						 IORESOURCE_MEM);
--		acpi_pci_root_validate_resources(&device->dev, list,
-+			acpi_pci_root_validate_resources(&device->dev, list,
- 						 IORESOURCE_IO);
-+		}
- 	}
+ config VFIO_PCI_INTX
+ 	depends on VFIO_PCI
+ 	def_bool y if !S390
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 09b3805..d536985 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -555,7 +555,8 @@ static long vfio_pci_ioctl(void *device_data,
+ 			    IORESOURCE_MEM && (info.size >= PAGE_SIZE ||
+ 			    pci_resource_page_aligned)) {
+ 				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
+-				if (info.index == vdev->msix_bar) {
++				if (!IS_ENABLED(CONFIG_VFIO_PCI_MMAP_MSIX) &&
++				    info.index == vdev->msix_bar) {
+ 					ret = msix_sparse_mmap_cap(vdev, &caps);
+ 					if (ret)
+ 						return ret;
+@@ -967,7 +968,8 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
+ 	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
+ 		return -EINVAL;
  
- 	return ret;
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index cdc5c25..530cad4 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -126,8 +126,10 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
- 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
- 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
- 
-+#ifndef PCI_IOBASE
- 	if (res->end >= 0x10003)
- 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
-+#endif
- 
- 	if (io_decode == ACPI_DECODE_16)
- 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
+-	if (index == vdev->msix_bar) {
++	if (!IS_ENABLED(CONFIG_VFIO_PCI_MMAP_MSIX) &&
++	    index == vdev->msix_bar) {
+ 		/*
+ 		 * Disallow mmaps overlapping the MSI-X table; users don't
+ 		 * get to touch this directly.  We could find somewhere
 -- 
-1.9.1
+1.7.9.5
 
