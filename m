@@ -1,37 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:16015 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751945AbcA3LHR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 30 Jan 2016 06:07:17 -0500
-From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com,
-	dwmw2@infradead.org, jroedel@suse.de, jacek.lawrynowicz@intel.com
-Subject: [PATCH v3 0/2] Fixed couple of issues pointed by Alex and Bjorn 
-Date: Sat, 30 Jan 2016 12:06:50 +0100
-Message-Id: <1454152012-46337-1-git-send-email-jacek.lawrynowicz@intel.com>
-In-Reply-To: <1453926324.18221.2.camel@redhat.com>
-References: <1453926324.18221.2.camel@redhat.com>
+Received: from jabberwock.ucw.cz ([46.255.230.98]:54273 "EHLO
+	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751366AbcACO24 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jan 2016 09:28:56 -0500
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [193.165.110.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+	by jabberwock.ucw.cz (Postfix) with ESMTPS id 391A91C01EE
+	for <linux-pci@vger.kernel.org>; Sun,  3 Jan 2016 15:22:27 +0100 (CET)
+Date: Sun, 3 Jan 2016 15:22:25 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Linux-PCI Mailing List <linux-pci@vger.kernel.org>
+Subject: Released pciutils-3.4.1
+Message-ID: <mj+md-20160103.142204.7585.albireo@ucw.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- changed pci_dma_alias_is_enabled to be a static helper
-- renamed pci_enable_dma_alias to pci_add_dma_alias
-- fixed "exisiting" typo
+Hello, world!\n
 
-Jacek Lawrynowicz (2):
-  pci: Add support for multiple DMA aliases
-  pci: Add DMA alias quirk for mic_x200_dma
+I have just released pciutils-3.4.1.
 
- drivers/iommu/iommu.c | 17 ++++++++++-------
- drivers/pci/pci.c     | 21 +++++++++++++++++++++
- drivers/pci/pci.h     |  2 ++
- drivers/pci/probe.c   |  1 +
- drivers/pci/quirks.c  | 28 +++++++++++++++++++---------
- drivers/pci/search.c  | 14 +++++++++-----
- include/linux/pci.h   | 12 +++++-------
- 7 files changed, 67 insertions(+), 28 deletions(-)
+>From the ChangeLog:
 
+2016-01-03  Martin Mares <mj@ucw.cz>
+
+	* Released as 3.4.1.
+
+	* New capabilities decoded: Process Address Space, Page Request
+	  Interface, Enhanced Allocation. Thanks to David Daney and
+	  David Woodhouse.
+
+	* DevCap SlotPowerLimit is now decoded for all components with
+	  upstream ports.
+
+	* Database mirror at SourceForge moved to GitHub.
+
+	* Updated pci.ids to the current snapshot of the database.
+
+				Have a nice fortnight
 -- 
-2.1.4
-
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+Outside of a dog, a book is man's best friend. Inside a dog, it's too dark to read.
