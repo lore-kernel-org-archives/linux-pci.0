@@ -1,77 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54489 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932594AbcA3RvE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jan 2016 12:51:04 -0500
-Message-ID: <b7e1eb3b78a09c8aacc84a15cb165585.squirrel@www.codeaurora.org>
-In-Reply-To: <20160130133027.GA16394@localhost>
-References: <20160120160427.GD13437@red-moon>
-    <569FB210.9090605@codeaurora.org> <20160129230645.GG12965@localhost>
-    <56AC0065.5030909@codeaurora.org> <20160130133027.GA16394@localhost>
-Date: Sat, 30 Jan 2016 17:51:03 -0000
-Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
-From: Okaya@codeaurora.org
-To: "Bjorn Helgaas" <helgaas@kernel.org>
-Cc: "Sinan Kaya" <okaya@codeaurora.org>,
-	"Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
-	linux-pci@vger.kernel.org, "Zhou Wang" <wangzhou1@hisilicon.com>,
-	"Phil Edworthy" <phil.edworthy@renesas.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>
+Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:59503 "EHLO
+	nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617AbcACOL2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jan 2016 09:11:28 -0500
+Received: from camelot.kam.mff.cuni.cz (camelot.kam.mff.cuni.cz [195.113.17.209])
+	by nikam.ms.mff.cuni.cz (Postfix) with ESMTP id AEF61542C38
+	for <linux-pci@vger.kernel.org>; Sun,  3 Jan 2016 15:11:24 +0100 (CET)
+Date: Sun, 3 Jan 2016 15:11:24 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Keith Busch <keith.busch@intel.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv5 7/7] pciutils: Allow 32-bit domains
+Message-ID: <mj+md-20160103.140612.56316.camelot@ucw.cz>
+References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
+ <1449523949-21898-8-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1449523949-21898-8-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Fri, Jan 29, 2016 at 07:14:29PM -0500, Sinan Kaya wrote:
->> On 1/29/2016 6:06 PM, Bjorn Helgaas wrote:
->> > On Wed, Jan 20, 2016 at 11:13:04AM -0500, Sinan Kaya wrote:
->> >> On 1/20/2016 11:04 AM, Lorenzo Pieralisi wrote:
->> >>>
->> >>> We want to get rid of PCI_PROBE_ONLY on ARM/ARM64:
->> >>
->> >> For platforms that does not have UEFI BIOS, it makes sense to remove
->> the probe only
->> >> option as the firmware is not doing anything.
->> >
->> > I don't understand this statement.  It sounds like you mean "non-UEFI
->> > BIOS firmware doesn't assign PCI BARs", but that's not true, so you
->> > must mean something else.
->>
->> It depends on the firmware flavor. I know u-boot does some PCI
->> assignment but it does minimum to use PCI itself not for OS
->> consumption. It may not deal with with switches/bridges etc. or will
->> only assign mem32 resources and not touch prefetchable.
->
-> Ah, I see the problem.  When you wrote "non-UEFI BIOS," I thought
-> "old-fashioned x86 BIOS," which generally do assign resources.  But I
-> don't have much experience with other firmware like U-boot.  There are
-> good reasons, e.g., portability and boot-time optimization, why
-> firmware might not touch things it doesn't need.  That's especially
-> true for PCI resource assignment, where we know the OS must do it
-> itself anyway, and there's little point in doing it twice.
->
->> Most non-UEFI firmwares I have seen on ARM rely on device specific
->> driver like synopsys etc. to do the device initialization and ask
->> kernel to do the enumeration.
->>
->> ACPI systems on the other hand handle the resource assignment before
->> the OS starts.
->
-> My guess is that this is more of a tradition than anything actually
-> required by the spec.
->
-> The bottom line is that Linux can't rely on much consistency across
-> the universe of architectures and firmwares.  I think the only thing
-> that really makes sense for us to do is:
->
->   - Read whatever assignments the firmware may have made
->   - Keep them unchanged if they seem sensible
->   - Reassign them if they aren't sensible
->   - Use quirks to handle exceptions
->
-> Bjorn
->
+Hello!
 
+> PCI-e segments will continue to use the lower 16 bits as required by
+> ACPI. Special domains may use the full 32-bits.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  lib/filter.c |    2 +-
+>  lib/pci.h    |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/lib/filter.c b/lib/filter.c
+> index d4254a0..075dc2f 100644
+> --- a/lib/filter.c
+> +++ b/lib/filter.c
+> @@ -45,7 +45,7 @@ pci_filter_parse_slot_v33(struct pci_filter *f, char *str)
+>  	  if (str[0] && strcmp(str, "*"))
+>  	    {
+>  	      long int x = strtol(str, &e, 16);
+> -	      if ((e && *e) || (x < 0 || x > 0xffff))
+> +	      if ((e && *e) || (x < 0))
+>  		return "Invalid domain number";
+>  	      f->domain = x;
+>  	    }
+> diff --git a/lib/pci.h b/lib/pci.h
+> index 10ba831..7e42765 100644
+> --- a/lib/pci.h
+> +++ b/lib/pci.h
+> @@ -119,7 +119,7 @@ struct pci_param *pci_walk_params(struct pci_access *acc, struct pci_param *prev
+>  
+>  struct pci_dev {
+>    struct pci_dev *next;			/* Next device in the chain */
+> -  u16 domain;				/* PCI domain (host bridge) */
+> +  int32_t domain;			/* PCI domain (host bridge) */
+>    u8 bus, dev, func;			/* Bus inside domain, device and function */
 
-+1 to this list.
+This is definitely not enough. Try grepping the source for "domain" :-)
 
+At least the following places need updating, too:
+
+  o  struct pci_filter and operations on it
+
+  o  Format strings for printing domains at various places
+
+  o  ABI compability ... changing a field in the middle of struct pci_dev
+     (or pci_filter) is going to break ABI, so you either need to change the
+     structures in a backward-compatible way, or to use ABI versioning.
+
+Also, we should decide on what type the domain should have -- currently, some
+places use "int", others use u16, and your patch introduces int32_t. I would
+prefer u32 myself, but especially in the filters we should be careful about
+how to encode "any domain".
+
+			Have a nice new year
+						Martin
