@@ -1,83 +1,143 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 8 Jan 2016 15:12:17 +0000
-From: Mark Rutland <mark.rutland@arm.com>
-To: Mark Salter <msalter@redhat.com>
-Cc: linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
-	will.deacon@arm.com, okaya@codeaurora.org, wangyijing@huawei.com,
-	Lorenzo.Pieralisi@arm.com, Tomasz Nowicki <tn@semihalf.com>,
-	ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com,
-	linux-arm-kernel@lists.infradead.org, catalin.marinas@arm.com,
-	arnd@arndb.de, Stefano.Stabellini@eu.citrix.com,
-	Liviu.Dudau@arm.com, bhelgaas@google.com, tglx@linutronix.de,
-	mw@semihalf.com, jcm@redhat.com, jchandra@broadcom.com,
-	rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
-	hanjun.guo@linaro.org, Suravee.Suthikulpanit@amd.com,
-	jiang.liu@linux.intel.com
-Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
- against platfrom specific quirks.
-Message-ID: <20160108151216.GJ3097@leverpostej>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
- <1450278993-12664-23-git-send-email-tn@semihalf.com>
- <1452262581.31901.26.camel@redhat.com>
- <20160108150137.GH3097@leverpostej>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:64033 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752515AbcADEtz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jan 2016 23:49:55 -0500
+From: Jayachandran C <jchandra@broadcom.com>
+To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Jayachandran C <jchandra@broadcom.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH v5 2/5] PCI: Handle ACPI companion and domain number
+Date: Mon, 4 Jan 2016 10:43:20 +0530
+Message-ID: <1451884403-21437-3-git-send-email-jchandra@broadcom.com>
+In-Reply-To: <1451884403-21437-1-git-send-email-jchandra@broadcom.com>
+References: <1451884403-21437-1-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20160108150137.GH3097@leverpostej>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 08, 2016 at 03:01:37PM +0000, Mark Rutland wrote:
-> On Fri, Jan 08, 2016 at 09:16:21AM -0500, Mark Salter wrote:
-> > On Wed, 2015-12-16 at 16:16 +0100, Tomasz Nowicki wrote:
-> > > Some platforms may not be fully compliant with generic set of PCI config
-> > > accessors. For these cases we implement the way to overwrite accessors
-> > > set before PCI buses enumeration. Algorithm that overwrite accessors
-> > > matches against platform ID (DMI), domain and bus number, hopefully
-> > > enough for all cases. All quirks can be defined using:
-> > > DECLARE_ACPI_MCFG_FIXUP() and keep self contained.
-> > > 
-> > > example:
-> > > 
-> > > static const struct dmi_system_id yyy[] = {
-> > >         {
-> > >                 .ident = "<Platform ident string>",
-> > >                 .callback = <handler>,
-> > >                 .matches = {
-> > >                         DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
-> > >                         DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
-> > >                         DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
-> > >                 },
-> > >         },
-> > >         { }
-> > > };
-> > > 
-> > 
-> > This seems awkward to me in the case where the quirk is SoC-based and there
-> > may be multiple platforms affected. Needing a DECLARE_ACPI_MCFG_FIXUP for
-> > each platform using such a SoC (i.e. Mustang and Moonshot) doesn't seem
-> > right. In that case, I think it'd be better to check CPUID and possibly
-> > some SoC register to cover all platforms affected.
-> 
-> CPUs get reused across SoCs, so as you've implicitly noted, the CPUID
-> alone is insufficient.
-> 
-> Given that IP blocks get moved around between SoC variants, I don't
-> think you can check "some SoC register" based on the CPU ID -- you can
-> end up bringing the board down at that point.
-> 
-> If the CPU ID alone is insufficient to tell you about a component, it
-> cannot give you enough information about a component you can use to
-> query more information from.
-> 
-> If your platform requires a quirk, it's always going to be painful (and
-> to some extent, rightfulyl so). We should aim for correctness here with
-> explicit matching.
+pci_create_root_bus is called with NULL as parent in ACPI. This
+ends up calling pci_bus_assign_domain_nr with a NULL paretn, which
+crashes when dereferencing parent.
 
-Further, if there is going to be an ever-expanding set of platforms
-requring quirks, then we need a standard mechanism in ACPI to enable the
-platform to tell us explicitly either which specific PCI implementation
-is used, or which common quirk is necessary.
+Fix this by providing away to set the ACPI domain number, we define
+acpi_pci_sysdata_to_root_info() to provide the acpi root info from
+sysdata. This is a simple cast the generic ACPI PCI implementation.
 
-Thanks,
-Mark.
+Similarly, setting up the ACPI companion in case of generic ACPI PCI
+implementation is staright forward.
+
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+---
+ drivers/pci/pci.c        | 15 ++++++++++++++-
+ drivers/pci/probe.c      |  2 ++
+ include/linux/pci-acpi.h | 28 +++++++++++++++++++++++++++-
+ 3 files changed, 43 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 314db8c..39d2bcc 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -20,6 +20,7 @@
+ #include <linux/string.h>
+ #include <linux/log2.h>
+ #include <linux/pci-aspm.h>
++#include <linux/pci-acpi.h>
+ #include <linux/pm_wakeup.h>
+ #include <linux/interrupt.h>
+ #include <linux/device.h>
+@@ -4772,9 +4773,21 @@ int pci_get_new_domain_nr(void)
+ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+-	int domain = of_get_pci_domain_nr(parent->of_node);
++	int domain;
+ 
+ 	/*
++	 * Handle ACPI early
++	 *
++	 * The companion is not set at this point, and ACPI sets parent to
++	 * NULL, we have to try to get the segment from acpi root info.
++	 */
++	if (!parent || !parent->of_node) {
++		bus->domain_nr = acpi_pci_get_segment(bus->sysdata);
++		return;
++	}
++
++	domain = of_get_pci_domain_nr(parent->of_node);
++	/*
+ 	 * Check DT domain and use_dt_domains values.
+ 	 *
+ 	 * If DT domain property is valid (domain >= 0) and
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index edb1984..5af66496 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -13,6 +13,7 @@
+ #include <linux/module.h>
+ #include <linux/cpumask.h>
+ #include <linux/pci-aspm.h>
++#include <linux/pci-acpi.h>
+ #include <linux/aer.h>
+ #include <linux/acpi.h>
+ #include <asm-generic/pci-bridge.h>
+@@ -2105,6 +2106,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	bridge->dev.parent = parent;
+ 	bridge->dev.release = pci_release_host_bridge_dev;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
++	pci_acpi_set_companion(bridge);
+ 	error = pcibios_root_bridge_prepare(bridge);
+ 	if (error) {
+ 		kfree(bridge);
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index e9450ef..f8d62e3 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -138,12 +138,38 @@ extern struct list_head pci_mmcfg_list;
+ 
+ #define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
+ #define PCI_MMCFG_OFFSET(bus, devfn)   ((bus) << 20 | (devfn) << 12)
+-
+ #else	/* CONFIG_ACPI */
+ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+ static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
+ #endif	/* CONFIG_ACPI */
+ 
++#if defined(CONFIG_ACPI) && defined(CONFIG_ACPI_PCI_HOST_GENERIC)
++static inline void pci_acpi_set_companion(struct pci_host_bridge *bridge)
++{
++	struct pci_bus *b = bridge->bus;
++	struct acpi_pci_root_info *ci = (struct acpi_pci_root_info *)b->sysdata;
++
++	ACPI_COMPANION_SET(&bridge->dev, ci->bridge);
++}
++
++static inline u16 acpi_pci_get_segment(void *sysdata)
++{
++	struct acpi_pci_root_info *ci = (struct acpi_pci_root_info *)sysdata;
++
++	return ci->root->segment;
++}
++#else
++static inline void pci_acpi_set_companion(struct pci_host_bridge *bridge)
++{
++	/* leave it to the platform for now */
++}
++
++static inline u16 acpi_pci_get_segment(void *sysdata)
++{
++	return 0;
++}
++#endif
++
+ #ifdef CONFIG_ACPI_APEI
+ extern bool aer_acpi_firmware_first(void);
+ #else
+-- 
+1.9.1
+
