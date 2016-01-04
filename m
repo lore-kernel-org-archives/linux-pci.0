@@ -1,130 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:33859 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161307AbcA1RZN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Jan 2016 12:25:13 -0500
-Date: Thu, 28 Jan 2016 17:27:01 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Phil Edworthy <phil.edworthy@renesas.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v5 0/5] ACPI based PCI support for arm64
+To: Jayachandran C <jchandra@broadcom.com>, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
-Message-ID: <20160128172701.GA28468@red-moon>
-References: <20160120160427.GD13437@red-moon>
- <569FB210.9090605@codeaurora.org>
- <20160120181003.GF13437@red-moon>
- <HK2PR0601MB1393A8E38392D17EC2DD7900F5C40@HK2PR0601MB1393.apcprd06.prod.outlook.com>
+	linux-acpi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+References: <1451884403-21437-1-git-send-email-jchandra@broadcom.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <568A125A.9090608@linaro.org>
+Date: Mon, 4 Jan 2016 14:34:02 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <HK2PR0601MB1393A8E38392D17EC2DD7900F5C40@HK2PR0601MB1393.apcprd06.prod.outlook.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1451884403-21437-1-git-send-email-jchandra@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+ Pratyush, Jingoo, Gabriele]
+Hi JC,
 
-any comment on this for the designware driver ?
+On 2016/1/4 13:13, Jayachandran C wrote:
+> This patchset provides a generic ACPI based PCI host controller
+> implementation and uses it on arm64.
+>
+> The first patch moves the common code to handle MCFG ACPI table from
+> arch/x86 to drivers/acpi/pci_mcfg.c. The last patch in the patchset
+> provides the generic implementation of an ACPI based PCI host
+> controller with a new file drivers/acpi/pci_host_acpi.c. The other
+> patches are to fix up arm64 and ACPI code to work with these two
+> patches.
+>
+> The pci host controller implementation keeps a reference to
+> pci_mmcfg_region entry so that config space access is done with a
+> simple mapping and generic PCI config read/write. There is also an
+> implementation of raw_pci_read/raw_pci_write provided by walking the
+> pci_mmcfg_list
+>
+> The patchset is against 4.4-rc6, but it can be applied to pci/next
+> with a very minor fixup.  This is tested with arm64 QEMU and OVMF
+> and on x86 with qemu.
 
-Thanks,
-Lorenzo
+Are there any specific problems that Tomasz didn't address in this
+patch set?
 
-On Fri, Jan 22, 2016 at 04:28:39PM +0000, Phil Edworthy wrote:
-> Hi Lorenzo,
-> 
-> On 20 January 2016 18:10, Lorenzo Pieralisi wrote:
-> > On Wed, Jan 20, 2016 at 11:13:04AM -0500, Sinan Kaya wrote:
-> > > On 1/20/2016 11:04 AM, Lorenzo Pieralisi wrote:
-> > > > Hi,
-> > > >
-> > > > I noticed that:
-> > > >
-> > > > 79953dd22c1d ("PCI: rcar: Remove dependency on ARM-specific struct
-> > hw_pci")
-> > > > cbce7900598c ("PCI: designware: Make driver arch-agnostic")
-> > > >
-> > > > added code in the respective host controller drivers to size bridges
-> > > > and assign resources only if the PCI_PROBE_ONLY flag is clear, which makes
-> > > > me wonder if there exists PCI_PROBE_ONLY set-ups for the respective
-> > > > host controllers:
-> > > >
-> <snip>
->  
-> > Resources claiming and assignment should be managed in arch code,
-> > not in host controllers specific code, and that's the reason I
-> > complained in this RFC about the scattering of PCI_PROBE_ONLY flag
-> > checks in host drivers, it is becoming unmanageable (if useful
-> > at all on designware and rcar, I would like to know if there are
-> > PCI_PROBE_ONLY set-ups probing those host drivers).
-> 
-> I am pretty sure  there are no rcar set-ups that use PCI_PROBE_ONLY,
-> so I am happy for that code to go.
-> 
-> Thanks
-> Phil
-> 
-> > Does it make the point clearer ?
-> > 
-> > > > https://patchwork.ozlabs.org/patch/545671/
-> > > >
-> > > > so unless you really have *existing* set-ups that require it, please
-> > > > remove the respective checks from the host controller drivers, this is
-> > > > becoming a serious issue, because either:
-> > > >
-> > > > - we claim resources if and only if PCI_PROBE_ONLY is set
-> > > >
-> > > > Either like this (to be done for every host controllers and ARM
-> > > > bios32):
-> > > >
-> > > > https://patchwork.ozlabs.org/patch/545670/
-> > > >
-> > > > or in core ARM/ARM64 code - eg pcibios_fixup_bus() - (to avoid adding a
-> > > > resource claiming call in ALL PCI host controllers)
-> > > >
-> > > > - or we *always* carry out resource claiming regardless of PCI_PROBE_ONLY
-> > > >   (but on ARM we can't really do that since PCI FW set-up on most of the
-> > > >   platforms is not present)
-> > > >
-> > > > On PCI_PROBE_ONLY systems resources claiming is mandatory if we want
-> > > > to get rid of arches workarounds:
-> > >
-> > > I'm hoping to see x86 like behavior on ARM64 without any gotchas as
-> > > there is nothing special about CPU type when it comes to PCI.
-> > 
-> > As I said, we must enforce it with ACPI, for DT platforms I am all
-> > ears to decide how we can implement it sanely (I think the only way
-> > to do it is by claiming the PCI resources on PCI_PROBE_ONLY systems,
-> > that's not ideal but it simplifies things a lot).
-> > 
-> > Thanks,
-> > Lorenzo
-> > 
-> > >
-> > > >
-> > > > https://patchwork.ozlabs.org/patch/545671/
-> > > >
-> > > > Comments very appreciated.
-> > > >
-> > > > Thanks,
-> > > > Lorenzo
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > >
-> > >
-> > >
-> > > --
-> > > Sinan Kaya
-> > > Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-> > > Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux
-> > Foundation Collaborative Project
-> > >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+https://lkml.org/lkml/2015/12/16/246
+
+As Lorenzo pointed out, that patch set was going several rounds and
+addressed lots of comments, why not comment on it and push it forward
+together?
+
+Thanks
+Hanjun
