@@ -1,199 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sun, 10 Jan 2016 16:08:19 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"rjui@broadcom.com" <rjui@broadcom.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	"dhdang@apm.com" <dhdang@apm.com>,
-	"sbranden@broadcom.com" <sbranden@broadcom.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	Paul Burton <paul.burton@imgtec.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>
-Subject: Re: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Message-ID: <20160110220819.GA25883@localhost>
-References: <1448798633-12697-1-git-send-email-bharatku@xilinx.com>
- <20151209231921.GI31930@localhost>
- <8520D5D51A55D047800579B09414719825869A85@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20151210201817.GB367@localhost>
- <8520D5D51A55D047800579B09414719825869EDC@XAP-PVEXMBX01.xlnx.xilinx.com>
- <8520D5D51A55D047800579B0941471982586BC8D@XAP-PVEXMBX01.xlnx.xilinx.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from sauhun.de ([89.238.76.85]:46200 "EHLO pokefinder.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752912AbcADNWA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Jan 2016 08:22:00 -0500
+Date: Mon, 4 Jan 2016 14:21:42 +0100
+From: Wolfram Sang <wsa@the-dreams.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Wolfram Sang <wsa+renesas@sang-engineering.com>,
+	Simon Horman <horms+renesas@verge.net.au>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: provide of_pci_get_host_bridge_resources helper
+Message-ID: <20160104132142.GA11689@katana>
+References: <8759253.sZisGJ6Km3@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8520D5D51A55D047800579B0941471982586BC8D@XAP-PVEXMBX01.xlnx.xilinx.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="4Ckj6UjgE2iN1+kY"
+In-Reply-To: <8759253.sZisGJ6Km3@wuerfel>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 21, 2015 at 05:23:47AM +0000, Bharat Kumar Gogada wrote:
-> Hi Bjorn, can you comment on this. Marc has also replied for query on irq_dispose_mapping().
 
-I'm not sure exactly what you want me to comment on.
+--4Ckj6UjgE2iN1+kY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> > Subject: RE: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
-> > PCIe Host Controller
-> > 
-> > > Subject: Re: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for
-> > > Xilinx NWL PCIe Host Controller
-> > >
-> > > [+cc Marc for irq_dispose_mapping() question]
-> > >
-> > > On Thu, Dec 10, 2015 at 02:10:34PM +0000, Bharat Kumar Gogada wrote:
-> > > I'm trying to figure out what the difference is between these two
-> > > checks and why you have both of them:
-> > >
-> > > > +	if (bus->number == pcie->root_busno && devfn > 0)
-> > > > +	if (bus->primary == pcie->root_busno && devfn > 0)
-> > >
-> > > If I understand correctly, pcie->root_busno is the bus number of the
-> > > Root Port device (likely 00).  I think the "bus->number ==
-> > > pcie->root_busno && devfn > 0" check means that the Root Port, e.g.,
-> > > 00:00.0, is the only device allowed on bus 00.  Often a Root Complex
-> > > contains several Root Ports and other integrated devices that typically are
-> > on bus 00.
-> > > But in your case, I think you're saying there is only the single Root
-> > > Port and no other devices.
-> > >
-> > > I think that first check takes care of everything on bus 00, so I'm
-> > > trying to figure out what the second check is for.  Assume your Root
-> > > Port is device
-> > > 00:00.0 and it is a bridge to [bus 01-ff].  Then we have two pci_bus
-> > > structs with these values:
-> > >
-> > >   bus->number = 00
-> > >   bus->primary = 00
-> > >   bus->busn_res = [bus 00-ff]
-> > >
-> > >   bus->number = 01
-> > >   bus->primary = 00
-> > >   bus->busn_res = [bus 01-ff]
-> > >
-> > > Because of the first check, 00:00.0 is the only possible device on bus
-> > > 00, and because of the second check, 01:00.0 is the only possible device on
-> > bus 01.
-> > > Therefore, you don't support a multifunction device connected to the
-> > > Root Port.  Right?
-> > >
-> > We support multifunction devices also, so this check should not be there, will
-> > remove this check in next patch.
+On Fri, Dec 18, 2015 at 04:02:41PM +0100, Arnd Bergmann wrote:
+> The pcie-rcar driver can be built for any ARM platform (for COMPILE_TEST)
+> including those without CONFIG_OF enabled, and that results in a compile-=
+time
+> error:
+>=20
+> drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_parse_request_of_pci=
+_ranges':
+> drivers/pci/host/pcie-rcar.c:939:8: error: implicit declaration of functi=
+on 'of_pci_get_host_bridge_resources' [-Werror=3Dimplicit-function-declarat=
+ion]
+>   err =3D of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources, =
+&iobase);
+>=20
+> In order to allow compile-testing on all platforms, this adds a
+> of_pci_get_host_bridge_resources() helper stub function that gets
+> used when CONFIG_OF_ADDRESS is disabled. This mirrors what we do for
+> other OF-specific functions.
+>=20
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 5d2917d469fa ("PCI: rcar: Convert to DT resource parsing API")
 
-It looks like you're planning to change this.
+Makes sense :)
 
-> > > > > > +		return false;
-> > > > > > +
-> > > > > > +	return true;
-> > > > > > +}
-> > > > > > + * nwl_setup_sspl - Set Slot Power limit
-> > > > > > + *
-> > > > > > + * @pcie: PCIe port information  */ static int
-> > > > > > +nwl_setup_sspl(struct nwl_pcie *pcie)
-> > > > >
-> > > > The Set_Slot_Power_Limit Message includes a one DW data payload. The
-> > > > data payload is copied from the Slot Capabilities register of the
-> > > > Downstream Port and is written into the Device Capabilities register
-> > > > of the Upstream Port on the other side of the Link. Bits 9:8 of the
-> > > > data payload map to the Slot Power Limit Scale field and bits 7:0
-> > > > map to the Slot Power Limit Value field. Bits 31:10 of the data
-> > > > payload must be set to all 0's by the Transmitter and ignored by the
-> > Receiver.
-> > >
-> > > > This Message is sent automatically by the Downstream Port (of a Root
-> > > > Complex or a Switch) when one of the following events occurs:
-> > > > -> On a Configuration Write to the Slot Capabilities register (see
-> > > > Section 7.8.9) when the Data Link Layer reports DL_Up status.
-> > >
-> > > I interpret this as meaning "the *hardware* automatically sends a
-> > > Set_Slot_Power_Limit Message."  There's no mention of software doing
-> > > anything other than the configuration write.
-> > >
-> > > If your hardware doesn't do that, I think it's a defect.  It's fine to
-> > > work around it, but we should have a comment to that effect so people
-> > > don't copy the code to new drivers that don't need it.
-> > 
-> > Our hardware is not capable of doing it, so we are doing it software. Yes I will
-> > add some comments.
+Acked-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
 
-And add a comment here.
 
-> > > It's a little strange that 7.8.9 talks about writing to this register
-> > > when all of its fields are HwInit and supposedly read-only.  I had
-> > > assumed devices would use strapping or implementation-specific
-> > > registers to set the Slot Power values, but maybe some devices use direct
-> > writes to Slot Capabilities instead.
-> > >
-> > > BTW, I noticed a related lspci bug: it didn't decode the Capture Slot
-> > > Power Limit in Device Capabilities of Endpoints.  I posted a fix for that
-> > separately.
-> > >
-> > > The Slot Power Limit (in Slot Capabilities) indicates how much power
-> > > the slot can supply to a downstream device.  That's a function of the
-> > > platform design, so it seems like this is something you want to set
-> > > via DT or some other mechanism that knows about the platform.
-> > > Intercepting all config writes and updating it with whatever the
-> > > caller supplies doesn't sound wise.  The value might be coming from
-> > > setpci or some other source with no knowledge of the platform.
-> > 
-> > Agreed, but this is what can be done, it is difficult to determine who does
-> > what.
+--4Ckj6UjgE2iN1+kY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-Your driver is based on DT.  What prevents you from adding a DT property
-that shows the slot power capability?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-> > > > > > +			status = nwl_bridge_readl(pcie,
-> > TX_PCIE_MSG)
-> > > > > > +						  & MSG_DONE_BIT;
-> > > > > > +			if (status) {
-> > > > > > +				status = nwl_bridge_readl(pcie,
-> > > > > TX_PCIE_MSG)
-> > > > > > +						  &
-> > MSG_DONE_STATUS_BIT;
-> > >
-> > > > > It's not clear to me whether you need to re-read TX_PCIE_MSG here.
-> > > >
-> > > > MSG_DONE_BIT qualifies MSG_DONE_STATUS_BIT; so value of
-> > > > MSG_DONE_STATUS_BIT is valid only when MSG_DONE_BIT = 1
-> > >
-> > > That doesn't answer the question of whether another read is required.
-> > > In fact, I would argue that if MSG_DONE_STATUS_BIT is only valid when
-> > > MSG_DONE_BIT = 1, you *should* only do one read, because you want to
-> > > capture both bits simultaneously so you know they're consistent, e.g.,
-> > >
-> > >   status = nwl_bridge_readl(pcie, TX_PCIE_MSG);
-> > >   if (status & MSG_DONE_BIT) {
-> > >     if (status & MSG_DONE_STATUS_BIT)
-> > >       ...
-> > >   }
-> > >
-> > > If you read the register twice, you always have to worry about what
-> > > changes MSG_DONE_BIT, and how you guarantee that the second read
-> > > happens before MSG_DONE_BIT changes.
-> > >
-> > Agreed, will do it in this way, once will also confirm with IP owner regarding
-> > both bits being updated parallel.
+iQIcBAEBAgAGBQJWinHmAAoJEBQN5MwUoCm2az4P/0/aIpq6QV1J6vlmCBRiDCAh
+deAfQgA9skEiuMjrlnptk5JK9P4Og8EVWcCsbN/EtHcTfl2R1J0NGzpyQw0O5r1k
+8AarULVabkNT4w2ZmlAeiRX8kGykumSX1OQk22fjou15eDDQo5OcNu0tpSTISBpN
+a0/5FW4oTAeF99uOASKBo//rTWlevGWYm5Byf5k9cAvoGhZAQd3uB4NC81891Pqm
+GSIHX6nwbIOY5PglYx+1g2cZOtq6KZB0APUiztQMIlift6H6g7dZH/QzvaYxftB+
+BKJJ+w26mEiDYcHoceEQOmFmfo0YsKz1ZBBnPLD2kIJue2CQvrqaxsmEM1gFC01F
++eL3zeq4s/qFJCfmuK+rhzewL3nOFqHuLn++z/yJ4+gKOvhdyLlcfOiRGeSC2Zn/
+RqsHfQeKeBNXJJsqo2BjPxtiqnY8gbp+a5p7WbPZlMjiyDRj60+6/X4/re1ujpkw
+W6WOb2j12SMBMBX/6QeZBQoG0iXwYgjaj9jM3w5z7W/4dt0DgjeVWvGHx8UziR0c
+8sbodkhalm5XrHFNoPaU8TMY8hvSq2YeQh5bqwCP81r8TE2UbNdNcuDSDQ7QSuPA
+OY+1RWivTHD6hzAmYV8tZk73vtozw5NymoYKkyVo0I0K8sV4AtZXhyLSyP634s2c
+Z1k7Ou6pmoQt5lmTTB1N
+=o8SD
+-----END PGP SIGNATURE-----
 
-It sounds like you're working on resolving this.
-
-Did I miss a question for me?
-
-Bjorn
+--4Ckj6UjgE2iN1+kY--
