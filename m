@@ -1,113 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:33264 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933132AbcATNmM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jan 2016 08:42:12 -0500
-Received: by mail-wm0-f49.google.com with SMTP id 123so133237115wmz.0
-        for <linux-pci@vger.kernel.org>; Wed, 20 Jan 2016 05:42:11 -0800 (PST)
-Subject: Re: [PATCH V3 11/21] pci, acpi: Move ACPI host bridge device
- companion assignment to core code.
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <1452691267-32240-12-git-send-email-tn@semihalf.com>
- <20160119160224.GD5276@red-moon> <569F6D67.5000000@semihalf.com>
- <20160120123849.GA13437@red-moon>
-Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <569F8E38.5030101@semihalf.com>
-Date: Wed, 20 Jan 2016 14:40:08 +0100
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:42122 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752485AbcADEtt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jan 2016 23:49:49 -0500
+From: Jayachandran C <jchandra@broadcom.com>
+To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Jayachandran C <jchandra@broadcom.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH v5 0/5] ACPI based PCI support for arm64
+Date: Mon, 4 Jan 2016 10:43:18 +0530
+Message-ID: <1451884403-21437-1-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20160120123849.GA13437@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20.01.2016 13:38, Lorenzo Pieralisi wrote:
-> On Wed, Jan 20, 2016 at 12:20:07PM +0100, Tomasz Nowicki wrote:
->> On 19.01.2016 17:02, Lorenzo Pieralisi wrote:
->>> On Wed, Jan 13, 2016 at 02:20:57PM +0100, Tomasz Nowicki wrote:
->> [...]
->>>> device via pci_create_root_bus parameter (as the ACPI device type)
->>>
->>> I do not understand what you mean by "as the ACPI device type".
->>
->> See below.
->>
->>>
->>>> and using ACPI_COMPANION_SET in core code for ACPI boot method.
->>>> ACPI_COMPANION_SET is safe to run for all cases DT, ACPI and DT&ACPI.
->>>>
->>>> Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->>>> ---
->>>>   drivers/acpi/pci_root.c | 5 ++++-
->>>>   drivers/pci/probe.c     | 2 ++
->>>>   2 files changed, 6 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->>>> index ae3fe4e..a65c8c2 100644
->>>> --- a/drivers/acpi/pci_root.c
->>>> +++ b/drivers/acpi/pci_root.c
->>>> @@ -846,7 +846,10 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
->>>>
->>>>   	pci_acpi_root_add_resources(info);
->>>>   	pci_add_resource(&info->resources, &root->secondary);
->>>> -	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
->>>> +
->>>> +	/* Root bridge device needs to be sure of parent ACPI type */
->>>> +	ACPI_COMPANION_SET(&device->dev, device);
->>>
->>> I do not understand why the code above is needed, can you elaborate
->>> please ?
->>>
->>
->> This makes sure that device->dev can be identified as ACPI device,
->> so we can use to_acpi_device_node() and assign companion safely
->> below.
->
-> I do not follow. If you refer to the fwnode handle type, that is
-> already set by ACPI core code (before acpi_pci_root_add() is called,
-> in acpi_init_device_object()).
+This patchset provides a generic ACPI based PCI host controller
+implementation and uses it on arm64.
 
-acpi_init_device_object() sets ACPI fwnode handle type only for 
-"device", but not for "device->dev" which is what is passed as an 
-argument to pci_create_root_bus().
+The first patch moves the common code to handle MCFG ACPI table from
+arch/x86 to drivers/acpi/pci_mcfg.c. The last patch in the patchset
+provides the generic implementation of an ACPI based PCI host
+controller with a new file drivers/acpi/pci_host_acpi.c. The other
+patches are to fix up arm64 and ACPI code to work with these two
+patches.
 
-Without ACPI_COMPANION_SET(&device->dev, device) here, no one can be 
-sure if we have ACPI device in pci_create_root_bus().
+The pci host controller implementation keeps a reference to
+pci_mmcfg_region entry so that config space access is done with a
+simple mapping and generic PCI config read/write. There is also an
+implementation of raw_pci_read/raw_pci_write provided by walking the
+pci_mmcfg_list
 
->
-> Did you add the code above to solve a real issue you encountered ?
-Yes. You can try to run series with this patch:
+The patchset is against 4.4-rc6, but it can be applied to pci/next
+with a very minor fixup.  This is tested with arm64 QEMU and OVMF
+and on x86 with qemu.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 88c9d20..1b74bf6 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -967,7 +967,11 @@ struct pci_bus *acpi_pci_root_create(struct 
-acpi_pci_root *root,
-         pci_add_resource(&info->resources, &root->secondary);
-
--        /* Root bridge device needs to be sure of parent ACPI type */
--       ACPI_COMPANION_SET(&device->dev, device);
-+       if (to_acpi_device_node(device->dev.fwnode) == NULL)
-+               pr_err("NON-ACPI TYPE\n");
-+       else
-+               pr_err("ACPI TYPE\n");
-+
-         bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
-                                   sysdata, &info->resources);
-
+More testing or comments are welcome. The idea is to provide a
+simpler alternative for ACPI PCI support in arm64, any feedback
+from PCI or ACPI maintainers would be appreciated on this front.
 
 Thanks,
-Tomasz
+JC.
+
+v4->v5:
+ - Fix arm build issue reported by the kbuild bot
+ - Use config_enabled instead of ifdef in pci_mcfg.c
+
+v3->v4:
+ - Handle suggestions from Arnd Bergmann <arnd@arndb.de>
+    * move the implementation of host controller to drivers/acpi
+      under config option CONFIG_ACPI_PCI_HOST_GENERIC
+    * remove unnecessary arch hooks (this done as much as possible
+      without affecting the scope of the patch, will need another
+      separate patchset for the rest).
+    * remove pcibios_assign_resources fs_initcall that was added
+ - fixup domain_nr assignment code, and move ACPI companion set
+   to PCI code.
+ - Call map resource correctly in setup code
+ - fix kbuild robot report
+ - More testing
+
+v2->v3:
+ - Move maintenance of the pci_mmcfg_list to drivers/acpi/pci_mcfg.c
+   without changing x86 logic
+ - use the pci_mmcfg_list in ARM64 implementation
+ - provide raw_pci_read/raw_pci_write
+
+v1->v2:
+ - use CONFIG_PCI_MMCONFIG on arm64, provide a weak implementation
+   of pci_mmcfg_late_init for arm64.
+ - The real implementation of pci_mmcfg_late_init is in pci-host-acpi.c
+   and it will save the MCFG table entries to an array. Earlier this
+   was done with an arch_init call
+ - remove unneeded pci_bus_add_devices call and fix MCFG saving code
+ - Added a patch to ACPI pci_root.c to handle arm64 PCI IO resources
+
+Jayachandran C (5):
+  APCI: MCFG: Move mmcfg_list management to drivers/acpi
+  PCI: Handle ACPI companion and domain number
+  ACPI: PCI: Support platforms that need pci_remap_iospace
+  arm64: pci: Add ACPI support
+  PCI: ACPI: Add a generic ACPI based host controller
+
+ arch/arm64/Kconfig             |   3 +
+ arch/arm64/kernel/pci.c        |  34 ++++-
+ arch/x86/include/asm/pci_x86.h |  24 +---
+ arch/x86/pci/mmconfig-shared.c | 269 +++++------------------------------
+ arch/x86/pci/mmconfig_32.c     |   1 +
+ arch/x86/pci/mmconfig_64.c     |   1 +
+ arch/x86/pci/numachip.c        |   1 +
+ drivers/acpi/Kconfig           |   8 ++
+ drivers/acpi/Makefile          |   2 +
+ drivers/acpi/pci_host_acpi.c   | 186 ++++++++++++++++++++++++
+ drivers/acpi/pci_mcfg.c        | 312 +++++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/pci_root.c        |  62 +++++++-
+ drivers/acpi/resource.c        |   2 +
+ drivers/pci/pci.c              |  15 +-
+ drivers/pci/probe.c            |   2 +
+ include/linux/pci-acpi.h       |  59 ++++++++
+ 16 files changed, 716 insertions(+), 265 deletions(-)
+ create mode 100644 drivers/acpi/pci_host_acpi.c
+ create mode 100644 drivers/acpi/pci_mcfg.c
+
+-- 
+1.9.1
+
