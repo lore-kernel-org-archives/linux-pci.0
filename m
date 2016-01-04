@@ -1,46 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58266 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966657AbcAZQqK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jan 2016 11:46:10 -0500
-Date: Tue, 26 Jan 2016 08:46:09 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Keith Busch <keith.busch@intel.com>,
-	"Derrick, Jonathan" <jonathan.derrick@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Williams, Dan J" <dan.j.williams@intel.com>,
-	"Veal, Bryan E" <bryan.e.veal@intel.com>
-Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
-Message-ID: <20160126164609.GC15979@infradead.org>
-References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
- <20160115181938.GA5296@localhost>
- <8D943B239464E04C9184454D8B3F5CFF0ABF18EC@ORSMSX101.amr.corp.intel.com>
- <20160115220631.GA14080@localhost>
- <20160119153822.GA3979@localhost.localdomain>
- <20160119160220.GA22059@infradead.org>
- <20160120204308.GD7973@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160120204308.GD7973@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1451941655.6585.8.camel@redhat.com>
+Subject: Re: [RFC PATCH v2 3/3] vfio-pci: Allow to mmap MSI-X table if EEH
+ is supported
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>, kvm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	nikunj@linux.vnet.ibm.com
+Date: Mon, 04 Jan 2016 14:07:35 -0700
+In-Reply-To: <1451551844-11732-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1451551844-11732-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+	 <1451551844-11732-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 20, 2016 at 02:43:08PM -0600, Bjorn Helgaas wrote:
-> I saw responses from Keith and Bryan, and I hope they answer your
-> questions.  As far as I can tell, the VMD driver is grossly similar to
-> other host bridge drivers we've already merged, and I don't think we
-> have public specs for all of them.
+On Thu, 2015-12-31 at 16:50 +0800, Yongji Xie wrote:
+> Current vfio-pci implementation disallows to mmap MSI-X
+> table in case that user get to touch this directly.
 > 
-> Unless you have further concerns, I'm going to ask Linus to pull this
-> tomorrow, along with the rest of the PCI changes for v4.5.
+> However, EEH mechanism can ensure that a given pci device
+> can only shoot the MSIs assigned for its PE. So we think
+> it's safe to expose the MSI-X table to userspace because
+> the exposed MSI-X table can't be used to do harm to other
+> memory space.
+> 
+> And with MSI-X table mmapped, some performance issues which
+> are caused when PCI adapters have critical registers in the
+> same page as the MSI-X table also can be resolved.
+> 
+> So this patch adds a Kconfig option, VFIO_PCI_MMAP_MSIX,
+> to support for mmapping MSI-X table.
+> 
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> ---
+>  drivers/vfio/pci/Kconfig    |    4 ++++
+>  drivers/vfio/pci/vfio_pci.c |    6 ++++--
+>  2 files changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
+> index 02912f1..67b0a2c 100644
+> --- a/drivers/vfio/pci/Kconfig
+> +++ b/drivers/vfio/pci/Kconfig
+> @@ -23,6 +23,10 @@ config VFIO_PCI_MMAP
+>  	depends on VFIO_PCI
+>  	def_bool y if !S390
+>  
+> +config VFIO_PCI_MMAP_MSIX
+> +	depends on VFIO_PCI_MMAP
+> +	def_bool y if EEH
 
-I still think it's a bad idea to merge something odd like this without
-a good explanation or showing what devices can actually sit under it.
+Does CONFIG_EEH necessarily mean the EEH is enabled?  Could the system
+not support EEH or could EEH be disabled via kernel commandline
+options?
 
-But you're the maintainer in the end..
+> +
+>  config VFIO_PCI_INTX
+>  	depends on VFIO_PCI
+>  	def_bool y if !S390
+> diff --git a/drivers/vfio/pci/vfio_pci.c
+> b/drivers/vfio/pci/vfio_pci.c
+> index 09b3805..d536985 100644
+> --- a/drivers/vfio/pci/vfio_pci.c
+> +++ b/drivers/vfio/pci/vfio_pci.c
+> @@ -555,7 +555,8 @@ static long vfio_pci_ioctl(void *device_data,
+>  			    IORESOURCE_MEM && (info.size >=
+> PAGE_SIZE ||
+>  			    pci_resource_page_aligned)) {
+>  				info.flags |=
+> VFIO_REGION_INFO_FLAG_MMAP;
+> -				if (info.index == vdev->msix_bar) {
+> +				if
+> (!IS_ENABLED(CONFIG_VFIO_PCI_MMAP_MSIX) &&
+> +				    info.index == vdev->msix_bar) {
+>  					ret =
+> msix_sparse_mmap_cap(vdev, &caps);
+>  					if (ret)
+>  						return ret;
+> @@ -967,7 +968,8 @@ static int vfio_pci_mmap(void *device_data,
+> struct vm_area_struct *vma)
+>  	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
+>  		return -EINVAL;
+>  
+> -	if (index == vdev->msix_bar) {
+> +	if (!IS_ENABLED(CONFIG_VFIO_PCI_MMAP_MSIX) &&
+> +	    index == vdev->msix_bar) {
+>  		/*
+>  		 * Disallow mmaps overlapping the MSI-X table; users
+> don't
+>  		 * get to touch this directly.  We could find
+> somewhere
+
