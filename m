@@ -1,86 +1,99 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 19 Jan 2016 20:40:15 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Graeme Gregory <gg@slimlogic.co.uk>, linaro-acpi@lists.linaro.org,
-	linux-pci@vger.kernel.org, will.deacon@arm.com,
-	okaya@codeaurora.org, wangyijing@huawei.com,
-	Lorenzo.Pieralisi@arm.com, Tomasz Nowicki <tn@semihalf.com>,
-	ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, catalin.marinas@arm.com,
-	jcm@redhat.com, arnd@arndb.de, Stefano.Stabellini@eu.citrix.com,
-	Liviu.Dudau@arm.com, Mark Salter <msalter@redhat.com>,
-	bhelgaas@google.com, tglx@linutronix.de, mw@semihalf.com,
-	linux-arm-kernel@lists.infradead.org, jchandra@broadcom.com,
-	rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
-	hanjun.guo@linaro.org, Suravee.Suthikulpanit@amd.com,
-	jiang.liu@linux.intel.com
-Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-Message-ID: <20160119204015.GS19062@n2100.arm.linux.org.uk>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <20160114134440.GA8520@xora-haswell.xora.org.uk>
- <1452780100.28109.3.camel@redhat.com>
- <20160114141501.GC8520@xora-haswell.xora.org.uk>
- <1452781481.28109.8.camel@redhat.com>
- <20160115121231.GD8520@xora-haswell.xora.org.uk>
- <20160118140405.GC11384@xora-haswell.xora.org.uk>
- <20160119202513.GC6510@localhost>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <568AB788.6050605@caviumnetworks.com>
+Date: Mon, 4 Jan 2016 10:18:48 -0800
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160119202513.GC6510@localhost>
-Sender: linux-acpi-owner@vger.kernel.org
+To: Rob Herring <robh@kernel.org>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	<linux-kernel@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v2 2/2] pci, pcie-thunder-pem: Add PCIe host driver for
+ ThunderX processors.
+References: <1450827832-3294-1-git-send-email-ddaney.cavm@gmail.com> <1450827832-3294-3-git-send-email-ddaney.cavm@gmail.com> <20151229203717.GA21072@rob-hp-laptop>
+In-Reply-To: <20151229203717.GA21072@rob-hp-laptop>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 19, 2016 at 02:25:13PM -0600, Bjorn Helgaas wrote:
-> On Mon, Jan 18, 2016 at 02:04:05PM +0000, Graeme Gregory wrote:
-> > After some private debugging with Mark it turned out that the difference
-> > between our configurations was I did not have.
-> > 
-> > CONFIG_DMA_CMA=y
-> > 
-> > With this enabled then the card works without coherent mask hack.
-> 
-> I didn't follow the whole discussion here, but is this a case where
-> the driver could fail more gracefully than it did?  Can we do anything
-> to make this easier for the next person who trips over the same problem?
+On 12/29/2015 12:37 PM, Rob Herring wrote:
+> On Tue, Dec 22, 2015 at 03:43:52PM -0800, David Daney wrote:
+>> From: David Daney <david.daney@cavium.com>
+>>
+>> Some Cavium ThunderX processors require quirky access methods for the
+>> config space of the PCIe bridge.  Add a driver to provide these config
+>> space accessor functions.  The pci-host-common code is used to
+>> configure the PCI machinery.
+>
+> Same comments again...
 
-I've not followed the discussion at all, but reading what was in the
-quoted parts of the mail makes me somewhat suspicious.
+Yes, I think your initial reply and my v2 must have crossed in 
+mid-flight.  Then I was on holiday, but now I can respond...
 
-The way PCI drivers (or in fact any driver) are supposed to work is:
+>
+>> Signed-off-by: David Daney <david.daney@cavium.com>
+>> ---
+>>   .../devicetree/bindings/pci/pcie-thunder-pem.txt   |  43 ++++
+>>   drivers/pci/host/Kconfig                           |   7 +
+>>   drivers/pci/host/Makefile                          |   1 +
+>>   drivers/pci/host/pcie-thunder-pem.c                | 283 +++++++++++++++++++++
+>>   4 files changed, 334 insertions(+)
+>>   create mode 100644 Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
+>>   create mode 100644 drivers/pci/host/pcie-thunder-pem.c
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt b/Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
+>> new file mode 100644
+>> index 0000000..52f56b3
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/pcie-thunder-pem.txt
+>> @@ -0,0 +1,43 @@
+>> +* ThunderX PEM PCIe host controller
+>> +
+>> +Firmware-initialized PCIe host controller found on some Cavium
+>> +ThunderX processors.
+>> +
+>> +The properties and their meanings are identical to those described in
+>> +host-generic-pci.txt except as listed below.
+>> +
+>> +Properties of the host controller node that differ from
+>> +host-generic-pci.txt:
+>> +
+>> +- compatible     : Must be "cavium,pci-host-thunder-pem"
+>
+> pcie rather than pci?
 
-- the bus code sets up a default mask (32-bit DMA in the case of PCI)
-- the driver calls dma_set_mask() or similar function with the mask
-  the _driver_ wants to use.  Arch DMA code decides whether the mask
-  can be supported, and if it can, it re-sets the DMA mask.  If the
-  mask can't be supported, it returns an error.
+Technically it is a PCI host controller at the root, and doesn't become 
+PCIe until we traverse a PCIe RC bridge,  Because of this, and also 
+because there is deployed firmware supplying this compatible string, I 
+would like to keep the name as is.
 
-The driver is doing things correctly:
+If you really want consistency, we could rename the driver (and this 
+binding description file) to be pci-thunder-pem.
 
-        if ((sizeof(dma_addr_t) > 4) &&
-            !pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) && use_dac) {
-                tp->cp_cmd |= PCIDAC;
-                dev->features |= NETIF_F_HIGHDMA;
-        } else {
-                rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+>
+>> +
+>> +- reg            : Two entries: First the configuration space for down
+>> +                   stream devices base address and size, as accessed
+>> +                   from the parent bus. Second, the register bank of
+>> +                   the PEM device PCIe bridge.
+>> +
+>> +Example:
+>> +
+>> +    pem2 {
+>
+> pcie-controller@... instead of pem2.
 
-which says: if the size of a DMA address supports 64-bit, and we can
-set a 64-bit DMA address mask (iow, the platform allows it), and
-we're permitted to use DAC, use DAC, otherwise try to set a 32-bit
-DMA mask.
+That is purely cosmetic, as the names are not used for anything.  I can 
+change it as you suggest.
 
-It shouldn't matter one bit what the mask is before that point.
+[...]
 
-However, what the driver fails to do is to deal with the coherent
-mask - it appears to be missing a call to pci_set_consistent_dma_mask().
-That may be where the issue is.
-
-It may be worth doing what I did with the DMA API, and introducing
-pci_set_mask_and_coherent() which sets both masks together - which
-will probably allow some PCI driver code to be simplified.
-
--- 
-RMK's Patch system: http://www.arm.linux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+Thanks,
+David Daney
