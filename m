@@ -1,48 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48203 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753082AbcAOOSf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Jan 2016 09:18:35 -0500
-Subject: Re: [PATCHv2 0/4] PCI VPD access fixes
-To: Babu Moger <babu.moger@oracle.com>,
-	"Seymour, Shane M" <shane.seymour@hpe.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-References: <1452684335-46107-1-git-send-email-hare@suse.de>
- <DDB9C85B850785449757F9914A034FCB4450CEC7@G9W0766.americas.hpqcorp.net>
- <5698FDF1.1060601@oracle.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+Received: from relmlor4.renesas.com ([210.160.252.174]:24943 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751487AbcADOSR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jan 2016 09:18:17 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+CC: Wolfram Sang <wsa@the-dreams.de>,
+	Simon Horman <horms@verge.net.au>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <5698FFB9.2000103@suse.de>
-Date: Fri, 15 Jan 2016 15:18:33 +0100
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>
+Subject: RE: [PATCH 2/4] PCI: rcar: Support runtime PM link state L1 handling
+ in pcie-rcar
+Date: Mon, 4 Jan 2016 14:18:12 +0000
+Message-ID: <HK2PR0601MB1393CE3EA6A72D0F74498251F5F20@HK2PR0601MB1393.apcprd06.prod.outlook.com>
+References: <1450358557-28376-1-git-send-email-phil.edworthy@renesas.com>
+	<1450358557-28376-3-git-send-email-phil.edworthy@renesas.com>
+	<20151217133058.GA20372@katana>
+	<PS1PR06MB1180304088ECF5384C497E40F5E10@PS1PR06MB1180.apcprd06.prod.outlook.com>
+	<20151218140412.GA4595@katana>
+	<KL1PR06MB1174165C6112327548CD29DDF5E40@KL1PR06MB1174.apcprd06.prod.outlook.com>
+ <CAMuHMdUKHO50n_OAhx-OcZX9FwN+dUbZCHnjP4HaPqgt3j=MzQ@mail.gmail.com>
+In-Reply-To: <CAMuHMdUKHO50n_OAhx-OcZX9FwN+dUbZCHnjP4HaPqgt3j=MzQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <5698FDF1.1060601@oracle.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/15/2016 03:10 PM, Babu Moger wrote:
-> Shane, Thank You very much..
->
-> On 1/14/2016 7:07 PM, Seymour, Shane M wrote:
->> For the series. Tested with AE311 PCI-Express 4Gb Fibre Channel HBA.
->> Truncation of the vpd data returned works (154 bytes) and lspci -vvv
->> prints out the VPD tags the same way with and without the changes.
->> This card did not require any quirks it was capable of returning 32k
->> of data (although it repeated every 4k).
->> ---
->> Tested-by: Shane Seymour <shane.seymour@hpe.com>
->>
-So, Alexander, are you happy with this series?
-It looks as if the technical issues are resolved now ...
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+SGkgR2VlcnQsDQoNCk9uIDIxIERlY2VtYmVyIDIwMTUgMTM6MTcsIEdlZXJ0IFV5dHRlcmhvZXZl
+biB3cm90ZToNCj4gT24gTW9uLCBEZWMgMjEsIDIwMTUgYXQgMTE6NTIgQU0sIFBoaWwgRWR3b3J0
+aHkNCj4gPHBoaWwuZWR3b3J0aHlAcmVuZXNhcy5jb20+IHdyb3RlOg0KPiA+IE9uIDE4IERlY2Vt
+YmVyIDIwMTUgMTQ6MDQsIFdvbGZyYW0gU2FuZyB3cm90ZToNCj4gPj4gPiBTaW5jZSB0aGUgaGFy
+ZHdhcmUgZG9lc24ndCBzdXBwb3J0IGhvdCBwbHVnLCBJIGJlbGlldmUgdGhpcyBsb29wIHdpbGwN
+Cj4gPj4gPiBhbHdheXMgZXhpdCB2ZXJ5IHF1aWNrbHkuIFVubGVzcyBzb21lb25lIGhhcyB0YWtl
+biBhIGhhbW1lciB0byB0aGUgSFcNCj4gPj4gPiBvZiBjb3Vyc2UuDQo+ID4+DQo+ID4+IEkga25v
+dyB3aGF0IHlvdSBtZWFuLiBCdXQgc2luY2UgcmVhZGxfcG9sbF90aW1lb3V0KCkgbWFrZXMgaXQg
+ZWFzeSwgd2UNCj4gPj4gc2hvdWxkIGJldHRlciBiZSBzYWZlIHRoYW4gc29ycnkuDQo+ID4gSG1t
+LCBJIGNoYW5nZWQgdGhlIGNvZGUsIGJ1dCBub3cgaXQgZG9lc24ndCBjb21lIG91dCBvZiBzdXNw
+ZW5kIHVubGVzcw0KPiA+IHNsZWVwX3VzIHBhc3NlZCB0byByZWFkbF9wb2xsX3RpbWVvdXQgaXMg
+MC4gQW55IHJlYXNvbiB5b3UgY2FuIHRoaW5rIG9mPw0KPiANCj4gVGltZXJzIG9yIGludGVycnVw
+dHMgZGlzYWJsZWQ/DQo+IA0KPiBEb2VzIHRoZSBtaWdodF9zbGVlcF9pZigpIHNjcmVhbSBpZiBD
+T05GSUdfREVCVUdfQVRPTUlDX1NMRUVQPXk/DQpZZXMsIGl0IGRvZXMgaW5kZWVkIHNjcmVhbS4g
+V291bGQgeW91IHJlY29tbWVuZCB0byBzdGlsbCB1c2UgcmVhZGxfcG9sbF90aW1lb3V0DQp3aXRo
+IHNsZWVwX3VzIHNldCB0byAwPw0KDQpUaGFua3MNClBoaWwNCg==
