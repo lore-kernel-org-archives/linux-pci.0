@@ -1,66 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38365 "EHLO foss.arm.com"
+Received: from mga09.intel.com ([134.134.136.24]:32610 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754857AbcA2L1l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Jan 2016 06:27:41 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 1/2] drivers: pci: host: rcar: remove PCI_PROBE_ONLY handling
-Date: Fri, 29 Jan 2016 11:29:31 +0000
-Message-Id: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
+	id S1751938AbcADW3v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Jan 2016 17:29:51 -0500
+Date: Mon, 4 Jan 2016 22:29:49 +0000
+From: Keith Busch <keith.busch@intel.com>
+To: Martin Mares <mj@ucw.cz>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv5 7/7] pciutils: Allow 32-bit domains
+Message-ID: <20160104222949.GA32608@localhost.localdomain>
+References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
+ <1449523949-21898-8-git-send-email-keith.busch@intel.com>
+ <mj+md-20160103.140612.56316.camelot@ucw.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <mj+md-20160103.140612.56316.camelot@ucw.cz>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe rcar host driver is not used in system configurations
-requiring the PCI_PROBE_ONLY flag to be set to prevent resources
-assignment, therefore the driver code handling the flag can be
-removed from the kernel.
+Hi, thanks for the feedback. I've a few follow up questions.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-rcar.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+On Sun, Jan 03, 2016 at 03:11:24PM +0100, Martin Mares wrote:
+> This is definitely not enough. Try grepping the source for "domain" :-)
+>
+> At least the following places need updating, too:
+> 
+>   o  struct pci_filter and operations on it
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 4edb518..3509218 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -390,9 +390,7 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
+Not sure I follow. struct pci_filter's domain was already a 32-bit int.
  
- 	rcar_pcie_setup(&res, pcie);
- 
--	/* Do not reassign resources if probe only */
--	if (!pci_has_flag(PCI_PROBE_ONLY))
--		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
-+	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		bus = pci_scan_root_bus_msi(pcie->dev, pcie->root_bus_nr,
-@@ -408,13 +406,11 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
- 
- 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
- 
--	if (!pci_has_flag(PCI_PROBE_ONLY)) {
--		pci_bus_size_bridges(bus);
--		pci_bus_assign_resources(bus);
-+	pci_bus_size_bridges(bus);
-+	pci_bus_assign_resources(bus);
- 
--		list_for_each_entry(child, &bus->children, node)
--			pcie_bus_configure_settings(child);
--	}
-+	list_for_each_entry(child, &bus->children, node)
-+		pcie_bus_configure_settings(child);
- 
- 	pci_bus_add_devices(bus);
- 
--- 
-2.5.1
+>   o  Format strings for printing domains at various places
 
+Are you wanting a %04x for 16 bit domains and %08x for 32 bit ones? The
+%04x specifier still works with 32-bit values.
+
+We just need a bit so this new h/w can't collide with ACPI _SEG defined
+domains. I don't know of any real need for the full 32-bits; we'd do
+fine using only 17 bits, so thought the leading 0's wasn't useful.
+
+>   o  ABI compability ... changing a field in the middle of struct pci_dev
+>      (or pci_filter) is going to break ABI, so you either need to change the
+>      structures in a backward-compatible way, or to use ABI versioning.
+
+It looks like there's a 16-bit gap after device_class. Would it be
+acceptable place the domain's upper 16 bits in there to keep ABI
+compatibility?
+
+> Also, we should decide on what type the domain should have -- currently, some
+> places use "int", others use u16, and your patch introduces int32_t. I would
+> prefer u32 myself, but especially in the filters we should be careful about
+> how to encode "any domain".
+
+I left it as a signed int to allow a negative number for "any", and that's
+also what the linux kernel uses.
