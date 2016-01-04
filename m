@@ -1,95 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44092 "EHLO mail.kernel.org"
+Received: from gate.crashing.org ([63.228.1.57]:57842 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752221AbcAHUta (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Jan 2016 15:49:30 -0500
-Date: Fri, 8 Jan 2016 14:49:24 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tim Sander <tim@krieglstein.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH] PCI: Add quirk for Lite-On IT Corp. / Plextor M6e PCI
- Express
-Message-ID: <20160108204924.GK5354@localhost>
-References: <11003431.x6xHs1WP1I@dabox>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <11003431.x6xHs1WP1I@dabox>
+	id S1753195AbcADWV2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Jan 2016 17:21:28 -0500
+Message-ID: <1451943775.12575.6.camel@kernel.crashing.org>
+Subject: Re: [RFC PATCH v2 3/3] vfio-pci: Allow to mmap MSI-X table if EEH
+ is supported
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>, kvm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
+Date: Tue, 05 Jan 2016 08:42:55 +1100
+In-Reply-To: <1451941655.6585.8.camel@redhat.com>
+References: <1451551844-11732-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+	 <1451551844-11732-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+	 <1451941655.6585.8.camel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex]
-
-On Mon, Jan 04, 2016 at 05:47:14PM +0100, Tim Sander wrote:
-> Hi
+On Mon, 2016-01-04 at 14:07 -0700, Alex Williamson wrote:
+> On Thu, 2015-12-31 at 16:50 +0800, Yongji Xie wrote:
+> > Current vfio-pci implementation disallows to mmap MSI-X
+> > table in case that user get to touch this directly.
+> > 
+> > However, EEH mechanism can ensure that a given pci device
+> > can only shoot the MSIs assigned for its PE. So we think
+> > it's safe to expose the MSI-X table to userspace because
+> > the exposed MSI-X table can't be used to do harm to other
+> > memory space.
+> > 
+> > And with MSI-X table mmapped, some performance issues which
+> > are caused when PCI adapters have critical registers in the
+> > same page as the MSI-X table also can be resolved.
+> > 
+> > So this patch adds a Kconfig option, VFIO_PCI_MMAP_MSIX,
+> > to support for mmapping MSI-X table.
+> > 
+> > Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> > ---
+> >  drivers/vfio/pci/Kconfig    |    4 ++++
+> >  drivers/vfio/pci/vfio_pci.c |    6 ++++--
+> >  2 files changed, 8 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
+> > index 02912f1..67b0a2c 100644
+> > --- a/drivers/vfio/pci/Kconfig
+> > +++ b/drivers/vfio/pci/Kconfig
+> > @@ -23,6 +23,10 @@ config VFIO_PCI_MMAP
+> >  	depends on VFIO_PCI
+> >  	def_bool y if !S390
+> >  
+> > +config VFIO_PCI_MMAP_MSIX
+> > +	depends on VFIO_PCI_MMAP
+> > +	def_bool y if EEH
 > 
-> Please consider this patch for the next release. It won't recognize my Plextor
-> M6e PCIE disk without it. Please cc as i am not on the list.
-> 
-> Signed-off-by: Tim Sander <tim@krieglstein.org>
-> 
-> PCI: Add quirk for Lite-On IT Corp. / Plextor M6e PCI Express SSD [Marvell 88SS9183] (rev 14)
+> Does CONFIG_EEH necessarily mean the EEH is enabled?  Could the
+> system
+> not support EEH or could EEH be disabled via kernel commandline
+> options?
 
-Alex?
+EEH is definitely the wrong thing to test here anyway. What needs to be
+tested is that the PCI Host bridge supports filtering of MSIs, so
+ideally this should be some kind of host bridge attribute set by the
+architecture backend.
 
-Please use a subject line that matches the other similar commits:
+This can happen with or without CONFIG_EEH and you are right,
+CONFIG_EEH can be enabled and the machine not support it.
 
-  247de694349c PCI: Add function 1 DMA alias quirk for Marvell 9120
-  c2e0fb966ad8 PCI: Add function 1 DMA alias quirk for HighPoint RocketRaid 642L
-  cc346a4714a5 PCI: Add function 1 DMA alias quirk for Marvell devices
+Any IODA bridge will support this.
 
-> ---
->  drivers/pci/quirks.c    | 4 ++++
->  include/linux/pci_ids.h | 3 +++
->  2 files changed, 7 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 7e32730..93ec5a02 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3620,6 +3620,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TTI, 0x0642,
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
->                          PCI_DEVICE_ID_JMICRON_JMB388_ESD,
->                          quirk_dma_func1_alias);
-> +/* https://bugzilla.kernel.org/show_bug.cgi?id=42679 */
+Cheers,
+Ben.
 
-Thanks for the link.  There are 126 comments on that bugzilla so far,
-so it'd be nice to have a more specific pointer.  I'm guessing 117
-might be the relevant one, so:
-
-  https://bugzilla.kernel.org/show_bug.cgi?id=42679#c117
-
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LITE_ON,
-> +                        PCI_DEVICE_ID_PLEXTOR_M6E,
-> +                        quirk_dma_func1_alias);
->  
->  /*
->   * Some devices DMA with the wrong devfn, not just the wrong function.
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index d9ba49c..01d8041 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2501,6 +2501,9 @@
->  
->  #define PCI_VENDOR_ID_ASMEDIA          0x1b21
->  
-> +#define PCI_VENDOR_ID_LITE_ON          0x1c28
-> +#define PCI_DEVICE_ID_PLEXTOR_M6E      0x0122
-
-Since these constants are only used in one place, don't add them to
-pci_ids.h (see comment at the top of this file).  Just use the hex
-constants directly in the quirk and include the vendor/device names in
-the comment.
-
->  #define PCI_VENDOR_ID_CIRCUITCO                0x1cc8
->  #define PCI_SUBSYSTEM_ID_CIRCUITCO_MINNOWBOARD 0x0001
->  
-> -- 
-> 1.9.1
-> 
+> > +
+> >  config VFIO_PCI_INTX
+> >  	depends on VFIO_PCI
+> >  	def_bool y if !S390
+> > diff --git a/drivers/vfio/pci/vfio_pci.c
+> > b/drivers/vfio/pci/vfio_pci.c
+> > index 09b3805..d536985 100644
+> > --- a/drivers/vfio/pci/vfio_pci.c
+> > +++ b/drivers/vfio/pci/vfio_pci.c
+> > @@ -555,7 +555,8 @@ static long vfio_pci_ioctl(void *device_data,
+> >  			    IORESOURCE_MEM && (info.size >=
+> > PAGE_SIZE ||
+> >  			    pci_resource_page_aligned)) {
+> >  				info.flags |=
+> > VFIO_REGION_INFO_FLAG_MMAP;
+> > -				if (info.index == vdev->msix_bar)
+> > {
+> > +				if
+> > (!IS_ENABLED(CONFIG_VFIO_PCI_MMAP_MSIX) &&
+> > +				    info.index == vdev->msix_bar)
+> > {
+> >  					ret =
+> > msix_sparse_mmap_cap(vdev, &caps);
+> >  					if (ret)
+> >  						return ret;
+> > @@ -967,7 +968,8 @@ static int vfio_pci_mmap(void *device_data,
+> > struct vm_area_struct *vma)
+> >  	if (phys_len < PAGE_SIZE || req_start + req_len >
+> > phys_len)
+> >  		return -EINVAL;
+> >  
+> > -	if (index == vdev->msix_bar) {
+> > +	if (!IS_ENABLED(CONFIG_VFIO_PCI_MMAP_MSIX) &&
+> > +	    index == vdev->msix_bar) {
+> >  		/*
+> >  		 * Disallow mmaps overlapping the MSI-X table;
+> > users
+> > don't
+> >  		 * get to touch this directly.  We could find
+> > somewhere
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> To unsubscribe from this list: send the line "unsubscribe linux-
+> kernel" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
