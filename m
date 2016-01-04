@@ -1,104 +1,190 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:35615 "EHLO
-	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751587AbcAEQSL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jan 2016 11:18:11 -0500
-MIME-Version: 1.0
-In-Reply-To: <20160105113317-mutt-send-email-mst@redhat.com>
-References: <20151213212557.5410.48577.stgit@localhost.localdomain>
-	<20160104204104.GB17427@char.us.oracle.com>
-	<CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
-	<20160105113317-mutt-send-email-mst@redhat.com>
-Date: Tue, 5 Jan 2016 08:18:10 -0800
-Message-ID: <CAKgT0UeY9+BJoGtM+Fqa4Zve36GBJQpYVyoo2CPJZdELH6cEbg@mail.gmail.com>
-Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page tracking
-From: Alexander Duyck <alexander.duyck@gmail.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
-	Yang Zhang <yang.zhang.wz@gmail.com>,
-	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
-	Alexander Graf <agraf@suse.de>,
-	Alex Williamson <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:54501 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751908AbcADUro (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Jan 2016 15:47:44 -0500
+Message-ID: <1451940460.6585.6.camel@redhat.com>
+Subject: Re: [RFC PATCH v2 1/3] PCI: Add support for enforcing all MMIO BARs
+ to be page aligned
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>, kvm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	nikunj@linux.vnet.ibm.com
+Date: Mon, 04 Jan 2016 13:47:40 -0700
+In-Reply-To: <1451551844-11732-2-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1451551844-11732-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+	 <1451551844-11732-2-git-send-email-xyjxie@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 5, 2016 at 1:40 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
-> On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
->> >> The two mechanisms referenced above would likely require coordination with
->> >> QEMU and as such are open to discussion.  I haven't attempted to address
->> >> them as I am not sure there is a consensus as of yet.  My personal
->> >> preference would be to add a vendor-specific configuration block to the
->> >> emulated pci-bridge interfaces created by QEMU that would allow us to
->> >> essentially extend shpc to support guest live migration with pass-through
->> >> devices.
->> >
->> > shpc?
->>
->> That is kind of what I was thinking.  We basically need some mechanism
->> to allow for the host to ask the device to quiesce.  It has been
->> proposed to possibly even look at something like an ACPI interface
->> since I know ACPI is used by QEMU to manage hot-plug in the standard
->> case.
->>
->> - Alex
->
->
-> Start by using hot-unplug for this!
->
-> Really use your patch guest side, and write host side
-> to allow starting migration with the device, but
-> defer completing it.
+On Thu, 2015-12-31 at 16:50 +0800, Yongji Xie wrote:
+> When vfio passthrough a PCI device of which MMIO BARs
+> are smaller than PAGE_SIZE, guest will not handle the
+> mmio accesses to the BARs which leads to mmio emulations
+> in host.
+> 
+> This is because vfio will not allow to passthrough one
+> BAR's mmio page which may be shared with other BARs.
+> 
+> To solve this performance issue, this patch adds a kernel
+> parameter "pci=resource_page_aligned=on" to enforce
+> the alignments of all MMIO BARs to be at least PAGE_SIZE,
+> so that one BAR's mmio page would not be shared with other
+> BARs. We can also disable it through kernel parameter
+> "pci=resource_page_aligned=off".
 
-Yeah, I'm fully on board with this idea, though I'm not really working
-on this right now since last I knew the folks on this thread from
-Intel were working on it.  My patches were mostly meant to be a nudge
-in this direction so that we could get away from the driver specific
-code.
+Shouldn't this somehow be associated with the realloc option?  I don't
+think PCI code will attempt to reprogram anything unless it needs to
+otherwise.
 
-> So
->
-> 1.- host tells guest to start tracking memory writes
-> 2.- guest acks
-> 3.- migration starts
-> 4.- most memory is migrated
-> 5.- host tells guest to eject device
-> 6.- guest acks
-> 7.- stop vm and migrate rest of state
->
+> For the default value of this parameter, we think it should be
+> arch-independent, so we add a macro PCI_RESOURCE_PAGE_ALIGNED
+> to change it. And we define this macro to enable this parameter
+> by default on PPC64 platform which can easily hit this
+> performance issue because its PAGE_SIZE is 64KB.
+> 
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> ---
+>  Documentation/kernel-parameters.txt |    4 ++++
+>  arch/powerpc/include/asm/pci.h      |   11 +++++++++++
+>  drivers/pci/pci.c                   |   17 +++++++++++++++++
+>  drivers/pci/pci.h                   |    7 ++++++-
+>  include/linux/pci.h                 |    2 ++
+>  5 files changed, 40 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> index 742f69d..a53aaee 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -2857,6 +2857,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>  				PAGE_SIZE is used as alignment.
+>  				PCI-PCI bridge can be specified, if resource
+>  				windows need to be expanded.
+> +		resource_page_aligned=	Enable/disable enforcing the alignment
+> +				of all PCI devices' memory resources to be
+> +				at least PAGE_SIZE.
+> +				Format: { "on" | "off" }
+>  		ecrc=		Enable/disable PCIe ECRC (transaction layer
+>  				end-to-end CRC checking).
+>  				bios: Use BIOS/firmware settings. This is the
+> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+> index 3453bd8..27bff59 100644
+> --- a/arch/powerpc/include/asm/pci.h
+> +++ b/arch/powerpc/include/asm/pci.h
+> @@ -136,6 +136,17 @@ extern pgprot_t	pci_phys_mem_access_prot(struct file *file,
+>  					 unsigned long pfn,
+>  					 unsigned long size,
+>  					 pgprot_t prot);
+> +#ifdef CONFIG_PPC64
+> +
+> +/* For PPC64, We enforce all PCI MMIO BARs to be page aligned
+> + * by default. This would be helpful to improve performance
+> + * when we passthrough a PCI device of which BARs are smaller
+> + * than PAGE_SIZE(64KB). And we can use bootcmd
+> + * "pci=resource_page_aligned=off" to disable it.
+> + */
+> +#define PCI_ENABLE_RESOURCE_PAGE_ALIGNED
+> +
+> +#endif
 
-Sounds about right.  The only way this differs from what I see as the
-final solution for this is that instead of fully ejecting the device
-in step 5 the driver would instead pause the device and give the host
-something like 10 seconds to stop the VM and resume with the same
-device connected if it is available.  We would probably also need to
-look at a solution that would force the device to be ejected or abort
-prior to starting the migration if it doesn't give us the ack in step
-2.
+This should be done with something like HAVE_PCI_DEFAULT_RESOURCE_PAGE_
+ALIGNED in arch/powerpc/include/asm
 
-> It will already be a win since hot unplug after migration starts and
-> most memory has been migrated is better than hot unplug before migration
-> starts.
+>  #define HAVE_ARCH_PCI_RESOURCE_TO_USER
+>  extern void pci_resource_to_user(const struct pci_dev *dev, int bar,
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 314db8c..9f14ba5 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -99,6 +99,13 @@ u8 pci_cache_line_size;
+>   */
+>  unsigned int pcibios_max_latency = 255;
+>  
+> +#ifdef PCI_ENABLE_RESOURCE_PAGE_ALIGNED
+> +bool pci_resource_page_aligned = true;
+> +#else
+> +bool pci_resource_page_aligned;
+> +#endif
+> +EXPORT_SYMBOL(pci_resource_page_aligned);
 
-Right.  Generally the longer the VF can be maintained as a part of the
-guest the longer the network performance is improved versus using a
-purely virtual interface.
+Couldn't this be done in a single line with IS_ENABLED() macro?
 
-> Then measure downtime and profile. Then we can look at ways
-> to quiesce device faster which really means step 5 is replaced
-> with "host tells guest to quiesce device and dirty (or just unmap!)
-> all memory mapped for write by device".
+Should this symbol be GPL-only?
 
-Step 5 will be the spot where we really need to start modifying
-drivers.  Specifically we probably need to go through and clean-up
-things so that we can reduce as many of the delays in the driver
-suspend/resume path as possible.  I suspect there is quite a bit that
-can be done there that would probably also improve boot and shutdown
-times since those are also impacted by the devices.
+> +
+>  /* If set, the PCIe ARI capability will not be used. */
+>  static bool pcie_ari_disabled;
+>  
+> @@ -4746,6 +4753,14 @@ static ssize_t pci_resource_alignment_store(struct bus_type *bus,
+>  BUS_ATTR(resource_alignment, 0644, pci_resource_alignment_show,
+>  					pci_resource_alignment_store);
+>  
+> +static void pci_resource_get_page_aligned(char *str)
+> +{
+> +	if (!strncmp(str, "off", 3))
+> +		pci_resource_page_aligned = false;
+> +	else if (!strncmp(str, "on", 2))
+> +		pci_resource_page_aligned = true;
+> +}
+> +
+>  static int __init pci_resource_alignment_sysfs_init(void)
+>  {
+>  	return bus_create_file(&pci_bus_type,
+> @@ -4859,6 +4874,8 @@ static int __init pci_setup(char *str)
+>  			} else if (!strncmp(str, "resource_alignment=", 19)) {
+>  				pci_set_resource_alignment_param(str + 19,
+>  							strlen(str + 19));
+> +			} else if (!strncmp(str, "resource_page_aligned=", 22)) {
+> +				pci_resource_get_page_aligned(str + 22);
+>  			} else if (!strncmp(str, "ecrc=", 5)) {
+>  				pcie_ecrc_get_policy(str + 5);
+>  			} else if (!strncmp(str, "hpiosize=", 9)) {
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index d390fc1..e16e48c 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -312,11 +312,16 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+>  #ifdef CONFIG_PCI_IOV
+>  	int resno = res - dev->resource;
+>  
+> -	if (resno >= PCI_IOV_RESOURCES && resno <= PCI_IOV_RESOURCE_END)
+> +	if (resno >= PCI_IOV_RESOURCES && resno <= PCI_IOV_RESOURCE_END) {
+> +		if (pci_resource_page_aligned && res->flags & IORESOURCE_MEM)
+> +			return PAGE_ALIGN(pci_sriov_resource_alignment(dev, resno));
+>  		return pci_sriov_resource_alignment(dev, resno);
+> +	}
+>  #endif
+>  	if (dev->class >> 8  == PCI_CLASS_BRIDGE_CARDBUS)
+>  		return pci_cardbus_resource_alignment(res);
+> +	if (pci_resource_page_aligned && res->flags & IORESOURCE_MEM)
+> +		return PAGE_ALIGN(resource_alignment(res));
+>  	return resource_alignment(res);
+>  }
 
-- Alex
+Why are we calling resource_alignment() and then doing another
+alignment on top of that?  Shouldn't this alignment be done there?  I
+still don't really understand if this is enough to produce a
+reallocation if the alignment is not sufficient, vfio would need to
+know if pci_resource_page_aligned has any loopholes.
+
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 6ae25aa..0ca57f1 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1517,6 +1517,8 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+>  
+>  #include 
+>  
+> +extern bool pci_resource_page_aligned;
+> +
+>  /* these helpers provide future and backwards compatibility
+>   * for accessing popular PCI BAR info */
+>  #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
+
