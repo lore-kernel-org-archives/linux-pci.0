@@ -1,86 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47026 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755544AbcAMRuU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Jan 2016 12:50:20 -0500
-Date: Wed, 13 Jan 2016 11:50:16 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Grygorii Strashko <grygorii.strashko@ti.com>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	tony@atomide.com, nsekhar@ti.com,
-	linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
-	linux-sh@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Kukjin Kim <kgene@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>
-Subject: Re: [PATCH v3] PCI: hosts: mark pcie/pci (msi) irq cascade handler
- as IRQF_NO_THREAD
-Message-ID: <20160113175016.GB28453@localhost>
-References: <1449775100-30877-1-git-send-email-grygorii.strashko@ti.com>
- <20160106221827.GD16231@localhost>
- <20160113133904.GD29964@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160113133904.GD29964@linutronix.de>
+Received: from relmlor4.renesas.com ([210.160.252.174]:13653 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752347AbcAENBh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jan 2016 08:01:37 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-sh@vger.kernel.org>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+Subject: [PATCH v2 4/4] PCI: rcar: Add Gen2 PHY setup to pcie-rcar
+Date: Tue,  5 Jan 2016 13:00:31 +0000
+Message-Id: <1451998831-27705-5-git-send-email-phil.edworthy@renesas.com>
+In-Reply-To: <1451998831-27705-1-git-send-email-phil.edworthy@renesas.com>
+References: <1451998831-27705-1-git-send-email-phil.edworthy@renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 13, 2016 at 02:39:04PM +0100, Sebastian Andrzej Siewior wrote:
-> * Bjorn Helgaas | 2016-01-06 16:18:27 [-0600]:
-> 
-> >Hi Bjorn,
-> 
-> >> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> >> index 8c36880..0415192 100644
-> >> --- a/drivers/pci/host/pci-dra7xx.c
-> >> +++ b/drivers/pci/host/pci-dra7xx.c
-> >> @@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
-> >>  		return -EINVAL;
-> >>  	}
-> >>  
-> >> +	/*
-> >> +	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
-> >> +	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
-> >> +	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
-> >> +	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
-> >> +	 * which, in turn, will be resolved to handle_simple_irq() call.
-> >> +	 * The handle_simple_irq() expected to be called with IRQ disabled, as
-> >> +	 * result kernle will display warning:
-> >> +	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
-> >> +	 */
-> 
-> could you _please_ remove this coment? This kind of comment (if at all)
-> should be part of the commit message (which is the case more or less).
+For PCIe compliance, the PHY registers need setting as per the
+manual.
 
-IIRC, Grygorii specifically wanted to keep this comment in dra7xx, but
-I do agree that this level of detail is more appropriate for a changelog.
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+v2:
+  - Added comment about where the PHY settings come from.
+---
+ drivers/pci/host/pcie-rcar.c | 31 ++++++++++++++++++++++++++++---
+ 1 file changed, 28 insertions(+), 3 deletions(-)
 
-If Grygorii and Kishon don't object, I can update the patch to remove it.
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 7e13fbb..12be16a 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -104,6 +104,11 @@
+ #define H1_PCIEPHYDOUTR		0x040014
+ #define H1_PCIEPHYSR		0x040018
+ 
++/* R-Car Gen2 PHY */
++#define GEN2_PCIEPHYADDR	0x780
++#define GEN2_PCIEPHYDATA	0x784
++#define GEN2_PCIEPHYCTRL	0x78c
++
+ #define INT_PCI_MSI_NR	32
+ 
+ #define RCONF(x)	(PCICONF(0)+(x))
+@@ -599,6 +604,26 @@ static int rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
+ 	return -ETIMEDOUT;
+ }
+ 
++static int rcar_pcie_hw_init_gen2(struct rcar_pcie *pcie)
++{
++	/*
++	 * These settings come from the R-Car Series, 2nd Generation User's
++	 * Manual, section 50.3.1 (2) Initialization of the physical layer.
++	 */
++	rcar_pci_write_reg(pcie, 0x000f0030, GEN2_PCIEPHYADDR);
++	rcar_pci_write_reg(pcie, 0x00381203, GEN2_PCIEPHYDATA);
++	rcar_pci_write_reg(pcie, 0x00000001, GEN2_PCIEPHYCTRL);
++	rcar_pci_write_reg(pcie, 0x00000006, GEN2_PCIEPHYCTRL);
++
++	rcar_pci_write_reg(pcie, 0x000f0054, GEN2_PCIEPHYADDR);
++	/* The following value is for DC connection, no termination resistor */
++	rcar_pci_write_reg(pcie, 0x13802007, GEN2_PCIEPHYDATA);
++	rcar_pci_write_reg(pcie, 0x00000001, GEN2_PCIEPHYCTRL);
++	rcar_pci_write_reg(pcie, 0x00000006, GEN2_PCIEPHYCTRL);
++
++	return rcar_pcie_hw_init(pcie);
++}
++
+ static int rcar_msi_alloc(struct rcar_msi *chip)
+ {
+ 	int msi;
+@@ -938,9 +963,9 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
+ 
+ static const struct of_device_id rcar_pcie_of_match[] = {
+ 	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
+-	{ .compatible = "renesas,pcie-rcar-gen2", .data = rcar_pcie_hw_init },
+-	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
+-	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
++	{ .compatible = "renesas,pcie-rcar-gen2", .data = rcar_pcie_hw_init_gen2 },
++	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init_gen2 },
++	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init_gen2 },
+ 	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
+ 	{},
+ };
+-- 
+2.5.0
 
-> >>  	ret = devm_request_irq(&pdev->dev, pp->irq,
-> >> -			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
-> >> +			       dra7xx_pcie_msi_irq_handler,
-> >> +			       IRQF_SHARED | IRQF_NO_THREAD,
-> >>  			       "dra7-pcie-msi",	pp);
-> >>  	if (ret) {
-> >>  		dev_err(&pdev->dev, "failed to request irq\n");
-> >> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> 
-> Sebastian
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
