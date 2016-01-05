@@ -1,105 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46714 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:42619 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752485AbcAGAKv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Jan 2016 19:10:51 -0500
-Date: Wed, 6 Jan 2016 18:10:47 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Ray Jui <rjui@broadcom.com>,
-	Vikram Prakash <vikramp@broadcom.com>,
-	Anup Patel <anup.patel@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI: iproc: fix msi driver selection
-Message-ID: <20160107001046.GA7083@localhost>
-References: <1541985.1Jq5kHC7MS@wuerfel>
+	id S1751456AbcAEJkI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Jan 2016 04:40:08 -0500
+Date: Tue, 5 Jan 2016 11:40:03 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
+ tracking
+Message-ID: <20160105113317-mutt-send-email-mst@redhat.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <20160104204104.GB17427@char.us.oracle.com>
+ <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1541985.1Jq5kHC7MS@wuerfel>
+In-Reply-To: <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 18, 2015 at 03:57:53PM +0100, Arnd Bergmann wrote:
-> The newly added MSI support for iproc causes a link error when its
-> Kconfig option is disabled:
+On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
+> >> The two mechanisms referenced above would likely require coordination with
+> >> QEMU and as such are open to discussion.  I haven't attempted to address
+> >> them as I am not sure there is a consensus as of yet.  My personal
+> >> preference would be to add a vendor-specific configuration block to the
+> >> emulated pci-bridge interfaces created by QEMU that would allow us to
+> >> essentially extend shpc to support guest live migration with pass-through
+> >> devices.
+> >
+> > shpc?
 > 
-> ERROR: "iproc_msi_exit" [drivers/pci/host/pcie-iproc.ko] undefined!
-> ERROR: "iproc_msi_init" [drivers/pci/host/pcie-iproc.ko] undefined!
+> That is kind of what I was thinking.  We basically need some mechanism
+> to allow for the host to ask the device to quiesce.  It has been
+> proposed to possibly even look at something like an ACPI interface
+> since I know ACPI is used by QEMU to manage hot-plug in the standard
+> case.
 > 
-> This changes the header file so we use stub functions whenever
-> the driver is not built, even when CONFIG_MSI is enabled.
-> 
-> As the Kconfig logic for the driver is a bit off, I'm rectifying
-> that as well, by making it depend on the specific drivers that
-> call into the driver, and moving the option behind those instead
-> of before them.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 610894347cbf ("PCI: iproc: Add iProc PCIe MSI support")
+> - Alex
 
-Applied with Ray's Reviewed-by to pci/host-iproc for v4.5, thanks!
 
-Actually, since 610894347cbf hasn't been merged upstream yet, I just
-squashed this fix into it and updated "pci/host-iproc" and "next".
+Start by using hot-unplug for this!
 
-> ---
-> Found on ARM randconfig builds a couple of days ago
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 490476e172fd..d7c05894af70 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -124,15 +124,6 @@ config PCIE_IPROC
->  	  iProc family of SoCs. An appropriate bus interface driver needs
->  	  to be enabled to select this.
->  
-> -config PCIE_IPROC_MSI
-> -	bool "Broadcom iProc PCIe MSI support"
-> -	depends on ARCH_BCM_IPROC && PCI_MSI
-> -	select PCI_MSI_IRQ_DOMAIN
-> -	default ARCH_BCM_IPROC
-> -	help
-> -	  Say Y here if you want to enable MSI support for Broadcom's iProc
-> -	  PCIe controller
-> -
->  config PCIE_IPROC_PLATFORM
->  	tristate "Broadcom iProc PCIe platform bus driver"
->  	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
-> @@ -154,6 +145,16 @@ config PCIE_IPROC_BCMA
->  	  Say Y here if you want to use the Broadcom iProc PCIe controller
->  	  through the BCMA bus interface
->  
-> +config PCIE_IPROC_MSI
-> +	bool "Broadcom iProc PCIe MSI support"
-> +	depends on PCIE_IPROC_PLATFORM || PCIE_IPROC_BCMA
-> +	depends on PCI_MSI
-> +	select PCI_MSI_IRQ_DOMAIN
-> +	default ARCH_BCM_IPROC
-> +	help
-> +	  Say Y here if you want to enable MSI support for Broadcom's iProc
-> +	  PCIe controller
-> +
->  config PCIE_ALTERA
->  	bool "Altera PCIe controller"
->  	depends on ARM || NIOS2
-> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-> index 6def23a7eb54..e84d93c53c7b 100644
-> --- a/drivers/pci/host/pcie-iproc.h
-> +++ b/drivers/pci/host/pcie-iproc.h
-> @@ -79,7 +79,7 @@ struct iproc_pcie {
->  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
->  int iproc_pcie_remove(struct iproc_pcie *pcie);
->  
-> -#ifdef CONFIG_PCI_MSI
-> +#ifdef CONFIG_PCIE_IPROC_MSI
->  int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
->  void iproc_msi_exit(struct iproc_pcie *pcie);
->  #else
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Really use your patch guest side, and write host side
+to allow starting migration with the device, but
+defer completing it.
+
+So
+
+1.- host tells guest to start tracking memory writes
+2.- guest acks
+3.- migration starts
+4.- most memory is migrated
+5.- host tells guest to eject device
+6.- guest acks
+7.- stop vm and migrate rest of state
+
+
+It will already be a win since hot unplug after migration starts and
+most memory has been migrated is better than hot unplug before migration
+starts.
+
+Then measure downtime and profile. Then we can look at ways
+to quiesce device faster which really means step 5 is replaced
+with "host tells guest to quiesce device and dirty (or just unmap!)
+all memory mapped for write by device".
+
+-- 
+MST
