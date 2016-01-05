@@ -1,243 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0081.outbound.protection.outlook.com ([104.47.38.81]:51520
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934913AbcA1PrX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jan 2016 10:47:23 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: 'Bjorn Helgaas' <helgaas@kernel.org>
-CC: "'robh+dt@kernel.org'" <robh+dt@kernel.org>,
-	"'pawel.moll@arm.com'" <pawel.moll@arm.com>,
-	"'mark.rutland@arm.com'" <mark.rutland@arm.com>,
-	"'ijc+devicetree@hellion.org.uk'" <ijc+devicetree@hellion.org.uk>,
-	"'galak@codeaurora.org'" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"'bhelgaas@google.com'" <bhelgaas@google.com>,
-	"'arnd@arndb.de'" <arnd@arndb.de>,
-	"'tinamdar@apm.com'" <tinamdar@apm.com>,
-	"'treding@nvidia.com'" <treding@nvidia.com>,
-	"'rjui@broadcom.com'" <rjui@broadcom.com>,
-	"'Minghuan.Lian@freescale.com'" <Minghuan.Lian@freescale.com>,
-	"'m-karicheri2@ti.com'" <m-karicheri2@ti.com>,
-	"'hauke@hauke-m.de'" <hauke@hauke-m.de>,
-	"'marc.zyngier@arm.com'" <marc.zyngier@arm.com>,
-	"'dhdang@apm.com'" <dhdang@apm.com>,
-	"'sbranden@broadcom.com'" <sbranden@broadcom.com>,
-	"'devicetree@vger.kernel.org'" <devicetree@vger.kernel.org>,
-	"'linux-arm-kernel@lists.infradead.org'"
-	<linux-arm-kernel@lists.infradead.org>,
-	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	"'Paul Burton'" <paul.burton@imgtec.com>,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	'Stephen Warren' <swarren@wwwdotorg.org>,
-	'Alexandre Courbot' <gnurou@gmail.com>
-Subject: RE: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
- PCIe Host Controller
-Date: Thu, 28 Jan 2016 15:47:13 +0000
-Message-ID: <8520D5D51A55D047800579B0941471982587422C@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1448798633-12697-1-git-send-email-bharatku@xilinx.com>
- <20151209231921.GI31930@localhost>
- <8520D5D51A55D047800579B09414719825869A85@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20151210201817.GB367@localhost>
- <8520D5D51A55D047800579B09414719825869EDC@XAP-PVEXMBX01.xlnx.xilinx.com>
- <8520D5D51A55D047800579B0941471982586BC8D@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20160110220819.GA25883@localhost>
- <8520D5D51A55D047800579B09414719825870721@XAP-PVEXMBX01.xlnx.xilinx.com>
-In-Reply-To: <8520D5D51A55D047800579B09414719825870721@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:60904 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751543AbcAELLy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Jan 2016 06:11:54 -0500
+Date: Tue, 5 Jan 2016 13:11:48 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Dr. David Alan Gilbert" <dgilbert@redhat.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
+ tracking
+Message-ID: <20160105130627-mutt-send-email-mst@redhat.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <20160104204104.GB17427@char.us.oracle.com>
+ <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+ <20160105113317-mutt-send-email-mst@redhat.com>
+ <20160105100104.GA2439@work-vm>
+ <20160105123243-mutt-send-email-mst@redhat.com>
+ <20160105104525.GC2439@work-vm>
+ <20160105125937-mutt-send-email-mst@redhat.com>
+ <20160105110337.GD2439@work-vm>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160105110337.GD2439@work-vm>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ping 
+On Tue, Jan 05, 2016 at 11:03:38AM +0000, Dr. David Alan Gilbert wrote:
+> * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > On Tue, Jan 05, 2016 at 10:45:25AM +0000, Dr. David Alan Gilbert wrote:
+> > > * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > > > On Tue, Jan 05, 2016 at 10:01:04AM +0000, Dr. David Alan Gilbert wrote:
+> > > > > * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > > > > > On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
+> > > > > > > >> The two mechanisms referenced above would likely require coordination with
+> > > > > > > >> QEMU and as such are open to discussion.  I haven't attempted to address
+> > > > > > > >> them as I am not sure there is a consensus as of yet.  My personal
+> > > > > > > >> preference would be to add a vendor-specific configuration block to the
+> > > > > > > >> emulated pci-bridge interfaces created by QEMU that would allow us to
+> > > > > > > >> essentially extend shpc to support guest live migration with pass-through
+> > > > > > > >> devices.
+> > > > > > > >
+> > > > > > > > shpc?
+> > > > > > > 
+> > > > > > > That is kind of what I was thinking.  We basically need some mechanism
+> > > > > > > to allow for the host to ask the device to quiesce.  It has been
+> > > > > > > proposed to possibly even look at something like an ACPI interface
+> > > > > > > since I know ACPI is used by QEMU to manage hot-plug in the standard
+> > > > > > > case.
+> > > > > > > 
+> > > > > > > - Alex
+> > > > > > 
+> > > > > > 
+> > > > > > Start by using hot-unplug for this!
+> > > > > > 
+> > > > > > Really use your patch guest side, and write host side
+> > > > > > to allow starting migration with the device, but
+> > > > > > defer completing it.
+> > > > > > 
+> > > > > > So
+> > > > > > 
+> > > > > > 1.- host tells guest to start tracking memory writes
+> > > > > > 2.- guest acks
+> > > > > > 3.- migration starts
+> > > > > > 4.- most memory is migrated
+> > > > > > 5.- host tells guest to eject device
+> > > > > > 6.- guest acks
+> > > > > > 7.- stop vm and migrate rest of state
+> > > > > > 
+> > > > > > 
+> > > > > > It will already be a win since hot unplug after migration starts and
+> > > > > > most memory has been migrated is better than hot unplug before migration
+> > > > > > starts.
+> > > > > > 
+> > > > > > Then measure downtime and profile. Then we can look at ways
+> > > > > > to quiesce device faster which really means step 5 is replaced
+> > > > > > with "host tells guest to quiesce device and dirty (or just unmap!)
+> > > > > > all memory mapped for write by device".
+> > > > > 
+> > > > > 
+> > > > > Doing a hot-unplug is going to upset the guests network stacks view
+> > > > > of the world; that's something we don't want to change.
+> > > > > 
+> > > > > Dave
+> > > > 
+> > > > It might but if you store the IP and restore it quickly
+> > > > after migration e.g. using guest agent, as opposed to DHCP,
+> > > > then it won't.
+> > > 
+> > > I thought if you hot-unplug then it will lose any outstanding connections
+> > > on that device.
+> > > 
+> > > > It allows calming the device down in a generic way,
+> > > > specific drivers can then implement the fast quiesce.
+> > > 
+> > > Except that if it breaks the guest networking it's useless.
+> > > 
+> > > Dave
+> > 
+> > Is hot unplug useless then?
+> 
+> As a migration hack, yes,
 
-> Subject: RE: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for Xilinx NWL
-> PCIe Host Controller
+Based on a premise that it breaks connections but it does not
+have to.
+
+> unless it's paired with a second network device
+> as a redundent route.
+
+You can do this too.
+
+But this is not a must at all.
+
+> To do what's being suggested here it's got to be done at the device level
+> and not visible to the networking stack.
 > 
->  > On Mon, Dec 21, 2015 at 05:23:47AM +0000, Bharat Kumar Gogada wrote:
-> > > Hi Bjorn, can you comment on this. Marc has also replied for query
-> > > on
-> > irq_dispose_mapping().
-> >
-> > I'm not sure exactly what you want me to comment on.
-> I wanted you to check for Marc's reply.
-> >
-> > > > Subject: RE: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for
-> > > > Xilinx NWL PCIe Host Controller
-> > > >
-> > > > > Subject: Re: [PATCH v11] PCI: Xilinx-NWL-PCIe: Added support for
-> > > > > Xilinx NWL PCIe Host Controller
-> > > > >
-> > > > > [+cc Marc for irq_dispose_mapping() question]
-> > > > >
-> > > > > On Thu, Dec 10, 2015 at 02:10:34PM +0000, Bharat Kumar Gogada
-> > wrote:
-> > > > > I'm trying to figure out what the difference is between these
-> > > > > two checks and why you have both of them:
-> > > > >
-> > > > > > +	if (bus->number == pcie->root_busno && devfn > 0)
-> > > > > > +	if (bus->primary == pcie->root_busno && devfn > 0)
-> > > > >
-> > > > > If I understand correctly, pcie->root_busno is the bus number of
-> > > > > the Root Port device (likely 00).  I think the "bus->number ==
-> > > > > pcie->root_busno && devfn > 0" check means that the Root Port,
-> > > > > pcie->e.g.,
-> > > > > 00:00.0, is the only device allowed on bus 00.  Often a Root
-> > > > > Complex contains several Root Ports and other integrated devices
-> > > > > that typically are
-> > > > on bus 00.
-> > > > > But in your case, I think you're saying there is only the single
-> > > > > Root Port and no other devices.
-> > > > >
-> > > > > I think that first check takes care of everything on bus 00, so
-> > > > > I'm trying to figure out what the second check is for.  Assume
-> > > > > your Root Port is device
-> > > > > 00:00.0 and it is a bridge to [bus 01-ff].  Then we have two
-> > > > > pci_bus structs with these values:
-> > > > >
-> > > > >   bus->number = 00
-> > > > >   bus->primary = 00
-> > > > >   bus->busn_res = [bus 00-ff]
-> > > > >
-> > > > >   bus->number = 01
-> > > > >   bus->primary = 00
-> > > > >   bus->busn_res = [bus 01-ff]
-> > > > >
-> > > > > Because of the first check, 00:00.0 is the only possible device
-> > > > > on bus 00, and because of the second check, 01:00.0 is the only
-> > > > > possible device on
-> > > > bus 01.
-> > > > > Therefore, you don't support a multifunction device connected to
-> > > > > the Root Port.  Right?
-> > > > >
-> > > > We support multifunction devices also, so this check should not be
-> > > > there, will remove this check in next patch.
-> >
-> > It looks like you're planning to change this.
-> No, our core supports multifunction devices it was my misunderstanding,
-> due to which this condition was present.
-> > > > > > > > +		return false;
-> > > > > > > > +
-> > > > > > > > +	return true;
-> > > > > > > > +}
-> > > > > > > > + * nwl_setup_sspl - Set Slot Power limit
-> > > > > > > > + *
-> > > > > > > > + * @pcie: PCIe port information  */ static int
-> > > > > > > > +nwl_setup_sspl(struct nwl_pcie *pcie)
-> > > > > > >
-> > > > > > The Set_Slot_Power_Limit Message includes a one DW data
-> payload.
-> > > > > > The data payload is copied from the Slot Capabilities register
-> > > > > > of the Downstream Port and is written into the Device
-> > > > > > Capabilities register of the Upstream Port on the other side
-> > > > > > of the Link. Bits 9:8 of the data payload map to the Slot
-> > > > > > Power Limit Scale field and bits 7:0 map to the Slot Power
-> > > > > > Limit Value field. Bits 31:10 of the data payload must be set
-> > > > > > to all 0's by the Transmitter and ignored by the
-> > > > Receiver.
-> > > > >
-> > > > > > This Message is sent automatically by the Downstream Port (of
-> > > > > > a Root Complex or a Switch) when one of the following events
-> occurs:
-> > > > > > -> On a Configuration Write to the Slot Capabilities register
-> > > > > > -> (see
-> > > > > > Section 7.8.9) when the Data Link Layer reports DL_Up status.
-> > > > >
-> > > > > I interpret this as meaning "the *hardware* automatically sends
-> > > > > a Set_Slot_Power_Limit Message."  There's no mention of software
-> > > > > doing anything other than the configuration write.
-> > > > >
-> > > > > If your hardware doesn't do that, I think it's a defect.  It's
-> > > > > fine to work around it, but we should have a comment to that
-> > > > > effect so people don't copy the code to new drivers that don't need
-> it.
-> > > >
-> > > > Our hardware is not capable of doing it, so we are doing it
-> > > > software. Yes I will add some comments.
-> >
-> > And add a comment here.
-> >
-> You meant to add comments for the function clearly mentioning that
-> hardware doesn't support this so doing it software ?
-> 
-> > > > > It's a little strange that 7.8.9 talks about writing to this
-> > > > > register when all of its fields are HwInit and supposedly
-> > > > > read-only.  I had assumed devices would use strapping or
-> > > > > implementation-specific registers to set the Slot Power values,
-> > > > > but maybe some devices use direct
-> > > > writes to Slot Capabilities instead.
-> > > > >
-> > > > > BTW, I noticed a related lspci bug: it didn't decode the Capture
-> > > > > Slot Power Limit in Device Capabilities of Endpoints.  I posted
-> > > > > a fix for that
-> > > > separately.
-> > > > >
-> > > > > The Slot Power Limit (in Slot Capabilities) indicates how much
-> > > > > power the slot can supply to a downstream device.  That's a
-> > > > > function of the platform design, so it seems like this is
-> > > > > something you want to set via DT or some other mechanism that
-> > > > > knows
-> > about the platform.
-> > > > > Intercepting all config writes and updating it with whatever the
-> > > > > caller supplies doesn't sound wise.  The value might be coming
-> > > > > from setpci or some other source with no knowledge of the platform.
-> > > >
-> > > > Agreed, but this is what can be done, it is difficult to determine
-> > > > who does what.
-> >
-> > Your driver is based on DT.  What prevents you from adding a DT
-> > property that shows the slot power capability?
-> >
-> You meant to add a DT property, Example: xlnx,slot_power_cap; as required
-> property, and use this property to call nwl_setup_sspl function. Currently
-> this function is being invoked in config write function if the condition meets a
-> write to slot power capabilities register.
-> > > > > > > > +			status = nwl_bridge_readl(pcie,
-> > > > TX_PCIE_MSG)
-> > > > > > > > +						  & MSG_DONE_BIT;
-> > > > > > > > +			if (status) {
-> > > > > > > > +				status = nwl_bridge_readl(pcie,
-> > > > > > > TX_PCIE_MSG)
-> > > > > > > > +						  &
-> > > > MSG_DONE_STATUS_BIT;
-> > > > >
-> > > > > > > It's not clear to me whether you need to re-read TX_PCIE_MSG
-> > here.
-> > > > > >
-> > > > > > MSG_DONE_BIT qualifies MSG_DONE_STATUS_BIT; so value of
-> > > > > > MSG_DONE_STATUS_BIT is valid only when MSG_DONE_BIT = 1
-> > > > >
-> > > > > That doesn't answer the question of whether another read is
-> required.
-> > > > > In fact, I would argue that if MSG_DONE_STATUS_BIT is only valid
-> > > > > when MSG_DONE_BIT = 1, you *should* only do one read, because
-> > you
-> > > > > want to capture both bits simultaneously so you know they're
-> > > > > consistent, e.g.,
-> > > > >
-> > > > >   status = nwl_bridge_readl(pcie, TX_PCIE_MSG);
-> > > > >   if (status & MSG_DONE_BIT) {
-> > > > >     if (status & MSG_DONE_STATUS_BIT)
-> > > > >       ...
-> > > > >   }
-> > > > >
-> > > > > If you read the register twice, you always have to worry about
-> > > > > what changes MSG_DONE_BIT, and how you guarantee that the
-> > second
-> > > > > read happens before MSG_DONE_BIT changes.
-> > > > >
-> > > > Agreed, will do it in this way, once will also confirm with IP
-> > > > owner regarding both bits being updated parallel.
-> >
-> > It sounds like you're working on resolving this.
-> >
-> > Did I miss a question for me?
-> 
-> Since IP owner is different, we don't have exact information by that time we
-> commented, now we got Information from owner that both buts
-> simultaneously.
-> 
-> Bharat
+> Dave
+
+Need for this was never demonstrated.
+
+> > 
+> > > > 
+> > > > > > 
+> > > > > > -- 
+> > > > > > MST
+> > > > > --
+> > > > > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+> > > --
+> > > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+> --
+> Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
