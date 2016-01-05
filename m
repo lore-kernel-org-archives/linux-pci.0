@@ -1,66 +1,110 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <56A281B6.6070709@gmail.com>
-Date: Fri, 22 Jan 2016 11:23:34 -0800
-From: David Daney <ddaney.cavm@gmail.com>
+Date: Tue, 5 Jan 2016 12:59:54 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Dr. David Alan Gilbert" <dgilbert@redhat.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
+ tracking
+Message-ID: <20160105125937-mutt-send-email-mst@redhat.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <20160104204104.GB17427@char.us.oracle.com>
+ <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+ <20160105113317-mutt-send-email-mst@redhat.com>
+ <20160105100104.GA2439@work-vm>
+ <20160105123243-mutt-send-email-mst@redhat.com>
+ <20160105104525.GC2439@work-vm>
 MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Cao jin <caoj.fnst@cn.fujitsu.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>, izumi.taku@jp.fujitsu.com,
-	wency@cn.fujitsu.com, Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH] pci: fix unavailable irq number 255 reported by BIOS
-References: <1453167913-16248-1-git-send-email-chen.fan.fnst@cn.fujitsu.com> <6239489.QX2A2kAHWp@vostro.rjw.lan> <20160120002431.GA7973@localhost> <56A0EE00.80709@cn.fujitsu.com> <CAJZ5v0iq29mq_sFzk=mEbjPGJV9vPL9MCgU4WamrGV_fWcpEMA@mail.gmail.com> <20160122175332.GA11004@localhost>
-In-Reply-To: <20160122175332.GA11004@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160105104525.GC2439@work-vm>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/22/2016 09:53 AM, Bjorn Helgaas wrote:
-> On Thu, Jan 21, 2016 at 11:58:26PM +0100, Rafael J. Wysocki wrote:
->> On Thu, Jan 21, 2016 at 3:41 PM, Cao jin <caoj.fnst@cn.fujitsu.com> wrote:
->>> Hi,
->>>
->>>      IMHO, I think maybe modification on i801_smbus driver is easier.
->>>
->>>      Because when i801_smbus request_irq using pci_dev->irq, this
->>> pci_dev->irq seems still holds the value read from register(
->>> pci_setup_device->pci_read_irq), if the value is 255, it is invalid in
->>> register,
->>
->> Right.
->>
->> Which is why the PCI core should not leak it into the driver's ->probe callback.
->
-> Is there a reserved IRQ value we could use to mean "invalid"?
+On Tue, Jan 05, 2016 at 10:45:25AM +0000, Dr. David Alan Gilbert wrote:
+> * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > On Tue, Jan 05, 2016 at 10:01:04AM +0000, Dr. David Alan Gilbert wrote:
+> > > * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > > > On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
+> > > > > >> The two mechanisms referenced above would likely require coordination with
+> > > > > >> QEMU and as such are open to discussion.  I haven't attempted to address
+> > > > > >> them as I am not sure there is a consensus as of yet.  My personal
+> > > > > >> preference would be to add a vendor-specific configuration block to the
+> > > > > >> emulated pci-bridge interfaces created by QEMU that would allow us to
+> > > > > >> essentially extend shpc to support guest live migration with pass-through
+> > > > > >> devices.
+> > > > > >
+> > > > > > shpc?
+> > > > > 
+> > > > > That is kind of what I was thinking.  We basically need some mechanism
+> > > > > to allow for the host to ask the device to quiesce.  It has been
+> > > > > proposed to possibly even look at something like an ACPI interface
+> > > > > since I know ACPI is used by QEMU to manage hot-plug in the standard
+> > > > > case.
+> > > > > 
+> > > > > - Alex
+> > > > 
+> > > > 
+> > > > Start by using hot-unplug for this!
+> > > > 
+> > > > Really use your patch guest side, and write host side
+> > > > to allow starting migration with the device, but
+> > > > defer completing it.
+> > > > 
+> > > > So
+> > > > 
+> > > > 1.- host tells guest to start tracking memory writes
+> > > > 2.- guest acks
+> > > > 3.- migration starts
+> > > > 4.- most memory is migrated
+> > > > 5.- host tells guest to eject device
+> > > > 6.- guest acks
+> > > > 7.- stop vm and migrate rest of state
+> > > > 
+> > > > 
+> > > > It will already be a win since hot unplug after migration starts and
+> > > > most memory has been migrated is better than hot unplug before migration
+> > > > starts.
+> > > > 
+> > > > Then measure downtime and profile. Then we can look at ways
+> > > > to quiesce device faster which really means step 5 is replaced
+> > > > with "host tells guest to quiesce device and dirty (or just unmap!)
+> > > > all memory mapped for write by device".
+> > > 
+> > > 
+> > > Doing a hot-unplug is going to upset the guests network stacks view
+> > > of the world; that's something we don't want to change.
+> > > 
+> > > Dave
+> > 
+> > It might but if you store the IP and restore it quickly
+> > after migration e.g. using guest agent, as opposed to DHCP,
+> > then it won't.
+> 
+> I thought if you hot-unplug then it will lose any outstanding connections
+> on that device.
+> 
+> > It allows calming the device down in a generic way,
+> > specific drivers can then implement the fast quiesce.
+> 
+> Except that if it breaks the guest networking it's useless.
+> 
+> Dave
 
-In many (most) cases, zero indicates no irq.
+Is hot unplug useless then?
 
-
-
-
->
-> I guess we have NR_IRQS as a ceiling, so the range of valid IRQs would be
-> [0 .. NR_IRQS - 1].  It looks like irq_desc() and a few drivers already
-> rely on NR_IRQS being the bound:
->
->    lpc32xx_kscan_probe
->    lpc32xx_nand_probe
->    pcmcia_setup_isa_irq
->    lpc32xx_rtc_probe
->    apbuart_verify_port
->    ar933x_uart_verify_port
->    lqasc_verify_port
->
-> So I guess we could use ~0 as "invalid IRQ", and maybe the PCI core could
-> set dev->irq to ~0 in these cases, and drivers like i801_smbus could check
-> for that.  Maybe a wrapper like irq_valid() would be useful.
->
-> Bjorn
->
->
+> > 
+> > > > 
+> > > > -- 
+> > > > MST
+> > > --
+> > > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+> --
+> Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
