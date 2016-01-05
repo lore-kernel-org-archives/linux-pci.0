@@ -1,128 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52953 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:55670 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751494AbcAZVyJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Jan 2016 16:54:09 -0500
-Date: Tue, 26 Jan 2016 15:54:05 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rafal Milecki <zajec5@gmail.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: iproc: Fix BCMA PCIe bus scanning regression
-Message-ID: <20160126215405.GA26726@localhost>
-References: <1453330510-21926-1-git-send-email-rjui@broadcom.com>
- <20160126182239.GA17600@localhost>
- <56A7BCE0.8090404@broadcom.com>
+	id S1751543AbcAELF0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Jan 2016 06:05:26 -0500
+Date: Tue, 5 Jan 2016 13:05:20 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Dr. David Alan Gilbert" <dgilbert@redhat.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
+ tracking
+Message-ID: <20160105130133-mutt-send-email-mst@redhat.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <20160104204104.GB17427@char.us.oracle.com>
+ <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+ <20160105113317-mutt-send-email-mst@redhat.com>
+ <20160105100104.GA2439@work-vm>
+ <20160105123243-mutt-send-email-mst@redhat.com>
+ <20160105104525.GC2439@work-vm>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56A7BCE0.8090404@broadcom.com>
+In-Reply-To: <20160105104525.GC2439@work-vm>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 26, 2016 at 10:37:20AM -0800, Ray Jui wrote:
-> Hi Bjorn,
+On Tue, Jan 05, 2016 at 10:45:25AM +0000, Dr. David Alan Gilbert wrote:
+> * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > On Tue, Jan 05, 2016 at 10:01:04AM +0000, Dr. David Alan Gilbert wrote:
+> > > * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > > > On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
+> > > > > >> The two mechanisms referenced above would likely require coordination with
+> > > > > >> QEMU and as such are open to discussion.  I haven't attempted to address
+> > > > > >> them as I am not sure there is a consensus as of yet.  My personal
+> > > > > >> preference would be to add a vendor-specific configuration block to the
+> > > > > >> emulated pci-bridge interfaces created by QEMU that would allow us to
+> > > > > >> essentially extend shpc to support guest live migration with pass-through
+> > > > > >> devices.
+> > > > > >
+> > > > > > shpc?
+> > > > > 
+> > > > > That is kind of what I was thinking.  We basically need some mechanism
+> > > > > to allow for the host to ask the device to quiesce.  It has been
+> > > > > proposed to possibly even look at something like an ACPI interface
+> > > > > since I know ACPI is used by QEMU to manage hot-plug in the standard
+> > > > > case.
+> > > > > 
+> > > > > - Alex
+> > > > 
+> > > > 
+> > > > Start by using hot-unplug for this!
+> > > > 
+> > > > Really use your patch guest side, and write host side
+> > > > to allow starting migration with the device, but
+> > > > defer completing it.
+> > > > 
+> > > > So
+> > > > 
+> > > > 1.- host tells guest to start tracking memory writes
+> > > > 2.- guest acks
+> > > > 3.- migration starts
+> > > > 4.- most memory is migrated
+> > > > 5.- host tells guest to eject device
+> > > > 6.- guest acks
+> > > > 7.- stop vm and migrate rest of state
+> > > > 
+> > > > 
+> > > > It will already be a win since hot unplug after migration starts and
+> > > > most memory has been migrated is better than hot unplug before migration
+> > > > starts.
+> > > > 
+> > > > Then measure downtime and profile. Then we can look at ways
+> > > > to quiesce device faster which really means step 5 is replaced
+> > > > with "host tells guest to quiesce device and dirty (or just unmap!)
+> > > > all memory mapped for write by device".
+> > > 
+> > > 
+> > > Doing a hot-unplug is going to upset the guests network stacks view
+> > > of the world; that's something we don't want to change.
+> > > 
+> > > Dave
+> > 
+> > It might but if you store the IP and restore it quickly
+> > after migration e.g. using guest agent, as opposed to DHCP,
+> > then it won't.
 > 
-> On 1/26/2016 10:22 AM, Bjorn Helgaas wrote:
-> >Hi Ray,
-> >
-> >On Wed, Jan 20, 2016 at 02:55:10PM -0800, Ray Jui wrote:
-> >>Commit 943ebae781f5 ("PCI: iproc: Add PAXC interface support") causes
-> >>regression on EP device detection on BCMA based platforms. This patch
-> >>fixes the issue by allowing multiple devices to be configured on the
-> >>same bus, for all PAXB based child buses
-> >>
-> >>Reported-by: Rafal Milecki <zajec5@gmail.com>
-> >>Fixes: 943ebae781f5 ("PCI: iproc: Add PAXC interface support")
-> >>Signed-off-by: Ray Jui <rjui@broadcom.com>
-> >>---
-> >>  drivers/pci/host/pcie-iproc.c | 5 +++--
-> >>  1 file changed, 3 insertions(+), 2 deletions(-)
-> >>
-> >>diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> >>index 5816bce..4627561 100644
-> >>--- a/drivers/pci/host/pcie-iproc.c
-> >>+++ b/drivers/pci/host/pcie-iproc.c
-> >>@@ -171,10 +171,11 @@ static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
-> >>  }
-> >>
-> >>  static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
-> >>+					      unsigned int busnum,
-> >>  					      unsigned int slot,
-> >>  					      unsigned int fn)
-> >>  {
-> >>-	if (slot > 0)
-> >>+	if ((pcie->type == IPROC_PCIE_PAXC || busnum == 0) && slot > 0)
-> >>  		return false;
-> >>
-> >>  	/* PAXC can only support limited number of functions */
-> >
-> >I don't understand this.  Here's the whole function (with this patch
-> >applied):
-> >
-> >     static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
-> >						  unsigned int busnum,
-> >						  unsigned int slot,
-> >						  unsigned int fn)
-> >     {
-> >	    if ((pcie->type == IPROC_PCIE_PAXC || busnum == 0) && slot > 0)
-> >		    return false;
-> >
-> >	    /* PAXC can only support limited number of functions */
-> >	    if (pcie->type == IPROC_PCIE_PAXC && fn >= MAX_NUM_PAXC_PF)
-> >		    return false;
-> >
-> >	    return true;
-> >     }
-> >
-> >This says:
-> >
-> >   - On bus 00, device 0 is the only valid device.  That seems
-> >     plausible because the devices on bus 00 are probably built-in to
-> >     the SoC.
-> >
-> >   - On PAXC-based systems, device 0 is the only valid device on *any*
-> >     bus.  Is that really true?  If there's any way to add a plug-in
-> >     card, this seems overly restrictive.
-> 
-> Yah, PAXC is connected with one internal device within the SoC.
-> There's no connection brought out of the chip.
-> 
-> >     PCIe devices are generally all device 0, but this would mean you
-> >     cannot plug in a PCIe-to-PCI bridge leading to a PCI device with a
-> >     non-zero device number.
-> >
-> >     I think it also means you could not plug in a PCIe device with ARI
-> >     enabled, because I think we store the upper 5 bits of the 8-bit
-> >     ARI function number in the PCI_SLOT bits.
-> >
-> >   - On PAXC-based systems, only functions 0, 1, 2, and 3 are valid
-> >     anywhere in the hierarchy.  I think this again restricts what what
-> >     cards can be plugged in.
-> 
-> Yes, the internal device connected to PAXC supports 4 physical functions.
-> 
-> >If iProc only supports devices built directly into the SoC, maybe
-> >these constraints are valid.  But if it supports any plugin or
-> >external devices, they don't seem to make sense.
-> 
-> Correct. PAXC only connects to one built-in device, while PAXB can
-> support external EP devices.
+> I thought if you hot-unplug then it will lose any outstanding connections
+> on that device.
 
-OK, thanks for confirming all that.
+Which connections and which device?  TCP connections and an ethernet
+device?  These are on different layers so of course you don't lose them.
+Just do not change the IP address.
 
-Something looks wrong in iproc_pcie_map_cfg_bus().
-iproc_pcie_device_is_valid() returns true for device 00:00.1,
-but the "busno == 0" case in iproc_pcie_map_cfg_bus() doesn't
-use "fn".  So the function number is ignored?  That would mean
-there's no difference between 000:00.0, 00:00.1, 00:00.2,
-00:00.3, etc.
+Some guests send a signal to applications to close connections
+when all links go down. One can work around this
+in a variety of ways.
 
-I think this would be clearer and less error-prone if
-iproc_pcie_device_is_valid() were folded directly into
-iproc_pcie_map_cfg_bus().
-
-Bjorn
+> > It allows calming the device down in a generic way,
+> > specific drivers can then implement the fast quiesce.
+> 
+> Except that if it breaks the guest networking it's useless.
+> 
+> Dave
+> 
+> > 
+> > > > 
+> > > > -- 
+> > > > MST
+> > > --
+> > > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+> --
+> Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
