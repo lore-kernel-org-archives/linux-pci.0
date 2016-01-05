@@ -1,57 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:56976 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933268AbcA0PRq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jan 2016 10:17:46 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	Michal Simek <michals@xilinx.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver to  work on both  Zynq and Microblaze
-Date: Wed, 27 Jan 2016 16:14:32 +0100
-Message-ID: <5255218.OREPu5Af3W@wuerfel>
-In-Reply-To: <8520D5D51A55D047800579B09414719825873DA8@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com> <4734542.KZZp0TeeeM@wuerfel> <8520D5D51A55D047800579B09414719825873DA8@XAP-PVEXMBX01.xlnx.xilinx.com>
+Received: from mail-io0-f182.google.com ([209.85.223.182]:35017 "EHLO
+	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753887AbcAEDL0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jan 2016 22:11:26 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20160104204104.GB17427@char.us.oracle.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+	<20160104204104.GB17427@char.us.oracle.com>
+Date: Mon, 4 Jan 2016 19:11:25 -0800
+Message-ID: <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page tracking
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 27 January 2016 14:33:45 Bharat Kumar Gogada wrote:
-> > > @@ -705,7 +715,9 @@ static int xilinx_pcie_probe(struct
-> > > platform_device *pdev)  #endif
-> > >     pci_scan_child_bus(bus);
-> > >     pci_assign_unassigned_bus_resources(bus);
-> > > +#ifdef CONFIG_ARM
-> > >     pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> > > +#endif
-> > >     pci_bus_add_devices(bus);
-> > >     platform_set_drvdata(pdev, port);
-> > 
-> > Here it looks like microblaze gets it right. I'm not sure why we still need the
-> > pci_fixup_irqs() on ARM, but my feeling is that this should be fixed in
-> > common code.
-> In arm pci_fixup_irqs is called by pci_common_init_dev (arch/arm/kernel/bios32.c), since this API is removed now, I was calling it separately.
+On Mon, Jan 4, 2016 at 12:41 PM, Konrad Rzeszutek Wilk
+<konrad.wilk@oracle.com> wrote:
+> On Sun, Dec 13, 2015 at 01:28:09PM -0800, Alexander Duyck wrote:
+>> This patch set is meant to be the guest side code for a proof of concept
+>> involving leaving pass-through devices in the guest during the warm-up
+>> phase of guest live migration.  In order to accomplish this I have added a
+>
+> What does that mean? 'warm-up-phase'?
 
-But who calls it in microblaze? If it works without the extra call there,
-can we make it work the same way for ARM?
+It is the first phase in a pre-copy migration.
+https://en.wikipedia.org/wiki/Live_migration
 
-	Arnd
+Basically in this phase all the memory is marked as dirty and then
+copied.  Any memory that changes gets marked as dirty as well.
+Currently DMA circumvents this as the user space dirty page tracking
+isn't able to track DMA.
+
+>> new function called dma_mark_dirty that will mark the pages associated with
+>> the DMA transaction as dirty in the case of either an unmap or a
+>> sync_.*_for_cpu where the DMA direction is either DMA_FROM_DEVICE or
+>> DMA_BIDIRECTIONAL.  The pass-through device must still be removed before
+>> the stop-and-copy phase, however allowing the device to be present should
+>> significantly improve the performance of the guest during the warm-up
+>> period.
+>
+> .. if the warm-up phase is short I presume? If the warm-up phase takes
+> a long time (busy guest that is of 1TB size) it wouldn't help much as the
+> tracking of these DMA's may be quite long?
+>
+>>
+>> This current implementation is very preliminary and there are number of
+>> items still missing.  Specifically in order to make this a more complete
+>> solution we need to support:
+>> 1.  Notifying hypervisor that drivers are dirtying DMA pages received
+>
+> .. And somehow giving the hypervisor the GPFN so it can retain the PFN in
+> the VT-d as long as possible.
+
+Yes, what has happened is that the host went through and marked all
+memory as read-only.  So trying to do any operation that requires
+write access triggers a page fault which is then used by the host to
+track pages that were dirtied.
+
+>> 2.  Bypassing page dirtying when it is not needed.
+>
+> How would this work with with device doing DMA operations _after_ the migration?
+> That is the driver submits and DMA READ.. migrates away, device is unplugged,
+> VT-d context is torn down - device does the DMA READ gets an VT-d error...
+>
+> and what then? How should the device on the other host replay the DMA READ?
+
+The device has to quiesce before the migration can occur.  We cannot
+have any DMA mappings still open when we reach the stop-and-copy phase
+of the migration.  The solution I have proposed here works for
+streaming mappings but doesn't solve the case for things like
+dma_alloc_coherent where a bidirectional mapping is maintained between
+the CPU and the device.
+
+>>
+>> The two mechanisms referenced above would likely require coordination with
+>> QEMU and as such are open to discussion.  I haven't attempted to address
+>> them as I am not sure there is a consensus as of yet.  My personal
+>> preference would be to add a vendor-specific configuration block to the
+>> emulated pci-bridge interfaces created by QEMU that would allow us to
+>> essentially extend shpc to support guest live migration with pass-through
+>> devices.
+>
+> shpc?
+
+That is kind of what I was thinking.  We basically need some mechanism
+to allow for the host to ask the device to quiesce.  It has been
+proposed to possibly even look at something like an ACPI interface
+since I know ACPI is used by QEMU to manage hot-plug in the standard
+case.
+
+- Alex
