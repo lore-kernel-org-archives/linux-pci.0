@@ -1,51 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv8] Driver for new "VMD" device 
-Date: Tue, 12 Jan 2016 09:28:38 -0700
-Message-Id: <1452616119-11450-1-git-send-email-keith.busch@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:43198 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751572AbcAEKBK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Jan 2016 05:01:10 -0500
+Date: Tue, 5 Jan 2016 10:01:04 +0000
+From: "Dr. David Alan Gilbert" <dgilbert@redhat.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
+ tracking
+Message-ID: <20160105100104.GA2439@work-vm>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <20160104204104.GB17427@char.us.oracle.com>
+ <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+ <20160105113317-mutt-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160105113317-mutt-send-email-mst@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is just the commit for the VMD driver. The other patches are the
-same from previous series here:
+* Michael S. Tsirkin (mst@redhat.com) wrote:
+> On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
+> > >> The two mechanisms referenced above would likely require coordination with
+> > >> QEMU and as such are open to discussion.  I haven't attempted to address
+> > >> them as I am not sure there is a consensus as of yet.  My personal
+> > >> preference would be to add a vendor-specific configuration block to the
+> > >> emulated pci-bridge interfaces created by QEMU that would allow us to
+> > >> essentially extend shpc to support guest live migration with pass-through
+> > >> devices.
+> > >
+> > > shpc?
+> > 
+> > That is kind of what I was thinking.  We basically need some mechanism
+> > to allow for the host to ask the device to quiesce.  It has been
+> > proposed to possibly even look at something like an ACPI interface
+> > since I know ACPI is used by QEMU to manage hot-plug in the standard
+> > case.
+> > 
+> > - Alex
+> 
+> 
+> Start by using hot-unplug for this!
+> 
+> Really use your patch guest side, and write host side
+> to allow starting migration with the device, but
+> defer completing it.
+> 
+> So
+> 
+> 1.- host tells guest to start tracking memory writes
+> 2.- guest acks
+> 3.- migration starts
+> 4.- most memory is migrated
+> 5.- host tells guest to eject device
+> 6.- guest acks
+> 7.- stop vm and migrate rest of state
+> 
+> 
+> It will already be a win since hot unplug after migration starts and
+> most memory has been migrated is better than hot unplug before migration
+> starts.
+> 
+> Then measure downtime and profile. Then we can look at ways
+> to quiesce device faster which really means step 5 is replaced
+> with "host tells guest to quiesce device and dirty (or just unmap!)
+> all memory mapped for write by device".
 
-  https://lkml.org/lkml/2015/12/21/353
 
-Patch 2/6 is no longer applicable since someone already beat me to
-exporting those functions to API in commit a4289dc2ec3a5. Otherwise the
-others are still needed and cleanly apply. I wasn't sure if I should
-repost the entire series or just the one file that changed.
+Doing a hot-unplug is going to upset the guests network stacks view
+of the world; that's something we don't want to change.
 
-Changes since v7 are all checkpatch fixes:
+Dave
 
-  Fixing 80 character lines.
-
-  Spacing, tabbing and new line fixes.
-
-  A macro semicolon fix.
-
-  An entry in the MAINTAINERS file.
-
-The only checkpatch issue reported is warning on a normally "const"
-struct, but the warning is not applicable for the usage.
-
-Keith Busch (1):
-  x86/PCI: Initial commit for new VMD device driver
-
- MAINTAINERS                   |   6 +
- arch/x86/Kconfig              |  13 +
- arch/x86/include/asm/hw_irq.h |   5 +
- arch/x86/pci/Makefile         |   2 +
- arch/x86/pci/vmd.c            | 699 ++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 725 insertions(+)
- create mode 100644 arch/x86/pci/vmd.c
-
--- 
-2.6.2.307.g37023ba
+> 
+> -- 
+> MST
+--
+Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
