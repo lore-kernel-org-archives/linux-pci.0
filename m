@@ -1,100 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:64601 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756237AbcANXFr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Jan 2016 18:05:47 -0500
-Date: Thu, 14 Jan 2016 15:02:15 -0800
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	david.daney@cavium.com
-Subject: Re: [RFC PATCH] pci: Identify Enhanced Allocation (EA) BAR
- Equivalent resources
-Message-ID: <20160114230214.GA3700@sean.stalley.intel.com>
-References: <20160114172645.23429.9938.stgit@gimli.home>
- <20160114183452.GA3075@sean.stalley.intel.com>
- <1452798962.14628.52.camel@redhat.com>
- <20160114202347.GB3381@sean.stalley.intel.com>
- <1452806092.14628.110.camel@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 5 Jan 2016 13:06:10 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Dr. David Alan Gilbert" <dgilbert@redhat.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
+ tracking
+Message-ID: <20160105130530-mutt-send-email-mst@redhat.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <20160104204104.GB17427@char.us.oracle.com>
+ <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+ <20160105113317-mutt-send-email-mst@redhat.com>
+ <20160105100104.GA2439@work-vm>
+ <20160105123243-mutt-send-email-mst@redhat.com>
+ <20160105104525.GC2439@work-vm>
+ <20160105125937-mutt-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1452806092.14628.110.camel@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160105125937-mutt-send-email-mst@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 14, 2016 at 02:14:52PM -0700, Alex Williamson wrote:
-> On Thu, 2016-01-14 at 12:23 -0800, Sean O. Stalley wrote:
-> > On Thu, Jan 14, 2016 at 12:16:02PM -0700, Alex Williamson wrote:
-> > > On Thu, 2016-01-14 at 10:34 -0800, Sean O. Stalley wrote:
-> > > > On Thu, Jan 14, 2016 at 10:26:56AM -0700, Alex Williamson wrote:
-> > > > > We've done a pretty good job of abstracting EA from drivers, but
-> > > > > there
-> > > > > are some properties of BAR Equivalent resources that don't really
-> > > > > jive
-> > > > > with traditional PCI BARs.  In particular, natural alignment is
-> > > > > only
-> > > > > encouraged, not required.
+On Tue, Jan 05, 2016 at 12:59:54PM +0200, Michael S. Tsirkin wrote:
+> On Tue, Jan 05, 2016 at 10:45:25AM +0000, Dr. David Alan Gilbert wrote:
+> > * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > > On Tue, Jan 05, 2016 at 10:01:04AM +0000, Dr. David Alan Gilbert wrote:
+> > > > * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > > > > On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
+> > > > > > >> The two mechanisms referenced above would likely require coordination with
+> > > > > > >> QEMU and as such are open to discussion.  I haven't attempted to address
+> > > > > > >> them as I am not sure there is a consensus as of yet.  My personal
+> > > > > > >> preference would be to add a vendor-specific configuration block to the
+> > > > > > >> emulated pci-bridge interfaces created by QEMU that would allow us to
+> > > > > > >> essentially extend shpc to support guest live migration with pass-through
+> > > > > > >> devices.
+> > > > > > >
+> > > > > > > shpc?
+> > > > > > 
+> > > > > > That is kind of what I was thinking.  We basically need some mechanism
+> > > > > > to allow for the host to ask the device to quiesce.  It has been
+> > > > > > proposed to possibly even look at something like an ACPI interface
+> > > > > > since I know ACPI is used by QEMU to manage hot-plug in the standard
+> > > > > > case.
+> > > > > > 
+> > > > > > - Alex
 > > > > > 
-> > > > > Why does this matter?  There are drivers like vfio-pci that will
-> > > > > happily gobble up the EA abstraction that's been implemented and
-> > > > > expose a device using EA to userspace as if those resources are
-> > > > > traditional BARs.  Pretty cool.  The vfio API is bus agnostic, so
-> > > > > it
-> > > > > doesn't care about alignment.  The problem comes with PCI config
-> > > > > space
-> > > > > emulation where we don't let userspace manipulate the BAR value,
-> > > > > but
-> > > > > we do emulate BAR sizing.  The abstraction kind of falls apart if
-> > > > > userspace gets garbage when they try to size what appears to be a
-> > > > > traditional BAR, but is actually a BAR equivalent.
 > > > > > 
-> > > > > We could simply round up the size in vfio to make it naturally
-> > > > > aligned, but then we're imposing artificial sizes to the user and
-> > > > > we
-> > > > > have the discontinuity that BAR size emulation and vfio region size
-> > > > > reporting don't agree on the size.  I think what we want to do is
-> > > > > expose EA to the user, reporting traditional BARs with BEIs as
-> > > > > zero-sized and providing additional regions for the user to access
-> > > > > each EA region, whether it has a BEI or not.
+> > > > > Start by using hot-unplug for this!
 > > > > > 
-> > > > > To facilitate that, a flag indicating whether a PCI resource is a
-> > > > > traditional BAR or BAR equivalent seems much nicer than attempting
-> > > > > to size the BAR ourselves or deducing it through the EA capability.
+> > > > > Really use your patch guest side, and write host side
+> > > > > to allow starting migration with the device, but
+> > > > > defer completing it.
+> > > > > 
+> > > > > So
+> > > > > 
+> > > > > 1.- host tells guest to start tracking memory writes
+> > > > > 2.- guest acks
+> > > > > 3.- migration starts
+> > > > > 4.- most memory is migrated
+> > > > > 5.- host tells guest to eject device
+> > > > > 6.- guest acks
+> > > > > 7.- stop vm and migrate rest of state
+> > > > > 
+> > > > > 
+> > > > > It will already be a win since hot unplug after migration starts and
+> > > > > most memory has been migrated is better than hot unplug before migration
+> > > > > starts.
+> > > > > 
+> > > > > Then measure downtime and profile. Then we can look at ways
+> > > > > to quiesce device faster which really means step 5 is replaced
+> > > > > with "host tells guest to quiesce device and dirty (or just unmap!)
+> > > > > all memory mapped for write by device".
 > > > > 
-> > > > If vfio does size the resource, EA entries that are aligned could
-> > > > still be emulated as BARs, correct?
 > > > > 
-> > > > I would think that emulating a BAR would be preferred when possible,
-> > > > for backwards-compatibility.
+> > > > Doing a hot-unplug is going to upset the guests network stacks view
+> > > > of the world; that's something we don't want to change.
+> > > > 
+> > > > Dave
 > > > 
-> > > If a BEI is naturally aligned, I can't think of any problems with
-> > > exposing it as a traditional BAR to userspace.  I agree that there may
-> > > be some compatibility benefits there, so it may be useful to offer both
-> > > options.  I don't think we can combine them though, it would violate
-> > > the EA spec to expose the traditional BAR and and the matching BEI.
-> > > We'd either need to hide the fake BAR or hide the EA entry defining
-> > > that BEI.  A module option could define which is preferred or maybe an
-> > > ioctl.
+> > > It might but if you store the IP and restore it quickly
+> > > after migration e.g. using guest agent, as opposed to DHCP,
+> > > then it won't.
 > > 
-> > Would any functionality be lost if vfio:
-> > 	- emulates BARs & hide EA entry when EA resources are aligned.
-> > 	- exposes EA entries when the resources aren't aligned (no BAR emulation).
-> > ?
+> > I thought if you hot-unplug then it will lose any outstanding connections
+> > on that device.
 > > 
-> > I'm just wondering if giving userspace the option to pick is necessary,
-> > or if there is a setting that is always ideal.
+> > > It allows calming the device down in a generic way,
+> > > specific drivers can then implement the fast quiesce.
+> > 
+> > Except that if it breaks the guest networking it's useless.
+> > 
+> > Dave
 > 
-> That certainly might be a good default and the only use case I can
-> think where it wouldn't be ideal is if we want to expose EA to a VM for
-> the purpose of doing EA testing and development in a guest.  A module
-> option would make more sense than defining a user interface for that
-> case though.
+> Is hot unplug useless then?
 
-The testing I have done for EA has been in a VM.
-I sent out some patches a while back for QEMU that allow the user to add an EA entry to the existing PCI models.
+Actually I misunderstood the question, unplug does not
+have to break guest networking.
 
-[https://lists.nongnu.org/archive/html/qemu-devel/2015-07/msg00348.html]
-
-I don't know if they will be useful for what you are doing, but they were very useful to me when doing the initial EA development.
-
--Sean
+> > > 
+> > > > > 
+> > > > > -- 
+> > > > > MST
+> > > > --
+> > > > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+> > --
+> > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
