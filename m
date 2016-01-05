@@ -1,181 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH V3 01/21] x86, pci: Reorder logic of pci_mmconfig_insert() function
-Date: Wed, 13 Jan 2016 14:20:47 +0100
-Message-Id: <1452691267-32240-2-git-send-email-tn@semihalf.com>
-In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor2.renesas.com ([210.160.252.172]:52059 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752476AbcAENBF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jan 2016 08:01:05 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-sh@vger.kernel.org>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+Subject: [PATCH v2 2/4] PCI: rcar: Support runtime PM link state L1 handling in pcie-rcar
+Date: Tue,  5 Jan 2016 13:00:29 +0000
+Message-Id: <1451998831-27705-3-git-send-email-phil.edworthy@renesas.com>
+In-Reply-To: <1451998831-27705-1-git-send-email-phil.edworthy@renesas.com>
+References: <1451998831-27705-1-git-send-email-phil.edworthy@renesas.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is the first step for MMCONFIG refactoring process.
+The R-Car PCIe host controller does not handle L1 ASPM. Instead, the
+hardware needs assistance to transition to L1. When the controller
+has received a PM_ENTER_L1 DLLP, we can't access a card's config regs
+until we have got it out of L1 link state. The host controller will
+handle this as long as it has also been transitioned to L1 link state.
 
-Code that uses pci_mmcfg_lock will be moved to common file and become
-accessible for all architectures. pci_mmconfig_insert() cannot be moved
-so easily since it is mixing generic mmconfig code with x86 specific logic
-inside of mutual exclusive block guarded by pci_mmcfg_lock.
+So, when attempting a config access, check to see if the card has gone
+into L1, and if so, do the same for the host controller.
 
-To get rid of that constraint, we reorder actions as follow:
-1. sanity check for mmconfig region presence, if we already have such
-region it doesn't make snese to alloc new mmconfig list entry
-2. mmconfig entry allocation, no need to lock
-3. insertion to iomem_resource has its own lock, no need to wrap it into mutex
-4. insertion to mmconfig list can be done as the final step in separate
-function (candidate for further refactoring) and needs another mmconfig
-lookup to avoid race condition.
+This is based on a patch by Hien Dang <hien.dang.eb@rvc.renesas.com>
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 ---
- arch/x86/pci/mmconfig-shared.c | 101 +++++++++++++++++++++++------------------
- 1 file changed, 58 insertions(+), 43 deletions(-)
+v2:
+ - Use readl_poll_timeout_atomic when waiting until we are in L1.
+---
+ drivers/pci/host/pcie-rcar.c | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index dd30b7e..c8bb9b0 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -720,6 +720,38 @@ static int __init pci_mmcfg_late_insert_resources(void)
-  */
- late_initcall(pci_mmcfg_late_insert_resources);
- 
-+static int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
-+{
-+	struct pci_mmcfg_region *cfg_conflict;
-+	int err = 0;
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index c72c0ae..31ad93a 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -15,6 +15,7 @@
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
++#include <linux/iopoll.h>
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+@@ -83,6 +84,14 @@
+ #define MACSR			0x011054
+ #define MACCTLR			0x011058
+ #define  SCRAMBLE_DISABLE	(1 << 27)
++#define PMSR			0x01105c
++#define  L1FAEG			(1 << 31)
++#define  PM_ENTER_L1RX		(1 << 23)
++#define  PMSTATE		(7 << 16)
++#define  PMSTATE_L1		(3 << 16)
++#define PMCTLR			0x011060
++#define  L1_INIT		(1 << 31)
 +
-+	mutex_lock(&pci_mmcfg_lock);
-+	cfg_conflict = pci_mmconfig_lookup(cfg->segment, cfg->start_bus);
-+	if (cfg_conflict) {
-+		if (cfg_conflict->end_bus < cfg->end_bus)
-+			pr_info(FW_INFO "MMCONFIG for "
-+				"domain %04x [bus %02x-%02x] "
-+				"only partially covers this bridge\n",
-+				cfg_conflict->segment, cfg_conflict->start_bus,
-+				cfg_conflict->end_bus);
-+		err = -EEXIST;
-+		goto out;
+ 
+ /* R-Car H1 PHY */
+ #define H1_PCIEPHYADRR		0x04000c
+@@ -175,6 +184,8 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+ 		unsigned int devfn, int where, u32 *data)
+ {
+ 	int dev, func, reg, index;
++	u32 val;
++	int err;
+ 
+ 	dev = PCI_SLOT(devfn);
+ 	func = PCI_FUNC(devfn);
+@@ -216,6 +227,26 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+ 	if (pcie->root_bus_nr < 0)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
++	/*
++	 * If we are not in L1 link state but have received PM_ENTER_L1 DLLP,
++	 * transition to L1 link state. The HW will handle coming out of L1.
++	 */
++	val = rcar_pci_read_reg(pcie, PMSR);
++	if ((val & PM_ENTER_L1RX) && ((val & PMSTATE) != PMSTATE_L1)) {
++		rcar_pci_write_reg(pcie, L1_INIT, PMCTLR);
++
++		/* Wait until we are in L1 */
++		err = readl_poll_timeout_atomic(pcie->base + PMSR,
++			val, (val & L1FAEG), 5, 1000000);
++		if (err) {
++			dev_err(pcie->dev, "poll for L1 state timed out\n");
++			return PCIBIOS_DEVICE_NOT_FOUND;
++		}
++
++		/* Clear flags indicating link has transitioned to L1 */
++		rcar_pci_write_reg(pcie, L1FAEG | PM_ENTER_L1RX, PMSR);
 +	}
 +
-+	if (pci_mmcfg_arch_map(cfg)) {
-+		pr_warn("fail to map MMCONFIG %pR.\n", &cfg->res);
-+		err = -ENOMEM;
-+		goto out;
-+	} else {
-+		list_add_sorted(cfg);
-+		pr_info("MMCONFIG at %pR (base %#lx)\n",
-+			&cfg->res, (unsigned long)cfg->address);
-+	}
-+out:
-+	mutex_unlock(&pci_mmcfg_lock);
-+	return err;
-+}
-+
- /* Add MMCFG information for host bridges */
- int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 			phys_addr_t addr)
-@@ -734,63 +766,46 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 	if (start > end)
- 		return -EINVAL;
- 
--	mutex_lock(&pci_mmcfg_lock);
-+	rcu_read_lock();
- 	cfg = pci_mmconfig_lookup(seg, start);
--	if (cfg) {
--		if (cfg->end_bus < end)
--			dev_info(dev, FW_INFO
--				 "MMCONFIG for "
--				 "domain %04x [bus %02x-%02x] "
--				 "only partially covers this bridge\n",
--				  cfg->segment, cfg->start_bus, cfg->end_bus);
--		mutex_unlock(&pci_mmcfg_lock);
-+	rcu_read_unlock();
-+	if (cfg)
- 		return -EEXIST;
--	}
- 
--	if (!addr) {
--		mutex_unlock(&pci_mmcfg_lock);
-+	if (!addr)
- 		return -EINVAL;
--	}
- 
--	rc = -EBUSY;
- 	cfg = pci_mmconfig_alloc(seg, start, end, addr);
--	if (cfg == NULL) {
-+	if (!cfg) {
- 		dev_warn(dev, "fail to add MMCONFIG (out of memory)\n");
--		rc = -ENOMEM;
--	} else if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
-+		return -ENOMEM;
-+	}
-+
-+	rc = -EBUSY;
-+	if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
- 		dev_warn(dev, FW_BUG "MMCONFIG %pR isn't reserved\n",
- 			 &cfg->res);
--	} else {
--		/* Insert resource if it's not in boot stage */
--		if (pci_mmcfg_running_state)
--			tmp = insert_resource_conflict(&iomem_resource,
--						       &cfg->res);
--
--		if (tmp) {
--			dev_warn(dev,
--				 "MMCONFIG %pR conflicts with "
--				 "%s %pR\n",
--				 &cfg->res, tmp->name, tmp);
--		} else if (pci_mmcfg_arch_map(cfg)) {
--			dev_warn(dev, "fail to map MMCONFIG %pR.\n",
--				 &cfg->res);
--		} else {
--			list_add_sorted(cfg);
--			dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
--				 &cfg->res, (unsigned long)addr);
--			cfg = NULL;
--			rc = 0;
--		}
-+		goto error;
- 	}
- 
--	if (cfg) {
--		if (cfg->res.parent)
--			release_resource(&cfg->res);
--		kfree(cfg);
-+	/* Insert resource if it's not in boot stage */
-+	if (pci_mmcfg_running_state)
-+		tmp = insert_resource_conflict(&iomem_resource, &cfg->res);
-+
-+	if (tmp) {
-+		dev_warn(dev, "MMCONFIG %pR conflicts with %s %pR\n",
-+			 &cfg->res, tmp->name, tmp);
-+		goto error;
- 	}
- 
--	mutex_unlock(&pci_mmcfg_lock);
-+	rc = pci_mmconfig_inject(cfg);
-+	if (!rc)
-+		return 0;
- 
-+error:
-+	if (cfg->res.parent)
-+		release_resource(&cfg->res);
-+	kfree(cfg);
- 	return rc;
- }
+ 	/* Clear errors */
+ 	rcar_pci_write_reg(pcie, rcar_pci_read_reg(pcie, PCIEERRFR), PCIEERRFR);
  
 -- 
-1.9.1
+2.5.0
+
