@@ -1,64 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0080.outbound.protection.outlook.com ([157.56.110.80]:42696
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753102AbcA2ViB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Jan 2016 16:38:01 -0500
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Tirumalesh Chalamarla <tchalamarla@cavium.com>,
-	"Richter, Robert" <Robert.Richter@caviumnetworks.com>
-From: Manish Jaggi <mjaggi@caviumnetworks.com>
-Subject: [PATCH] PCI: Add cavium acs pci quirk
-Message-ID: <56ABC5AE.1050209@caviumnetworks.com>
-Date: Sat, 30 Jan 2016 01:33:58 +0530
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 5 Jan 2016 12:43:03 +0000
+From: "Dr. David Alan Gilbert" <dgilbert@redhat.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
+ tracking
+Message-ID: <20160105124303.GE2439@work-vm>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <20160104204104.GB17427@char.us.oracle.com>
+ <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+ <20160105113317-mutt-send-email-mst@redhat.com>
+ <20160105100104.GA2439@work-vm>
+ <20160105123243-mutt-send-email-mst@redhat.com>
+ <20160105104525.GC2439@work-vm>
+ <20160105130133-mutt-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160105130133-mutt-send-email-mst@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+* Michael S. Tsirkin (mst@redhat.com) wrote:
+> On Tue, Jan 05, 2016 at 10:45:25AM +0000, Dr. David Alan Gilbert wrote:
+> > * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > > On Tue, Jan 05, 2016 at 10:01:04AM +0000, Dr. David Alan Gilbert wrote:
+> > > > * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > > > > On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
+> > > > > > >> The two mechanisms referenced above would likely require coordination with
+> > > > > > >> QEMU and as such are open to discussion.  I haven't attempted to address
+> > > > > > >> them as I am not sure there is a consensus as of yet.  My personal
+> > > > > > >> preference would be to add a vendor-specific configuration block to the
+> > > > > > >> emulated pci-bridge interfaces created by QEMU that would allow us to
+> > > > > > >> essentially extend shpc to support guest live migration with pass-through
+> > > > > > >> devices.
+> > > > > > >
+> > > > > > > shpc?
+> > > > > > 
+> > > > > > That is kind of what I was thinking.  We basically need some mechanism
+> > > > > > to allow for the host to ask the device to quiesce.  It has been
+> > > > > > proposed to possibly even look at something like an ACPI interface
+> > > > > > since I know ACPI is used by QEMU to manage hot-plug in the standard
+> > > > > > case.
+> > > > > > 
+> > > > > > - Alex
+> > > > > 
+> > > > > 
+> > > > > Start by using hot-unplug for this!
+> > > > > 
+> > > > > Really use your patch guest side, and write host side
+> > > > > to allow starting migration with the device, but
+> > > > > defer completing it.
+> > > > > 
+> > > > > So
+> > > > > 
+> > > > > 1.- host tells guest to start tracking memory writes
+> > > > > 2.- guest acks
+> > > > > 3.- migration starts
+> > > > > 4.- most memory is migrated
+> > > > > 5.- host tells guest to eject device
+> > > > > 6.- guest acks
+> > > > > 7.- stop vm and migrate rest of state
+> > > > > 
+> > > > > 
+> > > > > It will already be a win since hot unplug after migration starts and
+> > > > > most memory has been migrated is better than hot unplug before migration
+> > > > > starts.
+> > > > > 
+> > > > > Then measure downtime and profile. Then we can look at ways
+> > > > > to quiesce device faster which really means step 5 is replaced
+> > > > > with "host tells guest to quiesce device and dirty (or just unmap!)
+> > > > > all memory mapped for write by device".
+> > > > 
+> > > > 
+> > > > Doing a hot-unplug is going to upset the guests network stacks view
+> > > > of the world; that's something we don't want to change.
+> > > > 
+> > > > Dave
+> > > 
+> > > It might but if you store the IP and restore it quickly
+> > > after migration e.g. using guest agent, as opposed to DHCP,
+> > > then it won't.
+> > 
+> > I thought if you hot-unplug then it will lose any outstanding connections
+> > on that device.
+> 
+> Which connections and which device?  TCP connections and an ethernet
+> device?  These are on different layers so of course you don't lose them.
+> Just do not change the IP address.
+> 
+> Some guests send a signal to applications to close connections
+> when all links go down. One can work around this
+> in a variety of ways.
 
-Cavium devices matching this quirk do not perform
-peer-to-peer with other functions, allowing masking out
-these bits as if they were unimplemented in the ACS capability.
+So, OK, I was surprised that a simple connection didn't go down when
+I tested and just removed the network card; I'd thought stuff was more
+aggressive when there was no route.
+But as you say, some stuff does close connections when the links go down/away
+so we do need to work around that; and any new outgoing connections get
+a 'no route to host'.  So I'm still nervous what will break.
 
-Acked-by: Tirumalesh Chalamarla <tchalamarla@cavium.com>
-Signed-off-by: Manish Jaggi <mjaggi@caviumnetworks.com>
----
- drivers/pci/quirks.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Dave
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7e32730..a300fa6 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3814,6 +3814,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
- #endif
- }
-
-+static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-+{
-+	/*
-+	 * Cavium devices matching this quirk do not perform
-+	 * peer-to-peer with other functions, allowing masking out
-+	 * these bits as if they were unimplemented in the ACS capability.
-+	 */
-+	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
-+		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-+
-+	return acs_flags ? 0 : 1;
-+}
-+
- /*
-  * Many Intel PCH root ports do provide ACS-like features to disable peer
-  * transactions and validate bus numbers in requests, but do not provide an
-@@ -3966,6 +3979,8 @@ static const struct pci_dev_acs_enabled {
- 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
- 	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
- 	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
-+	/* Cavium ThunderX */
-+	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
- 	{ 0 }
- };
-
--- 
-1.9.1
+> 
+> > > It allows calming the device down in a generic way,
+> > > specific drivers can then implement the fast quiesce.
+> > 
+> > Except that if it breaks the guest networking it's useless.
+> > 
+> > Dave
+> > 
+> > > 
+> > > > > 
+> > > > > -- 
+> > > > > MST
+> > > > --
+> > > > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+> > --
+> > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+--
+Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
