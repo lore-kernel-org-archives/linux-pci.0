@@ -1,35 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:39743 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751610AbcAOTpL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2016 14:45:11 -0500
-Date: Fri, 15 Jan 2016 20:44:10 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Keith Busch <keith.busch@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
-In-Reply-To: <20160115181938.GA5296@localhost>
-Message-ID: <alpine.DEB.2.11.1601152042090.3575@nanos>
-References: <1452629890-17542-1-git-send-email-keith.busch@intel.com> <20160115181938.GA5296@localhost>
+Received: from mx1.redhat.com ([209.132.183.28]:35347 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751188AbcAELDn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Jan 2016 06:03:43 -0500
+Date: Tue, 5 Jan 2016 11:03:38 +0000
+From: "Dr. David Alan Gilbert" <dgilbert@redhat.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
+ tracking
+Message-ID: <20160105110337.GD2439@work-vm>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <20160104204104.GB17427@char.us.oracle.com>
+ <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+ <20160105113317-mutt-send-email-mst@redhat.com>
+ <20160105100104.GA2439@work-vm>
+ <20160105123243-mutt-send-email-mst@redhat.com>
+ <20160105104525.GC2439@work-vm>
+ <20160105125937-mutt-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160105125937-mutt-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 15 Jan 2016, Bjorn Helgaas wrote:
-> +    [bhelgaas: add VMD BAR #defines, factor out vmd_cfg_addr(), whitespace]
->      Signed-off-by: Keith Busch <keith.busch@intel.com>
->      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+* Michael S. Tsirkin (mst@redhat.com) wrote:
+> On Tue, Jan 05, 2016 at 10:45:25AM +0000, Dr. David Alan Gilbert wrote:
+> > * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > > On Tue, Jan 05, 2016 at 10:01:04AM +0000, Dr. David Alan Gilbert wrote:
+> > > > * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > > > > On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
+> > > > > > >> The two mechanisms referenced above would likely require coordination with
+> > > > > > >> QEMU and as such are open to discussion.  I haven't attempted to address
+> > > > > > >> them as I am not sure there is a consensus as of yet.  My personal
+> > > > > > >> preference would be to add a vendor-specific configuration block to the
+> > > > > > >> emulated pci-bridge interfaces created by QEMU that would allow us to
+> > > > > > >> essentially extend shpc to support guest live migration with pass-through
+> > > > > > >> devices.
+> > > > > > >
+> > > > > > > shpc?
+> > > > > > 
+> > > > > > That is kind of what I was thinking.  We basically need some mechanism
+> > > > > > to allow for the host to ask the device to quiesce.  It has been
+> > > > > > proposed to possibly even look at something like an ACPI interface
+> > > > > > since I know ACPI is used by QEMU to manage hot-plug in the standard
+> > > > > > case.
+> > > > > > 
+> > > > > > - Alex
+> > > > > 
+> > > > > 
+> > > > > Start by using hot-unplug for this!
+> > > > > 
+> > > > > Really use your patch guest side, and write host side
+> > > > > to allow starting migration with the device, but
+> > > > > defer completing it.
+> > > > > 
+> > > > > So
+> > > > > 
+> > > > > 1.- host tells guest to start tracking memory writes
+> > > > > 2.- guest acks
+> > > > > 3.- migration starts
+> > > > > 4.- most memory is migrated
+> > > > > 5.- host tells guest to eject device
+> > > > > 6.- guest acks
+> > > > > 7.- stop vm and migrate rest of state
+> > > > > 
+> > > > > 
+> > > > > It will already be a win since hot unplug after migration starts and
+> > > > > most memory has been migrated is better than hot unplug before migration
+> > > > > starts.
+> > > > > 
+> > > > > Then measure downtime and profile. Then we can look at ways
+> > > > > to quiesce device faster which really means step 5 is replaced
+> > > > > with "host tells guest to quiesce device and dirty (or just unmap!)
+> > > > > all memory mapped for write by device".
+> > > > 
+> > > > 
+> > > > Doing a hot-unplug is going to upset the guests network stacks view
+> > > > of the world; that's something we don't want to change.
+> > > > 
+> > > > Dave
+> > > 
+> > > It might but if you store the IP and restore it quickly
+> > > after migration e.g. using guest agent, as opposed to DHCP,
+> > > then it won't.
+> > 
+> > I thought if you hot-unplug then it will lose any outstanding connections
+> > on that device.
+> > 
+> > > It allows calming the device down in a generic way,
+> > > specific drivers can then implement the fast quiesce.
+> > 
+> > Except that if it breaks the guest networking it's useless.
+> > 
+> > Dave
+> 
+> Is hot unplug useless then?
 
-Just for the record. You forgot my Acked-bys
- 
-Other than that the changes look good!
+As a migration hack, yes, unless it's paired with a second network device
+as a redundent route.
+To do what's being suggested here it's got to be done at the device level
+and not visible to the networking stack.
 
-Thanks,
+Dave
 
-	tglx
+> 
+> > > 
+> > > > > 
+> > > > > -- 
+> > > > > MST
+> > > > --
+> > > > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+> > --
+> > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+--
+Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
