@@ -1,168 +1,110 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <5693E26C.2010501@suse.com>
-References: <1450780730-13667-1-git-send-email-gkulkarni@caviumnetworks.com>
-	<20160108180131.GB5354@localhost>
-	<20160108180638.GF11228@arm.com>
-	<CAFpQJXUaVS7tBqjQ4Dh201yrOWFxa3Bk2q-ZCFtK4mk-te=Q7w@mail.gmail.com>
-	<20160109152422.GA30802@localhost>
-	<CAFpQJXVBafgq864cNeOhccZAdr89EUfXdEdnW7jh1y66ModKAQ@mail.gmail.com>
-	<5693E26C.2010501@suse.com>
-Date: Mon, 11 Jan 2016 22:56:59 +0530
-Message-ID: <CAFpQJXVVPMvj4AC9G7Gd71O_xFAKfxNkzWh1us4ENP77Do=ceA@mail.gmail.com>
-Subject: Re: [PATCH] arm64, pci, numa: Adding helper functions as required by pci
-From: Ganapatrao Kulkarni <gpkulkarni@gmail.com>
-To: Matthias Brugger <mbrugger@suse.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Prasun Kapoor <Prasun.Kapoor@caviumnetworks.com>,
-	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:45371 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751415AbcAEKpb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Jan 2016 05:45:31 -0500
+Date: Tue, 5 Jan 2016 10:45:25 +0000
+From: "Dr. David Alan Gilbert" <dgilbert@redhat.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Robert Richter <rrichter@cavium.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	Alexander Graf <agraf@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
+ tracking
+Message-ID: <20160105104525.GC2439@work-vm>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <20160104204104.GB17427@char.us.oracle.com>
+ <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+ <20160105113317-mutt-send-email-mst@redhat.com>
+ <20160105100104.GA2439@work-vm>
+ <20160105123243-mutt-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160105123243-mutt-send-email-mst@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn, Will,
+* Michael S. Tsirkin (mst@redhat.com) wrote:
+> On Tue, Jan 05, 2016 at 10:01:04AM +0000, Dr. David Alan Gilbert wrote:
+> > * Michael S. Tsirkin (mst@redhat.com) wrote:
+> > > On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
+> > > > >> The two mechanisms referenced above would likely require coordination with
+> > > > >> QEMU and as such are open to discussion.  I haven't attempted to address
+> > > > >> them as I am not sure there is a consensus as of yet.  My personal
+> > > > >> preference would be to add a vendor-specific configuration block to the
+> > > > >> emulated pci-bridge interfaces created by QEMU that would allow us to
+> > > > >> essentially extend shpc to support guest live migration with pass-through
+> > > > >> devices.
+> > > > >
+> > > > > shpc?
+> > > > 
+> > > > That is kind of what I was thinking.  We basically need some mechanism
+> > > > to allow for the host to ask the device to quiesce.  It has been
+> > > > proposed to possibly even look at something like an ACPI interface
+> > > > since I know ACPI is used by QEMU to manage hot-plug in the standard
+> > > > case.
+> > > > 
+> > > > - Alex
+> > > 
+> > > 
+> > > Start by using hot-unplug for this!
+> > > 
+> > > Really use your patch guest side, and write host side
+> > > to allow starting migration with the device, but
+> > > defer completing it.
+> > > 
+> > > So
+> > > 
+> > > 1.- host tells guest to start tracking memory writes
+> > > 2.- guest acks
+> > > 3.- migration starts
+> > > 4.- most memory is migrated
+> > > 5.- host tells guest to eject device
+> > > 6.- guest acks
+> > > 7.- stop vm and migrate rest of state
+> > > 
+> > > 
+> > > It will already be a win since hot unplug after migration starts and
+> > > most memory has been migrated is better than hot unplug before migration
+> > > starts.
+> > > 
+> > > Then measure downtime and profile. Then we can look at ways
+> > > to quiesce device faster which really means step 5 is replaced
+> > > with "host tells guest to quiesce device and dirty (or just unmap!)
+> > > all memory mapped for write by device".
+> > 
+> > 
+> > Doing a hot-unplug is going to upset the guests network stacks view
+> > of the world; that's something we don't want to change.
+> > 
+> > Dave
+> 
+> It might but if you store the IP and restore it quickly
+> after migration e.g. using guest agent, as opposed to DHCP,
+> then it won't.
 
-On Mon, Jan 11, 2016 at 10:42 PM, Matthias Brugger <mbrugger@suse.com> wrote:
->
->
-> On 09/01/16 16:35, Ganapatrao Kulkarni wrote:
->>
->> Hi Bjorn,
->>
->> On Sat, Jan 9, 2016 at 8:54 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>>
->>> On Sat, Jan 09, 2016 at 11:35:17AM +0530, Ganapatrao Kulkarni wrote:
->>>>
->>>> On Fri, Jan 8, 2016 at 11:36 PM, Will Deacon <will.deacon@arm.com>
->>>> wrote:
->>>>>
->>>>> On Fri, Jan 08, 2016 at 12:01:31PM -0600, Bjorn Helgaas wrote:
->>>>>>
->>>>>> On Tue, Dec 22, 2015 at 04:08:50PM +0530, Ganapatrao Kulkarni wrote:
->>>>>>>
->>>>>>> Adding helper functions and necessary code to make
->>>>>>> pci driver(pci-host-generic) numa aware.
->>>>>>>
->>>>>>> This patch is on top of arm64-numa v7.
->>>>>>> http://www.spinics.net/lists/arm-kernel/msg460813.html
->>>>>>>
->>>>>>> Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
->>>>>>> ---
->>>>>>>   arch/arm64/include/asm/numa.h       | 8 +++++---
->>>>>>>   arch/arm64/kernel/pci.c             | 8 ++++++++
->>>>>>>   drivers/pci/host/pci-host-generic.c | 1 +
->
->
-> set_dev_node() in pci-host-generic.c is missing in v8 of your numa patches.
-> Was this forgotten?
-i am not sure on adding numa required change(it is one line add) to
-pci-host-generic.c in numa patchset itself.
-Is it more appropriate to send as separate patch?
-please suggest.
+I thought if you hot-unplug then it will lose any outstanding connections
+on that device.
 
+> It allows calming the device down in a generic way,
+> specific drivers can then implement the fast quiesce.
 
-Thanks Matthias for your comment.
->
-> Regards,
-> Matthias
->
->>>>>>>   3 files changed, 14 insertions(+), 3 deletions(-)
->>>>>>>
->>>>>>> diff --git a/arch/arm64/include/asm/numa.h
->>>>>>> b/arch/arm64/include/asm/numa.h
->>>>>>> index b8c2a3f..1eca4db 100644
->>>>>>> --- a/arch/arm64/include/asm/numa.h
->>>>>>> +++ b/arch/arm64/include/asm/numa.h
->>>>>>> @@ -15,9 +15,11 @@
->>>>>>>   extern int __node_distance(int from, int to);
->>>>>>>   #define node_distance(a, b) __node_distance(a, b)
->>>>>>>
->>>>>>> -/* dummy definitions for pci functions */
->>>>>>> -#define pcibus_to_node(node)       0
->>>>>>> -#define cpumask_of_pcibus(bus)     0
->>>>>>> +struct pci_bus;
->>>>>>> +extern int pcibus_to_node(struct pci_bus *bus);
->>>>>>> +#define cpumask_of_pcibus(bus)     (pcibus_to_node(bus) == -1 ?
->>>>>>> \
->>>>>>> +                            cpu_all_mask :                         \
->>>>>>> +                            cpumask_of_node(pcibus_to_node(bus)))
->>>>>>
->>>>>>
->>>>>> All the arch definitions of cpumask_of_pcibus() are pretty similar;
->>>>>> could they be made more generic?  At the very least, can you drop the
->>>>>> definition here and use the one in include/asm-generic/topology.h,
->>>>>> which is identical to what you're defining here?
->>>>
->>>> macro cpumask_of_pcibus is defined under #ifndef CONFIG_NUMA in
->>>> include/asm-generic/topology.h
->>>> and this macro is defined again for NUMA in respective arch header
->>>> files.
->>>> i think moving this macro from ifndef will allow us to use without
->>>> redefinition.
->>>>
->>>> --- a/include/asm-generic/topology.h
->>>> +++ b/include/asm-generic/topology.h
->>>> @@ -54,14 +54,14 @@
->>>>   #define pcibus_to_node(bus)    ((void)(bus), -1)
->>>>   #endif
->>>>
->>>> +#endif /* CONFIG_NUMA */
->>>> +
->>>>   #ifndef cpumask_of_pcibus
->>>>   #define cpumask_of_pcibus(bus) (pcibus_to_node(bus) == -1 ?
->>>> \
->>>>                                   cpu_all_mask :
->>>> \
->>>>                                   cpumask_of_node(pcibus_to_node(bus)))
->>>>   #endif
->>>>
->>>> -#endif /* CONFIG_NUMA */
->>>> -
->>>>   #if !defined(CONFIG_NUMA) || !defined(CONFIG_HAVE_MEMORYLESS_NODES)
->>>>
->>>>   #ifndef set_numa_mem
->>>>
->>>> i have got below compilation error withour macro defined in arch code.
->>>>
->>>> drivers/pci/pci-sysfs.c: In function ‘cpuaffinity_show’:
->>>> drivers/pci/pci-sysfs.c:114:15: error: implicit declaration of
->>>> function ‘cpumask_of_pcibus’ [-Werror=implicit-function-declaration]
->>>> drivers/pci/pci-sysfs.c:114:34: warning: initialization makes pointer
->>>> from integer without a cast [enabled by default]
->>>> drivers/pci/pci-sysfs.c: In function ‘cpulistaffinity_show’:
->>>> drivers/pci/pci-sysfs.c:123:34: warning: initialization makes pointer
->>>> from integer without a cast [enabled by default]
->>>> cc1: some warnings being treated as errors
->>>>
->>>>
->>>> i can send this as separate patch( as a  fix patch).
->>>
->>>
->>> Unless your series has already been merged, I don't like the idea of a
->>> separate fix patch.  The whole point of reviews is to try to fix as
->>> many things as we can *before* merging.
->>
->> thanks for the review.
->> sure, i will add  this as part of my numa patch series.
->>>
->>>
->>> Bjorn
->>
->>
->> thanks
->> Ganapat
->>
->> _______________________________________________
->> linux-arm-kernel mailing list
->> linux-arm-kernel@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
->>
->
+Except that if it breaks the guest networking it's useless.
+
+Dave
+
+> 
+> > > 
+> > > -- 
+> > > MST
+> > --
+> > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+--
+Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
