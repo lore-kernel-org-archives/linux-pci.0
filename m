@@ -1,33 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:50416 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753934AbcAWUJy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Jan 2016 15:09:54 -0500
-Subject: Re: [PATCH v2] pci: aer: wait till the workqueue completes before
- free memory
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20151217143243.GA9654@linutronix.de>
- <20160106232758.GE16231@localhost> <20160115183625.GG3781@linutronix.de>
- <20160121205717.GA21798@localhost>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Message-ID: <56A3DE10.9040809@linutronix.de>
-Date: Sat, 23 Jan 2016 21:09:52 +0100
+Received: from mail.kernel.org ([198.145.29.136]:44169 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751625AbcAEVmK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Jan 2016 16:42:10 -0500
+Date: Tue, 5 Jan 2016 15:42:06 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>
+Subject: Re: [PATCH v5 0/5] Qualcomm PCIe driver and designware fixes
+Message-ID: <20160105214206.GA23814@localhost>
+References: <1450442339-18765-1-git-send-email-stanimir.varbanov@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <20160121205717.GA21798@localhost>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1450442339-18765-1-git-send-email-stanimir.varbanov@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/21/2016 09:57 PM, Bjorn Helgaas wrote:
-> Hi Sebastian,
+On Fri, Dec 18, 2015 at 02:38:54PM +0200, Stanimir Varbanov wrote:
+> Hi,
+> 
+> I'm sending v5 with following changes:
+> - in 1/5 - replace wmb() call with PCIE_ATU_CR2 register read.
+> - in 3/5 - addressed comments from Born Helgaas about usage of a
+> standard PCI capabilities register names and rename link training
+> function to the way that other Designware based drivers use.
+> - in 5/5 - addressed a comment from Bjorn Andersson about regulator
+> label duplication.
+> 
+> Comments are welcome!
+> 
+> The previous v4 of the patch set can be found at [1].
+> 
+> regards,
+> Stan
+> 
+> [1] https://lkml.org/lkml/2015/12/3/370
+> 
+> Stanimir Varbanov (5):
+>   PCI: designware: ensure ATU is enabled before IO/conf space accesses
+>   DT: PCI: qcom: Document PCIe devicetree bindings
+>   PCI: qcom: Add Qualcomm PCIe controller driver
+>   ARM: dts: apq8064: add pcie devicetree node
+>   ARM: dts: ifc6410: enable pcie dt node for this board
+> 
+>  .../devicetree/bindings/pci/qcom,pcie.txt          |  233 ++++++++
+>  MAINTAINERS                                        |    7 +
+>  arch/arm/boot/dts/qcom-apq8064-ifc6410.dts         |   26 +
+>  arch/arm/boot/dts/qcom-apq8064.dtsi                |   36 ++
+>  drivers/pci/host/Kconfig                           |   10 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pcie-designware.c                 |    7 +
+>  drivers/pci/host/pcie-qcom.c                       |  617 ++++++++++++++++++++
+>  8 files changed, 937 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
+>  create mode 100644 drivers/pci/host/pcie-qcom.c
 
-Hi Bjorn,
-
-> I propose to merge this patch unchanged, but with the following
-> changelog.  I want to add a bit more detail about the concurrency
-> problem and remove a bit of the specific detail about your FPGA:
-
-perfect, thanks.
-
-Sebastian
+Applied to pci/host-qcom for v4.5, with Pratyush's ack on the first patch.
+Thanks!
