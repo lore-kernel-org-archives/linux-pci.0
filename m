@@ -1,141 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:34001 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752221AbcANU2C (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jan 2016 15:28:02 -0500
-Received: by mail-pa0-f49.google.com with SMTP id uo6so366812533pac.1
-        for <linux-pci@vger.kernel.org>; Thu, 14 Jan 2016 12:28:02 -0800 (PST)
-From: Justin Waters <justin.waters@timesys.com>
-To: linux-pci@vger.kernel.org
-Cc: festevam@gmail.com, l.stach@pengutronix.de,
-	Justin Waters <justin.waters@timesys.com>
-Subject: [PATCH] PCI: imx6: Add DT bindings to configure Tx Driver settings
-Date: Thu, 14 Jan 2016 15:27:49 -0500
-Message-Id: <1452803269-18412-1-git-send-email-justin.waters@timesys.com>
+Received: from e28smtp08.in.ibm.com ([125.16.236.8]:35850 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752253AbcAFJ6f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jan 2016 04:58:35 -0500
+Received: from localhost
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Wed, 6 Jan 2016 15:28:32 +0530
+Subject: Re: [RFC PATCH v2 3/3] vfio-pci: Allow to mmap MSI-X table if EEH is
+ supported
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org
+References: <1451551844-11732-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1451551844-11732-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1451941655.6585.8.camel@redhat.com>
+ <1451943775.12575.6.camel@kernel.crashing.org>
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Message-ID: <568CE52F.8030407@linux.vnet.ibm.com>
+Date: Wed, 6 Jan 2016 17:58:07 +0800
+MIME-Version: 1.0
+In-Reply-To: <1451943775.12575.6.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The settings in GPR8 are dependent upon the particular layout of the
-hardware platform. As such, they should be configurable via the device
-tree.
+On 2016/1/5 5:42, Benjamin Herrenschmidt wrote:
+> On Mon, 2016-01-04 at 14:07 -0700, Alex Williamson wrote:
+>> On Thu, 2015-12-31 at 16:50 +0800, Yongji Xie wrote:
+>>> Current vfio-pci implementation disallows to mmap MSI-X
+>>> table in case that user get to touch this directly.
+>>>
+>>> However, EEH mechanism can ensure that a given pci device
+>>> can only shoot the MSIs assigned for its PE. So we think
+>>> it's safe to expose the MSI-X table to userspace because
+>>> the exposed MSI-X table can't be used to do harm to other
+>>> memory space.
+>>>
+>>> And with MSI-X table mmapped, some performance issues which
+>>> are caused when PCI adapters have critical registers in the
+>>> same page as the MSI-X table also can be resolved.
+>>>
+>>> So this patch adds a Kconfig option, VFIO_PCI_MMAP_MSIX,
+>>> to support for mmapping MSI-X table.
+>>>
+>>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>>> ---
+>>>   drivers/vfio/pci/Kconfig    |    4 ++++
+>>>   drivers/vfio/pci/vfio_pci.c |    6 ++++--
+>>>   2 files changed, 8 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
+>>> index 02912f1..67b0a2c 100644
+>>> --- a/drivers/vfio/pci/Kconfig
+>>> +++ b/drivers/vfio/pci/Kconfig
+>>> @@ -23,6 +23,10 @@ config VFIO_PCI_MMAP
+>>>   	depends on VFIO_PCI
+>>>   	def_bool y if !S390
+>>>   
+>>> +config VFIO_PCI_MMAP_MSIX
+>>> +	depends on VFIO_PCI_MMAP
+>>> +	def_bool y if EEH
+>> Does CONFIG_EEH necessarily mean the EEH is enabled?  Could the
+>> system
+>> not support EEH or could EEH be disabled via kernel commandline
+>> options?
+> EEH is definitely the wrong thing to test here anyway. What needs to be
+> tested is that the PCI Host bridge supports filtering of MSIs, so
+> ideally this should be some kind of host bridge attribute set by the
+> architecture backend.
 
-As many boards have been using the default values, this implementation
-uses the old values if they are not specified in the device tree.
+So do you mean this attribute can be added in pci_host_bridge like this:
 
-Signed-off-by: Justin Waters <justin.waters@timesys.com>
----
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     | 13 +++++++
- drivers/pci/host/pci-imx6.c                        | 43 +++++++++++++++++++---
- 2 files changed, 51 insertions(+), 5 deletions(-)
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -412,6 +412,7 @@ struct pci_host_bridge {
+  	void (*release_fn)(struct pci_host_bridge *);
+  	void *release_data;
+  	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
++	unsigned int msix_filtered:1;	/* support filtering of MSIs */
+  	/* Resource alignment requirements */
+  	resource_size_t (*align_resource)(struct pci_dev *dev,
+  			const struct resource *res,
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 6fbba53..3aa462d 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -13,6 +13,17 @@ Required properties:
- - clock-names: Must include the following additional entries:
- 	- "pcie_phy"
- 
-+Optional properties:
-+- fsl,tx-deemph-gen1: Sets GPR8 value for Tx driver de-emphasis when PHY is
-+  running at Gen1 rates.
-+- fsl,tx-deemph-gen2-3p5db: Sets GPR8 value for Tx driver de-emphasis when
-+  PHY is running at Gen2 (3.5db) rate.
-+- fsl,tx-demmph-gen2-6db: Sets GPR8 value for Tx driver de-emphasis when
-+  PHY is running at Gen2 (3.5db) rate.
-+- fsl,tx-swing-full: Sets GPR8 value for Tx driver SWING_FULL.
-+- fsl,tx-swing-low: Sets GPR8 value for launch amplitude of transmitter when
-+  pipe0_tx_swing is set to 0.
-+
- Example:
- 
- 	pcie@0x01000000 {
-@@ -37,4 +48,6 @@ Example:
- 		                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
- 		clocks = <&clks 144>, <&clks 206>, <&clks 189>;
- 		clock-names = "pcie", "pcie_bus", "pcie_phy";
-+		fsl,tx-swing-full = <103>;
-+		fsl,tx-swing-low = <103>;
- 	};
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 230ebf9..10036e4 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -39,6 +39,11 @@ struct imx6_pcie {
- 	struct pcie_port	pp;
- 	struct regmap		*iomuxc_gpr;
- 	void __iomem		*mem_base;
-+	u32			tx_deemph_gen1;
-+	u32			tx_deemph_gen2_3p5db;
-+	u32			tx_deemph_gen2_6db;
-+	u32			tx_swing_full;
-+	u32			tx_swing_low;
- };
- 
- /* PCIe Root Complex registers (memory-mapped) */
-@@ -317,15 +322,20 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
- 			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
- 
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
-+			   IMX6Q_GPR8_TX_DEEMPH_GEN1,
-+			   imx6_pcie->tx_deemph_gen1 << 0);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB, 0 << 6);
-+			   IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB,
-+			   imx6_pcie->tx_deemph_gen2_3p5db << 6);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB, 20 << 12);
-+			   IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB,
-+			   imx6_pcie->tx_deemph_gen2_6db << 12);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			IMX6Q_GPR8_TX_SWING_FULL, 127 << 18);
-+			   IMX6Q_GPR8_TX_SWING_FULL,
-+			   imx6_pcie->tx_swing_full << 18);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
-+			   IMX6Q_GPR8_TX_SWING_LOW,
-+			   imx6_pcie->tx_swing_low << 25);
- }
- 
- static int imx6_pcie_wait_for_link(struct pcie_port *pp)
-@@ -565,6 +575,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	struct imx6_pcie *imx6_pcie;
- 	struct pcie_port *pp;
- 	struct resource *dbi_base;
-+	struct device_node *node = pdev->dev.of_node;
- 	int ret;
- 
- 	imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie), GFP_KERNEL);
-@@ -617,6 +628,28 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(imx6_pcie->iomuxc_gpr);
- 	}
- 
-+	/* Grab PCIe PHY Tx Settings */
-+	if (of_property_read_u32
-+	    (node, "fsl,tx-deemph-gen1", &imx6_pcie->tx_deemph_gen1))
-+		imx6_pcie->tx_deemph_gen1 = 0;
-+
-+	if (of_property_read_u32
-+	    (node, "fsl,tx-deemph-gen2-3p5db",
-+	     &imx6_pcie->tx_deemph_gen2_3p5db))
-+		imx6_pcie->tx_deemph_gen2_3p5db = 0;
-+
-+	if (of_property_read_u32
-+	    (node, "fsl,tx-deemph-gen2-6db", &imx6_pcie->tx_deemph_gen2_6db))
-+		imx6_pcie->tx_deemph_gen2_6db = 20;
-+
-+	if (of_property_read_u32
-+	    (node, "fsl,tx-swing-full", &imx6_pcie->tx_swing_full))
-+		imx6_pcie->tx_swing_full = 127;
-+
-+	if (of_property_read_u32
-+	    (node, "fsl,tx-swing-low", &imx6_pcie->tx_swing_low))
-+		imx6_pcie->tx_swing_low = 127;
-+
- 	ret = imx6_add_pcie_port(pp, pdev);
- 	if (ret < 0)
- 		return ret;
--- 
-2.5.0
+I can surely do it if there is no objection from PCI folks. Thanks.
+
+Regards,
+Yongji Xie
+
+> This can happen with or without CONFIG_EEH and you are right,
+> CONFIG_EEH can be enabled and the machine not support it.
+>
+> Any IODA bridge will support this.
+>
+> Cheers,
+> Ben.
+>
 
