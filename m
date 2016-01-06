@@ -1,93 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34197 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750869AbcAUW2v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Jan 2016 17:28:51 -0500
-Message-ID: <1453415330.32741.384.camel@redhat.com>
-Subject: Re: [PATCH 1/2] pci: Identify Enhanced Allocation (EA) BAR
- Equivalent resources
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Sean O. Stalley" <sean.stalley@intel.com>,
-	linux-pci@vger.kernel.org, mj@ucw.cz, bhelgaas@google.com
-Cc: david.daney@cavium.com
-Date: Thu, 21 Jan 2016 15:28:50 -0700
-In-Reply-To: <1453414410-27072-2-git-send-email-sean.stalley@intel.com>
-References: <1453414410-27072-1-git-send-email-sean.stalley@intel.com>
-	 <1453414410-27072-2-git-send-email-sean.stalley@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <kishon@ti.com>
+CC: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<rogerq@ti.com>, <nsekhar@ti.com>
+Subject: [PATCH 1/2] phy: ti-pipe3: get tx and rx MEM resource
+Date: Wed, 6 Jan 2016 16:29:07 +0530
+Message-ID: <1452077948-26232-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1452077948-26232-1-git-send-email-kishon@ti.com>
+References: <1452077948-26232-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2016-01-21 at 14:13 -0800, Sean O. Stalley wrote:
-> From: Alex Williamson <alex.williamson@redhat.com>
-> 
-> We've done a pretty good job of abstracting EA from drivers, but there
-> are some properties of BAR Equivalent resources that don't really jive
-> with traditional PCI BARs.  In particular, natural alignment is only
-> encouraged, not required.
-> 
-> Why does this matter?  There are drivers like vfio-pci that will
-> happily gobble up the EA abstraction that's been implemented and
-> expose a device using EA to userspace as if those resources are
-> traditional BARs.  Pretty cool.  The vfio API is bus agnostic, so it
-> doesn't care about alignment.  The problem comes with PCI config space
-> emulation where we don't let userspace manipulate the BAR value, but
-> we do emulate BAR sizing.  The abstraction kind of falls apart if
-> userspace gets garbage when they try to size what appears to be a
-> traditional BAR, but is actually a BAR equivalent.
-> 
-> We could simply round up the size in vfio to make it naturally
-> aligned, but then we're imposing artificial sizes to the user and we
-> have the discontinuity that BAR size emulation and vfio region size
-> reporting don't agree on the size.  I think what we want to do is
-> expose EA to the user, reporting traditional BARs with BEIs as
-> zero-sized and providing additional regions for the user to access
-> each EA region, whether it has a BEI or not.
-> 
-> To facilitate that, a flag indicating whether a PCI resource is a
-> traditional BAR or BAR equivalent seems much nicer than attempting
-> to size the BAR ourselves or deducing it through the EA capability.
-> 
-> Thoughts?
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
+get tx and rx MEM resource since this has to be used to configure
+for DRA72x to work in X2 mode.
 
-Feel free to rewrite this changelog and tailor it to the use case
-that's currently driving the change.  Add a sign-off for yourself too
-since the patch is passing through your hands.  Thanks,
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+---
+ drivers/phy/phy-ti-pipe3.c |   27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-Alex
-
->  drivers/pci/pci.c      | 2 +-
->  include/linux/ioport.h | 2 ++
->  2 files changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index d1a7105..8ff678c 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
->  
->  static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
->  {
-> -	unsigned long flags = IORESOURCE_PCI_FIXED;
-> +	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_PCI_EA_BEI;
->  
->  	switch (prop) {
->  	case PCI_EA_P_MEM:
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index 24bea08..5acc194 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -105,6 +105,8 @@ struct resource {
->  /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
->  #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
->  
-> +/* PCI Enhanced Allocation defined BAR equivalent resource */
-> +#define IORESOURCE_PCI_EA_BEI		(1<<5)
->  
->  /* helpers to define resources */
->  #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
+diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
+index 0a477d2..7d83d2b 100644
+--- a/drivers/phy/phy-ti-pipe3.c
++++ b/drivers/phy/phy-ti-pipe3.c
+@@ -91,6 +91,8 @@ struct pipe3_dpll_map {
+ 
+ struct ti_pipe3 {
+ 	void __iomem		*pll_ctrl_base;
++	void __iomem		*phy_rx;
++	void __iomem		*phy_tx;
+ 	struct device		*dev;
+ 	struct device		*control_dev;
+ 	struct clk		*wkupclk;
+@@ -536,6 +538,27 @@ static int ti_pipe3_get_pll_base(struct ti_pipe3 *phy)
+ 	return 0;
+ }
+ 
++static int ti_pipe3_get_rx_tx_base(struct ti_pipe3 *phy)
++{
++	struct resource *res;
++	struct device *dev = phy->dev;
++	struct platform_device *pdev = to_platform_device(dev);
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++					   "phy_rx");
++	phy->phy_rx = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(phy->phy_rx))
++		return PTR_ERR(phy->phy_rx);
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++					   "phy_tx");
++	phy->phy_tx = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(phy->phy_tx))
++		return PTR_ERR(phy->phy_tx);
++
++	return 0;
++}
++
+ static int ti_pipe3_probe(struct platform_device *pdev)
+ {
+ 	struct ti_pipe3 *phy;
+@@ -555,6 +578,10 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
++	ret = ti_pipe3_get_rx_tx_base(phy);
++	if (ret)
++		return ret;
++
+ 	ret = ti_pipe3_get_sysctrl(phy);
+ 	if (ret)
+ 		return ret;
+-- 
+1.7.9.5
 
