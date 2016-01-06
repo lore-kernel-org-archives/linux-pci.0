@@ -1,117 +1,190 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52170 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751681AbcA0Ays (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Jan 2016 19:54:48 -0500
-Message-ID: <1453856087.3107.1.camel@redhat.com>
-Subject: Re: [PATCH v2 1/2] pci: Add support for multiple DMA aliases
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	dwmw2@infradead.org, jroedel@suse.de
-Date: Tue, 26 Jan 2016 17:54:47 -0700
-In-Reply-To: <20160127000403.GA3102@localhost>
-References: <1453825639.26652.45.camel@redhat.com>
-	 <1453828335-111522-1-git-send-email-jacek.lawrynowicz@intel.com>
-	 <20160126233100.GC26726@localhost> <1453851743.21982.1.camel@redhat.com>
-	 <20160127000403.GA3102@localhost>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<kishon@ti.com>, <nsekhar@ti.com>
+Subject: [PATCH 2/2] pci: host: pci-dra7xx: Enable x2 mode support
+Date: Wed, 6 Jan 2016 16:19:53 +0530
+Message-ID: <1452077393-25880-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1452077393-25880-1-git-send-email-kishon@ti.com>
+References: <1452077393-25880-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2016-01-26 at 18:04 -0600, Bjorn Helgaas wrote:
-> On Tue, Jan 26, 2016 at 04:42:23PM -0700, Alex Williamson wrote:
-> > On Tue, 2016-01-26 at 17:31 -0600, Bjorn Helgaas wrote:
-> > > Hi Jacek,
-> > >  
-> > > When you post updated versions, please post the whole series with a
-> > > new version number.  I think there are three postings of [v2 1/2], and
-> > > I think they're different.  In any case, it's hard for me to keep them
-> > > straight.
-> > >  
-> > > On Tue, Jan 26, 2016 at 06:12:15PM +0100, Jacek Lawrynowicz wrote:
-> > > > This patch solves IOMMU support issues with PCIe non-transparent bridges
-> > > > that use Requester ID look-up tables (LUT), e.g. PEX8733. Before exiting
-> > > > the bridge, packet's RID is rewritten according to LUT programmed by
-> > > > a driver. Modified packets are then passed to a destination bus and
-> > > > processed upstream. The problem is that such packets seem to come from
-> > > > non-existent nodes that are hidden behind NTB and are not discoverable
-> > > > by a destination node, so IOMMU discards them. Adding DMA alias for a
-> > > > given LUT entry allows IOMMU to create a proper mapping that enables
-> > > > inter-node communication.
-> > > >  
-> > > > The current DMA alias implementation supports only single alias, so it's
-> > > > not possible to connect more than two nodes when IOMMU is enabled. This
-> > > > implementation enables all possible aliases on a given bus (256) that
-> > > > are stored in a bitset. Alias devfn is directly translated to a bit
-> > > > number. The bitset is not allocated for devices that have no need for
-> > > > DMA aliases.
-> > > >  
-> > > > More details can be found in following article:
-> > > > http://www.plxtech.com/files/pdf/technical/expresslane/RTC_Enabling%20MulitHostSystemDesigns
-> > > > .pdf
-> > > >  
-> > > > Signed-off-by: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-> > > > Acked-By: David Woodhouse <David.Woodhouse@intel.com>
-> > > > ---
-> > > >  drivers/iommu/iommu.c | 11 ++++-------
-> > > >  drivers/pci/pci.c     | 27 +++++++++++++++++++++++++++
-> > > >  drivers/pci/pci.h     |  2 ++
-> > > >  drivers/pci/probe.c   |  1 +
-> > > >  drivers/pci/quirks.c  | 15 ++++++---------
-> > > >  drivers/pci/search.c  | 14 +++++++++-----
-> > > >  include/linux/pci.h   | 14 +++++++-------
-> > > >  7 files changed, 56 insertions(+), 28 deletions(-)
-> > > >  
-> > > > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> > > > index 0e3b009..93a89ed 100644
-> > > > --- a/drivers/iommu/iommu.c
-> > > > +++ b/drivers/iommu/iommu.c
-> > > > @@ -660,8 +660,8 @@ static struct iommu_group *get_pci_function_alias_group(struct pci_dev
-> > > > *pdev,
-> > > >  }
-> > > >  
-> > > >  /*
-> > > > - * Look for aliases to or from the given device for exisiting groups.  The
-> > > > - * dma_alias_devfn only supports aliases on the same bus, therefore the search
-> > > > + * Look for aliases to or from the given device for exisiting groups. DMA
-> > >  
-> > > s/exisiting/existing/  (Not your change, but might as well fix the
-> > > typo since you're touching the line anyway.)
-> > >  
-> > > > + * aliases are only supported on the same bus, therefore the search
-> > > >   * space is quite small (especially since we're really only looking at pcie
-> > > >   * device, and therefore only expect multiple slots on the root complex or
-> > > >   * downstream switch ports).  It's conceivable though that a pair of
-> > > > @@ -686,11 +686,8 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
-> > > >  			continue;
-> > > >  
-> > > >  		/* We alias them or they alias us */
-> > > > -		if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
-> > > > -		     pdev->dma_alias_devfn == tmp->devfn) ||
-> > > > -		    ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
-> > > > -		     tmp->dma_alias_devfn == pdev->devfn)) {
-> > > > -
-> > > > +		if (pci_dma_alias_is_enabled(pdev, tmp->devfn) ||
-> > > > +		    pci_dma_alias_is_enabled(tmp, pdev->devfn)) {
-> > >  
-> > > I was hoping for something that took two pci_dev pointers and returned
-> > > true if they were aliases of each other, e.g.,
-> > >  
-> > >   bool pci_dma_aliases(struct pci_dev *dev1, struct pci_dev *dev2);
-> > 
-> > Such a thing could already be created with pci_for_each_dma_alias().
-> 
-> Does that mean we could get replace the use of for_each_pci_dev() with some
-> clever use of pci_for_each_dma_alias()?
+Perform syscon configurations to get x2 mode to working in DRA74x and
+DRA72x. Also add a new compatible string to dfferentiate
+DRA72x and DRA74x, since b1c0 mask is different for both these platforms.
 
-Not remotely, but if we're going to have an is-alias function, should it
-be limited to aliases on the same bus?  What if I call it on a
-conventional PCI device where everything on the bus is an alias, this
-implementation of relying only on the bitmap doesn't even work.  Thanks,
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/devicetree/bindings/pci/ti-pci.txt |    8 ++-
+ drivers/pci/host/pci-dra7xx.c                    |   81 +++++++++++++++++++++-
+ 2 files changed, 86 insertions(+), 3 deletions(-)
 
-Alex
-
+diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+index 60e2516..0b10e84 100644
+--- a/Documentation/devicetree/bindings/pci/ti-pci.txt
++++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+@@ -1,7 +1,9 @@
+ TI PCI Controllers
+ 
+ PCIe Designware Controller
+- - compatible: Should be "ti,dra7-pcie""
++ - compatible: "ti,dra7-pcie" is deprecated
++	       Should be "ti,dra746-pcie" for DRA74x
++	       Should be "ti,dra726-pcie" for DRA72x
+  - reg : Two register ranges as listed in the reg-names property
+  - reg-names : The first entry must be "ti-conf" for the TI specific registers
+ 	       The second entry must be "rc-dbics" for the designware pcie
+@@ -14,6 +16,10 @@ PCIe Designware Controller
+ 	       where <X> is the instance number of the pcie from the HW spec.
+  - interrupts : Two interrupt entries must be specified. The first one is for
+ 		main interrupt line and the second for MSI interrupt line.
++ - syscon-lane-conf : phandle/offset pair. Phandle to the system control module and the
++   register offset to specify 1 lane or 2 lane.
++ - syscon-lane-sel : phandle/offset pair. Phandle to the system control module and the
++   register offset to specify lane selection.
+  - #address-cells,
+    #size-cells,
+    #interrupt-cells,
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 05bbeee..dac216f 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -22,9 +22,11 @@
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
++#include <linux/of_platform.h>
+ #include <linux/resource.h>
+ #include <linux/types.h>
+-#include <linux/platform_data/pci-dra7xx.h>
++#include <linux/mfd/syscon.h>
++#include <linux/regmap.h>
+ 
+ #include <linux/platform_data/pci-dra7xx.h>
+ 
+@@ -67,14 +69,22 @@
+ #define	LINK_UP						BIT(16)
+ #define	DRA7XX_CPU_TO_BUS_ADDR				0x0FFFFFFF
+ 
++#define PCIE_1LANE_2LANE_SELECTION			BIT(13)
++#define PCIE_B1C0_MODE_SEL				BIT(2)
++
+ struct dra7xx_pcie {
+ 	void __iomem		*base;
++	u32			*b1c0_mask;
+ 	struct phy		**phy;
+ 	int			lanes;
+ 	struct device		*dev;
+ 	struct pcie_port	pp;
+ };
+ 
++struct dra7xx_pcie_data {
++	u32	b1co_mode_sel_mask;
++};
++
+ #define to_dra7xx_pcie(x)	container_of((x), struct dra7xx_pcie, pp)
+ 
+ static inline u32 dra7xx_pcie_readl(struct dra7xx_pcie *pcie, u32 offset)
+@@ -358,6 +368,57 @@ static int dra7xx_pcie_reset(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static const struct of_device_id of_dra7xx_pcie_match[];
++
++static int dra7xx_pcie_configure_two_lane(struct device *dev)
++{
++	struct device_node *np = dev->of_node;
++	struct regmap *pcie_syscon;
++	unsigned int pcie_reg;
++	struct dra7xx_pcie_data *data;
++	const struct of_device_id *match;
++
++	match = of_match_device(of_dra7xx_pcie_match, dev);
++	if (!match)
++		return -EINVAL;
++
++	data = (struct dra7xx_pcie_data *)match->data;
++	if (!data) {
++		dev_err(dev, "no b1c0 mask data\n");
++		return -EINVAL;
++	}
++
++	pcie_syscon = syscon_regmap_lookup_by_phandle(np, "syscon-lane-conf");
++	if (IS_ERR(pcie_syscon)) {
++		dev_err(dev, "unable to get syscon-lane-conf\n");
++		return -EINVAL;
++	}
++
++	if (of_property_read_u32_index(np, "syscon-lane-conf", 1, &pcie_reg)) {
++		dev_err(dev, "couldn't get lane configuration reg offset\n");
++		return -EINVAL;
++	}
++
++	regmap_update_bits(pcie_syscon, pcie_reg, PCIE_1LANE_2LANE_SELECTION,
++			   PCIE_1LANE_2LANE_SELECTION);
++
++	pcie_syscon = syscon_regmap_lookup_by_phandle(np, "syscon-lane-sel");
++	if (IS_ERR(pcie_syscon)) {
++		dev_err(dev, "unable to get syscon-lane-sel\n");
++		return -EINVAL;
++	}
++
++	if (of_property_read_u32_index(np, "syscon-lane-sel", 1, &pcie_reg)) {
++		dev_err(dev, "couldn't get lane selection reg offset\n");
++		return -EINVAL;
++	}
++
++	regmap_update_bits(pcie_syscon, pcie_reg, data->b1co_mode_sel_mask,
++			   PCIE_B1C0_MODE_SEL);
++
++	return 0;
++}
++
+ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ {
+ 	u32 reg;
+@@ -428,6 +489,12 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
++	if (lanes == 2) {
++		ret = dra7xx_pcie_configure_two_lane(dev);
++		if (ret < 0)
++			goto err_phy;
++	}
++
+ 	dra7xx->base = base;
+ 	dra7xx->phy = phy;
+ 	dra7xx->dev = dev;
+@@ -581,8 +648,18 @@ static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
+ 				      dra7xx_pcie_resume_noirq)
+ };
+ 
++static const struct dra7xx_pcie_data dra746_pcie_data = {
++	.b1co_mode_sel_mask = BIT(2),
++};
++
++static const struct dra7xx_pcie_data dra726_pcie_data = {
++	.b1co_mode_sel_mask = GENMASK(3, 2),
++};
++
+ static const struct of_device_id of_dra7xx_pcie_match[] = {
+-	{ .compatible = "ti,dra7-pcie", },
++	{ .compatible = "ti,dra7-pcie", .data = &dra746_pcie_data },
++	{ .compatible = "ti,dra746-pcie", .data = &dra746_pcie_data },
++	{ .compatible = "ti,dra726-pcie", .data = &dra726_pcie_data },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, of_dra7xx_pcie_match);
+-- 
+1.7.9.5
 
