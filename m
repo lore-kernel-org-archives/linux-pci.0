@@ -1,164 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:22166 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752302AbcA2MCm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jan 2016 07:02:42 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Sinan Kaya <okaya@codeaurora.org>
-Subject: RE: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
-Date: Fri, 29 Jan 2016 12:02:23 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EC909F2@lhreml503-mbs>
-References: <20160120160427.GD13437@red-moon>
- <569FB210.9090605@codeaurora.org> <20160120181003.GF13437@red-moon>
- <HK2PR0601MB1393A8E38392D17EC2DD7900F5C40@HK2PR0601MB1393.apcprd06.prod.outlook.com>
- <20160128172701.GA28468@red-moon>
-In-Reply-To: <20160128172701.GA28468@red-moon>
-Content-Type: text/plain; charset="Windows-1252"
+Received: from mail.kernel.org ([198.145.29.136]:39645 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752073AbcAFWEg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Jan 2016 17:04:36 -0500
+Date: Wed, 6 Jan 2016 16:04:30 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+Cc: Richard.Zhu@freescale.com, l.stach@pengutronix.de,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	David Mueller <dave.mueller@gmx.ch>
+Subject: Re: [PATCH] PCI: imx6:don't sleep in atomic context
+Message-ID: <20160106220430.GC16231@localhost>
+References: <1447066080-5859-1-git-send-email-sanjeev_sharma@mentor.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1447066080-5859-1-git-send-email-sanjeev_sharma@mentor.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo
+Hi Sanjeev,
 
-Sorry to be so late on this
-
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
-> On Behalf Of Lorenzo Pieralisi
-> Sent: 28 January 2016 17:27
-> To: Phil Edworthy; Pratyush Anand; Jingoo Han; Gabriele Paoloni
-> Cc: linux-pci@vger.kernel.org; Wangzhou (B); Bjorn Helgaas; Sinan Kaya
-> Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
+On Mon, Nov 09, 2015 at 04:18:00PM +0530, Sanjeev Sharma wrote:
+> If additional PCIe switch get connected between the
+> host and the NIC,the kernel crashes with "BUG:
+> scheduling while atomic". To handle this we need to
+> call mdelay() instead of usleep_range().
 > 
-> [+ Pratyush, Jingoo, Gabriele]
+> For more detail please refer bugzilla.kernel.org, Bug
+> 100031
 > 
-> any comment on this for the designware driver ?
+> Signed-off-by: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+> Signed-off-by: David Mueller <dave.mueller@gmx.ch>
 
->From our side we (HiSilicon) do not use such flag.
+I'm dropping this for now because we've been kicking around the same
+solution (with tweaks to the mdelay amount) since June, but no
+progress on the *real* issue, which is that imx6_pcie_link_up() should
+never wait; it should simply return the link status.
 
-We just modified the designware to stay in line with the
-generic host bridge as we were not sure if any other
-designware driver used it.
+I'm pretty sure the amount of time I've spent looking into this would
+have been enough to make some progress on that underlying issue.
 
-So I think it can be removed.
+Bjorn
 
-Thanks
-
-Gab
-
+> ---
+>  drivers/pci/host/pci-imx6.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Thanks,
-> Lorenzo
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 233a196..9769b13 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -499,7 +499,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+>  		 * Wait a little bit, then re-check if the link finished
+>  		 * the training.
+>  		 */
+> -		usleep_range(1000, 2000);
+> +		mdelay(1000);
+>  	}
+>  	/*
+>  	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
+> -- 
+> 1.7.11.7
 > 
-> On Fri, Jan 22, 2016 at 04:28:39PM +0000, Phil Edworthy wrote:
-> > Hi Lorenzo,
-> >
-> > On 20 January 2016 18:10, Lorenzo Pieralisi wrote:
-> > > On Wed, Jan 20, 2016 at 11:13:04AM -0500, Sinan Kaya wrote:
-> > > > On 1/20/2016 11:04 AM, Lorenzo Pieralisi wrote:
-> > > > > Hi,
-> > > > >
-> > > > > I noticed that:
-> > > > >
-> > > > > 79953dd22c1d ("PCI: rcar: Remove dependency on ARM-specific struct
-> > > hw_pci")
-> > > > > cbce7900598c ("PCI: designware: Make driver arch-agnostic")
-> > > > >
-> > > > > added code in the respective host controller drivers to size bridges
-> > > > > and assign resources only if the PCI_PROBE_ONLY flag is clear, which
-> makes
-> > > > > me wonder if there exists PCI_PROBE_ONLY set-ups for the respective
-> > > > > host controllers:
-> > > > >
-> > <snip>
-> >
-> > > Resources claiming and assignment should be managed in arch code,
-> > > not in host controllers specific code, and that's the reason I
-> > > complained in this RFC about the scattering of PCI_PROBE_ONLY flag
-> > > checks in host drivers, it is becoming unmanageable (if useful
-> > > at all on designware and rcar, I would like to know if there are
-> > > PCI_PROBE_ONLY set-ups probing those host drivers).
-> >
-> > I am pretty sure  there are no rcar set-ups that use PCI_PROBE_ONLY,
-> > so I am happy for that code to go.
-> >
-> > Thanks
-> > Phil
-> >
-> > > Does it make the point clearer ?
-> > >
-> > > > > https://patchwork.ozlabs.org/patch/545671/
-> > > > >
-> > > > > so unless you really have *existing* set-ups that require it, please
-> > > > > remove the respective checks from the host controller drivers, this is
-> > > > > becoming a serious issue, because either:
-> > > > >
-> > > > > - we claim resources if and only if PCI_PROBE_ONLY is set
-> > > > >
-> > > > > Either like this (to be done for every host controllers and ARM
-> > > > > bios32):
-> > > > >
-> > > > > https://patchwork.ozlabs.org/patch/545670/
-> > > > >
-> > > > > or in core ARM/ARM64 code - eg pcibios_fixup_bus() - (to avoid adding
-> a
-> > > > > resource claiming call in ALL PCI host controllers)
-> > > > >
-> > > > > - or we *always* carry out resource claiming regardless of
-> PCI_PROBE_ONLY
-> > > > >   (but on ARM we can't really do that since PCI FW set-up on most of
-> the
-> > > > >   platforms is not present)
-> > > > >
-> > > > > On PCI_PROBE_ONLY systems resources claiming is mandatory if we want
-> > > > > to get rid of arches workarounds:
-> > > >
-> > > > I'm hoping to see x86 like behavior on ARM64 without any gotchas as
-> > > > there is nothing special about CPU type when it comes to PCI.
-> > >
-> > > As I said, we must enforce it with ACPI, for DT platforms I am all
-> > > ears to decide how we can implement it sanely (I think the only way
-> > > to do it is by claiming the PCI resources on PCI_PROBE_ONLY systems,
-> > > that's not ideal but it simplifies things a lot).
-> > >
-> > > Thanks,
-> > > Lorenzo
-> > >
-> > > >
-> > > > >
-> > > > > https://patchwork.ozlabs.org/patch/545671/
-> > > > >
-> > > > > Comments very appreciated.
-> > > > >
-> > > > > Thanks,
-> > > > > Lorenzo
-> > > > > --
-> > > > > To unsubscribe from this list: send the line "unsubscribe linux-pci"
-> in
-> > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > >
-> > > >
-> > > >
-> > > > --
-> > > > Sinan Kaya
-> > > > Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-> > > > Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
-> Linux
-> > > Foundation Collaborative Project
-> > > >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
