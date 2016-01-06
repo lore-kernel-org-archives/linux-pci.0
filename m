@@ -1,54 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42322 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:39163 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753204AbcA2X0M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Jan 2016 18:26:12 -0500
-Date: Fri, 29 Jan 2016 17:26:09 -0600
+	id S1751969AbcAFVtg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Jan 2016 16:49:36 -0500
+Date: Wed, 6 Jan 2016 15:49:33 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	linux-pci@vger.kernel.org, Zhou Wang <wangzhou1@hisilicon.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
-Message-ID: <20160129232609.GB11085@localhost>
-References: <20160120160427.GD13437@red-moon>
- <569FB210.9090605@codeaurora.org>
- <20160120181003.GF13437@red-moon>
- <569FCEA8.4020001@codeaurora.org>
+To: Christoph Biedl <linux-kernel.bfrz@manchmal.in-ulm.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fix minimum allocation address overwrite
+Message-ID: <20160106214933.GB16231@localhost>
+References: <1450885675@msgid.manchmal.in-ulm.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <569FCEA8.4020001@codeaurora.org>
+In-Reply-To: <1450885675@msgid.manchmal.in-ulm.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 20, 2016 at 01:15:04PM -0500, Sinan Kaya wrote:
+On Wed, Dec 23, 2015 at 04:51:57PM +0100, Christoph Biedl wrote:
+> Commit 36e097a8a297 ("PCI: Split out bridge window override of minimum
+> allocation address") claimed to do no functional changes but unfortunately
+> did: The "min" variable is altered. At least the AVM A1 PCMCIA adapter was
+> no longer detected, breaking ISDN operation.
+> 
+> So use a local copy of min to restore the previous behaviour.
+> 
+> Cc: stable@vger.kernel.org      # v3.14+
+> Fixes: 36e097a8a297 ("PCI: Split out bridge window override of minimum allocation address")
+> Signed-off-by: Christoph Biedl <linux-kernel.bfrz@manchmal.in-ulm.de>
 
-> Footnote: I remember reading somewhere that some BIOS want to keep track
-> of where the endpoints are mapped. Reassigning the resources break such systems.
+Applied to pci/misc for v4.5, thanks!
 
-I agree, I think there are systems where the BIOS sets a PCI BAR value
-and depends on that remaining untouched at run-time.  For example, I'm
-pretty sure there's x86 SMM code that logs errors to PCI management
-devices.  I think these systems are broken.
+I don't think the problem is specific to the AVM A1 adapter; it is probably
+related to the specific system memory layout and maybe PCMCIA.  If you have
+more information, e.g., a dmesg log and /proc/iomem contents, that would be
+useful documentation.
 
-I don't think there's a way for firmware to tell the kernel "please
-don't reassign these PCI resources."  After handoff to the OS, I think
-the OS owns all PCI resources and can reassign things as necessary,
-subject only to a few constraints like _OSC.  Certainly the OS has to
-be able to write to BARs at least temporarily to learn their size.  I
-have no spec reference for this belief.
-
-I don't have a good strategy for dealing with such systems, other
-than:
-
-  - Keep firmware BAR assignments unless we have a reason to change
-    them
-
-  - Add quirks to set IORESOURCE_PCI_FIXED for specific BARs when we
-    know about issues
-
-The new PCI "Enhanced Allocation" stuff might be a way for platforms
-to do this more safely.
-
-Bjorn
+> ---
+> Since I have access to that piece of hardware for a limited time only,
+> please get back to ASAP in case I should do more tests, by 2015-12-26
+> the latest.
+> 
+> Additional tests were done for -stable on the latest 3.14, 4.1 and 4.3
+> releases, with all results as expected.
+> ---
+>  drivers/pci/bus.c |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index d3346d2..60263f7 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -140,6 +140,8 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
+>  	type_mask |= IORESOURCE_TYPE_BITS;
+>  
+>  	pci_bus_for_each_resource(bus, r, i) {
+> +		resource_size_t min_used;
+> +
+>  		if (!r)
+>  			continue;
+>  
+> @@ -162,13 +164,11 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
+>  		 * this is an already-configured bridge window, its start
+>  		 * overrides "min".
+>  		 */
+> -		if (avail.start)
+> -			min = avail.start;
+> -
+> +		min_used = avail.start ? : min;
+>  		max = avail.end;
+>  
+>  		/* Ok, try it out.. */
+> -		ret = allocate_resource(r, res, size, min, max,
+> +		ret = allocate_resource(r, res, size, min_used, max,
+>  					align, alignf, alignf_data);
+>  		if (ret == 0)
+>  			return 0;
+> -- 
+> 1.7.10.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
