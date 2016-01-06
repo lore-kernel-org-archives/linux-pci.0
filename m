@@ -1,75 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46250 "EHLO foss.arm.com"
+Received: from sauhun.de ([89.238.76.85]:44753 "EHLO pokefinder.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934158AbcATQCl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Jan 2016 11:02:41 -0500
-Date: Wed, 20 Jan 2016 16:04:27 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Zhou Wang <wangzhou1@hisilicon.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
-Message-ID: <20160120160427.GD13437@red-moon>
+	id S1752031AbcAFIjS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Jan 2016 03:39:18 -0500
+Date: Wed, 6 Jan 2016 09:39:11 +0100
+From: Wolfram Sang <wsa@the-dreams.de>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org
+Subject: Re: [PATCH v2 4/4] PCI: rcar: Add Gen2 PHY setup to pcie-rcar
+Message-ID: <20160106083911.GD1525@katana>
+References: <1451998831-27705-1-git-send-email-phil.edworthy@renesas.com>
+ <1451998831-27705-5-git-send-email-phil.edworthy@renesas.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="AkbCVLjbJ9qUtAXD"
+In-Reply-To: <1451998831-27705-5-git-send-email-phil.edworthy@renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
 
-I noticed that:
+--AkbCVLjbJ9qUtAXD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-79953dd22c1d ("PCI: rcar: Remove dependency on ARM-specific struct hw_pci")
-cbce7900598c ("PCI: designware: Make driver arch-agnostic")
+On Tue, Jan 05, 2016 at 01:00:31PM +0000, Phil Edworthy wrote:
+> For PCIe compliance, the PHY registers need setting as per the
+> manual.
+>=20
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 
-added code in the respective host controller drivers to size bridges
-and assign resources only if the PCI_PROBE_ONLY flag is clear, which makes
-me wonder if there exists PCI_PROBE_ONLY set-ups for the respective
-host controllers:
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
 
-- On ARM PCI_PROBE_ONLY can be set-up only via the command line or
-  by DT (but the host controllers drivers have to check the DT and
-  set it - see of_pci_check_probe_only()
 
-  in drivers/pci/host/pci-host-generic.c
+--AkbCVLjbJ9qUtAXD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-  neither designware nor rcar calls that function and I do not see
-  any dts file with that property). Given that I can't see a way
-  to set up PCI_PROBE_ONLY other than the command line on designware
-  or rcar I assume the PCI_PROBE_ONLY set-ups have been tested by
-  forcing it through command line parameter
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-- On ARM64 PCI_PROBE_ONLY can *only* be set via DT, so see above
+iQIcBAEBAgAGBQJWjNKuAAoJEBQN5MwUoCm2NwAP/R1vbh3RUN7ywFs0K0Hb7i9V
+dxCfcPdabei2joIwlGO8ZP5MutVh8yRI3i6cJpJVLmsAw2ZeAxZzQlWhiqKWSZ0d
+0KwZGFNas4dtzJINlGXGx89kpKKCDhiadKbZHQbd+brsEGyxcTTIpuTzms3fhgql
+qI+Rl4bR/l+jxM83H9yPtsieAQLcP2C7oufGmUnbuauf/2Wbi65SNml0ns4sEuz/
+J7VKXXZFTVic/qwafGB5NaJ6SO0dBPHi6ySmAnuvO5vDgQz0AztKeg6E3CS3Okco
+Ll/pDh8UJaitvaM+ujpMyPeyuP1gp5oPbL5mCt3QCGe3L/kyN7bBcQmYYalOkfq8
+mJpCG5EiyUHuiz+nOVJKtptH7XzER3R3nhkBJ2BchxEmHvXDWGm8MxG+bcNdftJI
+Y/XfuBOj4XXeFpLi5E3TMWj/jAm72Z4ZZEz60ZIYQd+bDapsmF4TF+xanwXaP8PK
+X/owHexW+/HWUJnOjKj2rrrXxOGQZCGhY8hjGmyNmh5+1DQO5pO6UjkiacQLDmVs
+iuCkTlkluKPAXih0kuyi/9PRhLqRBX6ndtC76mWpT4UdIrzKPJvZk8Htaj2+QBKo
+Gr/NDy1OsrrITsTlpki/MuZw9VdBXL33bzdEF5FCDzSU2i4Q4cEDIoC/Ewq+zVOe
+HoW4kt6TcRzqj5I6cpXh
+=N1yC
+-----END PGP SIGNATURE-----
 
-We want to get rid of PCI_PROBE_ONLY on ARM/ARM64:
-
-https://patchwork.ozlabs.org/patch/545671/
-
-so unless you really have *existing* set-ups that require it, please
-remove the respective checks from the host controller drivers, this is
-becoming a serious issue, because either:
-
-- we claim resources if and only if PCI_PROBE_ONLY is set
-
-Either like this (to be done for every host controllers and ARM
-bios32):
-
-https://patchwork.ozlabs.org/patch/545670/
-
-or in core ARM/ARM64 code - eg pcibios_fixup_bus() - (to avoid adding a
-resource claiming call in ALL PCI host controllers)
-
-- or we *always* carry out resource claiming regardless of PCI_PROBE_ONLY
-  (but on ARM we can't really do that since PCI FW set-up on most of the
-  platforms is not present)
-
-On PCI_PROBE_ONLY systems resources claiming is mandatory if we want
-to get rid of arches workarounds:
-
-https://patchwork.ozlabs.org/patch/545671/
-
-Comments very appreciated.
-
-Thanks,
-Lorenzo
+--AkbCVLjbJ9qUtAXD--
