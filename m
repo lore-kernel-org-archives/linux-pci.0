@@ -1,109 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:10222 "EHLO mga11.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:43850 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759297AbcAURwh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Jan 2016 12:52:37 -0500
-Date: Thu, 21 Jan 2016 09:48:59 -0800
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	david.daney@cavium.com
-Subject: Re: [RFC PATCH] pci: Identify Enhanced Allocation (EA) BAR
- Equivalent resources
-Message-ID: <20160121174858.GA3064@sean.stalley.intel.com>
-References: <20160114172645.23429.9938.stgit@gimli.home>
- <1453321227.32741.332.camel@redhat.com>
+	id S1752540AbcAFX2F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Jan 2016 18:28:05 -0500
+Date: Wed, 6 Jan 2016 17:27:58 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci: aer: wait till the workqueue completes before free
+ memory
+Message-ID: <20160106232758.GE16231@localhost>
+References: <20151217143243.GA9654@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1453321227.32741.332.camel@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151217143243.GA9654@linutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 20, 2016 at 01:20:27PM -0700, Alex Williamson wrote:
-> On Thu, 2016-01-14 at 10:26 -0700, Alex Williamson wrote:
-> > We've done a pretty good job of abstracting EA from drivers, but there
-> > are some properties of BAR Equivalent resources that don't really jive
-> > with traditional PCI BARs.  In particular, natural alignment is only
-> > encouraged, not required.
-> > 
-> > Why does this matter?  There are drivers like vfio-pci that will
-> > happily gobble up the EA abstraction that's been implemented and
-> > expose a device using EA to userspace as if those resources are
-> > traditional BARs.  Pretty cool.  The vfio API is bus agnostic, so it
-> > doesn't care about alignment.  The problem comes with PCI config space
-> > emulation where we don't let userspace manipulate the BAR value, but
-> > we do emulate BAR sizing.  The abstraction kind of falls apart if
-> > userspace gets garbage when they try to size what appears to be a
-> > traditional BAR, but is actually a BAR equivalent.
-> > 
-> > We could simply round up the size in vfio to make it naturally
-> > aligned, but then we're imposing artificial sizes to the user and we
-> > have the discontinuity that BAR size emulation and vfio region size
-> > reporting don't agree on the size.  I think what we want to do is
-> > expose EA to the user, reporting traditional BARs with BEIs as
-> > zero-sized and providing additional regions for the user to access
-> > each EA region, whether it has a BEI or not.
-> > 
-> > To facilitate that, a flag indicating whether a PCI resource is a
-> > traditional BAR or BAR equivalent seems much nicer than attempting
-> > to size the BAR ourselves or deducing it through the EA capability.
-> > 
-> > Thoughts?
-> > 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> 
-> 
-> Just to loop back on this, it seems like we do have some support and
-> use cases beyond what I proposed.  Thanks for the discussion of that.
-> However, I'm reluctant to post this formally because the change is user
-> visible, it consumes a limited resource, and I don't know how quickly
-> vfio-pci is going to be able to make use of this flag.  The vfio-pci
-> work may not happen until a device appears with poorly sized resources
-> that has some use case with vfio-pci.  Even then, we may be able to
-> infer the BEI association without this flag.  So, while I'm not opposed
-> to this flag, I don't see a need to drive it right now and those that
-> do have a more immediate need are welcome to take over.  Thanks,
-> 
-> Alex
-> 
-> 
+Hi Sebastian,
 
-Thanks Alex,
-
-I'll pick it up and fix the lspci case.
-
--Sean
-
-> >  drivers/pci/pci.c      |    2 +-
-> >  include/linux/ioport.h |    2 ++
-> >  2 files changed, 3 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 314db8c..174c734 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
-> >  
-> >  static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
-> >  {
-> > -	unsigned long flags = IORESOURCE_PCI_FIXED;
-> > +	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_PCI_EA_BEI;
-> >  
-> >  	switch (prop) {
-> >  	case PCI_EA_P_MEM:
-> > diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> > index 24bea08..5acc194 100644
-> > --- a/include/linux/ioport.h
-> > +++ b/include/linux/ioport.h
-> > @@ -105,6 +105,8 @@ struct resource {
-> >  /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
-> >  #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
-> >  
-> > +/* PCI Enhanced Allocation defined BAR equivalent resource */
-> > +#define IORESOURCE_PCI_EA_BEI		(1<<5)
-> >  
-> >  /* helpers to define resources */
-> >  #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
-> > 
+On Thu, Dec 17, 2015 at 03:32:43PM +0100, Sebastian Andrzej Siewior wrote:
+> I start a binary which should flash the FPGA and re-enumare the PCI-BUS
+> and find a new device. It works most of the time. With SLUB debug it
+> crashes on each iteration with something like this (compressed output):
 > 
+> | pcieport 0000:00:00.0: AER: Multiple Corrected error received: id=0000
+> | Unable to handle kernel paging request for data at address 0x27ef9e3e
+> | Faulting instruction address: 0x602f5328
+> | Oops: Kernel access of bad area, sig: 11 [#1]
+> | Workqueue: events aer_isr
+> | GPR24: dd6aa000 6b6b6b6b 605f8378 605f8360 d99b12c0 604fc674 606b1704 d99b12c0
+> | NIP [602f5328] pci_walk_bus+0xd4/0x104
+> 
+> Register 25 has the user-after magic. As it turns out, the old PCIe
+> device is leaving, generates an error before it left, aer_irq() is fired,
+> it schedules a work item. What happens now is that free_irq() is
+> invoked, all resources are gone *before* the aes_isr() work item is
+> completed.
+> So to fix this, I flush the workqueue to ensure that there is no more
+> work pending.
+> 
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> ---
+> Bjorn, this could deserve a stable tag. However it seems to have been
+> like that even in v2.6.20.
+> 
+>  drivers/pci/pcie/aer/aerdrv.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+> index 0bf82a20a0fb..7acd27348098 100644
+> --- a/drivers/pci/pcie/aer/aerdrv.c
+> +++ b/drivers/pci/pcie/aer/aerdrv.c
+> @@ -282,8 +282,10 @@ static void aer_remove(struct pcie_device *dev)
+>  
+>  	if (rpc) {
+>  		/* If register interrupt service, it must be free. */
+> -		if (rpc->isr)
+> +		if (rpc->isr) {
+>  			free_irq(dev->irq, dev);
+> +			flush_work(&rpc->dpc_handler);
+> +		}
+>  
+>  		wait_event(rpc->wait_release, rpc->prod_idx == rpc->cons_idx);
+
+Your change looks reasonable.  But I'm curious about the wait_event()
+just below it.  That *looks* like it's intended to do the same thing
+as your flush_work().
+
+Can you explain why the wait_event() isn't working?  If we add the
+flush_work(), can we remove the wait_event() stuff?
+
+Bjorn
