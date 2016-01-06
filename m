@@ -1,38 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:34060 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762209AbcALOUE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jan 2016 09:20:04 -0500
-From: Bogicevic Sasa <brutallesale@gmail.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bogicevic Sasa <brutallesale@gmail.com>
-Subject: [PATCH 2/2] drivers:pci Add pcie/Kconfig to pci/Kconfig
-Date: Tue, 12 Jan 2016 06:19:57 -0800
-Message-Id: <1452608397-32072-1-git-send-email-brutallesale@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:29076 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751777AbcAFUDo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Jan 2016 15:03:44 -0500
+Date: Wed, 6 Jan 2016 20:03:39 +0000
+From: Keith Busch <keith.busch@intel.com>
+To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv7 0/6] Driver for new "VMD" device
+Message-ID: <20160106200339.GA21311@localhost.localdomain>
+References: <1450719900-2824-1-git-send-email-keith.busch@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1450719900-2824-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Architectures currently have to include both
-drivers/pci/Kconfig and drivers/pci/pcie/Kconfig.
-They should include only drivers/pci/Kconfig, and
-that should handle PCIe as well.
+Hi all,
 
-Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
----
- drivers/pci/Kconfig | 2 ++
- 1 file changed, 2 insertions(+)
+I very much appreciate all the feedback received. I dropped the
+controversial PCI parts and the user space pci-utils from this series,
+and I think satisfied all the requests I am aware of. Is there anything
+else preventing a 4.5 inclusion?
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 73de4ef..005dd7d 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -119,3 +119,5 @@ config PCI_LABEL
- 	select NLS
- 
- source "drivers/pci/host/Kconfig"
-+
-+source "drivers/pci/pcie/Kconfig"
--- 
-2.5.0
+Thanks a bunch!
+Keith
 
+On Mon, Dec 21, 2015 at 10:44:54AM -0700, Keith Busch wrote:
+> v6->v7:
+> 
+>  Removed PCI resource window patch rejecting child bus that doesn't fit in
+>  parent's window. There are additional caveats the maintainer brought up
+>  that need more consideration. Since we are not dependent on that patch,
+>  it is removed from the series.
+> 
+>  Dropped the pciutils patch since it is an external projet not part
+>  of this series anyway. Will send tooling updates to the appropriate
+>  mailing list once this settles.
+> 
+>  Modified commit log messages to align with maintainer's requested format.
+> 
+>  Using u32's for domains instead of ints.
+> 
+>  Fixed code comment on posted/non-posted clarification. 
+> 
+>  Added a dmesg info message to show which domain a VMD end point bound to.
+> 
+>  Fixed the vmd domain's root bus parent device so power management has
+>  the correct dependency tree.
+> 
+> Keith Busch (5):
+>   PCI/MSI: Export msi functions for module use
+>   x86/IRQ: Export IRQ domain function for module use
+>   x86/PCI: Allow PCI domain specific dma ops
+>   x86/PCI: Initial commit for new VMD device driver
+>   PCI/AER: Use 32 bit int type domains
+> 
+> Liu Jiang (1):
+>   msi: Relax msi_domain_alloc() to support parentless MSI irqdomains
