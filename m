@@ -1,63 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-To: Mark Salter <msalter@redhat.com>, Tomasz Nowicki <tn@semihalf.com>,
-	bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, jiang.liu@linux.intel.com,
-	Stefano.Stabellini@eu.citrix.com
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <1452785393.28109.16.camel@redhat.com>
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <5697C0EB.4020404@codeaurora.org>
-Date: Thu, 14 Jan 2016 10:38:19 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 2/2] PCI: designware: Make config accessor override checking
+ symmetric
+To: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 06 Jan 2016 13:55:15 -0600
+Message-ID: <20160106195515.24780.43906.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160106195339.24780.37612.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160106195339.24780.37612.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1452785393.28109.16.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1/14/2016 10:29 AM, Mark Salter wrote:
-On Wed, 2016-01-13 at 14:20 +0100, Tomasz Nowicki wrote:
-> IO resources on Mustang get disabled unless I do:
-> 
-> @@ -126,9 +126,10 @@ static void acpi_dev_ioresource_flags(struct
-> resource *res, u64 len, if (!acpi_dev_resource_len_valid(res->start,
-> res->end, len, true)) res->flags |= IORESOURCE_DISABLED |
-> IORESOURCE_UNSET;
-> 
-> +#if 0 if (res->end >= 0x10003) res->flags |= IORESOURCE_DISABLED |
-> IORESOURCE_UNSET; - +#endif
-> 
-> res->end is way beyond 0x10003 on Mustang:
-> 
-> pci_bus 0000:00: root bus resource [io  0x0000-0xffff window] (bus
-> address [0x10000000-0x1000ffff])
-> 
-> 
+Drivers based on the DesignWare core can override the config read accessors
+by supplying rd_own_conf() and rd_other_conf() function pointers.
+dw_pcie_rd_conf() calls dw_pcie_rd_own_conf() (for accesses to the root
+bus) or dw_pcie_rd_other_conf():
 
-Join the club. I complained about this and I got the message that we just do what Intel does. 
-See Arnd Bergmann's reply.
+  dw_pcie_rd_conf
+    dw_pcie_rd_own_conf                # if on root bus
+    dw_pcie_rd_other_conf              # if not on root bus
 
-[PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI hostbridge init based on ACPI
+Previously we checked for rd_other_conf() directly in dw_pcie_rd_conf(),
+but we checked for rd_own_conf() in dw_pcie_rd_own_conf().
 
-1/12/2016 9:30 AM
+Check for rd_other_conf() in dw_pcie_rd_other_conf() to make this symmetric
+with the rd_own_conf() checking, and similarly for the write path.
 
-It is an artificial limit coming from the x86 world introduced into common code.
+No functional change intended.
 
-> -- To unsubscribe from this list: send the line "unsubscribe
-> linux-pci" in the body of a message to majordomo@vger.kernel.org More
-> majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-designware.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index c104bad..7a4ee06 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -564,6 +564,9 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 	u64 cpu_addr;
+ 	void __iomem *va_cfg_base;
+ 
++	if (pp->ops->rd_other_conf)
++		return pp->ops->rd_other_conf(pp, bus, devfn, where, size, val);
++
+ 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
+ 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
+ 
+@@ -598,6 +601,9 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 	u64 cpu_addr;
+ 	void __iomem *va_cfg_base;
+ 
++	if (pp->ops->wr_other_conf)
++		return pp->ops->wr_other_conf(pp, bus, devfn, where, size, val);
++
+ 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
+ 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
+ 
+@@ -660,9 +666,6 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 	if (bus->number == pp->root_bus_nr)
+ 		return dw_pcie_rd_own_conf(pp, where, size, val);
+ 
+-	if (pp->ops->rd_other_conf)
+-		return pp->ops->rd_other_conf(pp, bus, devfn, where, size, val);
+-
+ 	return dw_pcie_rd_other_conf(pp, bus, devfn, where, size, val);
+ }
+ 
+@@ -678,9 +681,6 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	if (bus->number == pp->root_bus_nr)
+ 		return dw_pcie_wr_own_conf(pp, where, size, val);
+ 
+-	if (pp->ops->wr_other_conf)
+-		return pp->ops->wr_other_conf(pp, bus, devfn, where, size, val);
+-
+ 	return dw_pcie_wr_other_conf(pp, bus, devfn, where, size, val);
+ }
+ 
 
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
