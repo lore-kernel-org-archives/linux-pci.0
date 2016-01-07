@@ -1,105 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60326 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933838AbcATQNI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jan 2016 11:13:08 -0500
-Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	linux-pci@vger.kernel.org
-References: <20160120160427.GD13437@red-moon>
-Cc: Zhou Wang <wangzhou1@hisilicon.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <569FB210.9090605@codeaurora.org>
-Date: Wed, 20 Jan 2016 11:13:04 -0500
+Received: from mail-am1on0061.outbound.protection.outlook.com ([157.56.112.61]:5176
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750852AbcAGIpI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Jan 2016 03:45:08 -0500
+From: Minghuan Lian <minghuan.lian@nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jisheng Zhang <jszhang@marvell.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
+Subject: RE: DesignWare ATU PCIE_ATU_TYPE_MEM usage
+Date: Thu, 7 Jan 2016 07:11:59 +0000
+Message-ID: <VI1PR04MB16158C40C78419DD02890CA7E8F50@VI1PR04MB1615.eurprd04.prod.outlook.com>
+References: <20160105224222.GB23814@localhost>
+In-Reply-To: <20160105224222.GB23814@localhost>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20160120160427.GD13437@red-moon>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1/20/2016 11:04 AM, Lorenzo Pieralisi wrote:
-> Hi,
-> 
-> I noticed that:
-> 
-> 79953dd22c1d ("PCI: rcar: Remove dependency on ARM-specific struct hw_pci")
-> cbce7900598c ("PCI: designware: Make driver arch-agnostic")
-> 
-> added code in the respective host controller drivers to size bridges
-> and assign resources only if the PCI_PROBE_ONLY flag is clear, which makes
-> me wonder if there exists PCI_PROBE_ONLY set-ups for the respective
-> host controllers:
-> 
-> - On ARM PCI_PROBE_ONLY can be set-up only via the command line or
->   by DT (but the host controllers drivers have to check the DT and
->   set it - see of_pci_check_probe_only()
-> 
->   in drivers/pci/host/pci-host-generic.c
-> 
->   neither designware nor rcar calls that function and I do not see
->   any dts file with that property). Given that I can't see a way
->   to set up PCI_PROBE_ONLY other than the command line on designware
->   or rcar I assume the PCI_PROBE_ONLY set-ups have been tested by
->   forcing it through command line parameter
-> 
-> - On ARM64 PCI_PROBE_ONLY can *only* be set via DT, so see above
-> 
-> We want to get rid of PCI_PROBE_ONLY on ARM/ARM64:
-
-For platforms that does not have UEFI BIOS, it makes sense to remove the probe only
-option as the firmware is not doing anything.
-
-For server like arm64 platforms, the behavior should be identical to x86 world. The UEFI
-BIOS sets up the resources, kernel uses the resources.
-
-Can we set this flag all the time for ACPI builds instead?
-
-What's so special about arm64 that we can't do probe only builds and x86 can do?
-
-> 
-> https://patchwork.ozlabs.org/patch/545671/
-> 
-> so unless you really have *existing* set-ups that require it, please
-> remove the respective checks from the host controller drivers, this is
-> becoming a serious issue, because either:
-> 
-> - we claim resources if and only if PCI_PROBE_ONLY is set
-> 
-> Either like this (to be done for every host controllers and ARM
-> bios32):
-> 
-> https://patchwork.ozlabs.org/patch/545670/
-> 
-> or in core ARM/ARM64 code - eg pcibios_fixup_bus() - (to avoid adding a
-> resource claiming call in ALL PCI host controllers)
-> 
-> - or we *always* carry out resource claiming regardless of PCI_PROBE_ONLY
->   (but on ARM we can't really do that since PCI FW set-up on most of the
->   platforms is not present)
-> 
-> On PCI_PROBE_ONLY systems resources claiming is mandatory if we want
-> to get rid of arches workarounds:
-
-I'm hoping to see x86 like behavior on ARM64 without any gotchas as there is nothing
-special about CPU type when it comes to PCI.
-
-> 
-> https://patchwork.ozlabs.org/patch/545671/
-> 
-> Comments very appreciated.
-> 
-> Thanks,
-> Lorenzo
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+SGkgQmpvcm4sDQoNCldlIG5lZWQgYXQgbGVhc3QgZm91ciBraW5kcyBvZiBQQ0llIHRyYW5zYWN0
+aW9uczogQ0ZHMCwgQ0ZHMSwgSU8sIE1FTS4NClRoZSBiZXN0IHNvbHV0aW9uIGlzIHRvIGFzc2ln
+biA0IGlBVFUgdG8gc3VwcG9ydCB0aGVtIHNlcGFyYXRlbHkgZm9yIGV4YW1wbGU6IEFUVTAtIENG
+RzAsIEFUVTEtQ0ZHMSwgQVRVMi1JTyBBVFUzLU1FTS4NClNvLCBmb3IgSU8gYW5kIE1FTSwgd2Ug
+ZG9uJ3QgbmVlZCB0byB1cGRhdGUgaUFUVSBhbmQgZm9yIENGRywgd2Ugb25seSBuZWVkIHRvIHVw
+ZGF0ZSBhIHJlZ2lzdGVyIHRvIHVwZGF0ZSBCVVMgZGV2aWNlIGFuZCBmdW5jdGlvbiBudW1iZXIu
+DQpNb3Jlb3ZlciwgdGhpcyBjYW4gYXZvaWQgYW55IGNvbmZsaWN0Lg0KDQpCdXQgVGhlcmUgYXJl
+IHNvbWUgU09DcyB0aGF0IG9ubHkgcHJvdmlkZXMgdHdvIGlBVFVzLg0KU28gdGhlIGxhdGVzdCBk
+cml2ZXIgcHJvdmlkZXMgYSBzb2x1dGlvbjogQVRVMCBpcyBzaGFyZWQgYnkgQ0ZHMCBDRkcxIGFu
+ZCBJTywgQVRVMSBpcyBkZWRpY2F0ZWQgdG8gTUVNLg0KVGhlIGRyaXZlciBzaG91bGQgZmlyc3Qg
+c2V0IEFUVTAgYXMgSU8gYW5kIEFUVTEgYXMgTUVNLiBXaGVuIGFjY2Vzc2luZyBDRkcwIG9yIENG
+RzEsIEFUVTAgd2lsbCBiZSBjaGFuZ2VkIHRvIENGRzAvQ0ZHMSwgdGhlbiBiYWNrIHRvIElPIHNl
+dHRpbmcuDQpDRkcwIENGRzEgY2FuIHNlcXVlbmNlZCBieSBwY2lfbG9jay4gQnV0IENGRyBJTyBh
+bmQgTUVNKG1heSBiZSBnZW5lcmF0ZWQgYnkgUENJZSBkZXZpY2UncyBETUEpIGFyZSBjb21wbGV0
+ZWx5IGluZGVwZW5kZW50Lg0KDQpCZWNhdXNlIG1vc3QgUENJZSBkZXZpY2UgZG8gbm90IG5lZWQg
+SU8gdHJhbnNhY3Rpb24gYW5kIGluIGdlbmVyYWwgQ0ZHMCBDRkcxIGFuZCBJTyB0cmFuc2FjdGlv
+biBpcyBnZW5lcmF0ZWQgYnkgUENJZSBkZXZpY2UgZHJpdmVyIGFuZCByYXJlbHkgb2NjdXJyZWQg
+c2ltdWx0YW5lb3VzbHkuDQpTbyB0aGUgY3VycmVudCBzb2x1dGlvbiBjYW4gbWluaW1pemUgY29u
+ZmxpY3QuDQpJbiBmYWN0LCBmb3IgdGhlIGN1cnJlbnQgcGNpZS1kZXNpZ253YXJlIGRyaXZlciwg
+dGhlcmUgaXMgbm8gd2F5IHRvIGF2b2lkIElPIGFuZCBDRkcgY29uZmxpY3QuDQoNCg0KVGhhbmtz
+LA0KTWluZ2h1YW4NCg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJq
+b3JuIEhlbGdhYXMgW21haWx0bzpoZWxnYWFzQGtlcm5lbC5vcmddDQo+IFNlbnQ6IFdlZG5lc2Rh
+eSwgSmFudWFyeSAwNiwgMjAxNiA2OjQyIEFNDQo+IFRvOiBKaW5nb28gSGFuIDxqaW5nb29oYW4x
+QGdtYWlsLmNvbT47IFByYXR5dXNoIEFuYW5kDQo+IDxwcmF0eXVzaC5hbmFuZEBnbWFpbC5jb20+
+DQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBKaXNoZW5nIFpoYW5nIDxqc3poYW5n
+QG1hcnZlbGwuY29tPjsNCj4gTWluZ2h1YW4uTGlhbkBmcmVlc2NhbGUuY29tDQo+IFN1YmplY3Q6
+IERlc2lnbldhcmUgQVRVIFBDSUVfQVRVX1RZUEVfTUVNIHVzYWdlDQo+IA0KPiBIaSBndXlzLA0K
+PiANCj4gVGhpcyBjb2RlIGluIGR3X3BjaWVfaG9zdF9pbml0KCkgbG9va3Mgd3Jvbmc6DQo+IA0K
+PiAgICAgaWYgKCFwcC0+b3BzLT5yZF9vdGhlcl9jb25mKQ0KPiAJICAgIGR3X3BjaWVfcHJvZ19v
+dXRib3VuZF9hdHUocHAsIFBDSUVfQVRVX1JFR0lPTl9JTkRFWDEsDQo+IAkJCQkgICAgICBQQ0lF
+X0FUVV9UWVBFX01FTSwgcHAtPm1lbV9iYXNlLA0KPiAJCQkJICAgICAgcHAtPm1lbV9idXNfYWRk
+ciwgcHAtPm1lbV9zaXplKTsNCj4gDQo+ICAgICBkd19wY2llX3dyX293bl9jb25mKHBwLCBQQ0lf
+QkFTRV9BRERSRVNTXzAsIDQsIDApOw0KPiAgICAgLi4uDQo+ICAgICBkd19wY2llX3JkX293bl9j
+b25mKHBwLCBQQ0lFX0xJTktfV0lEVEhfU1BFRURfQ09OVFJPTCwgNCwgJnZhbCk7DQo+IA0KPiBF
+dmlkZW50bHkgeW91IG5lZWQgdG8gcHJvZ3JhbSB0aGUgQVRVIHdpdGggUENJRV9BVFVfVFlQRV9N
+RU0gYmVmb3JlDQo+IGRvaW5nIGNvbmZpZyBhY2Nlc3NlcyBvbiB0aGUgcm9vdCBidXM/DQo+IA0K
+PiBJZiB0aGF0J3MgdGhlIGNhc2UsIHdoYXQgYWJvdXQgb3RoZXIgY29uZmlnIGFjY2Vzc2VzIGFm
+dGVyIHRoZXNlIGZldyBpbg0KPiBkd19wY2llX2hvc3RfaW5pdCgpPyAgSSBkb24ndCBzZWUgYW55
+dGhpbmcgdGhhdCBjaGFuZ2VzIHRoZSBBVFUgcHJvZ3JhbW1pbmcNCj4gZm9yIHRoaW5ncyBjb21p
+bmcgdGhyb3VnaCBkd19wY2llX3dyX2NvbmYoKS4NCj4gDQo+IEkgYXNzdW1lIHlvdSBuZWVkIHNv
+bWUgc29ydCBvZiBsb2NraW5nIGFyb3VuZCB0aGlzIHNlcXVlbmNlOg0KPiANCj4gICAgIGR3X3Bj
+aWVfcHJvZ19vdXRib3VuZF9hdHUocHAsIFBDSUVfQVRVX1JFR0lPTl9JTkRFWDAsIHR5cGUsIC4u
+Lg0KPiAgICAgcmV0ID0gZHdfcGNpZV9jZmdfcmVhZCh2YV9jZmdfYmFzZSArIHdoZXJlLCBzaXpl
+LCB2YWwpOw0KPiAgICAgZHdfcGNpZV9wcm9nX291dGJvdW5kX2F0dShwcCwgUENJRV9BVFVfUkVH
+SU9OX0lOREVYMCwNCj4gUENJRV9BVFVfVFlQRV9JTywgLi4uDQo+IA0KPiBBcmUgeW91IHJlbHlp
+bmcgb24gcGNpX2xvY2s/ICBJZiBzbywgYSBjb21tZW50IHRvIHRoYXQgZWZmZWN0IHdvdWxkIGJl
+IG5pY2UuDQo+IA0KPiBUaGUgd2hvbGUgQVRVIG1hbmFnZW1lbnQgbG9va3MgcHJldHR5IGluZWZm
+aWNpZW50LiAgSXQncyBsaWtlbHkgdGhhdCB0aGVyZSdsbCBiZQ0KPiBhIHdob2xlIHNlcXVlbmNl
+IG9mIG9wZXJhdGlvbnMgd2hlcmUgd2UgZG9uJ3QgbmVlZCB0byB0b3VjaCB0aGUgQVRVLCBidXQN
+Cj4gc2luY2Ugd2UgZG9uJ3QgcmVtZW1iZXIgaXRzIGN1cnJlbnQgc3RhdGUsIHdlIGNvbmZpZ3Vy
+ZSB0aGUgd2hvbGUgdGhpbmcgZnJvbQ0KPiBzY3JhdGNoIGVhY2ggdGltZSwgd2hpY2ggaXMgYXQg
+bGVhc3QgZWlnaHQgcmVnaXN0ZXIgd3JpdGVzIChwbHVzIGEgcmVhZCBmb3IgdGhlDQo+IG5ldyBz
+eW5jaHJvbml6YXRpb24pLg0KPiANCj4gQmpvcm4NCg==
