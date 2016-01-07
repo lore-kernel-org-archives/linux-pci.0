@@ -1,77 +1,102 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
- against platfrom specific quirks.
-To: Mark Salter <msalter@redhat.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
- <1450278993-12664-23-git-send-email-tn@semihalf.com>
- <1452262581.31901.26.camel@redhat.com>
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <568FC969.8060909@semihalf.com>
-Date: Fri, 8 Jan 2016 15:36:25 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:5407 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750707AbcAGIfv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jan 2016 03:35:51 -0500
+Date: Thu, 7 Jan 2016 16:32:11 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Minghuan Lian <minghuan.lian@nxp.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
+Subject: Re: DesignWare ATU PCIE_ATU_TYPE_MEM usage
+Message-ID: <20160107163211.6eec2269@xhacker>
+In-Reply-To: <VI1PR04MB16158C40C78419DD02890CA7E8F50@VI1PR04MB1615.eurprd04.prod.outlook.com>
+References: <20160105224222.GB23814@localhost>
+	<VI1PR04MB16158C40C78419DD02890CA7E8F50@VI1PR04MB1615.eurprd04.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <1452262581.31901.26.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08.01.2016 15:16, Mark Salter wrote:
-> On Wed, 2015-12-16 at 16:16 +0100, Tomasz Nowicki wrote:
->> Some platforms may not be fully compliant with generic set of PCI config
->> accessors. For these cases we implement the way to overwrite accessors
->> set before PCI buses enumeration. Algorithm that overwrite accessors
->> matches against platform ID (DMI), domain and bus number, hopefully
->> enough for all cases. All quirks can be defined using:
->> DECLARE_ACPI_MCFG_FIXUP() and keep self contained.
->>
->> example:
->>
->> static const struct dmi_system_id yyy[] = {
->>          {
->>                  .ident = "<Platform ident string>",
->>                  .callback = <handler>,
->>                  .matches = {
->>                          DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
->>                          DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
->>                          DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
->>                  },
->>          },
->>          { }
->> };
->>
->
-> This seems awkward to me in the case where the quirk is SoC-based and there
-> may be multiple platforms affected. Needing a DECLARE_ACPI_MCFG_FIXUP for
-> each platform using such a SoC (i.e. Mustang and Moonshot) doesn't seem
-> right. In that case, I think it'd be better to check CPUID and possibly
-> some SoC register to cover all platforms affected.
+Dear Minghuan, Bjorn,
 
-Right, my next version already has alternative to DMI match handler, so 
-there will be two ways to match:
-1. DMI, like in this patch set
-2. int (*match)(struct pci_mcfg_fixup *) where you can read CPUID, and 
-whatever is necessary.
+On Thu, 7 Jan 2016 07:11:59 +0000 Minghuan Lian wrote:
 
->
-> Also, there doesn't seem to be a way to connect a given quirk check to the
-> MCFG/device requesting the ops. So if there is a platform with multiple PCIE
-> roots and not all of them have quirks, how does one no whether to override the
-> default ecam ops?
->
+> Hi Bjorn,
+> 
+> We need at least four kinds of PCIe transactions: CFG0, CFG1, IO, MEM.
+> The best solution is to assign 4 iATU to support them separately for example: ATU0- CFG0, ATU1-CFG1, ATU2-IO ATU3-MEM.
 
-Then we can identify them using <domain:bus>. I was wondering to pass 
-acpi device handler to match handler for the case where we need e.g. 
-extra properties from related DSDT device descriptor. Does it make sense 
-to you?
+IMHO, 3 ATUs is enough, cfg0 and cfg1 can be sequenced by pci_lock as you
+pointed out ;)
 
-Tomasz
+> So, for IO and MEM, we don't need to update iATU and for CFG, we only need to update a register to update BUS device and function number.
+> Moreover, this can avoid any conflict.
+> 
+> But There are some SOCs that only provides two iATUs.
+> So the latest driver provides a solution: ATU0 is shared by CFG0 CFG1 and IO, ATU1 is dedicated to MEM.
+> The driver should first set ATU0 as IO and ATU1 as MEM. When accessing CFG0 or CFG1, ATU0 will be changed to CFG0/CFG1, then back to IO setting.
+> CFG0 CFG1 can sequenced by pci_lock. But CFG IO and MEM(may be generated by PCIe device's DMA) are completely independent.
+> 
+> Because most PCIe device do not need IO transaction and in general CFG0 CFG1 and IO transaction is generated by PCIe device driver and rarely occurred simultaneously.
+> So the current solution can minimize conflict.
+> In fact, for the current pcie-designware driver, there is no way to avoid IO and CFG conflict.
+
+The key is how to sequence IO and CFG, this may need pci subsystem to provide
+the support.
+
+> 
+> 
+> Thanks,
+> Minghuan
+> 
+> 
+> > -----Original Message-----
+> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > Sent: Wednesday, January 06, 2016 6:42 AM
+> > To: Jingoo Han <jingoohan1@gmail.com>; Pratyush Anand
+> > <pratyush.anand@gmail.com>
+> > Cc: linux-pci@vger.kernel.org; Jisheng Zhang <jszhang@marvell.com>;
+> > Minghuan.Lian@freescale.com
+> > Subject: DesignWare ATU PCIE_ATU_TYPE_MEM usage
+> > 
+> > Hi guys,
+> > 
+> > This code in dw_pcie_host_init() looks wrong:
+> > 
+> >     if (!pp->ops->rd_other_conf)
+> > 	    dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+> > 				      PCIE_ATU_TYPE_MEM, pp->mem_base,
+> > 				      pp->mem_bus_addr, pp->mem_size);
+> > 
+> >     dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+> >     ...
+> >     dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+> > 
+> > Evidently you need to program the ATU with PCIE_ATU_TYPE_MEM before
+> > doing config accesses on the root bus?
+> > 
+> > If that's the case, what about other config accesses after these few in
+> > dw_pcie_host_init()?  I don't see anything that changes the ATU programming
+> > for things coming through dw_pcie_wr_conf().
+> > 
+> > I assume you need some sort of locking around this sequence:
+> > 
+> >     dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0, type, ...
+> >     ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
+> >     dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+> > PCIE_ATU_TYPE_IO, ...
+> > 
+> > Are you relying on pci_lock?  If so, a comment to that effect would be nice.
+> > 
+> > The whole ATU management looks pretty inefficient.  It's likely that there'll be
+> > a whole sequence of operations where we don't need to touch the ATU, but
+> > since we don't remember its current state, we configure the whole thing from
+> > scratch each time, which is at least eight register writes (plus a read for the
+> > new synchronization).
+> > 
+> > Bjorn  
 
