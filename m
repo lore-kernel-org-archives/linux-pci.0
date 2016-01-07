@@ -1,108 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60796 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964929AbcALOme (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jan 2016 09:42:34 -0500
-From: Hannes Reinecke <hare@suse.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Babu Moger <babu.moger@oracle.com>,
-	Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
-Subject: [PATCH 3/3] pci: set VPD size to '0' if PCI_VPD_FLAGS_VPD_REF_F0 is set
-Date: Tue, 12 Jan 2016 15:42:30 +0100
-Message-Id: <1452609750-90760-4-git-send-email-hare@suse.de>
-In-Reply-To: <1452609750-90760-1-git-send-email-hare@suse.de>
-References: <1452609750-90760-1-git-send-email-hare@suse.de>
+Received: from mail-bn1bon0088.outbound.protection.outlook.com ([157.56.111.88]:39472
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753109AbcAGXxR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jan 2016 18:53:17 -0500
+From: "Ananth, Rajesh" <Rajesh.Ananth@smartm.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: FW: [PATCH 4.4-rc8] pci: Make 4K config space available for non
+ PCI-e/PCI-X devices
+Date: Thu, 7 Jan 2016 23:20:01 +0000
+Message-ID: <BLUPR0401MB168387B77DBE972BC1723D6894F50@BLUPR0401MB1683.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the VPD data is accessed via another PCI function than 0
-the access is redirected to function 0. However, we shouldn't
-calculate the actual size as we did for function 0, as there
-is no guarantee that function 0 is already initialized and
-VPD access is very costly and error prone.
+Resending this in PLAIN TEXT.
 
-So to avoid all this we set the size to '0' in sysfs, but only return
-the valid bytes from the underlying function 0.
+Description:
 
-Cc: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/pci/access.c    | 11 ++++++++++-
- drivers/pci/pci-sysfs.c | 20 ++++++++++++--------
- 2 files changed, 22 insertions(+), 9 deletions(-)
+The Kernel PCI driver that probes the devices always reports the config space as 256 bytes for the PCI devices that are not PCI-e or PCI-X.  
+There are some vendor devices that are not PCI-e or PCI-X, but might have the configuration space data that is more than 256 bytes  in size to
+be made accessible through the standard sys-fs "/sys/bus/pci/devices/./config" link.  
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index ce1b0cb..9fe19be 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -337,9 +337,16 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
- 	loff_t end = pos + count;
- 	u8 *buf = arg;
- 
--	if (pos < 0 || pos > vpd->base.len || end > vpd->base.len)
-+	if (pos < 0)
- 		return -EINVAL;
- 
-+	if (end > vpd->base.len) {
-+		if (pos > vpd->base.len)
-+			return 0;
-+		end = vpd->base.len;
-+		count = end - pos;
-+	}
-+
- 	if (mutex_lock_killable(&vpd->lock))
- 		return -EINTR;
- 
-@@ -554,6 +561,8 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 	dev->vpd = &vpd->base;
- 	if (!(dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0))
- 		vpd->base.len = pci_vpd_pci22_size(dev);
-+	else
-+		vpd->base.len = 0;
- 	return 0;
- }
- 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index eead54c..de327c3 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -772,10 +772,12 @@ static ssize_t read_vpd_attr(struct file *filp, struct kobject *kobj,
- 	struct pci_dev *dev =
- 		to_pci_dev(container_of(kobj, struct device, kobj));
- 
--	if (off > bin_attr->size)
--		count = 0;
--	else if (count > bin_attr->size - off)
--		count = bin_attr->size - off;
-+	if (bin_attr->size > 0) {
-+		if (off > bin_attr->size)
-+			count = 0;
-+		else if (count > bin_attr->size - off)
-+			count = bin_attr->size - off;
-+	}
- 
- 	return pci_read_vpd(dev, off, count, buf);
- }
-@@ -787,10 +789,12 @@ static ssize_t write_vpd_attr(struct file *filp, struct kobject *kobj,
- 	struct pci_dev *dev =
- 		to_pci_dev(container_of(kobj, struct device, kobj));
- 
--	if (off > bin_attr->size)
--		count = 0;
--	else if (count > bin_attr->size - off)
--		count = bin_attr->size - off;
-+	if (bin_attr->size > 0) {
-+		if (off > bin_attr->size)
-+			count = 0;
-+		else if (count > bin_attr->size - off)
-+			count = bin_attr->size - off;
-+	}
- 
- 	return pci_write_vpd(dev, off, count, buf);
- }
--- 
-1.8.5.6
+Currently, the current Kernel does not provide the extended config space access for those devices, and a proprietary mechanism is
+oftentimes used by the vendor utilities to address that. As the problem could be seen, use of proprietary tools and utilities automatically
+leads to user confusion of using non-standard tools across different vendor devices.
+
+Patch:
+
+--- linux-4.4-rc8/drivers/pci/probe.c.orig      2016-01-07 13:30:54.310392700 -0800
++++ linux-4.4-rc8/drivers/pci/probe.c   2016-01-07 13:32:14.586392700 -0800
+@@ -1119,28 +1119,8 @@ static int pci_cfg_space_size_ext(struct
+
+int pci_cfg_space_size(struct pci_dev *dev)
+{
+-       int pos;
+-       u32 status;
+-       u16 class;
+-
+-       class = dev->class >> 8;
+-       if (class == PCI_CLASS_BRIDGE_HOST)
+-               return pci_cfg_space_size_ext(dev);
+-
+-       if (!pci_is_pcie(dev)) {
+-               pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
+-               if (!pos)
+-                       goto fail;
+-
+-               pci_read_config_dword(dev, pos + PCI_X_STATUS, &status);
+-               if (!(status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ)))
+-                       goto fail;
+-       }
+-
+        return pci_cfg_space_size_ext(dev);
+
+- fail:
+-       return PCI_CFG_SPACE_SIZE;
+}
+
+#define LEGACY_IO_RESOURCE     (IORESOURCE_IO | IORESOURCE_PCI_FIXED)
+
+
+Developer's Certificate of Origin 1.1
+
+By making a contribution to this project, I certify that:
+
+(a) The contribution was created in whole or in part by me and I
+    have the right to submit it under the open source license
+    indicated in the file; or
+
+(b) The contribution is based upon previous work that, to the best
+    of my knowledge, is covered under an appropriate open source
+    license and I have the right under that license to submit that
+    work with modifications, whether created in whole or in part
+    by me, under the same open source license (unless I am
+    permitted to submit under a different license), as indicated
+    in the file; or
+
+(c) The contribution was provided directly to me by some other
+     person who certified (a), (b) or (c) and I have not modified
+     it.
+
+(d) I understand and agree that this project and the contribution
+     are public and that a record of the contribution (including all
+     personal information I submit with it, including my sign-off) is
+     maintained indefinitely and may be redistributed consistent with
+    this project or the open source license(s) involved.
+
+    Signed-off-by: Rajesh A Developer <rajesh.ananth@smartm.com>
+
 
