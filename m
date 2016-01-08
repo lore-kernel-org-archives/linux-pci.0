@@ -1,78 +1,61 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	alex.williamson@redhat.com, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC PATCH v3 3/5] PCI: Add host bridge attribute to indicate filtering of MSIs is supported
-Date: Fri, 15 Jan 2016 15:06:12 +0800
-Message-Id: <1452841574-2781-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Date: Fri, 8 Jan 2016 12:08:58 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Geliang Tang <geliangtang@163.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: use to_pci_dev
+Message-ID: <20160108180858.GC5354@localhost>
+References: <8ab09476f7fb0283031b973808740f40522bebe1.1450873511.git.geliangtang@163.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8ab09476f7fb0283031b973808740f40522bebe1.1450873511.git.geliangtang@163.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-MSI-X tables are not allowed to be mmapped in vfio-pci
-driver in case that user get to touch this directly.
-This will cause some performance issues when when PCI
-adapters have critical registers in the same page as
-the MSI-X table.
+On Wed, Dec 23, 2015 at 08:28:12PM +0800, Geliang Tang wrote:
+> Use to_pci_dev() instead of open-coding it.
+> 
+> Signed-off-by: Geliang Tang <geliangtang@163.com>
 
-However, some kind of PCI host bridge such as IODA bridge
-on Power support filtering of MSIs, which can ensure that a
-given pci device can only shoot the MSIs assigned for it.
-So we think it's safe to expose the MSI-X table to userspace
-if filtering of MSIs is supported because the exposed MSI-X
-table can't be used to do harm to other memory space.
+Both patches applied to pci/trivial for v4.5, thanks a lot, Geliang!
 
-To support this case, this patch adds a pci_host_bridge
-attribute to indicate if this PCI host bridge supports
-filtering of MSIs.
-
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- drivers/pci/host-bridge.c |    6 ++++++
- include/linux/pci.h       |    3 +++
- 2 files changed, 9 insertions(+)
-
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 5f4a2e0..c029267 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -96,3 +96,9 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 	res->end = region->end + offset;
- }
- EXPORT_SYMBOL(pcibios_bus_to_resource);
-+
-+bool pci_host_bridge_msi_filtered_enabled(struct pci_dev *pdev)
-+{
-+	return pci_find_host_bridge(pdev->bus)->msi_filtered;
-+}
-+EXPORT_SYMBOL_GPL(pci_host_bridge_msi_filtered_enabled);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b640d65..b952b78 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -412,6 +412,7 @@ struct pci_host_bridge {
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
-+	unsigned int msi_filtered:1;	/* support filtering of MSIs */
- 	/* Resource alignment requirements */
- 	resource_size_t (*align_resource)(struct pci_dev *dev,
- 			const struct resource *res,
-@@ -430,6 +431,8 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
- 
-+bool pci_host_bridge_msi_filtered_enabled(struct pci_dev *pdev);
-+
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
--- 
-1.7.9.5
+> ---
+>  drivers/pci/hotplug/shpchp_sysfs.c | 2 +-
+>  drivers/pci/pci.c                  | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/shpchp_sysfs.c b/drivers/pci/hotplug/shpchp_sysfs.c
+> index 52875b3..392a40b 100644
+> --- a/drivers/pci/hotplug/shpchp_sysfs.c
+> +++ b/drivers/pci/hotplug/shpchp_sysfs.c
+> @@ -43,7 +43,7 @@ static ssize_t show_ctrl (struct device *dev, struct device_attribute *attr, cha
+>  	struct resource *res;
+>  	struct pci_bus *bus;
+>  
+> -	pdev = container_of (dev, struct pci_dev, dev);
+> +	pdev = to_pci_dev(dev);
+>  	bus = pdev->subordinate;
+>  
+>  	out += sprintf(buf, "Free resources: memory\n");
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index d1a7105..9356f90 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1417,7 +1417,7 @@ struct pci_devres {
+>  
+>  static void pcim_release(struct device *gendev, void *res)
+>  {
+> -	struct pci_dev *dev = container_of(gendev, struct pci_dev, dev);
+> +	struct pci_dev *dev = to_pci_dev(gendev);
+>  	struct pci_devres *this = res;
+>  	int i;
+>  
+> -- 
+> 2.5.0
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
