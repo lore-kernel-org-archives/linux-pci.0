@@ -1,85 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:59503 "EHLO
-	nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751617AbcACOL2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jan 2016 09:11:28 -0500
-Received: from camelot.kam.mff.cuni.cz (camelot.kam.mff.cuni.cz [195.113.17.209])
-	by nikam.ms.mff.cuni.cz (Postfix) with ESMTP id AEF61542C38
-	for <linux-pci@vger.kernel.org>; Sun,  3 Jan 2016 15:11:24 +0100 (CET)
-Date: Sun, 3 Jan 2016 15:11:24 +0100
-From: Martin Mares <mj@ucw.cz>
-To: Keith Busch <keith.busch@intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv5 7/7] pciutils: Allow 32-bit domains
-Message-ID: <mj+md-20160103.140612.56316.camelot@ucw.cz>
-References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
- <1449523949-21898-8-git-send-email-keith.busch@intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
+ against platfrom specific quirks.
+To: Mark Salter <msalter@redhat.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <1450278993-12664-23-git-send-email-tn@semihalf.com>
+ <1452262581.31901.26.camel@redhat.com>
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <568FC969.8060909@semihalf.com>
+Date: Fri, 8 Jan 2016 15:36:25 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1449523949-21898-8-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1452262581.31901.26.camel@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+On 08.01.2016 15:16, Mark Salter wrote:
+> On Wed, 2015-12-16 at 16:16 +0100, Tomasz Nowicki wrote:
+>> Some platforms may not be fully compliant with generic set of PCI config
+>> accessors. For these cases we implement the way to overwrite accessors
+>> set before PCI buses enumeration. Algorithm that overwrite accessors
+>> matches against platform ID (DMI), domain and bus number, hopefully
+>> enough for all cases. All quirks can be defined using:
+>> DECLARE_ACPI_MCFG_FIXUP() and keep self contained.
+>>
+>> example:
+>>
+>> static const struct dmi_system_id yyy[] = {
+>>          {
+>>                  .ident = "<Platform ident string>",
+>>                  .callback = <handler>,
+>>                  .matches = {
+>>                          DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
+>>                          DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
+>>                          DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
+>>                  },
+>>          },
+>>          { }
+>> };
+>>
+>
+> This seems awkward to me in the case where the quirk is SoC-based and there
+> may be multiple platforms affected. Needing a DECLARE_ACPI_MCFG_FIXUP for
+> each platform using such a SoC (i.e. Mustang and Moonshot) doesn't seem
+> right. In that case, I think it'd be better to check CPUID and possibly
+> some SoC register to cover all platforms affected.
 
-> PCI-e segments will continue to use the lower 16 bits as required by
-> ACPI. Special domains may use the full 32-bits.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  lib/filter.c |    2 +-
->  lib/pci.h    |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/lib/filter.c b/lib/filter.c
-> index d4254a0..075dc2f 100644
-> --- a/lib/filter.c
-> +++ b/lib/filter.c
-> @@ -45,7 +45,7 @@ pci_filter_parse_slot_v33(struct pci_filter *f, char *str)
->  	  if (str[0] && strcmp(str, "*"))
->  	    {
->  	      long int x = strtol(str, &e, 16);
-> -	      if ((e && *e) || (x < 0 || x > 0xffff))
-> +	      if ((e && *e) || (x < 0))
->  		return "Invalid domain number";
->  	      f->domain = x;
->  	    }
-> diff --git a/lib/pci.h b/lib/pci.h
-> index 10ba831..7e42765 100644
-> --- a/lib/pci.h
-> +++ b/lib/pci.h
-> @@ -119,7 +119,7 @@ struct pci_param *pci_walk_params(struct pci_access *acc, struct pci_param *prev
->  
->  struct pci_dev {
->    struct pci_dev *next;			/* Next device in the chain */
-> -  u16 domain;				/* PCI domain (host bridge) */
-> +  int32_t domain;			/* PCI domain (host bridge) */
->    u8 bus, dev, func;			/* Bus inside domain, device and function */
+Right, my next version already has alternative to DMI match handler, so 
+there will be two ways to match:
+1. DMI, like in this patch set
+2. int (*match)(struct pci_mcfg_fixup *) where you can read CPUID, and 
+whatever is necessary.
 
-This is definitely not enough. Try grepping the source for "domain" :-)
+>
+> Also, there doesn't seem to be a way to connect a given quirk check to the
+> MCFG/device requesting the ops. So if there is a platform with multiple PCIE
+> roots and not all of them have quirks, how does one no whether to override the
+> default ecam ops?
+>
 
-At least the following places need updating, too:
+Then we can identify them using <domain:bus>. I was wondering to pass 
+acpi device handler to match handler for the case where we need e.g. 
+extra properties from related DSDT device descriptor. Does it make sense 
+to you?
 
-  o  struct pci_filter and operations on it
+Tomasz
 
-  o  Format strings for printing domains at various places
-
-  o  ABI compability ... changing a field in the middle of struct pci_dev
-     (or pci_filter) is going to break ABI, so you either need to change the
-     structures in a backward-compatible way, or to use ABI versioning.
-
-Also, we should decide on what type the domain should have -- currently, some
-places use "int", others use u16, and your patch introduces int32_t. I would
-prefer u32 myself, but especially in the filters we should be careful about
-how to encode "any domain".
-
-			Have a nice new year
-						Martin
