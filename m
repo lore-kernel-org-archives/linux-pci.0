@@ -1,75 +1,90 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-To: <linux-acpi@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <rjw@rjwysocki.net>,
-	<lenb@kernel.org>, <izumi.taku@jp.fujitsu.com>,
-	<wency@cn.fujitsu.com>, <caoj.fnst@cn.fujitsu.com>,
-	<ddaney.cavm@gmail.com>, <chen.fan.fnst@cn.fujitsu.com>,
-	<helgaas@kernel.org>, <okaya@codeaurora.org>,
-	<bhelgaas@google.com>, <jiang.liu@linux.intel.com>,
-	<linux-pci@vger.kernel.org>, <tglx@linutronix.de>,
-	<linux@roeck-us.net>
-Subject: [PATCH v3 2/2] i801_smbus: fix unavailable irq number 255 reported by BIOS
-Date: Wed, 27 Jan 2016 14:08:44 +0800
-Message-ID: <736ccbb04de44a75e8d1389bb7b2746c0a9a8937.1453862105.git.chen.fan.fnst@cn.fujitsu.com>
-In-Reply-To: <cover.1453862105.git.chen.fan.fnst@cn.fujitsu.com>
-References: <cover.1453862105.git.chen.fan.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:36898 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751167AbcAHOv1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Jan 2016 09:51:27 -0500
+Message-ID: <1452264683.31901.32.camel@redhat.com>
+Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
+ against platfrom specific quirks.
+From: Mark Salter <msalter@redhat.com>
+To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
+Date: Fri, 08 Jan 2016 09:51:23 -0500
+In-Reply-To: <568FC969.8060909@semihalf.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+	 <1450278993-12664-23-git-send-email-tn@semihalf.com>
+	 <1452262581.31901.26.camel@redhat.com> <568FC969.8060909@semihalf.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In our environment, when enable Secure boot, we found an abnormal
-phenomenon as following call trace shows. after investigation, we
-found the firmware assigned an irq number 255 which means unknown
-or no connection in PCI local spec for i801_smbus, meanwhile the
-ACPI didn't configure the pci irq routing. and the 255 irq number
-was assigned for megasa msix without IRQF_SHARED. then in this case
-during i801_smbus probe, the i801_smbus driver would request irq with
-bad irq number 255. but the 255 irq number was assigned for memgasa
-with MSIX enable. which will cause request_irq fails and result in
-the call trace below, here we add check the irq_invalid flag to identify
-the smbus whether support IRQ-driven.
+On Fri, 2016-01-08 at 15:36 +0100, Tomasz Nowicki wrote:
+> On 08.01.2016 15:16, Mark Salter wrote:
+> > On Wed, 2015-12-16 at 16:16 +0100, Tomasz Nowicki wrote:
+> > > Some platforms may not be fully compliant with generic set of PCI config
+> > > accessors. For these cases we implement the way to overwrite accessors
+> > > set before PCI buses enumeration. Algorithm that overwrite accessors
+> > > matches against platform ID (DMI), domain and bus number, hopefully
+> > > enough for all cases. All quirks can be defined using:
+> > > DECLARE_ACPI_MCFG_FIXUP() and keep self contained.
+> > > 
+> > > example:
+> > > 
+> > > static const struct dmi_system_id yyy[] = {
+> > >          {
+> > >                  .ident = "<Platform ident string>",
+> > >                  .callback = <handler>,
+> > >                  .matches = {
+> > >                          DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
+> > >                          DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
+> > >                          DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
+> > >                  },
+> > >          },
+> > >          { }
+> > > };
+> > > 
+> > 
+> > This seems awkward to me in the case where the quirk is SoC-based and there
+> > may be multiple platforms affected. Needing a DECLARE_ACPI_MCFG_FIXUP for
+> > each platform using such a SoC (i.e. Mustang and Moonshot) doesn't seem
+> > right. In that case, I think it'd be better to check CPUID and possibly
+> > some SoC register to cover all platforms affected.
+> 
+> Right, my next version already has alternative to DMI match handler, so 
+> there will be two ways to match:
+> 1. DMI, like in this patch set
+> 2. int (*match)(struct pci_mcfg_fixup *) where you can read CPUID, and 
+> whatever is necessary.
+> 
 
-i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
-i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
-i801_smbus 0000:00:1f.3: PCI INT C: no GSI
-genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa)
-CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
-Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
+Great. Thanks.
 
-Call Trace:
-  dump_stack+0x19/0x1b
-  __setup_irq+0x54a/0x570
-  request_threaded_irq+0xcc/0x170
-  i801_probe+0x32f/0x508 [i2c_i801]
-  local_pci_probe+0x45/0xa0
-i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
-i801_smbus: probe of 0000:00:1f.3 failed with error -16
+> > 
+> > Also, there doesn't seem to be a way to connect a given quirk check to the
+> > MCFG/device requesting the ops. So if there is a platform with multiple PCIE
+> > roots and not all of them have quirks, how does one no whether to override the
+> > default ecam ops?
+> > 
+> 
+> Then we can identify them using <domain:bus>. I was wondering to pass 
+> acpi device handler to match handler for the case where we need e.g. 
+> extra properties from related DSDT device descriptor. Does it make sense 
+> to you?
+> 
 
-Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
----
- drivers/i2c/busses/i2c-i801.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/i2c/busses/i2c-i801.c b/drivers/i2c/busses/i2c-i801.c
-index f62d697..22f9aea 100644
---- a/drivers/i2c/busses/i2c-i801.c
-+++ b/drivers/i2c/busses/i2c-i801.c
-@@ -1380,6 +1380,11 @@ static int i801_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 		}
- 	}
- 
-+	if ((priv->features & FEATURE_IRQ) && dev->irq_invalid) {
-+		dev_warn(&dev->dev, "Interrupt line is invalid!\n");
-+		priv->features &= ~FEATURE_IRQ;
-+	}
-+
- 	if (priv->features & FEATURE_IRQ) {
- 		init_waitqueue_head(&priv->waitq);
- 
--- 
-1.9.3
-
-
+The thing with domain:bus is that it is really a firmware setting. So on one
+platform domain 0 may be associated with hwdev X but on another platform it
+may be associated with hwdev Y. But yes, an acpi handle would make it much
+easier for the match handler to find out which hw dev it is being asked to
+match.
 
