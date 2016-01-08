@@ -1,218 +1,274 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V3 19/21] pci, acpi: Support for ACPI based generic PCI host controller init
-Date: Wed, 13 Jan 2016 14:21:05 +0100
-Message-Id: <1452691267-32240-20-git-send-email-tn@semihalf.com>
-In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bh-25.webhostbox.net ([208.91.199.152]:39553 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751690AbcAHQae (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jan 2016 11:30:34 -0500
+Subject: Re: [RFC PATCH 1/2] PCI: pciehp: Merge hotplug work requests
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1446522496-21628-1-git-send-email-linux@roeck-us.net>
+ <20160108161846.GA31005@localhost>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+From: Guenter Roeck <linux@roeck-us.net>
+Message-ID: <568FE426.5000707@roeck-us.net>
+Date: Fri, 8 Jan 2016 08:30:30 -0800
+MIME-Version: 1.0
+In-Reply-To: <20160108161846.GA31005@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Because of two patch series:
-1. Jiang Liu's common interface to support PCI host controller init
-2. MMCONFIG refactoring (part of this patch set)
-now we can think about generic ACPI based PCI host controller init
-implementation out of arch/ directory.
+On 01/08/2016 08:18 AM, Bjorn Helgaas wrote:
+> Hi Guenter,
+>
+> Sorry for the delay in getting to this.
+>
+> On Mon, Nov 02, 2015 at 07:48:15PM -0800, Guenter Roeck wrote:
+>> Some oddball devices may experience a PCIe link flap after power-on.
+>> This may result in the following sequence of events.
+>>
+>> fpc0 kernel: pciehp 0000:02:08.0:pcie24: Card present on Slot(0)
+>> fpc0 kernel: pciehp 0000:02:08.0:pcie24: slot(0): Link Up event
+>> fpc0 kernel: pciehp 0000:02:08.0:pcie24:
+>> 	Link Up event ignored on slot(0): already powering on
+>> fpc0 kernel: pciehp 0000:02:08.0:pcie24: slot(0): Link Down event
+>> fpc0 kernel: pciehp 0000:02:08.0:pcie24:
+>> 	Link Down event queued on slot(0): currently getting powered on
+>> fpc0 kernel: pciehp 0000:02:08.0:pcie24: slot(0): Link Up event
+>> fpc0 kernel: pciehp 0000:02:08.0:pcie24:
+>> 	Link Up event queued on slot(0): currently getting powered off
+>>
+>> This causes the driver for affected devices to be instantiated, removed,
+>> and re-instantiated.
+>>
+>> An even worse problem is a device which resets itself continuously.
+>> This can result in the following endless sequence of messages.
+>>
+>> pciehp 0000:02:0a.0:pcie24: Card present on Slot(10)
+>> pciehp 0000:02:0a.0:pcie24: Card not present on Slot(10)
+>> pciehp 0000:02:0a.0:pcie24: Card present on Slot(10)
+>> pciehp 0000:02:0a.0:pcie24: Card not present on Slot(10)
+>> pciehp 0000:02:0a.0:pcie24: Card present on Slot(10)
+>> pciehp 0000:02:0a.0:pcie24: Card not present on Slot(10)
+>>
+>> The problem in the both cases is that all events are enqueued as hotplug
+>> work requests and executed in sequence, which can overwhelm the system
+>> and even result in "hung task" tracebacks in pciehp_power_thread().
+>>
+>> This exposes an underlying limitation of the hotplug state machine: It
+>> executes all received requests, even though only the most recent request
+>> really needs to be handled. As a result, by the time a request is handled,
+>> it may well be obsolete and have been superseded by many other enable /
+>> disable requests which have been enqueued in the meantime.
+>>
+>> To solve the problem, fold hotplug work requests into a single request.
+>> Store the request as well as the work data structure in 'struct slot',
+>> thus eliminating the need to allocate memory for each request.
+>> Handle a sequence of requests by setting a 'disable' flag when needed,
+>> indicating that a link needs to be disabled prior to re-enabling it.
+>>
+>> With this change, requests and request sequences are handled as follows.
+>>
+>> enable (single request):		enable link
+>> disable (single request):		disable link
+>> ... disable-enable-disable...disable:	disable link
+>> ... disable-enable-disable...enable:	disable link, then enable it
+>
+> I think this is a really good idea, but I would like to understand
+> what the critical points are and how they affect the state machine.
+>
+> I think you're basically accounting for the fact that some hotplug
+> controller commands are not completed instantaneously, and we might
+> receive more interrupts before the first command is completed.  I
+> suspect that your patch only makes a difference on controllers that
+> support Command Completed events, right?
+>
 
-These calls use information from MCFG table (PCI config space regions)
-and _CRS method (IO/irq resources) to initialize PCI hostbridge.
+No, not really. problem is that state change interrupts are not handled
+immediately but enqueued. By the time an event is handled by the workqueue,
+it is long since obsolete and superseded by other events.
 
-TBD: We are still not sure whether we should reassign resources
-after PCI bus enumeration or trust firmware to do all that work for
-us properly.
+> You're not adding any timeouts, so I *think* you must be effectively
+> collapsing any events that occur before a Command Completed interrupt.
+> If that's the case, we should probably handle other events and
+> commands similarly.  The LED controls probably aren't important, but
+> what about the Electromechanical Interlock control?  Should that be
+> handled the same way you're handling power control?
+>
+> Right now it feels a little bit ad hoc, and it would be nice if we
+> could make it more explicit somehow.
+>
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Catalin Marinas <catalin.marinas@arm.com>
-CC: Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-CC: Will Deacon <will.deacon@arm.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Tested-by: Jeremy Linton <jeremy.linton@arm.com>
----
- drivers/acpi/Kconfig    |   5 ++
- drivers/acpi/pci_root.c | 131 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 136 insertions(+)
+Yes, collapsing events was the idea, though not specifically related
+to command completion but related to external events (power, link state
+changes. I did not explore interaction with command completed interrupts.
 
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index c3664be..e315061 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -335,6 +335,11 @@ config ACPI_PCI_SLOT
- 	  i.e., segment/bus/device/function tuples, with physical slots in
- 	  the system.  If you are unsure, say N.
- 
-+config ACPI_PCI_HOST_GENERIC
-+	bool "Generic ACPI PCI host controller"
-+	help
-+	  Say Y here if you want to support generic ACPI PCI host controller.
-+
- config X86_PM_TIMER
- 	bool "Power Management Timer Support" if EXPERT
- 	depends on X86
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index a65c8c2..d483e2a 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -24,6 +24,7 @@
- #include <linux/init.h>
- #include <linux/types.h>
- #include <linux/mutex.h>
-+#include <linux/of_address.h>
- #include <linux/pm.h>
- #include <linux/pm_runtime.h>
- #include <linux/pci.h>
-@@ -514,6 +515,136 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- 	}
- }
- 
-+#ifdef CONFIG_ACPI_PCI_HOST_GENERIC
-+static int pcibios_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
-+{
-+	if (pci_dev_msi_enabled(dev))
-+		return 0;
-+
-+	acpi_pci_irq_enable(dev);
-+	return dev->irq;
-+}
-+
-+static void pci_mcfg_release_info(struct acpi_pci_root_info *ci)
-+{
-+	pci_mmcfg_teardown_map(ci);
-+	kfree(ci);
-+}
-+
-+static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
-+{
-+	struct list_head *list = &ci->resources;
-+	struct acpi_device *device = ci->bridge;
-+	struct resource_entry *entry, *tmp;
-+	unsigned long flags;
-+	int ret;
-+
-+	flags = IORESOURCE_IO | IORESOURCE_MEM;
-+	ret = acpi_dev_get_resources(device, list,
-+				     acpi_dev_filter_resource_type_cb,
-+				     (void *)flags);
-+	if (ret < 0) {
-+		dev_warn(&device->dev,
-+			 "failed to parse _CRS method, error code %d\n", ret);
-+		return ret;
-+	} else if (ret == 0)
-+		dev_dbg(&device->dev,
-+			"no IO and memory resources present in _CRS\n");
-+
-+	resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
-+		resource_size_t cpu_addr, length;
-+		struct resource *res = entry->res;
-+
-+		if (entry->res->flags & IORESOURCE_DISABLED)
-+			resource_list_destroy_entry(entry);
-+		else
-+			res->name = ci->name;
-+
-+		/* PCI -> CPU space translation */
-+		cpu_addr = res->start + entry->offset;
-+		length = res->end - res->start + 1;
-+
-+		if (res->flags & IORESOURCE_MEM) {
-+			res->start = cpu_addr;
-+			res->end = cpu_addr + length - 1;
-+		} else if (res->flags & IORESOURCE_IO) {
-+			resource_size_t pci_addr = res->start;
-+			unsigned long port;
-+
-+			if (pci_register_io_range(cpu_addr, length)) {
-+				resource_list_destroy_entry(entry);
-+				continue;
-+			}
-+
-+			port = pci_address_to_pio(cpu_addr);
-+			if (port == (unsigned long)-1) {
-+				resource_list_destroy_entry(entry);
-+				continue;
-+			}
-+
-+			res->start = port;
-+			res->end = port + length - 1;
-+			entry->offset = port - pci_addr;
-+
-+			if (pci_remap_iospace(res, cpu_addr) < 0)
-+				resource_list_destroy_entry(entry);
-+		}
-+	}
-+	return ret;
-+}
-+
-+static struct acpi_pci_root_ops acpi_pci_root_ops = {
-+	.init_info = pci_mmcfg_setup_map,
-+	.release_info = pci_mcfg_release_info,
-+	.prepare_resources = pci_acpi_root_prepare_resources,
-+};
-+
-+/* Root bridge scanning */
-+struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
-+{
-+	int node = acpi_get_node(root->device->handle);
-+	int domain = root->segment;
-+	int busnum = root->secondary.start;
-+	struct acpi_pci_root_info *info;
-+	struct pci_host_bridge *bridge;
-+	struct pci_bus *bus, *child;
-+
-+	if (domain && !pci_domains_supported) {
-+		pr_warn("PCI %04x:%02x: multiple domains not supported.\n",
-+			domain, busnum);
-+		return NULL;
-+	}
-+
-+	info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
-+	if (!info) {
-+		dev_err(&root->device->dev,
-+			"pci_bus %04x:%02x: ignored (out of memory)\n",
-+			domain, busnum);
-+		return NULL;
-+	}
-+
-+	acpi_pci_root_ops.pci_ops = pci_mcfg_get_ops(root);
-+	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, info, root);
-+	if (!bus)
-+		return NULL;
-+
-+	bridge = pci_find_host_bridge(bus);
-+	bridge->map_irq = pcibios_map_irq;
-+
-+	pci_bus_size_bridges(bus);
-+	pci_bus_assign_resources(bus);
-+
-+	/*
-+	 * After the PCI-E bus has been walked and all devices discovered,
-+	 * configure any settings of the fabric that might be necessary.
-+	 */
-+	list_for_each_entry(child, &bus->children, node)
-+		pcie_bus_configure_settings(child);
-+
-+	return bus;
-+}
-+#endif /* CONFIG_ARCH_PCI_HOST_GENERIC_ACPI */
-+
- static int acpi_pci_root_add(struct acpi_device *device,
- 			     const struct acpi_device_id *not_used)
- {
--- 
-1.9.1
+I'll look into it some more to see if there is any problem or
+interaction with command completion interrupts.
+
+Guenter
+
+> Bjorn
+>
+>> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+>> ---
+>> This is a different approach to solve the problem I tried to address
+>> earlier with with "PCI: pciehp: Add support for delayed power-on" [1].
+>>
+>> While the earlier patch implemented an additional state in the hotplug
+>> state machine to solve the problem, the approach taken here is a bit
+>> simpler and more straightfoward. By folding multiple requests into one,
+>> the follow-up patch can use delayed work to implement power-on delays.
+>> An additional advantage is that this patch can be applied separately
+>> to simplify the state machine.
+>>
+>> While working on this patch, I also tried to drop multiple "disable"
+>> requests, and only disable a slot if it was already disabled, to reduce
+>> overhead. Unfortunately, this did not always work. In some instances,
+>> I ended up in a situation where a device could not be enabled
+>> because the system thought that it already existed. I don't know
+>> if this is a weakness in this patch or some state change I did not catch.
+>> This may be left for further study.
+>>
+>> [1] https://lkml.org/lkml/2015/10/12/686
+>>
+>>   drivers/pci/hotplug/pciehp.h      |  4 +++
+>>   drivers/pci/hotplug/pciehp_ctrl.c | 52 ++++++++++++++++++---------------------
+>>   drivers/pci/hotplug/pciehp_hpc.c  |  1 +
+>>   3 files changed, 29 insertions(+), 28 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+>> index 62d6fe6c3714..364b6fa32978 100644
+>> --- a/drivers/pci/hotplug/pciehp.h
+>> +++ b/drivers/pci/hotplug/pciehp.h
+>> @@ -78,6 +78,9 @@ struct slot {
+>>   	struct mutex lock;
+>>   	struct mutex hotplug_lock;
+>>   	struct workqueue_struct *wq;
+>> +	struct work_struct hotplug_work;
+>> +	u32 hotplug_req;
+>> +	bool disable;			/* true to disable before enable */
+>>   };
+>>
+>>   struct event_info {
+>> @@ -130,6 +133,7 @@ void pciehp_queue_interrupt_event(struct slot *slot, u32 event_type);
+>>   int pciehp_configure_device(struct slot *p_slot);
+>>   int pciehp_unconfigure_device(struct slot *p_slot);
+>>   void pciehp_queue_pushbutton_work(struct work_struct *work);
+>> +void pciehp_power_thread(struct work_struct *work);
+>>   struct controller *pcie_init(struct pcie_device *dev);
+>>   int pcie_init_notification(struct controller *ctrl);
+>>   int pciehp_enable_slot(struct slot *p_slot);
+>> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+>> index 880978b6d534..ad1321e91546 100644
+>> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+>> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+>> @@ -156,13 +156,9 @@ static int remove_board(struct slot *p_slot)
+>>   	return 0;
+>>   }
+>>
+>> -struct power_work_info {
+>> -	struct slot *p_slot;
+>> -	struct work_struct work;
+>> -	unsigned int req;
+>> -#define DISABLE_REQ 0
+>> -#define ENABLE_REQ  1
+>> -};
+>> +/* Hotplug work requests */
+>> +#define DISABLE_REQ	0
+>> +#define ENABLE_REQ	1
+>>
+>>   /**
+>>    * pciehp_power_thread - handle pushbutton events
+>> @@ -171,14 +167,19 @@ struct power_work_info {
+>>    * Scheduled procedure to handle blocking stuff for the pushbuttons.
+>>    * Handles all pending events and exits.
+>>    */
+>> -static void pciehp_power_thread(struct work_struct *work)
+>> +void pciehp_power_thread(struct work_struct *work)
+>>   {
+>> -	struct power_work_info *info =
+>> -		container_of(work, struct power_work_info, work);
+>> -	struct slot *p_slot = info->p_slot;
+>> -	int ret;
+>> +	struct slot *p_slot = container_of(work, struct slot, hotplug_work);
+>> +	int ret, req;
+>> +	bool disable;
+>> +
+>> +	mutex_lock(&p_slot->lock);
+>> +	req = p_slot->hotplug_req;
+>> +	disable = p_slot->disable;
+>> +	p_slot->disable = false;
+>> +	mutex_unlock(&p_slot->lock);
+>>
+>> -	switch (info->req) {
+>> +	switch (req) {
+>>   	case DISABLE_REQ:
+>>   		mutex_lock(&p_slot->hotplug_lock);
+>>   		pciehp_disable_slot(p_slot);
+>> @@ -189,6 +190,8 @@ static void pciehp_power_thread(struct work_struct *work)
+>>   		break;
+>>   	case ENABLE_REQ:
+>>   		mutex_lock(&p_slot->hotplug_lock);
+>> +		if (disable)
+>> +			pciehp_disable_slot(p_slot);
+>>   		ret = pciehp_enable_slot(p_slot);
+>>   		mutex_unlock(&p_slot->hotplug_lock);
+>>   		if (ret)
+>> @@ -200,26 +203,19 @@ static void pciehp_power_thread(struct work_struct *work)
+>>   	default:
+>>   		break;
+>>   	}
+>> -
+>> -	kfree(info);
+>>   }
+>>
+>>   static void pciehp_queue_power_work(struct slot *p_slot, int req)
+>>   {
+>> -	struct power_work_info *info;
+>> -
+>> -	p_slot->state = (req == ENABLE_REQ) ? POWERON_STATE : POWEROFF_STATE;
+>> -
+>> -	info = kmalloc(sizeof(*info), GFP_KERNEL);
+>> -	if (!info) {
+>> -		ctrl_err(p_slot->ctrl, "no memory to queue %s request\n",
+>> -			 (req == ENABLE_REQ) ? "poweron" : "poweroff");
+>> -		return;
+>> +	if (req == ENABLE_REQ) {
+>> +		p_slot->state = POWERON_STATE;
+>> +	} else {
+>> +		p_slot->state = POWEROFF_STATE;
+>> +		p_slot->disable = true;
+>>   	}
+>> -	info->p_slot = p_slot;
+>> -	INIT_WORK(&info->work, pciehp_power_thread);
+>> -	info->req = req;
+>> -	queue_work(p_slot->wq, &info->work);
+>> +	p_slot->hotplug_req = req;
+>> +
+>> +	queue_work(p_slot->wq, &p_slot->hotplug_work);
+>>   }
+>>
+>>   void pciehp_queue_pushbutton_work(struct work_struct *work)
+>> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+>> index 5c24e938042f..e4e6fcbe1e20 100644
+>> --- a/drivers/pci/hotplug/pciehp_hpc.c
+>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+>> @@ -755,6 +755,7 @@ static int pcie_init_slot(struct controller *ctrl)
+>>   	mutex_init(&slot->lock);
+>>   	mutex_init(&slot->hotplug_lock);
+>>   	INIT_DELAYED_WORK(&slot->work, pciehp_queue_pushbutton_work);
+>> +	INIT_WORK(&slot->hotplug_work, pciehp_power_thread);
+>>   	ctrl->slot = slot;
+>>   	return 0;
+>>   abort:
+>> --
+>> 2.1.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
