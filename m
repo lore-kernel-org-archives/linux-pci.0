@@ -1,81 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0043.outbound.protection.outlook.com ([104.47.37.43]:47474
-	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932659AbcAZPVy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Jan 2016 10:21:54 -0500
-Subject: Re: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver
- to work on both Zynq and Microblaze
-To: Arnd Bergmann <arnd@arndb.de>,
-	Michal Simek <michal.simek@xilinx.com>
-References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
- <4734542.KZZp0TeeeM@wuerfel> <56A74370.4090000@xilinx.com>
- <2270955.TlqP7HlQk4@wuerfel>
-CC: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	<bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-	<paul.burton@imgtec.com>, <yinghai@kernel.org>,
-	<wangyijing@huawei.com>, <robh@kernel.org>,
-	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
-	<jiang.liu@linux.intel.com>, <pawel.moll@arm.com>,
-	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-From: Michal Simek <michal.simek@xilinx.com>
-Message-ID: <56A78EFF.1010503@xilinx.com>
-Date: Tue, 26 Jan 2016 16:21:35 +0100
+Received: from mail-yk0-f172.google.com ([209.85.160.172]:36125 "EHLO
+	mail-yk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756301AbcAHS1M convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jan 2016 13:27:12 -0500
+Received: by mail-yk0-f172.google.com with SMTP id v14so277981434ykd.3
+        for <linux-pci@vger.kernel.org>; Fri, 08 Jan 2016 10:27:12 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <2270955.TlqP7HlQk4@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <7B5F9613-28B1-47BB-B081-ACB94DC45868@gmail.com>
+References: <1451251271-43502-1-git-send-email-brutallesale@gmail.com>
+ <20160108163638.GB31005@localhost> <8694496E-F4DE-4C68-98DE-CA9F1DD1D8BA@gmail.com>
+ <CAErSpo7oaZ220hv5=LfCdWiytjJGYciwUz4qHYx6E_ZW8GBe+g@mail.gmail.com> <7B5F9613-28B1-47BB-B081-ACB94DC45868@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 8 Jan 2016 12:26:52 -0600
+Message-ID: <CAErSpo59One_XZgYE+ZpyAu4Xmr7EsxkbuKbe2Xp_yfjK5PdLg@mail.gmail.com>
+Subject: Re: [PATCH] drivers:pci Fix all whitespace issues
+To: sasa bogicevic <brutallesale@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 26.1.2016 13:11, Arnd Bergmann wrote:
-> On Tuesday 26 January 2016 10:59:12 Michal Simek wrote:
->>>> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
->>>> index 3e3757f..1981948 100644
->>>> --- a/drivers/pci/host/pcie-xilinx.c
->>>> +++ b/drivers/pci/host/pcie-xilinx.c
->>>> @@ -92,7 +92,12 @@
->>>>  #define ECAM_DEV_NUM_SHIFT          12
->>>>  
->>>>  /* Number of MSI IRQs */
->>>> -#define XILINX_NUM_MSI_IRQS         128
->>>> +#define XILINX_NUM_MSI_IRQS 128
->>>> +#ifdef CONFIG_ARM
->>>> +#define TOT_NR_IRQS         XILINX_NUM_MSI_IRQS
->>>> +#else
->>>> +#define TOT_NR_IRQS         (NR_IRQS + XILINX_NUM_MSI_IRQS)
->>>> +#endif
+No, this change would only affect Kconfig files.  For example,
+arch/x86/Kconfig contains:
+
+  source "drivers/pci/pcie/Kconfig"
+  source "drivers/pci/Kconfig"
+  source "drivers/pci/hotplug/Kconfig"
+
+I would like it to contain only the "drivers/pci/Kconfig" line.  The
+drivers/pci/Kconfig file should take care of including pcie/Kconfig
+and pci/hotplug/Kconfig itself.
+
+Other arches have the same issue.
+
+
+On Fri, Jan 8, 2016 at 11:54 AM, sasa bogicevic <brutallesale@gmail.com> wrote:
+> Thanks!
+> This is great, so basically all drivers from pcie need to be moved to pci folder, right ?
+>
+> Thanks, Sasa
+> {
+>         name: Bogicevic Sasa
+>         phone: +381606006200
+> }
+>
+>
+>
+>> On Jan 8, 2016, at 18:38, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> I have sort of a to-do list here:
+>>
+>> https://docs.google.com/spreadsheets/d/1VgEMqaG5FFkde4Se64nNaMpNzBfXdlgihXuGKVEzMbA/edit?usp=sharing
+>>
+>> Most of those items are fairly significant, but I can help if you have
+>> questions (please post on linux-pci so others can benefit as well).
+>>
+>> Integrating PCIe Kconfig into PCI Kconfig should be relatively
+>> straightforward (though far from trivial).
+>>
+>> Welcome to Linux and PCI!
+>>
+>> Bjorn
+>>
+>> On Fri, Jan 8, 2016 at 10:58 AM, sasa bogicevic <brutallesale@gmail.com> wrote:
+>>> Thanks!
+>>> If you have some more tasks for me I would appreciate it. I am still new so I do only these kind of fixes for now but if there is something more complex that trivial coding style issues but not too complex for the start I would be glad to contribute some more. Just let me know and Ill get on it.
 >>>
->>> Something looks wrong here in the microblaze variant. What does NR_IRQS
->>> have to do with it?
->>
->> Arnd: What was the story regarding NR_IRQS?
->> I remember some discussion about it but just forget.
->>
->> Default value in include/asm-generic/irq.h is 64.
->> Current value is 32 because microblaze primary interrupt controller is
->> axi_intc core which has up to 32 input lines.
-> 
-> The value in asm-generic is completely arbitrary, it's just something
-> that happens to work for a number of the simpler architectures.
-> 
-> Traditionally, there is a a fixed NR_IRQS which defines the maximum
-> number of interrupts that can be used, and each irqchip has a fixed
-> start offset below that number.
-> 
-> On modern systems, you have CONFIG_SPARSE_IRQ, which lets an irqchip
-> allocate its own interrupts, without an upper limit. This is more
-> flexible and avoids preallocating space for all irq_desc instances,
-> so it saves memory.
-
-ok. That was the story. I will look if there is any issue to enable
-SPARSE_IRQ for Microblaze.
-
-I also need to move intc driver out of arch.
-
-Thanks,
-Michal
+>>> Thanks, Sasa
+>>> {
+>>>        name: Bogicevic Sasa
+>>>        phone: +381606006200
+>>> }
+>>>
+>>>
+>>>
+>>>> On Jan 8, 2016, at 17:36, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>>>
+>>>> On Sun, Dec 27, 2015 at 01:21:11PM -0800, Bogicevic Sasa wrote:
+>>>>> This patch fixes all whitespace issues( missing or needed whitespace) in
+>>>>> all files in drivers/pci folder. Code is compiled with allyesconfig
+>>>>> before and after code changes and objects are recorded and checked with
+>>>>> objdiff and they are not changed after this commit.
+>>>>>
+>>>>> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
+>>>>
+>>>> Applied to pci/trivial for v4.5, thanks!
+>>>>
+>>>> Bjorn
+>>>
+>
