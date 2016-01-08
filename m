@@ -1,32 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0094.outbound.protection.outlook.com ([104.47.2.94]:29728
-	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751275AbcAZAWv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jan 2016 19:22:51 -0500
-From: Ramon Fried <ramon.fried@tandemg.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"kernelnewbies@kernelnewbies.org" <kernelnewbies@kernelnewbies.org>
-Subject: Acquiring MSI vector physical address from kernel driver 
-Date: Mon, 25 Jan 2016 19:50:04 +0000
-Message-ID: <AM2PR02MB0689814C4DBF4815859A5323E8C70@AM2PR02MB0689.eurprd02.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 8 Jan 2016 15:01:37 +0000
+From: Mark Rutland <mark.rutland@arm.com>
+To: Mark Salter <msalter@redhat.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com,
+	jchandra@broadcom.com, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
+	Suravee.Suthikulpanit@amd.com, jcm@redhat.com,
+	wangyijing@huawei.com, tglx@linutronix.de, mw@semihalf.com,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
+ against platfrom specific quirks.
+Message-ID: <20160108150137.GH3097@leverpostej>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <1450278993-12664-23-git-send-email-tn@semihalf.com>
+ <1452262581.31901.26.camel@redhat.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1452262581.31901.26.camel@redhat.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi.
-I'm currently developing a driver for a new PCIe device.
-The specific PCIe device includes an embedded DMA engine that can be accessed by the host through the PCI configuration space on specific offset.
-The DMA engine can trigger a MSI on DMA complete if the physical address of the actual vector is written to it.
+On Fri, Jan 08, 2016 at 09:16:21AM -0500, Mark Salter wrote:
+> On Wed, 2015-12-16 at 16:16 +0100, Tomasz Nowicki wrote:
+> > Some platforms may not be fully compliant with generic set of PCI config
+> > accessors. For these cases we implement the way to overwrite accessors
+> > set before PCI buses enumeration. Algorithm that overwrite accessors
+> > matches against platform ID (DMI), domain and bus number, hopefully
+> > enough for all cases. All quirks can be defined using:
+> > DECLARE_ACPI_MCFG_FIXUP() and keep self contained.
+> > 
+> > example:
+> > 
+> > static const struct dmi_system_id yyy[] = {
+> >         {
+> >                 .ident = "<Platform ident string>",
+> >                 .callback = <handler>,
+> >                 .matches = {
+> >                         DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
+> >                         DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
+> >                         DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
+> >                 },
+> >         },
+> >         { }
+> > };
+> > 
+> 
+> This seems awkward to me in the case where the quirk is SoC-based and there
+> may be multiple platforms affected. Needing a DECLARE_ACPI_MCFG_FIXUP for
+> each platform using such a SoC (i.e. Mustang and Moonshot) doesn't seem
+> right. In that case, I think it'd be better to check CPUID and possibly
+> some SoC register to cover all platforms affected.
 
-I did some reading, and if I'm not mistaken, it appears that the kernel writes the physical address to the PCI device configuration space when enabling MSI.
-I didn't find any API or an easy way of getting that address from the kernel given only the MSI number (ID).
-I can read it (the PA) back from the PCI configuration space, but it seems wrong, as:
-1. The kernel has written this value before, it should know this already. 
-2. Nobody else has done it (grepped the kernel for that)
+CPUs get reused across SoCs, so as you've implicitly noted, the CPUID
+alone is insufficient.
 
-Am I right in my observations ? Is there a better way to achieve that ?
+Given that IP blocks get moved around between SoC variants, I don't
+think you can check "some SoC register" based on the CPU ID -- you can
+end up bringing the board down at that point.
+
+If the CPU ID alone is insufficient to tell you about a component, it
+cannot give you enough information about a component you can use to
+query more information from.
+
+If your platform requires a quirk, it's always going to be painful (and
+to some extent, rightfulyl so). We should aim for correctness here with
+explicit matching.
 
 Thanks,
-Ramon
+Mark.
