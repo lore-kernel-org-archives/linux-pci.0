@@ -1,49 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52221 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932373AbcAYXAv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Jan 2016 18:00:51 -0500
-Date: Mon, 25 Jan 2016 17:00:47 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 8 Jan 2016 12:14:42 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	linux-pci@vger.kernel.org, kernel@pengutronix.de,
-	patchwork-lst@pengutronix.de, dave.mueller@gmx.ch,
-	sanjeevsharmaengg@gmail.com, dev@lynxeye.de
-Subject: Re: [PATCH 0/4] i.MX6 sleep while atomic bugfix
-Message-ID: <20160125230047.GA19776@localhost>
-References: <1452884210-11359-1-git-send-email-l.stach@pengutronix.de>
- <20160125225811.GC10272@localhost>
+To: Colin King <colin.king@canonical.com>
+Cc: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Len Brown <len.brown@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: acpiphp_ibm: fix null dereferences on null ibm_slot
+Message-ID: <20160108181442.GE5354@localhost>
+References: <1451694421-5277-1-git-send-email-colin.king@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160125225811.GC10272@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1451694421-5277-1-git-send-email-colin.king@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc bugzilla folks]
-
-On Mon, Jan 25, 2016 at 04:58:11PM -0600, Bjorn Helgaas wrote:
-> On Fri, Jan 15, 2016 at 07:56:46PM +0100, Lucas Stach wrote:
-> > There have been some reports about a possible scheduling while atomic bug
-> > in the i.MX6 PCIe host driver, like the following one
-> > https://bugzilla.kernel.org/show_bug.cgi?id=100031
-> > 
-> > Although there were some proposed patches, they all had some flaws, which
-> > lead to none of them being included in the mainline kernel. The following
-> > patch series fixes this bug in a proper way, instead of papering over the
-> > problem, making the fix a bit bigger.
-> > 
-> > Regards
-> > Lucas
-> > 
-> > Lucas Stach (4):
-> >   PCI: imx6: move PHY reset function to other PHY handling functions
-> >   PCI: imx6: move PHY reset into establish_link
-> >   PCI: imx6: remove broken Gen2 workaround
-> >   PCI: imx6: move link up check into establish link path
-> > 
-> >  drivers/pci/host/pci-imx6.c | 137 +++++++++++++++++---------------------------
-> >  1 file changed, 54 insertions(+), 83 deletions(-)
+On Sat, Jan 02, 2016 at 12:27:01AM +0000, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Applied to pci/host-imx6 for v4.6, thanks!
+> ibm_slot_from_id can return null if the des header signature is
+> not aPCI or if the kmalloc for the return acpi descriptore fails,
+> causing potential null pointer dereferences on the return null
+> descriptor.
+> 
+> Handle the null case with appropriate check and error return.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+
+Applied to pci/hotplug for v4.5, thanks, Colin!
+
+> ---
+>  drivers/pci/hotplug/acpiphp_ibm.c | 17 ++++++++++++++---
+>  1 file changed, 14 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
+> index 6ca2399..9d16c9d 100644
+> --- a/drivers/pci/hotplug/acpiphp_ibm.c
+> +++ b/drivers/pci/hotplug/acpiphp_ibm.c
+> @@ -154,7 +154,8 @@ static union apci_descriptor *ibm_slot_from_id(int id)
+>  ibm_slot_done:
+>  	if (ret) {
+>  		ret = kmalloc(sizeof(union apci_descriptor), GFP_KERNEL);
+> -		memcpy(ret, des, sizeof(union apci_descriptor));
+> +		if (ret)
+> +			memcpy(ret, des, sizeof(union apci_descriptor));
+>  	}
+>  	kfree(table);
+>  	return ret;
+> @@ -175,8 +176,13 @@ static int ibm_set_attention_status(struct hotplug_slot *slot, u8 status)
+>  	acpi_status stat;
+>  	unsigned long long rc;
+>  	union apci_descriptor *ibm_slot;
+> +	int id = hpslot_to_sun(slot);
+>  
+> -	ibm_slot = ibm_slot_from_id(hpslot_to_sun(slot));
+> +	ibm_slot = ibm_slot_from_id(id);
+> +	if (!ibm_slot) {
+> +		pr_err("APLS null ACPI descriptor for slot %d\n", id);
+> +		return -ENODEV;
+> +	}
+>  
+>  	pr_debug("%s: set slot %d (%d) attention status to %d\n", __func__,
+>  			ibm_slot->slot.slot_num, ibm_slot->slot.slot_id,
+> @@ -215,8 +221,13 @@ static int ibm_set_attention_status(struct hotplug_slot *slot, u8 status)
+>  static int ibm_get_attention_status(struct hotplug_slot *slot, u8 *status)
+>  {
+>  	union apci_descriptor *ibm_slot;
+> +	int id = hpslot_to_sun(slot);
+>  
+> -	ibm_slot = ibm_slot_from_id(hpslot_to_sun(slot));
+> +	ibm_slot = ibm_slot_from_id(id);
+> +	if (!ibm_slot) {
+> +		pr_err("APLS null ACPI descriptor for slot %d\n", id);
+> +		return -ENODEV;
+> +	}
+>  
+>  	if (ibm_slot->slot.attn & 0xa0 || ibm_slot->slot.status[1] & 0x08)
+>  		*status = 1;
+> -- 
+> 2.6.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
