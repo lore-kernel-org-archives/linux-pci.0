@@ -1,48 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:39322 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752281AbcAOSD5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2016 13:03:57 -0500
-Date: Fri, 15 Jan 2016 19:03:54 +0100
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: aer: wait till the workqueue completes before free
- memory
-Message-ID: <20160115180354.GF3781@linutronix.de>
-References: <20151217143243.GA9654@linutronix.de>
- <20160106232758.GE16231@localhost>
+Received: from mail.kernel.org ([198.145.29.136]:34882 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756058AbcAHSLc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Jan 2016 13:11:32 -0500
+Date: Fri, 8 Jan 2016 12:11:26 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] shpchp: constify hpc_ops structure
+Message-ID: <20160108181126.GD5354@localhost>
+References: <1450902935-20302-1-git-send-email-Julia.Lawall@lip6.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20160106232758.GE16231@localhost>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1450902935-20302-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Bjorn Helgaas | 2016-01-06 17:27:58 [-0600]:
+On Wed, Dec 23, 2015 at 09:35:35PM +0100, Julia Lawall wrote:
+> The hpc_ops structure is never modified, so declare it as const.
+> 
+> Done with the help of Coccinelle.
+> 
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
->Hi Sebastian,
-Hi Bjorn,
+Applied to pci/trivial for v4.5, thanks, Julia!
 
->Your change looks reasonable.  But I'm curious about the wait_event()
->just below it.  That *looks* like it's intended to do the same thing
->as your flush_work().
-Indeed.
-
->Can you explain why the wait_event() isn't working?  If we add the
-
-aer_isr() invokes get_e_source() which increments rpc->cons_idx. So
-the condition is valid after that and the function does not terminate
-yes it invokes aer_isr_one_error().
-That means if we have one CPU doing the ISR + workqueue task and another
-CPU doing the aer_remove() removal thingy then the latter CPU evaluates
-the condition to true and continues cleanup while the former is still in
-aer_isr_one_error() wondering where the memory went.
-
->flush_work(), can we remove the wait_event() stuff?
-
-I think so since its only purpose is to sync against removal which does
-not work on SMP. So let me remove this and the wait_release member.
-
->Bjorn
-
-Sebastian
+> ---
+>  drivers/pci/hotplug/shpchp.h     |    4 ++--
+>  drivers/pci/hotplug/shpchp_hpc.c |    2 +-
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/shpchp.h b/drivers/pci/hotplug/shpchp.h
+> index 5897d51..3059c34 100644
+> --- a/drivers/pci/hotplug/shpchp.h
+> +++ b/drivers/pci/hotplug/shpchp.h
+> @@ -84,7 +84,7 @@ struct slot {
+>  	u8 presence_save;
+>  	u8 pwr_save;
+>  	struct controller *ctrl;
+> -	struct hpc_ops *hpc_ops;
+> +	const struct hpc_ops *hpc_ops;
+>  	struct hotplug_slot *hotplug_slot;
+>  	struct list_head	slot_list;
+>  	struct delayed_work work;	/* work for button event */
+> @@ -106,7 +106,7 @@ struct controller {
+>  	int slot_num_inc;		/* 1 or -1 */
+>  	struct pci_dev *pci_dev;
+>  	struct list_head slot_list;
+> -	struct hpc_ops *hpc_ops;
+> +	const struct hpc_ops *hpc_ops;
+>  	wait_queue_head_t queue;	/* sleep & wake process */
+>  	u8 slot_device_offset;
+>  	u32 pcix_misc2_reg;	/* for amd pogo errata */
+> diff --git a/drivers/pci/hotplug/shpchp_hpc.c b/drivers/pci/hotplug/shpchp_hpc.c
+> index 7d223e9..43e7906 100644
+> --- a/drivers/pci/hotplug/shpchp_hpc.c
+> +++ b/drivers/pci/hotplug/shpchp_hpc.c
+> @@ -910,7 +910,7 @@ static int shpc_get_max_bus_speed(struct controller *ctrl)
+>  	return retval;
+>  }
+>  
+> -static struct hpc_ops shpchp_hpc_ops = {
+> +static const struct hpc_ops shpchp_hpc_ops = {
+>  	.power_on_slot			= hpc_power_on_slot,
+>  	.slot_enable			= hpc_slot_enable,
+>  	.slot_disable			= hpc_slot_disable,
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
