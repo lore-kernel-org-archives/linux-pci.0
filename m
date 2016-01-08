@@ -1,77 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v3] PCI: hosts: mark pcie/pci (msi) irq cascade handler as
- IRQF_NO_THREAD
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-References: <1449775100-30877-1-git-send-email-grygorii.strashko@ti.com>
- <20160106221827.GD16231@localhost> <20160113133904.GD29964@linutronix.de>
- <20160113175016.GB28453@localhost>
-CC: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<tony@atomide.com>, <nsekhar@ti.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-samsung-soc@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-	<linux-sh@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Kukjin Kim <kgene@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?Q?S=c3=b6ren_Brinkmann?= <soren.brinkmann@xilinx.com>
-From: Grygorii Strashko <grygorii.strashko@ti.com>
-Message-ID: <56969BE3.6000804@ti.com>
-Date: Wed, 13 Jan 2016 20:48:03 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:43287 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932417AbcAHUeB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Jan 2016 15:34:01 -0500
+Date: Fri, 8 Jan 2016 14:33:58 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Vineet.Gupta1@synopsys.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-snps-arc@lists.infradead.org,
+	CARLOS.PALMINHA@synopsys.com, Alexey.Brodkin@synopsys.com,
+	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
+Subject: Re: [PATCH v3 0/2] adding PCI support to AXS10x
+Message-ID: <20160108203358.GI5354@localhost>
+References: <cover.1450694884.git.jpinto@synopsys.com>
 MIME-Version: 1.0
-In-Reply-To: <20160113175016.GB28453@localhost>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1450694884.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/13/2016 07:50 PM, Bjorn Helgaas wrote:
-> On Wed, Jan 13, 2016 at 02:39:04PM +0100, Sebastian Andrzej Siewior wrote:
->> * Bjorn Helgaas | 2016-01-06 16:18:27 [-0600]:
->>
->>> Hi Bjorn,
->>
->>>> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
->>>> index 8c36880..0415192 100644
->>>> --- a/drivers/pci/host/pci-dra7xx.c
->>>> +++ b/drivers/pci/host/pci-dra7xx.c
->>>> @@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
->>>>   		return -EINVAL;
->>>>   	}
->>>>
->>>> +	/*
->>>> +	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
->>>> +	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
->>>> +	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
->>>> +	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
->>>> +	 * which, in turn, will be resolved to handle_simple_irq() call.
->>>> +	 * The handle_simple_irq() expected to be called with IRQ disabled, as
->>>> +	 * result kernle will display warning:
->>>> +	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
->>>> +	 */
->>
->> could you _please_ remove this coment? This kind of comment (if at all)
->> should be part of the commit message (which is the case more or less).
->
-> IIRC, Grygorii specifically wanted to keep this comment in dra7xx, but
+Hi Joao,
 
-True.
+On Mon, Dec 21, 2015 at 03:44:14PM +0000, Joao Pinto wrote:
+> This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
+> AXS10x. It includes the necessary tweaks to the ARC architecture, necessary
+> tweaks to the PCI subsystem and a new driver (pcie-snpsdev).
+> This new driver will be used extensively in the PCIe RC Prototyping Kit.
+> 
+> The patches were produced against Bjorn Helgaas' repository. It was properly
+> tested in an IP Prototyping Kit.
+> 
+> Joao Pinto (2):
+>   PCI support added to ARC
+>   add new platform driver for PCI RC
+> 
+>  .../devicetree/bindings/pci/pcie-snpsdev.txt       |  33 +++
+>  MAINTAINERS                                        |   7 +
+>  arch/arc/Kconfig                                   |  23 ++
+>  arch/arc/include/asm/dma.h                         |   5 +
+>  arch/arc/include/asm/io.h                          |  10 +
+>  arch/arc/include/asm/pci.h                         |  43 ++++
+>  arch/arc/kernel/Makefile                           |   1 +
+>  arch/arc/kernel/pcibios.c                          |  55 ++++
+>  arch/arc/mm/ioremap.c                              |  10 +-
+>  arch/arc/plat-axs10x/Kconfig                       |   1 +
+>  drivers/pci/Makefile                               |   1 +
+>  drivers/pci/host/Kconfig                           |   5 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pcie-designware.c                 |  11 +
+>  drivers/pci/host/pcie-designware.h                 |   1 +
+>  drivers/pci/host/pcie-snpsdev.c                    | 286 +++++++++++++++++++++
+>  16 files changed, 492 insertions(+), 1 deletion(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
+>  create mode 100644 arch/arc/include/asm/pci.h
+>  create mode 100644 arch/arc/kernel/pcibios.c
+>  create mode 100644 drivers/pci/host/pcie-snpsdev.c
 
-> I do agree that this level of detail is more appropriate for a changelog.
->
-> If Grygorii and Kishon don't object, I can update the patch to remove it.
+This failed the kbuild test, so I'm waiting for a refresh to fix that.
 
-But no objections from my side. Thanks a lot.
-
--- 
-regards,
--grygorii
+Bjorn
