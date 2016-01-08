@@ -1,65 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:34536 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934689AbcALNsq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jan 2016 08:48:46 -0500
-Date: Tue, 12 Jan 2016 13:50:23 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-Subject: Re: [PATCH V2 11/23] arm64, pci: Remove useless boot time IRQ
- assignment when booting with DT.
-Message-ID: <20160112135023.GC3601@red-moon>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
- <1450278993-12664-12-git-send-email-tn@semihalf.com>
-MIME-Version: 1.0
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:35346 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751191AbcAHRy4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jan 2016 12:54:56 -0500
+Received: by mail-wm0-f51.google.com with SMTP id f206so144193401wmf.0
+        for <linux-pci@vger.kernel.org>; Fri, 08 Jan 2016 09:54:55 -0800 (PST)
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450278993-12664-12-git-send-email-tn@semihalf.com>
+Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
+Subject: Re: [PATCH] drivers:pci Fix all whitespace issues
+From: sasa bogicevic <brutallesale@gmail.com>
+In-Reply-To: <CAErSpo7oaZ220hv5=LfCdWiytjJGYciwUz4qHYx6E_ZW8GBe+g@mail.gmail.com>
+Date: Fri, 8 Jan 2016 18:54:52 +0100
+Cc: linux-pci@vger.kernel.org
+Message-Id: <7B5F9613-28B1-47BB-B081-ACB94DC45868@gmail.com>
+References: <1451251271-43502-1-git-send-email-brutallesale@gmail.com> <20160108163638.GB31005@localhost> <8694496E-F4DE-4C68-98DE-CA9F1DD1D8BA@gmail.com> <CAErSpo7oaZ220hv5=LfCdWiytjJGYciwUz4qHYx6E_ZW8GBe+g@mail.gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 16, 2015 at 04:16:21PM +0100, Tomasz Nowicki wrote:
-> In order to probe PCIe host controller when booting with DT,
-> ARM64 is using drivers which defer IRQ assignment to device
-> enable time. It means that boot time DT specific irq map initialization
-> is always overridden, so lets remove that code.
+Thanks!
+This is great, so basically all drivers from pcie need to be moved to pci folder, right ?
+
+Thanks, Sasa
+{
+	name: Bogicevic Sasa
+	phone: +381606006200
+}
+
+
+
+> On Jan 8, 2016, at 18:38, Bjorn Helgaas <bhelgaas@google.com> wrote:
 > 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> ---
->  arch/arm64/kernel/pci.c | 10 ----------
->  1 file changed, 10 deletions(-)
+> I have sort of a to-do list here:
 > 
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index 023b983..f7948f5 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -51,16 +51,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->  	return pci_enable_resources(dev, mask);
->  }
->  
-> -/*
-> - * Try to assign the IRQ number from DT when adding a new device
-> - */
-> -int pcibios_add_device(struct pci_dev *dev)
-> -{
-> -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> -
-> -	return 0;
-> -}
-> -
+> https://docs.google.com/spreadsheets/d/1VgEMqaG5FFkde4Se64nNaMpNzBfXdlgihXuGKVEzMbA/edit?usp=sharing
+> 
+> Most of those items are fairly significant, but I can help if you have
+> questions (please post on linux-pci so others can benefit as well).
+> 
+> Integrating PCIe Kconfig into PCI Kconfig should be relatively
+> straightforward (though far from trivial).
+> 
+> Welcome to Linux and PCI!
+> 
+> Bjorn
+> 
+> On Fri, Jan 8, 2016 at 10:58 AM, sasa bogicevic <brutallesale@gmail.com> wrote:
+>> Thanks!
+>> If you have some more tasks for me I would appreciate it. I am still new so I do only these kind of fixes for now but if there is something more complex that trivial coding style issues but not too complex for the start I would be glad to contribute some more. Just let me know and Ill get on it.
+>> 
+>> Thanks, Sasa
+>> {
+>>        name: Bogicevic Sasa
+>>        phone: +381606006200
+>> }
+>> 
+>> 
+>> 
+>>> On Jan 8, 2016, at 17:36, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>> 
+>>> On Sun, Dec 27, 2015 at 01:21:11PM -0800, Bogicevic Sasa wrote:
+>>>> This patch fixes all whitespace issues( missing or needed whitespace) in
+>>>> all files in drivers/pci folder. Code is compiled with allyesconfig
+>>>> before and after code changes and objects are recorded and checked with
+>>>> objdiff and they are not changed after this commit.
+>>>> 
+>>>> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
+>>> 
+>>> Applied to pci/trivial for v4.5, thanks!
+>>> 
+>>> Bjorn
+>> 
 
-Actually, this patch should be part of Matthew's series:
-
-http://comments.gmane.org/gmane.linux.kernel.pci/46461
-
-Lorenzo
