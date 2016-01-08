@@ -1,74 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:34688 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751516AbcA2ORX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jan 2016 09:17:23 -0500
-Received: by mail-wm0-f51.google.com with SMTP id 128so54759122wmz.1
-        for <linux-pci@vger.kernel.org>; Fri, 29 Jan 2016 06:17:22 -0800 (PST)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: linux-arm-kernel@lists.infradead.org, will.deacon@arm.com,
-	linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, mark.brown@linaro.org,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH] PCI: generic: map config window in one go
-Date: Fri, 29 Jan 2016 15:17:15 +0100
-Message-Id: <1454077035-23872-1-git-send-email-ard.biesheuvel@linaro.org>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:33465 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751213AbcAHUOz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jan 2016 15:14:55 -0500
+Received: by mail-wm0-f46.google.com with SMTP id f206so149195173wmf.0
+        for <linux-pci@vger.kernel.org>; Fri, 08 Jan 2016 12:14:54 -0800 (PST)
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
+Subject: Re: [PATCH] drivers:pci Fix all whitespace issues
+From: sasa bogicevic <brutallesale@gmail.com>
+In-Reply-To: <CAErSpo59One_XZgYE+ZpyAu4Xmr7EsxkbuKbe2Xp_yfjK5PdLg@mail.gmail.com>
+Date: Fri, 8 Jan 2016 21:14:51 +0100
+Cc: linux-pci@vger.kernel.org
+Message-Id: <37FF66B1-1FF0-4A3A-AD81-FF2FD0915E4C@gmail.com>
+References: <1451251271-43502-1-git-send-email-brutallesale@gmail.com> <20160108163638.GB31005@localhost> <8694496E-F4DE-4C68-98DE-CA9F1DD1D8BA@gmail.com> <CAErSpo7oaZ220hv5=LfCdWiytjJGYciwUz4qHYx6E_ZW8GBe+g@mail.gmail.com> <7B5F9613-28B1-47BB-B081-ACB94DC45868@gmail.com> <CAErSpo59One_XZgYE+ZpyAu4Xmr7EsxkbuKbe2Xp_yfjK5PdLg@mail.gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of iterating over the PCI config window and performing individual
-ioremap() calls on all the adjacent slices, perform a single ioremap() to
-map the entire region, and divvy it up later. This not only prevents
-leaving some of it mapped if we fail half way through, it also ensures that
-archs that support huge-vmap can use section mappings to perform the
-mapping.
+Thanks for the info, Ill shout if I need further help
 
-On my Seattle A0 box, this transforms 128 separate 1 MB mappings that are
-mapped down to 4 KB pages into a single 128 MB mapping using 2 MB sections,
-saving 512 KB worth of page tables.
+Thanks, Sasa
+{
+	name: Bogicevic Sasa
+	phone: +381606006200
+}
 
-Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
----
 
-huge-vmap for arm64 proposed here:
-http://article.gmane.org/gmane.linux.kernel.hardened.devel/1661
- 
- drivers/pci/host/pci-host-generic.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 1652bc70b145..3251cd779278 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -161,6 +161,7 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- 	struct device *dev = pci->host.dev.parent;
- 	struct device_node *np = dev->of_node;
- 	u32 sz = 1 << pci->cfg.ops->bus_shift;
-+	void *window;
- 
- 	err = of_address_to_resource(np, 0, &pci->cfg.res);
- 	if (err) {
-@@ -186,14 +187,15 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- 		return -ENOMEM;
- 
- 	bus_range = pci->cfg.bus_range;
-+	window = devm_ioremap(dev, pci->cfg.res.start,
-+			      (bus_range->end - bus_range->start + 1) * sz);
-+	if (!window)
-+		return -ENOMEM;
-+
- 	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
- 		u32 idx = busn - bus_range->start;
- 
--		pci->cfg.win[idx] = devm_ioremap(dev,
--						 pci->cfg.res.start + idx * sz,
--						 sz);
--		if (!pci->cfg.win[idx])
--			return -ENOMEM;
-+		pci->cfg.win[idx] = window + idx * sz;
- 	}
- 
- 	return 0;
--- 
-2.5.0
+> On Jan 8, 2016, at 19:26, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> 
+> No, this change would only affect Kconfig files.  For example,
+> arch/x86/Kconfig contains:
+> 
+>  source "drivers/pci/pcie/Kconfig"
+>  source "drivers/pci/Kconfig"
+>  source "drivers/pci/hotplug/Kconfig"
+> 
+> I would like it to contain only the "drivers/pci/Kconfig" line.  The
+> drivers/pci/Kconfig file should take care of including pcie/Kconfig
+> and pci/hotplug/Kconfig itself.
+> 
+> Other arches have the same issue.
+> 
+> 
+> On Fri, Jan 8, 2016 at 11:54 AM, sasa bogicevic <brutallesale@gmail.com> wrote:
+>> Thanks!
+>> This is great, so basically all drivers from pcie need to be moved to pci folder, right ?
+>> 
+>> Thanks, Sasa
+>> {
+>>        name: Bogicevic Sasa
+>>        phone: +381606006200
+>> }
+>> 
+>> 
+>> 
+>>> On Jan 8, 2016, at 18:38, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> 
+>>> I have sort of a to-do list here:
+>>> 
+>>> https://docs.google.com/spreadsheets/d/1VgEMqaG5FFkde4Se64nNaMpNzBfXdlgihXuGKVEzMbA/edit?usp=sharing
+>>> 
+>>> Most of those items are fairly significant, but I can help if you have
+>>> questions (please post on linux-pci so others can benefit as well).
+>>> 
+>>> Integrating PCIe Kconfig into PCI Kconfig should be relatively
+>>> straightforward (though far from trivial).
+>>> 
+>>> Welcome to Linux and PCI!
+>>> 
+>>> Bjorn
+>>> 
+>>> On Fri, Jan 8, 2016 at 10:58 AM, sasa bogicevic <brutallesale@gmail.com> wrote:
+>>>> Thanks!
+>>>> If you have some more tasks for me I would appreciate it. I am still new so I do only these kind of fixes for now but if there is something more complex that trivial coding style issues but not too complex for the start I would be glad to contribute some more. Just let me know and Ill get on it.
+>>>> 
+>>>> Thanks, Sasa
+>>>> {
+>>>>       name: Bogicevic Sasa
+>>>>       phone: +381606006200
+>>>> }
+>>>> 
+>>>> 
+>>>> 
+>>>>> On Jan 8, 2016, at 17:36, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>>>> 
+>>>>> On Sun, Dec 27, 2015 at 01:21:11PM -0800, Bogicevic Sasa wrote:
+>>>>>> This patch fixes all whitespace issues( missing or needed whitespace) in
+>>>>>> all files in drivers/pci folder. Code is compiled with allyesconfig
+>>>>>> before and after code changes and objects are recorded and checked with
+>>>>>> objdiff and they are not changed after this commit.
+>>>>>> 
+>>>>>> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
+>>>>> 
+>>>>> Applied to pci/trivial for v4.5, thanks!
+>>>>> 
+>>>>> Bjorn
+>>>> 
+>> 
 
