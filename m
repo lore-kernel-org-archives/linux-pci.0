@@ -1,44 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:51476 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752882AbcAMVSQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Jan 2016 16:18:16 -0500
-Message-ID: <1452719886.8203.1.camel@ellerman.id.au>
-Subject: Re: [v7,49/50] drivers/of: Export OF changeset functions
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Wolfram Sang <wsa@the-dreams.de>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: devicetree@vger.kernel.org, frowand.list@gmail.com, aik@ozlabs.ru,
-	linux-pci@vger.kernel.org, panto@antoniou-consulting.com,
-	bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, linuxppc-dev@lists.ozlabs.org
-Date: Thu, 14 Jan 2016 08:18:06 +1100
-In-Reply-To: <20160113135426.GA29030@katana>
-References: <1446642770-4681-50-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <20160113135426.GA29030@katana>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
+Subject: [PATCH v3 0/2] pci: Add host controller driver for Cavium ThunderX PCIe
+Date: Fri,  8 Jan 2016 15:59:11 -0800
+Message-Id: <1452297553-19911-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2016-01-13 at 14:54 +0100, Wolfram Sang wrote:
-> On Thu, Nov 05, 2015 at 12:12:49AM +1100, Gavin Shan wrote:
-> > The PowerNV PCI hotplug driver is going to use the OF changeset
-> > to manage the changed device sub-tree. This exports those OF
-> > changeset functions for that.
-> > 
-> > Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> > Acked-by: Rob Herring <robh@kernel.org>
-> 
-> I needed something like this, too [1] and rebased my series on top of
-> this patch. So:
-> 
-> Acked-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
-> Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+From: David Daney <david.daney@cavium.com>
 
-OK. This series is kind of in limbo, it might hit 4.6, but it might not. So if
-you need this patch before then you should probably pull it in to your series,
-or ask Rob to merge it pre-emptively.
+Some Cavium ThunderX processors require quirky access methods for the
+config space of the PCIe bridge.
 
-cheers
+There are two patches:
 
+1) Refactor code in pci-host-generic so that it can more easily be
+   used by other drivers.  This splits the driver for CAM and ECAM
+   access methods to a separate file from the common host driver code.
+
+2) Add the ThunderX PCIe driver, which leverages the code in
+   pci-host-generic
+
+Changes from v2: Improve device tree binding example as noted by Rob
+Herring.  Rename pcie-thunder-pem.* to pci-thunder-pem.* for better
+consistency.  Update MAINTAINERS to reflect the changes.
+
+Changes from v1: Split CAM and ECAM code from common driver code as
+suggested by Arnd Bergmann.  Fix spelling errors in
+pcie-thunder-pem.txt
+
+
+
+David Daney (2):
+  PCI: generic: Refactor code to enable reuse by other drivers.
+  pci, pci-thunder-pem: Add PCIe host driver for ThunderX processors.
+
+ .../devicetree/bindings/pci/pci-thunder-pem.txt    |  43 ++++
+ MAINTAINERS                                        |   9 +
+ drivers/pci/host/Kconfig                           |  11 +
+ drivers/pci/host/Makefile                          |   2 +
+ drivers/pci/host/pci-host-common.c                 | 194 ++++++++++++++
+ drivers/pci/host/pci-host-common.h                 |  56 ++++
+ drivers/pci/host/pci-host-generic.c                | 190 +-------------
+ drivers/pci/host/pci-thunder-pem.c                 | 283 +++++++++++++++++++++
+ 8 files changed, 602 insertions(+), 186 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
+ create mode 100644 drivers/pci/host/pci-host-common.c
+ create mode 100644 drivers/pci/host/pci-host-common.h
+ create mode 100644 drivers/pci/host/pci-thunder-pem.c
+
+-- 
+1.8.3.1
