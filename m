@@ -1,40 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:33095 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932826AbcAKMP4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jan 2016 07:15:56 -0500
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-next@vger.kernel.org
-Subject: [PATCH] PCI: designware: Remove unused variable
-Date: Mon, 11 Jan 2016 13:15:53 +0100
-Message-Id: <1452514553-16287-1-git-send-email-thierry.reding@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:35985 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756458AbcAHSXH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Jan 2016 13:23:07 -0500
+Date: Fri, 8 Jan 2016 12:23:03 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: eocallaghan@alterapraxis.com
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] drivers/pci: Avoid iterating through memory outside the
+ resource window
+Message-ID: <20160108182303.GF5354@localhost>
+References: <ebd27b01905fd23bf9144800c1767e88@alterapraxis.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ebd27b01905fd23bf9144800c1767e88@alterapraxis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+On Tue, Jan 05, 2016 at 04:12:38AM +1100, eocallaghan@alterapraxis.com wrote:
+> If the 'image' pointer has been advanced more than 'size',
+> we've already iterated through memory outside the resource window.
+> 
+> We have zero control over whatever we find in the option ROM,
+> if it's even an option ROM and not just an accident of random
+> data just happening to look like an option ROM.
+> 
+> Signed-off-by: Edward O'Callaghan <eocallaghan@alterapraxis.com>
 
-Commit 50a1a3b06ddd ("PCI: designware: Simplify control flow") removed
-all uses of the "ret" variable in the dw_pcie_wr_conf() function but not
-the variable itself. Do so now to get rid of an unused variable warning.
+This patch was somehow malformed, but I applied it by hand to pci/resource
+for v4.5, thanks, Edward!
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- drivers/pci/host/pcie-designware.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 9a666dbff127..21716827847a 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -680,7 +680,6 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 			int where, int size, u32 val)
- {
- 	struct pcie_port *pp = bus->sysdata;
--	int ret;
- 
- 	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
--- 
-2.5.0
-
+> ---
+>  drivers/pci/rom.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+> index eb0ad53..45987ad 100644
+> --- a/drivers/pci/rom.c
+> +++ b/drivers/pci/rom.c
+> @@ -96,6 +96,9 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void
+> __iomem *rom, size_t size)
+>  		last_image = readb(pds + 21) & 0x80;
+>  		length = readw(pds + 16);
+>  		image += length * 512;
+> +		/* Avoid iterating through memory outside the resource window */
+> +		if (image > rom + size)
+> +			break;
+>  	} while (length && !last_image);
+> 
+>  	/* never return a size larger than the PCI resource window */
+> -- 
+> 2.5.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
