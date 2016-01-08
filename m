@@ -1,97 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1451941655.6585.8.camel@redhat.com>
-Subject: Re: [RFC PATCH v2 3/3] vfio-pci: Allow to mmap MSI-X table if EEH
- is supported
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com
-Date: Mon, 04 Jan 2016 14:07:35 -0700
-In-Reply-To: <1451551844-11732-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1451551844-11732-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-	 <1451551844-11732-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 8 Jan 2016 15:12:17 +0000
+From: Mark Rutland <mark.rutland@arm.com>
+To: Mark Salter <msalter@redhat.com>
+Cc: linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
+	will.deacon@arm.com, okaya@codeaurora.org, wangyijing@huawei.com,
+	Lorenzo.Pieralisi@arm.com, Tomasz Nowicki <tn@semihalf.com>,
+	ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org,
+	robert.richter@caviumnetworks.com,
+	linux-arm-kernel@lists.infradead.org, catalin.marinas@arm.com,
+	arnd@arndb.de, Stefano.Stabellini@eu.citrix.com,
+	Liviu.Dudau@arm.com, bhelgaas@google.com, tglx@linutronix.de,
+	mw@semihalf.com, jcm@redhat.com, jchandra@broadcom.com,
+	rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
+	hanjun.guo@linaro.org, Suravee.Suthikulpanit@amd.com,
+	jiang.liu@linux.intel.com
+Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
+ against platfrom specific quirks.
+Message-ID: <20160108151216.GJ3097@leverpostej>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <1450278993-12664-23-git-send-email-tn@semihalf.com>
+ <1452262581.31901.26.camel@redhat.com>
+ <20160108150137.GH3097@leverpostej>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160108150137.GH3097@leverpostej>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-12-31 at 16:50 +0800, Yongji Xie wrote:
-> Current vfio-pci implementation disallows to mmap MSI-X
-> table in case that user get to touch this directly.
+On Fri, Jan 08, 2016 at 03:01:37PM +0000, Mark Rutland wrote:
+> On Fri, Jan 08, 2016 at 09:16:21AM -0500, Mark Salter wrote:
+> > On Wed, 2015-12-16 at 16:16 +0100, Tomasz Nowicki wrote:
+> > > Some platforms may not be fully compliant with generic set of PCI config
+> > > accessors. For these cases we implement the way to overwrite accessors
+> > > set before PCI buses enumeration. Algorithm that overwrite accessors
+> > > matches against platform ID (DMI), domain and bus number, hopefully
+> > > enough for all cases. All quirks can be defined using:
+> > > DECLARE_ACPI_MCFG_FIXUP() and keep self contained.
+> > > 
+> > > example:
+> > > 
+> > > static const struct dmi_system_id yyy[] = {
+> > >         {
+> > >                 .ident = "<Platform ident string>",
+> > >                 .callback = <handler>,
+> > >                 .matches = {
+> > >                         DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
+> > >                         DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
+> > >                         DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
+> > >                 },
+> > >         },
+> > >         { }
+> > > };
+> > > 
+> > 
+> > This seems awkward to me in the case where the quirk is SoC-based and there
+> > may be multiple platforms affected. Needing a DECLARE_ACPI_MCFG_FIXUP for
+> > each platform using such a SoC (i.e. Mustang and Moonshot) doesn't seem
+> > right. In that case, I think it'd be better to check CPUID and possibly
+> > some SoC register to cover all platforms affected.
 > 
-> However, EEH mechanism can ensure that a given pci device
-> can only shoot the MSIs assigned for its PE. So we think
-> it's safe to expose the MSI-X table to userspace because
-> the exposed MSI-X table can't be used to do harm to other
-> memory space.
+> CPUs get reused across SoCs, so as you've implicitly noted, the CPUID
+> alone is insufficient.
 > 
-> And with MSI-X table mmapped, some performance issues which
-> are caused when PCI adapters have critical registers in the
-> same page as the MSI-X table also can be resolved.
+> Given that IP blocks get moved around between SoC variants, I don't
+> think you can check "some SoC register" based on the CPU ID -- you can
+> end up bringing the board down at that point.
 > 
-> So this patch adds a Kconfig option, VFIO_PCI_MMAP_MSIX,
-> to support for mmapping MSI-X table.
+> If the CPU ID alone is insufficient to tell you about a component, it
+> cannot give you enough information about a component you can use to
+> query more information from.
 > 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> ---
->  drivers/vfio/pci/Kconfig    |    4 ++++
->  drivers/vfio/pci/vfio_pci.c |    6 ++++--
->  2 files changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
-> index 02912f1..67b0a2c 100644
-> --- a/drivers/vfio/pci/Kconfig
-> +++ b/drivers/vfio/pci/Kconfig
-> @@ -23,6 +23,10 @@ config VFIO_PCI_MMAP
->  	depends on VFIO_PCI
->  	def_bool y if !S390
->  
-> +config VFIO_PCI_MMAP_MSIX
-> +	depends on VFIO_PCI_MMAP
-> +	def_bool y if EEH
+> If your platform requires a quirk, it's always going to be painful (and
+> to some extent, rightfulyl so). We should aim for correctness here with
+> explicit matching.
 
-Does CONFIG_EEH necessarily mean the EEH is enabled?  Could the system
-not support EEH or could EEH be disabled via kernel commandline
-options?
+Further, if there is going to be an ever-expanding set of platforms
+requring quirks, then we need a standard mechanism in ACPI to enable the
+platform to tell us explicitly either which specific PCI implementation
+is used, or which common quirk is necessary.
 
-> +
->  config VFIO_PCI_INTX
->  	depends on VFIO_PCI
->  	def_bool y if !S390
-> diff --git a/drivers/vfio/pci/vfio_pci.c
-> b/drivers/vfio/pci/vfio_pci.c
-> index 09b3805..d536985 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -555,7 +555,8 @@ static long vfio_pci_ioctl(void *device_data,
->  			    IORESOURCE_MEM && (info.size >=
-> PAGE_SIZE ||
->  			    pci_resource_page_aligned)) {
->  				info.flags |=
-> VFIO_REGION_INFO_FLAG_MMAP;
-> -				if (info.index == vdev->msix_bar) {
-> +				if
-> (!IS_ENABLED(CONFIG_VFIO_PCI_MMAP_MSIX) &&
-> +				    info.index == vdev->msix_bar) {
->  					ret =
-> msix_sparse_mmap_cap(vdev, &caps);
->  					if (ret)
->  						return ret;
-> @@ -967,7 +968,8 @@ static int vfio_pci_mmap(void *device_data,
-> struct vm_area_struct *vma)
->  	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
->  		return -EINVAL;
->  
-> -	if (index == vdev->msix_bar) {
-> +	if (!IS_ENABLED(CONFIG_VFIO_PCI_MMAP_MSIX) &&
-> +	    index == vdev->msix_bar) {
->  		/*
->  		 * Disallow mmaps overlapping the MSI-X table; users
-> don't
->  		 * get to touch this directly.  We could find
-> somewhere
-
+Thanks,
+Mark.
