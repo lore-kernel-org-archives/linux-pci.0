@@ -1,126 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44720 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.136]:54199 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934226AbcAZM1W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Jan 2016 07:27:22 -0500
-Subject: Re: [PATCH] PCI: aer_inject: Log actual error causes
-From: Jean Delvare <jdelvare@suse.de>
-To: Borislav Petkov <bp@suse.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	john.ronciak@intel.com, tony.luck@intel.com,
-	Thomas Renninger <trenn@suse.de>
-In-Reply-To: <20160126101244.GB8475@pd.tnic>
-References: <20160126095205.0e5923bd@endymion.delvare>
-	 <20160126101244.GB8475@pd.tnic>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 26 Jan 2016 13:27:18 +0100
-Message-ID: <1453811238.4772.124.camel@chaos.site>
-Mime-Version: 1.0
+	id S1754089AbcAIBFu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Jan 2016 20:05:50 -0500
+Date: Fri, 8 Jan 2016 19:05:45 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jordan Hargrave <Jordan_Hargrave@dell.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, alexander.duyck@gmail.com,
+	Babu Moger <babu.moger@oracle.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Michal Kubecek <mkubecek@suse.com>,
+	"Shane M. Seymour" <shane.seymour@hpe.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
+Subject: Re: [PATCH] Limit VPD length on Atheros wifi cards
+Message-ID: <20160109010545.GA31085@localhost>
+References: <1451427542-30482-1-git-send-email-Jordan_Hargrave@dell.com>
+ <20160109005736.GP5354@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160109005736.GP5354@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Borislav,
+[+cc Hannes, Michal, Shane, Myron, Venkat; sorry I missed you guys the
+first time around]
 
-Thanks for the quick review.
-
-Le Tuesday 26 January 2016 à 11:12 +0100, Borislav Petkov a écrit :
-> On Tue, Jan 26, 2016 at 09:52:05AM +0100, Jean Delvare (by way of Jean Delvare <jdelvare@suse.de>) wrote:
-> > The aer_inject driver is very quiet. In most cases, it merely returns
-> > an error code to user-space, leaving the user with little clue about
-> > the actual reason for the failure.
+On Fri, Jan 08, 2016 at 06:57:36PM -0600, Bjorn Helgaas wrote:
+> [+cc Babu]
+> 
+> Hi Jordan, Babu, et al,
+> 
+> On Tue, Dec 29, 2015 at 04:19:02PM -0600, Jordan Hargrave wrote:
+> > Attempt to read VPD on these cards causes kernel hang or delay
 > > 
-> > So, log error messages for 4 of the most frequent causes of failure:
-> > * Can't find the root port of the specified device.
-> > * Device doesn't support AER.
-> > * Root port doesn't support AER.
-> > * AER device not found.
-> > This gives the user a chance to understand why aer-inject failed.
-> > 
-> > Based on a preliminary patch by Thomas Renninger.
-> > 
-> > Signed-off-by: Jean Delvare <jdelvare@suse.de>
-> > Cc: Thomas Renninger <trenn@suse.de>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
 > > ---
-> >  drivers/pci/pcie/aer/aer_inject.c |    8 +++++++-
-> >  1 file changed, 7 insertions(+), 1 deletion(-)
+> >  drivers/pci/quirks.c |   10 ++++++++++
+> >  1 files changed, 10 insertions(+), 0 deletions(-)
 > > 
-> > --- linux-4.5-rc0.orig/drivers/pci/pcie/aer/aer_inject.c	2016-01-20 09:25:54.815852332 +0100
-> > +++ linux-4.5-rc0/drivers/pci/pcie/aer/aer_inject.c	2016-01-26 09:41:17.361994839 +0100
-> > @@ -334,12 +334,14 @@ static int aer_inject(struct aer_error_i
-> >  		return -ENODEV;
-> >  	rpdev = pcie_find_root_port(dev);
-> >  	if (!rpdev) {
-> > +		dev_err(&dev->dev, "aer_inject: Root port not found\n");
-> >  		ret = -ENODEV;
-> >  		goto out_put;
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index e6376f6..a72667f 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -2161,6 +2161,16 @@ static void quirk_brcm_570x_limit_vpd(struct pci_dev *dev)
 > >  	}
+> >  }
 > >  
-> >  	pos_cap_err = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> >  	if (!pos_cap_err) {
-> > +		dev_err(&dev->dev, "aer_inject: Device doesn't support AER\n");
-> >  		ret = -EPERM;
+> > +static void quirk_atheros_vpd(struct pci_dev *dev)
+> > +{
+> > +	/* Atheros WiFi cards hang when reading VPD */
+> > +	if (dev->vpd)
+> > +		dev->vpd->len = 0;
+> > +}
+> > +
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATHEROS, PCI_ANY_ID, quirk_atheros_vpd);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID, quirk_atheros_vpd);
 > 
-> Btw, this -EPERM looks wrong - if we're checking for capabilities, we
-> shouldn't be returning -EPERM but maybe something like -ENODEV or so.
-
-I agree. It was originally -ENOTTY, changed to -EPERM by:
-
-commit e82b14bdd390c534750a191f9936f842bab255d4
-Author: Prarit Bhargava <prarit@redhat.com>
-Date:   Wed Mar 20 12:04:43 2013 +0000
-
-But I'd say -EPERM is hardly better. The problem with -ENODEV is that it
-is already returned by this function for several other error causes.
-Also the aer-inject user-space tool will print the error message from
-the error code, and I don't think "No such device" is helpful in that
-case. What about -ENOTSUPP ("Operation not supported") or
--EEPROTONOSUPPORT ("Protocol not supported")?
-
-I can change it if nobody objects. I think the change can be included in
-this patch as it is quite related.
-
-> >  		goto out_put;
-> >  	}
-> > @@ -350,6 +352,8 @@ static int aer_inject(struct aer_error_i
-> >  
-> >  	rp_pos_cap_err = pci_find_ext_capability(rpdev, PCI_EXT_CAP_ID_ERR);
-> >  	if (!rp_pos_cap_err) {
-> > +		dev_err(&rpdev->dev,
-> > +			"aer_inject: Root port doesn't support AER\n");
-> >  		ret = -EPERM;
+> We're accumulating several quirks like this, and they don't do
+> anything device-specific, so we could probably use a single quirk for
+> all of them, i.e., Babu's quirk_megaraid_sas_limit_vpd() and your
+> quirk_atheros_vpd() are needlessly duplicated.
 > 
-> Ditto.
+> I'd really like to have more details about what the "kernel hang or
+> delay" that happens when we try to read VPD.
 > 
-> >  		goto out_put;
-> >  	}
-> > @@ -462,8 +466,10 @@ static int aer_inject(struct aer_error_i
-> >  			goto out_put;
-> >  		}
-> >  		aer_irq(-1, edev);
-> > -	} else
-> > +	} else {
-> > +		dev_err(&rpdev->dev, "aer_inject: AER device not found\n");
+> Looking at pci_vpd_pci22_read(), it basically just does config
+> accesses, so I only see two ways things could go wrong:
 > 
-> So other error prints in that function do printk(KERN_WARNING. Why
-> dev_err()?
-
-I'd rather ask, why printk? ;-) Using raw printk is considered bad and
-should be avoided whenever possible. So says checkpatch.pl. If anything,
-all these printks should be converted to at least pr_* and ideally
-dev_*. But that would be a separate patch.
-
-> Why not pr_err() and define pr_fmt to "aer_inject: " and then drop
-> that prefix from the messages?
-
-Because I believe that including the device name in the error messages
-makes them more helpful to understand and diagnose the problem. If the
-device where we try to inject the error has a problem, it's PCI name
-will be included in the error message. If the error is with the root
-port, then we include the root port's PCI name. If I used pr_err()
-instead then the device information would be missing.
-
--- 
-Jean Delvare
-SUSE L3 Support
-
+>   1) If the device responds with data, but the PCI_VPD_ADDR_F flag
+>   isn't set, we should be able to timeout gracefully.
+> 
+>   2) If the device doesn't respond at all, we could see machine
+>   checks, master aborts, processor read timeouts, or similar hardware
+>   problems.
+> 
+> If there are other failure modes, I'd like to learn what they are.
+> 
+> If we're seeing problems like (1), there must be something we can
+> improve in the way we handle timeouts.
+> 
+> If we're seeing failures like (2), they're probably caused by a
+> hardware or firmware problem on the device, and there's not much we
+> can do in the kernel, so disabling VPD access completely is probably
+> all we can do.
+> 
+> So if/when we add quirks like this, I'm looking for bugzilla entries
+> that clearly show that the problem is (2).  I'd also like to log
+> something in dmesg as a clue about why lspci or other utilities don't
+> find any VPD data.
+> 
+> Bjorn
+> 
+> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
+> >  			PCI_DEVICE_ID_NX2_5706,
+> >  			quirk_brcm_570x_limit_vpd);
