@@ -1,74 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34882 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:52622 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756058AbcAHSLc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Jan 2016 13:11:32 -0500
-Date: Fri, 8 Jan 2016 12:11:26 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] shpchp: constify hpc_ops structure
-Message-ID: <20160108181126.GD5354@localhost>
-References: <1450902935-20302-1-git-send-email-Julia.Lawall@lip6.fr>
+	id S1752850AbcAIWx0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 9 Jan 2016 17:53:26 -0500
+Date: Sat, 9 Jan 2016 16:53:21 -0600
+From: Rob Herring <robh@kernel.org>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v3 2/2] pci, pci-thunder-pem: Add PCIe host driver for
+ ThunderX processors.
+Message-ID: <20160109225321.GA22053@rob-hp-laptop>
+References: <1452297553-19911-1-git-send-email-ddaney.cavm@gmail.com>
+ <1452297553-19911-3-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450902935-20302-1-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1452297553-19911-3-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 23, 2015 at 09:35:35PM +0100, Julia Lawall wrote:
-> The hpc_ops structure is never modified, so declare it as const.
+On Fri, Jan 08, 2016 at 03:59:13PM -0800, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
 > 
-> Done with the help of Coccinelle.
+> Some Cavium ThunderX processors require quirky access methods for the
+> config space of the PCIe bridge.  Add a driver to provide these config
+> space accessor functions.  The pci-host-common code is used to
+> configure the PCI machinery.
 > 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
-Applied to pci/trivial for v4.5, thanks, Julia!
-
+> Signed-off-by: David Daney <david.daney@cavium.com>
 > ---
->  drivers/pci/hotplug/shpchp.h     |    4 ++--
->  drivers/pci/hotplug/shpchp_hpc.c |    2 +-
->  2 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/shpchp.h b/drivers/pci/hotplug/shpchp.h
-> index 5897d51..3059c34 100644
-> --- a/drivers/pci/hotplug/shpchp.h
-> +++ b/drivers/pci/hotplug/shpchp.h
-> @@ -84,7 +84,7 @@ struct slot {
->  	u8 presence_save;
->  	u8 pwr_save;
->  	struct controller *ctrl;
-> -	struct hpc_ops *hpc_ops;
-> +	const struct hpc_ops *hpc_ops;
->  	struct hotplug_slot *hotplug_slot;
->  	struct list_head	slot_list;
->  	struct delayed_work work;	/* work for button event */
-> @@ -106,7 +106,7 @@ struct controller {
->  	int slot_num_inc;		/* 1 or -1 */
->  	struct pci_dev *pci_dev;
->  	struct list_head slot_list;
-> -	struct hpc_ops *hpc_ops;
-> +	const struct hpc_ops *hpc_ops;
->  	wait_queue_head_t queue;	/* sleep & wake process */
->  	u8 slot_device_offset;
->  	u32 pcix_misc2_reg;	/* for amd pogo errata */
-> diff --git a/drivers/pci/hotplug/shpchp_hpc.c b/drivers/pci/hotplug/shpchp_hpc.c
-> index 7d223e9..43e7906 100644
-> --- a/drivers/pci/hotplug/shpchp_hpc.c
-> +++ b/drivers/pci/hotplug/shpchp_hpc.c
-> @@ -910,7 +910,7 @@ static int shpc_get_max_bus_speed(struct controller *ctrl)
->  	return retval;
->  }
->  
-> -static struct hpc_ops shpchp_hpc_ops = {
-> +static const struct hpc_ops shpchp_hpc_ops = {
->  	.power_on_slot			= hpc_power_on_slot,
->  	.slot_enable			= hpc_slot_enable,
->  	.slot_disable			= hpc_slot_disable,
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  .../devicetree/bindings/pci/pci-thunder-pem.txt    |  43 ++++
+
+Acked-by: Rob Herring <robh@kernel.org>
+
+>  MAINTAINERS                                        |   8 +
+>  drivers/pci/host/Kconfig                           |   7 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pci-thunder-pem.c                 | 283 +++++++++++++++++++++
+>  5 files changed, 342 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
+>  create mode 100644 drivers/pci/host/pci-thunder-pem.c
