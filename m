@@ -1,62 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44138 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751709AbcAGRsH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Jan 2016 12:48:07 -0500
-Date: Thu, 7 Jan 2016 11:48:03 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Subject: Re: [PATCH] PCI: msi: fix typos in <linux/msi.h>
-Message-ID: <20160107174803.GC14105@localhost>
-References: <1450703588-12295-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:38151 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108AbcAIGFT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Jan 2016 01:05:19 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450703588-12295-1-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20160108180638.GF11228@arm.com>
+References: <1450780730-13667-1-git-send-email-gkulkarni@caviumnetworks.com>
+	<20160108180131.GB5354@localhost>
+	<20160108180638.GF11228@arm.com>
+Date: Sat, 9 Jan 2016 11:35:17 +0530
+Message-ID: <CAFpQJXUaVS7tBqjQ4Dh201yrOWFxa3Bk2q-ZCFtK4mk-te=Q7w@mail.gmail.com>
+Subject: Re: [PATCH] arm64, pci, numa: Adding helper functions as required by pci
+From: Ganapatrao Kulkarni <gpkulkarni@gmail.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Robert Richter <rrichter@cavium.com>,
+	Prasun Kapoor <Prasun.Kapoor@caviumnetworks.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 21, 2015 at 02:13:08PM +0100, Thomas Petazzoni wrote:
-> This commit fixes two typos in the <linux/msi.h> header.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+On Fri, Jan 8, 2016 at 11:36 PM, Will Deacon <will.deacon@arm.com> wrote:
+> On Fri, Jan 08, 2016 at 12:01:31PM -0600, Bjorn Helgaas wrote:
+>> On Tue, Dec 22, 2015 at 04:08:50PM +0530, Ganapatrao Kulkarni wrote:
+>> > Adding helper functions and necessary code to make
+>> > pci driver(pci-host-generic) numa aware.
+>> >
+>> > This patch is on top of arm64-numa v7.
+>> > http://www.spinics.net/lists/arm-kernel/msg460813.html
+>> >
+>> > Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+>> > ---
+>> >  arch/arm64/include/asm/numa.h       | 8 +++++---
+>> >  arch/arm64/kernel/pci.c             | 8 ++++++++
+>> >  drivers/pci/host/pci-host-generic.c | 1 +
+>> >  3 files changed, 14 insertions(+), 3 deletions(-)
+>> >
+>> > diff --git a/arch/arm64/include/asm/numa.h b/arch/arm64/include/asm/numa.h
+>> > index b8c2a3f..1eca4db 100644
+>> > --- a/arch/arm64/include/asm/numa.h
+>> > +++ b/arch/arm64/include/asm/numa.h
+>> > @@ -15,9 +15,11 @@
+>> >  extern int __node_distance(int from, int to);
+>> >  #define node_distance(a, b) __node_distance(a, b)
+>> >
+>> > -/* dummy definitions for pci functions */
+>> > -#define pcibus_to_node(node)       0
+>> > -#define cpumask_of_pcibus(bus)     0
+>> > +struct pci_bus;
+>> > +extern int pcibus_to_node(struct pci_bus *bus);
+>> > +#define cpumask_of_pcibus(bus)     (pcibus_to_node(bus) == -1 ?            \
+>> > +                            cpu_all_mask :                         \
+>> > +                            cpumask_of_node(pcibus_to_node(bus)))
+>>
+>> All the arch definitions of cpumask_of_pcibus() are pretty similar;
+>> could they be made more generic?  At the very least, can you drop the
+>> definition here and use the one in include/asm-generic/topology.h,
+>> which is identical to what you're defining here?
+macro cpumask_of_pcibus is defined under #ifndef CONFIG_NUMA in
+include/asm-generic/topology.h
+and this macro is defined again for NUMA in respective arch header files.
+i think moving this macro from ifndef will allow us to use without redefinition.
 
-Applied for v4.5, thanks!  I plan to merge this with other trivial patches
-near the end of the merge window.
+--- a/include/asm-generic/topology.h
++++ b/include/asm-generic/topology.h
+@@ -54,14 +54,14 @@
+ #define pcibus_to_node(bus)    ((void)(bus), -1)
+ #endif
 
-> ---
->  include/linux/msi.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index f71a25e..8974b21 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -186,7 +186,7 @@ struct msi_domain_info;
->   * @msi_free:		Domain specific function to free a MSI interrupts
->   * @msi_check:		Callback for verification of the domain/info/dev data
->   * @msi_prepare:	Prepare the allocation of the interrupts in the domain
-> - * @msi_finish:		Optional callbacl to finalize the allocation
-> + * @msi_finish:		Optional callback to finalize the allocation
->   * @set_desc:		Set the msi descriptor for an interrupt
->   * @handle_error:	Optional error handler if the allocation fails
->   *
-> @@ -194,7 +194,7 @@ struct msi_domain_info;
->   * msi_create_irq_domain() and related interfaces
->   *
->   * @msi_check, @msi_prepare, @msi_finish, @set_desc and @handle_error
-> - * are callbacks used by msi_irq_domain_alloc_irqs() and related
-> + * are callbacks used by msi_domain_alloc_irqs() and related
->   * interfaces which are based on msi_desc.
->   */
->  struct msi_domain_ops {
-> -- 
-> 2.6.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
++#endif /* CONFIG_NUMA */
++
+ #ifndef cpumask_of_pcibus
+ #define cpumask_of_pcibus(bus) (pcibus_to_node(bus) == -1 ?            \
+                                 cpu_all_mask :                         \
+                                 cpumask_of_node(pcibus_to_node(bus)))
+ #endif
+
+-#endif /* CONFIG_NUMA */
+-
+ #if !defined(CONFIG_NUMA) || !defined(CONFIG_HAVE_MEMORYLESS_NODES)
+
+ #ifndef set_numa_mem
+
+i have got below compilation error withour macro defined in arch code.
+
+drivers/pci/pci-sysfs.c: In function ‘cpuaffinity_show’:
+drivers/pci/pci-sysfs.c:114:15: error: implicit declaration of
+function ‘cpumask_of_pcibus’ [-Werror=implicit-function-declaration]
+drivers/pci/pci-sysfs.c:114:34: warning: initialization makes pointer
+from integer without a cast [enabled by default]
+drivers/pci/pci-sysfs.c: In function ‘cpulistaffinity_show’:
+drivers/pci/pci-sysfs.c:123:34: warning: initialization makes pointer
+from integer without a cast [enabled by default]
+cc1: some warnings being treated as errors
+
+
+i can send this as separate patch( as a  fix patch).
+
+>
+> +1 on that. I asked for exactly the same thing in my review of v7:
+>
+>   http://www.spinics.net/lists/arm-kernel/msg469592.html
+>
+> but it looks like I was just ignored.
+>
+> Will
+thanks
+ganapat
