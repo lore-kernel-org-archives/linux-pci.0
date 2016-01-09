@@ -1,74 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49306 "EHLO mga02.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:53082 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751136AbcAOGXB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Jan 2016 01:23:01 -0500
-From: Qipeng Zha <qipeng.zha@intel.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	mika.westerberg@intel.com, Qi Zheng <qi.zheng@intel.com>
-Subject: [PATCH 2/2] PCI/PM: enable runtime PM support for Intel Broxton platform.
-Date: Fri, 15 Jan 2016 22:27:45 +0800
-Message-Id: <1452868065-96999-2-git-send-email-qipeng.zha@intel.com>
-In-Reply-To: <1452868065-96999-1-git-send-email-qipeng.zha@intel.com>
-References: <1452868065-96999-1-git-send-email-qipeng.zha@intel.com>
+	id S1750949AbcAIAVB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Jan 2016 19:21:01 -0500
+Date: Fri, 8 Jan 2016 18:20:57 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: John Crispin <blogic@openwrt.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH 1/2] dt-bindings: add MedieTak PCIE binding documentation
+Message-ID: <20160109002057.GO5354@localhost>
+References: <1452200773-50794-1-git-send-email-blogic@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1452200773-50794-1-git-send-email-blogic@openwrt.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe runtime PM is disabled by default, add special treatment
-to allow runtime PM for Intel Broxton platform.
+In subject:
 
-Signed-off-by: Qi Zheng <qi.zheng@intel.com>
-Signed-off-by: Qipeng Zha <qipeng.zha@intel.com>
----
- drivers/pci/quirks.c    | 13 +++++++++++++
- include/linux/pci_ids.h |  2 ++
- 2 files changed, 15 insertions(+)
+  add MedieTak PCIE binding documentation
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7e32730..a745d06 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -25,6 +25,7 @@
- #include <linux/sched.h>
- #include <linux/ktime.h>
- #include <linux/mm.h>
-+#include <linux/pm_runtime.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
- #include "pci.h"
- 
-@@ -2989,6 +2990,18 @@ static void quirk_intel_ntb(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
- 
-+
-+/*PCIe ports on Intel Broxton should support runtime PM*/
-+static void quirk_pcie_enable_rtpm(struct pci_dev *dev)
-+{
-+	pm_runtime_put_noidle(&dev->dev);
-+	pm_runtime_allow(&dev->dev);
-+}
-+DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_INTEL,
-+	PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_0, quirk_pcie_enable_rtpm);
-+DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_INTEL,
-+	PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_1, quirk_pcie_enable_rtpm);
-+
- static ktime_t fixup_debug_start(struct pci_dev *dev,
- 				 void (*fn)(struct pci_dev *dev))
- {
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index d9ba49c..731f05f 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2596,6 +2596,8 @@
- #define PCI_DEVICE_ID_INTEL_82840_HB	0x1a21
- #define PCI_DEVICE_ID_INTEL_82845_HB	0x1a30
- #define PCI_DEVICE_ID_INTEL_IOAT	0x1a38
-+#define PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_0		0x1ad6
-+#define PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_1		0x1ad7
- #define PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MIN	0x1c41
- #define PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MAX	0x1c5f
- #define PCI_DEVICE_ID_INTEL_PATSBURG_LPC_0	0x1d40
--- 
-1.8.3.2
+has a couple misspellings ("MedieTak" and "PCIE").
 
+Use "PCIe" consistently below.
+
+On Thu, Jan 07, 2016 at 10:06:12PM +0100, John Crispin wrote:
+> Signed-off-by: John Crispin <blogic@openwrt.org>
+> ---
+>  .../devicetree/bindings/pci/mediatek-pcie.txt      |  140 ++++++++++++++++++++
+>  1 file changed, 140 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+> new file mode 100644
+> index 0000000..1bd20b2
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+> @@ -0,0 +1,140 @@
+> +Mediatek PCIe controller
+> +
+> +Required properties:
+> +- compatible: Should be one of:
+> +	- "mediatek,mt2701-pcie"
+> +	- "mediatek,mt7623-pcie"
+> +- device_type: Must be "pci"
+> +- reg: A list of physical base address and length for each set of controller
+> +  registers. A list of register ranges to use. Must contain an
+> +    entry for each entry in the reg-names property.
+> +- reg-names: Must include the following entries:
+> +  "pcie": PCIE registers
+> +  "pcie phy0": PCIE PHY0 registers
+> +  "pcie phy1": PCIE PHY0 registers
+> +  "pcie phy2": PCIE PHY0 registers
+> +- interrupts: A list of interrupt outputs of the controller. Must contain an
+> +  entry for each entry in the interrupt-names property.
+> +- interrupt-names: Must include the following entries:
+> +  "pcie0": The interrupt that is asserted for port0
+> +  "pcie1": The interrupt that is asserted for port1
+> +  "pcie2": The interrupt that is asserted for port2
+> +- bus-range: Range of bus numbers associated with this controller
+> +- #address-cells: Address representation for root ports (must be 3)
+> +- #size-cells: Size representation for root ports (must be 2)
+> +- ranges: Describes the translation of addresses for root ports and standard
+> +  PCI regions. The entries must be 6 cells each.
+> +  Please refer to the standard PCI bus binding document for a more detailed
+> +  explanation.
+> +- #interrupt-cells: Size representation for interrupts (must be 1)
+> +- clocks: Must contain an entry for each entry in clock-names.
+> +  See ../clocks/clock-bindings.txt for details.
+> +- clock-names: Must include the following entries:
+> +  - pcie0
+> +  - pcie1
+> +  - pcie2
+> +- resets: Must contain an entry for each entry in reset-names.
+> +  See ../reset/reset.txt for details.
+> +- reset-names: Must include the following entries:
+> +  - pcie0
+> +  - pcie1
+> +  - pcie2
+> +- mediatek,hifsys: Must contain a phandle to the HIFSYS syscon range.
+> +Root ports are defined as subnodes of the PCIe controller node.
+> +
+> +Required properties:
+> +- device_type: Must be "pci"
+> +- assigned-addresses: Address and size of the port configuration registers
+> +- reg: PCI bus address of the root port
+> +- #address-cells: Must be 3
+> +- #size-cells: Must be 2
+> +- ranges: Sub-ranges distributed from the PCIe controller node. An empty
+> +  property is sufficient.
+> +
+> +Example:
+> +
+> +SoC DTSI:
+> +
+> +	hifsys: clock-controller@1a000000 {
+> +		compatible = "mediatek,mt7623-hifsys",
+> +			     "mediatek,mt2701-hifsys",
+> +			     "syscon";
+> +		reg = <0 0x1a000000 0 0x1000>;
+> +		#clock-cells = <1>;
+> +		#reset-cells = <1>;
+> +	};
+> +
+> +	pcie-controller@1a140000 {
+> +		compatible = "mediatek,mt7623-pcie";
+> +		device_type = "pci";
+> +		reg = <0 0x1a140000 0 0x8000>, /* PCI-Express registers */
+> +		      <0 0x1a149000 0 0x1000>, /* PCI-Express PHY0 */
+> +		      <0 0x1a14a000 0 0x1000>, /* PCI-Express PHY1 */
+> +		      <0 0x1a244000 0 0x1000>; /* PCI-Express PHY2 */
+> +		reg-names = "pcie", "pcie phy0", "pcie phy1", "pcie phy2";
+> +		interrupts = <GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>,
+> +			     <GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>,
+> +			     <GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
+> +		interrupt-names = "pcie0", "pcie1", "pcie2";
+> +		clocks = <&topckgen CLK_TOP_ETHIF_SEL>;
+> +		clock-names = "pcie";
+> +		power-domains = <&scpsys MT2701_POWER_DOMAIN_HIF>;
+> +		resets = <&hifsys MT2701_HIFSYS_PCIE0_RST>,
+> +			 <&hifsys MT2701_HIFSYS_PCIE1_RST>,
+> +			 <&hifsys MT2701_HIFSYS_PCIE2_RST>;
+> +		reset-names = "pcie0", "pice1", "pcie2";
+> +
+> +		bus-range = <0x00 0xff>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +
+> +                mediatek,hifsys = <&hifsys>;
+> +
+> +		ranges = <0x81000000 0 0x1a160000 0 0x1a160000 0 0x00010000 /* io space */
+> +			  0x83000000 0 0x60000000 0 0x60000000 0 0x10000000>; /* pci memory */
+> +
+> +		status = "disabled";
+> +
+> +		pcie@1,0 {
+> +			device_type = "pci";
+> +			reg = <0x0800 0 0 0 0>;
+> +
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			ranges;
+> +
+> +			status = "disabled";
+> +		};
+> +
+> +		pcie@2,0{
+> +			device_type = "pci";
+> +			reg = <0x1000 0 0 0 0>;
+> +
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			ranges;
+> +
+> +			status = "disabled";
+> +		};
+> +
+> +		pcie@3,0{
+> +			device_type = "pci";
+> +			reg = <0x1800 0 0 0 0>;
+> +
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			ranges;
+> +
+> +			status = "disabled";
+> +		};
+> +	};
+> +
+> +Board DTS:
+> +
+> +	pcie-controller {
+> +		status = "okay";
+> +
+> +		pci@1,0 {
+> +			status = "okay";
+> +		};
+> +	};
+> -- 
+> 1.7.10.4
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
