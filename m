@@ -1,111 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:42122 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752485AbcADEtt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jan 2016 23:49:49 -0500
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH v5 0/5] ACPI based PCI support for arm64
-Date: Mon, 4 Jan 2016 10:43:18 +0530
-Message-ID: <1451884403-21437-1-git-send-email-jchandra@broadcom.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:42374 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756444AbcAIXQ1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Jan 2016 18:16:27 -0500
+Subject: Re: [PATCH] Limit VPD length on Atheros wifi cards
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>
+References: <1451427542-30482-1-git-send-email-Jordan_Hargrave@dell.com>
+ <20160109005736.GP5354@localhost> <20160109010545.GA31085@localhost>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, alexander.duyck@gmail.com,
+	Hannes Reinecke <hare@suse.de>,
+	Michal Kubecek <mkubecek@suse.com>,
+	"Shane M. Seymour" <shane.seymour@hpe.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
+From: Babu Moger <babu.moger@oracle.com>
+Message-ID: <569194AC.8060301@oracle.com>
+Date: Sat, 9 Jan 2016 17:15:56 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20160109010545.GA31085@localhost>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset provides a generic ACPI based PCI host controller
-implementation and uses it on arm64.
+Thanks for bringing this topic up.
 
-The first patch moves the common code to handle MCFG ACPI table from
-arch/x86 to drivers/acpi/pci_mcfg.c. The last patch in the patchset
-provides the generic implementation of an ACPI based PCI host
-controller with a new file drivers/acpi/pci_host_acpi.c. The other
-patches are to fix up arm64 and ACPI code to work with these two
-patches.
+On 1/8/2016 7:05 PM, Bjorn Helgaas wrote:
+> [+cc Hannes, Michal, Shane, Myron, Venkat; sorry I missed you guys the
+> first time around]
+> 
+> On Fri, Jan 08, 2016 at 06:57:36PM -0600, Bjorn Helgaas wrote:
+>> [+cc Babu]
+>>
+>> Hi Jordan, Babu, et al,
+>>
+>> On Tue, Dec 29, 2015 at 04:19:02PM -0600, Jordan Hargrave wrote:
+>>> Attempt to read VPD on these cards causes kernel hang or delay
+>>>
+>>> Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
+>>> ---
+>>>  drivers/pci/quirks.c |   10 ++++++++++
+>>>  1 files changed, 10 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>>> index e6376f6..a72667f 100644
+>>> --- a/drivers/pci/quirks.c
+>>> +++ b/drivers/pci/quirks.c
+>>> @@ -2161,6 +2161,16 @@ static void quirk_brcm_570x_limit_vpd(struct pci_dev *dev)
+>>>  	}
+>>>  }
+>>>  
+>>> +static void quirk_atheros_vpd(struct pci_dev *dev)
+>>> +{
+>>> +	/* Atheros WiFi cards hang when reading VPD */
+>>> +	if (dev->vpd)
+>>> +		dev->vpd->len = 0;
+>>> +}
+>>> +
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATHEROS, PCI_ANY_ID, quirk_atheros_vpd);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID, quirk_atheros_vpd);
+>>
+>> We're accumulating several quirks like this, and they don't do
+>> anything device-specific, so we could probably use a single quirk for
+>> all of them, i.e., Babu's quirk_megaraid_sas_limit_vpd() and your
+>> quirk_atheros_vpd() are needlessly duplicated.
+>>
+>> I'd really like to have more details about what the "kernel hang or
+>> delay" that happens when we try to read VPD.
+>>
+>> Looking at pci_vpd_pci22_read(), it basically just does config
+>> accesses, so I only see two ways things could go wrong:
+>>
+>>   1) If the device responds with data, but the PCI_VPD_ADDR_F flag
+>>   isn't set, we should be able to timeout gracefully.
+>>
+>>   2) If the device doesn't respond at all, we could see machine
+>>   checks, master aborts, processor read timeouts, or similar hardware
+>>   problems.
 
-The pci host controller implementation keeps a reference to
-pci_mmcfg_region entry so that config space access is done with a
-simple mapping and generic PCI config read/write. There is also an
-implementation of raw_pci_read/raw_pci_write provided by walking the
-pci_mmcfg_list
+ I think I saw the the second problem. It appears to respond ok when the length
+is smaller(i tried 0x80). Problem with that is, lspci reports error when it cannot find
+start/end tags. I saw all the data as 00. I think Myron saw everything 00 and 0xFF sometimes.
 
-The patchset is against 4.4-rc6, but it can be applied to pci/next
-with a very minor fixup.  This is tested with arm64 QEMU and OVMF
-and on x86 with qemu.
+When I increase the length, kernel hangs and panics at some unknown location.
+Looking at the crash I saw this stack(it did not panic at this location though)
 
-More testing or comments are welcome. The idea is to provide a
-simpler alternative for ACPI PCI support in arm64, any feedback
-from PCI or ACPI maintainers would be appreciated on this front.
+ PID: 5274   TASK: ffff800fe1198680  CPU: 0   COMMAND: "cat"
+#0 [ffff800fe25f6f81] switch_to_pc at 8d725c
+#1 [ffff800fe25f70e1] pci_user_read_config_word at 6c4698
+#2 [ffff800fe25f71a1] pci_vpd_pci22_wait at 6c4710
+#3 [ffff800fe25f7261] pci_vpd_pci22_read at 6c4994
+#4 [ffff800fe25f7321] pci_read_vpd at 6c3e90
+#5 [ffff800fe25f73d1] read_vpd_attr at 6ccc78
+#6 [ffff800fe25f7481] read at 5be478
+#7 [ffff800fe25f7531] vfs_read at 54fdb0
+#8 [ffff800fe25f75e1] sys_read at 54ff10
+#9 [ffff800fe25f76a1] linux_sparc_syscall at 4060f4
+TSTATE=0x8082000223 TT=0x16d TPC=0xfffffc0100295e28 TNPC=0xfffffc0100295e2c
+ r0=0x0000000000000000  r1=0x0000000000000003  r2=0x000000000020aec0
+ r3=0x000000000020aec4  r4=0x000000000b000000  r5=0x00000000033fffff
+ r6=0x0000000000000001  r7=0xfffffc01000006f0 r24=0x0000000000000003
+r25=0x000000000020e000 r26=0x0000000000008000 r27=0x0000000000000000
+r28=0x0000000000000000 r29=0x0000000000000000 r30=0x000007feffb468d1
+  
+  
+>>
+>> If there are other failure modes, I'd like to learn what they are.
+>>
+>> If we're seeing problems like (1), there must be something we can
+>> improve in the way we handle timeouts.
+>>
+>> If we're seeing failures like (2), they're probably caused by a
+>> hardware or firmware problem on the device, and there's not much we
+>> can do in the kernel, so disabling VPD access completely is probably
+>> all we can do.
+>>
+>> So if/when we add quirks like this, I'm looking for bugzilla entries
+>> that clearly show that the problem is (2).  I'd also like to log
+>> something in dmesg as a clue about why lspci or other utilities don't
+>> find any VPD data.
 
-Thanks,
-JC.
+Sure. I can open a bugzilla on Monday with more details.  I like the idea
+of having a one solution to cover all these cases. I can post a RFC patch
+with one function to cover all these buggy adapters. Please let me know.
 
-v4->v5:
- - Fix arm build issue reported by the kbuild bot
- - Use config_enabled instead of ifdef in pci_mcfg.c
-
-v3->v4:
- - Handle suggestions from Arnd Bergmann <arnd@arndb.de>
-    * move the implementation of host controller to drivers/acpi
-      under config option CONFIG_ACPI_PCI_HOST_GENERIC
-    * remove unnecessary arch hooks (this done as much as possible
-      without affecting the scope of the patch, will need another
-      separate patchset for the rest).
-    * remove pcibios_assign_resources fs_initcall that was added
- - fixup domain_nr assignment code, and move ACPI companion set
-   to PCI code.
- - Call map resource correctly in setup code
- - fix kbuild robot report
- - More testing
-
-v2->v3:
- - Move maintenance of the pci_mmcfg_list to drivers/acpi/pci_mcfg.c
-   without changing x86 logic
- - use the pci_mmcfg_list in ARM64 implementation
- - provide raw_pci_read/raw_pci_write
-
-v1->v2:
- - use CONFIG_PCI_MMCONFIG on arm64, provide a weak implementation
-   of pci_mmcfg_late_init for arm64.
- - The real implementation of pci_mmcfg_late_init is in pci-host-acpi.c
-   and it will save the MCFG table entries to an array. Earlier this
-   was done with an arch_init call
- - remove unneeded pci_bus_add_devices call and fix MCFG saving code
- - Added a patch to ACPI pci_root.c to handle arm64 PCI IO resources
-
-Jayachandran C (5):
-  APCI: MCFG: Move mmcfg_list management to drivers/acpi
-  PCI: Handle ACPI companion and domain number
-  ACPI: PCI: Support platforms that need pci_remap_iospace
-  arm64: pci: Add ACPI support
-  PCI: ACPI: Add a generic ACPI based host controller
-
- arch/arm64/Kconfig             |   3 +
- arch/arm64/kernel/pci.c        |  34 ++++-
- arch/x86/include/asm/pci_x86.h |  24 +---
- arch/x86/pci/mmconfig-shared.c | 269 +++++------------------------------
- arch/x86/pci/mmconfig_32.c     |   1 +
- arch/x86/pci/mmconfig_64.c     |   1 +
- arch/x86/pci/numachip.c        |   1 +
- drivers/acpi/Kconfig           |   8 ++
- drivers/acpi/Makefile          |   2 +
- drivers/acpi/pci_host_acpi.c   | 186 ++++++++++++++++++++++++
- drivers/acpi/pci_mcfg.c        | 312 +++++++++++++++++++++++++++++++++++++++++
- drivers/acpi/pci_root.c        |  62 +++++++-
- drivers/acpi/resource.c        |   2 +
- drivers/pci/pci.c              |  15 +-
- drivers/pci/probe.c            |   2 +
- include/linux/pci-acpi.h       |  59 ++++++++
- 16 files changed, 716 insertions(+), 265 deletions(-)
- create mode 100644 drivers/acpi/pci_host_acpi.c
- create mode 100644 drivers/acpi/pci_mcfg.c
-
--- 
-1.9.1
-
+>>
+>> Bjorn
+>>
+>>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
+>>>  			PCI_DEVICE_ID_NX2_5706,
+>>>  			quirk_brcm_570x_limit_vpd);
