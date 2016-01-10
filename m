@@ -1,141 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33278 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933658AbcAKRGU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jan 2016 12:06:20 -0500
-Date: Mon, 11 Jan 2016 11:06:17 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv7 0/6] Driver for new "VMD" device
-Message-ID: <20160111170617.GA30780@localhost>
-References: <1450719900-2824-1-git-send-email-keith.busch@intel.com>
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:36049 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757222AbcAJTNE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Jan 2016 14:13:04 -0500
+Received: by mail-ob0-f176.google.com with SMTP id ba1so392455946obb.3
+        for <linux-pci@vger.kernel.org>; Sun, 10 Jan 2016 11:13:03 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450719900-2824-1-git-send-email-keith.busch@intel.com>
+In-Reply-To: <CALCETrV+RwNPzxyL8UVNsrAGu-6cCzD_Cc9PFJT2NCTJPLZZiw@mail.gmail.com>
+References: <CALCETrXM5w0iCKDNBZYEpk17ViCMdP_B-cO4X01EQR9H8hesTw@mail.gmail.com>
+ <20151118105907.GC4437@intel.com> <CALCETrUPfgPrKY4ZQcvLr8=i_dYb=FTndfVXzbCjxEMfbi0YiQ@mail.gmail.com>
+ <CAPj87rNj4mGtRe33k64zYMAdSKc=OwrseY0oxMGtPtzn=XGnXA@mail.gmail.com> <CALCETrV+RwNPzxyL8UVNsrAGu-6cCzD_Cc9PFJT2NCTJPLZZiw@mail.gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Sun, 10 Jan 2016 11:12:42 -0800
+Message-ID: <CALCETrXD6WUPJ-d8vUD0UnjGDDK6MnQfNtd7tyZNbNZkFBxYNw@mail.gmail.com>
+Subject: Re: [Intel-gfx] i915 Skylake: "Invalid ROM contents"
+To: Daniel Stone <daniel@fooishbar.org>
+Cc: =?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	=?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith,
+On Sun, Jan 10, 2016 at 10:41 AM, Andy Lutomirski <luto@amacapital.net> wrote:
+> On Wed, Nov 18, 2015 at 8:12 AM, Daniel Stone <daniel@fooishbar.org> wrote:
+>> Hi,
+>>
+>> On 18 November 2015 at 15:59, Andy Lutomirski <luto@amacapital.net> wrote:
+>>> On Wed, Nov 18, 2015 at 2:59 AM, Ville Syrjälä
+>>> <ville.syrjala@linux.intel.com> wrote:
+>>>> On Tue, Nov 17, 2015 at 11:43:25AM -0800, Andy Lutomirski wrote:
+>>>>> Typing:
+>>>>>
+>>>>> # cat /sys/devices/pci0000:00/0000:00:02.0/rom
+>>>>>
+>>>>> Provokes:
+>>>>>
+>>>>> i915 0000:00:02.0: Invalid ROM contents
+>>>>
+>>>> Hmm. So there's no PCI option ROM there. I wonder what is there. I
+>>>> get the same on my Braswell BTW. I tried to look through the UEFI
+>>>> spec a bit, and it seems to say that even for non-legacy option ROMs
+>>>> the 0x55aa signature should be there.
+>>>>
+>>>> But this being the GPU means we may be using the shadow ROM stuff,
+>>>> which IIRC assumes that the shadow is at 0xc000. I'm not sure that
+>>>> holds anymore with UEFI, and maybe we should be using some UEFI
+>>>> trick instead to find out where it actually lives?
+>>>>
+>>>> BTW what does 'lspci -vv -s 00:02.0' say on your machine?
+>>>>
+>>>
+>>> 00:02.0 VGA compatible controller: Intel Corporation Sky Lake
+>>> Integrated Graphics (rev 07) (prog-if 00 [VGA controller])
+>>>     DeviceName:  Onboard IGD
+>>>     Subsystem: Dell Device 0704
+>>>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+>>> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>>>     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+>>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>>     Latency: 0
+>>>     Interrupt: pin A routed to IRQ 128
+>>>     Region 0: Memory at db000000 (64-bit, non-prefetchable) [size=16M]
+>>>     Region 2: Memory at 90000000 (64-bit, prefetchable) [size=256M]
+>>>     Region 4: I/O ports at f000 [size=64]
+>>>     Expansion ROM at <unassigned> [disabled]
+>>
+>> UEFI has an option to enable option ROMs, which is disabled by
+>> default; I wonder if having it disabled prevents all access to the
+>> ROM.
+>>
+>> Mind you, it doesn't seem to be fatal; I've not had any issues with
+>> the same machine that I can pin down to lack of ROM.
+>>
+>
+> FWIW, my logs also get spammed with:
+>
+> [  127.101881] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2]
+> has bogus alignment
+>
+> I suspect that the PCI core is just failing to recognize that the ROM
+> is disabled.
+>
 
-On Mon, Dec 21, 2015 at 10:44:54AM -0700, Keith Busch wrote:
-> Now on version 7, mostly cosmetic.
-> 
-> v6->v7:
-> 
->  Removed PCI resource window patch rejecting child bus that doesn't fit in
->  parent's window. There are additional caveats the maintainer brought up
->  that need more consideration. Since we are not dependent on that patch,
->  it is removed from the series.
-> 
->  Dropped the pciutils patch since it is an external projet not part
->  of this series anyway. Will send tooling updates to the appropriate
->  mailing list once this settles.
-> 
->  Modified commit log messages to align with maintainer's requested format.
-> 
->  Using u32's for domains instead of ints.
-> 
->  Fixed code comment on posted/non-posted clarification. 
-> 
->  Added a dmesg info message to show which domain a VMD end point bound to.
-> 
->  Fixed the vmd domain's root bus parent device so power management has
->  the correct dependency tree.
-> 
-> Keith Busch (5):
->   PCI/MSI: Export msi functions for module use
->   x86/IRQ: Export IRQ domain function for module use
->   x86/PCI: Allow PCI domain specific dma ops
->   x86/PCI: Initial commit for new VMD device driver
->   PCI/AER: Use 32 bit int type domains
-> 
-> Liu Jiang (1):
->   msi: Relax msi_domain_alloc() to support parentless MSI irqdomains
-> 
->  arch/x86/Kconfig                  |  13 +
->  arch/x86/include/asm/device.h     |  10 +
->  arch/x86/include/asm/hw_irq.h     |   5 +
->  arch/x86/pci/Makefile             |   2 +
->  arch/x86/pci/common.c             |  38 +++
->  arch/x86/pci/vmd.c                | 698 ++++++++++++++++++++++++++++++++++++++
->  drivers/pci/msi.c                 |   2 +
->  drivers/pci/pcie/aer/aer_inject.c |  16 +-
->  kernel/irq/irqdomain.c            |   1 +
->  kernel/irq/msi.c                  |   8 +-
->  10 files changed, 782 insertions(+), 11 deletions(-)
->  create mode 100644 arch/x86/pci/vmd.c
+A bit more info:
 
-Checkpatch complained about a few things that should be easy to fix up:
+I think I only get this error when suspending for the second time
+after boot.  No clue why.
 
-  x86-pci-allow-pci-domain
-  -:26: WARNING: struct dma_map_ops should normally be const
-  x86-pci-initial-commit-for-new
-  -:125: WARNING: added, moved or deleted file(s), does MAINTAINERS need updating?
-  -:168: WARNING: please, no space before tabs
-  -:187: WARNING: please, no space before tabs
-  -:212: WARNING: struct dma_map_ops should normally be const
-  -:269: WARNING: line over 80 characters
-  -:384: WARNING: Missing a blank line after declarations
-  -:391: WARNING: Missing a blank line after declarations
+I instrumented the code a bit.  At the time of that error, res->flags
+== 0x2.  It's probably not a coincidence that:
 
-This is from:
+#define IORESOURCE_ROM_SHADOW        (1<<1)    /* ROM is copy at C000:0 */
 
-+       struct device *vdev = dev_to_vmd_dev(dev);
-+       return vdev->archdata.dma_ops->alloc(vdev, size, addr, flag, attrs);
+Should pci_fixup_video check that the resource exists in the first
+place before setting flags on it?
 
-There are a lot of these, and I'm not going to be obsessive about all
-these two-line functions.  But maybe a macro or helper function could
-turn them all into one-line functions and side-step it, e.g.,:
-
-  static struct dma_ops *vmd_dma_ops(struct device *dev)
-  {
-    return &dev_to_vmd_dev(dev)->archdata.dma_ops;
-  }
-
-  static void *vmd_alloc(...)
-  {
-    return vmd_dma_ops(dev)->alloc(...);
-  }
-
-  -:398: WARNING: Missing a blank line after declarations
-  -:406: WARNING: Missing a blank line after declarations
-  -:415: WARNING: Missing a blank line after declarations
-  -:425: WARNING: Missing a blank line after declarations
-  -:434: WARNING: Missing a blank line after declarations
-  -:442: WARNING: Missing a blank line after declarations
-  -:450: WARNING: Missing a blank line after declarations
-  -:457: WARNING: Missing a blank line after declarations
-  -:464: WARNING: Missing a blank line after declarations
-  -:471: WARNING: Missing a blank line after declarations
-  -:478: WARNING: Missing a blank line after declarations
-  -:484: WARNING: Missing a blank line after declarations
-  -:490: WARNING: Missing a blank line after declarations
-  -:497: WARNING: Missing a blank line after declarations
-  -:509: ERROR: Macros with multiple statements should be enclosed in a do - while loop
-  -:509: WARNING: macros should not use a trailing semicolon
-  -:510: ERROR: trailing statements should be on next line
-
-We should definitely fix this one.
-
-  -:514: WARNING: struct dma_map_ops should normally be const
-  -:515: WARNING: struct dma_map_ops should normally be const
-  -:654: WARNING: line over 80 characters
-  -:656: WARNING: line over 80 characters
-  -:662: WARNING: line over 80 characters
-  -:664: WARNING: line over 80 characters
-  -:692: WARNING: line over 80 characters
-
-These could be easily fixed with a "struct resource *res", which would
-make the code more readable as well.
-
-  -:747: ERROR: space required before the open parenthesis '('
-
+--Andy
