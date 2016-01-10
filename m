@@ -1,105 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64079 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753138AbcALUSO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jan 2016 15:18:14 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv8 4/5] PCI/AER: Use 32 bit int type domains
-Date: Tue, 12 Jan 2016 13:18:09 -0700
-Message-Id: <1452629890-17542-5-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
-References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:34129 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756583AbcAJSlv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Jan 2016 13:41:51 -0500
+Received: by mail-oi0-f45.google.com with SMTP id k206so39492151oia.1
+        for <linux-pci@vger.kernel.org>; Sun, 10 Jan 2016 10:41:51 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAPj87rNj4mGtRe33k64zYMAdSKc=OwrseY0oxMGtPtzn=XGnXA@mail.gmail.com>
+References: <CALCETrXM5w0iCKDNBZYEpk17ViCMdP_B-cO4X01EQR9H8hesTw@mail.gmail.com>
+ <20151118105907.GC4437@intel.com> <CALCETrUPfgPrKY4ZQcvLr8=i_dYb=FTndfVXzbCjxEMfbi0YiQ@mail.gmail.com>
+ <CAPj87rNj4mGtRe33k64zYMAdSKc=OwrseY0oxMGtPtzn=XGnXA@mail.gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Sun, 10 Jan 2016 10:41:31 -0800
+Message-ID: <CALCETrV+RwNPzxyL8UVNsrAGu-6cCzD_Cc9PFJT2NCTJPLZZiw@mail.gmail.com>
+Subject: Re: [Intel-gfx] i915 Skylake: "Invalid ROM contents"
+To: Daniel Stone <daniel@fooishbar.org>
+Cc: =?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-New pci device provides additional pci domains that start above what 16
-bits can address.
+On Wed, Nov 18, 2015 at 8:12 AM, Daniel Stone <daniel@fooishbar.org> wrote:
+> Hi,
+>
+> On 18 November 2015 at 15:59, Andy Lutomirski <luto@amacapital.net> wrote:
+>> On Wed, Nov 18, 2015 at 2:59 AM, Ville Syrjälä
+>> <ville.syrjala@linux.intel.com> wrote:
+>>> On Tue, Nov 17, 2015 at 11:43:25AM -0800, Andy Lutomirski wrote:
+>>>> Typing:
+>>>>
+>>>> # cat /sys/devices/pci0000:00/0000:00:02.0/rom
+>>>>
+>>>> Provokes:
+>>>>
+>>>> i915 0000:00:02.0: Invalid ROM contents
+>>>
+>>> Hmm. So there's no PCI option ROM there. I wonder what is there. I
+>>> get the same on my Braswell BTW. I tried to look through the UEFI
+>>> spec a bit, and it seems to say that even for non-legacy option ROMs
+>>> the 0x55aa signature should be there.
+>>>
+>>> But this being the GPU means we may be using the shadow ROM stuff,
+>>> which IIRC assumes that the shadow is at 0xc000. I'm not sure that
+>>> holds anymore with UEFI, and maybe we should be using some UEFI
+>>> trick instead to find out where it actually lives?
+>>>
+>>> BTW what does 'lspci -vv -s 00:02.0' say on your machine?
+>>>
+>>
+>> 00:02.0 VGA compatible controller: Intel Corporation Sky Lake
+>> Integrated Graphics (rev 07) (prog-if 00 [VGA controller])
+>>     DeviceName:  Onboard IGD
+>>     Subsystem: Dell Device 0704
+>>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+>> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>>     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>     Latency: 0
+>>     Interrupt: pin A routed to IRQ 128
+>>     Region 0: Memory at db000000 (64-bit, non-prefetchable) [size=16M]
+>>     Region 2: Memory at 90000000 (64-bit, prefetchable) [size=256M]
+>>     Region 4: I/O ports at f000 [size=64]
+>>     Expansion ROM at <unassigned> [disabled]
+>
+> UEFI has an option to enable option ROMs, which is disabled by
+> default; I wonder if having it disabled prevents all access to the
+> ROM.
+>
+> Mind you, it doesn't seem to be fatal; I've not had any issues with
+> the same machine that I can pin down to lack of ROM.
+>
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/aer/aer_inject.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+FWIW, my logs also get spammed with:
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index 182224a..20db790 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -41,12 +41,12 @@ struct aer_error_inj {
- 	u32 header_log1;
- 	u32 header_log2;
- 	u32 header_log3;
--	u16 domain;
-+	u32 domain;
- };
- 
- struct aer_error {
- 	struct list_head list;
--	u16 domain;
-+	u32 domain;
- 	unsigned int bus;
- 	unsigned int devfn;
- 	int pos_cap_err;
-@@ -74,7 +74,7 @@ static LIST_HEAD(pci_bus_ops_list);
- /* Protect einjected and pci_bus_ops_list */
- static DEFINE_SPINLOCK(inject_lock);
- 
--static void aer_error_init(struct aer_error *err, u16 domain,
-+static void aer_error_init(struct aer_error *err, u32 domain,
- 			   unsigned int bus, unsigned int devfn,
- 			   int pos_cap_err)
- {
-@@ -86,7 +86,7 @@ static void aer_error_init(struct aer_error *err, u16 domain,
- }
- 
- /* inject_lock must be held before calling */
--static struct aer_error *__find_aer_error(u16 domain, unsigned int bus,
-+static struct aer_error *__find_aer_error(u32 domain, unsigned int bus,
- 					  unsigned int devfn)
- {
- 	struct aer_error *err;
-@@ -106,7 +106,7 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
- 	int domain = pci_domain_nr(dev->bus);
- 	if (domain < 0)
- 		return NULL;
--	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
-+	return __find_aer_error(domain, dev->bus->number, dev->devfn);
- }
- 
- /* inject_lock must be held before calling */
-@@ -196,7 +196,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
- 	domain = pci_domain_nr(bus);
- 	if (domain < 0)
- 		goto out;
--	err = __find_aer_error((u16)domain, bus->number, devfn);
-+	err = __find_aer_error(domain, bus->number, devfn);
- 	if (!err)
- 		goto out;
- 
-@@ -228,7 +228,7 @@ static int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where,
- 	domain = pci_domain_nr(bus);
- 	if (domain < 0)
- 		goto out;
--	err = __find_aer_error((u16)domain, bus->number, devfn);
-+	err = __find_aer_error(domain, bus->number, devfn);
- 	if (!err)
- 		goto out;
- 
-@@ -329,7 +329,7 @@ static int aer_inject(struct aer_error_inj *einj)
- 	u32 sever, cor_mask, uncor_mask, cor_mask_orig = 0, uncor_mask_orig = 0;
- 	int ret = 0;
- 
--	dev = pci_get_domain_bus_and_slot((int)einj->domain, einj->bus, devfn);
-+	dev = pci_get_domain_bus_and_slot(einj->domain, einj->bus, devfn);
- 	if (!dev)
- 		return -ENODEV;
- 	rpdev = pcie_find_root_port(dev);
--- 
-2.6.2.307.g37023ba
+[  127.101881] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2]
+has bogus alignment
 
+I suspect that the PCI core is just failing to recognize that the ROM
+is disabled.
+
+--Andy
