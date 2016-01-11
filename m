@@ -1,133 +1,306 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58202 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751102AbcAZXbG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Jan 2016 18:31:06 -0500
-Date: Tue, 26 Jan 2016 17:31:00 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	alex.williamson@redhat.com, dwmw2@infradead.org, jroedel@suse.de
-Subject: Re: [PATCH v2 1/2] pci: Add support for multiple DMA aliases
-Message-ID: <20160126233100.GC26726@localhost>
-References: <1453825639.26652.45.camel@redhat.com>
- <1453828335-111522-1-git-send-email-jacek.lawrynowicz@intel.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:12712 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758046AbcAKJjM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jan 2016 04:39:12 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	qiujiang <qiujiang@huawei.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: RE: [PATCH v2] PCI: hisi: Add support for HiSilicon Hip06 PCIe host
+ bridge controllers
+Date: Mon, 11 Jan 2016 09:38:44 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EC52FFD@lhreml503-mbs>
+References: <1448558225-24491-1-git-send-email-gabriele.paoloni@huawei.com>
+ <20160108202016.GG5354@localhost>
+In-Reply-To: <20160108202016.GG5354@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1453828335-111522-1-git-send-email-jacek.lawrynowicz@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jacek,
-
-When you post updated versions, please post the whole series with a
-new version number.  I think there are three postings of [v2 1/2], and
-I think they're different.  In any case, it's hard for me to keep them
-straight.
-
-On Tue, Jan 26, 2016 at 06:12:15PM +0100, Jacek Lawrynowicz wrote:
-> This patch solves IOMMU support issues with PCIe non-transparent bridges
-> that use Requester ID look-up tables (LUT), e.g. PEX8733. Before exiting
-> the bridge, packet's RID is rewritten according to LUT programmed by
-> a driver. Modified packets are then passed to a destination bus and
-> processed upstream. The problem is that such packets seem to come from
-> non-existent nodes that are hidden behind NTB and are not discoverable
-> by a destination node, so IOMMU discards them. Adding DMA alias for a
-> given LUT entry allows IOMMU to create a proper mapping that enables
-> inter-node communication.
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: 08 January 2016 20:20
+> To: Gabriele Paoloni
+> Cc: Wangzhou (B); linux-pci@vger.kernel.org; xuwei (O); zhangjukuo;
+> qiuzhenfa; qiujiang; liudongdong (C); Liguozhu (Kenneth); linux-
+> kernel@vger.kernel.org; lorenzo.pieralisi@arm.com; bhelgaas@google.com
+> Subject: Re: [PATCH v2] PCI: hisi: Add support for HiSilicon Hip06 PCIe
+> host bridge controllers
 > 
-> The current DMA alias implementation supports only single alias, so it's
-> not possible to connect more than two nodes when IOMMU is enabled. This
-> implementation enables all possible aliases on a given bus (256) that
-> are stored in a bitset. Alias devfn is directly translated to a bit
-> number. The bitset is not allocated for devices that have no need for
-> DMA aliases.
+> On Fri, Nov 27, 2015 at 01:17:05AM +0800, Gabriele Paoloni wrote:
+> > This patch adds support for HiSilicon Hip06 SoC.
+> > Documentation has been updated to include Hip06.
+> > Gabriele Paoloni has been added as maintainer of the driver
+> >
+> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> > Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
 > 
-> More details can be found in following article:
-> http://www.plxtech.com/files/pdf/technical/expresslane/RTC_Enabling%20MulitHostSystemDesigns.pdf
+> Beautiful, applied to pci/host-hisi for v4.5, thanks, Gabriele!
+
+Great! Thanks a lot Bjorn!
+
 > 
-> Signed-off-by: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-> Acked-By: David Woodhouse <David.Woodhouse@intel.com>
-> ---
->  drivers/iommu/iommu.c | 11 ++++-------
->  drivers/pci/pci.c     | 27 +++++++++++++++++++++++++++
->  drivers/pci/pci.h     |  2 ++
->  drivers/pci/probe.c   |  1 +
->  drivers/pci/quirks.c  | 15 ++++++---------
->  drivers/pci/search.c  | 14 +++++++++-----
->  include/linux/pci.h   | 14 +++++++-------
->  7 files changed, 56 insertions(+), 28 deletions(-)
-> 
-> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> index 0e3b009..93a89ed 100644
-> --- a/drivers/iommu/iommu.c
-> +++ b/drivers/iommu/iommu.c
-> @@ -660,8 +660,8 @@ static struct iommu_group *get_pci_function_alias_group(struct pci_dev *pdev,
->  }
->  
->  /*
-> - * Look for aliases to or from the given device for exisiting groups.  The
-> - * dma_alias_devfn only supports aliases on the same bus, therefore the search
-> + * Look for aliases to or from the given device for exisiting groups. DMA
-
-s/exisiting/existing/  (Not your change, but might as well fix the
-typo since you're touching the line anyway.)
-
-> + * aliases are only supported on the same bus, therefore the search
->   * space is quite small (especially since we're really only looking at pcie
->   * device, and therefore only expect multiple slots on the root complex or
->   * downstream switch ports).  It's conceivable though that a pair of
-> @@ -686,11 +686,8 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
->  			continue;
->  
->  		/* We alias them or they alias us */
-> -		if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
-> -		     pdev->dma_alias_devfn == tmp->devfn) ||
-> -		    ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
-> -		     tmp->dma_alias_devfn == pdev->devfn)) {
-> -
-> +		if (pci_dma_alias_is_enabled(pdev, tmp->devfn) ||
-> +		    pci_dma_alias_is_enabled(tmp, pdev->devfn)) {
-
-I was hoping for something that took two pci_dev pointers and returned
-true if they were aliases of each other, e.g.,
-
-  bool pci_dma_aliases(struct pci_dev *dev1, struct pci_dev *dev2);
-
->  			group = get_pci_alias_group(tmp, devfns);
->  			if (group) {
->  				pci_dev_put(tmp);
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 602eb42..cd38767 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4568,6 +4568,33 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
->  	return 0;
->  }
->  
-> +/**
-> + * pci_enable_dma_alias - Allows to set multiple devfn aliases for given device
-> + * @dev: the PCI device for which alias is added
-> + * @devfn: alias slot and function
-> + *
-> + * This helper encodes 8-bit devfn as bit number in dma_alias_mask.
-> + * It should be called early, preferably as PCI fixup header quirk.
-> + */
-> +void pci_enable_dma_alias(struct pci_dev *dev, u8 devfn)
-
-I kind of liked "pci_add_dma_alias()."  "Enable" suggests that we can
-turn them on and off, which isn't really the case here.
-
-> +{
-> +	if (!dev->dma_alias_mask)
-> +		dev->dma_alias_mask = kcalloc(BITS_TO_LONGS(U8_MAX),
-> +					      sizeof(long), GFP_KERNEL);
-> +	if (!dev->dma_alias_mask) {
-> +		dev_warn(&dev->dev, "Unable to allocate DMA alias mask.\n");
-> +		return;
-> +	}
-> +	if (dev->dma_alias_mask)
-> +		set_bit(devfn, dev->dma_alias_mask);
-> +}
-
-Bjorn
+> > ---
+> > This patch is based on top of Arnd Bergmann patch [PATCH] PCI: hisi:
+> > fix deferred probing
+> > ---
+> >  .../devicetree/bindings/pci/hisilicon-pcie.txt     |  8 +--
+> >  MAINTAINERS                                        |  1 +
+> >  drivers/pci/host/Kconfig                           |  5 +-
+> >  drivers/pci/host/pcie-hisi.c                       | 76
+> ++++++++++++++++++----
+> >  4 files changed, 73 insertions(+), 17 deletions(-)
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> > b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> > index 17c6ed9..b721bea 100644
+> > --- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> > +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> > @@ -1,4 +1,4 @@
+> > -HiSilicon PCIe host bridge DT description
+> > +HiSilicon Hip05 and Hip06 PCIe host bridge DT description
+> >
+> >  HiSilicon PCIe host controller is based on Designware PCI core.
+> >  It shares common functions with PCIe Designware core driver and
+> > inherits @@ -7,8 +7,8 @@
+> Documentation/devicetree/bindings/pci/designware-pci.txt.
+> >
+> >  Additional properties are described here:
+> >
+> > -Required properties:
+> > -- compatible: Should contain "hisilicon,hip05-pcie".
+> > +Required properties
+> > +- compatible: Should contain "hisilicon,hip05-pcie" or
+> "hisilicon,hip06-pcie".
+> >  - reg: Should contain rc_dbi, config registers location and length.
+> >  - reg-names: Must include the following entries:
+> >    "rc_dbi": controller configuration registers; @@ -20,7 +20,7 @@
+> > Optional properties:
+> >  - status: Either "ok" or "disabled".
+> >  - dma-coherent: Present if DMA operations are coherent.
+> >
+> > -Example:
+> > +Hip05 Example (note that Hip06 is the same except compatible):
+> >  	pcie@0xb0080000 {
+> >  		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
+> >  		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
+> diff
+> > --git a/MAINTAINERS b/MAINTAINERS index f3de001..2f78e13 100644
+> > --- a/MAINTAINERS
+> > +++ b/MAINTAINERS
+> > @@ -8250,6 +8250,7 @@ F:	drivers/pci/host/pci-xgene-msi.c
+> >
+> >  PCIE DRIVER FOR HISILICON
+> >  M:	Zhou Wang <wangzhou1@hisilicon.com>
+> > +M:	Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> >  L:	linux-pci@vger.kernel.org
+> >  S:	Maintained
+> >  F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index
+> > f131ba9..3f73587 100644
+> > --- a/drivers/pci/host/Kconfig
+> > +++ b/drivers/pci/host/Kconfig
+> > @@ -166,10 +166,11 @@ config PCIE_ALTERA_MSI
+> >
+> >  config PCI_HISI
+> >  	depends on OF && ARM64
+> > -	bool "HiSilicon SoC HIP05 PCIe controller"
+> > +	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
+> >  	select PCIEPORTBUS
+> >  	select PCIE_DW
+> >  	help
+> > -	  Say Y here if you want PCIe controller support on HiSilicon
+> HIP05 SoC
+> > +	  Say Y here if you want PCIe controller support on HiSilicon
+> > +	  Hip05 and Hip06 SoCs
+> >
+> >  endmenu
+> > diff --git a/drivers/pci/host/pcie-hisi.c
+> > b/drivers/pci/host/pcie-hisi.c index 163671a..0cd7554 100644
+> > --- a/drivers/pci/host/pcie-hisi.c
+> > +++ b/drivers/pci/host/pcie-hisi.c
+> > @@ -1,10 +1,11 @@
+> >  /*
+> > - * PCIe host controller driver for HiSilicon Hip05 SoC
+> > + * PCIe host controller driver for HiSilicon SoCs
+> >   *
+> >   * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
+> >   *
+> > - * Author: Zhou Wang <wangzhou1@hisilicon.com>
+> > - *         Dacai Zhu <zhudacai@hisilicon.com>
+> > + * Authors: Zhou Wang <wangzhou1@hisilicon.com>
+> > + *          Dacai Zhu <zhudacai@hisilicon.com>
+> > + *          Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> >   *
+> >   * This program is free software; you can redistribute it and/or
+> modify
+> >   * it under the terms of the GNU General Public License version 2 as
+> > @@ -16,21 +17,31 @@  #include <linux/of_address.h>  #include
+> > <linux/of_pci.h>  #include <linux/platform_device.h>
+> > +#include <linux/of_device.h>
+> >  #include <linux/regmap.h>
+> >
+> >  #include "pcie-designware.h"
+> >
+> > -#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
+> > -#define PCIE_LTSSM_LINKUP_STATE                         0x11
+> > -#define PCIE_LTSSM_STATE_MASK                           0x3F
+> > +#define PCIE_LTSSM_LINKUP_STATE				0x11
+> > +#define PCIE_LTSSM_STATE_MASK				0x3F
+> > +#define PCIE_SUBCTRL_SYS_STATE4_REG			0x6818
+> > +#define PCIE_SYS_STATE4						0x31c
+> > +#define PCIE_HIP06_CTRL_OFF					0x1000
+> >
+> >  #define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
+> >
+> > +struct hisi_pcie;
+> > +
+> > +struct pcie_soc_ops {
+> > +	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie); };
+> > +
+> >  struct hisi_pcie {
+> >  	struct regmap *subctrl;
+> >  	void __iomem *reg_base;
+> >  	u32 port_id;
+> >  	struct pcie_port pp;
+> > +	struct pcie_soc_ops *soc_ops;
+> >  };
+> >
+> >  static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie, @@
+> > -44,7 +55,7 @@ static inline u32 hisi_pcie_apb_readl(struct hisi_pcie
+> *pcie, u32 reg)
+> >  	return readl(pcie->reg_base + reg);
+> >  }
+> >
+> > -/* Hip05 PCIe host only supports 32-bit config access */
+> > +/* HipXX PCIe host only supports 32-bit config access */
+> >  static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int
+> size,
+> >  			      u32 *val)
+> >  {
+> > @@ -67,7 +78,7 @@ static int hisi_pcie_cfg_read(struct pcie_port *pp,
+> int where, int size,
+> >  	return PCIBIOS_SUCCESSFUL;
+> >  }
+> >
+> > -/* Hip05 PCIe host only supports 32-bit config access */
+> > +/* HipXX PCIe host only supports 32-bit config access */
+> >  static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int
+> size,
+> >  				u32 val)
+> >  {
+> > @@ -94,10 +105,9 @@ static int hisi_pcie_cfg_write(struct pcie_port
+> *pp, int where, int  size,
+> >  	return PCIBIOS_SUCCESSFUL;
+> >  }
+> >
+> > -static int hisi_pcie_link_up(struct pcie_port *pp)
+> > +static int hisi_pcie_link_up_hip05(struct hisi_pcie *hisi_pcie)
+> >  {
+> >  	u32 val;
+> > -	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
+> >
+> >  	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
+> >  		    0x100 * hisi_pcie->port_id, &val); @@ -105,6 +115,23 @@
+> static
+> > int hisi_pcie_link_up(struct pcie_port *pp)
+> >  	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
+> > }
+> >
+> > +static int hisi_pcie_link_up_hip06(struct hisi_pcie *hisi_pcie) {
+> > +	u32 val;
+> > +
+> > +	val = hisi_pcie_apb_readl(hisi_pcie, PCIE_HIP06_CTRL_OFF +
+> > +			PCIE_SYS_STATE4);
+> > +
+> > +	return ((val & PCIE_LTSSM_STATE_MASK) ==
+> PCIE_LTSSM_LINKUP_STATE); }
+> > +
+> > +static int hisi_pcie_link_up(struct pcie_port *pp) {
+> > +	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
+> > +
+> > +	return hisi_pcie->soc_ops->hisi_pcie_link_up(hisi_pcie);
+> > +}
+> > +
+> >  static struct pcie_host_ops hisi_pcie_host_ops = {
+> >  	.rd_own_conf = hisi_pcie_cfg_read,
+> >  	.wr_own_conf = hisi_pcie_cfg_write,
+> > @@ -143,7 +170,9 @@ static int hisi_pcie_probe(struct platform_device
+> > *pdev)  {
+> >  	struct hisi_pcie *hisi_pcie;
+> >  	struct pcie_port *pp;
+> > +	const struct of_device_id *match;
+> >  	struct resource *reg;
+> > +	struct device_driver *driver;
+> >  	int ret;
+> >
+> >  	hisi_pcie = devm_kzalloc(&pdev->dev, sizeof(*hisi_pcie),
+> > GFP_KERNEL); @@ -152,6 +181,10 @@ static int hisi_pcie_probe(struct
+> > platform_device *pdev)
+> >
+> >  	pp = &hisi_pcie->pp;
+> >  	pp->dev = &pdev->dev;
+> > +	driver = (pdev->dev).driver;
+> > +
+> > +	match = of_match_device(driver->of_match_table, &pdev->dev);
+> > +	hisi_pcie->soc_ops = (struct pcie_soc_ops *) match->data;
+> >
+> >  	hisi_pcie->subctrl =
+> >  	syscon_regmap_lookup_by_compatible("hisilicon,pcie-sas-subctrl");
+> > @@ -180,11 +213,27 @@ static int hisi_pcie_probe(struct
+> platform_device *pdev)
+> >  	return 0;
+> >  }
+> >
+> > +static struct pcie_soc_ops hip05_ops = {
+> > +		&hisi_pcie_link_up_hip05
+> > +};
+> > +
+> > +static struct pcie_soc_ops hip06_ops = {
+> > +		&hisi_pcie_link_up_hip06
+> > +};
+> > +
+> >  static const struct of_device_id hisi_pcie_of_match[] = {
+> > -	{.compatible = "hisilicon,hip05-pcie",},
+> > +	{
+> > +			.compatible = "hisilicon,hip05-pcie",
+> > +			.data	    = (void *) &hip05_ops,
+> > +	},
+> > +	{
+> > +			.compatible = "hisilicon,hip06-pcie",
+> > +			.data	    = (void *) &hip06_ops,
+> > +	},
+> >  	{},
+> >  };
+> >
+> > +
+> >  MODULE_DEVICE_TABLE(of, hisi_pcie_of_match);
+> >
+> >  static struct platform_driver hisi_pcie_driver = { @@ -196,3 +245,8
+> > @@ static struct platform_driver hisi_pcie_driver = {  };
+> >
+> >  module_platform_driver(hisi_pcie_driver);
+> > +
+> > +MODULE_AUTHOR("Zhou Wang <wangzhou1@hisilicon.com>");
+> > +MODULE_AUTHOR("Dacai Zhu <zhudacai@hisilicon.com>");
+> > +MODULE_AUTHOR("Gabriele Paoloni <gabriele.paoloni@huawei.com>");
+> > +MODULE_LICENSE("GPL v2");
+> > --
+> > 1.9.1
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci"
+> > in the body of a message to majordomo@vger.kernel.org More majordomo
+> > info at  http://vger.kernel.org/majordomo-info.html
