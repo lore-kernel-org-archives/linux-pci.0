@@ -1,55 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0063.outbound.protection.outlook.com ([104.47.37.63]:2688
-	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751651AbcALRgl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jan 2016 12:36:41 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <michals@xilinx.com>,
-	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
-	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
-	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
-	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>
-CC: <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>
-Subject: [PATCH V2 0/5] PCIe Xilinx generic driver for Microblaze and 
-Date: Tue, 12 Jan 2016 23:06:08 +0530
-Message-ID: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
+Received: from mout.kundenserver.de ([212.227.17.24]:58848 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759914AbcAKMLw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jan 2016 07:11:52 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH] PCI: designware: remove unused variable
+Date: Mon, 11 Jan 2016 13:11:24 +0100
+Message-ID: <4643317.WUGgxPjcvu@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series does modifications to pcie-xilinx.c, to support common
-driver on both Zynq and Microblaze architectures.
-Microblaze pci-common.c has been modified to support generic driver.
+A cleanup patch removed the only use of the 'ret' variable
+in wr_conf but forgot to remove the variable:
 
-I'm aware Paul Burton <paul.burton@imgtec.com> has also sent patches
-related to pcie-xilinx.c, but I'm unable to comment on them. 
-I request Paul Burton to please add me in cc list so that I can comment on
-those patches.
+pci/host/pcie-designware.c: In function 'dw_pcie_wr_conf':
+pci/host/pcie-designware.c:683:6: warning: unused variable 'ret' [-Wunused-variable]
 
-Bharat Kumar Gogada (5):
-  PCI: xilinx: Removing xilinx_pcie_parse_and_add_res function
-  PCI: xilinx: Removing struct hw_irq structure.
-  PCI: xilinx: Modifying AXI PCIe Host Bridge driver to      work on
-    both  Zynq and Microblaze
-  PCI: xilinx: Updating Zynq PCI binding documentation with     
-    Microblaze node.
-  Microblaze: Modifying microblaze PCI subsytem to support      generic
-    Xilinx  AXI PCIe Host Bridge IP driver
+This cleans that part up as well.
 
- .../devicetree/bindings/pci/xilinx-pcie.txt        |  36 +++-
- arch/microblaze/Kconfig                            |   3 +
- arch/microblaze/pci/pci-common.c                   |  61 +++---
- drivers/pci/host/Kconfig                           |   2 +-
- drivers/pci/host/pcie-xilinx.c                     | 210 ++++-----------------
- 5 files changed, 98 insertions(+), 214 deletions(-)
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 50a1a3b06ddd ("PCI: designware: Simplify control flow")
+---
+This came up this morning on linux-next with ARM randconfig builds
 
--- 
-2.1.1
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 9a666dbff127..21716827847a 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -680,7 +680,6 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 			int where, int size, u32 val)
+ {
+ 	struct pcie_port *pp = bus->sysdata;
+-	int ret;
+ 
+ 	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
 
