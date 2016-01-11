@@ -1,186 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53082 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750949AbcAIAVB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Jan 2016 19:21:01 -0500
-Date: Fri, 8 Jan 2016 18:20:57 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: John Crispin <blogic@openwrt.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH 1/2] dt-bindings: add MedieTak PCIE binding documentation
-Message-ID: <20160109002057.GO5354@localhost>
-References: <1452200773-50794-1-git-send-email-blogic@openwrt.org>
+Received: from smtp.nue.novell.com ([195.135.221.5]:38858 "EHLO
+	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934254AbcAKRMn (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:0:0>);
+	Mon, 11 Jan 2016 12:12:43 -0500
+Subject: Re: [PATCH] arm64, pci, numa: Adding helper functions as required by
+ pci
+To: Ganapatrao Kulkarni <gpkulkarni@gmail.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+References: <1450780730-13667-1-git-send-email-gkulkarni@caviumnetworks.com>
+ <20160108180131.GB5354@localhost> <20160108180638.GF11228@arm.com>
+ <CAFpQJXUaVS7tBqjQ4Dh201yrOWFxa3Bk2q-ZCFtK4mk-te=Q7w@mail.gmail.com>
+ <20160109152422.GA30802@localhost>
+ <CAFpQJXVBafgq864cNeOhccZAdr89EUfXdEdnW7jh1y66ModKAQ@mail.gmail.com>
+Cc: Prasun Kapoor <Prasun.Kapoor@caviumnetworks.com>,
+	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Robert Richter <rrichter@cavium.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+From: Matthias Brugger <mbrugger@suse.com>
+Message-ID: <5693E26C.2010501@suse.com>
+Date: Mon, 11 Jan 2016 18:12:12 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1452200773-50794-1-git-send-email-blogic@openwrt.org>
+In-Reply-To: <CAFpQJXVBafgq864cNeOhccZAdr89EUfXdEdnW7jh1y66ModKAQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In subject:
 
-  add MedieTak PCIE binding documentation
 
-has a couple misspellings ("MedieTak" and "PCIE").
+On 09/01/16 16:35, Ganapatrao Kulkarni wrote:
+> Hi Bjorn,
+>
+> On Sat, Jan 9, 2016 at 8:54 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> On Sat, Jan 09, 2016 at 11:35:17AM +0530, Ganapatrao Kulkarni wrote:
+>>> On Fri, Jan 8, 2016 at 11:36 PM, Will Deacon <will.deacon@arm.com> wrote:
+>>>> On Fri, Jan 08, 2016 at 12:01:31PM -0600, Bjorn Helgaas wrote:
+>>>>> On Tue, Dec 22, 2015 at 04:08:50PM +0530, Ganapatrao Kulkarni wrote:
+>>>>>> Adding helper functions and necessary code to make
+>>>>>> pci driver(pci-host-generic) numa aware.
+>>>>>>
+>>>>>> This patch is on top of arm64-numa v7.
+>>>>>> http://www.spinics.net/lists/arm-kernel/msg460813.html
+>>>>>>
+>>>>>> Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+>>>>>> ---
+>>>>>>   arch/arm64/include/asm/numa.h       | 8 +++++---
+>>>>>>   arch/arm64/kernel/pci.c             | 8 ++++++++
+>>>>>>   drivers/pci/host/pci-host-generic.c | 1 +
 
-Use "PCIe" consistently below.
+set_dev_node() in pci-host-generic.c is missing in v8 of your numa patches.
+Was this forgotten?
 
-On Thu, Jan 07, 2016 at 10:06:12PM +0100, John Crispin wrote:
-> Signed-off-by: John Crispin <blogic@openwrt.org>
-> ---
->  .../devicetree/bindings/pci/mediatek-pcie.txt      |  140 ++++++++++++++++++++
->  1 file changed, 140 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-> new file mode 100644
-> index 0000000..1bd20b2
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-> @@ -0,0 +1,140 @@
-> +Mediatek PCIe controller
-> +
-> +Required properties:
-> +- compatible: Should be one of:
-> +	- "mediatek,mt2701-pcie"
-> +	- "mediatek,mt7623-pcie"
-> +- device_type: Must be "pci"
-> +- reg: A list of physical base address and length for each set of controller
-> +  registers. A list of register ranges to use. Must contain an
-> +    entry for each entry in the reg-names property.
-> +- reg-names: Must include the following entries:
-> +  "pcie": PCIE registers
-> +  "pcie phy0": PCIE PHY0 registers
-> +  "pcie phy1": PCIE PHY0 registers
-> +  "pcie phy2": PCIE PHY0 registers
-> +- interrupts: A list of interrupt outputs of the controller. Must contain an
-> +  entry for each entry in the interrupt-names property.
-> +- interrupt-names: Must include the following entries:
-> +  "pcie0": The interrupt that is asserted for port0
-> +  "pcie1": The interrupt that is asserted for port1
-> +  "pcie2": The interrupt that is asserted for port2
-> +- bus-range: Range of bus numbers associated with this controller
-> +- #address-cells: Address representation for root ports (must be 3)
-> +- #size-cells: Size representation for root ports (must be 2)
-> +- ranges: Describes the translation of addresses for root ports and standard
-> +  PCI regions. The entries must be 6 cells each.
-> +  Please refer to the standard PCI bus binding document for a more detailed
-> +  explanation.
-> +- #interrupt-cells: Size representation for interrupts (must be 1)
-> +- clocks: Must contain an entry for each entry in clock-names.
-> +  See ../clocks/clock-bindings.txt for details.
-> +- clock-names: Must include the following entries:
-> +  - pcie0
-> +  - pcie1
-> +  - pcie2
-> +- resets: Must contain an entry for each entry in reset-names.
-> +  See ../reset/reset.txt for details.
-> +- reset-names: Must include the following entries:
-> +  - pcie0
-> +  - pcie1
-> +  - pcie2
-> +- mediatek,hifsys: Must contain a phandle to the HIFSYS syscon range.
-> +Root ports are defined as subnodes of the PCIe controller node.
-> +
-> +Required properties:
-> +- device_type: Must be "pci"
-> +- assigned-addresses: Address and size of the port configuration registers
-> +- reg: PCI bus address of the root port
-> +- #address-cells: Must be 3
-> +- #size-cells: Must be 2
-> +- ranges: Sub-ranges distributed from the PCIe controller node. An empty
-> +  property is sufficient.
-> +
-> +Example:
-> +
-> +SoC DTSI:
-> +
-> +	hifsys: clock-controller@1a000000 {
-> +		compatible = "mediatek,mt7623-hifsys",
-> +			     "mediatek,mt2701-hifsys",
-> +			     "syscon";
-> +		reg = <0 0x1a000000 0 0x1000>;
-> +		#clock-cells = <1>;
-> +		#reset-cells = <1>;
-> +	};
-> +
-> +	pcie-controller@1a140000 {
-> +		compatible = "mediatek,mt7623-pcie";
-> +		device_type = "pci";
-> +		reg = <0 0x1a140000 0 0x8000>, /* PCI-Express registers */
-> +		      <0 0x1a149000 0 0x1000>, /* PCI-Express PHY0 */
-> +		      <0 0x1a14a000 0 0x1000>, /* PCI-Express PHY1 */
-> +		      <0 0x1a244000 0 0x1000>; /* PCI-Express PHY2 */
-> +		reg-names = "pcie", "pcie phy0", "pcie phy1", "pcie phy2";
-> +		interrupts = <GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>,
-> +			     <GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>,
-> +			     <GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
-> +		interrupt-names = "pcie0", "pcie1", "pcie2";
-> +		clocks = <&topckgen CLK_TOP_ETHIF_SEL>;
-> +		clock-names = "pcie";
-> +		power-domains = <&scpsys MT2701_POWER_DOMAIN_HIF>;
-> +		resets = <&hifsys MT2701_HIFSYS_PCIE0_RST>,
-> +			 <&hifsys MT2701_HIFSYS_PCIE1_RST>,
-> +			 <&hifsys MT2701_HIFSYS_PCIE2_RST>;
-> +		reset-names = "pcie0", "pice1", "pcie2";
-> +
-> +		bus-range = <0x00 0xff>;
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +
-> +                mediatek,hifsys = <&hifsys>;
-> +
-> +		ranges = <0x81000000 0 0x1a160000 0 0x1a160000 0 0x00010000 /* io space */
-> +			  0x83000000 0 0x60000000 0 0x60000000 0 0x10000000>; /* pci memory */
-> +
-> +		status = "disabled";
-> +
-> +		pcie@1,0 {
-> +			device_type = "pci";
-> +			reg = <0x0800 0 0 0 0>;
-> +
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			ranges;
-> +
-> +			status = "disabled";
-> +		};
-> +
-> +		pcie@2,0{
-> +			device_type = "pci";
-> +			reg = <0x1000 0 0 0 0>;
-> +
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			ranges;
-> +
-> +			status = "disabled";
-> +		};
-> +
-> +		pcie@3,0{
-> +			device_type = "pci";
-> +			reg = <0x1800 0 0 0 0>;
-> +
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			ranges;
-> +
-> +			status = "disabled";
-> +		};
-> +	};
-> +
-> +Board DTS:
-> +
-> +	pcie-controller {
-> +		status = "okay";
-> +
-> +		pci@1,0 {
-> +			status = "okay";
-> +		};
-> +	};
-> -- 
-> 1.7.10.4
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+Matthias
+
+>>>>>>   3 files changed, 14 insertions(+), 3 deletions(-)
+>>>>>>
+>>>>>> diff --git a/arch/arm64/include/asm/numa.h b/arch/arm64/include/asm/numa.h
+>>>>>> index b8c2a3f..1eca4db 100644
+>>>>>> --- a/arch/arm64/include/asm/numa.h
+>>>>>> +++ b/arch/arm64/include/asm/numa.h
+>>>>>> @@ -15,9 +15,11 @@
+>>>>>>   extern int __node_distance(int from, int to);
+>>>>>>   #define node_distance(a, b) __node_distance(a, b)
+>>>>>>
+>>>>>> -/* dummy definitions for pci functions */
+>>>>>> -#define pcibus_to_node(node)       0
+>>>>>> -#define cpumask_of_pcibus(bus)     0
+>>>>>> +struct pci_bus;
+>>>>>> +extern int pcibus_to_node(struct pci_bus *bus);
+>>>>>> +#define cpumask_of_pcibus(bus)     (pcibus_to_node(bus) == -1 ?            \
+>>>>>> +                            cpu_all_mask :                         \
+>>>>>> +                            cpumask_of_node(pcibus_to_node(bus)))
+>>>>>
+>>>>> All the arch definitions of cpumask_of_pcibus() are pretty similar;
+>>>>> could they be made more generic?  At the very least, can you drop the
+>>>>> definition here and use the one in include/asm-generic/topology.h,
+>>>>> which is identical to what you're defining here?
+>>> macro cpumask_of_pcibus is defined under #ifndef CONFIG_NUMA in
+>>> include/asm-generic/topology.h
+>>> and this macro is defined again for NUMA in respective arch header files.
+>>> i think moving this macro from ifndef will allow us to use without redefinition.
+>>>
+>>> --- a/include/asm-generic/topology.h
+>>> +++ b/include/asm-generic/topology.h
+>>> @@ -54,14 +54,14 @@
+>>>   #define pcibus_to_node(bus)    ((void)(bus), -1)
+>>>   #endif
+>>>
+>>> +#endif /* CONFIG_NUMA */
+>>> +
+>>>   #ifndef cpumask_of_pcibus
+>>>   #define cpumask_of_pcibus(bus) (pcibus_to_node(bus) == -1 ?            \
+>>>                                   cpu_all_mask :                         \
+>>>                                   cpumask_of_node(pcibus_to_node(bus)))
+>>>   #endif
+>>>
+>>> -#endif /* CONFIG_NUMA */
+>>> -
+>>>   #if !defined(CONFIG_NUMA) || !defined(CONFIG_HAVE_MEMORYLESS_NODES)
+>>>
+>>>   #ifndef set_numa_mem
+>>>
+>>> i have got below compilation error withour macro defined in arch code.
+>>>
+>>> drivers/pci/pci-sysfs.c: In function ‘cpuaffinity_show’:
+>>> drivers/pci/pci-sysfs.c:114:15: error: implicit declaration of
+>>> function ‘cpumask_of_pcibus’ [-Werror=implicit-function-declaration]
+>>> drivers/pci/pci-sysfs.c:114:34: warning: initialization makes pointer
+>>> from integer without a cast [enabled by default]
+>>> drivers/pci/pci-sysfs.c: In function ‘cpulistaffinity_show’:
+>>> drivers/pci/pci-sysfs.c:123:34: warning: initialization makes pointer
+>>> from integer without a cast [enabled by default]
+>>> cc1: some warnings being treated as errors
+>>>
+>>>
+>>> i can send this as separate patch( as a  fix patch).
+>>
+>> Unless your series has already been merged, I don't like the idea of a
+>> separate fix patch.  The whole point of reviews is to try to fix as
+>> many things as we can *before* merging.
+> thanks for the review.
+> sure, i will add  this as part of my numa patch series.
+>>
+>> Bjorn
+>
+> thanks
+> Ganapat
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
