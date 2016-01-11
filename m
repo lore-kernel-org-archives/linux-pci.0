@@ -1,129 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:33902 "EHLO
-	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750779AbcAOP0R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2016 10:26:17 -0500
-Received: by mail-qk0-f170.google.com with SMTP id x1so39487579qkc.1
-        for <linux-pci@vger.kernel.org>; Fri, 15 Jan 2016 07:26:16 -0800 (PST)
-From: Justin Waters <justin.waters@timesys.com>
-To: linux-pci@vger.kernel.org
-Cc: festevam@gmail.com, l.stach@pengutronix.de,
-	Justin Waters <justin.waters@timesys.com>
-Subject: [PATCH v2] PCI: imx6: Add DT bindings to configure Tx Driver settings
-Date: Fri, 15 Jan 2016 10:24:35 -0500
-Message-Id: <1452871476-11752-1-git-send-email-justin.waters@timesys.com>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:42586 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759832AbcAKPCU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jan 2016 10:02:20 -0500
+Subject: Re: [PATCH v3 0/2] adding PCI support to AXS10x
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+References: <cover.1450694884.git.jpinto@synopsys.com>
+ <20160108203358.GI5354@localhost> <5693BCD7.4050703@synopsys.com>
+ <20160111145353.GD25540@localhost>
+CC: <Vineet.Gupta1@synopsys.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-snps-arc@lists.infradead.org>,
+	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
+	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <5693C3F4.6040408@synopsys.com>
+Date: Mon, 11 Jan 2016 15:02:12 +0000
+MIME-Version: 1.0
+In-Reply-To: <20160111145353.GD25540@localhost>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The settings in GPR8 are dependent upon the particular layout of the
-hardware platform. As such, they should be configurable via the device
-tree.
 
-As many boards have been using the default values, this implementation
-uses the old values if they are not specified in the device tree.
+Hi,
+I am going to add dependencies to the driver' kconfig to avoid this problem. I
+will send you a new patch version today.
 
-Signed-off-by: Justin Waters <justin.waters@timesys.com>
----
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  7 ++++
- drivers/pci/host/pci-imx6.c                        | 42 +++++++++++++++++++---
- 2 files changed, 44 insertions(+), 5 deletions(-)
+Thanks.
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 6fbba53..3be80c6 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -13,6 +13,13 @@ Required properties:
- - clock-names: Must include the following additional entries:
- 	- "pcie_phy"
- 
-+Optional properties:
-+- fsl,tx-deemph-gen1: Gen1 De-emphasis value. Default: 0
-+- fsl,tx-deemph-gen2-3p5db: Gen2 (3.5db) De-emphasis value. Default: 0
-+- fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
-+- fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
-+- fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
-+
- Example:
- 
- 	pcie@0x01000000 {
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 230ebf9..cc04497 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -39,6 +39,11 @@ struct imx6_pcie {
- 	struct pcie_port	pp;
- 	struct regmap		*iomuxc_gpr;
- 	void __iomem		*mem_base;
-+	u32			tx_deemph_gen1;
-+	u32			tx_deemph_gen2_3p5db;
-+	u32			tx_deemph_gen2_6db;
-+	u32			tx_swing_full;
-+	u32			tx_swing_low;
- };
- 
- /* PCIe Root Complex registers (memory-mapped) */
-@@ -317,15 +322,20 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
- 			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
- 
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
-+			   IMX6Q_GPR8_TX_DEEMPH_GEN1,
-+			   imx6_pcie->tx_deemph_gen1 << 0);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB, 0 << 6);
-+			   IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB,
-+			   imx6_pcie->tx_deemph_gen2_3p5db << 6);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB, 20 << 12);
-+			   IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB,
-+			   imx6_pcie->tx_deemph_gen2_6db << 12);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			IMX6Q_GPR8_TX_SWING_FULL, 127 << 18);
-+			   IMX6Q_GPR8_TX_SWING_FULL,
-+			   imx6_pcie->tx_swing_full << 18);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
-+			   IMX6Q_GPR8_TX_SWING_LOW,
-+			   imx6_pcie->tx_swing_low << 25);
- }
- 
- static int imx6_pcie_wait_for_link(struct pcie_port *pp)
-@@ -565,6 +575,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	struct imx6_pcie *imx6_pcie;
- 	struct pcie_port *pp;
- 	struct resource *dbi_base;
-+	struct device_node *node = pdev->dev.of_node;
- 	int ret;
- 
- 	imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie), GFP_KERNEL);
-@@ -617,6 +628,27 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(imx6_pcie->iomuxc_gpr);
- 	}
- 
-+	/* Grab PCIe PHY Tx Settings */
-+	if (of_property_read_u32
-+	    (node, "fsl,tx-deemph-gen1", &imx6_pcie->tx_deemph_gen1))
-+		imx6_pcie->tx_deemph_gen1 = 0;
-+
-+	if (of_property_read_u32
-+	    (node, "fsl,tx-deemph-gen2-3p5db", &imx6_pcie->tx_deemph_gen2_3p5db))
-+		imx6_pcie->tx_deemph_gen2_3p5db = 0;
-+
-+	if (of_property_read_u32
-+	    (node, "fsl,tx-deemph-gen2-6db", &imx6_pcie->tx_deemph_gen2_6db))
-+		imx6_pcie->tx_deemph_gen2_6db = 20;
-+
-+	if (of_property_read_u32
-+	    (node, "fsl,tx-swing-full", &imx6_pcie->tx_swing_full))
-+		imx6_pcie->tx_swing_full = 127;
-+
-+	if (of_property_read_u32
-+	    (node, "fsl,tx-swing-low", &imx6_pcie->tx_swing_low))
-+		imx6_pcie->tx_swing_low = 127;
-+
- 	ret = imx6_add_pcie_port(pp, pdev);
- 	if (ret < 0)
- 		return ret;
--- 
-2.5.0
+On 1/11/2016 2:53 PM, Bjorn Helgaas wrote:
+> On Mon, Jan 11, 2016 at 02:31:51PM +0000, Joao Pinto wrote:
+>> Hi Bjorn,
+>>
+>> On 1/8/2016 8:33 PM, Bjorn Helgaas wrote:
+>>> Hi Joao,
+>>>
+>>> On Mon, Dec 21, 2015 at 03:44:14PM +0000, Joao Pinto wrote:
+>>>> This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
+>>>> AXS10x. It includes the necessary tweaks to the ARC architecture, necessary
+>>>> tweaks to the PCI subsystem and a new driver (pcie-snpsdev).
+>>>> This new driver will be used extensively in the PCIe RC Prototyping Kit.
+>>>>
+>>>> The patches were produced against Bjorn Helgaas' repository. It was properly
+>>>> tested in an IP Prototyping Kit.
+>>>>
+>>>> Joao Pinto (2):
+>>>>   PCI support added to ARC
+>>>>   add new platform driver for PCI RC
+>>>>
+>>>>  .../devicetree/bindings/pci/pcie-snpsdev.txt       |  33 +++
+>>>>  MAINTAINERS                                        |   7 +
+>>>>  arch/arc/Kconfig                                   |  23 ++
+>>>>  arch/arc/include/asm/dma.h                         |   5 +
+>>>>  arch/arc/include/asm/io.h                          |  10 +
+>>>>  arch/arc/include/asm/pci.h                         |  43 ++++
+>>>>  arch/arc/kernel/Makefile                           |   1 +
+>>>>  arch/arc/kernel/pcibios.c                          |  55 ++++
+>>>>  arch/arc/mm/ioremap.c                              |  10 +-
+>>>>  arch/arc/plat-axs10x/Kconfig                       |   1 +
+>>>>  drivers/pci/Makefile                               |   1 +
+>>>>  drivers/pci/host/Kconfig                           |   5 +
+>>>>  drivers/pci/host/Makefile                          |   1 +
+>>>>  drivers/pci/host/pcie-designware.c                 |  11 +
+>>>>  drivers/pci/host/pcie-designware.h                 |   1 +
+>>>>  drivers/pci/host/pcie-snpsdev.c                    | 286 +++++++++++++++++++++
+>>>>  16 files changed, 492 insertions(+), 1 deletion(-)
+>>>>  create mode 100644 Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
+>>>>  create mode 100644 arch/arc/include/asm/pci.h
+>>>>  create mode 100644 arch/arc/kernel/pcibios.c
+>>>>  create mode 100644 drivers/pci/host/pcie-snpsdev.c
+>>>
+>>> This failed the kbuild test, so I'm waiting for a refresh to fix that.
+>>
+>> Just checked the kbuild robot error and it is happening in ARC git tree when
+>> built for i386 arch and the problem is independent from my patches. The build
+>> error is the following:
+>>
+>>    drivers/pci/host/pcie-designware.c: In function 'dw_pcie_host_init':
+>>>> drivers/pci/host/pcie-designware.c:556:7: error: implicit declaration of function
+>> 'pci_has_flag' [-Werror=implicit-function-declaration]
+>>      if (!pci_has_flag(PCI_PROBE_ONLY)) {
+>>           ^
+>>>> drivers/pci/host/pcie-designware.c:556:20: error: 'PCI_PROBE_ONLY' undeclared
+>> (first use in
+>> this function)
+>>      if (!pci_has_flag(PCI_PROBE_ONLY)) {
+>>                        ^
+>> This problem has been already identified by Stephen Rothwell as you can see in
+>> the following mailing list thread:
+>>
+>> http://www.gossamer-threads.com/lists/linux/kernel/2341200
+> 
+> Stephen saw that problem while building the Qualcomm driver
+> (CONFIG_PCIE_QCOM), and we fixed it by changing Kconfig so we won't build
+> that driver on x86.
+> 
+> That fix only affects CONFIG_PCIE_QCOM, so it won't help your driver.
+> 
+> You need some improvements to your drivers/pci/host/Kconfig patch -- some
+> help text and probably some dependencies.
+> 
+> Bjorn
+> 
 
