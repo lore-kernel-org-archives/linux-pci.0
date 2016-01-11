@@ -1,76 +1,117 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 8 Jan 2016 15:01:37 +0000
-From: Mark Rutland <mark.rutland@arm.com>
-To: Mark Salter <msalter@redhat.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com,
-	jchandra@broadcom.com, linaro-acpi@lists.linaro.org,
-	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
-	Suravee.Suthikulpanit@amd.com, jcm@redhat.com,
-	wangyijing@huawei.com, tglx@linutronix.de, mw@semihalf.com,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
- against platfrom specific quirks.
-Message-ID: <20160108150137.GH3097@leverpostej>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
- <1450278993-12664-23-git-send-email-tn@semihalf.com>
- <1452262581.31901.26.camel@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:33140 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757233AbcAKBG2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Jan 2016 20:06:28 -0500
+Date: Mon, 11 Jan 2016 10:06:24 +0900
+From: Simon Horman <horms@verge.net.au>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 2/4] PCI: rcar-gen2: Add device tree support for r8a7793
+Message-ID: <20160111010624.GA11387@verge.net.au>
+References: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
+ <1448954672-27236-3-git-send-email-horms+renesas@verge.net.au>
+ <20151204212649.GJ20125@localhost>
+ <CAMuHMdWEXA-KTkqJsofXuBTQKBrtGW7x+2r+V42CuWwbjkqmvQ@mail.gmail.com>
+ <20151207153833.GB7994@localhost>
+ <20151208004519.GK10799@verge.net.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1452262581.31901.26.camel@redhat.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151208004519.GK10799@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 08, 2016 at 09:16:21AM -0500, Mark Salter wrote:
-> On Wed, 2015-12-16 at 16:16 +0100, Tomasz Nowicki wrote:
-> > Some platforms may not be fully compliant with generic set of PCI config
-> > accessors. For these cases we implement the way to overwrite accessors
-> > set before PCI buses enumeration. Algorithm that overwrite accessors
-> > matches against platform ID (DMI), domain and bus number, hopefully
-> > enough for all cases. All quirks can be defined using:
-> > DECLARE_ACPI_MCFG_FIXUP() and keep self contained.
+On Tue, Dec 08, 2015 at 09:45:19AM +0900, Simon Horman wrote:
+> On Mon, Dec 07, 2015 at 09:38:33AM -0600, Bjorn Helgaas wrote:
+> > On Sat, Dec 05, 2015 at 11:38:37AM +0100, Geert Uytterhoeven wrote:
+> > > Hi Bjorn,
+> > > 
+> > > On Fri, Dec 4, 2015 at 10:26 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > > On Tue, Dec 01, 2015 at 04:24:30PM +0900, Simon Horman wrote:
+> > > >> Simply document new compat strings.
+> > > >> There appears to be no need for a driver updates.
+> > > >>
+> > > >> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+> > > >> ---
+> > > >>  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 1 +
+> > > >>  1 file changed, 1 insertion(+)
+> > > >>
+> > > >> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> > > >> index b19be08a8113..7c231b3e5872 100644
+> > > >> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> > > >> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> > > >> @@ -8,6 +8,7 @@ OHCI and EHCI controllers.
+> > > >>  Required properties:
+> > > >>  - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
+> > > >>             "renesas,pci-r8a7791" for the R8A7791 SoC;
+> > > >> +           "renesas,pci-r8a7793" for the R8A7793 SoC;
+> > > >
+> > > > What's the benefit of adding a string here if the driver doesn't check
+> > > > for it?  Since the driver doesn't look for it, there's no way to test
+> > > > anything.
+> > > 
+> > > If we ever discover a difference between PCI on r8a7793 compared to PCI on
+> > > other SoCs of the R-Car Gen2 family, we can handle that difference in the
+> > > driver.
+> > > 
+> > > > It doesn't seem like this file is an authoritative source of names, so
+> > > 
+> > > Yes it is. When adding compatible values to a DTS, checkpatch.pl will check
+> > > for their existence in the binding documentation. Hence we always add the
+> > > compatible values to the DT binding docs, before we start using them.
+> > > 
+> > > > if we add it here, there's the possibility the r8a7793 will be
+> > > > canceled or renamed, and then we'd have to update this if the driver
+> > > > ever did need an r8a7793-specific quirk.  If we waited until the
+> > > 
+> > > I don't understand what you mean here.
+> > > 
+> > > > driver actually needs a quirk, then we'd know exactly what name to
+> > > > look for and we could update the driver, DT, and doc all together.
+> > > 
+> > > If we update driver, DT, and doc only after we discover the need for a quirk,
+> > > it's already too late, due to stable DT rules. Hence we always document and
+> > > use SoC-specific compatible values, sometimes combined with family-specific
+> > > compatible values. The driver only matches to the as least specific value as
+> > > possible.
 > > 
-> > example:
+> > The stable DT rules seem to be the key here, but I don't know what
+> > they are.  I found Documentation/devicetree/bindings/ABI.txt, but it
+> > doesn't clear it up for me.
 > > 
-> > static const struct dmi_system_id yyy[] = {
-> >         {
-> >                 .ident = "<Platform ident string>",
-> >                 .callback = <handler>,
-> >                 .matches = {
-> >                         DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
-> >                         DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
-> >                         DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
-> >                 },
-> >         },
-> >         { }
-> > };
+> > I was assuming vendors could ship a DT in a platform ROM, in the same
+> > way platforms ship with an ACPI system description.  For ACPI, the
+> > _HID/_CID in the ROM in the field is authoritative in the sense that
+> > we have to regard it as a fixed, unchangeable feature of the platform.
+> > If we want a driver to recognize that device, we have to build the ID
+> > from the ROM into the driver, and it doesn't matter what is documented
+> > in the spec or in the kernel source.
 > > 
+> > If we had a one-sentence description of why adding the doc update when
+> > we actually need it is too late, that would probably be enough.
 > 
-> This seems awkward to me in the case where the quirk is SoC-based and there
-> may be multiple platforms affected. Needing a DECLARE_ACPI_MCFG_FIXUP for
-> each platform using such a SoC (i.e. Mustang and Moonshot) doesn't seem
-> right. In that case, I think it'd be better to check CPUID and possibly
-> some SoC register to cover all platforms affected.
+> I agree that would be useful.
 
-CPUs get reused across SoCs, so as you've implicitly noted, the CPUID
-alone is insufficient.
+Sorry for letting this slip. How about the following in the relevant changelogs:
 
-Given that IP blocks get moved around between SoC variants, I don't
-think you can check "some SoC register" based on the CPU ID -- you can
-end up bringing the board down at that point.
+	By documenting this compat sting it may be used in DTSs shipped,
+	for example as part of ROMs. It must be used in conjunction with
+	the Gen2 fallback compat string. At this time there are no known
+	differences between the r8a7793 IP block and that implemented by
+	the driver for the Gen2 fallback compat string. Thus there is no
+	need to update the driver as the use of the Gen2 fallback compat
+	string will activate the correct code in the current driver while
+	leaving the option for r8a7793-specific driver code to be activated
+	in an updated driver should the need arise.
 
-If the CPU ID alone is insufficient to tell you about a component, it
-cannot give you enough information about a component you can use to
-query more information from.
-
-If your platform requires a quirk, it's always going to be painful (and
-to some extent, rightfulyl so). We should aim for correctness here with
-explicit matching.
-
-Thanks,
-Mark.
+> > I'm perfectly happy with the PCI changes, so if somebody else wants to
+> > just merge all these via a DT tree, I'm happy to ack the PCI ones.
+> 
+> I have no fixed ideas about who should take these changes
+> but I think you could take them through the PCI tree if you
+> are so inclined.
