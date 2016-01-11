@@ -1,102 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:33465 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213AbcAHUOz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jan 2016 15:14:55 -0500
-Received: by mail-wm0-f46.google.com with SMTP id f206so149195173wmf.0
-        for <linux-pci@vger.kernel.org>; Fri, 08 Jan 2016 12:14:54 -0800 (PST)
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
-Subject: Re: [PATCH] drivers:pci Fix all whitespace issues
-From: sasa bogicevic <brutallesale@gmail.com>
-In-Reply-To: <CAErSpo59One_XZgYE+ZpyAu4Xmr7EsxkbuKbe2Xp_yfjK5PdLg@mail.gmail.com>
-Date: Fri, 8 Jan 2016 21:14:51 +0100
-Cc: linux-pci@vger.kernel.org
-Message-Id: <37FF66B1-1FF0-4A3A-AD81-FF2FD0915E4C@gmail.com>
-References: <1451251271-43502-1-git-send-email-brutallesale@gmail.com> <20160108163638.GB31005@localhost> <8694496E-F4DE-4C68-98DE-CA9F1DD1D8BA@gmail.com> <CAErSpo7oaZ220hv5=LfCdWiytjJGYciwUz4qHYx6E_ZW8GBe+g@mail.gmail.com> <7B5F9613-28B1-47BB-B081-ACB94DC45868@gmail.com> <CAErSpo59One_XZgYE+ZpyAu4Xmr7EsxkbuKbe2Xp_yfjK5PdLg@mail.gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
+Received: from relmlor4.renesas.com ([210.160.252.174]:29663 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752296AbcAKLXm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Jan 2016 06:23:42 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Simon Horman <horms@verge.net.au>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>
+Subject: RE: [PATCH v2 1/4] PCI: rcar: remove unused pci_sys_data structure in
+ pcie-rcar
+Date: Mon, 11 Jan 2016 11:23:37 +0000
+Message-ID: <HK2PR0601MB1393C2A62EE47AA804CFCF09F5C90@HK2PR0601MB1393.apcprd06.prod.outlook.com>
+References: <1451998831-27705-1-git-send-email-phil.edworthy@renesas.com>
+ <1451998831-27705-2-git-send-email-phil.edworthy@renesas.com>
+ <20160108015056.GB9600@verge.net.au> <20160108210635.GL5354@localhost>
+In-Reply-To: <20160108210635.GL5354@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for the info, Ill shout if I need further help
+Hi Bjorn,
 
-Thanks, Sasa
-{
-	name: Bogicevic Sasa
-	phone: +381606006200
-}
+On 08 January 2016 21:07, Bjorn Helgaas wrote:
+> On Fri, Jan 08, 2016 at 10:50:57AM +0900, Simon Horman wrote:
+> > Hi Phil,
+> >
+> > On Tue, Jan 05, 2016 at 01:00:28PM +0000, Phil Edworthy wrote:
+> > > Commit b3a72384fe29 ("ARM/PCI: Replace pci_sys_data->align_resource
+> > > with global function pointer") removed the struct pci_sys_data
+> > > dependency from the ARM pcibios functions, so remove it from this
+> > > driver.
+> >
+> > I am a little confused by this as I still see two instances of
+> > the following in bios32.c as of the commit above.
+> >
+> > 	struct pci_sys_data *sys = dev->sysdata;
+> 
+> This patch only removes a pci_sys_data struct from pcie-rcar.c.  That
+> struct was previously used by pci_common_init_dev() and by the ARM
+> pcibios_align_resource().
+> 
+> After cbce7900598c ("PCI: designware: Make driver arch-agnostic"), none of
+> the DesignWare drivers use pci_common_init_dev(), and after b3a72384fe29,
+> ARM doesn't need pci_sys_data for pcibios_align_resource().
+> 
+> Phil can correct me if I'm wrong, but I think this patch is probably OK.
+You are absolutely right!
 
+> I guess we can tell after I apply it and get a build test :)
+Yes, it has been built and run on both ARM and ARM64 boards.
 
-
-> On Jan 8, 2016, at 19:26, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> 
-> No, this change would only affect Kconfig files.  For example,
-> arch/x86/Kconfig contains:
-> 
->  source "drivers/pci/pcie/Kconfig"
->  source "drivers/pci/Kconfig"
->  source "drivers/pci/hotplug/Kconfig"
-> 
-> I would like it to contain only the "drivers/pci/Kconfig" line.  The
-> drivers/pci/Kconfig file should take care of including pcie/Kconfig
-> and pci/hotplug/Kconfig itself.
-> 
-> Other arches have the same issue.
-> 
-> 
-> On Fri, Jan 8, 2016 at 11:54 AM, sasa bogicevic <brutallesale@gmail.com> wrote:
->> Thanks!
->> This is great, so basically all drivers from pcie need to be moved to pci folder, right ?
->> 
->> Thanks, Sasa
->> {
->>        name: Bogicevic Sasa
->>        phone: +381606006200
->> }
->> 
->> 
->> 
->>> On Jan 8, 2016, at 18:38, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> 
->>> I have sort of a to-do list here:
->>> 
->>> https://docs.google.com/spreadsheets/d/1VgEMqaG5FFkde4Se64nNaMpNzBfXdlgihXuGKVEzMbA/edit?usp=sharing
->>> 
->>> Most of those items are fairly significant, but I can help if you have
->>> questions (please post on linux-pci so others can benefit as well).
->>> 
->>> Integrating PCIe Kconfig into PCI Kconfig should be relatively
->>> straightforward (though far from trivial).
->>> 
->>> Welcome to Linux and PCI!
->>> 
->>> Bjorn
->>> 
->>> On Fri, Jan 8, 2016 at 10:58 AM, sasa bogicevic <brutallesale@gmail.com> wrote:
->>>> Thanks!
->>>> If you have some more tasks for me I would appreciate it. I am still new so I do only these kind of fixes for now but if there is something more complex that trivial coding style issues but not too complex for the start I would be glad to contribute some more. Just let me know and Ill get on it.
->>>> 
->>>> Thanks, Sasa
->>>> {
->>>>       name: Bogicevic Sasa
->>>>       phone: +381606006200
->>>> }
->>>> 
->>>> 
->>>> 
->>>>> On Jan 8, 2016, at 17:36, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>>>> 
->>>>> On Sun, Dec 27, 2015 at 01:21:11PM -0800, Bogicevic Sasa wrote:
->>>>>> This patch fixes all whitespace issues( missing or needed whitespace) in
->>>>>> all files in drivers/pci folder. Code is compiled with allyesconfig
->>>>>> before and after code changes and objects are recorded and checked with
->>>>>> objdiff and they are not changed after this commit.
->>>>>> 
->>>>>> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
->>>>> 
->>>>> Applied to pci/trivial for v4.5, thanks!
->>>>> 
->>>>> Bjorn
->>>> 
->> 
-
+Thanks
+Phil
