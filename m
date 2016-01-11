@@ -1,110 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:56218 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758680AbcAKPiP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jan 2016 10:38:15 -0500
-Date: Mon, 11 Jan 2016 15:39:49 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Okaya@codeaurora.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Tomasz Nowicki <tn@semihalf.com>,
-	bhelgaas@google.com, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	jiang.liu@linux.intel.com, stefano.stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	liviu.dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, suravee.suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-Subject: Re: [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-Message-ID: <20160111153949.GA2366@red-moon>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
- <20151221121050.GB11145@red-moon>
- <5677F3C8.8040200@semihalf.com>
- <201512211515.55447.arnd@arndb.de>
- <b3750d7918712f6035ea875d90c25471.squirrel@www.codeaurora.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:59928 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756544AbcAKKiq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jan 2016 05:38:46 -0500
+Subject: Re: [PATCH v3 0/2] adding PCI support to AXS10x
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+References: <cover.1450694884.git.jpinto@synopsys.com>
+ <20160108203358.GI5354@localhost>
+CC: <Vineet.Gupta1@synopsys.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-snps-arc@lists.infradead.org>,
+	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
+	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56938609.5050304@synopsys.com>
+Date: Mon, 11 Jan 2016 10:38:01 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b3750d7918712f6035ea875d90c25471.squirrel@www.codeaurora.org>
+In-Reply-To: <20160108203358.GI5354@localhost>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 21, 2015 at 03:26:14PM +0000, Okaya@codeaurora.org wrote:
-> > On Monday 21 December 2015, Tomasz Nowicki wrote:
-> >> On 21.12.2015 13:10, Lorenzo Pieralisi wrote:
-> >> > On Fri, Dec 18, 2015 at 06:56:39PM +0000, okaya@codeaurora.org wrote:
-> >
-> >> >> I have multiple root ports with the same IO port configuration in the
-> >> >> current ACPI table.
-> >> >>
-> >> >> Root port 0 = IO range 0x1000-0x10FFF
-> >> >> Root port 1 = IO range 0x1000-0x10FFF
-> >> >> Root port 2 = IO range 0x1000-0x10FFF
-> >> >
-> >> > It is fine. You end up mapping for each of those a 4k window of the
-> >> > virtual address space allocated to IO and that's what you will have in
-> >> > the kernel PCI resources (not in the HW BARs though). If that was a
-> >> problem
-> >> > it would be even for the current DT host controllers eg:
-> >> >
-> >> > arch/arm64/boot/dts/apm/apm-storm.dtsi
-> >> >
-> >> > it should not be (again I will let Arnd comment on this since he may
-> >> be
-> >> > aware of issues encountered on other arches/platforms).
-> >> >
-> >>
-> >> Root port 0 = IO range 0x1000-0x10FFF
-> >> Root port 1 = IO range 0x1000-0x10FFF
-> >> Root port 2 = IO range 0x1000-0x10FFF
-> >>
-> >> If above ranges are mapped into different CPU windows, then yes, it is
-> >> fine.
-> >
-> > Ideally, they should all be the same CPU address so we only have to map
-> > the window
-> > once, each device gets an address below 64K, and you can have legacy port
-> > numbers
-> > (below 4K) on any bus, which is required to make certain GPUs work.
-> >
-> > I haven't actually seen anyone do that on ARM though, every implementation
-> > so
-> > far has a separate mapping per host bridge, and we can cope with that too,
-> > and we can live with either overlapping bus addresses or unique bus
-> > addresses,
-> > any of them can be expressed by the PCI core in Linux, we just have to
-> > make sure
-> > that we correctly translate the firmware tables into our internal
-> > structures.
-> >
-> > 	Arnd
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> 
-> Thanks, I won't be touching the acpi tables then and I will assume the
-> hack had a problem. It was trying to remap the io range of the second root
-> port  to the first port io address map.
-> 
-> I was getting a warning from resource.c
-> 
-> Btw, when I tested the io ranges before, kernel didn't accept anything
-> below 1k like 0. That is why my range starts at 1k.
 
-And that's what you should not do. ACPI tables have to have a 1:1
-correspondence with HW resources and you must not change them to
-make the kernel (which version by the way, given that ARM64 ACPI PCI
-support is not in the mainline) work. I already said that: we must not
-interpret ACPI tables, we must define them according to specifications,
-and that's what everyone should follow to write FW.
+Hi Bjorn,
 
-So, why does your PCI IO range starts at 1k ? Please define what you
-mean by "kernel didn't accept anything below 1k", I want to understand
-what you are referring to.
+On 1/8/2016 8:33 PM, Bjorn Helgaas wrote:
+> Hi Joao,
+> 
+> On Mon, Dec 21, 2015 at 03:44:14PM +0000, Joao Pinto wrote:
+>> This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
+>> AXS10x. It includes the necessary tweaks to the ARC architecture, necessary
+>> tweaks to the PCI subsystem and a new driver (pcie-snpsdev).
+>> This new driver will be used extensively in the PCIe RC Prototyping Kit.
+>>
+>> The patches were produced against Bjorn Helgaas' repository. It was properly
+>> tested in an IP Prototyping Kit.
+>>
+>> Joao Pinto (2):
+>>   PCI support added to ARC
+>>   add new platform driver for PCI RC
+>>
+>>  .../devicetree/bindings/pci/pcie-snpsdev.txt       |  33 +++
+>>  MAINTAINERS                                        |   7 +
+>>  arch/arc/Kconfig                                   |  23 ++
+>>  arch/arc/include/asm/dma.h                         |   5 +
+>>  arch/arc/include/asm/io.h                          |  10 +
+>>  arch/arc/include/asm/pci.h                         |  43 ++++
+>>  arch/arc/kernel/Makefile                           |   1 +
+>>  arch/arc/kernel/pcibios.c                          |  55 ++++
+>>  arch/arc/mm/ioremap.c                              |  10 +-
+>>  arch/arc/plat-axs10x/Kconfig                       |   1 +
+>>  drivers/pci/Makefile                               |   1 +
+>>  drivers/pci/host/Kconfig                           |   5 +
+>>  drivers/pci/host/Makefile                          |   1 +
+>>  drivers/pci/host/pcie-designware.c                 |  11 +
+>>  drivers/pci/host/pcie-designware.h                 |   1 +
+>>  drivers/pci/host/pcie-snpsdev.c                    | 286 +++++++++++++++++++++
+>>  16 files changed, 492 insertions(+), 1 deletion(-)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
+>>  create mode 100644 arch/arc/include/asm/pci.h
+>>  create mode 100644 arch/arc/kernel/pcibios.c
+>>  create mode 100644 drivers/pci/host/pcie-snpsdev.c
+> 
+> This failed the kbuild test, so I'm waiting for a refresh to fix that.
+> 
+> Bjorn
+> 
 
-Thanks,
-Lorenzo
+I am going to check what happened and send you an update ASAP.
+
+Joao
