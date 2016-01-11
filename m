@@ -1,177 +1,111 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 19 Jan 2016 18:24:31 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lenb@kernel.org, izumi.taku@jp.fujitsu.com, wency@cn.fujitsu.com,
-	caoj.fnst@cn.fujitsu.com, Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH] pci: fix unavailable irq number 255 reported by BIOS
-Message-ID: <20160120002431.GA7973@localhost>
-References: <1453167913-16248-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
- <6239489.QX2A2kAHWp@vostro.rjw.lan>
+Subject: Re: [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <20151221121050.GB11145@red-moon> <5677F3C8.8040200@semihalf.com>
+ <201512211515.55447.arnd@arndb.de>
+ <b3750d7918712f6035ea875d90c25471.squirrel@www.codeaurora.org>
+ <20160111153949.GA2366@red-moon>
+Cc: Arnd Bergmann <arnd@arndb.de>, Tomasz Nowicki <tn@semihalf.com>,
+	bhelgaas@google.com, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	jiang.liu@linux.intel.com, stefano.stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	liviu.dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, suravee.suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5693D0AE.4020306@codeaurora.org>
+Date: Mon, 11 Jan 2016 10:56:30 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6239489.QX2A2kAHWp@vostro.rjw.lan>
+In-Reply-To: <20160111153949.GA2366@red-moon>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jiang]
-
-Hi Chen,
-
-On Tue, Jan 19, 2016 at 02:43:30PM +0100, Rafael J. Wysocki wrote:
-> On Tuesday, January 19, 2016 09:45:13 AM Chen Fan wrote:
-> > In our environment, when enable Secure boot, we found an abnormal
-
-This has more information than necessary.  I don't think Secure Boot is
-really relevant, and nor are the timestamps and stack addresses below.
-
-> > phenomenon as following call trace shows. after investigation, we
-> > found the firmware assigned an irq number 255 which means unknown
-> > or no connection in PCI local spec for i801_smbus, meanwhile the
-> > ACPI didn't configure the pci irq routing. and the 255 irq number
-> > was assigned for megasa msix without IRQF_SHARED. then in this case
-> > during i801_smbus probe, the i801_smbus driver would request irq with
-> > bad irq number 255. but the 255 irq number was assigned for memgasa
-> > with MSIX enable. which will cause request_irq fails, and call trace
-> > shows, actually, we should expose the error early, rather than in request
-> > irq, here we simply fix the problem by return err when find the irq is
-> > 255.
-
-> > See the call trace:
-> > 
-> >  [   32.459195] ipmi device interface
-> >  [   32.612907] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
-> >  [   32.800459] ixgbe: Intel(R) 10 Gigabit PCI Express Network Driver - version 4.0.1-k-rh
-> >  [   32.818319] ixgbe: Copyright (c) 1999-2014 Intel Corporation.
-> >  [   32.844009] lpc_ich 0001:80:1f.0: I/O space for ACPI uninitialized
-> >  [   32.850093] i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
-> >  [   32.851134] i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
-> >  [   32.851136] i801_smbus 0000:00:1f.3: PCI INT C: no GSI
-> >  [   32.851164] genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa
-> >  [   32.851168] CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
-> >  [   32.851170] Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
-> >  [   32.851178] Workqueue: events work_for_cpu_fn
-> >  [   32.851208]  ffff88086c330b00 00000000e233a9df ffff88086d57bca0 ffffffff81603f36
-> >  [   32.851227]  ffff88086d57bcf8 ffffffff8110d23a ffff88686fe02000 0000000000000246
-> >  [   32.851246]  ffff88086a9a8c00 00000000e233a9df ffffffffa00ad220 0000000000000080
-> >  [   32.851247] Call Trace:
-> >  [   32.851261]  [<ffffffff81603f36>] dump_stack+0x19/0x1b
-> >  [   32.851271]  [<ffffffff8110d23a>] __setup_irq+0x54a/0x570
-> >  [   32.851282]  [<ffffffffa00ad220>] ? i801_check_pre.isra.5+0xe0/0xe0 [i2c_i801]
-> >  [   32.851289]  [<ffffffff8110d3bc>] request_threaded_irq+0xcc/0x170
-> >  [   32.851298]  [<ffffffffa00ae87f>] i801_probe+0x32f/0x508 [i2c_i801]
-> >  [   32.851308]  [<ffffffff81308385>] local_pci_probe+0x45/0xa0
-> >  [   32.851315]  [<ffffffff8108bfd4>] work_for_cpu_fn+0x14/0x20
-> >  [   32.851323]  [<ffffffff8108f0ab>] process_one_work+0x17b/0x470
-> >  [   32.851330]  [<ffffffff81090003>] worker_thread+0x293/0x400
-> >  [   32.851338]  [<ffffffff8108fd70>] ? rescuer_thread+0x400/0x400
-> >  [   32.851346]  [<ffffffff8109726f>] kthread+0xcf/0xe0
-> >  [   32.851353]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
-> >  [   32.851362]  [<ffffffff81613cfc>] ret_from_fork+0x7c/0xb0
-> >  [   32.851369]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
-> >  [   32.851373] i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
-> >  [   32.851435] i801_smbus: probe of 0000:00:1f.3 failed with error -16
-
-Since the Interrupt Line register is writable and might contain any
-value, it would be nice if Linux could at least tolerate anything
-firmware might leave there without a backtrace, even if we end up not
-being able to use the device.
-
-Your patch changes the acpi_pci_irq_enable() return value from 0 to
--EINVAL for this case.  You're running v3.10, and this change probably
-makes pci_enable_device() fail.  I suppose the user-visible effect is
-that with your patch,
-
-  - there's no backtrace,
-  - i801_smbus fails with "Failed to enable SMBus PCI device" instead
-    of with "Failed to allocate irq 255", and
-  - i801_smbus fails even if no other device is using IRQ 255, instead
-    of "succeeding" and using an IRQ 255 that probably doesn't work
-    (this seems like maybe the most important difference)
-
-Jiang has changed this path with 890e4847587f ("PCI: Add
-pcibios_alloc_irq() and pcibios_free_irq()"), so I think on newer
-kernels, we'll never even call the i801_smbus probe function.
-
-What behavior are you looking for from i801_smbus?  Decline to claim
-the device?  Try to use the device without interrupts?  Try to figure
-out an interrupt in some other way?
-
-I'm not 100% sure that 890e4847587f does the right thing by preventing
-a driver from claiming a device where we can't set up an IRQ.  It's
-conceivable that a driver could still operate a device even without an
-IRQ.
-
-> >  [   33.180145] ixgbe 0000:5a:00.0: Multiq[   33.240538] ixgbe 0000:5a:00.0: (PCI Express:03:e0
-> >  [   33.280826] ixgbe 0000:5a:00.0: MAC: 3, PHY: 0, PBA No: 000000-000
-> > 
-> > Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-> > ---
-> >  drivers/acpi/pci_irq.c | 10 +++++++++-
-> >  1 file changed, 9 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-> > index d30184c..d2f47f8 100644
-> > --- a/drivers/acpi/pci_irq.c
-> > +++ b/drivers/acpi/pci_irq.c
-> > @@ -439,9 +439,17 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
-> >  		if (acpi_isa_register_gsi(dev))
-> >  			dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
-> >  				 pin_name(pin));
-> > +		rc = 0;
-> > +		/*
-> > +		 * Excluding the BIOS report the value 255, which meaning
-> > +		 * "unknown" or "no connection" in PCI Local Bus Specification
-> > +		 * Revision 3.0 February 3, 2004, P223.
+On 1/11/2016 10:39 AM, Lorenzo Pieralisi wrote:
+>> Thanks, I won't be touching the acpi tables then and I will assume the
+>> > hack had a problem. It was trying to remap the io range of the second root
+>> > port  to the first port io address map.
+>> > 
+>> > I was getting a warning from resource.c
+>> > 
+>> > Btw, when I tested the io ranges before, kernel didn't accept anything
+>> > below 1k like 0. That is why my range starts at 1k.
+> And that's what you should not do. ACPI tables have to have a 1:1
+> correspondence with HW resources and you must not change them to
+> make the kernel (which version by the way, given that ARM64 ACPI PCI
+> support is not in the mainline) work. I already said that: we must not
+> interpret ACPI tables, we must define them according to specifications,
+> and that's what everyone should follow to write FW.
 > 
-> You mean the footnote on page 223 talking about the Interrupt Line values, right?
-> 
-> > +		 */
-> > +		if (dev->irq == 0xFF)
-> > +			rc = -EINVAL;
-> >  
-> >  		kfree(entry);
-> > -		return 0;
-> > +		return rc;
-> >  	}
-> >  
-> >  	rc = acpi_register_gsi(&dev->dev, gsi, triggering, polarity);
-> > 
-> 
-> Well, if you look at acpi_isa_register_gsi(), you'll see that it
-> actually does the check you're adding, so maybe the following should
-> be done instead?
-> 
-> ---
->  drivers/acpi/pci_irq.c |    5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> Index: linux-pm/drivers/acpi/pci_irq.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/pci_irq.c
-> +++ linux-pm/drivers/acpi/pci_irq.c
-> @@ -436,12 +436,13 @@ int acpi_pci_irq_enable(struct pci_dev *
->  	 * driver reported one, then use it. Exit in any case.
->  	 */
->  	if (gsi < 0) {
-> -		if (acpi_isa_register_gsi(dev))
-> +		rc = acpi_isa_register_gsi(dev);
-> +		if (rc)
->  			dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
->  				 pin_name(pin));
->  
->  		kfree(entry);
-> -		return 0;
-> +		return rc;
->  	}
->  
->  	rc = acpi_register_gsi(&dev->dev, gsi, triggering, polarity);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+What confused me was the kernel view of IO addresses vs. PCI IO addresses. I looked at
+Mark Salter's patch and I realized that the kernel is maintaining global IO addresses with offsets 
+to real PCI IO addresses.
+
+I was expecting to see the PCI addresses to match kernel IO addresses. I wondered if somebody put some
+restriction into Linux or not which happened to me below.
+
+_#_cat_/proc/ioports
+00000000-0000efff : PCI Bus 0000:00
+  00001000-00001fff : PCI Bus 0000:01
+0000f000-0001dfff : PCI Bus 0002:00
+  0000f000-0000ffff : PCI Bus 0002:01
+0001e000-0002cfff : PCI Bus 0006:00
+  0001e000-0001efff : PCI Bus 0006:01
+    0001e000-0001e01f : 0006:01:00.0
+    0001e020-0001e03f : 0006:01:00.1
+/ #
+
+#_dmesg_|_grep_resource
+[    2.945762] pci_bus 0000:00: root bus resource [io  0x0000-0xefff window] (bus address [0x1000-0xffff])
+[    3.652201] pci_bus 0002:00: root bus resource [io  0xf000-0x1dfff window] (bus address [0x1000-0xffff])
+[    6.546716] pci_bus 0006:00: root bus resource [io  0x1e000-0x2cfff window] (bus address [0x1000-0xffff])
+/ #
+
+Since we are talking about what ACPI dictates vs. what kernel does. Here is something that got me 
+while testing.
+
+Somebody sneaked in a 0x10003 upper limit on PCI addresses for some reason below. There is nothing magic
+about 0x10003 and I'm wonding why we have this limit.
+
+static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+				      u8 io_decode, u8 translation_type)
+{
+	res->flags = IORESOURCE_IO;
+
+	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
+		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+
+	if (res->end >= 0x10003)
+		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+
+
+
+I did a debug session with Tomasz last week. He fixed the issue. The range for
+IO resources were not being registered properly. The second root port was causing
+a bug check in the kernel because the IO range was overlapping with the first root port.
+The issue is fixed now. 
+
+
+> So, why does your PCI IO range starts at 1k ? Please define what you
+> mean by "kernel didn't accept anything below 1k", I want to understand
+> what you are referring to.
+
+I created my own version of ACPI PCI root port patch by porting ia64 to ARMv7 two years ago
+and wrote the ACPI table on an ARMv7 platform. I have been reusing the same tables since
+then. 
+
+The issue was what Arnd described in his email to this thread. (PCIBIOS_MIN_IO) macro. 
+I have tested the IO range starting from 0 on Tomasz's patches. I'm not seeing any problems.
+
+
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
