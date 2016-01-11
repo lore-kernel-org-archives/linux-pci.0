@@ -1,176 +1,107 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V3 12/21] x86, ia64, pci: Remove ACPI companion device from platform specific data.
-Date: Wed, 13 Jan 2016 14:20:58 +0100
-Message-Id: <1452691267-32240-13-git-send-email-tn@semihalf.com>
-In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Babu Moger <babu.moger@oracle.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	alexander.duyck@gmail.com, babu.moger@oracle.com, hare@suse.de,
+	mkubecek@suse.com, shane.seymour@hpe.com, myron.stowe@gmail.com,
+	VenkatKumar.Duvvuru@avago.com
+Subject: [PATCH RFC] pci: Blacklist vpd access for buggy devices
+Date: Mon, 11 Jan 2016 13:13:09 -0800
+Message-Id: <1452546789-62938-1-git-send-email-babu.moger@oracle.com>
+In-Reply-To: <20160109010545.GA31085@localhost>
+References: <20160109010545.GA31085@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since PCI core code is setting ACPI companion device for us now,
-platform specific ACPI companion device setting turns out to be dead now.
-Therefore we can get rid of it, including related companion reference
-from PCI sysdata structure.
+Reading or Writing of PCI VPD data causes system panic.
+We saw this problem by running "lspci -vvv" in the beginning.
+However this can be easily reproduced by running
+ cat /sys/bus/devices/XX../vpd
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+VPD length has been set as 32768 by default. Accessing vpd
+will trigger read/write of 32k. This causes problem as we
+could read data beyond the VPD end tag. Behaviour is un-
+predictable when this happens. I see some other adapter doing
+similar quirks(commit bffadffd43d4 ("PCI: fix VPD limit quirk
+for Broadcom 5708S"))
+
+I see there is an attempt to fix this right way.
+https://patchwork.ozlabs.org/patch/534843/ or
+https://lkml.org/lkml/2015/10/23/97
+
+Tried to fix it this way, but problem is I dont see the proper
+start/end TAGs(at least for this adapter) at all. The data is
+mostly junk or zeros. This patch fixes the issue by setting the
+vpd length to 0x80.
+
+Also look at the threds 
+
+https://lkml.org/lkml/2015/11/10/557
+https://lkml.org/lkml/2015/12/29/315
+
+Signed-off-by: Babu Moger <babu.moger@oracle.com>
 ---
- arch/ia64/hp/common/sba_iommu.c    |  2 +-
- arch/ia64/include/asm/pci.h        |  1 -
- arch/ia64/pci/pci.c                | 16 ----------------
- arch/ia64/sn/kernel/io_acpi_init.c |  4 ++--
- arch/x86/include/asm/pci.h         |  3 ---
- arch/x86/pci/acpi.c                |  2 --
- arch/x86/pci/irq.c                 | 10 ----------
- 7 files changed, 3 insertions(+), 35 deletions(-)
 
-diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
-index a6d6190..78e4444 100644
---- a/arch/ia64/hp/common/sba_iommu.c
-+++ b/arch/ia64/hp/common/sba_iommu.c
-@@ -1981,7 +1981,7 @@ sba_connect_bus(struct pci_bus *bus)
- 	if (PCI_CONTROLLER(bus)->iommu)
- 		return;
+NOTE:
+Jordan, Are you sure all the devices in PCI_VENDOR_ID_ATHEROS and
+PCI_VENDOR_ID_ATTANSIC have this problem. You have used PCI_ANY_ID.
+I felt it is too broad. Can you please check.
+
+
+ drivers/pci/quirks.c |   41 +++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 41 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b03373f..8abcee5 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2123,6 +2123,47 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
  
--	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
-+	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
- 	if (!handle)
- 		return;
- 
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 07039d1..5050748 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -65,7 +65,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- #define pci_legacy_write platform_pci_legacy_write
- 
- struct pci_controller {
--	struct acpi_device *companion;
- 	void *iommu;
- 	int segment;
- 	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 8f6ac2f..978d6af 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -301,28 +301,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	}
- 
- 	info->controller.segment = root->segment;
--	info->controller.companion = device;
- 	info->controller.node = acpi_get_node(device->handle);
- 	INIT_LIST_HEAD(&info->io_resources);
- 	return acpi_pci_root_create(root, &pci_acpi_root_ops,
- 				    &info->common, &info->controller);
- }
- 
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--{
--	/*
--	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
--	 * here, pci_create_root_bus() has been called by someone else and
--	 * sysdata is likely to be different from what we expect.  Let it go in
--	 * that case.
--	 */
--	if (!bridge->dev.parent) {
--		struct pci_controller *controller = bridge->bus->sysdata;
--		ACPI_COMPANION_SET(&bridge->dev, controller->companion);
--	}
--	return 0;
--}
--
- void pcibios_fixup_device_resources(struct pci_dev *dev)
- {
- 	int idx;
-diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
-index 0640739..bcfddc2 100644
---- a/arch/ia64/sn/kernel/io_acpi_init.c
-+++ b/arch/ia64/sn/kernel/io_acpi_init.c
-@@ -132,7 +132,7 @@ sn_get_bussoft_ptr(struct pci_bus *bus)
- 	struct acpi_resource_vendor_typed *vendor;
- 
- 
--	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
-+	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
- 	status = acpi_get_vendor_resource(handle, METHOD_NAME__CRS,
- 					  &sn_uuid, &buffer);
- 	if (ACPI_FAILURE(status)) {
-@@ -360,7 +360,7 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
- 	acpi_status status;
- 	struct acpi_buffer name_buffer = { ACPI_ALLOCATE_BUFFER, NULL };
- 
--	rootbus_handle = acpi_device_handle(PCI_CONTROLLER(dev)->companion);
-+	rootbus_handle = acpi_device_handle(ACPI_COMPANION(dev->bus->bridge));
-         status = acpi_evaluate_integer(rootbus_handle, METHOD_NAME__SEG, NULL,
-                                        &segment);
-         if (ACPI_SUCCESS(status)) {
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4625943..a98c022 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -14,9 +14,6 @@
- struct pci_sysdata {
- 	int		domain;		/* PCI domain */
- 	int		node;		/* NUMA node */
--#ifdef CONFIG_ACPI
--	struct acpi_device *companion;	/* ACPI companion device */
--#endif
- #ifdef CONFIG_X86_64
- 	void		*iommu;		/* IOMMU private data */
- #endif
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 56714a9..286e0f5 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -333,7 +333,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		struct pci_sysdata sd = {
- 			.domain = domain,
- 			.node = node,
--			.companion = root->device
- 		};
- 
- 		memcpy(bus->sysdata, &sd, sizeof(sd));
-@@ -348,7 +347,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		else {
- 			info->sd.domain = domain;
- 			info->sd.node = node;
--			info->sd.companion = root->device;
- 			bus = acpi_pci_root_create(root, &acpi_pci_root_ops,
- 						   &info->common, &info->sd);
- 		}
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 7032798..cc62226 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1153,16 +1153,6 @@ void __init pcibios_irq_init(void)
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- {
--	/*
--	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
--	 * here, pci_create_root_bus() has been called by someone else and
--	 * sysdata is likely to be different from what we expect.  Let it go in
--	 * that case.
--	 */
--	if (!bridge->dev.parent) {
--		struct pci_sysdata *sd = bridge->bus->sysdata;
--		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
--	}
- 	bridge->map_irq = pci_map_irq;
- 	return 0;
- }
+ /*
++ * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
++ * will dump 32k of data. The default length is set as 32768.
++ * Reading a full 32k will cause an access beyond the VPD end tag.
++ * The system behaviour at that point is mostly unpredictable.
++ * Apparently, some vendors have not implemented this VPD headers properly.
++ * Adding a generic function disable vpd data for these buggy adapters
++ * Add the DECLARE_PCI_FIXUP_FINAL line below with the specific with
++ * vendor and device of interest to use this quirk.
++ */
++static void quirk_blacklist_vpd(struct pci_dev *dev)
++{
++	if (dev->vpd) {
++		dev->vpd->len = 0;
++		dev_warn(&dev->dev, "PCI vpd access has been disabled due to firmware bug\n");
++	}
++}
++
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
++		quirk_blacklist_vpd);
++
++/*
+  * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
+  * VPD end tag will hang the device.  This problem was initially
+  * observed when a vpd entry was created in sysfs
 -- 
-1.9.1
-
+1.7.1
