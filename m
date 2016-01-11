@@ -1,128 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] PCI: iproc: Fix BCMA PCIe bus scanning regression
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1453330510-21926-1-git-send-email-rjui@broadcom.com>
- <20160126182239.GA17600@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:56360 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758213AbcAKIJX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Jan 2016 03:09:23 -0500
+Subject: Re: [PATCH 0/2] DRA72/DRA74: Add 2 lane support
+To: Tony Lindgren <tony@atomide.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+References: <1452077393-25880-1-git-send-email-kishon@ti.com>
+ <20160107174126.GB14105@localhost> <20160107181320.GO12777@atomide.com>
 CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Rafal Milecki <zajec5@gmail.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-Message-ID: <56A7BCE0.8090404@broadcom.com>
-Date: Tue, 26 Jan 2016 10:37:20 -0800
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<nsekhar@ti.com>, Richard Cochran <richardcochran@gmail.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <5693631E.2050807@ti.com>
+Date: Mon, 11 Jan 2016 13:39:02 +0530
 MIME-Version: 1.0
-In-Reply-To: <20160126182239.GA17600@localhost>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160107181320.GO12777@atomide.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hi Tony,
 
-On 1/26/2016 10:22 AM, Bjorn Helgaas wrote:
-> Hi Ray,
->
-> On Wed, Jan 20, 2016 at 02:55:10PM -0800, Ray Jui wrote:
->> Commit 943ebae781f5 ("PCI: iproc: Add PAXC interface support") causes
->> regression on EP device detection on BCMA based platforms. This patch
->> fixes the issue by allowing multiple devices to be configured on the
->> same bus, for all PAXB based child buses
+On Thursday 07 January 2016 11:43 PM, Tony Lindgren wrote:
+> * Bjorn Helgaas <helgaas@kernel.org> [160107 09:42]:
+>> [+cc Richard]
 >>
->> Reported-by: Rafal Milecki <zajec5@gmail.com>
->> Fixes: 943ebae781f5 ("PCI: iproc: Add PAXC interface support")
->> Signed-off-by: Ray Jui <rjui@broadcom.com>
->> ---
->>   drivers/pci/host/pcie-iproc.c | 5 +++--
->>   1 file changed, 3 insertions(+), 2 deletions(-)
+>> Hi Kishon,
 >>
->> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
->> index 5816bce..4627561 100644
->> --- a/drivers/pci/host/pcie-iproc.c
->> +++ b/drivers/pci/host/pcie-iproc.c
->> @@ -171,10 +171,11 @@ static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
->>   }
+>> On Wed, Jan 06, 2016 at 04:19:51PM +0530, Kishon Vijay Abraham I wrote:
+>>> Add driver modifications in pci-dra7xx to get x2 mode working in
+>>> DRA72 and DRA74. Certain modifications is needed in PHY driver also
+>>> which will be sent as a separate series.
+>>>
+>>> Certain board modifications has to be done in order to test
+>>> x2 mode in dra72-evm.
+>>>
+>>> These patches were created on pci next.
+>>>
+>>> Changes from RFC:
+>>> *) .b1co_mode_sel_mask is now set with the correct value.
+>>> *) cleanup the patch
+>>>
+>>> Kishon Vijay Abraham I (2):
+>>>   pci: host: pci-dra7xx: use "num-lanes" property to find phy count
+>>>   pci: host: pci-dra7xx: Enable x2 mode support
+>>>
+>>>  Documentation/devicetree/bindings/pci/ti-pci.txt |    8 +-
+>>>  drivers/pci/host/pci-dra7xx.c                    |  104 +++++++++++++++++++---
+>>>  2 files changed, 97 insertions(+), 15 deletions(-)
 >>
->>   static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
->> +					      unsigned int busnum,
->>   					      unsigned int slot,
->>   					      unsigned int fn)
->>   {
->> -	if (slot > 0)
->> +	if ((pcie->type == IPROC_PCIE_PAXC || busnum == 0) && slot > 0)
->>   		return false;
->>
->>   	/* PAXC can only support limited number of functions */
->
-> I don't understand this.  Here's the whole function (with this patch
-> applied):
->
->      static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
-> 						  unsigned int busnum,
-> 						  unsigned int slot,
-> 						  unsigned int fn)
->      {
-> 	    if ((pcie->type == IPROC_PCIE_PAXC || busnum == 0) && slot > 0)
-> 		    return false;
->
-> 	    /* PAXC can only support limited number of functions */
-> 	    if (pcie->type == IPROC_PCIE_PAXC && fn >= MAX_NUM_PAXC_PF)
-> 		    return false;
->
-> 	    return true;
->      }
->
-> This says:
->
->    - On bus 00, device 0 is the only valid device.  That seems
->      plausible because the devices on bus 00 are probably built-in to
->      the SoC.
->
->    - On PAXC-based systems, device 0 is the only valid device on *any*
->      bus.  Is that really true?  If there's any way to add a plug-in
->      card, this seems overly restrictive.
+>> Apparently dra7xx in mainline doesn't work [1].  Until that's
+>> resolved, I'm going to ignore dra7xx patches.
+> 
+> Agreed. Guys, please do the development _and_ testing on the mainline
+> kernel. We do have the mainline kernel usable for probably a few
+> tens of omap SoC variants. If you have issues using dra7 with mainline,
+> please fix those issues ASAP.
 
-Yah, PAXC is connected with one internal device within the SoC. There's 
-no connection brought out of the chip.
+Here Bjorn meant pci-dra7xx is broken in mainline and not the dra7xx boot
+as such. (which is due to the absence of reset controller driver).
+All the patches to pci-dra7xx were tested on mainline kernel (having
+out-of-tree reset patches since the reset controller driver is not merged).
+> 
+> Ideally of course please also use the device you're working on to
+> send out the patches :)
 
->
->      PCIe devices are generally all device 0, but this would mean you
->      cannot plug in a PCIe-to-PCI bridge leading to a PCI device with a
->      non-zero device number.
->
->      I think it also means you could not plug in a PCIe device with ARI
->      enabled, because I think we store the upper 5 bits of the 8-bit
->      ARI function number in the PCI_SLOT bits.
->
->    - On PAXC-based systems, only functions 0, 1, 2, and 3 are valid
->      anywhere in the hierarchy.  I think this again restricts what what
->      cards can be plugged in.
+dra7x is the only device that use this pci driver and all the patches to
+pci-dra7xx have been tested on both dra7 and dra72 boards.
 
-Yes, the internal device connected to PAXC supports 4 physical functions.
-
->
-> If iProc only supports devices built directly into the SoC, maybe
-> these constraints are valid.  But if it supports any plugin or
-> external devices, they don't seem to make sense.
-
-Correct. PAXC only connects to one built-in device, while PAXB can 
-support external EP devices.
-
->
-> Also, is it the case that an iProc root bus is always bus number zero?
-> That's certainly not the case for many other host controllers, but
-> maybe you only have one possible host controller per system and the
-> base number is not programmable.
-
-An iProc based SoC can potentially have multiple root complexes, with 
-each of them resides on separate PCIe domain (and always on bus 0). I 
-think this is similar to how Exynos PCIe host controller is modeled.
-
->
-> Bjorn
->
-
-Thanks,
-
-Ray
+Thanks
+Kishon
