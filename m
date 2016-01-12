@@ -1,54 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50630 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:60803 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751986AbcAEWmZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 Jan 2016 17:42:25 -0500
-Date: Tue, 5 Jan 2016 16:42:22 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>
-Cc: linux-pci@vger.kernel.org, Jisheng Zhang <jszhang@marvell.com>,
-	Minghuan.Lian@freescale.com
-Subject: DesignWare ATU PCIE_ATU_TYPE_MEM usage
-Message-ID: <20160105224222.GB23814@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S964937AbcALOmf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jan 2016 09:42:35 -0500
+From: Hannes Reinecke <hare@suse.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Babu Moger <babu.moger@oracle.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hannes Reinecke <hare@suse.com>
+Subject: [PATCH 1/3] pci: Update VPD definitions
+Date: Tue, 12 Jan 2016 15:42:28 +0100
+Message-Id: <1452609750-90760-2-git-send-email-hare@suse.de>
+In-Reply-To: <1452609750-90760-1-git-send-email-hare@suse.de>
+References: <1452609750-90760-1-git-send-email-hare@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi guys,
+The 'end' tag is actually 0x0f, it's the representation as a
+small resource data type tag that's 0x78 (ie shifted by 3).
+This patch also adds helper functions to extract the resource
+data type tags for both large and small resource data types.
 
-This code in dw_pcie_host_init() looks wrong:
+Cc: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ include/linux/pci.h | 27 +++++++++++++++++++++++++--
+ 1 file changed, 25 insertions(+), 2 deletions(-)
 
-    if (!pp->ops->rd_other_conf)
-	    dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-				      PCIE_ATU_TYPE_MEM, pp->mem_base,
-				      pp->mem_bus_addr, pp->mem_size);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d86378c..5d61c36 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1836,12 +1836,13 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+ #define PCI_VPD_LRDT_RW_DATA		PCI_VPD_LRDT_ID(PCI_VPD_LTIN_RW_DATA)
+ 
+ /* Small Resource Data Type Tag Item Names */
+-#define PCI_VPD_STIN_END		0x78	/* End */
++#define PCI_VPD_STIN_END		0x0f	/* End */
+ 
+-#define PCI_VPD_SRDT_END		PCI_VPD_STIN_END
++#define PCI_VPD_SRDT_END		(PCI_VPD_STIN_END << 3)
+ 
+ #define PCI_VPD_SRDT_TIN_MASK		0x78
+ #define PCI_VPD_SRDT_LEN_MASK		0x07
++#define PCI_VPD_LRDT_TIN_MASK		0x7f
+ 
+ #define PCI_VPD_LRDT_TAG_SIZE		3
+ #define PCI_VPD_SRDT_TAG_SIZE		1
+@@ -1865,6 +1866,17 @@ static inline u16 pci_vpd_lrdt_size(const u8 *lrdt)
+ }
+ 
+ /**
++ * pci_vpd_lrdt_tag - Extracts the Large Resource Data Type Tag Item
++ * @lrdt: Pointer to the beginning of the Large Resource Data Type tag
++ *
++ * Returns the extracted Large Resource Data Type Tag item.
++ */
++static inline u16 pci_vpd_lrdt_tag(const u8 *lrdt)
++{
++    return (u16)(lrdt[0] & PCI_VPD_LRDT_TIN_MASK);
++}
++
++/**
+  * pci_vpd_srdt_size - Extracts the Small Resource Data Type length
+  * @lrdt: Pointer to the beginning of the Small Resource Data Type tag
+  *
+@@ -1876,6 +1888,17 @@ static inline u8 pci_vpd_srdt_size(const u8 *srdt)
+ }
+ 
+ /**
++ * pci_vpd_srdt_tag - Extracts the Small Resource Data Type Tag Item
++ * @lrdt: Pointer to the beginning of the Small Resource Data Type tag
++ *
++ * Returns the extracted Small Resource Data Type Tag Item.
++ */
++static inline u8 pci_vpd_srdt_tag(const u8 *srdt)
++{
++	return ((*srdt) & PCI_VPD_SRDT_TIN_MASK) >> 3;
++}
++
++/**
+  * pci_vpd_info_field_size - Extracts the information field length
+  * @lrdt: Pointer to the beginning of an information field header
+  *
+-- 
+1.8.5.6
 
-    dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-    ...
-    dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
-
-Evidently you need to program the ATU with PCIE_ATU_TYPE_MEM before
-doing config accesses on the root bus?
-
-If that's the case, what about other config accesses after these few
-in dw_pcie_host_init()?  I don't see anything that changes the ATU
-programming for things coming through dw_pcie_wr_conf().
-
-I assume you need some sort of locking around this sequence:
-
-    dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0, type, ...
-    ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
-    dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0, PCIE_ATU_TYPE_IO, ...
-
-Are you relying on pci_lock?  If so, a comment to that effect would be
-nice.
-
-The whole ATU management looks pretty inefficient.  It's likely that
-there'll be a whole sequence of operations where we don't need to
-touch the ATU, but since we don't remember its current state, we
-configure the whole thing from scratch each time, which is at least
-eight register writes (plus a read for the new synchronization).
-
-Bjorn
