@@ -1,91 +1,185 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:13653 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752347AbcAENBh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jan 2016 08:01:37 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
+Received: from mail-sn1nam02on0041.outbound.protection.outlook.com ([104.47.36.41]:53888
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932708AbcALF2K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jan 2016 00:28:10 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <michals@xilinx.com>,
+	<lorenzo.pieralisi@arm.com>, <yinghai@kernel.org>,
+	<wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
 	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-sh@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Subject: [PATCH v2 4/4] PCI: rcar: Add Gen2 PHY setup to pcie-rcar
-Date: Tue,  5 Jan 2016 13:00:31 +0000
-Message-Id: <1451998831-27705-5-git-send-email-phil.edworthy@renesas.com>
-In-Reply-To: <1451998831-27705-1-git-send-email-phil.edworthy@renesas.com>
-References: <1451998831-27705-1-git-send-email-phil.edworthy@renesas.com>
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: [PATCH 5/5] Microblaze: Modifying microblaze PCI subsytem to support generic Xilinx  AXI PCIe Host Bridge IP driver
+Date: Tue, 12 Jan 2016 10:56:39 +0530
+Message-ID: <1452576399-1513-6-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
+References: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For PCIe compliance, the PHY registers need setting as per the
-manual.
+This patch does required modifications to microblaze PCI subsystem, to
+work with generic driver (drivers/pci/host/pcie-xilinx.c) on Microblaze
+and Zynq.
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
 ---
-v2:
-  - Added comment about where the PHY settings come from.
+Modified pcibios_fixup_bus in pci-common.c, as per generic architecuture.
+Modified pcibios_align_resource in pci-common.c, as per generic
+architecuture.
+Modified pcibios_get_phb_of_node function in pci-common.c, to remove
+dependency on struct pci_controller.
+Removed pci_domain_nr in pci-common.c, instead using generic code.
+Added pcibios_add_device in pci-common.c, as per generic architecuture.
+Adding Kernel configuration in arch/microblaze as required for generic PCI
+domains.
+Added kernel configuration for driver to support Microblaze.
 ---
- drivers/pci/host/pcie-rcar.c | 31 ++++++++++++++++++++++++++++---
- 1 file changed, 28 insertions(+), 3 deletions(-)
+ arch/microblaze/Kconfig          |  3 ++
+ arch/microblaze/pci/pci-common.c | 61 +++++++++++++++-------------------------
+ drivers/pci/host/Kconfig         |  2 +-
+ 3 files changed, 27 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 7e13fbb..12be16a 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -104,6 +104,11 @@
- #define H1_PCIEPHYDOUTR		0x040014
- #define H1_PCIEPHYSR		0x040018
+diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig
+index 0bce820..c3702b9 100644
+--- a/arch/microblaze/Kconfig
++++ b/arch/microblaze/Kconfig
+@@ -271,6 +271,9 @@ config PCI
+ config PCI_DOMAINS
+ 	def_bool PCI
  
-+/* R-Car Gen2 PHY */
-+#define GEN2_PCIEPHYADDR	0x780
-+#define GEN2_PCIEPHYDATA	0x784
-+#define GEN2_PCIEPHYCTRL	0x78c
++config PCI_DOMAINS_GENERIC
++	def_bool PCI_DOMAINS
 +
- #define INT_PCI_MSI_NR	32
+ config PCI_SYSCALL
+ 	def_bool PCI
  
- #define RCONF(x)	(PCICONF(0)+(x))
-@@ -599,6 +604,26 @@ static int rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
- 	return -ETIMEDOUT;
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index ae838ed..bc72856 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
+ }
+ EXPORT_SYMBOL_GPL(pci_address_to_pio);
+ 
+-/*
+- * Return the domain number for this bus.
+- */
+-int pci_domain_nr(struct pci_bus *bus)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(bus);
+-
+-	return hose->global_number;
+-}
+-EXPORT_SYMBOL(pci_domain_nr);
+-
+ /* This routine is meant to be used early during boot, when the
+  * PCI bus numbers have not yet been assigned, and you need to
+  * issue PCI config cycles to an OF device.
+@@ -863,26 +852,10 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
+ 
+ void pcibios_fixup_bus(struct pci_bus *bus)
+ {
+-	/* When called from the generic PCI probe, read PCI<->PCI bridge
+-	 * bases. This is -not- called when generating the PCI tree from
+-	 * the OF device-tree.
+-	 */
+-	if (bus->self != NULL)
+-		pci_read_bridge_bases(bus);
+-
+-	/* Now fixup the bus bus */
+-	pcibios_setup_bus_self(bus);
+-
+-	/* Now fixup devices on that bus */
+-	pcibios_setup_bus_devices(bus);
++	/* nothing to do */
+ }
+ EXPORT_SYMBOL(pcibios_fixup_bus);
+ 
+-static int skip_isa_ioresource_align(struct pci_dev *dev)
+-{
+-	return 0;
+-}
+-
+ /*
+  * We need to avoid collisions with `mirrored' VGA ports
+  * and other strange ISA hardware, so we always want the
+@@ -899,20 +872,20 @@ static int skip_isa_ioresource_align(struct pci_dev *dev)
+ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 				resource_size_t size, resource_size_t align)
+ {
+-	struct pci_dev *dev = data;
+ 	resource_size_t start = res->start;
+ 
+-	if (res->flags & IORESOURCE_IO) {
+-		if (skip_isa_ioresource_align(dev))
+-			return start;
+-		if (start & 0x300)
+-			start = (start + 0x3ff) & ~0x3ff;
+-	}
+-
+ 	return start;
+ }
+ EXPORT_SYMBOL(pcibios_align_resource);
+ 
++int pcibios_add_device(struct pci_dev *dev)
++{
++	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++
++	return 0;
++}
++EXPORT_SYMBOL(pcibios_add_device);
++
+ /*
+  * Reparent resource children of pr that conflict with res
+  * under res, and make res replace those children.
+@@ -1335,9 +1308,21 @@ static void pcibios_setup_phb_resources(struct pci_controller *hose,
+ 
+ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+ {
+-	struct pci_controller *hose = bus->sysdata;
++	struct device_node *np;
++
++	for_each_node_by_type(np, "pci") {
++		const void *prop;
++		unsigned int bus_min;
++
++		prop = of_get_property(np, "bus-range", NULL);
++		if (!prop)
++			continue;
++		bus_min = be32_to_cpup(prop);
++		if (bus->number == bus_min)
++			return np;
++	}
+ 
+-	return of_node_get(hose->dn);
++	return NULL;
  }
  
-+static int rcar_pcie_hw_init_gen2(struct rcar_pcie *pcie)
-+{
-+	/*
-+	 * These settings come from the R-Car Series, 2nd Generation User's
-+	 * Manual, section 50.3.1 (2) Initialization of the physical layer.
-+	 */
-+	rcar_pci_write_reg(pcie, 0x000f0030, GEN2_PCIEPHYADDR);
-+	rcar_pci_write_reg(pcie, 0x00381203, GEN2_PCIEPHYDATA);
-+	rcar_pci_write_reg(pcie, 0x00000001, GEN2_PCIEPHYCTRL);
-+	rcar_pci_write_reg(pcie, 0x00000006, GEN2_PCIEPHYCTRL);
-+
-+	rcar_pci_write_reg(pcie, 0x000f0054, GEN2_PCIEPHYADDR);
-+	/* The following value is for DC connection, no termination resistor */
-+	rcar_pci_write_reg(pcie, 0x13802007, GEN2_PCIEPHYDATA);
-+	rcar_pci_write_reg(pcie, 0x00000001, GEN2_PCIEPHYCTRL);
-+	rcar_pci_write_reg(pcie, 0x00000006, GEN2_PCIEPHYCTRL);
-+
-+	return rcar_pcie_hw_init(pcie);
-+}
-+
- static int rcar_msi_alloc(struct rcar_msi *chip)
- {
- 	int msi;
-@@ -938,9 +963,9 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
+ static void pcibios_scan_phb(struct pci_controller *hose)
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index d5e58ba..7c56c2e 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -79,7 +79,7 @@ config PCI_KEYSTONE
  
- static const struct of_device_id rcar_pcie_of_match[] = {
- 	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
--	{ .compatible = "renesas,pcie-rcar-gen2", .data = rcar_pcie_hw_init },
--	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
--	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
-+	{ .compatible = "renesas,pcie-rcar-gen2", .data = rcar_pcie_hw_init_gen2 },
-+	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init_gen2 },
-+	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init_gen2 },
- 	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
- 	{},
- };
+ config PCIE_XILINX
+ 	bool "Xilinx AXI PCIe host bridge support"
+-	depends on ARCH_ZYNQ
++	depends on ARCH_ZYNQ || MICROBLAZE
+ 	help
+ 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+ 	  Host Bridge driver.
 -- 
-2.5.0
+2.1.1
 
