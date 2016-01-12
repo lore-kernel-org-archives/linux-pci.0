@@ -1,64 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:55954 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753931AbcAVWTz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Jan 2016 17:19:55 -0500
-Date: Fri, 22 Jan 2016 14:16:19 -0800
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: linux-pci@vger.kernel.org, mj@ucw.cz, bhelgaas@google.com,
-	alex.williamson@redhat.com
-Cc: david.daney@cavium.com
-Subject: Re: [PATCH 0/2] pci/lspci: Identify Enhanced Allocation (EA)
- Resources
-Message-ID: <20160122221619.GA3202@sean.stalley.intel.com>
-References: <1453500294-3140-1-git-send-email-sean.stalley@intel.com>
+Received: from mout.kundenserver.de ([212.227.17.13]:51503 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752332AbcALWYc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jan 2016 17:24:32 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	bhelgaas@google.com, michals@xilinx.com, lorenzo.pieralisi@arm.com,
+	paul.burton@imgtec.com, yinghai@kernel.org, wangyijing@huawei.com,
+	robh@kernel.org, russell.joyce@york.ac.uk, sorenb@xilinx.com,
+	jiang.liu@linux.intel.com, pawel.moll@arm.com,
+	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
+	galak@codeaurora.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH V2 2/5] PCI: xilinx: Removing struct hw_irq structure.
+Date: Tue, 12 Jan 2016 23:23:32 +0100
+Message-ID: <5660994.Bgxrr57r2H@wuerfel>
+In-Reply-To: <1452620173-4905-3-git-send-email-bharatku@xilinx.com>
+References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com> <1452620173-4905-3-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1453500294-3140-1-git-send-email-sean.stalley@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry, I forgot to increment the patch version.
+On Tuesday 12 January 2016 23:06:10 Bharat Kumar Gogada wrote:
+> Removing struct hw_irq and adding generic PCI core API's.
+> 
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> ---
+> Removing architecure dependecy structure struct hw_irq which is ARM 32-bit
+> specific structure, and adding generic PCI core API's to register to
+> PCI subsytem.
+> Removing funtions which are not being used with generic API's.
+> 
 
-This is V2. The only difference from V1 is the commit message on 1/2.
-No functional changes.
+typo: s/hw_irq/hw_pci/
 
--Sean
-
-On Fri, Jan 22, 2016 at 02:04:52PM -0800, Sean O. Stalley wrote:
-> Identify BAR-equivalent resources that are described by EA entries
-> with the IORESOURCE_PCI_EA_BEI flag.
-> 
-> lspci cannot distinguish between resources from VF BARs and resources from EA.
-> This results in EA Resources being incorrectly identified as [virtual].
-> Adding this flag allows EA resources to be marked more accurately as [enhanced].
-> 
-> Although this patchset only add support for this flag to lspci,
-> there are other use cases (such as vfio) where knowing a resource
-> comes from EA would be useful.
-> 
-> [PATCH 1/2] is for the kernel, [PATCH 2/2] is for lspci.
-> 
-> 
-> Alex Williamson (1):
->   pci: Identify Enhanced Allocation (EA) BAR Equivalent resources
-> 
-> Sean O. Stalley (1):
->   Add support for enhanced allocation regions
-> 
-> linux changes:
->  drivers/pci/pci.c      | 2 +-
->  include/linux/ioport.h | 2 ++
->  2 files changed, 3 insertions(+), 1 deletion(-)
-> 
-> lspci changes:
->  lib/header.h |  4 ++++
->  lib/pci.h    |  2 ++
->  lib/sysfs.c  |  5 ++++-
->  lspci.c      | 17 ++++++++++++++---
->  4 files changed, 24 insertions(+), 4 deletions(-)
-> 
-> 
-> -- 
-> 1.9.1
-> 
+	Arnd
