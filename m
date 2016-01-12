@@ -1,237 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63124 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754796AbcAZKPT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Jan 2016 05:15:19 -0500
-From: "Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>
-To: David Woodhouse <dwmw2@infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"jroedel@suse.de" <jroedel@suse.de>
-Subject: RE: [PATCH] pci: Add support for multiple DMA aliases
-Date: Tue, 26 Jan 2016 10:15:14 +0000
-Message-ID: <36D38C1F74839847A52A484C31F3E51A6213B068@irsmsx105.ger.corp.intel.com>
-References: <1453118346-76897-1-git-send-email-jacek.lawrynowicz@intel.com>
-	 <1453133267-79756-1-git-send-email-jacek.lawrynowicz@intel.com>
-	 <20160119033315.GA6510@localhost> <20160119201254.GB6510@localhost>
-	 <1453237471.32741.267.camel@redhat.com> <20160119213901.GG14080@localhost>
-	 <36D38C1F74839847A52A484C31F3E51A62131B9D@irsmsx105.ger.corp.intel.com>
-	 <20160120174622.GC7973@localhost> <1453369141.4639.73.camel@infradead.org>
-	 <20160121152236.GA6629@localhost> <1453390357.4639.101.camel@infradead.org>
-In-Reply-To: <1453390357.4639.101.camel@infradead.org>
-Content-Type: multipart/signed; micalg=SHA1;
-	protocol="application/x-pkcs7-signature";
-	boundary="----=_NextPart_000_0014_01D1582A.D3D16040"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <michals@xilinx.com>,
+	<lorenzo.pieralisi@arm.com>, <yinghai@kernel.org>,
+	<wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>
+Subject: [PATCH 0/5] PCIe Xilinx with generic driver for Microblaze and 
+Date: Tue, 12 Jan 2016 10:56:34 +0530
+Message-ID: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-------=_NextPart_000_0014_01D1582A.D3D16040
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+This patch series does modifications to pcie-xilinx.c, to support common
+driver on both Zynq and Microblaze architectures.
+Microblaze pci-common.c has been modified to support generic driver.
 
-> -----Original Message-----
-> From: David Woodhouse [mailto:dwmw2@infradead.org]
-> Sent: Thursday, January 21, 2016 4:33 PM
-> To: Bjorn Helgaas <helgaas@kernel.org>
-> Cc: Lawrynowicz, Jacek <jacek.lawrynowicz@intel.com>; Alex Williamson
-> <alex.williamson@redhat.com>; linux-pci@vger.kernel.org;
-> bhelgaas@google.com; jroedel@suse.de
-> Subject: Re: [PATCH] pci: Add support for multiple DMA aliases
->
-> On Thu, 2016-01-21 at 09:22 -0600, Bjorn Helgaas wrote:
-> >
-> > This definitely isn't part of the driver code; I didn't mean to
-> > suggest that.  I'd like to see this as a separate patch, but as part
-> > of a series that adds a user of the multiple-alias functionality.
-> >
-> > All I'm saying is that as-is, this patch makes the quirks easier to
-> > read but doesn't actually change any behavior: we set up at most one
-> > alias, and we do it as a header quirk at enumeration-time, so there
-> > are no new lifetime issues.  Normally we merge things when they're
-> > needed, and multiple alias support is a bit of infrastructure that
-> > isn't used yet.
->
-> Ah, right. I see your point.
->
-> I don't actually see why pci_add_dma_alias() should be exported at all.
->
-> I suspect the best approach is for Jacek to add a second patch in this
-> series, adding the required quirk to drivers/pci/quirks.c for the
-> device in question, and then resubmit them to you when Linus releases
-> 4.5-rc1.
->
-> This is completely independent of any native driver for the device, of
-> course.
+I'm aware Paul Burton <paul.burton@imgtec.com> has also sent patches
+related to pcie-xilinx.c, but I'm unable to comment on them. 
+I request Paul Burton to please add me in cc list so that I can comment on
+those patches.
 
-OK guys, I've prepared a second version of the patch that includes fixes for 
-all
-your review comments. I will post it today to linux-pci. It also includes a 
-quirk
-for x200 dma driver that is undergoing internal review and will be posted to 
-dma
-tree probably early next week. It would be great if v2 could be included in 
-4.5 but
-I understand that it's a bit late and you may prefer to wait for x200 dma 
-driver to
-be posted.
+Bharat Kumar Gogada (5):
+  PCI: xilinx: Removing xilinx_pcie_parse_and_add_res function
+  PCI: xilinx: Removing struct hw_irq structure.
+  PCI: xilinx: Modifying AXI PCIe Host Bridge driver to work on both    
+     Zynq and Microblaze
+  PCI: xilinx: Updating Zynq PCI binding documentation with Microblaze
+    node.
+  Microblaze: Modifying microblaze PCI subsytem to support generic
+    Xilinx      AXI PCIe Host Bridge IP driver
 
-Thanks for all your feedback. The patch now make a lot more sense.
+ .../devicetree/bindings/pci/xilinx-pcie.txt        |  36 +++-
+ arch/microblaze/Kconfig                            |   3 +
+ arch/microblaze/pci/pci-common.c                   |  61 +++---
+ drivers/pci/host/Kconfig                           |   2 +-
+ drivers/pci/host/pcie-xilinx.c                     | 208 ++++-----------------
+ 5 files changed, 97 insertions(+), 213 deletions(-)
 
-Regards,
-Jacek
-
---
-Jacek Lawrynowicz
-Intel Technology Poland sp. z o.o.
-KRS 101882 - ul. Slowackiego 173, 80-298 Gdansk
-
-
-
-------=_NextPart_000_0014_01D1582A.D3D16040
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-
-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
-VMv3yxHO8jex40LgMIIFijCCBHKgAwIBAgITMwAAHtrUMHJqXk2MNwAAAAAe2jANBgkqhkiG9w0B
-AQUFADB5MQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFDASBgNVBAcTC1NhbnRhIENsYXJhMRow
-GAYDVQQKExFJbnRlbCBDb3Jwb3JhdGlvbjErMCkGA1UEAxMiSW50ZWwgRXh0ZXJuYWwgQmFzaWMg
-SXNzdWluZyBDQSA0QjAeFw0xNTEwMTIxMzEwNDlaFw0xODA5MjYxMzEwNDlaMEkxGzAZBgNVBAMT
-Ekxhd3J5bm93aWN6LCBKYWNlazEqMCgGCSqGSIb3DQEJARYbamFjZWsubGF3cnlub3dpY3pAaW50
-ZWwuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1tjwqdbx6/OJGZH6bcoU0kUw
-Rfszjz7Ws3+m5aZzzysxb1a4/KemhppgfL8kAjJ4Ha35ixtjn2ZO+uAQ7IgJs512oyUkUZydLypc
-4kobk1ZQiAeX1J/r0gwPQsbBBJu0rJ4uP9wMn6P1YQRHbjJ443cDPlYKjEzoFxnTlWwpQ4Zc3C8Y
-DCLuZk6NPduNJ0++LIVOKi9s35cht7W8CxoVOjV9s9sZlEeN5oCGLVB9ORpt3GPh+8ap/WXTB6FW
-Z8Zn/eH0FqPH/UOfbNlb6sJz9RnZ0RcIa+KJpj2QA38JfmSuGc+u+7Ds7/I+0GL3BIzOv9eGBA8h
-DAAV8IwXGhwmQQIDAQABo4ICOTCCAjUwCwYDVR0PBAQDAgeAMDwGCSsGAQQBgjcVBwQvMC0GJSsG
-AQQBgjcVCIbDjHWEmeVRg/2BKIWOn1OCkcAJZ4HevTmV8EMCAWQCAQgwHQYDVR0OBBYEFM3NoUwk
-hZ72HaT2GREobB3IUpkTMB8GA1UdIwQYMBaAFNpBI5xaj3GvV4M+INPjZdsMywvbMGUGA1UdHwRe
-MFwwWqBYoFaGVGh0dHA6Ly93d3cuaW50ZWwuY29tL3JlcG9zaXRvcnkvQ1JML0ludGVsJTIwRXh0
-ZXJuYWwlMjBCYXNpYyUyMElzc3VpbmclMjBDQSUyMDRCLmNybDCBnwYIKwYBBQUHAQEEgZIwgY8w
-IgYIKwYBBQUHMAGGFmh0dHA6Ly9vY3NwLmludGVsLmNvbS8waQYIKwYBBQUHMAKGXWh0dHA6Ly93
-d3cuaW50ZWwuY29tL3JlcG9zaXRvcnkvY2VydGlmaWNhdGVzL0ludGVsJTIwRXh0ZXJuYWwlMjBC
-YXNpYyUyMElzc3VpbmclMjBDQSUyMDRCLmNydDAfBgNVHSUEGDAWBggrBgEFBQcDBAYKKwYBBAGC
-NwoDDDApBgkrBgEEAYI3FQoEHDAaMAoGCCsGAQUFBwMEMAwGCisGAQQBgjcKAwwwUwYDVR0RBEww
-SqArBgorBgEEAYI3FAIDoB0MG2phY2VrLmxhd3J5bm93aWN6QGludGVsLmNvbYEbamFjZWsubGF3
-cnlub3dpY3pAaW50ZWwuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQCXms3sgvqozD+mirP5B9PANgCE
-RVBbEkYt8TzJE0B1lcLfXavkPldx1vC2vpblXofPfVyRbaUbobbIqohYCiblPvqso5raQmr8GeR1
-RiWmiqiye2sA2nvQh1m7Skc6h7XBI3knNDzhG87zmvweY0Fgmbvdi7PGfMxjT4eiLjvzhWCthkmJ
-NYoJ7Whtn60/vHl1OO6b7JeTqfNDc1NxV/g4dlMyFsr+XtyMGFzI0ch6eIzlpqeFDzKLI/5i8tzc
-cZikcJThuwA/SfHHWEHs33gEHxa4F1x6ngyN8OdZgwdBc6nk6wgx6vLeDnN67fCNhQAadMeHjdP+
-QqAEvc7XavdRMIIGfTCCBWWgAwIBAgIKGZmpegAAAAAy3TANBgkqhkiG9w0BAQUFADB5MQswCQYD
-VQQGEwJVUzELMAkGA1UECBMCQ0ExFDASBgNVBAcTC1NhbnRhIENsYXJhMRowGAYDVQQKExFJbnRl
-bCBDb3Jwb3JhdGlvbjErMCkGA1UEAxMiSW50ZWwgRXh0ZXJuYWwgQmFzaWMgSXNzdWluZyBDQSA0
-QTAeFw0xMzEwMjEwODU4NThaFw0xNjEwMDUwODU4NThaMEkxGzAZBgNVBAMTEkxhd3J5bm93aWN6
-LCBKYWNlazEqMCgGCSqGSIb3DQEJARYbamFjZWsubGF3cnlub3dpY3pAaW50ZWwuY29tMIIBIjAN
-BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAplKHW1GF9qUj6MGOr6H3a+meHkH/FZW7bNFAFGic
-hxCpbgkwPVjFPo5gqoTk1/vZazgMlr6BrETZHAT78vC2OfpHEOgRcBvE3aJw8AMk9q8Scsx43UWY
-iK9Ys1i7idBWNH45OfCyHu7Z0pHCFywyQgFUK4FM10MlFNBXzET+rmgqU9RBIRFWkMOi0G4gmL7c
-lLApKKFjjfhTx75W2WK3vsNK4Uw+omqR/Kli7IeXExsKOXjv8kuzifYZNAUHMiAGUZURbp5hv7IY
-wG7SI9CDwDrtpFbu9k8RRRLNJnt8n+cueMPmNMeMv6PVy/8hmKn0tW+wIIO6hPbe8MbCqLcQJwID
-AQABo4IDNTCCAzEwCwYDVR0PBAQDAgQwMD0GCSsGAQQBgjcVBwQwMC4GJisGAQQBgjcVCIbDjHWE
-meVRg/2BKIWOn1OCkcAJZ4S52UGHhP9OAgFkAgENMEQGCSqGSIb3DQEJDwQ3MDUwDgYIKoZIhvcN
-AwICAgCAMA4GCCqGSIb3DQMEAgIAgDAHBgUrDgMCBzAKBggqhkiG9w0DBzAdBgNVHQ4EFgQUa/PH
-evLj3Q34U/tCjZKn2DnMMIwwHwYDVR0jBBgwFoAUHmkqtNwo/kcYTiELP7ysES/wmPUwgckGA1Ud
-HwSBwTCBvjCBu6CBuKCBtYZUaHR0cDovL3d3dy5pbnRlbC5jb20vcmVwb3NpdG9yeS9DUkwvSW50
-ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWluZyUyMENBJTIwNEEuY3Jshl1odHRwOi8vY2Vy
-dGlmaWNhdGVzLmludGVsLmNvbS9yZXBvc2l0b3J5L0NSTC9JbnRlbCUyMEV4dGVybmFsJTIwQmFz
-aWMlMjBJc3N1aW5nJTIwQ0ElMjA0QS5jcmwwge8GCCsGAQUFBwEBBIHiMIHfMGkGCCsGAQUFBzAC
-hl1odHRwOi8vd3d3LmludGVsLmNvbS9yZXBvc2l0b3J5L2NlcnRpZmljYXRlcy9JbnRlbCUyMEV4
-dGVybmFsJTIwQmFzaWMlMjBJc3N1aW5nJTIwQ0ElMjA0QS5jcnQwcgYIKwYBBQUHMAKGZmh0dHA6
-Ly9jZXJ0aWZpY2F0ZXMuaW50ZWwuY29tL3JlcG9zaXRvcnkvY2VydGlmaWNhdGVzL0ludGVsJTIw
-RXh0ZXJuYWwlMjBCYXNpYyUyMElzc3VpbmclMjBDQSUyMDRBLmNydDAfBgNVHSUEGDAWBggrBgEF
-BQcDBAYKKwYBBAGCNwoDBDApBgkrBgEEAYI3FQoEHDAaMAoGCCsGAQUFBwMEMAwGCisGAQQBgjcK
-AwQwUwYDVR0RBEwwSqArBgorBgEEAYI3FAIDoB0MG2phY2VrLmxhd3J5bm93aWN6QGludGVsLmNv
-bYEbamFjZWsubGF3cnlub3dpY3pAaW50ZWwuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQCZxulYBdgq
-w81+yDpeBMgPwjP6kyC2V0UHwaRygJD6LJEq5KNaJBQl1leJ8esPXOyFCSHyhkAE89FrFvNRhvJs
-1B2vpT7sPMy0S8LHwJ/y+vokKXE+b69KwtOIhvzFuZ2SjloRtrN9gIL3lJSy/8hNDnh5Gmzq/KgY
-Fv2hOoi1vQYta94hBCgLAjMdbZPuPhdHZxq7QRK871Ghg1tD0Rj1fxEp4aX+UVlcJruVTVdWCjaC
-nv0dmSxtIG0tDh8bb8ZfPDbijqz8ul26z+7wHJCDB6dT6zwDCXnWIoD8nzLlaCyRvWUtiTC3wXpy
-mh1fAkT91KBs8uiS6O8FccYZoylvMYID5zCCA+MCAQEwgZAweTELMAkGA1UEBhMCVVMxCzAJBgNV
-BAgTAkNBMRQwEgYDVQQHEwtTYW50YSBDbGFyYTEaMBgGA1UEChMRSW50ZWwgQ29ycG9yYXRpb24x
-KzApBgNVBAMTIkludGVsIEV4dGVybmFsIEJhc2ljIElzc3VpbmcgQ0EgNEICEzMAAB7a1DByal5N
-jDcAAAAAHtowCQYFKw4DAhoFAKCCAiswGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG
-9w0BCQUxDxcNMTYwMTI2MTAxNTEzWjAjBgkqhkiG9w0BCQQxFgQUY9AhLruY90NDykD7s/4CzlQP
-DtYwgZMGCSqGSIb3DQEJDzGBhTCBgjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAoGCCqGSIb3
-DQMHMAsGCWCGSAFlAwQBAjAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAwBwYFKw4DAhow
-CwYJYIZIAWUDBAIDMAsGCWCGSAFlAwQCAjALBglghkgBZQMEAgEwgZgGCSsGAQQBgjcQBDGBijCB
-hzB5MQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFDASBgNVBAcTC1NhbnRhIENsYXJhMRowGAYD
-VQQKExFJbnRlbCBDb3Jwb3JhdGlvbjErMCkGA1UEAxMiSW50ZWwgRXh0ZXJuYWwgQmFzaWMgSXNz
-dWluZyBDQSA0QQIKGZmpegAAAAAy3TCBmgYLKoZIhvcNAQkQAgsxgYqggYcweTELMAkGA1UEBhMC
-VVMxCzAJBgNVBAgTAkNBMRQwEgYDVQQHEwtTYW50YSBDbGFyYTEaMBgGA1UEChMRSW50ZWwgQ29y
-cG9yYXRpb24xKzApBgNVBAMTIkludGVsIEV4dGVybmFsIEJhc2ljIElzc3VpbmcgQ0EgNEECChmZ
-qXoAAAAAMt0wDQYJKoZIhvcNAQEBBQAEggEACDxBO70RLuio56iIBxLwfE24slgE4fMj24w8+r3A
-HO+jVFzhUIDqU3BwhbpvHBLGgfXat/b+dWojJrD74TOYAJV7qmsCK/ZAxvJWHTGEgNBha+T+K2mU
-bN1uegDBWQiuDkk2bQwYRj4px5AuSzR1a8k6H8t9ppBFRWe5JQmiri2GDcR9ki6BfaB114nU4CCr
-sLEonSnCm51tNKH+CQE4cc4JwuH7ZyNKlgpFQX92of6e+jFfR3ErilWbw2JQbDBEstJYrMXiTyPk
-YNmj7KFBPUTcY4J5b1y1PWp7l0xN/nRi6TwO3ncHXwh0ZFcjpdeH3Jw797xShtw8x9FT+IBIdgAA
-AAAAAA==
-
-------=_NextPart_000_0014_01D1582A.D3D16040--
+-- 
+2.1.1
