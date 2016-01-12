@@ -1,139 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-To: <linux-acpi@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <rjw@rjwysocki.net>,
-	<lenb@kernel.org>, <izumi.taku@jp.fujitsu.com>,
-	<wency@cn.fujitsu.com>, <caoj.fnst@cn.fujitsu.com>,
-	<ddaney.cavm@gmail.com>, <chen.fan.fnst@cn.fujitsu.com>,
-	<helgaas@kernel.org>, <okaya@codeaurora.org>,
-	<bhelgaas@google.com>, <jiang.liu@linux.intel.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH v2] pci: fix unavailable irq number 255 reported by BIOS
-Date: Mon, 25 Jan 2016 14:59:38 +0800
-Message-ID: <1453705178-27389-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:49376 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751151AbcALVdO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jan 2016 16:33:14 -0500
+From: Jacob Keller <jacob.e.keller@intel.com>
+To: linux-pci@vger.kernel.org
+Cc: Jacob Keller <jacob.e.keller@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Kay Sievers <kay.sievers@vrfy.org>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Arjan van de Ven <arjan@linux.intel.com>
+Subject: [PATCH] don't allow vfio drivers to bind on driver_attach
+Date: Tue, 12 Jan 2016 13:33:09 -0800
+Message-Id: <1452634390-17729-1-git-send-email-jacob.e.keller@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In our environment, when enable Secure boot, we found an abnormal
-phenomenon as following call trace shows. after investigation, we
-found the firmware assigned an irq number 255 which means unknown
-or no connection in PCI local spec for i801_smbus, meanwhile the
-ACPI didn't configure the pci irq routing. and the 255 irq number
-was assigned for megasa msix without IRQF_SHARED. then in this case
-during i801_smbus probe, the i801_smbus driver would request irq with
-bad irq number 255. but the 255 irq number was assigned for memgasa
-with MSIX enable. which will cause request_irq fails as call trace
-shows, here we use ~0U as invalid IRQ to identify the 0xff IRQ specified
-by BIOS.
+This patch is an attempt to resolve an issue which can occur when using
+vfio-pci (and vfio-platform) with IOMMU direct assignment.
 
-See the call trace:
+When attempting to directly assign a device to a virtual machine, the
+normal flow is something like the following:
 
- [   32.459195] ipmi device interface
- [   32.612907] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
- [   32.800459] ixgbe: Intel(R) 10 Gigabit PCI Express Network Driver - version 4.0.1-k-rh
- [   32.818319] ixgbe: Copyright (c) 1999-2014 Intel Corporation.
- [   32.844009] lpc_ich 0001:80:1f.0: I/O space for ACPI uninitialized
- [   32.850093] i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
- [   32.851134] i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
- [   32.851136] i801_smbus 0000:00:1f.3: PCI INT C: no GSI
- [   32.851164] genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa
- [   32.851168] CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
- [   32.851170] Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
- [   32.851178] Workqueue: events work_for_cpu_fn
- [   32.851208]  ffff88086c330b00 00000000e233a9df ffff88086d57bca0 ffffffff81603f36
- [   32.851227]  ffff88086d57bcf8 ffffffff8110d23a ffff88686fe02000 0000000000000246
- [   32.851246]  ffff88086a9a8c00 00000000e233a9df ffffffffa00ad220 0000000000000080
- [   32.851247] Call Trace:
- [   32.851261]  [<ffffffff81603f36>] dump_stack+0x19/0x1b
- [   32.851271]  [<ffffffff8110d23a>] __setup_irq+0x54a/0x570
- [   32.851282]  [<ffffffffa00ad220>] ? i801_check_pre.isra.5+0xe0/0xe0 [i2c_i801]
- [   32.851289]  [<ffffffff8110d3bc>] request_threaded_irq+0xcc/0x170
- [   32.851298]  [<ffffffffa00ae87f>] i801_probe+0x32f/0x508 [i2c_i801]
- [   32.851308]  [<ffffffff81308385>] local_pci_probe+0x45/0xa0
- [   32.851315]  [<ffffffff8108bfd4>] work_for_cpu_fn+0x14/0x20
- [   32.851323]  [<ffffffff8108f0ab>] process_one_work+0x17b/0x470
- [   32.851330]  [<ffffffff81090003>] worker_thread+0x293/0x400
- [   32.851338]  [<ffffffff8108fd70>] ? rescuer_thread+0x400/0x400
- [   32.851346]  [<ffffffff8109726f>] kthread+0xcf/0xe0
- [   32.851353]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
- [   32.851362]  [<ffffffff81613cfc>] ret_from_fork+0x7c/0xb0
- [   32.851369]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
- [   32.851373] i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
- [   32.851435] i801_smbus: probe of 0000:00:1f.3 failed with error -16
- [   33.180145] ixgbe 0000:5a:00.0: Multiq[   33.240538] ixgbe 0000:5a:00.0: (PCI Express:03:e0
- [   33.280826] ixgbe 0000:5a:00.0: MAC: 3, PHY: 0, PBA No: 000000-000
+echo <pci address> > /sys/bus/pci/drivers/<old driver>/unbind
+echo <device id> > /sys/bus/pci/drivers/vfio-pci/new_id
+echo <pci address> > /sys/bus/pci/drivers/vfio-pci/bind
 
-Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
----
- arch/x86/include/asm/irq_vectors.h |  2 ++
- drivers/acpi/pci_irq.c             | 11 ++++++++++-
- include/linux/interrupt.h          |  9 +++++++++
- 3 files changed, 21 insertions(+), 1 deletion(-)
+This process results in the device being bound to the vfio-pci stub
+driver, and then this device can be safely given to a virtual machine.
 
-diff --git a/arch/x86/include/asm/irq_vectors.h b/arch/x86/include/asm/irq_vectors.h
-index 6ca9fd6..b616d69 100644
---- a/arch/x86/include/asm/irq_vectors.h
-+++ b/arch/x86/include/asm/irq_vectors.h
-@@ -146,4 +146,6 @@
- #define NR_IRQS				NR_IRQS_LEGACY
- #endif
- 
-+#define IRQ_INVALID			(~0U)
-+
- #endif /* _ASM_X86_IRQ_VECTORS_H */
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index d30184c..819eb23 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -33,6 +33,7 @@
- #include <linux/pci.h>
- #include <linux/acpi.h>
- #include <linux/slab.h>
-+#include <linux/interrupt.h>
- 
- #define PREFIX "ACPI: "
- 
-@@ -436,7 +437,15 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 	 * driver reported one, then use it. Exit in any case.
- 	 */
- 	if (gsi < 0) {
--		if (acpi_isa_register_gsi(dev))
-+#ifdef CONFIG_X86
-+		/*
-+		 * The Interrupt Line value of 0xff is defined to mean "unknown"
-+		 * or "no connection" (PCI 3.0, Section 6.2.4, footnote on page
-+		 * 223), using ~0U as invalid IRQ.
-+		 */
-+		dev->irq = (dev->irq == 0xff) ? IRQ_INVALID : dev->irq;
-+#endif
-+		if (!irq_is_valid(dev->irq) || acpi_isa_register_gsi(dev))
- 			dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
- 				 pin_name(pin));
- 
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index cb30edb..2f0d46b 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -198,6 +198,15 @@ extern void enable_percpu_irq(unsigned int irq, unsigned int type);
- extern bool irq_percpu_is_enabled(unsigned int irq);
- extern void irq_wake_thread(unsigned int irq, void *dev_id);
- 
-+static inline bool irq_is_valid(unsigned int irq)
-+{
-+#ifdef CONFIG_X86
-+	if (irq == IRQ_INVALID)
-+		return false;
-+#endif
-+	return true;
-+}
-+
- /* The following three functions are for the core kernel use only. */
- extern void suspend_device_irqs(void);
- extern void resume_device_irqs(void);
+The issue can occur, that if <device id> doesn't currently have a driver
+loaded, (like say the module was removed), the process of adding
+<new_id> can result in *all* devices which match that id being bound to
+vfio-pci. This may not seem like a problem, but it can be confusing when
+you have a dual-port device, such as a networking card. In some use
+cases, you only want to assign a single port to a VM and not all the
+ports. If you happen to not have the driver loaded already, the result
+is that even loading the driver later will not gain control of the 2nd
+port, because the device is already bound to vfio-pci. The solution (if
+you know this is the case) would be to unbind that particular device
+from vfio and bind it to the real driver.
+
+This patch fixes the issue by instead requiring vfio-pci and
+vfio-platform to only bind to devices given via the sysfs bind route,
+and prevents bind to any devices in other scenarios. The result is that
+vfio-pci will never bind a device unless explicitly requested. Given the
+nature of what vfio-pci does, I think this is a much better solution.
+
+I've tried to Cc several people who've made changes to this area of th
+kernel for more feedback.
+
+Jacob Keller (1):
+  driver: add manual_bind_only option for virtual stub drivers
+
+ drivers/base/dd.c                     | 6 ++++++
+ drivers/vfio/pci/vfio_pci.c           | 3 +++
+ drivers/vfio/platform/vfio_platform.c | 1 +
+ include/linux/device.h                | 1 +
+ 4 files changed, 11 insertions(+)
+
 -- 
-1.9.3
-
-
+2.6.3.505.g5cc1fd1
 
