@@ -1,80 +1,116 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Thu, 28 Jan 2016 18:08:24 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Ganapatrao Kulkarni <gpkulkarni@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-ia64@vger.kernel.org,
-	linux-metag@vger.kernel.org,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	linux-s390@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Leif Lindholm <leif.lindholm@linaro.org>, rfranz@cavium.com,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Steve Capper <steve.capper@linaro.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Al Stone <al.stone@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, tony.luck@intel.com,
-	fenghua.yu@intel.com, james.hogan@imgtec.com,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"tglx@linutronix.de" <tglx@linutronix.de>, mingo@redhat.com,
-	hpa@zytor.com, x86@kernel.org,
-	Jon Masters <jonathan@jonmasters.org>,
-	Robert Richter <rrichter@cavium.com>,
-	Prasun Kapoor <Prasun.Kapoor@caviumnetworks.com>
-Subject: Re: [PATCH v9 3/6] arm64/arm, numa, dt: adding numa dt binding
- implementation for arm64 platforms.
-Message-ID: <20160128180824.GP775@arm.com>
-References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
- <1453134965-6125-4-git-send-email-gkulkarni@caviumnetworks.com>
- <20160126203603.GC17600@localhost>
- <20160128143925.GC775@arm.com>
- <CAFpQJXVhEVw7vSq233wfkOGkTanf-msO+PEcWJ2OVAFUhn7n+w@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:45168 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752935AbcALRYO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jan 2016 12:24:14 -0500
+Subject: Re: [PATCH 0/3] PCI VPD access fixes
+To: Hannes Reinecke <hare@suse.de>, Bjorn Helgaas <helgaas@kernel.org>
+References: <1452609750-90760-1-git-send-email-hare@suse.de>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Babu Moger <babu.moger@oracle.com>
+Message-ID: <569536AE.8070704@oracle.com>
+Date: Tue, 12 Jan 2016 11:23:58 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFpQJXVhEVw7vSq233wfkOGkTanf-msO+PEcWJ2OVAFUhn7n+w@mail.gmail.com>
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <1452609750-90760-1-git-send-email-hare@suse.de>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 28, 2016 at 10:42:17PM +0530, Ganapatrao Kulkarni wrote:
-> On Thu, Jan 28, 2016 at 8:09 PM, Will Deacon <will.deacon@arm.com> wrote:
-> > On Tue, Jan 26, 2016 at 02:36:04PM -0600, Bjorn Helgaas wrote:
-> >> Subject is "arm64/arm, numa, dt: adding ..."  What is the significance
-> >> of the "arm" part?  The other patches only mention "arm64".
-> >>
-> >> General comment: the code below has little, if anything, that is
-> >> actually arm64-specific.  Maybe this is the first DT-based NUMA
-> >> platform?  I don't see other similar code for other arches, so maybe
-> >> it's too early to try to generalize it, but we should try to avoid
-> >> adding duplicates of this code if/when other arches do show up.
-> >
-> > Having it in the core code would allow us to share it with arch/arm/
-> > fairly straightforwardly.
-> This binding can be used for arm too.
-> however at this moment it is the need of arm64 platforms.
-> can we please keep this to arm64 as it's too early to try to
-> generalize it(as Bjorn suggested)
-> I prefer to keep it as it is, otherwise ok.
-> Please suggest.
+Hannes,
+These patches cause some other issues. I still have to figure
+out what is going on here. I have seen same problem before also with your
+older patches. That is the reason I thought setting the vpd length to 0
+is an easy solution.  Here are is what panic stack looks like. I am
+looking at it now. Let me know if you see anything obvious here.
 
-My suggestions time and time again on the NUMA patches from you have
-consistently been around consolidation of existing code, or moving things
-that aren't architecture-specific out of the architecture code.
+megasas: 06.807.10.00-rc1
+megasas: Waiting for FW to come to ready state
+megasas: FW now in Ready state
+NON-RESUMABLE ERROR: Reporting on cpu 3
+NON-RESUMABLE ERROR: TPC [0x0000000000730990] <msix_capability_init+0x250/0x360>
+NON-RESUMABLE ERROR: RAW [0003100000000001:0006ccae1076de96:0000000202000080:ffffffffffffffff
+NON-RESUMABLE ERROR:      0000000800030000:0000000100000000:0000000000000000:0000000000000000]
+NON-RESUMABLE ERROR: handle [0x0003100000000001] stick [0x0006ccae1076de96]
+NON-RESUMABLE ERROR: type [precise nonresumable]
+NON-RESUMABLE ERROR: attrs [0x02000080] < ASI sp-faulted priv >
+NON-RESUMABLE ERROR: raddr [0xffffffffffffffff]
+NON-RESUMABLE ERROR: insn effective address [0x000008510079700c]
+NON-RESUMABLE ERROR: size [0x8]
+NON-RESUMABLE ERROR: asi [0x00]
+CPU: 3 PID: 325 Comm: modprobe Tainted: G            E   4.1.12-uek4-bm #5
+task: fff8000ff37bda00 ti: fff8000ff2940000 task.ti: fff8000ff2940000
+TSTATE: 0000000011001607 TPC: 0000000000730990 TNPC: 0000000000730994 Y: 00000000    Tainted: G            E
+TPC: <msix_capability_init+0x250/0x360>
+g0: 0000000000000000 g1: fff8000ff33109c0 g2: 0000000000000000 g3: 000008510079700c
+g4: fff8000ff37bda00 g5: fff8000ffe58a000 g6: fff8000ff2940000 g7: 0000085100797000
+o0: fff8000ffd60d000 o1: 000000000000ffff o2: 000000000000ffff o3: 000000000111e678
+o4: 000000000000001e o5: 0000000000000000 sp: fff8000ff2942711 ret_pc: 0000000000730940
+RPC: <msix_capability_init+0x200/0x360>
+l0: fff8000ffd60d888 l1: fff8000ff28123ec l2: fff8000ffd60d888 l3: 00000000000080d0
+l4: 00000000010eace0 l5: 0000000000000001 l6: 0080000000000000 l7: 8000000000000000
+i0: fff8000ffd60d000 i1: fff8000ff28123e4 i2: 0000000000000001 i3: 0000000000000000
+i4: 0000000000000000 i5: 0000085100797000 i6: fff8000ff29427d1 i7: 0000000000730c08
+I7: <pci_enable_msix+0x168/0x1c0>
+Call Trace:
+ [0000000000730c08] pci_enable_msix+0x168/0x1c0
+ [0000000000730c80] pci_enable_msix_range+0x20/0x60
+ [00000000100d7554] megasas_init_fw+0x374/0xb40 [megaraid_sas]
+ [00000000100d8c80] megasas_probe_one+0x4a0/0x9a0 [megaraid_sas]
+ [0000000000721e74] local_pci_probe+0x34/0xa0
+ [0000000000721f88] pci_call_probe+0xa8/0xe0
+ [0000000000722270] pci_device_probe+0x50/0x80
+ [000000000079b660] really_probe+0x140/0x420
+ [000000000079b984] driver_probe_device+0x44/0xa0
+ [000000000079ba68] __driver_attach+0x88/0xa0
+ [000000000079986c] bus_for_each_dev+0x6c/0xa0
+ [000000000079b1fc] driver_attach+0x1c/0x40
+ [000000000079a2bc] bus_add_driver+0x17c/0x220
+ [000000000079c234] driver_register+0x74/0x120
+ [000000000072235c] __pci_register_driver+0x3c/0x60
+ [00000000100f00ac] megasas_init+0xac/0x1dc [megaraid_sas]
+Kernel panic - not syncing: Non-resumable error.
+CPU: 3 PID: 325 Comm: modprobe Tainted: G            E   4.1.12-uek4-bm #5
+Call Trace:
+ [00000000009c8314] panic+0xb4/0x248
+ [0000000000429638] sun4v_nonresum_error+0xb8/0xe0
+ [000000000040744c] sun4v_nonres_mondo+0xc8/0xd8
+ [0000000000730990] msix_capability_init+0x250/0x360
+ [0000000000730c08] pci_enable_msix+0x168/0x1c0
+ [0000000000730c80] pci_enable_msix_range+0x20/0x60
+ [00000000100d7554] megasas_init_fw+0x374/0xb40 [megaraid_sas]
+ [00000000100d8c80] megasas_probe_one+0x4a0/0x9a0 [megaraid_sas]
+ [0000000000721e74] local_pci_probe+0x34/0xa0
+ [0000000000721f88] pci_call_probe+0xa8/0xe0
+ [0000000000722270] pci_device_probe+0x50/0x80
+ [000000000079b660] really_probe+0x140/0x420
+ [000000000079b984] driver_probe_device+0x44/0xa0
+ [000000000079ba68] __driver_attach+0x88/0xa0
+ [000000000079986c] bus_for_each_dev+0x6c/0xa0
+ [000000000079b1fc] driver_attach+0x1c/0x40
+Press Stop-A (L1-A) to return to the boot prom
+---[ end Kernel panic - not syncing: Non-resumable error.
 
-Will
+
+
+On 1/12/2016 8:42 AM, Hannes Reinecke wrote:
+> Hi all,
+> 
+> the current PCI VPD page access assumes that the entire possible VPD
+> data is readable. However, the spec only guarantees a VPD data up to
+> the 'end' marker, with everything beyond that being undefined.
+> This causes a system lockup on certain devices.
+> 
+> With this patch we calculate the actual VPD size, or set it to '0'
+> if no valid VPD data could be read.
+> 
+> Hannes Reinecke (3):
+>   pci: Update VPD definitions
+>   pci: Update VPD size with correct length
+>   pci: set VPD size to '0' if PCI_VPD_FLAGS_VPD_REF_F0 is set
+> 
+>  drivers/pci/access.c    | 68 ++++++++++++++++++++++++++++++++++++++++++++++++-
+>  drivers/pci/pci-sysfs.c | 20 +++++++++------
+>  include/linux/pci.h     | 27 ++++++++++++++++++--
+>  3 files changed, 104 insertions(+), 11 deletions(-)
+> 
