@@ -1,51 +1,194 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: helgaas@kernel.org
-Cc: Vineet.Gupta1@synopsys.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-snps-arc@lists.infradead.org,
-	CARLOS.PALMINHA@synopsys.com, Alexey.Brodkin@synopsys.com,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v4 0/2] adding PCI support to AXS10x
-Date: Mon, 11 Jan 2016 17:24:07 +0000
-Message-Id: <cover.1452526707.git.jpinto@synopsys.com>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <michals@xilinx.com>,
+	<lorenzo.pieralisi@arm.com>, <yinghai@kernel.org>,
+	<wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: [PATCH 1/5] PCI: xilinx: Removing xilinx_pcie_parse_and_add_res function
+Date: Tue, 12 Jan 2016 10:56:35 +0530
+Message-ID: <1452576399-1513-2-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
+References: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
-AXS10x. It includes the necessary tweaks to the ARC architecture, necessary
-tweaks to the PCI subsystem and a new driver (pcie-snpsdev).
-This new driver will be used extensively in the PCIe RC Prototyping Kit.
+Removing xilinx_pcie_parse_and_add_res function replacing with
+of_pci_get_host_bridge_resources API.
 
-The patches were produced against Bjorn Helgaas' repository. It was properly
-tested in an IP Prototyping Kit.
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+---
+Changes:
+Removing xilinx_pcie_parse_and_add_res function and replacing it
+with of_pci_get_host_bridge_resources kernel API which does the same.
+---
+ drivers/pci/host/pcie-xilinx.c | 108 ++---------------------------------------
+ 1 file changed, 5 insertions(+), 103 deletions(-)
 
-Joao Pinto (2):
-  PCI support added to ARC
-  add new platform driver for PCI RC
-
- .../devicetree/bindings/pci/pcie-snpsdev.txt       |  33 +++
- MAINTAINERS                                        |   7 +
- arch/arc/Kconfig                                   |  23 ++
- arch/arc/include/asm/dma.h                         |   5 +
- arch/arc/include/asm/io.h                          |  10 +
- arch/arc/include/asm/pci.h                         |  43 ++++
- arch/arc/kernel/Makefile                           |   1 +
- arch/arc/kernel/pcibios.c                          |  55 ++++
- arch/arc/mm/ioremap.c                              |  10 +-
- arch/arc/plat-axs10x/Kconfig                       |   1 +
- drivers/pci/Makefile                               |   1 +
- drivers/pci/host/Kconfig                           |   8 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pcie-designware.c                 |  11 +
- drivers/pci/host/pcie-designware.h                 |   1 +
- drivers/pci/host/pcie-snpsdev.c                    | 286 +++++++++++++++++++++
- 16 files changed, 495 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
- create mode 100644 arch/arc/include/asm/pci.h
- create mode 100644 arch/arc/kernel/pcibios.c
- create mode 100644 drivers/pci/host/pcie-snpsdev.c
-
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 3c7a0d5..588e568 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -94,8 +94,6 @@
+ /* Number of MSI IRQs */
+ #define XILINX_NUM_MSI_IRQS		128
+ 
+-/* Number of Memory Resources */
+-#define XILINX_MAX_NUM_RESOURCES	3
+ 
+ /**
+  * struct xilinx_pcie_port - PCIe port information
+@@ -105,7 +103,6 @@
+  * @root_busno: Root Bus number
+  * @dev: Device pointer
+  * @irq_domain: IRQ domain pointer
+- * @bus_range: Bus range
+  * @resources: Bus Resources
+  */
+ struct xilinx_pcie_port {
+@@ -115,7 +112,6 @@ struct xilinx_pcie_port {
+ 	u8 root_busno;
+ 	struct device *dev;
+ 	struct irq_domain *irq_domain;
+-	struct resource bus_range;
+ 	struct list_head resources;
+ };
+ 
+@@ -658,98 +654,6 @@ static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	return bus;
+ }
+ 
+-/**
+- * xilinx_pcie_parse_and_add_res - Add resources by parsing ranges
+- * @port: PCIe port information
+- *
+- * Return: '0' on success and error value on failure
+- */
+-static int xilinx_pcie_parse_and_add_res(struct xilinx_pcie_port *port)
+-{
+-	struct device *dev = port->dev;
+-	struct device_node *node = dev->of_node;
+-	struct resource *mem;
+-	resource_size_t offset;
+-	struct of_pci_range_parser parser;
+-	struct of_pci_range range;
+-	struct resource_entry *win;
+-	int err = 0, mem_resno = 0;
+-
+-	/* Get the ranges */
+-	if (of_pci_range_parser_init(&parser, node)) {
+-		dev_err(dev, "missing \"ranges\" property\n");
+-		return -EINVAL;
+-	}
+-
+-	/* Parse the ranges and add the resources found to the list */
+-	for_each_of_pci_range(&parser, &range) {
+-
+-		if (mem_resno >= XILINX_MAX_NUM_RESOURCES) {
+-			dev_err(dev, "Maximum memory resources exceeded\n");
+-			return -EINVAL;
+-		}
+-
+-		mem = devm_kmalloc(dev, sizeof(*mem), GFP_KERNEL);
+-		if (!mem) {
+-			err = -ENOMEM;
+-			goto free_resources;
+-		}
+-
+-		of_pci_range_to_resource(&range, node, mem);
+-
+-		switch (mem->flags & IORESOURCE_TYPE_BITS) {
+-		case IORESOURCE_MEM:
+-			offset = range.cpu_addr - range.pci_addr;
+-			mem_resno++;
+-			break;
+-		default:
+-			err = -EINVAL;
+-			break;
+-		}
+-
+-		if (err < 0) {
+-			dev_warn(dev, "Invalid resource found %pR\n", mem);
+-			continue;
+-		}
+-
+-		err = request_resource(&iomem_resource, mem);
+-		if (err)
+-			goto free_resources;
+-
+-		pci_add_resource_offset(&port->resources, mem, offset);
+-	}
+-
+-	/* Get the bus range */
+-	if (of_pci_parse_bus_range(node, &port->bus_range)) {
+-		u32 val = pcie_read(port, XILINX_PCIE_REG_BIR);
+-		u8 last;
+-
+-		last = (val & XILINX_PCIE_BIR_ECAM_SZ_MASK) >>
+-			XILINX_PCIE_BIR_ECAM_SZ_SHIFT;
+-
+-		port->bus_range = (struct resource) {
+-			.name	= node->name,
+-			.start	= 0,
+-			.end	= last,
+-			.flags	= IORESOURCE_BUS,
+-		};
+-	}
+-
+-	/* Register bus resource */
+-	pci_add_resource(&port->resources, &port->bus_range);
+-
+-	return 0;
+-
+-free_resources:
+-	release_child_resources(&iomem_resource);
+-	resource_list_for_each_entry(win, &port->resources)
+-		devm_kfree(dev, win->res);
+-	pci_free_resource_list(&port->resources);
+-
+-	return err;
+-}
+-
+-/**
+  * xilinx_pcie_parse_dt - Parse Device tree
+  * @port: PCIe port information
+  *
+@@ -802,6 +706,8 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ 	struct hw_pci hw;
+ 	struct device *dev = &pdev->dev;
+ 	int err;
++	resource_size_t iobase = 0;
++	LIST_HEAD(res);
+ 
+ 	if (!dev->of_node)
+ 		return -ENODEV;
+@@ -826,14 +732,10 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ 		return err;
+ 	}
+ 
+-	/*
+-	 * Parse PCI ranges, configuration bus range and
+-	 * request their resources
+-	 */
+-	INIT_LIST_HEAD(&port->resources);
+-	err = xilinx_pcie_parse_and_add_res(port);
++	err = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff, &res,
++					       &iobase);
+ 	if (err) {
+-		dev_err(dev, "Failed adding resources\n");
++		dev_err(dev, "Getting bridge resources failed\n");
+ 		return err;
+ 	}
+ 
 -- 
-1.8.1.5
+2.1.1
