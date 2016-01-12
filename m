@@ -1,45 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0099.outbound.protection.outlook.com ([207.46.100.99]:3709
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751116AbcAKL4S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jan 2016 06:56:18 -0500
-From: Fabio Estevam <fabio.estevam@nxp.com>
-To: <bhelgaas@google.com>
-CC: <jingoohan1@gmail.com>, <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH] PCI: designware: Remove unused variable
-Date: Mon, 11 Jan 2016 09:41:10 -0200
-Message-ID: <1452512470-20890-1-git-send-email-fabio.estevam@nxp.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:62030 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753008AbcALVjU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jan 2016 16:39:20 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+	Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	will.deacon@arm.com, catalin.marinas@arm.com, rjw@rjwysocki.net,
+	hanjun.guo@linaro.org, jiang.liu@linux.intel.com,
+	stefano.stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	liviu.dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, suravee.suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+Subject: Re: [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI hostbridge init based on ACPI
+Date: Tue, 12 Jan 2016 22:37:54 +0100
+Message-ID: <4627437.88HpJxySSc@wuerfel>
+In-Reply-To: <20160112183854.GB5139@red-moon>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com> <4945809.OlUZI8D7JL@wuerfel> <20160112183854.GB5139@red-moon>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 50a1a3b06dddaa5b ("PCI: designware: Simplify control flow")
-causes the following build warning:
+On Tuesday 12 January 2016 18:38:54 Lorenzo Pieralisi wrote:
+> On Tue, Jan 12, 2016 at 03:30:25PM +0100, Arnd Bergmann wrote:
+> > On Monday 11 January 2016 10:56:30 Sinan Kaya wrote:
+> > > 
+> > > #_dmesg_|_grep_resource
+> > > [    2.945762] pci_bus 0000:00: root bus resource [io  0x0000-0xefff window] (bus address [0x1000-0xffff])
+> > > [    3.652201] pci_bus 0002:00: root bus resource [io  0xf000-0x1dfff window] (bus address [0x1000-0xffff])
+> > > [    6.546716] pci_bus 0006:00: root bus resource [io  0x1e000-0x2cfff window] (bus address [0x1000-0xffff])
+> > > / #
+> > 
+> > This is bad. We normally want to stay out of the first 0x1000 bytes of
+> > the Linux space, to prevent drivers from poking into the ISA
+> > registers.
+> 
+> You are referring to:
+> 
+> pci_bus 0000:00: root bus resource [io  0x0000-0xefff window]
+>                                         ^^^^^^
+> here, right ? [0x0 - PCIBIOS_MIN_IO] is not assigned by the PCI
+> code that reassigns resources anyway, so devices with IO BARs won't
+> get assigned [0x0 - PCIBIOS_MIN_IO] address space (Linux space).
+> 
+> Are you saying we should disallow the [0x0 - 0x1000] in the PCI busses
+> IO resource (Linux space) ?
+> 
+> In pci_address_to_pio() the offset (Linux IO resource) we assign starts
+> from 0x0, so we always allocate that chunk of IO address space (that is
+> an offset into the Linux virtual address space), am I correct ?
 
-drivers/pci/host/pcie-designware.c:683:6: warning: unused variable 'ret' [-Wunused-variable]
+I think we can assign the address zero of the Linux I/O port range, but
+we should never assign it to a bus port range that does not also start
+at zero.
 
-Remove the unused 'ret' varaible.
+If we encounter a firmware description that has bus range which excludes
+the first 1k, we should probably assign it to somewhere after 0x10000
+(65536), so we can later assign a primary I/O space to a bus that has an
+ISA or LPC bridge with actual devices below 0x1000 (4096).
 
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
----
- drivers/pci/host/pcie-designware.c | 1 -
- 1 file changed, 1 deletion(-)
+> > We can have one of the buses be the "primary" bus that has its first
+> > 0x1000 bytes of I/O space mapped into the respective Linux addresses,
+> > but mapping the second 0x1000 bytes into the reserved space is the
+> > worst possible outcome here, as legacy ISA drivers will now poke at
+> > random other devices that are intentionally moved to high addresses to
+> > stay of of that range.
+> 
+> And you are referring to:
+> 
+> root bus resource [io  0x0000-0xefff window] (bus address [0x1000-0xffff])
+> 		       ^^^^^^                              ^^^^^^
+> 
+> here ? If ISA drivers poke at addresses in the [0x0 - 0x1000]
+> range (Linux space IO offset) they end up on the PCI bus with addresses
+> above 0x1000, is that what you are saying when you refer to "moved to
+> high addresses to stay out of that range" ?
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 9a666db..2171682 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -680,7 +680,6 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 			int where, int size, u32 val)
- {
- 	struct pcie_port *pp = bus->sysdata;
--	int ret;
- 
- 	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
--- 
-1.9.1
+Correct.
 
+	Arnd
