@@ -1,59 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0083.outbound.protection.outlook.com ([104.47.37.83]:38992
-	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932555AbcA0O12 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jan 2016 09:27:28 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	Michal Simek <michals@xilinx.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	nofooter <nofooter@xilinx.com>
-Subject: RE: [PATCH V2 2/5] PCI: xilinx: Removing struct hw_irq structure.
-Date: Wed, 27 Jan 2016 14:27:16 +0000
-Message-ID: <8520D5D51A55D047800579B09414719825873D88@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
- <1452620173-4905-3-git-send-email-bharatku@xilinx.com>
- <5660994.Bgxrr57r2H@wuerfel>
-In-Reply-To: <5660994.Bgxrr57r2H@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mx2.suse.de ([195.135.220.15]:60796 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964929AbcALOme (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jan 2016 09:42:34 -0500
+From: Hannes Reinecke <hare@suse.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Babu Moger <babu.moger@oracle.com>,
+	Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Subject: [PATCH 3/3] pci: set VPD size to '0' if PCI_VPD_FLAGS_VPD_REF_F0 is set
+Date: Tue, 12 Jan 2016 15:42:30 +0100
+Message-Id: <1452609750-90760-4-git-send-email-hare@suse.de>
+In-Reply-To: <1452609750-90760-1-git-send-email-hare@suse.de>
+References: <1452609750-90760-1-git-send-email-hare@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: Re: [PATCH V2 2/5] PCI: xilinx: Removing struct hw_irq structure.
-> 
-> On Tuesday 12 January 2016 23:06:10 Bharat Kumar Gogada wrote:
-> > Removing struct hw_irq and adding generic PCI core API's.
-> >
-> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> > ---
-> > Removing architecure dependecy structure struct hw_irq which is ARM
-> > 32-bit specific structure, and adding generic PCI core API's to
-> > register to PCI subsytem.
-> > Removing funtions which are not being used with generic API's.
-> >
-> 
-> typo: s/hw_irq/hw_pci/
-> 
-Yes, its struct hw_pci, will correct it in next patch.
+If the VPD data is accessed via another PCI function than 0
+the access is redirected to function 0. However, we shouldn't
+calculate the actual size as we did for function 0, as there
+is no guarantee that function 0 is already initialized and
+VPD access is very costly and error prone.
+
+So to avoid all this we set the size to '0' in sysfs, but only return
+the valid bytes from the underlying function 0.
+
+Cc: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/pci/access.c    | 11 ++++++++++-
+ drivers/pci/pci-sysfs.c | 20 ++++++++++++--------
+ 2 files changed, 22 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index ce1b0cb..9fe19be 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -337,9 +337,16 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
+ 	loff_t end = pos + count;
+ 	u8 *buf = arg;
+ 
+-	if (pos < 0 || pos > vpd->base.len || end > vpd->base.len)
++	if (pos < 0)
+ 		return -EINVAL;
+ 
++	if (end > vpd->base.len) {
++		if (pos > vpd->base.len)
++			return 0;
++		end = vpd->base.len;
++		count = end - pos;
++	}
++
+ 	if (mutex_lock_killable(&vpd->lock))
+ 		return -EINTR;
+ 
+@@ -554,6 +561,8 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+ 	dev->vpd = &vpd->base;
+ 	if (!(dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0))
+ 		vpd->base.len = pci_vpd_pci22_size(dev);
++	else
++		vpd->base.len = 0;
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index eead54c..de327c3 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -772,10 +772,12 @@ static ssize_t read_vpd_attr(struct file *filp, struct kobject *kobj,
+ 	struct pci_dev *dev =
+ 		to_pci_dev(container_of(kobj, struct device, kobj));
+ 
+-	if (off > bin_attr->size)
+-		count = 0;
+-	else if (count > bin_attr->size - off)
+-		count = bin_attr->size - off;
++	if (bin_attr->size > 0) {
++		if (off > bin_attr->size)
++			count = 0;
++		else if (count > bin_attr->size - off)
++			count = bin_attr->size - off;
++	}
+ 
+ 	return pci_read_vpd(dev, off, count, buf);
+ }
+@@ -787,10 +789,12 @@ static ssize_t write_vpd_attr(struct file *filp, struct kobject *kobj,
+ 	struct pci_dev *dev =
+ 		to_pci_dev(container_of(kobj, struct device, kobj));
+ 
+-	if (off > bin_attr->size)
+-		count = 0;
+-	else if (count > bin_attr->size - off)
+-		count = bin_attr->size - off;
++	if (bin_attr->size > 0) {
++		if (off > bin_attr->size)
++			count = 0;
++		else if (count > bin_attr->size - off)
++			count = bin_attr->size - off;
++	}
+ 
+ 	return pci_write_vpd(dev, off, count, buf);
+ }
+-- 
+1.8.5.6
 
