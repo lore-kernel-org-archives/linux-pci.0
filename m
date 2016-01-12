@@ -1,62 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:48143 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753233AbcATWzO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jan 2016 17:55:14 -0500
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Rafal Milecki <zajec5@gmail.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH] PCI: iproc: Fix BCMA PCIe bus scanning regression
-Date: Wed, 20 Jan 2016 14:55:10 -0800
-Message-ID: <1453330510-21926-1-git-send-email-rjui@broadcom.com>
+Received: from mail.kernel.org ([198.145.29.136]:50378 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752510AbcALTmb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jan 2016 14:42:31 -0500
+Date: Tue, 12 Jan 2016 13:42:28 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv8] x86/PCI: Initial commit for new VMD device driver
+Message-ID: <20160112194228.GA28453@localhost>
+References: <1452616119-11450-2-git-send-email-keith.busch@intel.com>
+ <201601130151.Y87x1uES%fengguang.wu@intel.com>
+ <20160112180829.GB28857@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160112180829.GB28857@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 943ebae781f5 ("PCI: iproc: Add PAXC interface support") causes
-regression on EP device detection on BCMA based platforms. This patch
-fixes the issue by allowing multiple devices to be configured on the
-same bus, for all PAXB based child buses
+On Tue, Jan 12, 2016 at 06:08:29PM +0000, Keith Busch wrote:
+> On Wed, Jan 13, 2016 at 01:40:33AM +0800, kbuild test robot wrote:
+> > [auto build test ERROR on tip/x86/core]
+> 
+> Looks a reason to repost the entire series, or maybe I should have
+> replied to the existing thread with the dependencies.
 
-Reported-by: Rafal Milecki <zajec5@gmail.com>
-Fixes: 943ebae781f5 ("PCI: iproc: Add PAXC interface support")
-Signed-off-by: Ray Jui <rjui@broadcom.com>
----
- drivers/pci/host/pcie-iproc.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Reposting the series as a whole makes my life much easier.  I select
+all the patches in a series and apply them as a group, and that's
+much harder if individual patches in the series get superceded.
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 5816bce..4627561 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -171,10 +171,11 @@ static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
- }
- 
- static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
-+					      unsigned int busnum,
- 					      unsigned int slot,
- 					      unsigned int fn)
- {
--	if (slot > 0)
-+	if ((pcie->type == IPROC_PCIE_PAXC || busnum == 0) && slot > 0)
- 		return false;
- 
- 	/* PAXC can only support limited number of functions */
-@@ -199,7 +200,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
- 	u32 val;
- 	u16 offset;
- 
--	if (!iproc_pcie_device_is_valid(pcie, slot, fn))
-+	if (!iproc_pcie_device_is_valid(pcie, busno, slot, fn))
- 		return NULL;
- 
- 	/* root complex access */
--- 
-1.9.1
-
+> > url:    https://github.com/0day-ci/linux/commits/Keith-Busch/x86-PCI-Initial-commit-for-new-VMD-device-driver/20160113-003207
+> > config: x86_64-allmodconfig (attached as .config)
+> > reproduce:
+> >         # save the attached .config to linux build tree
+> >         make ARCH=x86_64 
+> > 
+> > All errors (new ones prefixed by >>):
+> > 
+> > >> arch/x86/pci/vmd.c:85:20: error: field 'dma_domain' has incomplete type
+> >      struct dma_domain dma_domain;
