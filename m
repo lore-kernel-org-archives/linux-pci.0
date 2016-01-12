@@ -1,152 +1,118 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Wed, 20 Jan 2016 08:18:06 -0600
-From: Rob Herring <robh@kernel.org>
-To: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
-Cc: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-ia64@vger.kernel.org, linux-metag@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	linux-sh@vger.kernel.org, linux-arch@vger.kernel.org,
-	Will.Deacon@arm.com, catalin.marinas@arm.com,
-	grant.likely@linaro.org, leif.lindholm@linaro.org,
-	rfranz@cavium.com, ard.biesheuvel@linaro.org, msalter@redhat.com,
-	steve.capper@linaro.org, hanjun.guo@linaro.org,
-	al.stone@linaro.org, arnd@arndb.de, pawel.moll@arm.com,
-	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
-	galak@codeaurora.org, rjw@rjwysocki.net, lenb@kernel.org,
-	marc.zyngier@arm.com, lorenzo.pieralisi@arm.com,
-	bhelgaas@google.com, tony.luck@intel.com, fenghua.yu@intel.com,
-	james.hogan@imgtec.com, benh@kernel.crashing.org,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	x86@kernel.org, jonathan@jonmasters.org, rrichter@cavium.com,
-	Prasun.Kapoor@caviumnetworks.com, gpkulkarni@gmail.com
-Subject: Re: [PATCH v9 2/6] Documentation, dt, arm64/arm: dt bindings for
- numa.
-Message-ID: <20160120141806.GA8434@rob-hp-laptop>
-References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
- <1453134965-6125-3-git-send-email-gkulkarni@caviumnetworks.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0053.outbound.protection.outlook.com ([104.47.36.53]:20393
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752203AbcALRgm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jan 2016 12:36:42 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <michals@xilinx.com>,
+	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
+	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver to  work on both  Zynq and Microblaze
+Date: Tue, 12 Jan 2016 23:06:11 +0530
+Message-ID: <1452620173-4905-4-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
+References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1453134965-6125-3-git-send-email-gkulkarni@caviumnetworks.com>
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 18, 2016 at 10:06:01PM +0530, Ganapatrao Kulkarni wrote:
-> DT bindings for numa mapping of memory, cores and IOs.
-> 
-> Reviewed-by: Robert Richter <rrichter@cavium.com>
-> Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
-> ---
->  Documentation/devicetree/bindings/arm/numa.txt | 272 +++++++++++++++++++++++++
->  1 file changed, 272 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/arm/numa.txt
+Modifying Xilinx AXI PCIe Host Bridge Soft IP driver to work on both
+Zynq and Microblaze Architectures.
+With these modifications drivers/pci/host/pcie-xilinx.c, will
+work on both Zynq and Microblaze Architectures.
 
-This is looks okay to me, but some cosmetic things on the example.
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+---
+Changes:
+Changed Total number of MSI IRQ count logic according to both architectures.
+Updated MSI assigning functions accordingly to new count.
+Modified irq_domain_add_linear with new MSI IRQ count.
+Added #ifdef to pci_fixup_irqs which is ARM specific API.
+---
+ drivers/pci/host/pcie-xilinx.c | 22 +++++++++++++++++-----
+ 1 file changed, 17 insertions(+), 5 deletions(-)
 
-> +==============================================================================
-> +4 - Example dts
-> +==============================================================================
-> +
-> +2 sockets system consists of 2 boards connected through ccn bus and
-> +each board having one socket/soc of 8 cpus, memory and pci bus.
-> +
-> +	memory@00c00000 {
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 3e3757f..1981948 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -92,7 +92,12 @@
+ #define ECAM_DEV_NUM_SHIFT		12
+ 
+ /* Number of MSI IRQs */
+-#define XILINX_NUM_MSI_IRQS		128
++#define XILINX_NUM_MSI_IRQS	128
++#ifdef CONFIG_ARM
++#define TOT_NR_IRQS		XILINX_NUM_MSI_IRQS
++#else
++#define TOT_NR_IRQS		(NR_IRQS + XILINX_NUM_MSI_IRQS)
++#endif
+ 
+ 
+ /**
+@@ -238,15 +243,20 @@ static void xilinx_pcie_destroy_msi(unsigned int irq)
+  */
+ static int xilinx_pcie_assign_msi(struct xilinx_pcie_port *port)
+ {
++	int irq;
+ 	int pos;
+ 
+ 	pos = find_first_zero_bit(msi_irq_in_use, XILINX_NUM_MSI_IRQS);
+-	if (pos < XILINX_NUM_MSI_IRQS)
++	irq = pos;
++#ifdef CONFIG_MICROBLAZE
++	irq = XILINX_NUM_MSI_IRQS + pos;
++#endif
++	if (irq < TOT_NR_IRQS)
+ 		set_bit(pos, msi_irq_in_use);
+ 	else
+ 		return -ENOSPC;
+ 
+-	return pos;
++	return irq;
+ }
+ 
+ /**
+@@ -520,7 +530,7 @@ static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
+ 
+ 		free_pages(port->msi_pages, 0);
+ 
+-		num_irqs = XILINX_NUM_MSI_IRQS;
++		num_irqs = TOT_NR_IRQS;
+ 	} else {
+ 		/* INTx */
+ 		num_irqs = 4;
+@@ -565,7 +575,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+ 	/* Setup MSI */
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		port->irq_domain = irq_domain_add_linear(node,
+-							 XILINX_NUM_MSI_IRQS,
++							 TOT_NR_IRQS,
+ 							 &msi_domain_ops,
+ 							 &xilinx_pcie_msi_chip);
+ 		if (!port->irq_domain) {
+@@ -705,7 +715,9 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ #endif
+ 	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
++#ifdef CONFIG_ARM
+ 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++#endif
+ 	pci_bus_add_devices(bus);
+ 	platform_set_drvdata(pdev, port);
+ 
+-- 
+2.1.1
 
-Drop the leading 0s on unit addresses.
-
-> +		device_type = "memory";
-> +		reg = <0x0 0x00c00000 0x0 0x80000000>;
-> +		/* node 0 */
-> +		numa-node-id = <0>;
-> +	};
-> +
-> +	memory@10000000000 {
-> +		device_type = "memory";
-> +		reg = <0x100 0x00000000 0x0 0x80000000>;
-> +		/* node 1 */
-> +		numa-node-id = <1>;
-> +	};
-> +
-> +	cpus {
-> +		#address-cells = <2>;
-> +		#size-cells = <0>;
-> +
-> +		cpu@000 {
-
-Same here (leaving one of course).
-
-> +			device_type = "cpu";
-> +			compatible =  "arm,armv8";
-> +			reg = <0x0 0x000>;
-> +			enable-method = "psci";
-> +			/* node 0 */
-> +			numa-node-id = <0>;
-> +		};
-> +		cpu@001 {
-
-and so on...
-
-> +			device_type = "cpu";
-> +			compatible =  "arm,armv8";
-> +			reg = <0x0 0x001>;
-
-Either all leading 0s or none.
-
-> +			reg = <0x0 0x008>;
-> +			enable-method = "psci";
-> +			/* node 1 */
-
-Kind of a pointless comment.
-
-Wouldn't each cluster of cpus for a given numa node be in a different 
-cpu affinity? Certainly not required by the architecture, but the common 
-case at least.
-
-> +			numa-node-id = <1>;
-> +		};
-
-[...]
-
-> +	pcie0: pcie0@0x8480,00000000 {
-
-Drop the 0x and the comma.
-
-> +		compatible = "arm,armv8";
-> +		device_type = "pci";
-> +		bus-range = <0 255>;
-> +		#size-cells = <2>;
-> +		#address-cells = <3>;
-> +		reg = <0x8480 0x00000000 0 0x10000000>;  /* Configuration space */
-> +		ranges = <0x03000000 0x8010 0x00000000 0x8010 0x00000000 0x70 0x00000000>;
-> +		/* node 0 */
-> +		numa-node-id = <0>;
-> +        };
-> +
-> +	pcie1: pcie1@0x9480,00000000 {
-
-ditto
-
-> +		compatible = "arm,armv8";
-> +		device_type = "pci";
-> +		bus-range = <0 255>;
-> +		#size-cells = <2>;
-> +		#address-cells = <3>;
-> +		reg = <0x9480 0x00000000 0 0x10000000>;  /* Configuration space */
-> +		ranges = <0x03000000 0x9010 0x00000000 0x9010 0x00000000 0x70 0x00000000>;
-> +		/* node 1 */
-> +		numa-node-id = <1>;
-> +        };
-> +
-> +	distance-map {
-> +		compatible = "numa-distance-map-v1";
-> +		distance-matrix = <0 0 10>,
-> +				  <0 1 20>,
-> +				  <1 1 10>;
-> +	};
-> -- 
-> 1.8.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
