@@ -1,107 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:37205 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755337AbcAZPtl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jan 2016 10:49:41 -0500
-Date: Tue, 26 Jan 2016 16:48:25 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rjw@rjwysocki.net, lenb@kernel.org, izumi.taku@jp.fujitsu.com,
-	wency@cn.fujitsu.com, caoj.fnst@cn.fujitsu.com,
-	ddaney.cavm@gmail.com, okaya@codeaurora.org, bhelgaas@google.com,
-	jiang.liu@linux.intel.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] pci: fix unavailable irq number 255 reported by
- BIOS
-In-Reply-To: <20160126152221.GB9279@localhost>
-Message-ID: <alpine.DEB.2.11.1601261628450.3886@nanos>
-References: <1453705178-27389-1-git-send-email-chen.fan.fnst@cn.fujitsu.com> <20160125205803.GA10272@localhost> <alpine.DEB.2.11.1601260825510.3886@nanos> <20160126152221.GB9279@localhost>
+Received: from mail-bl2nam02on0085.outbound.protection.outlook.com ([104.47.38.85]:1185
+	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752067AbcALRgv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jan 2016 12:36:51 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <michals@xilinx.com>,
+	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
+	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: [PATCH V2 4/5] PCI: xilinx: Updating Zynq PCI binding documentation with  Microblaze node.
+Date: Tue, 12 Jan 2016 23:06:12 +0530
+Message-ID: <1452620173-4905-5-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
+References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 26 Jan 2016, Bjorn Helgaas wrote:
-> On Tue, Jan 26, 2016 at 09:26:29AM +0100, Thomas Gleixner wrote:
-> > And why would this be x86 specific? PCI3.0 is architecture independent, right?
-> 
-> Yes, PCI is mostly arch-independent, but Interrupt Line is
-> arch-specific, and the corner case of it being 255 is only mentioned
-> in an x86-specific footnote.  We can improve the comment.
+Updated Zynq PCI binding documentation with Microblaze node.
 
-Yes please :)
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+---
+Changes:
+Adding Microblaze device tree node Documnetation.
+---
+ .../devicetree/bindings/pci/xilinx-pcie.txt        | 36 ++++++++++++++++++++--
+ 1 file changed, 33 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
+index 02f979a..d207bf4 100644
+--- a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
+@@ -17,7 +17,10 @@ Required properties:
+ 	Please refer to the standard PCI bus binding document for a more
+ 	detailed explanation
  
-> > The proper solution here is to flag that this device does not have an
-> > interrupt connected and act accordingly in the device driver, i.e. do not call
-> > request_irq() in the first place.
-> 
-> This is the crux of the problem.  As far as I know, PCI doesn't have
-> a flag to indicate that dev->irq is a wire that's not connected, so
-> there's no generic way for a driver to know whether it should call
-> request_irq().
-
-Ok.
+-Optional properties:
++Optional properties for Zynq:
++- bus-range: PCI bus numbers covered
++
++Required property for Microblaze:
+ - bus-range: PCI bus numbers covered
  
-> We could add one, of course, but that only helps in the drivers we
-> update.  It'd be nice if we could figure out a way to fix this
-> without having to touch all the drivers.
-
-Hmm.
+ Interrupt controller child node
+@@ -38,13 +41,13 @@ the four INTx interrupts in ISR and route them to this domain.
  
-> I think any driver that uses line-based interrupts can potentially
-> fail if the platform uses Interrupt Line == 255 to indicate that the
-> line is not connected.  If another driver happens to be using IRQ 255,
-> request_irq() may fail as it does here.  Otherwise, I suspect
-> request_irq() will return success, but the driver won't get any
-> interrupts.
-
-Right. So we could certainly do something like this INVALID_IRQ thingy, but
-that looks a bit weird. What would request_irq() return?
-
-If it returns success, then drivers might make the wrong decision. If it
-returns an error code, then the i801 one works, but we might have to fix
-others anyway.
-
-I think it's better to have a software flag in pci_dev to indicate that there
-is no irq line and fix up the (probably few) affected drivers so they avoid
-calling request_irq() and take the right action.
-
-> > No. NR_IRQS cannot be used at all if sparse irqs are enabled. 
-> 
-> Ah, thanks, this is a critical piece I missed.  There *are* a few
-> places where we do define or use NR_IRQS when CONFIG_SPARSE_IRQ=y.  Do
-> these need updates?
-> 
->   include/asm-generic/irq.h defines NR_IRQS if not defined yet
->   arch/arm/include/asm/irq.h defines NR_IRQS to NR_IRQS_LEGACY
->   arch/arm/kernel/irq.c uses NR_IRQS
->   arch/sh/include/asm/irq.h defines NR_IRQS to 8
-
-These defines are used for preallocating interrupt descriptors in early
-boot. That was invented to help migrating to sparse irq.
-
->   kernel/irq/internals.h uses NR_IRQS to define IRQ_BITMAP_BITS
-
-Right, that's probably pointless, but harmless.
-
-> > Nothing in any generic code is supposed to rely on NR_IRQS.
->  
-> I guess that means these uses are suspect:
-> 
->   $ git grep -w NR_IRQS | grep -v "^arch" | grep -v "^kernel" | grep -v "^drivers/irqchip" | grep -v "^include"
->   drivers/input/keyboard/lpc32xx-keys.c:	if (irq < 0 || irq >= NR_IRQS) {
->   drivers/mtd/nand/lpc32xx_mlc.c:	if ((host->irq < 0) || (host->irq >= NR_IRQS)) {
->   drivers/net/hamradio/scc.c:static struct irqflags { unsigned char used : 1; } Ivec[NR_IRQS];
->   drivers/pcmcia/pcmcia_resource.c:		if (irq > NR_IRQS)
->   drivers/tty/serial/apbuart.c:	if (ser->irq < 0 || ser->irq >= NR_IRQS)
->   drivers/tty/serial/ar933x_uart.c:	if (ser->irq < 0 || ser->irq >= NR_IRQS)
->   drivers/tty/serial/lantiq.c:	if (ser->irq < 0 || ser->irq >= NR_IRQS)
->   drivers/tty/serial/m32r_sio.c:static struct irq_info irq_lists[NR_IRQS];
-
-Indeed.
-
-Thanks,
-
-	tglx
+ Example:
+ ++++++++
+-
++Zynq:
+ 	pci_express: axi-pcie@50000000 {
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+ 		#interrupt-cells = <1>;
+ 		compatible = "xlnx,axi-pcie-host-1.00.a";
+-		reg = < 0x50000000 0x10000000 >;
++		reg = < 0x50000000 0x1000000 >;
+ 		device_type = "pci";
+ 		interrupts = < 0 52 4 >;
+ 		interrupt-map-mask = <0 0 0 7>;
+@@ -60,3 +63,30 @@ Example:
+ 			#interrupt-cells = <1>;
+ 		};
+ 	};
++
++
++Microblaze:
++	pci_express: axi-pcie@10000000 {
++		#address-cells = <3>;
++		#size-cells = <2>;
++		#interrupt-cells = <1>;
++		compatible = "xlnx,axi-pcie-host-1.00.a";
++		reg = <0x10000000 0x4000000>;
++		device_type = "pci";
++		interrupt-parent = <&microbalze_0_intc>;
++		interrupts = <1 2>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_intc 1>,
++				<0 0 0 2 &pcie_intc 2>,
++				<0 0 0 3 &pcie_intc 3>,
++				<0 0 0 4 &pcie_intc 4>;
++		ranges = <0x02000000 0x00000000 0x80000000 0x80000000 0x00000000 0x10000000>;
++		bus-range = <0x00 0xff>;
++
++		pcie_intc: interrupt-controller {
++			interrupt-controller;
++			#address-cells = <0>;
++			#interrupt-cells = <1>;
++		};
++
++	};
+-- 
+2.1.1
 
