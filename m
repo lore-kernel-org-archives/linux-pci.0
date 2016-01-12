@@ -1,131 +1,110 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <michals@xilinx.com>,
+	<lorenzo.pieralisi@arm.com>, <yinghai@kernel.org>,
+	<wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>
+CC: <devicetree@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	<xen-devel@lists.xenproject.org>
-Subject: [PATCH v7 4/5] arm64: pci: Add ACPI support
-Date: Fri, 29 Jan 2016 14:35:39 +0530
-Message-ID: <1454058340-7904-5-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1454058340-7904-1-git-send-email-jchandra@broadcom.com>
-References: <1454058340-7904-1-git-send-email-jchandra@broadcom.com>
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: [PATCH 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver to work on both  Zynq and Microblaze
+Date: Tue, 12 Jan 2016 10:56:37 +0530
+Message-ID: <1452576399-1513-4-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
+References: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add functions needed for ACPI support and prepare arm64 for using
-CONFIG_ACPI_PCI_HOST_GENERIC for the ACPI based PCI controller.
+Modifying Xilinx AXI PCIe Host Bridge Soft IP driver to work on both
+Zynq and Microblaze Architectures.
+With these modifications drivers/pci/host/pcie-xilinx.c, will
+work on both Zynq and Microblaze Architectures.
 
-pci_acpi_scan_root(), raw_pci_read() and raw_pci_write() are marked
-as weak so that they can be implemented by the generic ACPI PCI
-driver.
-
-pcibios_enable_device() and pcibios_disable_device() have been added
-to handle acpi irq enable and disable. pcibios_add_bus() and
-pcibios_remove_bus() have been added call the corresponding ACPI
-functions.
-
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
 ---
- arch/arm64/Kconfig      |  3 +++
- arch/arm64/kernel/pci.c | 34 +++++++++++++++++++++++++++++-----
- 2 files changed, 32 insertions(+), 5 deletions(-)
+Changes:
+Changed Total number of MSI IRQ count logic according to both architectures.
+Updated MSI assigning functions accordingly to new count.
+Modified irq_domain_add_linear with new MSI IRQ count.
+Added #ifdef to pci_fixup_irqs which are ARM specific API.
+---
+ drivers/pci/host/pcie-xilinx.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 8cc6228..6bb21d8 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -234,6 +234,9 @@ config PCI_DOMAINS_GENERIC
- config PCI_SYSCALL
- 	def_bool PCI
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 3e3757f..05f6f2e 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -93,6 +93,11 @@
  
-+config PCI_MMCONFIG
-+	def_bool PCI && ACPI
-+
- source "drivers/pci/Kconfig"
- source "drivers/pci/pcie/Kconfig"
- source "drivers/pci/hotplug/Kconfig"
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index b3d098b..db0a6a9 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -17,6 +17,7 @@
- #include <linux/mm.h>
- #include <linux/of_pci.h>
- #include <linux/of_platform.h>
-+#include <linux/pci-acpi.h>
- #include <linux/slab.h>
- 
- #include <asm/pci-bridge.h>
-@@ -48,9 +49,22 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	if (pci_has_flag(PCI_PROBE_ONLY))
- 		return 0;
- 
-+#ifdef CONFIG_ACPI
-+	if (acpi_find_root_bridge_handle(dev))
-+		acpi_pci_irq_enable(dev);
+ /* Number of MSI IRQs */
+ #define XILINX_NUM_MSI_IRQS		128
++#ifdef CONFIG_ARM
++#define TOT_NR_IRQS			XILINX_NUM_MSI_IRQS
++#else
++#define TOT_NR_IRQS			(NR_IRQS + XILINX_NUM_MSI_IRQS)
 +#endif
-+
- 	return pci_enable_resources(dev, mask);
- }
  
-+void pcibios_disable_device(struct pci_dev *dev)
-+{
-+#ifdef CONFIG_ACPI
-+	if (acpi_find_root_bridge_handle(dev))
-+		acpi_pci_irq_disable(dev);
+ 
+ /**
+@@ -238,15 +243,20 @@ static void xilinx_pcie_destroy_msi(unsigned int irq)
+  */
+ static int xilinx_pcie_assign_msi(struct xilinx_pcie_port *port)
+ {
++	int irq;
+ 	int pos;
+ 
+ 	pos = find_first_zero_bit(msi_irq_in_use, XILINX_NUM_MSI_IRQS);
+-	if (pos < XILINX_NUM_MSI_IRQS)
++	irq = pos;
++#ifdef CONFIG_MICROBLAZE
++	irq = XILINX_NUM_MSI_IRQS + pos;
 +#endif
-+}
-+
- /*
-  * Try to assign the IRQ number from DT when adding a new device
-  */
-@@ -62,15 +76,15 @@ int pcibios_add_device(struct pci_dev *dev)
++	if (irq < TOT_NR_IRQS)
+ 		set_bit(pos, msi_irq_in_use);
+ 	else
+ 		return -ENOSPC;
+ 
+-	return pos;
++	return irq;
  }
  
- /*
-- * raw_pci_read/write - Platform-specific PCI config space access.
-+ * ACPI uses these - leave it to the generic ACPI PCI driver
-  */
--int raw_pci_read(unsigned int domain, unsigned int bus,
-+int __weak raw_pci_read(unsigned int domain, unsigned int bus,
- 		  unsigned int devfn, int reg, int len, u32 *val)
- {
- 	return -ENXIO;
- }
+ /**
+@@ -520,7 +530,7 @@ static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
  
--int raw_pci_write(unsigned int domain, unsigned int bus,
-+int __weak raw_pci_write(unsigned int domain, unsigned int bus,
- 		unsigned int devfn, int reg, int len, u32 val)
- {
- 	return -ENXIO;
-@@ -78,9 +92,19 @@ int raw_pci_write(unsigned int domain, unsigned int bus,
+ 		free_pages(port->msi_pages, 0);
  
- #ifdef CONFIG_ACPI
- /* Root bridge scanning */
--struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
-+struct pci_bus * __weak pci_acpi_scan_root(struct acpi_pci_root *root)
- {
--	/* TODO: Should be revisited when implementing PCI on ACPI */
- 	return NULL;
- }
-+
-+void pcibios_add_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_add_bus(bus);
-+}
-+
-+void pcibios_remove_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_remove_bus(bus);
-+}
-+
+-		num_irqs = XILINX_NUM_MSI_IRQS;
++		num_irqs = TOT_NR_IRQS;
+ 	} else {
+ 		/* INTx */
+ 		num_irqs = 4;
+@@ -565,7 +575,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+ 	/* Setup MSI */
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		port->irq_domain = irq_domain_add_linear(node,
+-							 XILINX_NUM_MSI_IRQS,
++							 TOT_NR_IRQS,
+ 							 &msi_domain_ops,
+ 							 &xilinx_pcie_msi_chip);
+ 		if (!port->irq_domain) {
+@@ -705,7 +715,9 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
  #endif
+ 	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
++#ifdef CONFIG_ARM
+ 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++#endif
+ 	pci_bus_add_devices(bus);
+ 	platform_set_drvdata(pdev, port);
+ 
 -- 
-1.9.1
-
+2.1.1
