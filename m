@@ -1,103 +1,185 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1452789524.28109.24.camel@redhat.com>
-Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-From: Mark Salter <msalter@redhat.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
-Date: Thu, 14 Jan 2016 11:38:44 -0500
-In-Reply-To: <20160114161238.GA20706@red-moon>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-	 <1452785393.28109.16.camel@redhat.com> <5697C0EB.4020404@codeaurora.org>
-	 <20160114161238.GA20706@red-moon>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <michals@xilinx.com>,
+	<lorenzo.pieralisi@arm.com>, <yinghai@kernel.org>,
+	<wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: [PATCH 2/5] PCI: xilinx: Removing struct hw_irq structure.
+Date: Tue, 12 Jan 2016 10:56:36 +0530
+Message-ID: <1452576399-1513-3-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
+References: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2016-01-14 at 16:12 +0000, Lorenzo Pieralisi wrote:
-> On Thu, Jan 14, 2016 at 10:38:19AM -0500, Sinan Kaya wrote:
-> > On 1/14/2016 10:29 AM, Mark Salter wrote:
-> > On Wed, 2016-01-13 at 14:20 +0100, Tomasz Nowicki wrote:
-> > > IO resources on Mustang get disabled unless I do:
-> > > 
-> > > @@ -126,9 +126,10 @@ static void acpi_dev_ioresource_flags(struct
-> > > resource *res, u64 len, if (!acpi_dev_resource_len_valid(res->start,
-> > > res->end, len, true)) res->flags |= IORESOURCE_DISABLED |
-> > > IORESOURCE_UNSET;
-> > > 
-> > > +#if 0 if (res->end >= 0x10003) res->flags |= IORESOURCE_DISABLED |
-> > > IORESOURCE_UNSET; - +#endif
-> > > 
-> > > res->end is way beyond 0x10003 on Mustang:
-> > > 
-> > > pci_bus 0000:00: root bus resource [io  0x0000-0xffff window] (bus
-> > > address [0x10000000-0x1000ffff])
-> > > 
-> > > 
-> > 
-> > Join the club. I complained about this and I got the message that we
-> > just do what Intel does.  See Arnd Bergmann's reply.
-> > 
-> > [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI
-> > hostbridge init based on ACPI
-> > 
-> > 1/12/2016 9:30 AM
-> > 
-> > It is an artificial limit coming from the x86 world introduced into
-> > common code.
-> 
-> Guys, I think you are mixing things up here, we discussed this to
-> death, read the archives please.
-> 
-> The ACPI IO descriptors AddressMinimum/AddressMaximum describe
-> the IO space PCI bus addresses. The AddressTranslation field
-> provides the PCI IO space -> CPU physical address translation, or
-> put it differently, the secondary to primary bus translation in
-> ACPI jargon, that's how ACPI tables must be written for IO space,
-> at least that's what IA64 does (and on ia64 IO space is memory
-> mapped, as on arm64).
-> 
-> I bet APM IO descriptors specify the *CPU* physical address in
-> the AddressMinimum field, and that's where the problem lies.
-> 
+Removing struct hw_irq and adding generic PCI core API's.
 
-You would lose that bet. AddressMinimum/Maximum describe the
-PCI bus addresses.
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+---
+Changes:
+Removing architecure dependecy structure struct hw_irq which is ARM 32-bit
+specific structure, and adding generic PCI core API's to register to
+PCI subsytem.
+Removing funtions which are not being used with generic API's.
+---
+ drivers/pci/host/pcie-xilinx.c | 80 +++++++++---------------------------------
+ 1 file changed, 16 insertions(+), 64 deletions(-)
 
-                QWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
-                    0x0000000000000000, // Granularity
-                    0x0000000010000000, // Range Minimum
-                    0x000000001000FFFF, // Range Maximum
-                    0x000000E000000000, // Translation Offset
-                    0x0000000000010000, // Length
-                    ,, , TypeStatic)
-
-
-> Jiang's patch:
-> 
-> https://lkml.org/lkml/2015/12/16/249
-> 
-> parses the IO descriptors and stores the AddressMinimum, AddressMaximum
-> in the IO resource (with AddressTranslation as offset which must be the
-> *CPU* physical address mapping IO), from the log above it seems to me in
-> AddressMinimum APM specifies the *CPU* physical address generating IO
-> cycles.
-> 
-> All in all, I was right to fear this would happen, and I already
-> raised the point within the ACPI spec working group, ACPI IO
-> descriptors specification is ambiguous and we must agree on how
-> they have to be specified once for all.
-> 
-> Lorenzo
-
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 588e568..3e3757f 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -117,11 +117,6 @@ struct xilinx_pcie_port {
+ 
+ static DECLARE_BITMAP(msi_irq_in_use, XILINX_NUM_MSI_IRQS);
+ 
+-static inline struct xilinx_pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+-{
+-	return sys->private_data;
+-}
+-
+ static inline u32 pcie_read(struct xilinx_pcie_port *port, u32 reg)
+ {
+ 	return readl(port->reg_base + reg);
+@@ -163,7 +158,7 @@ static void xilinx_pcie_clear_err_interrupts(struct xilinx_pcie_port *port)
+  */
+ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+ {
+-	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
++	struct xilinx_pcie_port *port = bus->sysdata;
+ 
+ 	/* Check if link is up when trying to access downstream ports */
+ 	if (bus->number != port->root_busno)
+@@ -196,7 +191,7 @@ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+ static void __iomem *xilinx_pcie_map_bus(struct pci_bus *bus,
+ 					 unsigned int devfn, int where)
+ {
+-	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
++	struct xilinx_pcie_port *port = bus->sysdata;
+ 	int relbus;
+ 
+ 	if (!xilinx_pcie_valid_device(bus, devfn))
+@@ -228,7 +223,7 @@ static void xilinx_pcie_destroy_msi(unsigned int irq)
+ 
+ 	if (!test_bit(irq, msi_irq_in_use)) {
+ 		msi = irq_get_msi_desc(irq);
+-		port = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
++		port = msi_desc_to_pci_sysdata(msi);
+ 		dev_err(port->dev, "Trying to free unused MSI#%d\n", irq);
+ 	} else {
+ 		clear_bit(irq, msi_irq_in_use);
+@@ -277,7 +272,7 @@ static int xilinx_pcie_msi_setup_irq(struct msi_controller *chip,
+ 				     struct pci_dev *pdev,
+ 				     struct msi_desc *desc)
+ {
+-	struct xilinx_pcie_port *port = sys_to_pcie(pdev->bus->sysdata);
++	struct xilinx_pcie_port *port = pdev->bus->sysdata;
+ 	unsigned int irq;
+ 	int hwirq;
+ 	struct msi_msg msg;
+@@ -614,46 +609,6 @@ static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
+ }
+ 
+ /**
+- * xilinx_pcie_setup - Setup memory resources
+- * @nr: Bus number
+- * @sys: Per controller structure
+- *
+- * Return: '1' on success and error value on failure
+- */
+-static int xilinx_pcie_setup(int nr, struct pci_sys_data *sys)
+-{
+-	struct xilinx_pcie_port *port = sys_to_pcie(sys);
+-
+-	list_splice_init(&port->resources, &sys->resources);
+-
+-	return 1;
+-}
+-
+-/**
+- * xilinx_pcie_scan_bus - Scan PCIe bus for devices
+- * @nr: Bus number
+- * @sys: Per controller structure
+- *
+- * Return: Valid Bus pointer on success and NULL on failure
+- */
+-static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+-{
+-	struct xilinx_pcie_port *port = sys_to_pcie(sys);
+-	struct pci_bus *bus;
+-
+-	port->root_busno = sys->busnr;
+-
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		bus = pci_scan_root_bus_msi(port->dev, sys->busnr,
+-					    &xilinx_pcie_ops, sys,
+-					    &sys->resources,
+-					    &xilinx_pcie_msi_chip);
+-	else
+-		bus = pci_scan_root_bus(port->dev, sys->busnr,
+-					&xilinx_pcie_ops, sys, &sys->resources);
+-	return bus;
+-}
+-
+  * xilinx_pcie_parse_dt - Parse Device tree
+  * @port: PCIe port information
+  *
+@@ -703,8 +658,9 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
+ static int xilinx_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct xilinx_pcie_port *port;
+-	struct hw_pci hw;
+ 	struct device *dev = &pdev->dev;
++	struct pci_bus *bus;
++
+ 	int err;
+ 	resource_size_t iobase = 0;
+ 	LIST_HEAD(res);
+@@ -738,24 +694,20 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ 		dev_err(dev, "Getting bridge resources failed\n");
+ 		return err;
+ 	}
+-
+-	platform_set_drvdata(pdev, port);
+-
+-	/* Register the device */
+-	memset(&hw, 0, sizeof(hw));
+-	hw = (struct hw_pci) {
+-		.nr_controllers	= 1,
+-		.private_data	= (void **)&port,
+-		.setup		= xilinx_pcie_setup,
+-		.map_irq	= of_irq_parse_and_map_pci,
+-		.scan		= xilinx_pcie_scan_bus,
+-		.ops		= &xilinx_pcie_ops,
+-	};
++	bus = pci_create_root_bus(&pdev->dev, 0,
++				  &xilinx_pcie_ops, port, &res);
++	if (!bus)
++		return -ENOMEM;
+ 
+ #ifdef CONFIG_PCI_MSI
+ 	xilinx_pcie_msi_chip.dev = port->dev;
++	bus->msi = &xilinx_pcie_msi_chip;
+ #endif
+-	pci_common_init_dev(dev, &hw);
++	pci_scan_child_bus(bus);
++	pci_assign_unassigned_bus_resources(bus);
++	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++	pci_bus_add_devices(bus);
++	platform_set_drvdata(pdev, port);
+ 
+ 	return 0;
+ }
+-- 
+2.1.1
